@@ -1,0 +1,1224 @@
+[
+   {
+      "sample" : "SA493T-whole_genome",
+      "gene" : "SOX9"
+   },
+   {
+      "gene" : "SOX9",
+      "sample" : "SA494T-whole_genome"
+   },
+   {
+      "sample" : "SA499T-whole_genome",
+      "gene" : "SOX9"
+   },
+   {
+      "sample" : "SA500T-whole_genome",
+      "gene" : "SOX9"
+   },
+   {
+      "cna" : "AMPLIFIED",
+      "gene" : "SOX9",
+      "sample" : "SA501T-whole_genome"
+   },
+   {
+      "gene" : "SOX9",
+      "sample" : "SA530T-whole_genome"
+   },
+   {
+      "cna" : "AMPLIFIED",
+      "gene" : "SOX9",
+      "sample" : "SA531T-whole_genome"
+   },
+   {
+      "sample" : "SA532T-whole_genome",
+      "gene" : "SOX9"
+   },
+   {
+      "sample" : "SA533T-whole_genome",
+      "gene" : "SOX9",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "gene" : "SOX9",
+      "sample" : "SA534T-whole_genome"
+   },
+   {
+      "sample" : "SA535T-whole_genome",
+      "gene" : "SOX9"
+   },
+   {
+      "gene" : "SOX9",
+      "sample" : "SA536T-whole_genome"
+   },
+   {
+      "sample" : "SA536X0-whole_genome",
+      "gene" : "SOX9"
+   },
+   {
+      "sample" : "SA493X1-whole_genome",
+      "gene" : "SOX9"
+   },
+   {
+      "sample" : "SA531X1-whole_genome",
+      "gene" : "SOX9",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "sample" : "SA533X1-whole_genome",
+      "gene" : "SOX9",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "cna" : "AMPLIFIED",
+      "gene" : "SOX9",
+      "sample" : "SA501X1A-whole_genome"
+   },
+   {
+      "sample" : "SA534X1A-whole_genome",
+      "gene" : "SOX9"
+   },
+   {
+      "gene" : "SOX9",
+      "sample" : "SA535X1A-whole_genome",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "sample" : "SA530X2-whole_genome",
+      "gene" : "SOX9"
+   },
+   {
+      "sample" : "SA429X2A-whole_genome",
+      "gene" : "SOX9"
+   },
+   {
+      "cna" : "AMPLIFIED",
+      "gene" : "SOX9",
+      "sample" : "SA496X2A-whole_genome"
+   },
+   {
+      "gene" : "SOX9",
+      "sample" : "SA500X3-whole_genome"
+   },
+   {
+      "sample" : "SA532X3A-whole_genome",
+      "gene" : "SOX9"
+   },
+   {
+      "sample" : "SA494X4-whole_genome",
+      "gene" : "SOX9"
+   },
+   {
+      "sample" : "SA495X4-whole_genome",
+      "gene" : "SOX9"
+   },
+   {
+      "gene" : "SOX9",
+      "sample" : "SA499X5-whole_genome"
+   },
+   {
+      "gene" : "SOX9",
+      "sample" : "SA429X5A-whole_genome"
+   },
+   {
+      "gene" : "SOX9",
+      "sample" : "SA501X5A-whole_genome",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "gene" : "RAN",
+      "sample" : "SA493T-whole_genome"
+   },
+   {
+      "gene" : "RAN",
+      "sample" : "SA494T-whole_genome"
+   },
+   {
+      "sample" : "SA499T-whole_genome",
+      "gene" : "RAN"
+   },
+   {
+      "sample" : "SA500T-whole_genome",
+      "gene" : "RAN"
+   },
+   {
+      "sample" : "SA501T-whole_genome",
+      "gene" : "RAN"
+   },
+   {
+      "sample" : "SA530T-whole_genome",
+      "gene" : "RAN"
+   },
+   {
+      "sample" : "SA531T-whole_genome",
+      "gene" : "RAN"
+   },
+   {
+      "gene" : "RAN",
+      "sample" : "SA532T-whole_genome"
+   },
+   {
+      "gene" : "RAN",
+      "sample" : "SA533T-whole_genome"
+   },
+   {
+      "sample" : "SA534T-whole_genome",
+      "gene" : "RAN"
+   },
+   {
+      "gene" : "RAN",
+      "sample" : "SA535T-whole_genome"
+   },
+   {
+      "gene" : "RAN",
+      "sample" : "SA536T-whole_genome"
+   },
+   {
+      "cna" : "AMPLIFIED",
+      "gene" : "RAN",
+      "sample" : "SA536X0-whole_genome"
+   },
+   {
+      "gene" : "RAN",
+      "sample" : "SA493X1-whole_genome"
+   },
+   {
+      "gene" : "RAN",
+      "sample" : "SA531X1-whole_genome"
+   },
+   {
+      "gene" : "RAN",
+      "sample" : "SA533X1-whole_genome"
+   },
+   {
+      "sample" : "SA501X1A-whole_genome",
+      "gene" : "RAN"
+   },
+   {
+      "sample" : "SA534X1A-whole_genome",
+      "gene" : "RAN",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "gene" : "RAN",
+      "sample" : "SA535X1A-whole_genome"
+   },
+   {
+      "sample" : "SA530X2-whole_genome",
+      "gene" : "RAN"
+   },
+   {
+      "gene" : "RAN",
+      "sample" : "SA429X2A-whole_genome"
+   },
+   {
+      "sample" : "SA496X2A-whole_genome",
+      "gene" : "RAN",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "sample" : "SA500X3-whole_genome",
+      "gene" : "RAN"
+   },
+   {
+      "sample" : "SA532X3A-whole_genome",
+      "gene" : "RAN"
+   },
+   {
+      "sample" : "SA494X4-whole_genome",
+      "gene" : "RAN"
+   },
+   {
+      "gene" : "RAN",
+      "sample" : "SA495X4-whole_genome"
+   },
+   {
+      "gene" : "RAN",
+      "sample" : "SA499X5-whole_genome"
+   },
+   {
+      "sample" : "SA429X5A-whole_genome",
+      "gene" : "RAN"
+   },
+   {
+      "sample" : "SA501X5A-whole_genome",
+      "gene" : "RAN"
+   },
+   {
+      "cna" : "AMPLIFIED",
+      "sample" : "SA493T-whole_genome",
+      "gene" : "TNK2"
+   },
+   {
+      "sample" : "SA494T-whole_genome",
+      "gene" : "TNK2"
+   },
+   {
+      "cna" : "AMPLIFIED",
+      "gene" : "TNK2",
+      "sample" : "SA499T-whole_genome"
+   },
+   {
+      "cna" : "AMPLIFIED",
+      "gene" : "TNK2",
+      "sample" : "SA500T-whole_genome"
+   },
+   {
+      "sample" : "SA501T-whole_genome",
+      "gene" : "TNK2"
+   },
+   {
+      "gene" : "TNK2",
+      "sample" : "SA530T-whole_genome"
+   },
+   {
+      "sample" : "SA531T-whole_genome",
+      "gene" : "TNK2"
+   },
+   {
+      "gene" : "TNK2",
+      "sample" : "SA532T-whole_genome"
+   },
+   {
+      "sample" : "SA533T-whole_genome",
+      "gene" : "TNK2",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "sample" : "SA534T-whole_genome",
+      "gene" : "TNK2"
+   },
+   {
+      "cna" : "AMPLIFIED",
+      "gene" : "TNK2",
+      "sample" : "SA535T-whole_genome"
+   },
+   {
+      "gene" : "TNK2",
+      "sample" : "SA536T-whole_genome"
+   },
+   {
+      "gene" : "TNK2",
+      "sample" : "SA536X0-whole_genome"
+   },
+   {
+      "cna" : "AMPLIFIED",
+      "sample" : "SA493X1-whole_genome",
+      "gene" : "TNK2"
+   },
+   {
+      "sample" : "SA531X1-whole_genome",
+      "gene" : "TNK2"
+   },
+   {
+      "cna" : "AMPLIFIED",
+      "gene" : "TNK2",
+      "sample" : "SA533X1-whole_genome"
+   },
+   {
+      "sample" : "SA501X1A-whole_genome",
+      "gene" : "TNK2"
+   },
+   {
+      "gene" : "TNK2",
+      "sample" : "SA534X1A-whole_genome"
+   },
+   {
+      "sample" : "SA535X1A-whole_genome",
+      "gene" : "TNK2"
+   },
+   {
+      "sample" : "SA530X2-whole_genome",
+      "gene" : "TNK2"
+   },
+   {
+      "cna" : "AMPLIFIED",
+      "sample" : "SA429X2A-whole_genome",
+      "gene" : "TNK2"
+   },
+   {
+      "sample" : "SA496X2A-whole_genome",
+      "gene" : "TNK2"
+   },
+   {
+      "gene" : "TNK2",
+      "sample" : "SA500X3-whole_genome"
+   },
+   {
+      "sample" : "SA532X3A-whole_genome",
+      "gene" : "TNK2"
+   },
+   {
+      "gene" : "TNK2",
+      "sample" : "SA494X4-whole_genome"
+   },
+   {
+      "sample" : "SA495X4-whole_genome",
+      "gene" : "TNK2"
+   },
+   {
+      "sample" : "SA499X5-whole_genome",
+      "gene" : "TNK2"
+   },
+   {
+      "cna" : "AMPLIFIED",
+      "gene" : "TNK2",
+      "sample" : "SA429X5A-whole_genome"
+   },
+   {
+      "gene" : "TNK2",
+      "sample" : "SA501X5A-whole_genome"
+   },
+   {
+      "sample" : "SA493T-whole_genome",
+      "gene" : "EP300"
+   },
+   {
+      "sample" : "SA494T-whole_genome",
+      "gene" : "EP300"
+   },
+   {
+      "sample" : "SA499T-whole_genome",
+      "gene" : "EP300"
+   },
+   {
+      "gene" : "EP300",
+      "sample" : "SA500T-whole_genome"
+   },
+   {
+      "gene" : "EP300",
+      "sample" : "SA501T-whole_genome"
+   },
+   {
+      "gene" : "EP300",
+      "sample" : "SA530T-whole_genome"
+   },
+   {
+      "gene" : "EP300",
+      "sample" : "SA531T-whole_genome"
+   },
+   {
+      "gene" : "EP300",
+      "sample" : "SA532T-whole_genome"
+   },
+   {
+      "sample" : "SA533T-whole_genome",
+      "gene" : "EP300"
+   },
+   {
+      "sample" : "SA534T-whole_genome",
+      "gene" : "EP300"
+   },
+   {
+      "sample" : "SA535T-whole_genome",
+      "gene" : "EP300"
+   },
+   {
+      "sample" : "SA536T-whole_genome",
+      "gene" : "EP300"
+   },
+   {
+      "sample" : "SA536X0-whole_genome",
+      "gene" : "EP300"
+   },
+   {
+      "gene" : "EP300",
+      "sample" : "SA493X1-whole_genome"
+   },
+   {
+      "gene" : "EP300",
+      "sample" : "SA531X1-whole_genome"
+   },
+   {
+      "sample" : "SA533X1-whole_genome",
+      "gene" : "EP300"
+   },
+   {
+      "gene" : "EP300",
+      "sample" : "SA501X1A-whole_genome"
+   },
+   {
+      "gene" : "EP300",
+      "sample" : "SA534X1A-whole_genome"
+   },
+   {
+      "gene" : "EP300",
+      "sample" : "SA535X1A-whole_genome"
+   },
+   {
+      "gene" : "EP300",
+      "sample" : "SA530X2-whole_genome"
+   },
+   {
+      "gene" : "EP300",
+      "sample" : "SA429X2A-whole_genome"
+   },
+   {
+      "gene" : "EP300",
+      "sample" : "SA496X2A-whole_genome"
+   },
+   {
+      "sample" : "SA500X3-whole_genome",
+      "gene" : "EP300"
+   },
+   {
+      "sample" : "SA532X3A-whole_genome",
+      "gene" : "EP300"
+   },
+   {
+      "gene" : "EP300",
+      "sample" : "SA494X4-whole_genome"
+   },
+   {
+      "sample" : "SA495X4-whole_genome",
+      "gene" : "EP300",
+      "mutation" : "E988K"
+   },
+   {
+      "gene" : "EP300",
+      "sample" : "SA499X5-whole_genome"
+   },
+   {
+      "sample" : "SA429X5A-whole_genome",
+      "gene" : "EP300"
+   },
+   {
+      "sample" : "SA501X5A-whole_genome",
+      "gene" : "EP300"
+   },
+   {
+      "sample" : "SA493T-whole_genome",
+      "gene" : "PXN"
+   },
+   {
+      "sample" : "SA494T-whole_genome",
+      "gene" : "PXN"
+   },
+   {
+      "gene" : "PXN",
+      "sample" : "SA499T-whole_genome"
+   },
+   {
+      "gene" : "PXN",
+      "sample" : "SA500T-whole_genome"
+   },
+   {
+      "sample" : "SA501T-whole_genome",
+      "gene" : "PXN"
+   },
+   {
+      "sample" : "SA530T-whole_genome",
+      "gene" : "PXN"
+   },
+   {
+      "sample" : "SA531T-whole_genome",
+      "gene" : "PXN"
+   },
+   {
+      "sample" : "SA532T-whole_genome",
+      "gene" : "PXN"
+   },
+   {
+      "gene" : "PXN",
+      "sample" : "SA533T-whole_genome"
+   },
+   {
+      "gene" : "PXN",
+      "sample" : "SA534T-whole_genome"
+   },
+   {
+      "sample" : "SA535T-whole_genome",
+      "gene" : "PXN"
+   },
+   {
+      "gene" : "PXN",
+      "sample" : "SA536T-whole_genome"
+   },
+   {
+      "cna" : "AMPLIFIED",
+      "sample" : "SA536X0-whole_genome",
+      "gene" : "PXN"
+   },
+   {
+      "gene" : "PXN",
+      "sample" : "SA493X1-whole_genome"
+   },
+   {
+      "sample" : "SA531X1-whole_genome",
+      "gene" : "PXN"
+   },
+   {
+      "sample" : "SA533X1-whole_genome",
+      "gene" : "PXN"
+   },
+   {
+      "gene" : "PXN",
+      "sample" : "SA501X1A-whole_genome"
+   },
+   {
+      "gene" : "PXN",
+      "sample" : "SA534X1A-whole_genome"
+   },
+   {
+      "gene" : "PXN",
+      "sample" : "SA535X1A-whole_genome"
+   },
+   {
+      "sample" : "SA530X2-whole_genome",
+      "gene" : "PXN"
+   },
+   {
+      "sample" : "SA429X2A-whole_genome",
+      "gene" : "PXN"
+   },
+   {
+      "gene" : "PXN",
+      "sample" : "SA496X2A-whole_genome",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "sample" : "SA500X3-whole_genome",
+      "gene" : "PXN"
+   },
+   {
+      "gene" : "PXN",
+      "sample" : "SA532X3A-whole_genome"
+   },
+   {
+      "sample" : "SA494X4-whole_genome",
+      "gene" : "PXN"
+   },
+   {
+      "sample" : "SA495X4-whole_genome",
+      "gene" : "PXN"
+   },
+   {
+      "sample" : "SA499X5-whole_genome",
+      "gene" : "PXN"
+   },
+   {
+      "sample" : "SA429X5A-whole_genome",
+      "gene" : "PXN"
+   },
+   {
+      "gene" : "PXN",
+      "sample" : "SA501X5A-whole_genome"
+   },
+   {
+      "sample" : "SA493T-whole_genome",
+      "gene" : "NCOA2",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "gene" : "NCOA2",
+      "sample" : "SA494T-whole_genome",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "sample" : "SA499T-whole_genome",
+      "gene" : "NCOA2"
+   },
+   {
+      "sample" : "SA500T-whole_genome",
+      "gene" : "NCOA2"
+   },
+   {
+      "cna" : "AMPLIFIED",
+      "gene" : "NCOA2",
+      "sample" : "SA501T-whole_genome"
+   },
+   {
+      "gene" : "NCOA2",
+      "sample" : "SA530T-whole_genome"
+   },
+   {
+      "sample" : "SA531T-whole_genome",
+      "gene" : "NCOA2",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "sample" : "SA532T-whole_genome",
+      "gene" : "NCOA2"
+   },
+   {
+      "sample" : "SA533T-whole_genome",
+      "gene" : "NCOA2"
+   },
+   {
+      "gene" : "NCOA2",
+      "sample" : "SA534T-whole_genome",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "gene" : "NCOA2",
+      "sample" : "SA535T-whole_genome"
+   },
+   {
+      "gene" : "NCOA2",
+      "sample" : "SA536T-whole_genome"
+   },
+   {
+      "gene" : "NCOA2",
+      "sample" : "SA536X0-whole_genome",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "gene" : "NCOA2",
+      "sample" : "SA493X1-whole_genome"
+   },
+   {
+      "sample" : "SA531X1-whole_genome",
+      "gene" : "NCOA2",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "sample" : "SA533X1-whole_genome",
+      "gene" : "NCOA2"
+   },
+   {
+      "sample" : "SA501X1A-whole_genome",
+      "gene" : "NCOA2"
+   },
+   {
+      "sample" : "SA534X1A-whole_genome",
+      "gene" : "NCOA2"
+   },
+   {
+      "sample" : "SA535X1A-whole_genome",
+      "gene" : "NCOA2"
+   },
+   {
+      "gene" : "NCOA2",
+      "sample" : "SA530X2-whole_genome"
+   },
+   {
+      "gene" : "NCOA2",
+      "sample" : "SA429X2A-whole_genome"
+   },
+   {
+      "sample" : "SA496X2A-whole_genome",
+      "gene" : "NCOA2"
+   },
+   {
+      "gene" : "NCOA2",
+      "sample" : "SA500X3-whole_genome"
+   },
+   {
+      "gene" : "NCOA2",
+      "sample" : "SA532X3A-whole_genome"
+   },
+   {
+      "cna" : "AMPLIFIED",
+      "gene" : "NCOA2",
+      "sample" : "SA494X4-whole_genome"
+   },
+   {
+      "gene" : "NCOA2",
+      "sample" : "SA495X4-whole_genome"
+   },
+   {
+      "gene" : "NCOA2",
+      "sample" : "SA499X5-whole_genome"
+   },
+   {
+      "gene" : "NCOA2",
+      "sample" : "SA429X5A-whole_genome"
+   },
+   {
+      "sample" : "SA501X5A-whole_genome",
+      "gene" : "NCOA2"
+   },
+   {
+      "sample" : "SA493T-whole_genome",
+      "gene" : "AR"
+   },
+   {
+      "gene" : "AR",
+      "sample" : "SA494T-whole_genome"
+   },
+   {
+      "sample" : "SA499T-whole_genome",
+      "gene" : "AR"
+   },
+   {
+      "gene" : "AR",
+      "sample" : "SA500T-whole_genome"
+   },
+   {
+      "sample" : "SA501T-whole_genome",
+      "gene" : "AR"
+   },
+   {
+      "sample" : "SA530T-whole_genome",
+      "gene" : "AR"
+   },
+   {
+      "sample" : "SA531T-whole_genome",
+      "gene" : "AR"
+   },
+   {
+      "sample" : "SA532T-whole_genome",
+      "gene" : "AR"
+   },
+   {
+      "gene" : "AR",
+      "sample" : "SA533T-whole_genome"
+   },
+   {
+      "gene" : "AR",
+      "sample" : "SA534T-whole_genome"
+   },
+   {
+      "sample" : "SA535T-whole_genome",
+      "gene" : "AR"
+   },
+   {
+      "sample" : "SA536T-whole_genome",
+      "gene" : "AR"
+   },
+   {
+      "sample" : "SA536X0-whole_genome",
+      "gene" : "AR"
+   },
+   {
+      "sample" : "SA493X1-whole_genome",
+      "gene" : "AR"
+   },
+   {
+      "gene" : "AR",
+      "sample" : "SA531X1-whole_genome"
+   },
+   {
+      "gene" : "AR",
+      "sample" : "SA533X1-whole_genome"
+   },
+   {
+      "sample" : "SA501X1A-whole_genome",
+      "gene" : "AR"
+   },
+   {
+      "gene" : "AR",
+      "sample" : "SA534X1A-whole_genome"
+   },
+   {
+      "sample" : "SA535X1A-whole_genome",
+      "gene" : "AR"
+   },
+   {
+      "gene" : "AR",
+      "sample" : "SA530X2-whole_genome"
+   },
+   {
+      "sample" : "SA429X2A-whole_genome",
+      "gene" : "AR"
+   },
+   {
+      "sample" : "SA496X2A-whole_genome",
+      "gene" : "AR"
+   },
+   {
+      "gene" : "AR",
+      "sample" : "SA500X3-whole_genome"
+   },
+   {
+      "gene" : "AR",
+      "sample" : "SA532X3A-whole_genome"
+   },
+   {
+      "gene" : "AR",
+      "sample" : "SA494X4-whole_genome"
+   },
+   {
+      "sample" : "SA495X4-whole_genome",
+      "gene" : "AR"
+   },
+   {
+      "sample" : "SA499X5-whole_genome",
+      "gene" : "AR"
+   },
+   {
+      "gene" : "AR",
+      "sample" : "SA429X5A-whole_genome"
+   },
+   {
+      "sample" : "SA501X5A-whole_genome",
+      "gene" : "AR"
+   },
+   {
+      "gene" : "NRIP1",
+      "sample" : "SA493T-whole_genome",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "sample" : "SA494T-whole_genome",
+      "gene" : "NRIP1"
+   },
+   {
+      "sample" : "SA499T-whole_genome",
+      "gene" : "NRIP1"
+   },
+   {
+      "sample" : "SA500T-whole_genome",
+      "gene" : "NRIP1",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "sample" : "SA501T-whole_genome",
+      "gene" : "NRIP1"
+   },
+   {
+      "gene" : "NRIP1",
+      "sample" : "SA530T-whole_genome"
+   },
+   {
+      "sample" : "SA531T-whole_genome",
+      "gene" : "NRIP1"
+   },
+   {
+      "gene" : "NRIP1",
+      "sample" : "SA532T-whole_genome"
+   },
+   {
+      "sample" : "SA533T-whole_genome",
+      "gene" : "NRIP1"
+   },
+   {
+      "sample" : "SA534T-whole_genome",
+      "gene" : "NRIP1"
+   },
+   {
+      "gene" : "NRIP1",
+      "sample" : "SA535T-whole_genome",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "gene" : "NRIP1",
+      "sample" : "SA536T-whole_genome"
+   },
+   {
+      "sample" : "SA536X0-whole_genome",
+      "gene" : "NRIP1"
+   },
+   {
+      "sample" : "SA493X1-whole_genome",
+      "gene" : "NRIP1"
+   },
+   {
+      "sample" : "SA531X1-whole_genome",
+      "gene" : "NRIP1"
+   },
+   {
+      "gene" : "NRIP1",
+      "sample" : "SA533X1-whole_genome"
+   },
+   {
+      "gene" : "NRIP1",
+      "sample" : "SA501X1A-whole_genome"
+   },
+   {
+      "gene" : "NRIP1",
+      "sample" : "SA534X1A-whole_genome"
+   },
+   {
+      "gene" : "NRIP1",
+      "sample" : "SA535X1A-whole_genome",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "gene" : "NRIP1",
+      "sample" : "SA530X2-whole_genome"
+   },
+   {
+      "cna" : "AMPLIFIED",
+      "sample" : "SA429X2A-whole_genome",
+      "gene" : "NRIP1"
+   },
+   {
+      "sample" : "SA496X2A-whole_genome",
+      "gene" : "NRIP1"
+   },
+   {
+      "sample" : "SA500X3-whole_genome",
+      "gene" : "NRIP1",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "sample" : "SA532X3A-whole_genome",
+      "gene" : "NRIP1"
+   },
+   {
+      "sample" : "SA494X4-whole_genome",
+      "gene" : "NRIP1",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "gene" : "NRIP1",
+      "sample" : "SA495X4-whole_genome"
+   },
+   {
+      "cna" : "AMPLIFIED",
+      "gene" : "NRIP1",
+      "sample" : "SA499X5-whole_genome"
+   },
+   {
+      "sample" : "SA429X5A-whole_genome",
+      "gene" : "NRIP1",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "cna" : "AMPLIFIED",
+      "gene" : "NRIP1",
+      "sample" : "SA501X5A-whole_genome"
+   },
+   {
+      "gene" : "NCOR1",
+      "sample" : "SA493T-whole_genome"
+   },
+   {
+      "cna" : "AMPLIFIED",
+      "gene" : "NCOR1",
+      "sample" : "SA494T-whole_genome"
+   },
+   {
+      "gene" : "NCOR1",
+      "sample" : "SA499T-whole_genome"
+   },
+   {
+      "gene" : "NCOR1",
+      "sample" : "SA500T-whole_genome"
+   },
+   {
+      "gene" : "NCOR1",
+      "sample" : "SA501T-whole_genome"
+   },
+   {
+      "sample" : "SA530T-whole_genome",
+      "gene" : "NCOR1"
+   },
+   {
+      "sample" : "SA531T-whole_genome",
+      "gene" : "NCOR1",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "gene" : "NCOR1",
+      "sample" : "SA532T-whole_genome",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "cna" : "AMPLIFIED",
+      "sample" : "SA533T-whole_genome",
+      "gene" : "NCOR1"
+   },
+   {
+      "gene" : "NCOR1",
+      "sample" : "SA534T-whole_genome"
+   },
+   {
+      "sample" : "SA535T-whole_genome",
+      "gene" : "NCOR1"
+   },
+   {
+      "sample" : "SA536T-whole_genome",
+      "gene" : "NCOR1"
+   },
+   {
+      "sample" : "SA536X0-whole_genome",
+      "gene" : "NCOR1"
+   },
+   {
+      "sample" : "SA493X1-whole_genome",
+      "gene" : "NCOR1"
+   },
+   {
+      "cna" : "AMPLIFIED",
+      "gene" : "NCOR1",
+      "sample" : "SA531X1-whole_genome"
+   },
+   {
+      "gene" : "NCOR1",
+      "sample" : "SA533X1-whole_genome",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "sample" : "SA501X1A-whole_genome",
+      "gene" : "NCOR1",
+      "cna" : "HOMODELETED"
+   },
+   {
+      "sample" : "SA534X1A-whole_genome",
+      "gene" : "NCOR1"
+   },
+   {
+      "sample" : "SA535X1A-whole_genome",
+      "gene" : "NCOR1",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "sample" : "SA530X2-whole_genome",
+      "gene" : "NCOR1"
+   },
+   {
+      "gene" : "NCOR1",
+      "sample" : "SA429X2A-whole_genome"
+   },
+   {
+      "gene" : "NCOR1",
+      "sample" : "SA496X2A-whole_genome"
+   },
+   {
+      "sample" : "SA500X3-whole_genome",
+      "gene" : "NCOR1"
+   },
+   {
+      "gene" : "NCOR1",
+      "sample" : "SA532X3A-whole_genome",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "sample" : "SA494X4-whole_genome",
+      "gene" : "NCOR1",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "gene" : "NCOR1",
+      "sample" : "SA495X4-whole_genome"
+   },
+   {
+      "sample" : "SA499X5-whole_genome",
+      "gene" : "NCOR1"
+   },
+   {
+      "sample" : "SA429X5A-whole_genome",
+      "gene" : "NCOR1"
+   },
+   {
+      "gene" : "NCOR1",
+      "sample" : "SA501X5A-whole_genome"
+   },
+   {
+      "gene" : "NCOR2",
+      "sample" : "SA493T-whole_genome"
+   },
+   {
+      "gene" : "NCOR2",
+      "sample" : "SA494T-whole_genome"
+   },
+   {
+      "sample" : "SA499T-whole_genome",
+      "gene" : "NCOR2"
+   },
+   {
+      "sample" : "SA500T-whole_genome",
+      "gene" : "NCOR2",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "gene" : "NCOR2",
+      "sample" : "SA501T-whole_genome"
+   },
+   {
+      "sample" : "SA530T-whole_genome",
+      "gene" : "NCOR2"
+   },
+   {
+      "cna" : "AMPLIFIED",
+      "gene" : "NCOR2",
+      "sample" : "SA531T-whole_genome"
+   },
+   {
+      "sample" : "SA532T-whole_genome",
+      "gene" : "NCOR2",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "sample" : "SA533T-whole_genome",
+      "gene" : "NCOR2"
+   },
+   {
+      "sample" : "SA534T-whole_genome",
+      "gene" : "NCOR2"
+   },
+   {
+      "sample" : "SA535T-whole_genome",
+      "gene" : "NCOR2"
+   },
+   {
+      "gene" : "NCOR2",
+      "sample" : "SA536T-whole_genome"
+   },
+   {
+      "cna" : "AMPLIFIED",
+      "sample" : "SA536X0-whole_genome",
+      "gene" : "NCOR2"
+   },
+   {
+      "gene" : "NCOR2",
+      "sample" : "SA493X1-whole_genome"
+   },
+   {
+      "sample" : "SA531X1-whole_genome",
+      "gene" : "NCOR2"
+   },
+   {
+      "sample" : "SA533X1-whole_genome",
+      "gene" : "NCOR2"
+   },
+   {
+      "gene" : "NCOR2",
+      "sample" : "SA501X1A-whole_genome",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "cna" : "AMPLIFIED",
+      "gene" : "NCOR2",
+      "sample" : "SA534X1A-whole_genome"
+   },
+   {
+      "sample" : "SA535X1A-whole_genome",
+      "gene" : "NCOR2"
+   },
+   {
+      "sample" : "SA530X2-whole_genome",
+      "gene" : "NCOR2"
+   },
+   {
+      "sample" : "SA429X2A-whole_genome",
+      "gene" : "NCOR2"
+   },
+   {
+      "gene" : "NCOR2",
+      "sample" : "SA496X2A-whole_genome",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "gene" : "NCOR2",
+      "sample" : "SA500X3-whole_genome",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "gene" : "NCOR2",
+      "sample" : "SA532X3A-whole_genome"
+   },
+   {
+      "gene" : "NCOR2",
+      "sample" : "SA494X4-whole_genome",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "gene" : "NCOR2",
+      "sample" : "SA495X4-whole_genome"
+   },
+   {
+      "sample" : "SA499X5-whole_genome",
+      "gene" : "NCOR2"
+   },
+   {
+      "sample" : "SA429X5A-whole_genome",
+      "gene" : "NCOR2"
+   },
+   {
+      "cna" : "AMPLIFIED",
+      "sample" : "SA501X5A-whole_genome",
+      "gene" : "NCOR2"
+   }
+]
