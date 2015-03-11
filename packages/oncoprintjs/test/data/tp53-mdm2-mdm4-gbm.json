@@ -1,0 +1,1145 @@
+[
+   {
+      "sample" : "TCGA-02-0001-01",
+      "mutation" : "P278R",
+      "gene" : "TP53"
+   },
+   {
+      "sample" : "TCGA-02-0003-01",
+      "mutation" : "H178Q,R282W",
+      "gene" : "TP53"
+   },
+   {
+      "gene" : "TP53",
+      "sample" : "TCGA-02-0006-01"
+   },
+   {
+      "gene" : "TP53",
+      "sample" : "TCGA-02-0007-01"
+   },
+   {
+      "sample" : "TCGA-02-0009-01",
+      "gene" : "TP53"
+   },
+   {
+      "gene" : "TP53",
+      "mutation" : "R175H,R273C",
+      "sample" : "TCGA-02-0010-01"
+   },
+   {
+      "sample" : "TCGA-02-0011-01",
+      "mutation" : "R175G",
+      "gene" : "TP53"
+   },
+   {
+      "sample" : "TCGA-02-0014-01",
+      "mutation" : "N200fs",
+      "gene" : "TP53"
+   },
+   {
+      "sample" : "TCGA-02-0021-01",
+      "gene" : "TP53"
+   },
+   {
+      "mutation" : "R342*",
+      "gene" : "TP53",
+      "sample" : "TCGA-02-0024-01"
+   },
+   {
+      "gene" : "TP53",
+      "sample" : "TCGA-02-0027-01"
+   },
+   {
+      "gene" : "TP53",
+      "sample" : "TCGA-02-0028-01"
+   },
+   {
+      "gene" : "TP53",
+      "mutation" : "R248Q",
+      "sample" : "TCGA-02-0033-01"
+   },
+   {
+      "mutation" : "E258Q,C135Y",
+      "gene" : "TP53",
+      "sample" : "TCGA-02-0034-01"
+   },
+   {
+      "mutation" : "R175H",
+      "gene" : "TP53",
+      "sample" : "TCGA-02-0037-01"
+   },
+   {
+      "gene" : "TP53",
+      "sample" : "TCGA-02-0038-01"
+   },
+   {
+      "gene" : "TP53",
+      "sample" : "TCGA-02-0043-01"
+   },
+   {
+      "mutation" : "P177S,R282W",
+      "gene" : "TP53",
+      "sample" : "TCGA-02-0046-01"
+   },
+   {
+      "gene" : "TP53",
+      "sample" : "TCGA-02-0047-01"
+   },
+   {
+      "sample" : "TCGA-02-0052-01",
+      "gene" : "TP53"
+   },
+   {
+      "sample" : "TCGA-02-0054-01",
+      "mutation" : "R213*",
+      "gene" : "TP53"
+   },
+   {
+      "gene" : "TP53",
+      "mutation" : "V216M",
+      "sample" : "TCGA-02-0055-01"
+   },
+   {
+      "sample" : "TCGA-02-0057-01",
+      "gene" : "TP53"
+   },
+   {
+      "sample" : "TCGA-02-0058-01",
+      "mutation" : "V272M",
+      "gene" : "TP53"
+   },
+   {
+      "sample" : "TCGA-02-0060-01",
+      "gene" : "TP53"
+   },
+   {
+      "gene" : "TP53",
+      "sample" : "TCGA-02-0064-01"
+   },
+   {
+      "sample" : "TCGA-02-0069-01",
+      "gene" : "TP53"
+   },
+   {
+      "gene" : "TP53",
+      "sample" : "TCGA-02-0071-01"
+   },
+   {
+      "sample" : "TCGA-02-0074-01",
+      "gene" : "TP53",
+      "mutation" : "N235D"
+   },
+   {
+      "mutation" : "L130F",
+      "gene" : "TP53",
+      "sample" : "TCGA-02-0075-01"
+   },
+   {
+      "mutation" : "R273C",
+      "gene" : "TP53",
+      "sample" : "TCGA-02-0080-01"
+   },
+   {
+      "sample" : "TCGA-02-0083-01",
+      "gene" : "TP53",
+      "mutation" : "P278S"
+   },
+   {
+      "gene" : "TP53",
+      "sample" : "TCGA-02-0085-01"
+   },
+   {
+      "sample" : "TCGA-02-0086-01",
+      "gene" : "TP53"
+   },
+   {
+      "mutation" : "H179Y",
+      "gene" : "TP53",
+      "sample" : "TCGA-02-0089-01"
+   },
+   {
+      "gene" : "TP53",
+      "sample" : "TCGA-02-0099-01"
+   },
+   {
+      "gene" : "TP53",
+      "sample" : "TCGA-02-0102-01"
+   },
+   {
+      "sample" : "TCGA-02-0107-01",
+      "gene" : "TP53"
+   },
+   {
+      "sample" : "TCGA-02-0113-01",
+      "gene" : "TP53"
+   },
+   {
+      "gene" : "TP53",
+      "mutation" : "C176Y,A276V",
+      "sample" : "TCGA-02-0114-01"
+   },
+   {
+      "gene" : "TP53",
+      "sample" : "TCGA-02-0115-01"
+   },
+   {
+      "gene" : "TP53",
+      "sample" : "TCGA-02-0116-01"
+   },
+   {
+      "gene" : "TP53",
+      "sample" : "TCGA-06-0122-01"
+   },
+   {
+      "sample" : "TCGA-06-0124-01",
+      "gene" : "TP53"
+   },
+   {
+      "gene" : "TP53",
+      "sample" : "TCGA-06-0125-01"
+   },
+   {
+      "sample" : "TCGA-06-0126-01",
+      "gene" : "TP53"
+   },
+   {
+      "sample" : "TCGA-06-0128-01",
+      "gene" : "TP53",
+      "mutation" : "T312fs"
+   },
+   {
+      "gene" : "TP53",
+      "sample" : "TCGA-06-0129-01"
+   },
+   {
+      "sample" : "TCGA-06-0130-01",
+      "mutation" : "R158H",
+      "gene" : "TP53"
+   },
+   {
+      "sample" : "TCGA-06-0132-01",
+      "gene" : "TP53"
+   },
+   {
+      "sample" : "TCGA-06-0133-01",
+      "gene" : "TP53"
+   },
+   {
+      "sample" : "TCGA-06-0137-01",
+      "gene" : "TP53"
+   },
+   {
+      "sample" : "TCGA-06-0138-01",
+      "gene" : "TP53"
+   },
+   {
+      "gene" : "TP53",
+      "sample" : "TCGA-06-0139-01"
+   },
+   {
+      "sample" : "TCGA-06-0141-01",
+      "gene" : "TP53"
+   },
+   {
+      "gene" : "TP53",
+      "sample" : "TCGA-06-0143-01"
+   },
+   {
+      "sample" : "TCGA-06-0145-01",
+      "gene" : "TP53"
+   },
+   {
+      "gene" : "TP53",
+      "sample" : "TCGA-06-0147-01"
+   },
+   {
+      "gene" : "TP53",
+      "sample" : "TCGA-06-0148-01"
+   },
+   {
+      "sample" : "TCGA-06-0154-01",
+      "gene" : "TP53"
+   },
+   {
+      "mutation" : "V97fs",
+      "gene" : "TP53",
+      "sample" : "TCGA-06-0156-01"
+   },
+   {
+      "sample" : "TCGA-06-0157-01",
+      "gene" : "TP53"
+   },
+   {
+      "sample" : "TCGA-06-0158-01",
+      "gene" : "TP53"
+   },
+   {
+      "sample" : "TCGA-06-0166-01",
+      "gene" : "TP53"
+   },
+   {
+      "gene" : "TP53",
+      "sample" : "TCGA-06-0168-01"
+   },
+   {
+      "gene" : "TP53",
+      "sample" : "TCGA-06-0169-01"
+   },
+   {
+      "sample" : "TCGA-06-0171-01",
+      "gene" : "TP53"
+   },
+   {
+      "gene" : "TP53",
+      "sample" : "TCGA-06-0173-01"
+   },
+   {
+      "sample" : "TCGA-06-0174-01",
+      "gene" : "TP53"
+   },
+   {
+      "gene" : "TP53",
+      "sample" : "TCGA-06-0176-01"
+   },
+   {
+      "gene" : "TP53",
+      "sample" : "TCGA-06-0178-01"
+   },
+   {
+      "sample" : "TCGA-06-0184-01",
+      "gene" : "TP53",
+      "mutation" : "R158H"
+   },
+   {
+      "gene" : "TP53",
+      "sample" : "TCGA-06-0185-01"
+   },
+   {
+      "sample" : "TCGA-06-0187-01",
+      "gene" : "TP53"
+   },
+   {
+      "sample" : "TCGA-06-0188-01",
+      "gene" : "TP53",
+      "mutation" : "A307_splice,A307V"
+   },
+   {
+      "sample" : "TCGA-06-0189-01",
+      "gene" : "TP53"
+   },
+   {
+      "sample" : "TCGA-06-0190-01",
+      "mutation" : "G245S",
+      "gene" : "TP53"
+   },
+   {
+      "gene" : "TP53",
+      "mutation" : "G266R,D281A",
+      "sample" : "TCGA-06-0195-01"
+   },
+   {
+      "gene" : "TP53",
+      "mutation" : "F270S",
+      "sample" : "TCGA-06-0197-01"
+   },
+   {
+      "sample" : "TCGA-06-0201-01",
+      "gene" : "TP53"
+   },
+   {
+      "gene" : "TP53",
+      "mutation" : "R273H",
+      "sample" : "TCGA-06-0206-01"
+   },
+   {
+      "sample" : "TCGA-06-0208-01",
+      "gene" : "TP53"
+   },
+   {
+      "sample" : "TCGA-06-0209-01",
+      "gene" : "TP53"
+   },
+   {
+      "sample" : "TCGA-06-0210-01",
+      "gene" : "TP53"
+   },
+   {
+      "gene" : "TP53",
+      "sample" : "TCGA-06-0211-01"
+   },
+   {
+      "sample" : "TCGA-06-0213-01",
+      "gene" : "TP53",
+      "cna" : "HOMODELETED"
+   },
+   {
+      "sample" : "TCGA-06-0214-01",
+      "gene" : "TP53"
+   },
+   {
+      "sample" : "TCGA-06-0219-01",
+      "gene" : "TP53"
+   },
+   {
+      "mutation" : "K139fs",
+      "gene" : "TP53",
+      "sample" : "TCGA-06-0221-01"
+   },
+   {
+      "mutation" : "I195T",
+      "gene" : "TP53",
+      "sample" : "TCGA-06-0237-01"
+   },
+   {
+      "mutation" : "R248Q",
+      "gene" : "TP53",
+      "sample" : "TCGA-06-0241-01"
+   },
+   {
+      "sample" : "TCGA-02-0001-01",
+      "gene" : "MDM2"
+   },
+   {
+      "sample" : "TCGA-02-0003-01",
+      "gene" : "MDM2"
+   },
+   {
+      "gene" : "MDM2",
+      "cna" : "AMPLIFIED",
+      "sample" : "TCGA-02-0006-01"
+   },
+   {
+      "sample" : "TCGA-02-0007-01",
+      "gene" : "MDM2"
+   },
+   {
+      "sample" : "TCGA-02-0009-01",
+      "gene" : "MDM2"
+   },
+   {
+      "sample" : "TCGA-02-0010-01",
+      "gene" : "MDM2"
+   },
+   {
+      "sample" : "TCGA-02-0011-01",
+      "gene" : "MDM2"
+   },
+   {
+      "sample" : "TCGA-02-0014-01",
+      "gene" : "MDM2"
+   },
+   {
+      "sample" : "TCGA-02-0021-01",
+      "gene" : "MDM2"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-02-0024-01"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-02-0027-01"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-02-0028-01"
+   },
+   {
+      "sample" : "TCGA-02-0033-01",
+      "gene" : "MDM2"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-02-0034-01"
+   },
+   {
+      "sample" : "TCGA-02-0037-01",
+      "gene" : "MDM2"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-02-0038-01"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-02-0043-01"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-02-0046-01"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-02-0047-01"
+   },
+   {
+      "gene" : "MDM2",
+      "cna" : "AMPLIFIED",
+      "sample" : "TCGA-02-0052-01"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-02-0054-01"
+   },
+   {
+      "sample" : "TCGA-02-0055-01",
+      "gene" : "MDM2"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-02-0057-01"
+   },
+   {
+      "sample" : "TCGA-02-0058-01",
+      "gene" : "MDM2"
+   },
+   {
+      "sample" : "TCGA-02-0060-01",
+      "gene" : "MDM2",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "sample" : "TCGA-02-0064-01",
+      "gene" : "MDM2"
+   },
+   {
+      "sample" : "TCGA-02-0069-01",
+      "gene" : "MDM2"
+   },
+   {
+      "cna" : "AMPLIFIED",
+      "gene" : "MDM2",
+      "sample" : "TCGA-02-0071-01"
+   },
+   {
+      "sample" : "TCGA-02-0074-01",
+      "gene" : "MDM2"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-02-0075-01"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-02-0080-01"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-02-0083-01"
+   },
+   {
+      "gene" : "MDM2",
+      "mutation" : "Y287H",
+      "sample" : "TCGA-02-0085-01"
+   },
+   {
+      "sample" : "TCGA-02-0086-01",
+      "gene" : "MDM2"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-02-0089-01"
+   },
+   {
+      "cna" : "AMPLIFIED",
+      "gene" : "MDM2",
+      "sample" : "TCGA-02-0099-01"
+   },
+   {
+      "gene" : "MDM2",
+      "cna" : "AMPLIFIED",
+      "sample" : "TCGA-02-0102-01"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-02-0107-01"
+   },
+   {
+      "sample" : "TCGA-02-0113-01",
+      "gene" : "MDM2"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-02-0114-01"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-02-0115-01"
+   },
+   {
+      "sample" : "TCGA-02-0116-01",
+      "gene" : "MDM2"
+   },
+   {
+      "sample" : "TCGA-06-0122-01",
+      "gene" : "MDM2"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-06-0124-01"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-06-0125-01"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-06-0126-01"
+   },
+   {
+      "sample" : "TCGA-06-0128-01",
+      "gene" : "MDM2"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-06-0129-01"
+   },
+   {
+      "sample" : "TCGA-06-0130-01",
+      "gene" : "MDM2"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-06-0132-01"
+   },
+   {
+      "sample" : "TCGA-06-0133-01",
+      "gene" : "MDM2"
+   },
+   {
+      "sample" : "TCGA-06-0137-01",
+      "gene" : "MDM2"
+   },
+   {
+      "gene" : "MDM2",
+      "cna" : "AMPLIFIED",
+      "sample" : "TCGA-06-0138-01"
+   },
+   {
+      "sample" : "TCGA-06-0139-01",
+      "gene" : "MDM2"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-06-0141-01"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-06-0143-01"
+   },
+   {
+      "sample" : "TCGA-06-0145-01",
+      "gene" : "MDM2"
+   },
+   {
+      "sample" : "TCGA-06-0147-01",
+      "gene" : "MDM2"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-06-0148-01"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-06-0154-01"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-06-0156-01"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-06-0157-01"
+   },
+   {
+      "sample" : "TCGA-06-0158-01",
+      "gene" : "MDM2"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-06-0166-01"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-06-0168-01"
+   },
+   {
+      "sample" : "TCGA-06-0169-01",
+      "gene" : "MDM2"
+   },
+   {
+      "sample" : "TCGA-06-0171-01",
+      "gene" : "MDM2"
+   },
+   {
+      "cna" : "AMPLIFIED",
+      "gene" : "MDM2",
+      "sample" : "TCGA-06-0173-01"
+   },
+   {
+      "sample" : "TCGA-06-0174-01",
+      "cna" : "AMPLIFIED",
+      "gene" : "MDM2"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-06-0176-01"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-06-0178-01"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-06-0184-01"
+   },
+   {
+      "sample" : "TCGA-06-0185-01",
+      "gene" : "MDM2"
+   },
+   {
+      "sample" : "TCGA-06-0187-01",
+      "gene" : "MDM2",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "sample" : "TCGA-06-0188-01",
+      "gene" : "MDM2"
+   },
+   {
+      "sample" : "TCGA-06-0189-01",
+      "gene" : "MDM2"
+   },
+   {
+      "sample" : "TCGA-06-0190-01",
+      "gene" : "MDM2"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-06-0195-01"
+   },
+   {
+      "sample" : "TCGA-06-0197-01",
+      "gene" : "MDM2"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-06-0201-01"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-06-0206-01"
+   },
+   {
+      "sample" : "TCGA-06-0208-01",
+      "gene" : "MDM2"
+   },
+   {
+      "cna" : "AMPLIFIED",
+      "gene" : "MDM2",
+      "sample" : "TCGA-06-0209-01"
+   },
+   {
+      "sample" : "TCGA-06-0210-01",
+      "gene" : "MDM2"
+   },
+   {
+      "sample" : "TCGA-06-0211-01",
+      "gene" : "MDM2"
+   },
+   {
+      "gene" : "MDM2",
+      "sample" : "TCGA-06-0213-01"
+   },
+   {
+      "sample" : "TCGA-06-0214-01",
+      "gene" : "MDM2",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "sample" : "TCGA-06-0219-01",
+      "gene" : "MDM2"
+   },
+   {
+      "sample" : "TCGA-06-0221-01",
+      "gene" : "MDM2"
+   },
+   {
+      "sample" : "TCGA-06-0237-01",
+      "gene" : "MDM2"
+   },
+   {
+      "sample" : "TCGA-06-0241-01",
+      "gene" : "MDM2"
+   },
+   {
+      "sample" : "TCGA-02-0001-01",
+      "gene" : "MDM4"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-02-0003-01"
+   },
+   {
+      "sample" : "TCGA-02-0006-01",
+      "gene" : "MDM4"
+   },
+   {
+      "gene" : "MDM4",
+      "cna" : "AMPLIFIED",
+      "sample" : "TCGA-02-0007-01"
+   },
+   {
+      "sample" : "TCGA-02-0009-01",
+      "gene" : "MDM4"
+   },
+   {
+      "sample" : "TCGA-02-0010-01",
+      "gene" : "MDM4"
+   },
+   {
+      "sample" : "TCGA-02-0011-01",
+      "gene" : "MDM4"
+   },
+   {
+      "sample" : "TCGA-02-0014-01",
+      "gene" : "MDM4"
+   },
+   {
+      "sample" : "TCGA-02-0021-01",
+      "gene" : "MDM4"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-02-0024-01"
+   },
+   {
+      "sample" : "TCGA-02-0027-01",
+      "gene" : "MDM4"
+   },
+   {
+      "sample" : "TCGA-02-0028-01",
+      "gene" : "MDM4"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-02-0033-01"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-02-0034-01"
+   },
+   {
+      "sample" : "TCGA-02-0037-01",
+      "gene" : "MDM4"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-02-0038-01"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-02-0043-01"
+   },
+   {
+      "sample" : "TCGA-02-0046-01",
+      "gene" : "MDM4"
+   },
+   {
+      "sample" : "TCGA-02-0047-01",
+      "gene" : "MDM4"
+   },
+   {
+      "sample" : "TCGA-02-0052-01",
+      "gene" : "MDM4"
+   },
+   {
+      "sample" : "TCGA-02-0054-01",
+      "gene" : "MDM4"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-02-0055-01"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-02-0057-01"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-02-0058-01"
+   },
+   {
+      "sample" : "TCGA-02-0060-01",
+      "gene" : "MDM4"
+   },
+   {
+      "sample" : "TCGA-02-0064-01",
+      "gene" : "MDM4"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-02-0069-01"
+   },
+   {
+      "cna" : "AMPLIFIED",
+      "gene" : "MDM4",
+      "sample" : "TCGA-02-0071-01"
+   },
+   {
+      "sample" : "TCGA-02-0074-01",
+      "gene" : "MDM4"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-02-0075-01"
+   },
+   {
+      "sample" : "TCGA-02-0080-01",
+      "gene" : "MDM4"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-02-0083-01"
+   },
+   {
+      "sample" : "TCGA-02-0085-01",
+      "gene" : "MDM4"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-02-0086-01"
+   },
+   {
+      "sample" : "TCGA-02-0089-01",
+      "gene" : "MDM4"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-02-0099-01"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-02-0102-01"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-02-0107-01"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-02-0113-01"
+   },
+   {
+      "sample" : "TCGA-02-0114-01",
+      "gene" : "MDM4"
+   },
+   {
+      "sample" : "TCGA-02-0115-01",
+      "gene" : "MDM4"
+   },
+   {
+      "sample" : "TCGA-02-0116-01",
+      "gene" : "MDM4"
+   },
+   {
+      "sample" : "TCGA-06-0122-01",
+      "gene" : "MDM4"
+   },
+   {
+      "sample" : "TCGA-06-0124-01",
+      "gene" : "MDM4"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-06-0125-01"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-06-0126-01"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-06-0128-01"
+   },
+   {
+      "mutation" : "T160S",
+      "gene" : "MDM4",
+      "sample" : "TCGA-06-0129-01"
+   },
+   {
+      "sample" : "TCGA-06-0130-01",
+      "gene" : "MDM4"
+   },
+   {
+      "sample" : "TCGA-06-0132-01",
+      "gene" : "MDM4"
+   },
+   {
+      "sample" : "TCGA-06-0133-01",
+      "gene" : "MDM4"
+   },
+   {
+      "sample" : "TCGA-06-0137-01",
+      "gene" : "MDM4"
+   },
+   {
+      "sample" : "TCGA-06-0138-01",
+      "gene" : "MDM4"
+   },
+   {
+      "sample" : "TCGA-06-0139-01",
+      "gene" : "MDM4"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-06-0141-01"
+   },
+   {
+      "gene" : "MDM4",
+      "cna" : "AMPLIFIED",
+      "sample" : "TCGA-06-0143-01"
+   },
+   {
+      "sample" : "TCGA-06-0145-01",
+      "gene" : "MDM4"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-06-0147-01"
+   },
+   {
+      "sample" : "TCGA-06-0148-01",
+      "gene" : "MDM4"
+   },
+   {
+      "sample" : "TCGA-06-0154-01",
+      "gene" : "MDM4"
+   },
+   {
+      "sample" : "TCGA-06-0156-01",
+      "gene" : "MDM4"
+   },
+   {
+      "sample" : "TCGA-06-0157-01",
+      "gene" : "MDM4",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-06-0158-01"
+   },
+   {
+      "sample" : "TCGA-06-0166-01",
+      "gene" : "MDM4"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-06-0168-01"
+   },
+   {
+      "sample" : "TCGA-06-0169-01",
+      "gene" : "MDM4"
+   },
+   {
+      "sample" : "TCGA-06-0171-01",
+      "gene" : "MDM4"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-06-0173-01"
+   },
+   {
+      "sample" : "TCGA-06-0174-01",
+      "gene" : "MDM4"
+   },
+   {
+      "sample" : "TCGA-06-0176-01",
+      "gene" : "MDM4"
+   },
+   {
+      "sample" : "TCGA-06-0178-01",
+      "gene" : "MDM4"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-06-0184-01"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-06-0185-01"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-06-0187-01"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-06-0188-01"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-06-0189-01"
+   },
+   {
+      "sample" : "TCGA-06-0190-01",
+      "gene" : "MDM4"
+   },
+   {
+      "sample" : "TCGA-06-0195-01",
+      "gene" : "MDM4"
+   },
+   {
+      "sample" : "TCGA-06-0197-01",
+      "gene" : "MDM4"
+   },
+   {
+      "sample" : "TCGA-06-0201-01",
+      "gene" : "MDM4"
+   },
+   {
+      "sample" : "TCGA-06-0206-01",
+      "gene" : "MDM4"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-06-0208-01"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-06-0209-01"
+   },
+   {
+      "sample" : "TCGA-06-0210-01",
+      "gene" : "MDM4",
+      "cna" : "AMPLIFIED"
+   },
+   {
+      "sample" : "TCGA-06-0211-01",
+      "gene" : "MDM4"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-06-0213-01"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-06-0214-01"
+   },
+   {
+      "sample" : "TCGA-06-0219-01",
+      "gene" : "MDM4"
+   },
+   {
+      "gene" : "MDM4",
+      "sample" : "TCGA-06-0221-01"
+   },
+   {
+      "sample" : "TCGA-06-0237-01",
+      "gene" : "MDM4"
+   },
+   {
+      "sample" : "TCGA-06-0241-01",
+      "gene" : "MDM4"
+   }
+]

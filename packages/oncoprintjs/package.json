@@ -1,0 +1,53 @@
+{
+  "name": "oncoprintjs",
+  "version": "1.0.0",
+  "description": "A data visualization for cancer genomic data.",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cBioPortal/oncoprintjs.git"
+  },
+  "keywords": [
+    "cancer",
+    "genomics",
+    "visualization",
+    "d3js"
+  ],
+  "author": {
+    "name": "Gideon Dresdner",
+    "email": "oncoprintjs@gideonite.com"
+  },
+  "contributors": [
+    {
+      "name": "JJ Gao",
+      "email": "jianjiong.gao@gmail.com"
+    }
+  ],
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cBioPortal/oncoprintjs/issues"
+  },
+  "homepage": "https://github.com/cBioPortal/oncoprintjs",
+  "devDependencies": {
+    "browserify": "^8.1.1",
+    "del": "^1.1.1",
+    "gulp": "^3.8.10",
+    "gulp-autoprefixer": "^2.1.0",
+    "gulp-cache": "^0.2.4",
+    "gulp-concat": "^2.4.3",
+    "gulp-jshint": "^1.9.0",
+    "gulp-livereload": "^3.4.0",
+    "gulp-minify-css": "^0.4.0",
+    "gulp-notify": "^2.1.0",
+    "gulp-rename": "^1.2.0",
+    "gulp-streamify": "0.0.5",
+    "gulp-uglify": "^1.1.0",
+    "vinyl-source-stream": "^1.0.0"
+  },
+  "dependencies": {
+    "d3": "^3.5.3",
+    "underscore": "^1.7.0"
+  }
+}
