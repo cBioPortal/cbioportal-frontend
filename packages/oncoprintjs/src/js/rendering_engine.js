@@ -103,6 +103,7 @@ var rendering_engine = function() {
         return utils.translate(0, i * config.row_height);
       })
       .each(function(d,i) {
+        // TODO btw this completely defeats the purpose of different renderers...
         d3.select(this).call(renderers[0]);
       })
     });

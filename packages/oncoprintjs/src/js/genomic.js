@@ -27,13 +27,13 @@ function is_sample_genetically_altered(datum) {
     || datum.mutation !== undefined
     || datum.rna !== undefined
     || datum.protein !== undefined;
-};
+}
 
 function calculate_row_label(row) {
   var percent_altered = _.filter(row, is_sample_genetically_altered).length / row.length;
   percent_altered = Math.round(percent_altered*100);
   return [{align: 'left', text: row[0].gene}, {align: 'right', text: percent_altered + "%"}];
-};
+}
 
 function rows_to_labels(rows) {
   return _.flatten(_.map(rows, calculate_row_label));
@@ -56,6 +56,7 @@ var genomic = function() {
     if (!arguments.length) return row_height;
     row_height = value;
     return me;
+
   };
 
   me.width = function(value) {

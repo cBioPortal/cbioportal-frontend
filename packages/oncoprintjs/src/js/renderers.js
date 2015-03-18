@@ -32,7 +32,12 @@ var gene_rule = function(config) {
     mutation.filter(function(d) {
       return d.mutation === undefined;
     }).remove();
+
+    // TODO delete me
+    row_elements.on("click", function(d) {
+      d3.selectAll('.selected_sample').text(JSON.stringify(d));
+    });
   };
 };
 
-exports.gene = gene;
+exports.gene = gene_rule;
