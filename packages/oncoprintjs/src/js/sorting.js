@@ -30,7 +30,7 @@ exports.genomic_metric = function genomic_metric(x) {
 };
 
 // indexers is least significant first.
-exports.radixSort = function radixSort(datums, compare, indexers) {
+exports.radix_sort = function radix_sort(datums, compare, indexers) {
   var to_return = copy_array(datums);
 
   indexers.forEach(function(indexer) {
@@ -44,24 +44,8 @@ exports.radixSort = function radixSort(datums, compare, indexers) {
 
 exports.sort_rows = function sort_rows(rows, metric) {
   var indexers = rows_to_indexers(rows);
-  var sorted_column_indices = exports.radixSort(_.range(rows[0].length), metric, indexers);
+  var sorted_column_indices = exports.radix_sort(_.range(rows[0].length), metric, indexers);
   return _.map(rows, function(row) {
     return sorted_column_indices.map(function(i) { return row[i]; });
   });
 };
-
-//
-// BASIC TESTS
-//
-
-var indexers = [function(d) { return d[4]; },
-                function(d) { return d[3]; },
-                function(d) { return d[2]; },
-                function(d) { return d[1]; },
-                function(d) { return d[0]; }];
-
-// radixSort
-exports.radixSort(["hello", "asdfd", "dafds", "aaafa"], function(x,y) { return x < y; }, indexers);
-exports.radixSort(["aaaaa", "bbbbb", "aaaaa", "aaaaa"], function(x,y) { return x < y; }, indexers);
-exports.radixSort([], function(x,y) { return x < y; }, indexers);
-exports.radixSort(["hello", "asdfd", "dafds", "aaafa"], function(x,y) { return x > y; }, indexers);
