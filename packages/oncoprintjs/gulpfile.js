@@ -6,6 +6,7 @@ var cache = require('gulp-cache');
 var concat = require('gulp-concat');
 var del = require('del');
 var gulp = require('gulp');
+var jasmine = require('gulp-jasmine');
 var jshint = require('gulp-jshint');
 var livereload = require('gulp-livereload');
 var minifycss = require('gulp-minify-css');
@@ -15,8 +16,15 @@ var source = require('vinyl-source-stream');
 var streamify = require('gulp-streamify');
 var uglify = require('gulp-uglify');
 
+gulp.task('spec', function() {
+  return gulp.src('test/spec/*.js')
+  .pipe(jasmine());
+});
+
 // Test Page
 gulp.task('test', function() {
+  // Unit tests
+  gulp.start('spec');
 
   // JavaScript
   browserify({entries: './test/js/test_page.js',
@@ -62,5 +70,5 @@ gulp.task('default', ['clean'], function() {
 
 // Watch
 gulp.task('watch', function() {
-  gulp.watch(['src/js/**/*.js', 'test/*.html', 'test/js/**/*.js'], ['test']);
+  gulp.watch(['src/js/**/*.js', 'test/*.html', 'test/js/**/*.js', 'test/spec/*.js'], ['test']);
 });
