@@ -36,6 +36,20 @@ module.exports = function genomic() {
     return me;
   };
 
+  me.resort = function(container, sample_id_to_array_index) {
+    var row_groups = container.selectAll('.oncoprint-row');
+    row_groups = row_groups[0].map(d3.select);
+    utils.assert(row_groups.length === rendering_rules.length,
+                 "Rows don't matchup with rendering rules.");
+    row_groups = row_groups.reverse();
+
+    _.each(_.zip(row_groups, rendering_rules), function(row_group_and_rr) {
+      var row_group = row_group_and_rr[0];
+      var rr = row_group_and_rr[1];
+      rr(config).resort(row_group, sample_id_to_array_index);
+    });
+  };
+
   return me;
 };
 
