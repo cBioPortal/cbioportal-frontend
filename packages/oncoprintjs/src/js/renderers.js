@@ -8,7 +8,7 @@ exports.discrete_data_rule = function discrete_data_rule(config) {
 };
 
 exports.gender_rule = function gender_rule(config) {
-  return function(selection) {
+  var ret = function(selection) {
     selection.selectAll('rect')
     .data(function(d) { return d; })
     .enter()
@@ -28,10 +28,21 @@ exports.gender_rule = function gender_rule(config) {
 
     update(selection.selectAll('rect'));
   };
+
+  ret.resort = function(selection, sample_order) {
+    selection.selectAll('rect')
+    .transition(function(d, i) { return i; })
+    .attr('x', function(d, i) {
+      return sample_order[d.sample_id || d.sample] *
+        (config.rect_width + config.rect_padding);
+    });
+  };
+
+  return ret;
 };
 
 exports.gene_rule = function gene_rule(config) {
-  return function(selection) {
+  var ret = function(selection) {
     var sample_group = bind_sample_group(selection);
     align_sample_group_horizontally(sample_group, config.rect_width, config.rect_padding);
     cna_visualization(sample_group, config.cna_fills, config.rect_width, config.rect_height);
@@ -39,6 +50,17 @@ exports.gene_rule = function gene_rule(config) {
 
     update(sample_group);
   };
+
+  ret.resort = function(selection, sample_order) {
+    selection.selectAll('g')
+    .transition(function(d, i) { return i; })
+    .attr('transform', function(d, i) {
+      return utils.translate(sample_order[d.sample_id || d.sample]
+                             * (config.rect_width + config.rect_padding), 0);
+    });
+  }
+
+  return ret;
 };
 
 //

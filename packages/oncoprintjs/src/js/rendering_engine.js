@@ -81,6 +81,7 @@ module.exports = function rendering_engine() {
     })
     .enter()
     .append('g')
+    .attr('class', 'oncoprint-row')
     .attr('transform', utils.translate(0,0))
     .each(function(d,i) {
       d3.select(this).call(rendering_rule(config))

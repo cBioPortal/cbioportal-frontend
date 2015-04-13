@@ -30,7 +30,7 @@ window.test_for_genomic_data = function(filenames, div_selector_string) {
     // break into rows
     var rows = _.chain(data).groupBy(function(d) { return d.gene; }).values().value();
     var sorted_rows = sorting.sort_rows(rows, sorting.genomic_metric);
-    d3.select(div_selector_string).datum(sorted_rows);
+    var container = d3.select(div_selector_string).datum(sorted_rows);
 
     var oncoprint = genomic_oncoprint();
 
@@ -42,7 +42,7 @@ window.test_for_genomic_data = function(filenames, div_selector_string) {
     });
     oncoprint.rendering_rules(rendering_rules);
 
-    d3.select(div_selector_string).call(oncoprint);
+    container.call(oncoprint);
 
     // additional clinical data if it has been specified.
     if (additional_file !== undefined) {
@@ -64,7 +64,21 @@ window.test_for_genomic_data = function(filenames, div_selector_string) {
           return sampleid_to_array_index[d.sample_id || d.sample];
         });
 
-        oncoprint.insert_row(d3.select(div_selector_string), gender_data, renderers.gender_rule);
+        // update the list of renderers
+        rendering_rules.unshift(renderers.gender_rule);
+        oncoprint.rendering_rules(rendering_rules);
+
+        oncoprint.insert_row(container, gender_data, renderers.gender_rule);
+
+        d3.select('#shuffle-gbm').on('click', function() {
+          var sampleids = rows[0].map(function(d) { return d.sample_id || d.sample; });
+          var shuffled_sampleids = d3.shuffle(sampleids);
+          var sampleid_to_array_index = shuffled_sampleids.reduce(function(curr, next, index) {
+            curr[next] = index;
+            return curr;
+          }, {});
+          oncoprint.resort(container, sampleid_to_array_index);
+        });
       });
     }
   });

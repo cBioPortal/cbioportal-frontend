@@ -61,6 +61,7 @@ function assert(bool, msg) {
   if (bool) return;
   throw msg;
 }
+exports.assert = assert;
 
 function pluck_sample_id(datum) {
   return datum.sample || datum.sample_id;
