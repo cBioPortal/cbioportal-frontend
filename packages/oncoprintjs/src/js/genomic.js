@@ -7,30 +7,44 @@ var utils = require('./utils');
 
 var rendering_engine = rendering_engine();
 
-var config = { rect_height: 20,
-              rect_padding: 3,
-              rect_width: 10,
-              mutation_fill: 'green',
+module.exports = function genomic() {
+  var config = {};
+  var rendering_rules = [];
 
-              cna_fills: {
-              null: 'grey',
-              undefined: 'grey',
-              AMPLIFIED: 'red',
-              HOMODELETED: 'blue'
-             }
+  var me = function(container) {
+    rendering_engine.config(config);
+    rendering_engine.container_width(config.width);
+    rendering_engine.element_width(config.rect_width);
+    rendering_engine.element_padding(config.rect_padding);
+    rendering_engine.label_function(rows_to_labels);
+    rendering_engine.renderers(rendering_rules);
+    container.call(rendering_engine);
+  };
+
+  me.config = function(value) {
+    if (!arguments.length) return config;
+    config = value;
+    return me;
+  };
+
+  // expose this function
+  me.insert_row = rendering_engine.insert_row;
+
+  me.rendering_rules = function(value) {
+    if (!arguments.length) return rendering_rules;
+    rendering_rules = value;
+    return me;
+  };
+
+  return me;
 };
 
-var gene_renderer = renderers.gene(config);
-
-function is_sample_genetically_altered(datum) {
-  return datum.cna !== undefined
-    || datum.mutation !== undefined
-    || datum.rna !== undefined
-    || datum.protein !== undefined;
-}
+//
+// HELPER FUNCTIONS
+//
 
 function calculate_row_label(row) {
-  var percent_altered = _.filter(row, is_sample_genetically_altered).length / row.length;
+  var percent_altered = _.filter(row, utils.is_sample_genetically_altered).length / row.length;
   percent_altered = Math.round(percent_altered*100);
   return [{align: 'left', text: row[0].gene}, {align: 'right', text: percent_altered + "%"}];
 }
@@ -38,34 +52,3 @@ function calculate_row_label(row) {
 function rows_to_labels(rows) {
   return _.flatten(_.map(rows, calculate_row_label));
 }
-
-var genomic = function() {
-  var row_height = 25;
-  var width = 500;
-
-  var me = function(container) {
-    rendering_engine.config({row_height: row_height});
-    rendering_engine.container_width(width);
-    rendering_engine.element_width(config.rect_width);
-    rendering_engine.element_padding(config.rect_padding);
-    rendering_engine.labels(rows_to_labels(rows));
-    container.call(rendering_engine);
-  };
-
-  me.row_height = function(value) {
-    if (!arguments.length) return row_height;
-    row_height = value;
-    return me;
-
-  };
-
-  me.width = function(value) {
-    if (!arguments.length) return width;
-    width = value;
-    return me;
-  };
-
-  return me;
-};
-
-module.exports = genomic;

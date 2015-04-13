@@ -1,43 +1,92 @@
 var utils = require('./utils');
+var exports = module.exports = {};
 
-var gene_rule = function(config) {
+exports.continuous_data_rule = function continuous_data_rule(config) {
+};
+
+exports.discrete_data_rule = function discrete_data_rule(config) {
+};
+
+exports.gender_rule = function gender_rule(config) {
   return function(selection) {
-    var row_elements = selection.selectAll('g')
-    // binds the row-wise data to the row group, <g>. See Bostock's
-    // explaination on nested selections: http://bost.ocks.org/mike/nest/#data
+    selection.selectAll('rect')
     .data(function(d) { return d; })
-    .enter().append('g');
-
-    row_elements.attr('transform', function(d, i) {
-      return utils.translate(i * (config.rect_width + config.rect_padding), 0);
-    });
-
-    row_elements.append('rect')
-    .attr('fill', function(d) { return config.cna_fills[d.cna]; })
+    .enter()
+    .append('rect')
+    .attr('x', function(d, i) {
+      return i * (config.rect_width + config.rect_padding);
+    })
+    .attr('fill', function(d) {
+      if (d.attr_val === "MALE")
+        return 'black';
+      if (d.attr_val === "FEMALE")
+        return 'pink';
+      return 'grey';
+    })
     .attr('height', config.rect_height)
     .attr('width', config.rect_width);
 
-    var one_third_height = config.rect_height / 3;
-
-    var mutation = row_elements.append('rect')
-    .attr('y', one_third_height)
-    .attr('fill', function(d) {
-      // leave the ones without mutations uncolored
-      return d.mutation !== undefined ? config.mutation_fill : 'none';
-    })
-    .attr('height', one_third_height)
-    .attr('width', config.rect_width);
-
-    // remove the ones without mutations
-    mutation.filter(function(d) {
-      return d.mutation === undefined;
-    }).remove();
-
-    // TODO delete me
-    row_elements.on("click", function(d) {
-      d3.selectAll('.selected_sample').text(JSON.stringify(d));
-    });
+    update(selection.selectAll('rect'));
   };
 };
 
-exports.gene = gene_rule;
+exports.gene_rule = function gene_rule(config) {
+  return function(selection) {
+    var sample_group = bind_sample_group(selection);
+    align_sample_group_horizontally(sample_group, config.rect_width, config.rect_padding);
+    cna_visualization(sample_group, config.cna_fills, config.rect_width, config.rect_height);
+    mutation_visualization(sample_group, config.rect_height / 3, config.rect_width, config.mutation_fill);
+
+    update(sample_group);
+  };
+};
+
+//
+// HELPER FUNCTIONS
+//
+
+function align_sample_group_horizontally(sample_group, rect_width, rect_padding) {
+  return sample_group.attr('transform', function(d, i) {
+    return utils.translate(i * (rect_width + rect_padding), 0);
+  });
+}
+
+function bind_sample_group(selection) {
+  // binds the row-wise data to the row group, <g>. See Bostock's
+  // explaination on nested selections: http://bost.ocks.org/mike/nest/#data
+  return selection.selectAll('g')
+  .data(function(d) { return d; })
+  .enter().append('g');
+}
+
+// copy number alteration "subrule"
+function cna_visualization(sample_group, cna_fills, rect_width, rect_height) {
+  return sample_group.append('rect')
+  .attr('fill', function(d) { return cna_fills[d.cna]; })
+  .attr('height', rect_height)
+  .attr('width', rect_width);
+}
+
+// mutation "subrule"
+function mutation_visualization(sample_group, one_third_height, width, fill) {
+  var mutation = sample_group.append('rect')
+  .attr('y', one_third_height)
+  .attr('fill', function(d) {
+    // leave the ones without mutations uncolored
+    return d.mutation !== undefined ? fill : 'none';
+  })
+  .attr('height', one_third_height)
+  .attr('width', width);
+
+  // remove the ones without mutations
+  mutation.filter(function(d) {
+    return d.mutation === undefined;
+  }).remove();
+}
+
+// TODO dev only
+function update(sample_group) {
+  sample_group.on("click", function(d) {
+    d3.selectAll('.selected_sample').text(JSON.stringify(d));
+  });
+}
