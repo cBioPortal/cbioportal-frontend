@@ -2,6 +2,13 @@ var _ = require("underscore");
 
 var exports = module.exports = {};
 
+exports.invert_array = function invert_array(arr) {
+  return arr.reduce(function(curr, next, index) {
+    curr[next] = index;
+    return curr;
+  }, {});
+};
+
 exports.is_sample_genetically_altered = function is_sample_genetically_altered(datum) {
   return datum.cna !== undefined
   || datum.mutation !== undefined
