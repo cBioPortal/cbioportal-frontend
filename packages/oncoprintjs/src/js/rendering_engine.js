@@ -76,7 +76,7 @@ module.exports = function rendering_engine() {
 
     // use d3 to detect which row is new and use the rendering function to render.
     svg.selectAll('.oncoprint-row')
-    .data(svg.data()[0], function(d) {
+    .data(internal_data, function(d) {
       return oncoprint_key_function(d[0])
     })
     .enter()
