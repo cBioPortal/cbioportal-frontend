@@ -23,18 +23,18 @@ gulp.task('spec', function() {
 
 // Test Page
 gulp.task('test', function() {
-  // Unit tests
-  gulp.start('spec');
-
   // JavaScript
   browserify({entries: './test/js/test_page.js',
-              debug: true
+              debug: true,
+              standalone: 'test_script'
              }).bundle()
   .pipe(source('test.js'))
-  .pipe(rename('test_page_bundle.js'))
+  .pipe(rename('test-oncoprint-bundle.js'))
   .pipe(gulp.dest('dist/test/'))
-  .pipe(streamify(uglify()))
   .pipe(notify("Done with building code for testing."))
+
+  // Unit tests
+  gulp.start('spec');
 
   // Copy over the HTML.
   gulp.src('test/index.html')
@@ -45,18 +45,14 @@ gulp.task('test', function() {
   .pipe(gulp.dest('dist/test/'));
 });
 
-// JavaScript
-// TODO need to figure out what to compile other than test code...
-//gulp.task('js', function() {
-//  browserify({entries: './src/js/main.js',
-//              debug: !process.env.production
-//             }).bundle()
-//  .pipe(source('genomic.js'))
-//  .pipe(rename('genomic-oncoprint-bundle.js'))
-//  .pipe(gulp.dest('dist/asset/js'))
-//  .pipe(streamify(uglify()))
-//  .pipe(notify("Done with JavaScript."))
-//});
+gulp.task('prod', function() {
+  browserify('./src/js/main.js',
+             {standalone: 'oncoprint'}).bundle()
+  .pipe(source('oncoprint-bundle.js'))
+  .pipe(streamify(uglify()))
+  .pipe(gulp.dest('dist/prod/'))
+  .pipe(notify("Done with generating production code."));
+});
 
 // Clean
 gulp.task('clean', function(cb) {
@@ -65,7 +61,7 @@ gulp.task('clean', function(cb) {
 
 // Default
 gulp.task('default', ['clean'], function() {
-    gulp.start('js');
+    gulp.start('prod');
 });
 
 // Watch
