@@ -16,6 +16,18 @@ exports.is_sample_genetically_altered = function is_sample_genetically_altered(d
   || datum.protein !== undefined;
 };
 
+exports.sort_row_by_rows = function(row, rows) {
+  // TODO test this
+  var ordering = exports.invert_array(
+    rows[0].map(function(d) {
+      return d.sample || d.sample_id;
+    }));
+
+  return _.sortBy(row, function(d) {
+    return ordering[d.sample || d.sample_id];
+  });
+};
+
 exports.translate = function translate(x,y) {
   return "translate(" + x + "," + y + ")";
 };
