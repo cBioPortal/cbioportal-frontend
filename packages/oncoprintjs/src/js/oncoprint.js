@@ -38,13 +38,13 @@ function Oncoprint(container_selector_string, config) {
 	this.getTrack = function(name) {
 		return tracks[name];
 	}
-	this.render = function() {
+	this.renderInit = function() {
 		this.clear();
 		// build table
 		var d3_table = d3_container.append('table');
 		// delegate rendering to tracks
 		for (var i=0; i<track_order.length; i++) {
-			tracks[track_order[i]].render(d3_table, id_order);
+			tracks[track_order[i]].renderInit(d3_table, id_order);
 		}
 	};
 	this.clear = function() {
