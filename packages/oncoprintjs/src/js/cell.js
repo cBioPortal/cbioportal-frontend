@@ -1,6 +1,7 @@
 var utils = require('./utils');
 var $ = require('jquery');
 var _ = require('underscore');
+
 function D3SVGRuleSet() {
 	var rule_map = {};
 	this.addRule = function(condition, d3_shape, attrs, z_index) {
@@ -99,4 +100,21 @@ function D3SVGRenderer(track) {
 									, 0);})
 	};*/
 };
+
+function GeneticAlterationRuleSet = function() {
+	// standard genetic alteration oncoprint settings
+	var ret = new D3SVGRuleSet();
+};
+
+function CategoricalDataRuleSet = function(data_member, attrs) {
+
+}
+
+function ContinuousDataRuleSet = function(data_member, attrs) {
+
+}
+
+function BinaryDataColorRuleSet = function(data_member, ) {
+}
+
 module.exports = D3SVGRenderer;
