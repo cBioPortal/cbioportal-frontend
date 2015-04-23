@@ -2,19 +2,18 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <title>Oncoprint Test Page</title>
-<!--
-<link rel="stylesheet" type="text/css" href="FIXME" />
-<script type="text/javascript" src="FIXME"></script>
-<style type="text/css">
-/* <![CDATA[ */
-/* ]]> */
-</style>
--->
-    <script type="text/javascript" src="test-oncoprint-bundle.js"></script>
 </head>
 <body>
+    <div id='onc'></div>
+    <button id='shuffle_btn'>Sort by gender</button>
 
-    <span>Selected: </span> <span class="selected_sample"></span>
+    <script type="text/javascript" src="test-oncoprint-bundle.js"></script>
+</body>
+
+</html>
+
+
+<!--   <span>Selected: </span> <span class="selected_sample"></span>
     <h1> TP53 MDM2 MDM4 GBM with CNA and mutation data. </h1>
     <div id="tp53-mdm2-mdm4-gbm"></div>
     <button id="shuffle-gbm">Shuffle Order</button>
@@ -31,6 +30,4 @@
     testscript(["gbm/tp53-mdm2-mdm4-gbm.json", "gbm/gender-gbm.json"], "#tp53-mdm2-mdm4-gbm");
     testscript(["prostate-ar-signalling.json"], "#prostate-ar-signalling")
 </script>
-</body>
-
-</html>
+->

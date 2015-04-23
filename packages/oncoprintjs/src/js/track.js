@@ -1,6 +1,13 @@
 var _ = require('underscore');
+var d3 = require('d3');
+var $ = require('jquery');
+var CellRenderer = require('./cell').CellRenderer;
+var utils = require('./utils');
 
 module.exports = {};
+
+// To use a track, you must specify:
+//	labelDecorator
 
 // Predefined configs
 var defaultConfig = {
@@ -9,10 +16,10 @@ var defaultConfig = {
 		// default deals with genomic oncoprint data in which an unaltered datum just has 'sample' and 'gene' as keys
 		return Object.keys(d).length > 2; 
 	},
+	baseLabel: 'Gene',
 	id_accessor: 'sample',
-	cell_width: 10,
 	cell_height: 20,
-	cell_padding: 3,
+	track_height: 20,
 }; 
 
 var geneConfig = {
@@ -23,19 +30,19 @@ var genderConfig = {
 };
 
 // Predefined label decorators
-var labelDecoratorPercentAltered = function(data, isAltered) {
-	if (!isAltered || typeof isAltered != "function") {
+var labelDecoratorPercentAltered = function(data, isAlteredFn) {
+	if (!isAlteredFn || typeof isAlteredFn != "function") {
 		return -1;
 	}
-	var alteredCt = _.reduce(_.map(data, isAltered), function(memo, bool) {
+	var alteredCt = _.reduce(_.map(data, isAlteredFn), function(memo, bool) {
 		return memo+bool;
 	}, 0);
-	var percentAltered = alteredCt/data.length;
+	var percentAltered = 100*(alteredCt/data.length);
 	// TODO: precision
-	return ''+percentAltered+'%';
+	return ''+Math.floor(percentAltered)+'%';
 }
 
-function Track(data, config) {
+function Track(data, config, oncoprint) {
 	if (typeof config === "object") {
 		// Use user-specified config
 		this.config = $.extend({}, defaultConfig, config);
@@ -51,11 +58,20 @@ function Track(data, config) {
 	} else {
 		this.config = defaultConfig;
 	}
-	this.baseLabel = baseLabel; 
+	this.oncoprint = oncoprint;
+	this.config = $.extend({}, this.oncoprint.config, this.config);
 	this.data = data;
+	this.cellRenderer = new CellRenderer(this);
+	this.d3_table = false;
 	
+	var makeCellArea = $.proxy(function(ctr) {
+		return ctr.append('svg')
+			.attr('width', (this.config.cell_width + this.config.cell_padding)*this.data.length)
+			.attr('height', this.config.track_height);
+	}, this);
+
 	this.getLabel = function() {
-		var ret = this.baseLabel;
+		var ret = this.config.baseLabel;
 		if (this.config.labelDecorator) {
 			ret += " ";
 			if (typeof this.config.labelDecorator === "function") {
@@ -68,17 +84,41 @@ function Track(data, config) {
 		}
 		return ret;
 	};
-	this.sort = function(cmp, id_accessor) {
-		// sorts and returns the new order
-
-	}
-
-	this.update = function() {
-		// to be called after render has already been called
-
+	
+	this.getIds = function() {
+		var id_accessor = this.config.id_accessor;
+		return _.map(this.data, function(d) { return d[id_accessor];});
 	};
-	this.render = function() {
+	this.sort = function(cmp) {
+		// returns result of sorting on comparator: a list of ids
+		this.data.sort(cmp);
+		return this.getIds();
+	};
 
+	this.addRenderRule = function(type, stroke, fill, selector) {
+		this.cellRenderer.addRule(type, stroke, fill, selector);
+		return this;
+	};
+
+	this.addDefaultRenderRule = function(type, stroke, fill) {
+		this.cellRenderer.addDefaultRule(type, stroke, fill);
+		return this;
 	}
 
+	this.update = function(id_order) {
+		this.cellRenderer.update_order(this.d3_table, this.data, id_order);
+	}
+	this.render = function(d3_table, id_order) {
+		this.d3_table = d3_table;
+		var config = this.config;
+		var row = this.d3_table.append('tr')
+			.style('padding-bottom', config.track_padding)
+			.style('padding-top', config.track_padding);
+		// label segment
+		row.append('td').classed('track_label', true).append('p').text(this.getLabel());
+		// cells segment
+		var cellArea = makeCellArea(row.append('td').classed('track_cells', true));
+		this.cellRenderer.render(cellArea, this.data, id_order);
+	}
 }
+module.exports.Track = Track;
