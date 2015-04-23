@@ -1,7 +1,7 @@
 var _ = require('underscore');
 var d3 = require('d3');
 var $ = require('jquery');
-var CellRenderer = require('./cell').CellRenderer;
+var D3SVGRenderer = require('./cell');
 var utils = require('./utils');
 
 module.exports = {};
@@ -61,7 +61,7 @@ function Track(data, config, oncoprint) {
 	this.oncoprint = oncoprint;
 	this.config = $.extend({}, this.oncoprint.config, this.config);
 	this.data = data;
-	this.cellRenderer = new CellRenderer(this);
+	this.d3SVGRenderer = new D3SVGRenderer(this);
 	this.d3_table = false;
 	
 	var makeCellArea = $.proxy(function(ctr) {
@@ -95,20 +95,10 @@ function Track(data, config, oncoprint) {
 		return this.getIds();
 	};
 
-	this.addRenderRule = function(type, stroke, fill, selector) {
-		this.cellRenderer.addRule(type, stroke, fill, selector);
-		return this;
-	};
-
-	this.addDefaultRenderRule = function(type, stroke, fill) {
-		this.cellRenderer.addDefaultRule(type, stroke, fill);
-		return this;
-	}
-
 	this.update = function(id_order) {
 		this.cellRenderer.update_order(this.d3_table, this.data, id_order);
 	}
-	this.render = function(d3_table, id_order) {
+	this.renderInit = function(d3_table, id_order) {
 		this.d3_table = d3_table;
 		var config = this.config;
 		var row = this.d3_table.append('tr')
@@ -118,7 +108,7 @@ function Track(data, config, oncoprint) {
 		row.append('td').classed('track_label', true).append('p').text(this.getLabel());
 		// cells segment
 		var cellArea = makeCellArea(row.append('td').classed('track_cells', true));
-		this.cellRenderer.render(cellArea, this.data, id_order);
+		this.d3SVGRenderer.renderInit(cellArea, this.data, id_order);
 	}
 }
 module.exports.Track = Track;

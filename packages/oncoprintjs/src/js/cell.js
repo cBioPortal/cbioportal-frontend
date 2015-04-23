@@ -1,85 +1,102 @@
 var utils = require('./utils');
 var $ = require('jquery');
-// cellDecoratorTypes is an enum as well as giving a rendering order
-var cellDecoratorTypes = utils.invert_array(['CELL', 'ONE_THIRD_FILL', 'LARGE_RIGHTARROW', 'UPPER_UPARROW', 'LOWER_DOWNARROW']);
-// a decorator attribute is of the form {'type':T, 'stroke':CS, 'fill':CF, selector:F} 
-//	where T is in cellDecoratorTypes, CS and CF are hex color strings or functions that take a datum and return a hex color string, 
-//	and F is a function from datum to boolean that decides whether its active
-function CellRenderer(track) {
-	var defaultRules = [];
-	var rules = [];
+var _ = require('underscore');
+function D3SVGRuleSet() {
+	var rule_map = {};
+	this.addRule = function(condition, d3_shape, attrs, z_index) {
+		var rule_id = Object.keys(rule_map).length;
+		if (z_index === undefined) {
+			z_index = rule_id;
+		}
+		rule_map[rule_id] = new D3SVGRule(rule_id, condition, d3_shape, attrs, z_index);
+		return rule_id;
+	}
+	this.removeRule = function(rule_id) {
+		rule_map[rule_id] = null;
+	}
+	this.getRules = function() {
+		// returns a list of lists of rules to render in the given order
+		var z_map = {};
+		_.each(rule_map, function(rule, rule_id) {
+			z_map[rule.z_index] = z_map[rule.z_index] || [];
+			z_map[rule.z_index].push(rule);
+		});
+		return _.map(Object.keys(z_map).sort(), 
+			function(z) { return z_map[z];});
+	}
+}
+function D3SVGRule(rule_id, condition, d3_shape, attrs, z_index) {
+	this.rule_id = rule_id; 
+	this.d3_shape = d3_shape; 
+	this.z_index = z_index; 
+	this.condition = condition; 
+	this.attrs = attrs;
+	this.d3FilterData = function(d3_data) {
+		return d3_data.filter(this.condition);
+	}
+	this.apply = function(d3_g_selection) {
+		var elts = d3_g_selection.select(function() {
+			return this.appendChild(d3_shape.node().cloneNode(true));
+		});
+		_.each(this.attrs, function(val, key) {
+			elts.attr(key, val);
+		});
+		console.log($('rect').length);
+		console.log($('g').length);
+	}
+}
+
+function D3SVGRenderer(track) {
+	var rule_set = new D3SVGRuleSet();
 	this.track = track;
 	this.config = this.track.config;
+	this.addRule = function(condition, d3_shape, attrs, z_index) {
+		return rule_set.addRule(condition, d3_shape, attrs, z_index);
+	};
+	this.removeRule = function(rule_id) {
+		rule_set.removeRule(rule_id);
+	};
+	this.renderInit = function(container, data, id_order) {
+		container.selectAll('g').remove();
 
-	this.update_order = function(container, data, id_order) {
+		var config = this.config;
+		id_order = utils.invert_array(id_order);
+		// draw groups with empty rectangle hitzones
+		container.selectAll('g').data(data).enter().append('g').classed('cell', true)
+			.attr('transform', function(d,i) { return utils.translate(
+				id_order[d[config.id_accessor]]*(config.cell_width + config.cell_padding)
+				, 0);
+			})
+			.append('rect').classed('hit', true)
+			.attr('width', config.cell_width)
+			.attr('height', config.cell_height)
+			.attr('stroke', 'rgba(0,0,0,0)')
+			.attr('fill', 'rgba(0,0,0,0)');
+		this.applyRules(container, data);
+	};
+	this.applyRule = function(d3_svg_rule, container, d3_data) {
+		var config = this.config;
+		var d3_filtered_data = d3_svg_rule.d3FilterData(d3_data);
+		var d3_g_selection = container.selectAll('g.cell').data(d3_filtered_data, function(d) { return d[config.id_accessor];});
+		d3_svg_rule.apply(d3_g_selection);
+	};
+	this.applyRules = function(container, d3_data) {
+		var rule_lists = rule_set.getRules();
+		var self = this;
+		_.each(rule_lists, function(rule_list) {
+			_.each(rule_list, function(rule) {
+				self.applyRule(rule, container, d3_data);
+			});
+		});
+	};
+
+	/*this.update_order = function(container, data, id_order) {
 		var config = this.config;
 		id_order = utils.invert_array(id_order);
 		container.selectAll('g.cell').transition(function(d,i) { return i;})
 			.attr('transform', function(d, i) { return utils.translate(
 									id_order[d[config.id_accessor]]*(config.cell_width + config.cell_padding)
 									, 0);})
-	};
-
-	this.decorate = function(container, data) {
-		var config = this.config;
-		// decorate according to rules
-		rules.sort(function(a,b) {
-			return cellDecoratorTypes[a.type] - cellDecoratorTypes[b.type];
-		});
-		var rule, filtered_data;
-		var fullRules = defaultRules.concat(rules);
-		for (var i=0; i<fullRules.length; i++) {
-			rule = fullRules[i];
-			filtered_data = data.filter(rule.selector);
-			var d3_selection;
-			if (rule.type === 'CELL') {
-				// create new rects if necessary
-				d3_selection = container.selectAll('g.cell').data(filtered_data, function(d) { return d[config.id_accessor]; });
-			} else if (rule.type === 'ONE_THIRD_FILL') {
-				container.selectAll('g.cell').data(filtered_data, function(d) { return d[config.id_accessor]; }).selectAll('rect.one-third-fill').remove();
-				d3_selection = container.selectAll('g.cell').data(filtered_data, function(d) { return d[config.id_accessor]; })
-							.append('rect').classed('one-third-fill', true)
-							.attr('transform', utils.translate(0,config.cell_height/3))
-							.attr('width', config.cell_width)
-							.attr('height', config.cell_height/3);
-			} else if (rule.type === 'LARGE_RIGHTARROW') {
-
-			} else if (rule.type === 'UPPER_UPARROW') {
-
-			} else if (rule.type === 'LOWER_DOWNARROW') {
-
-			}
-			if (rule.stroke) {
-				d3_selection.attr('stroke', rule.stroke)
-			}
-			if (rule.fill) {
-				d3_selection.attr('fill', rule.fill);
-			}
-		}
-	}
-
-	this.render = function(container, data, id_order) {
-		// first clear everything
-		container.selectAll('g').remove();
-
-		var config = this.config;
-		id_order = utils.invert_array(id_order);
-		// draw initial rectangles
-		container.selectAll('g').data(data).enter().append('g').classed('cell', true)
-			.attr('transform', function(d, i) { return utils.translate(
-									id_order[d[config.id_accessor]]*(config.cell_width + config.cell_padding)
-									, 0);})
-			.append('rect').classed('cell', true)
-			.attr('width', config.cell_width)
-			.attr('height', config.cell_height);
-		this.decorate(container, data);
-	}
-	this.addRule = function(type, stroke, fill, selector) {
-		rules.push({'type': type, 'stroke': stroke, 'fill': fill, 'selector': selector});
-	};
-	this.addDefaultRule = function(type, stroke, fill) {
-		defaultRules.push({'type':type, 'stroke':stroke, 'fill':fill, 'selector': function(d) { return true;}});
-	}
+	};*/
 };
-module.exports = {};
-module.exports.CellRenderer = CellRenderer;
+module.exports = D3SVGRenderer;
