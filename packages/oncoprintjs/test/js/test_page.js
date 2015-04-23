@@ -1,6 +1,37 @@
 var _ = require("underscore");
+var $ = require('jquery');
 
-var OncoPrint = require('../../src/js/main');
+var Oncoprint  = require('../../src/js/oncoprint').Oncoprint;
+var onc = new Oncoprint('#onc');
+$('#shuffle_btn').click(function() {
+  onc.sortOnTrack('gender', function(d1, d2) {
+    var map = {'MALE':0, 'FEMALE':1};
+    return map[d1.attr_val] - map[d2.attr_val];
+  });
+})
+var genderData;
+var genderDataPromise = $.getJSON('./gbm/gender-gbm.json');
+var geneData;
+var geneDataPromise = $.getJSON('./gbm/tp53.json');
+genderDataPromise.then(function(data) {
+  genderData = data.data;
+});
+geneDataPromise.then(function(data) {
+  geneData = data;
+});
+$.when(geneDataPromise, genderDataPromise).then(function() {
+  onc.addTrack('gender',genderData, {baseLabel:'Gender', labelDecorator:false})
+        .addRenderRule('CELL', '#00ff00', '#ccffff', function(d) { return d.attr_val === 'MALE';})
+        .addRenderRule('CELL', '#ff0000', '#F5F5DC', function(d) { return d.attr_val === 'FEMALE';});
+  onc.addTrack('gene', geneData, {baseLabel:'TP53'})
+        .addDefaultRenderRule('CELL', '#000000', '#888888')
+        .addRenderRule('ONE_THIRD_FILL', 'rgba(0,0,0,0)', 'rgb(0,255,0)', function(d) { return !!d.mutation;})
+        .addRenderRule('CELL', false, '#ff0000', function(d) { return !!d.cna;});
+  onc.setTrackOrder(['gene', 'gender']);
+  onc.render();
+});
+//global.Oncoprint = require('../../src/js/oncoprint');
+/*
 var renderers = require("../../src/js/renderers");
 var utils = require("../../src/js/utils");
 
@@ -56,4 +87,4 @@ module.exports = function test_script(filenames, div_selector_string) {
       });
 
   });
-};
+};*/

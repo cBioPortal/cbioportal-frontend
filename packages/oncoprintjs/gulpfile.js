@@ -54,6 +54,14 @@ gulp.task('prod', function() {
   .pipe(notify("Done with generating production code."));
 });
 
+gulp.task('refact', function() {
+  browserify('./src/js/oncoprint.js',
+      {standalone: 'oncoprint'}).bundle()
+  .pipe(source('oncoprint-bundle.js'))
+  .pipe(streamify(uglify()))
+  .pipe(gulp.dest('dist/refact/'))
+  .pipe(notify('Done with generating refactor code.'))
+});
 // Clean
 gulp.task('clean', function(cb) {
     del(['dist'], cb)
