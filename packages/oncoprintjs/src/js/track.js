@@ -6,10 +6,6 @@ var utils = require('./utils');
 
 module.exports = {};
 
-// To use a track, you must specify:
-//	labelDecorator
-
-// Predefined configs
 var defaultConfig = {
 	labelDecorator: 'percent_altered',
 	isAltered: function(d) {
@@ -21,13 +17,6 @@ var defaultConfig = {
 	cell_height: 20,
 	track_height: 20,
 }; 
-
-var geneConfig = {
-};
-
-var genderConfig = {
-	labelDecorator: false
-};
 
 // Predefined label decorators
 var labelDecoratorPercentAltered = function(data, isAlteredFn) {
@@ -42,27 +31,29 @@ var labelDecoratorPercentAltered = function(data, isAlteredFn) {
 	return ''+Math.floor(percentAltered)+'%';
 }
 
-function Track(data, config, oncoprint) {
-	if (typeof config === "object") {
-		// Use user-specified config
-		this.config = $.extend({}, defaultConfig, config);
-	} else if (typeof config === "string") {
-		// Select from predefined configs
-		if (config === "gender") {
-			this.config = genderConfig;
-		} else if (config === "gene") {
-			this.config = geneConfig;
-		} else {
-			this.config = defaultConfig;
-		}
-	} else {
-		this.config = defaultConfig;
-	}
+function Track(oncoprint, data, config) {
+	this.config = $.extend({}, defaultConfig, config || {}); // inherit from default
+	
 	this.oncoprint = oncoprint;
-	this.config = $.extend({}, this.oncoprint.config, this.config);
+	this.config = $.extend({}, this.oncoprint.config, this.config); // inherit from oncoprint
 	this.data = data;
-	this.d3SVGRenderer = new D3SVGRenderer(this);
-	this.d3_table = false;
+
+	this.renderer = new D3SVGRenderer(this);
+
+	this.init = function() {
+
+		$.)
+		var config = this.config;
+		var row = d3_table.append('tr')
+			.style('padding-bottom', this.config.track_padding || 0)
+			.style('padding-top', this.config.track_padding || 0);
+		// label segment
+		row.append('td').classed('track_label', true).append('p').text(this.getLabel());
+		// cells segment
+		row.append('td').classed('track_cells', true);
+		var cellArea = makeCellArea(row.append('td').classed('track_cells', true));
+		this.d3SVGRenderer.renderInit(cellArea, this.data, id_order);
+	}
 	
 	var makeCellArea = $.proxy(function(ctr) {
 		return ctr.append('svg')
@@ -85,30 +76,30 @@ function Track(data, config, oncoprint) {
 		return ret;
 	};
 	
-	this.getIds = function() {
+	this.getIds = function(sort_cmp) {
+		// if sort_cmp is undefined, the order is unspecified
+		// otherwise, it's the order given by sorting by sort_cmp
 		var id_accessor = this.config.id_accessor;
+		if (sort_cmp) {
+			this.data.sort(sort_cmp);
+		}
 		return _.map(this.data, function(d) { return d[id_accessor];});
-	};
-	this.sort = function(cmp) {
-		// returns result of sorting on comparator: a list of ids
-		this.data.sort(cmp);
-		return this.getIds();
 	};
 
 	this.update = function(id_order) {
 		this.cellRenderer.update_order(this.d3_table, this.data, id_order);
-	}
-	this.renderInit = function(d3_table, id_order) {
-		this.d3_table = d3_table;
-		var config = this.config;
-		var row = this.d3_table.append('tr')
-			.style('padding-bottom', config.track_padding)
-			.style('padding-top', config.track_padding);
-		// label segment
-		row.append('td').classed('track_label', true).append('p').text(this.getLabel());
-		// cells segment
-		var cellArea = makeCellArea(row.append('td').classed('track_cells', true));
-		this.d3SVGRenderer.renderInit(cellArea, this.data, id_order);
+	}	
+}
+
+function TrackTableRenderer(track) {
+	this.track = track;
+	this.row;
+
+	this.render = function(row) {
+		var label_area = row.append('td').classed('track_label', true);
+		var cell_area = row.append('td').classed('track_cells', true);
+		this.renderLabel(label_area);
+		this.renderCells(cell_area)
 	}
 }
 module.exports.Track = Track;
