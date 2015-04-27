@@ -37,7 +37,7 @@ function Track(name, oncoprint, data, config) {
 		// otherwise, it's the order given by sorting by sort_cmp
 		var id_member = self.config.id_member;
 		if (sort_cmp) {
-			self.data.sort(sort_cmp);
+			self.data = utils.stableSort(self.data, sort_cmp);
 		}
 		return _.map(self.data, function(d) { return d[id_member];});
 	};
