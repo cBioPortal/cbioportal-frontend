@@ -53,7 +53,7 @@ function D3SVGRule(rule_id, condition, d3_shape, attrs, z_index) {
 	}
 }
 
-function makeD3SVGElement = function(tag) {
+function makeD3SVGElement(tag) {
 	return d3.select(document.createElementNS('http://www.w3.org/2000/svg', tag));
 };
 
@@ -64,6 +64,7 @@ function D3SVGRenderer(track) {
 	this.config = this.track.config;
 	this.data = this.track.data;
 	this.cell_area;
+	this.svg;
 	this.g;
 
 	this.data_key = function(d) {
@@ -85,30 +86,29 @@ function D3SVGRenderer(track) {
 	this.renderCells = function(cell_area) {
 		this.cell_area = cell_area;
 
-		this.cell_area.selectAll('*'),remove();
-		this.cell_area.append('svg')
+		this.cell_area.selectAll('*').remove();
+		this.svg = this.cell_area.append('svg')
 		.attr('width', (this.config.cell_width + this.config.cell_padding)*this.track.data.length)
 		.attr('height', this.config.track_height);
 
-		var config = this.config;
-		var id_order = utils.invert_array(this.track.oncoprint.id_order);
-
-		this.g = container.selectAll('g').data(this.data, this.data_key).enter().append('g').classed('cell', true);
+		this.g = this.svg.selectAll('g').data(this.data, this.data_key).enter().append('g').classed('cell', true);
 		this.updateCells();
 	};
 	this.updateCells = function() {
+		var config = this.config;
+		var id_order = utils.invert_array(this.track.oncoprint.id_order);
 		this.g.transition()
 		.attr('transform', function(d,i) {
 				return utils.translate(id_order[d[config.id_member]]*(config.cell_width + config.cell_padding), 0);
 			});
 
-		this.renderRules();
+		this.drawCells();
 	};
 	this.drawCells = function() {
 		this.g.selectAll('*').remove();
 
 		var renderRule = function(rule) {
-			rule.apply(this.g.data(rule.filterData(this.data), this.data_key));
+			rule.apply(self.g.data(rule.filterData(self.data), self.data_key));
 		};
 		var rule_lists = this.rule_set.getRules();
 		_.each(rule_lists, function(rule_list) {
@@ -126,7 +126,7 @@ function D3SVGRenderer(track) {
 			.attr('fill', 'rgba(0,0,0,0)');
 		// bind events
 		hits.on('click', function(d, i){
-			$(self.track.oncoprint).trigger('cellClick.oncoprint', {datum: d, index: i, track: self.track, g: this.parent()});
+			$(self.track.oncoprint).trigger('cellClick.oncoprint', {datum: d, index: i, track: self.track, g: d3.select(this.parentNode)});
 		});
 	};
 
