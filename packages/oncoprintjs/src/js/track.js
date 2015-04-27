@@ -1,7 +1,7 @@
 var _ = require('underscore');
 var d3 = require('d3');
 var $ = require('jquery');
-var D3SVGCellRenderer = require('./cell');
+var D3SVGCellRenderer = require('./d3_svg_cell_renderer');
 var utils = require('./utils');
 
 module.exports = {};
@@ -15,57 +15,67 @@ var defaultTrackConfig = {
 }; 
 
 function Track(name, oncoprint, data, config) {
-	this.name = name;
-	this.config = $.extend({}, defaultTrackConfig, config || {}); // inherit from default
+	var self = this;
+	self.name = name;
+	self.config = $.extend({}, defaultTrackConfig, config || {}); // inherit from default
 	
-	this.oncoprint = oncoprint;
-	this.config = $.extend({}, this.oncoprint.config, this.config); // inherit from oncoprint
-	this.data = data;
+	self.oncoprint = oncoprint;
+	self.config = $.extend({}, self.oncoprint.config, self.config); // inherit from oncoprint
+	self.data = data;
 
-	if (this.config.render === 'table') {
-		this.renderer = new TrackTableRenderer(this, new D3SVGCellRenderer(this));
+	if (self.config.render === 'table') {
+		self.renderer = new TrackTableRenderer(self, new D3SVGCellRenderer(self));
 	}
 
-	var makeCellArea = $.proxy(function(ctr) {
-		return ctr.append('svg')
-			.attr('width', (this.config.cell_width + this.config.cell_padding)*this.data.length)
-			.attr('height', this.config.track_height);
-	}, this);
-
-	this.getLabel = function() {
-		return this.config.label;
+	self.getLabel = function() {
+		// TODO: label decorations
+		return self.config.label;
 	};
 	
-	this.getDatumIds = function(sort_cmp) {
+	self.getDatumIds = function(sort_cmp) {
 		// if sort_cmp is undefined, the order is unspecified
 		// otherwise, it's the order given by sorting by sort_cmp
-		var id_member = this.config.id_member;
+		var id_member = self.config.id_member;
 		if (sort_cmp) {
-			this.data.sort(sort_cmp);
+			self.data.sort(sort_cmp);
 		}
-		return _.map(this.data, function(d) { return d[id_member];});
+		return _.map(self.data, function(d) { return d[id_member];});
+	};
+
+	self.useTemplate = function(templName, params) {
+		self.renderer.useTemplate(templName, params);
 	};
 }
 
 function TrackTableRenderer(track, cellRenderer) {
-	this.track = track;
-	this.cellRenderer = cellRenderer;
-	this.row;
+	var self = this;
+	self.track = track;
+	self.cellRenderer = cellRenderer;
+	self.row;
 
-	this.renderTrack = function(row) {
-		this.row = row;
+	self.renderTrack = function(row) {
+		self.row = row;
 		var label_area = row.append('td').classed('track_label', true);
 		var cell_area = row.append('td').classed('track_cells', true);
-		this.renderLabel(label_area);
-		this.renderCells(cell_area)
+		self.renderLabel(label_area);
+		self.renderCells(cell_area)
 	};
 
-	this.renderLabel = function(label_area) {
+	self.renderLabel = function(label_area) {
 		label_area.selectAll('*').remove();
-		label_area.append('p').text(this.track.getLabel());
+		label_area.append('p').text(self.track.getLabel());
 	};
-	this.renderCells = function(cell_area) {
-		this.cellRenderer.renderCells(cell_area);
+
+	self.renderCells = function(cell_area) {
+		self.cellRenderer.renderCells(cell_area);
 	};
+
+	self.useTemplate = function(templName, params) {
+		self.cellRenderer.useTemplate(templName, params);
+	};
+
+	$(self.track.oncoprint).on('sort.oncoprint', function() {
+		self.cellRenderer.updateCells();
+	});
 }
 module.exports.Track = Track;
