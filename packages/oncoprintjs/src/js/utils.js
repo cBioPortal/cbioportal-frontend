@@ -20,6 +20,23 @@ exports.makeD3SVGElement = function(tag) {
   return d3.select(document.createElementNS('http://www.w3.org/2000/svg', tag));
 };
 
+exports.stableSort = function(arr, cmp) {
+      var zipped = [];
+      _.each(arr, function(val, ind) {
+        zipped.push([val, ind]);
+      });
+      zipped.sort(function(a,b) {
+        var cmp_res = cmp(a[0],b[0]);
+        if (cmp_res === 0) {
+          return a[1]-b[1];
+        } else {
+          return cmp_res;
+        }
+      });
+      // unzip
+      return _.map(zipped, function(x) { return x[0];});
+}
+
 exports.sort_row_by_rows = function(row, rows) {
   // TODO test this
   var ordering = exports.invert_array(

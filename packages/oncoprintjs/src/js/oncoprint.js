@@ -14,66 +14,66 @@ var defaultOncoprintConfig = {
 
 function Oncoprint(container_selector_string, config) {
 	var self = this;
-	this.table;
-	this.config = $.extend({}, defaultOncoprintConfig, config || {});
+	self.table;
+	self.config = $.extend({}, defaultOncoprintConfig, config || {});
 
-	this.id_order = [];
-	this.track_order = []; 
-	this.tracks = {};
-	this.ids = {};
+	self.id_order = [];
+	self.track_order = []; 
+	self.tracks = {};
+	self.ids = {};
 
-	if (this.config.render === 'table') {
-		this.renderer = new OncoprintTableRenderer(container_selector_string, this);
+	if (self.config.render === 'table') {
+		self.renderer = new OncoprintTableRenderer(container_selector_string, self);
 	}
 
-	this.sortOnTrack = function(trackName, dataCmp) {
+	self.sortOnTrack = function(trackName, dataCmp) {
 		// sort ids using given comparator, by delegating to the track
-		this.id_order = this.tracks[trackName].getDatumIds(dataCmp);
+		self.id_order = self.tracks[trackName].getDatumIds(dataCmp);
 		// trigger event
-		$(this).trigger('sort.oncoprint', {id_order:this.id_order});
+		$(self).trigger('sort.oncoprint', {id_order:this.id_order});
 	};
 
-	this.moveTrack = function(trackName, newPosition) {
+	self.moveTrack = function(trackName, newPosition) {
 		// remove from old position in order and place it in new position
-		var oldPosition = this.track_order.indexOf(trackName);
-		this.track_order.splice(oldPosition, 1);
-		this.track_order.splice(newPosition, 0, trackName);
+		var oldPosition = self.track_order.indexOf(trackName);
+		self.track_order.splice(oldPosition, 1);
+		self.track_order.splice(newPosition, 0, trackName);
 		// trigger event
-		$(this).trigger('move_track.oncoprint', {track_name: trackName, new_position: newPosition, track_order: this.track_order});
+		$(self).trigger('move_track.oncoprint', {track_name: trackName, new_position: newPosition, track_order: this.track_order});
 	};
 
-	this.appendTrack = function(name, data, config) {
+	self.appendTrack = function(name, data, config) {
 		// two tracks with same name not allowed
-		if (name in this.tracks) {
+		if (name in self.tracks) {
 			return false;
 		}
 		// add track to internal indexes
-		this.tracks[name] = new Track(name, this, data, config);
-		this.track_order.push(name);
+		self.tracks[name] = new Track(name, self, data, config);
+		self.track_order.push(name);
 		// add new id to id_order
-		// TODO: maybe this shouldn't exist if we're not handling no data in oncoprint
-		this.id_order = this.id_order.concat(_.difference(this.tracks[name].getDatumIds(), this.id_order));
+		// TODO: maybe this line shouldn't exist if we're not handling no data in oncoprint
+		self.id_order = self.id_order.concat(_.difference(self.tracks[name].getDatumIds(), self.id_order));
 		// trigger event
-		$(this).trigger('append_track.oncoprint', {track: self.tracks[name]});
-		return this.tracks[name];
+		$(self).trigger('append_track.oncoprint', {track: self.tracks[name]});
+		return self.tracks[name];
 	};
 
-	this.getTrack = function(name) {
-		return this.tracks[name];
+	self.getTrack = function(name) {
+		return self.tracks[name];
 	};
 }
 
 function OncoprintTableRenderer(container_selector_string, oncoprint) {
 	var self = this;
-	this.oncoprint = oncoprint;
-	this.container = d3.select(container_selector_string);
+	self.oncoprint = oncoprint;
+	self.container = d3.select(container_selector_string);
 	
 	// initialize table
-	this.container.selectAll('*').remove();
-	this.table = this.container.append('table');
+	self.container.selectAll('*').remove();
+	self.table = self.container.append('table');
 
 	// bind events
-	$(this.oncoprint).on('append_track.oncoprint', function(e, data) {
+	$(self.oncoprint).on('append_track.oncoprint', function(e, data) {
 		var track = data.track;
 		// append track
 		track.renderer.renderTrack(self.table.append('tr'));
