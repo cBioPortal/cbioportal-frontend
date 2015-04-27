@@ -39,7 +39,7 @@ function Oncoprint(container_selector_string, config) {
 		this.track_order.splice(oldPosition, 1);
 		this.track_order.splice(newPosition, 0, trackName);
 		// trigger event
-		$(this).trigger('moveTrack.oncoprint', {track_name: trackName, new_position: newPosition, track_order: this.track_order});
+		$(this).trigger('move_track.oncoprint', {track_name: trackName, new_position: newPosition, track_order: this.track_order});
 	};
 
 	this.appendTrack = function(name, data, config) {
@@ -54,7 +54,7 @@ function Oncoprint(container_selector_string, config) {
 		// TODO: maybe this shouldn't exist if we're not handling no data in oncoprint
 		this.id_order = this.id_order.concat(_.difference(this.tracks[name].getDatumIds(), this.id_order));
 		// trigger event
-		$(this).trigger('appendTrack.oncoprint', {track: self.tracks[name]});
+		$(this).trigger('append_track.oncoprint', {track: self.tracks[name]});
 		return this.tracks[name];
 	};
 
@@ -73,7 +73,7 @@ function OncoprintTableRenderer(container_selector_string, oncoprint) {
 	this.table = this.container.append('table');
 
 	// bind events
-	$(this.oncoprint).on('appendTrack.oncoprint', function(e, data) {
+	$(this.oncoprint).on('append_track.oncoprint', function(e, data) {
 		var track = data.track;
 		// append track
 		track.renderer.renderTrack(self.table.append('tr'));
