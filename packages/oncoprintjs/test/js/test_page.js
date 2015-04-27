@@ -21,8 +21,20 @@ geneDataPromise.then(function(data) {
 });
 $.when(geneDataPromise, genderDataPromise).then(function() {
   var renderer = onc.appendTrack('gender',genderData, {label:'Gender' }).renderer.cellRenderer;
-  renderer.addRule(function(d) { return d.attr_val === 'MALE';}, d3.select(document.createElementNS('http://www.w3.org/2000/svg', 'rect')), {'fill':'rgba(255,0,0,255)', 'width':'10', 'height':'3.33', 'y':'3.33'},1);
-  renderer.addRule(function(d) { return true;}, d3.select(document.createElementNS('http://www.w3.org/2000/svg', 'rect')), {'fill':'rgba(100,100,100,255)', 'width':'10', 'height':'20'}, 0);
+  renderer.addRule(function(d) { return d.attr_val === 'MALE';}, d3.select(document.createElementNS('http://www.w3.org/2000/svg', 'rect')), {'fill':'rgba(255,0,0,255)', 'width':'100%', 'height':'33.33%', 'y':'33.33%'},1);
+  renderer.addRule(function(d) { return true;}, d3.select(document.createElementNS('http://www.w3.org/2000/svg', 'rect')), {'fill':'rgba(100,100,100,255)', 'width':'100%', 'height':function(d,i) { return 100*i/genderData.length + '%';}}, 0);
+  var renderer = onc.appendTrack('gender2',genderData, {label:'Gender 2' }).renderer.cellRenderer;
+  renderer.addRule(function(d) { return d.attr_val === 'MALE';}, d3.select(document.createElementNS('http://www.w3.org/2000/svg', 'rect')), {'fill':'rgba(255,0,0,255)', 'width':'100%', 'height':'33.33%', 'y':'33.33%'},1);
+  renderer.addRule(function(d) { return true;}, d3.select(document.createElementNS('http://www.w3.org/2000/svg', 'rect')), {'fill':'rgba(100,100,100,255)', 'width':'100%', 'height':'100%'}, 0);
+  var renderer = onc.appendTrack('gender3',genderData, {label:'Gender 3' }).renderer.cellRenderer;
+  renderer.addRule(function(d) { return d.attr_val === 'MALE';}, d3.select(document.createElementNS('http://www.w3.org/2000/svg', 'rect')), {'fill':'rgba(255,0,0,255)', 'width':'100%', 'height':'33.33%', 'y':'33.33%'},1);
+  renderer.addRule(function(d) { return true;}, d3.select(document.createElementNS('http://www.w3.org/2000/svg', 'rect')), {'fill':'rgba(100,100,100,255)', 'width':'100%', 'height':'100%'}, 0);
+  var renderer = onc.appendTrack('gender4',genderData, {label:'Gender 4' }).renderer.cellRenderer;
+  renderer.addRule(function(d) { return d.attr_val === 'MALE';}, d3.select(document.createElementNS('http://www.w3.org/2000/svg', 'rect')), {'fill':'rgba(255,0,0,255)', 'width':'100%', 'height':'33.33%', 'y':'33.33%'},1);
+  renderer.addRule(function(d) { return true;}, d3.select(document.createElementNS('http://www.w3.org/2000/svg', 'rect')), {'fill':'rgba(100,100,100,255)', 'width':'100%', 'height':'100%'}, 0);
+  var renderer = onc.appendTrack('gender5',genderData, {label:'Gender 5' }).renderer.cellRenderer;
+  renderer.addRule(function(d) { return d.attr_val === 'MALE';}, d3.select(document.createElementNS('http://www.w3.org/2000/svg', 'rect')), {'fill':'rgba(255,0,0,255)', 'width':'100%', 'height':'33.33%', 'y':'33.33%'},1);
+  renderer.addRule(function(d) { return true;}, d3.select(document.createElementNS('http://www.w3.org/2000/svg', 'rect')), {'fill':'rgba(100,100,100,255)', 'width':'100%', 'height':'100%'}, 0);
 });
 //global.Oncoprint = require('../../src/js/oncoprint');
 /*

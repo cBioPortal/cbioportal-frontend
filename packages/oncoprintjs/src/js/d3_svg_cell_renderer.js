@@ -4,16 +4,17 @@ var _ = require('underscore');
 
 // TODO: use self everywhere
 
-function D3SVGRuleSet() {
+function D3SVGRuleSet(renderer) {
 	var self = this;
 	self.rule_map = {};
+	self.renderer = renderer;
 
 	self.addRule = function(condition, d3_shape, attrs, z_index) {
 		var rule_id = Object.keys(self.rule_map).length;
 		if (z_index === undefined) {
 			z_index = rule_id;
 		}
-		self.rule_map[rule_id] = new D3SVGRule(rule_id, condition, d3_shape, attrs, z_index);
+		self.rule_map[rule_id] = new D3SVGRule(rule_id, self.renderer, condition, d3_shape, attrs, z_index);
 		return rule_id;
 	};
 
@@ -40,13 +41,17 @@ function D3SVGRuleSet() {
 	};
 }
 
-function D3SVGRule(rule_id, condition, d3_shape, attrs, z_index) {
+function D3SVGRule(rule_id, renderer, condition, d3_shape, attrs, z_index) {
 	var self = this;
-	this.rule_id = rule_id; 
-	this.d3_shape = d3_shape; 
-	this.z_index = z_index; 
-	this.condition = condition; 
-	this.attrs = attrs;
+	self.rule_id = rule_id; 
+	self.renderer = renderer;
+	self.d3_shape = d3_shape; 
+	self.z_index = z_index; 
+	self.condition = condition; 
+	self.attrs = attrs;
+
+	var widthLike = ['width', 'x'];
+	var heightLike = ['height', 'y'];
 
 	self.filterData = function(d3_data) {
 		return d3_data.filter(self.condition);
@@ -57,14 +62,32 @@ function D3SVGRule(rule_id, condition, d3_shape, attrs, z_index) {
 			return this.appendChild(d3_shape.node().cloneNode(true));
 		});
 		_.each(self.attrs, function(val, key) {
-			elts.attr(key, val);
+			elts.attr(key, function(d,i) {
+				// handle percentages manually so its percent of the specified
+				//	cell dimensions. This cannot be done automatically b/c
+				//	this is naturally handled as percentage of the entire svg
+				//	and <g>'s don't have dimension
+				var currVal = val;
+				if (typeof currVal === 'function') {
+					currVal = currVal(d,i);
+				}
+				if (typeof currVal === 'string' && currVal.indexOf('%') > -1) {
+					currVal = parseFloat(currVal)/100;
+					if (widthLike.indexOf(key) > -1) {
+						currVal = currVal*self.renderer.config.cell_width;	
+					} else if (heightLike.indexOf(key) > -1) {
+						currVal = currVal*self.renderer.config.cell_height;	
+					} 
+				}
+				return currVal+'';
+			});
 		});
 	};
 }
 
 function D3SVGCellRenderer(track) {
 	var self = this;
-	this.rule_set = new D3SVGRuleSet();
+	this.rule_set = new D3SVGRuleSet(self);
 	this.track = track;
 	this.config = this.track.config;
 	this.data = this.track.data;
