@@ -16,6 +16,10 @@ exports.is_sample_genetically_altered = function is_sample_genetically_altered(d
   || datum.protein !== undefined;
 };
 
+exports.makeD3SVGElement = function(tag) {
+  return d3.select(document.createElementNS('http://www.w3.org/2000/svg', tag));
+};
+
 exports.sort_row_by_rows = function(row, rows) {
   // TODO test this
   var ordering = exports.invert_array(

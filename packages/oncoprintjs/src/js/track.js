@@ -1,7 +1,7 @@
 var _ = require('underscore');
 var d3 = require('d3');
 var $ = require('jquery');
-var D3SVGRenderer = require('./cell');
+var D3SVGCellRenderer = require('./cell');
 var utils = require('./utils');
 
 module.exports = {};
@@ -14,15 +14,16 @@ var defaultTrackConfig = {
 	track_padding: 2.5,
 }; 
 
-function Track(oncoprint, data, config) {
-	this.config = $.extend({}, defaultConfig, config || {}); // inherit from default
+function Track(name, oncoprint, data, config) {
+	this.name = name;
+	this.config = $.extend({}, defaultTrackConfig, config || {}); // inherit from default
 	
 	this.oncoprint = oncoprint;
 	this.config = $.extend({}, this.oncoprint.config, this.config); // inherit from oncoprint
 	this.data = data;
 
 	if (this.config.render === 'table') {
-		this.renderer = new TrackTableRenderer(this, new D3SVGCellRenderer());
+		this.renderer = new TrackTableRenderer(this, new D3SVGCellRenderer(this));
 	}
 
 	var makeCellArea = $.proxy(function(ctr) {

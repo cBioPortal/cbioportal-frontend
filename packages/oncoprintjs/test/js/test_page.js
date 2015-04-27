@@ -20,16 +20,14 @@ geneDataPromise.then(function(data) {
   geneData = data;
 });
 $.when(geneDataPromise, genderDataPromise).then(function() {
-  var renderer = onc.addTrack('gender',genderData, {baseLabel:'Gender', labelDecorator:false,  events:{
-      'click': function(d,i,g) {
-        console.log("HANDLING");
-        console.log(g.selectAll('*').attr('height','300'));
-      }
-  }}).d3SVGRenderer;
+  var renderer = onc.appendTrack('gender',genderData, {label:'Gender' }).renderer.cellRenderer;
   renderer.addRule(function(d) { return d.attr_val === 'MALE';}, d3.select(document.createElementNS('http://www.w3.org/2000/svg', 'rect')), {'fill':'rgba(255,0,0,255)', 'width':'100%', 'height':'33.33%', 'y':'33.33%'},1);
   renderer.addRule(function(d) { return true;}, d3.select(document.createElementNS('http://www.w3.org/2000/svg', 'rect')), {'fill':'rgba(100,100,100,255)', 'width':'100%', 'height':'100%'}, 0);
-  onc.renderInit();
+  renderer.updateCells();
 });
+$(onc).on('cellClick.oncoprint', function(e,d) {
+  console.log(d);
+})
 //global.Oncoprint = require('../../src/js/oncoprint');
 /*
 var renderers = require("../../src/js/renderers");

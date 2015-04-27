@@ -15,7 +15,7 @@ var defaultOncoprintConfig = {
 function Oncoprint(container_selector_string, config) {
 	var self = this;
 	this.table;
-	this.config = $.extend({}, defaultConfig, config || {});
+	this.config = $.extend({}, defaultOncoprintConfig, config || {});
 
 	this.id_order = [];
 	this.track_order = []; 
@@ -48,7 +48,7 @@ function Oncoprint(container_selector_string, config) {
 			return false;
 		}
 		// add track to internal indexes
-		this.tracks[name] = new Track(this, data, config);
+		this.tracks[name] = new Track(name, this, data, config);
 		this.track_order.push(name);
 		// add new id to id_order
 		// TODO: maybe this shouldn't exist if we're not handling no data in oncoprint
@@ -64,6 +64,7 @@ function Oncoprint(container_selector_string, config) {
 }
 
 function OncoprintTableRenderer(container_selector_string, oncoprint) {
+	var self = this;
 	this.oncoprint = oncoprint;
 	this.container = d3.select(container_selector_string);
 	
@@ -72,10 +73,10 @@ function OncoprintTableRenderer(container_selector_string, oncoprint) {
 	this.table = this.container.append('table');
 
 	// bind events
-	$(this.oncoprint).on('appendTrack.oncoprint', function(data) {
+	$(this.oncoprint).on('appendTrack.oncoprint', function(e, data) {
 		var track = data.track;
 		// append track
-		track.renderer.renderTrack(this.table.append('tr'));
+		track.renderer.renderTrack(self.table.append('tr'));
 	});
 }
 
