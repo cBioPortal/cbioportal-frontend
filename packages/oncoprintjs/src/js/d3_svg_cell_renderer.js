@@ -2,8 +2,6 @@ var utils = require('./utils');
 var $ = require('jquery');
 var _ = require('underscore');
 
-// TODO: use self everywhere
-
 function D3SVGRuleSet(renderer) {
 	var self = this;
 	self.rule_map = {};
@@ -19,7 +17,7 @@ function D3SVGRuleSet(renderer) {
 	};
 
 	self.removeRule = function(rule_id) {
-		self.rule_map[rule_id] = null;
+		delete self.rule_map[rule_id];
 	}
 
 	self.getRules = function() {
@@ -87,13 +85,13 @@ function D3SVGRule(rule_id, renderer, condition, d3_shape, attrs, z_index) {
 
 function D3SVGCellRenderer(track) {
 	var self = this;
-	this.rule_set = new D3SVGRuleSet(self);
-	this.track = track;
-	this.config = this.track.config;
-	this.data = this.track.data;
-	this.cell_area;
-	this.svg;
-	this.g;
+	self.rule_set = new D3SVGRuleSet(self);
+	self.track = track;
+	self.config = self.track.config;
+	self.data = self.track.data;
+	self.cell_area;
+	self.svg;
+	self.g;
 
 	self.data_key = function(d) {
 		return d[self.config.id_member];
