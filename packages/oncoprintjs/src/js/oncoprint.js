@@ -47,6 +47,8 @@ function Oncoprint(container_selector_string, config) {
 
 	self.moveTrack = function(trackName, newPosition) {
 		// remove from old position in order and place it in new position
+		newPosition = Math.min(self.track_order.length-1, newPosition);
+		newPosition = Math.max(0, newPosition);
 		var oldPosition = self.track_order.indexOf(trackName);
 		self.track_order.splice(oldPosition, 1);
 		self.track_order.splice(newPosition, 0, trackName);
@@ -72,6 +74,18 @@ function Oncoprint(container_selector_string, config) {
 
 	self.getTrack = function(name) {
 		return self.tracks[name];
+	};
+
+	self.removeTrack = function(name) {
+		// delete from internal indexes
+		var track = self.tracks[name];
+		delete self.tracks[name];
+
+		var oldPosition = self.track_order.indexOf(name);
+		self.track_order.splice(oldPosition, 1);
+
+		$(self).trigger('remove_track.oncoprint', {track: track});
+		return true;
 	};
 }
 
@@ -101,6 +115,10 @@ function OncoprintTableRenderer(container_selector_string, oncoprint) {
 			var beforeTrack = self.oncoprint.tracks[order[new_position-1]];
 			beforeTrack.renderer.$row.after(track.renderer.$row);
 		}
+	});
+	$(self.oncoprint).on('remove_track.oncoprint', function(e, data) {
+		var track = data.track;
+		track.renderer.$row.remove();
 	});
 }
 
