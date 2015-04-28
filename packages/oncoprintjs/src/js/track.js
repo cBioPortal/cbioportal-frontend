@@ -20,10 +20,9 @@ function Track(name, oncoprint, data, config) {
 	self.config = $.extend({}, defaultTrackConfig, config || {}); // inherit from default
 	
 	self.oncoprint = oncoprint;
-	self.config = $.extend({}, self.oncoprint.config, self.config); // inherit from oncoprint
 	self.data = data;
 
-	if (self.config.render === 'table') {
+	if (self.oncoprint.config.render === 'table') {
 		self.renderer = new TrackTableRenderer(self, new D3SVGCellRenderer(self));
 	}
 
@@ -42,19 +41,22 @@ function Track(name, oncoprint, data, config) {
 		return _.map(self.data, function(d) { return d[id_member];});
 	};
 
-	self.useTemplate = function(templName, params) {
+	self.useRenderTemplate = function(templName, params) {
 		self.renderer.useTemplate(templName, params);
 	};
 }
 
 function TrackTableRenderer(track, cellRenderer) {
+	// coupled with OncoprintTableRenderer
 	var self = this;
 	self.track = track;
 	self.cellRenderer = cellRenderer;
 	self.row;
+	self.$row;
 
 	self.renderTrack = function(row) {
 		self.row = row;
+		self.$row = $(self.row.node());
 		var label_area = row.append('td').classed('track_label', true);
 		var cell_area = row.append('td').classed('track_cells', true);
 		self.renderLabel(label_area);
@@ -74,7 +76,7 @@ function TrackTableRenderer(track, cellRenderer) {
 		self.cellRenderer.useTemplate(templName, params);
 	};
 
-	$(self.track.oncoprint).on('sort.oncoprint', function() {
+	$(self.track.oncoprint).on('sort.oncoprint set_cell_width.oncoprint set_cell_padding.oncoprint', function() {
 		self.cellRenderer.updateCells();
 	});
 }

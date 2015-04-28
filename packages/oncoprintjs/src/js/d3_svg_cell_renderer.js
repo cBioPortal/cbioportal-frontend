@@ -2,6 +2,8 @@ var utils = require('./utils');
 var $ = require('jquery');
 var _ = require('underscore');
 
+// TODO: handle accessing config properties cleaner
+
 function D3SVGRuleSet(renderer) {
 	var self = this;
 	self.rule_map = {};
@@ -72,7 +74,7 @@ function D3SVGRule(rule_id, renderer, condition, d3_shape, attrs, z_index) {
 				if (typeof currVal === 'string' && currVal.indexOf('%') > -1) {
 					currVal = parseFloat(currVal)/100;
 					if (widthLike.indexOf(key) > -1) {
-						currVal = currVal*self.renderer.config.cell_width;	
+						currVal = currVal*self.renderer.track.oncoprint.config.cell_width;	
 					} else if (heightLike.indexOf(key) > -1) {
 						currVal = currVal*self.renderer.config.cell_height;	
 					} 
@@ -117,7 +119,7 @@ function D3SVGCellRenderer(track) {
 
 		self.cell_area.selectAll('*').remove();
 		self.svg = self.cell_area.append('svg')
-		.attr('width', (self.config.cell_width + self.config.cell_padding)*self.track.data.length)
+		.attr('width', (self.track.oncoprint.config.cell_width + self.track.oncoprint.config.cell_padding)*self.track.data.length)
 		.attr('height', self.config.track_height);
 
 		self.g = self.svg.selectAll('g').data(self.data, self.data_key).enter().append('g').classed('cell', true);
@@ -129,7 +131,7 @@ function D3SVGCellRenderer(track) {
 		var id_order = utils.invert_array(self.track.oncoprint.id_order);
 		self.g.transition()
 		.attr('transform', function(d,i) {
-				return utils.translate(id_order[d[config.id_member]]*(config.cell_width + config.cell_padding), 0);
+				return utils.translate(id_order[d[config.id_member]]*(self.track.oncoprint.config.cell_width + self.track.oncoprint.config.cell_padding), 0);
 			});
 
 		self.drawCells();

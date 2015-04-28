@@ -26,6 +26,18 @@ function Oncoprint(container_selector_string, config) {
 		self.renderer = new OncoprintTableRenderer(container_selector_string, self);
 	}
 
+	self.setCellWidth = function(w) {
+		self.config.cell_width = w;
+		// trigger event
+		$(self).trigger('set_cell_width.oncoprint');
+	};
+
+	self.setCellPadding = function(p) {
+		self.config.cell_padding = p;
+		// trigger event
+		$(self).trigger('set_cell_padding.oncoprint');
+	};
+
 	self.sortOnTrack = function(trackName, dataCmp) {
 		// sort ids using given comparator, by delegating to the track
 		self.id_order = self.tracks[trackName].getDatumIds(dataCmp);
@@ -39,7 +51,7 @@ function Oncoprint(container_selector_string, config) {
 		self.track_order.splice(oldPosition, 1);
 		self.track_order.splice(newPosition, 0, trackName);
 		// trigger event
-		$(self).trigger('move_track.oncoprint', {track_name: trackName, new_position: newPosition, track_order: this.track_order});
+		$(self).trigger('move_track.oncoprint', {track: self.tracks[trackName], new_position: newPosition, track_order: this.track_order});
 	};
 
 	self.appendTrack = function(name, data, config) {
@@ -71,12 +83,24 @@ function OncoprintTableRenderer(container_selector_string, oncoprint) {
 	// initialize table
 	self.container.selectAll('*').remove();
 	self.table = self.container.append('table');
+	self.$table = $(self.table.node());
 
 	// bind events
 	$(self.oncoprint).on('append_track.oncoprint', function(e, data) {
 		var track = data.track;
 		// append track
 		track.renderer.renderTrack(self.table.append('tr'));
+	});
+	$(self.oncoprint).on('move_track.oncoprint', function(e, data) {
+		var new_position = data.new_position;
+		var order = data.track_order;
+		var track = data.track;
+		if (new_position === 0) {
+			self.$table.find('tr:first').before(track.renderer.$row);
+		} else {
+			var beforeTrack = self.oncoprint.tracks[order[new_position-1]];
+			beforeTrack.renderer.$row.after(track.renderer.$row);
+		}
 	});
 }
 
