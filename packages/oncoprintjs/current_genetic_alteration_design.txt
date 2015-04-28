@@ -1,0 +1,24 @@
+The current oncoprint genetic alteration design settings:
+
+CNA:
+- Amplification -> full red cell
+- Deep Deletion -> full blue cell
+TODO - Heterozygeous Deletion -> ?
+TODO - Gain -> ?
+
+MUT:
+TODO: anything else?
+- Missense Mutation -> mid-cell green square
+- Truncating Mutation -> mid-cell black square
+- Inframe Mutation -> mid-cell brown square
+TODO - Frameshift Mutation -> ?
+
+MRNA:
+TODO: anything else?
+- mRNA Downregulation -> blue cell outline
+- mRNA Upregulation -> red cell outline
+
+PROTEIN:
+TODO: anything else?
+- RPPA Upregulation -> upper cell small black uparrow
+- RPPA Downregulation -> lower cell small black downarrow

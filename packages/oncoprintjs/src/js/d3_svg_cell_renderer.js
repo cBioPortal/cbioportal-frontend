@@ -173,16 +173,33 @@ function D3SVGCellRenderer(track) {
 
 	self.useTemplate = function(templName, params) {
 		// TODO
-		if (templName === 'categorical') {
+		// (1) make sure these are the params you want to pass in
+		// (1a) Question: for genetic alteration, should we pass in design configurations like color?
+		// (2) implement
 
-		} else if (templName === 'continuous') {
+
+		// DEF: data accessor = string: datum member which holds the category
+		//			| function: takes in datum, outputs value
+		if (templName === 'categorical_color') {
+			// params: - map from category to color
+			//	      - data accessor
+
+		} else if (templName === 'continuous_color') {
+			// params: - data accessor
+			//	      - endpoints of the value range
+			//               - endpoints of the gradient (in same order)
 
 		} else if (templName === 'heat_map') {
+			// params: - data accessor
+			//	      - endpoints of the value range
 
 		} else if (templName === 'bar_chart') {
+			// params: - data accessor
+			//	      - endpoints of the value range
+			//	      - color: string or function of datum
 
 		} else if (templName === 'genetic_alteration') {
-
+			// any params?
 		}
 	};
 };

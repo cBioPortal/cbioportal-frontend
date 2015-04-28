@@ -20,6 +20,10 @@ $('#move_btn').click(function(){
   onc.moveTrack('gender', newPos);
     console.log('moving gender to '+newPos);
 });
+$('#remove_btn').click(function(){
+  onc.removeTrack('gender2');
+  console.log('removing Gender 2');
+});
 var genderData;
 var genderDataPromise = $.getJSON('./gbm/gender-gbm.json');
 var geneData;
