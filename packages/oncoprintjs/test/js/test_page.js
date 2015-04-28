@@ -9,6 +9,17 @@ $('#shuffle_btn').click(function() {
     return map[d1.attr_val] - map[d2.attr_val];
   });
 })
+$('#padding_btn').click(function(){
+  onc.setCellPadding(onc.config.cell_padding+1);
+});
+$('#width_btn').click(function(){
+  onc.setCellWidth(onc.config.cell_width+1);
+});
+$('#move_btn').click(function(){
+  var newPos = Math.floor(Math.random()*5);
+  onc.moveTrack('gender', newPos);
+    console.log('moving gender to '+newPos);
+});
 var genderData;
 var genderDataPromise = $.getJSON('./gbm/gender-gbm.json');
 var geneData;
