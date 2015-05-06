@@ -20,19 +20,26 @@ function Track(name, data, config, oncoprint_config) {
 	self.oncoprint_config = oncoprint_config;
 	
 	self.data = data;
+	var cell_renderer;
 
 	if (self.oncoprint_config.get('render') === 'table') {
-		var cellRenderer = new D3SVGCellRenderer(self.data, self.oncoprint_config, new ReadOnlyObject(self.config));
-		cellRenderer.bindEvents(self);
-		self.renderer = new TrackTableRenderer(cellRenderer);
+		cell_renderer = new D3SVGCellRenderer(self.data, self.oncoprint_config, new ReadOnlyObject(self.config));
+		cell_renderer.bindEvents(self);
+		self.renderer = new TrackTableRenderer(cell_renderer);
 	}
 	self.renderer.bindEvents(self);
 
 	self.bindEvents = function(oncoprint) {
-		var passAlong = ['sort.oncoprint', 'set_cell_width.oncoprint', 'set_cell_padding.oncoprint'];
-		_.each(passAlong, function(evt) {
+		var pass_down_from_oncoprint = ['sort.oncoprint', 'set_cell_width.oncoprint', 'set_cell_padding.oncoprint'];
+		_.each(pass_down_from_oncoprint, function(evt) {
 			$(oncoprint).on(evt, function(e, data) {
 				$(self).trigger(evt, data);
+			})
+		});
+		var pass_up_from_cell_renderer = ['cell_click.oncoprint', 'cell_mouseenter.oncoprint', 'cell_mouseleave.oncoprint'];
+		_.each(pass_up_from_cell_renderer, function(evt) {
+			$(cell_renderer).on(evt, function(e, data) {
+				$(oncoprint).trigger(evt, $.extend({}, data, {track: self}));
 			})
 		});
 	};
@@ -55,11 +62,11 @@ function Track(name, data, config, oncoprint_config) {
 	$(self).trigger('init.track.oncoprint', {label_text: self.getLabel()});
 }
 
-function TrackTableRenderer(cellRenderer) {
+function TrackTableRenderer(cell_renderer) {
 	// coupled with OncoprintTableRenderer
 
 	var self = this;
-	var cellRenderer = cellRenderer;
+	var cell_renderer = cell_renderer;
 	self.row;
 	self.$row;
 	var label_text;
@@ -76,7 +83,7 @@ function TrackTableRenderer(cellRenderer) {
 	};
 
 	var initCells = function(cell_area) {
-		cellRenderer.init(cell_area);
+		cell_renderer.init(cell_area);
 	};
 
 	self.init = function(row) {
@@ -89,11 +96,11 @@ function TrackTableRenderer(cellRenderer) {
 	};
 
 	self.addRule = function(params) {
-		cellRenderer.addRule(params);
+		cell_renderer.addRule(params);
 	};
 
 	self.useTemplate = function(templName, params) {
-		cellRenderer.useTemplate(templName, params);
+		cell_renderer.useTemplate(templName, params);
 	};
 
 }

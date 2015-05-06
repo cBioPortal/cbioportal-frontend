@@ -83,7 +83,7 @@ function Oncoprint(container_selector_string, config) {
 	};
 }
 
-function OncoprintTableRenderer(container_selector_string, oncoprint) {
+function OncoprintTableRenderer(container_selector_string) {
 	var self = this;
 	self.container = d3.select(container_selector_string);
 	self.table;
