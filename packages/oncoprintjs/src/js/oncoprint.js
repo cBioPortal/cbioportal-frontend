@@ -103,7 +103,7 @@ function OncoprintTableRenderer(container_selector_string, oncoprint) {
 	$(self.oncoprint).on('append_track.oncoprint', function(e, data) {
 		var track = data.track;
 		// append track
-		track.renderer.renderTrack(self.table.append('tr'));
+		track.renderer.init(self.table.append('tr'));
 	});
 	$(self.oncoprint).on('move_track.oncoprint', function(e, data) {
 		var new_position = data.new_position;

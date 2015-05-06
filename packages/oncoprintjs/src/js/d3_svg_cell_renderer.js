@@ -37,6 +37,12 @@ function D3SVGRuleset(renderer) {
 			);
 	};
 
+	self.apply = function(d3_g_selection, d3_data, d3_data_key) {
+		var rules = self.getRules();
+		_.each(rules, function(rule) {
+			rule.apply(d3_g_selection, d3_data, d3_data_key);
+		});
+	};
 	self.fromJSON = function(json_rules) {
 		self.rule_map = {};
 		_.each(json_rules, function(rule) {
@@ -54,36 +60,36 @@ function D3SVGRule(rule_id, renderer, condition, d3_shape, attrs, z_index) {
 	self.condition = condition; 
 	self.attrs = attrs;
 
-	var widthLike = ['width', 'x'];
-	var heightLike = ['height', 'y'];
-
-	self.filterData = function(d3_data) {
-		return d3_data.filter(self.condition);
+	self._toLocalCoords = function(val, key) {
+		// convert a percentage to a local pixel coordinate
+		var widthLike = ['width', 'x'];
+		var heightLike = ['height', 'y'];
+		if (typeof val === 'string' && val.indexOf('%') > -1) {
+			val = parseFloat(val)/100;
+			if (widthLike.indexOf(key) > -1) {
+				val = val*self.renderer.track.oncoprint.config.cell_width;	
+			} else if (heightLike.indexOf(key) > -1) {
+				val = val*self.renderer.config.cell_height;	
+			} 
+		}
+		return val+'';
 	};
-
-	self.apply = function(d3_g_selection) {
+	self.apply = function(d3_g_selection, d3_data, d3_data_key) {
+		d3_g_selection = d3_g_selection.data(
+			d3_data.filter(self.condition),
+			d3_data_key
+			);
 		var elts = d3_g_selection.select(function() {
 			return this.appendChild(d3_shape.node().cloneNode(true));
 		});
 		_.each(self.attrs, function(val, key) {
 			elts.attr(key, function(d,i) {
-				// handle percentages manually so its percent of the specified
-				//	cell dimensions. This cannot be done automatically b/c
-				//	this is naturally handled as percentage of the entire svg
-				//	and <g>'s don't have dimension
 				var currVal = val;
 				if (typeof currVal === 'function') {
 					currVal = currVal(d,i);
 				}
-				if (typeof currVal === 'string' && currVal.indexOf('%') > -1) {
-					currVal = parseFloat(currVal)/100;
-					if (widthLike.indexOf(key) > -1) {
-						currVal = currVal*self.renderer.track.oncoprint.config.cell_width;	
-					} else if (heightLike.indexOf(key) > -1) {
-						currVal = currVal*self.renderer.config.cell_height;	
-					} 
-				}
-				return currVal+'';
+				currVal = self._toLocalCoords(currVal, key);
+				return currVal;
 			});
 		});
 	};
@@ -98,10 +104,6 @@ function D3SVGCellRenderer(track) {
 	self.cell_area;
 	self.svg;
 	self.g;
-
-	self.data_key = function(d) {
-		return d[self.config.id_member];
-	};
 
 	self.parseRuleset = function(json_rules) {
 		self.rule_set.fromJSON(json_rules);
@@ -118,7 +120,7 @@ function D3SVGCellRenderer(track) {
 		self.updateCells();
 	};
 
-	self.renderCells = function(cell_area) {
+	self.init = function(cell_area) {
 		self.cell_area = cell_area;
 
 		self.cell_area.selectAll('*').remove();
@@ -126,7 +128,7 @@ function D3SVGCellRenderer(track) {
 		.attr('width', (self.track.oncoprint.config.cell_width + self.track.oncoprint.config.cell_padding)*self.track.data.length)
 		.attr('height', self.config.track_height);
 
-		self.g = self.svg.selectAll('g').data(self.data, self.data_key).enter().append('g').classed('cell', true);
+		self.g = self.svg.selectAll('g').data(self.data, self.config.datum_id).enter().append('g').classed('cell', true);
 		self.updateCells();
 	};
 
@@ -135,7 +137,7 @@ function D3SVGCellRenderer(track) {
 		var id_order = utils.invert_array(self.track.oncoprint.id_order);
 		self.g.transition()
 		.attr('transform', function(d,i) {
-				return utils.translate(id_order[d[config.id_member]]*(self.track.oncoprint.config.cell_width + self.track.oncoprint.config.cell_padding), 0);
+				return utils.translate(id_order[self.config.datum_id(d)]*(self.track.oncoprint.config.cell_width + self.track.oncoprint.config.cell_padding), 0);
 			});
 
 		self.drawCells();
@@ -143,14 +145,7 @@ function D3SVGCellRenderer(track) {
 
 	self.drawCells = function() {
 		self.g.selectAll('*').remove();
-
-		var renderRule = function(rule) {
-			rule.apply(self.g.data(rule.filterData(self.data), self.data_key));
-		};
-		var rule_list = self.rule_set.getRules();
-		_.each(rule_list, function(rule) {
-			renderRule(rule);
-		});
+		self.rule_set.apply(self.g, self.data, self.config.datum_id);
 		self.drawHitZones();
 	};
 
@@ -204,6 +199,9 @@ function D3SVGCellRenderer(track) {
 			// any params?
 		}
 	};
+	$(self.track.oncoprint).on('sort.oncoprint set_cell_width.oncoprint set_cell_padding.oncoprint', function() {
+		self.updateCells();
+	});
 };
 
 module.exports = D3SVGCellRenderer;
