@@ -4,7 +4,7 @@ var _ = require('underscore');
 
 // TODO: handle accessing config properties cleaner
 
-function D3SVGRuleSet(renderer) {
+function D3SVGRuleset(renderer) {
 	var self = this;
 	self.rule_map = {};
 	self.renderer = renderer;
@@ -23,14 +23,18 @@ function D3SVGRuleSet(renderer) {
 	}
 
 	self.getRules = function() {
-		// returns a list of lists of rules to render in the given order
+		// returns a list of rules to render in order
 		var z_map = {};
 		_.each(self.rule_map, function(rule, rule_id) {
 			z_map[rule.z_index] = z_map[rule.z_index] || [];
 			z_map[rule.z_index].push(rule);
 		});
-		return _.map(Object.keys(z_map).sort(), 
-			function(z) { return z_map[z];});
+		return _.flatten(
+			_.map(
+				Object.keys(z_map).sort(), 
+				function(z) { return z_map[z];}
+				)
+			);
 	};
 
 	self.fromJSON = function(json_rules) {
@@ -87,7 +91,7 @@ function D3SVGRule(rule_id, renderer, condition, d3_shape, attrs, z_index) {
 
 function D3SVGCellRenderer(track) {
 	var self = this;
-	self.rule_set = new D3SVGRuleSet(self);
+	self.rule_set = new D3SVGRuleset(self);
 	self.track = track;
 	self.config = self.track.config;
 	self.data = self.track.data;
@@ -99,7 +103,7 @@ function D3SVGCellRenderer(track) {
 		return d[self.config.id_member];
 	};
 
-	self.parseRuleSet = function(json_rules) {
+	self.parseRuleset = function(json_rules) {
 		self.rule_set.fromJSON(json_rules);
 	};
 
@@ -143,11 +147,9 @@ function D3SVGCellRenderer(track) {
 		var renderRule = function(rule) {
 			rule.apply(self.g.data(rule.filterData(self.data), self.data_key));
 		};
-		var rule_lists = self.rule_set.getRules();
-		_.each(rule_lists, function(rule_list) {
-			_.each(rule_list, function(rule) {
-				renderRule(rule);
-			});
+		var rule_list = self.rule_set.getRules();
+		_.each(rule_list, function(rule) {
+			renderRule(rule);
 		});
 		self.drawHitZones();
 	};
