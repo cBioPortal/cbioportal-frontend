@@ -1,11 +1,9 @@
 var _ = require('underscore');
 var d3 = require('d3');
 var $ = require('jquery');
-var D3SVGCellRenderer = require('./d3_svg_cell_renderer');
+var D3SVGCellRenderer = require('./D3SVGCellRenderer');
 var ReadOnlyObject = require('./ReadOnlyObject');
 var utils = require('./utils');
-
-module.exports = {};
 
 var defaultTrackConfig = {
 	label: 'Gene',
@@ -99,4 +97,4 @@ function TrackTableRenderer(cellRenderer) {
 	};
 
 }
-module.exports.Track = Track;
+module.exports = Track;
