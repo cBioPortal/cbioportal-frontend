@@ -1,7 +1,7 @@
 var _ = require("underscore");
 var $ = require('jquery');
 
-var Oncoprint  = require('../../src/js/oncoprint').Oncoprint;
+var Oncoprint  = require('../../src/js/Oncoprint');
 var onc = new Oncoprint('#onc');
 $('#shuffle_btn').click(function() {
   onc.sortOnTrack('gender', function(d1, d2) {

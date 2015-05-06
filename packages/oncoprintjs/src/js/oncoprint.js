@@ -1,9 +1,8 @@
-var Track = require('./track').Track;
+var Track = require('./Track');
 var _ = require('underscore');
 var d3 = require('d3');
 var $ = require('jquery');
 var ReadOnlyObject = require('./ReadOnlyObject');
-module.exports = {};
 
 // TODO: use self everywhere
 
@@ -119,4 +118,4 @@ function OncoprintTableRenderer(container_selector_string, oncoprint) {
 	};
 }
 
-module.exports.Oncoprint = Oncoprint;
+module.exports = Oncoprint;
