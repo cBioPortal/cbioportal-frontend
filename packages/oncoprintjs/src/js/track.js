@@ -8,7 +8,7 @@ module.exports = {};
 
 var defaultTrackConfig = {
 	label: 'Gene',
-	id_member: 'sample',
+	datum_id: function(d) { return d['sample'];},
 	cell_height: 20,
 	track_height: 20,
 	track_padding: 2.5,
@@ -38,7 +38,9 @@ function Track(name, oncoprint, data, config) {
 		if (sort_cmp) {
 			self.data = utils.stableSort(self.data, sort_cmp);
 		}
-		return _.map(self.data, function(d) { return d[id_member];});
+		return _.map((sort_cmp && utils.stableSort(self.data, sort_cmp)) || self.data, 
+				self.config.datum_id
+				);
 	};
 
 	self.useRenderTemplate = function(templName, params) {
@@ -54,13 +56,13 @@ function TrackTableRenderer(track, cellRenderer) {
 	self.row;
 	self.$row;
 
-	self.renderTrack = function(row) {
+	self.init = function(row) {
 		self.row = row;
 		self.$row = $(self.row.node());
 		var label_area = row.append('td').classed('track_label', true);
 		var cell_area = row.append('td').classed('track_cells', true);
 		self.renderLabel(label_area);
-		self.renderCells(cell_area)
+		self.initCells(cell_area)
 	};
 
 	self.renderLabel = function(label_area) {
@@ -68,16 +70,13 @@ function TrackTableRenderer(track, cellRenderer) {
 		label_area.append('p').text(self.track.getLabel());
 	};
 
-	self.renderCells = function(cell_area) {
-		self.cellRenderer.renderCells(cell_area);
+	self.initCells = function(cell_area) {
+		self.cellRenderer.init(cell_area);
 	};
 
 	self.useTemplate = function(templName, params) {
 		self.cellRenderer.useTemplate(templName, params);
 	};
 
-	$(self.track.oncoprint).on('sort.oncoprint set_cell_width.oncoprint set_cell_padding.oncoprint', function() {
-		self.cellRenderer.updateCells();
-	});
 }
 module.exports.Track = Track;
