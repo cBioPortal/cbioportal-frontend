@@ -90,6 +90,7 @@ function D3SVGCellRenderer(data, oncoprint_config, track_config) {
 	self.cell_area;
 	self.svg;
 	self.g;
+	self.hits;
 
 	self.parseRuleset = function(json_rules) {
 		self.rule_set.fromJSON(json_rules);
@@ -135,6 +136,7 @@ function D3SVGCellRenderer(data, oncoprint_config, track_config) {
 	};
 
 	self.drawHitZones = function() {
+		self.g.selectAll('rect.hit').remove();
 		var hits = self.g.append('rect').classed('hit', true)
 			.attr('width', self.oncoprint_config.get('cell_width'))
 			.attr('height', self.track_config.get('cell_height'))
@@ -142,14 +144,14 @@ function D3SVGCellRenderer(data, oncoprint_config, track_config) {
 			.attr('fill', 'rgba(0,0,0,0)');
 		// bind events
 		var eventData = function(d, i, ctx) {
-			return {datum: d, index: i, /*track: track,*/ g:d3.select(ctx.parentNode)};//AASFOUAPIOJ
+			return {datum: d, index: i, g:d3.select(ctx.parentNode)};
 		}
 		hits.on('click', function(d, i){
-			$(self.track.oncoprint).trigger('cell_click.oncoprint', eventData(d,i,this));
+			$(self).trigger('cell_click.oncoprint', eventData(d,i,this));
 		}).on('mouseenter', function(d,i) {
-			$(self.track.oncoprint).trigger('cell_mouseenter.oncoprint', eventData(d,i,this));
+			$(self).trigger('cell_mouseenter.oncoprint', eventData(d,i,this));
 		}).on('mouseleave', function(d,i) {
-			$(self.track.oncoprint).trigger('cell_mouseleave.oncoprint', eventData(d,i,this));
+			$(self).trigger('cell_mouseleave.oncoprint', eventData(d,i,this));
 		});
 	};
 
