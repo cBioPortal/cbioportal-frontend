@@ -2,6 +2,7 @@ var Track = require('./track').Track;
 var _ = require('underscore');
 var d3 = require('d3');
 var $ = require('jquery');
+var ReadOnlyObject = require('./ReadOnlyObject');
 module.exports = {};
 
 // TODO: use self everywhere
@@ -17,58 +18,54 @@ function Oncoprint(container_selector_string, config) {
 	self.table;
 	self.config = $.extend({}, defaultOncoprintConfig, config || {});
 
-	self.id_order = [];
+	self.config.id_order = [];
 	self.track_order = []; 
 	self.tracks = {};
 	self.ids = {};
 
 	if (self.config.render === 'table') {
-		self.renderer = new OncoprintTableRenderer(container_selector_string, self);
+		self.renderer = new OncoprintTableRenderer(container_selector_string);
 	}
+	self.renderer.bindEvents(self);
 
 	self.setCellWidth = function(w) {
 		self.config.cell_width = w;
-		// trigger event
 		$(self).trigger('set_cell_width.oncoprint');
 	};
 
 	self.setCellPadding = function(p) {
 		self.config.cell_padding = p;
-		// trigger event
 		$(self).trigger('set_cell_padding.oncoprint');
 	};
 
 	self.sortOnTrack = function(trackName, dataCmp) {
-		// sort ids using given comparator, by delegating to the track
-		self.id_order = self.tracks[trackName].getDatumIds(dataCmp);
-		// trigger event
-		$(self).trigger('sort.oncoprint', {id_order:this.id_order});
+		self.config.id_order = self.tracks[trackName].getDatumIds(dataCmp);
+		$(self).trigger('sort.oncoprint', {id_order: self.config.id_order});
 	};
 
-	self.moveTrack = function(trackName, newPosition) {
-		// remove from old position in order and place it in new position
-		newPosition = Math.min(self.track_order.length-1, newPosition);
-		newPosition = Math.max(0, newPosition);
-		var oldPosition = self.track_order.indexOf(trackName);
-		self.track_order.splice(oldPosition, 1);
-		self.track_order.splice(newPosition, 0, trackName);
-		// trigger event
-		$(self).trigger('move_track.oncoprint', {track: self.tracks[trackName], new_position: newPosition, track_order: this.track_order});
+	self.moveTrack = function(track_name, new_position) {
+		new_position = Math.min(self.track_order.length-1, new_position);
+		new_position = Math.max(0, new_position);
+		var old_position = self.track_order.indexOf(track_name);
+
+		self.track_order.splice(old_position, 1);
+		self.track_order.splice(new_position, 0, track_name);
+
+		$(self).trigger('move_track.oncoprint', {track_name: track_name, tracks:self.tracks, track_order: self.track_order});
 	};
 
-	self.appendTrack = function(name, data, config) {
-		// two tracks with same name not allowed
+	self.addTrack = function(name, data, config) {
 		if (name in self.tracks) {
 			return false;
 		}
-		// add track to internal indexes
-		self.tracks[name] = new Track(name, self, data, config);
+		self.tracks[name] = new Track(name, data, config, new ReadOnlyObject(self.config));
+		self.tracks[name].bindEvents(self);
 		self.track_order.push(name);
-		// add new id to id_order
+
 		// TODO: maybe this line shouldn't exist if we're not handling no data in oncoprint
-		self.id_order = self.id_order.concat(_.difference(self.tracks[name].getDatumIds(), self.id_order));
-		// trigger event
-		$(self).trigger('append_track.oncoprint', {track: self.tracks[name]});
+		self.config.id_order = self.config.id_order.concat(_.difference(self.tracks[name].getDatumIds(), self.config.id_order));
+
+		$(self).trigger('add_track.oncoprint', {track: self.tracks[name]});
 		return self.tracks[name];
 	};
 
@@ -77,49 +74,49 @@ function Oncoprint(container_selector_string, config) {
 	};
 
 	self.removeTrack = function(name) {
-		// delete from internal indexes
-		var track = self.tracks[name];
 		delete self.tracks[name];
 
 		var oldPosition = self.track_order.indexOf(name);
 		self.track_order.splice(oldPosition, 1);
 
-		$(self).trigger('remove_track.oncoprint', {track: track});
+		$(self).trigger('remove_track.oncoprint', {track: name});
 		return true;
 	};
 }
 
 function OncoprintTableRenderer(container_selector_string, oncoprint) {
 	var self = this;
-	self.oncoprint = oncoprint;
 	self.container = d3.select(container_selector_string);
+	self.table;
+	self.$table;
 	
-	// initialize table
-	self.container.selectAll('*').remove();
-	self.table = self.container.append('table');
-	self.$table = $(self.table.node());
+	(function initTable(self) {
+		self.container.selectAll('*').remove();
+		self.table = self.container.append('table');
+		self.$table = $(self.table.node());
+	})(self);
 
-	// bind events
-	$(self.oncoprint).on('append_track.oncoprint', function(e, data) {
-		var track = data.track;
-		// append track
-		track.renderer.init(self.table.append('tr'));
-	});
-	$(self.oncoprint).on('move_track.oncoprint', function(e, data) {
-		var new_position = data.new_position;
-		var order = data.track_order;
-		var track = data.track;
-		if (new_position === 0) {
-			self.$table.find('tr:first').before(track.renderer.$row);
-		} else {
-			var beforeTrack = self.oncoprint.tracks[order[new_position-1]];
-			beforeTrack.renderer.$row.after(track.renderer.$row);
-		}
-	});
-	$(self.oncoprint).on('remove_track.oncoprint', function(e, data) {
-		var track = data.track;
-		track.renderer.$row.remove();
-	});
+	self.bindEvents = function(oncoprint) {
+		$(oncoprint).on('add_track.oncoprint', function(e, data) {
+			data.track.renderer.init(self.table.append('tr'));
+		});
+		$(oncoprint).on('move_track.oncoprint', function(e, data) {
+			var track_name = data.track_name;
+			var new_position = data.track_order.indexOf(track_name);
+			var track_order = data.track_order;
+			var track = data.tracks[track_name];
+			if (new_position === 0) {
+				self.$table.find('tr:first').before(track.renderer.$row);
+			} else {
+				var before_track = data.tracks[track_order[new_position-1]];
+				before_track.renderer.$row.after(track.renderer.$row);
+			}
+		});
+		$(oncoprint).on('remove_track.oncoprint', function(e, data) {
+			var track = data.track;
+			track.renderer.$row.remove();
+		});
+	};
 }
 
 module.exports.Oncoprint = Oncoprint;
