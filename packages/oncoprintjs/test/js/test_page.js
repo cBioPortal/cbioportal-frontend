@@ -35,7 +35,14 @@ geneDataPromise.then(function(data) {
   geneData = data;
 });
 $.when(geneDataPromise, genderDataPromise).then(function() {
-  var renderer = onc.addTrack('gender',genderData, {label:'Gender' }).renderer;
+  onc.addTrack('gender', genderData, {label: 'Gender'})
+          .useRenderTemplate('categorical_color', {
+            color: {MALE: '#6699FF', FEMALE:'#FF00FF'},
+            category: function(d) {
+              return d.attr_val;
+            }
+          });
+  /*var renderer = onc.addTrack('gender',genderData, {label:'Gender' }).renderer;
   renderer.addRule({condition:function(d) { return d.attr_val === 'MALE';}, 
                                   d3_shape: d3.select(document.createElementNS('http://www.w3.org/2000/svg', 'rect')), 
                                   attrs: {'fill':'rgba(255,0,0,255)', 'width':'100%', 'height':'33.33%', 'y':'33.33%'},

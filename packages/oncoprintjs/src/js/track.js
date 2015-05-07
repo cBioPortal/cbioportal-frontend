@@ -23,7 +23,7 @@ function Track(name, data, config, oncoprint_config) {
 	var cell_renderer;
 
 	if (self.oncoprint_config.get('render') === 'table') {
-		cell_renderer = new D3SVGCellRenderer(self.data, self.oncoprint_config, new ReadOnlyObject(self.config));
+		cell_renderer = new D3SVGCellRenderer(self.data, self.oncoprint_config.extend(self.config));
 		cell_renderer.bindEvents(self);
 		self.renderer = new TrackTableRenderer(cell_renderer);
 	}
