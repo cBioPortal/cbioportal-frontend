@@ -2,8 +2,6 @@ var utils = require('./utils');
 var $ = require('jquery');
 var _ = require('underscore');
 
-// TODO: handle accessing config properties cleaner
-
 function D3SVGRuleset(track_config) {
 	var self = this;
 	self.rule_map = {};
@@ -88,7 +86,6 @@ function D3SVGCellRenderer(data, track_config) {
 	self.cell_area;
 	self.svg;
 	self.g;
-	self.hits;
 
 	self.parseRuleset = function(json_rules) {
 		self.rule_set.fromJSON(json_rules);
