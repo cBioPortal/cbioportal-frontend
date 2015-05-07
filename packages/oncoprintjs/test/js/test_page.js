@@ -28,8 +28,10 @@ var genderData;
 var genderDataPromise = $.getJSON('./gbm/gender-gbm.json');
 var geneData;
 var geneDataPromise = $.getJSON('./gbm/tp53.json');
+var mutationData;
 genderDataPromise.then(function(data) {
   genderData = data.data;
+  mutationData = genderData.map(function(x) { return $.extend({}, x, {attr_val: (x.attr_val === 'MALE' ? 70 + Math.random()*30 : Math.random()*30)}); });
 });
 geneDataPromise.then(function(data) {
   geneData = data;
@@ -42,6 +44,13 @@ $.when(geneDataPromise, genderDataPromise).then(function() {
               return d.attr_val;
             }
           });
+  onc.addTrack('mutations', mutationData, {label: 'Mutations'})
+        .useRenderTemplate('bar_chart', {
+          data: function(d) {
+            return d.attr_val;
+          },
+          range:[0,100]
+        });
   /*var renderer = onc.addTrack('gender',genderData, {label:'Gender' }).renderer;
   renderer.addRule({condition:function(d) { return d.attr_val === 'MALE';}, 
                                   d3_shape: d3.select(document.createElementNS('http://www.w3.org/2000/svg', 'rect')), 
