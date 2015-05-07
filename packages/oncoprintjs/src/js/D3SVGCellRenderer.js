@@ -37,7 +37,7 @@ function D3SVGRuleset(track_config) {
 
 	var applyRule = function(params, d3_g_selection, d3_data, d3_data_key) {
 		d3_g_selection = d3_g_selection.data(
-			d3_data.filter(params.condition),
+			d3_data.filter(params.condition || function(d) { return true; }),
 			d3_data_key
 			);
 		var elts = d3_g_selection.select(function() {
@@ -180,7 +180,6 @@ function D3SVGCellRenderer(data, track_config) {
 				}
 			};
 			self.addRule({
-				condition: function(d) { return true; },
 				d3_shape: rect,
 				attrs: attrs,
 			});
@@ -197,7 +196,28 @@ function D3SVGCellRenderer(data, track_config) {
 			// params: - data accessor
 			//	      - endpoints of the value range
 			//	      - color: string or function of datum
-
+			var rect = utils.makeD3SVGElement('rect');
+			var range = params.range.slice();
+			var range_len = range[1] - range[0];
+			var color = params.color;
+			var data = params.data;
+			var height_perc = function(d) {
+				return ((data(d) - range[0])/range_len)*100;
+			};
+			var attrs = {
+				width: '100%',
+				height: function(d) {
+					return height_perc(d)+'%';
+				},
+				y: function(d) {
+					return (100 - height_perc(d))+ '%';
+				},
+				fill: color || '#000000'
+			};
+			self.addRule({
+				d3_shape: rect,
+				attrs: attrs
+			});
 		} else if (templName === 'genetic_alteration') {
 			// any params?
 		}
