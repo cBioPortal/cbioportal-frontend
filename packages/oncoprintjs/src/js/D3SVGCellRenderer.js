@@ -4,11 +4,10 @@ var _ = require('underscore');
 
 // TODO: handle accessing config properties cleaner
 
-function D3SVGRuleset(oncoprint_config, track_config) {
+function D3SVGRuleset(track_config) {
 	var self = this;
 	self.rule_map = {};
 	self.track_config = track_config;
-	self.oncoprint_config = oncoprint_config;
 
 	self.addRule = function(condition, d3_shape, attrs, z_index) {
 		var rule_id = Object.keys(self.rule_map).length;
@@ -27,14 +26,12 @@ function D3SVGRuleset(oncoprint_config, track_config) {
 		// convert a percentage to a local pixel coordinate
 		var width_like = ['width', 'x'];
 		var height_like = ['height', 'y'];
-		if (typeof attr_val === 'string' && attr_val.indexOf('%') > -1) {
-			attr_val = parseFloat(attr_val)/100;
-			if (width_like.indexOf(attr_name) > -1) {
-				attr_val = attr_val*self.oncoprint_config.get('cell_width');
-			} else if (height_like.indexOf(attr_name) > -1) {
-				attr_val = attr_val*self.track_config.get('cell_height');
-			} 
-		}
+		attr_val = parseFloat(attr_val)/100;
+		if (width_like.indexOf(attr_name) > -1) {
+			attr_val = attr_val*self.track_config.get('cell_width');
+		} else if (height_like.indexOf(attr_name) > -1) {
+			attr_val = attr_val*self.track_config.get('cell_height');
+		} 
 		return attr_val+'';
 	};
 
@@ -48,12 +45,14 @@ function D3SVGRuleset(oncoprint_config, track_config) {
 		});
 		_.each(params.attrs, function(val, key) {
 			elts.attr(key, function(d,i) {
-				var currVal = val;
-				if (typeof currVal === 'function') {
-					currVal = currVal(d,i);
+				var curr_val = val;
+				if (typeof curr_val === 'function') {
+					curr_val = curr_val(d,i);
 				}
-				currVal = percentToPx(currVal, key);
-				return currVal;
+				if (typeof curr_val === 'string' && curr_val.indexOf('%') > -1) {
+					curr_val = percentToPx(curr_val, key);
+				}
+				return curr_val;
 			});
 		});
 	};
@@ -81,11 +80,10 @@ function D3SVGRuleset(oncoprint_config, track_config) {
 	};
 }
 
-function D3SVGCellRenderer(data, oncoprint_config, track_config) {
+function D3SVGCellRenderer(data, track_config) {
 	var self = this;
 	self.track_config = track_config;
-	self.oncoprint_config = oncoprint_config;
-	self.rule_set = new D3SVGRuleset(self.oncoprint_config, self.track_config);
+	self.rule_set = new D3SVGRuleset(self.track_config);
 	self.data = data;
 	self.cell_area;
 	self.svg;
@@ -112,18 +110,22 @@ function D3SVGCellRenderer(data, oncoprint_config, track_config) {
 
 		self.cell_area.selectAll('*').remove();
 		self.svg = self.cell_area.append('svg')
-		.attr('width', (self.oncoprint_config.get('cell_width') + self.oncoprint_config.get('cell_padding'))*self.data.length)
-		.attr('height', self.track_config.get('track_height'));
+		self.updateCellArea();
 
 		self.g = self.svg.selectAll('g').data(self.data, self.track_config.get('datum_id')).enter().append('g').classed('cell', true);
 		self.updateCells();
 	};
 
+	self.updateCellArea = function() {
+		self.svg.attr('width', (self.track_config.get('cell_width') + self.track_config.get('cell_padding'))*self.data.length)
+			.attr('height', self.track_config.get('track_height'));
+	};
+
 	self.updateCells = function() {
-		var id_order = utils.invert_array(self.oncoprint_config.get('id_order'));
+		var id_order = utils.invert_array(self.track_config.get('id_order'));
 		self.g.transition()
 		.attr('transform', function(d,i) {
-				return utils.translate(id_order[self.track_config.get('datum_id')(d)]*(self.oncoprint_config.get('cell_width') + self.oncoprint_config.get('cell_padding')), 0);
+				return utils.translate(id_order[self.track_config.get('datum_id')(d)]*(self.track_config.get('cell_width') + self.track_config.get('cell_padding')), 0);
 			});
 
 		self.drawCells();
@@ -138,7 +140,7 @@ function D3SVGCellRenderer(data, oncoprint_config, track_config) {
 	self.drawHitZones = function() {
 		self.g.selectAll('rect.hit').remove();
 		var hits = self.g.append('rect').classed('hit', true)
-			.attr('width', self.oncoprint_config.get('cell_width'))
+			.attr('width', self.track_config.get('cell_width'))
 			.attr('height', self.track_config.get('cell_height'))
 			.attr('stroke', 'rgba(0,0,0,0)')
 			.attr('fill', 'rgba(0,0,0,0)');
@@ -167,7 +169,21 @@ function D3SVGCellRenderer(data, oncoprint_config, track_config) {
 		if (templName === 'categorical_color') {
 			// params: - map from category to color
 			//	      - data accessor
-
+			var rect = utils.makeD3SVGElement('rect');
+			var color = $.extend({}, params.color);
+			var category = params.category;
+			var attrs = {
+				width: '100%',
+				height: '100%',
+				fill: function(d) {
+					return color[category(d)];
+				}
+			};
+			self.addRule({
+				condition: function(d) { return true; },
+				d3_shape: rect,
+				attrs: attrs,
+			});
 		} else if (templName === 'continuous_color') {
 			// params: - data accessor
 			//	      - endpoints of the value range
@@ -189,6 +205,9 @@ function D3SVGCellRenderer(data, oncoprint_config, track_config) {
 	self.bindEvents = function(track) {
 		$(track).on('sort.oncoprint set_cell_width.oncoprint set_cell_padding.oncoprint', function() {
 			self.updateCells();
+		});
+		$(track).on('set_cell_width.oncoprint set_cell_padding.oncoprint', function() {
+			self.updateCellArea();
 		});
 	};
 };
