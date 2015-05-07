@@ -35,7 +35,7 @@ exports.stableSort = function(arr, cmp) {
       });
       // unzip
       return _.map(zipped, function(x) { return x[0];});
-}
+};
 
 exports.sort_row_by_rows = function(row, rows) {
   // TODO test this
