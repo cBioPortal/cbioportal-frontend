@@ -13,10 +13,14 @@ var defaultOncoprintConfig = {
 	render: 'table',
 };
 
+var hiddenOncoprintConfig = {
+};
+
 function Oncoprint(container_selector_string, config) {
 	var self = this;
 	self.table;
 	self.config = $.extend({}, defaultOncoprintConfig, config || {});
+	self.config = $.extend(self.config, hiddenOncoprintConfig);
 
 	self.config.id_order = [];
 	self.track_order = []; 

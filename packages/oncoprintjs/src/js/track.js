@@ -91,6 +91,7 @@ function TrackTableRenderer(cell_renderer) {
 		self.row = row;
 		self.$row = $(self.row.node());
 		var label_area = row.append('td').classed('track_label', true);
+		var between_area = row.append('td').classed('track_between', true);
 		var cell_area = row.append('td').classed('track_cells', true);
 		renderLabel(label_area);
 		initCells(cell_area)
