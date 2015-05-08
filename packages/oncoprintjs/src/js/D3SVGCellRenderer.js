@@ -1,6 +1,7 @@
 var utils = require('./utils');
 var $ = require('jquery');
 var _ = require('underscore');
+var events = require('./events');
 
 function D3SVGRuleset(track_config) {
 	var self = this;
@@ -193,11 +194,23 @@ function D3SVGCellRenderer(data, track_config) {
 			// params: - data accessor
 			//	      - endpoints of the value range
 			//	      - color: string or function of datum
+			//	     - scale
 			var rect = utils.makeD3SVGElement('rect');
 			var range = params.range.slice();
+			var _data = params.data;
+			var data = params.data;
+			if (params.log_scale) {
+				if (range[0] <= 0 || range[1] <= 0) {
+					utils.warn("Using log scale with range that includes a number <= 0", "Bar chart template");
+				}
+				range[0] = Math.log(range[0]);
+				range[1] = Math.log(range[1]);
+				data = function(d) {
+					return Math.log(_data(d));
+				}
+			}
 			var range_len = range[1] - range[0];
 			var color = params.color;
-			var data = params.data;
 			var height_perc = function(d) {
 				return ((data(d) - range[0])/range_len)*100;
 			};
@@ -216,14 +229,85 @@ function D3SVGCellRenderer(data, track_config) {
 				attrs: attrs
 			});
 		} else if (templName === 'genetic_alteration') {
-			// any params?
+			params = $.extend({}, params);
+			var rect = utils.makeD3SVGElement('rect');
+			// background (CNA)
+			var cna = params.cna_name || 'cna';
+			self.addRule({
+				d3_shape: rect,
+				attrs: {
+					width:'100%',
+					height: '100%',
+					fill: function(d) {
+						if (!d[cna]) {
+							return params.default_cell_color || '#D3D3D3';
+						} else if (d[cna] === params.cna_amplified_name) {
+							return params.cna_amplified_color || '#FF0000';
+						} else if (d[cna] === params.cna_homodeleted_name) {
+							return params.cna_homodeleted_color || '#0000FF';
+						}
+					}
+				}
+			});
+			// mutations
+			var mut = params.mut_name || 'mut';
+			self.addRule({
+				condition: function(d) { return !!d[mut]; },
+				d3_shape: rect,
+				attrs: {
+					width: '100%',
+					height: '33.33%',
+					y: '33.33%',
+					fill: function(d) {
+						var m = d[mut];
+						// TODO: look up defaults in real data
+						if (m === (params.mut_missense_name || 'MISSENSE')) {
+							return params.mut_missense_color || '#008000';
+						} else if (m === (params.mut_trunc_name || 'TRUNC')) {
+							return params.mut_trunc_color || '#000000';
+						} else if (m === (params.mut_inframe_name || 'INFRAME')) {
+							return params.mut_inframe_color || '#9F8170';
+						} else if (m === (params.mut_frameshift_name || 'FRAMESHIFT')) {
+							return params.mut_frameshift_color || '#000000'; // TODO - is this default?
+						} else {
+							return params.mut_default_color || '#000000';
+						}
+					}
+				}
+			});
+			// mrna
+			var mrna = params.mrna_name || 'mrna';
+			self.addRule({
+				condition: function(d) { return !!d[mrna]; },
+				d3_shape: rect,
+				attrs: {
+					width: '100%',
+					height: '100%',
+					fill: 'rgba(0,0,0,0)',
+					stroke-width: 2,
+					stroke: function(d) {
+						var m = d[mrna];
+						// TODO: look up defaults in real data. or maybe just have no defaults here - put defaults in a different file
+						if (m === (params.mrna_upregulated_name || 'UPREGULATED')) {
+							return params.mrna_upregulated_color || '#FF9999';
+						} else if (m === (params.mrna_downregulated_name || 'DOWNREGULATED')) {
+							return params.mrna_downregulated_color || '#6699CC';
+						}
+					}
+				}
+			});
+			// TODO: rppa
+			var triangle-up = utils.makeD3SVGElement('path').attr('d', 'triangle-up')
 		}
 	};
 	self.bindEvents = function(track) {
-		$(track).on('sort.oncoprint set_cell_width.oncoprint set_cell_padding.oncoprint', function() {
+		$(track).on(events.SORT, function() {
 			self.updateCells();
-		});
-		$(track).on('set_cell_width.oncoprint set_cell_padding.oncoprint', function() {
+		}).on(events.SET_CELL_WIDTH, function() {
+			self.updateCells();
+			self.updateCellArea();
+		}).on(events.SET_CELL_PADDING, function() {
+			self.updateCells();
 			self.updateCellArea();
 		});
 	};
