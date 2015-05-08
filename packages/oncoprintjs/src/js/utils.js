@@ -20,6 +20,10 @@ exports.makeD3SVGElement = function(tag) {
   return d3.select(document.createElementNS('http://www.w3.org/2000/svg', tag));
 };
 
+exports.warn = function(str, context) {
+  console.log("Oncoprint error in "+context+": "+str);
+}
+
 exports.stableSort = function(arr, cmp) {
       var zipped = [];
       _.each(arr, function(val, ind) {
