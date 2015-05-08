@@ -284,7 +284,7 @@ function D3SVGCellRenderer(data, track_config) {
 					width: '100%',
 					height: '100%',
 					fill: 'rgba(0,0,0,0)',
-					stroke-width: 2,
+					'stroke-width': 2,
 					stroke: function(d) {
 						var m = d[mrna];
 						// TODO: look up defaults in real data. or maybe just have no defaults here - put defaults in a different file
@@ -297,7 +297,7 @@ function D3SVGCellRenderer(data, track_config) {
 				}
 			});
 			// TODO: rppa
-			var triangle-up = utils.makeD3SVGElement('path').attr('d', 'triangle-up')
+			var triangle_up = utils.makeD3SVGElement('path').attr('d', 'triangle-up')
 		}
 	};
 	self.bindEvents = function(track) {
