@@ -8,4 +8,5 @@ module.exports = {
 	CELL_CLICK: 'cell_click.oncoprint',
 	CELL_MOUSEENTER: 'cell_mouseenter.oncoprint',
 	CELL_MOUSELEAVE: 'cell_mouseleave.oncoprint',
+	SET_PRE_TRACK_PADDING: 'set_pre_track_padding.oncoprint'
 };

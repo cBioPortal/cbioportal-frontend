@@ -4,6 +4,7 @@ var d3 = require('d3');
 var $ = require('jquery');
 var ReadOnlyObject = require('./ReadOnlyObject');
 var events = require('./events');
+var signals = require('./signals');
 
 // TODO: use self everywhere
 
@@ -14,6 +15,7 @@ var defaultOncoprintConfig = {
 };
 
 var hiddenOncoprintConfig = {
+	pre_track_padding: 0,
 };
 
 function Oncoprint(container_selector_string, config) {
@@ -86,6 +88,13 @@ function Oncoprint(container_selector_string, config) {
 		$(self).trigger(events.REMOVE_TRACK, {track: name});
 		return true;
 	};
+
+	(function bindEvents(self) {
+		$(self).on(signals.REQUEST_PRE_TRACK_PADDING, function(e, data) {
+			self.config.pre_track_padding = Math.max(data.pre_track_padding, self.config.pre_track_padding);
+			$(self).trigger(events.SET_PRE_TRACK_PADDING, {pre_track_padding: self.config.pre_track_padding});
+		});
+	})(self);
 }
 
 function OncoprintTableRenderer(container_selector_string) {

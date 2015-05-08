@@ -20,6 +20,23 @@ $('#move_btn').click(function(){
   onc.moveTrack('gender', newPos);
     console.log('moving gender to '+newPos);
 });
+$('#add_tracks_btn').click(function() {
+  onc.addTrack('mutations', mutationData, {label: 'Mutations'})
+        .useRenderTemplate('bar_chart', {
+          data: function(d) {
+            return d.attr_val;
+          },
+          range:[0,100]
+        });
+  onc.addTrack('logmutations', mutationData, {label: 'Mutations (log scale)'})
+        .useRenderTemplate('bar_chart', {
+          data: function(d) {
+            return d.attr_val;
+          },
+          range:[0.1,100],
+          log_scale:true
+        });
+      });
 $('#remove_btn').click(function(){
   onc.removeTrack('gender2');
   console.log('removing Gender 2');
@@ -46,21 +63,7 @@ $.when(geneDataPromise, genderDataPromise).then(function() {
               return d.attr_val;
             }
           });
-  onc.addTrack('mutations', mutationData, {label: 'Mutations'})
-        .useRenderTemplate('bar_chart', {
-          data: function(d) {
-            return d.attr_val;
-          },
-          range:[0,100]
-        });
-  onc.addTrack('logmutations', mutationData, {label: 'Mutations (log scale)'})
-        .useRenderTemplate('bar_chart', {
-          data: function(d) {
-            return d.attr_val;
-          },
-          range:[0.1,100],
-          log_scale:true
-        });
+  
   /*var renderer = onc.addTrack('gender',genderData, {label:'Gender' }).renderer;
   renderer.addRule({condition:function(d) { return d.attr_val === 'MALE';}, 
                                   d3_shape: d3.select(document.createElementNS('http://www.w3.org/2000/svg', 'rect')), 

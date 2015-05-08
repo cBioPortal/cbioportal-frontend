@@ -2,6 +2,7 @@ var utils = require('./utils');
 var $ = require('jquery');
 var _ = require('underscore');
 var events = require('./events');
+var signals = require('./signals');
 
 function D3SVGRuleset(track_config) {
 	var self = this;
@@ -115,7 +116,7 @@ function D3SVGCellRenderer(data, track_config) {
 	};
 
 	self.updateCellArea = function() {
-		self.svg.attr('width', (self.track_config.get('cell_width') + self.track_config.get('cell_padding'))*self.data.length)
+		self.svg.attr('width', self.track_config.get('pre_track_padding') + (self.track_config.get('cell_width') + self.track_config.get('cell_padding'))*self.data.length)
 			.attr('height', self.track_config.get('track_height'));
 	};
 
@@ -123,7 +124,7 @@ function D3SVGCellRenderer(data, track_config) {
 		var id_order = utils.invert_array(self.track_config.get('id_order'));
 		self.g.transition()
 		.attr('transform', function(d,i) {
-				return utils.translate(id_order[self.track_config.get('datum_id')(d)]*(self.track_config.get('cell_width') + self.track_config.get('cell_padding')), 0);
+				return utils.translate(self.track_config.get('pre_track_padding') + id_order[self.track_config.get('datum_id')(d)]*(self.track_config.get('cell_width') + self.track_config.get('cell_padding')), 0);
 			});
 
 		self.drawCells();
@@ -197,22 +198,23 @@ function D3SVGCellRenderer(data, track_config) {
 			//	     - scale
 			var rect = utils.makeD3SVGElement('rect');
 			var range = params.range.slice();
+			var effective_range = params.range.slice();
 			var _data = params.data;
 			var data = params.data;
 			if (params.log_scale) {
 				if (range[0] <= 0 || range[1] <= 0) {
 					utils.warn("Using log scale with range that includes a number <= 0", "Bar chart template");
 				}
-				range[0] = Math.log(range[0]);
-				range[1] = Math.log(range[1]);
+				effective_range[0] = Math.log(range[0]);
+				effective_range[1] = Math.log(range[1]);
 				data = function(d) {
 					return Math.log(_data(d));
 				}
 			}
-			var range_len = range[1] - range[0];
+			var range_len = effective_range[1] - effective_range[0];
 			var color = params.color;
 			var height_perc = function(d) {
-				return ((data(d) - range[0])/range_len)*100;
+				return ((data(d) - effective_range[0])/range_len)*100;
 			};
 			var attrs = {
 				width: '100%',
@@ -228,6 +230,22 @@ function D3SVGCellRenderer(data, track_config) {
 				d3_shape: rect,
 				attrs: attrs
 			});
+			// add range markers
+			self.svg.selectAll('text.bar_chart_range_marker').remove();
+			var range_font_size = params.range_font_size || 10;
+			var range_label_width = range_font_size * Math.max(range[0].toString().length, range[1].toString().length) + 2;
+			$(self).trigger(signals.REQUEST_PRE_TRACK_PADDING, {pre_track_padding: range_label_width});
+			var range_font_color = params.range_font_color || '#FF0000';
+			self.svg.append('text').attr('font-size', range_font_size)
+						.attr('fill', range_font_color)
+						.attr('x', 0)
+						.attr('y', range_font_size)
+						.text(range[1]);
+			self.svg.append('text').attr('font-size', range_font_size)
+						.attr('fill', range_font_color)
+						.attr('x', 0)
+						.attr('y', track_config.get('track_height'))
+						.text(range[0]);
 		} else if (templName === 'genetic_alteration') {
 			params = $.extend({}, params);
 			var rect = utils.makeD3SVGElement('rect');
@@ -309,6 +327,12 @@ function D3SVGCellRenderer(data, track_config) {
 		}).on(events.SET_CELL_PADDING, function() {
 			self.updateCells();
 			self.updateCellArea();
+		}).on(events.SET_PRE_TRACK_PADDING, function(e,data) {
+			self.updateCells();
+			self.updateCellArea();
+		});
+		$(self).on(signals.REQUEST_PRE_TRACK_PADDING, function(e, data) {
+			$(track).trigger(signals.REQUEST_PRE_TRACK_PADDING, data);
 		});
 	};
 };
