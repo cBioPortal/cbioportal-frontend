@@ -3,8 +3,9 @@ var $ = require('jquery');
 
 var Oncoprint  = require('../../src/js/Oncoprint');
 var onc = new Oncoprint('#onc');
+var genderTrack;
 $('#shuffle_btn').click(function() {
-  onc.sortOnTrack('gender', function(d1, d2) {
+  onc.sortOnTrack(genderTrack, function(d1, d2) {
     var map = {'MALE':0, 'FEMALE':1};
     return map[d1.attr_val] - map[d2.attr_val];
   });
@@ -21,14 +22,18 @@ $('#move_btn').click(function(){
     console.log('moving gender to '+newPos);
 });
 $('#add_tracks_btn').click(function() {
-  onc.addTrack('mutations', mutationData, {label: 'Mutations'})
+  var mutationsTrack = 
+  onc.addTrack(mutationData, {label: 'Mutations'});
+  onc.getTrack(mutationsTrack)
         .useRenderTemplate('bar_chart', {
           data: function(d) {
             return d.attr_val;
           },
           range:[0,100]
         });
-  onc.addTrack('logmutations', mutationData, {label: 'Mutations (log scale)'})
+  var logMutationsTrack =
+  onc.addTrack(mutationData, {label: 'Mutations (log scale)'});
+  onc.getTrack(logMutationsTrack)
         .useRenderTemplate('bar_chart', {
           data: function(d) {
             return d.attr_val;
@@ -38,8 +43,7 @@ $('#add_tracks_btn').click(function() {
         });
       });
 $('#remove_btn').click(function(){
-  onc.removeTrack('gender2');
-  console.log('removing Gender 2');
+  onc.removeTrack(mutationsTrack);
 });
 var genderData;
 var genderDataPromise = $.getJSON('./gbm/gender-gbm.json');
@@ -56,7 +60,9 @@ geneDataPromise.then(function(data) {
   geneData = data;
 });
 $.when(geneDataPromise, genderDataPromise).then(function() {
-  onc.addTrack('gender', genderData, {label: 'Gender'})
+  genderTrack = 
+  onc.addTrack(genderData, {label: 'Gender'});
+  onc.getTrack(genderTrack)
           .useRenderTemplate('categorical_color', {
             color: {MALE: '#6699FF', FEMALE:'#FF00FF'},
             category: function(d) {
