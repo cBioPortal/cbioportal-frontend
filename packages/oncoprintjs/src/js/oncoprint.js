@@ -20,6 +20,7 @@ var hiddenOncoprintConfig = {
 
 function Oncoprint(container_selector_string, config) {
 	var self = this;
+	var track_id_counter = 0;
 	self.table;
 	self.config = $.extend({}, defaultOncoprintConfig, config || {});
 	self.config = $.extend(self.config, hiddenOncoprintConfig);
@@ -44,48 +45,48 @@ function Oncoprint(container_selector_string, config) {
 		$(self).trigger(events.SET_CELL_PADDING);
 	};
 
-	self.sortOnTrack = function(trackName, dataCmp) {
-		self.config.id_order = self.tracks[trackName].getDatumIds(dataCmp);
+	self.sortOnTrack = function(track_id, data_cmp) {
+		self.config.id_order = self.tracks[track_id].getDatumIds(data_cmp);
 		$(self).trigger(events.SORT, {id_order: self.config.id_order});
 	};
 
-	self.moveTrack = function(track_name, new_position) {
+	self.moveTrack = function(track_id, new_position) {
 		new_position = Math.min(self.track_order.length-1, new_position);
 		new_position = Math.max(0, new_position);
-		var old_position = self.track_order.indexOf(track_name);
+		var old_position = self.track_order.indexOf(track_id);
 
 		self.track_order.splice(old_position, 1);
-		self.track_order.splice(new_position, 0, track_name);
+		self.track_order.splice(new_position, 0, track_id);
 
-		$(self).trigger(events.MOVE_TRACK, {track_name: track_name, tracks:self.tracks, track_order: self.track_order});
+		$(self).trigger(events.MOVE_TRACK, {track_id: track_id, tracks:self.tracks, track_order: self.track_order});
 	};
 
-	self.addTrack = function(name, data, config) {
-		if (name in self.tracks) {
-			return false;
-		}
-		self.tracks[name] = new Track(name, data, config, new ReadOnlyObject(self.config));
-		self.tracks[name].bindEvents(self);
-		self.track_order.push(name);
+	self.addTrack = function(data, config) {
+		var track_id = track_id_counter;
+		track_id_counter += 1;
+		self.tracks[track_id] = new Track(data, config, new ReadOnlyObject(self.config));
+		self.tracks[track_id].bindEvents(self);
+		self.track_order.push(track_id);
 
 		// TODO: maybe this line shouldn't exist if we're not handling no data in oncoprint
-		self.config.id_order = self.config.id_order.concat(_.difference(self.tracks[name].getDatumIds(), self.config.id_order));
+		self.config.id_order = self.config.id_order.concat(_.difference(self.tracks[track_id].getDatumIds(), self.config.id_order));
 
-		$(self).trigger(events.ADD_TRACK, {track: self.tracks[name]});
-		return self.tracks[name];
+		$(self).trigger(events.ADD_TRACK, {track: self.tracks[track_id]});
+		return track_id;
 	};
 
-	self.getTrack = function(name) {
-		return self.tracks[name];
+	self.getTrack = function(track_id) {
+		return self.tracks[track_id];
 	};
 
-	self.removeTrack = function(name) {
-		delete self.tracks[name];
+	self.removeTrack = function(track_id) {
+		var track = self.tracks[track_id];
+		delete self.tracks[track_id];
 
-		var oldPosition = self.track_order.indexOf(name);
+		var oldPosition = self.track_order.indexOf(track_id);
 		self.track_order.splice(oldPosition, 1);
 
-		$(self).trigger(events.REMOVE_TRACK, {track: name});
+		$(self).trigger(events.REMOVE_TRACK, {track: track, track_id: track_id});
 		return true;
 	};
 

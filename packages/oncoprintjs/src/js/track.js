@@ -16,9 +16,8 @@ var defaultTrackConfig = {
 	sort_cmp: undefined
 }; 
 
-function Track(name, data, config, oncoprint_config) {
+function Track(data, config, oncoprint_config) {
 	var self = this;
-	self.name = name;
 	self.config = $.extend({}, defaultTrackConfig, config || {}); // inherit from default
 	self.oncoprint_config = oncoprint_config;
 	
