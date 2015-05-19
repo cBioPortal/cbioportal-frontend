@@ -22,7 +22,6 @@ var hiddenOncoprintConfig = {
 function Oncoprint(container_selector_string, config) {
 	var self = this;
 	var track_id_counter = 0;
-	self.toolbar = new Toolbar();
 	self.table;
 	self.config = $.extend({}, defaultOncoprintConfig, config || {});
 	self.config = $.extend(self.config, hiddenOncoprintConfig);
@@ -36,7 +35,6 @@ function Oncoprint(container_selector_string, config) {
 		self.renderer = new OncoprintTableRenderer(container_selector_string);
 	}
 	self.renderer.bindEvents(self);
-	self.toolbar.bindEvents(self);
 
 	self.setCellWidth = function(w) {
 		self.config.cell_width = w;
@@ -136,6 +134,12 @@ function OncoprintTableRenderer(container_selector_string) {
 		$(oncoprint).on(events.REMOVE_TRACK, function(e, data) {
 			var track = data.track;
 			track.renderer.$row.remove();
+		});
+		self.$table.mouseenter(function() {
+			$(oncoprint).trigger(events.ONCOPRINT_MOUSEENTER);
+		});
+		self.$table.mouseleave(function() {
+			$(oncoprint).trigger(events.ONCOPRINT_MOUSELEAVE);
 		});
 	};
 }
