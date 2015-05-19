@@ -34,10 +34,10 @@ exports.stableSort = function(arr, cmp) {
 
 	var ordered_cmp = function(a,b) {
 		var res = 0;
-		var cmp_ind = -1;
+		var cmp_ind = 0;
 		while (res === 0 && cmp_ind < cmp.length) {
-			cmp_ind += 1;
 			res = (cmp[cmp_ind])(a[0],b[0]);
+			cmp_ind += 1;
 		}
 		return res;
 	};
@@ -46,7 +46,7 @@ exports.stableSort = function(arr, cmp) {
 		zipped.push([val, ind]);
 	})
 	zipped.sort(ordered_cmp);
-	return _map(zipped, function(x) { return x[0];});
+	return _.map(zipped, function(x) { return x[0];});
 };
 
 exports.translate = function(x,y) {

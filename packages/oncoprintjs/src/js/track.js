@@ -23,9 +23,10 @@ function Track(data, config, oncoprint_config) {
 	
 	self.data = data;
 	var cell_renderer;
-	var data_map = data.reduce(function(acc, next) {
+	var data_map = _.reduce(data, function(acc, next) {
 		acc[self.config.datum_id(next)] = next;
-	});
+		return acc;
+	}, {});
 
 	if (self.oncoprint_config.get('render') === 'table') {
 		cell_renderer = new D3SVGCellRenderer(self.data, self.oncoprint_config.extend(self.config));
