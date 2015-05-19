@@ -23,6 +23,9 @@ function Track(data, config, oncoprint_config) {
 	
 	self.data = data;
 	var cell_renderer;
+	var data_map = data.reduce(function(acc, next) {
+		acc[self.config.datum_id(next)] = next;
+	});
 
 	if (self.oncoprint_config.get('render') === 'table') {
 		cell_renderer = new D3SVGCellRenderer(self.data, self.oncoprint_config.extend(self.config));
@@ -50,11 +53,24 @@ function Track(data, config, oncoprint_config) {
 		// TODO: label decorations
 		return self.config.label;
 	};
-	
-	self.getDatumIds = function(sort_cmp) {
-		return _.map((sort_cmp && utils.stableSort(self.data, sort_cmp)) || self.data, 
+
+	self.getDatumIds = function(sort_cmp, filter) {
+		filter = filter || function(d) { return true; };
+		return _.map(
+				_.filter(
+					(sort_cmp && utils.stableSort(self.data, sort_cmp)) || self.data,
+					filter
+				),
 				self.config.datum_id
-				);
+			);
+	};
+
+	self.getSortedData = function(sort_cmp) {
+		return utils.stableSort(self.data, sort_cmp);
+	};
+
+	self.getDatum = function(datum_id) {
+		return data_map[datum_id];
 	};
 
 	self.useRenderTemplate = function(templName, params) {

@@ -3,6 +3,7 @@ var _ = require('underscore');
 var d3 = require('d3');
 var $ = require('jquery');
 var ReadOnlyObject = require('./ReadOnlyObject');
+var Toolbar = require('./Toolbar')
 var events = require('./events');
 var signals = require('./signals');
 
@@ -21,6 +22,7 @@ var hiddenOncoprintConfig = {
 function Oncoprint(container_selector_string, config) {
 	var self = this;
 	var track_id_counter = 0;
+	self.toolbar = new Toolbar();
 	self.table;
 	self.config = $.extend({}, defaultOncoprintConfig, config || {});
 	self.config = $.extend(self.config, hiddenOncoprintConfig);
@@ -34,6 +36,7 @@ function Oncoprint(container_selector_string, config) {
 		self.renderer = new OncoprintTableRenderer(container_selector_string);
 	}
 	self.renderer.bindEvents(self);
+	self.toolbar.bindEvents(self);
 
 	self.setCellWidth = function(w) {
 		self.config.cell_width = w;
@@ -48,6 +51,10 @@ function Oncoprint(container_selector_string, config) {
 	self.sortOnTrack = function(track_id, data_cmp) {
 		self.config.id_order = self.tracks[track_id].getDatumIds(data_cmp);
 		$(self).trigger(events.SORT, {id_order: self.config.id_order});
+	};
+
+	self.sortOnTracks = function(track_ids, data_cmps) {
+		self.config.id_order;
 	};
 
 	self.moveTrack = function(track_id, new_position) {

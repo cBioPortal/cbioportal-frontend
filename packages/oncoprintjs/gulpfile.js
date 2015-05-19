@@ -34,7 +34,7 @@ gulp.task('test', function() {
   .pipe(notify("Done with building code for testing."))
 
   // Unit tests
-  gulp.start('spec');
+  /*gulp.start('spec');*/
 
   // Copy over the HTML.
   gulp.src('test/index.html')
