@@ -157,8 +157,13 @@ function D3SVGCellRenderer(data, track_config) {
 		g_attached.exit().remove();
 		self.g = self.svg.selectAll('g').data(self.data, self.track_config.get('datum_id'))
 		var id_order = utils.invert_array(self.track_config.get('id_order'));
-		self.g.transition()
-		.attr('transform', function(d,i) {
+		var g_target;
+		if (self.track_config.get('transition') > 0) {
+			g_target = self.g.transition().duration(self.track_config.get('transition'));
+		} else {
+			g_target = self.g;
+		}
+		g_target.attr('transform', function(d,i) {
 				return utils.translate(self.track_config.get('pre_track_padding') + id_order[self.track_config.get('datum_id')(d)]*(self.track_config.get('cell_width') + self.track_config.get('cell_padding')), 0);
 			});
 
