@@ -31,7 +31,7 @@ var toolbar_events = {
 	
 };
 
-function OncoprintToolbar() {
+function OncoprintToolbar(config) {
 	var self = this;
 	
 	self.bindEvents = function(oncoprint) {

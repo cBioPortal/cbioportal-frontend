@@ -7,7 +7,7 @@ var whitespace_on = true;
 
 var onc = new Oncoprint('#onc', {cell_padding: cell_padding});
 $('#shuffle_btn').click(function() {
-	onc.sortOnTrack(gender_track, function(d1, d2) {
+	onc.sortOnTrack(gender_track_id, function(d1, d2) {
 		var map = {'MALE':0, 'FEMALE':1};
 		return map[d1.attr_val] - map[d2.attr_val];
 	});
