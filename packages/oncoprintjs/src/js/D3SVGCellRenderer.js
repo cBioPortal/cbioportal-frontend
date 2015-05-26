@@ -44,13 +44,17 @@ function D3SVGRuleset(track_config) {
 		if (z_index === undefined) {
 			z_index = rule_id;
 		}
-		self.rule_map[rule_id] = {condition: condition, shape: d3_shape, attrs: attrs, z_index: z_index};
+		self.rule_map[rule_id] = {condition: condition || function(d) { return true; }, shape: d3_shape, attrs: attrs, z_index: z_index, id:rule_id};
 		return rule_id;
 	};
 
 	self.removeRule = function(rule_id) {
 		delete self.rule_map[rule_id];
 	};
+
+	self.getRule = function(rule_id) {
+		return self.rule_map[rule_id];
+	}
 
 	var percentToPx = function(attr_val, attr_name) {
 		// convert a percentage to a local pixel coordinate
@@ -65,15 +69,19 @@ function D3SVGRuleset(track_config) {
 		return attr_val+'';
 	};
 
-	var applyRule = function(params, d3_g_selection, d3_data, d3_data_key) {
+	var filterData = function(rule_params, d3_data) {
+		return d3_data.filter(rule_params.condition);
+	};
+
+	var applyRule = function(rule_params, d3_g_selection, d3_data) {
 		d3_g_selection = d3_g_selection.data(
-			d3_data.filter(params.condition || function(d) { return true; }),
-			d3_data_key || function(d) { return d; }
+			filterData(rule_params, d3_data),
+			self.track_config.get('datum_id'),
 			);
 		var elts = d3_g_selection.select(function() {
-			return this.appendChild(params.shape.node().cloneNode(true));
+			return this.appendChild(rule_params.shape.node().cloneNode(true));
 		});
-		_.each(params.attrs, function(val, key) {
+		_.each(rule_params.attrs, function(val, key) {
 			elts.attr(key, function(d,i) {
 				var curr_val = val;
 				if (typeof curr_val === 'function') {
@@ -95,10 +103,10 @@ function D3SVGRuleset(track_config) {
 				);
 	};
 
-	self.apply = function(d3_g_selection, d3_data, d3_data_key) {
+	self.apply = function(d3_g_selection, d3_data) {
 		var rules = getOrderedRules();
 		_.each(rules, function(rule) {
-			applyRule(rule, d3_g_selection, d3_data, d3_data_key);
+			applyRule(rule, d3_g_selection, d3_data, self.track_config.get('datum_id'));
 		});
 	};
 
@@ -107,6 +115,11 @@ function D3SVGRuleset(track_config) {
 		_.each(json_rules, function(rule) {
 			self.addRule(rule.condition, rule.d3_shape, rule.attrs, rule.z_index);
 		});
+	};
+
+	self.getLegendMap = function(only_active, d3_data) {
+		// returns map from rule_id to svg element
+		// if only_active is true, then only give back the rules that are used at least once
 	};
 }
 
@@ -119,14 +132,18 @@ function D3SVGCellRenderer(data, track_config) {
 	self.svg;
 	self.g;
 
+	self.getLegendMap = function(only_active) {
+		return self.rule_set.getLegendMap(only_active, self.data);
+	};
+
 	self.setRuleset = function(json_rules) {
 		self.rule_set.fromJSON(json_rules);
 	};
 
 	self.addRule = function(params) {
-		var ret = self.rule_set.addRule(params.condition, params.d3_shape, params.attrs, params.z_index);
+		var rule_id = self.rule_set.addRule(params.condition, params.d3_shape, params.attrs, params.z_index);
 		updateCells();
-		return ret;
+		return rule_id;
 	};
 
 	self.removeRule = function(rule_id) {
@@ -172,7 +189,7 @@ function D3SVGCellRenderer(data, track_config) {
 
 	var drawCells = function() {
 		self.g.selectAll('*').remove();
-		self.rule_set.apply(self.g, self.data, self.track_config.get('datum_id'));
+		self.rule_set.apply(self.g, self.data);
 		drawHitZones();
 	};
 
