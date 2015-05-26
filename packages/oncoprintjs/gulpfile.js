@@ -43,6 +43,10 @@ gulp.task('test', function() {
   // Copy over the data.
   gulp.src('test/data/**')
   .pipe(gulp.dest('dist/test/'));
+
+  // Copy over the css
+  gulp.src('src/css/**')
+  .pipe(gulp.dest('dist/test/'));
 });
 
 gulp.task('prod', function() {
@@ -74,5 +78,5 @@ gulp.task('default', ['clean'], function() {
 
 // Watch
 gulp.task('watch', function() {
-  gulp.watch(['src/js/**/*.js', 'test/*.html', 'test/js/**/*.js', 'test/spec/*.js'], ['test']);
+  gulp.watch(['src/js/**/*.js', 'src/css/**/*.css', 'test/*.html', 'test/js/**/*.js', 'test/spec/*.js'], ['test']);
 });
