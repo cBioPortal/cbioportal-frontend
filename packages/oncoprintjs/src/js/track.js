@@ -122,8 +122,10 @@ function TrackTableRenderer(track_config, cell_renderer) {
 
 	var self = this;
 	var cell_renderer = cell_renderer;
-	self.row;
-	self.$row;
+	self.fixed_row;
+	self.$fixed_row;
+	self.scrolling_row;
+	self.$scrolling_row;
 	self.label_area;
 	self.between_area;
 	self.cell_area;
@@ -137,19 +139,23 @@ function TrackTableRenderer(track_config, cell_renderer) {
 
 	var renderLabel = function(label_area) {
 		label_area.selectAll('*').remove();
-		label_area.append('p').text(label_text);
+		label_area.append('p').text(label_text).style('display', 'inline');
 	};
 
 	var initCells = function(cell_area) {
 		cell_renderer.init(cell_area);
 	};
 
-	self.init = function(row) {
-		self.row = row;
-		self.$row = $(self.row.node());
-		self.label_area = row.append('td').classed('track_label', true);
-		self.between_area = row.append('td').classed('track_between', true).style('position', 'relative');
-		self.cell_area = row.append('td').classed('track_cells', true);
+	self.init = function(fixed_row, scrolling_row) {
+		self.fixed_row = fixed_row;
+		self.$fixed_row = $(self.fixed_row.node());
+		self.scrolling_row = scrolling_row;
+		self.$scrolling_row = $(self.scrolling_row.node());
+
+		self.label_area = self.fixed_row.append('td').classed('track_label', true);
+		self.between_area = self.fixed_row.append('td').classed('track_between', true).style('position', 'relative');
+		self.between_area.append('p').style('display', 'inline').text('yoyoyo');
+		self.cell_area = self.scrolling_row.append('td').classed('track_cells', true);
 		renderLabel(self.label_area);
 		initCells(self.cell_area)
 	};

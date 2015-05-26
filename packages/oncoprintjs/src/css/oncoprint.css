@@ -1,0 +1,11 @@
+.oncoprint_container {
+	//position: relative;
+}
+
+.fixed_oncoprint_table_container {
+	float:left;
+}
+.scrolling_oncoprint_table_container {
+	overflow: auto;
+	width: auto;
+}

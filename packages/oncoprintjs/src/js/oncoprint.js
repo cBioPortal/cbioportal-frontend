@@ -134,19 +134,23 @@ function Oncoprint(container_selector_string, config) {
 
 function OncoprintTableRenderer(container_selector_string) {
 	var self = this;
-	self.container = d3.select(container_selector_string);
-	self.table;
-	self.$table;
+	self.container = d3.select(container_selector_string).classed('oncoprint_container', true);
+	self.fixed_table;
+	self.$fixed_table;
+	self.scrolling_table;
+	self.$scrolling_table;
 	
 	(function initTable(self) {
 		self.container.selectAll('*').remove();
-		self.table = self.container.append('table');
-		self.$table = $(self.table.node());
+		self.fixed_table = self.container.append('div').classed('fixed_oncoprint_table_container', true).append('table')
+		self.$fixed_table = $(self.fixed_table.node());
+		self.scrolling_table = self.container.append('div').classed('scrolling_oncoprint_table_container', true).append('table')
+		self.$scrolling_table = $(self.scrolling_table.node());
 	})(self);
 
 	self.bindEvents = function(oncoprint) {
 		$(oncoprint).on(events.ADD_TRACK, function(e, data) {
-			data.track.renderer.init(self.table.append('tr'));
+			data.track.renderer.init(self.fixed_table.append('tr'), self.scrolling_table.append('tr'));
 		});
 		$(oncoprint).on(events.MOVE_TRACK, function(e, data) {
 			var track_name = data.track_name;
@@ -164,10 +168,16 @@ function OncoprintTableRenderer(container_selector_string) {
 			var track = data.track;
 			track.renderer.$row.remove();
 		});
-		self.$table.mouseenter(function() {
+		self.$fixed_table.mouseenter(function() {
 			$(oncoprint).trigger(events.ONCOPRINT_MOUSEENTER);
 		});
-		self.$table.mouseleave(function() {
+		self.$fixed_table.mouseleave(function() {
+			$(oncoprint).trigger(events.ONCOPRINT_MOUSELEAVE);
+		});
+		self.$scrolling_table.mouseenter(function() {
+			$(oncoprint).trigger(events.ONCOPRINT_MOUSEENTER);
+		});
+		self.$scrolling_table.mouseleave(function() {
 			$(oncoprint).trigger(events.ONCOPRINT_MOUSELEAVE);
 		});
 	};
