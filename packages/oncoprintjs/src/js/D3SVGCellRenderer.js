@@ -34,6 +34,14 @@ var _ = require('underscore');
 var events = require('./events');
 var signals = require('./signals');
 
+function D3SVGLinearRangeRule(condition, d3_shape, attrs, attr_bounds) {
+
+};
+
+function D3SVGStaticRule(condition, d3_shape) {
+
+};
+
 function D3SVGRuleset(track_config) {
 	var self = this;
 	self.rule_map = {};
