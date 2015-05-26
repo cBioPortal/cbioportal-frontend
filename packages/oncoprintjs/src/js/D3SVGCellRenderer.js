@@ -68,7 +68,7 @@ function D3SVGRuleset(track_config) {
 	var applyRule = function(params, d3_g_selection, d3_data, d3_data_key) {
 		d3_g_selection = d3_g_selection.data(
 			d3_data.filter(params.condition || function(d) { return true; }),
-			d3_data_key
+			d3_data_key || function(d) { return d; }
 			);
 		var elts = d3_g_selection.select(function() {
 			return this.appendChild(params.shape.node().cloneNode(true));
@@ -119,19 +119,19 @@ function D3SVGCellRenderer(data, track_config) {
 	self.svg;
 	self.g;
 
-	self.parseRuleset = function(json_rules) {
+	self.setRuleset = function(json_rules) {
 		self.rule_set.fromJSON(json_rules);
 	};
 
 	self.addRule = function(params) {
 		var ret = self.rule_set.addRule(params.condition, params.d3_shape, params.attrs, params.z_index);
-		self.updateCells();
+		updateCells();
 		return ret;
 	};
 
 	self.removeRule = function(rule_id) {
 		self.rule_set.removeRule(rule_id);
-		self.updateCells();
+		updateCells();
 	};
 
 	self.init = function(cell_area) {
@@ -139,18 +139,18 @@ function D3SVGCellRenderer(data, track_config) {
 
 		self.cell_area.selectAll('*').remove();
 		self.svg = self.cell_area.append('svg')
-		self.updateCellArea();
+		updateCellArea();
 
 		self.g = self.svg.selectAll('g').data(self.data, self.track_config.get('datum_id')).enter().append('g').classed('cell', true);
-		self.updateCells();
+		updateCells();
 	};
 
-	self.updateCellArea = function() {
+	var updateCellArea = function() {
 		self.svg.attr('width', self.track_config.get('pre_track_padding') + (self.track_config.get('cell_width') + self.track_config.get('cell_padding'))*self.data.length)
 			.attr('height', self.track_config.get('track_height'));
 	};
 
-	self.updateCells = function() {
+	var updateCells = function() {
 		// enter/exit as necessary
 		var g_attached = self.svg.selectAll('g.cell').data(self.data, self.track_config.get('datum_id'));
 		g_attached.enter().append('g').classed('cell', true);
@@ -167,16 +167,16 @@ function D3SVGCellRenderer(data, track_config) {
 				return utils.translate(self.track_config.get('pre_track_padding') + id_order[self.track_config.get('datum_id')(d)]*(self.track_config.get('cell_width') + self.track_config.get('cell_padding')), 0);
 			});
 
-		self.drawCells();
+		drawCells();
 	};
 
-	self.drawCells = function() {
+	var drawCells = function() {
 		self.g.selectAll('*').remove();
 		self.rule_set.apply(self.g, self.data, self.track_config.get('datum_id'));
-		self.drawHitZones();
+		drawHitZones();
 	};
 
-	self.drawHitZones = function() {
+	var drawHitZones = function() {
 		self.g.selectAll('rect.hit').remove();
 		var hits = self.g.append('rect').classed('hit', true)
 			.attr('width', self.track_config.get('cell_width'))
@@ -360,16 +360,16 @@ function D3SVGCellRenderer(data, track_config) {
 	};
 	self.bindEvents = function(track) {
 		$(track).on(events.SORT, function() {
-			self.updateCells();
+			updateCells();
 		}).on(events.SET_CELL_WIDTH, function() {
-			self.updateCells();
-			self.updateCellArea();
+			updateCells();
+			updateCellArea();
 		}).on(events.SET_CELL_PADDING, function() {
-			self.updateCells();
-			self.updateCellArea();
+			updateCells();
+			updateCellArea();
 		}).on(events.SET_PRE_TRACK_PADDING, function(e,data) {
-			self.updateCells();
-			self.updateCellArea();
+			updateCells();
+			updateCellArea();
 		});
 		$(self).on(signals.REQUEST_PRE_TRACK_PADDING, function(e, data) {
 			$(track).trigger(signals.REQUEST_PRE_TRACK_PADDING, data);
