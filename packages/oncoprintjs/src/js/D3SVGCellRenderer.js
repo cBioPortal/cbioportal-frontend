@@ -33,26 +33,136 @@ var $ = require('jquery');
 var _ = require('underscore');
 var events = require('./events');
 var signals = require('./signals');
+var globals = require('./globals');
 
-function D3SVGLinearRangeRule(condition, d3_shape, attrs, attr_bounds) {
+function D3SVGRule() {
+	var percentToPx = function(attr_val, attr_name, cell_width, cell_height) {
+		// convert a percentage to a local pixel coordinate
+		var width_like = ['width', 'x'];
+		var height_like = ['height', 'y'];
+		attr_val = parseFloat(attr_val)/100;
+		if (width_like.indexOf(attr_name) > -1) {
+			attr_val = attr_val*cell_width;
+		} else if (height_like.indexOf(attr_name) > -1) {
+			attr_val = attr_val*cell_height;
+		} 
+		return attr_val+'';
+	};
 
+	this.apply = function(d3_g_selection, cell_width, cell_height) {
+		var shape = this.shape;
+		var elts = d3_g_selection.select(function() {
+			return this.appendChild(shape.node().cloneNode(true));
+		});
+		_.each(this.attrs, function(val, key) {
+			elts.attr(key, function(d,i) {
+				var curr_val = val;
+				if (typeof curr_val === 'function') {
+					curr_val = curr_val(d,i);
+				}
+				if (typeof curr_val === 'string' && curr_val.indexOf('%') > -1) {
+					curr_val = percentToPx(curr_val, key, cell_width, cell_height);
+				}
+				return curr_val;
+			});
+		});
+	}
+	this.filterData = function(d3_data) {
+		return d3_data.filter(this.condition || function(d) { return true; });
+	};
+
+}
+
+function D3SVGLinearColorRangeRule(condition, d3_shape, data_function, data_range, color_range, z_index, rule_id) {
+	var self = this;
+	self.rule_id = rule_id;
+	self.condition = condition;
+	self.shape = d3_shape;
+	var fill_function = (function(_data_range, _color_range) {
+		return function(d) {
+			var datum = data_function(d);
+			distance = (datum - _data_range[0]) / (_data_range[1] - _data_range[0]);
+			_color_range = [d3.rgb(_color_range[0]).toString(), d3.rgb(_color_range[1]).toString()];
+			return utils.lin_interp(distance, _color_range[0], _color_range[1]);
+		}
+	})(data_range, color_range);
+	self.attrs = {
+		fill: fill_function
+	};
+	self.z_index = z_index;
+
+	(function makeLegendElement(self) {
+		// TODO
+		self.legend_g = utils.makeD3SVGElement('g');
+		self.legend_g.append('text').attr('font-size', '12px').text(data_range[0]);
+	/*
+	var gradient = self.legend_g.append('linearGradient')
+					.attr('y1', 0).attr('y2', 0)
+					.attr('x1', )
+	*/
+	})(self);
 };
+D3SVGLinearColorRangeRule.prototype = new D3SVGRule();
+D3SVGLinearColorRangeRule.prototype.constructor=D3SVGLinearColorRangeRule;
 
-function D3SVGStaticRule(condition, d3_shape) {
+function D3SVGLinearRangeRule(condition, d3_shape, data_function, data_range, attr_range, z_index, rule_id) {
+	var self = this;
+	self.rule_id = rule_id;
+	self.condition = condition;
+	self.shape = d3_shape;
+	self.attrs = {};
+	_.each(attr_range, function(range, attr) {
+		self.attrs[attr] = (function(_data_range, _range) {
+			return function(d) {
+				var datum = data_function(d);
+				distance = (datum - _data_range[0]) / (_data_range[1] - _data_range[0]);
+				return utils.lin_interp(distance, _range[0], _range[1]);
+			};
+		})(data_range, range);
+	});
+	self.z_index = z_index;
 
+	self.legend_g = utils.makeD3SVGElement('g');
 };
+D3SVGLinearRangeRule.prototype = new D3SVGRule();
+D3SVGLinearRangeRule.prototype.constructor=D3SVGLinearRangeRule;
+
+function D3SVGStaticRule(condition, d3_shape, attrs, z_index, rule_id, legend_label) {
+	var self = this;
+	self.rule_id = rule_id;
+	self.condition = condition;
+	self.shape = d3_shape;
+	self.attrs = attrs;
+	self.z_index = z_index;
+	self.legend_label = legend_label;
+
+	self.getLegendGroup = function(cell_width, cell_height) {
+		var group = utils.makeD3SVGElement('g');
+		if (self.legend_label) {
+			var text = group.append('text').text(self.legend_label);
+		}
+		var g = group.append('g');
+		self.apply(g, cell_width, cell_height);
+		return group;
+	};
+};
+D3SVGStaticRule.prototype = new D3SVGRule();
+D3SVGStaticRule.prototype.constructor = D3SVGStaticRule;
 
 function D3SVGRuleset(track_config) {
 	var self = this;
 	self.rule_map = {};
 	self.track_config = track_config;
 
-	self.addRule = function(condition, d3_shape, attrs, z_index) {
+	self.addStaticRule = function(condition, d3_shape, attrs, z_index, legend_label) {
 		var rule_id = Object.keys(self.rule_map).length;
+		attrs = attrs || {};
 		if (z_index === undefined) {
 			z_index = rule_id;
 		}
-		self.rule_map[rule_id] = {condition: condition || function(d) { return true; }, shape: d3_shape, attrs: attrs, z_index: z_index, id:rule_id};
+		self.rule_map[rule_id] = new D3SVGStaticRule(condition, d3_shape, attrs, z_index, rule_id, legend_label);
+		globals.rulesvgs = globals.rulesvgs || [];
+		globals.rulesvgs.push(self.rule_map[rule_id].getLegendGroup(10, 20));
 		return rule_id;
 	};
 
@@ -62,45 +172,10 @@ function D3SVGRuleset(track_config) {
 
 	self.getRule = function(rule_id) {
 		return self.rule_map[rule_id];
-	}
-
-	var percentToPx = function(attr_val, attr_name) {
-		// convert a percentage to a local pixel coordinate
-		var width_like = ['width', 'x'];
-		var height_like = ['height', 'y'];
-		attr_val = parseFloat(attr_val)/100;
-		if (width_like.indexOf(attr_name) > -1) {
-			attr_val = attr_val*self.track_config.get('cell_width');
-		} else if (height_like.indexOf(attr_name) > -1) {
-			attr_val = attr_val*self.track_config.get('cell_height');
-		} 
-		return attr_val+'';
 	};
 
-	var filterData = function(rule_params, d3_data) {
-		return d3_data.filter(rule_params.condition);
-	};
-
-	var applyRule = function(rule_params, d3_g_selection, d3_data) {
-		d3_g_selection = d3_g_selection.data(
-			filterData(rule_params, d3_data),
-			self.track_config.get('datum_id'),
-			);
-		var elts = d3_g_selection.select(function() {
-			return this.appendChild(rule_params.shape.node().cloneNode(true));
-		});
-		_.each(rule_params.attrs, function(val, key) {
-			elts.attr(key, function(d,i) {
-				var curr_val = val;
-				if (typeof curr_val === 'function') {
-					curr_val = curr_val(d,i);
-				}
-				if (typeof curr_val === 'string' && curr_val.indexOf('%') > -1) {
-					curr_val = percentToPx(curr_val, key);
-				}
-				return curr_val;
-			});
-		});
+	var filterG = function(rule, d3_g_selection, d3_data) {
+		return d3_g_selection.data(rule.filterData(d3_data), self.track_config.get('datum_id'));
 	};
 
 	var getOrderedRules = function() {
@@ -114,7 +189,7 @@ function D3SVGRuleset(track_config) {
 	self.apply = function(d3_g_selection, d3_data) {
 		var rules = getOrderedRules();
 		_.each(rules, function(rule) {
-			applyRule(rule, d3_g_selection, d3_data, self.track_config.get('datum_id'));
+			rule.apply(filterG(rule, d3_g_selection, d3_data), self.track_config.get('cell_width'), self.track_config.get('cell_height'));
 		});
 	};
 
@@ -125,9 +200,16 @@ function D3SVGRuleset(track_config) {
 		});
 	};
 
-	self.getLegendMap = function(only_active, d3_data) {
-		// returns map from rule_id to svg element
+	self.getLegendMap = function(d3_data, only_active) {
+		// returns map from rule_id to g element
 		// if only_active is true, then only give back the rules that are used at least once
+		var legend_map = {};
+		_.each(getOrderedRules(), function(rule) {
+			if (!only_active || filterData(rule, d3_data).length > 0) {
+				legend_map[rule.rule_id] = rule.legend_g;
+			}
+		});
+		return legend_map;
 	};
 }
 
@@ -151,19 +233,28 @@ function D3SVGCellRenderer(data, track_config) {
 	self.addRule = function(params) {
 		var rule_id = self.rule_set.addRule(params.condition, params.d3_shape, params.attrs, params.z_index);
 		updateCells();
+		$(self).trigger(events.UPDATE_RENDER_RULES);
+		return rule_id;
+	};
+
+	self.addStaticRule = function(params) {
+		var rule_id = self.rule_set.addStaticRule(params.condition, params.d3_shape, params.attrs, params.z_index, params.legend_label);
+		updateCells();
+		$(self).trigger(events.UPDATE_RENDER_RULES);
 		return rule_id;
 	};
 
 	self.removeRule = function(rule_id) {
 		self.rule_set.removeRule(rule_id);
 		updateCells();
+		$(self).trigger(events.UPDATE_RENDER_RULES);
 	};
 
 	self.init = function(cell_area) {
 		self.cell_area = cell_area;
 
 		self.cell_area.selectAll('*').remove();
-		self.svg = self.cell_area.append('svg')
+		self.svg = self.cell_area.append('svg');
 		updateCellArea();
 
 		self.g = self.svg.selectAll('g').data(self.data, self.track_config.get('datum_id')).enter().append('g').classed('cell', true);
@@ -233,6 +324,24 @@ function D3SVGCellRenderer(data, track_config) {
 		if (templName === 'categorical_color') {
 			// params: - map from category to color
 			//	      - data accessor
+			_.each(params.color, function(color, category) {
+				var rect = utils.makeD3SVGElement('rect');
+				rect.attr('fill', color);
+				var condition = (function(cat) {
+					return function(d) {
+						return d.attr_val === cat;
+					};
+				})(category);
+				self.addStaticRule({ condition: condition, 
+							d3_shape: rect,
+							attrs: {
+								width: '100%',
+								height: '100%'
+							},
+							legend_label: category
+						});
+			});
+			/*
 			var rect = utils.makeD3SVGElement('rect');
 			var color = $.extend({}, params.color);
 			var category = params.category;
@@ -246,7 +355,7 @@ function D3SVGCellRenderer(data, track_config) {
 			self.addRule({
 				d3_shape: rect,
 				attrs: attrs,
-			});
+			});*/
 		} else if (templName === 'continuous_color') {
 			// params: - data accessor
 			//	      - endpoints of the value range
@@ -395,9 +504,6 @@ function D3SVGCellRenderer(data, track_config) {
 		}).on(events.SET_PRE_TRACK_PADDING, function(e,data) {
 			updateCells();
 			updateCellArea();
-		});
-		$(self).on(signals.REQUEST_PRE_TRACK_PADDING, function(e, data) {
-			$(track).trigger(signals.REQUEST_PRE_TRACK_PADDING, data);
 		});
 	};
 };

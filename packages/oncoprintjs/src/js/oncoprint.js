@@ -35,6 +35,8 @@ var ReadOnlyObject = require('./ReadOnlyObject');
 var Toolbar = require('./Toolbar')
 var events = require('./events');
 var signals = require('./signals');
+var globals = require('./globals');
+var utils = require('./utils');
 
 // TODO: use self everywhere
 
@@ -65,19 +67,33 @@ function Oncoprint(container_selector_string, config) {
 	}
 	self.renderer.bindEvents(self);
 
+	var track_events = [events.TRACK_INIT, events.TRACK_FILTER_DATA, events.UPDATE_RENDER_RULES, 
+			events.CELL_CLICK, events.CELL_MOUSEENTER, events.CELL_MOUSELEAVE, 
+			signals.REQUEST_PRE_TRACK_PADDING];
+
+
+	var triggerTracks = function(evt, data) {
+		_.each(self.tracks, function(track) {
+			$(track).trigger(evt, data);
+		});
+	};
+
 	self.setCellWidth = function(w) {
 		self.config.cell_width = w;
 		$(self).trigger(events.SET_CELL_WIDTH);
+		triggerTracks(events.SET_CELL_WIDTH);
 	};
 
 	self.setCellPadding = function(p) {
 		self.config.cell_padding = p;
 		$(self).trigger(events.SET_CELL_PADDING);
+		triggerTracks(events.SET_CELL_PADDING);
 	};
 
 	self.sortOnTrack = function(track_id, data_cmp) {
 		self.config.id_order = self.tracks[track_id].getDatumIds(data_cmp);
 		$(self).trigger(events.SORT, {id_order: self.config.id_order});
+		triggerTracks(events.SORT, {id_order: self.config.id_order});
 	};
 
 	self.sortOnTracks = function(track_ids, data_cmps) {
@@ -99,7 +115,11 @@ function Oncoprint(container_selector_string, config) {
 		var track_id = track_id_counter;
 		track_id_counter += 1;
 		self.tracks[track_id] = new Track(data, config, new ReadOnlyObject(self.config));
-		self.tracks[track_id].bindEvents(self);
+		_.each(track_events, function(evt) {
+			$(self.tracks[track_id]).on(evt, function(e,data) {
+				$(self).trigger(evt, data);
+			});
+		});
 		self.track_order.push(track_id);
 
 		// TODO: maybe this line shouldn't exist if we're not handling no data in oncoprint
@@ -139,18 +159,26 @@ function OncoprintTableRenderer(container_selector_string) {
 	self.$fixed_table;
 	self.scrolling_table;
 	self.$scrolling_table;
+	self.legend_table;
+	self.$legend_table;
 	
 	(function initTable(self) {
 		self.container.selectAll('*').remove();
 		self.fixed_table = self.container.append('div').classed('fixed_oncoprint_table_container', true).append('table')
 		self.$fixed_table = $(self.fixed_table.node());
-		self.scrolling_table = self.container.append('div').classed('scrolling_oncoprint_table_container', true).append('table')
+		self.scrolling_table = self.container.append('div').classed('scrolling_oncoprint_table_container', true).append('table');
 		self.$scrolling_table = $(self.scrolling_table.node());
+		self.legend_table = self.container.append('div').classed('legend_oncoprint_table_container', true).append('table');
+		self.$legend_table = $(self.legend_table.node());
+		self.legend_table.append('tr').append('svg').attr('width', 100).attr('height', 100);
 	})(self);
 
 	self.bindEvents = function(oncoprint) {
 		$(oncoprint).on(events.ADD_TRACK, function(e, data) {
-			data.track.renderer.init(self.fixed_table.append('tr'), self.scrolling_table.append('tr'));
+			var new_fixed_table_row = self.fixed_table.append('tr');
+			var new_scrolling_table_row = self.scrolling_table.append('tr');
+			var new_legend_table_row = self.legend_table.append('tr');
+			data.track.renderer.init(new_fixed_table_row, new_scrolling_table_row);
 		});
 		$(oncoprint).on(events.MOVE_TRACK, function(e, data) {
 			var track_name = data.track_name;
@@ -167,6 +195,13 @@ function OncoprintTableRenderer(container_selector_string) {
 		$(oncoprint).on(events.REMOVE_TRACK, function(e, data) {
 			var track = data.track;
 			track.renderer.$row.remove();
+		});
+		var legend_x = 0;
+		$(oncoprint).on(events.UPDATE_RENDER_RULES, function(e, data) {
+			self.legend_table.select('svg').select(function() {
+				return this.appendChild(globals.rulesvgs[globals.rulesvgs.length-1].node().cloneNode(true));
+			}).attr('transform', utils.translate(legend_x, 0));
+			legend_x += 30;
 		});
 		self.$fixed_table.mouseenter(function() {
 			$(oncoprint).trigger(events.ONCOPRINT_MOUSEENTER);
