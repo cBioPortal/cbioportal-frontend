@@ -35,6 +35,7 @@ var ReadOnlyObject = require('./ReadOnlyObject');
 var utils = require('./utils');
 var events = require('./events');
 var signals = require('./signals');
+var globals = require('./globals');
 
 var defaultTrackConfig = {
 	label: 'Gene',
@@ -65,20 +66,14 @@ function Track(data, config, oncoprint_config) {
 	}
 	self.renderer.bindEvents(self);
 
-	self.bindEvents = function(oncoprint) {
-		var pass_down_from_oncoprint = [events.SORT, events.SET_CELL_WIDTH, events.SET_CELL_PADDING, events.SET_PRE_TRACK_PADDING];
-		_.each(pass_down_from_oncoprint, function(evt) {
-			$(oncoprint).on(evt, function(e, data) {
-				$(self).trigger(evt, data);
-			})
-		});
-		var pass_up_from_cell_renderer = [events.CELL_CLICK, events.CELL_MOUSEENTER, events.CELL_MOUSELEAVE, signals.REQUEST_PRE_TRACK_PADDING];
+	(function bindEvents() {
+		var pass_up_from_cell_renderer = [events.UPDATE_RENDER_RULES, events.CELL_CLICK, events.CELL_MOUSEENTER, events.CELL_MOUSELEAVE, signals.REQUEST_PRE_TRACK_PADDING];
 		_.each(pass_up_from_cell_renderer, function(evt) {
 			$(cell_renderer).on(evt, function(e, data) {
-				$(oncoprint).trigger(evt, $.extend({}, data, {track: self}));
+				$(self).trigger(evt, $.extend({}, data, {track: self}));
 			})
 		});
-	};
+	})();
 
 	self.getLabel = function() {
 		// TODO: label decorations

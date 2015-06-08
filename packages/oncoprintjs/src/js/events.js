@@ -41,4 +41,5 @@ module.exports = {
 	ONCOPRINT_MOUSELEAVE: 'oncoprint_mouseleave.oncoprint',
 	SET_PRE_TRACK_PADDING: 'set_pre_track_padding.oncoprint',
 	TRACK_INIT: 'init.track.oncoprint',
+	UPDATE_RENDER_RULES: 'update_render_rules.cell_renderer=.oncoprint',
 };
