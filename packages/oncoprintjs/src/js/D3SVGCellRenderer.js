@@ -40,7 +40,7 @@ function D3SVGRule() {
 		// convert a percentage to a local pixel coordinate
 		var width_like = ['width', 'x'];
 		var height_like = ['height', 'y'];
-		attr_val = parseFloat(attr_val)/100;
+		attr_val = parseFloat(attr_val, 10)/100;
 		if (width_like.indexOf(attr_name) > -1) {
 			attr_val = attr_val*cell_width;
 		} else if (height_like.indexOf(attr_name) > -1) {
@@ -51,9 +51,7 @@ function D3SVGRule() {
 
 	this.apply = function(d3_g_selection, cell_width, cell_height) {
 		var shape = this.shape;
-		var elts = d3_g_selection.select(function() {
-			return this.appendChild(shape.node().cloneNode(true));
-		});
+		var elts = utils.appendD3SVGElement(shape, d3_g_selection);
 		_.each(this.attrs, function(val, key) {
 			elts.attr(key, function(d,i) {
 				var curr_val = val;
@@ -105,16 +103,18 @@ function D3SVGLinearColorRangeRule(condition, d3_shape, data_function, data_rang
 D3SVGLinearColorRangeRule.prototype = new D3SVGRule();
 D3SVGLinearColorRangeRule.prototype.constructor=D3SVGLinearColorRangeRule;
 
-function D3SVGLinearRangeRule(condition, d3_shape, data_function, data_range, attr_range, z_index, rule_id) {
+function D3SVGLinearRangeRule(condition, d3_shape, data_key, data_range, attr_range, z_index, rule_id, legend_label) {
 	var self = this;
 	self.rule_id = rule_id;
 	self.condition = condition;
 	self.shape = d3_shape;
 	self.attrs = {};
+	self.legend_label = legend_label;
+
 	_.each(attr_range, function(range, attr) {
 		self.attrs[attr] = (function(_data_range, _range) {
 			return function(d) {
-				var datum = data_function(d);
+				var datum = parseFloat(d[data_key], 10);
 				distance = (datum - _data_range[0]) / (_data_range[1] - _data_range[0]);
 				return utils.lin_interp(distance, _range[0], _range[1]);
 			};
@@ -122,7 +122,28 @@ function D3SVGLinearRangeRule(condition, d3_shape, data_function, data_range, at
 	});
 	self.z_index = z_index;
 
-	self.legend_g = utils.makeD3SVGElement('g');
+	self.getLegendGroup = function(cell_width, cell_height) {
+		/*var ret = utils.makeD3SVGElement('g');
+		var lower_group = ret.append('g');
+		var upper_group = ret.append('g');
+
+		var lower_cell = (function(_data_range) {
+			return lower_group.append('g').data({data_key: _data_range[0]});
+		})(data_range);
+		var upper_cell = (function(_data_range) {
+			return upper_group.append('g').data({data_key: _data_range[1]});
+		})(data_range);
+
+		self.apply(lower_cell, cell_width, cell_height);
+		self.apply(upper_cell, cell_width, cell_height);
+
+		lower_group.append('text').text()
+		utils.appendD3SVGElement(lower_group);
+		utils.appendD3SVGElement(upper_group);		
+
+		return ret;	*/
+	};
+	
 };
 D3SVGLinearRangeRule.prototype = new D3SVGRule();
 D3SVGLinearRangeRule.prototype.constructor=D3SVGLinearRangeRule;
@@ -139,7 +160,8 @@ function D3SVGStaticRule(condition, d3_shape, attrs, z_index, rule_id, legend_la
 	self.getLegendGroup = function(cell_width, cell_height) {
 		var group = utils.makeD3SVGElement('g');
 		if (self.legend_label) {
-			var text = group.append('text').text(self.legend_label);
+			group.append('text').text(self.legend_label)
+						.attr('alignment-baseline', 'hanging');
 		}
 		var g = group.append('g');
 		self.apply(g, cell_width, cell_height);

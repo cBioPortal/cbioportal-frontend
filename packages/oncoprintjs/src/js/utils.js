@@ -42,6 +42,31 @@ exports.makeD3SVGElement = function(tag) {
 	return d3.select(document.createElementNS('http://www.w3.org/2000/svg', tag));
 };
 
+exports.appendD3SVGElement = function(elt, target) {
+	return target.select(function() {
+		return this.appendChild(elt.node().cloneNode(true));
+	});
+};
+
+exports.spaceSVGElementsHorizontally = function(group, padding) {
+	var x = 0;
+	var elts = exports.d3SelectChildren(group, '*').each(function() {
+		var transform = d3.select(this).attr('transform');
+		var y = transform && transform.indexOf("translate") > -1 && parseFloat(transform.split(",")[1], 10);
+		y = y || 0;
+		d3.select(this).attr('transform', exports.translate(x, y));
+		x += this.getBBox().width;
+		x += padding;
+	});
+	return group;
+};
+
+exports.d3SelectChildren = function(parent, selector) {
+	return parent.selectAll(selector).filter(function() {
+		return this.parentNode === parent.node();
+	});
+};
+
 exports.warn = function(str, context) {
 	console.log("Oncoprint error in "+context+": "+str);
 };

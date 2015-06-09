@@ -170,7 +170,7 @@ function OncoprintTableRenderer(container_selector_string) {
 		self.$scrolling_table = $(self.scrolling_table.node());
 		self.legend_table = self.container.append('div').classed('legend_oncoprint_table_container', true).append('table');
 		self.$legend_table = $(self.legend_table.node());
-		self.legend_table.append('tr').append('svg').attr('width', 100).attr('height', 100);
+		self.legend_table.append('tr').append('svg').attr('width', 600).attr('height', 100);
 	})(self);
 
 	self.bindEvents = function(oncoprint) {
@@ -198,10 +198,9 @@ function OncoprintTableRenderer(container_selector_string) {
 		});
 		var legend_x = 0;
 		$(oncoprint).on(events.UPDATE_RENDER_RULES, function(e, data) {
-			self.legend_table.select('svg').select(function() {
-				return this.appendChild(globals.rulesvgs[globals.rulesvgs.length-1].node().cloneNode(true));
-			}).attr('transform', utils.translate(legend_x, 0));
-			legend_x += 30;
+			var group = utils.appendD3SVGElement(globals.rulesvgs[globals.rulesvgs.length-1], self.legend_table.select('svg'));
+			utils.spaceSVGElementsHorizontally(group, 10);
+			utils.spaceSVGElementsHorizontally(self.legend_table.select('svg'), 20);
 		});
 		self.$fixed_table.mouseenter(function() {
 			$(oncoprint).trigger(events.ONCOPRINT_MOUSEENTER);
