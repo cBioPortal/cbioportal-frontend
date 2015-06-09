@@ -108,10 +108,15 @@ exports.lin_interp = function(t, a, b) {
 		var r = [parseInt(a.substring(1,3), 16), parseInt(b.substring(1,3), 16)];
 		var g = [parseInt(a.substring(3,5), 16), parseInt(b.substring(3,5), 16)];
 		var b = [parseInt(a.substring(5,7), 16), parseInt(b.substring(5,7), 16)];
-		var R = r[0]*(1-t) + r[1]*t;
-		var G = g[0]*(1-t) + g[1]*t;
-		var B = b[0]*(1-t) + b[1]*t;
-		return '#' + R.toString(16) + G.toString(16) + B.toString(16);
+		var R = Math.round(r[0]*(1-t) + r[1]*t).toString(16);
+		var G = Math.round(g[0]*(1-t) + g[1]*t).toString(16);
+		var B = Math.round(b[0]*(1-t) + b[1]*t).toString(16);
+
+		R = R.length < 2 ? '0'+R : R;
+		G = G.length < 2 ? '0'+G : G;
+		B = B.length < 2 ? '0'+B : B;
+
+		return '#' + R + G + B;
 	} else if (isNaN(a) && a.indexOf('%') > -1) {
 		var A = parseFloat(a, 10);
 		var B = parseFloat(b, 10);
