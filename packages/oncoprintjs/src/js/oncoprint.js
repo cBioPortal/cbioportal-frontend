@@ -43,29 +43,30 @@ var utils = require('./utils');
 var defaultOncoprintConfig = {
 	cell_width: 10,
 	cell_padding: 3,
-	render: 'table',
 };
 
 var hiddenOncoprintConfig = {
 	pre_track_padding: 0,
 };
 
-function Oncoprint(container_selector_string, config) {
+module.exports = function CreateOncoprint(container_selector_string, config) {
+	var oncoprint = new Oncoprint(config);
+	var renderer = new OncoprintSVGRenderer(container_selector_string, oncoprint);
+	return oncoprint;
+};
+
+function Oncoprint(config) {
 	var self = this;
 	var track_id_counter = 0;
-	self.table;
 	self.config = $.extend({}, defaultOncoprintConfig, config || {});
 	self.config = $.extend(self.config, hiddenOncoprintConfig);
 
-	self.config.id_order = [];
-	self.track_order = []; 
+	/*self.config.id_order = [];
+	self.config.track_order = []; */
+	self.id_order = [];
+	self.track_order = [];
 	self.tracks = {};
 	self.ids = {};
-
-	if (self.config.render === 'table') {
-		self.renderer = new OncoprintTableRenderer(container_selector_string);
-	}
-	self.renderer.bindEvents(self);
 
 	var track_events = [events.TRACK_INIT, events.TRACK_FILTER_DATA, events.UPDATE_RENDER_RULES, 
 			events.CELL_CLICK, events.CELL_MOUSEENTER, events.CELL_MOUSELEAVE, 
@@ -81,50 +82,55 @@ function Oncoprint(container_selector_string, config) {
 	self.setCellWidth = function(w) {
 		self.config.cell_width = w;
 		$(self).trigger(events.SET_CELL_WIDTH);
-		triggerTracks(events.SET_CELL_WIDTH);
+		//triggerTracks(events.SET_CELL_WIDTH);
 	};
 
 	self.setCellPadding = function(p) {
 		self.config.cell_padding = p;
 		$(self).trigger(events.SET_CELL_PADDING);
-		triggerTracks(events.SET_CELL_PADDING);
+		//triggerTracks(events.SET_CELL_PADDING);
 	};
 
 	self.sortOnTrack = function(track_id, data_cmp) {
-		var track_order = self.tracks[track_id].getDatumIds(data_cmp);
-		self.config.id_order = track_order.concat(_.difference(self.config.id_order, track_order));
+		/*var track_id_order = self.tracks[track_id].getDatumIds(data_cmp);
+		self.config.id_order = track_id_order.concat(_.difference(self.config.id_order, track_id_order));
 		$(self).trigger(events.SORT, {id_order: self.config.id_order});
-		triggerTracks(events.SORT, {id_order: self.config.id_order});
+		triggerTracks(events.SORT, {id_order: self.config.id_order});*/
+		throw "not implemented";
 	};
 
 	self.sortOnTracks = function(track_ids, data_cmps) {
-		self.config.id_order;
+		throw "not implemented";
 	};
 
 	self.moveTrack = function(track_id, new_position) {
-		new_position = Math.min(self.track_order.length-1, new_position);
+		new_position = Math.min(self.config.track_order.length-1, new_position);
 		new_position = Math.max(0, new_position);
-		var old_position = self.track_order.indexOf(track_id);
+		var old_position = self.config.track_order.indexOf(track_id);
 
-		self.track_order.splice(old_position, 1);
-		self.track_order.splice(new_position, 0, track_id);
+		self.config.track_order.splice(old_position, 1);
+		self.config.track_order.splice(new_position, 0, track_id);
 
-		$(self).trigger(events.MOVE_TRACK, {track_id: track_id, tracks:self.tracks, track_order: self.track_order});
+		$(self).trigger(events.MOVE_TRACK, {track_id: track_id, tracks:self.tracks, track_order: self.config.track_order});
 	};
 
 	self.addTrack = function(data, config) {
 		var track_id = track_id_counter;
 		track_id_counter += 1;
-		self.tracks[track_id] = new Track(data, config, new ReadOnlyObject(self.config));
-		_.each(track_events, function(evt) {
+		self.tracks[track_id] ={id: track_id, data: data, config: config}; //new Track(data, config, new ReadOnlyObject(self.config));
+		/*_.each(track_events, function(evt) {
 			$(self.tracks[track_id]).on(evt, function(e,data) {
 				$(self).trigger(evt, data);
 			});
-		});
+		});*/
+		//self.config.track_order.push(track_id);
 		self.track_order.push(track_id);
 
 		// TODO: maybe this line shouldn't exist if we're not handling no data in oncoprint
-		self.config.id_order = self.config.id_order.concat(_.difference(self.tracks[track_id].getDatumIds(), self.config.id_order));
+		//self.config.id_order = self.config.id_order.concat(_.difference(self.tracks[track_id].getDatumIds(), self.config.id_order));
+		self.id_order = self.id_order.concat(_.difference(self.id_order, _.map(data, function(d) {
+			return d[config.datum_id_key];
+		})));
 
 		$(self).trigger(events.ADD_TRACK, {track: self.tracks[track_id]});
 		return track_id;
@@ -138,8 +144,8 @@ function Oncoprint(container_selector_string, config) {
 		var track = self.tracks[track_id];
 		delete self.tracks[track_id];
 
-		var oldPosition = self.track_order.indexOf(track_id);
-		self.track_order.splice(oldPosition, 1);
+		var oldPosition = self.config.track_order.indexOf(track_id);
+		self.config.track_order.splice(oldPosition, 1);
 
 		$(self).trigger(events.REMOVE_TRACK, {track: track, track_id: track_id});
 		return true;
@@ -153,30 +159,54 @@ function Oncoprint(container_selector_string, config) {
 	})(self);
 }
 
-function OncoprintLegendRenderer(container_selector_string) {
+function OncoprintSVGRenderer(container_selector_string, oncoprint) {
 	var self = this;
-	self.container = d3.select(container_selector_string).classed('oncoprint_legend_container', true);
-	self.table;
-	self.$table;
+	self.container = d3.select(container_selector_string).classed('oncoprint_container', true);
+	self.fixed_svg;
+	self.$fixed_svg;
+	self.scrolling_svg;
+	self.$scrolling_svg;
 
-	var rows = [];
+	var track_configs = {};
+	var trackY = function(track_id) {
+		var y = 0;
+		_.find(oncoprint.config.track_order, function(id) {
+			if (id === track_id) {
+				return true;
+			} else {
+				y += trackHeight(id);
+				return false;
+			}
+		});
+		return y;
+	};
 
-	(function initTable(self) {
-		self.container.selectAll('*').remove();
-		self.table = self.container.append('table');
-		self.$table = $(self.table.node());		
-	})(self);
-
-	var addRow = function(track_id) {
-
+	var trackHeight = function(track_id) {
+		var track_config = oncoprint.tracks[track_id].config;
+		return track_config.track_height + 2*track_config.track_padding;
 	}
 
+	(function init(self) {
+		self.container.selectAll('*').remove();
+		self.fixed_svg = self.container.append('div').classed('fixed_oncoprint_section_container', true).append('svg');
+		self.scrolling_svg = self.container.append('div').classed('scrolling_oncoprint_section_container', true).append('svg');
+		self.$fixed_svg = $(self.fixed_svg.node());
+		self.$scrolling_svg = $(self.scrolling_svg.node());
+	})(self);
+
 	self.bindEvents = function(oncoprint) {
-		$(oncoprint).on(events.UPDATE_RENDER_RULES, function(e, data) {
+		$(oncoprint).on(events.ADD_TRACK, function(e, data) {
+			data.track.renderer.init()
+		});
+		$(oncoprint).on(events.MOVE_TRACK, function(e, data)) {
+
+		});
+		$(oncoprint).on(events.REMOVE_TRACK, function(e, data)) {
 
 		});
 	};
 }
+
 
 function OncoprintTableRenderer(container_selector_string) {
 	var self = this;
@@ -243,4 +273,27 @@ function OncoprintTableRenderer(container_selector_string) {
 	};
 }
 
-module.exports = Oncoprint;
+function OncoprintLegendRenderer(container_selector_string) {
+	var self = this;
+	self.container = d3.select(container_selector_string).classed('oncoprint_legend_container', true);
+	self.table;
+	self.$table;
+
+	var rows = [];
+
+	(function initTable(self) {
+		self.container.selectAll('*').remove();
+		self.table = self.container.append('table');
+		self.$table = $(self.table.node());		
+	})(self);
+
+	var addRow = function(track_id) {
+
+	}
+
+	self.bindEvents = function(oncoprint) {
+		$(oncoprint).on(events.UPDATE_RENDER_RULES, function(e, data) {
+
+		});
+	};
+}

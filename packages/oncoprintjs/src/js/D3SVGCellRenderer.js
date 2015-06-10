@@ -508,6 +508,12 @@ function D3SVGCellRenderer(data, track_config) {
 			});*/
 			// mutations
 			var mut = params.mut_key || 'mut';
+			self.addStaticRule({
+				condition: function(d) {
+					return utils.mutationType(d[mut])
+				}
+
+			});
 			/*
 			self.addStaticRule({
 				condition: function(d) {}

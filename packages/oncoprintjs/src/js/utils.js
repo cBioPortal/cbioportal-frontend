@@ -70,11 +70,7 @@ exports.mutationType = function(mutation) {
 		'SPLICE_SITE': /^[A-Z]([0-9]+)_splice$/g,
 		'MISSENSE': /^[A-z]([0-9]+)[A-z]$/g
 	}
-	if (nonsense_regex.test(mutation)) {
-
-	} else if (frame_shift_del_regex.test(mutation)) {
-
-	} else if (frame_shift_ins)
+	return '';
 };
 
 exports.d3SelectChildren = function(parent, selector) {

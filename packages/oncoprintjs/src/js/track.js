@@ -42,7 +42,7 @@ var defaultTrackConfig = {
 	datum_id: function(d) { return d['sample'];},
 	cell_height: 20,
 	track_height: 20,
-	track_padding: 20,
+	track_padding: 5,
 	sort_cmp: undefined
 }; 
 
@@ -59,11 +59,9 @@ function Track(data, config, oncoprint_config) {
 		return acc;
 	}, {});
 
-	if (self.oncoprint_config.get('render') === 'table') {
-		cell_renderer = new D3SVGCellRenderer(self.data, self.oncoprint_config.extend(self.config));
-		cell_renderer.bindEvents(self);
-		self.renderer = new TrackTableRenderer(self.oncoprint_config.extend(self.config), cell_renderer);
-	}
+	cell_renderer = new D3SVGCellRenderer(self.data, self.oncoprint_config.extend(self.config));
+	cell_renderer.bindEvents(self);
+	self.renderer = new TrackSVGRenderer(self.oncoprint_config.extend(self.config), cell_renderer);
 	self.renderer.bindEvents(self);
 
 	(function bindEvents() {
@@ -112,6 +110,7 @@ function Track(data, config, oncoprint_config) {
 	$(self).trigger(events.TRACK_INIT, {label_text: self.getLabel()});
 }
 
+function TrackSVGRenderer()
 function TrackTableRenderer(track_config, cell_renderer) {
 	// coupled with OncoprintTableRenderer
 
@@ -146,11 +145,12 @@ function TrackTableRenderer(track_config, cell_renderer) {
 		self.$fixed_row = $(self.fixed_row.node());
 		self.scrolling_row = scrolling_row;
 		self.$scrolling_row = $(self.scrolling_row.node());
+		self.scrolling_row.attr('height', track_config.get('track_height'));
 
-		self.label_area = self.fixed_row.append('td').classed('track_label', true);
-		self.between_area = self.fixed_row.append('td').classed('track_between', true).style('position', 'relative');
+		self.label_area = self.fixed_row.append('td').classed('track_label', true).attr('height', track_config.get('track_height')+5);
+		self.between_area = self.fixed_row.append('td').classed('track_between', true).style('position', 'relative').attr('height', track_config.get('track_height')+5);
 		self.between_area.append('p').style('display', 'inline').text('yoyoyo');
-		self.cell_area = self.scrolling_row.append('td').classed('track_cells', true);
+		self.cell_area = self.scrolling_row.append('td').classed('track_cells', true).attr('height', track_config.get('track_height')+5);
 		renderLabel(self.label_area);
 		initCells(self.cell_area)
 	};

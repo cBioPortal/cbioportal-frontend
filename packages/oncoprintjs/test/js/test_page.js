@@ -5,7 +5,8 @@ var Oncoprint = require('../../src/js/Oncoprint');
 var cell_padding = 3;
 var whitespace_on = true;
 
-var onc = new Oncoprint('#onc', {cell_padding: cell_padding});
+var onc = CreateOncoprint('#onc', {cell_padding: cell_padding});
+
 $('#shuffle_btn').click(function() {
 	onc.sortOnTrack(gender_track_id, function(d1, d2) {
 		var map = {'MALE':0, 'FEMALE':1};
@@ -51,12 +52,14 @@ mutation_data_promise.then(function(data) {
 	mutation_data = data.data;
 });
 $.when(mutation_data_promise).then(function() {
+	for (var i=0; i<10; i++) {
 	mutation_track_id = onc.addTrack(mutation_data, {label: 'Mutations'});
 	onc.getTrack(mutation_track_id).useRenderTemplate('continuous_color', {
 		data_key: 'attr_val',
 		data_range: [0,100],
 		color_range: ['#A9A9A9', '#FF0000']
 	});
+}
 });
 
 alteration_data_promise.then(function(data) {
