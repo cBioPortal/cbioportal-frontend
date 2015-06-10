@@ -2,10 +2,20 @@
 	//position: relative;
 }
 
-.fixed_oncoprint_table_container {
+.fixed_oncoprint_section_container {
 	float:left;
-}
-.scrolling_oncoprint_table_container {
 	overflow: auto;
 	width: auto;
+}
+.scrolling_oncoprint_section_container {
+	overflow: auto;
+	width: auto;
+}
+
+.scrolling_oncoprint_table_container table td {
+	padding: 0;
+	margin: 0;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
 }
