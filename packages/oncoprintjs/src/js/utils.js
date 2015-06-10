@@ -61,6 +61,22 @@ exports.spaceSVGElementsHorizontally = function(group, padding) {
 	return group;
 };
 
+exports.mutationType = function(mutation) {
+	var regex = {
+		'NONSENSE': /^[A-Z]([0-9]+)[*]$/g,
+		'FRAMESHIFT_DEL': /^[A-z*]([0-9]+)[A-z]{2}$/g,
+		'INFRAME_DEL': /^([A-Z]+)([0-9]+)del$/g,
+		'INFRAME_INS': /^([A-Z]+)([0-9]+)ins$/g,
+		'SPLICE_SITE': /^[A-Z]([0-9]+)_splice$/g,
+		'MISSENSE': /^[A-z]([0-9]+)[A-z]$/g
+	}
+	if (nonsense_regex.test(mutation)) {
+
+	} else if (frame_shift_del_regex.test(mutation)) {
+
+	} else if (frame_shift_ins)
+};
+
 exports.d3SelectChildren = function(parent, selector) {
 	return parent.selectAll(selector).filter(function() {
 		return this.parentNode === parent.node();
