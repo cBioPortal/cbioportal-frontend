@@ -36,6 +36,8 @@ var signals = require('./signals');
 var globals = require('./globals');
 
 function D3SVGRule() {
+	this.exclude_from_legend;
+
 	var percentToPx = function(attr_val, attr_name, cell_width, cell_height) {
 		// convert a percentage to a local pixel coordinate
 		var width_like = ['width', 'x'];
@@ -74,11 +76,12 @@ function D3SVGRule() {
 
 }
 
-function D3SVGLinearGradientRule(condition, d3_shape, data_key, data_range, color_range, z_index, rule_id) {
+function D3SVGLinearGradientRule(condition, d3_shape, data_key, data_range, color_range, z_index, rule_id, exclude_from_legend) {
 	var self = this;
 	self.rule_id = rule_id;
 	self.condition = condition;
 	self.shape = d3_shape;
+	self.exclude_from_legend = exclude_from_legend;
 
 	var fill_function = (function(_data_range, _color_range) {
 		return function(d) {
@@ -126,7 +129,7 @@ D3SVGLinearGradientRule.prototype = new D3SVGRule();
 D3SVGLinearGradientRule.prototype.constructor=D3SVGLinearGradientRule;
 
 
-function D3SVGStaticRule(condition, d3_shape, attrs, z_index, rule_id, legend_label) {
+function D3SVGStaticRule(condition, d3_shape, attrs, z_index, rule_id, legend_label, exclude_from_legend) {
 	var self = this;
 	self.rule_id = rule_id;
 	self.condition = condition;
@@ -134,6 +137,7 @@ function D3SVGStaticRule(condition, d3_shape, attrs, z_index, rule_id, legend_la
 	self.attrs = attrs;
 	self.z_index = z_index;
 	self.legend_label = legend_label;
+	self.exclude_from_legend = exclude_from_legend;
 
 	self.getLegendGroup = function(cell_width, cell_height) {
 		var group = utils.makeD3SVGElement('g');
@@ -154,24 +158,24 @@ function D3SVGRuleset(track_config) {
 	self.rule_map = {};
 	self.track_config = track_config;
 
-	self.addStaticRule = function(condition, d3_shape, attrs, z_index, legend_label) {
+	self.addStaticRule = function(condition, d3_shape, attrs, z_index, legend_label, exclude_from_legend) {
 		var rule_id = Object.keys(self.rule_map).length;
 		attrs = attrs || {};
 		if (z_index === undefined) {
 			z_index = rule_id;
 		}
-		self.rule_map[rule_id] = new D3SVGStaticRule(condition, d3_shape, attrs, z_index, rule_id, legend_label);
+		self.rule_map[rule_id] = new D3SVGStaticRule(condition, d3_shape, attrs, z_index, rule_id, legend_label, exclude_from_legend);
 		globals.rulesvgs = globals.rulesvgs || [];
 		globals.rulesvgs.push(self.rule_map[rule_id].getLegendGroup(10, 20));
 		return rule_id;
 	};
 
-	self.addLinearGradientRule = function(condition, d3_shape, data_key, data_range, color_range, z_index) {
+	self.addLinearGradientRule = function(condition, d3_shape, data_key, data_range, color_range, z_index, exclude_from_legend) {
 		var rule_id = Object.keys(self.rule_map).length;
 		if (z_index === undefined) {
 			z_index = rule_id;
 		}
-		self.rule_map[rule_id] = new D3SVGLinearGradientRule(condition, d3_shape, data_key, data_range, color_range, z_index, rule_id);
+		self.rule_map[rule_id] = new D3SVGLinearGradientRule(condition, d3_shape, data_key, data_range, color_range, z_index, rule_id, exclude_from_legend);
 		globals.rulesvgs = globals.rulesvgs || [];
 		globals.rulesvgs.push(self.rule_map[rule_id].getLegendGroup(10, 20));
 		return rule_id;
@@ -216,7 +220,7 @@ function D3SVGRuleset(track_config) {
 		// if only_active is true, then only give back the rules that are used at least once
 		var legend_map = {};
 		_.each(getOrderedRules(), function(rule) {
-			if (!only_active || filterData(rule, d3_data).length > 0) {
+			if ((!only_active || filterData(rule, d3_data).length > 0) && !rule.exclude_from_legend) {
 				legend_map[rule.rule_id] = rule.legend_g;
 			}
 		});
@@ -239,6 +243,7 @@ function D3SVGCellRenderer(data, track_config) {
 
 	self.setRuleset = function(json_rules) {
 		self.rule_set.fromJSON(json_rules);
+		$(self).trigger(events.UPDATE_RENDER_RULES);
 	};
 
 	self.addRule = function(params) {
@@ -249,14 +254,14 @@ function D3SVGCellRenderer(data, track_config) {
 	};
 
 	self.addStaticRule = function(params) {
-		var rule_id = self.rule_set.addStaticRule(params.condition, params.d3_shape, params.attrs, params.z_index, params.legend_label);
+		var rule_id = self.rule_set.addStaticRule(params.condition, params.d3_shape, params.attrs, params.z_index, params.legend_label, params.exclude_from_legend);
 		updateCells();
 		$(self).trigger(events.UPDATE_RENDER_RULES);
 		return rule_id;
 	};
 
 	self.addLinearGradientRule = function(params) {
-		var rule_id = self.rule_set.addLinearGradientRule(params.condition, params.d3_shape, params.data_key, params.data_range, params.color_range, params.z_index);
+		var rule_id = self.rule_set.addLinearGradientRule(params.condition, params.d3_shape, params.data_key, params.data_range, params.color_range, params.z_index, params.exclude_from_legend);
 		updateCells();
 		$(self).trigger(events.UPDATE_RENDER_RULES);
 		return rule_id;
@@ -280,7 +285,7 @@ function D3SVGCellRenderer(data, track_config) {
 	};
 
 	var updateCellArea = function() {
-		self.svg.attr('width', self.track_config.get('pre_track_padding') + (self.track_config.get('cell_width') + self.track_config.get('cell_padding'))*self.data.length)
+		self.svg.attr('width', self.track_config.get('pre_track_padding') + (self.track_config.get('cell_width') + self.track_config.get('cell_padding'))*self.track_config.get('id_order').length)
 			.attr('height', self.track_config.get('track_height'));
 	};
 
@@ -298,6 +303,7 @@ function D3SVGCellRenderer(data, track_config) {
 			g_target = self.g;
 		}
 		g_target.attr('transform', function(d,i) {
+
 				return utils.translate(self.track_config.get('pre_track_padding') + id_order[self.track_config.get('datum_id')(d)]*(self.track_config.get('cell_width') + self.track_config.get('cell_padding')), 0);
 			});
 
@@ -352,10 +358,6 @@ function D3SVGCellRenderer(data, track_config) {
 				})(category);
 				self.addStaticRule({ condition: condition, 
 							d3_shape: rect,
-							attrs: {
-								width: '100%',
-								height: '100%'
-							},
 							legend_label: category
 						});
 			});
@@ -379,6 +381,7 @@ function D3SVGCellRenderer(data, track_config) {
 			//	      - endpoints of the value range
 			//	      - color: string or function of datum
 			//	     - scale
+			/*
 			var rect = utils.makeD3SVGElement('rect');
 			var range = params.range.slice();
 			var effective_range = params.range.slice();
@@ -429,11 +432,64 @@ function D3SVGCellRenderer(data, track_config) {
 						.attr('x', 0)
 						.attr('y', track_config.get('track_height'))
 						.text(range[0]);
+			*/
 		} else if (templName === 'genetic_alteration') {
 			params = $.extend({}, params);
 			var rect = utils.makeD3SVGElement('rect');
 			// background (CNA)
-			var cna = params.cna_name || 'cna';
+			var cna = params.cna_key || 'cna';
+			self.addStaticRule({
+				condition: function(d) {
+					return d[cna] === params.cna_amp_name;
+				},
+				d3_shape: rect,
+				legend_label: 'Amplification',
+				attrs: {
+					fill: params.cna_amp_color
+				}
+			});
+			self.addStaticRule({
+				condition: function(d) {
+					return d[cna] === params.cna_homdel_name;
+				},
+				d3_shape: rect,
+				legend_label: 'Homozygous Deletion',
+				attrs: {
+					fill: params.cna_homdel_color
+				}
+			});
+			console.log(params);
+			self.addStaticRule({
+				condition: function(d) {
+					return d[cna] === params.cna_gain_name;
+				},
+				d3_shape: rect,
+				legend_label: 'Gain',
+				attrs: {
+					fill: params.cna_gain_color
+				}
+			});
+			self.addStaticRule({
+				condition: function(d) {
+					return d[cna] === params.cna_hetloss_name;
+				},
+				d3_shape: rect,
+				legend_label: 'Hemizygous Deletion',
+				attrs: {
+					fill: params.cna_hetloss_color
+				}
+			});
+			self.addStaticRule({
+				condition: function(d) {
+					return !d[cna];
+				},
+				d3_shape: rect,
+				attrs: {
+					fill: params.default_cell_color
+				},
+				exclude_from_legend: true
+			});
+			/*
 			self.addRule({
 				d3_shape: rect,
 				attrs: {
@@ -449,9 +505,13 @@ function D3SVGCellRenderer(data, track_config) {
 						}
 					}
 				}
-			});
+			});*/
 			// mutations
-			var mut = params.mut_name || 'mut';
+			var mut = params.mut_key || 'mut';
+			/*
+			self.addStaticRule({
+				condition: function(d) {}
+			});
 			self.addRule({
 				condition: function(d) { return !!d[mut]; },
 				d3_shape: rect,
@@ -475,9 +535,10 @@ function D3SVGCellRenderer(data, track_config) {
 						}
 					}
 				}
-			});
+			});*/
 			// mrna
 			var mrna = params.mrna_name || 'mrna';
+			/*
 			self.addRule({
 				condition: function(d) { return !!d[mrna]; },
 				d3_shape: rect,
@@ -496,9 +557,9 @@ function D3SVGCellRenderer(data, track_config) {
 						}
 					}
 				}
-			});
+			});*/
 			// TODO: rppa
-			var triangle_up = utils.makeD3SVGElement('path').attr('d', 'triangle-up')
+			var triangle_up = utils.makeD3SVGElement('path').attr('d', 'triangle-up');
 		}
 	};
 	self.bindEvents = function(track) {

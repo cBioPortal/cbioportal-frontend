@@ -91,7 +91,8 @@ function Oncoprint(container_selector_string, config) {
 	};
 
 	self.sortOnTrack = function(track_id, data_cmp) {
-		self.config.id_order = self.tracks[track_id].getDatumIds(data_cmp);
+		var track_order = self.tracks[track_id].getDatumIds(data_cmp);
+		self.config.id_order = track_order.concat(_.difference(self.config.id_order, track_order));
 		$(self).trigger(events.SORT, {id_order: self.config.id_order});
 		triggerTracks(events.SORT, {id_order: self.config.id_order});
 	};
@@ -152,6 +153,31 @@ function Oncoprint(container_selector_string, config) {
 	})(self);
 }
 
+function OncoprintLegendRenderer(container_selector_string) {
+	var self = this;
+	self.container = d3.select(container_selector_string).classed('oncoprint_legend_container', true);
+	self.table;
+	self.$table;
+
+	var rows = [];
+
+	(function initTable(self) {
+		self.container.selectAll('*').remove();
+		self.table = self.container.append('table');
+		self.$table = $(self.table.node());		
+	})(self);
+
+	var addRow = function(track_id) {
+
+	}
+
+	self.bindEvents = function(oncoprint) {
+		$(oncoprint).on(events.UPDATE_RENDER_RULES, function(e, data) {
+
+		});
+	};
+}
+
 function OncoprintTableRenderer(container_selector_string) {
 	var self = this;
 	self.container = d3.select(container_selector_string).classed('oncoprint_container', true);
@@ -170,7 +196,7 @@ function OncoprintTableRenderer(container_selector_string) {
 		self.$scrolling_table = $(self.scrolling_table.node());
 		self.legend_table = self.container.append('div').classed('legend_oncoprint_table_container', true).append('table');
 		self.$legend_table = $(self.legend_table.node());
-		self.legend_table.append('tr').append('svg').attr('width', 600).attr('height', 100);
+		self.legend_table.append('tr').append('svg').attr('width', 2000).attr('height', 100);
 	})(self);
 
 	self.bindEvents = function(oncoprint) {
