@@ -5,7 +5,7 @@ var Oncoprint = require('../../src/js/Oncoprint');
 var cell_padding = 3;
 var whitespace_on = true;
 
-var onc = CreateOncoprint('#onc', {cell_padding: cell_padding});
+var onc = Oncoprint('#onc', {cell_padding: cell_padding});
 
 $('#shuffle_btn').click(function() {
 	onc.sortOnTrack(gender_track_id, function(d1, d2) {
@@ -39,15 +39,23 @@ gender_data_promise.then(function(data) {
 	gender_data = data.data;
 });
 $.when(gender_data_promise).then(function() {
-	gender_track_id = onc.addTrack(gender_data, {label: 'Gender'});
+	gender_track_id = onc.addTrack({label: 'Gender'});
+	onc.setRuleSet(gender_track_id, onc.CATEGORICAL_COLOR, {
+		color: {MALE: '#6699FF', FEMALE: '#FF00FF'},
+		getCategory: function(d) {
+			return d.attr_val;
+		}
+	});
+	onc.setTrackData(gender_track_id, gender_data);
+	/*gender_track_id = onc.addTrack(gender_data, {label: 'Gender'});
 	onc.getTrack(gender_track_id).useRenderTemplate('categorical_color', {
 		color: {MALE: '#6699FF', FEMALE: '#FF00FF'},
 		category: function(d) {
 			return d.attr_val;	
 		}
-	});
+	});*/
 });
-
+/*
 mutation_data_promise.then(function(data) {
 	mutation_data = data.data;
 });
@@ -80,12 +88,18 @@ $.when(alteration_data_promise).then(function() {
 		default_cell_color: '#D3D3D3'
 	});
 });
-
+*/
 $('#change_color_scheme').click(function() {
-	onc.getTrack(gender_track_id).useRenderTemplate('categorical_color', {
+	onc.setRuleSet(gender_track_id, onc.CATEGORICAL_COLOR, {
+		color: {MALE: '#000000', FEMALE: '#999999'},
+		getCategory: function(d) {
+			return d.attr_val;
+		}
+	});
+	/*onc.getTrack(gender_track_id).useRenderTemplate('categorical_color', {
 		color: {MALE: '#0F0F0F', FEMALE: '#D6D6D6'},
 		category: function(d) {
 			return d.attr_val;	
 		}
-	});
+	});*/
 });
