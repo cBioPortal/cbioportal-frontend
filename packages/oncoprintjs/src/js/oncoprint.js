@@ -158,21 +158,21 @@ function Oncoprint(config) {
 		var track = self.tracks[track_id];
 		delete self.tracks[track_id];
 
-		var oldPosition = self.config.track_order.indexOf(track_id);
-		self.config.track_order.splice(oldPosition, 1);
+		var oldPosition = self.track_order.indexOf(track_id);
+		self.track_order.splice(oldPosition, 1);
 
 		$(self).trigger(events.REMOVE_TRACK, {track: track, track_id: track_id});
 		return true;
 	};
 	self.moveTrack = function(track_id, new_position) {
-		new_position = Math.min(self.config.track_order.length-1, new_position);
+		new_position = Math.min(self.track_order.length-1, new_position);
 		new_position = Math.max(0, new_position);
-		var old_position = self.config.track_order.indexOf(track_id);
+		var old_position = self.track_order.indexOf(track_id);
 
-		self.config.track_order.splice(old_position, 1);
-		self.config.track_order.splice(new_position, 0, track_id);
+		self.track_order.splice(old_position, 1);
+		self.track_order.splice(new_position, 0, track_id);
 
-		$(self).trigger(events.MOVE_TRACK, {track_id: track_id, tracks:self.tracks, track_order: self.config.track_order});
+		$(self).trigger(events.MOVE_TRACK, {track_id: track_id, tracks:self.tracks, track_order: self.track_order});
 	};
 	self.addTrack = function(config) {
 		var track_id = track_id_counter;
@@ -239,7 +239,7 @@ function OncoprintSVGRenderer(container_selector_string, oncoprint) {
 	};
 
 	self.renderTracks = function() {
-		_.each(oncoprint.getTrackOrder(), function(track_id) {
+		_.each(oncoprint.getTrackOrder(), function(track_id, ind) {
 			renderTrackLabel(track_id);
 			renderTrackCells(track_id, getRuleSet(track_id));
 		});
@@ -297,7 +297,7 @@ function OncoprintSVGRenderer(container_selector_string, oncoprint) {
 			return bound_g;
 		})();
 		(function positionGroups() {
-			bound_g.attr('transform', function(d, i) {
+			bound_g.transition().attr('transform', function(d, i) {
 				return utils.translate(id_order[id_accessor(d)]*(oncoprint.getCellWidth() + oncoprint.getCellPadding()), track_y);
 			});
 		})();
