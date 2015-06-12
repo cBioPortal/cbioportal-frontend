@@ -21,56 +21,61 @@ module.exports = {
 	}
 };
 
-function D3SVGRuleSet() {
-	var self = this;
+var D3SVGRuleSet = (function() {
+	function D3SVGRuleSet() {
+		this.rule_map = {};
+	};
 	var rule_counter = 0;
 	var getRuleId = function() {
 		rule_counter += 1;
 		return rule_counter;
 	};
-	this.rule_map = {};
-
-	this.addRule = function(params) {
+	D3SVGRuleSet.prototype.addRule = function(params) {
 		var rule_id = getRuleId();
 		this.rule_map[rule_id] = new D3SVGRule(params, rule_id);
 		return rule_id;
 	}
-	this.addStaticRule = function(params) {
+	D3SVGRuleSet.prototype.addStaticRule = function(params) {
 		var rule_id = getRuleId();
 		this.rule_map[rule_id] = new D3SVGStaticRule(params, rule_id);
 		return rule_id;
 	};
-	this.addGradientRule = function(params) {
+	D3SVGRuleSet.prototype.addGradientRule = function(params) {
 		var rule_id = getRuleId();
 		this.rule_map[rule_id] = new D3SVGGradientRule(params, rule_id);
 		return rule_id;
 	};
-	this.removeRule = function(rule_id) {
+	D3SVGRuleSet.prototype.removeRule = function(rule_id) {
 		delete this.rule_map[rule_id];
 	};
-	this.getRules = function() {
+	D3SVGRuleSet.prototype.getRules = function() {
+		var self = this;
 		var rule_ids = Object.keys(this.rule_map);
 		var rules = _.map(rule_ids, function(id) { return self.rule_map[id]; });
 		var sorted_rules = _.sortBy(rules, function(r) { return r.z_index; });
 		return sorted_rules;
 	};
-	this.apply = function(g, data, datum_id_accessor, cell_width, cell_height) {
+	D3SVGRuleSet.prototype.apply = function(g, data, datum_id_accessor, cell_width, cell_height) {
 		_.each(this.getRules(), function(rule) {
 			var affected_data = rule.filterData(data);
 			var affected_groups = g.data(affected_data, datum_id_accessor);
 			rule.apply(affected_groups, cell_width, cell_height);
 		});
 	};
-	this.getRule = function(rule_id) {
+	D3SVGRuleSet.prototype.getRule = function(rule_id) {
 		return this.rule_map[rule_id];
 	};
-}
+	return D3SVGRuleSet;
+})();
 
 function D3SVGCategoricalColorRuleSet(params) {
 	D3SVGRuleSet.call(this, params);
 	this.type = CATEGORICAL_COLOR;
 	var self = this;
-	_.each(params.color, function(color, category) {
+	var d3_colors = _.shuffle(d3.scale.category20().range()
+				.concat(d3.scale.category20b().range())
+				.concat(d3.scale.category20c().range()));
+	var addColorRule = function(color, category) {
 		var colored_rect = utils.makeD3SVGElement('rect').attr('fill', color);
 		var condition = (function(cat) {
 			return function(d) {
@@ -82,7 +87,23 @@ function D3SVGCategoricalColorRuleSet(params) {
 			shape: colored_rect,
 			legend_label: category
 		});
+	};
+	_.each(params.color, function(color, category) {
+		addColorRule(color, category);
 	});
+
+	self.apply = function(g, data, datum_id_accessor, cell_width, cell_height) {
+		var missing_categories = [];
+		_.each(data, function(datum) {
+			var category = params.getCategory(datum);
+			if (!params.color.hasOwnProperty(category)) {
+				var new_color = d3_colors.pop();
+				params.color[category] = new_color;
+				addColorRule(new_color, category);
+			}
+		});
+		D3SVGRuleSet.prototype.apply.call(this, g, data, datum_id_accessor, cell_width, cell_height);
+	};
 
 	self.putLegendGroup = function(svg, cell_width, cell_height) {
 		var group = svg.append('g');
@@ -172,6 +193,7 @@ function D3SVGGeneticAlterationRuleSet(params) {
 		return _.uniq(altered_data);
 	};
 }
+D3SVGGeneticAlterationRuleSet.prototype = Object.create(D3SVGRuleSet.prototype);
 
 function D3SVGRule(params, rule_id) {
 	this.rule_id = rule_id;

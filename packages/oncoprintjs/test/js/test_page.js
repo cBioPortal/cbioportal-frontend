@@ -41,7 +41,7 @@ gender_data_promise.then(function(data) {
 $.when(gender_data_promise).then(function() {
 	gender_track_id = onc.addTrack({label: 'Gender'});
 	onc.setRuleSet(gender_track_id, Oncoprint.CATEGORICAL_COLOR, {
-		color: {MALE: '#6699FF', FEMALE: '#FF00FF'},
+		color: {},
 		getCategory: function(d) {
 			return d.attr_val;
 		}
@@ -57,8 +57,7 @@ $.when(mutation_data_promise).then(function() {
 	onc.setRuleSet(mutation_track_id, Oncoprint.GRADIENT_COLOR, {
 		data_key: 'attr_val',
 		data_range: [0,100],
-		color_range: ['#A9A9A9', '#FF0000'],
-		scale: 'log'
+		color_range: ['#A9A9A9', '#FF0000']
 	});
 	onc.setTrackData(mutation_track_id, mutation_data);
 });
