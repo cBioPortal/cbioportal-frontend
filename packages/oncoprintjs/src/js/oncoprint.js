@@ -27,12 +27,9 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-var Track = require('./Track');
 var _ = require('underscore');
 var d3 = require('d3');
 var $ = require('jquery');
-var ReadOnlyObject = require('./ReadOnlyObject');
-var Toolbar = require('./Toolbar')
 var events = require('./events');
 var signals = require('./signals');
 var globals = require('./globals');
@@ -42,7 +39,7 @@ var RuleSet = require('./RuleSet');
 // TODO: use self everywhere
 
 var defaultOncoprintConfig = {
-	cell_width: 10,
+	cell_width: 5.5,
 	cell_padding: 3,
 };
 
@@ -53,45 +50,53 @@ var hiddenOncoprintConfig = {
 var defaultTrackConfig = {
 	label: 'Gene',
 	datum_id_key: 'sample',
-	cell_height: 20,
+	cell_height: 23,
 	track_height: 20,
 	track_padding: 5,
 	sort_cmp: undefined
 }; 
 
-module.exports = function CreateOncoprint(container_selector_string, config) {
-	var oncoprint = new Oncoprint(config);
-	var renderer = new OncoprintSVGRenderer(container_selector_string, oncoprint);
-	return {
-		CATEGORICAL_COLOR: RuleSet.CATEGORICAL_COLOR,
-		GRADIENT_COLOR: RuleSet.GRADIENT_COLOR,
-		GENETIC_ALTERATION: RuleSet.GENETIC_ALTERATION_TRACK,
-		addTrack: function(config) {
-			var track_id = oncoprint.addTrack(config);
-			return track_id;
-		},
-		removeTrack: function(track_id) {
-			oncoprint.removeTrack(track_id);
-		},
-		moveTrack: function(track_id, position) {
-			oncoprint.moveTrack(track_id, position);
-		},
-		setTrackData: function(track_id, data) {
-			oncoprint.setTrackData(track_id, data);
-			//<REMOVE>
-			renderer.renderTracks();
-			//</REMOVE>
-		},
-		setRuleSet: function(track_id, type, params) {
-			renderer.setRuleSet(track_id, type, params);
-			//<REMOVE>
-			renderer.renderTracks();
-			//</REMOVE>
-		},
-		useSameRuleSet: function(target_track_id, source_track_id) {
-			renderer.useSameRuleSet(target_track_id, source_track_id);
-		}
-	};
+module.exports = { 
+	CATEGORICAL_COLOR: RuleSet.CATEGORICAL_COLOR,
+	GRADIENT_COLOR: RuleSet.GRADIENT_COLOR,
+	GENETIC_ALTERATION: RuleSet.GENETIC_ALTERATION,
+	create: function CreateOncoprint(container_selector_string, config) {
+		var oncoprint = new Oncoprint(config);
+		var renderer = new OncoprintSVGRenderer(container_selector_string, oncoprint);
+		return {
+			addTrack: function(config) {
+				var track_id = oncoprint.addTrack(config);
+				return track_id;
+			},
+			removeTrack: function(track_id) {
+				oncoprint.removeTrack(track_id);
+			},
+			moveTrack: function(track_id, position) {
+				oncoprint.moveTrack(track_id, position);
+			},
+			setTrackData: function(track_id, data) {
+				oncoprint.setTrackData(track_id, data);
+				//<REMOVE>
+				renderer.renderTracks();
+				//</REMOVE>
+			},
+			setRuleSet: function(track_id, type, params) {
+				renderer.setRuleSet(track_id, type, params);
+				//<REMOVE>
+				renderer.renderTracks();
+				//</REMOVE>
+			},
+			useSameRuleSet: function(target_track_id, source_track_id) {
+				renderer.useSameRuleSet(target_track_id, source_track_id);
+			},
+			setCellPadding: function(p) {
+				oncoprint.setCellPadding(p);
+				//<REMOVE>
+				renderer.renderTracks();
+				//</REMOVE>
+			}
+		};
+	}
 };
 
 function Oncoprint(config) {
@@ -110,6 +115,9 @@ function Oncoprint(config) {
 	};
 	self.getCellPadding = function() {
 		return self.config.cell_padding;
+	};
+	self.setCellPadding = function(p) {
+		self.config.cell_padding = p;
 	};
 	self.getCellHeight = function(track_id) {
 		return self.tracks[track_id].config.cell_height;
@@ -200,15 +208,20 @@ function OncoprintSVGRenderer(container_selector_string, oncoprint) {
 	self.$label_svg;
 	self.cell_svg;
 	self.$cell_svg;
+	self.legend_table;
+	self.$legend_table;
 	self.rule_set_map = {};
 	self.rule_sets = [];
 
 	(function init() {
 		self.container.selectAll('*').remove();
-		self.label_svg = self.container.append('div').classed('fixed_oncoprint_section_container', true).append('svg');
+		self.label_svg = self.container.append('div').classed('fixed_oncoprint_section_container', true).append('svg')
+					.attr('width', 100);
 		self.cell_svg = self.container.append('div').classed('scrolling_oncoprint_section_container', true).append('svg');
 		self.$label_svg = $(self.label_svg.node());
 		self.$cell_svg = $(self.cell_svg.node());
+		self.legend_table = self.container.append('table');
+		self.$legend_table = $(self.legend_table.node());
 	})();
 
 	self.setRuleSet = function(track_id, type, params) {
@@ -230,14 +243,37 @@ function OncoprintSVGRenderer(container_selector_string, oncoprint) {
 			renderTrackLabel(track_id);
 			renderTrackCells(track_id, getRuleSet(track_id));
 		});
+
+		(function renderLegend() {
+			self.legend_table.selectAll('*').remove();
+			_.each(self.rule_sets, function(rule_set) {
+				var svg = self.legend_table.append('tr').append('svg').attr('width', 1000).attr('height', 50);
+				rule_set.putLegendGroup(svg, oncoprint.getCellWidth(), 20); // TODO: get actual cell height
+			})
+		})();
 	};
 
 	var renderTrackLabel = function(track_id) {
 		var label_class = 'label'+track_id;
+		var track_y = trackY(track_id);
+		self.label_svg
+			.attr('width', labelSvgWidth())
+			.attr('height', labelSvgHeight());
 		self.label_svg.selectAll('.'+label_class).remove();
 		self.label_svg.append('text').classed(label_class, true).text(oncoprint.getTrackLabel(track_id))
-				.attr('transform', utils.translate(0, trackY(track_id)))
+				.attr('transform', utils.translate(0, track_y))
 				.attr('alignment-baseline', 'hanging');
+
+		var track_rule_set = getRuleSet(track_id);
+		var track_data = oncoprint.getTrackData(track_id);
+		if (track_rule_set.alteredData) {
+			var percent_altered = 100*(track_rule_set.alteredData(track_data).length / track_data.length);
+			self.label_svg.append('text').classed(label_class, true)
+				.attr('text-anchor', 'end')
+				.text(Math.floor(percent_altered)+'%')
+				.attr('alignment-baseline', 'hanging')
+				.attr('transform', utils.translate(labelSvgWidth(), track_y));
+		}
 
 	};
 	var renderTrackCells = function(track_id, rule_set) {
@@ -250,6 +286,7 @@ function OncoprintSVGRenderer(container_selector_string, oncoprint) {
 			self.cell_svg
 			.attr('width', cellSvgWidth())
 			.attr('height', cellSvgHeight());
+
 		})();
 		var bound_g = (function createAndRemoveGroups() {
 			var cell_class = 'cell'+track_id;
@@ -298,95 +335,10 @@ function OncoprintSVGRenderer(container_selector_string, oncoprint) {
 				return memo + renderedTrackHeight(track_id);
 			}, 0);
 	};
-}
-
-
-function OncoprintTableRenderer(container_selector_string) {
-	var self = this;
-	self.container = d3.select(container_selector_string).classed('oncoprint_container', true);
-	self.fixed_table;
-	self.$fixed_table;
-	self.scrolling_table;
-	self.$scrolling_table;
-	self.legend_table;
-	self.$legend_table;
-	
-	(function initTable(self) {
-		self.container.selectAll('*').remove();
-		self.fixed_table = self.container.append('div').classed('fixed_oncoprint_table_container', true).append('table')
-		self.$fixed_table = $(self.fixed_table.node());
-		self.scrolling_table = self.container.append('div').classed('scrolling_oncoprint_table_container', true).append('table');
-		self.$scrolling_table = $(self.scrolling_table.node());
-		self.legend_table = self.container.append('div').classed('legend_oncoprint_table_container', true).append('table');
-		self.$legend_table = $(self.legend_table.node());
-		self.legend_table.append('tr').append('svg').attr('width', 2000).attr('height', 100);
-	})(self);
-
-	self.bindEvents = function(oncoprint) {
-		$(oncoprint).on(events.ADD_TRACK, function(e, data) {
-			var new_fixed_table_row = self.fixed_table.append('tr');
-			var new_scrolling_table_row = self.scrolling_table.append('tr');
-			var new_legend_table_row = self.legend_table.append('tr');
-			data.track.renderer.init(new_fixed_table_row, new_scrolling_table_row);
-		});
-		$(oncoprint).on(events.MOVE_TRACK, function(e, data) {
-			var track_name = data.track_name;
-			var new_position = data.track_order.indexOf(track_name);
-			var track_order = data.track_order;
-			var track = data.tracks[track_name];
-			if (new_position === 0) {
-				self.$table.find('tr:first').before(track.renderer.$row);
-			} else {
-				var before_track = data.tracks[track_order[new_position-1]];
-				before_track.renderer.$row.after(track.renderer.$row);
-			}
-		});
-		$(oncoprint).on(events.REMOVE_TRACK, function(e, data) {
-			var track = data.track;
-			track.renderer.$row.remove();
-		});
-		var legend_x = 0;
-		$(oncoprint).on(events.UPDATE_RENDER_RULES, function(e, data) {
-			var group = utils.appendD3SVGElement(globals.rulesvgs[globals.rulesvgs.length-1], self.legend_table.select('svg'));
-			utils.spaceSVGElementsHorizontally(group, 10);
-			utils.spaceSVGElementsHorizontally(self.legend_table.select('svg'), 20);
-		});
-		self.$fixed_table.mouseenter(function() {
-			$(oncoprint).trigger(events.ONCOPRINT_MOUSEENTER);
-		});
-		self.$fixed_table.mouseleave(function() {
-			$(oncoprint).trigger(events.ONCOPRINT_MOUSELEAVE);
-		});
-		self.$scrolling_table.mouseenter(function() {
-			$(oncoprint).trigger(events.ONCOPRINT_MOUSEENTER);
-		});
-		self.$scrolling_table.mouseleave(function() {
-			$(oncoprint).trigger(events.ONCOPRINT_MOUSELEAVE);
-		});
+	var labelSvgHeight = function() {
+		return cellSvgHeight();
 	};
-}
-
-function OncoprintLegendRenderer(container_selector_string) {
-	var self = this;
-	self.container = d3.select(container_selector_string).classed('oncoprint_legend_container', true);
-	self.table;
-	self.$table;
-
-	var rows = [];
-
-	(function initTable(self) {
-		self.container.selectAll('*').remove();
-		self.table = self.container.append('table');
-		self.$table = $(self.table.node());		
-	})(self);
-
-	var addRow = function(track_id) {
-
-	}
-
-	self.bindEvents = function(oncoprint) {
-		$(oncoprint).on(events.UPDATE_RENDER_RULES, function(e, data) {
-
-		});
+	var labelSvgWidth = function() {
+		return 100;
 	};
 }
