@@ -51,6 +51,10 @@ exports.appendD3SVGElement = function(elt, target) {
 exports.spaceSVGElementsHorizontally = function(group, padding) {
 	var x = 0;
 	var elts = exports.d3SelectChildren(group, '*').each(function() {
+		if (this.tagName === 'defs') {
+			// don't adjust spacing for a defs element
+			return;
+		}
 		var transform = d3.select(this).attr('transform');
 		var y = transform && transform.indexOf("translate") > -1 && parseFloat(transform.split(",")[1], 10);
 		y = y || 0;
