@@ -5,7 +5,7 @@ var Oncoprint = require('../../src/js/Oncoprint');
 var cell_padding = 3;
 var whitespace_on = true;
 
-var onc = Oncoprint('#onc', {cell_padding: cell_padding});
+var onc = Oncoprint.create('#onc', {cell_padding: cell_padding});
 
 $('#shuffle_btn').click(function() {
 	onc.sortOnTrack(gender_track_id, function(d1, d2) {
@@ -40,55 +40,66 @@ gender_data_promise.then(function(data) {
 });
 $.when(gender_data_promise).then(function() {
 	gender_track_id = onc.addTrack({label: 'Gender'});
-	onc.setRuleSet(gender_track_id, onc.CATEGORICAL_COLOR, {
+	onc.setRuleSet(gender_track_id, Oncoprint.CATEGORICAL_COLOR, {
 		color: {MALE: '#6699FF', FEMALE: '#FF00FF'},
 		getCategory: function(d) {
 			return d.attr_val;
 		}
 	});
 	onc.setTrackData(gender_track_id, gender_data);
-	/*gender_track_id = onc.addTrack(gender_data, {label: 'Gender'});
-	onc.getTrack(gender_track_id).useRenderTemplate('categorical_color', {
-		color: {MALE: '#6699FF', FEMALE: '#FF00FF'},
-		category: function(d) {
-			return d.attr_val;	
-		}
-	});*/
 });
-/*
+
 mutation_data_promise.then(function(data) {
 	mutation_data = data.data;
 });
 $.when(mutation_data_promise).then(function() {
-	for (var i=0; i<10; i++) {
-	mutation_track_id = onc.addTrack(mutation_data, {label: 'Mutations'});
-	onc.getTrack(mutation_track_id).useRenderTemplate('continuous_color', {
+	mutation_track_id = onc.addTrack({label: 'Mutations'});
+	onc.setRuleSet(mutation_track_id, Oncoprint.GRADIENT_COLOR, {
 		data_key: 'attr_val',
 		data_range: [0,100],
-		color_range: ['#A9A9A9', '#FF0000']
+		color_range: ['#A9A9A9', '#FF0000'],
+		scale: 'log'
 	});
-}
+	onc.setTrackData(mutation_track_id, mutation_data);
 });
 
+
 alteration_data_promise.then(function(data) {
-	alteration_data = data;
+	alteration_data = _.map(data, function(x) { if (Math.random() < 0.3) { x.mut_type='MISSENSE'; } return x; });
 });
 $.when(alteration_data_promise).then(function() {
-	alteration_track_id = onc.addTrack(alteration_data, {label: 'TP53'});
-	onc.getTrack(alteration_track_id).useRenderTemplate('genetic_alteration', {
+	alteration_track_id = onc.addTrack({label: 'TP53'});
+	onc.setRuleSet(alteration_track_id, Oncoprint.GENETIC_ALTERATION, {
+		default_color: '#D3D3D3',
 		cna_key: 'cna',
-		cna_amp_name: 'AMPLIFIED',
-		cna_homdel_name: 'HOMODELETED',
-		cna_gain_name: 'GAINED',
-		cna_hetloss_name: 'HETLOSS',
-		cna_amp_color: '#FF0000',
-		cna_gain_color: '#FFB6C1',
-		cna_hetloss_color: '#8FD8D8',
-		cna_homdel_color: '#0000FF',
-		default_cell_color: '#D3D3D3'
+		cna: {
+			color: {
+				AMPLIFIED: '#FF0000',
+				GAINED: '#FFB6C1',
+				HOMODELETED: '#8FD8D8',
+				HETLOSS: '#8FD8D8',	
+			},
+			label: {
+				AMPLIFIED: 'Amplification',
+				GAINED: 'Gain',
+				HOMODELETED: 'Homozygous Deletion',
+				HETLOSS: 'Heterozygous Deletion'
+			}
+
+		},
+		mut_type_key: 'mut_type',
+		mut: {
+			color: {
+				MISSENSE: 'green'
+			},
+			label: {
+				MISSENSE: 'Missense Mutation'
+			}
+		}
 	});
+	onc.setTrackData(alteration_track_id, alteration_data);
 });
-*/
+
 $('#change_color_scheme').click(function() {
 	onc.setRuleSet(gender_track_id, onc.CATEGORICAL_COLOR, {
 		color: {MALE: '#000000', FEMALE: '#999999'},
@@ -96,10 +107,4 @@ $('#change_color_scheme').click(function() {
 			return d.attr_val;
 		}
 	});
-	/*onc.getTrack(gender_track_id).useRenderTemplate('categorical_color', {
-		color: {MALE: '#0F0F0F', FEMALE: '#D6D6D6'},
-		category: function(d) {
-			return d.attr_val;	
-		}
-	});*/
 });
