@@ -109,6 +109,10 @@ $.when(alteration_data_promise).then(function() {
 		}
 	});
 	onc.setTrackData(alteration_track_id, alteration_data);
+
+	var second_alt_track = onc.addTrack({Label: 'TP53 duplicate'});
+	onc.useSameRuleSet(second_alt_track, alteration_track_id);
+	onc.setTrackData(second_alt_track, alteration_data);
 });
 
 $('#change_color_scheme').click(function() {

@@ -74,6 +74,15 @@ var D3SVGRuleSet = (function() {
 	D3SVGRuleSet.prototype.getRule = function(rule_id) {
 		return this.rule_map[rule_id];
 	};
+	D3SVGRuleSet.prototype.markLegendRendered = function() {
+		this.legend_rendered = true;
+	};
+	D3SVGRuleSet.prototype.unmarkLegendRendered = function() {
+		this.legend_rendered = false;
+	};
+	D3SVGRuleSet.prototype.isLegendRendered = function() {
+		return this.legend_rendered;
+	};
 	return D3SVGRuleSet;
 })();
 
