@@ -60,6 +60,7 @@ module.exports = {
 	CATEGORICAL_COLOR: RuleSet.CATEGORICAL_COLOR,
 	GRADIENT_COLOR: RuleSet.GRADIENT_COLOR,
 	GENETIC_ALTERATION: RuleSet.GENETIC_ALTERATION,
+	BAR_CHART: RuleSet.BAR_CHART,
 	create: function CreateOncoprint(container_selector_string, config) {
 		var oncoprint = new Oncoprint(config);
 		var renderer = new OncoprintSVGRenderer(container_selector_string, oncoprint);
@@ -94,6 +95,9 @@ module.exports = {
 				//<REMOVE>
 				renderer.renderTracks();
 				//</REMOVE>
+			},
+			toSVG: function(ctr) {
+				return renderer.toSVG(ctr);
 			}
 		};
 	}
@@ -131,6 +135,9 @@ function Oncoprint(config) {
 	self.getIdOrder = function() {
 		return self.id_order;
 	};
+	self.setIdOrder = function(id_order) {
+		self.id_order = id_order;
+	};
 	self.getTrackOrder = function() {
 		return self.track_order;
 	};
@@ -141,8 +148,19 @@ function Oncoprint(config) {
 		return self.tracks[track_id].data;
 	};
 	self.setTrackData = function(track_id, data) {
+		var id_accessor = self.getTrackDatumIdAccessor(track_id);
+
 		self.tracks[track_id].data = data;
-		self.id_order = self.id_order.concat(_.difference(_.map(data, self.getTrackDatumIdAccessor(track_id)), self.id_order));
+		self.id_order = self.id_order.concat(_.difference(_.map(data, id_accessor), self.id_order));
+
+		self.tracks[track_id].id_data_map = {};
+		var id_data_map = self.tracks[track_id].id_data_map;
+		_.each(self.tracks[track_id].data, function(datum) {
+			id_data_map[id_accessor(datum)] = datum;
+		});
+	};
+	self.getTrackDatum = function(track_id, datum_id) {
+		return self.tracks[track_id].id_data_map[datum_id];
 	};
 
 	self.getTrackDatumIdAccessor = function(track_id) {
@@ -193,6 +211,21 @@ function Oncoprint(config) {
 		$(self).trigger(events.SET_CELL_PADDING);
 	};
 
+	self.sort = function(track_id_list, cmp_list) {
+		var lexicographically_ordered_cmp = function(id1,id2) {
+			var cmp_result;
+			for (var i=0, _len = track_id_list.length; i<_len; i++) {
+				cmp_result = cmp_list[i](self.getTrackDatum(id1),self.getTrackDatum(id2));
+				if (cmp_result !== 0) {
+					break;
+				}
+			}
+			return cmp_result;
+		};
+		self.getIdOrder().sort(lexicographically_ordered_cmp);
+		$(self).trigger(events.SORT, {id_order: self.id_order});
+	};
+
 	self.sortOnTrack = function(track_id, data_cmp) {
 		throw "not implemented";
 	};
@@ -205,11 +238,9 @@ function OncoprintSVGRenderer(container_selector_string, oncoprint) {
 	var self = this;
 	self.container = d3.select(container_selector_string).classed('oncoprint_container', true);
 	self.label_svg;
-	self.$label_svg;
 	self.cell_svg;
-	self.$cell_svg;
 	self.legend_table;
-	self.$legend_table;
+	self.legend_svg;
 	self.rule_set_map = {};
 	self.rule_sets = [];
 
@@ -218,11 +249,13 @@ function OncoprintSVGRenderer(container_selector_string, oncoprint) {
 		self.label_svg = self.container.append('div').classed('fixed_oncoprint_section_container', true).append('svg')
 					.attr('width', 100);
 		self.cell_svg = self.container.append('div').classed('scrolling_oncoprint_section_container', true).append('svg');
-		self.$label_svg = $(self.label_svg.node());
-		self.$cell_svg = $(self.cell_svg.node());
 		self.legend_table = self.container.append('table');
-		self.$legend_table = $(self.legend_table.node());
 	})();
+
+	var render_events = [events.ADD_TRACK, events.REMOVE_TRACK, events.MOVE_TRACK, events.SORT, events.SET_CELL_PADDING, events.SET_CELL_WIDTH];
+	$(oncoprint).on(render_events.join(" "), function() {
+		self.renderTracks();
+	});
 
 	self.setRuleSet = function(track_id, type, params) {
 		var new_rule_set = RuleSet.makeRuleSet(type, params);
@@ -238,9 +271,35 @@ function OncoprintSVGRenderer(container_selector_string, oncoprint) {
 		return self.rule_sets[rule_set_index];
 	};
 
+	self.toSVG = function(ctr) {
+		var svg = ctr.append('svg');
+		//var svg = utils.makeD3SVGElement('svg');
+		var vertical_padding = 5;
+		utils.appendD3SVGElement(self.label_svg, svg);
+		utils.appendD3SVGElement(self.cell_svg, svg).attr('x',+self.label_svg.attr('width'));
+		var legend_row_y = +self.label_svg.attr('height') + vertical_padding;
+		self.legend_table.selectAll('tr').selectAll('svg').each(function() {
+			var d3_elt = d3.select(this);
+			utils.appendD3SVGElement(d3_elt, svg).attr('y', legend_row_y);
+			console.log(legend_row_y);
+			legend_row_y += +d3_elt.attr('height');			
+		});
+		//utils.appendD3SVGelement(self.label_svg, svg);
+		console.log(svg);
+		if (ctr) {
+			utils.appendD3SVGElement(svg, ctr);
+		}
+		return svg;
+	};
+
 	self.renderTracks = function() {
 		_.each(oncoprint.getTrackOrder(), function(track_id, ind) {
 			renderTrackLabel(track_id);
+			var rule_set = getRuleSet(track_id);
+			if (!rule_set) {
+				console.log("No rule set found for track id "+track_id);
+				return;
+			}
 			renderTrackCells(track_id, getRuleSet(track_id));
 		});
 
@@ -265,6 +324,10 @@ function OncoprintSVGRenderer(container_selector_string, oncoprint) {
 				.attr('alignment-baseline', 'hanging');
 
 		var track_rule_set = getRuleSet(track_id);
+		if (!track_rule_set) {
+			console.log("No rule set found for track id "+track_id);
+			return;
+		}
 		var track_data = oncoprint.getTrackData(track_id);
 		if (track_rule_set.alteredData) {
 			var percent_altered = 100*(track_rule_set.alteredData(track_data).length / track_data.length);
@@ -279,6 +342,10 @@ function OncoprintSVGRenderer(container_selector_string, oncoprint) {
 	var renderTrackCells = function(track_id, rule_set) {
 		var data = oncoprint.getTrackData(track_id);
 		var id_accessor = oncoprint.getTrackDatumIdAccessor(track_id);
+		if (!id_accessor) {
+			console.log("No id accessor found for track id "+track_id);
+			return;
+		}
 		var track_y = trackY(track_id);
 		var id_order = utils.invert_array(oncoprint.getIdOrder());
 

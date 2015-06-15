@@ -1,5 +1,6 @@
 var _ = require('underscore');
 var $ = require('jquery');
+var d3 = require('d3');
 
 var Oncoprint = require('../../src/js/Oncoprint');
 var cell_padding = 3;
@@ -22,6 +23,9 @@ $('#toggle_whitespace').click(function() {
 		onc.setCellPadding(0);
 	}
 });
+ $('#to_svg_btn').click(function() {
+ 	onc.toSVG(d3.select('#svg_container'));
+ });
 
 var gender_data;
 var gender_track_id;
@@ -62,10 +66,9 @@ $.when(mutation_data_promise).then(function() {
 	onc.setTrackData(mutation_track_id, mutation_data);
 
 	var log_mut_track_id = onc.addTrack({label: 'Log Mutations'});
-	onc.setRuleSet(log_mut_track_id, Oncoprint.GRADIENT_COLOR, {
+	onc.setRuleSet(log_mut_track_id, Oncoprint.BAR_CHART, {
 		data_key: 'attr_val',
 		data_range: [0,100],
-		color_range: ['#A9A9A9', '#FF0000'],
 		scale: 'log'
 	});
 	onc.setTrackData(log_mut_track_id, mutation_data);
@@ -109,7 +112,7 @@ $.when(alteration_data_promise).then(function() {
 });
 
 $('#change_color_scheme').click(function() {
-	onc.setRuleSet(gender_track_id, onc.CATEGORICAL_COLOR, {
+	onc.setRuleSet(gender_track_id, Oncoprint.CATEGORICAL_COLOR, {
 		color: {MALE: '#000000', FEMALE: '#999999'},
 		getCategory: function(d) {
 			return d.attr_val;
