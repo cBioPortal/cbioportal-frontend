@@ -241,8 +241,7 @@ function OncoprintSVGRenderer(container_selector_string, oncoprint) {
 	self.cell_svg;
 	self.legend_table;
 	self.legend_svg;
-	self.rule_set_map = {};
-	self.rule_sets = [];
+	self.rule_sets = {};
 
 	(function init() {
 		self.container.selectAll('*').remove();
@@ -259,19 +258,19 @@ function OncoprintSVGRenderer(container_selector_string, oncoprint) {
 
 	self.setRuleSet = function(track_id, type, params) {
 		var new_rule_set = RuleSet.makeRuleSet(type, params);
-		self.rule_sets.push(new_rule_set);
-		self.rule_set_map[track_id] = self.rule_sets.length-1;
+		self.rule_sets[track_id] = new_rule_set;
 	};
 	self.useSameRuleSet = function(target_track_id, source_track_id) {
-		self.rule_set_map[target_track_id] = self.rule_set_map[source_track_id];
+		self.rule_sets[target_track_id] = self.rule_sets[source_track_id];
 	};
 
 	var getRuleSet = function(track_id) {
-		var rule_set_index = self.rule_set_map[track_id];
-		return self.rule_sets[rule_set_index];
+		return self.rule_sets[track_id];
 	};
 
 	self.toSVG = function(ctr) {
+		ctr.attr('width', 2000);
+		ctr.attr('height', 1000);
 		var svg = ctr.append('svg');
 		//var svg = utils.makeD3SVGElement('svg');
 		var vertical_padding = 5;
@@ -305,10 +304,24 @@ function OncoprintSVGRenderer(container_selector_string, oncoprint) {
 
 		(function renderLegend() {
 			self.legend_table.selectAll('*').remove();
-			_.each(self.rule_sets, function(rule_set) {
-				var svg = self.legend_table.append('tr').append('svg').attr('width', 1000).attr('height', 50);
-				rule_set.putLegendGroup(svg, oncoprint.getCellWidth(), 20); // TODO: get actual cell height
-			})
+			_.each(oncoprint.getTrackOrder(), function(track_id) {
+				var rule_set = getRuleSet(track_id);
+				if (!rule_set) {
+					console.log("No rule set found for track id "+track_id);
+					return;
+				}
+				if (!rule_set.isLegendRendered()) {
+					var svg = self.legend_table.append('tr').append('svg').attr('width', 1000).attr('height', 50);
+					rule_set.putLegendGroup(svg, oncoprint.getCellWidth(), 20); // TODO: get actual cell height
+					rule_set.markLegendRendered();
+				}
+			});
+			_.each(oncoprint.getTrackOrder(), function(track_id) {
+				var rule_set = getRuleSet(track_id);
+				if (rule_set) {
+					rule_set.unmarkLegendRendered();
+				}
+			});
 		})();
 	};
 
