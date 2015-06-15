@@ -4,10 +4,12 @@ var utils = require('./utils');
 var CATEGORICAL_COLOR = 0;
 var GRADIENT_COLOR = 1; 
 var GENETIC_ALTERATION = 2;
+var BAR_CHART = 3;
 module.exports = {
 	CATEGORICAL_COLOR: CATEGORICAL_COLOR,
 	GRADIENT_COLOR: GRADIENT_COLOR,
 	GENETIC_ALTERATION: GENETIC_ALTERATION,
+	BAR_CHART: BAR_CHART,
 	makeRuleSet: function(type, params) {
 		if (type === CATEGORICAL_COLOR) {
 			return new D3SVGCategoricalColorRuleSet(params);
@@ -15,6 +17,8 @@ module.exports = {
 			return new D3SVGGradientColorRuleSet(params);
 		} else if (type === GENETIC_ALTERATION) {
 			return new D3SVGGeneticAlterationRuleSet(params);
+		} else if (type === BAR_CHART) {
+			return new D3SVGBarChartRuleSet(params);
 		} else {
 			return new D3SVGRuleSet();
 		}
@@ -43,6 +47,11 @@ var D3SVGRuleSet = (function() {
 	D3SVGRuleSet.prototype.addGradientRule = function(params) {
 		var rule_id = getRuleId();
 		this.rule_map[rule_id] = new D3SVGGradientRule(params, rule_id);
+		return rule_id;
+	};
+	D3SVGRuleSet.prototype.addBarChartRule = function(params) {
+		var rule_id = getRuleId();
+		this.rule_map[rule_id] = new D3SVGBarChartRule(params, rule_id);
 		return rule_id;
 	};
 	D3SVGRuleSet.prototype.removeRule = function(rule_id) {
@@ -128,6 +137,21 @@ function D3SVGGradientColorRuleSet(params) {
 	};
 }
 D3SVGGradientColorRuleSet.prototype = Object.create(D3SVGRuleSet.prototype);
+
+function D3SVGBarChartRuleSet(params) {
+	D3SVGRuleSet.call(this, params);
+	var self = this;
+	self.type = BAR_CHART;
+	var rule = this.addBarChartRule({
+		data_key: params.data_key,
+		data_range: params.data_range,
+		scale: params.scale
+	});
+	this.putLegendGroup = function(svg, cell_width, cell_height) {
+		this.rule_map[rule].putLegendGroup(svg, cell_width, cell_height);
+	};
+}
+D3SVGBarChartRuleSet.prototype = Object.create(D3SVGRuleSet.prototype);
 
 function D3SVGGeneticAlterationRuleSet(params) {
 	D3SVGRuleSet.call(this, params);
@@ -244,6 +268,62 @@ function D3SVGRule(params, rule_id) {
 		return this.filterData(data).length > 0;
 	};
 }
+
+function D3SVGBarChartRule(params, rule_id) {
+	D3SVGRule.call(this, params, rule_id);
+	this.data_key = params.data_key;
+	this.data_range = params.data_range;
+
+	var scale = function(x) {
+		if (params.scale === 'log') {
+			return Math.log10(Math.max(x, 0.1)); 
+		} else {
+			return x;
+		}
+	};
+
+	var scaled_data_range = _.map(this.data_range, scale);
+	var height_helper = function(d) {
+		var datum = scale(d[params.data_key]);
+		var data_range = [scaled_data_range[0], scaled_data_range[1]];
+		var distance = (datum-scaled_data_range[0]) / (scaled_data_range[1]-scaled_data_range[0]);
+		return distance * 100;
+	};
+	var y_function = function(d) {
+		return (100 - height_helper(d)) + '%';
+	};
+	var height_function = function(d) { 
+		return height_helper(d) + '%';
+	};
+	this.attrs.height = height_function;
+	this.attrs.y = y_function;
+
+
+	this.putLegendGroup = function(svg, cell_width, cell_height) {
+		if (params.exclude_from_legend) {
+			return;
+		}
+		var rect =utils.makeD3SVGElement('rect');
+		var group = svg.append('g');
+		var bottom_end = group.append('g');
+		utils.appendD3SVGElement(rect, bottom_end)
+			.attr('width', cell_width)
+			.attr('height', 1).attr('y', cell_height-1);
+		bottom_end.append('text').text(this.data_range[0]).attr('alignment-baseline', 'hanging');;
+		utils.spaceSVGElementsHorizontally(bottom_end, 5);
+
+		var top_end = group.append('g');
+		utils.appendD3SVGElement(rect, top_end)
+			.attr('width', cell_width)
+			.attr('height', cell_height);
+		top_end.append('text').text(this.data_range[1]).attr('alignment-baseline', 'hanging');;
+		utils.spaceSVGElementsHorizontally(top_end, 5);
+
+		utils.spaceSVGElementsHorizontally(group, 10);
+		return group;
+	};
+}
+D3SVGBarChartRule.prototype = Object.create(D3SVGRule.prototype);
 
 function D3SVGGradientRule(params, rule_id) {
 	D3SVGRule.call(this, params, rule_id);
