@@ -2,6 +2,7 @@ var _ = require('underscore');
 var $ = require('jquery');
 var d3 = require('d3');
 
+var globals = require('../../src/js/globals');
 var Oncoprint = require('../../src/js/Oncoprint');
 var cell_padding = 3;
 var whitespace_on = true;
@@ -39,6 +40,12 @@ $('#toggle_whitespace').click(function() {
 		ctx.drawImage(img, 0, 0);
 		DOMURL.revokeObjectURL(url);
 	};
+ });
+ var clipping = true;
+ $('#clipping_btn').click(function() {
+ 	clipping = !clipping;
+ 	onc.setClipping(clipping);
+ 	console.log("Clipping is "+clipping);
  });
 
 var gender_data;
@@ -83,6 +90,7 @@ $.when(mutation_data_promise).then(function() {
 	onc.setRuleSet(log_mut_track_id, Oncoprint.BAR_CHART, {
 		data_key: 'attr_val',
 		data_range: [0,100],
+		fill: '#ff0000',
 		scale: 'log'
 	});
 	onc.setTrackData(log_mut_track_id, mutation_data);
