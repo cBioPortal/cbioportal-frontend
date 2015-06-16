@@ -246,8 +246,9 @@ function OncoprintSVGRenderer(container_selector_string, oncoprint) {
 	(function init() {
 		self.container.selectAll('*').remove();
 		self.label_svg = self.container.append('div').classed('fixed_oncoprint_section_container', true).append('svg')
-					.attr('width', 100);
-		self.cell_svg = self.container.append('div').classed('scrolling_oncoprint_section_container', true).append('svg');
+					.attr('width', 100).attr('xmlns', "http://www.w3.org/2000/svg");
+		//self.cell_canvas = self.container.append('div').classed('scrolling_oncoprint_section_container', true).append('canvas').attr('id', 'cell_canvas').attr('width', 1000).attr('height', 400);
+		self.cell_svg = self.container.append('div').classed('scrolling_oncoprint_section_container', true).append('svg').attr('xmlns', "http://www.w3.org/2000/svg");
 		self.legend_table = self.container.append('table');
 	})();
 
@@ -271,7 +272,7 @@ function OncoprintSVGRenderer(container_selector_string, oncoprint) {
 	self.toSVG = function(ctr) {
 		ctr.attr('width', 2000);
 		ctr.attr('height', 1000);
-		var svg = ctr.append('svg');
+		var svg = ctr.append('svg').attr('xmlns', "http://www.w3.org/2000/svg");
 		//var svg = utils.makeD3SVGElement('svg');
 		var vertical_padding = 5;
 		utils.appendD3SVGElement(self.label_svg, svg);
@@ -311,7 +312,7 @@ function OncoprintSVGRenderer(container_selector_string, oncoprint) {
 					return;
 				}
 				if (!rule_set.isLegendRendered()) {
-					var svg = self.legend_table.append('tr').append('svg').attr('width', 1000).attr('height', 50);
+					var svg = self.legend_table.append('tr').append('svg').attr('width', 1000).attr('height', 50).attr('xmlns', "http://www.w3.org/2000/svg");
 					rule_set.putLegendGroup(svg, oncoprint.getCellWidth(), 20); // TODO: get actual cell height
 					rule_set.markLegendRendered();
 				}
@@ -352,6 +353,15 @@ function OncoprintSVGRenderer(container_selector_string, oncoprint) {
 		}
 
 	};
+	/*var renderCellsToCanvas = function() {
+		var ctx = self.cell_canvas.node().getContext('2d');
+		for (var child = self.cell_svg.node().firstChild; child; child = child.nextSibling) {
+			var d3_child = d3.select(child);
+			//ctx.rect(d3_child.attr('x'), d3_child.attr('y'), d3_child.attr('width'), d3_child.attr('height'));
+			ctx.rect(Math.random()*1000, Math.random()*200, 1, 1);
+		}
+		ctx.stroke();
+	}*/
 	var renderTrackCells = function(track_id, rule_set) {
 		var data = oncoprint.getTrackData(track_id);
 		var id_accessor = oncoprint.getTrackDatumIdAccessor(track_id);
@@ -385,8 +395,9 @@ function OncoprintSVGRenderer(container_selector_string, oncoprint) {
 			bound_g.selectAll('*').remove();	
 		})();
 		(function renderCells() {
-			rule_set.apply(bound_g, data, id_accessor, oncoprint.getCellWidth(), oncoprint.getCellHeight(track_id));
+			rule_set.apply(self.cell_svg, bound_g, data, id_accessor, oncoprint.getCellWidth(), oncoprint.getCellHeight(track_id));
 		})();
+		//renderCellsToCanvas();
 	};
 
 	var trackY = function(track_id) {

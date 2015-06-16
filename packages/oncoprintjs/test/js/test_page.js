@@ -25,6 +25,20 @@ $('#toggle_whitespace').click(function() {
 });
  $('#to_svg_btn').click(function() {
  	onc.toSVG(d3.select('#svg_container'));
+	var DOMURL = window.URL || window.webkitURL || window;
+	var ctx = $('#canvas')[0].getContext('2d');
+	var img = new Image();
+	var svg;
+	var data = $('#svg_container')[0].outerHTML;
+	console.log(data);
+	svg = new Blob([data], {type: 'image/svg+xml;charset=utf-8'});
+	console.log(svg);
+	var url = DOMURL.createObjectURL(svg);
+	img.src = url;
+	img.onload = function() {
+		ctx.drawImage(img, 0, 0);
+		DOMURL.revokeObjectURL(url);
+	};
  });
 
 var gender_data;

@@ -64,11 +64,11 @@ var D3SVGRuleSet = (function() {
 		var sorted_rules = _.sortBy(rules, function(r) { return r.z_index; });
 		return sorted_rules;
 	};
-	D3SVGRuleSet.prototype.apply = function(g, data, datum_id_accessor, cell_width, cell_height) {
+	D3SVGRuleSet.prototype.apply = function(svg, g, data, datum_id_accessor, cell_width, cell_height) {
 		_.each(this.getRules(), function(rule) {
 			var affected_data = rule.filterData(data);
 			var affected_groups = g.data(affected_data, datum_id_accessor);
-			rule.apply(affected_groups, cell_width, cell_height);
+			rule.apply(svg, affected_groups, cell_width, cell_height);
 		});
 	};
 	D3SVGRuleSet.prototype.getRule = function(rule_id) {
@@ -108,7 +108,7 @@ function D3SVGCategoricalColorRuleSet(params) {
 		addColorRule(color, category);
 	});
 
-	self.apply = function(g, data, datum_id_accessor, cell_width, cell_height) {
+	self.apply = function(svg, g, data, datum_id_accessor, cell_width, cell_height) {
 		var missing_categories = [];
 		_.each(data, function(datum) {
 			var category = params.getCategory(datum);
@@ -118,7 +118,7 @@ function D3SVGCategoricalColorRuleSet(params) {
 				addColorRule(new_color, category);
 			}
 		});
-		D3SVGRuleSet.prototype.apply.call(this, g, data, datum_id_accessor, cell_width, cell_height);
+		D3SVGRuleSet.prototype.apply.call(this, svg, g, data, datum_id_accessor, cell_width, cell_height);
 	};
 
 	self.putLegendGroup = function(svg, cell_width, cell_height) {
@@ -251,7 +251,7 @@ function D3SVGRule(params, rule_id) {
 		return attr_val+'';
 	};
 
-	this.apply = function(g, cell_width, cell_height) {
+	this.apply = function(svg, g, cell_width, cell_height) {
 		var shape = this.shape;
 		var elts = utils.appendD3SVGElement(shape, g);
 		var attrs = this.attrs || {};
@@ -433,7 +433,7 @@ function D3SVGStaticRule(params, rule_id) {
 		}
 		var group = svg.append('g');
 		var g = group.append('g');
-		this.apply(g, cell_width, cell_height);
+		this.apply(svg, g, cell_width, cell_height);
 		if (this.legend_label) {
 			group.append('text').text(this.legend_label)
 						.attr('alignment-baseline', 'hanging');

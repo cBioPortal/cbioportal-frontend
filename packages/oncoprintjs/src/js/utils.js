@@ -42,7 +42,7 @@ exports.makeD3SVGElement = function(tag) {
 	return d3.select(document.createElementNS('http://www.w3.org/2000/svg', tag));
 };
 
-exports.appendD3SVGElement = function(elt, target) {
+exports.appendD3SVGElement = function(elt, target, svg) {
 	return target.select(function() {
 		return this.appendChild(elt.node().cloneNode(true));
 	});
