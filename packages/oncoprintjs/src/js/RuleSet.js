@@ -154,7 +154,8 @@ function D3SVGBarChartRuleSet(params) {
 	var rule = this.addBarChartRule({
 		data_key: params.data_key,
 		data_range: params.data_range,
-		scale: params.scale
+		scale: params.scale,
+		fill: params.fill,
 	});
 	this.putLegendGroup = function(svg, cell_width, cell_height) {
 		this.rule_map[rule].putLegendGroup(svg, cell_width, cell_height);
@@ -251,23 +252,38 @@ function D3SVGRule(params, rule_id) {
 		return attr_val+'';
 	};
 
+	var convertAttr = function(d, i, attr_val, attr_name, cell_width, cell_height) {
+		var ret = attr_val;
+		if (typeof ret === 'function') {
+			ret = ret(d,i);
+		}
+		if (typeof ret === 'string' && ret.indexOf('%') > -1) {
+			ret = percentToPx(ret, attr_name, cell_width, cell_height);
+		}
+		return ret;
+	};
+
 	this.apply = function(svg, g, cell_width, cell_height) {
 		var shape = this.shape;
 		var elts = utils.appendD3SVGElement(shape, g);
 		var attrs = this.attrs || {};
 		attrs.width = attrs.width || '100%';
 		attrs.height = attrs.height || '100%';
+		attrs.x = attrs.x || 0;
+		attrs.y = attrs.y || 0;
 		_.each(attrs, function(val, key) {
 			elts.attr(key, function(d,i) {
-				var curr_val = val;
-				if (typeof curr_val === 'function') {
-					curr_val = curr_val(d,i);
+				if (key === 'x' || key === 'y') {
+					return;
 				}
-				if (typeof curr_val === 'string' && curr_val.indexOf('%') > -1) {
-					curr_val = percentToPx(curr_val, key, cell_width, cell_height);
-				}
-				return curr_val;
+				return convertAttr(d, i, val, key, cell_width, cell_height);
 			});
+		});
+		
+		elts.attr('transform', function(d,i) {
+			var x_val = convertAttr(d, i, attrs.x, 'x', cell_width, cell_height);
+			var y_val = convertAttr(d, i, attrs.y, 'y', cell_width, cell_height);
+			return utils.translate(x_val, y_val);
 		});
 	}
 	this.filterData = function(data) {
@@ -306,13 +322,16 @@ function D3SVGBarChartRule(params, rule_id) {
 	};
 	this.attrs.height = height_function;
 	this.attrs.y = y_function;
+	this.attrs.fill = params.fill || '#000000';
 
 
 	this.putLegendGroup = function(svg, cell_width, cell_height) {
+		// TODO: triangle legend piece
 		if (params.exclude_from_legend) {
 			return;
 		}
 		var rect =utils.makeD3SVGElement('rect');
+		rect.attr('fill', this.attrs.fill);
 		var group = svg.append('g');
 		var bottom_end = group.append('g');
 		utils.appendD3SVGElement(rect, bottom_end)

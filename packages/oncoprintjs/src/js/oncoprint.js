@@ -64,7 +64,7 @@ module.exports = {
 	create: function CreateOncoprint(container_selector_string, config) {
 		var oncoprint = new Oncoprint(config);
 		var renderer = new OncoprintSVGRenderer(container_selector_string, oncoprint);
-		return {
+		var ret = {
 			addTrack: function(config) {
 				var track_id = oncoprint.addTrack(config);
 				return track_id;
@@ -89,8 +89,12 @@ module.exports = {
 			},
 			toSVG: function(ctr) {
 				return renderer.toSVG(ctr);
+			},
+			setClipping: function(c) {
+				renderer.setClipping(c);
 			}
 		};
+		return ret;
 	}
 };
 
@@ -234,13 +238,29 @@ function OncoprintSVGRenderer(container_selector_string, oncoprint) {
 	self.legend_table;
 	self.legend_svg;
 	self.rule_sets = {};
+	self.clipping = true;
 
 	(function init() {
 		self.container.selectAll('*').remove();
 		self.label_svg = self.container.append('div').classed('fixed_oncoprint_section_container', true).append('svg')
 					.attr('width', 100).attr('xmlns', "http://www.w3.org/2000/svg");
-		//self.cell_canvas = self.container.append('div').classed('scrolling_oncoprint_section_container', true).append('canvas').attr('id', 'cell_canvas').attr('width', 1000).attr('height', 400);
-		self.cell_svg = self.container.append('div').classed('scrolling_oncoprint_section_container', true).append('svg').attr('xmlns', "http://www.w3.org/2000/svg");
+		self.cell_canvas = self.container.append('div').classed('scrolling_oncoprint_section_container', true).append('canvas').attr('id', 'cell_canvas').attr('width', 1000).attr('height', 200);
+		self.cell_canvas.node().addEventListener('mousemove', function(evt) {
+			$(self).off(events.FINISHED_RENDERING);
+			var canvas_rect = self.cell_canvas.node().getBoundingClientRect();
+			var x = evt.clientX - canvas_rect.left;
+			var y = evt.clientY - canvas_rect.top;
+			var cell = self.mousePosToCell(x,y);
+			if (cell) {
+				$(self).on(events.FINISHED_RENDERING, function() {
+					self.cell_canvas_ctx.fillStyle = '#ff0000';
+					self.cell_canvas_ctx.fillRect(cell.x, cell.y, 2, 2);
+					console.log(cell.datum);
+				});
+			}
+		});
+		self.cell_canvas_ctx = self.cell_canvas.node().getContext('2d');
+		self.cell_svg = utils.makeD3SVGElement('svg');//self.container.append('div').classed('scrolling_oncoprint_section_container', true).append('svg').attr('xmlns', "http://www.w3.org/2000/svg");
 		self.legend_table = self.container.append('table');
 	})();
 
@@ -278,8 +298,6 @@ function OncoprintSVGRenderer(container_selector_string, oncoprint) {
 			console.log(legend_row_y);
 			legend_row_y += +d3_elt.attr('height');			
 		});
-		//utils.appendD3SVGelement(self.label_svg, svg);
-		console.log(svg);
 		if (ctr) {
 			utils.appendD3SVGElement(svg, ctr);
 		}
@@ -318,17 +336,21 @@ function OncoprintSVGRenderer(container_selector_string, oncoprint) {
 				}
 			});
 		})();
+
 	};
 
 	var renderTrackLabel = function(track_id) {
 		var label_class = 'label'+track_id;
 		var track_y = trackY(track_id);
+		var label_y = track_y + oncoprint.getTrackPadding(track_id); // TODO: centralize it
 		self.label_svg
 			.attr('width', labelSvgWidth())
 			.attr('height', labelSvgHeight());
 		self.label_svg.selectAll('.'+label_class).remove();
 		self.label_svg.append('text').classed(label_class, true).text(oncoprint.getTrackLabel(track_id))
-				.attr('transform', utils.translate(0, track_y))
+				//.attr('x', 0)
+				//.attr('y', track_y)
+				.attr('transform', utils.translate(0, label_y))
 				.attr('alignment-baseline', 'hanging');
 
 		var track_rule_set = getRuleSet(track_id);
@@ -343,19 +365,52 @@ function OncoprintSVGRenderer(container_selector_string, oncoprint) {
 				.attr('text-anchor', 'end')
 				.text(Math.floor(percent_altered)+'%')
 				.attr('alignment-baseline', 'hanging')
-				.attr('transform', utils.translate(labelSvgWidth(), track_y));
+				//.attr('x', labelSvgWidth())
+				//.attr('y', track_y);
+				.attr('transform', utils.translate(labelSvgWidth(), label_y));
 		}
 
 	};
-	/*var renderCellsToCanvas = function() {
-		var ctx = self.cell_canvas.node().getContext('2d');
+	var renderCellsToCanvas = function() {
+		var ctx = self.cell_canvas_ctx;
+		ctx.clearRect(0,0, self.cell_canvas.node().width, self.cell_canvas.node().height);
+		ctx.beginPath();
+		var toprint = 5;
 		for (var child = self.cell_svg.node().firstChild; child; child = child.nextSibling) {
-			var d3_child = d3.select(child);
-			//ctx.rect(d3_child.attr('x'), d3_child.attr('y'), d3_child.attr('width'), d3_child.attr('height'));
-			ctx.rect(Math.random()*1000, Math.random()*200, 1, 1);
+			renderCellToCanvas(child);
 		}
 		ctx.stroke();
-	}*/
+		ctx.closePath();
+		$(self).trigger(events.FINISHED_RENDERING);
+	};
+	var pointInCanvas = function(x, y) {
+		var canvas_node = self.cell_canvas.node();
+		var x_lim = self.cell_canvas.attr('width');
+		var y_lim = self.cell_canvas.attr('height');
+		return x <= x_lim && x >= 0 && y <= y_lim && y >= 0;
+	};
+	var renderCellToCanvas = function(node) {
+		var ctx = self.cell_canvas_ctx;
+		var rectpt = self.cell_svg.node().createSVGPoint();
+		var d3_node = d3.select(node);
+		rectpt = rectpt.matrixTransform(node.getCTM());
+		if (self.clipping && !pointInCanvas(rectpt.x, rectpt.y)) {
+			return;
+		}
+		switch (node.tagName) {
+			case 'g':
+				for (var child=node.firstChild; child; child = child.nextSibling) {
+					renderCellToCanvas(child);
+				}
+				break;
+			case 'rect':
+				ctx.fillStyle = d3_node.attr('fill');
+				ctx.strokeStyle = d3_node.attr('stroke') || ctx.fillStyle;
+				ctx.fillRect(rectpt.x /*+ d3_node.attr('x')*/, rectpt.y/* + d3_node.attr('y')*/, d3_node.attr('width'), d3_node.attr('height'));
+
+		}
+	};
+	setInterval(renderCellsToCanvas, 1000/60);
 	var renderTrackCells = function(track_id, rule_set) {
 		var data = oncoprint.getTrackData(track_id);
 		var id_accessor = oncoprint.getTrackDatumIdAccessor(track_id);
@@ -365,6 +420,8 @@ function OncoprintSVGRenderer(container_selector_string, oncoprint) {
 		}
 		var track_y = trackY(track_id);
 		var id_order = utils.invert_array(oncoprint.getIdOrder());
+		var cell_width = oncoprint.getCellWidth();
+		var cell_height = oncoprint.getCellHeight(track_id);
 
 		(function updateSVG() {
 			self.cell_svg
@@ -382,16 +439,17 @@ function OncoprintSVGRenderer(container_selector_string, oncoprint) {
 		})();
 		(function positionGroups() {
 			bound_g.transition().attr('transform', function(d, i) {
-				return utils.translate(id_order[id_accessor(d)]*(oncoprint.getCellWidth() + oncoprint.getCellPadding()), track_y);
+				var x = id_order[id_accessor(d)]*(oncoprint.getCellWidth() + oncoprint.getCellPadding());
+				var y = track_y + oncoprint.getTrackPadding(track_id);
+				return utils.translate(x, y);
 			});
 		})();
 		(function cleanGroups() {
 			bound_g.selectAll('*').remove();	
 		})();
 		(function renderCells() {
-			rule_set.apply(self.cell_svg, bound_g, data, id_accessor, oncoprint.getCellWidth(), oncoprint.getCellHeight(track_id));
+			rule_set.apply(self.cell_svg, bound_g, data, id_accessor, cell_width, cell_height);
 		})();
-		//renderCellsToCanvas();
 	};
 
 	var trackY = function(track_id) {
@@ -407,6 +465,40 @@ function OncoprintSVGRenderer(container_selector_string, oncoprint) {
 		return y;
 	};
 
+	self.mousePosToCell = function(x,y) {
+		// TODO: centralize all of these coordinate stuff...shouldn't be calculating them twice in two different functions D:
+		var yInTrack = function(track_id, y) {
+			var track_y = trackY(track_id);
+			var track_padding = oncoprint.getTrackPadding(track_id);
+			var track_height = oncoprint.getTrackHeight(track_id);
+			return y >= track_y + track_padding && y <= track_y + track_padding + track_height;
+		};
+		var track_id = false;
+		_.find(oncoprint.getTrackOrder(), function(id) {
+			if (yInTrack(id, y)) {
+				track_id = id;
+				return true;
+			}
+			return false;
+		});
+		if (track_id === false) {
+			return undefined;	
+		} else {
+			var cell_width = oncoprint.getCellWidth();
+			var cell_padding = oncoprint.getCellPadding();
+			var cell_index = Math.floor(x / (cell_padding +cell_width));
+			var in_cell = (x % (cell_padding + cell_width)) < cell_width;
+			if (in_cell) {
+				var datum_id = oncoprint.getIdOrder()[cell_index];
+				var datum = oncoprint.getTrackDatum(track_id, datum_id);
+				var cell_x = cell_index*(cell_padding + cell_width); // TODO: centralize it
+				var cell_y = trackY(track_id)+oncoprint.getTrackPadding(track_id);// TODO: centralize it
+				return {datum: datum, x: cell_x, y: cell_y};
+			} else {
+				return undefined;
+			}
+		}
+	};
 	var renderedTrackHeight = function(track_id) {
 		return oncoprint.getTrackHeight(track_id) + 2*oncoprint.getTrackPadding(track_id);
 	};
@@ -425,5 +517,9 @@ function OncoprintSVGRenderer(container_selector_string, oncoprint) {
 	};
 	var labelSvgWidth = function() {
 		return 100;
+	};
+
+	self.setClipping = function(c) {
+		self.clipping = c;
 	};
 }

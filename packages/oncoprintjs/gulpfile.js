@@ -76,7 +76,12 @@ gulp.task('default', ['clean'], function() {
     gulp.start('prod');
 });
 
+
+function handleError(err) {
+	console.log(err.toString());
+}	
 // Watch
 gulp.task('watch', function() {
-  gulp.watch(['src/js/**/*.js', 'src/css/**/*.css', 'test/*.html', 'test/js/**/*.js', 'test/spec/*.js'], ['test']);
+  gulp.watch(['src/js/**/*.js', 'src/css/**/*.css', 'test/*.html', 'test/js/**/*.js', 'test/spec/*.js'], ['test'])
+	.on('error', handleError);
 });
