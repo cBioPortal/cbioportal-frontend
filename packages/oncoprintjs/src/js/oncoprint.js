@@ -77,24 +77,15 @@ module.exports = {
 			},
 			setTrackData: function(track_id, data) {
 				oncoprint.setTrackData(track_id, data);
-				//<REMOVE>
-				renderer.renderTracks();
-				//</REMOVE>
 			},
 			setRuleSet: function(track_id, type, params) {
 				renderer.setRuleSet(track_id, type, params);
-				//<REMOVE>
-				renderer.renderTracks();
-				//</REMOVE>
 			},
 			useSameRuleSet: function(target_track_id, source_track_id) {
 				renderer.useSameRuleSet(target_track_id, source_track_id);
 			},
 			setCellPadding: function(p) {
 				oncoprint.setCellPadding(p);
-				//<REMOVE>
-				renderer.renderTracks();
-				//</REMOVE>
 			},
 			toSVG: function(ctr) {
 				return renderer.toSVG(ctr);
@@ -120,9 +111,6 @@ function Oncoprint(config) {
 	self.getCellPadding = function() {
 		return self.config.cell_padding;
 	};
-	self.setCellPadding = function(p) {
-		self.config.cell_padding = p;
-	};
 	self.getCellHeight = function(track_id) {
 		return self.tracks[track_id].config.cell_height;
 	};
@@ -137,6 +125,7 @@ function Oncoprint(config) {
 	};
 	self.setIdOrder = function(id_order) {
 		self.id_order = id_order;
+		$(self).trigger(events.SET_ID_ORDER);
 	};
 	self.getTrackOrder = function() {
 		return self.track_order;
@@ -158,6 +147,7 @@ function Oncoprint(config) {
 		_.each(self.tracks[track_id].data, function(datum) {
 			id_data_map[id_accessor(datum)] = datum;
 		});
+		$(self).trigger(events.SET_TRACK_DATA);
 	};
 	self.getTrackDatum = function(track_id, datum_id) {
 		return self.tracks[track_id].id_data_map[datum_id];
@@ -212,6 +202,8 @@ function Oncoprint(config) {
 	};
 
 	self.sort = function(track_id_list, cmp_list) {
+		track_id_list = [].concat(track_id_list);
+		cmp_list = [].concat(cmp_list);
 		var lexicographically_ordered_cmp = function(id1,id2) {
 			var cmp_result;
 			for (var i=0, _len = track_id_list.length; i<_len; i++) {
@@ -252,7 +244,8 @@ function OncoprintSVGRenderer(container_selector_string, oncoprint) {
 		self.legend_table = self.container.append('table');
 	})();
 
-	var render_events = [events.ADD_TRACK, events.REMOVE_TRACK, events.MOVE_TRACK, events.SORT, events.SET_CELL_PADDING, events.SET_CELL_WIDTH];
+	var render_events = [events.ADD_TRACK, events.REMOVE_TRACK, events.MOVE_TRACK, events.SORT, events.SET_CELL_PADDING, 
+				events.SET_CELL_WIDTH, events.SET_TRACK_DATA];
 	$(oncoprint).on(render_events.join(" "), function() {
 		self.renderTracks();
 	});
@@ -260,6 +253,7 @@ function OncoprintSVGRenderer(container_selector_string, oncoprint) {
 	self.setRuleSet = function(track_id, type, params) {
 		var new_rule_set = RuleSet.makeRuleSet(type, params);
 		self.rule_sets[track_id] = new_rule_set;
+		self.renderTracks();
 	};
 	self.useSameRuleSet = function(target_track_id, source_track_id) {
 		self.rule_sets[target_track_id] = self.rule_sets[source_track_id];

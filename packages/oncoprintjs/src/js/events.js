@@ -34,6 +34,7 @@ module.exports = {
 	SORT: 'sort.oncoprint',
 	SET_CELL_PADDING: 'set_cell_padding.oncoprint',
 	SET_CELL_WIDTH: 'set_cell_width.oncoprint',
+	SET_TRACK_DATA: 'set_track_data.oncoprint',
 	CELL_CLICK: 'cell_click.oncoprint',
 	CELL_MOUSEENTER: 'cell_mouseenter.oncoprint',
 	CELL_MOUSELEAVE: 'cell_mouseleave.oncoprint',
