@@ -28,6 +28,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 var _ = require("underscore");
+var $ = require("jquery");
 
 var exports = module.exports = {};
 
@@ -36,6 +37,11 @@ exports.invert_array = function invert_array(arr) {
 		curr[next] = index;
 		return curr;
 	}, {});
+};
+
+exports.extends = function(child_class, parent_class) {
+	child_class.prototype = Object.create(parent_class.prototype);
+	child_class.prototype.constructor = child_class;
 };
 
 exports.makeD3SVGElement = function(tag) {
@@ -63,6 +69,17 @@ exports.spaceSVGElementsHorizontally = function(group, padding) {
 		x += padding;
 	});
 	return group;
+};
+
+exports.textWidth = function(string, font) {
+	var obj = $('<div>'+string+'</div>')
+			.css({position: 'absolute', float: 'left',
+				'white-space':'nowrap', visibility: 'hidden',
+				font: font})
+			.appendTo($('body'));
+	var width = obj.width();
+	obj.remove();
+	return width;
 };
 
 exports.d3SelectChildren = function(parent, selector) {
