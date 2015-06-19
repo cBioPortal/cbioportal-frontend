@@ -12,6 +12,15 @@
 	width: auto;
 }
 
+.cell_div {
+	background-color: #EEE;
+    position: relative;
+}
+
+.cell {
+	position: absolute;
+}
+
 .scrolling_oncoprint_table_container table td {
 	padding: 0;
 	margin: 0;
