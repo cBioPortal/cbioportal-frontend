@@ -72,11 +72,11 @@ $.when(gender_data_promise).then(function() {
 		}
 	});
 	onc.setTrackData(gender_track_id, gender_data);
-	for (var i=0; i<10; i++) {
+	//for (var i=0; i<10; i++) {
 		var dup_gender_track_id = onc.addTrack({label: 'Gender'});
 		onc.useSameRuleSet(dup_gender_track_id, gender_track_id);
 		onc.setTrackData(dup_gender_track_id, gender_data);
-	}
+	//}
 });
 
 mutation_data_promise.then(function(data) {

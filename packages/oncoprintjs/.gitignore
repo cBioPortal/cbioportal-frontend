@@ -43,3 +43,8 @@ Session.vim
 
 # Compiled assets
 dist
+
+# DS_Store
+.DS_Store
+src/.DS_Store
+test/.DS_Store

@@ -272,6 +272,9 @@ var OncoprintRenderer = (function() {
 	OncoprintRenderer.prototype.getTrackRenderHeight = function(track_id) {
 		return this.oncoprint.getTrackHeight(track_id) + 2*this.oncoprint.getTrackPadding(track_id);
 	};
+	OncoprintRenderer.prototype.getCellX = function(index) {
+		return index*(this.oncoprint.getCellWidth()+this.oncoprint.getCellPadding());
+	};
 	OncoprintRenderer.prototype.getCellPos = function(track_id, datum_id) {
 		var index = this.oncoprint.getIdOrder().indexOf(datum_id);
 		if (index > -1) {
@@ -319,12 +322,16 @@ var OncoprintSVGRenderer = (function() {
 		this.cell_svg = utils.makeD3SVGElement('svg');
 		this.label_container;
 		this.cell_container;
+		this.cell_div;
 
-		var render_events = [events.ADD_TRACK, events.REMOVE_TRACK, events.MOVE_TRACK, events.SORT, events.SET_CELL_PADDING, 
-					events.SET_CELL_WIDTH, events.SET_TRACK_DATA];
+		var render_events = [events.ADD_TRACK, events.REMOVE_TRACK, events.SET_TRACK_DATA];
+		var reposition_events = [events.MOVE_TRACK, events.SORT, events.SET_CELL_PADDING, events.SET_CELL_WIDTH];
 		var self = this;
 		$(oncoprint).on(render_events.join(" "), function() {
 			self.render();
+		});
+		$(oncoprint).on(reposition_events.join(" "), function() {
+			self.repositionCells();
 		});
 	}
 	utils.extends(OncoprintSVGRenderer, OncoprintRenderer);
@@ -357,14 +364,21 @@ var OncoprintSVGRenderer = (function() {
 	};
 	OncoprintSVGRenderer.prototype.attachCellSVG = function(container_selector_string) {
 		this.cell_container = d3.select(container_selector_string).append('div').classed('scrolling_oncoprint_section_container', true);
+		this.cell_div = this.cell_container.append('div').classed('cell_div', true);
 		var cell_svg = this.getCellSVG();
 		this.cell_container.select(function() {
 			return this.appendChild(cell_svg.node());
 		});
 		var self = this;
+		
 		$(this.cell_container.node()).on('scroll', function() {
-			self.render();
+			//TODO: need to do this more smartly --- dont do it on
+			//		every scroll, just when you need it
+			// TODO: separate into repositioning and reclipping
+			self.repositionCells();
 		});
+		// TODO: delete this if you want it back
+		cell_svg.style('display', 'none');
 	};
 	OncoprintSVGRenderer.prototype.renderTrackLabel = function(oncoprint, track_id, rule_set, svg) {
 		var label_class = 'label'+track_id;
@@ -396,35 +410,90 @@ var OncoprintSVGRenderer = (function() {
 		var view_rect = this.getParentViewRect();
 		var cell_width = oncoprint.getCellWidth();
 		var cell_padding = oncoprint.getCellPadding();
+		var cell_div = this.cell_div;
+		var cell_height = oncoprint.getCellHeight(track_id);
 
-		var bound_g = (function createAndRemoveGroups() {
-			var cell_class = 'cell'+track_id;
+		//var bound_g 
+		var bound_svg = (function createAndRemoveGroups() {
+			var cell_class = 'cell';
+			var track_cell_class = 'cell'+track_id;
+			
+			/* CLIPPING
 			data = data.filter(function(d,i) {
 				var position = id_order[id_accessor(d)]*(cell_width + cell_padding);
 				var xlim = [view_rect.x, view_rect.x + view_rect.width];
 				return position >= xlim[0] && position < xlim[1];
-			});
-			var bound_g = svg.selectAll('g.'+cell_class).data(data, id_accessor);
-			bound_g.enter().append('g').classed(cell_class, true);
-			bound_g.exit().remove();
-			return bound_g;
+			});*/
+			var bound_svg = cell_div.selectAll('svg.'+track_cell_class).data(data, id_accessor);
+			bound_svg.enter().append('svg').classed(track_cell_class, true).classed(cell_class, true)
+							.style('width', cell_width).style('height', cell_height);
+			//var bound_g = svg.selectAll('g.'+cell_class).data(data, id_accessor);
+			//bound_g.enter().append('g').classed(cell_class, true);
+			//bound_g.exit().remove();
+			//return bound_g;
+			return bound_svg;
 		})();
 		var self = this;
 		(function positionGroups() {
-			bound_g.transition().attr('transform', function(d,i) {
+			/*bound_g.transition().attr('transform', function(d,i) {
 				var pos = self.getCellPos(track_id, id_accessor(d));
 				return utils.translate(pos.x, pos.y);
+			});*/
+			bound_svg.transition().style('left', function(d,i) {
+				var pos = self.getCellPos(track_id, id_accessor(d));
+				return pos.x;
+			}).style('top', function(d,i) {
+				var pos = self.getCellPos(track_id, id_accessor(d));
+				return pos.y;
 			});
 		})();
 		(function renderCells() {
-			bound_g.selectAll('*').remove();
-			rule_set.apply(svg, bound_g, data, id_accessor, oncoprint.getCellWidth(), oncoprint.getCellHeight(track_id));
+			//bound_g.selectAll('*').remove();
+			//rule_set.apply(svg, bound_g, data, id_accessor, oncoprint.getCellWidth(), oncoprint.getCellHeight(track_id));
+			bound_svg.selectAll('*').remove();
+			rule_set.apply(svg, bound_svg, data, id_accessor, oncoprint.getCellWidth(), oncoprint.getCellHeight(track_id));
 		})();
 	};
+	OncoprintSVGRenderer.prototype.repositionTrackCells = function(oncoprint, track_id) {
+		var data = oncoprint.getTrackData(track_id);
+		var id_accessor = oncoprint.getTrackDatumIdAccessor(track_id);
+		var view_rect = this.getParentViewRect();
+		var self = this;
+		if (!id_accessor) {
+			return false;
+		}
+		var cell_div = this.cell_div;
+
+		var track_cell_class = 'cell'+track_id;
+		var bound_svg = cell_div.selectAll('svg.'+track_cell_class).data(data, id_accessor);
+
+		// TODO: find x as a set function of i, that will make this faster, and clipping faster
+		bound_svg.transition().style('left', function(d,i) {
+			return self.getCellX(i);
+		}).style('top', function(d,i) {
+			return self.getTrackRenderTop(track_id);
+		}).style('display', function(d,i) {
+			var position = self.getCellX(i);
+			var xlim = [view_rect.x, view_rect.x + view_rect.width];
+			var ret = (position >= xlim[0] && position < xlim[1]) ? 'initial' : 'none';
+			return ret;
+		});
+	};
+	OncoprintSVGRenderer.prototype.repositionCells = function() {
+		var oncoprint = this.oncoprint;
+		var self = this;
+		_.each(oncoprint.getTrackOrder(), function(track_id) {
+			self.repositionTrackCells(oncoprint, track_id);
+		});
+	}
 	OncoprintSVGRenderer.prototype.render = function() {
 		var self = this;
 		this.cell_svg.attr('width', this.getCellAreaWidth())
 				.attr('height', this.getCellAreaHeight());
+		this.cell_div.style('min-width', this.getCellAreaWidth()+'px')
+				.style('min-height', this.getCellAreaHeight()+'px');
+		//this.cell_div.append('svg').classed('cell', true).style('left', '10').style('top','5').style('width','10').style('height','10')
+				//.append('rect').attr('width', '10').attr('height','10').attr('fill', '#ff0000');
 		this.label_svg.attr('width', this.getLabelAreaWidth())
 				.attr('height', this.getLabelAreaHeight());
 		_.each(this.oncoprint.getTrackOrder(), function(track_id) {
