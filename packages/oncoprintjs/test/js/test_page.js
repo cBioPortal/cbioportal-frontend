@@ -102,6 +102,15 @@ $.when(mutation_data_promise).then(function() {
 		legend_label: 'Mutations (Log scale)'
 	});
 	onc.setTrackData(log_mut_track_id, mutation_data);
+
+	var dup_mut_track_id = onc.addTrack({label: 'Mutations'});
+	onc.setRuleSet(dup_mut_track_id, Oncoprint.BAR_CHART, {
+		data_key: 'attr_val',
+		data_range: [0,100],
+		fill: '#ff0000',
+		legend_label: 'Mutations (Linear scale)'
+	});
+	onc.setTrackData(dup_mut_track_id, mutation_data);
 });
 
 
