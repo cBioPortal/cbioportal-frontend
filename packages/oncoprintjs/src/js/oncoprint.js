@@ -559,7 +559,6 @@ var OncoprintSVGRenderer = (function() {
 			var bbox = this.getBBox();
 			new_height = Math.max(new_height, point.y+bbox.height);
 			new_width = Math.max(new_width, point.x + bbox.width);
-			console.log(bbox);
 		});
 		this.legend_svg.attr('width', new_width).attr('height', new_height);
 	};

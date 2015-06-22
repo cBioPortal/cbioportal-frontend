@@ -307,6 +307,11 @@ function D3SVGBarChartRule(params, rule_id) {
 		}
 	};
 
+	var makeDatum = function(x) {
+		var ret = {};
+		ret[params.data_key] = x;
+		return ret;
+	};
 	var scaled_data_range = _.map(this.data_range, scale);
 	var height_helper = function(d) {
 		var datum = scale(d[params.data_key]);
@@ -324,30 +329,30 @@ function D3SVGBarChartRule(params, rule_id) {
 	this.attrs.y = y_function;
 	this.attrs.fill = params.fill || '#000000';
 
-
 	this.putLegendGroup = function(svg, cell_width, cell_height) {
 		// TODO: triangle legend piece
 		if (params.exclude_from_legend) {
 			return;
 		}
-		var rect =utils.makeD3SVGElement('rect');
-		rect.attr('fill', this.attrs.fill);
 		var group = svg.append('g');
-		var bottom_end = group.append('g');
-		utils.appendD3SVGElement(rect, bottom_end)
-			.attr('width', cell_width)
-			.attr('height', 1).attr('y', cell_height-1);
-		bottom_end.append('text').text(this.data_range[0]).attr('alignment-baseline', 'hanging');;
-		utils.spaceSVGElementsHorizontally(bottom_end, 5);
-
-		var top_end = group.append('g');
-		utils.appendD3SVGElement(rect, top_end)
-			.attr('width', cell_width)
-			.attr('height', cell_height);
-		top_end.append('text').text(this.data_range[1]).attr('alignment-baseline', 'hanging');;
-		utils.spaceSVGElementsHorizontally(top_end, 5);
-
+		group.append('text').text(this.data_range[0]).attr('alignment-baseline', 'hanging');
+		var rect_group = group.append('g');
+		var mesh = 50;
+		for (var i=0; i<=mesh; i++) {
+			var t = i/mesh;
+			var d = (1-t)*this.data_range[0] + t*this.data_range[1];
+			var datum = makeDatum(d);
+			var height = cell_height*height_helper(datum)/100;
+			rect_group.append('rect')
+				.attr('width', 1)
+				.attr('height', height)
+				.attr('y', cell_height-height)
+				.attr('fill', this.attrs.fill);
+		}
+		utils.spaceSVGElementsHorizontally(rect_group, 0);
+		group.append('text').text(this.data_range[1]).attr('alignment-baseline', 'hanging');
 		utils.spaceSVGElementsHorizontally(group, 10);
+
 		return group;
 	};
 }
