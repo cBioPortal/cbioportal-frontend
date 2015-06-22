@@ -69,10 +69,11 @@ $.when(gender_data_promise).then(function() {
 		color: {},
 		getCategory: function(d) {
 			return d.attr_val;
-		}
+		},
+		legend_label: 'Gender'
 	});
 	onc.setTrackData(gender_track_id, gender_data);
-	for (var i=0; i<10; i++) {
+	for (var i=0; i<2; i++) {
 		var dup_gender_track_id = onc.addTrack({label: 'Gender'});
 		onc.useSameRuleSet(dup_gender_track_id, gender_track_id);
 		onc.setTrackData(dup_gender_track_id, gender_data);
@@ -87,7 +88,8 @@ $.when(mutation_data_promise).then(function() {
 	onc.setRuleSet(mutation_track_id, Oncoprint.GRADIENT_COLOR, {
 		data_key: 'attr_val',
 		data_range: [0,100],
-		color_range: ['#A9A9A9', '#FF0000']
+		color_range: ['#A9A9A9', '#FF0000'],
+		legend_label: 'Mutations'
 	});
 	onc.setTrackData(mutation_track_id, mutation_data);
 
@@ -96,7 +98,8 @@ $.when(mutation_data_promise).then(function() {
 		data_key: 'attr_val',
 		data_range: [0,100],
 		fill: '#ff0000',
-		scale: 'log'
+		scale: 'log',
+		legend_label: 'Mutations (Log scale)'
 	});
 	onc.setTrackData(log_mut_track_id, mutation_data);
 });
@@ -133,7 +136,8 @@ $.when(alteration_data_promise).then(function() {
 			label: {
 				MISSENSE: 'Missense Mutation'
 			}
-		}
+		},
+		legend_label: 'Genetic Alteration'
 	});
 	onc.setTrackData(alteration_track_id, alteration_data);
 
@@ -147,6 +151,7 @@ $('#change_color_scheme').click(function() {
 		color: {MALE: '#000000', FEMALE: '#999999'},
 		getCategory: function(d) {
 			return d.attr_val;
-		}
+		},
+		legend_label: 'Gender (modified color)'
 	});
 });
