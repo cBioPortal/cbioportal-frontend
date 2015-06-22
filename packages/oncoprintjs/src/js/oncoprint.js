@@ -63,9 +63,7 @@ module.exports = {
 	BAR_CHART: RuleSet.BAR_CHART,
 	create: function CreateOncoprint(container_selector_string, config) {
 		var oncoprint = new Oncoprint(config);
-		var renderer = new OncoprintSVGRenderer(oncoprint, {label_font: '12px Arial'});
-		renderer.attachLabelSVG(container_selector_string);
-		renderer.attachCellSVG(container_selector_string);
+		var renderer = new OncoprintSVGRenderer(container_selector_string, oncoprint, {label_font: '12px Arial'});
 		var ret = {
 			addTrack: function(config) {
 				var track_id = oncoprint.addTrack(config);
@@ -360,10 +358,10 @@ var OncoprintSVGRenderer = (function() {
 			return this;
 		};
 	}
-	function OncoprintSVGRenderer(oncoprint, config) {
+	function OncoprintSVGRenderer(container_selector_string, oncoprint, config) {
 		OncoprintRenderer.call(this, oncoprint, config);
+		var self = this;
 		this.label_svg = utils.makeD3SVGElement('svg');
-		this.cell_svg = utils.makeD3SVGElement('svg');
 		this.label_container;
 		this.cell_container;
 		this.cell_container_node;
@@ -372,13 +370,29 @@ var OncoprintSVGRenderer = (function() {
 		this.curr_clip_bounds = new VisibleIndexBounds(-1, -2);
 		this.prev_clip_bounds = new VisibleIndexBounds(-1, -2);
 
+		(function initLabelContainer() {
+			self.label_container = d3.select(container_selector_string).append('div').classed('fixed_oncoprint_section_container', true);
+			var label_svg = self.getLabelSVG();
+			self.label_container.select(function () {
+				return this.appendChild(label_svg.node());
+			});
+		})();
+		(function initCellContainer() {
+			self.cell_container = d3.select(container_selector_string).append('div').classed('scrolling_oncoprint_section_container', true);
+			self.cell_container_node = self.cell_container.node();
+			self.cell_div = self.cell_container.append('div').classed('cell_div', true);
+			
+			$(self.cell_container.node()).on('scroll', function() {
+				self.clipCells();
+			});
+		})();
+
 		var render_all_events = [events.MOVE_TRACK, events.REMOVE_TRACK];
 		var render_track_events = [events.ADD_TRACK, events.SET_TRACK_DATA];
 		var reposition_events = [events.MOVE_TRACK, events.SET_CELL_PADDING, events.SET_CELL_WIDTH];
 		var resize_cell_div_events = [events.SET_CELL_PADDING, events.SET_CELL_WIDTH];
 		var reclip_events = [events.SET_CELL_PADDING, events.SET_CELL_WIDTH];
 		var reposition_then_reclip_events = [events.SET_ID_ORDER];
-		var self = this;
 		$(oncoprint).on(resize_cell_div_events.join(" "), function() {
 			self.resizeCellDiv();
 		});
@@ -431,28 +445,6 @@ var OncoprintSVGRenderer = (function() {
 	}
 	OncoprintSVGRenderer.prototype.getLabelSVG = function() {
 		return this.label_svg;
-	};
-	OncoprintSVGRenderer.prototype.getCellSVG = function() {
-		return this.cell_svg;
-	};
-	OncoprintSVGRenderer.prototype.attachLabelSVG = function(container_selector_string) {
-		this.label_container = d3.select(container_selector_string).append('div').classed('fixed_oncoprint_section_container', true);
-		var label_svg = this.getLabelSVG();
-		this.label_container.select(function () {
-			return this.appendChild(label_svg.node());
-		});
-	};
-	OncoprintSVGRenderer.prototype.attachCellSVG = function(container_selector_string) {
-		this.cell_container = d3.select(container_selector_string).append('div').classed('scrolling_oncoprint_section_container', true);
-		this.cell_container_node = this.cell_container.node();
-		this.cell_div = this.cell_container.append('div').classed('cell_div', true);
-		var self = this;
-		
-		$(this.cell_container.node()).on('scroll', function() {
-			_.debounce(function() {
-				self.clipCells();	
-			}, 60)();
-		});
 	};
 	OncoprintSVGRenderer.prototype.renderTrackLabel = function(oncoprint, track_id, rule_set, svg) {
 		var label_class = 'label'+track_id;
@@ -553,8 +545,6 @@ var OncoprintSVGRenderer = (function() {
 	};
 	OncoprintSVGRenderer.prototype.render = function(track_id) {
 		var self = this;
-		this.cell_svg.attr('width', this.getCellAreaWidth())
-				.attr('height', this.getCellAreaHeight());
 		this.label_svg.attr('width', this.getLabelAreaWidth())
 				.attr('height', this.getLabelAreaHeight());
 		this.resizeCellDiv();
