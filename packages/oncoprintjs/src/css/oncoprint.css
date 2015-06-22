@@ -28,3 +28,12 @@
 	-moz-box-sizing: border-box;
 	box-sizing: border-box;
 }
+
+.ruleset_legend_label {
+	font-family: Arial;
+	font-weight: bold;
+	fill: gray;
+	text-anchor: start;
+	alignment-baseline: hanging;
+	font-size: 12px;
+}

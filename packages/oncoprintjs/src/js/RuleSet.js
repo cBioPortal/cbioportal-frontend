@@ -25,14 +25,21 @@ module.exports = {
 	}
 };
 
+var getRuleSetId = utils.makeIdCounter();
+
 var D3SVGRuleSet = (function() {
-	function D3SVGRuleSet() {
+	function D3SVGRuleSet(params) {
 		this.rule_map = {};
+		this.rule_set_id = getRuleSetId();
+		this.legend_label = params.legend_label;
 	};
-	var rule_counter = 0;
-	var getRuleId = function() {
-		rule_counter += 1;
-		return rule_counter;
+	var getRuleId = utils.makeIdCounter();
+
+	D3SVGRuleSet.prototype.getLegendLabel = function() {
+		return this.legend_label;
+	};
+	D3SVGRuleSet.prototype.getRuleSetId = function() {
+		return this.rule_set_id;
 	};
 	D3SVGRuleSet.prototype.addRule = function(params) {
 		var rule_id = getRuleId();
@@ -73,15 +80,6 @@ var D3SVGRuleSet = (function() {
 	};
 	D3SVGRuleSet.prototype.getRule = function(rule_id) {
 		return this.rule_map[rule_id];
-	};
-	D3SVGRuleSet.prototype.markLegendRendered = function() {
-		this.legend_rendered = true;
-	};
-	D3SVGRuleSet.prototype.unmarkLegendRendered = function() {
-		this.legend_rendered = false;
-	};
-	D3SVGRuleSet.prototype.isLegendRendered = function() {
-		return this.legend_rendered;
 	};
 	return D3SVGRuleSet;
 })();
@@ -127,7 +125,8 @@ function D3SVGCategoricalColorRuleSet(params) {
 			rule.putLegendGroup(group, cell_width, cell_height);
 		})
 		utils.spaceSVGElementsHorizontally(group, 20);
-	}
+		return group;
+	};
 }
 D3SVGCategoricalColorRuleSet.prototype = Object.create(D3SVGRuleSet.prototype);
 
@@ -142,7 +141,7 @@ function D3SVGGradientColorRuleSet(params) {
 		scale: params.scale
 	});
 	this.putLegendGroup = function(svg) {
-		this.rule_map[rule].putLegendGroup(svg);
+		return this.rule_map[rule].putLegendGroup(svg);
 	};
 }
 D3SVGGradientColorRuleSet.prototype = Object.create(D3SVGRuleSet.prototype);
@@ -158,7 +157,7 @@ function D3SVGBarChartRuleSet(params) {
 		fill: params.fill,
 	});
 	this.putLegendGroup = function(svg, cell_width, cell_height) {
-		this.rule_map[rule].putLegendGroup(svg, cell_width, cell_height);
+		return this.rule_map[rule].putLegendGroup(svg, cell_width, cell_height);
 	};
 }
 D3SVGBarChartRuleSet.prototype = Object.create(D3SVGRuleSet.prototype);
@@ -216,6 +215,7 @@ function D3SVGGeneticAlterationRuleSet(params) {
 			rule.putLegendGroup(group, cell_width, cell_height);
 		})
 		utils.spaceSVGElementsHorizontally(group, 20);
+		return group;
 	};
 	self.alteredData = function(data) {
 		var altered_data = [];

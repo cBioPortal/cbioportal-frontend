@@ -41,6 +41,7 @@ var RuleSet = require('./RuleSet');
 var defaultOncoprintConfig = {
 	cell_width: 6,
 	cell_padding: 3,
+	legend: true
 };
 
 var hiddenOncoprintConfig = {
@@ -62,8 +63,10 @@ module.exports = {
 	GENETIC_ALTERATION: RuleSet.GENETIC_ALTERATION,
 	BAR_CHART: RuleSet.BAR_CHART,
 	create: function CreateOncoprint(container_selector_string, config) {
+		config = $.extend({}, defaultOncoprintConfig, config || {});
+		config = $.extend(config, hiddenOncoprintConfig);
 		var oncoprint = new Oncoprint(config);
-		var renderer = new OncoprintSVGRenderer(container_selector_string, oncoprint, {label_font: '12px Arial'});
+		var renderer = new OncoprintSVGRenderer(container_selector_string, oncoprint, {label_font: '12px Arial', legend:config.legend});
 		var ret = {
 			addTrack: function(config) {
 				var track_id = oncoprint.addTrack(config);
@@ -101,9 +104,7 @@ module.exports = {
 function Oncoprint(config) {
 	var self = this;
 	var track_id_counter = 0;
-	self.config = $.extend({}, defaultOncoprintConfig, config || {});
-	self.config = $.extend(self.config, hiddenOncoprintConfig);
-
+	self.config = config;
 	self.id_order = [];
 	self.track_order = [];
 	self.tracks = {};
@@ -361,21 +362,19 @@ var OncoprintSVGRenderer = (function() {
 	function OncoprintSVGRenderer(container_selector_string, oncoprint, config) {
 		OncoprintRenderer.call(this, oncoprint, config);
 		var self = this;
-		this.label_svg = utils.makeD3SVGElement('svg');
+		this.label_svg;
 		this.label_container;
 		this.cell_container;
 		this.cell_container_node;
 		this.cell_div;
+		this.legend_svg;
 		this.cells = {};
 		this.curr_clip_bounds = new VisibleIndexBounds(-1, -2);
 		this.prev_clip_bounds = new VisibleIndexBounds(-1, -2);
 
 		(function initLabelContainer() {
 			self.label_container = d3.select(container_selector_string).append('div').classed('fixed_oncoprint_section_container', true);
-			var label_svg = self.getLabelSVG();
-			self.label_container.select(function () {
-				return this.appendChild(label_svg.node());
-			});
+			self.label_svg = self.label_container.append('svg');
 		})();
 		(function initCellContainer() {
 			self.cell_container = d3.select(container_selector_string).append('div').classed('scrolling_oncoprint_section_container', true);
@@ -385,6 +384,11 @@ var OncoprintSVGRenderer = (function() {
 			$(self.cell_container.node()).on('scroll', function() {
 				self.clipCells();
 			});
+		})();
+		(function initLegend() {
+			if (config.legend) {
+				self.legend_svg = d3.select(container_selector_string).append('svg');
+			}
 		})();
 
 		var render_all_events = [events.MOVE_TRACK, events.REMOVE_TRACK];
@@ -540,13 +544,31 @@ var OncoprintSVGRenderer = (function() {
 		this.cell_div.style('min-width', this.getCellAreaWidth()+'px')
 				.style('min-height', this.getCellAreaHeight()+'px');
 	};
+	OncoprintSVGRenderer.prototype.resizeLabelSVG = function() {
+		this.getLabelSVG().attr('width', this.getLabelAreaWidth())
+				.attr('height', this.getLabelAreaHeight());
+	};
+	OncoprintSVGRenderer.prototype.resizeLegendSVG = function() {
+		var new_height = 0;
+		var new_width = 0;
+		var point = this.legend_svg.node().createSVGPoint();
+		utils.d3SelectChildren(this.legend_svg, 'g').each(function() {
+			point.x = 0;
+			point.y = 0;
+			point = point.matrixTransform(this.getCTM());
+			var bbox = this.getBBox();
+			new_height = Math.max(new_height, point.y+bbox.height);
+			new_width = Math.max(new_width, point.x + bbox.width);
+			console.log(bbox);
+		});
+		this.legend_svg.attr('width', new_width).attr('height', new_height);
+	};
 	OncoprintSVGRenderer.prototype.isTrackRenderable = function(track_id) {
 		return this.getRuleSet(track_id) && this.oncoprint.getTrackData(track_id).length > 0;
 	};
 	OncoprintSVGRenderer.prototype.render = function(track_id) {
 		var self = this;
-		this.label_svg.attr('width', this.getLabelAreaWidth())
-				.attr('height', this.getLabelAreaHeight());
+		this.resizeLabelSVG();
 		this.resizeCellDiv();
 
 		var renderTrack = function(track_id) {
@@ -555,7 +577,6 @@ var OncoprintSVGRenderer = (function() {
 				self.drawTrackCells(track_id, rule_set);
 				self.positionTrackCells(track_id);
 				self.renderTrackLabel(self.oncoprint, track_id, rule_set, self.getLabelSVG());
-				//renderTrackLegend(self.oncoprint, track_id, rule_set, self.getLegendSVG());
 			}
 		};
 		if (typeof track_id !== "undefined") {
@@ -566,7 +587,31 @@ var OncoprintSVGRenderer = (function() {
 			});
 		}
 		self.clipCells();
+		this.renderLegend();
 	};
+	OncoprintSVGRenderer.prototype.renderLegend = function() {
+		var svg = this.legend_svg;
+		svg.selectAll('*').remove();
+		var padding = 25;
+		var y = padding;
+		var rendered = {};
+		var cell_width = this.oncoprint.getCellWidth();
+		var self = this;
+		_.each(this.rule_sets, function(rule_set, track_id) {
+			var rule_set_id = rule_set.getRuleSetId();
+			if (!rendered.hasOwnProperty(rule_set_id)) {
+				var text = svg.append('text').classed('ruleset_legend_label', true).text(rule_set.getLegendLabel())
+						.attr('transform', utils.translate(0,y));
+				var group = rule_set.putLegendGroup(svg, cell_width, self.oncoprint.getCellHeight(track_id));
+				rendered[rule_set_id] = true;
+				group.attr('transform', utils.translate(200,y));
+				var bounding_box = group.node().getBBox();
+				y += bounding_box.height;
+				y += padding;
+			}
+		});
+		this.resizeLegendSVG();
+	}
 	return OncoprintSVGRenderer;
 })();
 

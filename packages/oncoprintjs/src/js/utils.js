@@ -44,6 +44,14 @@ exports.extends = function(child_class, parent_class) {
 	child_class.prototype.constructor = child_class;
 };
 
+exports.makeIdCounter = function() {
+	var counter = 0;
+	return function() {
+		counter += 1;
+		return counter;
+	};
+};
+
 exports.makeD3SVGElement = function(tag) {
 	return d3.select(document.createElementNS('http://www.w3.org/2000/svg', tag));
 };
