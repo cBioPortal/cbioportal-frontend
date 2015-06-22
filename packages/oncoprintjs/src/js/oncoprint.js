@@ -375,7 +375,8 @@ var OncoprintSVGRenderer = (function() {
 			//TODO: need to do this more smartly --- dont do it on
 			//		every scroll, just when you need it
 			// TODO: separate into repositioning and reclipping
-			self.repositionCells();
+			//self.repositionCells();
+			self.clipCells();
 		});
 		// TODO: delete this if you want it back
 		cell_svg.style('display', 'none');
@@ -453,6 +454,26 @@ var OncoprintSVGRenderer = (function() {
 			bound_svg.selectAll('*').remove();
 			rule_set.apply(svg, bound_svg, data, id_accessor, oncoprint.getCellWidth(), oncoprint.getCellHeight(track_id));
 		})();
+	};
+	OncoprintSVGRenderer.prototype.clipCells = function() {
+		var self = this;
+		var view_rect = this.getParentViewRect();
+		_.each(this.oncoprint.getTrackOrder(), function(track_id) {
+			var data = self.oncoprint.getTrackData(track_id);
+			var id_accessor = self.oncoprint.getTrackDatumIdAccessor(track_id);
+			if (!id_accessor) {
+				return false;
+			}
+
+			var track_cell_class = 'cell'+track_id;
+			var bound_svg = self.cell_div.selectAll('svg.'+track_cell_class).data(data, id_accessor);
+			bound_svg.style('display', function(d,i) {
+				var position = self.getCellX(i);
+				var xlim = [view_rect.x, view_rect.x + view_rect.width];
+				var ret = (position >= xlim[0] && position < xlim[1]) ? 'initial' : 'none';
+				return ret;
+			});
+		});
 	};
 	OncoprintSVGRenderer.prototype.repositionTrackCells = function(oncoprint, track_id) {
 		var data = oncoprint.getTrackData(track_id);
