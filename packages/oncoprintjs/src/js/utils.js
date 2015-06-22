@@ -95,32 +95,22 @@ exports.warn = function(str, context) {
 exports.stableSort = function(arr, cmp) {
 	// cmp returns something in [-1,0,1]
 
-	cmp = [].concat(cmp);
-	var index_cmp = function(a,b) {
-		if (a[1] < b[1]) {
-			return -1;
-		} else if (a[1] > b[1]) {
-			return 1;
-		} else {
-			return 0;
-		}
-	};
-	cmp = cmp.concat(index_cmp); // stable
-
-	var ordered_cmp = function(a,b) {
-		var res = 0;
-		var cmp_ind = 0;
-		while (res === 0 && cmp_ind < cmp.length) {
-			res = (cmp[cmp_ind])(a[0],b[0]);
-			cmp_ind += 1;
-		}
-		return res;
-	};
 	var zipped = [];
 	_.each(arr, function(val, ind) {
 		zipped.push([val, ind]);
-	})
-	zipped.sort(ordered_cmp);
+	});
+	var stable_cmp = function(a,b) {
+		var res = cmp(a[0], b[0]);
+		if (res === 0) {
+			if (a[1] < b[1]) {
+				res = -1;
+			} else if (a[1] > b[1]) {
+				res = 1;
+			}
+		}
+		return res;
+	};
+	zipped.sort(stable_cmp);
 	return _.map(zipped, function(x) { return x[0];});
 };
 
