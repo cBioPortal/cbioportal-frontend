@@ -35,6 +35,7 @@ module.exports = {
 	SET_CELL_PADDING: 'set_cell_padding.oncoprint',
 	SET_CELL_WIDTH: 'set_cell_width.oncoprint',
 	SET_TRACK_DATA: 'set_track_data.oncoprint',
+	SET_ID_ORDER: 'set_id_order.oncoprint',
 	CELL_CLICK: 'cell_click.oncoprint',
 	CELL_MOUSEENTER: 'cell_mouseenter.oncoprint',
 	CELL_MOUSELEAVE: 'cell_mouseleave.oncoprint',
@@ -43,5 +44,6 @@ module.exports = {
 	SET_PRE_TRACK_PADDING: 'set_pre_track_padding.oncoprint',
 	TRACK_INIT: 'init.track.oncoprint',
 	UPDATE_RENDER_RULES: 'update_render_rules.cell_renderer.oncoprint',
-	FINISHED_RENDERING: 'finished_rendering.renderer.oncoprint'
+	FINISHED_RENDERING: 'finished_rendering.renderer.oncoprint',
+	FINISHED_POSITIONING: 'finished_positioning.renderer.oncoprint'
 };
