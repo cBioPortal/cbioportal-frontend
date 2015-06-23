@@ -23,7 +23,7 @@ $('#toggle_whitespace').click(function() {
 		onc.setCellPadding(0);
 	}
 });
- $('#to_svg_btn').click(function() {
+ /*$('#to_svg_btn').click(function() {
  	onc.toSVG(d3.select('#svg_container'));
 	var DOMURL = window.URL || window.webkitURL || window;
 	var ctx = $('#canvas')[0].getContext('2d');
@@ -39,17 +39,14 @@ $('#toggle_whitespace').click(function() {
 		ctx.drawImage(img, 0, 0);
 		DOMURL.revokeObjectURL(url);
 	};
- });
- var clipping = true;
- $('#clipping_btn').click(function() {
- 	clipping = !clipping;
- 	onc.setClipping(clipping);
- 	console.log("Clipping is "+clipping);
- });
+ });*/
 
 var gender_data;
 var gender_track_id;
 var gender_data_promise = $.getJSON('./gbm/gender-gbm.json');
+$('#move_btn').click(function() {
+	onc.moveTrack(gender_track_id, 4);
+})
 
 var mutation_data;
 var mutation_track_id;
@@ -72,7 +69,7 @@ $.when(gender_data_promise).then(function() {
 		legend_label: 'Gender'
 	});
 	onc.setTrackData(gender_track_id, gender_data);
-	for (var i=0; i<2; i++) {
+	for (var i=0; i<0; i++) {
 		var dup_gender_track_id = onc.addTrack({label: 'Gender'});
 		onc.useSameRuleSet(dup_gender_track_id, gender_track_id);
 		onc.setTrackData(dup_gender_track_id, gender_data);
