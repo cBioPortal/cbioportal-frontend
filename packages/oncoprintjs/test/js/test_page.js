@@ -1,5 +1,4 @@
 var _ = require('underscore');
-var $ = require('jquery');
 var d3 = require('d3');
 
 var globals = require('../../src/js/globals');
@@ -84,12 +83,16 @@ mutation_data_promise.then(function(data) {
 	mutation_data = data.data;
 });
 $.when(mutation_data_promise).then(function() {
-	mutation_track_id = onc.addTrack({label: 'Mutations'});
+	mutation_track_id = onc.addTrack({label: 'Mutations', 
+		tooltip: function(d) {
+			return '<a href="http://www.google.com"><p><b>'+d.sample+'</b>: '+d.attr_val+'</p></a>';
+		}
+	});
 	onc.setRuleSet(mutation_track_id, Oncoprint.GRADIENT_COLOR, {
 		data_key: 'attr_val',
 		data_range: [0,100],
 		color_range: ['#A9A9A9', '#FF0000'],
-		legend_label: 'Mutations'
+		legend_label: 'Mutations',
 	});
 	onc.setTrackData(mutation_track_id, mutation_data);
 
