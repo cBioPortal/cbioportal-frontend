@@ -358,6 +358,11 @@ var OncoprintSVGRenderer = (function() {
 			this.last = last;
 			return this;
 		};
+		this.fromViewInterval = function(interval, cell_unit) {
+			this.first = Math.floor(interval[0]/cell_unit);
+			this.last = Math.ceil(interval[1]/cell_unit);
+			return this;
+		};
 	}
 	function OncoprintSVGRenderer(container_selector_string, oncoprint, config) {
 		OncoprintRenderer.call(this, oncoprint, config);
@@ -371,6 +376,8 @@ var OncoprintSVGRenderer = (function() {
 		this.cells = {};
 		this.curr_clip_bounds = new VisibleIndexBounds(-1, -2);
 		this.prev_clip_bounds = new VisibleIndexBounds(-1, -2);
+
+		this.clip_zone_start = 0;
 
 		(function initLabelContainer() {
 			self.label_container = d3.select(container_selector_string).append('div').classed('fixed_oncoprint_section_container', true);
@@ -419,6 +426,11 @@ var OncoprintSVGRenderer = (function() {
 	}
 	utils.extends(OncoprintSVGRenderer, OncoprintRenderer);
 
+	OncoprintSVGRenderer.prototype.getViewInterval = function() {
+		var parent = this.cell_container_node;
+		var parentRect = parent.getBoundingClientRect();
+		return {x: parent.scrollLeft, width: parentRect.right - parentRect.left};
+	};
 	OncoprintSVGRenderer.prototype.getClipBounds = function() {
 		var parent = this.cell_container_node;
 		var parentRect = parent.getBoundingClientRect();
@@ -510,33 +522,73 @@ var OncoprintSVGRenderer = (function() {
 			$(self).trigger(events.FINISHED_POSITIONING);
 		});
 	};
+	OncoprintSVGRenderer.prototype.getClipViewInterval = function() {
+		var self = this;
+		var view = this.getViewInterval();
+		var x = view.x;
+		var width = view.width;
+		var clip_buffer = Math.floor(0.05*width);
+		var clip_zone_size = 3*width; 
+
+		var variant=1;
+		if (variant === 0) {
+			var section0 = this.clip_zone_start;
+			var section2 = this.clip_zone_start + 2*width;
+
+			if (x > section2) {
+				this.clip_zone_start += width;
+			} else if (x < section0) {
+				this.clip_zone_start -= width;
+			}
+
+			return [this.clip_zone_start, this.clip_zone_start + clip_zone_size];
+		} else if (variant === 1) {
+			var section1 = this.clip_zone_start + width;
+
+			while (x > section1 + clip_buffer) {
+				this.clip_zone_start += clip_buffer;
+				section1 = this.clip_zone_start + width;
+			}
+			while (x < section1 - clip_buffer) {
+				this.clip_zone_start -= clip_buffer;
+				section1 = this.clip_zone_start + width;
+			}
+			return [this.clip_zone_start, this.clip_zone_start + clip_zone_size];
+		}
+	};
 	OncoprintSVGRenderer.prototype.clipCells = function(force) {
 		var self = this;
 		var oncoprint = this.oncoprint;
 
 		var id_order = oncoprint.getIdOrder();
-		var visible_bounds = this.getClipBounds();
+		var visible_bounds = this.curr_clip_bounds.fromViewInterval(this.getClipViewInterval(), this.oncoprint.getCellWidth() + this.oncoprint.getCellPadding());
+		visible_bounds.first = Math.max(0, visible_bounds.first);
+		visible_bounds.last = Math.min(id_order.length-1, visible_bounds.last);
 		var prev_bounds = force ? this.prev_clip_bounds.set(id_order.length, -1) : this.getPreviousClipBounds();
 		var to_show = prev_bounds.toShow(visible_bounds);
 		var to_hide = prev_bounds.toHide(visible_bounds);
-		var i, len;
-		for (i=0, len = to_show.length; i < len; i++) {
-			var datum_id = id_order[to_show[i]];
-			_.each(self.cells, function(cell_map) {
-				var cell = cell_map[datum_id];
-				if (cell) {
-					cell.style.display = 'initial';
-				}
-			});
-		}
-		for (i=0, len = to_hide.length; i < len; i++) {
-			var datum_id = id_order[to_hide[i]];
-			_.each(self.cells, function(cell_map) {
-				var cell = cell_map[datum_id];
-				if (cell) {
-					cell.style.display = 'none';
-				}
-			});
+		if (to_show.length >  0 || to_hide.length > 0) {
+			//this.cell_div.node().style.display = 'none';
+			var i, len;
+			for (i=0, len = to_show.length; i < len; i++) {
+				var datum_id = id_order[to_show[i]];
+				_.each(self.cells, function(cell_map) {
+					var cell = cell_map[datum_id];
+					if (cell) {
+						cell.style.display = 'inherit';
+					}
+				});
+			}
+			for (i=0, len = to_hide.length; i < len; i++) {
+				var datum_id = id_order[to_hide[i]];
+				_.each(self.cells, function(cell_map) {
+					var cell = cell_map[datum_id];
+					if (cell) {
+						cell.style.display = 'none';
+					}
+				});
+			}
+			//this.cell_div.node().style.display = 'inherit';
 		}
 		this.prev_clip_bounds.set(visible_bounds.first, visible_bounds.last);
 	};
