@@ -29,7 +29,6 @@
  */
 var _ = require('underscore');
 var d3 = require('d3');
-var $ = require('jquery');
 var events = require('./events');
 var signals = require('./signals');
 var globals = require('./globals');
@@ -41,7 +40,7 @@ var RuleSet = require('./RuleSet');
 var defaultOncoprintConfig = {
 	cell_width: 6,
 	cell_padding: 3,
-	legend: true
+	legend: true,
 };
 
 var hiddenOncoprintConfig = {
@@ -54,7 +53,10 @@ var defaultTrackConfig = {
 	cell_height: 23,
 	track_height: 20,
 	track_padding: 5,
-	sort_cmp: undefined
+	sort_cmp: undefined,
+	tooltip: function(d) {
+		return d['sample'];
+	}
 }; 
 
 module.exports = { 
@@ -140,6 +142,9 @@ function Oncoprint(config) {
 	};
 	self.getTrackData = function(track_id) {
 		return self.tracks[track_id].data;
+	};
+	self.getTrackTooltip = function(track_id) {
+		return self.tracks[track_id].config.tooltip;
 	};
 	self.setTrackData = function(track_id, data) {
 		var id_accessor = self.getTrackDatumIdAccessor(track_id);
@@ -491,11 +496,36 @@ var OncoprintSVGRenderer = (function() {
 		var cell_class = this.getCellCSSClass();
 		var track_cell_class = this.getTrackCellCSSClass(track_id);
 
+
 		var bound_svg = this.cell_div.selectAll('svg.'+track_cell_class).data(data, id_accessor);
 		bound_svg.enter().append('svg').classed(track_cell_class, true).classed(cell_class, true);
 		bound_svg.style('width', oncoprint.getCellWidth()).style('height', oncoprint.getCellHeight(track_id));
+		var tooltip = this.oncoprint.getTrackTooltip(track_id);
 		bound_svg.each(function(d,i) {
-			self.cells[track_id][d[id_key]] = this;
+			var dom_cell = this;
+			var id = id_accessor(d);
+			var tooltip_html = tooltip(d);
+			if (tooltip) {
+				$(dom_cell).one("mouseover", function() {
+					$(dom_cell).qtip({
+						content: {
+							text: tooltip_html
+						},
+						position: {my:'left bottom', at:'top middle', viewport: $(window)},
+						style: { classes: 'qtip-rounded qtip-shadow qtip-lightyellow' },
+						show: {event: "mouseover"},
+						hide: {fixed: true, delay: 100, event: "mouseout"}
+					});
+					$(dom_cell).trigger("mouseover");
+				});
+			}
+			$(dom_cell).on("mouseover", function() {
+				d3.select(dom_cell).classed("cell_rollover", true);
+			});
+			$(dom_cell).on("mouseout", function() {
+				d3.select(dom_cell).classed("cell_rollover", false);
+			});		
+			self.cells[track_id][id] = this;
 		});
 		bound_svg.selectAll('*').remove();
 		rule_set.apply(bound_svg, data, id_accessor, oncoprint.getCellWidth(), oncoprint.getCellHeight(track_id));

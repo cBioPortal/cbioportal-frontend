@@ -21,6 +21,10 @@
 	position: absolute;
 }
 
+.cell_rollover {
+	outline: 1px solid DarkGray;
+}
+
 .scrolling_oncoprint_table_container table td {
 	padding: 0;
 	margin: 0;
