@@ -379,8 +379,6 @@ var OncoprintSVGRenderer = (function() {
 		this.cell_div;
 		this.legend_svg;
 		this.cells = {};
-		this.curr_clip_bounds = new VisibleIndexBounds(-1, -2);
-		this.prev_clip_bounds = new VisibleIndexBounds(-1, -2);
 
 		this.clip_zone_start = 0;
 
@@ -435,26 +433,6 @@ var OncoprintSVGRenderer = (function() {
 		var parent = this.cell_container_node;
 		var parentRect = parent.getBoundingClientRect();
 		return {x: parent.scrollLeft, width: parentRect.right - parentRect.left};
-	};
-	OncoprintSVGRenderer.prototype.getClipBounds = function() {
-		var parent = this.cell_container_node;
-		var parentRect = parent.getBoundingClientRect();
-		var x = parent.scrollLeft;
-		var width = parentRect.right-parentRect.left;
-		var cell_unit = this.oncoprint.getCellWidth() + this.oncoprint.getCellPadding();
-
-		var first_visible = Math.floor(x / cell_unit);
-		var last_visible = Math.ceil((x + width) / cell_unit);
-
-		return this.curr_clip_bounds.set(first_visible, last_visible);
-	};
-	OncoprintSVGRenderer.prototype.getPreviousClipBounds = function() {
-		return this.prev_clip_bounds;
-	};
-	OncoprintSVGRenderer.prototype.getScrollRect = function() {
-		var parent = this.cell_div.node().parentNode;
-		var parentRect = parent.getBoundingClientRect();
-		return {x: parent.scrollLeft, y: parent.scrollTop, width: parentRect.right - parentRect.left, height: parentRect.bottom - parentRect.top};
 	};
 	OncoprintSVGRenderer.prototype.setRuleSet = function(track_id, type, params) {
 		OncoprintRenderer.prototype.setRuleSet.call(this, track_id, type, params);
@@ -695,58 +673,3 @@ var OncoprintSVGRenderer = (function() {
 	}
 	return OncoprintSVGRenderer;
 })();
-
-// var CanvasSVGDrawer = (function() {
-// 	function CanvasSVGDrawer(canvas, svg) {
-// 		this.canvas = canvas;
-// 		this.ctx = this.canvas.node().getContext('2d');
-// 		this.svg = svg;
-// 		this.clipping_buffer = 300;
-// 		setInterval($.proxy(this.draw, this), 1000/60);
-// 		var self = this;
-// 		$(this.canvas.node().parentNode).on('scroll', function() {
-// 			self.draw();
-// 		});
-// 	}
-// 	var containsPoint = function(x, y, rect) {
-// 		return x >= rect.x && y >= rect.y && x < rect.x + rect.width && y < rect.y + rect.height;
-// 	};
-// 	CanvasSVGDrawer.prototype.draw = function() {
-// 		this.canvas.attr('width', this.svg.attr('width'))
-// 			.attr('height', this.svg.attr('height'));
-// 		var canvas_node = this.canvas.node();
-// 		var ctx = this.ctx;
-// 		ctx.clearRect(0, 0, canvas_node.width, canvas_node.height);
-// 		ctx.beginPath();
-// 		var view_rect = this.getParentViewRect();
-// 		for (var child = this.svg.node().firstChild; child; child = child.nextSibling) {
-// 			this.drawNode(child, view_rect);
-// 		}
-// 		ctx.stroke();
-// 		ctx.closePath();
-// 	};
-// 	CanvasSVGDrawer.prototype.getParentViewRect = function() {
-// 		var parent = this.canvas.node().parentNode;
-// 		var parentRect = parent.getBoundingClientRect();
-// 		return {x: parent.scrollLeft, y: parent.scrollTop, width: parentRect.right - parentRect.left, height: parentRect.bottom - parentRect.top};
-// 	};
-// 	CanvasSVGDrawer.prototype.drawNode = function(node, view_rect) {
-// 		var d3_node = d3.select(node);
-// 		var ctx = this.ctx;
-// 		var pos = this.svg.node().createSVGPoint();
-// 		pos = pos.matrixTransform(node.getCTM());
-// 		if (containsPoint(pos.x, pos.y, view_rect)) {
-// 			switch (node.tagName) {
-// 				case 'g':
-// 					for (var child = node.firstChild; child; child = child.nextSibling) {
-// 						this.drawNode(child, view_rect);
-// 					}
-// 				case 'rect':
-// 					ctx.fillStyle = d3_node.attr('fill');
-// 					ctx.strokeStyle = d3_node.attr('stroke') || ctx.fillStyle;
-// 					ctx.fillRect(pos.x, pos.y, d3_node.attr('width'), d3_node.attr('height'));
-// 			}
-// 		}
-// 	};
-// 	return CanvasSVGDrawer;
-// })();
