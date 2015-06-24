@@ -52,6 +52,10 @@ exports.makeIdCounter = function() {
 	};
 };
 
+exports.minMax = function(t, a, b) {
+	return Math.max(Math.min(b,t), a);
+};
+
 exports.makeD3SVGElement = function(tag) {
 	return d3.select(document.createElementNS('http://www.w3.org/2000/svg', tag));
 };

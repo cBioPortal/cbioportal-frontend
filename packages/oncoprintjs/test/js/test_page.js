@@ -44,9 +44,6 @@ $('#toggle_whitespace').click(function() {
 var gender_data;
 var gender_track_id;
 var gender_data_promise = $.getJSON('./gbm/gender-gbm.json');
-$('#move_btn').click(function() {
-	onc.moveTrack(gender_track_id, 4);
-})
 
 var mutation_data;
 var mutation_track_id;
