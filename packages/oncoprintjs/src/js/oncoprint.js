@@ -187,10 +187,25 @@ function Oncoprint(config) {
 		new_position = Math.max(0, new_position);
 		var old_position = self.track_order.indexOf(track_id);
 
-		self.track_order.splice(old_position, 1);
-		self.track_order.splice(new_position, 0, track_id);
-
-		$(self).trigger(events.MOVE_TRACK, {track_id: track_id, tracks:self.tracks, track_order: self.track_order});
+		var new_order = self.track_order.slice();
+		var i;
+		var moved_tracks = [];
+		if (old_position > new_position) {
+			for (i=new_position+1; i<=old_position; i++) {
+				new_order[i] = self.track_order[i-1];
+				moved_tracks.push(self.track_order[i-1]);
+			}
+			moved_tracks.push(track_id);
+		} else if (old_position < new_position) {
+			for (i=old_position; i<new_position; i++) {
+				new_order[i] = self.track_order[i+1];
+				moved_tracks.push(self.track_order[i+1]);
+			}
+			moved_tracks.push(track_id);
+		}
+		new_order[new_position] = track_id;
+		self.track_order = new_order;
+		$(self).trigger(events.MOVE_TRACK, {track_id: track_id, tracks:self.tracks, track_order: self.track_order, moved_tracks: moved_tracks});
 	};
 	self.addTrack = function(config) {
 		var track_id = track_id_counter;
