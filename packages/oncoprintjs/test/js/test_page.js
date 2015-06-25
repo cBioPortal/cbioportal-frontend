@@ -66,7 +66,7 @@ $.when(gender_data_promise).then(function() {
 		legend_label: 'Gender'
 	});
 	onc.setTrackData(gender_track_id, gender_data);
-	for (var i=0; i<0; i++) {
+	for (var i=0; i<8; i++) {
 		var dup_gender_track_id = onc.addTrack({label: 'Gender'});
 		onc.useSameRuleSet(dup_gender_track_id, gender_track_id);
 		onc.setTrackData(dup_gender_track_id, gender_data);
