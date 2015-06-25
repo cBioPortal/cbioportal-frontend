@@ -389,9 +389,9 @@ var OncoprintSVGRenderer = (function() {
 		(function initToolbarContainer() {
 			self.toolbar_container = d3.select(container_selector_string).append('div').classed('toolbar_container', true);
 			d3.select(container_selector_string).append('br');
-			$.ajax({url: "toolbar.html", context: document.body, success: function(response) {
+			/*$.ajax({url: "toolbar.html", context: document.body, success: function(response) {
 				$(self.toolbar_container.node()).html(response);
-			}});
+			}});*/
 		})();
 		(function initLabelContainer() {
 			self.label_container = d3.select(container_selector_string).append('div').classed('fixed_oncoprint_section_container', true);
@@ -414,6 +414,7 @@ var OncoprintSVGRenderer = (function() {
 		})();
 		(function initCellContainer() {
 			self.cell_container = d3.select(container_selector_string).append('div').classed('scrolling_oncoprint_section_container', true);
+			//self.cell_container.style('display', 'none');
 			self.cell_container_node = self.cell_container.node();
 			self.cell_div = self.cell_container.append('div').classed('cell_div', true);
 			
@@ -463,11 +464,11 @@ var OncoprintSVGRenderer = (function() {
 	// Rule sets
 	OncoprintSVGRenderer.prototype.setRuleSet = function(track_id, type, params) {
 		OncoprintRenderer.prototype.setRuleSet.call(this, track_id, type, params);
-		this.render();
+		this.render(track_id);
 	};
 	OncoprintSVGRenderer.prototype.useSameRuleSet = function(target_track_id, source_track_id) {
 		OncoprintRenderer.prototype.useSameRuleSet.call(this, target_track_id, source_track_id);
-		this.render();
+		this.render(target_track_id);
 	}
 
 	// Containers
@@ -501,12 +502,18 @@ var OncoprintSVGRenderer = (function() {
 	OncoprintSVGRenderer.prototype.renderTrackLabel = function(oncoprint, track_id, rule_set, svg, label_y) {
 		var label_class = 'label'+track_id;
 		label_y = typeof label_y === "undefined" ? this.getLabelTops()[track_id] : label_y;
-		svg.selectAll('.'+label_class).remove();
-		svg.append('text').classed(label_class, true).text(oncoprint.getTrackLabel(track_id))
-				.attr('font', this.getLabelFont())
-				.attr('alignment-baseline', 'hanging')
-				.classed('noselect', true)
-				.attr('transform', utils.translate(0, label_y));
+
+		var to_reposition;
+		if (rule_set) {
+			svg.selectAll('.'+label_class).remove();
+			to_reposition = svg.append('text').classed(label_class, true).text(oncoprint.getTrackLabel(track_id))
+					.attr('font', this.getLabelFont())
+					.attr('alignment-baseline', 'hanging')
+					.classed('noselect', true)
+		} else {
+			to_reposition = svg.selectAll('.' + label_class);
+		}
+		to_reposition.attr('transform', utils.translate(0, label_y));
 
 		var altered_data_label_class = 'altered_data_label'+track_id;
 		if (rule_set && rule_set.alteredData && typeof rule_set.alteredData === 'function') {
@@ -514,17 +521,16 @@ var OncoprintSVGRenderer = (function() {
 			var data = oncoprint.getTrackData(track_id);
 			var num_altered = rule_set.alteredData(data).length;
 			var percent_altered = Math.floor(100*num_altered/data.length);
-			svg.append('text').classed(altered_data_label_class, true)
+			to_reposition = svg.append('text').classed(altered_data_label_class, true)
 				.text(percent_altered+'%')
 				.attr('font', this.getLabelFont())
 				.attr('text-anchor', 'end')
 				.attr('alignment-baseline', 'hanging')
 				.classed('noselect', true)
-				.attr('transform', utils.translate(this.getLabelAreaWidth(), label_y));
 		} else {
-			svg.selectAll('.'+altered_data_label_class)
-				.attr('transform', utils.translate(this.getLabelAreaWidth(), label_y));
+			to_reposition = svg.selectAll('.'+altered_data_label_class)
 		}
+		to_reposition.attr('transform', utils.translate(this.getLabelAreaWidth(), label_y));
 		return svg.selectAll('.'+label_class+',.'+altered_data_label_class);
 	};
 
@@ -548,8 +554,8 @@ var OncoprintSVGRenderer = (function() {
 		bound_svg.each(function(d,i) {
 			var dom_cell = this;
 			var id = id_accessor(d);
-			var tooltip_html = tooltip(d);
 			if (tooltip) {
+				var tooltip_html = tooltip(d);
 				$(dom_cell).one("mouseover", function() {
 					$(dom_cell).qtip({
 						content: {
@@ -586,11 +592,9 @@ var OncoprintSVGRenderer = (function() {
 		var id_key = oncoprint.getTrackDatumIdKey(track_id);
 		var id_order = oncoprint.getIdOrder();
 		var y = this.getCellTops()[track_id];
-		bound_svg.transition().style('left', function(d,i) {
+		bound_svg.style('left', function(d,i) {
 			return self.getCellX(id_order.indexOf(d[id_key]));
-		}).style('top', y).each("end", function() {
-			$(self).trigger(events.FINISHED_POSITIONING);
-		});
+		}).style('top', y);
 	};
 	OncoprintSVGRenderer.prototype.positionCells = function(track_ids) {
 		track_ids = track_ids || this.oncoprint.getTrackOrder();
@@ -675,6 +679,7 @@ var OncoprintSVGRenderer = (function() {
 				});
 			}
 		}
+
 		this.prev_clip_bounds.set(visible_bounds.first, visible_bounds.last);
 	};
 
@@ -693,6 +698,7 @@ var OncoprintSVGRenderer = (function() {
 		this.resizeLabelSVG();
 		this.resizeCellDiv();
 
+		this.cell_div.style('display', 'none');
 		var renderTrack = function(track_id) {
 			if (self.isTrackRenderable(track_id)) {
 				var rule_set = self.getRuleSet(track_id);
@@ -709,6 +715,7 @@ var OncoprintSVGRenderer = (function() {
 			});
 		}
 		self.clipCells();
+		this.cell_div.style('display', 'inherit');
 		this.renderLegend();
 	};
 	OncoprintSVGRenderer.prototype.renderLegend = function() {
@@ -744,10 +751,11 @@ var OncoprintSVGRenderer = (function() {
 		var new_track_pos;
 		var track_tops_true = this.getLabelTops();
 		delete track_tops_true[track_id];
+		var label_area_height = self.getLabelAreaHeight();
 		var handler = function(evt) {
 			var track_tops = $.extend({},{},track_tops_true);
 			var mouse_y = evt.clientY - self.label_svg.node().offsetTop;
-			var render_y = utils.minMax(mouse_y, 0, self.getLabelAreaHeight());
+			var render_y = utils.clamp(mouse_y, 0, label_area_height);
 			self.renderTrackLabel(self.oncoprint, track_id, false, self.label_svg, mouse_y).classed('dragging_label', true);
 
 			var first_below = 0;

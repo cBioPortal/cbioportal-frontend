@@ -52,7 +52,7 @@ exports.makeIdCounter = function() {
 	};
 };
 
-exports.minMax = function(t, a, b) {
+exports.clamp = function(t, a, b) {
 	return Math.max(Math.min(b,t), a);
 };
 
