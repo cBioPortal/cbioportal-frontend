@@ -1,7 +1,12 @@
-.oncoprint_container {
-	//position: relative;
+.toolbar_container {
+	display: inline-block;
+	vertical-align: top;
+	float: right;
 }
-
+.content_container {
+	display: inline-block;
+	vertical-align: bottom;
+}
 .fixed_oncoprint_section_container {
 	float:left;
 	overflow: auto;
