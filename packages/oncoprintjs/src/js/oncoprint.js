@@ -373,6 +373,7 @@ var OncoprintSVGRenderer = (function() {
 	function OncoprintSVGRenderer(container_selector_string, oncoprint, config) {
 		OncoprintRenderer.call(this, oncoprint, config);
 		var self = this;
+		this.toolbar_container;
 		this.label_svg;
 		this.label_container;
 		this.cell_container;
@@ -385,6 +386,13 @@ var OncoprintSVGRenderer = (function() {
 
 		this.clip_zone_start = 0;
 
+		(function initToolbarContainer() {
+			self.toolbar_container = d3.select(container_selector_string).append('div').classed('toolbar_container', true);
+			d3.select(container_selector_string).append('br');
+			$.ajax({url: "toolbar.html", context: document.body, success: function(response) {
+				$(self.toolbar_container.node()).html(response);
+			}});
+		})();
 		(function initLabelContainer() {
 			self.label_container = d3.select(container_selector_string).append('div').classed('fixed_oncoprint_section_container', true);
 			self.label_svg = self.label_container.append('svg');
@@ -392,7 +400,7 @@ var OncoprintSVGRenderer = (function() {
 				// TODO: fix this shit UP
 				var in_track = -1;
 				var track_tops = self.getTrackTops();
-				var mouse_y = evt.clientY;
+				var mouse_y = evt.clientY - self.label_svg.node().offsetTop;
 				_.find(self.oncoprint.getTrackOrder(), function(id) {
 					if (mouse_y >= track_tops[id] && mouse_y <= track_tops[id] + self.getRenderedTrackHeight(id)) {
 						in_track = id;
@@ -738,7 +746,7 @@ var OncoprintSVGRenderer = (function() {
 		delete track_tops_true[track_id];
 		var handler = function(evt) {
 			var track_tops = $.extend({},{},track_tops_true);
-			var mouse_y = evt.clientY;
+			var mouse_y = evt.clientY - self.label_svg.node().offsetTop;
 			var render_y = utils.minMax(mouse_y, 0, self.getLabelAreaHeight());
 			self.renderTrackLabel(self.oncoprint, track_id, false, self.label_svg, mouse_y).classed('dragging_label', true);
 

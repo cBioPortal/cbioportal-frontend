@@ -40,6 +40,9 @@ gulp.task('test', function() {
   gulp.src('test/index.html')
   .pipe(gulp.dest('dist/test/'));
 
+  gulp.src('src/html/toolbar.html')
+  .pipe(gulp.dest('dist/test/'));
+
   // Copy over the data.
   gulp.src('test/data/**')
   .pipe(gulp.dest('dist/test/'));
