@@ -210,7 +210,30 @@ window.oncoprint_RuleSet = (function() {
 			});
 			altered_rules.push(new_mrna_rule);
 		});
-		//_.each()
+		var up_rppa_rule = self.addStaticRule({
+			condition: function(d) {
+				return d[params.rppa_key] === params.rppa_up;
+			},
+			shape: utils.makeD3SVGElement('polygon').attr('style', 'fill:black; stroke-width:0'),
+			legend_label: params.rppa_up_label,
+			attrs: {
+				points: "50%,0% 100%,25% 0%,25%"
+			},
+			z_index: 3
+		});
+		altered_rules.push(up_rppa_rule);
+		var down_rppa_rule = self.addStaticRule({
+			condition: function(d) {
+				return d[params.rppa_key] === params.rppa_down;
+			},
+			shape: utils.makeD3SVGElement('polygon').attr('style', 'fill:black; stroke-width:0'),
+			legend_label: params.rppa_down_label,
+			attrs: {
+				points: "50%,100% 100%,75% 0%,75%"
+			},
+			z_index: 3
+		});
+		altered_rules.push(down_rppa_rule);
 		// TODO: mrna, rppa, other stuff?
 		self.putLegendGroup = function(svg, cell_width, cell_height) {
 			var group = svg.append('g');
@@ -265,7 +288,16 @@ window.oncoprint_RuleSet = (function() {
 				ret = ret(d,i);
 			}
 			if (typeof ret === 'string' && ret.indexOf('%') > -1) {
-				ret = percentToPx(ret, attr_name, cell_width, cell_height);
+				if (attr_name === 'points') {
+					ret = _.map(ret.split(" "), function(pt) {
+						var split_pt = pt.split(",");
+						var pt_x = percentToPx(split_pt[0], 'x', cell_width, cell_height);
+						var pt_y = percentToPx(split_pt[1], 'y', cell_width, cell_height);
+						return pt_x+","+pt_y;
+					}).join(" ");
+				} else {
+					ret = percentToPx(ret, attr_name, cell_width, cell_height);
+				}
 			}
 			return ret;
 		};
@@ -279,20 +311,11 @@ window.oncoprint_RuleSet = (function() {
 			attrs.y = attrs.y || 0;
 			_.each(attrs, function(val, key) {
 				elts.attr(key, function(d,i) {
-					if (key === 'x' || key === 'y') {
-						return;
-					}
 					return convertAttr(d, i, val, key, cell_width, cell_height);
 				});
 			});
 			_.each(styles, function(val, key) {
 				elts.style(key, val);
-			});
-			
-			elts.attr('transform', function(d,i) {
-				var x_val = convertAttr(d, i, attrs.x, 'x', cell_width, cell_height);
-				var y_val = convertAttr(d, i, attrs.y, 'y', cell_width, cell_height);
-				return utils.translate(x_val, y_val);
 			});
 		}
 		this.filterData = function(data) {
