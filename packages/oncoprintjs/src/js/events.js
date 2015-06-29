@@ -27,7 +27,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-module.exports = {
+window.oncoprint_events = {
 	ADD_TRACK: 'add_track.oncoprint',
 	REMOVE_TRACK: 'remove_track.oncoprint',
 	MOVE_TRACK: 'move_track.oncoprint',
