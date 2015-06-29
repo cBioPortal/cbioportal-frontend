@@ -28,8 +28,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 window.oncoprint_utils = (function() {
-
-	var exports ={};
+	var exports = {};
 
 	exports.invert_array = function invert_array(arr) {
 		return arr.reduce(function(curr, next, index) {
