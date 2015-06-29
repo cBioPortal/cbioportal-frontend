@@ -52,6 +52,7 @@ gender_data_promise.then(function(data) {
 	gender_data = data.data;
 });
 $.when(gender_data_promise).then(function() {
+	/*
 	gender_track_id = onc.addTrack({label: 'Gender'});
 	onc.setRuleSet(gender_track_id, Oncoprint.CATEGORICAL_COLOR, {
 		color: {},
@@ -61,6 +62,7 @@ $.when(gender_data_promise).then(function() {
 		legend_label: 'Gender'
 	});
 	onc.setTrackData(gender_track_id, gender_data);
+	*/
 	//for (var i=0; i<0; i++) {
 	//	var dup_gender_track_id = onc.addTrack({label: 'Gender'});
 	//	onc.useSameRuleSet(dup_gender_track_id, gender_track_id);
@@ -147,7 +149,12 @@ $.when(alteration_data_promise).then(function() {
 			label: {
 				MISSENSE: 'MRNA MISSENSE'
 			}
-		}
+		},
+		rppa_key: 'mut_type',
+		rppa_down: 'MISSENSE',
+		rppa_up: 'MISSENSE',
+		rppa_down_label: 'Protein Downregulation',
+		rppa_up_label: 'Protein Upregulation'
 	});
 	onc.setTrackData(alteration_track_id, alteration_data);
 

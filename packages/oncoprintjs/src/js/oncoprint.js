@@ -59,6 +59,7 @@ window.Oncoprint = (function() {
 	function Oncoprint(config) {
 		var self = this;
 		var track_id_counter = 0;
+		var MIN_CELL_WIDTH = 0.5;
 		self.config = config;
 		self.id_order = [];
 		self.track_order = [];
@@ -75,18 +76,22 @@ window.Oncoprint = (function() {
 		self.getZoom = function() {
 			return self.zoom;
 		};
+		self.getZoomMultiplier = function() {
+			var min_over_max = MIN_CELL_WIDTH/self.getTrueCellWidth();
+			return (1-min_over_max)*self.zoom + min_over_max;
+		};
 		self.setZoom = function(z) {
-			self.zoom = z;
+			self.zoom = utils.clamp(z,0,1);
 			$(self).trigger(events.SET_ZOOM);
 		};
 		self.getTrueCellWidth = function() {
 			return self.true_cell_width;
 		};
 		self.getCellWidth = function() {
-			return self.true_cell_width*self.zoom;
+			return self.true_cell_width*self.getZoomMultiplier();
 		};
 		self.getCellPadding = function() {
-			return self.config.cell_padding*self.zoom*(+self.cell_padding_on);
+			return self.config.cell_padding*self.getZoomMultiplier()*(+self.cell_padding_on);
 		};
 		self.getCellHeight = function(track_id) {
 			return self.tracks[track_id].config.cell_height;
@@ -509,7 +514,6 @@ window.Oncoprint = (function() {
 		// Cells
 		OncoprintSVGRenderer.prototype.resizeCells = function(new_width) {
 			this.cell_div.selectAll('svg.'+this.getCellCSSClass()).style('width', this.oncoprint.getCellWidth());
-			// todo
 		};
 		OncoprintSVGRenderer.prototype.drawTrackCells = function(track_id, rule_set) {
 			var oncoprint = this.oncoprint;
@@ -572,7 +576,7 @@ window.Oncoprint = (function() {
 			var id_key = oncoprint.getTrackDatumIdKey(track_id);
 			var id_order = oncoprint.getIdOrder();
 			var y = this.getCellTops()[track_id];
-			bound_svg.style('left', function(d,i) {
+			bound_svg.transition().style('left', function(d,i) {
 				return self.getCellX(id_order.indexOf(d[id_key]));
 			}).style('top', y);
 		};
