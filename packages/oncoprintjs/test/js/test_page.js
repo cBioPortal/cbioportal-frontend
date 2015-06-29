@@ -1,8 +1,3 @@
-var _ = require('underscore');
-var d3 = require('d3');
-
-var globals = require('../../src/js/globals');
-var Oncoprint = require('../../src/js/Oncoprint');
 var cell_padding = 3;
 var whitespace_on = true;
 
@@ -43,15 +38,15 @@ $('#toggle_whitespace').click(function() {
 
 var gender_data;
 var gender_track_id;
-var gender_data_promise = $.getJSON('./gbm/gender-gbm.json');
+var gender_data_promise = $.getJSON('dist/test/gbm/gender-gbm.json');
 
 var mutation_data;
 var mutation_track_id;
-var mutation_data_promise = $.getJSON('./gbm/mutations-gbm.json');
+var mutation_data_promise = $.getJSON('dist/test/gbm/mutations-gbm.json');
 
 var alteration_data;
 var alteration_track_id;
-var alteration_data_promise = $.getJSON('./gbm/tp53.json');
+var alteration_data_promise = $.getJSON('dist/test/gbm/tp53.json');
 
 gender_data_promise.then(function(data) {
 	gender_data = data.data;
