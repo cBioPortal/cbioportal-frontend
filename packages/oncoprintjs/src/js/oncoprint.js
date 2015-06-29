@@ -27,10 +27,10 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
- window.Oncoprint = (function() {
-	var events = window.oncoprint_events;
-	var utils = window.oncoprint_utils;
-	var RuleSet = window.oncoprint_RuleSet;
+window.Oncoprint = (function() {
+	var events = oncoprint_events;
+	var utils = oncoprint_utils;
+	var RuleSet = oncoprint_RuleSet;
 
 	var defaultOncoprintConfig = {
 		cell_width: 6,
@@ -53,6 +53,8 @@
 			return d['sample'];
 		}
 	}; 
+
+
 
 	function Oncoprint(config) {
 		var self = this;
@@ -339,6 +341,7 @@
 
 			this.clip_zone_start = 0;
 
+			d3.select(container_selector_string).selectAll('*').remove();
 			(function initToolbarContainer() {
 				self.toolbar_container = d3.select(container_selector_string).append('div').classed('toolbar_container', true);
 				d3.select(container_selector_string).append('br');
@@ -353,7 +356,7 @@
 					// TODO: fix this shit UP
 					var in_track = -1;
 					var track_tops = self.getTrackTops();
-					var mouse_y = evt.clientY - self.label_svg.node().offsetTop;
+					var mouse_y = evt.offsetY;
 					_.find(self.oncoprint.getTrackOrder(), function(id) {
 						if (mouse_y >= track_tops[id] && mouse_y <= track_tops[id] + self.getRenderedTrackHeight(id)) {
 							in_track = id;
@@ -381,12 +384,17 @@
 				}
 			})();
 
-			var render_all_events = [events.REMOVE_TRACK];
+			var render_all_events = [];
 			var render_track_events = [events.ADD_TRACK, events.SET_TRACK_DATA];
 			var reposition_events = [events.MOVE_TRACK, events.SET_CELL_PADDING, events.SET_CELL_WIDTH];
 			var resize_cell_div_events = [events.SET_CELL_PADDING, events.SET_CELL_WIDTH];
 			var reclip_events = [events.SET_CELL_PADDING, events.SET_CELL_WIDTH];
 			var reposition_then_reclip_events = [events.SET_ID_ORDER];
+			$(oncoprint).on(events.REMOVE_TRACK, function(evt, data) {
+				delete self.cells[data.track_id];
+				delete self.rule_sets[data.track_id];
+				self.render();
+			});
 			$(oncoprint).on(resize_cell_div_events.join(" "), function() {
 				self.resizeCellDiv();
 			});
@@ -445,7 +453,7 @@
 				point.y = 0;
 				point = point.matrixTransform(this.getCTM());
 				var bbox = this.getBBox();
-				new_height = Math.max(new_height, point.y+bbox.height);
+				new_height = Math.max(new_height, point.y + bbox.height);
 				new_width = Math.max(new_width, point.x + bbox.width);
 			});
 			this.legend_svg.attr('width', new_width).attr('height', new_height);
@@ -674,6 +682,9 @@
 		OncoprintSVGRenderer.prototype.renderLegend = function() {
 			var svg = this.legend_svg;
 			svg.selectAll('*').remove();
+			// <delete with less hacky solution that doesn't use bbox>
+			svg.attr('width', 10000).attr('height', 10000);
+			//</delete>
 			var padding = 25;
 			var y = padding;
 			var rendered = {};
@@ -707,7 +718,7 @@
 			var label_area_height = self.getLabelAreaHeight();
 			var handler = function(evt) {
 				var track_tops = $.extend({},{},track_tops_true);
-				var mouse_y = evt.clientY - self.label_svg.node().offsetTop;
+				var mouse_y = evt.offsetY;
 				var render_y = utils.clamp(mouse_y, 0, label_area_height);
 				self.renderTrackLabel(self.oncoprint, track_id, false, self.label_svg, mouse_y).classed('dragging_label', true);
 
@@ -734,48 +745,47 @@
 		};
 		return OncoprintSVGRenderer;
 	})();
-
 	return { 
-		CATEGORICAL_COLOR: RuleSet.CATEGORICAL_COLOR,
-		GRADIENT_COLOR: RuleSet.GRADIENT_COLOR,
-		GENETIC_ALTERATION: RuleSet.GENETIC_ALTERATION,
-		BAR_CHART: RuleSet.BAR_CHART,
-		create: function CreateOncoprint(container_selector_string, config) {
-			config = $.extend({}, defaultOncoprintConfig, config || {});
-			config = $.extend(config, hiddenOncoprintConfig);
-			var oncoprint = new Oncoprint(config);
-			var renderer = new OncoprintSVGRenderer(container_selector_string, oncoprint, {label_font: '12px Arial', legend:config.legend});
-			var ret = {
-				addTrack: function(config) {
-					var track_id = oncoprint.addTrack(config);
-					return track_id;
-				},
-				removeTrack: function(track_id) {
-					oncoprint.removeTrack(track_id);
-				},
-				moveTrack: function(track_id, position) {
-					oncoprint.moveTrack(track_id, position);
-				},
-				setTrackData: function(track_id, data) {
-					oncoprint.setTrackData(track_id, data);
-				},
-				setRuleSet: function(track_id, type, params) {
-					renderer.setRuleSet(track_id, type, params);
-				},
-				useSameRuleSet: function(target_track_id, source_track_id) {
-					renderer.useSameRuleSet(target_track_id, source_track_id);
-				},
-				setCellPadding: function(p) {
-					oncoprint.setCellPadding(p);
-				},
-				toSVG: function(ctr) {
-					return renderer.toSVG(ctr);
-				},
-				sort: function(track_id_list, cmp_list) {
-					oncoprint.sort(track_id_list, cmp_list);
-				}
-			};
-			return ret;
-		}
-	};
-}();
+	CATEGORICAL_COLOR: RuleSet.CATEGORICAL_COLOR,
+	GRADIENT_COLOR: RuleSet.GRADIENT_COLOR,
+	GENETIC_ALTERATION: RuleSet.GENETIC_ALTERATION,
+	BAR_CHART: RuleSet.BAR_CHART,
+	create: function CreateOncoprint(container_selector_string, config) {
+		config = $.extend({}, defaultOncoprintConfig, config || {});
+		config = $.extend(config, hiddenOncoprintConfig);
+		var oncoprint = new Oncoprint(config);
+		var renderer = new OncoprintSVGRenderer(container_selector_string, oncoprint, {label_font: '12px Arial', legend:config.legend});
+		var ret = {
+			addTrack: function(config) {
+				var track_id = oncoprint.addTrack(config);
+				return track_id;
+			},
+			removeTrack: function(track_id) {
+				oncoprint.removeTrack(track_id);
+			},
+			moveTrack: function(track_id, position) {
+				oncoprint.moveTrack(track_id, position);
+			},
+			setTrackData: function(track_id, data) {
+				oncoprint.setTrackData(track_id, data);
+			},
+			setRuleSet: function(track_id, type, params) {
+				renderer.setRuleSet(track_id, type, params);
+			},
+			useSameRuleSet: function(target_track_id, source_track_id) {
+				renderer.useSameRuleSet(target_track_id, source_track_id);
+			},
+			setCellPadding: function(p) {
+				oncoprint.setCellPadding(p);
+			},
+			toSVG: function(ctr) {
+				return renderer.toSVG(ctr);
+			},
+			sort: function(track_id_list, cmp_list) {
+				oncoprint.sort(track_id_list, cmp_list);
+			}
+		};
+		return ret;
+	}
+};
+})();
