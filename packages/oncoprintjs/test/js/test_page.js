@@ -11,15 +11,12 @@ $('#shuffle_btn').click(function() {
 });
 
 $('#toggle_whitespace').click(function() {
-	whitespace_on = !whitespace_on;
-	if (whitespace_on) {
-		onc.setCellPadding(cell_padding);
-	} else {
-		onc.setCellPadding(0);
-	}
+	onc.toggleCellPadding();
 });
+var z = 1;
 $('#reduce_cell_width').click(function() {
-	onc.setCellWidth(3);
+	z *= 0.9;
+	onc.setZoom(z);
 });
  /*$('#to_svg_btn').click(function() {
  	onc.toSVG(d3.select('#svg_container'));
@@ -55,15 +52,15 @@ gender_data_promise.then(function(data) {
 	gender_data = data.data;
 });
 $.when(gender_data_promise).then(function() {
-	//gender_track_id = onc.addTrack({label: 'Gender'});
-	//onc.setRuleSet(gender_track_id, Oncoprint.CATEGORICAL_COLOR, {
-		//color: {},
-		//getCategory: function(d) {
-			//return d.attr_val;
-		//},
-		//legend_label: 'Gender'
-	//});
-	//onc.setTrackData(gender_track_id, gender_data);
+	gender_track_id = onc.addTrack({label: 'Gender'});
+	onc.setRuleSet(gender_track_id, Oncoprint.CATEGORICAL_COLOR, {
+		color: {},
+		getCategory: function(d) {
+			return d.attr_val;
+		},
+		legend_label: 'Gender'
+	});
+	onc.setTrackData(gender_track_id, gender_data);
 	//for (var i=0; i<0; i++) {
 	//	var dup_gender_track_id = onc.addTrack({label: 'Gender'});
 	//	onc.useSameRuleSet(dup_gender_track_id, gender_track_id);
