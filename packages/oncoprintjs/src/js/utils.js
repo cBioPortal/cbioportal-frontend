@@ -37,6 +37,9 @@ window.oncoprint_utils = (function() {
 		}, {});
 	};
 
+	exports.ifndef = function(val, replacement) {
+		return (typeof val === 'undefined') ? replacement : val;
+	};
 	exports.extends = function(child_class, parent_class) {
 		child_class.prototype = Object.create(parent_class.prototype);
 		child_class.prototype.constructor = child_class;

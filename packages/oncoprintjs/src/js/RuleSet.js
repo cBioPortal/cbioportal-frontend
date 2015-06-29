@@ -6,6 +6,8 @@ window.oncoprint_RuleSet = (function() {
 	var GENETIC_ALTERATION = 2;
 	var BAR_CHART = 3;
 
+	var CELL = 0;
+
 	var getRuleSetId = utils.makeIdCounter();
 
 	var D3SVGRuleSet = (function() {
@@ -184,12 +186,31 @@ window.oncoprint_RuleSet = (function() {
 				attrs: {
 					width: '100%',
 					height: '33.33%',
-					y: '33.33%'
+					y: '33.33%',
 				},
 				z_index: 1
 			});
 			altered_rules.push(new_mut_rule);
 		});
+		_.each(params.mrna.color, function(color, name) {
+			var new_mrna_rule = self.addStaticRule({
+				condition: (function(_name) {
+					return function(d) {
+						return d[params.mrna_key] === _name;
+					}
+				})(name),
+				shape: CELL,
+				legend_label: params.mrna.label[name],
+				styles: {
+					'outline-style':'solid',
+					'outline-width':'2px',
+					'outline-color':color,
+				},
+				z_index: 2
+			});
+			altered_rules.push(new_mrna_rule);
+		});
+		//_.each()
 		// TODO: mrna, rppa, other stuff?
 		self.putLegendGroup = function(svg, cell_width, cell_height) {
 			var group = svg.append('g');
@@ -218,8 +239,12 @@ window.oncoprint_RuleSet = (function() {
 		this.exclude_from_legend = params.exclude_from_legend;
 
 		this.attrs = params.attrs || {};
-		this.attrs.width = this.attrs.width || '100%';
-		this.attrs.height = this.attrs.height || '100%';
+		this.attrs.width = utils.ifndef(this.attrs.width, '100%');
+		this.attrs.height = utils.ifndef(this.attrs.height, '100%');
+		this.attrs.x = utils.ifndef(this.attrs.x, 0);
+		this.attrs.y = utils.ifndef(this.attrs.y, 0);
+
+		this.styles = params.styles || {};
 
 		var percentToPx = function(attr_val, attr_name, cell_width, cell_height) {
 			// convert a percentage to a local pixel coordinate
@@ -247,10 +272,9 @@ window.oncoprint_RuleSet = (function() {
 
 		this.apply = function(g, cell_width, cell_height) {
 			var shape = this.shape;
-			var elts = utils.appendD3SVGElement(shape, g);
-			var attrs = this.attrs || {};
-			attrs.width = attrs.width || '100%';
-			attrs.height = attrs.height || '100%';
+			var elts = shape === CELL ? g : utils.appendD3SVGElement(shape, g);
+			var styles = this.styles;
+			var attrs = this.attrs;
 			attrs.x = attrs.x || 0;
 			attrs.y = attrs.y || 0;
 			_.each(attrs, function(val, key) {
@@ -260,6 +284,9 @@ window.oncoprint_RuleSet = (function() {
 					}
 					return convertAttr(d, i, val, key, cell_width, cell_height);
 				});
+			});
+			_.each(styles, function(val, key) {
+				elts.style(key, val);
 			});
 			
 			elts.attr('transform', function(d,i) {
