@@ -173,7 +173,7 @@ window.Oncoprint = (function() {
 
 		self.setCellWidth = function(w) {
 			self.config.cell_width = w;
-			$(self).trigger(events.SET_CELL_WIDTH);
+			$(self).trigger(events.SET_CELL_WIDTH, {cell_width: w});
 		};
 		self.setCellPadding = function(p) {
 			self.config.cell_padding = p;
@@ -386,10 +386,14 @@ window.Oncoprint = (function() {
 
 			var render_all_events = [];
 			var render_track_events = [events.ADD_TRACK, events.SET_TRACK_DATA];
-			var reposition_events = [events.MOVE_TRACK, events.SET_CELL_PADDING, events.SET_CELL_WIDTH];
+			var reposition_events = [events.MOVE_TRACK, events.SET_CELL_PADDING];
 			var resize_cell_div_events = [events.SET_CELL_PADDING, events.SET_CELL_WIDTH];
 			var reclip_events = [events.SET_CELL_PADDING, events.SET_CELL_WIDTH];
 			var reposition_then_reclip_events = [events.SET_ID_ORDER];
+			$(oncoprint).on(events.SET_CELL_WIDTH, function(evt, data) {
+				//self.render();
+				self.resizeCells(data.cell_width);
+			});
 			$(oncoprint).on(events.REMOVE_TRACK, function(evt, data) {
 				delete self.cells[data.track_id];
 				delete self.rule_sets[data.track_id];
@@ -415,7 +419,6 @@ window.Oncoprint = (function() {
 				self.clipCells(true);
 			});
 			$(oncoprint).on(events.MOVE_TRACK, function(evt, data) {
-				// TODO: only reposition tracks that have been moved as a result - this is a fairly slow op so necessary opt
 				self.positionCells(data.moved_tracks);
 				self.renderLabels();
 			})
@@ -496,6 +499,9 @@ window.Oncoprint = (function() {
 		};
 
 		// Cells
+		OncoprintSVGRenderer.prototype.resizeCells = function(new_width) {
+			// todo
+		};
 		OncoprintSVGRenderer.prototype.drawTrackCells = function(track_id, rule_set) {
 			var oncoprint = this.oncoprint;
 			var data = oncoprint.getTrackData(track_id);
@@ -777,6 +783,9 @@ window.Oncoprint = (function() {
 			},
 			setCellPadding: function(p) {
 				oncoprint.setCellPadding(p);
+			},
+			setCellWidth: function(w) {
+				oncoprint.setCellWidth(w);
 			},
 			toSVG: function(ctr) {
 				return renderer.toSVG(ctr);

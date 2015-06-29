@@ -18,6 +18,9 @@ $('#toggle_whitespace').click(function() {
 		onc.setCellPadding(0);
 	}
 });
+$('#reduce_cell_width').click(function() {
+	onc.setCellWidth(3);
+});
  /*$('#to_svg_btn').click(function() {
  	onc.toSVG(d3.select('#svg_container'));
 	var DOMURL = window.URL || window.webkitURL || window;
@@ -52,20 +55,20 @@ gender_data_promise.then(function(data) {
 	gender_data = data.data;
 });
 $.when(gender_data_promise).then(function() {
-	gender_track_id = onc.addTrack({label: 'Gender'});
-	onc.setRuleSet(gender_track_id, Oncoprint.CATEGORICAL_COLOR, {
-		color: {},
-		getCategory: function(d) {
-			return d.attr_val;
-		},
-		legend_label: 'Gender'
-	});
-	onc.setTrackData(gender_track_id, gender_data);
-	for (var i=0; i<8; i++) {
-		var dup_gender_track_id = onc.addTrack({label: 'Gender'});
-		onc.useSameRuleSet(dup_gender_track_id, gender_track_id);
-		onc.setTrackData(dup_gender_track_id, gender_data);
-	}
+	//gender_track_id = onc.addTrack({label: 'Gender'});
+	//onc.setRuleSet(gender_track_id, Oncoprint.CATEGORICAL_COLOR, {
+		//color: {},
+		//getCategory: function(d) {
+			//return d.attr_val;
+		//},
+		//legend_label: 'Gender'
+	//});
+	//onc.setTrackData(gender_track_id, gender_data);
+	//for (var i=0; i<0; i++) {
+	//	var dup_gender_track_id = onc.addTrack({label: 'Gender'});
+	//	onc.useSameRuleSet(dup_gender_track_id, gender_track_id);
+	//	onc.setTrackData(dup_gender_track_id, gender_data);
+	//}
 });
 
 mutation_data_promise.then(function(data) {
@@ -138,7 +141,16 @@ $.when(alteration_data_promise).then(function() {
 				MISSENSE: 'Missense Mutation'
 			}
 		},
-		legend_label: 'Genetic Alteration'
+		legend_label: 'Genetic Alteration',
+		mrna_key: 'mut_type',
+		mrna: {
+			color: {
+				MISSENSE: '#C9C900'
+			},
+			label: {
+				MISSENSE: 'MRNA MISSENSE'
+			}
+		}
 	});
 	onc.setTrackData(alteration_track_id, alteration_data);
 
