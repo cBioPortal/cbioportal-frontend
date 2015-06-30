@@ -6,7 +6,7 @@ window.oncoprint_RuleSet = (function() {
 	var GENETIC_ALTERATION = 2;
 	var BAR_CHART = 3;
 
-	var CELL = 0;
+	var CELL = "cell";
 
 	var getRuleSetId = utils.makeIdCounter();
 
@@ -234,7 +234,6 @@ window.oncoprint_RuleSet = (function() {
 			z_index: 3
 		});
 		altered_rules.push(down_rppa_rule);
-		// TODO: mrna, rppa, other stuff?
 		self.putLegendGroup = function(svg, cell_width, cell_height) {
 			var group = svg.append('g');
 			_.each(self.getRules(), function(rule) {

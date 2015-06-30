@@ -46,5 +46,6 @@ window.oncoprint_events = {
 	UPDATE_RENDER_RULES: 'update_render_rules.cell_renderer.oncoprint',
 	FINISHED_RENDERING: 'finished_rendering.renderer.oncoprint',
 	FINISHED_POSITIONING: 'finished_positioning.renderer.oncoprint',
-	SET_ZOOM: 'set_zoom.oncoprint'
+	SET_ZOOM: 'set_zoom.oncoprint',
+	ADD_TRACK_SEPARATOR: 'add_track_separator.oncoprint'
 };
