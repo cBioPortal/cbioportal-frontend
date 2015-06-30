@@ -78,16 +78,16 @@ $.when(mutation_data_promise).then(function() {
 		tooltip: function(d) {
 			return '<a href="http://www.google.com"><p><b>'+d.sample+'</b>: '+d.attr_val+'</p></a>';
 		}
-	});
+	}, 0);
 	onc.setRuleSet(mutation_track_id, Oncoprint.GRADIENT_COLOR, {
 		data_key: 'attr_val',
-		data_range: [0,100],
 		color_range: ['#A9A9A9', '#FF0000'],
+		data_range: [0,100],
 		legend_label: 'Mutations',
 	});
 	onc.setTrackData(mutation_track_id, mutation_data);
 
-	var log_mut_track_id = onc.addTrack({label: 'Log Mutations'});
+	var log_mut_track_id = onc.addTrack({label: 'Log Mutations'}, 0);
 	onc.setRuleSet(log_mut_track_id, Oncoprint.BAR_CHART, {
 		data_key: 'attr_val',
 		data_range: [0,100],
@@ -97,7 +97,7 @@ $.when(mutation_data_promise).then(function() {
 	});
 	onc.setTrackData(log_mut_track_id, mutation_data);
 
-	var dup_mut_track_id = onc.addTrack({label: 'Mutations'});
+	var dup_mut_track_id = onc.addTrack({label: 'Mutations'}, 0);
 	onc.setRuleSet(dup_mut_track_id, Oncoprint.BAR_CHART, {
 		data_key: 'attr_val',
 		data_range: [0,100],
@@ -112,15 +112,15 @@ alteration_data_promise.then(function(data) {
 	alteration_data = _.map(data, function(x) { if (Math.random() < 0.3) { x.mut_type='MISSENSE'; } return x; });
 });
 $.when(alteration_data_promise).then(function() {
-	alteration_track_id = onc.addTrack({label: 'TP53'});
+	alteration_track_id = onc.addTrack({label: 'TP53'}, 1);
 	onc.setRuleSet(alteration_track_id, Oncoprint.GENETIC_ALTERATION, {
 		default_color: '#D3D3D3',
 		cna_key: 'cna',
 		cna: {
 			color: {
-				AMPLIFIED: '#FF0000',
+				AMPLIFIED: 'red',
 				GAINED: '#FFB6C1',
-				HOMODELETED: '#8FD8D8',
+				HOMODELETED: '#0000FF',
 				HETLOSS: '#8FD8D8',	
 			},
 			label: {
@@ -134,20 +134,28 @@ $.when(alteration_data_promise).then(function() {
 		mut_type_key: 'mut_type',
 		mut: {
 			color: {
-				MISSENSE: 'green'
+				MISSENSE: 'green',
+				INFRAME: '#9F8170',
+				TRUNC: 'black',
 			},
 			label: {
-				MISSENSE: 'Missense Mutation'
+				MISSENSE: 'Missense Mutation',
+				INFRAME: 'In-Frame Insertion/Deletion',
+				TRUNC: 'Truncating Mutation'
 			}
 		},
 		legend_label: 'Genetic Alteration',
 		mrna_key: 'mut_type',
 		mrna: {
 			color: {
-				MISSENSE: '#C9C900'
+				MISSENSE: '#C9C900',
+				UPREGULATED: '#FF9999',
+				DOWNREGULATED: '#6699CC'
 			},
 			label: {
-				MISSENSE: 'MRNA MISSENSE'
+				MISSENSE: 'MRNA MISSENSE',
+				UPREGULATED: 'mRNA Upregulation',
+				DOWNREGULATED: 'mRNA Downregulation'
 			}
 		},
 		rppa_key: 'mut_type',
@@ -158,7 +166,7 @@ $.when(alteration_data_promise).then(function() {
 	});
 	onc.setTrackData(alteration_track_id, alteration_data);
 
-	var second_alt_track = onc.addTrack({Label: 'TP53 duplicate'});
+	var second_alt_track = onc.addTrack({Label: 'TP53 duplicate'}, 1);
 	onc.useSameRuleSet(second_alt_track, alteration_track_id);
 	onc.setTrackData(second_alt_track, alteration_data);
 });

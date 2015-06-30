@@ -1,44 +1,32 @@
-.toolbar_container {
+.oncoprint-toolbar-ctr {
 	display: inline-block;
 	vertical-align: top;
 	float: right;
 }
-.content_container {
-	display: inline-block;
-	vertical-align: bottom;
-}
-.fixed_oncoprint_section_container {
+.oncoprint-label-area-ctr {
 	float:left;
 	overflow: auto;
 	width: auto;
 }
-.scrolling_oncoprint_section_container {
+.oncoprint-cell-area-ctr {
 	overflow: auto;
 	width: auto;
 }
 
-.cell_div {
+.oncoprint-cell-area {
 	background-color: #fff;
     	position: relative;
 }
 
-.cell {
+.oncoprint-cell {
 	position: absolute;
 }
 
-.cell_rollover {
+.oncoprint-cell-hover {
 	outline: 1px solid DarkGray;
 }
 
-.scrolling_oncoprint_table_container table td {
-	padding: 0;
-	margin: 0;
-	-webkit-box-sizing: border-box;
-	-moz-box-sizing: border-box;
-	box-sizing: border-box;
-}
-
-.ruleset_legend_label {
+.oncoprint-legend-header {
 	font-family: Arial;
 	font-weight: bold;
 	fill: gray;
@@ -47,7 +35,10 @@
 	font-size: 12px;
 }
 
-.dragging_label {
+.oncoprint-label-draggable {
+	cursor: move;
+}
+.oncoprint-label-dragging {
 	font-weight: bold;
 }
 
@@ -60,10 +51,10 @@
     	user-select: none;
 }
 
-.cell-qtip {
+.oncoprint-cell-qtip {
 	background-color: rgba(0,0,0,0) !important;
 	border: none !important;
 }
-.cell-qtip .qtip-content {
+.oncoprint-cell-qtip .qtip-content {
 	background-color: rgba(255,255,255,0.9) !important;
 }
