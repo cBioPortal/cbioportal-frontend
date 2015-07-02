@@ -285,6 +285,12 @@ window.Oncoprint = (function() {
 				},
 				setZoom: function(z) {
 					oncoprint.setZoom(z);
+				},
+				suppressRendering: function() {
+					renderer.suppressRendering();
+				},
+				releaseRendering: function() {
+					renderer.releaseRendering();
 				}
 			};
 			return ret;

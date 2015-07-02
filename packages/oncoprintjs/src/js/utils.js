@@ -37,6 +37,9 @@ window.oncoprint_utils = (function() {
 		}, {});
 	};
 
+	exports.cssClassToSelector = function(classes) {
+		return "."+classes.split(" ").join(".");
+	};
 	exports.mouseY = function(evt) {
 		return exports.ifndef(evt.offsetY, evt.originalEvent && evt.originalEvent.layerY);
 	};

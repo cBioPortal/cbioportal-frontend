@@ -48,12 +48,15 @@ var alteration_data;
 var alteration_track_id;
 var alteration_data_promise = $.getJSON('dist/test/gbm/tp53.json');
 
+var tracks_to_load = 15;
+onc.suppressRendering();
+
 gender_data_promise.then(function(data) {
 	gender_data = data.data;
 });
 $.when(gender_data_promise).then(function() {
-	/*
 	gender_track_id = onc.addTrack({label: 'Gender'});
+	tracks_to_load -= 1;
 	onc.setRuleSet(gender_track_id, Oncoprint.CATEGORICAL_COLOR, {
 		color: {},
 		getCategory: function(d) {
@@ -61,13 +64,17 @@ $.when(gender_data_promise).then(function() {
 		},
 		legend_label: 'Gender'
 	});
+
 	onc.setTrackData(gender_track_id, gender_data);
-	*/
-	//for (var i=0; i<0; i++) {
-	//	var dup_gender_track_id = onc.addTrack({label: 'Gender'});
-	//	onc.useSameRuleSet(dup_gender_track_id, gender_track_id);
-	//	onc.setTrackData(dup_gender_track_id, gender_data);
-	//}
+	for (var i=0; i<9; i++) {
+		var dup_gender_track_id = onc.addTrack({label: 'Gender'});
+		onc.useSameRuleSet(dup_gender_track_id, gender_track_id);
+		onc.setTrackData(dup_gender_track_id, gender_data);
+		tracks_to_load -= 1;
+	}
+	if (tracks_to_load === 0) {
+		onc.releaseRendering();
+	}
 });
 
 mutation_data_promise.then(function(data) {
@@ -79,6 +86,7 @@ $.when(mutation_data_promise).then(function() {
 			return '<a href="http://www.google.com"><p><b>'+d.sample+'</b>: '+d.attr_val+'</p></a>';
 		}
 	}, 0);
+	tracks_to_load -= 1;
 	onc.setRuleSet(mutation_track_id, Oncoprint.GRADIENT_COLOR, {
 		data_key: 'attr_val',
 		color_range: ['#A9A9A9', '#FF0000'],
@@ -88,6 +96,7 @@ $.when(mutation_data_promise).then(function() {
 	onc.setTrackData(mutation_track_id, mutation_data);
 
 	var log_mut_track_id = onc.addTrack({label: 'Log Mutations'}, 0);
+	tracks_to_load -= 1;
 	onc.setRuleSet(log_mut_track_id, Oncoprint.BAR_CHART, {
 		data_key: 'attr_val',
 		data_range: [0,100],
@@ -98,6 +107,7 @@ $.when(mutation_data_promise).then(function() {
 	onc.setTrackData(log_mut_track_id, mutation_data);
 
 	var dup_mut_track_id = onc.addTrack({label: 'Mutations'}, 0);
+	tracks_to_load -= 1;
 	onc.setRuleSet(dup_mut_track_id, Oncoprint.BAR_CHART, {
 		data_key: 'attr_val',
 		data_range: [0,100],
@@ -105,6 +115,9 @@ $.when(mutation_data_promise).then(function() {
 		legend_label: 'Mutations (Linear scale)'
 	});
 	onc.setTrackData(dup_mut_track_id, mutation_data);
+	if (tracks_to_load === 0) {
+		onc.releaseRendering();
+	}
 });
 
 
@@ -113,6 +126,7 @@ alteration_data_promise.then(function(data) {
 });
 $.when(alteration_data_promise).then(function() {
 	alteration_track_id = onc.addTrack({label: 'TP53'}, 1);
+	tracks_to_load -= 1;
 	onc.setRuleSet(alteration_track_id, Oncoprint.GENETIC_ALTERATION, {
 		default_color: '#D3D3D3',
 		cna_key: 'cna',
@@ -167,8 +181,12 @@ $.when(alteration_data_promise).then(function() {
 	onc.setTrackData(alteration_track_id, alteration_data);
 
 	var second_alt_track = onc.addTrack({Label: 'TP53 duplicate'}, 1);
+	tracks_to_load -= 1;
 	onc.useSameRuleSet(second_alt_track, alteration_track_id);
 	onc.setTrackData(second_alt_track, alteration_data);
+	if (tracks_to_load === 0) {
+		onc.releaseRendering();
+	}
 });
 
 $('#change_color_scheme').click(function() {
