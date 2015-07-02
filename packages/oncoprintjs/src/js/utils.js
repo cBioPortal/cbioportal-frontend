@@ -37,6 +37,9 @@ window.oncoprint_utils = (function() {
 		}, {});
 	};
 
+	exports.mouseY = function(evt) {
+		return exports.ifndef(evt.offsetY, evt.originalEvent && evt.originalEvent.layerY);
+	};
 	exports.ifndef = function(val, replacement) {
 		return (typeof val === 'undefined') ? replacement : val;
 	};

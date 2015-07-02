@@ -35,7 +35,11 @@
 	font-size: 12px;
 }
 
-.oncoprint-label-draggable {
+.oncoprint-track-label {
+	alignment-baseline: hanging;
+	pointer-events: none;
+}
+.oncoprint-track-label-draggable {
 	cursor: move;
 }
 .oncoprint-label-dragging {
