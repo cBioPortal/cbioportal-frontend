@@ -397,7 +397,9 @@
 			track_tops[id] = all_track_tops[id];
 		});
 		track_group.splice(track_group.indexOf(track_id), 1);
-
+		var group_track_tops = _.map(track_group, function(id) {
+			return track_tops[id];
+		});
 		var label_area_height = this.getLabelAreaHeight();
 		var drag_bounds = [undefined, undefined];
 		drag_bounds[0] = utils.clamp(track_tops[first_track], 0, label_area_height);
@@ -416,22 +418,19 @@
 				if (evt.preventDefault) {
 					evt.preventDefault();
 				}
-				var track_tops_tmp = $.extend({},{},track_tops);
+				var track_tops_tmp = $.extend({},{}, track_tops);
 				var mouse_y = utils.clamp(utils.mouseY(evt), drag_bounds[0], drag_bounds[1]);
 				self.renderTrackLabels(track_id, mouse_y);
 				d3.selectAll(self.getTrackLabelCSSSelector(track_id)).classed(LABEL_DRAGGING_CLASS, true);
-
-				new_pos = 0;
-				while (track_tops_tmp[track_group[new_pos]] < mouse_y && new_pos < track_group.length) {
-					new_pos += 1;
-				}
+				
+				new_pos = _.sortedIndex(group_track_tops, mouse_y);
 				if (new_pos > 0) {
 					track_tops_tmp[track_group[new_pos-1]] -= 3;
 				}
 				if (new_pos < track_group.length) {
 					track_tops_tmp[track_group[new_pos]] += 3;
 				}
-				_.each(track_tops_tmp, function(top, id) {
+				_.each(track_tops_tmp, function(top,id){
 					self.renderTrackLabels(id, top);
 				});
 			}
