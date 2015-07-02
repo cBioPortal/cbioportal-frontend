@@ -52,7 +52,11 @@ window.OncoprintRenderer = (function() {
 		return 'oncoprint-track-label oncoprint-track-label'+track_id;
 	};
 	OncoprintRenderer.prototype.getTrackLabelCSSSelector = function(track_id) {
+		// TODO: replace with utils.cssClassToSelector
 		return "."+this.getTrackLabelCSSClass(track_id).split(" ").join(".");
+	};
+	OncoprintRenderer.prototype.getTrackCellCtrCSSClass = function(track_id) {
+		return 'oncoprint-track-cell-ctr'+track_id;
 	};
 	OncoprintRenderer.prototype.getLabelFont = function() {
 		return this.config.label_font;
