@@ -104,13 +104,16 @@ window.oncoprint_RuleSet = (function() {
 			D3SVGRuleSet.prototype.apply.call(this, g, data, datum_id_accessor, cell_width, cell_height);
 		};
 
-		self.putLegendGroup = function(svg, cell_width, cell_height) {
-			var group = svg.append('g');
+		self.getLegendDiv = function(cell_width, cell_height) {
+			var div = d3.select(document.createElement('div'));
 			_.each(self.getRules(), function(rule) {
-				rule.putLegendGroup(group, cell_width, cell_height);
-			})
-			utils.spaceSVGElementsHorizontally(group, 20);
-			return group;
+				var legend_div = rule.getLegendDiv(cell_width, cell_height);
+				if (legend_div) {
+					div.node().appendChild(legend_div);
+				}
+			});
+			utils.d3SelectChildren(div, '*').style('padding-right', '20px');
+			return div.node();
 		};
 	}
 	D3SVGCategoricalColorRuleSet.prototype = Object.create(D3SVGRuleSet.prototype);
@@ -125,8 +128,8 @@ window.oncoprint_RuleSet = (function() {
 			color_range: params.color_range,
 			scale: params.scale
 		});
-		this.putLegendGroup = function(svg) {
-			return this.rule_map[rule].putLegendGroup(svg);
+		this.getLegendDiv = function() {
+			return this.rule_map[rule].getLegendDiv();
 		};
 	}
 	D3SVGGradientColorRuleSet.prototype = Object.create(D3SVGRuleSet.prototype);
@@ -141,8 +144,8 @@ window.oncoprint_RuleSet = (function() {
 			scale: params.scale,
 			fill: params.fill,
 		});
-		this.putLegendGroup = function(svg, cell_width, cell_height) {
-			return this.rule_map[rule].putLegendGroup(svg, cell_width, cell_height);
+		this.getLegendDiv = function(cell_width, cell_height) {
+			return this.rule_map[rule].getLegendDiv(cell_width, cell_height);
 		};
 	}
 	D3SVGBarChartRuleSet.prototype = Object.create(D3SVGRuleSet.prototype);
@@ -236,13 +239,16 @@ window.oncoprint_RuleSet = (function() {
 			z_index: 3
 		});
 		altered_rules.push(down_rppa_rule);
-		self.putLegendGroup = function(svg, cell_width, cell_height) {
-			var group = svg.append('g');
+		self.getLegendDiv = function(cell_width, cell_height) {
+			var div = d3.select(document.createElement('div'));
 			_.each(self.getRules(), function(rule) {
-				rule.putLegendGroup(group, cell_width, cell_height);
-			})
-			utils.spaceSVGElementsHorizontally(group, 20);
-			return group;
+				var legend_div = rule.getLegendDiv(cell_width, cell_height);
+				if (legend_div) {
+					div.node().appendChild(legend_div);
+				}
+			});
+			utils.d3SelectChildren(div, '*').style('padding-right', '20px');
+			return div.node();
 		};
 		self.alteredData = function(data) {
 			var altered_data = [];
@@ -362,31 +368,29 @@ window.oncoprint_RuleSet = (function() {
 		this.attrs.y = y_function;
 		this.attrs.fill = params.fill || '#000000';
 
-		this.putLegendGroup = function(svg, cell_width, cell_height) {
-			// TODO: triangle legend piece
+		this.getLegendDiv = function(cell_width, cell_height) {
 			if (params.exclude_from_legend) {
 				return;
 			}
-			var group = svg.append('g');
-			group.append('text').text(this.data_range[0]).attr('alignment-baseline', 'hanging');
-			var rect_group = group.append('g');
+			var div = d3.select(document.createElement('div'));
+			div.append('h2').text(this.data_range[0]).classed('oncoprint-legend-label', true);
 			var mesh = 50;
+			var svg = div.append('svg').attr('width', mesh+'px').attr('height', cell_height+'px');
 			for (var i=0; i<=mesh; i++) {
 				var t = i/mesh;
 				var d = (1-t)*this.data_range[0] + t*this.data_range[1];
 				var datum = makeDatum(d);
 				var height = cell_height*height_helper(datum)/100;
-				rect_group.append('rect')
-					.attr('width', 1)
+				svg.append('rect')
+					.attr('width', '1px')
 					.attr('height', height)
-					.attr('y', cell_height-height)
-					.attr('fill', this.attrs.fill);
+					.attr('y', (cell_height-height)+'px')
+					.attr('fill', this.attrs.fill)
+					.attr('x', i+'px');
 			}
-			utils.spaceSVGElementsHorizontally(rect_group, 0);
-			group.append('text').text(this.data_range[1]).attr('alignment-baseline', 'hanging');
-			utils.spaceSVGElementsHorizontally(group, 10);
-
-			return group;
+			div.append('h2').text(this.data_range[1]).classed('oncoprint-legend-label', true);
+			utils.d3SelectChildren(div, '*').style('padding-right', '10px');
+			return div.node();
 		};
 	}
 	D3SVGBarChartRule.prototype = Object.create(D3SVGRule.prototype);
@@ -461,22 +465,24 @@ window.oncoprint_RuleSet = (function() {
 			utils.spaceSVGElementsHorizontally(gradient_group, 0);
 		};
 
-		this.putLegendGroup = function(svg) {
+		this.getLegendDiv = function() {
 			if (params.exclude_from_legend) {
 				return;
 			}
-			var group = svg.append('g');
-
-			group.append('text').text(this.data_range[0]).attr('alignment-baseline', 'hanging');
+			var div = d3.select(document.createElement('div'));
+			div.append('h2').text(this.data_range[0]).classed('oncoprint-legend-label', true);
+			var gradient_height = 20;
+			var gradient_width = 100;
+			var gradient_group = div.append('svg').attr('width', gradient_width).attr('height', gradient_height)
+						.append('g');
 			if (params.scale === 'log') {
-				putLogGradient(group, this.color_range, 100, 20);
+				putLogGradient(gradient_group, this.color_range, gradient_width, gradient_height);
 			} else {
-				putLinearGradient(group, this.color_range, 100, 20);
+				putLinearGradient(gradient_group, this.color_range, gradient_width, gradient_height);
 			}
-			group.append('text').text(this.data_range[1]).attr('alignment-baseline', 'hanging');
-
-			utils.spaceSVGElementsHorizontally(group, 10);
-			return group;
+			div.append('h2').text(this.data_range[1]).classed('oncoprint-legend-label', true);
+			utils.d3SelectChildren(div, '*').style('padding-right', '10px');
+			return div.node();
 		};
 	}
 	D3SVGGradientRule.prototype = Object.create(D3SVGRule.prototype);
@@ -484,19 +490,19 @@ window.oncoprint_RuleSet = (function() {
 	function D3SVGStaticRule(params, rule_id) {
 		D3SVGRule.call(this, params, rule_id);
 
-		this.putLegendGroup = function(svg, cell_width, cell_height) {
+		this.getLegendDiv = function(cell_width, cell_height) {
 			if (params.exclude_from_legend) {
 				return;
 			}
-			var group = svg.append('g');
-			var g = group.append('g');
-			this.apply(g, cell_width, cell_height);
+			var div = d3.select(document.createElement('div'));
+			var svg_ctr = div.append('div');
+			var svg = svg_ctr.append('svg').attr('width', cell_width+'px').attr('height', cell_height+'px');
+			this.apply(svg, cell_width, cell_height);
 			if (this.legend_label) {
-				group.append('text').text(this.legend_label)
-							.attr('alignment-baseline', 'hanging');
+				div.append('h2').text(this.legend_label).classed('oncoprint-legend-label', true);
 			}
-			utils.spaceSVGElementsHorizontally(group, 10);
-			return group;
+			utils.d3SelectChildren(div, '*').style('padding-right', '10px');
+			return div.node();
 		};
 	}
 	D3SVGStaticRule.prototype = Object.create(D3SVGRule.prototype);
