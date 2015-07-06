@@ -1,4 +1,5 @@
 window.oncoprint_defaults = (function() {
+	var utils = window.oncoprint_utils;
 	var genetic_alteration_config = {
 		default_color: '#D3D3D3',
 		cna_key: 'cna',

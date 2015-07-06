@@ -127,57 +127,7 @@ alteration_data_promise.then(function(data) {
 $.when(alteration_data_promise).then(function() {
 	alteration_track_id = onc.addTrack({label: 'TP53'}, 1);
 	tracks_to_load -= 1;
-	onc.setRuleSet(alteration_track_id, Oncoprint.GENETIC_ALTERATION, {
-		default_color: '#D3D3D3',
-		cna_key: 'cna',
-		cna: {
-			color: {
-				AMPLIFIED: 'red',
-				GAINED: '#FFB6C1',
-				HOMODELETED: '#0000FF',
-				HETLOSS: '#8FD8D8',	
-			},
-			label: {
-				AMPLIFIED: 'Amplification',
-				GAINED: 'Gain',
-				HOMODELETED: 'Homozygous Deletion',
-				HETLOSS: 'Heterozygous Deletion'
-			}
-
-		},
-		mut_type_key: 'mut_type',
-		mut: {
-			color: {
-				MISSENSE: 'green',
-				INFRAME: '#9F8170',
-				TRUNC: 'black',
-			},
-			label: {
-				MISSENSE: 'Missense Mutation',
-				INFRAME: 'In-Frame Insertion/Deletion',
-				TRUNC: 'Truncating Mutation'
-			}
-		},
-		legend_label: 'Genetic Alteration',
-		mrna_key: 'mut_type',
-		mrna: {
-			color: {
-				MISSENSE: '#C9C900',
-				UPREGULATED: '#FF9999',
-				DOWNREGULATED: '#6699CC'
-			},
-			label: {
-				MISSENSE: 'MRNA MISSENSE',
-				UPREGULATED: 'mRNA Upregulation',
-				DOWNREGULATED: 'mRNA Downregulation'
-			}
-		},
-		rppa_key: 'mut_type',
-		rppa_down: 'MISSENSE',
-		rppa_up: 'MISSENSE',
-		rppa_down_label: 'Protein Downregulation',
-		rppa_up_label: 'Protein Upregulation'
-	});
+	onc.setRuleSet(alteration_track_id, Oncoprint.GENETIC_ALTERATION);
 	onc.setTrackData(alteration_track_id, alteration_data);
 
 	var second_alt_track = onc.addTrack({Label: 'TP53 duplicate'}, 1);
