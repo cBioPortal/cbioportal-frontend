@@ -27,12 +27,23 @@
 }
 
 .oncoprint-legend-header {
-	font-family: Arial;
-	font-weight: bold;
-	fill: gray;
+	font-family: Arial !important;
+	font-weight: bold !important;
+	fill: gray !important;
 	text-anchor: start;
 	alignment-baseline: hanging;
 	font-size: 12px;
+}
+
+.oncoprint-legend-label {
+	font-family: Arial;
+	alignment-baseline: hanging;
+	font-size: 12px;
+	padding-right: 20px;
+}
+
+.oncoprint-legend-element {
+	display: inline-block;
 }
 
 .oncoprint-track-label {

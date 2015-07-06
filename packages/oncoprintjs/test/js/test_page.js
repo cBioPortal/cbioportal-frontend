@@ -48,7 +48,7 @@ var alteration_data;
 var alteration_track_id;
 var alteration_data_promise = $.getJSON('dist/test/gbm/tp53.json');
 
-var tracks_to_load = 15;
+var tracks_to_load = 8;
 onc.suppressRendering();
 
 gender_data_promise.then(function(data) {
@@ -66,7 +66,7 @@ $.when(gender_data_promise).then(function() {
 	});
 
 	onc.setTrackData(gender_track_id, gender_data);
-	for (var i=0; i<9; i++) {
+	for (var i=0; i<2; i++) {
 		var dup_gender_track_id = onc.addTrack({label: 'Gender'});
 		onc.useSameRuleSet(dup_gender_track_id, gender_track_id);
 		onc.setTrackData(dup_gender_track_id, gender_data);
