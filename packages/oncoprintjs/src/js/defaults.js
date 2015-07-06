@@ -48,7 +48,7 @@ window.oncoprint_defaults = (function() {
 		rppa_down: 'MISSENSE',
 		rppa_up: 'MISSENSE',
 		rppa_down_label: 'Protein Downregulation',
-		rppa_up_label: 'Protein Upregulation'
+		rppa_up_label: 'Protein Upregulation',
 	};
 	
 	var genetic_alteration_comparator = function(d1,d2) {
@@ -82,4 +82,9 @@ window.oncoprint_defaults = (function() {
 
 		return 0;
 	};
-});
+
+	return {
+		genetic_alteration_config: genetic_alteration_config,
+		genetic_alteration_comparator: genetic_alteration_comparator
+	}
+})();
