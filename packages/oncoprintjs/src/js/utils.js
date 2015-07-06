@@ -30,6 +30,10 @@
 window.oncoprint_utils = (function() {
 	var exports = {};
 
+	exports.sign = function(number) {
+		return number?((number<0)?-1:1):0
+	};
+
 	exports.invert_array = function invert_array(arr) {
 		return arr.reduce(function(curr, next, index) {
 			curr[next] = index;

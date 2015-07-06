@@ -1,5 +1,6 @@
 window.oncoprint_RuleSet = (function() {
 	var utils = oncoprint_utils;
+	var defaults = oncoprint_defaults;
 
 	var CATEGORICAL_COLOR = 0;
 	var GRADIENT_COLOR = 1; 
@@ -150,6 +151,7 @@ window.oncoprint_RuleSet = (function() {
 		D3SVGRuleSet.call(this, params);
 		var self = this;
 		self.type = GENETIC_ALTERATION;
+		params = params || defaults.genetic_alteration_config;
 		var default_rule = this.addStaticRule({
 			shape: utils.makeD3SVGElement('rect').attr('fill', params.default_color),
 			exclude_from_legend: true,

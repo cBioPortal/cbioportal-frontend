@@ -138,7 +138,6 @@ window.Oncoprint = (function() {
 				return cmp_result;
 			};
 			self.setIdOrder(utils.stableSort(self.getIdOrder(), lexicographically_ordered_cmp));
-			$(self).trigger(events.SORT, {id_order: self.id_order});
 		};
 
 		// Track Creation/Destruction
