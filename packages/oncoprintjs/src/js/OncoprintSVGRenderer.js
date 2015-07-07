@@ -58,9 +58,9 @@
 		(function initToolbarContainer() {
 			self.toolbar_container = d3.select(container_selector_string).append('div').classed(TOOLBAR_CONTAINER_CLASS, true);
 			d3.select(container_selector_string).append('br');
-			/*$.ajax({url: "toolbar.html", context: document.body, success: function(response) {
+			$.ajax({url: "src/html/toolbar.html", context: document.body, success: function(response) {
 				$(self.toolbar_container.node()).html(response);
-			}});*/
+			}});
 		})();
 		(function initLabelContainer() {
 			self.label_container = d3.select(container_selector_string).append('div').classed(LABEL_AREA_CONTAINER_CLASS, true);

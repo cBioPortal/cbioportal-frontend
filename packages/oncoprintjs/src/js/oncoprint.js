@@ -34,7 +34,7 @@ window.Oncoprint = (function() {
 
 	var defaultOncoprintConfig = {
 		cell_width: 6,
-		cell_padding: 5,
+		cell_padding: 2.5,
 		legend: true,
 	};
 
@@ -124,13 +124,22 @@ window.Oncoprint = (function() {
 			self.id_order = id_order;
 			$(self).trigger(events.SET_ID_ORDER);
 		};
+		self.setTrackDataComparator = function(track_id, cmp) {
+			self.tracks[track_id].config.sort_cmp = cmp;
+			$(self).trigger(events.SET_DATA_COMPARATOR);
+		};
+		self.getTrackDataComparator = function(track_id) {
+			return self.tracks[track_id].config.sort_cmp;
+		};
 		self.sort = function(track_id_list, cmp_list) {
-			track_id_list = [].concat(track_id_list);
+			track_id_list = track_id_list ? [].concat(track_id_list) : self.getTracks();
 			cmp_list = [].concat(cmp_list);
 			var lexicographically_ordered_cmp = function(id1,id2) {
 				var cmp_result;
 				for (var i=0, _len = track_id_list.length; i<_len; i++) {
-					cmp_result = cmp_list[i](self.getTrackDatum(track_id_list[i], id1),self.getTrackDatum(track_id_list[i], id2));
+					var track_id = track_id_list[i];
+					var cmp = cmp_list[i] || self.getTrackDataComparator(track_id);
+					cmp_result = cmp(self.getTrackDatum(track_id, id1),self.getTrackDatum(track_id, id2));
 					if (cmp_result !== 0) {
 						break;
 					}
