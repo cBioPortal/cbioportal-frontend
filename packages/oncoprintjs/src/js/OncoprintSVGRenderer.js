@@ -64,7 +64,7 @@
 		})();
 		(function initLabelContainer() {
 			self.label_container = d3.select(container_selector_string).append('div').classed(LABEL_AREA_CONTAINER_CLASS, true);
-			self.label_div = self.label_container.append('div').style('position', 'relative').attr('viewport-fill', '#ffffff');
+			self.label_div = self.label_container.append('div').style('position', 'relative').attr('viewport-fill', '#ffffff').style('overflow', 'hidden');
 			$(self.label_div.node()).on("mousedown", 
 				function startDraggingLabel(evt) {
 					if (evt.stopPropagation) {
@@ -119,6 +119,7 @@
 				self.drawCells(d.track_id);
 				self.positionCells();
 				self.renderTrackLabels();
+				self.resizeLabelDiv();
 				//this.cell_div.style('display','inherit');
 			});
 
@@ -186,17 +187,8 @@
 				.style('min-height', this.getCellAreaHeight()+'px');
 	};
 	OncoprintSVGRenderer.prototype.resizeLabelDiv = function() {
-		var div = this.getLabelDiv();
-		var width = 0;
-		var height = 0;
-		utils.d3SelectChildren(div, '*').each(function() {
-			var max_x = (parseInt(this.style.left) || 0) + this.offsetWidth;
-			var max_y = (parseInt(this.style.top) || 0) + this.offsetHeight;
-			width = Math.max(max_x, width);
-			height = Math.max(max_y, height);
-		});
-		this.getLabelDiv().style('width', width+10+'px')
-				.style('height', height+'px');
+		this.getLabelDiv().style('width', this.getLabelAreaWidth()+'px')
+				.style('height', this.getLabelAreaHeight()+'px');
 	};
 
 	// Labels
@@ -213,6 +205,7 @@
 			var label_tops = this.getTrackLabelTops();
 			var self = this;
 			var label_area_width = this.getLabelAreaWidth();
+			var percent_altered_left = label_area_width - utils.textWidth('100%', self.getLabelFont());
 			_.each(track_ids, function(track_id) {
 				var label_top = label_tops[track_id];
 				var track_label_class = self.getTrackLabelCSSClass(track_id);
@@ -221,7 +214,7 @@
 					.style('position','absolute')
 					.classed(self.getTrackLabelCSSClass(track_id), true)
 					.classed('noselect', true)
-					.style('font-family', self.getLabelFont())
+					.style('font', self.getLabelFont())
 					.text(self.oncoprint.getTrackLabel(track_id))
 					.style('top', label_top+'px')
 					.style('cursor', 'move');
@@ -235,15 +228,13 @@
 						.style('position','absolute')
 						.classed(self.getTrackLabelCSSClass(track_id), true)
 						.classed('noselect', true)
-						.attr('font-family', self.getLabelFont())
+						.style('font', self.getLabelFont())
 						.text(percent_altered + '%')
-						.style('text-anchor', 'end')
 						.style('top', label_top+'px')
-						.style('left', label_area_width+'px');	
+						.style('left', percent_altered_left+'px');	
 				}
 			});
 		}
-		this.resizeLabelDiv();
 	};
 
 	// Cells
