@@ -54,7 +54,7 @@
 	cursor: move;
 }
 .oncoprint-label-dragging {
-	font-weight: bold;
+	font-weight: bold !important;
 }
 
 .noselect {
