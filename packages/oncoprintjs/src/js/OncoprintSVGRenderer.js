@@ -42,6 +42,8 @@
 	var LABEL_DRAGGABLE_CLASS = 'oncoprint-label-draggable';
 	var CELL_QTIP_CLASS = 'oncoprint-cell-qtip';
 
+	var SMOOTH_TRANSITION_CELL_LIMIT = 2000;
+
 	function OncoprintSVGRenderer(container_selector_string, oncoprint, config) {
 		OncoprintRenderer.call(this, oncoprint, config);
 		var self = this;
@@ -313,7 +315,7 @@
 		var id_key = oncoprint.getTrackDatumIdKey(track_id);
 		var id_order = utils.invert_array(oncoprint.getIdOrder());
 		var y = this.getTrackCellTops()[track_id];
-		var moving = bound_svg.transition();
+		var moving = bound_svg[0].length > SMOOTH_TRANSITION_CELL_LIMIT ? bound_svg : bound_svg.transition();
 		if (!axis || axis === 'left') {
 			moving.style('left', function(d,i) {
 				return self.getCellX(id_order[d[id_key]])+'px';
