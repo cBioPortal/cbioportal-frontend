@@ -32,29 +32,27 @@ window.oncoprint_defaults = (function() {
 			}
 		},
 		legend_label: 'Genetic Alteration',
-		mrna_key: 'mut_type',
+		mrna_key: 'mrna',
 		mrna: {
 			color: {
-				MISSENSE: '#C9C900',
 				UPREGULATED: '#FF9999',
 				DOWNREGULATED: '#6699CC'
 			},
 			label: {
-				MISSENSE: 'MRNA MISSENSE',
 				UPREGULATED: 'mRNA Upregulation',
 				DOWNREGULATED: 'mRNA Downregulation'
 			}
 		},
-		rppa_key: 'mut_type',
-		rppa_down: 'MISSENSE',
-		rppa_up: 'MISSENSE',
+		rppa_key: 'rppa',
+		rppa_down: 'DOWNREGULATED',
+		rppa_up: 'UPREGULATED',
 		rppa_down_label: 'Protein Downregulation',
 		rppa_up_label: 'Protein Upregulation',
 	};
 	
 	var genetic_alteration_comparator = function(d1,d2) {
 		var cna_order = utils.invert_array(['AMPLIFIED', 'HOMODELETED', 'GAINED', 'HEMIZYGOUSLYDELETED', 'DIPLOID', undefined]);
-		var mut_order = utils.invert_array([]); // TODO: mutation order
+		var mut_order = utils.invert_array(['MISSENSE', 'INFRAME', 'TRUNC', undefined]); 
 		var regulation_order = utils.invert_array(['UPREGULATED', 'DOWNREGULATED', undefined]);
 
 		var cna_key = genetic_alteration_config.cna_key;
