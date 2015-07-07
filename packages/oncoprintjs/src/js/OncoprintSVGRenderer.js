@@ -58,9 +58,9 @@
 		(function initToolbarContainer() {
 			self.toolbar_container = d3.select(container_selector_string).append('div').classed(TOOLBAR_CONTAINER_CLASS, true);
 			d3.select(container_selector_string).append('br');
-			$.ajax({url: "src/html/toolbar.html", context: document.body, success: function(response) {
+			/*$.ajax({url: "src/html/toolbar.html", context: document.body, success: function(response) {
 				$(self.toolbar_container.node()).html(response);
-			}});
+			}});*/
 		})();
 		(function initLabelContainer() {
 			self.label_container = d3.select(container_selector_string).append('div').classed(LABEL_AREA_CONTAINER_CLASS, true);
@@ -97,6 +97,8 @@
 			//self.cell_container.style('display', 'none');
 			self.cell_container_node = self.cell_container.node();
 			self.cell_div = self.cell_container.append('div').classed(CELL_AREA_CLASS, true);
+			// TODO: magic number
+			self.cell_div.style('max-width', '1000px');
 		})();
 		(function initLegend() {
 			if (config.legend) {
@@ -110,7 +112,7 @@
 				self.render();
 			});
 			$(oncoprint).on(events.MOVE_TRACK, function(evt, data) {
-				self.positionCells(data.moved_tracks);
+				self.positionCells(data.moved_tracks, 'top');
 				self.renderTrackLabels();
 			});
 
@@ -132,23 +134,20 @@
 				//this.cell_div.style('display','inherit');
 			});
 
-			$(oncoprint).on(events.MOVE_TRACK, function(e,d) {
-				self.positionCells(d.moved_tracks);
-			});
 
 			$(oncoprint).on(events.SET_CELL_PADDING, function(e,d) {
-				self.positionCells();
+				self.positionCells(undefined, 'left');
 				self.resizeCellDiv();
 			});
 
 			$(oncoprint).on(events.SET_ZOOM, function(e,d) {
-				self.positionCells();
+				self.positionCells(undefined, 'left');
 				self.resizeCells();
 				self.resizeCellDiv();
 			});
 
 			$(oncoprint).on(events.SET_ID_ORDER, function() {
-				self.positionCells();
+				self.positionCells(undefined, 'left');
 			})
 		})();
 	}
@@ -306,26 +305,30 @@
 	};
 
 	// Positioning
-	OncoprintSVGRenderer.prototype.positionTrackCells = function(track_id, bound_svg) {
+	OncoprintSVGRenderer.prototype.positionTrackCells = function(track_id, axis) {
 		var oncoprint = this.oncoprint;
-		if (!bound_svg) {
-			bound_svg = this.cell_div.selectAll('svg.'+this.getTrackCellCSSClass(track_id))
+		var bound_svg = this.cell_div.selectAll('svg.'+this.getTrackCellCSSClass(track_id))
 					.data(oncoprint.getTrackData(track_id), oncoprint.getTrackDatumIdAccessor(track_id));
-		}
 		var self = this;
 		var id_key = oncoprint.getTrackDatumIdKey(track_id);
-		var id_order = oncoprint.getIdOrder();
+		var id_order = utils.invert_array(oncoprint.getIdOrder());
 		var y = this.getTrackCellTops()[track_id];
-		bound_svg.transition().style('left', function(d,i) {
-			return self.getCellX(id_order.indexOf(d[id_key]))+'px';
-		}).style('top', y+'px');
+		var moving = bound_svg.transition();
+		if (!axis || axis === 'left') {
+			moving.style('left', function(d,i) {
+				return self.getCellX(id_order[d[id_key]])+'px';
+			});
+		}
+		if (!axis || axis === 'top') {
+			moving.style('top', y+'px');
+		}
 	};
-	OncoprintSVGRenderer.prototype.positionCells = function(track_ids) {
+	OncoprintSVGRenderer.prototype.positionCells = function(track_ids, axis) {
 		track_ids = typeof track_ids === "undefined" ? this.oncoprint.getTracks() : track_ids;
 		track_ids = [].concat(track_ids);
 		var self = this;
 		_.each(track_ids, function(track_id) {
-			self.positionTrackCells(track_id);
+			self.positionTrackCells(track_id, axis);
 		});
 	};
 
