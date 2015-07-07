@@ -64,9 +64,16 @@ window.OncoprintRenderer = (function() {
 	OncoprintRenderer.prototype.setRuleSet = function(track_id, type, params) {
 		var new_rule_set = RuleSet.makeRuleSet(type, params);
 		this.rule_sets[track_id] = new_rule_set;
+		if (new_rule_set.sort_cmp) {
+			this.oncoprint.setTrackDataComparator(track_id, new_rule_set.sort_cmp);
+		}
 	};
 	OncoprintRenderer.prototype.useSameRuleSet = function(target_track_id, source_track_id) {
-		this.rule_sets[target_track_id] = this.rule_sets[source_track_id];
+		var rule_set = this.rule_sets[source_track_id];
+		this.rule_sets[target_track_id] = rule_set;
+		if (rule_set.sort_cmp) {
+			this.oncoprint.setTrackDataComparator(target_track_id, rule_set.sort_cmp);
+		}
 	};
 	OncoprintRenderer.prototype.getRuleSet = function(track_id) {
 		return this.rule_sets[track_id];
