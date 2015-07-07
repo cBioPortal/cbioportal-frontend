@@ -46,7 +46,7 @@
 		OncoprintRenderer.call(this, oncoprint, config);
 		var self = this;
 		this.toolbar_container;
-		this.label_svg;
+		this.label_div;
 		this.label_container;
 		this.cell_container;
 		this.cell_container_node;
@@ -64,8 +64,8 @@
 		})();
 		(function initLabelContainer() {
 			self.label_container = d3.select(container_selector_string).append('div').classed(LABEL_AREA_CONTAINER_CLASS, true);
-			self.label_svg = self.label_container.append('svg').attr('viewport-fill', '#ffffff');
-			$(self.label_svg.node()).on("mousedown", 
+			self.label_div = self.label_container.append('div').style('position', 'relative').attr('viewport-fill', '#ffffff');
+			$(self.label_div.node()).on("mousedown", 
 				function startDraggingLabel(evt) {
 					if (evt.stopPropagation) {
 						evt.stopPropagation();
@@ -85,7 +85,9 @@
 						}
 					});
 					if (to_drag !== false) {
-						self.dragLabel(to_drag);
+						if (self.oncoprint.getContainingTrackGroup(to_drag).length > 1) {
+							self.dragLabel(to_drag);
+						}
 					}
 				}
 			);
@@ -176,16 +178,25 @@
 	}
 
 	// Containers
-	OncoprintSVGRenderer.prototype.getLabelSVG = function() {
-		return this.label_svg;
+	OncoprintSVGRenderer.prototype.getLabelDiv = function() {
+		return this.label_div;
 	};
 	OncoprintSVGRenderer.prototype.resizeCellDiv = function() {
 		this.cell_div.style('min-width', this.getCellAreaWidth()+'px')
 				.style('min-height', this.getCellAreaHeight()+'px');
 	};
-	OncoprintSVGRenderer.prototype.resizeLabelSVG = function() {
-		this.getLabelSVG().attr('width', this.getLabelAreaWidth()+'px')
-				.attr('height', this.getLabelAreaHeight()+'px');
+	OncoprintSVGRenderer.prototype.resizeLabelDiv = function() {
+		var div = this.getLabelDiv();
+		var width = 0;
+		var height = 0;
+		utils.d3SelectChildren(div, '*').each(function() {
+			var max_x = (parseInt(this.style.left) || 0) + this.offsetWidth;
+			var max_y = (parseInt(this.style.top) || 0) + this.offsetHeight;
+			width = Math.max(max_x, width);
+			height = Math.max(max_y, height);
+		});
+		this.getLabelDiv().style('width', width+10+'px')
+				.style('height', height+'px');
 	};
 
 	// Labels
@@ -193,10 +204,10 @@
 		return OncoprintRenderer.prototype.getTrackLabelCSSClass.call(this, track_id)+' oncoprint-track-label-draggable';
 	};
 	OncoprintSVGRenderer.prototype.renderTrackLabels = function(track_ids, y) {
-		var svg = this.label_svg;
+		var div = this.label_div;
 		track_ids = typeof track_ids === "undefined" ? this.oncoprint.getTracks() : track_ids;
 		if (typeof y !== "undefined") {
-			svg.selectAll(this.getTrackLabelCSSSelector(track_ids)).attr('y', y+'px');
+			div.selectAll(this.getTrackLabelCSSSelector(track_ids)).style('top', y+'px');
 		} else {
 			track_ids = [].concat(track_ids);
 			var label_tops = this.getTrackLabelTops();
@@ -205,30 +216,34 @@
 			_.each(track_ids, function(track_id) {
 				var label_top = label_tops[track_id];
 				var track_label_class = self.getTrackLabelCSSClass(track_id);
-				svg.selectAll(self.getTrackLabelCSSSelector(track_id)).remove();
-				svg.append('text')
+				div.selectAll(self.getTrackLabelCSSSelector(track_id)).remove();
+				div.append('span')
+					.style('position','absolute')
 					.classed(self.getTrackLabelCSSClass(track_id), true)
 					.classed('noselect', true)
-					.attr('font', self.getLabelFont())
+					.style('font-family', self.getLabelFont())
 					.text(self.oncoprint.getTrackLabel(track_id))
-					.attr('y', label_top+'px');
+					.style('top', label_top+'px')
+					.style('cursor', 'move');
 
 				var rule_set = self.getRuleSet(track_id);
 				if (rule_set && rule_set.alteredData) {
 					var data = self.oncoprint.getTrackData(track_id);
 					var num_altered = rule_set.alteredData(data).length;
 					var percent_altered = Math.floor(100*num_altered/data.length);
-					svg.append('text')
+					div.append('span')
+						.style('position','absolute')
 						.classed(self.getTrackLabelCSSClass(track_id), true)
 						.classed('noselect', true)
-						.attr('font', self.getLabelFont())
+						.attr('font-family', self.getLabelFont())
 						.text(percent_altered + '%')
-						.attr('text-anchor', 'end')
-						.attr('y', label_top+'px')
-						.attr('x', label_area_width+'px');	
+						.style('text-anchor', 'end')
+						.style('top', label_top+'px')
+						.style('left', label_area_width+'px');	
 				}
 			});
 		}
+		this.resizeLabelDiv();
 	};
 
 	// Cells
@@ -388,7 +403,7 @@
 		drag_bounds[1] = utils.clamp(track_tops[last_track]+this.getRenderedTrackHeight(last_track), 0, label_area_height);
 
 		var self = this;
-		var $label_svg = $(self.label_svg.node());
+		var $label_div = $(self.label_div.node());
 		delete track_tops[track_id];
 
 		(function(track_id) {
@@ -400,25 +415,20 @@
 				if (evt.preventDefault) {
 					evt.preventDefault();
 				}
-				var track_tops_tmp = $.extend({},{}, track_tops);
 				var mouse_y = utils.clamp(utils.mouseY(evt), drag_bounds[0], drag_bounds[1]);
 				self.renderTrackLabels(track_id, mouse_y);
 				d3.selectAll(self.getTrackLabelCSSSelector(track_id)).classed(LABEL_DRAGGING_CLASS, true);
 				
 				new_pos = _.sortedIndex(group_track_tops, mouse_y);
-				if (new_pos > 0) {
-					track_tops_tmp[track_group[new_pos-1]] -= 3;
-				}
-				if (new_pos < track_group.length) {
-					track_tops_tmp[track_group[new_pos]] += 3;
-				}
-				_.each(track_tops_tmp, function(top,id){
+				_.each(track_tops, function(top, id) {
+					top += 3*(+(new_pos < track_group.length && track_group[new_pos] == id));
+					top -= 3*(+(new_pos > 0 && track_group[new_pos-1] == id));
 					self.renderTrackLabels(id, top);
 				});
 			}
-			$label_svg.on("mousemove", moveHandler);
-			$label_svg.one("mouseleave mouseup", function(evt) {
-				$label_svg.off("mousemove", moveHandler);
+			$label_div.on("mousemove", moveHandler);
+			$label_div.one("mouseleave mouseup", function(evt) {
+				$label_div.off("mousemove", moveHandler);
 				if (new_pos > -1) {
 					self.oncoprint.moveTrack(track_id, new_pos);
 				}
