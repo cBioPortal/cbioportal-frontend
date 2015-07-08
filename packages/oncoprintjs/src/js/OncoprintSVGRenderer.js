@@ -447,6 +447,7 @@
 			$label_div.on("mousemove", moveHandler);
 			$label_div.one("mouseleave mouseup", function(evt) {
 				$label_div.off("mousemove", moveHandler);
+				$label_div.off("mouseleave mouseup");
 				if (new_pos > -1) {
 					self.oncoprint.moveTrack(track_id, new_pos);
 				}
