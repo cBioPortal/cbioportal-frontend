@@ -128,8 +128,8 @@ window.oncoprint_RuleSet = (function() {
 			color_range: params.color_range,
 			scale: params.scale
 		});
-		this.getLegendDiv = function() {
-			return this.rule_map[rule].getLegendDiv();
+		this.getLegendDiv = function(cell_width, cell_height) {
+			return this.rule_map[rule].getLegendDiv(cell_width, cell_height);
 		};
 	}
 	D3SVGGradientColorRuleSet.prototype = Object.create(D3SVGRuleSet.prototype);
@@ -261,21 +261,23 @@ window.oncoprint_RuleSet = (function() {
 	}
 	D3SVGGeneticAlterationRuleSet.prototype = Object.create(D3SVGRuleSet.prototype);
 
-	function D3SVGRule(params, rule_id) {
-		this.rule_id = rule_id;
-		this.condition = params.condition || function(d) { return true; };
-		this.shape = typeof params.shape === 'undefined' ? utils.makeD3SVGElement('rect') : params.shape;
-		this.z_index = typeof params.z_index === 'undefined' ? this.rule_id : params.z_index;
-		this.legend_label = params.legend_label;
-		this.exclude_from_legend = params.exclude_from_legend;
+	var D3SVGRule = (function() {
+		function D3SVGRule(params, rule_id) {
+			this.rule_id = rule_id;
+			this.condition = params.condition || function(d) { return true; };
+			this.shape = typeof params.shape === 'undefined' ? utils.makeD3SVGElement('rect') : params.shape;
+			this.z_index = typeof params.z_index === 'undefined' ? this.rule_id : params.z_index;
+			this.legend_label = params.legend_label;
+			this.exclude_from_legend = params.exclude_from_legend;
 
-		this.attrs = params.attrs || {};
-		this.attrs.width = utils.ifndef(this.attrs.width, '100%');
-		this.attrs.height = utils.ifndef(this.attrs.height, '100%');
-		this.attrs.x = utils.ifndef(this.attrs.x, 0);
-		this.attrs.y = utils.ifndef(this.attrs.y, 0);
+			this.attrs = params.attrs || {};
+			this.attrs.width = utils.ifndef(this.attrs.width, '100%');
+			this.attrs.height = utils.ifndef(this.attrs.height, '100%');
+			this.attrs.x = utils.ifndef(this.attrs.x, 0);
+			this.attrs.y = utils.ifndef(this.attrs.y, 0);
 
-		this.styles = params.styles || {};
+			this.styles = params.styles || {};
+		}
 
 		var percentToPx = function(attr_val, attr_name, cell_width, cell_height) {
 			// convert a percentage to a local pixel coordinate
@@ -310,7 +312,7 @@ window.oncoprint_RuleSet = (function() {
 			return ret;
 		};
 
-		this.apply = function(g, cell_width, cell_height) {
+		D3SVGRule.prototype.apply = function(g, cell_width, cell_height) {
 			var shape = this.shape;
 			var elts = shape === CELL ? g : utils.appendD3SVGElement(shape, g);
 			var styles = this.styles;
@@ -326,18 +328,22 @@ window.oncoprint_RuleSet = (function() {
 				elts.style(key, val);
 			});
 		}
-		this.filterData = function(data) {
+		D3SVGRule.prototype.filterData = function(data) {
 			return data.filter(this.condition);
 		};
-		this.isActive = function(data) {
+		D3SVGRule.prototype.isActive = function(data) {
 			return this.filterData(data).length > 0;
 		};
-	}
+		return D3SVGRule;
+	})();
+	
 
 	function D3SVGBarChartRule(params, rule_id) {
 		D3SVGRule.call(this, params, rule_id);
 		this.data_key = params.data_key;
 		this.data_range = params.data_range;
+		this.inferred_data_range;
+		this.attrs.fill = params.fill || '#000000';
 
 		var scale = function(x) {
 			if (params.scale === 'log') {
@@ -346,53 +352,73 @@ window.oncoprint_RuleSet = (function() {
 				return x;
 			}
 		};
-
 		var makeDatum = function(x) {
 			var ret = {};
 			ret[params.data_key] = x;
 			return ret;
 		};
-		var scaled_data_range = _.map(this.data_range, scale);
-		var height_helper = function(d) {
-			var datum = scale(d[params.data_key]);
-			var data_range = [scaled_data_range[0], scaled_data_range[1]];
-			var distance = (datum-scaled_data_range[0]) / (scaled_data_range[1]-scaled_data_range[0]);
-			return distance * 100;
+
+		this.setUpHelperFunctions = function(data_range) {
+			var scaled_data_range = _.map(data_range, scale);
+			var height_helper = function(d) {
+				var datum = scale(d[params.data_key]);
+				var distance = (datum-scaled_data_range[0]) / (scaled_data_range[1]-scaled_data_range[0]);
+				return distance * 100;
+			};
+			var y_function = function(d) {
+				return (100 - height_helper(d)) + '%';
+			};
+			var height_function = function(d) { 
+				return height_helper(d) + '%';
+			};
+			this.attrs.height = height_function;
+			this.attrs.y = y_function;
 		};
-		var y_function = function(d) {
-			return (100 - height_helper(d)) + '%';
+
+		this.inferDataRange = function(g) {
+			var self = this;
+			var min = Number.POSITIVE_INFINITY;
+			var max = Number.NEGATIVE_INFINITY;
+			g.each(function(d,i) {
+				min = Math.min(min, d[self.data_key]);
+				max = Math.max(max, d[self.data_key]);
+			});
+			return [min, max];
 		};
-		var height_function = function(d) { 
-			return height_helper(d) + '%';
-		};
-		this.attrs.height = height_function;
-		this.attrs.y = y_function;
-		this.attrs.fill = params.fill || '#000000';
 
 		this.getLegendDiv = function(cell_width, cell_height) {
 			if (params.exclude_from_legend) {
 				return;
 			}
 			var div = d3.select(document.createElement('div'));
-			div.append('h2').text(this.data_range[0]).classed('oncoprint-legend-label', true);
+			var data_range = this.data_range || this.inferred_data_range;
+			if (!data_range) {
+				return div.node();
+			}
+			div.append('h2').text(data_range[0]).classed('oncoprint-legend-label', true);
 			var mesh = 50;
 			var svg = div.append('svg').attr('width', mesh+'px').attr('height', cell_height+'px');
 			for (var i=0; i<=mesh; i++) {
 				var t = i/mesh;
-				var d = (1-t)*this.data_range[0] + t*this.data_range[1];
+				var d = (1-t)*data_range[0] + t*data_range[1];
 				var datum = makeDatum(d);
-				var height = cell_height*height_helper(datum)/100;
+				var height = cell_height*parseInt(this.attrs.height(datum))/100;
 				svg.append('rect')
 					.attr('width', '1px')
-					.attr('height', height)
+					.attr('height', height+'px')
 					.attr('y', (cell_height-height)+'px')
 					.attr('fill', this.attrs.fill)
 					.attr('x', i+'px');
 			}
-			div.append('h2').text(this.data_range[1]).classed('oncoprint-legend-label', true);
+			div.append('h2').text(data_range[1]).classed('oncoprint-legend-label', true);
 			utils.d3SelectChildren(div, '*').style('padding-right', '10px');
 			return div.node();
 		};
+		this.apply = function(g, cell_width, cell_height) {
+			this.setUpHelperFunctions(this.data_range || (this.inferred_data_range = this.inferDataRange(g)));
+			D3SVGRule.prototype.apply.call(this, g, cell_width, cell_height);
+		};
+
 	}
 	D3SVGBarChartRule.prototype = Object.create(D3SVGRule.prototype);
 
@@ -400,15 +426,14 @@ window.oncoprint_RuleSet = (function() {
 		D3SVGRule.call(this, params, rule_id);
 		this.data_key = params.data_key;
 		this.data_range = params.data_range;
+		this.inferred_data_range;
 		this.color_range = params.color_range;
 
-		var getGradientId = (function() {
-			var gradient_counter = 0;
-			return function() {
-				gradient_counter += 1;
-				return 'gradient'+'_'+rule_id+'_'+gradient_counter;
-			}
-		})();
+		var makeDatum = function(x) {
+			var ret = {};
+			ret[params.data_key] = x;
+			return ret;
+		};
 		var scale = function(x) {
 			if (params.scale === 'log') {
 				return Math.log10(Math.max(x, 0.1)); 
@@ -417,73 +442,59 @@ window.oncoprint_RuleSet = (function() {
 			}
 		};
 
-		var scaled_data_range = _.map(this.data_range, scale);
-		var fill_function = function(d) {
-			var datum = scale(d[params.data_key]);
-			var data_range = [scaled_data_range[0], scaled_data_range[1]];
-			var distance = (datum-scaled_data_range[0]) / (scaled_data_range[1]-scaled_data_range[0]);
-			color_range = [d3.rgb(params.color_range[0]).toString(),
-					d3.rgb(params.color_range[1]).toString()];
-			return utils.lin_interp(distance, params.color_range[0], params.color_range[1]);
-		};
-		this.attrs.fill = fill_function;
-
-		var makeDatum = function(x) {
-			var ret = {};
-			ret[params.data_key] = x;
-			return ret;
-		};
-		var putLinearGradient = function(group, color_range, width, height) {
-			var gradient_id = getGradientId();
-			var gradient = group.append('svg:defs').append('svg:linearGradient')
-				.attr('id', gradient_id)
-				.attr('x1', '0%').attr('y1', '0%')
-				.attr('x2', '100%').attr('y2', '0%')
-				.attr('spreadMethod', 'pad');
-			gradient.append('svg:stop')
-				.attr('offset', '0%')
-				.attr('stop-color', color_range[0])
-				.attr('stop-opacity', 1);
-			gradient.append('svg:stop')
-				.attr('offset', '100%')
-				.attr('stop-color', color_range[1])
-				.attr('stop-opacity', 1);
-			group.append('rect')
-				.attr('width',width).attr('height', height)
-				.style('fill', 'url(#'+gradient_id+')');
+		this.setUpHelperFunctions = function(data_range) {
+			var scaled_data_range = _.map(data_range, scale);
+			var fill_function = function(d) {
+				var datum = scale(d[params.data_key]);
+				var data_range = [scaled_data_range[0], scaled_data_range[1]];
+				var distance = (datum-scaled_data_range[0]) / (scaled_data_range[1]-scaled_data_range[0]);
+				color_range = [d3.rgb(params.color_range[0]).toString(),
+						d3.rgb(params.color_range[1]).toString()];
+				return utils.lin_interp(distance, params.color_range[0], params.color_range[1]);
+			};
+			this.attrs.fill = fill_function;
 		};
 
-		var putLogGradient = function(group, color_range, width, height) {
-			// TODO: I think this is perceptually useless....but could still leave it I guess
-			var gradient_group = group.append('g');
-			var t, datum;
-			for (var i=0; i<width; i++) {
-				t = i/width;
-				datum = (1-t)*params.data_range[0] + t*params.data_range[1];
-				gradient_group.append('rect').attr('width', 1).attr('height', height)
-						.attr('fill', fill_function(makeDatum(datum)));
-			}
-			utils.spaceSVGElementsHorizontally(gradient_group, 0);
+		this.inferDataRange = function(g) {
+			var self = this;
+			var min = Number.POSITIVE_INFINITY;
+			var max = Number.NEGATIVE_INFINITY;
+			g.each(function(d,i) {
+				min = Math.min(min, d[self.data_key]);
+				max = Math.max(max, d[self.data_key]);
+			});
+			return [min, max];
 		};
 
-		this.getLegendDiv = function() {
+		this.getLegendDiv = function(cell_width, cell_height) {
 			if (params.exclude_from_legend) {
 				return;
 			}
 			var div = d3.select(document.createElement('div'));
-			div.append('h2').text(this.data_range[0]).classed('oncoprint-legend-label', true);
-			var gradient_height = 20;
-			var gradient_width = 100;
-			var gradient_group = div.append('svg').attr('width', gradient_width).attr('height', gradient_height)
-						.append('g');
-			if (params.scale === 'log') {
-				putLogGradient(gradient_group, this.color_range, gradient_width, gradient_height);
-			} else {
-				putLinearGradient(gradient_group, this.color_range, gradient_width, gradient_height);
+			var data_range = this.data_range || this.inferred_data_range;
+			if (!data_range) {
+				return div.node();
 			}
-			div.append('h2').text(this.data_range[1]).classed('oncoprint-legend-label', true);
+			div.append('h2').text(data_range[0]).classed('oncoprint-legend-label', true);
+			var mesh = 50;
+			var svg = div.append('svg').attr('width', mesh+'px').attr('height', cell_height+'px');
+			for (var i=0; i<=mesh; i++) {
+				var t = i/mesh;
+				var d = (1-t)*data_range[0] + t*data_range[1];
+				var datum = makeDatum(d);
+				svg.append('rect')
+					.attr('width', '1px')
+					.attr('height', cell_height+'px')
+					.attr('fill', this.attrs.fill(datum))
+					.attr('x', i+'px');
+			}
+			div.append('h2').text(data_range[1]).classed('oncoprint-legend-label', true);
 			utils.d3SelectChildren(div, '*').style('padding-right', '10px');
 			return div.node();
+		};
+		this.apply = function(g, cell_width, cell_height) {
+			this.setUpHelperFunctions(this.data_range || (this.inferred_data_range = this.inferDataRange(g)));
+			D3SVGRule.prototype.apply.call(this, g, cell_width, cell_height);
 		};
 	}
 	D3SVGGradientRule.prototype = Object.create(D3SVGRule.prototype);

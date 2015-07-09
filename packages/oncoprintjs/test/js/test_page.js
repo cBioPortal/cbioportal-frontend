@@ -90,7 +90,6 @@ $.when(mutation_data_promise).then(function() {
 	onc.setRuleSet(mutation_track_id, Oncoprint.GRADIENT_COLOR, {
 		data_key: 'attr_val',
 		color_range: ['#A9A9A9', '#FF0000'],
-		data_range: [0,100],
 		legend_label: 'Mutations',
 	});
 	onc.setTrackData(mutation_track_id, mutation_data);
@@ -99,7 +98,6 @@ $.when(mutation_data_promise).then(function() {
 	tracks_to_load -= 1;
 	onc.setRuleSet(log_mut_track_id, Oncoprint.BAR_CHART, {
 		data_key: 'attr_val',
-		data_range: [0,100],
 		fill: '#ff0000',
 		scale: 'log',
 		legend_label: 'Mutations (Log scale)'
@@ -110,7 +108,6 @@ $.when(mutation_data_promise).then(function() {
 	tracks_to_load -= 1;
 	onc.setRuleSet(dup_mut_track_id, Oncoprint.BAR_CHART, {
 		data_key: 'attr_val',
-		data_range: [0,100],
 		fill: '#ff0000',
 		legend_label: 'Mutations (Linear scale)'
 	});
