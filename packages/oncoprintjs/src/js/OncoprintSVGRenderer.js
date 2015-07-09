@@ -47,6 +47,7 @@
 		var self = this;
 		this.toolbar_container;
 		this.label_div;
+		this.label_drag_div;
 		this.label_container;
 		this.cell_container;
 		this.cell_container_node;
@@ -63,34 +64,11 @@
 			}});*/
 		})();
 		(function initLabelContainer() {
-			self.label_container = d3.select(container_selector_string).append('div').classed(LABEL_AREA_CONTAINER_CLASS, true);
-			self.label_div = self.label_container.append('div').style('position', 'relative').attr('viewport-fill', '#ffffff').style('overflow', 'hidden');
-			$(self.label_div.node()).on("mousedown", 
-				function startDraggingLabel(evt) {
-					if (evt.stopPropagation) {
-						evt.stopPropagation();
-					}
-					if (evt.preventDefault) {
-						evt.preventDefault();
-					}
-					var to_drag = false;
-					var track_tops = self.getTrackTops();
-					//var mouse_y = utils.mouseY(evt);
-					var mouse_y = evt.offsetY;
-					_.find(track_tops, function(track_top, track_id) {
-						track_id = parseInt(track_id);
-						if (mouse_y >= track_top && mouse_y <= track_top + self.getRenderedTrackHeight(track_id)) {
-							to_drag = track_id;
-							return true;
-						}
-					});
-					if (to_drag !== false) {
-						if (self.oncoprint.getContainingTrackGroup(to_drag).length > 1) {
-							self.dragLabel(to_drag);
-						}
-					}
-				}
-			);
+			self.label_container = d3.select(container_selector_string).append('div').classed(LABEL_AREA_CONTAINER_CLASS, true).style('position', 'relative');
+			self.label_div = self.label_container.append('div').style('position', 'relative').style('overflow', 'hidden');
+			self.label_drag_div = self.label_container.append('div').style('position', 'absolute').style('overflow', 'hidden')
+							.style('top', '0px').style('left','0px')
+							.style('display','none');
 		})();
 		(function initCellContainer() {
 			self.cell_container = d3.select(container_selector_string).append('div').classed(CELL_AREA_CONTAINER_CLASS, true);
@@ -190,12 +168,17 @@
 	OncoprintSVGRenderer.prototype.getLabelDiv = function() {
 		return this.label_div;
 	};
+	OncoprintSVGRenderer.prototype.getLabelDragDiv = function() {
+		return this.label_drag_div;
+	};
 	OncoprintSVGRenderer.prototype.resizeCellDiv = function() {
 		this.cell_div.style('min-width', this.getCellAreaWidth()+'px')
 				.style('min-height', this.getCellAreaHeight()+'px');
 	};
 	OncoprintSVGRenderer.prototype.resizeLabelDiv = function() {
 		this.getLabelDiv().style('width', this.getLabelAreaWidth()+'px')
+				.style('height', this.getLabelAreaHeight()+'px');
+		this.getLabelDragDiv().style('width', this.getLabelAreaWidth()+'px')
 				.style('height', this.getLabelAreaHeight()+'px');
 	};
 
@@ -225,7 +208,10 @@
 					.style('font', self.getLabelFont())
 					.text(self.oncoprint.getTrackLabel(track_id))
 					.style('top', label_top+'px')
-					.style('cursor', 'move');
+					.style('cursor', 'move')
+					.on("mousedown", function() {
+						self.dragLabel(track_id);
+					});
 
 				var rule_set = self.getRuleSet(track_id);
 				if (rule_set && rule_set.alteredData) {
@@ -413,6 +399,7 @@
 		});
 	};
 	OncoprintSVGRenderer.prototype.dragLabel = function(track_id) {
+		this.getLabelDragDiv().style('display','block');
 		var track_group = this.oncoprint.getContainingTrackGroup(track_id);
 		var first_track = track_group[0], last_track=track_group[track_group.length-1];
 		var all_track_tops = this.getTrackLabelTops();
@@ -430,7 +417,7 @@
 		drag_bounds[1] = utils.clamp(track_tops[last_track]+this.getRenderedTrackHeight(last_track), 0, label_area_height);
 
 		var self = this;
-		var $label_div = $(self.label_div.node());
+		var $label_drag_div = $(self.getLabelDragDiv().node());
 		delete track_tops[track_id];
 
 		(function(track_id) {
@@ -453,10 +440,11 @@
 					self.renderTrackLabels(id, top);
 				});
 			}
-			$label_div.on("mousemove", moveHandler);
-			$label_div.one("mouseleave mouseup", function(evt) {
-				$label_div.off("mousemove", moveHandler);
-				$label_div.off("mouseleave mouseup");
+			$label_drag_div.on("mousemove", moveHandler);
+			$label_drag_div.one("mouseleave mouseup", function(evt) {
+				$label_drag_div.hide();
+				$label_drag_div.off("mousemove", moveHandler);
+				$label_drag_div.off("mouseleave mouseup");
 				if (new_pos > -1) {
 					self.oncoprint.moveTrack(track_id, new_pos);
 				}
