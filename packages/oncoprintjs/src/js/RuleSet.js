@@ -153,93 +153,75 @@ window.oncoprint_RuleSet = (function() {
 	function D3SVGGeneticAlterationRuleSet(params) {
 		params = params || defaults.genetic_alteration_config;
 		D3SVGRuleSet.call(this, params);
+		var vocab = ['full-rect', 'middle-rect', 'large-right-arrow', 'small-up-arrow', 'small-down-arrow'];
 		var self = this;
 		self.type = GENETIC_ALTERATION;
 		self.sort_cmp = params.sort_cmp || defaults.genetic_alteration_comparator;
-		var default_rule = this.addStaticRule({
-			shape: utils.makeD3SVGElement('rect').attr('fill', params.default_color),
-			exclude_from_legend: true,
-			z_index: -1
-		});
+
+		var makeStaticShapeRule = function(rule_spec, key, value) {
+			var condition = typeof key !== 'undefined' && typeof value !== 'undefined' ? (function(_key, _value) {
+				return function(d) {
+					return d[_key] === _value;
+				};
+			})(key, value) : undefined;
+			var shape, attrs, styles, z_index;
+			switch (rule_spec.shape) {
+				case 'full-rect':
+					shape = utils.makeD3SVGElement('rect');
+					attrs = {fill: rule_spec.color, width: '100%', height: '100%'};
+					styles = {};
+					z_index = 0;
+					break;
+				case 'middle-rect':
+					shape = utils.makeD3SVGElement('rect');
+					attrs = {fill: rule_spec.color, width: '100%', height: '33.33%', y: '33.33%'};
+					styles = {};
+					z_index = 1;
+					break;
+				case 'large-right-arrow':
+					shape = utils.makeD3SVGElement('polygon');
+					attrs = {points: "0%,0% 100%,50% 0%,100%"};
+					styles = {'stroke-width':'0px', 'fill': rule_spec.color};
+					z_index = 2;
+					break;
+				case 'small-up-arrow':
+					shape = utils.makeD3SVGElement('polygon');
+					attrs = {points: "50%,0% 100%,25% 0%,25%"};
+					styles = {'stroke-width':'0px', 'fill': rule_spec.color};
+					z_index = 3;
+					break;
+				case 'small-down-arrow':
+					shape = utils.makeD3SVGElement('polygon');
+					attrs = {points: "50%,100% 100%,75% 0%,75%"};
+					styles = {'stroke-width':'0px', 'fill': rule_spec.color};
+					z_index = 4;
+					break;
+				case 'outline':
+					shape = CELL;
+					styles = {'outline-color':rule_spec.color, 'outline-style':'solid', 'outline-width':'2px'};
+					z_index = 5;
+					break;
+			}
+			var new_rule = self.addStaticRule({
+				condition: condition,
+				shape: shape,
+				attrs: attrs,
+				styles: styles,
+				z_index: z_index,
+				legend_label: rule_spec.legend_label,
+				exclude_from_legend: (typeof rule_spec.legend_label === "undefined")
+			});
+			return new_rule;
+		};
 		var altered_rules = [];
-		_.each(params.cna.color, function(color, name) {
-			var new_cna_rule = self.addStaticRule({
-				condition: (function(_name) {
-					return function(d) {
-						return d[params.cna_key] === _name;
-					};
-				})(name),
-				shape: utils.makeD3SVGElement('rect'),
-				legend_label: params.cna.label[name],
-				attrs: {
-					fill: color,
-					width: '100%',
-					height: '100%'
-				},
-				z_index: 0
+		_.each(params.altered, function(values, key) {
+			_.each(values, function(rule_spec, value) {
+				altered_rules.push(makeStaticShapeRule(rule_spec, key, value));
 			});
-			altered_rules.push(new_cna_rule);
 		});
-		_.each(params.mut.color, function(color, name) {
-			var new_mut_rule = self.addStaticRule({
-				condition: (function(_name) {
-					return function(d) {
-						return d[params.mut_type_key] === _name; // TODO: should be indexOf for multiple mutations?
-					}
-				})(name),
-				shape: utils.makeD3SVGElement('rect').attr('fill', color),
-				legend_label: params.mut.label[name],
-				attrs: {
-					width: '100%',
-					height: '33.33%',
-					y: '33.33%',
-				},
-				z_index: 1
-			});
-			altered_rules.push(new_mut_rule);
+		_.each(params.default, function(rule_spec) {
+			makeStaticShapeRule(rule_spec);
 		});
-		_.each(params.mrna.color, function(color, name) {
-			var new_mrna_rule = self.addStaticRule({
-				condition: (function(_name) {
-					return function(d) {
-						return d[params.mrna_key] === _name;
-					}
-				})(name),
-				shape: CELL,
-				legend_label: params.mrna.label[name],
-				styles: {
-					'outline-style':'solid',
-					'outline-width':'2px',
-					'outline-color':color,
-				},
-				z_index: 2
-			});
-			altered_rules.push(new_mrna_rule);
-		});
-		var up_rppa_rule = self.addStaticRule({
-			condition: function(d) {
-				return d[params.rppa_key] === params.rppa_up;
-			},
-			shape: utils.makeD3SVGElement('polygon').attr('style', 'fill:black; stroke-width:0'),
-			legend_label: params.rppa_up_label,
-			attrs: {
-				points: "50%,0% 100%,25% 0%,25%"
-			},
-			z_index: 3
-		});
-		altered_rules.push(up_rppa_rule);
-		var down_rppa_rule = self.addStaticRule({
-			condition: function(d) {
-				return d[params.rppa_key] === params.rppa_down;
-			},
-			shape: utils.makeD3SVGElement('polygon').attr('style', 'fill:black; stroke-width:0'),
-			legend_label: params.rppa_down_label,
-			attrs: {
-				points: "50%,100% 100%,75% 0%,75%"
-			},
-			z_index: 3
-		});
-		altered_rules.push(down_rppa_rule);
 		self.getLegendDiv = function(cell_width, cell_height) {
 			var div = d3.select(document.createElement('div'));
 			_.each(self.getRules(), function(rule) {
