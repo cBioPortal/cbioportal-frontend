@@ -147,7 +147,6 @@
 		this.document_fragment = undefined;
 		var self = this;
 		$(this.cell_div.node()).ready(function() {
-			console.log(self.cell_div.selectAll('.'+self.getCellCSSClass())[0].length);
 			self.resizeCells();
 			self.positionCells();
 		});
