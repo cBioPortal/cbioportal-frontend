@@ -1,7 +1,7 @@
 window.oncoprint_defaults = (function() {
 	var utils = window.oncoprint_utils;
 	var genetic_alteration_config = {
-		default: [{shape: 'full-rect', color: '#D3D3D3'}],
+		default: [{shape: 'full-rect', color: '#D3D3D3', z_index: -1}],
 		altered: {
 			'cna': {
 				'AMPLIFIED': {

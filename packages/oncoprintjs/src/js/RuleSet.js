@@ -170,36 +170,36 @@ window.oncoprint_RuleSet = (function() {
 					shape = utils.makeD3SVGElement('rect');
 					attrs = {fill: rule_spec.color, width: '100%', height: '100%'};
 					styles = {};
-					z_index = 0;
+					z_index = utils.ifndef(rule_spec.z_index, 0);
 					break;
 				case 'middle-rect':
 					shape = utils.makeD3SVGElement('rect');
 					attrs = {fill: rule_spec.color, width: '100%', height: '33.33%', y: '33.33%'};
 					styles = {};
-					z_index = 1;
+					z_index = utils.ifndef(rule_spec.z_index, 1);
 					break;
 				case 'large-right-arrow':
 					shape = utils.makeD3SVGElement('polygon');
 					attrs = {points: "0%,0% 100%,50% 0%,100%"};
 					styles = {'stroke-width':'0px', 'fill': rule_spec.color};
-					z_index = 2;
+					z_index = utils.ifndef(rule_spec.z_index, 2);
 					break;
 				case 'small-up-arrow':
 					shape = utils.makeD3SVGElement('polygon');
 					attrs = {points: "50%,0% 100%,25% 0%,25%"};
 					styles = {'stroke-width':'0px', 'fill': rule_spec.color};
-					z_index = 3;
+					z_index = utils.ifndef(rule_spec.z_index, 3);
 					break;
 				case 'small-down-arrow':
 					shape = utils.makeD3SVGElement('polygon');
 					attrs = {points: "50%,100% 100%,75% 0%,75%"};
 					styles = {'stroke-width':'0px', 'fill': rule_spec.color};
-					z_index = 4;
+					z_index = utils.ifndef(rule_spec.z_index, 4);
 					break;
 				case 'outline':
 					shape = CELL;
 					styles = {'outline-color':rule_spec.color, 'outline-style':'solid', 'outline-width':'2px'};
-					z_index = 5;
+					z_index = utils.ifndef(rule_spec.z_index, 5);
 					break;
 			}
 			var new_rule = self.addStaticRule({
