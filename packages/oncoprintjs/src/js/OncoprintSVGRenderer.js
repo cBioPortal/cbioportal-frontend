@@ -167,8 +167,12 @@
 	OncoprintSVGRenderer.prototype.releaseRendering = function() {
 		this.cell_div.node().appendChild(this.document_fragment);
 		this.document_fragment = undefined;
-		this.resizeCells();
-		this.positionCells();
+		var self = this;
+		$(this.cell_div.node()).ready(function() {
+			console.log(self.cell_div.selectAll('.'+self.getCellCSSClass())[0].length);
+			self.resizeCells();
+			self.positionCells();
+		});
 	};
 	// Rule sets
 	OncoprintSVGRenderer.prototype.setRuleSet = function(track_id, type, params) {
@@ -305,7 +309,6 @@
 		_.each(track_ids, function(track_id) {
 			self.drawTrackCells(track_ids, fragment);
 		});
-		//this.cell_div.node().appendChild(fragment);
 		this.cellRenderTarget().node().appendChild(fragment);
 	};
 
@@ -323,29 +326,35 @@
 		var in_view = function(i) {
 			return i >= visible_interval[0] && i <= visible_interval[1];
 		};
+		var currently_in_view = function(node) {
+			return !isNaN(parseInt(node.style.left)) && in_view(parseInt(node.style.left));
+		};
 		var left_fn = function(d) {
 			return self.getCellX(id_order[d[id_key]]);
 		};
-		var animated = bound_svg.filter(function(d,i) {
-			var ret = (this.style.left && in_view(parseInt(this.style.left))) || in_view(left_fn(d));
-			return ret;
-		}).transition();
-		var nonanimated = bound_svg.filter(function(d,i) {
-			var ret = !((this.style.left && in_view(parseInt(this.style.left))) || in_view(left_fn(d)));
-			return ret;
+		var coming_into_view = function(d) {
+			return in_view(left_fn(d));
+		};
+		
+		var animated = bound_svg.filter(function(d) {
+			return currently_in_view(this) || coming_into_view(d);
 		});
-		if (!axis || axis === 'left') {
-			var left_px_fn = function(d,i) {
-				return left_fn(d)+'px';
-			};
-			animated.style('left', left_px_fn);
-			nonanimated.style('left', left_px_fn);
+		var nonanimated = bound_svg.filter(function(d) {
+			return !(currently_in_view(this) || coming_into_view(d));
+		});
+		
+		var left_px_fn = function(d,i) {
+			return left_fn(d)+'px';
+		};
+		if (!axis || axis === "left") {
+			animated.style('left', left_px_fn)
+			nonanimated.style('left', left_px_fn)
 		}
-		if (!axis || axis === 'top') {
-			var top = y + 'px';
-			animated.style('top', top);
-			nonanimated.style('top', top);
+		if (!axis || axis === "top") {
+			animated.style('top', y+'px');
+			nonanimated.style('top', y+'px');
 		}
+		// TODO: integrate transitions above
 	};
 	OncoprintSVGRenderer.prototype.positionCells = function(track_ids, axis) {
 		track_ids = typeof track_ids === "undefined" ? this.oncoprint.getTracks() : track_ids;

@@ -52,7 +52,7 @@ window.oncoprint_defaults = (function() {
 	
 	var genetic_alteration_comparator = function(d1,d2) {
 		var cna_order = utils.invert_array(['AMPLIFIED', 'HOMODELETED', 'GAINED', 'HEMIZYGOUSLYDELETED', 'DIPLOID', undefined]);
-		var mut_order = utils.invert_array(['MISSENSE', 'INFRAME', 'TRUNC', undefined]); 
+		var mut_order = utils.invert_array(['TRUNC', 'INFRAME', 'MISSENSE', undefined]); 
 		var regulation_order = utils.invert_array(['UPREGULATED', 'DOWNREGULATED', undefined]);
 
 		var cna_key = genetic_alteration_config.cna_key;
