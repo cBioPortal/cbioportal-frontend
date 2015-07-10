@@ -72,7 +72,7 @@ window.oncoprint_defaults = (function() {
 				}
 			}
 		},
-		legend_label: "Genetic Alteration"
+		legend_label: "Genetic Alteration",
 	};
 	
 	var genetic_alteration_comparator = function(d1,d2) {
