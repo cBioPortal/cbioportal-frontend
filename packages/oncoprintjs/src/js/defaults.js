@@ -71,7 +71,8 @@ window.oncoprint_defaults = (function() {
 					legend_label: 'Protein Downregulation'
 				}
 			}
-		}
+		},
+		legend_label: "Genetic Alteration"
 	};
 	
 	var genetic_alteration_comparator = function(d1,d2) {
