@@ -109,6 +109,7 @@
 				self.positionTrackCells(d.track_id);
 				self.renderTrackLabels(d.track_id);
 				self.resizeCellDiv();
+				self.renderLegend();
 				//this.cell_div.style('display','inherit');
 			});
 
