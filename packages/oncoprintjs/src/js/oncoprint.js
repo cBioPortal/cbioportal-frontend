@@ -31,6 +31,7 @@ window.Oncoprint = (function() {
 	var events = oncoprint_events;
 	var utils = oncoprint_utils;
 	var RuleSet = oncoprint_RuleSet;
+	var defaults = oncoprint_defaults;
 
 	var defaultOncoprintConfig = {
 		cell_width: 6,
@@ -65,6 +66,8 @@ window.Oncoprint = (function() {
 
 		self.id_order = [];
 		self.track_groups = [[],[]];
+		self.track_group_sort_order = [0,1];
+		self.sort_direction = {};
 		self.tracks = {};
 
 		self.zoom = 1;
@@ -118,28 +121,70 @@ window.Oncoprint = (function() {
 
 		// Id Order
 		self.getIdOrder = function() {
-			return self.id_order;
+			return self.id_order.slice();
 		};
 		self.setIdOrder = function(id_order) {
-			self.id_order = id_order;
+			self.id_order = id_order.slice();
 			$(self).trigger(events.SET_ID_ORDER);
 		};
-		self.setTrackDataComparator = function(track_id, cmp) {
+
+		// Sorting
+		self.setTrackSortComparator = function(track_id, cmp) {
 			self.tracks[track_id].config.sort_cmp = cmp;
-			$(self).trigger(events.SET_DATA_COMPARATOR);
 		};
-		self.getTrackDataComparator = function(track_id) {
+		self.getTrackSortComparator = function(track_id) {
 			return self.tracks[track_id].config.sort_cmp;
 		};
-		self.sort = function(track_id_list, cmp_list) {
-			track_id_list = track_id_list ? [].concat(track_id_list) : self.getTracks();
-			cmp_list = [].concat(cmp_list);
+		self.toggleTrackSortDirection = function(track_id) {
+			var dir = self.sort_direction[track_id];
+			self.sort_direction[track_id] = -dir;
+			$(self).trigger(events.SET_SORT_DIRECTION);
+		};
+		self.setTrackGroupSortOrder = function(order) {
+			self.track_group_sort_order = order.slice();
+		};
+		self.getTrackGroupSortOrder = function() {
+			return self.track_group_sort_order.slice();
+		};
+		self.getTrackSortOrder = function() {
+			var ret = [];
+			var track_groups = self.getTrackGroups();
+			_.each(self.getTrackGroupSortOrder(), function(group_id) {
+				ret = ret.concat(track_groups[group_id]);
+			});
+			return ret;
+		};
+		self.sortById = function(desc) {
+			var ret = _.sortBy(self.getIdOrder(), _.identity);
+			if (desc) {
+				ret.reverse();
+			}
+			self.setIdOrder(ret);
+		};
+		self.sortByTrack = function() {
+			var track_id_list = self.getTrackSortOrder();
+			var cmp_list = _.map(track_id_list, function(track_id) { 
+				return self.getTrackSortComparator(track_id);
+			});
 			var lexicographically_ordered_cmp = function(id1,id2) {
-				var cmp_result;
+				var cmp_result = 0;
 				for (var i=0, _len = track_id_list.length; i<_len; i++) {
 					var track_id = track_id_list[i];
-					var cmp = cmp_list[i] || self.getTrackDataComparator(track_id);
-					cmp_result = cmp(self.getTrackDatum(track_id, id1),self.getTrackDatum(track_id, id2));
+					var cmp = cmp_list[i];
+					var d1 = self.getTrackDatum(track_id, id1);
+					var d2 = self.getTrackDatum(track_id, id2);
+					var d1_undef = (typeof d1 === "undefined");
+					var d2_undef = (typeof d2 === "undefined");
+					if (!d1_undef && !d2_undef) {
+						cmp_result = cmp(self.getTrackDatum(track_id, id1),self.getTrackDatum(track_id, id2));
+					} else if (d1_undef && d2_undef) {
+						cmp_result = 0;
+					} else if (d1_undef) {
+						cmp_result = 1;
+					} else {
+						cmp_result = -1;
+					}
+					cmp_result *= self.sort_direction[track_id];
 					if (cmp_result !== 0) {
 						break;
 					}
@@ -149,12 +194,14 @@ window.Oncoprint = (function() {
 			self.setIdOrder(utils.stableSort(self.getIdOrder(), lexicographically_ordered_cmp));
 		};
 
+
 		// Track Creation/Destruction
 		self.addTrack = function(config, group) {
 			group = utils.ifndef(group, 1);
 			var track_id = getTrackId();
 			self.tracks[track_id] ={id: track_id, data: [], config: $.extend({}, defaultTrackConfig, config)};
 			self.track_groups[group].push(track_id);
+			self.sort_direction[track_id] = 1;
 
 			$(self).trigger(events.ADD_TRACK, {track_id: track_id});
 			return track_id;
@@ -237,6 +284,9 @@ window.Oncoprint = (function() {
 		self.getTrackDatum = function(track_id, datum_id) {
 			return self.tracks[track_id].id_data_map[datum_id];
 		};
+		self.getTrackDatumDataKey = function(track_id) {
+			return self.tracks[track_id].config.datum_data_key;
+		};
 
 		// Track Datum Id
 		self.getTrackDatumIdAccessor = function(track_id) {
@@ -288,8 +338,14 @@ window.Oncoprint = (function() {
 				toSVG: function(ctr) {
 					return renderer.toSVG(ctr);
 				},
-				sort: function(track_id_list, cmp_list) {
-					oncoprint.sort(track_id_list, cmp_list);
+				sortByTrack: function() {
+					oncoprint.sortByTrack();
+				},
+				sortById: function() {
+					oncoprint.sortById();
+				},
+				toggleTrackSortDirection: function(track_id) {
+					oncoprint.toggleTrackSortDirection(track_id);
 				},
 				setZoom: function(z) {
 					oncoprint.setZoom(z);
@@ -301,6 +357,9 @@ window.Oncoprint = (function() {
 					renderer.releaseRendering();
 				}
 			};
+			$(oncoprint).on(events.MOVE_TRACK, function() {
+				$(ret).trigger(events.MOVE_TRACK);
+			});
 			return ret;
 		}
 	};

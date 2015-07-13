@@ -92,6 +92,9 @@ window.oncoprint_RuleSet = (function() {
 			addColorRule(color, category);
 		});
 
+		this.sort_cmp = params.sort_cmp || function(d1,d2) {
+			return params.getCategory(d1).toString().localeCompare(params.getCategory(d2).toString());
+		};
 		self.apply = function(g, data, datum_id_accessor, cell_width, cell_height) {
 			var missing_categories = [];
 			_.each(data, function(datum) {
@@ -130,9 +133,11 @@ window.oncoprint_RuleSet = (function() {
 			scale: params.scale
 		});
 		this.sort_cmp = params.sort_cmp || function(d1,d2) {
-			if (d1[params.data_key] < d2[params.data_key]) {
+			var f1 = parseFloat(d1[params.data_key], 10);
+			var f2 = parseFloat(d2[params.data_key], 10);
+			if (f1 < f2) {
 				return -1;
-			} else if (d1[params.data_key] > d2[params.data_key]) {
+			} else if (f1 > f2) {
 				return 1;
 			} else {
 				return 0;
@@ -155,9 +160,11 @@ window.oncoprint_RuleSet = (function() {
 			fill: params.fill,
 		});
 		this.sort_cmp = params.sort_cmp || function(d1,d2) {
-			if (d1[params.data_key] < d2[params.data_key]) {
+			var f1 = parseFloat(d1[params.data_key], 10);
+			var f2 = parseFloat(d2[params.data_key], 10);
+			if (f1 < f2) {
 				return -1;
-			} else if (d1[params.data_key] > d2[params.data_key]) {
+			} else if (f1 > f2) {
 				return 1;
 			} else {
 				return 0;

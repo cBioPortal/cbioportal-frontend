@@ -447,11 +447,6 @@
 				$label_drag_div.off("mouseleave mouseup");
 				if (new_pos > -1) {
 					self.oncoprint.moveTrack(track_id, new_pos);
-					try {
-						self.oncoprint.sort();
-					} catch (e) {
-						console.log("error sorting - no comparator set for some track");
-					}
 				}
 			});
 		})(track_id);
