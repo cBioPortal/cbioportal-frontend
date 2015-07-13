@@ -8,6 +8,7 @@ window.oncoprint_RuleSet = (function() {
 	var BAR_CHART = 3;
 
 	var CELL = "cell";
+	var ANY = '*';
 
 	var getRuleSetId = utils.makeIdCounter();
 
@@ -128,6 +129,15 @@ window.oncoprint_RuleSet = (function() {
 			color_range: params.color_range,
 			scale: params.scale
 		});
+		this.sort_cmp = params.sort_cmp || function(d1,d2) {
+			if (d1[params.data_key] < d2[params.data_key]) {
+				return -1;
+			} else if (d1[params.data_key] > d2[params.data_key]) {
+				return 1;
+			} else {
+				return 0;
+			}
+		};
 		this.getLegendDiv = function(cell_width, cell_height) {
 			return this.rule_map[rule].getLegendDiv(cell_width, cell_height);
 		};
@@ -144,6 +154,15 @@ window.oncoprint_RuleSet = (function() {
 			scale: params.scale,
 			fill: params.fill,
 		});
+		this.sort_cmp = params.sort_cmp || function(d1,d2) {
+			if (d1[params.data_key] < d2[params.data_key]) {
+				return -1;
+			} else if (d1[params.data_key] > d2[params.data_key]) {
+				return 1;
+			} else {
+				return 0;
+			}
+		};
 		this.getLegendDiv = function(cell_width, cell_height) {
 			return this.rule_map[rule].getLegendDiv(cell_width, cell_height);
 		};
@@ -160,9 +179,15 @@ window.oncoprint_RuleSet = (function() {
 
 		var makeStaticShapeRule = function(rule_spec, key, value) {
 			var condition = typeof key !== 'undefined' && typeof value !== 'undefined' ? (function(_key, _value) {
-				return function(d) {
-					return d[_key] === _value;
-				};
+				if (_value === ANY) {
+					return function(d) {
+						return typeof d[_key] !== 'undefined';
+					}
+				} else {
+					return function(d) {
+						return d[_key] === _value;
+					};
+				}
 			})(key, value) : undefined;
 			var shape, attrs, styles, z_index;
 			switch (rule_spec.shape) {
