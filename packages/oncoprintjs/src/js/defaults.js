@@ -1,5 +1,50 @@
 window.oncoprint_defaults = (function() {
 	var utils = window.oncoprint_utils;
+	var makeGeneticAlterationComparator = function(distinguish_mutations) {
+		var cna_key = 'cna';
+		var cna_order = utils.invert_array(['AMPLIFIED', 'HOMODELETED', 'GAINED', 'HEMIZYGOUSLYDELETED', 'DIPLOID', undefined]);
+		var mut_type_key = 'mut_type';
+		var mut_order = (function() {
+			if (!distinguish_mutations) {
+				return function(m) {
+					return +(typeof m === 'undefined');
+				}
+			} else {
+				var _order = utils.invert_array(['TRUNC', 'INFRAME', 'MISSENSE', undefined]); 
+				return function(m) {
+					return _order[m];
+				}
+			}
+		})();
+		var mrna_key = 'mrna';
+		var rppa_key = 'rppa';
+		var regulation_order = utils.invert_array(['UPREGULATED', 'DOWNREGULATED', undefined]);
+
+		return function(d1, d2) {
+			var cna_diff = utils.sign(cna_order[d1[cna_key]] - cna_order[d2[cna_key]]);
+			if (cna_diff !== 0) {
+				return cna_diff;
+			}
+
+			var mut_type_diff = utils.sign(mut_order(d1[mut_type_key]) - mut_order(d2[mut_type_key]));
+			if (mut_type_diff !== 0) {
+				return mut_type_diff;
+			}
+
+			var mrna_diff = utils.sign(regulation_order[d1[mrna_key]] - regulation_order[d2[mrna_key]]);
+			if (mrna_diff !== 0) {
+				return mrna_diff;
+			}
+
+			var rppa_diff = utils.sign(regulation_order[d1[rppa_key]] - regulation_order[d2[rppa_key]]);
+			if (rppa_diff !== 0) {
+				return rppa_diff;
+			}
+
+			return 0;
+		};
+	;
+
 	var genetic_alteration_config_base = {
 		default: [{shape: 'full-rect', color: '#D3D3D3', z_index: -1}],
 		altered: {
@@ -84,51 +129,6 @@ window.oncoprint_defaults = (function() {
 		}
 	};
 	
-	var makeGeneticAlterationComparator = function(distinguish_mutations) {
-		var cna_key = 'cna';
-		var cna_order = utils.invert_array(['AMPLIFIED', 'HOMODELETED', 'GAINED', 'HEMIZYGOUSLYDELETED', 'DIPLOID', undefined]);
-		var mut_type_key = 'mut_type';
-		var mut_order = (function() {
-			if (!distinguish_mutations) {
-				return function(m) {
-					return +(typeof m === 'undefined');
-				}
-			} else {
-				var _order = utils.invert_array(['TRUNC', 'INFRAME', 'MISSENSE', undefined]); 
-				return function(m) {
-					return _order[m];
-				}
-			}
-		})();
-		var mrna_key = 'mrna';
-		var rppa_key = 'rppa';
-		var regulation_order = utils.invert_array(['UPREGULATED', 'DOWNREGULATED', undefined]);
-
-		return function(d1, d2) {
-			var cna_diff = utils.sign(cna_order[d1[cna_key]] - cna_order[d2[cna_key]]);
-			if (cna_diff !== 0) {
-				return cna_diff;
-			}
-
-			var mut_type_diff = utils.sign(mut_order(d1[mut_type_key]) - mut_order(d2[mut_type_key]));
-			if (mut_type_diff !== 0) {
-				return mut_type_diff;
-			}
-
-			var mrna_diff = utils.sign(regulation_order[d1[mrna_key]] - regulation_order[d2[mrna_key]]);
-			if (mrna_diff !== 0) {
-				return mrna_diff;
-			}
-
-			var rppa_diff = utils.sign(regulation_order[d1[rppa_key]] - regulation_order[d2[rppa_key]]);
-			if (rppa_diff !== 0) {
-				return rppa_diff;
-			}
-
-			return 0;
-		};
-	};
-
 	return {
 		genetic_alteration_config: genetic_alteration_config,
 		genetic_alteration_config_nondistinct_mutations: genetic_alteration_config,

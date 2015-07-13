@@ -338,6 +338,9 @@ window.Oncoprint = (function() {
 				toSVG: function(ctr) {
 					return renderer.toSVG(ctr);
 				},
+				setTrackGroupSortOrder: function(order) {
+					oncoprint.setTrackGroupSortOrder(order);
+				},
 				sortByTrack: function() {
 					oncoprint.sortByTrack();
 				},
