@@ -18,6 +18,9 @@ $('#reduce_cell_width').click(function() {
 	z *= 0.9;
 	onc.setZoom(z);
 });
+$(onc).on("move_track.oncoprint", function() {
+	onc.sortByTrack();
+});
  /*$('#to_svg_btn').click(function() {
  	onc.toSVG(d3.select('#svg_container'));
 	var DOMURL = window.URL || window.webkitURL || window;
