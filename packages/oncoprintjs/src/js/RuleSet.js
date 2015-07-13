@@ -177,12 +177,20 @@ window.oncoprint_RuleSet = (function() {
 	D3SVGBarChartRuleSet.prototype = Object.create(D3SVGRuleSet.prototype);
 
 	function D3SVGGeneticAlterationRuleSet(params) {
-		params = params || defaults.genetic_alteration_config;
+		if (params.dont_distinguish_mutation_color) {
+			params = $.extend({}, params, defaults.genetic_alteration_config_nondistinct_mutations);
+		} else {
+			params = $.extend({}, params, defaults.genetic_alteration_config);
+		}
+		if (params.dont_distinguish_mutation_order) {
+			this.sort_cmp = defaults.genetic_alteration_comparator_nondistinct_mutations;
+		} else {
+			this.sort_cmp = defaults.genetic_alteration_comparator;
+		}
 		D3SVGRuleSet.call(this, params);
 		var vocab = ['full-rect', 'middle-rect', 'large-right-arrow', 'small-up-arrow', 'small-down-arrow'];
 		var self = this;
 		self.type = GENETIC_ALTERATION;
-		self.sort_cmp = params.sort_cmp || defaults.genetic_alteration_comparator;
 
 		var makeStaticShapeRule = function(rule_spec, key, value) {
 			var condition = typeof key !== 'undefined' && typeof value !== 'undefined' ? (function(_key, _value) {
