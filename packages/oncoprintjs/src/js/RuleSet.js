@@ -177,12 +177,12 @@ window.oncoprint_RuleSet = (function() {
 	D3SVGBarChartRuleSet.prototype = Object.create(D3SVGRuleSet.prototype);
 
 	function D3SVGGeneticAlterationRuleSet(params) {
-		if (params.dont_distinguish_mutation_color) {
+		if (params && params.dont_distinguish_mutation_color) {
 			params = $.extend({}, params, defaults.genetic_alteration_config_nondistinct_mutations);
 		} else {
 			params = $.extend({}, params, defaults.genetic_alteration_config);
 		}
-		if (params.dont_distinguish_mutation_order) {
+		if (params && params.dont_distinguish_mutation_order) {
 			this.sort_cmp = defaults.genetic_alteration_comparator_nondistinct_mutations;
 		} else {
 			this.sort_cmp = defaults.genetic_alteration_comparator;
