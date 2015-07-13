@@ -43,7 +43,7 @@ window.oncoprint_defaults = (function() {
 
 			return 0;
 		};
-	;
+	};
 
 	var genetic_alteration_config_base = {
 		default: [{shape: 'full-rect', color: '#D3D3D3', z_index: -1}],
