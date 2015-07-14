@@ -79,11 +79,16 @@ window.oncoprint_RuleSet = (function() {
 			return sorted_rules;
 		};
 		D3SVGRuleSet.prototype.apply = function(g, data, datum_id_accessor, cell_width, cell_height) {
+			var active_rules = {};
 			_.each(this.getRules(), function(rule) {
 				var affected_data = rule.filterData(data);
+				if (affected_data.length > 0) {
+					active_rules[rule.rule_id] = true;
+				}
 				var affected_groups = g.data(affected_data, datum_id_accessor);
 				rule.apply(affected_groups, cell_width, cell_height);
 			});
+			return active_rules;
 		};
 		D3SVGRuleSet.prototype.getRule = function(rule_id) {
 			return this.rule_map[rule_id];
@@ -127,15 +132,17 @@ window.oncoprint_RuleSet = (function() {
 					addColorRule(new_color, category);
 				}
 			});
-			D3SVGRuleSet.prototype.apply.call(this, g, data, datum_id_accessor, cell_width, cell_height);
+			return D3SVGRuleSet.prototype.apply.call(this, g, data, datum_id_accessor, cell_width, cell_height);
 		};
 
-		self.getLegendDiv = function(cell_width, cell_height) {
+		self.getLegendDiv = function(active_rules, cell_width, cell_height) {
 			var div = d3.select(document.createElement('div'));
 			_.each(self.getRules(), function(rule) {
-				var legend_div = rule.getLegendDiv(cell_width, cell_height);
-				if (legend_div) {
-					div.node().appendChild(legend_div);
+				if (active_rules[rule.rule_id]) {
+					var legend_div = rule.getLegendDiv(cell_width, cell_height);
+					if (legend_div) {
+						div.node().appendChild(legend_div);
+					}
 				}
 			});
 			utils.d3SelectChildren(div, '*').style('padding-right', '20px');
@@ -157,8 +164,8 @@ window.oncoprint_RuleSet = (function() {
 			na_color: params.na_color
 		});
 		this.sort_cmp = params.sort_cmp || $.proxy(numericalNaNSort, this);
-		this.getLegendDiv = function(cell_width, cell_height) {
-			return this.rule_map[rule].getLegendDiv(cell_width, cell_height);
+		this.getLegendDiv = function(active_rules, cell_width, cell_height) {
+			return (active_rules[rule] && this.rule_map[rule].getLegendDiv(cell_width, cell_height)) || $('<div>')[0];
 		};
 	}
 	D3SVGGradientColorRuleSet.prototype = Object.create(D3SVGRuleSet.prototype);
@@ -176,8 +183,8 @@ window.oncoprint_RuleSet = (function() {
 			na_color: params.na_color
 		});
 		this.sort_cmp = params.sort_cmp || $.proxy(numericalNaNSort, this);
-		this.getLegendDiv = function(cell_width, cell_height) {
-			return this.rule_map[rule].getLegendDiv(cell_width, cell_height);
+		this.getLegendDiv = function(active_rules, cell_width, cell_height) {
+			return (active_rules[rule] && this.rule_map[rule].getLegendDiv(cell_width, cell_height)) || $('<div>')[0];
 		};
 	}
 	D3SVGBarChartRuleSet.prototype = Object.create(D3SVGRuleSet.prototype);
@@ -268,12 +275,14 @@ window.oncoprint_RuleSet = (function() {
 		_.each(params.default, function(rule_spec) {
 			makeStaticShapeRule(rule_spec);
 		});
-		self.getLegendDiv = function(cell_width, cell_height) {
+		self.getLegendDiv = function(active_rules, cell_width, cell_height) {
 			var div = d3.select(document.createElement('div'));
 			_.each(self.getRules(), function(rule) {
-				var legend_div = rule.getLegendDiv(cell_width, cell_height);
-				if (legend_div) {
-					div.node().appendChild(legend_div);
+				if (active_rules[rule.rule_id]) {
+					var legend_div = rule.getLegendDiv(cell_width, cell_height);
+					if (legend_div) {
+						div.node().appendChild(legend_div);
+					}
 				}
 			});
 			utils.d3SelectChildren(div, '*').style('padding-right', '20px');
@@ -362,6 +371,9 @@ window.oncoprint_RuleSet = (function() {
 		D3SVGRule.prototype.isActive = function(data) {
 			return this.filterData(data).length > 0;
 		};
+		D3SVGRule.prototype.showInLegend = function() {
+			return !this.exclude_from_legend;
+		};
 		return D3SVGRule;
 	})();
 	
@@ -424,7 +436,7 @@ window.oncoprint_RuleSet = (function() {
 		};
 
 		this.getLegendDiv = function(cell_width, cell_height) {
-			if (params.exclude_from_legend) {
+			if (!this.showInLegend()) {
 				return;
 			}
 			var div = d3.select(document.createElement('div'));
@@ -513,7 +525,7 @@ window.oncoprint_RuleSet = (function() {
 		};
 
 		this.getLegendDiv = function(cell_width, cell_height) {
-			if (params.exclude_from_legend) {
+			if (!this.showInLegend()) {
 				return;
 			}
 			var div = d3.select(document.createElement('div'));
@@ -549,7 +561,7 @@ window.oncoprint_RuleSet = (function() {
 		D3SVGRule.call(this, params, rule_id);
 
 		this.getLegendDiv = function(cell_width, cell_height) {
-			if (params.exclude_from_legend) {
+			if (!this.showInLegend()) {
 				return;
 			}
 			var div = d3.select(document.createElement('div'));

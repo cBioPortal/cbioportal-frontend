@@ -45,6 +45,7 @@
 	function OncoprintSVGRenderer(container_selector_string, oncoprint, config) {
 		OncoprintRenderer.call(this, oncoprint, config);
 		var self = this;
+		this.active_rule_set_rules = {};
 		this.toolbar_container;
 		this.label_div;
 		this.label_drag_div;
@@ -156,6 +157,7 @@
 	// Rule sets
 	OncoprintSVGRenderer.prototype.setRuleSet = function(track_id, type, params) {
 		OncoprintRenderer.prototype.setRuleSet.call(this, track_id, type, params);
+		this.active_rule_set_rules[this.getRuleSet(track_id).getRuleSetId()] = {};
 		this.drawCells(track_id);
 		this.positionCells(track_id);
 		this.renderLegend();
@@ -290,7 +292,7 @@
 			});		
 		});
 		bound_svg.selectAll('*').remove();
-		rule_set.apply(bound_svg, data, id_accessor, oncoprint.getZoomedCellWidth(), oncoprint.getCellHeight(track_id));
+		this.active_rule_set_rules[rule_set.getRuleSetId()][track_id] = rule_set.apply(bound_svg, data, id_accessor, oncoprint.getZoomedCellWidth(), oncoprint.getCellHeight(track_id));
 	};
 	OncoprintSVGRenderer.prototype.drawCells = function(track_ids) {
 		var fragment = document.createDocumentFragment();
@@ -404,13 +406,17 @@
 				return;
 			}
 			var rule_set_id = rule_set.getRuleSetId();
+			var active_rules = {};
+			_.each(self.active_rule_set_rules[rule_set_id], function(track_map, track_id) {
+				$.extend(active_rules, track_map);
+			});
 			if (!rendered.hasOwnProperty(rule_set_id)) {
 				var tr = self.legend_table.append('tr');
 				var label_header = tr.append('td').style('padding-top', '1em').style('padding-bottom', '1em')
 							.append('h1').classed('oncoprint-legend-header', true);
 				label_header.text(rule_set.getLegendLabel());
 				var legend_body_td = tr.append('td');
-				var legend_div = rule_set.getLegendDiv(cell_width, self.oncoprint.getCellHeight(track_id));
+				var legend_div = rule_set.getLegendDiv(active_rules, cell_width, self.oncoprint.getCellHeight(track_id));
 				legend_body_td.node().appendChild(legend_div);
 				d3.select(legend_div).selectAll('*').classed('oncoprint-legend-element', true);
 				rendered[rule_set_id] = true;
