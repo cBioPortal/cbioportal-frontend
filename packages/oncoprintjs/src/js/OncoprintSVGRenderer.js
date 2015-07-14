@@ -386,12 +386,23 @@
 		this.cell_div.style('display', 'inherit');
 		this.renderLegend();
 	};
+	OncoprintSVGRenderer.prototype.setLegendVisible = function(track_ids, visible) {
+		var self = this;
+		track_ids = typeof track_ids === "undefined" ? this.oncoprint.getTracks() : [].concat(track_ids);
+		_.each(track_ids, function(id) {
+			self.getRuleSet(id).exclude_from_legend = !visible;
+		});
+		this.renderLegend();
+	};
 	OncoprintSVGRenderer.prototype.renderLegend = function() {
 		var cell_width = this.oncoprint.getZoomedCellWidth();
 		var self = this;
 		var rendered = {};
 		self.legend_table.selectAll('*').remove();
 		_.each(this.rule_sets, function(rule_set, track_id) {
+			if (rule_set.exclude_from_legend) {
+				return;
+			}
 			var rule_set_id = rule_set.getRuleSetId();
 			if (!rendered.hasOwnProperty(rule_set_id)) {
 				var tr = self.legend_table.append('tr');
