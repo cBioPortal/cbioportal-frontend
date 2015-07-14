@@ -12,6 +12,27 @@ window.oncoprint_RuleSet = (function() {
 
 	var getRuleSetId = utils.makeIdCounter();
 
+	var numericalNaNSort = function(d1, d2) {
+		var f1 = parseFloat(d1[this.data_key], 10);
+		var f2 = parseFloat(d2[this.data_key], 10);
+		var f1_isNaN = isNaN(f1);
+		var f2_isNaN = isNaN(f2);
+		if (f1_isNaN && f2_isNaN) {
+			return 0;
+		} else if (!f1_isNaN && !f2_isNaN) {
+			if (f1 < f2) {
+				return -1;
+			} else if (f1 > f2) {
+				return 1;
+			} else {
+				return 0;
+			}	
+		} else if (f1_isNaN) {
+			return 1;
+		} else {
+			return -1;
+		}
+	};
 	var D3SVGRuleSet = (function() {
 		function D3SVGRuleSet(params) {
 			this.rule_map = {};
@@ -125,24 +146,16 @@ window.oncoprint_RuleSet = (function() {
 	function D3SVGGradientColorRuleSet(params) {
 		D3SVGRuleSet.call(this, params);
 		this.type = GRADIENT_COLOR;
+		this.data_key = params.data_key;
 		var rule = this.addGradientRule({
 			shape: utils.makeD3SVGElement('rect'),
 			data_key: params.data_key,
 			data_range: params.data_range,
 			color_range: params.color_range,
-			scale: params.scale
+			scale: params.scale,
+			na_color: params.na_color
 		});
-		this.sort_cmp = params.sort_cmp || function(d1,d2) {
-			var f1 = parseFloat(d1[params.data_key], 10);
-			var f2 = parseFloat(d2[params.data_key], 10);
-			if (f1 < f2) {
-				return -1;
-			} else if (f1 > f2) {
-				return 1;
-			} else {
-				return 0;
-			}
-		};
+		this.sort_cmp = params.sort_cmp || $.proxy(numericalNaNSort, this);
 		this.getLegendDiv = function(cell_width, cell_height) {
 			return this.rule_map[rule].getLegendDiv(cell_width, cell_height);
 		};
@@ -153,23 +166,15 @@ window.oncoprint_RuleSet = (function() {
 		D3SVGRuleSet.call(this, params);
 		var self = this;
 		self.type = BAR_CHART;
+		self.data_key = params.data_key;
 		var rule = this.addBarChartRule({
 			data_key: params.data_key,
 			data_range: params.data_range,
 			scale: params.scale,
 			fill: params.fill,
+			na_color: params.na_color
 		});
-		this.sort_cmp = params.sort_cmp || function(d1,d2) {
-			var f1 = parseFloat(d1[params.data_key], 10);
-			var f2 = parseFloat(d2[params.data_key], 10);
-			if (f1 < f2) {
-				return -1;
-			} else if (f1 > f2) {
-				return 1;
-			} else {
-				return 0;
-			}
-		};
+		this.sort_cmp = params.sort_cmp || $.proxy(numericalNaNSort, this);
 		this.getLegendDiv = function(cell_width, cell_height) {
 			return this.rule_map[rule].getLegendDiv(cell_width, cell_height);
 		};
@@ -365,7 +370,14 @@ window.oncoprint_RuleSet = (function() {
 		this.data_key = params.data_key;
 		this.data_range = params.data_range;
 		this.inferred_data_range;
-		this.attrs.fill = params.fill || '#000000';
+		this.attrs.fill = function(d) {
+			if (isNaN(d[params.data_key])) {
+				return params.na_color;
+			}  else {
+				return params.fill;
+			}
+		};
+		this.na_color = params.na_color;
 
 		var scale = function(x) {
 			if (params.scale === 'log') {
@@ -388,10 +400,10 @@ window.oncoprint_RuleSet = (function() {
 				return distance * 100;
 			};
 			var y_function = function(d) {
-				return (100 - height_helper(d)) + '%';
+				return (isNaN(d[params.data_key]) ? "0" : (100 - height_helper(d))) + '%';
 			};
 			var height_function = function(d) { 
-				return height_helper(d) + '%';
+				return (isNaN(d[params.data_key]) ? "100" : height_helper(d)) + '%';
 			};
 			this.attrs.height = height_function;
 			this.attrs.y = y_function;
@@ -431,7 +443,7 @@ window.oncoprint_RuleSet = (function() {
 					.attr('width', '1px')
 					.attr('height', height+'px')
 					.attr('y', (cell_height-height)+'px')
-					.attr('fill', this.attrs.fill)
+					.attr('fill', params.fill)
 					.attr('x', i+'px');
 			}
 			div.append('h2').text(data_range[1]).classed('oncoprint-legend-label', true);
@@ -455,6 +467,7 @@ window.oncoprint_RuleSet = (function() {
 		this.data_range = params.data_range;
 		this.inferred_data_range;
 		this.color_range = params.color_range;
+		this.na_color = params.na_color;
 
 		var makeDatum = function(x) {
 			var ret = {};
@@ -472,7 +485,10 @@ window.oncoprint_RuleSet = (function() {
 		this.setUpHelperFunctions = function(data_range) {
 			var scaled_data_range = _.map(data_range, scale);
 			var fill_function = function(d) {
-				var datum = scale(d[params.data_key]);
+				if (isNaN(d[params.data_key])) {
+					return params.na_color;
+				}
+ 				var datum = scale(d[params.data_key]);
 				var data_range = [scaled_data_range[0], scaled_data_range[1]];
 				var distance = (datum-scaled_data_range[0]) / (scaled_data_range[1]-scaled_data_range[0]);
 				color_range = [d3.rgb(params.color_range[0]).toString(),
