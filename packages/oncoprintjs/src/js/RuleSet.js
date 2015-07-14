@@ -402,8 +402,10 @@ window.oncoprint_RuleSet = (function() {
 			var min = Number.POSITIVE_INFINITY;
 			var max = Number.NEGATIVE_INFINITY;
 			g.each(function(d,i) {
-				min = Math.min(min, d[self.data_key]);
-				max = Math.max(max, d[self.data_key]);
+				var datum = d[self.data_key];
+				var datumIsNaN = isNaN(datum);
+				min = Math.min(min, datumIsNaN ? Number.POSITIVE_INFINITY : datum);
+				max = Math.max(max, datumIsNaN ? Number.NEGATIVE_INFINITY : datum);
 			});
 			return [min, max];
 		};
@@ -437,6 +439,9 @@ window.oncoprint_RuleSet = (function() {
 			return div.node();
 		};
 		this.apply = function(g, cell_width, cell_height) {
+			if (g[0].length === 0) {
+				return;
+			}
 			this.setUpHelperFunctions(this.data_range || (this.inferred_data_range = this.inferDataRange(g)));
 			D3SVGRule.prototype.apply.call(this, g, cell_width, cell_height);
 		};
@@ -482,8 +487,10 @@ window.oncoprint_RuleSet = (function() {
 			var min = Number.POSITIVE_INFINITY;
 			var max = Number.NEGATIVE_INFINITY;
 			g.each(function(d,i) {
-				min = Math.min(min, d[self.data_key]);
-				max = Math.max(max, d[self.data_key]);
+				var datum = d[self.data_key];
+				var datumIsNaN = isNaN(datum);
+				min = Math.min(min, datumIsNaN ? Number.POSITIVE_INFINITY : datum);
+				max = Math.max(max, datumIsNaN ? Number.NEGATIVE_INFINITY : datum);
 			});
 			return [min, max];
 		};

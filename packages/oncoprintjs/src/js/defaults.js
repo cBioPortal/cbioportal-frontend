@@ -97,7 +97,7 @@ window.oncoprint_defaults = (function() {
 		},
 		legend_label: "Genetic Alteration",
 	};
-	var genetic_alteration_config_nondistinct_mutations = $.extend({},{},genetic_alteration_config_base);
+	var genetic_alteration_config_nondistinct_mutations = $.extend(true,{},genetic_alteration_config_base);
 	genetic_alteration_config_nondistinct_mutations.altered.mut_type = {
 		'*': {
 			shape: 'middle-rect',
@@ -105,7 +105,7 @@ window.oncoprint_defaults = (function() {
 			legend_label: 'Mutation'
 		}
 	};
-	var genetic_alteration_config = $.extend({},{},genetic_alteration_config_base);
+	var genetic_alteration_config = $.extend(true,{},genetic_alteration_config_base);
 	genetic_alteration_config.altered.mut_type = {
 		'MISSENSE': {
 			shape: 'middle-rect',
@@ -131,7 +131,7 @@ window.oncoprint_defaults = (function() {
 	
 	return {
 		genetic_alteration_config: genetic_alteration_config,
-		genetic_alteration_config_nondistinct_mutations: genetic_alteration_config,
+		genetic_alteration_config_nondistinct_mutations: genetic_alteration_config_nondistinct_mutations,
 		genetic_alteration_comparator: makeGeneticAlterationComparator(true),
 		genetic_alteration_comparator_nondistinct_mutations: makeGeneticAlterationComparator(false)
 	};

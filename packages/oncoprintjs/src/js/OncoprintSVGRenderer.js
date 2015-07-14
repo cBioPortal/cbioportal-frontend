@@ -92,6 +92,7 @@
 			$(oncoprint).on(events.MOVE_TRACK, function(evt, data) {
 				self.positionCells(data.moved_tracks, 'top');
 				self.renderTrackLabels();
+				oncoprint.sortByTrack();
 			});
 
 			$(oncoprint).on(events.ADD_TRACK, function(e,d) {
@@ -156,11 +157,13 @@
 	OncoprintSVGRenderer.prototype.setRuleSet = function(track_id, type, params) {
 		OncoprintRenderer.prototype.setRuleSet.call(this, track_id, type, params);
 		this.drawCells(track_id);
+		this.positionCells(track_id);
 		this.renderLegend();
 	};
 	OncoprintSVGRenderer.prototype.useSameRuleSet = function(target_track_id, source_track_id) {
 		OncoprintRenderer.prototype.useSameRuleSet.call(this, target_track_id, source_track_id);
 		this.drawCells(target_track_id);
+		this.positionTrackCells(target_track_id);
 		this.renderLegend();
 	}
 
@@ -206,6 +209,7 @@
 					.classed(self.getTrackLabelCSSClass(track_id), true)
 					.classed('noselect', true)
 					.style('font', self.getLabelFont())
+					.style('font-weight', 'bold')
 					.text(self.oncoprint.getTrackLabel(track_id))
 					.style('top', label_top+'px')
 					.style('cursor', 'move')
@@ -251,6 +255,7 @@
 
 
 		//var bound_svg = this.cell_div.selectAll('svg.'+track_cell_class).data(data, id_accessor);
+		this.cellRenderTarget().selectAll('svg.'+track_cell_class).remove();
 		var bound_svg = d3.select(fragment).selectAll('svg.'+track_cell_class).data(data, id_accessor);
 		bound_svg.enter().append('svg').classed(track_cell_class, true).classed(cell_class, true);
 		bound_svg.style('width', oncoprint.getZoomedCellWidth()+'px').style('height', oncoprint.getCellHeight(track_id)+'px');
@@ -293,7 +298,7 @@
 		track_ids = [].concat(track_ids);
 		var self = this;
 		_.each(track_ids, function(track_id) {
-			self.drawTrackCells(track_ids, fragment);
+			self.drawTrackCells(track_id, fragment);
 		});
 		this.cellRenderTarget().node().appendChild(fragment);
 	};
