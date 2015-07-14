@@ -338,7 +338,7 @@
 			return left_fn(d)+'px';
 		};
 		if (!axis || axis === "left") {
-			animated.style('left', left_px_fn)
+			animated.transition().duration(500).style('left', left_px_fn)
 			nonanimated.style('left', left_px_fn)
 		}
 		if (!axis || axis === "top") {
