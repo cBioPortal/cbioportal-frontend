@@ -358,6 +358,9 @@ window.Oncoprint = (function() {
 				},
 				releaseRendering: function() {
 					renderer.releaseRendering();
+				},
+				setLegendVisible: function(track_ids, visible) {
+					renderer.setLegendVisible(track_ids, visible);
 				}
 			};
 			$(oncoprint).on(events.MOVE_TRACK, function() {

@@ -38,6 +38,7 @@ window.oncoprint_RuleSet = (function() {
 			this.rule_map = {};
 			this.rule_set_id = getRuleSetId();
 			this.legend_label = params.legend_label;
+			this.exclude_from_legend = false;
 		};
 		var getRuleId = utils.makeIdCounter();
 
