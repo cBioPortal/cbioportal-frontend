@@ -363,6 +363,9 @@ window.Oncoprint = (function() {
 			$(oncoprint).on(events.MOVE_TRACK, function() {
 				$(ret).trigger(events.MOVE_TRACK);
 			});
+			$(renderer).on(events.FINISHED_RENDERING, function() {
+				$(ret).trigger(events.FINISHED_RENDERING);
+			});
 			return ret;
 		}
 	};

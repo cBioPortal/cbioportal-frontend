@@ -44,7 +44,7 @@ window.oncoprint_events = {
 	SET_PRE_TRACK_PADDING: 'set_pre_track_padding.oncoprint',
 	TRACK_INIT: 'init.track.oncoprint',
 	UPDATE_RENDER_RULES: 'update_render_rules.cell_renderer.oncoprint',
-	FINISHED_RENDERING: 'finished_rendering.renderer.oncoprint',
+	FINISHED_RENDERING: 'finished_rendering.oncoprint',
 	FINISHED_POSITIONING: 'finished_positioning.renderer.oncoprint',
 	SET_ZOOM: 'set_zoom.oncoprint',
 	SET_SORT_DIRECTION: 'set_sort_direction.oncoprint'

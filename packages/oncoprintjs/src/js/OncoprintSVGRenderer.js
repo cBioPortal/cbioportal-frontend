@@ -301,6 +301,9 @@
 			self.drawTrackCells(track_id, fragment);
 		});
 		this.cellRenderTarget().node().appendChild(fragment);
+		setTimeout(function() {
+			$(self).trigger(events.FINISHED_RENDERING);
+		}, 0);
 	};
 
 	// Positioning
