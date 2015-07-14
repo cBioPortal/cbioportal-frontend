@@ -155,13 +155,13 @@
 	// Rule sets
 	OncoprintSVGRenderer.prototype.setRuleSet = function(track_id, type, params) {
 		OncoprintRenderer.prototype.setRuleSet.call(this, track_id, type, params);
+		this.drawCells(track_id);
 		this.renderLegend();
-		//this.render(track_id);
 	};
 	OncoprintSVGRenderer.prototype.useSameRuleSet = function(target_track_id, source_track_id) {
 		OncoprintRenderer.prototype.useSameRuleSet.call(this, target_track_id, source_track_id);
+		this.drawCells(target_track_id);
 		this.renderLegend();
-		//this.render(target_track_id);
 	}
 
 	// Containers
