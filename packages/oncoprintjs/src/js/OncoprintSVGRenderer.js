@@ -76,6 +76,9 @@
 			//self.cell_container.style('display', 'none');
 			self.cell_container_node = self.cell_container.node();
 			self.cell_div = self.cell_container.append('div').classed(CELL_AREA_CLASS, true);
+			self.cell_container_node.addEventListener("scroll", function() {
+				self.clipCells();
+			});
 			// TODO: magic number
 			self.cell_div.style('max-width', '1000px');
 		})();
@@ -88,7 +91,6 @@
 			$(oncoprint).on(events.REMOVE_TRACK, function(evt, data) {
 				delete self.rule_sets[data.track_id];
 				throw "not implemented";
-				self.render();
 			});
 			$(oncoprint).on(events.MOVE_TRACK, function(evt, data) {
 				self.positionCells(data.moved_tracks, 'top');
@@ -102,6 +104,7 @@
 				self.positionCells();
 				self.renderTrackLabels();
 				self.resizeLabelDiv();
+				self.clipCells(true, d.track_id);
 				//this.cell_div.style('display','inherit');
 			});
 
@@ -112,12 +115,14 @@
 				self.renderTrackLabels(d.track_id);
 				self.resizeCellDiv();
 				self.renderLegend();
+				self.clipCells(true);
 				//this.cell_div.style('display','inherit');
 			});
 
 
 			$(oncoprint).on(events.SET_CELL_PADDING, function(e,d) {
 				self.positionCells(undefined, 'left');
+				self.clipCells(true);
 				self.resizeCellDiv();
 			});
 
@@ -125,11 +130,13 @@
 				self.positionCells(undefined, 'left');
 				self.resizeCells();
 				self.resizeCellDiv();
+				self.clipCells(true);
 			});
 
 			$(oncoprint).on(events.SET_ID_ORDER, function() {
 				self.positionCells(undefined, 'left');
-			})
+				self.clipCells(true);
+			});
 		})();
 	}
 	utils.extends(OncoprintSVGRenderer, OncoprintRenderer);
@@ -193,10 +200,10 @@
 	};
 	OncoprintSVGRenderer.prototype.renderTrackLabels = function(track_ids, y) {
 		var div = this.label_div;
-		track_ids = typeof track_ids === "undefined" ? this.oncoprint.getTracks() : track_ids;
 		if (typeof y !== "undefined") {
 			div.selectAll(this.getTrackLabelCSSSelector(track_ids)).style('top', y+'px');
 		} else {
+			track_ids = typeof track_ids === "undefined" ? this.oncoprint.getTracks() : track_ids;
 			track_ids = [].concat(track_ids);
 			var label_tops = this.getTrackLabelTops();
 			var self = this;
@@ -308,6 +315,25 @@
 		}, 0);
 	};
 
+	// Clipping
+	OncoprintSVGRenderer.prototype.clipCells = function(force, track_id) {
+		var visible_interval = this.getVisibleInterval();
+		var interval_width = visible_interval[1] - visible_interval[0];
+		var interval_number = Math.floor(visible_interval[0] / interval_width);
+		visible_interval = _.map([-interval_width, 2*interval_width], function(x) { return x + interval_number*interval_width; });
+		if (interval_number !== this.prev_interval_number || force) {
+			var selector_class = (typeof track_id === 'undefined' ? this.getTrackCellCSSClass(track_id) : this.getCellCSSClass());
+			this.cell_div.selectAll('svg.'+ selector_class).each(function(d,i) {
+				var x = parseInt(this.style.left) || 0;
+				var disp = this.style.display;
+				var new_disp = (x < visible_interval[0] || x > visible_interval[1]) ? 'none' : 'inherit';
+				if (disp !== new_disp) {
+					this.style.display = new_disp;
+				}
+			});
+		}
+		this.prev_interval_number = interval_number;
+	};
 	// Positioning
 	OncoprintSVGRenderer.prototype.positionTrackCells = function(track_id, axis) {
 		var oncoprint = this.oncoprint;
@@ -338,7 +364,6 @@
 		var nonanimated = bound_svg.filter(function(d) {
 			return !(currently_in_view(this) || coming_into_view(d));
 		});
-		bound_svg.classed('oncoprint-animated', false);
 		
 		if (!axis || axis === "top") {
 			bound_svg.style('top', y+'px');
@@ -347,10 +372,8 @@
 			return left_fn(d)+'px';
 		};
 		if (!axis || axis === "left") {
-			animated.classed('oncoprint-animated', true);
 			bound_svg.style('left', left_px_fn);
 		}
-		
 	};
 	OncoprintSVGRenderer.prototype.positionCells = function(track_ids, axis) {
 		track_ids = typeof track_ids === "undefined" ? this.oncoprint.getTracks() : track_ids;
