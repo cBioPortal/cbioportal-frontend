@@ -77,7 +77,7 @@
 			self.cell_container_node = self.cell_container.node();
 			self.cell_div = self.cell_container.append('div').classed(CELL_AREA_CLASS, true);
 			self.cell_container_node.addEventListener("scroll", function() {
-				self.clipCells();
+				self.clipAndPositionCells();
 			});
 			// TODO: magic number
 			self.cell_div.style('max-width', '1000px');
@@ -93,7 +93,7 @@
 				throw "not implemented";
 			});
 			$(oncoprint).on(events.MOVE_TRACK, function(evt, data) {
-				self.positionCells(data.moved_tracks, 'top');
+				self.clipAndPositionCells(data.moved_tracks, 'top', true);
 				self.renderTrackLabels();
 				oncoprint.sortByTrack();
 			});
@@ -101,41 +101,41 @@
 			$(oncoprint).on(events.ADD_TRACK, function(e,d) {
 				//this.cell_div.style('display', 'none');
 				self.drawCells(d.track_id);
-				self.positionCells();
+				self.clipAndPositionCells(undefined, 'top', true);
 				self.renderTrackLabels();
 				self.resizeLabelDiv();
-				self.clipCells(true, d.track_id);
+				//self.clipCells(true, d.track_id);
 				//this.cell_div.style('display','inherit');
 			});
 
 			$(oncoprint).on(events.SET_TRACK_DATA, function(e,d) {
 				//this.cell_div.style('display', 'none');
 				self.drawCells(d.track_id);
-				self.positionTrackCells(d.track_id);
+				self.clipAndPositionCells(d.track_id, undefined, true);
 				self.renderTrackLabels(d.track_id);
 				self.resizeCellDiv();
 				self.renderLegend();
-				self.clipCells(true);
+				//self.clipCells(true);
 				//this.cell_div.style('display','inherit');
 			});
 
 
 			$(oncoprint).on(events.SET_CELL_PADDING, function(e,d) {
-				self.positionCells(undefined, 'left');
-				self.clipCells(true);
+				self.clipAndPositionCells(undefined, undefined, true);
+				//self.clipCells(true);
 				self.resizeCellDiv();
 			});
 
 			$(oncoprint).on(events.SET_ZOOM, function(e,d) {
-				self.positionCells(undefined, 'left');
+				self.clipAndPositionCells(undefined, undefined, true);
 				self.resizeCells();
 				self.resizeCellDiv();
-				self.clipCells(true);
+				//self.clipCells(true);
 			});
 
 			$(oncoprint).on(events.SET_ID_ORDER, function() {
-				self.positionCells(undefined, 'left');
-				self.clipCells(true);
+				self.clipAndPositionCells(undefined, undefined, true);
+				//self.clipCells(true);
 			});
 		})();
 	}
@@ -335,6 +335,40 @@
 		this.prev_interval_number = interval_number;
 	};
 	// Positioning
+	OncoprintSVGRenderer.prototype.clipAndPositionCells = function(track_ids, axis, force) {
+		track_ids = typeof track_ids === "undefined" ? this.oncoprint.getTracks() : track_ids;
+		var visible_interval = this.getVisibleInterval();
+		var interval_width = visible_interval[1] - visible_interval[0];
+		var interval_number = Math.floor(visible_interval[0] / interval_width);
+		visible_interval = _.map([-interval_width, 2*interval_width], function(x) { return x + interval_number*interval_width; });
+		var self = this;
+		_.each(track_ids, function(track_id) {
+			var y;// = 20;//this.getTrackCellTops()[track_id]; uncomment if its fast
+			if (!axis || axis === 'top') {
+				y = self.getTrackCellTops()[track_id];
+			}
+			var id_key = self.oncoprint.getTrackDatumIdKey(track_id);
+			var id_order = utils.invert_array(self.oncoprint.getIdOrder());
+			if ((interval_number !== self.prev_interval_number) || force) {
+				var selector_class = self.getTrackCellCSSClass(track_id);
+				self.cell_div.selectAll('svg.'+ selector_class).each(function(d,i) {
+					var new_x = self.getCellX(id_order[d[id_key]]);
+					var disp = this.style.display;
+					var new_disp = (new_x < visible_interval[0] || new_x > visible_interval[1]) ? 'none' : 'inherit';
+					if (disp !== new_disp) {
+						this.style.display = new_disp;
+					}
+					if ((!axis || axis === 'left') && new_disp !== 'none') {
+						this.style.left = new_x + 'px';
+					}
+					if ((!axis || axis === 'top') && new_disp !== 'none') {
+						this.style.top = y+'px';
+					}
+				});
+			}
+		});
+		this.prev_interval_number = interval_number;
+	};
 	OncoprintSVGRenderer.prototype.positionTrackCells = function(track_id, axis) {
 		var oncoprint = this.oncoprint;
 		var bound_svg = this.cell_div.selectAll('svg.'+this.getTrackCellCSSClass(track_id))
