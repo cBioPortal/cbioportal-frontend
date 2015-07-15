@@ -338,19 +338,19 @@
 		var nonanimated = bound_svg.filter(function(d) {
 			return !(currently_in_view(this) || coming_into_view(d));
 		});
+		bound_svg.classed('oncoprint-animated', false);
 		
+		if (!axis || axis === "top") {
+			bound_svg.style('top', y+'px');
+		}
 		var left_px_fn = function(d,i) {
 			return left_fn(d)+'px';
 		};
 		if (!axis || axis === "left") {
-			animated.transition().duration(500).style('left', left_px_fn)
-			nonanimated.style('left', left_px_fn)
+			animated.classed('oncoprint-animated', true);
+			bound_svg.style('left', left_px_fn);
 		}
-		if (!axis || axis === "top") {
-			animated.style('top', y+'px');
-			nonanimated.style('top', y+'px');
-		}
-		// TODO: integrate transitions above
+		
 	};
 	OncoprintSVGRenderer.prototype.positionCells = function(track_ids, axis) {
 		track_ids = typeof track_ids === "undefined" ? this.oncoprint.getTracks() : track_ids;
