@@ -45,6 +45,7 @@
 	function OncoprintSVGRenderer(container_selector_string, oncoprint, config) {
 		OncoprintRenderer.call(this, oncoprint, config);
 		var self = this;
+		this.track_cell_selections = {};
 		this.active_rule_set_rules = {};
 		this.toolbar_container;
 		this.label_div;
@@ -300,6 +301,7 @@
 		});
 		bound_svg.selectAll('*').remove();
 		this.active_rule_set_rules[rule_set.getRuleSetId()][track_id] = rule_set.apply(bound_svg, data, id_accessor, oncoprint.getZoomedCellWidth(), oncoprint.getCellHeight(track_id));
+		self.track_cell_selections[track_id] = bound_svg;
 	};
 	OncoprintSVGRenderer.prototype.drawCells = function(track_ids) {
 		var fragment = document.createDocumentFragment();
@@ -339,7 +341,7 @@
 		this.cell_div.node().display = 'none';
 		track_ids = typeof track_ids === "undefined" ? this.oncoprint.getTracks() : track_ids;
 		var visible_interval = this.getVisibleInterval();
-		var interval_width = visible_interval[1] - visible_interval[0];
+		var interval_width = 2*(visible_interval[1] - visible_interval[0]);
 		var interval_number = Math.floor(visible_interval[0] / interval_width);
 		visible_interval = _.map([-interval_width, 2*interval_width], function(x) { return x + interval_number*interval_width; });
 		var self = this;
@@ -349,23 +351,25 @@
 				y = self.getTrackCellTops()[track_id];
 			}
 			var id_key = self.oncoprint.getTrackDatumIdKey(track_id);
-			var id_order = utils.invert_array(self.oncoprint.getIdOrder());
+			var id_order = self.oncoprint.getInvertedIdOrder();
 			if ((interval_number !== self.prev_interval_number) || force) {
 				var selector_class = self.getTrackCellCSSClass(track_id);
-				self.cell_div.selectAll('svg.'+ selector_class).each(function(d,i) {
-					var new_x = self.getCellX(id_order[d[id_key]]);
-					var disp = this.style.display;
-					var new_disp = (new_x < visible_interval[0] || new_x > visible_interval[1]) ? 'none' : 'inherit';
-					if (disp !== new_disp) {
-						this.style.display = new_disp;
-					}
-					if ((!axis || axis === 'left') && new_disp !== 'none') {
-						this.style.left = new_x + 'px';
-					}
-					if ((!axis || axis === 'top') && new_disp !== 'none') {
-						this.style.top = y+'px';
-					}
-				});
+				if (self.track_cell_selections.hasOwnProperty(track_id)) {
+					self.track_cell_selections[track_id].each(function(d,i) {
+						var new_x = self.getCellX(id_order[d[id_key]]);
+						var disp = this.style.display;
+						var new_disp = (new_x < visible_interval[0] || new_x > visible_interval[1]) ? 'none' : 'inherit';
+						if (disp !== new_disp) {
+							this.style.display = new_disp;
+						}
+						if ((!axis || axis === 'left') && new_disp !== 'none') {
+							this.style.left = new_x + 'px';
+						}
+						if ((!axis || axis === 'top') && new_disp !== 'none') {
+							this.style.top = y+'px';
+						}
+					});
+				}
 			}
 		});
 		this.prev_interval_number = interval_number;
