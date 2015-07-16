@@ -294,7 +294,7 @@
 			});		
 		});
 		bound_svg.selectAll('*').remove();
-		this.active_rule_set_rules[rule_set.getRuleSetId()][track_id] = rule_set.apply(bound_svg, data, id_accessor, oncoprint.getZoomedCellWidth(), oncoprint.getCellHeight(track_id));
+		this.active_rule_set_rules[rule_set.getRuleSetId()][track_id] = rule_set.apply(bound_svg, data, id_accessor, oncoprint.getFullCellWidth(), oncoprint.getCellHeight(track_id));
 		self.track_cell_selections[track_id] = bound_svg;
 	};
 	OncoprintSVGRenderer.prototype.drawCells = function(track_ids) {
