@@ -37,6 +37,7 @@ window.OncoprintRenderer = (function() {
 		this.clipping = true;
 		this.oncoprint = oncoprint;
 		this.config = config;
+		this.upper_padding = utils.ifndef(config.upper_padding, 10);
 	};
 	OncoprintRenderer.prototype.getTrackGroupSeparation = function() {
 		// TODO: configurable
@@ -80,7 +81,7 @@ window.OncoprintRenderer = (function() {
 	};
 	OncoprintRenderer.prototype.getTrackTops = function() {
 		var ret = {};
-		var y = 0;
+		var y = this.upper_padding;
 		var self = this;
 		_.each(this.oncoprint.getTrackGroups(), function(group) {
 			_.each(group, function(id) {
