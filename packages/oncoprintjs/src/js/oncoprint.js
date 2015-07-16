@@ -65,6 +65,7 @@ window.Oncoprint = (function() {
 		self.config = config;
 
 		self.id_order = [];
+		self.inverted_id_order = {};
 		self.track_groups = [[],[]];
 		self.track_group_sort_order = [0,1];
 		self.sort_direction = {};
@@ -123,8 +124,12 @@ window.Oncoprint = (function() {
 		self.getIdOrder = function() {
 			return self.id_order.slice();
 		};
+		self.getInvertedIdOrder = function() {
+			return self.inverted_id_order;
+		};
 		self.setIdOrder = function(id_order) {
 			self.id_order = id_order.slice();
+			self.inverted_id_order = utils.invert_array(self.id_order);
 			$(self).trigger(events.SET_ID_ORDER);
 		};
 
@@ -272,7 +277,7 @@ window.Oncoprint = (function() {
 			var id_accessor = self.getTrackDatumIdAccessor(track_id);
 
 			self.tracks[track_id].data = data;
-			self.id_order = self.id_order.concat(_.difference(_.map(data, id_accessor), self.id_order));
+			self.setIdOrder(self.id_order.concat(_.difference(_.map(data, id_accessor), self.id_order)));
 
 			self.tracks[track_id].id_data_map = {};
 			var id_data_map = self.tracks[track_id].id_data_map;
