@@ -100,7 +100,7 @@ window.oncoprint_RuleSet = (function() {
 		D3SVGRuleSet.call(this, params);
 		this.type = CATEGORICAL_COLOR;
 		var self = this;
-		var d3_colors = _.shuffle(d3.scale.category20().range());
+		var d3_colors = _.shuffle(d3.scale.category20().range().concat(d3.scale.category20b().range()).concat(d3.scale.category20c().range()));
 		var addColorRule = function(color, category) {
 			var colored_rect = utils.makeD3SVGElement('rect').attr('fill', color);
 			var condition = (function(cat) {
@@ -144,6 +144,7 @@ window.oncoprint_RuleSet = (function() {
 				var category = params.getCategory(datum);
 				if (!params.color.hasOwnProperty(category)) {
 					var new_color = d3_colors.pop();
+					console.log(d3_colors);
 					params.color[category] = new_color;
 					addColorRule(new_color, category);
 				}
