@@ -120,7 +120,23 @@ window.oncoprint_RuleSet = (function() {
 		});
 
 		this.sort_cmp = params.sort_cmp || function(d1,d2) {
-			return params.getCategory(d1).toString().localeCompare(params.getCategory(d2).toString());
+			var cat1 = params.getCategory(d1);
+			var cat2 = params.getCategory(d2);
+			if (typeof cat1 !== 'string') {
+				cat1 = cat1.toString();
+			}
+			if (typeof cat2 !== 'string') {
+				cat2 = cat2.toString();
+			}
+			if (cat1 === cat2) {
+				return 0;
+			} else if (cat1 === 'NA') {
+				return 1;
+			} else if (cat2 === 'NA') {
+				return -1;
+			} else {
+				return cat1.localeCompare(cat2);
+			}
 		};
 		self.apply = function(g, data, datum_id_accessor, cell_width, cell_height) {
 			var missing_categories = [];

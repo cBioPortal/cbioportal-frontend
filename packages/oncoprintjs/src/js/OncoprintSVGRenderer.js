@@ -336,6 +336,7 @@
 	};
 	// Positioning
 	OncoprintSVGRenderer.prototype.clipAndPositionCells = function(track_ids, axis, force) {
+		this.cell_div.node().display = 'none';
 		track_ids = typeof track_ids === "undefined" ? this.oncoprint.getTracks() : track_ids;
 		var visible_interval = this.getVisibleInterval();
 		var interval_width = visible_interval[1] - visible_interval[0];
@@ -343,7 +344,7 @@
 		visible_interval = _.map([-interval_width, 2*interval_width], function(x) { return x + interval_number*interval_width; });
 		var self = this;
 		_.each(track_ids, function(track_id) {
-			var y;// = 20;//this.getTrackCellTops()[track_id]; uncomment if its fast
+			var y;
 			if (!axis || axis === 'top') {
 				y = self.getTrackCellTops()[track_id];
 			}
@@ -368,6 +369,7 @@
 			}
 		});
 		this.prev_interval_number = interval_number;
+		this.cell_div.node().display = 'block';
 	};
 	OncoprintSVGRenderer.prototype.positionTrackCells = function(track_id, axis) {
 		var oncoprint = this.oncoprint;
