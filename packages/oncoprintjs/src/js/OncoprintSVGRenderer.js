@@ -159,7 +159,7 @@
 		var self = this;
 		$(this.cell_div.node()).ready(function() {
 			self.resizeCells();
-			self.positionCells();
+			self.clipAndPositionCells(undefined, undefined, true);
 		});
 	};
 	// Rule sets
@@ -167,13 +167,13 @@
 		OncoprintRenderer.prototype.setRuleSet.call(this, track_id, type, params);
 		this.active_rule_set_rules[this.getRuleSet(track_id).getRuleSetId()] = {};
 		this.drawCells(track_id);
-		this.positionCells(track_id);
+		this.clipAndPositionCells(track_id, undefined, true);
 		this.renderLegend();
 	};
 	OncoprintSVGRenderer.prototype.useSameRuleSet = function(target_track_id, source_track_id) {
 		OncoprintRenderer.prototype.useSameRuleSet.call(this, target_track_id, source_track_id);
 		this.drawCells(target_track_id);
-		this.positionTrackCells(target_track_id);
+		this.clipAndPositionCells(target_track_id, undefined, true);
 		this.renderLegend();
 	}
 
@@ -317,31 +317,13 @@
 		}, 0);
 	};
 
-	// Clipping
-	OncoprintSVGRenderer.prototype.clipCells = function(force, track_id) {
-		var visible_interval = this.getVisibleInterval();
-		var interval_width = visible_interval[1] - visible_interval[0];
-		var interval_number = Math.floor(visible_interval[0] / interval_width);
-		visible_interval = _.map([-interval_width, 2*interval_width], function(x) { return x + interval_number*interval_width; });
-		if (interval_number !== this.prev_interval_number || force) {
-			var selector_class = (typeof track_id === 'undefined' ? this.getTrackCellCSSClass(track_id) : this.getCellCSSClass());
-			this.cell_div.selectAll('svg.'+ selector_class).each(function(d,i) {
-				var x = parseInt(this.style.left) || 0;
-				var disp = this.style.display;
-				var new_disp = (x < visible_interval[0] || x > visible_interval[1]) ? 'none' : 'inherit';
-				if (disp !== new_disp) {
-					this.style.display = new_disp;
-				}
-			});
-		}
-		this.prev_interval_number = interval_number;
-	};
 	// Positioning
 	OncoprintSVGRenderer.prototype.clipAndPositionCells = function(track_ids, axis, force) {
 		this.cell_div.node().display = 'none';
 		track_ids = typeof track_ids === "undefined" ? this.oncoprint.getTracks() : track_ids;
+		track_ids = [].concat(track_ids);
 		var visible_interval = this.getVisibleInterval();
-		var interval_width = 2*(visible_interval[1] - visible_interval[0]);
+		var interval_width = 4*(visible_interval[1] - visible_interval[0]);
 		var interval_number = Math.floor(visible_interval[0] / interval_width);
 		visible_interval = _.map([-interval_width, 2*interval_width], function(x) { return x + interval_number*interval_width; });
 		var self = this;
@@ -353,7 +335,6 @@
 			var id_key = self.oncoprint.getTrackDatumIdKey(track_id);
 			var id_order = self.oncoprint.getInvertedIdOrder();
 			if ((interval_number !== self.prev_interval_number) || force) {
-				var selector_class = self.getTrackCellCSSClass(track_id);
 				if (self.track_cell_selections.hasOwnProperty(track_id)) {
 					self.track_cell_selections[track_id].each(function(d,i) {
 						var new_x = self.getCellX(id_order[d[id_key]]);
@@ -375,82 +356,7 @@
 		this.prev_interval_number = interval_number;
 		this.cell_div.node().display = 'block';
 	};
-	OncoprintSVGRenderer.prototype.positionTrackCells = function(track_id, axis) {
-		var oncoprint = this.oncoprint;
-		var bound_svg = this.cell_div.selectAll('svg.'+this.getTrackCellCSSClass(track_id))
-					.data(oncoprint.getTrackData(track_id), oncoprint.getTrackDatumIdAccessor(track_id));
-		var self = this;
-		var id_key = oncoprint.getTrackDatumIdKey(track_id);
-		var id_order = utils.invert_array(oncoprint.getIdOrder());
-		var y = this.getTrackCellTops()[track_id];
-		var visible_interval = this.getVisibleInterval();
 
-		var in_view = function(i) {
-			return i >= visible_interval[0] && i <= visible_interval[1];
-		};
-		var currently_in_view = function(node) {
-			return !isNaN(parseInt(node.style.left)) && in_view(parseInt(node.style.left));
-		};
-		var left_fn = function(d) {
-			return self.getCellX(id_order[d[id_key]]);
-		};
-		var coming_into_view = function(d) {
-			return in_view(left_fn(d));
-		};
-		
-		var animated = bound_svg.filter(function(d) {
-			return currently_in_view(this) || coming_into_view(d);
-		});
-		var nonanimated = bound_svg.filter(function(d) {
-			return !(currently_in_view(this) || coming_into_view(d));
-		});
-		
-		if (!axis || axis === "top") {
-			bound_svg.style('top', y+'px');
-		}
-		var left_px_fn = function(d,i) {
-			return left_fn(d)+'px';
-		};
-		if (!axis || axis === "left") {
-			bound_svg.style('left', left_px_fn);
-		}
-	};
-	OncoprintSVGRenderer.prototype.positionCells = function(track_ids, axis) {
-		track_ids = typeof track_ids === "undefined" ? this.oncoprint.getTracks() : track_ids;
-		track_ids = [].concat(track_ids);
-		var self = this;
-		_.each(track_ids, function(track_id) {
-			self.positionTrackCells(track_id, axis);
-		});
-	};
-
-	OncoprintSVGRenderer.prototype.isTrackRenderable = function(track_id) {
-		return this.getRuleSet(track_id) && this.oncoprint.getTrackData(track_id).length > 0;
-	};
-	OncoprintSVGRenderer.prototype.render = function(track_id) {
-		// TODO: do this by for each track to render, render it, because there's stuff you should only get once like celltops
-		var self = this;
-		this.resizeLabelSVG();
-		this.resizeCellDiv();
-
-		this.cell_div.style('display', 'none');
-		var renderTrack = function(track_id) {
-			if (self.isTrackRenderable(track_id)) {
-				self.drawTrackCells(track_id);
-				self.positionTrackCells(track_id);
-				self.renderTrackLabels(track_id);
-			}
-		};
-		if (typeof track_id !== "undefined") {
-			renderTrack(track_id);
-		} else {
-			_.each(this.oncoprint.getTracks(), function(track_id) {
-				renderTrack(track_id);
-			});
-		}
-		this.cell_div.style('display', 'inherit');
-		this.renderLegend();
-	};
 	OncoprintSVGRenderer.prototype.setLegendVisible = function(track_ids, visible) {
 		var self = this;
 		track_ids = typeof track_ids === "undefined" ? this.oncoprint.getTracks() : [].concat(track_ids);
