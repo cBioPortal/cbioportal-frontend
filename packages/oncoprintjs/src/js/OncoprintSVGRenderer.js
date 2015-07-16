@@ -207,19 +207,32 @@
 			_.each(track_ids, function(track_id) {
 				var label_top = label_tops[track_id];
 				var track_label_class = self.getTrackLabelCSSClass(track_id);
+				var label_text = self.oncoprint.getTrackLabel(track_id);
+				var disp_label_text = label_text;
+				if (label_text.length > self.max_label_length) {
+					disp_label_text = label_text.substring(0,self.max_label_length-3)+'...';
+				}
+				_.each(div.selectAll(self.getTrackLabelCSSSelector(track_id)), function(node) {
+					$(node).qtip('destroy');
+				});
 				div.selectAll(self.getTrackLabelCSSSelector(track_id)).remove();
-				div.append('span')
+				var span = div.append('span')
 					.style('position','absolute')
 					.classed(self.getTrackLabelCSSClass(track_id), true)
 					.classed('noselect', true)
 					.style('font', self.getLabelFont())
 					.style('font-weight', 'bold')
-					.text(self.oncoprint.getTrackLabel(track_id))
+					.text(disp_label_text)
 					.style('top', label_top+'px')
 					.style('cursor', 'move')
 					.on("mousedown", function() {
 						self.dragLabel(track_id);
 					});
+					$(span.node()).qtip( {content: {text: (label_text.length > this.max_label_length ? disp_label_text+'<br> hold to drag' : 'hold to drag') },
+									position: {my:'middle right', at:'middle left', viewport: $(window)},
+									style: { classes: 'qtip-light qtip-rounded qtip-shadow qtip-lightyellow'},
+									show: {event: "mouseover"}
+								});
 
 				var rule_set = self.getRuleSet(track_id);
 				if (rule_set && rule_set.alteredData) {
