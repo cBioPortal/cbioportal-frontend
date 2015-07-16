@@ -57,14 +57,8 @@
 		this.legend_table;
 		this.document_fragment;
 
-		d3.select(container_selector_string).selectAll('*').remove();
-		(function initToolbarContainer() {
-			self.toolbar_container = d3.select(container_selector_string).append('div').classed(TOOLBAR_CONTAINER_CLASS, true);
-			d3.select(container_selector_string).append('br');
-			/*$.ajax({url: "src/html/toolbar.html", context: document.body, success: function(response) {
-				$(self.toolbar_container.node()).html(response);
-			}});*/
-		})();
+		d3.select(container_selector_string).classed('noselect', true).selectAll('*').remove();
+		d3.select(container_selector_string).append('br');
 		(function initLabelContainer() {
 			self.label_container = d3.select(container_selector_string).append('div').classed(LABEL_AREA_CONTAINER_CLASS, true).style('position', 'relative');
 			self.label_div = self.label_container.append('div').style('position', 'relative').style('overflow', 'hidden');
