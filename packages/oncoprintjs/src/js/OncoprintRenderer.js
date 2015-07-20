@@ -108,10 +108,10 @@ window.OncoprintRenderer = (function() {
 		return this.oncoprint.getTrackHeight(track_id) + 2*this.oncoprint.getTrackPadding(track_id);
 	};
 	OncoprintRenderer.prototype.getCellX = function(index) {
-		return index*(this.oncoprint.getZoomedCellWidth()+this.oncoprint.getCellPadding());
+		return (typeof index === 'number' ? index*(this.oncoprint.getZoomedCellWidth()+this.oncoprint.getCellPadding()) : -1);
 	};
 	OncoprintRenderer.prototype.getCellAreaWidth = function() {
-		return this.oncoprint.getIdOrder().length*(this.oncoprint.getZoomedCellWidth() + this.oncoprint.getCellPadding());
+		return this.oncoprint.getVisibleIdOrder().length*(this.oncoprint.getZoomedCellWidth() + this.oncoprint.getCellPadding());
 	};
 	OncoprintRenderer.prototype.getCellAreaHeight = function() {
 		var track_tops = this.getTrackTops();

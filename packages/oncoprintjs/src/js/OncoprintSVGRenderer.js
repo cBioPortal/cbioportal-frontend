@@ -117,7 +117,6 @@
 
 			$(oncoprint).on(events.SET_CELL_PADDING, function(e,d) {
 				self.clipAndPositionCells(undefined, undefined, true);
-				//self.clipCells(true);
 				self.resizeCellDiv();
 			});
 
@@ -125,13 +124,16 @@
 				self.clipAndPositionCells(undefined, undefined, true);
 				self.resizeCells();
 				self.resizeCellDiv();
-				//self.clipCells(true);
 			});
 
 			$(oncoprint).on(events.SET_ID_ORDER, function() {
 				self.clipAndPositionCells(undefined, undefined, true);
-				//self.clipCells(true);
 			});
+
+			$(oncoprint).on(events.SET_VISIBLE_IDS, function() {
+				self.clipAndPositionCells(undefined, undefined, true);
+				self.resizeCellDiv();
+			})
 		})();
 	}
 	utils.extends(OncoprintSVGRenderer, OncoprintRenderer);
@@ -332,7 +334,9 @@
 		var visible_interval = this.getVisibleInterval();
 		var interval_width = 4*(visible_interval[1] - visible_interval[0]);
 		var interval_number = Math.floor(visible_interval[0] / interval_width);
-		visible_interval = _.map([-interval_width, 2*interval_width], function(x) { return x + interval_number*interval_width; });
+		visible_interval = _.map([-interval_width, 2*interval_width], function(x) { 
+			return Math.max(x + interval_number*interval_width, 0); 
+		});
 		var self = this;
 		_.each(track_ids, function(track_id) {
 			var y;
@@ -340,7 +344,7 @@
 				y = self.getTrackCellTops()[track_id];
 			}
 			var id_key = self.oncoprint.getTrackDatumIdKey(track_id);
-			var id_order = self.oncoprint.getInvertedIdOrder();
+			var id_order = self.oncoprint.getVisibleInvertedIdOrder();
 			if ((interval_number !== self.prev_interval_number) || force) {
 				if (self.track_cell_selections.hasOwnProperty(track_id)) {
 					self.track_cell_selections[track_id].each(function(d,i) {
