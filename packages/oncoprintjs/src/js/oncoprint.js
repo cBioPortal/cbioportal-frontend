@@ -67,6 +67,7 @@ window.Oncoprint = (function() {
 		self.id_order = [];
 		self.inverted_id_order = {};
 		self.visible_id_order = [];
+		self.visible_inverted_id_order = {};
 		self.hidden_ids = {};
 		self.track_groups = [[],[]];
 		self.track_group_sort_order = [0,1];
@@ -141,12 +142,16 @@ window.Oncoprint = (function() {
 		self.getVisibleIdOrder = function() {
 			return self.visible_id_order;
 		};
+		self.getVisibleInvertedIdOrder = function() {
+			return self.visible_inverted_id_order;
+		};
 		var updateVisibleIdOrder = function() {
 			self.visible_id_order = _.filter(self.id_order, function(id) {
 				return !self.hidden_ids[id];
 			});
+			self.visible_inverted_id_order = utils.invert_array(self.visible_id_order);
 			$(self).trigger(events.SET_VISIBLE_IDS);
-		}
+		};
 		self.setIdOrder = function(id_order) {
 			self.id_order = id_order.slice();
 			self.inverted_id_order = utils.invert_array(self.id_order);
