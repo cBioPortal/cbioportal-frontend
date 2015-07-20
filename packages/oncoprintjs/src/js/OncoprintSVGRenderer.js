@@ -90,7 +90,7 @@
 			$(oncoprint).on(events.MOVE_TRACK, function(evt, data) {
 				self.clipAndPositionCells(data.moved_tracks, 'top', true);
 				self.renderTrackLabels();
-				oncoprint.sortByTrack();
+				oncoprint.sort();
 			});
 
 			$(oncoprint).on(events.ADD_TRACK, function(e,d) {
