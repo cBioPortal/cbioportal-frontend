@@ -230,7 +230,7 @@
 					.on("mousedown", function() {
 						self.dragLabel(track_id);
 					});
-					$(span.node()).qtip( {content: {text: (label_text.length > this.max_label_length ? disp_label_text+'<br> hold to drag' : 'hold to drag') },
+					$(span.node()).qtip( {content: {text: (label_text.length > self.max_label_length ? label_text+'<br> hold to drag' : 'hold to drag') },
 									position: {my:'middle right', at:'middle left', viewport: $(window)},
 									style: { classes: 'qtip-light qtip-rounded qtip-shadow qtip-lightyellow'},
 									show: {event: "mouseover"}
