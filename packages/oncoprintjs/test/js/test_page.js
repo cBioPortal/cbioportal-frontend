@@ -55,7 +55,7 @@ gender_data_promise.then(function(data) {
 	gender_data = data.data;
 });
 $.when(gender_data_promise).then(function() {
-	gender_track_id = onc.addTrack({label: 'Gender'});
+	gender_track_id = onc.addTrack({label: 'Gender', removable:true});
 	tracks_to_load -= 1;
 	onc.setRuleSet(gender_track_id, Oncoprint.CATEGORICAL_COLOR, {
 		color: {},
@@ -84,8 +84,9 @@ $.when(mutation_data_promise).then(function() {
 	mutation_track_id = onc.addTrack({label: 'Mutations', 
 		tooltip: function(d) {
 			return '<a href="http://www.google.com"><p><b>'+d.sample+'</b>: '+d.attr_val+'</p></a>';
-		}
-	}, 0);
+		},
+		removable: true,
+		sort_direction_changable: true}, 0);
 	tracks_to_load -= 1;
 	onc.setRuleSet(mutation_track_id, Oncoprint.GRADIENT_COLOR, {
 		data_key: 'attr_val',

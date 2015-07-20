@@ -53,9 +53,6 @@
 	display: inline-block;
 }
 
-.oncoprint-track-label {
-	alignment-baseline: hanging;
-}
 .oncoprint-track-label-draggable {
 	cursor: move;
 }

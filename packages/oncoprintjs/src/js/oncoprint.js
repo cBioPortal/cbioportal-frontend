@@ -52,7 +52,9 @@ window.Oncoprint = (function() {
 		sort_cmp: undefined,
 		tooltip: function(d) {
 			return d['sample'];
-		}
+		},
+		removable: false,
+		sort_direction_changable: false
 	}; 
 
 
@@ -190,7 +192,7 @@ window.Oncoprint = (function() {
 		self.toggleTrackSortDirection = function(track_id) {
 			var dir = self.sort_direction[track_id];
 			self.sort_direction[track_id] = -dir;
-			$(self).trigger(events.SET_SORT_DIRECTION);
+			self.sort();
 		};
 		self.setTrackGroupSortOrder = function(order) {
 			self.track_group_sort_order = order.slice();
@@ -274,6 +276,7 @@ window.Oncoprint = (function() {
 		self.removeTrack = function(track_id) {
 			var track = self.tracks[track_id];
 			delete self.tracks[track_id];
+			delete self.sort_direction[track_id];
 
 			var track_group = self.getContainingTrackGroup(track_id, true);
 			if (!track_group) {
@@ -364,6 +367,14 @@ window.Oncoprint = (function() {
 		};
 		self.getTrackDatumIdKey = function(track_id) {
 			return self.tracks[track_id].config.datum_id_key;
+		};
+
+		// Track info
+		self.isTrackRemovable = function(track_id) {
+			return self.tracks[track_id].config.removable;
+		};
+		self.isTrackSortDirectionChangable = function(track_id) {
+			return self.tracks[track_id].config.sort_direction_changable;
 		};
 	}
 
