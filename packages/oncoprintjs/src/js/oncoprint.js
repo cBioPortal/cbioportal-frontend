@@ -250,7 +250,10 @@ window.Oncoprint = (function() {
 		self.addTrack = function(config, group) {
 			group = utils.ifndef(group, 1);
 			var track_id = getTrackId();
-			self.tracks[track_id] ={id: track_id, data: [], config: $.extend({}, defaultTrackConfig, config)};
+			self.tracks[track_id] ={id: track_id, 
+						data: [], 
+						config: $.extend({}, defaultTrackConfig, config),
+						id_data_map: {}};
 			self.track_groups[group].push(track_id);
 			self.sort_direction[track_id] = 1;
 
