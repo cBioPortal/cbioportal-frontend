@@ -73,6 +73,7 @@ window.Oncoprint = (function() {
 		self.track_group_sort_order = [0,1];
 		self.sort_direction = {};
 		self.tracks = {};
+		self.sort_config = {type: 'track'};
 
 		self.zoom = 1;
 		self.cell_padding_on = true;
@@ -205,14 +206,17 @@ window.Oncoprint = (function() {
 			});
 			return ret;
 		};
-		self.sortById = function(desc) {
+		self.setSortConfig = function(config) {
+			self.sort_config = config;
+		};
+		var sortById = function(desc) {
 			var ret = _.sortBy(self.getIdOrder(), _.identity);
 			if (desc) {
 				ret.reverse();
 			}
 			self.setIdOrder(ret);
 		};
-		self.sortByTrack = function() {
+		var sortByTrack = function() {
 			var track_id_list = self.getTrackSortOrder();
 			var cmp_list = _.map(track_id_list, function(track_id) { 
 				return self.getTrackSortComparator(track_id);
@@ -244,7 +248,14 @@ window.Oncoprint = (function() {
 			};
 			self.setIdOrder(utils.stableSort(self.getIdOrder(), lexicographically_ordered_cmp));
 		};
-
+		self.sort = function() {
+			var config = self.sort_config;
+			if (config.type === 'track') {
+				sortByTrack();
+			} else if (config.type === 'id') {
+				sortById(config.desc);
+			}
+		};
 
 		// Track Creation/Destruction
 		self.addTrack = function(config, group) {
@@ -397,11 +408,11 @@ window.Oncoprint = (function() {
 				setTrackGroupSortOrder: function(order) {
 					oncoprint.setTrackGroupSortOrder(order);
 				},
-				sortByTrack: function() {
-					oncoprint.sortByTrack();
+				sort: function() {
+					oncoprint.sort();
 				},
-				sortById: function() {
-					oncoprint.sortById();
+				setSortConfig: function(config) {
+					oncoprint.setSortConfig(config);
 				},
 				setIdOrder: function(id_order) {
 					oncoprint.setIdOrder(id_order);
