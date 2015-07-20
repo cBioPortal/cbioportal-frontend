@@ -123,6 +123,15 @@ window.Oncoprint = (function() {
 		};
 
 		// Id Order
+		self.getFilteredIdOrder = function(data_filter_fn, track_ids) {
+			var tracks = track_ids || self.getTracks();
+			return _.filter(self.id_order, function(id) {
+				var d = _.map(tracks, function(track_id) {
+					return self.getTrackDatum(track_id, id);
+				});
+				return data_filter_fn(d);
+			});
+		};
 		self.getIdOrder = function() {
 			return self.id_order;
 		};
@@ -132,12 +141,18 @@ window.Oncoprint = (function() {
 		self.getVisibleIdOrder = function() {
 			return self.visible_id_order;
 		};
+		var updateVisibleIdOrder = function() {
+			self.visible_id_order = _.filter(self.id_order, function(id) {
+				return !self.hidden_ids[id];
+			});
+			$(self).trigger(events.SET_VISIBLE_IDS);
+		}
 		self.setIdOrder = function(id_order) {
 			self.id_order = id_order.slice();
 			self.inverted_id_order = utils.invert_array(self.id_order);
+			updateVisibleIdOrder();
 			$(self).trigger(events.SET_ID_ORDER);
 		};
-
 		// Hide Ids
 		self.hideIds = function(ids, clear_existing) {
 			if (clear_existing) {
@@ -146,8 +161,17 @@ window.Oncoprint = (function() {
 			_.each(ids, function(id) {
 				self.hidden_ids[id] = true;
 			});
+			updateVisibleIdOrder();
 		};
 		self.showIds = function(ids) {
+			if (!ids) {
+				self.hidden_ids = {};
+			} else {
+				_.each(ids, function(id) {
+					delete self.hidden_ids[id];
+				});
+			}
+			updateVisibleIdOrder();
 		};
 
 		// Sorting
@@ -294,7 +318,9 @@ window.Oncoprint = (function() {
 			var id_accessor = self.getTrackDatumIdAccessor(track_id);
 
 			self.tracks[track_id].data = data;
-			self.setIdOrder(self.id_order.concat(_.difference(_.map(data, id_accessor), self.id_order)));
+			var current_id_order = self.getIdOrder();
+			var augmented_id_order = current_id_order.concat(_.difference(_.map(data, id_accessor), current_id_order));
+			self.setIdOrder(augmented_id_order);
 
 			self.tracks[track_id].id_data_map = {};
 			var id_data_map = self.tracks[track_id].id_data_map;
@@ -383,6 +409,15 @@ window.Oncoprint = (function() {
 				},
 				setLegendVisible: function(track_ids, visible) {
 					renderer.setLegendVisible(track_ids, visible);
+				},
+				getFilteredIdOrder: function(data_filter_fn, track_ids) {
+					return oncoprint.getFilteredIdOrder(data_filter_fn, track_ids);
+				},
+				hideIds: function(ids) {
+					oncoprint.hideIds(ids);
+				},
+				showIds: function(ids) {
+					oncoprint.showIds(ids);
 				}
 			};
 			$(oncoprint).on(events.MOVE_TRACK, function() {
