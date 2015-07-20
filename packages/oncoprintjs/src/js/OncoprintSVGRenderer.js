@@ -84,12 +84,23 @@
 		})();
 		(function reactToOncoprint() {
 			$(oncoprint).on(events.REMOVE_TRACK, function(evt, data) {
-				delete self.rule_sets[data.track_id];
-				throw "not implemented";
+				var track_id = data.track_id;
+				delete self.rule_sets[track_id];
+				delete self.track_cell_selections[track_id];
+				self.removeTrackCells(track_id);
+				self.removeTrackLabels(track_id);
+				self.removeTrackButtons(track_id);
+				
+				self.renderTrackLabels();
+				self.renderTrackButtons();
+				self.resizeLabelDiv();
+				self.resizeCellDiv();
+				oncoprint.sort();
 			});
 			$(oncoprint).on(events.MOVE_TRACK, function(evt, data) {
 				self.clipAndPositionCells(data.moved_tracks, 'top', true);
 				self.renderTrackLabels();
+				self.renderTrackButtons();
 				oncoprint.sort();
 			});
 
@@ -98,6 +109,7 @@
 				self.drawCells(d.track_id);
 				self.clipAndPositionCells(undefined, 'top', true);
 				self.renderTrackLabels();
+				self.renderTrackButtons();
 				self.resizeLabelDiv();
 				//self.clipCells(true, d.track_id);
 				//this.cell_div.style('display','inherit');
@@ -133,7 +145,7 @@
 			$(oncoprint).on(events.SET_VISIBLE_IDS, function() {
 				self.clipAndPositionCells(undefined, undefined, true);
 				self.resizeCellDiv();
-			})
+			});
 		})();
 	}
 	utils.extends(OncoprintSVGRenderer, OncoprintRenderer);
@@ -192,9 +204,15 @@
 	};
 
 	// Labels
-	OncoprintSVGRenderer.prototype.getTrackLabelCSSClass = function(track_id) {
-		return OncoprintRenderer.prototype.getTrackLabelCSSClass.call(this, track_id)+' oncoprint-track-label-draggable';
-	};
+	OncoprintSVGRenderer.prototype.removeTrackLabels =function(track_ids) {
+		track_ids = typeof track_ids === "undefined" ? this.oncoprint.getTracks() : track_ids;
+		track_ids = [].concat(track_ids);	
+		var div = this.label_div;
+		var self = this;
+		_.each(track_ids, function(track_id) {
+			div.selectAll(self.getTrackLabelCSSSelector(track_id)).remove();
+		});
+	}
 	OncoprintSVGRenderer.prototype.renderTrackLabels = function(track_ids, y) {
 		var div = this.label_div;
 		if (typeof y !== "undefined") {
@@ -221,12 +239,13 @@
 				var span = div.append('span')
 					.style('position','absolute')
 					.classed(self.getTrackLabelCSSClass(track_id), true)
+					.classed('oncoprint-track-label-draggable', true)
+					.classed('oncoprint-track-label-main', true)
 					.classed('noselect', true)
 					.style('font', self.getLabelFont())
 					.style('font-weight', 'bold')
 					.text(disp_label_text)
 					.style('top', label_top+'px')
-					.style('cursor', 'move')
 					.on("mousedown", function() {
 						self.dragLabel(track_id);
 					});
@@ -254,9 +273,67 @@
 		}
 	};
 
+	// Buttons
+	OncoprintSVGRenderer.prototype.getTrackButtonCSSClass = function(track_id) {
+		return 'oncoprint-track-button'+track_id;
+	};
+	OncoprintSVGRenderer.prototype.removeTrackButtons = function(track_ids) {
+		var div = this.label_div;
+		track_ids = typeof track_ids === "undefined" ? this.oncoprint.getTracks() : track_ids;
+		track_ids = [].concat(track_ids);
+		var self = this;
+		_.each(track_ids, function(track_id) {
+			div.selectAll('.'+self.getTrackButtonCSSClass(track_id)).remove();
+		});
+	};
+	OncoprintSVGRenderer.prototype.renderTrackButtons = function(track_ids) {
+		var div = this.label_div;
+		track_ids = typeof track_ids === "undefined" ? this.oncoprint.getTracks() : track_ids;
+		track_ids = [].concat(track_ids);
+		var label_tops = this.getTrackLabelTops();
+		var self = this;
+		_.each(track_ids, function(track_id) {
+			var button_class = self.getTrackButtonCSSClass(track_id);
+			div.selectAll('.'+button_class).remove();
+			var left = $(div.node()).find('.'+self.getTrackLabelCSSClass(track_id)+',.oncoprint-track-label-main').width();
+			if (self.oncoprint.isTrackSortDirectionChangable(track_id)) {
+				var direction = -1;
+				(function() {
+					var new_btn = div.append('button')
+					.classed(button_class, true).on('click', function() {
+						self.oncoprint.toggleTrackSortDirection(track_id);
+						direction = -direction;
+						if (direction > 0) {
+							new_btn.text('>');
+						} else {
+							new_btn.text('<');
+						}
+					})
+					.style('position', 'absolute').style('left', left+'px').style('top', label_tops[track_id]+'px');
+					new_btn.text('<');
+				})();
+				left += 25;
+			}
+			if (self.oncoprint.isTrackRemovable(track_id)) {
+				(function() {
+					var new_btn = div.append('button')
+					.classed(button_class, true).on('click', function() {
+						self.oncoprint.removeTrack(track_id);
+					})
+					.style('position', 'absolute').style('left', left+'px').style('top', label_tops[track_id]+'px');
+					new_btn.text('X');
+					left += 25;
+				})();
+			}
+		});
+	};
+
 	// Cells
 	OncoprintSVGRenderer.prototype.resizeCells = function(new_width) {
 		this.cell_div.selectAll('svg.'+this.getCellCSSClass()).style('width', this.oncoprint.getZoomedCellWidth()+'px');
+	};
+	OncoprintSVGRenderer.prototype.removeTrackCells = function(track_id) {
+		this.cell_div.selectAll('svg.'+this.getTrackCellCSSClass(track_id)).remove();
 	};
 	OncoprintSVGRenderer.prototype.drawTrackCells = function(track_id, fragment) {
 		var oncoprint = this.oncoprint;
