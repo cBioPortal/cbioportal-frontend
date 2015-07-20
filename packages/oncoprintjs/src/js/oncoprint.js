@@ -403,6 +403,9 @@ window.Oncoprint = (function() {
 				sortById: function() {
 					oncoprint.sortById();
 				},
+				setIdOrder: function(id_order) {
+					oncoprint.setIdOrder(id_order);
+				},
 				toggleTrackSortDirection: function(track_id) {
 					oncoprint.toggleTrackSortDirection(track_id);
 				},
