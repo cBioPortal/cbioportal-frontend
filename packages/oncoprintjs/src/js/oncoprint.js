@@ -368,6 +368,9 @@ window.Oncoprint = (function() {
 		self.getTrackDatumIdKey = function(track_id) {
 			return self.tracks[track_id].config.datum_id_key;
 		};
+		self.setTrackDatumIdKey = function(track_id, key) {
+			self.tracks[track_id].config.datum_id_key = key;
+		};
 
 		// Track info
 		self.isTrackRemovable = function(track_id) {
@@ -400,6 +403,9 @@ window.Oncoprint = (function() {
 				},
 				moveTrack: function(track_id, position) {
 					oncoprint.moveTrack(track_id, position);
+				},
+				setTrackDatumIdKey: function(track_id, key) {
+					oncoprint.setTrackDatumIdKey(track_id, key);
 				},
 				setTrackData: function(track_id, data) {
 					oncoprint.setTrackData(track_id, data);
@@ -458,6 +464,9 @@ window.Oncoprint = (function() {
 			});
 			$(renderer).on(events.FINISHED_RENDERING, function() {
 				$(ret).trigger(events.FINISHED_RENDERING);
+			});
+			$(oncoprint).on(events.REMOVE_TRACK, function(evt, data) {
+				$(ret).trigger(events.REMOVE_TRACK, {track_id: data.track_id});
 			});
 			return ret;
 		}

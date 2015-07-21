@@ -533,5 +533,8 @@
 			});
 		})(track_id);
 	};
+	OncoprintSVGRenderer.prototype.toSVG = function() {
+		var svg = d3.select(document.createElement('svg'));
+	};
 	return OncoprintSVGRenderer;
 })();
