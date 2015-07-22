@@ -381,6 +381,14 @@ window.Oncoprint = (function() {
 		self.isTrackSortDirectionChangable = function(track_id) {
 			return self.tracks[track_id].config.sort_direction_changable;
 		};
+
+		// Clearing
+		self.clearData = function() {
+			_.each(self.getTracks(), function(track_id) {
+				self.setTrackData(track_id, []);
+			});
+			self.setIdOrder([]);
+		}
 	}
 
 	return { 
@@ -462,6 +470,9 @@ window.Oncoprint = (function() {
 				},
 				showIds: function(ids) {
 					oncoprint.showIds(ids);
+				},
+				clearData: function() {
+					oncoprint.clearData();
 				}
 			};
 			$(oncoprint).on(events.MOVE_TRACK, function() {
