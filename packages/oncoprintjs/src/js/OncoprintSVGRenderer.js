@@ -97,6 +97,7 @@
 				self.removeTrackLabels(track_id);
 				self.removeTrackButtons(track_id);
 				
+				self.renderLegend();
 				self.renderTrackLabels();
 				self.renderTrackButtons();
 				self.resizeLabelDiv();
