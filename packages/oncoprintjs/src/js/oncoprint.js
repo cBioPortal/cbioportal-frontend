@@ -468,6 +468,12 @@ window.Oncoprint = (function() {
 			$(oncoprint).on(events.REMOVE_TRACK, function(evt, data) {
 				$(ret).trigger(events.REMOVE_TRACK, {track_id: data.track_id});
 			});
+			$(renderer).on(events.CONTENT_AREA_MOUSEENTER, function(evt, data) {
+				$(ret).trigger(events.CONTENT_AREA_MOUSEENTER);
+			});
+			$(renderer).on(events.CONTENT_AREA_MOUSELEAVE, function(evt, data) {
+				$(ret).trigger(events.CONTENT_AREA_MOUSELEAVE);
+			});
 			return ret;
 		}
 	};
