@@ -59,15 +59,16 @@
 
 		d3.select(container_selector_string).classed('noselect', true).selectAll('*').remove();
 		d3.select(container_selector_string).append('br');
+		var content_area = d3.select(container_selector_string).append('div').classed('oncoprint-content-area', true);
 		(function initLabelContainer() {
-			self.label_container = d3.select(container_selector_string).append('div').classed(LABEL_AREA_CONTAINER_CLASS, true).style('position', 'relative');
+			self.label_container = content_area.append('div').classed(LABEL_AREA_CONTAINER_CLASS, true).style('position', 'relative');
 			self.label_div = self.label_container.append('div').style('position', 'relative').style('overflow', 'hidden');
 			self.label_drag_div = self.label_container.append('div').style('position', 'absolute').style('overflow', 'hidden')
 							.style('top', '0px').style('left','0px')
 							.style('display','none');
 		})();
 		(function initCellContainer() {
-			self.cell_container = d3.select(container_selector_string).append('div').classed(CELL_AREA_CONTAINER_CLASS, true);
+			self.cell_container = content_area.append('div').classed(CELL_AREA_CONTAINER_CLASS, true);
 			//self.cell_container.style('display', 'none');
 			self.cell_container_node = self.cell_container.node();
 			self.cell_div = self.cell_container.append('div').classed(CELL_AREA_CLASS, true);
@@ -77,6 +78,11 @@
 			// TODO: magic number
 			self.cell_div.style('max-width', '1000px');
 		})();
+		$(content_area.node()).hover(function() {
+			$(self.label_div.node()).find('.'+self.getTrackButtonCSSClass()).stop().fadeTo(80,1);
+		}, function() {
+			$(self.label_div.node()).find('.'+self.getTrackButtonCSSClass()).stop().fadeOut(500);
+		});
 		(function initLegend() {
 			if (config.legend) {
 				self.legend_table = d3.select(container_selector_string).append('table').style('border-collapse', 'collapse');
@@ -275,7 +281,7 @@
 
 	// Buttons
 	OncoprintSVGRenderer.prototype.getTrackButtonCSSClass = function(track_id) {
-		return 'oncoprint-track-button'+track_id;
+		return 'oncoprint-track-button'+utils.ifndef(track_id, "");
 	};
 	OncoprintSVGRenderer.prototype.removeTrackButtons = function(track_ids) {
 		var div = this.label_div;
@@ -300,7 +306,7 @@
 				var direction = -1;
 				(function() {
 					var new_btn = div.append('button')
-					.classed(button_class, true).on('click', function() {
+					.classed(button_class, true).classed(self.getTrackButtonCSSClass(), true).on('click', function() {
 						self.oncoprint.toggleTrackSortDirection(track_id);
 						direction = -direction;
 						if (direction > 0) {
@@ -317,7 +323,7 @@
 			if (self.oncoprint.isTrackRemovable(track_id)) {
 				(function() {
 					var new_btn = div.append('button')
-					.classed(button_class, true).on('click', function() {
+					.classed(button_class, true).classed(self.getTrackButtonCSSClass(), true).on('click', function() {
 						self.oncoprint.removeTrack(track_id);
 					})
 					.style('position', 'absolute').style('left', left+'px').style('top', label_tops[track_id]+'px');
