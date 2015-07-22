@@ -298,37 +298,56 @@
 		track_ids = [].concat(track_ids);
 		var label_tops = this.getTrackLabelTops();
 		var self = this;
+		var label_area_width = this.getLabelAreaWidth();
 		_.each(track_ids, function(track_id) {
 			var button_class = self.getTrackButtonCSSClass(track_id);
 			div.selectAll('.'+button_class).remove();
-			var left = $(div.node()).find('.'+self.getTrackLabelCSSClass(track_id)+',.oncoprint-track-label-main').width();
-			if (self.oncoprint.isTrackSortDirectionChangable(track_id)) {
-				var direction = -1;
-				(function() {
-					var new_btn = div.append('button')
-					.classed(button_class, true).classed(self.getTrackButtonCSSClass(), true).on('click', function() {
-						self.oncoprint.toggleTrackSortDirection(track_id);
-						direction = -direction;
-						if (direction > 0) {
-							new_btn.text('>');
-						} else {
-							new_btn.text('<');
-						}
-					})
-					.style('position', 'absolute').style('left', left+'px').style('top', label_tops[track_id]+'px');
-					new_btn.text('<');
-				})();
-				left += 25;
-			}
+			var left = label_area_width - 15;
 			if (self.oncoprint.isTrackRemovable(track_id)) {
 				(function() {
-					var new_btn = div.append('button')
+					var new_btn = div.append('span').classed('noselect', true).style('font-size','12px').style('color', '#87CEFA').style('cursor', 'pointer')
 					.classed(button_class, true).classed(self.getTrackButtonCSSClass(), true).on('click', function() {
 						self.oncoprint.removeTrack(track_id);
 					})
 					.style('position', 'absolute').style('left', left+'px').style('top', label_tops[track_id]+'px');
 					new_btn.text('X');
-					left += 25;
+					$(new_btn.node()).hover(function() {
+						new_btn.style('font-size', '15px').style('color', '#0000FF');
+					}, function() {
+						new_btn.style('font-size','12px').style('color', '#87CEFA');
+					}).qtip({
+				                    content: {text: 'Click to remove'},
+				                    position: {my:'bottom middle', at:'top middle', viewport: $(window)},
+				                    style: { classes: 'qtip-light qtip-rounded qtip-shadow qtip-lightyellow' },
+				                    show: {event: "mouseover"},
+				                    hide: {fixed: true, delay: 100, event: "mouseout"}
+                    				});
+				})();
+				left -= 35;
+			}
+			if (self.oncoprint.isTrackSortDirectionChangable(track_id)) {
+				(function() {
+					var imgs = ['images/decreaseSort.svg', 'images/increaseSort.svg', 'images/nonSort.svg'];
+					var descs = ['Sort in descending order', 'Don\'t sort on this track', 'Sort in ascending order'];
+					var sort_direction = [1, -1, 0];
+					var current_sort_setting = sort_direction.indexOf(self.oncoprint.getTrackSortDirection(track_id));
+					var new_btn = div.append('img');
+					new_btn.attr('src', imgs[current_sort_setting]).style('cursor','pointer');
+					$(new_btn.node()).qtip({
+				                    content: {text: function() {
+				                    	return descs[current_sort_setting];
+				                    }},
+				                    position: {my:'bottom middle', at:'top middle', viewport: $(window)},
+				                    style: { classes: 'qtip-light qtip-rounded qtip-shadow qtip-lightyellow' },
+				                    show: {event: "mouseover"},
+				                    hide: {fixed: true, delay: 100, event: "mouseout"}
+                    				});
+					new_btn.classed(button_class, true).classed(self.getTrackButtonCSSClass(), true).on('click', function() {
+						current_sort_setting = (current_sort_setting + 1) % 3;
+						self.oncoprint.setTrackSortDirection(track_id, sort_direction[current_sort_setting]);//toggleTrackSortDirection(track_id);
+						new_btn.attr('src', imgs[current_sort_setting]);
+					})
+					.style('position', 'absolute').style('left', left+'px').style('top', label_tops[track_id]+'px');
 				})();
 			}
 		});

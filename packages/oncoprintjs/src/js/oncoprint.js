@@ -87,7 +87,7 @@ window.Oncoprint = (function() {
 			$(self).trigger(events.SET_CELL_PADDING);
 		};
 		self.getCellPadding = function() {
-			return Math.round(self.config.cell_padding*self.getZoomMultiplier())*(+self.cell_padding_on);
+			return self.config.cell_padding*self.getZoomMultiplier()*(+self.cell_padding_on);
 		};
 
 		// Zoom
@@ -108,7 +108,7 @@ window.Oncoprint = (function() {
 			return self.true_cell_width;
 		};
 		self.getZoomedCellWidth = function() {
-			return Math.round(self.true_cell_width*self.getZoomMultiplier());
+			return self.true_cell_width*self.getZoomMultiplier();
 		};
 
 		// Cell Height
@@ -189,9 +189,11 @@ window.Oncoprint = (function() {
 		self.getTrackSortComparator = function(track_id) {
 			return self.tracks[track_id].config.sort_cmp;
 		};
-		self.toggleTrackSortDirection = function(track_id) {
-			var dir = self.sort_direction[track_id];
-			self.sort_direction[track_id] = -dir;
+		self.getTrackSortDirection = function(track_id) {
+			return self.sort_direction[track_id];
+		};
+		self.setTrackSortDirection = function(track_id, dir) {
+			self.sort_direction[track_id] = dir;
 			self.sort();
 		};
 		self.setTrackGroupSortOrder = function(order) {
@@ -434,8 +436,11 @@ window.Oncoprint = (function() {
 				setIdOrder: function(id_order) {
 					oncoprint.setIdOrder(id_order);
 				},
-				toggleTrackSortDirection: function(track_id) {
-					oncoprint.toggleTrackSortDirection(track_id);
+				getTrackSortDirection: function(track_id) {
+					return oncoprint.getTrackSortDirection(track_id);
+				},
+				setTrackSortDirection: function(track_id, dir) {
+					oncoprint.setTrackSortDirection(track_id, dir);
 				},
 				setZoom: function(z) {
 					oncoprint.setZoom(z);
