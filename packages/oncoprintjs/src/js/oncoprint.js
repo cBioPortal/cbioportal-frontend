@@ -45,13 +45,13 @@ window.Oncoprint = (function() {
 
 	var defaultTrackConfig = {
 		label: 'Gene',
-		datum_id_key: 'sample',
+		datum_id_key: 'patient',
 		cell_height: 23,
 		track_height: 20,
 		track_padding: 5,
 		sort_cmp: undefined,
 		tooltip: function(d) {
-			return d['sample'];
+			return d['patient'];
 		},
 		removable: false,
 		sort_direction_changable: false
@@ -333,6 +333,9 @@ window.Oncoprint = (function() {
 		self.getTrackTooltip = function(track_id) {
 			return self.tracks[track_id].config.tooltip;
 		};
+		self.setTrackTooltip = function(track_id, tooltip) {
+			self.tracks[track_id].config.tooltip = tooltip;
+		};
 
 		// Track Data
 		self.getTrackData = function(track_id) {
@@ -473,6 +476,9 @@ window.Oncoprint = (function() {
 				},
 				clearData: function() {
 					oncoprint.clearData();
+				},
+				setTrackTooltip: function(track_id, tooltip) {
+					oncoprint.setTrackTooltip(track_id, tooltip);
 				}
 			};
 			$(oncoprint).on(events.MOVE_TRACK, function() {
