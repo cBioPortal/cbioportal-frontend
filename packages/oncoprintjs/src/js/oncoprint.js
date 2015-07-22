@@ -87,7 +87,7 @@ window.Oncoprint = (function() {
 			$(self).trigger(events.SET_CELL_PADDING);
 		};
 		self.getCellPadding = function() {
-			return self.config.cell_padding*self.getZoomMultiplier()*(+self.cell_padding_on);
+			return Math.round(self.config.cell_padding*self.getZoomMultiplier())*(+self.cell_padding_on);
 		};
 
 		// Zoom
@@ -108,7 +108,7 @@ window.Oncoprint = (function() {
 			return self.true_cell_width;
 		};
 		self.getZoomedCellWidth = function() {
-			return self.true_cell_width*self.getZoomMultiplier();
+			return Math.round(self.true_cell_width*self.getZoomMultiplier());
 		};
 
 		// Cell Height
