@@ -378,6 +378,7 @@
 
 		//var bound_svg = this.cell_div.selectAll('svg.'+track_cell_class).data(data, id_accessor);
 		this.cellRenderTarget().selectAll('svg.'+track_cell_class).remove();
+		this.cell_div.selectAll('svg.'+track_cell_class).remove();
 		var bound_svg = d3.select(fragment).selectAll('svg.'+track_cell_class).data(data, id_accessor);
 		bound_svg.enter().append('svg').classed(track_cell_class, true).classed(cell_class, true).attr('shape-rendering','geometricPrecision');
 		bound_svg.style('width', oncoprint.getZoomedCellWidth()+'px').style('height', oncoprint.getCellHeight(track_id)+'px');
