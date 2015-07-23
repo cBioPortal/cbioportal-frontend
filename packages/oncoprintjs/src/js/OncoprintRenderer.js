@@ -124,8 +124,12 @@ window.OncoprintRenderer = (function() {
 	OncoprintRenderer.prototype.getCellAreaHeight = function() {
 		var track_tops = this.getTrackTops();
 		var track_order = this.oncoprint.getTracks();
-		var last_track = track_order[track_order.length-1];
-		return track_tops[last_track] + this.getRenderedTrackHeight(last_track);
+		if (track_order.length === 0) {
+			return 0;
+		} else {
+			var last_track = track_order[track_order.length-1];
+			return track_tops[last_track] + this.getRenderedTrackHeight(last_track);
+		}
 	};
 	OncoprintRenderer.prototype.getLabelAreaWidth = function() {
 		return this.label_area_width;
