@@ -39,6 +39,14 @@ window.OncoprintRenderer = (function() {
 		this.config = config;
 		this.upper_padding = utils.ifndef(config.upper_padding, 10);
 		this.max_label_length = utils.ifndef(config.max_label_length, 20);
+
+		(function computeLabelAreaWidth(self) {
+			var label_font = self.getLabelFont();
+			var max_label_width = utils.textWidth((Math.pow(10,self.max_label_length)-1).toString(), label_font);
+			var max_percent_altered_width = utils.textWidth('100%', label_font);
+			var buffer_width = 20;
+			self.label_area_width = max_label_width + buffer_width + max_percent_altered_width;
+		})(this);
 	};
 	OncoprintRenderer.prototype.getTrackGroupSeparation = function() {
 		// TODO: configurable
@@ -120,11 +128,7 @@ window.OncoprintRenderer = (function() {
 		return track_tops[last_track] + this.getRenderedTrackHeight(last_track);
 	};
 	OncoprintRenderer.prototype.getLabelAreaWidth = function() {
-		var label_font = this.getLabelFont();
-		var max_label_width = utils.textWidth((Math.pow(10,this.max_label_length)-1).toString(), label_font);
-		var max_percent_altered_width = utils.textWidth('100%', label_font);
-		var buffer_width = 20;
-		return max_label_width + buffer_width + max_percent_altered_width ;
+		return this.label_area_width;
 	};
 	OncoprintRenderer.prototype.getLabelAreaHeight = function() {
 		return this.getCellAreaHeight();

@@ -73,6 +73,7 @@
 			self.cell_container_node = self.cell_container.node();
 			self.cell_div = self.cell_container.append('div').classed(CELL_AREA_CLASS, true);
 			self.cell_container_node.addEventListener("scroll", function() {
+				self.calculateVisibleInterval();
 				self.clipAndPositionCells();
 			});
 			// TODO: magic number
@@ -156,11 +157,14 @@
 		})();
 	}
 	utils.extends(OncoprintSVGRenderer, OncoprintRenderer);
-	OncoprintSVGRenderer.prototype.getVisibleInterval = function() {
+	OncoprintSVGRenderer.prototype.calculateVisibleInterval = function() {
 		var cell_unit = this.oncoprint.getZoomedCellWidth() + this.oncoprint.getCellPadding();
 		var cell_ctr_rect = this.cell_container_node.getBoundingClientRect();
-		var view_interval = [this.cell_container_node.scrollLeft, this.cell_container_node.scrollLeft + cell_ctr_rect.right - cell_ctr_rect.left];
-		return view_interval;
+		this.visible_interval = [this.cell_container_node.scrollLeft, this.cell_container_node.scrollLeft + cell_ctr_rect.right - cell_ctr_rect.left];
+		return this.visible_interval;
+	};
+	OncoprintSVGRenderer.prototype.getVisibleInterval = function() {
+		return (this.visible_interval || this.calculateVisibleInterval());
 	};
 	OncoprintSVGRenderer.prototype.cellRenderTarget = function() {
 		return d3.select(this.document_fragment || this.cell_div.node());

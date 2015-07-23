@@ -345,9 +345,12 @@ window.Oncoprint = (function() {
 			var id_accessor = self.getTrackDatumIdAccessor(track_id);
 
 			self.tracks[track_id].data = data;
+
+			/*
 			var current_id_order = self.getIdOrder();
-			var augmented_id_order = current_id_order.concat(_.difference(_.map(data, id_accessor), current_id_order));
+			var augmented_id_order = _.uniq(current_id_order.concat(_.map(data, id_accessor)));
 			self.setIdOrder(augmented_id_order);
+			*/
 
 			self.tracks[track_id].id_data_map = {};
 			var id_data_map = self.tracks[track_id].id_data_map;
