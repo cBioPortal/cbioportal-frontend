@@ -377,10 +377,11 @@
 
 
 		//var bound_svg = this.cell_div.selectAll('svg.'+track_cell_class).data(data, id_accessor);
-		this.cellRenderTarget().selectAll('svg.'+track_cell_class).remove();
-		this.cell_div.selectAll('svg.'+track_cell_class).remove();
-		var bound_svg = d3.select(fragment).selectAll('svg.'+track_cell_class).data(data, id_accessor);
+		//this.cellRenderTarget().selectAll('svg.'+track_cell_class).remove();
+		//this.cell_div.selectAll('svg.'+track_cell_class).remove();
+		var bound_svg = d3.select(fragment).selectAll('svg.'+track_cell_class).data(data);
 		bound_svg.enter().append('svg').classed(track_cell_class, true).classed(cell_class, true).attr('shape-rendering','geometricPrecision');
+		bound_svg.exit().remove();
 		bound_svg.style('width', oncoprint.getZoomedCellWidth()+'px').style('height', oncoprint.getCellHeight(track_id)+'px');
 		bound_svg
 			.attr('preserveAspectRatio','none')
@@ -413,18 +414,26 @@
 			});		
 		});
 		bound_svg.selectAll('*').remove();
-		this.active_rule_set_rules[rule_set.getRuleSetId()][track_id] = rule_set.apply(bound_svg, data, id_accessor, oncoprint.getFullCellWidth(), oncoprint.getCellHeight(track_id));
+		this.active_rule_set_rules[rule_set.getRuleSetId()][track_id] = rule_set.apply(bound_svg, oncoprint.getFullCellWidth(), oncoprint.getCellHeight(track_id));
 		self.track_cell_selections[track_id] = bound_svg;
 	};
 	OncoprintSVGRenderer.prototype.drawCells = function(track_ids) {
-		var fragment = document.createDocumentFragment();
+		var fragment;
+		if (this.document_fragment) {
+			//HACK
+			fragment = document.createDocumentFragment();
+		} else {
+			fragment = this.cell_div.node();
+		}
 		track_ids = typeof track_ids === "undefined" ? this.oncoprint.getTracks() : track_ids;
 		track_ids = [].concat(track_ids);
 		var self = this;
 		_.each(track_ids, function(track_id) {
 			self.drawTrackCells(track_id, fragment);
 		});
-		this.cellRenderTarget().node().appendChild(fragment);
+		if (this.document_fragment) {
+			this.cellRenderTarget().node().appendChild(fragment);
+		}
 		setTimeout(function() {
 			$(self).trigger(events.FINISHED_RENDERING);
 		}, 0);

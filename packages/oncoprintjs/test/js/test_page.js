@@ -52,7 +52,7 @@ var tracks_to_load = 8;
 onc.suppressRendering();
 
 gender_data_promise.then(function(data) {
-	gender_data = data.data;
+	gender_data = _.map(data.data, function(d) { d.patient = d.sample; return d; });
 });
 $.when(gender_data_promise).then(function() {
 	gender_track_id = onc.addTrack({label: 'Gender', removable:true});
@@ -78,7 +78,7 @@ $.when(gender_data_promise).then(function() {
 });
 
 mutation_data_promise.then(function(data) {
-	mutation_data = data.data;
+	mutation_data = _.map(data.data, function(d) { d.patient = d.sample; return d; });
 });
 $.when(mutation_data_promise).then(function() {
 	mutation_track_id = onc.addTrack({label: 'Mutations', 
@@ -120,7 +120,7 @@ $.when(mutation_data_promise).then(function() {
 
 
 alteration_data_promise.then(function(data) {
-	alteration_data = _.map(data, function(x) { if (Math.random() < 0.3) { x.mut_type='MISSENSE'; } return x; });
+	alteration_data = _.map(data, function(x) { if (Math.random() < 0.3) { x.mut_type='MISSENSE'; } x.patient = x.sample; return x; });
 });
 $.when(alteration_data_promise).then(function() {
 	alteration_track_id = onc.addTrack({label: 'TP53'}, 1);
