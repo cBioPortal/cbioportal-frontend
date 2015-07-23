@@ -78,14 +78,13 @@ window.oncoprint_RuleSet = (function() {
 			var sorted_rules = _.sortBy(rules, function(r) { return r.z_index; });
 			return sorted_rules;
 		};
-		D3SVGRuleSet.prototype.apply = function(g, data, datum_id_accessor, cell_width, cell_height) {
+		D3SVGRuleSet.prototype.apply = function(g, cell_width, cell_height) {
 			var active_rules = {};
 			_.each(this.getRules(), function(rule) {
-				var affected_data = rule.filterData(data);
-				if (affected_data.length > 0) {
+				var affected_groups = rule.filter(g);
+				if (affected_groups[0].length > 0) {
 					active_rules[rule.rule_id] = true;
 				}
-				var affected_groups = g.data(affected_data, datum_id_accessor);
 				rule.apply(affected_groups, cell_width, cell_height);
 			});
 			return active_rules;
@@ -142,17 +141,17 @@ window.oncoprint_RuleSet = (function() {
 				return cat1.localeCompare(cat2);
 			}
 		};
-		self.apply = function(g, data, datum_id_accessor, cell_width, cell_height) {
+		self.apply = function(g, cell_width, cell_height) {
 			var missing_categories = [];
-			_.each(data, function(datum) {
-				var category = params.getCategory(datum);
+			g.each(function(d,i) {
+				var category = params.getCategory(d);
 				if (!params.color.hasOwnProperty(category)) {
 					var new_color = d3_colors.pop();
 					params.color[category] = new_color;
 					addColorRule(new_color, category);
 				}
 			});
-			return D3SVGRuleSet.prototype.apply.call(this, g, data, datum_id_accessor, cell_width, cell_height);
+			return D3SVGRuleSet.prototype.apply.call(this, g, cell_width, cell_height);
 		};
 
 		self.getLegendDiv = function(active_rules, cell_width, cell_height) {
@@ -385,11 +384,11 @@ window.oncoprint_RuleSet = (function() {
 				elts.style(key, val);
 			});
 		}
+		D3SVGRule.prototype.filter = function(g) {
+			return g.filter(this.condition);
+		};
 		D3SVGRule.prototype.filterData = function(data) {
 			return data.filter(this.condition);
-		};
-		D3SVGRule.prototype.isActive = function(data) {
-			return this.filterData(data).length > 0;
 		};
 		D3SVGRule.prototype.showInLegend = function() {
 			return !this.exclude_from_legend;
