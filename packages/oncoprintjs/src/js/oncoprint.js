@@ -346,12 +346,15 @@ window.Oncoprint = (function() {
 
 			self.tracks[track_id].data = data;
 
-			/*
 			var current_id_order = self.getIdOrder();
-			var augmented_id_order = _.uniq(current_id_order.concat(_.map(data, id_accessor)));
-			self.setIdOrder(augmented_id_order);
-			*/
-
+			var current_inverted_id_order = self.getInvertedIdOrder();
+			_.each(_.map(data, id_accessor), function(id) {
+				if (!(id in current_inverted_id_order)) {
+					current_id_order.push(id);
+				}
+			});
+			self.setIdOrder(current_id_order);
+			
 			self.tracks[track_id].id_data_map = {};
 			var id_data_map = self.tracks[track_id].id_data_map;
 			_.each(self.tracks[track_id].data, function(datum) {

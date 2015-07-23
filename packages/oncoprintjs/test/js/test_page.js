@@ -126,7 +126,7 @@ $.when(alteration_data_promise).then(function() {
 	alteration_track_id = onc.addTrack({label: 'TP53'}, 1);
 	tracks_to_load -= 1;
 	onc.setRuleSet(alteration_track_id, Oncoprint.GENETIC_ALTERATION);
-	onc.setTrackData(alteration_track_id, alteration_data);
+	onc.setTrackData(alteration_track_id, alteration_data, true);
 
 	var second_alt_track = onc.addTrack({Label: 'TP53 duplicate'}, 1);
 	tracks_to_load -= 1;
