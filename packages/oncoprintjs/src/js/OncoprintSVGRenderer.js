@@ -56,6 +56,7 @@
 		this.cell_div;
 		this.legend_table;
 		this.document_fragment;
+		this.percent_altered_max_width = utils.textWidth('100%', self.getLabelFont());
 
 		d3.select(container_selector_string).classed('noselect', true).selectAll('*').remove();
 		d3.select(container_selector_string).append('br');
@@ -234,7 +235,7 @@
 			var label_tops = this.getTrackLabelTops();
 			var self = this;
 			var label_area_width = this.getLabelAreaWidth();
-			var percent_altered_left = label_area_width - utils.textWidth('100%', self.getLabelFont());
+			var percent_altered_left = label_area_width - this.percent_altered_max_width;
 			_.each(track_ids, function(track_id) {
 				var label_top = label_tops[track_id];
 				var track_label_class = self.getTrackLabelCSSClass(track_id);
@@ -384,14 +385,14 @@
 		//this.cellRenderTarget().selectAll('svg.'+track_cell_class).remove();
 		//this.cell_div.selectAll('svg.'+track_cell_class).remove();
 		var bound_svg = d3.select(fragment).selectAll('svg.'+track_cell_class).data(data);
-		bound_svg.enter().append('svg').classed(track_cell_class, true).classed(cell_class, true).attr('shape-rendering','geometricPrecision');
-		bound_svg.exit().remove();
-		bound_svg.style('width', oncoprint.getZoomedCellWidth()+'px').style('height', oncoprint.getCellHeight(track_id)+'px');
-		bound_svg
+		bound_svg.enter().append('svg').classed(track_cell_class, true).classed(cell_class, true)
+			.attr('shape-rendering','geometricPrecision')
 			.attr('preserveAspectRatio','none')
-			.attr('viewBox', '0 0 '+oncoprint.getFullCellWidth()+' '+oncoprint.getCellHeight(track_id));
+			.attr('viewBox', '0 0 '+oncoprint.getFullCellWidth()+' '+oncoprint.getCellHeight(track_id))
+			.style('width', oncoprint.getZoomedCellWidth()+'px').style('height', oncoprint.getCellHeight(track_id)+'px');
+		bound_svg.exit().remove();
 
-		var tooltip = this.oncoprint.getTrackTooltip(track_id);
+		var tooltip = oncoprint.getTrackTooltip(track_id);
 		bound_svg.each(function(d,i) {
 			var dom_cell = this;
 			var id = id_accessor(d);
@@ -455,17 +456,19 @@
 			return Math.max(x + interval_number*interval_width, 0); 
 		});
 		var self = this;
+		var track_cell_tops = this.getTrackCellTops();
+		var id_order = this.oncoprint.getVisibleInvertedIdOrder();
+		var cell_x = this.getCellXArray(Object.keys(id_order).length);
 		_.each(track_ids, function(track_id) {
 			var y;
 			if (!axis || axis === 'top') {
-				y = self.getTrackCellTops()[track_id];
+				y = track_cell_tops[track_id];
 			}
 			var id_key = self.oncoprint.getTrackDatumIdKey(track_id);
-			var id_order = self.oncoprint.getVisibleInvertedIdOrder();
 			if ((interval_number !== self.prev_interval_number) || force) {
 				if (self.track_cell_selections.hasOwnProperty(track_id)) {
 					self.track_cell_selections[track_id].each(function(d,i) {
-						var new_x = self.getCellX(id_order[d[id_key]]);
+						var new_x = cell_x[id_order[d[id_key]]];
 						var disp = this.style.display;
 						var new_disp = (new_x < visible_interval[0] || new_x > visible_interval[1]) ? 'none' : 'inherit';
 						if (disp !== new_disp) {

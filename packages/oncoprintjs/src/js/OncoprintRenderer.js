@@ -118,6 +118,10 @@ window.OncoprintRenderer = (function() {
 	OncoprintRenderer.prototype.getCellX = function(index) {
 		return (typeof index === 'number' ? index*(this.oncoprint.getZoomedCellWidth()+this.oncoprint.getCellPadding()) : -1);
 	};
+	OncoprintRenderer.prototype.getCellXArray = function(length) {
+		var cell_unit = this.oncoprint.getZoomedCellWidth() + this.oncoprint.getCellPadding();
+		return _.map(_.range(0,length), function(x) { return x*cell_unit; });
+	};
 	OncoprintRenderer.prototype.getCellAreaWidth = function() {
 		return this.oncoprint.getVisibleIdOrder().length*(this.oncoprint.getZoomedCellWidth() + this.oncoprint.getCellPadding());
 	};
