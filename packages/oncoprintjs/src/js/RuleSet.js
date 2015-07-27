@@ -463,7 +463,11 @@ window.oncoprint_RuleSet = (function() {
 			if (!data_range) {
 				return div.node();
 			}
-			div.append('h2').text(data_range[0]).classed('oncoprint-legend-label', true);
+			var display_data_range = _.map(data_range, function(x) { 
+				var num_digit_multiplier = Math.pow(10, utils.ifndef(params.legend_num_decimal_digits,2));
+				return Math.round(x * num_digit_multiplier) / num_digit_multiplier;
+			});
+			div.append('h2').text(display_data_range[0]).classed('oncoprint-legend-label', true);
 			var mesh = 50;
 			var svg = div.append('svg').attr('width', mesh+'px').attr('height', cell_height+'px');
 			for (var i=0; i<=mesh; i++) {
@@ -478,7 +482,7 @@ window.oncoprint_RuleSet = (function() {
 					.attr('fill', params.fill)
 					.attr('x', i+'px');
 			}
-			div.append('h2').text(data_range[1]).classed('oncoprint-legend-label', true);
+			div.append('h2').text(display_data_range[1]).classed('oncoprint-legend-label', true);
 			utils.d3SelectChildren(div, '*').style('padding-right', '10px');
 			return div.node();
 		};
@@ -552,7 +556,11 @@ window.oncoprint_RuleSet = (function() {
 			if (!data_range) {
 				return div.node();
 			}
-			div.append('h2').text(data_range[0]).classed('oncoprint-legend-label', true);
+			var display_data_range = _.map(data_range, function(x) { 
+				var num_digit_multiplier = Math.pow(10, utils.ifndef(params.legend_num_decimal_digits,2));
+				return Math.round(x * num_digit_multiplier) / num_digit_multiplier;
+			});
+			div.append('h2').text(display_data_range[0]).classed('oncoprint-legend-label', true);
 			var mesh = 50;
 			var svg = div.append('svg').attr('width', mesh+'px').attr('height', cell_height+'px');
 			for (var i=0; i<=mesh; i++) {
@@ -565,7 +573,7 @@ window.oncoprint_RuleSet = (function() {
 					.attr('fill', this.attrs.fill(datum))
 					.attr('x', i+'px');
 			}
-			div.append('h2').text(data_range[1]).classed('oncoprint-legend-label', true);
+			div.append('h2').text(display_data_range[1]).classed('oncoprint-legend-label', true);
 			utils.d3SelectChildren(div, '*').style('padding-right', '10px');
 			return div.node();
 		};
