@@ -243,7 +243,10 @@ window.Oncoprint = (function() {
 					} else {
 						cmp_result = -1;
 					}
-					cmp_result *= self.sort_direction[track_id];
+					if (isFinite(cmp_result)) {
+						// reverse direction unless infinite, which is a signal that an NA is involved
+						cmp_result *= self.sort_direction[track_id];
+					}
 					if (cmp_result !== 0) {
 						break;
 					}

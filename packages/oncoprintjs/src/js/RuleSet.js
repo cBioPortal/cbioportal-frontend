@@ -28,9 +28,9 @@ window.oncoprint_RuleSet = (function() {
 				return 0;
 			}	
 		} else if (f1_isNaN) {
-			return 1;
+			return Number.POSITIVE_INFINITY;
 		} else {
-			return -1;
+			return Number.NEGATIVE_INFINITY;
 		}
 	};
 	var D3SVGRuleSet = (function() {
@@ -134,9 +134,9 @@ window.oncoprint_RuleSet = (function() {
 			if (cat1 === cat2) {
 				return 0;
 			} else if (cat1 === 'NA') {
-				return 1;
+				return Number.POSITIVE_INFINITY;
 			} else if (cat2 === 'NA') {
-				return -1;
+				return Number.NEGATIVE_INFINITY;
 			} else {
 				return cat1.localeCompare(cat2);
 			}
