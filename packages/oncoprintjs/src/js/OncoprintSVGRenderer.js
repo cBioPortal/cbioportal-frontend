@@ -405,10 +405,10 @@
 						},
 						position: {my:'left bottom', at:'top middle', viewport: $(window)},
 						style: { classes: CELL_QTIP_CLASS, border: 'none'},
-						show: {event: "mouseover"},
+						show: {event: "mouseover qtip-first-show"},
 						hide: {fixed: true, delay: 100, event: "mouseout"}
 					});
-					$(dom_cell).trigger("mouseover");
+					$(dom_cell).trigger("qtip-first-show");
 				});
 			}
 			$(dom_cell).on("mouseover", function() {
