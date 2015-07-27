@@ -214,10 +214,10 @@ window.oncoprint_RuleSet = (function() {
 		} else {
 			params = $.extend({}, params, defaults.genetic_alteration_config);
 		}
-		if (params && params.dont_distinguish_mutation_order) {
-			this.sort_cmp = defaults.genetic_alteration_comparator_nondistinct_mutations;
-		} else {
+		if (params && params.distinguish_mutation_order) {
 			this.sort_cmp = defaults.genetic_alteration_comparator;
+		} else {
+			this.sort_cmp = defaults.genetic_alteration_comparator_nondistinct_mutations;
 		}
 		D3SVGRuleSet.call(this, params);
 		var vocab = ['full-rect', 'middle-rect', 'large-right-arrow', 'small-up-arrow', 'small-down-arrow'];
