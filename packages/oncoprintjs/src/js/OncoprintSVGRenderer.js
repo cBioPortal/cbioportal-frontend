@@ -83,13 +83,8 @@
 				content: 'SHARED QTIP',
 				position: {target: 'event', my:'left bottom', at:'top middle', viewport: $(window)},
 				style: { classes: CELL_QTIP_CLASS, border: 'none'},
-				show: {event: "mouseover"},
-				hide: {fixed: true, delay: 100, event: "mouseout"},
-				events: {
-					show: function(evt, api) {
-						evt.originalEvent.stopPropagation();
-					}
-				}
+				show: {event: "cell-mouseover"},
+				hide: {fixed: true, delay: 100, event: "cell-mouseout"},
 			});
 		
 			self.cell_mouseover_div = self.cell_container.append('div').style('position', 'absolute').style('overflow', 'hidden')
@@ -102,13 +97,12 @@
 				var prev_track, prev_cell_index, prev_dom;
 				var hover_cell = function(dom) {
 					$('.'+CELL_QTIP_CLASS).finish();
-					//dom.classed(CELL_HOVER_CLASS, true);
-					$(dom.node()).trigger("mouseover");
+					$(dom.node()).trigger("cell-mouseover");
 				};
 				var unhover_cell = function(dom) {
 					$('.'+CELL_QTIP_CLASS).finish();
 					//dom.classed(CELL_HOVER_CLASS, false);
-					$(dom.node()).trigger("mouseout");
+					$(dom.node()).trigger("cell-mouseout");
 				};
 				var clear_and_unhover = function() {
 					self.cell_highlight.style('visibility','hidden');
