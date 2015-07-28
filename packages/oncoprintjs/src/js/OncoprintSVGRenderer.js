@@ -72,6 +72,10 @@
 		(function initCellContainer() {
 			self.cell_container = content_area.append('div').classed(CELL_AREA_CONTAINER_CLASS, true);
 			//self.cell_container.style('display', 'none');
+			self.cell_highlight = self.cell_container.append('div').classed(CELL_HOVER_CLASS, true)
+						.style('width', oncoprint.getZoomedCellWidth()+'px')
+						.style('visibility', 'hidden');
+
 			self.cell_container_node = self.cell_container.node();
 			self.cell_div = self.cell_container.append('div').classed(CELL_AREA_CLASS, true);
 
@@ -93,15 +97,16 @@
 				var prev_track, prev_cell_index, prev_dom;
 				var hover_cell = function(dom) {
 					$('.'+CELL_QTIP_CLASS).finish();
-					dom.classed(CELL_HOVER_CLASS, true);
+					//dom.classed(CELL_HOVER_CLASS, true);
 					$(dom.node()).trigger("mouseover");
 				};
 				var unhover_cell = function(dom) {
 					$('.'+CELL_QTIP_CLASS).finish();
-					dom.classed(CELL_HOVER_CLASS, false);
+					//dom.classed(CELL_HOVER_CLASS, false);
 					$(dom.node()).trigger("mouseout");
 				};
 				var clear_and_unhover = function() {
+					self.cell_highlight.style('visibility','hidden');
 					prev_track = undefined;
 					prev_cell_index = undefined;
 					prev_dom && unhover_cell(prev_dom);
@@ -149,12 +154,15 @@
 							return;
 						}
 						// otherwise, we're over a cell
-						prev_dom && unhover_cell(prev_dom);
+						//prev_dom && unhover_cell(prev_dom);
+						$('.'+CELL_QTIP_CLASS).finish().hide();
 						prev_cell_index = cell_index;
 						prev_track = track;
 						prev_dom = track_cell.dom;
-						hover_cell(prev_dom);
 						$(self.cell_div.node()).qtip('option', 'content.text', oncoprint.getTrackTooltip(track)(track_cell.d));
+						hover_cell(prev_dom);
+						self.cell_highlight.style('height', track_height+'px').style('top', track_cell_tops[track]+'px').style('left', cell_unit*cell_index + 'px');
+						self.cell_highlight.style('visibility','visible');
 					}
 				};
 			})();
@@ -230,6 +238,7 @@
 				self.clipAndPositionCells(undefined, undefined, true);
 				self.resizeCells();
 				self.resizeCellDiv();
+				self.cell_highlight.style('width', oncoprint.getZoomedCellWidth() + 'px');
 			});
 
 			$(oncoprint).on(events.SET_ID_ORDER, function() {
