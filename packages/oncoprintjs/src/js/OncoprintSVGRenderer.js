@@ -35,6 +35,7 @@
 	var LABEL_AREA_CONTAINER_CLASS = 'oncoprint-label-area-ctr';
 	var CELL_AREA_CONTAINER_CLASS = 'oncoprint-cell-area-ctr';
 	var CELL_AREA_CLASS = 'oncoprint-cell-area';
+	var COLUMN_HIGHLIGHT_CLASS = 'oncoprint-column-highlight'
 	
 	var CELL_HOVER_CLASS = 'oncoprint-cell-hover';
 	var LEGEND_HEADER_CLASS = 'oncoprint-legend-header';
@@ -71,20 +72,28 @@
 		})();
 		(function initCellContainer() {
 			self.cell_container = content_area.append('div').classed(CELL_AREA_CONTAINER_CLASS, true);
-			//self.cell_container.style('display', 'none');
-			self.cell_highlight = self.cell_container.append('div').classed(CELL_HOVER_CLASS, true)
-						.style('width', oncoprint.getZoomedCellWidth()+'px')
+			self.cell_column_highlight = self.cell_container.append('div').classed(COLUMN_HIGHLIGHT_CLASS, true)
+						.style('height', self.getCellAreaHeight())
 						.style('visibility', 'hidden');
 
 			self.cell_container_node = self.cell_container.node();
 			self.cell_div = self.cell_container.append('div').classed(CELL_AREA_CLASS, true);
 
+			var tooltip_html = '';
 			$(self.cell_div.node()).qtip({
 				content: 'SHARED QTIP',
-				position: {target: 'event', my:'left bottom', at:'top middle', viewport: $(window)},
+				position: {target: 'event', my:'bottom middle', at:'top middle', viewport: $(window)},
 				style: { classes: CELL_QTIP_CLASS, border: 'none'},
 				show: {event: "cell-mouseover"},
 				hide: {fixed: true, delay: 100, event: "cell-mouseout"},
+				events: {
+					show: function() {
+						$('.' + CELL_QTIP_CLASS+' .qtip-content').html(tooltip_html);
+					},
+					render: function(){
+						$('.' + CELL_QTIP_CLASS+' .qtip-content').html(tooltip_html);
+					}
+				}
 			});
 		
 			self.cell_mouseover_div = self.cell_container.append('div').style('position', 'absolute').style('overflow', 'hidden')
@@ -95,8 +104,10 @@
 			});
 			var mouseMove = (function() {
 				var prev_track, prev_cell_index, prev_dom;
+				var column_highlight_timeout;
 				var hover_cell = function(dom) {
 					$('.'+CELL_QTIP_CLASS).finish();
+					//dom.classed(CELL_HOVER_CLASS, true);
 					$(dom.node()).trigger("cell-mouseover");
 				};
 				var unhover_cell = function(dom) {
@@ -105,11 +116,13 @@
 					$(dom.node()).trigger("cell-mouseout");
 				};
 				var clear_and_unhover = function() {
-					self.cell_highlight.style('visibility','hidden');
+					//self.cell_highlight.style('visibility','hidden');
 					prev_track = undefined;
 					prev_cell_index = undefined;
 					prev_dom && unhover_cell(prev_dom);
 					prev_dom = undefined;
+					self.cell_column_highlight.style('visibility', 'hidden');
+					column_highlight_timeout && clearTimeout(column_highlight_timeout)
 				};
 				return function(evt) {
 					var mouseX = utils.mouseX(evt);
@@ -145,6 +158,8 @@
 					// at this point, we are hovered over a cell position
 					var cell_index = Math.floor(mouseX / cell_unit);
 					if (cell_index !== prev_cell_index || track !== prev_track) {
+						self.cell_column_highlight.style('visibility', 'hidden');
+						column_highlight_timeout && clearTimeout(column_highlight_timeout)
 						// not the same cell as before
 						var track_cell = self.track_cells[track][oncoprint.getIdOrder()[cell_index]];
 						if (!track_cell) {
@@ -158,10 +173,13 @@
 						prev_cell_index = cell_index;
 						prev_track = track;
 						prev_dom = track_cell.dom;
-						$(self.cell_div.node()).qtip('option', 'content.text', oncoprint.getTrackTooltip(track)(track_cell.d));
+						tooltip_html = oncoprint.getTrackTooltip(track)(track_cell.d);
 						hover_cell(prev_dom);
-						self.cell_highlight.style('height', track_height+'px').style('top', track_cell_tops[track]+'px').style('left', cell_unit*cell_index + 'px');
-						self.cell_highlight.style('visibility','visible');
+						column_highlight_timeout = setTimeout(function() {
+							self.cell_column_highlight.style('left', cell_unit*cell_index + cell_width/2 + 'px').transition().style('visibility', 'visible');
+						}, 1000);
+						//self.cell_highlight.style('height', track_height+'px').style('top', track_cell_tops[track]+'px').style('left', cell_unit*cell_index + 'px');
+						//self.cell_highlight.style('visibility','visible');
 					}
 				};
 			})();
@@ -237,7 +255,7 @@
 				self.clipAndPositionCells(undefined, undefined, true);
 				self.resizeCells();
 				self.resizeCellDiv();
-				self.cell_highlight.style('width', oncoprint.getZoomedCellWidth() + 'px');
+				//self.cell_highlight.style('width', oncoprint.getZoomedCellWidth() + 'px');
 			});
 
 			$(oncoprint).on(events.SET_ID_ORDER, function() {
@@ -303,7 +321,7 @@
 		
 		this.cell_mouseover_div.style('min-width', this.getCellAreaWidth()+'px')
 				.style('min-height', this.getCellAreaHeight()+'px');
-		
+		this.cell_column_highlight.style('height', this.getCellAreaHeight() + 'px');
 	};
 	OncoprintSVGRenderer.prototype.resizeLabelDiv = function() {
 		this.getLabelDiv().style('width', this.getLabelAreaWidth()+'px')

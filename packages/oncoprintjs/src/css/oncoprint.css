@@ -19,6 +19,13 @@
     	position: relative;
 }
 
+.oncoprint-column-highlight {
+	position:absolute;
+	width: 1px;
+	border-left: 1px dashed rgba(0,0,0,0.75);
+	top: 0px;
+}
+
 .oncoprint-cell {
 	position: absolute;
 }
