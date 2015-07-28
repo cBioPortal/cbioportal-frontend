@@ -15,7 +15,7 @@
 }
 
 .oncoprint-cell-area {
-	background-color: #fff;
+	background-color: transparent;
     	position: relative;
 }
 
@@ -32,6 +32,7 @@
 
 .oncoprint-cell-hover {
 	outline: 1px solid DarkGray;
+	position: absolute;
 }
 
 .oncoprint-legend-header {
