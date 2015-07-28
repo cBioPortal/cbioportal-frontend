@@ -46,6 +46,7 @@
 		OncoprintRenderer.call(this, oncoprint, config);
 		var self = this;
 		this.track_cell_selections = {};
+		this.track_cells = {};
 		this.active_rule_set_rules = {};
 		this.toolbar_container;
 		this.label_div;
@@ -73,10 +74,91 @@
 			//self.cell_container.style('display', 'none');
 			self.cell_container_node = self.cell_container.node();
 			self.cell_div = self.cell_container.append('div').classed(CELL_AREA_CLASS, true);
+
+			$(self.cell_div.node()).qtip({
+				content: 'SHARED QTIP',
+				position: {target: 'event', my:'left bottom', at:'top middle', viewport: $(window)},
+				style: { classes: CELL_QTIP_CLASS, border: 'none'},
+				show: {event: "mouseover"},
+				hide: {fixed: true, delay: 100, event: "mouseout"},
+			});
+		
+			self.cell_mouseover_div = self.cell_container.append('div').style('position', 'absolute').style('overflow', 'hidden')
+							.style('top', '0px').style('left','0px');
 			self.cell_container_node.addEventListener("scroll", function() {
 				self.calculateVisibleInterval();
 				self.clipAndPositionCells();
 			});
+			var mouseMove = (function() {
+				var prev_track, prev_cell_index, prev_dom;
+				var hover_cell = function(dom) {
+					$('.'+CELL_QTIP_CLASS).finish();
+					dom.classed(CELL_HOVER_CLASS, true);
+					$(dom.node()).trigger("mouseover");
+				};
+				var unhover_cell = function(dom) {
+					$('.'+CELL_QTIP_CLASS).finish();
+					dom.classed(CELL_HOVER_CLASS, false);
+					$(dom.node()).trigger("mouseout");
+				};
+				var clear_and_unhover = function() {
+					prev_track = undefined;
+					prev_cell_index = undefined;
+					prev_dom && unhover_cell(prev_dom);
+					prev_dom = undefined;
+				};
+				return function(evt) {
+					var mouseX = utils.mouseX(evt);
+					var mouseY = utils.mouseY(evt);
+					var track_cell_tops = self.getTrackCellTops();
+					var track = (function() {
+						var closest_track_dist = Number.POSITIVE_INFINITY;
+						var closest_track = undefined;
+						_.each(track_cell_tops, function(top, track_id) {
+							var dist = mouseY - top;
+							if (dist >= 0 && dist < closest_track_dist) {
+								closest_track_dist = dist;
+								closest_track = track_id;
+							}
+						});
+						return closest_track;
+					})();
+					if (!track) {
+						clear_and_unhover();
+						return;
+					}
+					var track_height = oncoprint.getCellHeight(track);
+					if (mouseY > track_cell_tops[track] + track_height) {
+						clear_and_unhover();
+						return;
+					}
+					var cell_width = oncoprint.getZoomedCellWidth();
+					var cell_unit = cell_width + oncoprint.getCellPadding();
+					if (mouseX % cell_unit > cell_width) {
+						clear_and_unhover();
+						return;
+					}
+					// at this point, we are hovered over a cell position
+					var cell_index = Math.floor(mouseX / cell_unit);
+					if (cell_index !== prev_cell_index || track !== prev_track) {
+						// not the same cell as before
+						var track_cell = self.track_cells[track][oncoprint.getIdOrder()[cell_index]];
+						if (!track_cell) {
+							// track doesn't have a cell there
+							clear_and_unhover();
+							return;
+						}
+						// otherwise, we're over a cell
+						prev_dom && unhover_cell(prev_dom);
+						prev_cell_index = cell_index;
+						prev_track = track;
+						prev_dom = track_cell.dom;
+						hover_cell(prev_dom);
+						$(self.cell_div.node()).qtip('option', 'content.text', oncoprint.getTrackTooltip(track)(track_cell.d));
+					}
+				};
+			})();
+			self.cell_mouseover_div.node().addEventListener('mousemove', mouseMove);
 			// TODO: magic number
 			self.cell_div.style('max-width', '1000px');
 		})();
@@ -99,6 +181,7 @@
 				self.removeTrackLabels(track_id);
 				self.removeTrackButtons(track_id);
 				
+				self.computeTrackCellTops();
 				self.renderLegend();
 				self.renderTrackLabels();
 				self.renderTrackButtons();
@@ -107,6 +190,7 @@
 				oncoprint.sort();
 			});
 			$(oncoprint).on(events.MOVE_TRACK, function(evt, data) {
+				self.computeTrackCellTops();
 				self.clipAndPositionCells(data.moved_tracks, 'top', true);
 				self.renderTrackLabels();
 				self.renderTrackButtons();
@@ -117,6 +201,7 @@
 				//this.cell_div.style('display', 'none');
 				self.drawCells(d.track_id);
 				self.clipAndPositionCells(undefined, 'top', true);
+				self.computeTrackCellTops();
 				self.renderTrackLabels();
 				self.renderTrackButtons();
 				self.resizeLabelDiv();
@@ -207,6 +292,10 @@
 	OncoprintSVGRenderer.prototype.resizeCellDiv = function() {
 		this.cell_div.style('min-width', this.getCellAreaWidth()+'px')
 				.style('min-height', this.getCellAreaHeight()+'px');
+		
+		this.cell_mouseover_div.style('min-width', this.getCellAreaWidth()+'px')
+				.style('min-height', this.getCellAreaHeight()+'px');
+		
 	};
 	OncoprintSVGRenderer.prototype.resizeLabelDiv = function() {
 		this.getLabelDiv().style('width', this.getLabelAreaWidth()+'px')
@@ -377,8 +466,10 @@
 		}
 		var self = this;
 
+		this.track_cells[track_id] = {};
 		var cell_class = this.getCellCSSClass();
 		var track_cell_class = this.getTrackCellCSSClass(track_id);
+		var track_cells = this.track_cells[track_id];
 
 
 		//var bound_svg = this.cell_div.selectAll('svg.'+track_cell_class).data(data, id_accessor);
@@ -396,7 +487,8 @@
 		bound_svg.each(function(d,i) {
 			var dom_cell = this;
 			var id = id_accessor(d);
-			if (tooltip) {
+			track_cells[id] = {dom: d3.select(this), d: d};
+			/*if (tooltip) {
 				var tooltip_html = tooltip(d);
 				$(dom_cell).one("mouseover", function() {
 					$(dom_cell).qtip({
@@ -416,7 +508,7 @@
 			});
 			$(dom_cell).on("mouseout", function() {
 				d3.select(dom_cell).classed(CELL_HOVER_CLASS, false);
-			});		
+			});*/		
 		});
 		bound_svg.selectAll('*').remove();
 		this.active_rule_set_rules[rule_set.getRuleSetId()][track_id] = rule_set.apply(bound_svg, oncoprint.getFullCellWidth(), oncoprint.getCellHeight(track_id));

@@ -47,6 +47,9 @@ window.oncoprint_utils = (function() {
 	exports.mouseY = function(evt) {
 		return exports.ifndef(evt.offsetY, evt.originalEvent && evt.originalEvent.layerY);
 	};
+	exports.mouseX = function(evt) {
+		return exports.ifndef(evt.offsetX, evt.originalEvent && evt.originalEvent.layerX);
+	};
 	exports.ifndef = function(val, replacement) {
 		return (typeof val === 'undefined') ? replacement : val;
 	};
