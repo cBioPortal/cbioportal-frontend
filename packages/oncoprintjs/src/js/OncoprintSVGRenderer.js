@@ -178,6 +178,7 @@
 				};
 			})();
 			self.cell_mouseover_div.node().addEventListener('mousemove', mouseMove);
+			self.cell_mouseover_div.node().addEventListener('mouseout', mouseMove);
 			// TODO: magic number
 			self.cell_div.style('max-width', '1000px');
 		})();
@@ -491,10 +492,6 @@
 		var track_cell_class = this.getTrackCellCSSClass(track_id);
 		var track_cells = this.track_cells[track_id];
 
-
-		//var bound_svg = this.cell_div.selectAll('svg.'+track_cell_class).data(data, id_accessor);
-		//this.cellRenderTarget().selectAll('svg.'+track_cell_class).remove();
-		//this.cell_div.selectAll('svg.'+track_cell_class).remove();
 		var bound_svg = d3.select(fragment).selectAll('svg.'+track_cell_class).data(data);
 		bound_svg.enter().append('svg').classed(track_cell_class, true).classed(cell_class, true)
 			.attr('shape-rendering','geometricPrecision')
@@ -508,27 +505,6 @@
 			var dom_cell = this;
 			var id = id_accessor(d);
 			track_cells[id] = {dom: d3.select(this), d: d};
-			/*if (tooltip) {
-				var tooltip_html = tooltip(d);
-				$(dom_cell).one("mouseover", function() {
-					$(dom_cell).qtip({
-						content: {
-							text: tooltip_html
-						},
-						position: {my:'left bottom', at:'top middle', viewport: $(window)},
-						style: { classes: CELL_QTIP_CLASS, border: 'none'},
-						show: {event: "mouseover qtip-first-show"},
-						hide: {fixed: true, delay: 100, event: "mouseout"}
-					});
-					$(dom_cell).trigger("qtip-first-show");
-				});
-			}
-			$(dom_cell).on("mouseover", function() {
-				d3.select(dom_cell).classed(CELL_HOVER_CLASS, true);
-			});
-			$(dom_cell).on("mouseout", function() {
-				d3.select(dom_cell).classed(CELL_HOVER_CLASS, false);
-			});*/		
 		});
 		bound_svg.selectAll('*').remove();
 		this.active_rule_set_rules[rule_set.getRuleSetId()][track_id] = rule_set.apply(bound_svg, oncoprint.getFullCellWidth(), oncoprint.getCellHeight(track_id));
