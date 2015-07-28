@@ -11,6 +11,7 @@
 .oncoprint-cell-area-ctr {
 	overflow: auto;
 	width: auto;
+	position:relative;
 }
 
 .oncoprint-cell-area {

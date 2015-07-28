@@ -102,11 +102,15 @@ window.OncoprintRenderer = (function() {
 		return ret;
 	};
 	OncoprintRenderer.prototype.getTrackCellTops = function() {
+		return this.track_cell_tops || this.computeTrackCellTops();
+	};
+	OncoprintRenderer.prototype.computeTrackCellTops = function() {
 		var tops = this.getTrackTops();
 		var self = this;
 		_.each(tops, function(top, id) {
 			tops[id] = top + self.oncoprint.getTrackPadding(id);
 		});
+		this.track_cell_tops = tops;
 		return tops;
 	};
 	OncoprintRenderer.prototype.getTrackLabelTops = function() {
