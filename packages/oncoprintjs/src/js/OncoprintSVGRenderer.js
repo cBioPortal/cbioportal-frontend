@@ -158,7 +158,7 @@
 						//self.cell_column_highlight.style('visibility', 'hidden');
 						column_highlight_timeout && clearTimeout(column_highlight_timeout)
 						// not the same cell as before
-						var track_cell = self.track_cells[track][oncoprint.getIdOrder()[cell_index]];
+						var track_cell = self.track_cells[track][oncoprint.getVisibleIdOrder()[cell_index]];
 						if (!track_cell) {
 							// track doesn't have a cell there
 							clear_and_unhover();
@@ -558,7 +558,7 @@
 					self.track_cell_selections[track_id].each(function(d,i) {
 						var new_x = cell_x[id_order[d[id_key]]];
 						var disp = this.style.display;
-						var new_disp = (new_x < visible_interval[0] || new_x > visible_interval[1]) ? 'none' : 'inherit';
+						var new_disp = (isNaN(new_x) || new_x < visible_interval[0] || new_x > visible_interval[1]) ? 'none' : 'inherit';
 						if (disp !== new_disp) {
 							this.style.display = new_disp;
 						}
