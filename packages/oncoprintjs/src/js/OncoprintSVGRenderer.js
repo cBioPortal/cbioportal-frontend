@@ -85,6 +85,11 @@
 				style: { classes: CELL_QTIP_CLASS, border: 'none'},
 				show: {event: "mouseover"},
 				hide: {fixed: true, delay: 100, event: "mouseout"},
+				events: {
+					show: function(evt, api) {
+						evt.originalEvent.stopPropagation();
+					}
+				}
 			});
 		
 			self.cell_mouseover_div = self.cell_container.append('div').style('position', 'absolute').style('overflow', 'hidden')
