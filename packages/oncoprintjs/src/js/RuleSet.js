@@ -467,9 +467,9 @@ window.oncoprint_RuleSet = (function() {
 				var num_digit_multiplier = Math.pow(10, utils.ifndef(params.legend_num_decimal_digits,2));
 				return Math.round(x * num_digit_multiplier) / num_digit_multiplier;
 			});
-			div.append('h2').text(display_data_range[0]).classed('oncoprint-legend-label', true);
+			div.append('h2').text(display_data_range[0]).classed('oncoprint-legend-label oncoprint-legend-element', true);
 			var mesh = 50;
-			var svg = div.append('svg').attr('width', mesh+'px').attr('height', cell_height+'px');
+			var svg = div.append('svg').attr('width', mesh+'px').attr('height', cell_height+'px').classed('oncoprint-legend-element', true)
 			for (var i=0; i<=mesh; i++) {
 				var t = i/mesh;
 				var d = (1-t)*data_range[0] + t*data_range[1];
@@ -482,7 +482,7 @@ window.oncoprint_RuleSet = (function() {
 					.attr('fill', params.fill)
 					.attr('x', i+'px');
 			}
-			div.append('h2').text(display_data_range[1]).classed('oncoprint-legend-label', true);
+			div.append('h2').text(display_data_range[1]).classed('oncoprint-legend-label oncoprint-legend-element', true);
 			utils.d3SelectChildren(div, '*').style('padding-right', '10px');
 			return div.node();
 		};
@@ -560,9 +560,9 @@ window.oncoprint_RuleSet = (function() {
 				var num_digit_multiplier = Math.pow(10, utils.ifndef(params.legend_num_decimal_digits,2));
 				return Math.round(x * num_digit_multiplier) / num_digit_multiplier;
 			});
-			div.append('h2').text(display_data_range[0]).classed('oncoprint-legend-label', true);
+			div.append('h2').text(display_data_range[0]).classed('oncoprint-legend-label oncoprint-legend-element', true);
 			var mesh = 50;
-			var svg = div.append('svg').attr('width', mesh+'px').attr('height', cell_height+'px');
+			var svg = div.append('svg').attr('width', mesh+'px').attr('height', cell_height+'px').classed('oncoprint-legend-element', true);
 			for (var i=0; i<=mesh; i++) {
 				var t = i/mesh;
 				var d = (1-t)*data_range[0] + t*data_range[1];
@@ -573,7 +573,7 @@ window.oncoprint_RuleSet = (function() {
 					.attr('fill', this.attrs.fill(datum))
 					.attr('x', i+'px');
 			}
-			div.append('h2').text(display_data_range[1]).classed('oncoprint-legend-label', true);
+			div.append('h2').text(display_data_range[1]).classed('oncoprint-legend-label oncoprint-legend-element', true);
 			utils.d3SelectChildren(div, '*').style('padding-right', '10px');
 			return div.node();
 		};
@@ -592,11 +592,11 @@ window.oncoprint_RuleSet = (function() {
 				return;
 			}
 			var div = d3.select(document.createElement('div'));
-			var svg_ctr = div.append('div');
-			var svg = svg_ctr.append('svg').attr('width', cell_width+'px').attr('height', cell_height+'px');
+			var svg_ctr = div.append('div').classed('oncoprint-legend-block', true);
+			var svg = svg_ctr.append('svg').attr('width', cell_width+'px').attr('height', cell_height+'px').classed('oncoprint-legend-element', true);
 			this.apply(svg, cell_width, cell_height);
 			if (this.legend_label) {
-				div.append('h2').text(this.legend_label).classed('oncoprint-legend-label', true);
+				div.append('h2').text(this.legend_label).classed('oncoprint-legend-label oncoprint-legend-element', true);
 			}
 			utils.d3SelectChildren(div, '*').style('padding-right', '10px');
 			return div.node();
