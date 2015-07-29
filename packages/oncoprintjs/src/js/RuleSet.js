@@ -2,10 +2,10 @@ window.oncoprint_RuleSet = (function() {
 	var utils = oncoprint_utils;
 	var defaults = oncoprint_defaults;
 
-	var CATEGORICAL_COLOR = 0;
-	var GRADIENT_COLOR = 1; 
-	var GENETIC_ALTERATION = 2;
-	var BAR_CHART = 3;
+	var CATEGORICAL_COLOR = 'categorical_color';
+	var GRADIENT_COLOR = 'gradient_color'; 
+	var GENETIC_ALTERATION = 'genetic_alteration';
+	var BAR_CHART = 'bar_chart';
 
 	var CELL = "cell";
 	var ANY = '*';
