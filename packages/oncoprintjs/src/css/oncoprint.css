@@ -58,8 +58,15 @@
 	padding-right: 20px;
 }
 
+.oncoprint-legend-block {
+	display: inline-block;
+}
 .oncoprint-legend-element {
 	display: inline-block;
+}
+
+.oncoprint-track-label {
+	font-size: 12px;
 }
 
 .oncoprint-track-label-draggable {

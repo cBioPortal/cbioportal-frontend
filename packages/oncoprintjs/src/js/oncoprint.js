@@ -412,7 +412,7 @@ window.Oncoprint = (function() {
 			config = $.extend({}, defaultOncoprintConfig, config || {});
 			config = $.extend(config, hiddenOncoprintConfig);
 			var oncoprint = new Oncoprint(config);
-			var renderer = new OncoprintSVGRenderer(container_selector_string, oncoprint, {label_font: '12px Arial', legend:config.legend});
+			var renderer = new OncoprintSVGRenderer(container_selector_string, oncoprint, {label_font: 'Arial', legend:config.legend});
 			var ret = {
 				onc_dev: oncoprint,
 				ren_dev: renderer,
@@ -441,8 +441,8 @@ window.Oncoprint = (function() {
 				toggleCellPadding: function() {
 					oncoprint.toggleCellPadding();
 				},
-				toSVG: function(ctr) {
-					return renderer.toSVG(ctr);
+				toSVG: function() {
+					return renderer.toSVG();
 				},
 				setTrackGroupSortOrder: function(order) {
 					oncoprint.setTrackGroupSortOrder(order);
@@ -476,6 +476,9 @@ window.Oncoprint = (function() {
 				},
 				getFilteredIdOrder: function(data_filter_fn, track_ids) {
 					return oncoprint.getFilteredIdOrder(data_filter_fn, track_ids);
+				},
+				getVisibleIdOrder: function() {
+					return oncoprint.getVisibleIdOrder();
 				},
 				hideIds: function(ids) {
 					oncoprint.hideIds(ids);
