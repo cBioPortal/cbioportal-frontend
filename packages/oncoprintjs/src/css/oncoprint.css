@@ -74,6 +74,7 @@
 }
 .oncoprint-label-dragging {
 	font-weight: bold !important;
+	color: #ff0000;
 }
 
 .noselect {
