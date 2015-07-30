@@ -608,7 +608,7 @@
 			if (!rendered.hasOwnProperty(rule_set_id)) {
 				var tr = self.legend_table.append('tr');
 				var label_header = tr.append('td').style('padding-top', '1em').style('padding-bottom', '1em')
-							.append('h1').classed('oncoprint-legend-header', true);
+							.append('span').classed('oncoprint-legend-header', true);
 				label_header.text(rule_set.getLegendLabel());
 				var legend_body_td = tr.append('td');
 				var legend_div = rule_set.getLegendDiv(active_rules, cell_width, self.oncoprint.getCellHeight(track_id));

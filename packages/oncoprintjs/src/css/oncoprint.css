@@ -49,13 +49,13 @@
 	text-anchor: start;
 	alignment-baseline: hanging;
 	font-size: 12px;
+	padding-right: 30px;
 }
 
 .oncoprint-legend-label {
 	font-family: Arial;
 	alignment-baseline: hanging;
 	font-size: 12px;
-	padding-right: 20px;
 }
 
 .oncoprint-legend-block {
