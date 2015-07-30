@@ -671,13 +671,13 @@
 			$(document).one("mouseup", mouseUpHandler);
 		})(track_id);
 	};
-	OncoprintSVGRenderer.prototype.toSVG = function() {
+	OncoprintSVGRenderer.prototype.toSVG = function(full_labels) {
 		var self = this;
 		var root = $(this.container.node()).offset();
 		var svg = d3.select(document.createElementNS('http://www.w3.org/2000/svg', 'svg'));
 		svg.attr('width', this.getLabelAreaWidth() + this.getCellAreaWidth() + 'px');
 		this.renderLegend(true);
-		this.renderTrackLabels(undefined, undefined, true);
+		this.renderTrackLabels(undefined, undefined, full_labels);
 		svg.attr('height', $(this.container.node()).height()+'px');
 		(function addLabels() {
 			self.label_div.selectAll('.oncoprint-track-label').each(function() {
