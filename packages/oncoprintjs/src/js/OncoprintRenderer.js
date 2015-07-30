@@ -93,6 +93,9 @@ window.OncoprintRenderer = (function() {
 		var y = this.upper_padding;
 		var self = this;
 		_.each(this.oncoprint.getTrackGroups(), function(group) {
+			if (group.length === 0) {
+				return;
+			}
 			_.each(group, function(id) {
 				ret[id] = y;
 				y+= self.getRenderedTrackHeight(id);
