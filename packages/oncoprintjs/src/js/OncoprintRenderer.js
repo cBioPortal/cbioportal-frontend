@@ -37,7 +37,7 @@ window.OncoprintRenderer = (function() {
 		this.clipping = true;
 		this.oncoprint = oncoprint;
 		this.config = config;
-		this.upper_padding = utils.ifndef(config.upper_padding, 10);
+		this.upper_padding = utils.ifndef(config.upper_padding, 0);
 		this.max_label_length = utils.ifndef(config.max_label_length, 20);
 
 		(function computeLabelAreaWidth(self) {

@@ -62,7 +62,7 @@ window.Oncoprint = (function() {
 	function Oncoprint(config) {
 		var self = this;
 		var getTrackId = utils.makeIdCounter();
-		var MIN_CELL_WIDTH = 0.5;
+		var MIN_CELL_WIDTH = 1;
 
 		self.config = config;
 

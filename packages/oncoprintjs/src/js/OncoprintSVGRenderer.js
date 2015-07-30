@@ -661,14 +661,14 @@
 				});
 			}
 			$label_drag_div.on("mousemove", moveHandler);
-			$label_drag_div.one("mouseleave mouseup", function(evt) {
+			var mouseUpHandler = function(evt) {
 				$label_drag_div.hide();
 				$label_drag_div.off("mousemove", moveHandler);
-				$label_drag_div.off("mouseleave mouseup");
 				if (new_pos > -1) {
 					self.oncoprint.moveTrack(track_id, new_pos);
 				}
-			});
+			};
+			$(document).one("mouseup", mouseUpHandler);
 		})(track_id);
 	};
 	OncoprintSVGRenderer.prototype.toSVG = function() {
