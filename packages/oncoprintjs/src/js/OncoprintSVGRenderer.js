@@ -87,7 +87,8 @@
 				self.calculateVisibleInterval();
 				self.clipAndPositionCells();
 			});
-			var mouseMove = (function() {
+			var mouseMove, mouseOut;
+			(function() {
 				var prev_track, prev_cell_index, prev_dom;
 				var column_highlight_timeout;
 				var tooltip_html = '';
@@ -122,7 +123,10 @@
 					//self.cell_column_highlight.style('visibility', 'hidden');
 					//column_highlight_timeout && clearTimeout(column_highlight_timeout)
 				};
-				return function(evt) {
+				mouseOut = function() {
+					clear_and_unhover();
+				};
+				mouseMove = function(evt) {
 					var mouseX = utils.mouseX(evt);
 					var mouseY = utils.mouseY(evt);
 					var track_cell_tops = self.getTrackCellTops();
@@ -179,7 +183,7 @@
 				};
 			})();
 			self.cell_mouseover_div.node().addEventListener('mousemove', mouseMove);
-			self.cell_mouseover_div.node().addEventListener('mouseout', mouseMove);
+			self.cell_mouseover_div.node().addEventListener('mouseout', mouseOut);
 			// TODO: magic number
 			self.cell_div.style('max-width', '1000px');
 		})();
