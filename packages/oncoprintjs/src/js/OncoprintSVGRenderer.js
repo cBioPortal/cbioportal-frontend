@@ -592,7 +592,7 @@
 		this.renderLegend();
 	};
 	OncoprintSVGRenderer.prototype.renderLegend = function(include_all) {
-		var cell_width = this.oncoprint.getZoomedCellWidth();
+		var cell_width = this.oncoprint.getFullCellWidth();
 		var self = this;
 		var rendered = {};
 		self.legend_table.selectAll('*').remove();
