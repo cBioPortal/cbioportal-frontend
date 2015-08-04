@@ -62,7 +62,6 @@ window.Oncoprint = (function() {
 	function Oncoprint(config) {
 		var self = this;
 		var getTrackId = utils.makeIdCounter();
-		var MIN_CELL_WIDTH = 1;
 
 		self.config = config;
 
@@ -77,9 +76,11 @@ window.Oncoprint = (function() {
 		self.tracks = {};
 		self.sort_config = {type: 'track'};
 
-		self.zoom = 1;
 		self.cell_padding_on = true;
 		self.true_cell_width = config.cell_width;
+
+		self.zoomed_cell_width = self.true_cell_width;
+		self.zoom = 1;
 
 		// Cell Padding
 		self.toggleCellPadding = function() {
@@ -87,20 +88,39 @@ window.Oncoprint = (function() {
 			$(self).trigger(events.SET_CELL_PADDING);
 		};
 		self.getCellPadding = function() {
-			return self.config.cell_padding*self.getZoomMultiplier()*(+self.cell_padding_on);
+			return Math.floor(self.config.cell_padding*self.getZoom())*(+self.cell_padding_on);
 		};
 
 		// Zoom
 		self.getZoom = function() {
 			return self.zoom;
 		};
-		self.getZoomMultiplier = function() {
-			var min_over_max = MIN_CELL_WIDTH/self.getFullCellWidth();
-			return (1-min_over_max)*self.zoom + min_over_max;
-		};
 		self.setZoom = function(z) {
-			self.zoom = utils.clamp(z,0,1);
+			self.zoom = utils.clamp(z, 0, 1);
+			updateZoomedCellWidth();
+			updateZoom();
 			$(self).trigger(events.SET_ZOOM);
+			return self.zoom;
+		};
+		var updateZoom = function() {
+			// maps {1, ... , true_cell_width} to [0,1]
+			self.zoom = (self.zoomed_cell_width-1)/(self.true_cell_width - 1);
+		};
+		var updateZoomedCellWidth = function() {
+			// maps [0,1] to {1, ... , true_cell_width}
+			self.zoomed_cell_width = Math.round(self.zoom*(self.true_cell_width-1) + 1);
+		};
+		self.increaseZoom = function() {
+			self.zoomed_cell_width = utils.clamp(self.zoomed_cell_width+1, 1, self.true_cell_width);
+			updateZoom();
+			$(self).trigger(events.SET_ZOOM);
+			return self.zoom;
+		};
+		self.decreaseZoom = function() {
+			self.zoomed_cell_width = utils.clamp(self.zoomed_cell_width-1, 1, self.true_cell_width);
+			updateZoom();
+			$(self).trigger(events.SET_ZOOM);
+			return self.zoom;
 		};
 
 		// Cell Width
@@ -108,7 +128,7 @@ window.Oncoprint = (function() {
 			return self.true_cell_width;
 		};
 		self.getZoomedCellWidth = function() {
-			return self.true_cell_width*self.getZoomMultiplier();
+			return self.zoomed_cell_width;
 		};
 
 		// Cell Height
@@ -463,7 +483,13 @@ window.Oncoprint = (function() {
 					oncoprint.setTrackSortDirection(track_id, dir);
 				},
 				setZoom: function(z) {
-					oncoprint.setZoom(z);
+					return oncoprint.setZoom(z);
+				},
+				increaseZoom: function() {
+					return oncoprint.increaseZoom();
+				},
+				decreaseZoom: function() {
+					return oncoprint.decreaseZoom();
 				},
 				suppressRendering: function() {
 					renderer.suppressRendering();
