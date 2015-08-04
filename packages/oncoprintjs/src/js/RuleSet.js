@@ -33,6 +33,27 @@ window.oncoprint_RuleSet = (function() {
 			return Number.NEGATIVE_INFINITY;
 		}
 	};
+	var makeNARuleParams = function(condition, label) {
+		return {
+				condition: condition,
+				shape: utils.makeD3SVGElement('rect'),
+				attrs: {fill: '#d3d3d3', width: '100%', height:'100%'},
+				legend_label: label,
+				children: [{
+					condition: condition,
+					shape: utils.makeD3SVGElement('path'),
+					attrs: {d: "m 0% 0% L 100% 100%"},
+					styles: {'stroke-width':'1px', 'stroke':'#dfdfdf'},
+					legend_label: label,
+				}, {
+					condition: condition,
+					shape: utils.makeD3SVGElement('path'),
+					attrs: {d: "m 100% 0% L 0% 100%"},
+					styles: {'stroke-width':'1px', 'stroke':'#dddddd'},
+					legend_label: label,
+				}],
+			};
+	};
 	var D3SVGRuleSet = (function() {
 		function D3SVGRuleSet(params) {
 			this.rule_map = {};
@@ -121,6 +142,9 @@ window.oncoprint_RuleSet = (function() {
 		_.each(params.color, function(color, category) {
 			addColorRule(color, category);
 		});
+		self.addStaticRule(makeNARuleParams(function(d) {
+			return params.getCategory(d) === 'NA';
+		}, 'NA'));
 
 		this.sort_cmp = params.sort_cmp || function(d1,d2) {
 			var cat1 = params.getCategory(d1);
@@ -145,7 +169,7 @@ window.oncoprint_RuleSet = (function() {
 			var missing_categories = [];
 			g.each(function(d,i) {
 				var category = params.getCategory(d);
-				if (!params.color.hasOwnProperty(category)) {
+				if (!params.color.hasOwnProperty(category) && category !== "NA") {
 					var new_color = d3_colors.pop();
 					params.color[category] = new_color;
 					addColorRule(new_color, category);
@@ -182,6 +206,9 @@ window.oncoprint_RuleSet = (function() {
 			scale: params.scale,
 			na_color: params.na_color
 		});
+		this.addStaticRule(makeNARuleParams(function(d) {
+			return isNaN(d[params.data_key]);
+		}, 'NA'));
 		this.sort_cmp = params.sort_cmp || $.proxy(numericalNaNSort, this);
 		this.getLegendDiv = function(active_rules, cell_width, cell_height) {
 			return (active_rules[rule] && this.rule_map[rule].getLegendDiv(cell_width, cell_height)) || $('<div>')[0];
@@ -201,6 +228,9 @@ window.oncoprint_RuleSet = (function() {
 			fill: params.fill,
 			na_color: params.na_color
 		});
+		this.addStaticRule(makeNARuleParams(function(d) {
+			return isNaN(d[params.data_key]);
+		}, 'NA'));
 		this.sort_cmp = params.sort_cmp || $.proxy(numericalNaNSort, this);
 		this.getLegendDiv = function(active_rules, cell_width, cell_height) {
 			return (active_rules[rule] && this.rule_map[rule].getLegendDiv(cell_width, cell_height)) || $('<div>')[0];
@@ -333,6 +363,10 @@ window.oncoprint_RuleSet = (function() {
 			this.attrs.y = utils.ifndef(this.attrs.y, 0);
 
 			this.styles = params.styles || {};
+
+			this.children = _.map(params.children, function(p) {
+				return new D3SVGRule(p);
+			});
 		}
 
 		var percentToPx = function(attr_val, attr_name, cell_width, cell_height) {
@@ -361,6 +395,17 @@ window.oncoprint_RuleSet = (function() {
 						var pt_y = percentToPx(split_pt[1], 'y', cell_width, cell_height);
 						return pt_x+","+pt_y;
 					}).join(" ");
+				} else if (attr_name === 'd') {
+					var split = ret.split(/\s+/);
+					for (var i=0, _len = split.length; i<_len; i++) {
+						var c = split[i].toLowerCase();
+						if (c === 'm' || c === 'l') {
+							split[i+1] = percentToPx(split[i+1], 'x', cell_width, cell_height);
+							split[i+2] = percentToPx(split[i+2], 'y', cell_width, cell_height);
+							i += 2;
+						}
+					}
+					return split.join(" ");
 				} else {
 					ret = percentToPx(ret, attr_name, cell_width, cell_height);
 				}
@@ -382,6 +427,9 @@ window.oncoprint_RuleSet = (function() {
 			});
 			_.each(styles, function(val, key) {
 				elts.style(key, val);
+			});
+			_.each(this.children, function(r) {
+				r.apply(g, cell_width, cell_height);
 			});
 		}
 		D3SVGRule.prototype.filter = function(g) {
@@ -608,7 +656,6 @@ window.oncoprint_RuleSet = (function() {
 		};
 	}
 	D3SVGStaticRule.prototype = Object.create(D3SVGRule.prototype);
-
 
 	return {
 		CATEGORICAL_COLOR: CATEGORICAL_COLOR,
