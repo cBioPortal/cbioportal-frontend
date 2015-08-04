@@ -39,7 +39,7 @@ window.OncoprintRenderer = (function() {
 		this.config = config;
 		this.upper_padding = utils.ifndef(config.upper_padding, 0);
 		this.max_label_length = utils.ifndef(config.max_label_length, 20);
-		this.track_group_separation = 15;
+		this.track_group_separation = 12;
 
 		(function computeLabelAreaWidth(self) {
 			var label_font = self.getLabelFont();
