@@ -62,12 +62,12 @@ window.oncoprint_defaults = (function() {
 				'HOMODELETED':{
 					shape: 'full-rect',
 					color: '#0000FF',
-					legend_label: 'Homozygous Deletion'
+					legend_label: 'Deep Deletion'
 				},
-				'HETLOSS': {
+				'HEMIZYGOUSLYDELETED': {
 					shape: 'full-rect',
 					color: '#8FD8D8',
-					legend_label: 'Heterozygous Deletion'
+					legend_label: 'Shallow Deletion'
 				}
 			},
 			'mrna': {
@@ -115,7 +115,7 @@ window.oncoprint_defaults = (function() {
 		'INFRAME': {
 			shape: 'middle-rect',
 			color: '#9F8170',
-			legend_label: 'Inframe Insertion/Deletion'
+			legend_label: 'Inframe Mutation'
 		},
 		'TRUNC': {
 			shape: 'middle-rect',

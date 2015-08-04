@@ -88,7 +88,7 @@ window.Oncoprint = (function() {
 			$(self).trigger(events.SET_CELL_PADDING);
 		};
 		self.getCellPadding = function() {
-			return Math.floor(self.config.cell_padding*self.getZoom())*(+self.cell_padding_on);
+			return Math.ceil(self.config.cell_padding*self.getZoom())*(+self.cell_padding_on);
 		};
 
 		// Zoom
