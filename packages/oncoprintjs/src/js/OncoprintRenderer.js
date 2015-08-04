@@ -39,6 +39,7 @@ window.OncoprintRenderer = (function() {
 		this.config = config;
 		this.upper_padding = utils.ifndef(config.upper_padding, 0);
 		this.max_label_length = utils.ifndef(config.max_label_length, 20);
+		this.track_group_separation = 15;
 
 		(function computeLabelAreaWidth(self) {
 			var label_font = self.getLabelFont();
@@ -47,10 +48,6 @@ window.OncoprintRenderer = (function() {
 			var buffer_width = 20;
 			self.label_area_width = max_label_width + buffer_width + max_percent_altered_width;
 		})(this);
-	};
-	OncoprintRenderer.prototype.getTrackGroupSeparation = function() {
-		// TODO: configurable
-		return 40;
 	};
 	OncoprintRenderer.prototype.getCellCSSClass = function() {
 		return 'oncoprint-cell';	
@@ -100,7 +97,7 @@ window.OncoprintRenderer = (function() {
 				ret[id] = y;
 				y+= self.getRenderedTrackHeight(id);
 			});
-			y += self.getTrackGroupSeparation();
+			y += self.track_group_separation;
 		});
 		return ret;
 	};
