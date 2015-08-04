@@ -451,7 +451,7 @@
 			if (self.oncoprint.isTrackSortDirectionChangable(track_id)) {
 				(function() {
 					var imgs = ['images/decreaseSort.svg', 'images/increaseSort.svg', 'images/nonSort.svg'];
-					var descs = ['Sort in descending order', 'Don\'t sort on this track', 'Sort in ascending order'];
+					var descs = ['Click to sort in descending order', 'Click to not sort on this track', 'Click to sort in ascending order'];
 					var sort_direction = [1, -1, 0];
 					var current_sort_setting = sort_direction.indexOf(self.oncoprint.getTrackSortDirection(track_id));
 					var new_btn = div.append('img');
