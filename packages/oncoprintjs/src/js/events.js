@@ -48,5 +48,5 @@ window.oncoprint_events = {
 	FINISHED_POSITIONING: 'finished_positioning.renderer.oncoprint',
 	SET_ZOOM: 'set_zoom.oncoprint',
 	SET_SORT_DIRECTION: 'set_sort_direction.oncoprint',
-	SET_VISIBLE_IDS: 'set_visible_ids.oncoprint'
+	SET_VISIBLE_ID_ORDER: 'set_visible_ids.oncoprint'
 };

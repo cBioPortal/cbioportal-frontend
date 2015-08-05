@@ -59,6 +59,9 @@
 		this.legend_table;
 		this.document_fragment;
 		this.percent_altered_max_width = utils.textWidth('100%', self.getLabelFont());
+		this.altered_data_percentage = {};
+		
+		this.cell_tooltip_html = '';
 
 		this.container = d3.select(container_selector_string);
 		this.container.classed('noselect', true).selectAll('*').remove();
@@ -91,7 +94,6 @@
 			(function() {
 				var prev_track, prev_cell_index, prev_dom;
 				var column_highlight_timeout;
-				var tooltip_html = '';
 				$(self.cell_div.node()).qtip({
 					content: 'SHARED QTIP',
 					position: {target: 'event', my:'bottom middle', at:'top middle', viewport: $(window)},
@@ -100,10 +102,10 @@
 					hide: {fixed: true, delay: 100, event: "cell-mouseout"},
 					events: {
 						show: function() {
-							$('.' + CELL_QTIP_CLASS+' .qtip-content').html(tooltip_html);
+							$(this).find('.qtip-content').html(self.cell_tooltip_html);
 						},
 						render: function(){
-							$('.' + CELL_QTIP_CLASS+' .qtip-content').html(tooltip_html);
+							$(this).find('.qtip-content').html(self.cell_tooltip_html);
 						}
 					}
 				});
@@ -174,7 +176,7 @@
 						prev_cell_index = cell_index;
 						prev_track = track;
 						prev_dom = track_cell.dom;
-						tooltip_html = oncoprint.getTrackTooltip(track)(track_cell.d);
+						self.cell_tooltip_html = oncoprint.getTrackTooltip(track)(track_cell.d);
 						hover_cell(prev_dom);
 						/*column_highlight_timeout = setTimeout(function() {
 							self.cell_column_highlight.style('left', cell_unit*cell_index + cell_width/2 + 'px').transition().style('visibility', 'visible');
@@ -202,6 +204,7 @@
 				var track_id = data.track_id;
 				delete self.rule_sets[track_id];
 				delete self.track_cell_selections[track_id];
+				delete self.altered_data_percentage[track_id];
 				self.removeTrackCells(track_id);
 				self.removeTrackLabels(track_id);
 				self.removeTrackButtons(track_id);
@@ -238,6 +241,7 @@
 				//this.cell_div.style('display', 'none');
 				self.drawCells(d.track_id);
 				self.clipAndPositionCells(d.track_id, undefined, true);
+				self.computeAlteredDataPercentage(d.track_id);
 				self.renderTrackLabels(d.track_id);
 				self.resizeCellDiv();
 				self.renderLegend();
@@ -258,17 +262,25 @@
 				//self.cell_highlight.style('width', oncoprint.getZoomedCellWidth() + 'px');
 			});
 
-			$(oncoprint).on(events.SET_ID_ORDER, function() {
-				self.clipAndPositionCells(undefined, undefined, true);
-			});
-
-			$(oncoprint).on(events.SET_VISIBLE_IDS, function() {
+			$(oncoprint).on(events.SET_VISIBLE_ID_ORDER, function() {
 				self.clipAndPositionCells(undefined, undefined, true);
 				self.resizeCellDiv();
 			});
 		})();
 	}
 	utils.extends(OncoprintSVGRenderer, OncoprintRenderer);
+	OncoprintSVGRenderer.prototype.computeAlteredDataPercentage = function(track_id) {
+		var rule_set = this.getRuleSet(track_id);
+		if (rule_set && rule_set.alteredData) {
+			var data = this.oncoprint.getTrackData(track_id);
+			var num_altered = rule_set.alteredData(data).length;
+			var percent_altered = Math.floor(100 * num_altered / data.length);
+			this.altered_data_percentage[track_id] = percent_altered;
+		}
+	};
+	OncoprintSVGRenderer.prototype.getAlteredDataPercentage = function(track_id) {
+		return this.altered_data_percentage[track_id];
+	};
 	OncoprintSVGRenderer.prototype.calculateVisibleInterval = function() {
 		var cell_unit = this.oncoprint.getZoomedCellWidth() + this.oncoprint.getCellPadding();
 		var cell_ctr_rect = this.cell_container_node.getBoundingClientRect();
@@ -300,12 +312,16 @@
 		this.drawCells(track_id);
 		this.clipAndPositionCells(track_id, undefined, true);
 		this.renderLegend();
+		this.computeAlteredDataPercentage(track_id);
+		this.renderTrackLabels(track_id);
 	};
 	OncoprintSVGRenderer.prototype.useSameRuleSet = function(target_track_id, source_track_id) {
 		OncoprintRenderer.prototype.useSameRuleSet.call(this, target_track_id, source_track_id);
 		this.drawCells(target_track_id);
 		this.clipAndPositionCells(target_track_id, undefined, true);
 		this.renderLegend();
+		this.computeAlteredDataPercentage(target_track_id);
+		this.renderTrackLabels(target_track_id);
 	}
 
 	// Containers
@@ -382,12 +398,8 @@
 									style: { classes: 'qtip-light qtip-rounded qtip-shadow qtip-lightyellow'},
 									show: {event: "mouseover"}
 								});
-
-				var rule_set = self.getRuleSet(track_id);
-				if (rule_set && rule_set.alteredData) {
-					var data = self.oncoprint.getTrackData(track_id);
-					var num_altered = rule_set.alteredData(data).length;
-					var percent_altered = Math.floor(100*num_altered/data.length);
+				var percent_altered = self.getAlteredDataPercentage(track_id);
+				if (typeof percent_altered !== 'undefined') {
 					div.append('span')
 						.style('position','absolute')
 						.classed(self.getTrackLabelCSSClass(track_id), true)

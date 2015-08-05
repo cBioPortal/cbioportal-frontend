@@ -173,7 +173,7 @@ window.Oncoprint = (function() {
 				return !self.hidden_ids[id];
 			});
 			self.visible_inverted_id_order = utils.invert_array(self.visible_id_order);
-			$(self).trigger(events.SET_VISIBLE_IDS);
+			$(self).trigger(events.SET_VISIBLE_ID_ORDER);
 		};
 		self.setIdOrder = function(id_order) {
 			self.id_order = id_order.slice();
@@ -245,17 +245,25 @@ window.Oncoprint = (function() {
 			var cmp_list = _.map(track_id_list, function(track_id) { 
 				return self.getTrackSortComparator(track_id);
 			});
+			var data = {};
+			var id_order = self.getIdOrder();
+			_.each(id_order, function(id) {
+				data[id] = {};
+				_.each(track_id_list, function(track_id) {
+					data[id][track_id] = self.getTrackDatum(track_id, id);
+				});
+			});
 			var lexicographically_ordered_cmp = function(id1,id2) {
 				var cmp_result = 0;
 				for (var i=0, _len = track_id_list.length; i<_len; i++) {
 					var track_id = track_id_list[i];
 					var cmp = cmp_list[i];
-					var d1 = self.getTrackDatum(track_id, id1);
-					var d2 = self.getTrackDatum(track_id, id2);
+					var d1 = data[id1][track_id];
+					var d2 = data[id2][track_id];
 					var d1_undef = (typeof d1 === "undefined");
 					var d2_undef = (typeof d2 === "undefined");
 					if (!d1_undef && !d2_undef) {
-						cmp_result = cmp(self.getTrackDatum(track_id, id1),self.getTrackDatum(track_id, id2));
+						cmp_result = cmp(d1, d2);
 					} else if (d1_undef && d2_undef) {
 						cmp_result = 0;
 					} else if (d1_undef) {
