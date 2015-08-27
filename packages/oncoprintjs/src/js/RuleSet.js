@@ -37,19 +37,13 @@ window.oncoprint_RuleSet = (function() {
 		return {
 				condition: condition,
 				shape: utils.makeD3SVGElement('rect'),
-				attrs: {fill: '#d3d3d3', width: '100%', height:'100%'},
+				attrs: {fill: '#eeeeee', width: '100%', height:'100%'},
 				legend_label: label,
 				children: [{
 					condition: condition,
 					shape: utils.makeD3SVGElement('path'),
 					attrs: {d: "m 0% 0% L 100% 100%"},
-					styles: {'stroke-width':'1px', 'stroke':'#dfdfdf'},
-					legend_label: label,
-				}, {
-					condition: condition,
-					shape: utils.makeD3SVGElement('path'),
-					attrs: {d: "m 100% 0% L 0% 100%"},
-					styles: {'stroke-width':'1px', 'stroke':'#dddddd'},
+					styles: {'stroke-width':'1px', 'stroke':'#555555'},
 					legend_label: label,
 				}],
 			};
@@ -120,11 +114,18 @@ window.oncoprint_RuleSet = (function() {
 		D3SVGRuleSet.call(this, params);
 		this.type = CATEGORICAL_COLOR;
 		var self = this;
-		var d3_colors = _.shuffle(_.filter(d3.scale.category20().range().concat(d3.scale.category20b().range()).concat(d3.scale.category20c().range()),
-						function(color) {
-							var rgb = d3.rgb(color);
-							return !(rgb.r === rgb.g && rgb.g === rgb.b);
-						}));
+		var d3_colors = ["#3366cc","#dc3912","#ff9900","#109618",
+				"#990099","#0099c6","#dd4477","#66aa00",
+				"#b82e2e","#316395","#994499","#22aa99",
+				"#aaaa11","#6633cc","#e67300","#8b0707",
+				"#651067","#329262","#5574a6","#3b3eac",
+				"#b77322","#16d620","#b91383","#f4359e",
+				"#9c5935","#a9c413","#2a778d","#668d1c",
+				"#bea413","#0c5922","#743411"];/*_.shuffle(_.filter(d3.scale.category20().range().concat(d3.scale.category20b().range()).concat(d3.scale.category20c().range()),
+									function(color) {
+										var rgb = d3.rgb(color);
+										return !(rgb.r === rgb.g && rgb.g === rgb.b);
+									}));*/
 		var addColorRule = function(color, category) {
 			var colored_rect = utils.makeD3SVGElement('rect').attr('fill', color);
 			var condition = (function(cat) {
@@ -166,7 +167,6 @@ window.oncoprint_RuleSet = (function() {
 			}
 		};
 		self.apply = function(g, cell_width, cell_height) {
-			var missing_categories = [];
 			g.each(function(d,i) {
 				var category = params.getCategory(d);
 				if (!params.color.hasOwnProperty(category) && category !== "NA") {
@@ -461,7 +461,7 @@ window.oncoprint_RuleSet = (function() {
 
 		var scale = function(x) {
 			if (params.scale === 'log') {
-				return Math.log10(Math.max(x, 0.1)); 
+				return Math.log10(Math.max(Math.abs(x), 0.1)); 
 			} else {
 				return x;
 			}
@@ -476,7 +476,7 @@ window.oncoprint_RuleSet = (function() {
 			var scaled_data_range = _.map(data_range, scale);
 			var height_helper = function(d) {
 				var datum = scale(d[params.data_key]);
-				var distance = (datum-scaled_data_range[0]) / (scaled_data_range[1]-scaled_data_range[0]);
+				var distance = Math.abs(datum-scaled_data_range[0]) / Math.abs(scaled_data_range[1]-scaled_data_range[0]);
 				return distance * 100;
 			};
 			var y_function = function(d) {
@@ -502,12 +502,22 @@ window.oncoprint_RuleSet = (function() {
 			return [min, max];
 		};
 
+		this.getEffectiveDataRange = function() {
+			if (typeof this.data_range === "undefined") {
+				return this.inferred_data_range;
+			} else {
+				var ret = [];
+				ret[0] = (typeof this.data_range[0] === 'undefined' ? this.inferred_data_range[0] : this.data_range[0]);
+				ret[1] = (typeof this.data_range[1] === 'undefined' ? this.inferred_data_range[1] : this.data_range[1]);
+				return ret;
+			}
+		};
 		this.getLegendDiv = function(cell_width, cell_height) {
 			if (!this.showInLegend()) {
 				return;
 			}
 			var div = d3.select(document.createElement('div'));
-			var data_range = this.data_range || this.inferred_data_range;
+			var data_range = this.getEffectiveDataRange();
 			if (!data_range) {
 				return div.node();
 			}
@@ -540,7 +550,8 @@ window.oncoprint_RuleSet = (function() {
 			if (g[0].length === 0) {
 				return;
 			}
-			this.setUpHelperFunctions(this.data_range || (this.inferred_data_range = this.inferDataRange(g)));
+			this.inferred_data_range = this.inferDataRange(g);
+			this.setUpHelperFunctions(this.getEffectiveDataRange());
 			D3SVGRule.prototype.apply.call(this, g, cell_width, cell_height);
 		};
 

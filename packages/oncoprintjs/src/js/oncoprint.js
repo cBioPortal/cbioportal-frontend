@@ -31,7 +31,6 @@ window.Oncoprint = (function() {
 	var events = oncoprint_events;
 	var utils = oncoprint_utils;
 	var RuleSet = oncoprint_RuleSet;
-	var defaults = oncoprint_defaults;
 
 	var defaultOncoprintConfig = {
 		cell_width: 6,
@@ -203,6 +202,9 @@ window.Oncoprint = (function() {
 		};
 
 		// Sorting
+		self.getTopmostTrack = function() {
+			return (self.track_groups[0].length > 0 ? self.track_groups[0][0] : self.track_groups[1][0]);
+		};
 		self.setTrackSortComparator = function(track_id, cmp) {
 			self.tracks[track_id].config.sort_cmp = cmp;
 		};
