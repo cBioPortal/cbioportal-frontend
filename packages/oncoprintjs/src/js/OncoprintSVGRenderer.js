@@ -92,7 +92,7 @@
 			});
 			var mouseMove, mouseOut;
 			(function() {
-				var prev_track, prev_cell_index, prev_dom;
+				var prev_track, prev_cell_index, prev_dom, highlighted_col_cells = [];
 				var column_highlight_timeout;
 				$(self.cell_div.node()).qtip({
 					content: 'SHARED QTIP',
@@ -111,11 +111,11 @@
 				});
 				var hover_cell = function(dom) {
 					$('.'+CELL_QTIP_CLASS).finish();
-					$(dom.node()).trigger("cell-mouseover");
+					$(dom).trigger("cell-mouseover");
 				};
 				var unhover_cell = function(dom) {
 					$('.'+CELL_QTIP_CLASS).finish();
-					$(dom.node()).trigger("cell-mouseout");
+					$(dom).trigger("cell-mouseout");
 				};
 				var clear_and_unhover = function() {
 					prev_track = undefined;
@@ -123,7 +123,14 @@
 					prev_dom && unhover_cell(prev_dom);
 					prev_dom = undefined;
 					//self.cell_column_highlight.style('visibility', 'hidden');
-					//column_highlight_timeout && clearTimeout(column_highlight_timeout)
+					column_highlight_timeout && clearTimeout(column_highlight_timeout)
+					_.each(highlighted_col_cells, function(cell) {
+						if (cell) {
+							cell.style.border = '';
+							cell.style.margin = '';
+						}
+					});
+					highlighted_col_cells = [];
 				};
 				mouseOut = function() {
 					clear_and_unhover();
@@ -165,10 +172,11 @@
 						//self.cell_column_highlight.style('visibility', 'hidden');
 						column_highlight_timeout && clearTimeout(column_highlight_timeout)
 						// not the same cell as before
-						var track_cell = self.track_cells[track][oncoprint.getVisibleIdOrder()[cell_index]];
+						clear_and_unhover();
+						var cell_id = oncoprint.getVisibleIdOrder()[cell_index];
+						var track_cell = self.track_cells[track][cell_id];
 						if (!track_cell) {
 							// track doesn't have a cell there
-							clear_and_unhover();
 							return;
 						}
 						// otherwise, we're over a cell
@@ -178,9 +186,21 @@
 						prev_dom = track_cell.dom;
 						self.cell_tooltip_html = oncoprint.getTrackTooltip(track)(track_cell.d);
 						hover_cell(prev_dom);
-						/*column_highlight_timeout = setTimeout(function() {
-							self.cell_column_highlight.style('left', cell_unit*cell_index + cell_width/2 + 'px').transition().style('visibility', 'visible');
-						}, 1000);*/
+						column_highlight_timeout = setTimeout(function() {
+							highlighted_col_cells = _.map(self.track_cells, function(cells, track_id) {
+								var cell = cells[cell_id].dom;
+								if (cell) {
+									if (track_id === track) {
+										cell.style.border = "1px solid #000000";
+										cell.style.margin = "-1px";
+									} else {
+										cell.style.border = "1px solid #999999";
+										cell.style.margin = "-1px";
+									}
+								}
+								return cell;
+							});
+						}, 200);
 					}
 				};
 			})();
@@ -523,7 +543,7 @@
 		bound_svg.each(function(d,i) {
 			var dom_cell = this;
 			var id = id_accessor(d);
-			track_cells[id] = {dom: d3.select(this), d: d};
+			track_cells[id] = {dom: this, d: d};
 		});
 		bound_svg.selectAll('*').remove();
 		this.active_rule_set_rules[rule_set.getRuleSetId()][track_id] = rule_set.apply(bound_svg, oncoprint.getFullCellWidth(), oncoprint.getCellHeight(track_id));
@@ -709,12 +729,20 @@
 			self.clipAndPositionCells(undefined, undefined, true, true);
 			self.cell_div.selectAll('.oncoprint-cell').each(function() {
 				var cell_elt = d3.select(this);
+				var cell_rect = cell_elt.node().getBoundingClientRect();
+				var cell_dim = {width: cell_rect.width, height: cell_rect.height};
 				var pos = $(cell_elt.node()).offset();
 				var g = svg.append('g').attr('transform', utils.translate(pos.left - root.left, pos.top - root.top));
 				cell_elt.selectAll('*').each(function() {
 					utils.appendD3SVGElement(d3.select(this), g);
 				});
+				var outline_styles = {color: cell_elt.style('outline-color'), width: cell_elt.style('outline-width')};
+				if (outline_styles.color) {
+					g.append('rect').attr('width', cell_dim.width+'px').attr('height', cell_dim.height+'px')
+							.style('fill', 'none').style('stroke', outline_styles.color).style('stroke-width', outline_styles.width);
+				}
 			});
+			//styles = {'outline-color':rule_spec.color, 'outline-style':'solid', 'outline-width':'2px'};
 			self.clipAndPositionCells(undefined, undefined, true);
 		})();
 		(function addLegend() {
@@ -741,6 +769,13 @@
 							var elt = d3.select(this);
 							var pos = $(elt.node()).offset();
 							var g = svg.append('g').attr('transform', utils.translate(pos.left - root.left, pos.top - root.top));
+							var cell_rect = elt.node().getBoundingClientRect();
+							var cell_dim = {width: cell_rect.width, height: cell_rect.height};
+							var outline_styles = {color: elt.style('outline-color'), width: elt.style('outline-width')};
+							if (outline_styles.color) {
+								g.append('rect').attr('width', cell_dim.width+'px').attr('height', cell_dim.height+'px')
+										.style('fill', 'none').style('stroke', outline_styles.color).style('stroke-width', outline_styles.width);
+							}
 							elt.selectAll('*').each(function() {
 								utils.appendD3SVGElement(d3.select(this), g);
 							});
