@@ -20,21 +20,7 @@ This is not exactly a perfect solution to getting the gulp binary into your `PAT
 
 ## Build
 
-Run `gulp spec && gulp` to run unit tests and generate a minified artifact in `dist/prod`.
-
-## Tests
-
-Run `gulp spec` for unit tests.
-
-Run `gulp test` to run both unit tests and to build development environment in `dist/test`. Run your favorite lightweight static resource server from `dist/test`. I use [http-server][http-server] because I've found it to be faster and more reliable than `python -m SimpleHttpServer`. You should be able to navigate your browser to wherever your local server is running ([http://localhost:8080](http://localhost:8080) is likely) and see some sample OncoPrints.
-
-## Development
-
-While developing, I recommend using
-
-```gulp watch```
-
-This will run `gulp test` every time a source file is modified.
+TODO
 
 [nodejs]:https://nodejs.org/
 [http-server]:https://github.com/indexzero/http-server
