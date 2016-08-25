@@ -1,6 +1,6 @@
 # cbioportal-frontend
 
-## To embed in cBioPortal site
+To embed in cBioPortal site
 
 ```html
 <div id="root">fd</div>
