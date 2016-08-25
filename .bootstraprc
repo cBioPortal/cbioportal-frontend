@@ -1,0 +1,14 @@
+{
+  // And JSON comments also!
+  "useFlexbox": true,
+  "bootstrapVersion": 3,
+  "styleLoaders": ["style", "css", "sass"],
+
+    "appStyles":"./src/styles/global.scss",
+
+  "styles": true,
+
+  "scripts":true,
+  "preBootstrapCustomizations": "./src/styles/pre-customizations.scss"
+
+}
