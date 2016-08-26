@@ -1,7 +1,8 @@
 {
     "env": {
         "browser": true,
-        "es6": true
+        "es6": true,
+        "amd": true
     },
     "extends": "eslint:recommended",
     "parserOptions": {
@@ -14,6 +15,10 @@
     "plugins": [
         "react"
     ],
+    "globals": {
+        "module": true,
+        "__DEBUG__": true
+    },
     "rules": {
         "indent": [
             "error",
