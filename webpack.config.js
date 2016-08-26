@@ -1,3 +1,5 @@
+var ExtractTextPlugin = require("extract-text-webpack-plugin");
+
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const dotenv = require('dotenv');
 
@@ -68,7 +70,8 @@ const defines =
         });
 
 config.plugins = [
-    new webpack.DefinePlugin(defines)
+    new webpack.DefinePlugin(defines),
+    new ExtractTextPlugin("styles.css")
 ].concat(config.plugins);
 // END ENV variables
 
@@ -119,6 +122,35 @@ config.module.loaders.push(
     }
 );
 
+// config.module.loaders.push(
+//     {
+//         test: /\.scss$/,
+//         loader: ExtractTextPlugin.extract(
+//             'style',
+//             'css?modules&importLoaders=2&localIdentName=[name]__[local]__[hash:base64:5]' +
+//             '!sass' +
+//             '!sass-resources'
+//         )
+//     }
+//
+// );
+
+config.module.loaders.push(
+    {
+        test: /\.scss$/,
+        loaders: [
+            'style',
+            'css?modules&importLoaders=2&localIdentName=[name]__[local]__[hash:base64:5]' +
+            '!sass' +
+            '!sass-resources'
+        ]
+    }
+
+);
+
+
+config.sassResources = './sass-resources.scss';
+
 
 config.entry.push('bootstrap-loader');
 
@@ -129,11 +161,11 @@ config.entry.push('font-awesome-webpack');
 // CSS modules
 
 // postcss
-config.postcss = [].concat([
-    require('precss')({}),
-    require('autoprefixer')({}),
-    require('cssnano')({})
-]);
+// config.postcss = [].concat([
+//     require('precss')({}),
+//     require('autoprefixer')({}),
+//     require('cssnano')({})
+// ]);
 
 // END postcss
 
