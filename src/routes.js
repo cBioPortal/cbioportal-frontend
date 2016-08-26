@@ -1,4 +1,4 @@
-import React from 'react'
+import React from 'react';
 import {Route, IndexRoute} from 'react-router';
 
 import Container from 'features/Container';
@@ -12,7 +12,7 @@ export const makeRoutes = () => {
             <IndexRoute component={ClinicalInformationContainer} />
 
         </Route>
-    )
-}
+    );
+};
 
-export default makeRoutes
+export default makeRoutes;
