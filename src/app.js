@@ -1,6 +1,5 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Map } from 'immutable';
 
 import App from 'containers/App/App';
 
