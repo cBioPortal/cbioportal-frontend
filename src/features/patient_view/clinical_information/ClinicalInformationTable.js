@@ -10,8 +10,8 @@ export class ClinicalInformationTable extends React.Component {
 
         const arr = [];
 
-        this.props.data.forEach((item)=>{
-            arr.push(<div className="success"><b>{ item.get(0) }</b></div>);
+        this.props.data.forEach((item, i)=>{
+            arr.push(<div className="success" key={i}><b>{ item.get(0) }</b></div>);
         });
 
         return (<div>{ arr }</div>)

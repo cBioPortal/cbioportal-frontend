@@ -1,6 +1,7 @@
 import React, { PropTypes as T } from 'react';
 import { loadClinicalInformationTableData } from './duck';
 import { ClinicalInformationTable } from './ClinicalInformationTable';
+import { Link } from 'react-router';
 
 
 export default class ClinicalInformationContainer extends React.Component {
@@ -14,7 +15,6 @@ export default class ClinicalInformationContainer extends React.Component {
             [ "GENDER", "Male" ],
             [ "CANCER_TYPE", "Glioma" ]
         ];
-
 
         this.context.store.dispatch(loadClinicalInformationTableData(data));
 
@@ -35,7 +35,7 @@ export default class ClinicalInformationContainer extends React.Component {
         if (data === undefined) {
             return <div>Loading ...</div>;
         } else {
-            return <div>{ <ClinicalInformationTable data={ data } />  }</div>;
+            return <div><Link to="/aaron">Aaron Link</Link>{ <ClinicalInformationTable data={ data } />  }</div>;
         }
 
     }
