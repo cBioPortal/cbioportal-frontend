@@ -14,7 +14,7 @@ export class ClinicalInformationTable extends React.Component {
             arr.push(<div className="success" key={i}><b>{ item.get(0) }</b></div>);
         });
 
-        return (<div>{ arr }</div>)
+        return (<div>{ arr }</div>);
 
     }
 }

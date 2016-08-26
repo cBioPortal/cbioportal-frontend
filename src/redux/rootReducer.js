@@ -11,13 +11,13 @@ import Immutable from 'immutable';
 // Require your modules here
 const modules = {
     clinical_information
-}
+};
 
 export let actions = {
     routing: {
         navigateTo: path => dispatch => dispatch(push(path))
     }
-}
+};
 
 export let initialState = Immutable.Map({});
 

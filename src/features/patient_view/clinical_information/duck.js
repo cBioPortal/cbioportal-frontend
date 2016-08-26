@@ -14,12 +14,12 @@ export default function reducer(state = Immutable.Map({}), action = {}) {
     switch (action.type) {
         // do reducer stuff
 
-        case actionTypes.LOAD:
+    case actionTypes.LOAD:
 
-             return state.setIn(['table_data'],Immutable.fromJS(action.payload));
+        return state.setIn(['table_data'],Immutable.fromJS(action.payload));
 
-        default:
-            return state;
+    default:
+        return state;
     }
 }
 

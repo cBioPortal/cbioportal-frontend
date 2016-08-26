@@ -9,11 +9,11 @@ export default class ClinicalInformationContainer extends React.Component {
     componentDidMount() {
 
         const data = [
-            [ "OS_MONTHS" , "58" ],
-            [ "AGE" ,  "28" ],
-            [ "OS_STATUS" , "DECEASED" ],
-            [ "GENDER", "Male" ],
-            [ "CANCER_TYPE", "Glioma" ]
+            [ 'OS_MONTHS' , '58' ],
+            [ 'AGE' ,  '28' ],
+            [ 'OS_STATUS' , 'DECEASED' ],
+            [ 'GENDER', 'Male' ],
+            [ 'CANCER_TYPE', 'Glioma' ]
         ];
 
         this.context.store.dispatch(loadClinicalInformationTableData(data));
