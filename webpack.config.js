@@ -49,6 +49,9 @@ var config = getConfig({
     }
 });
 
+console.log(config);
+
+
 // ENV variables
 const dotEnvVars = dotenv.config();
 const environmentEnv = dotenv.config({
@@ -75,37 +78,6 @@ config.plugins = [
 ].concat(config.plugins);
 // END ENV variables
 
-// START CONFIG FOR CSS MODULES
-// const cssModulesNames = `${isDev ? '[path][name]__[local]__' : ''}[hash:base64:5]`;
-//
-// const matchCssLoaders = /(^|!)(css-loader)($|!)/;
-//
-// const findLoader = (loaders, match) => {
-//     const found = loaders.filter(l => l && l.loader && l.loader.match(match));
-//     return found ? found[0] : null;
-// };
-
-// existing css loader
-// const cssloader =
-//     findLoader(config.module.loaders, matchCssLoaders);
-
-// const newloader = Object.assign({}, cssloader, {
-//     test: /\.module\.css$/,
-//     include: [src],
-//     loader: cssloader.loader.replace(matchCssLoaders, `$1$2?modules&localIdentName=${cssModulesNames}$3`)
-// });
-
-//config.module.loaders.push(newloader);
-
-//cssloader.test = new RegExp(`[^module]${cssloader.test.source}`);
-//cssloader.loader = newloader.loader;
-
-// config.module.loaders.push({
-//     test: /\.css$/,
-//     include: [modules],
-//     loader: 'style!css'
-// });
-// END CONFIG FOR CSS MODULES
 
 // for font-awesome;
 const fontAwesomeLoaders = [
@@ -122,6 +94,13 @@ config.module.loaders.push(
     }
 );
 
+
+config.module.loaders.push({ test: /\.css$/, loader: "style-loader!css-loader" });
+
+
+// START BOOTSTRAP LOADER
+
+// FOR PRODUCTION USE THE EXTRACT TEST PLUGIN
 // config.module.loaders.push(
 //     {
 //         test: /\.scss$/,
@@ -135,6 +114,7 @@ config.module.loaders.push(
 //
 // );
 
+// FOR DEV, DON'T USER EXTRACT TEXT PLUGIN
 config.module.loaders.push(
     {
         test: /\.scss$/,
@@ -148,11 +128,12 @@ config.module.loaders.push(
 
 );
 
-
 config.sassResources = './sass-resources.scss';
 
 
 config.entry.push('bootstrap-loader');
+// END BOOTSTRAP LOADER
+
 
 config.entry.push('font-awesome-webpack');
 

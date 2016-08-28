@@ -1,4 +1,5 @@
 import React, { PropTypes as T } from 'react';
+import { Table } from 'react-bootstrap';
 
 export class ClinicalInformationTable extends React.Component {
 
@@ -11,17 +12,28 @@ export class ClinicalInformationTable extends React.Component {
         const arr = [];
 
         this.props.data.forEach((item, i)=>{
-            arr.push(<div className="success" key={i}><b>{ item.get(0) }</b></div>);
+            arr.push(<tr key={i}>
+                    <td>{ item.get(0) }</td>
+                    <td>{ item.get(1) }</td>
+                </tr>
+            );
         });
 
-        return (<div>{ arr }</div>);
+        return (
+                <Table striped>
+                    <thead>
+                        <tr><th>Attribute</th><th>Value</th></tr>
+                    </thead>
+                    <tbody>{ arr }</tbody>
+                </Table>
+        );
 
     }
 }
 
 export default ClinicalInformationTable;
 
-// grant access to the store via context
-ClinicalInformationTable.contextTypes = {
-    store: React.PropTypes.object.isRequired
+
+ClinicalInformationTable.propTypes = {
+    data: T.any.isRequired
 };

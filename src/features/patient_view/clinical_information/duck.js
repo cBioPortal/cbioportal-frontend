@@ -4,22 +4,44 @@ import Immutable from 'immutable';
 // ACTION TYPE CONSTANTS
 export const actionTypes = {
 
-    LOAD: 'clinical_information_table/LOAD'
+    FETCH: 'clinical_information_table/FETCH'
 
 };
 
 // Reducer
-export default function reducer(state = Immutable.Map({}), action = {}) {
+export default function reducer(state = Immutable.Map({ status:'fetching'}), action = {}) {
 
     switch (action.type) {
         // do reducer stuff
 
-    case actionTypes.LOAD:
+        case actionTypes.FETCH:
 
-        return state.setIn(['table_data'],Immutable.fromJS(action.payload));
+            switch (action.status) {
+                case 'fetching':
 
-    default:
-        return state;
+                    return state.set('status', 'fetching');
+
+                case 'success':
+
+                    return state.merge({
+                        'table_data':action.payload,
+                        'status': 'complete'
+                    });
+
+                case 'error':
+
+                    return state.merge({
+                        'table_data': null,
+                        'status': 'error'
+                    });
+            }
+
+            return state.setIn(['table_data'], Immutable.fromJS(action.payload));
+
+
+        default:
+
+            return state;
     }
 }
 
