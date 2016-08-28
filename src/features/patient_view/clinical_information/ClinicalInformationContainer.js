@@ -2,8 +2,9 @@ import React, { PropTypes as T } from 'react';
 import { loadClinicalInformationTableData } from './duck';
 import { ClinicalInformationTable } from './ClinicalInformationTable';
 import { Link } from 'react-router';
-import { Tabs, Tab } from 'react-bootstrap';
+import { Tabs, Tab, ButtonGroup, Button } from 'react-bootstrap';
 import { default as $ } from 'jquery';
+import Spinner from 'react-spinkit';
 
 import styles from './test.scss';
 
@@ -17,25 +18,38 @@ export default class ClinicalInformationContainer extends React.Component {
 
     }
 
+    // this belongs in a datalayer
     fetchData(dispatch){
 
         const type = 'clinical_information_table/FETCH';
 
-        const mockData = [
-            [ 'OS_MONTHS' , '58' ],
-            [ 'AGE' ,  '28' ],
-            [ 'OS_STATUS' , 'DECEASED' ],
-            [ 'GENDER', 'Male' ],
-            [ 'CANCER_TYPE', 'Glioma' ]
-        ];
+        const mockData = {
+
+            patient:[
+                [ 'OS_MONTHS' , '58' ],
+                [ 'AGE' ,  '28' ],
+                [ 'OS_STATUS' , 'DECEASED' ],
+                [ 'GENDER', 'Male' ],
+                [ 'CANCER_TYPE', 'Glioma' ]
+            ],
+            samples:[
+                [ 'anti_O_viverrini_IgG' , 'Negative' ], [ 'Anatomical Subtype' ,  'Extrahepatic' ]
+            ]
+
+        };
 
         $.get('/').then(
             data => {
-                dispatch({
-                    type,
-                    status:'success',
-                    payload:mockData
-                });
+
+                setTimeout(()=>{
+                    dispatch({
+                        type,
+                        status:'success',
+                        payload:mockData
+                    });
+                },3000);
+
+
             },
             error => {
                 dispatch({
@@ -68,7 +82,7 @@ export default class ClinicalInformationContainer extends React.Component {
 
             case 'fetching':
 
-                return <div>Loading ...</div>;
+                return <div><Spinner spinnerName="three-bounce" /></div>;
 
             case 'complete':
 
@@ -85,13 +99,40 @@ export default class ClinicalInformationContainer extends React.Component {
 
     }
 
+    buildButtonGroups(){
+
+        return (
+
+            <ButtonGroup>
+                <Button>Copy</Button>
+                <Button>CSV</Button>
+                <Button>Show/Hide Columns</Button>
+            </ButtonGroup>
+
+        );
+
+    }
+
     buildTabs(storeState){
 
         return (
 
             <Tabs defaultActiveKey={1} id="clinical-information-tabs">
-                <Tab eventKey={1} title="Patient"><ClinicalInformationTable data={ storeState.get('clinical_information').get('table_data') } /></Tab>
-                <Tab eventKey={2} title="Samples">Tab 2 content</Tab>
+                <Tab eventKey={1} title="Patient">
+                    { this.buildButtonGroups() }
+                    <ClinicalInformationTable
+                        data={ storeState.get('clinical_information').get('patient') }
+                        title1="Attribute" title2="Value"
+                    />
+                </Tab>
+                <Tab eventKey={2} title="Samples">
+                    { this.buildButtonGroups() }
+                    <ClinicalInformationTable
+                        data={ storeState.get('clinical_information').get('samples') }
+                        title1="Attribute" title2="1202"
+                    />
+
+                </Tab>
             </Tabs>
 
         );

@@ -24,7 +24,8 @@ export default function reducer(state = Immutable.Map({ status:'fetching'}), act
                 case 'success':
 
                     return state.merge({
-                        'table_data':action.payload,
+                        'patient':action.payload.patient,
+                        'samples' : action.payload.samples,
                         'status': 'complete'
                     });
 
