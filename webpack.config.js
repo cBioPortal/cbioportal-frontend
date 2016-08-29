@@ -49,9 +49,6 @@ var config = getConfig({
     }
 });
 
-console.log(config);
-
-
 // ENV variables
 const dotEnvVars = dotenv.config();
 const environmentEnv = dotenv.config({
