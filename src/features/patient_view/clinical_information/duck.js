@@ -26,6 +26,7 @@ export default function reducer(state = Immutable.Map({ status:'fetching'}), act
             return state.merge({
                 'patient':action.payload.patient,
                 'samples' : action.payload.samples,
+                'nodes': action.payload.nodes,
                 'status': 'complete'
             });
 

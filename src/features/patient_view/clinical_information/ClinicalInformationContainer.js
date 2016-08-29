@@ -3,11 +3,12 @@ import { ClinicalInformationTable } from './ClinicalInformationTable';
 import { Link } from 'react-router';
 import { Tabs, Tab, ButtonGroup, Button } from 'react-bootstrap';
 import { default as $ } from 'jquery';
-import Spinner from 'react-spinkit';
+import PDXTree from './PDXTree'
+//import Spinner from 'react-spinkit';
 
-import styles from './test.scss';
+//import styles from './test.scss';
 
-import './test.css';
+//import './test.css';
 
 export default class ClinicalInformationContainer extends React.Component {
 
@@ -33,8 +34,71 @@ export default class ClinicalInformationContainer extends React.Component {
             ],
             samples:[
                 [ 'anti_O_viverrini_IgG' , 'Negative' ], [ 'Anatomical Subtype' ,  'Extrahepatic' ]
-            ]
-
+            ],
+            nodes: {
+                "name": "Top Node",
+                "label": "1",
+                "children": [
+                    {
+                        "name": "Bob: Child of Top Node",
+                        "label": "1.1",
+                        "parent": "Top Node",
+                        "children": [
+                            {
+                                "name": "Son of Bob",
+                                "label": "1.1.1",
+                                "parent": "Bob: Child of Top Node"
+                            },
+                            {
+                                "name": "Daughter of Bob",
+                                "label": "1.1.2",
+                                "parent": "Bob: Child of Top Node"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Sally: Child of Top Node",
+                        "label": "1.2",
+                        "parent": "Top Node",
+                        "children": [
+                            {
+                                "name": "Son of Sally",
+                                "label": "1.2.1",
+                                "parent": "Sally: Child of Top Node"
+                            },
+                            {
+                                "name": "Daughter of Sally",
+                                "label": "1.2.2",
+                                "parent": "Sally: Child of Top Node"
+                            },
+                            {
+                                "name": "Daughter #2 of Sally",
+                                "label": "1.2.3",
+                                "parent": "Sally: Child of Top Node",
+                                "children": [
+                                    {
+                                        "name": "Daughter of Daughter #2 of Sally",
+                                        "label": "1.2.3.1",
+                                        "parent": "Daughter #2 of Sally"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "name": "Dirk: Child of Top Node",
+                        "label": "1.3",
+                        "parent": "Top Node",
+                        "children": [
+                            {
+                                "name": "Son of Dirk",
+                                "label": "1.3.1",
+                                "parent": "Dirk: Child of Top Node"
+                            },
+                        ]
+                    }
+                ]
+            }
         };
 
         $.get('/').then(
@@ -61,7 +125,7 @@ export default class ClinicalInformationContainer extends React.Component {
 
         // tell the store that we've initated a fetch
         return {
-            type:'clinicalInformationTable/FETCH',
+            type:'clinical_information_table/FETCH',
             status:'fetching'
         };
 
@@ -79,9 +143,6 @@ export default class ClinicalInformationContainer extends React.Component {
 
         switch (storeState.getIn(['clinical_information','status'])) {
 
-        case 'fetching':
-
-            return <div><Spinner spinnerName="three-bounce" /></div>;
 
         case 'complete':
 
@@ -130,7 +191,11 @@ export default class ClinicalInformationContainer extends React.Component {
                         data={ storeState.get('clinical_information').get('samples') }
                         title1="Attribute" title2="1202"
                     />
-
+                    <PDXTree
+                      width={800}
+                      height={300}
+                      nodes={ storeState.get('clinical_information').get('nodes').toJS() }
+                    />
                 </Tab>
             </Tabs>
 
