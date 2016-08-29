@@ -14,35 +14,35 @@ export default function reducer(state = Immutable.Map({ status:'fetching'}), act
     switch (action.type) {
         // do reducer stuff
 
-        case actionTypes.FETCH:
+    case actionTypes.FETCH:
 
-            switch (action.status) {
-                case 'fetching':
+        switch (action.status) {
+        case 'fetching':
 
-                    return state.set('status', 'fetching');
+            return state.set('status', 'fetching');
 
-                case 'success':
+        case 'success':
 
-                    return state.merge({
-                        'patient':action.payload.patient,
-                        'samples' : action.payload.samples,
-                        'status': 'complete'
-                    });
+            return state.merge({
+                'patient':action.payload.patient,
+                'samples' : action.payload.samples,
+                'status': 'complete'
+            });
 
-                case 'error':
+        case 'error':
 
-                    return state.merge({
-                        'table_data': null,
-                        'status': 'error'
-                    });
-            }
+            return state.merge({
+                'table_data': null,
+                'status': 'error'
+            });
+        }
 
-            return state.setIn(['table_data'], Immutable.fromJS(action.payload));
+        return state.setIn(['table_data'], Immutable.fromJS(action.payload));
 
 
-        default:
+    default:
 
-            return state;
+        return state;
     }
 }
 
