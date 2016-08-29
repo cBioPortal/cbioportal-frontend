@@ -1,5 +1,4 @@
-import React, { PropTypes as T } from 'react';
-import { loadClinicalInformationTableData } from './duck';
+import React from 'react';
 import { ClinicalInformationTable } from './ClinicalInformationTable';
 import { Link } from 'react-router';
 import { Tabs, Tab, ButtonGroup, Button } from 'react-bootstrap';
@@ -80,20 +79,20 @@ export default class ClinicalInformationContainer extends React.Component {
 
         switch (storeState.getIn(['clinical_information','status'])) {
 
-            case 'fetching':
+        case 'fetching':
 
-                return <div><Spinner spinnerName="three-bounce" /></div>;
+            return <div><Spinner spinnerName="three-bounce" /></div>;
 
-            case 'complete':
+        case 'complete':
 
-                return <div>{ this.buildTabs(storeState) }</div>;
+            return <div>{ this.buildTabs(storeState) }</div>;
 
-            case 'error':
+        case 'error':
 
-                return <div>There was an error.</div>;
+            return <div>There was an error.</div>;
 
-            default:
-                return null;
+        default:
+            return null;
 
         }
 
