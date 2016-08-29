@@ -4,7 +4,7 @@ import { Link } from 'react-router';
 import { Tabs, Tab, ButtonGroup, Button } from 'react-bootstrap';
 import { default as $ } from 'jquery';
 import PDXTree from './PDXTree'
-//import Spinner from 'react-spinkit';
+import Spinner from 'react-spinkit';
 
 //import styles from './test.scss';
 
@@ -12,9 +12,10 @@ import PDXTree from './PDXTree'
 
 export default class ClinicalInformationContainer extends React.Component {
 
+
     componentDidMount(){
 
-        this.context.store.dispatch(this.fetchData);
+        this.getDispatcher()(this.fetchData);
 
     }
 
@@ -110,7 +111,7 @@ export default class ClinicalInformationContainer extends React.Component {
                         status:'success',
                         payload:mockData
                     });
-                },3000);
+                },6000);
 
 
             },
@@ -135,6 +136,10 @@ export default class ClinicalInformationContainer extends React.Component {
         return this.context.store.getState();
     }
 
+    getDispatcher() {
+        return this.context.store.dispatch;
+    }
+
     render() {
 
         const storeState = this.getStoreState();
@@ -154,7 +159,7 @@ export default class ClinicalInformationContainer extends React.Component {
             return <div>There was an error.</div>;
 
         default:
-            return null;
+            return <div></div>;
 
         }
 
