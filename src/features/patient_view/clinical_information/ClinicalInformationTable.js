@@ -8,12 +8,11 @@ export class ClinicalInformationTable extends React.Component {
     }
 
     render() {
-
         const arr = [];
 
         // NOTE: we can use either naked bootstrap or a fancy bootstrap datatable control
         // and get the same style.  That's the case for boostrap datatable control
-        this.props.data.forEach((item, i)=>{
+        this.props.data.forEach((item, i) => {
             arr.push(<tr key={i}>
                     <td>{ item.get(0) }</td>
                     <td>{ item.get(1) }</td>
@@ -29,7 +28,6 @@ export class ClinicalInformationTable extends React.Component {
                     <tbody>{ arr }</tbody>
                 </Table>
         );
-
     }
 }
 
@@ -37,5 +35,5 @@ export default ClinicalInformationTable;
 
 
 ClinicalInformationTable.propTypes = {
-    data: T.any.isRequired
+    data: T.any.isRequired,
 };

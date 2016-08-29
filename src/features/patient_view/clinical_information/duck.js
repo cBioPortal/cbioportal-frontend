@@ -1,16 +1,15 @@
-import {createAction} from 'redux-actions';
+import { createAction } from 'redux-actions';
 import Immutable from 'immutable';
 
 // ACTION TYPE CONSTANTS
 export const actionTypes = {
 
-    FETCH: 'clinical_information_table/FETCH'
+    FETCH: 'clinical_information_table/FETCH',
 
 };
 
 // Reducer
-export default function reducer(state = Immutable.Map({ status:'fetching'}), action = {}) {
-
+export default function reducer(state = Immutable.Map({ status: 'fetching' }), action = {}) {
     switch (action.type) {
         // do reducer stuff
 

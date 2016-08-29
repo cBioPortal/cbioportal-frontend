@@ -9,9 +9,8 @@ import Immutable from 'immutable';
 
 export const configureStore = ({
     historyType = browserHistory,
-    userInitialState = {}}) => {
-
-    let middleware = [
+    userInitialState = {} }) => {
+    const middleware = [
         // createApiMiddleware({
         //     baseUrl: __ROOT_URL__,
         //     headers: {
@@ -19,19 +18,17 @@ export const configureStore = ({
         //     }
         // }),
         thunkMiddleware,
-        routerMiddleware(historyType)
+        routerMiddleware(historyType),
     ];
 
-    let tools = [];
+    const tools = [];
     if (__DEBUG__) {
-
         const DevTools = require('containers/DevTools/DevTools').default;
-        let devTools = window.devToolsExtension ? window.devToolsExtension : DevTools.instrument;
+        const devTools = window.devToolsExtension ? window.devToolsExtension : DevTools.instrument;
         if (typeof devTools === 'function') {
             tools.push(devTools({
 
                 deserializeState: (state) => {
-
                     return Immutable.fromJS(state);
                 },
 
@@ -42,7 +39,7 @@ export const configureStore = ({
                     } else {
                         return action;
                     }
-                }
+                },
 
             }));
         }
@@ -61,18 +58,18 @@ export const configureStore = ({
 
     const history = syncHistoryWithStore(historyType, store, {
         adjustUrlOnReplay: true,
-        selectLocationState (state) {
+        selectLocationState(state) {
             return state.get('customRoutingReducer').toJS();
-        }
+        },
     });
 
     if (module.hot) {
         module.hot.accept('./rootReducer', () => {
-            const {rootReducer} = require('./rootReducer');
+            const { rootReducer } = require('./rootReducer');
             store.replaceReducer(rootReducer);
         });
     }
 
     const boundActions = bindActionCreatorsToStore(actions, store);
-    return {store, actions: boundActions, history};
+    return { store, actions: boundActions, history };
 };

@@ -131,18 +131,19 @@ export default class ClinicalInformationContainer extends React.Component {
 
     }
 
-    getStoreState(){
-
+    getStoreState() {
         return this.context.store.getState();
-
     }
 
     render() {
 
         const storeState = this.getStoreState();
 
-        switch (storeState.getIn(['clinical_information','status'])) {
+        switch (storeState.getIn(['clinical_information', 'status'])) {
 
+            case 'fetching':
+
+                return <div><Spinner spinnerName="three-bounce" /></div>;
 
         case 'complete':
 
@@ -159,8 +160,7 @@ export default class ClinicalInformationContainer extends React.Component {
 
     }
 
-    buildButtonGroups(){
-
+    buildButtonGroups() {
         return (
 
             <ButtonGroup>
@@ -170,26 +170,24 @@ export default class ClinicalInformationContainer extends React.Component {
             </ButtonGroup>
 
         );
-
     }
 
-    buildTabs(storeState){
-
+    buildTabs(storeState) {
         return (
 
             <Tabs defaultActiveKey={1} id="clinical-information-tabs">
                 <Tab eventKey={1} title="Patient">
                     { this.buildButtonGroups() }
                     <ClinicalInformationTable
-                        data={ storeState.get('clinical_information').get('patient') }
-                        title1="Attribute" title2="Value"
+                      data={storeState.get('clinical_information').get('patient')}
+                      title1="Attribute" title2="Value"
                     />
                 </Tab>
                 <Tab eventKey={2} title="Samples">
                     { this.buildButtonGroups() }
                     <ClinicalInformationTable
-                        data={ storeState.get('clinical_information').get('samples') }
-                        title1="Attribute" title2="1202"
+                      data={storeState.get('clinical_information').get('samples')}
+                      title1="Attribute" title2="1202"
                     />
                     <PDXTree
                       width={800}
@@ -209,5 +207,5 @@ export default class ClinicalInformationContainer extends React.Component {
 
 // grant access to the store via context
 ClinicalInformationContainer.contextTypes = {
-    store: React.PropTypes.object.isRequired
+    store: React.PropTypes.object.isRequired,
 };

@@ -4,7 +4,8 @@
         "es6": true,
         "amd": true
     },
-    "extends": "eslint:recommended",
+    "extends": ["airbnb"],
+
     "parserOptions": {
         "ecmaFeatures": {
             "experimentalObjectRestSpread": true,

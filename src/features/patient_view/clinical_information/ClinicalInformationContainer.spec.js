@@ -4,7 +4,7 @@ import { shallow } from 'enzyme';
 import Immutable from 'immutable';
 import { default as reducer, actionTypes } from './duck';
 
-describe('', ()=>{
+describe('', () => {
 
     // it('clicking a note on active string fires onNoteClick handler', () => {
     //

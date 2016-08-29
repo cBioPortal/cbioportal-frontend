@@ -7,10 +7,10 @@ import styles from './styles.module.css';
 
 describe('<App />', () => {
     let wrapper;
-    let history = {};
+    const history = {};
     beforeEach(() => {
         wrapper =
-      shallow(<App history={history}/>);
+      shallow(<App history={history} />);
     });
 
     it('has a Router component', () => {
@@ -24,5 +24,4 @@ describe('<App />', () => {
         expect(props.history)
       .to.be.defined;
     });
-
 });
