@@ -112,12 +112,27 @@ config.module.loaders.push({ test: /\.css$/, loader: "style-loader!css-loader" }
 // );
 
 // FOR DEV, DON'T USER EXTRACT TEXT PLUGIN
+
+// if we want css modules
+// config.module.loaders.push(
+//     {
+//         test: /\.scss$/,
+//         loaders: [
+//             'style',
+//             'css?modules&importLoaders=2&localIdentName=[name]__[local]__[hash:base64:5]' +
+//             '!sass' +
+//             '!sass-resources'
+//         ]
+//     }
+//
+// );
+
 config.module.loaders.push(
     {
         test: /\.scss$/,
         loaders: [
             'style',
-            'css?modules&importLoaders=2&localIdentName=[name]__[local]__[hash:base64:5]' +
+            'css?' +
             '!sass' +
             '!sass-resources'
         ]
