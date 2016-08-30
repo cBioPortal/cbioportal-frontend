@@ -21,3 +21,8 @@ To run unit/integration tests
 ```
 npm test
 ```
+
+To run linting
+```
+npm run test
+```
