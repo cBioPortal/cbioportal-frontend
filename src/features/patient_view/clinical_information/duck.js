@@ -1,16 +1,16 @@
-import {createAction} from 'redux-actions';
+import { createAction } from 'redux-actions';
 import Immutable from 'immutable';
 
 // ACTION TYPE CONSTANTS
 export const actionTypes = {
 
     FETCH: 'clinical_information_table/FETCH',
-    SET_TAB: 'clinical_information_table/SET_TAB'
+    SET_TAB: 'clinical_information_table/SET_TAB',
 
 };
 
 export const initialState = Immutable.fromJS({
-    status: 'fetching', activeTab:1
+    status: 'fetching', activeTab: 1,
 });
 
 
@@ -19,39 +19,39 @@ export default function reducer(state = initialState, action = {}) {
     switch (action.type) {
         // do reducer stuff
 
-        case actionTypes.FETCH:
+    case actionTypes.FETCH:
 
-            switch (action.status) {
-                case 'fetching':
+        switch (action.status) {
+        case 'fetching':
 
-                    return state.set('status', 'fetching');
+            return state.set('status', 'fetching');
 
-                case 'success':
+        case 'success':
 
-                    return state.merge({
-                        'patient': action.payload.patient,
-                        'samples': action.payload.samples,
-                        'nodes': action.payload.nodes,
-                        'status': 'complete'
-                    });
+            return state.merge({
+                'patient': action.payload.patient,
+                'samples': action.payload.samples,
+                'nodes': Immutable.fromJS(action.payload.nodes),
+                'status': 'complete',
+            });
 
-                case 'error':
+        case 'error':
 
-                    return state.merge({
-                        'table_data': null,
-                        'status': 'error'
-                    });
-            }
+            return state.merge({
+                'table_data': null,
+                'status': 'error',
+            });
+        }
 
-            return state.setIn(['table_data'], Immutable.fromJS(action.payload));
+        return state.setIn(['table_data'], Immutable.fromJS(action.payload));
 
-        case actionTypes.SET_TAB:
+    case actionTypes.SET_TAB:
 
-            return state.set('activeTab', action.payload);
+        return state.set('activeTab', action.payload);
 
-        default:
+    default:
 
-            return state;
+        return state;
     }
 }
 

@@ -1,13 +1,4 @@
-import React from 'react';
-import { assert } from 'chai';
-import { shallow, mount } from 'enzyme';
-import Immutable from 'immutable';
-import sinon from 'sinon';
-import { default as reducer, actionTypes } from './duck';
-import ClinicalInformationContainer from './ClinicalInformationContainer';
-import * as $ from 'jquery';
-
-const mockData = {
+export const mockData = {
 
     patient: [
         ['OS_MONTHS', '58'],
@@ -29,7 +20,7 @@ const mockData = {
                 'parent': 'Top Node',
                 'children': [
                     {
-                        'name': 'Son of Bob',
+                        'name': 'Sonn of Bob',
                         'label': '1.1.1',
                         'parent': 'Bob: Child of Top Node',
                     },
@@ -48,6 +39,11 @@ const mockData = {
                     {
                         'name': 'Son of Sally',
                         'label': '1.2.1',
+                        'parent': 'Sally: Child of Top Node',
+                    },
+                    {
+                        'name': 'Daughter of Sally',
+                        'label': '1.2.2',
                         'parent': 'Sally: Child of Top Node',
                     },
                     {
@@ -84,15 +80,3 @@ const mockData = {
         ],
     },
 };
-
-
-describe('', () => {
-
-    beforeEach(()=>{
-
-
-
-    });
-
-
-});

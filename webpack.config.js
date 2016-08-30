@@ -36,7 +36,7 @@ var config = getConfig({
     html: function (context) {
         return {
             'index.html': context.defaultTemplate({
-                title: 'FretboardTest',
+                title: 'cBioPortal',
                 publicPath,
                 meta: {}
             })
