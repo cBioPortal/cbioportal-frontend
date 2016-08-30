@@ -1,10 +1,11 @@
 import React from 'react';
-import { ClinicalInformationTable } from './ClinicalInformationTable';
-import { Link } from 'react-router';
-import { Tabs, Tab, ButtonGroup, Button } from 'react-bootstrap';
-import { default as $ } from 'jquery';
+import {ClinicalInformationTable} from './ClinicalInformationTable';
+import {Link} from 'react-router';
+import {Tabs, Tab, ButtonGroup, Button} from 'react-bootstrap';
+import {default as $} from 'jquery';
 import PDXTree from './PDXTree'
 import Spinner from 'react-spinkit';
+import {actionTypes} from './duck';
 
 //import styles from './test.scss';
 
@@ -13,28 +14,28 @@ import Spinner from 'react-spinkit';
 export default class ClinicalInformationContainer extends React.Component {
 
 
-    componentDidMount(){
+    componentDidMount() {
 
         this.getDispatcher()(this.fetchData);
 
     }
 
     // this belongs in a datalayer
-    fetchData(dispatch){
+    fetchData(dispatch) {
 
         const type = 'clinical_information_table/FETCH';
 
         const mockData = {
 
-            patient:[
-                [ 'OS_MONTHS' , '58' ],
-                [ 'AGE' ,  '28' ],
-                [ 'OS_STATUS' , 'DECEASED' ],
-                [ 'GENDER', 'Male' ],
-                [ 'CANCER_TYPE', 'Glioma' ]
+            patient: [
+                ['OS_MONTHS', '58'],
+                ['AGE', '28'],
+                ['OS_STATUS', 'DECEASED'],
+                ['GENDER', 'Male'],
+                ['CANCER_TYPE', 'Glioma']
             ],
-            samples:[
-                [ 'anti_O_viverrini_IgG' , 'Negative' ], [ 'Anatomical Subtype' ,  'Extrahepatic' ]
+            samples: [
+                ['anti_O_viverrini_IgG', 'Negative'], ['Anatomical Subtype', 'Extrahepatic']
             ],
             nodes: {
                 "name": "Top Node",
@@ -105,20 +106,20 @@ export default class ClinicalInformationContainer extends React.Component {
         $.get('/').then(
             data => {
 
-                setTimeout(()=>{
+                setTimeout(()=> {
                     dispatch({
                         type,
-                        status:'success',
-                        payload:mockData
+                        status: 'success',
+                        payload: mockData
                     });
-                },6000);
+                }, 6000);
 
 
             },
             error => {
                 dispatch({
                     type,
-                    status:'error',
+                    status: 'error',
                     error
                 });
             }
@@ -126,8 +127,8 @@ export default class ClinicalInformationContainer extends React.Component {
 
         // tell the store that we've initated a fetch
         return {
-            type:'clinical_information_table/FETCH',
-            status:'fetching'
+            type: 'clinical_information_table/FETCH',
+            status: 'fetching'
         };
 
     }
@@ -148,18 +149,18 @@ export default class ClinicalInformationContainer extends React.Component {
 
             case 'fetching':
 
-                return <div><Spinner spinnerName="three-bounce" /></div>;
+                return <div><Spinner spinnerName="three-bounce"/></div>;
 
-        case 'complete':
+            case 'complete':
 
-            return <div>{ this.buildTabs(storeState) }</div>;
+                return <div>{ this.buildTabs(storeState) }</div>;
 
-        case 'error':
+            case 'error':
 
-            return <div>There was an error.</div>;
+                return <div>There was an error.</div>;
 
-        default:
-            return <div></div>;
+            default:
+                return <div></div>;
 
         }
 
@@ -177,27 +178,36 @@ export default class ClinicalInformationContainer extends React.Component {
         );
     }
 
+    selectTab(tabId) {
+
+        this.getDispatcher()({
+            type: actionTypes.SET_TAB,
+            payload: tabId
+        });
+
+    }
+
     buildTabs(storeState) {
         return (
 
-            <Tabs defaultActiveKey={1} id="clinical-information-tabs">
+            <Tabs defaultActiveKey={1} activeKey={ storeState.get('clinical_information').get('activeTab') } id="clinical-information-tabs" onSelect={ this.selectTab.bind(this) }>
                 <Tab eventKey={1} title="Patient">
                     { this.buildButtonGroups() }
                     <ClinicalInformationTable
-                      data={storeState.get('clinical_information').get('patient')}
-                      title1="Attribute" title2="Value"
+                        data={storeState.get('clinical_information').get('patient')}
+                        title1="Attribute" title2="Value"
                     />
                 </Tab>
                 <Tab eventKey={2} title="Samples">
                     { this.buildButtonGroups() }
                     <ClinicalInformationTable
-                      data={storeState.get('clinical_information').get('samples')}
-                      title1="Attribute" title2="1202"
+                        data={storeState.get('clinical_information').get('samples')}
+                        title1="Attribute" title2="1202"
                     />
                     <PDXTree
-                      width={800}
-                      height={300}
-                      nodes={ storeState.get('clinical_information').get('nodes').toJS() }
+                        width={800}
+                        height={300}
+                        nodes={ storeState.get('clinical_information').get('nodes').toJS() }
                     />
                 </Tab>
             </Tabs>
@@ -205,7 +215,6 @@ export default class ClinicalInformationContainer extends React.Component {
         );
 
     }
-
 
 
 }

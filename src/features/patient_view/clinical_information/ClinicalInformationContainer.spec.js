@@ -87,11 +87,32 @@ const mockData = {
 
 describe('', () => {
 
+
     it('dispatches on mounting', ()=> {
 
         const getDispatcherStub = sinon.stub(ClinicalInformationContainer.prototype, 'componentDidMount');
 
         const store = Immutable.fromJS({clinical_information: {status: 'fetching'}});
+
+        const getStoreStateStub = sinon.stub(ClinicalInformationContainer.prototype, 'getStoreState', ()=>store);
+
+        const wrapper = mount(<ClinicalInformationContainer />);
+
+        assert.isTrue(getDispatcherStub.called);
+
+        console.log(getDispatcherStub.args[0]);
+
+        getDispatcherStub.restore();
+
+        getStoreStateStub.restore();
+
+    });
+
+    it('dispatches on mounting', ()=> {
+
+        const getDispatcherStub = sinon.stub(ClinicalInformationContainer.prototype, 'componentDidMount');
+
+        const store = Immutable.fromJS({clinical_information: {status: 'complete'}});
 
         const getStoreStateStub = sinon.stub(ClinicalInformationContainer.prototype, 'getStoreState', ()=>store);
 
