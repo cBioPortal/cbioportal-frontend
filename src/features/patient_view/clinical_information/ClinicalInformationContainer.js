@@ -7,7 +7,7 @@ import PDXTree from './PDXTree'
 import Spinner from 'react-spinkit';
 import {actionTypes} from './duck';
 
-//import styles from './test.scss';
+import styles from './test.scss';
 
 //import './test.css';
 
