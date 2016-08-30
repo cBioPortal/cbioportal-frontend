@@ -7,7 +7,7 @@ To embed in cBioPortal site, place the following in any jsp
 <script src="//localhost:3000/app.js"></script>
 ```
 
-To install 
+To install all app and dev dependencies 
 ```
 npm install
 ```
