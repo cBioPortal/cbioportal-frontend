@@ -1,5 +1,9 @@
 var ExtractTextPlugin = require("extract-text-webpack-plugin");
 
+var HtmlWebpackPlugin = require('html-webpack-plugin');
+
+var jsonFN = require("json-fn");
+
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const dotenv = require('dotenv');
 
@@ -9,7 +13,7 @@ const path = require('path');
 const join = path.join;
 const resolve = path.resolve;
 
-const getConfig = require('hjs-webpack');
+//const getConfig = require('hjs-webpack');
 
 const isDev = NODE_ENV === 'development';
 const isTest = NODE_ENV === 'test';
@@ -27,27 +31,83 @@ const modules = join(root, 'node_modules');
 const dest = join(root, 'dist');
 const css = join(src, 'styles');
 
-// NOTE: we are not using hjs dev server, so we have hot turned off even though it
-// gets turned on when we call webpack-dev-server CLI (see package.json build command)
-var config = getConfig({
-    isDev: isDev,
-    in: join(src, 'app.js'),
-    out: dest,
-    html: function (context) {
-        return {
-            'index.html': context.defaultTemplate({
-                title: 'cBioPortal',
-                publicPath,
-                meta: {}
-            })
-        };
+var config = {
+
+    "entry": [
+        "/Users/aaronlisman/projects/cbioportal-frontend/src/app.js"
+    ],
+    "output": {
+        "path": "/Users/aaronlisman/projects/cbioportal-frontend/dist/",
+        "filename": "app.js",
+        "cssFilename": "app.css",
+        "hash": false,
+        "publicPath": "/"
     },
-    devServer: {
-        historyApiFallback:false,
-        hot:false,
-        noInfo:false
+    "resolve": {
+        "extensions": [
+            "",
+            ".js",
+            ".jsx",
+            ".json"
+        ]
+    },
+
+    plugins: [new HtmlWebpackPlugin({cache: false, template: 'my-index.ejs'})],
+
+    "module": {
+        "loaders": [
+            {
+                test: /\.(js|jsx|babel)$/,
+                exclude: /node_modules/,
+                loader: 'babel-loader'
+            },
+            {
+                test: /\.json$/,
+                loaders: ['json']
+            },
+            {
+                test: /\.otf(\?\S*)?$/,
+                loader: 'url-loader?limit=10000'
+            },
+            {
+                test: /\.eot(\?\S*)?$/,
+                loader: 'url-loader?limit=10000',
+            },
+            {
+                test: /\.svg(\?\S*)?$/,
+                loader: 'url-loader?mimetype=image/svg+xml&limit=10000'
+            },
+            {
+                test: /\.ttf(\?\S*)?$/,
+                loader: 'url-loader?mimetype=application/octet-stream&limit=10000'
+            },
+            {
+                test: /\.woff2?(\?\S*)?$/,
+                loader: 'url-loader?mimetype=application/font-woff&limit=10000'
+            },
+            {
+                test: /\.(jpe?g|png|gif)$/,
+                loader: 'url-loader?limit=10000'
+            }
+        ]
+    },
+    "postcss": [require('autoprefixer')],
+    "devtool": "cheap-module-eval-source-map",
+    "devServer": {
+        "historyApiFallback": false,
+        "hot": false,
+        "noInfo": false,
+        "quiet": false,
+        "lazy": false,
+        "publicPath": "/",
+        "contentBase": "/Users/aaronlisman/projects/cbioportal-frontend/dist",
+        "port": 3000,
+        "https": false,
+        "hostname": "localhost"
     }
-});
+
+
+};
 
 // ENV variables
 const dotEnvVars = dotenv.config();
@@ -78,11 +138,11 @@ config.plugins = [
 
 // for font-awesome;
 const fontAwesomeLoaders = [
-    { test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: "url-loader?limit=10000&minetype=application/font-woff" },
-    { test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: "file-loader" }
+    {test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: "url-loader?limit=10000&minetype=application/font-woff"},
+    {test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: "file-loader"}
 ];
 
-config.module.loaders.push.apply(this,fontAwesomeLoaders);
+config.module.loaders.push.apply(this, fontAwesomeLoaders);
 
 config.module.loaders.push(
     {
@@ -90,9 +150,6 @@ config.module.loaders.push(
         loader: 'imports?jQuery=jquery'
     }
 );
-
-
-config.module.loaders.push({ test: /\.css$/, loader: "style-loader!css-loader" });
 
 
 // START BOOTSTRAP LOADER
@@ -127,18 +184,53 @@ config.module.loaders.push({ test: /\.css$/, loader: "style-loader!css-loader" }
 //
 // );
 
-config.module.loaders.push(
-    {
-        test: /\.scss$/,
-        loaders: [
-            'style',
-            'css?' +
-            '!sass' +
-            '!sass-resources'
-        ]
-    }
+if (isDev) {
 
-);
+    // IN DEV WE WANT TO LOAD CSS AND SCSS BUT NOT USE EXTRACT TEXT PLUGIN
+    // STYLES WILL BE IN JS BUNDLE AND APPENDED TO DOM IN <STYLE> TAGS
+
+    config.module.loaders.push({test: /\.css$/, loader: "style-loader!css-loader"});
+
+    config.module.loaders.push(
+        {
+            test: /\.scss$/,
+            loaders: [
+                'style',
+                'css?' +
+                '!sass' +
+                '!sass-resources'
+            ]
+        }
+    );
+
+} else {
+
+    config.module.loaders.push(
+        {
+            "test": /\.css$/,
+
+            "loader": ExtractTextPlugin.extract(
+                'style',
+                'css?' +
+                '!sass' +
+                '!sass-resources'
+            )
+
+        },
+        {
+            "test": /\.scss$/,
+            "loader": ExtractTextPlugin.extract(
+                'style',
+                'css?' +
+                '!sass' +
+                '!sass-resources'
+            )
+
+        }
+    );
+
+}
+
 
 config.sassResources = './sass-resources.scss';
 
@@ -147,20 +239,8 @@ config.entry.push('bootstrap-loader');
 // END BOOTSTRAP LOADER
 
 
-config.entry.push('font-awesome-webpack');
+//config.entry.push('font-awesome-webpack');
 
-
-
-// CSS modules
-
-// postcss
-// config.postcss = [].concat([
-//     require('precss')({}),
-//     require('autoprefixer')({}),
-//     require('cssnano')({})
-// ]);
-
-// END postcss
 
 // Roots
 config.resolve.root = [src, modules];
