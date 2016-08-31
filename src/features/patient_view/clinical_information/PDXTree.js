@@ -1,6 +1,6 @@
 import React from 'react';
 import SampleLabel from './SampleLabel';
-
+          //
 export default class PDXTree extends React.Component {
 
     /*
@@ -63,12 +63,12 @@ export default class PDXTree extends React.Component {
         }
     }
 }
-
-PDXTree.propTypes = {
-    width: React.PropTypes.number.isRequired,
-    height: React.PropTypes.number.isRequired,
-    data: React.PropTypes.any.isRequired,
-};
+//
+// PDXTree.propTypes = {
+//     width: React.PropTypes.number.isRequired,
+//     height: React.PropTypes.number.isRequired,
+//     data: React.PropTypes.any.isRequired,
+// };
 
 /*
  * Convert cBioPortal clinical data format and given sampleOrder (for labels)
