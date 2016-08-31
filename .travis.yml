@@ -1,0 +1,9 @@
+language: node_js
+node_js:
+  - "4.4.7"
+install:
+  - sudo apt-get install npm
+  - npm config set registry http://registry.npmjs.org/
+  - npm install
+script:
+  - npm test

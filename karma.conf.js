@@ -12,7 +12,8 @@ module.exports = function (config) {
 
     preprocessors: {
       // add webpack as preprocessor
-      'tests.webpack.js': ['webpack', 'sourcemap']
+      'tests.webpack.js': ['webpack', 'sourcemap'],
+      'src/**/*.js': ['coverage']
     },
 
     webpack: webpackConfig,
@@ -26,10 +27,11 @@ module.exports = function (config) {
       'karma-webpack',
       'karma-phantomjs-launcher',
       'karma-spec-reporter',
-      'karma-sourcemap-loader'
+      'karma-sourcemap-loader',
+      'karma-coverage'
     ],
 
-    reporters: ['spec'],
+    reporters: ['coverage', 'spec'],
     port: 9876,
     colors: true,
     logLevel: config.LOG_INFO,
