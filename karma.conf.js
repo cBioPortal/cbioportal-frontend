@@ -13,7 +13,6 @@ module.exports = function (config) {
     preprocessors: {
       // add webpack as preprocessor
       'tests.webpack.js': ['webpack', 'sourcemap'],
-      'src/**/*.js': ['coverage']
     },
 
     webpack: webpackConfig,
@@ -36,6 +35,12 @@ module.exports = function (config) {
     colors: true,
     logLevel: config.LOG_INFO,
     browsers: ['PhantomJS'],
-    singleRun: !argv.watch
+    singleRun: !argv.watch,
+    coverageReporter: {
+      reporters: [
+        { type: 'lcov' },
+        { type: 'text-summary' }
+      ],
+    }
   });
 };

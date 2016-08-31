@@ -1,6 +1,6 @@
 {
-  "name": "CleanProject",
-  "version": "1.0.0",
+  "name": "cbioportal-frontend",
+  "version": "0.0.1",
   "description": "",
   "scripts": {
     "start": "./node_modules/.bin/cross-env NODE_ENV=development ./node_modules/.bin/webpack-dev-server --inline --hot",
@@ -20,6 +20,7 @@
     "extract-text-webpack-plugin": "^1.0.1",
     "font-awesome": "^4.6.3",
     "font-awesome-webpack": "0.0.4",
+    "istanbul-instrumenter-loader": "^0.2.0",
     "jquery": "^3.1.0",
     "json-fn": "^1.1.1",
     "less": "^2.7.1",
@@ -47,6 +48,7 @@
     "autoprefixer": "^6.3.7",
     "babel-core": "^6.10.4",
     "babel-loader": "^6.2.4",
+    "babel-plugin-istanbul": "^2.0.0",
     "babel-plugin-transform-es2015-modules-umd": "^6.8.0",
     "babel-polyfill": "^6.9.1",
     "babel-preset-es2015": "^6.9.0",
@@ -97,6 +99,7 @@
     "redux-devtools-dock-monitor": "^1.1.1",
     "redux-devtools-log-monitor": "^1.0.11",
     "resolve-url-loader": "^1.6.0",
+    "rimraf": "^2.5.4",
     "sass-loader": "^4.0.0",
     "sass-resources-loader": "^1.1.0",
     "sinon": "^1.17.4",

@@ -5,5 +5,10 @@ install:
   - sudo apt-get install npm
   - npm config set registry http://registry.npmjs.org/
   - npm install
+  # install codecov.io
+  - npm install codecov.io
 script:
   - npm test
+after_success:
+ # upload coverage data to codecov.io
+ - cat coverage/*/lcov.info | codecov
