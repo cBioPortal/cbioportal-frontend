@@ -32,10 +32,10 @@ const css = join(src, 'styles');
 var config = {
 
     "entry": [
-        "/Users/aaronlisman/projects/cbioportal-frontend/src/app.js"
+        "./src/app.js"
     ],
     "output": {
-        "path": "/Users/aaronlisman/projects/cbioportal-frontend/dist/",
+        "path": "./dist/",
         "filename": "app.js",
         "cssFilename": "app.css",
         "hash": false,
@@ -98,7 +98,7 @@ var config = {
         "quiet": false,
         "lazy": false,
         "publicPath": "/",
-        "contentBase": "/Users/aaronlisman/projects/cbioportal-frontend/dist",
+        "contentBase": "dist",
         "port": 3000,
         "https": false,
         "hostname": "localhost"
