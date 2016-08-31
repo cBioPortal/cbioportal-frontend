@@ -1,4 +1,5 @@
 # cbioportal-frontend
+[![Build Status](https://travis-ci.org/cBioPortal/cbioportal-frontend.svg?branch=master)](https://travis-ci.org/cBioPortal/cbioportal-frontend)
 
 To embed in cBioPortal site, place the following in any jsp
 
