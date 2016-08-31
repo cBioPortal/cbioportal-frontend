@@ -37,19 +37,6 @@ export default class ClinicalInformationContainer extends React.Component {
                     });
                 }, 3000);
 
-                setTimeout(() => {
-                    console.log("another dispatch");
-
-                    mockData.nodes.children = [];
-
-                    dispatch({
-                        type: actionTypes.FETCH,
-                        status: 'success',
-                        payload: mockData,
-                    });
-                }, 15000);
-
-
             }
         );
 
