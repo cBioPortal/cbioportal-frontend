@@ -13,8 +13,6 @@ const path = require('path');
 const join = path.join;
 const resolve = path.resolve;
 
-//const getConfig = require('hjs-webpack');
-
 const isDev = NODE_ENV === 'development';
 const isTest = NODE_ENV === 'test';
 
