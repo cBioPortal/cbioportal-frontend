@@ -12,3 +12,6 @@ script:
 after_success:
  # upload coverage data to codecov.io
  - cat coverage/*/lcov.info | codecov
+cache:
+  directories:
+    - node_modules
