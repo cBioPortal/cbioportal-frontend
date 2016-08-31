@@ -1,5 +1,6 @@
 # cbioportal-frontend
 [![Build Status](https://travis-ci.org/cBioPortal/cbioportal-frontend.svg?branch=master)](https://travis-ci.org/cBioPortal/cbioportal-frontend)
+[![codecov](https://codecov.io/gh/cbioportal/cbioportal-frontend/branch/master/graph/badge.svg)](https://codecov.io/gh/cbioportal/cbioportal-frontend)
 
 To embed in cBioPortal site, place the following in any jsp
 
@@ -25,5 +26,5 @@ npm test
 
 To run linting
 ```
-npm run test
+npm run lint
 ```
