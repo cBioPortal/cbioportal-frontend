@@ -61,8 +61,6 @@ export default class ClinicalInformationContainer extends React.Component {
     render() {
         const storeState = this.getStoreState();
 
-        console.log("container render");
-
         switch (storeState.getIn(['clinical_information', 'status'])) {
 
             case 'fetching':
