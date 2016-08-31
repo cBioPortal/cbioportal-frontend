@@ -61,6 +61,8 @@ export default class ClinicalInformationContainer extends React.Component {
     render() {
         const storeState = this.getStoreState();
 
+        console.log("container render");
+
         switch (storeState.getIn(['clinical_information', 'status'])) {
 
         case 'fetching':
@@ -101,9 +103,10 @@ export default class ClinicalInformationContainer extends React.Component {
     }
 
     buildTabs(storeState) {
+
         return (
 
-            <Tabs defaultActiveKey={1} activeKey={storeState.get('clinical_information').get('activeTab')} id="clinical-information-tabs" onSelect={this.selectTab.bind(this)}>
+            <Tabs defaultActiveKey={1} animation={false} activeKey={storeState.get('clinical_information').get('activeTab')} id="clinical-information-tabs" onSelect={this.selectTab.bind(this)}>
                 <Tab eventKey={1} title="Patient">
                     { this.buildButtonGroups() }
                     <ClinicalInformationTable
@@ -120,7 +123,7 @@ export default class ClinicalInformationContainer extends React.Component {
                     <PDXTree
                       width={800}
                       height={300}
-                      data={ Immutable.fromJS(mockData.nodes) }
+                      data={ storeState.get('clinical_information').get('nodes').toJS() }
                     />
                 </Tab>
             </Tabs>
