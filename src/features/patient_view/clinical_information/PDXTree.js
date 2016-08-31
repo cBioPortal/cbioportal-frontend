@@ -32,9 +32,12 @@ export default class PDXTree extends React.Component {
     }
 
     render() {
+
+        console.log("pdx tree render");
+
         const {width, height, data} = this.props;
 
-        const nodes = data.toJS();
+        const nodes = data;
 
         if (nodes.children) {
             const maxDepth = Math.max(...nodes.children.map((n, i) => {
