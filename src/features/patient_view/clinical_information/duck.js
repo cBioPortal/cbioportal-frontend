@@ -1,5 +1,7 @@
 import { createAction } from 'redux-actions';
 import Immutable from 'immutable';
+import getClinicalInformationData from './dataLayer';
+import { mockData } from './mockData';
 
 // ACTION TYPE CONSTANTS
 export const actionTypes = {
@@ -21,7 +23,7 @@ export default function reducer(state = initialState, action = {}) {
 
     case actionTypes.FETCH:
 
-        switch (action.status) {
+        switch (action.meta.status) {
         case 'fetching':
 
             return state.set('status', 'fetching');
@@ -58,15 +60,42 @@ export default function reducer(state = initialState, action = {}) {
 // Action Creators
 export function loadClinicalInformationTableData() {
 
-    return {
-        type: 'clinical_information_table/FETCH',
-        status: 'fetching',
-    };
+    // this is a thunk
+    return (dispatch)=>{
+
+        getClinicalInformationData().then(
+            function(){
+
+                dispatch({
+                    type: actionTypes.FETCH,
+                    meta: { status: 'success' },
+                    payload: mockData,
+                });
+            }.bind(this)
+        );
+
+        dispatch({
+            type: actionTypes.FETCH,
+            meta: { status:'fetching' }
+        });
+
+
+    }
 
 };
 
+export function setTab(tabId){
+
+    return {
+        type: actionTypes.SET_TAB,
+        payload: tabId,
+    }
+
+}
+
 export const actionCreators = {
 
-    loadClinicalInformationTableData
+    loadClinicalInformationTableData,
+    setTab
 
 };

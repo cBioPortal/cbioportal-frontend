@@ -7,9 +7,6 @@ import PDXTree from './PDXTree';
 import Spinner from 'react-spinkit';
 import Immutable from 'immutable';
 import { actionTypes, actionCreators } from './duck';
-
-import {mockData} from './mockData';
-import getClinicalInformationData from './dataLayer';
 import PurifyComponent from 'shared/PurifyComponent';
 import { connect } from 'react-redux';
 
@@ -20,30 +17,37 @@ export class ClinicalInformationContainerUnconnected extends React.Component {
 
     componentDidMount() {
 
-        //this.props.loadClinicalInformationTableData();
-        this.fetchData();
+
+
+        this.props.loadClinicalInformationTableData();
+        //this.fetchData();
+
+
+        //this.props.dispatch();
+
+
     }
 
     // this belongs in a datalayer
-    fetchData(dispatch) {
+    fetchData() {
         // IN PRACTICE, WE SHOULD MOVE NETWORK CALLS TO A DATA LAYER WHICH EXPOSES PROMISES
         // TO COMPONENTS
 
-        getClinicalInformationData().then(
-            function(){
+        // getClinicalInformationData().then(
+        //     function(){
+        //
+        //         this.props.dispatch({
+        //             type: actionTypes.FETCH,
+        //             status: 'success',
+        //             payload: mockData,
+        //         });
+        //     }.bind(this)
+        // );
 
-                this.props.dispatch({
-                    type: actionTypes.FETCH,
-                    status: 'success',
-                    payload: mockData,
-                });
-            }.bind(this)
-        );
-
-        return {
-            type: 'clinical_information_table/FETCH',
-            status: 'fetching',
-        };
+        // return {
+        //     type: 'clinical_information_table/FETCH',
+        //     status: 'fetching',
+        // };
     }
 
     getClinicalInformationData() {
@@ -85,10 +89,13 @@ export class ClinicalInformationContainerUnconnected extends React.Component {
     }
 
     selectTab(tabId) {
-        this.props.dispatch({
-            type: actionTypes.SET_TAB,
-            payload: tabId,
-        });
+        // this.props.dispatch({
+        //     type: actionTypes.SET_TAB,
+        //     payload: tabId,
+        // });
+
+        this.props.setTab(tabId)
+
     }
 
     buildTabs() {
@@ -149,5 +156,5 @@ const mapDispatchToProps = {
 
 };
 
-export default connect(mapStateToProps)(ClinicalInformationContainerUnconnected);
+export default connect(mapStateToProps, actionCreators)(ClinicalInformationContainerUnconnected);
 

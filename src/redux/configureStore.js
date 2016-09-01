@@ -6,6 +6,7 @@ import thunkMiddleware from 'redux-thunk';
 import { createStore, compose, applyMiddleware } from 'redux';
 import { rootReducer, actions, initialState } from './rootReducer';
 import Immutable from 'immutable';
+import { apiMiddleware } from 'redux-api-middleware';
 
 export const configureStore = ({
     historyType = browserHistory,
@@ -18,6 +19,7 @@ export const configureStore = ({
         //     }
         // }),
         thunkMiddleware,
+        //apiMiddleware,
         routerMiddleware(historyType),
     ];
 
