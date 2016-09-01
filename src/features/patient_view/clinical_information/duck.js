@@ -56,4 +56,17 @@ export default function reducer(state = initialState, action = {}) {
 }
 
 // Action Creators
-export const loadClinicalInformationTableData = createAction(actionTypes.LOAD);
+export function loadClinicalInformationTableData() {
+
+    return {
+        type: 'clinical_information_table/FETCH',
+        status: 'fetching',
+    };
+
+};
+
+export const actionCreators = {
+
+    loadClinicalInformationTableData
+
+};

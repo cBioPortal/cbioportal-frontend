@@ -4,7 +4,7 @@ import { shallow, mount } from 'enzyme';
 import Immutable from 'immutable';
 import sinon from 'sinon';
 import { default as reducer, actionTypes } from './duck';
-import ClinicalInformationContainer from './ClinicalInformationContainer';
+import { ClinicalInformationContainerUnconnected } from './ClinicalInformationContainer';
 import * as $ from 'jquery';
 
 const mockData = {
@@ -93,6 +93,17 @@ describe('', () => {
 
 
     });
+
+    it.only('',()=>{
+
+        const dispatchStub = sinon.stub();
+
+        shallow(<ClinicalInformationContainerUnconnected dispatch={dispatchStub} store={Immutable.fromJS({})} />)
+
+        //assert.isTrue(dispatchStub.called);
+
+    })
+
 
 
 });

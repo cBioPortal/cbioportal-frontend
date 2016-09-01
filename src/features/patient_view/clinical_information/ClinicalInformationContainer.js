@@ -6,20 +6,22 @@ import {default as $} from 'jquery';
 import PDXTree from './PDXTree';
 import Spinner from 'react-spinkit';
 import Immutable from 'immutable';
-import {actionTypes} from './duck';
+import { actionTypes, actionCreators } from './duck';
+
 import {mockData} from './mockData';
 import getClinicalInformationData from './dataLayer';
 import PurifyComponent from 'shared/PurifyComponent';
+import { connect } from 'react-redux';
 
 import './style/local-styles.scss';
 
-export default class ClinicalInformationContainer extends React.Component {
+
+export class ClinicalInformationContainerUnconnected extends React.Component {
 
     componentDidMount() {
 
-        const dispatch = this.getDispatcher();
-
-        dispatch(this.fetchData);
+        //this.props.loadClinicalInformationTableData();
+        this.fetchData();
     }
 
     // this belongs in a datalayer
@@ -28,16 +30,14 @@ export default class ClinicalInformationContainer extends React.Component {
         // TO COMPONENTS
 
         getClinicalInformationData().then(
-            ()=> {
-                setTimeout(() => {
-                    dispatch({
-                        type: actionTypes.FETCH,
-                        status: 'success',
-                        payload: mockData,
-                    });
-                }, 3000);
+            function(){
 
-            }
+                this.props.dispatch({
+                    type: actionTypes.FETCH,
+                    status: 'success',
+                    payload: mockData,
+                });
+            }.bind(this)
         );
 
         return {
@@ -50,18 +50,9 @@ export default class ClinicalInformationContainer extends React.Component {
         return getClinicalInformationData();
     }
 
-    getStoreState() {
-        return this.context.store.getState();
-    }
-
-    getDispatcher() {
-        return this.context.store.dispatch;
-    }
-
     render() {
-        const storeState = this.getStoreState();
 
-        switch (storeState.getIn(['clinical_information', 'status'])) {
+        switch (this.props.status) {
 
             case 'fetching':
 
@@ -69,7 +60,7 @@ export default class ClinicalInformationContainer extends React.Component {
 
             case 'complete':
 
-                return <div>{ this.buildTabs(storeState) }</div>;
+                return <div>{ this.buildTabs() }</div>;
 
             case 'error':
 
@@ -94,30 +85,30 @@ export default class ClinicalInformationContainer extends React.Component {
     }
 
     selectTab(tabId) {
-        this.getDispatcher()({
+        this.props.dispatch({
             type: actionTypes.SET_TAB,
             payload: tabId,
         });
     }
 
-    buildTabs(storeState) {
+    buildTabs() {
 
         return (
 
             <Tabs defaultActiveKey={1} animation={false}
-                  activeKey={storeState.get('clinical_information').get('activeTab')} id="clinical-information-tabs"
+                  activeKey={this.props.activeTab} id="clinical-information-tabs"
                   onSelect={this.selectTab.bind(this)}>
                 <Tab eventKey={1} title="Patient">
                     { this.buildButtonGroups() }
                     <ClinicalInformationTable
-                        data={storeState.get('clinical_information').get('patient')}
+                        data={this.props.patient}
                         title1="Attribute" title2="Value"
                     />
                 </Tab>
                 <Tab eventKey={2} title="Samples">
                     { this.buildButtonGroups() }
                     <ClinicalInformationTable
-                        data={storeState.get('clinical_information').get('samples')}
+                        data={this.props.samples}
                         title1="Attribute" title2="1202"
                     />
 
@@ -125,7 +116,7 @@ export default class ClinicalInformationContainer extends React.Component {
                         component={PDXTree}
                         width={800}
                         height={300}
-                        data={ storeState.get('clinical_information').get('nodes') }
+                        data={ this.props.nodes }
                     />
 
                 </Tab>
@@ -137,7 +128,26 @@ export default class ClinicalInformationContainer extends React.Component {
 
 }
 
-// grant access to the store via context
-ClinicalInformationContainer.contextTypes = {
-    store: React.PropTypes.object.isRequired,
+const mapStateToProps = function mapStateToProps(state) {
+    return {
+        samples:state.get('clinical_information').get('samples'),
+        status:state.get('clinical_information').get('status'),
+        activeTab:state.get('clinical_information').get('activeTab'),
+        patient:state.get('clinical_information').get('patient'),
+        nodes:state.get('clinical_information').get('nodes')
+    };
+}
+
+const mapDispatchToProps = {
+
+    fetchData:function(){
+        return {
+            type: 'clinical_information_table/FETCH',
+            status: 'fetching',
+        };
+    }
+
 };
+
+export default connect(mapStateToProps)(ClinicalInformationContainerUnconnected);
+
