@@ -94,7 +94,7 @@ describe('', () => {
 
     });
 
-    it.only('',()=>{
+    it('',()=>{
 
         const dispatchStub = sinon.stub();
 
