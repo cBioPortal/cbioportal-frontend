@@ -25,6 +25,7 @@
     "json-fn": "^1.1.1",
     "less": "^2.7.1",
     "node-sass": "^3.8.0",
+    "query-string": "^4.2.3",
     "react": "^15.3.0",
     "react-addons-pure-render-mixin": "^15.3.0",
     "react-bootstrap": "^0.30.1",
