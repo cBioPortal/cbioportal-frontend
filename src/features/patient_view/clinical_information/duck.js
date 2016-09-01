@@ -64,7 +64,10 @@ export function loadClinicalInformationTableData() {
     return (dispatch)=>{
 
         getClinicalInformationData().then(
-            function(){
+            function(data){
+
+                debugger;
+
 
                 dispatch({
                     type: actionTypes.FETCH,
