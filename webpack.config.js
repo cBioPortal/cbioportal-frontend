@@ -50,7 +50,10 @@ var config = {
         ]
     },
 
-    plugins: [new HtmlWebpackPlugin({cache: false, template: 'my-index.ejs'})],
+    plugins: [
+        new HtmlWebpackPlugin({cache: false, template: 'my-index.ejs'}),
+        new webpack.optimize.DedupePlugin()
+    ],
 
     "module": {
         "loaders": [
@@ -226,6 +229,20 @@ if (isDev) {
 
         }
     );
+
+    config.plugins.push(
+        new webpack.optimize.UglifyJsPlugin({
+            compress: {
+                warnings: false
+            },
+            sourceMap:false,
+            comments:false
+        })
+    );
+
+
+
+
 
 }
 
