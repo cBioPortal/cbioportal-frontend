@@ -1,5 +1,5 @@
 import React from 'react';
-import {ClinicalInformationTable} from './ClinicalInformationTable';
+import {ClinicalInformationTable, convertSampleDataToTable, convertPatientDataToTable } from './ClinicalInformationTable';
 import {Link} from 'react-router';
 import {Tabs, Tab, ButtonGroup, Button} from 'react-bootstrap';
 import {default as $} from 'jquery';
@@ -108,15 +108,15 @@ export class ClinicalInformationContainerUnconnected extends React.Component {
                 <Tab eventKey={1} title="Patient">
                     { this.buildButtonGroups() }
                     <ClinicalInformationTable
-                        data={this.props.patient}
-                        title1="Attribute" title2="Value"
+                        data={convertPatientDataToTable(this.props.patient)}
+                        header={["Attribute", "Value"]}
                     />
                 </Tab>
                 <Tab eventKey={2} title="Samples">
                     { this.buildButtonGroups() }
                     <ClinicalInformationTable
-                        data={this.props.samples}
-                        title1="Attribute" title2="1202"
+                        data={convertSampleDataToTable(this.props.samples)}
+                        header={this.props.samples.map(x => x.get('id')).insert(0, "Attribute")}
                     />
 
                     <PurifyComponent
