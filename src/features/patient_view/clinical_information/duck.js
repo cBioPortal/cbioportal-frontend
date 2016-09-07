@@ -2,6 +2,7 @@ import { createAction } from 'redux-actions';
 import Immutable from 'immutable';
 import getClinicalInformationData from './dataLayer';
 import { mockData } from './mockData';
+import convertSamplesData from './lib/convertSamplesData';
 
 // ACTION TYPE CONSTANTS
 export const actionTypes = {
@@ -32,7 +33,7 @@ export default function reducer(state = initialState, action = {}) {
 
             return state.merge({
                 'patient': action.payload.patient,
-                'samples': action.payload.samples,
+                'samples': Immutable.fromJS(convertSamplesData(action.payload.samples)),
                 'nodes': Immutable.fromJS(action.payload.nodes),
                 'status': 'complete',
             });
