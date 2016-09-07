@@ -1,5 +1,6 @@
 import React from 'react';
-import {ClinicalInformationTable, convertSampleDataToTable, convertPatientDataToTable } from './ClinicalInformationTable';
+import ClinicalInformationSamplesTable from './ClinicalInformationSamplesTable';
+import ClinicalInformationPatientTable from './ClinicalInformationPatientTable';
 import {Link} from 'react-router';
 import {Tabs, Tab, ButtonGroup, Button} from 'react-bootstrap';
 import {default as $} from 'jquery';
@@ -107,17 +108,12 @@ export class ClinicalInformationContainerUnconnected extends React.Component {
                   onSelect={this.selectTab.bind(this)}>
                 <Tab eventKey={1} title="Patient">
                     { this.buildButtonGroups() }
-                    <ClinicalInformationTable
-                        data={convertPatientDataToTable(this.props.patient)}
-                        header={["Attribute", "Value"]}
-                    />
+                    <ClinicalInformationPatientTable data={this.props.patient.get("clinicalData") } />
                 </Tab>
                 <Tab eventKey={2} title="Samples">
                     { this.buildButtonGroups() }
-                    <ClinicalInformationTable
-                        data={convertSampleDataToTable(this.props.samples)}
-                        header={this.props.samples.map(x => x.get('id')).insert(0, "Attribute")}
-                    />
+                    <ClinicalInformationSamplesTable
+                        data={this.props.samples} />
 
                     <PurifyComponent
                         component={PDXTree}
