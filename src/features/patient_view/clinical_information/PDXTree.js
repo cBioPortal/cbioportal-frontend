@@ -1,6 +1,6 @@
 import React from 'react';
-import SampleLabel from './SampleLabel';
-          //
+import SampleLabelSVG from './SampleLabel';
+
 export default class PDXTree extends React.Component {
 
     /*
@@ -9,7 +9,7 @@ export default class PDXTree extends React.Component {
     renderNode(node, width, yDistance, x, y, level) {
         if (node.children) {
             return (<g key={node.name}>
-                <SampleLabel x={x} y={y} color={'black'} label={node.label}/>
+                <SampleLabelSVG x={x} y={y} color={'black'} label={node.label}/>
                 {node.children.map((n, i) => {
                     const newX = x - (width / 2) + (i + .5) * (width / node.children.length);
                     const newY = (level + 1) * yDistance;
@@ -26,7 +26,7 @@ export default class PDXTree extends React.Component {
             </g>);
         } else {
             return (<g key={node.name}>
-                <SampleLabel x={x} y={y} color={'black'} label={node.label}/>
+                <SampleLabelSVG x={x} y={y} color={'black'} label={node.label}/>
             </g>);
         }
     }

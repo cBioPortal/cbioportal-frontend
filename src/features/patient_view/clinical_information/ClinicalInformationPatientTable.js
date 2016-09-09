@@ -15,15 +15,13 @@ export default class ClinicalInformationPatientTable extends React.Component {
 
     render() {
 
-        console.log(this.props.data);
-
         const rows = [];
 
         this.props.data.forEach((item)=> {
 
             rows.push(
                 <tr key={item.get('id')}>
-                    <td>{item.get('name')}</td>
+                    <td>{item.get('id')}</td>
                     <td>{item.get('value')}</td>
                 </tr>
             )

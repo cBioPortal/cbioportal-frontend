@@ -10,6 +10,7 @@ import Immutable from 'immutable';
 import { actionTypes, actionCreators } from './duck';
 import PurifyComponent from 'shared/PurifyComponent';
 import { connect } from 'react-redux';
+import { getSamples } from 'shared/oldAPIWrapper'
 
 import './style/local-styles.scss';
 
@@ -115,13 +116,13 @@ export class ClinicalInformationContainerUnconnected extends React.Component {
                     <ClinicalInformationSamplesTable
                         data={this.props.samples} />
 
+                    <h4 style={{color: 'black'}}>PDX Hierarchy</h4>
                     <PurifyComponent
                         component={PDXTree}
-                        width={800}
+                        width={400}
                         height={300}
                         data={ this.props.nodes }
                     />
-
                 </Tab>
             </Tabs>
 

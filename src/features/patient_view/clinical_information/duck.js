@@ -1,7 +1,6 @@
 import { createAction } from 'redux-actions';
 import Immutable from 'immutable';
 import getClinicalInformationData from './dataLayer';
-import { mockData } from './mockData';
 import convertSamplesData from './lib/convertSamplesData';
 
 // ACTION TYPE CONSTANTS
@@ -66,11 +65,10 @@ export function loadClinicalInformationTableData() {
 
         getClinicalInformationData().then(
             function(data){
-
                 dispatch({
                     type: actionTypes.FETCH,
                     meta: { status: 'success' },
-                    payload: mockData,
+                    payload: data,
                 });
             }.bind(this)
         );

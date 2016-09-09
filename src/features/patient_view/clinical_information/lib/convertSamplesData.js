@@ -13,6 +13,7 @@ export default function(data) {
             output.items[dataItem.id] = output.items[dataItem.id] || {};
             output.items[dataItem.id][sampleId] = dataItem.value.toString();
             output.items[dataItem.id].name = dataItem.name;
+            output.items[dataItem.id].id = dataItem.id;
 
         });
 

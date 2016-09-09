@@ -1,49 +1,51 @@
 import * as $ from 'jquery';
 import queryString from 'query-string';
-import mockData from './mockData';
+import { mockData } from './mockData';
+import { zipObject } from 'lodash';
+import { getSamples, getPatient } from 'shared/oldAPIWrapper'
+import { getTreeNodesFromClinicalData } from './PDXTree'
 
-export default function getClinicalInformationData(){
 
+export default function getClinicalInformationData() {
     let promise = new Promise(function(resolve, reject){
 
-        const QueryString = queryString.parse(location.search);
+        const qs = queryString.parse(location.search);
 
-        //console.log(parsed);
+        if (qs.cancer_study_id && qs.case_id) {
+            let cancerStudyId = qs.cancer_study_id;
+            let caseId = qs.case_id;
+
+                Promise.all([mockData, getSamples(cancerStudyId, caseId), getPatient(cancerStudyId, caseId)]).then(result => {
+                let [mockData, samples, patient] = result;
+
+                let sampleOrder = samples.map(x => x.id).sort()
+
+                // create object with sample ids as keys and values are objects
+                // that have clinical attribute ids as keys (only PDX_PARENT is
+                // important for the PDX tree)
+                let clinicalDataMap = samples.reduce((map, obj) => {
+                    let pdx_parent = obj.clinicalData.find(x => x.id === "PDX_PARENT" && x.value !== "N/A");
+
+                    if (pdx_parent) { 
+                        map[obj.id] = {"PDX_PARENT": pdx_parent.value}; 
+                    } else { 
+                        map[obj.id] = {}
+                    }
+
+                    return map;
+                }, {})
 
 
-
-
-        // if (QueryString.cancer_study_id && QueryString.case_id) {
-        //     fetch(`http://localhost:8080/api/samples?study_id=${QueryString.cancer_study_id}&patient_ids=${QueryString.case_id}`)
-        //         .then((response) => response.json())
-        //         .then((responseJson) => {
-        //             let sampleIds = responseJson.map((sample) => { return sample.id }).sort()
-        //             fetch(`http://localhost:8080/api/clinicaldata/samples?study_id=${QueryString.cancer_study_id}&attribute_ids=PDX_PARENT&sample_ids=${sampleIds}`)
-        //                 .then((response) => response.json())
-        //                 .then((responseJson) => {
-        //                     let clinicalDataMap = _.zipObject(responseJson.map((x) => { return x.sample_id }),
-        //                         responseJson.map((sample) => {
-        //                             return {"PDX_PARENT": sample.attr_val}
-        //                         })
-        //                     )
-        //                     // Add samples without a PDX_PARENT
-        //                     for (let i=0; i < sampleIds.length; i++) {
-        //                         if (!(sampleIds[i] in clinicalDataMap)) {
-        //                             clinicalDataMap[sampleIds[i]] = {}
-        //                         }
-        //                     }
-        //                     //store.dispatch({ type: 'ADD_TREE', nodes: getTreeNodesFromClinicalData(clinicalDataMap, sampleIds)[0] })
-        //
-        //                     resolve({ clinicalDataMap, sampleIds });
-        //
-        //                 })
-        //         })
-        // } else {
-
-        resolve(mockData);
-
-        //}
-
+                let rv = {
+                    patient: patient,
+                    samples: samples,
+                    nodes: getTreeNodesFromClinicalData(clinicalDataMap, sampleOrder)[0]
+                }
+                resolve(rv);
+            });
+        } else {
+            return resolve(mockData);
+        }
     });
 
 
