@@ -36,6 +36,7 @@
         "semi": [
             2,
             "always"
-        ]
+        ],
+        "react/jsx-indent":"off"
     }
 }

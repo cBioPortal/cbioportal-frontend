@@ -59,42 +59,35 @@ export default function reducer(state = initialState, action = {}) {
 
 // Action Creators
 export function loadClinicalInformationTableData() {
-
     // this is a thunk
-    return (dispatch)=>{
-
+    return (dispatch) => {
         getClinicalInformationData().then(
-            function(data){
+            (data) => {
                 dispatch({
                     type: actionTypes.FETCH,
                     meta: { status: 'success' },
                     payload: data,
                 });
-            }.bind(this)
+            }
         );
 
         dispatch({
             type: actionTypes.FETCH,
-            meta: { status:'fetching' }
+            meta: { status: 'fetching' },
         });
+    };
+}
 
-
-    }
-
-};
-
-export function setTab(tabId){
-
+export function setTab(tabId) {
     return {
         type: actionTypes.SET_TAB,
         payload: tabId,
-    }
-
+    };
 }
 
 export const actionCreators = {
 
     loadClinicalInformationTableData,
-    setTab
+    setTab,
 
 };

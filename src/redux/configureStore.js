@@ -19,7 +19,7 @@ export const configureStore = ({
         //     }
         // }),
         thunkMiddleware,
-        //apiMiddleware,
+        // apiMiddleware,
         routerMiddleware(historyType),
     ];
 

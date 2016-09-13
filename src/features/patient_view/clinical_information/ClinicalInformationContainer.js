@@ -1,16 +1,16 @@
 import React from 'react';
 import ClinicalInformationSamplesTable from './ClinicalInformationSamplesTable';
 import ClinicalInformationPatientTable from './ClinicalInformationPatientTable';
-import {Link} from 'react-router';
-import {Tabs, Tab, ButtonGroup, Button} from 'react-bootstrap';
-import {default as $} from 'jquery';
+import { Link } from 'react-router';
+import { Tabs, Tab, ButtonGroup, Button } from 'react-bootstrap';
+import { default as $ } from 'jquery';
 import PDXTree from './PDXTree';
 import Spinner from 'react-spinkit';
 import Immutable from 'immutable';
 import { actionTypes, actionCreators } from './duck';
 import PurifyComponent from 'shared/PurifyComponent';
 import { connect } from 'react-redux';
-import { getSamples } from 'shared/oldAPIWrapper'
+import { getSamples } from 'shared/oldAPIWrapper';
 
 import './style/local-styles.scss';
 
@@ -18,29 +18,26 @@ import './style/local-styles.scss';
 export class ClinicalInformationContainerUnconnected extends React.Component {
 
     componentDidMount() {
-
         this.props.loadClinicalInformationTableData();
-
     }
 
     render() {
-
         switch (this.props.status) {
 
-            case 'fetching':
+        case 'fetching':
 
-                return <div><Spinner spinnerName="three-bounce"/></div>;
+            return <div><Spinner spinnerName="three-bounce" /></div>;
 
-            case 'complete':
+        case 'complete':
 
-                return <div>{ this.buildTabs() }</div>;
+            return <div>{ this.buildTabs() }</div>;
 
-            case 'error':
+        case 'error':
 
-                return <div>There was an error.</div>;
+            return <div>There was an error.</div>;
 
-            default:
-                return <div />;
+        default:
+            return <div />;
 
         }
     }
@@ -58,33 +55,32 @@ export class ClinicalInformationContainerUnconnected extends React.Component {
     }
 
     selectTab(tabId) {
-
-        this.props.setTab(tabId)
-
+        this.props.setTab(tabId);
     }
 
     buildTabs() {
-
         return (
 
             <Tabs defaultActiveKey={1} animation={false}
-                  activeKey={this.props.activeTab} id="clinical-information-tabs"
-                  onSelect={this.selectTab.bind(this)}>
+              activeKey={this.props.activeTab} id="clinical-information-tabs"
+              onSelect={this.selectTab.bind(this)}
+            >
                 <Tab eventKey={1} title="Patient">
                     { this.buildButtonGroups() }
-                    <ClinicalInformationPatientTable data={this.props.patient.get("clinicalData") } />
+                    <ClinicalInformationPatientTable data={this.props.patient.get('clinicalData')} />
                 </Tab>
                 <Tab eventKey={2} title="Samples">
                     { this.buildButtonGroups() }
                     <ClinicalInformationSamplesTable
-                        data={this.props.samples} />
+                      data={this.props.samples}
+                    />
 
-                    <h4 style={{color: 'black'}}>PDX Hierarchy</h4>
+                    <h4 style={{ color: 'black' }}>PDX Hierarchy</h4>
                     <PurifyComponent
-                        component={PDXTree}
-                        width={400}
-                        height={300}
-                        data={ this.props.nodes }
+                      component={PDXTree}
+                      width={400}
+                      height={300}
+                      data={this.props.nodes}
                     />
                 </Tab>
             </Tabs>
@@ -97,22 +93,22 @@ export class ClinicalInformationContainerUnconnected extends React.Component {
 
 const mapStateToProps = function mapStateToProps(state) {
     return {
-        samples:state.get('clinical_information').get('samples'),
-        status:state.get('clinical_information').get('status'),
-        activeTab:state.get('clinical_information').get('activeTab'),
-        patient:state.get('clinical_information').get('patient'),
-        nodes:state.get('clinical_information').get('nodes')
+        samples: state.get('clinical_information').get('samples'),
+        status: state.get('clinical_information').get('status'),
+        activeTab: state.get('clinical_information').get('activeTab'),
+        patient: state.get('clinical_information').get('patient'),
+        nodes: state.get('clinical_information').get('nodes'),
     };
-}
+};
 
 const mapDispatchToProps = {
 
-    fetchData:function(){
+    fetchData() {
         return {
             type: 'clinical_information_table/FETCH',
             status: 'fetching',
         };
-    }
+    },
 
 };
 

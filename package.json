@@ -9,7 +9,7 @@
     "build:size": "npm run clean && ./node_modules/.bin/cross-env NODE_ENV=production webpack --json > stats.json",
     "test": "./node_modules/.bin/cross-env NODE_ENV=test ./node_modules/karma/bin/karma start karma.conf.js",
     "test:watch": "npm run test -- --watch",
-    "lint": "eslint src/** --ext .js --ext .jsx --fix --ignore-path .gitignore --cache"
+    "lint": "eslint src/** --ext .js --ext .jsx --fix --cache"
   },
   "author": "",
   "license": "",
@@ -45,7 +45,8 @@
     "resolve-url-loader": "^1.6.0",
     "sass-loader": "^4.0.0",
     "style-loader": "^0.13.1",
-    "url-loader": "^0.5.7"
+    "url-loader": "^0.5.7",
+    "immutable": "^3.8.1"
   },
   "devDependencies": {
     "autoprefixer": "^6.3.7",
@@ -76,7 +77,6 @@
     "expect": "^1.20.2",
     "file-loader": "^0.9.0",
     "html-webpack-plugin": "^2.22.0",
-    "immutable": "^3.8.1",
     "imports-loader": "^0.6.5",
     "jasmine-core": "^2.4.1",
     "json-loader": "^0.5.4",
