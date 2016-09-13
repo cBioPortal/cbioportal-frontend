@@ -6,7 +6,7 @@ import _ from 'lodash';
 
 describe('', ()=>{
 
-   it.only('api data is properly transformed into table data', function(){
+   it('api data is properly transformed into table data', function(){
 
        const result = convertSampleData(mockData.samples);
 
