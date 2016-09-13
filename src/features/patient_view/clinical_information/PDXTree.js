@@ -95,12 +95,12 @@ export function getTreeNodesFromClinicalData(clinicalDataMap, sampleOrder) {
         if (children.length === 0) {
             return {
                 'name': sampleName,
-                'label': clinicalDataMapExtended[sampleName].label,
+                'label': clinicalDataMapExtended[sampleName].label.toString(),
             };
         } else {
             return {
                 'name': sampleName,
-                'label': clinicalDataMapExtended[sampleName].label,
+                'label': clinicalDataMapExtended[sampleName].label.toString(),
                 'children': children.map((c) => {
                     return getNode(clinicalDataMapExtended, c);
                 }),
