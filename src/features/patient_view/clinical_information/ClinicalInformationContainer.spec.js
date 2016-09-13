@@ -5,7 +5,37 @@ import Immutable from 'immutable';
 import sinon from 'sinon';
 import { default as reducer, actionTypes } from './duck';
 import { ClinicalInformationContainerUnconnected } from './ClinicalInformationContainer';
+import Spinner from 'react-spinkit';
 import * as $ from 'jquery';
+import ClinicalInformationPatientTable from './ClinicalInformationPatientTable';
+import ClinicalInformationSamplesTable from './ClinicalInformationSamplesTable';
+import PDXTree from './PDXTree';
+
+var stubComponent = function(componentClass) {
+    var originalPropTypes;
+
+    var renderStub;
+
+    beforeEach(function() {
+        originalPropTypes = componentClass.propTypes;
+
+        componentClass.propTypes = {};
+
+        renderStub = sinon.stub(componentClass.prototype, 'render', ()=><div/>);
+        //sinon.stub(componentClass.prototype, 'componentWillMount');
+        //sinon.stub(componentClass.prototype, 'componentDidMount');
+        //sinon.stub(componentClass.prototype, 'componentWillReceiveProps');
+        //sinon.stub(componentClass.prototype, 'shouldComponentUpdate');
+        //sinon.stub(componentClass.prototype, 'componentWillUpdate');
+        //sinon.stub(componentClass.prototype, 'componentDidUpdate');
+        //sinon.stub(componentClass.prototype, 'componentWillUnmount');
+    });
+
+    afterEach(function() {
+        renderStub.restore();
+        componentClass.propTypes = originalPropTypes;
+    });
+};
 
 const mockData = {
 
@@ -86,24 +116,78 @@ const mockData = {
 };
 
 
-describe('', () => {
+describe('ClinicalInformationContainerUnconnected', () => {
 
-    beforeEach(()=>{
+    let comp, props, buildTabsStub;
+
+    before(()=>{
+
+        props = {
+
+            loadClinicalInformationTableData:sinon.stub(),
+            setTab:sinon.stub()
+
+        };
+
+        stubComponent(ClinicalInformationPatientTable);
+        stubComponent(ClinicalInformationSamplesTable);
+        stubComponent(PDXTree);
 
 
+        comp = mount(<ClinicalInformationContainerUnconnected {...props} />);
 
     });
 
-    it('',()=>{
+    it('it calls data load routine on mounting',()=>{
 
-        const dispatchStub = sinon.stub();
+        assert.isTrue(props.loadClinicalInformationTableData.calledOnce);
 
-        shallow(<ClinicalInformationContainerUnconnected dispatch={dispatchStub} store={Immutable.fromJS({})} />)
+    });
 
-        //assert.isTrue(dispatchStub.called);
+    it('has a spinner when in status is fetching',()=>{
 
-    })
+        assert.isFalse(comp.contains(<Spinner />));
+
+        comp.setProps({ status:'fetching' });
+
+        assert.isTrue(comp.find('.spinner').length > 0);
+
+        assert.isTrue(comp.contains(<Spinner />));
+
+    });
+
+    it('calls buildTabs when status is "complete" ',()=>{
+
+        buildTabsStub = sinon.stub(ClinicalInformationContainerUnconnected.prototype,"buildTabs");
+
+        assert.isFalse(buildTabsStub.called);
+
+        comp.setProps({ status:'complete' });
+
+        assert.isTrue(buildTabsStub.called);
+
+        buildTabsStub.restore();
+
+    });
+
+    it('clicking a tab results in call to setTab with appropriate tab index',()=>{
+
+        comp.setProps({ status:'complete', patient: Immutable.fromJS({ clinicalData:{} })  });
+
+        assert.isFalse(props.setTab.called);
+
+        comp.find('.nav-tabs #clinical-information-tabs-tab-2').simulate('click');
+
+        assert.isTrue(props.setTab.called);
+
+        assert.isTrue(props.setTab.calledWith(2));
+
+    });
 
 
+    after(()=>{
+
+
+    });
 
 });
