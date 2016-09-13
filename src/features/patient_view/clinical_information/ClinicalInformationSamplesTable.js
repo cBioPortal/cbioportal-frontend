@@ -3,6 +3,7 @@ import { Table } from 'react-bootstrap';
 import Immutable from 'immutable';
 import { SampleLabelHTML } from './SampleLabel';
 
+
 export class ClinicalInformationSamplesTable extends React.Component {
 
     componentDidMount() {
