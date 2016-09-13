@@ -1,4 +1,3 @@
-import { createAction } from 'redux-actions';
 import Immutable from 'immutable';
 import getClinicalInformationData from './dataLayer';
 import convertSamplesData from './lib/convertSamplesData';
@@ -31,10 +30,10 @@ export default function reducer(state = initialState, action = {}) {
         case 'success':
 
             return state.merge({
-                'patient': action.payload.patient,
-                'samples': Immutable.fromJS(convertSamplesData(action.payload.samples)),
-                'nodes': Immutable.fromJS(action.payload.nodes),
-                'status': 'complete',
+                patient: action.payload.patient,
+                samples: Immutable.fromJS(convertSamplesData(action.payload.samples)),
+                nodes: Immutable.fromJS(action.payload.nodes),
+                status: 'complete',
             });
 
         case 'error':
@@ -43,9 +42,12 @@ export default function reducer(state = initialState, action = {}) {
                 'table_data': null,
                 'status': 'error',
             });
-        }
 
-        return state.setIn(['table_data'], Immutable.fromJS(action.payload));
+        default:
+
+            return state;
+
+        }
 
     case actionTypes.SET_TAB:
 

@@ -1,4 +1,3 @@
-import * as $ from 'jquery';
 import queryString from 'query-string';
 import { mockData } from './mockData';
 import { zipObject } from 'lodash';

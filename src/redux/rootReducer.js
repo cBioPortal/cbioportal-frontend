@@ -2,12 +2,12 @@
 import { routerReducer as push } from 'react-router-redux';
 import { combineReducers } from 'redux-immutable';
 import Immutable from 'immutable';
+import clinicalInformation from 'features/patient_view/clinical_information/duck';
 import customRoutingReducer from './customRouterReducer';
-import clinical_information from 'features/patient_view/clinical_information/duck';
 
 // Require your modules here
 const modules = {
-    clinical_information,
+    clinicalInformation,
 };
 
 export const actions = {

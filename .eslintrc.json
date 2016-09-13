@@ -37,6 +37,8 @@
             2,
             "always"
         ],
-        "react/jsx-indent":"off"
+        "react/jsx-indent":"off",
+        "import/no-unresolved":"off",
+        "react/jsx-filename-extension":"off"
     }
 }

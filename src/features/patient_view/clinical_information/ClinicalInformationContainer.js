@@ -93,11 +93,11 @@ export class ClinicalInformationContainerUnconnected extends React.Component {
 
 const mapStateToProps = function mapStateToProps(state) {
     return {
-        samples: state.get('clinical_information').get('samples'),
-        status: state.get('clinical_information').get('status'),
-        activeTab: state.get('clinical_information').get('activeTab'),
-        patient: state.get('clinical_information').get('patient'),
-        nodes: state.get('clinical_information').get('nodes'),
+        samples: state.get('clinicalInformation').get('samples'),
+        status: state.get('clinicalInformation').get('status'),
+        activeTab: state.get('clinicalInformation').get('activeTab'),
+        patient: state.get('clinicalInformation').get('patient'),
+        nodes: state.get('clinicalInformation').get('nodes'),
     };
 };
 
