@@ -8,9 +8,9 @@ import PDXTree from './PDXTree';
 import Spinner from 'react-spinkit';
 import Immutable from 'immutable';
 import { actionTypes, actionCreators } from './duck';
-import PurifyComponent from 'shared/PurifyComponent';
+import PurifyComponent from 'shared/components/PurifyComponent';
 import { connect } from 'react-redux';
-import { getSamples } from 'shared/oldAPIWrapper';
+import { getSamples } from 'shared/api/oldAPIWrapper';
 import FixedExample from './FixedDataTableExample';
 
 import './style/local-styles.scss';

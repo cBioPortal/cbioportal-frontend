@@ -16,9 +16,9 @@ export class ClinicalInformationSamplesTable extends React.Component {
 
 
     render() {
-        const headerCells = this.props.data.get('columns').map((col, i) => {
-            return (<th style={{ whiteSpace: 'nowrap' }} key={i}>
-                       <SampleLabelHTML color={'black'} label={i + 1} />
+        const headerCells = this.props.data.get('columns').map((col, i)=> {
+            return (<th style={{whiteSpace: 'nowrap'}} key={i}>
+                       <SampleLabelHTML color={'black'} label={(i+1).toString()} />
                        {' ' + col.get('id')}
                    </th>);
         });
