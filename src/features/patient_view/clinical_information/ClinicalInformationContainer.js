@@ -11,6 +11,7 @@ import { actionTypes, actionCreators } from './duck';
 import PurifyComponent from 'shared/PurifyComponent';
 import { connect } from 'react-redux';
 import { getSamples } from 'shared/oldAPIWrapper';
+import FixedExample from './FixedDataTableExample';
 
 import './style/local-styles.scss';
 
@@ -19,6 +20,7 @@ export class ClinicalInformationContainerUnconnected extends React.Component {
 
     componentDidMount() {
         this.props.loadClinicalInformationTableData();
+
     }
 
     render() {
@@ -70,7 +72,10 @@ export class ClinicalInformationContainerUnconnected extends React.Component {
                     <ClinicalInformationPatientTable data={this.props.patient.get('clinicalData')} />
                 </Tab>
                 <Tab eventKey={2} title="Samples">
-                    { this.buildButtonGroups() }
+
+
+                    <FixedExample data={this.props.samples} />
+
                     <ClinicalInformationSamplesTable
                       data={this.props.samples}
                     />
