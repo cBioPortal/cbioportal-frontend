@@ -1,42 +1,56 @@
 import React from 'react';
+import sinon from 'sinon';
 import { assert } from 'chai';
 import { shallow } from 'enzyme';
 import Immutable from 'immutable';
-import { default as reducer, actionTypes } from './duck';
+import { default as reducer, actionTypes, actionCreators, __RewireAPI__ as RewireDuckAPI } from './duck';
+
 
 describe('clinical_information duck', () => {
-    let initialState;
 
-    beforeEach(() => {
-        initialState = reducer(undefined, { type: null });
+    
+    describe('actionCreators',()=>{
+
+        it('dispatches a load action with status equal to fetching',()=>{
+
+            //var prom = new Promise(()=>{});
+
+            RewireDuckAPI.__Rewire__('getClinicalInformationData',()=>{
+                return new Promise((resolve)=>{
+                   setTimeout(()=>resolve(),1);
+                });
+            });
+
+            const dispatchStub = sinon.stub();
+
+            actionCreators.loadClinicalInformationTableData()(dispatchStub);
+            
+            assert.equal(dispatchStub.args[0][0].meta.status,"fetching");
+            assert.equal(dispatchStub.args[0][0].type, actionTypes.FETCH);
+
+            //assert.isTrue(dispatchStub.calledTwice);
+            //assert.equal(dispatchStub.args[1][0].meta.status,"fetching");
+            //assert.equal(dispatchStub.args[1][0].type, actionTypes.FETCH);
+
+
+            RewireDuckAPI.__ResetDependency__('getClinicalInformationData');
+
+        });        
+        
     });
+    
+    describe('reducer',()=>{
+        
+        it('handles fetching by setting status to fetching', ()=>{
+           
+            const newState = reducer(Immutable.Map({}), { type:actionTypes.FETCH, meta: { status:'fetching' } })
+            
+            assert.equal(newState.get('status'),'fetching');
 
-    // it('by default reducer returns unmodified state', () => {
-    //     const nextState = reducer(initialState, { type: null });
-    //
-    //     assert.equal(initialState, nextState);
-    // });
-    //
-    // it('fetching action sets status to fetching', () => {
-    //     const action = {
-    //         type: actionTypes.FETCH,
-    //         status: 'fetching',
-    //     };
-    //
-    //     const nextState = reducer(initialState, action);
-    //
-    //     assert.equal(nextState.get('status'), 'fetching');
-    // });
-    //
-    // it('fetching complete sets status to success and sets payload', () => {
-    //     const action = {
-    //         type: actionTypes.FETCH,
-    //         status: 'success',
-    //         payload: { patient: [1, 2, 3], samples: [4, 5, 6] },
-    //     };
-    //
-    //     const nextState = reducer(initialState, action);
-    //
-    //     assert.equal(nextState.get('status'), 'complete');
-    // });
+        });
+
+    });
+    
+
+
 });

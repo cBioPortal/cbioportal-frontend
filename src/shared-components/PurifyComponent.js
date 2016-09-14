@@ -9,10 +9,9 @@ export default class PurifyComponent extends React.Component {
     }
 
     render() {
-
         const newProps = {};
 
-        Object.keys(this.props).forEach((key)=>{
+        Object.keys(this.props).forEach((key) => {
             if (key !== 'component') {
                 if (Immutable.Iterable.isIterable(this.props[key])) {
                     newProps[key] = this.props[key].toJS();
@@ -22,6 +21,6 @@ export default class PurifyComponent extends React.Component {
             }
         });
 
-        return <this.props.component {...newProps } />;
+        return <this.props.component {...newProps} />;
     }
 }

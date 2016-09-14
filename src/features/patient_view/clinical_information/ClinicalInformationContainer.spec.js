@@ -10,28 +10,29 @@ import * as $ from 'jquery';
 import ClinicalInformationPatientTable from './ClinicalInformationPatientTable';
 import ClinicalInformationSamplesTable from './ClinicalInformationSamplesTable';
 import PDXTree from './PDXTree';
+import FixedDataTableExample from './FixedDataTableExample';
 
-var stubComponent = function(componentClass) {
-    var originalPropTypes;
+const stubComponent = function (componentClass) {
+    let originalPropTypes;
 
-    var renderStub;
+    let renderStub;
 
-    beforeEach(function() {
+    beforeEach(() => {
         originalPropTypes = componentClass.propTypes;
 
         componentClass.propTypes = {};
 
-        renderStub = sinon.stub(componentClass.prototype, 'render', ()=><div/>);
-        //sinon.stub(componentClass.prototype, 'componentWillMount');
-        //sinon.stub(componentClass.prototype, 'componentDidMount');
-        //sinon.stub(componentClass.prototype, 'componentWillReceiveProps');
-        //sinon.stub(componentClass.prototype, 'shouldComponentUpdate');
-        //sinon.stub(componentClass.prototype, 'componentWillUpdate');
-        //sinon.stub(componentClass.prototype, 'componentDidUpdate');
-        //sinon.stub(componentClass.prototype, 'componentWillUnmount');
+        renderStub = sinon.stub(componentClass.prototype, 'render', () => <div />);
+        // sinon.stub(componentClass.prototype, 'componentWillMount');
+        // sinon.stub(componentClass.prototype, 'componentDidMount');
+        // sinon.stub(componentClass.prototype, 'componentWillReceiveProps');
+        // sinon.stub(componentClass.prototype, 'shouldComponentUpdate');
+        // sinon.stub(componentClass.prototype, 'componentWillUpdate');
+        // sinon.stub(componentClass.prototype, 'componentDidUpdate');
+        // sinon.stub(componentClass.prototype, 'componentWillUnmount');
     });
 
-    afterEach(function() {
+    afterEach(() => {
         renderStub.restore();
         componentClass.propTypes = originalPropTypes;
     });
@@ -117,62 +118,54 @@ const mockData = {
 
 
 describe('ClinicalInformationContainerUnconnected', () => {
-
     let comp, props, buildTabsStub;
 
-    before(()=>{
+    before(() => {
 
         props = {
 
-            loadClinicalInformationTableData:sinon.stub(),
-            setTab:sinon.stub()
+            loadClinicalInformationTableData: sinon.stub(),
+            setTab: sinon.stub(),
 
         };
 
         stubComponent(ClinicalInformationPatientTable);
         stubComponent(ClinicalInformationSamplesTable);
         stubComponent(PDXTree);
+        stubComponent(FixedDataTableExample);
 
 
         comp = mount(<ClinicalInformationContainerUnconnected {...props} />);
-
     });
 
-    it('it calls data load routine on mounting',()=>{
-
+    it('it calls data load routine on mounting', () => {
         assert.isTrue(props.loadClinicalInformationTableData.calledOnce);
-
     });
 
-    it('has a spinner when in status is fetching',()=>{
-
+    it('has a spinner when in status is fetching', () => {
         assert.isFalse(comp.contains(<Spinner />));
 
-        comp.setProps({ status:'fetching' });
+        comp.setProps({ status: 'fetching' });
 
         assert.isTrue(comp.find('.spinner').length > 0);
 
         assert.isTrue(comp.contains(<Spinner />));
-
     });
 
-    it('calls buildTabs when status is "complete" ',()=>{
-
-        buildTabsStub = sinon.stub(ClinicalInformationContainerUnconnected.prototype,"buildTabs");
+    it('calls buildTabs when status is "complete" ', () => {
+        buildTabsStub = sinon.stub(ClinicalInformationContainerUnconnected.prototype, 'buildTabs');
 
         assert.isFalse(buildTabsStub.called);
 
-        comp.setProps({ status:'complete' });
+        comp.setProps({ status: 'complete' });
 
         assert.isTrue(buildTabsStub.called);
 
         buildTabsStub.restore();
-
     });
 
-    it('clicking a tab results in call to setTab with appropriate tab index',()=>{
-
-        comp.setProps({ status:'complete', patient: Immutable.fromJS({ clinicalData:{} })  });
+    it('clicking a tab results in call to setTab with appropriate tab index', () => {
+        comp.setProps({ status: 'complete', samples: Immutable.fromJS({  }), patient: Immutable.fromJS({ clinicalData: {} }) });
 
         assert.isFalse(props.setTab.called);
 
@@ -181,13 +174,11 @@ describe('ClinicalInformationContainerUnconnected', () => {
         assert.isTrue(props.setTab.called);
 
         assert.isTrue(props.setTab.calledWith(2));
-
     });
 
 
-    after(()=>{
+    after(() => {
 
 
     });
-
 });

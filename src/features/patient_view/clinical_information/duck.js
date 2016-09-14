@@ -1,4 +1,3 @@
-import { createAction } from 'redux-actions';
 import Immutable from 'immutable';
 import getClinicalInformationData from './dataLayer';
 import convertSamplesData from './lib/convertSamplesData';
@@ -31,10 +30,10 @@ export default function reducer(state = initialState, action = {}) {
         case 'success':
 
             return state.merge({
-                'patient': action.payload.patient,
-                'samples': Immutable.fromJS(convertSamplesData(action.payload.samples)),
-                'nodes': Immutable.fromJS(action.payload.nodes),
-                'status': 'complete',
+                patient: action.payload.patient,
+                samples: Immutable.fromJS(convertSamplesData(action.payload.samples)),
+                nodes: Immutable.fromJS(action.payload.nodes),
+                status: 'complete',
             });
 
         case 'error':
@@ -43,9 +42,12 @@ export default function reducer(state = initialState, action = {}) {
                 'table_data': null,
                 'status': 'error',
             });
-        }
 
-        return state.setIn(['table_data'], Immutable.fromJS(action.payload));
+        default:
+
+            return state;
+
+        }
 
     case actionTypes.SET_TAB:
 
@@ -59,42 +61,37 @@ export default function reducer(state = initialState, action = {}) {
 
 // Action Creators
 export function loadClinicalInformationTableData() {
-
     // this is a thunk
-    return (dispatch)=>{
-
+    return (dispatch) => {
         getClinicalInformationData().then(
-            function(data){
+
+            (data) => {
+                console.log("yesss");
                 dispatch({
                     type: actionTypes.FETCH,
                     meta: { status: 'success' },
                     payload: data,
                 });
-            }.bind(this)
+            }
         );
 
         dispatch({
             type: actionTypes.FETCH,
-            meta: { status:'fetching' }
+            meta: { status: 'fetching' },
         });
+    };
+}
 
-
-    }
-
-};
-
-export function setTab(tabId){
-
+export function setTab(tabId) {
     return {
         type: actionTypes.SET_TAB,
         payload: tabId,
-    }
-
+    };
 }
 
 export const actionCreators = {
 
     loadClinicalInformationTableData,
-    setTab
+    setTab,
 
 };

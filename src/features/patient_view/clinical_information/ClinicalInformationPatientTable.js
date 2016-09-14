@@ -1,5 +1,5 @@
-import React, {PropTypes as T} from 'react';
-import {Table} from 'react-bootstrap';
+import React, { PropTypes as T } from 'react';
+import { Table } from 'react-bootstrap';
 import Immutable from 'immutable';
 
 export default class ClinicalInformationPatientTable extends React.Component {
@@ -14,18 +14,15 @@ export default class ClinicalInformationPatientTable extends React.Component {
 
 
     render() {
-
         const rows = [];
 
-        this.props.data.forEach((item)=> {
-
+        this.props.data.forEach((item) => {
             rows.push(
                 <tr key={item.get('id')}>
                     <td>{item.get('id')}</td>
                     <td>{item.get('value')}</td>
                 </tr>
-            )
-
+            );
         });
 
         return (
@@ -41,7 +38,7 @@ export default class ClinicalInformationPatientTable extends React.Component {
                 </tbody>
 
             </Table>
-        )
+        );
         // const headerCells = this.props.data.get('columns').map((col)=>{
         //     return <th>{col.get('id')}</th>
         // });
@@ -78,5 +75,5 @@ export default class ClinicalInformationPatientTable extends React.Component {
 
 
 ClinicalInformationPatientTable.propTypes = {
-    data: T.any.isRequired
+    data: T.any.isRequired,
 };
