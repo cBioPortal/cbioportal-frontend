@@ -1,35 +1,9 @@
 /* eslint-disable */
 
-import cbioportal_client from 'shared/cbioportal-client';
+import cbioportal_client from 'shared/api/cbioportal-client';
+import { renameKeys, dropKeys } from 'shared/lib/ObjectManipulation';
 
 const API_ROOT = 'http://www.cbioportal.org/pdx/api';
-
-/*
- * Rename keys in flat dictionary. Keep old keys if not in keyMap.
- */
-function renameKeys(dict, keyMap) {
-    return _.reduce(dict, (newDict, val, oldKey) => {
-        const newKey = keyMap[oldKey];
-        if (newKey) {
-            newDict[newKey] = val;
-        } else {
-            newDict[oldKey] = val;
-        }
-        return newDict;
-    }, {});
-}
-
-/*
- * Return new dict w/o given keys (only works on flat dicts)
- */
-function dropKeys(dict, keys) {
-    return _.reduce(dict, (newDict, val, key) => {
-        if (keys.indexOf(key) === -1) {
-            newDict[key] = val;
-        }
-        return newDict;
-    }, {});
-}
 
 /* Return patient data in new API format */
 export function getPatient(studyId, patientId) {

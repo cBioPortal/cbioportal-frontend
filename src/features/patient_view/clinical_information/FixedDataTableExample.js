@@ -11,7 +11,7 @@ import ResponsiveFixedDataTable from 'responsive-fixed-data-table';
 
 import 'fixed-data-table/dist/fixed-data-table.min.css';
 
-import EnhancedFixedDataTable from 'shared/EnhancedFixedDataTable';
+import EnhancedFixedDataTable from 'shared/components/EnhancedFixedDataTable';
 
 import fixedData from './sample-fixed-data';
 
