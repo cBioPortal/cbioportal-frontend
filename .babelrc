@@ -10,13 +10,23 @@
     "test": {
       "presets": [],
       "plugins": [
+
+
+
         [
           "istanbul", {
-            "exclude": [
-              "**/*.spec.js"
-            ]
-          }
-        ]
+          "exclude": [
+            "**/*.spec.js"
+          ]
+        }
+        ],
+
+        ["rewire",{
+          "exclude": [
+            "**/*.spec.js"
+          ]
+        }]
+
       ]
     }
   }
