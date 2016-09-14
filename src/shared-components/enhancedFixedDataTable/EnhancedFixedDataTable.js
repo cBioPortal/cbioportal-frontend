@@ -1,6 +1,7 @@
 import React from 'react';
 import FixedDataTable from 'fixed-data-table';
-import * as $ from 'jquery';
+
+var $ = window.jQuery;
 
 var EnhancedFixedDataTable = (function() {
 // Data button component
@@ -492,6 +493,7 @@ var EnhancedFixedDataTable = (function() {
     var TableMainPart = React.createClass({displayName: "TableMainPart",
         // Creates Qtip
         createQtip: function() {
+
             $('.EFDT-table .hasQtip').one('mouseenter', function() {
                 $(this).qtip({
                     content: {text: $(this).attr('data-qtip')},
@@ -1187,7 +1189,7 @@ var EnhancedFixedDataTable = (function() {
 
             return (
                 React.createElement("div", {className: "EFDT-table"},
-                    React.createElement("div", {className: "EFDT-table-prefix row"},
+                    React.createElement("div", {className: "EFDT-table-prefix"},
                         React.createElement(TablePrefix, {cols: this.state.cols, rows: this.rows,
                             onFilterKeywordChange: this.onFilterKeywordChange,
                             onResetFilters: this.onResetFilters,
@@ -1206,7 +1208,7 @@ var EnhancedFixedDataTable = (function() {
                             filteredRowsSize: this.state.filteredRows.length}
                         )
                     ),
-                    React.createElement("div", {className: "EFDT-tableMain row"},
+                    React.createElement("div", {className: "EFDT-tableMain"},
                         React.createElement(TableMainPart, {cols: this.state.cols,
                             filteredRows: this.state.filteredRows,
                             filters: this.state.filters,

@@ -1,4 +1,5 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 import ClinicalInformationSamplesTable from './ClinicalInformationSamplesTable';
 import ClinicalInformationPatientTable from './ClinicalInformationPatientTable';
 import { Link } from 'react-router';
@@ -12,6 +13,7 @@ import PurifyComponent from 'shared/PurifyComponent';
 import { connect } from 'react-redux';
 import { getSamples } from 'shared/oldAPIWrapper';
 import FixedExample from './FixedDataTableExample';
+import PatientNodeUnconnected from '../patientHeader/PatientHeader';
 
 import './style/local-styles.scss';
 
@@ -21,6 +23,8 @@ export class ClinicalInformationContainerUnconnected extends React.Component {
     componentDidMount() {
 
         this.props.loadClinicalInformationTableData();
+
+        ReactDOM.render(<PatientNode store={this.props.store}></PatientNode>, document.getElementById("clinical_div"));
 
     }
 
@@ -64,18 +68,20 @@ export class ClinicalInformationContainerUnconnected extends React.Component {
     buildTabs() {
         return (
 
-            <Tabs defaultActiveKey={1} animation={false}
+            <Tabs defaultActiveKey={2} animation={false}
               activeKey={this.props.activeTab} id="clinical-information-tabs"
               onSelect={this.selectTab.bind(this)}
             >
-                <Tab eventKey={1} title="Patient">
+                <Tab eventKey={2} title="Patient">
                     { this.buildButtonGroups() }
                     <ClinicalInformationPatientTable data={this.props.patient.get('clinicalData')} />
                 </Tab>
-                <Tab eventKey={2} title="Samples">
+                <Tab eventKey={1} title="Samples">
 
-
+                    <div style={{ height:500 }}>
                     <FixedExample data={this.props.samples} />
+                    </div>
+
 
                     <ClinicalInformationSamplesTable
                       data={this.props.samples}
@@ -117,6 +123,10 @@ const mapDispatchToProps = {
     },
 
 };
+
+
+const PatientNode = connect(mapStateToProps, actionCreators)(PatientNodeUnconnected);
+
 
 export default connect(mapStateToProps, actionCreators)(ClinicalInformationContainerUnconnected);
 

@@ -1,5 +1,3 @@
-/* eslint-disable */
-
 import * as $ from 'jquery';
 
 const PORTAL_HOME = 'http://www.cbioportal.org/pdx/';

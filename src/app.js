@@ -19,13 +19,18 @@ let render = (routerKey = null) => {
 
     const mountNode = document.querySelector('#root');
     ReactDOM.render(
-    <App
-      store={store}
-      actions={actions}
-      routes={routes}
-      history={history}
-      routerKey={routerKey}
-    />, mountNode);
+        <App
+            store={store}
+            actions={actions}
+            routes={routes}
+            history={history}
+            routerKey={routerKey}
+        />, mountNode);
+
+
+
+
+
 };
 
 if (__DEBUG__ && module.hot) {

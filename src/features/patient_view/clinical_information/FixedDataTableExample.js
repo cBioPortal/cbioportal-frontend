@@ -10,8 +10,9 @@ import ResponsiveFixedDataTable from 'responsive-fixed-data-table';
 
 
 import 'fixed-data-table/dist/fixed-data-table.min.css';
+import 'shared/enhancedFixedDataTable/styles.scss';
 
-import EnhancedFixedDataTable from 'shared/EnhancedFixedDataTable';
+import EnhancedFixedDataTable from 'shared/enhancedFixedDataTable/EnhancedFixedDataTable';
 
 import fixedData from './sample-fixed-data';
 
@@ -90,56 +91,56 @@ export class ClinicalInformationSamplesTable extends React.Component {
 
         const cols = this.props.data.get('columns').toJS();
         
-        //return <EnhancedFixedDataTable input={fixedData} uniqueId="SEX" maxHeight="500" tableWidth="2000" autoColumnWidth={false} />
+        return <EnhancedFixedDataTable input={fixedData} uniqueId="SEX" maxHeight={500} autoColumnWidth={false} />
 
 
 
 
-        return(
-            <div className="fixedTable">
-            <ResponsiveFixedDataTable
-            rowsCount={rows.length}
-            rowHeight={50}
-            headerHeight={50}
-            width={1200}
-            height={500}>
-                <Column
-                    header={<Cell>Name</Cell>}
-                    cell={props => (
-                        <Cell {...props}>
-                            {rows[props.rowIndex].id}
-                        </Cell>
-                    )}
-                    width={200}
-                />
-                {
-
-                    cols.map((col)=>{
-
-                        return(
-
-                            <Column
-                                header={<Cell>{col.id}</Cell>}
-                                cell={props => (
-                                    <Cell {...props}>
-                                        {rows[props.rowIndex][col.id]}
-                                    </Cell>
-                                )}
-                                width={200}
-                            />
-
-
-                        )
-
-
-                    })
-
-
-                }
-
-        </ResponsiveFixedDataTable>
-                </div>
-        )
+        // return(
+        //     <div className="fixedTable">
+        //     <ResponsiveFixedDataTable
+        //     rowsCount={rows.length}
+        //     rowHeight={50}
+        //     headerHeight={50}
+        //     width={1200}
+        //     height={500}>
+        //         <Column
+        //             header={<Cell>Name</Cell>}
+        //             cell={props => (
+        //                 <Cell {...props}>
+        //                     {rows[props.rowIndex].id}
+        //                 </Cell>
+        //             )}
+        //             width={200}
+        //         />
+        //         {
+        //
+        //             cols.map((col)=>{
+        //
+        //                 return(
+        //
+        //                     <Column
+        //                         header={<Cell>{col.id}</Cell>}
+        //                         cell={props => (
+        //                             <Cell {...props}>
+        //                                 {rows[props.rowIndex][col.id]}
+        //                             </Cell>
+        //                         )}
+        //                         width={200}
+        //                     />
+        //
+        //
+        //                 )
+        //
+        //
+        //             })
+        //
+        //
+        //         }
+        //
+        // </ResponsiveFixedDataTable>
+        //         </div>
+        // )
 
 
     }

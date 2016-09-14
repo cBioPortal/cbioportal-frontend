@@ -1,4 +1,5 @@
 import React, { PropTypes as T } from 'react';
+import ReactDOM from 'react-dom';
 
 export class Container extends React.Component {
     renderChildren() {
@@ -9,7 +10,11 @@ export class Container extends React.Component {
         return React.Children.map(children,
               c => React.cloneElement(c, childProps));
     }
+
+
     render() {
+
+
         return (
       <div>
         <div>

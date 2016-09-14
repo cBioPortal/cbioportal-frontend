@@ -145,12 +145,12 @@ const fontAwesomeLoaders = [
 
 config.module.loaders.push.apply(this, fontAwesomeLoaders);
 
-config.module.loaders.push(
-    {
-        test: /bootstrap-sass[\/\\]assets[\/\\]javascripts[\/\\]/,
-        loader: 'imports?jQuery=jquery'
-    }
-);
+// config.module.loaders.push(
+//     {
+//         test: /bootstrap-sass[\/\\]assets[\/\\]javascripts[\/\\]/,
+//         loader: 'imports?jQuery=jquery,$=jquery,this=>window'
+//     }
+// );
 
 
 // START BOOTSTRAP LOADER
