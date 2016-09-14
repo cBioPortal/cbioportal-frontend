@@ -64,7 +64,9 @@ export function loadClinicalInformationTableData() {
     // this is a thunk
     return (dispatch) => {
         getClinicalInformationData().then(
+
             (data) => {
+                console.log("yesss");
                 dispatch({
                     type: actionTypes.FETCH,
                     meta: { status: 'success' },

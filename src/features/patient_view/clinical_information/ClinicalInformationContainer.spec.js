@@ -121,6 +121,7 @@ describe('ClinicalInformationContainerUnconnected', () => {
     let comp, props, buildTabsStub;
 
     before(() => {
+
         props = {
 
             loadClinicalInformationTableData: sinon.stub(),

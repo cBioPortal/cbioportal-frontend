@@ -19,6 +19,7 @@ import './style/local-styles.scss';
 export class ClinicalInformationContainerUnconnected extends React.Component {
 
     componentDidMount() {
+
         this.props.loadClinicalInformationTableData();
 
     }
