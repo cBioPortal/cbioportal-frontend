@@ -10,6 +10,7 @@ import * as $ from 'jquery';
 import ClinicalInformationPatientTable from './ClinicalInformationPatientTable';
 import ClinicalInformationSamplesTable from './ClinicalInformationSamplesTable';
 import PDXTree from './PDXTree';
+import FixedDataTableExample from './FixedDataTableExample';
 
 const stubComponent = function (componentClass) {
     let originalPropTypes;
@@ -130,6 +131,7 @@ describe('ClinicalInformationContainerUnconnected', () => {
         stubComponent(ClinicalInformationPatientTable);
         stubComponent(ClinicalInformationSamplesTable);
         stubComponent(PDXTree);
+        stubComponent(FixedDataTableExample);
 
 
         comp = mount(<ClinicalInformationContainerUnconnected {...props} />);
@@ -162,7 +164,7 @@ describe('ClinicalInformationContainerUnconnected', () => {
     });
 
     it('clicking a tab results in call to setTab with appropriate tab index', () => {
-        comp.setProps({ status: 'complete', patient: Immutable.fromJS({ clinicalData: {} }) });
+        comp.setProps({ status: 'complete', samples: Immutable.fromJS({  }), patient: Immutable.fromJS({ clinicalData: {} }) });
 
         assert.isFalse(props.setTab.called);
 

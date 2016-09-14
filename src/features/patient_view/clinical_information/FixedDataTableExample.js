@@ -5,6 +5,9 @@ import { SampleLabelHTML } from './SampleLabel';
 
 import {Table, Column, Cell} from 'fixed-data-table';
 
+import ResponsiveFixedDataTable from 'responsive-fixed-data-table';
+
+
 
 import 'fixed-data-table/dist/fixed-data-table.min.css';
 
@@ -93,7 +96,8 @@ export class ClinicalInformationSamplesTable extends React.Component {
 
 
         return(
-            <Table
+            <div className="fixedTable">
+            <ResponsiveFixedDataTable
             rowsCount={rows.length}
             rowHeight={50}
             headerHeight={50}
@@ -133,7 +137,8 @@ export class ClinicalInformationSamplesTable extends React.Component {
 
                 }
 
-        </Table>
+        </ResponsiveFixedDataTable>
+                </div>
         )
 
 
