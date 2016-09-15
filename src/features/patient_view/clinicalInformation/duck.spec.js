@@ -6,7 +6,7 @@ import Immutable from 'immutable';
 import { default as reducer, actionTypes, actionCreators, __RewireAPI__ as RewireDuckAPI } from './duck';
 
 
-describe('clinical_information duck', () => {
+describe('clinicalInformation duck', () => {
 
     
     describe('actionCreators',()=>{
