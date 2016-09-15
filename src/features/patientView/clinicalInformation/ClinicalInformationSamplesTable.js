@@ -21,7 +21,7 @@ export class ClinicalInformationSamplesTable extends React.Component {
                        <SampleLabelHTML color={'black'} label={(i+1).toString()} />
                        {' ' + col.get('id')}
                    </th>);
-        });
+        }).toArray();
 
         const rows = this.props.data.get('items').map((row, key) => {
             return (<tr key={key}>
@@ -38,7 +38,7 @@ export class ClinicalInformationSamplesTable extends React.Component {
 
                 </tr>
             );
-        });
+        }).toArray();
 
         return (
             <Table striped>

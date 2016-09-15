@@ -76,9 +76,6 @@ export class ClinicalInformationContainerUnconnected extends React.Component {
                 </Tab>
                 <Tab eventKey={2} title="Samples">
 
-
-                    <FixedExample data={this.props.samples} />
-
                     <ClinicalInformationSamplesTable
                       data={this.props.samples}
                     />
