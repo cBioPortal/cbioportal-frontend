@@ -66,7 +66,7 @@ export function loadClinicalInformationTableData() {
         getClinicalInformationData().then(
 
             (data) => {
-                console.log("yesss");
+
                 dispatch({
                     type: actionTypes.FETCH,
                     meta: { status: 'success' },
@@ -94,4 +94,14 @@ export const actionCreators = {
     loadClinicalInformationTableData,
     setTab,
 
+};
+
+export const mapStateToProps = function mapStateToProps(state) {
+    return {
+        samples: state.get('clinicalInformation').get('samples'),
+        status: state.get('clinicalInformation').get('status'),
+        activeTab: state.get('clinicalInformation').get('activeTab'),
+        patient: state.get('clinicalInformation').get('patient'),
+        nodes: state.get('clinicalInformation').get('nodes'),
+    };
 };
