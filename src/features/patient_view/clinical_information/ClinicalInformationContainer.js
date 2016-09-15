@@ -1,4 +1,5 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 import ClinicalInformationSamplesTable from './ClinicalInformationSamplesTable';
 import ClinicalInformationPatientTable from './ClinicalInformationPatientTable';
 import { Link } from 'react-router';
@@ -12,6 +13,7 @@ import PurifyComponent from 'shared/components/PurifyComponent';
 import { connect } from 'react-redux';
 import { getSamples } from 'shared/api/oldAPIWrapper';
 import FixedExample from './FixedDataTableExample';
+import PatientHeader from '../patientHeader/PatientHeader';
 
 import './style/local-styles.scss';
 
@@ -19,6 +21,12 @@ import './style/local-styles.scss';
 export class ClinicalInformationContainerUnconnected extends React.Component {
 
     componentDidMount() {
+
+
+        ReactDOM.render(<PatientHeaderConnected
+                        store={this.props.store}></PatientHeaderConnected>,
+                        document.getElementById("clinical_div"));
+
 
         this.props.loadClinicalInformationTableData();
 
@@ -118,5 +126,7 @@ const mapDispatchToProps = {
 
 };
 
-export default connect(mapStateToProps, actionCreators)(ClinicalInformationContainerUnconnected);
+const PatientHeaderConnected = connect(mapStateToProps,
+                            actionCreators)(PatientHeader);
 
+export default connect(mapStateToProps, actionCreators)(ClinicalInformationContainerUnconnected);
