@@ -7,6 +7,8 @@ import { hashHistory, createMemoryHistory } from 'react-router';
 
 import makeRoutes from './routes';
 
+import { PatientHeader } from 'features/patientView/clinicalInformation/ClinicalInformationContainer';
+
 const memoryHistory = createMemoryHistory('/monkey');
 
 const initialState = {};
@@ -26,6 +28,12 @@ let render = (routerKey = null) => {
       history={history}
       routerKey={routerKey}
     />, mountNode);
+
+    ReactDOM.render(<PatientHeader
+            store={store}></PatientHeader>,
+        document.getElementById("clinical_div"));
+
+
 };
 
 if (__DEBUG__ && module.hot) {

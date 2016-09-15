@@ -8,12 +8,12 @@ import { default as $ } from 'jquery';
 import PDXTree from './PDXTree';
 import Spinner from 'react-spinkit';
 import Immutable from 'immutable';
-import { actionTypes, actionCreators } from './duck';
+import { actionTypes, actionCreators, mapStateToProps } from './duck';
 import PurifyComponent from 'shared/components/PurifyComponent';
 import { connect } from 'react-redux';
 import { getSamples } from 'shared/api/oldAPIWrapper';
 import FixedExample from './FixedDataTableExample';
-import PatientHeader from '../patientHeader/PatientHeader';
+import PatientHeaderUnconnected from '../patientHeader/PatientHeader';
 
 import './style/local-styles.scss';
 
@@ -21,12 +21,6 @@ import './style/local-styles.scss';
 export class ClinicalInformationContainerUnconnected extends React.Component {
 
     componentDidMount() {
-
-
-        ReactDOM.render(<PatientHeaderConnected
-                        store={this.props.store}></PatientHeaderConnected>,
-                        document.getElementById("clinical_div"));
-
 
         this.props.loadClinicalInformationTableData();
 
@@ -105,28 +99,9 @@ export class ClinicalInformationContainerUnconnected extends React.Component {
 
 }
 
-const mapStateToProps = function mapStateToProps(state) {
-    return {
-        samples: state.get('clinicalInformation').get('samples'),
-        status: state.get('clinicalInformation').get('status'),
-        activeTab: state.get('clinicalInformation').get('activeTab'),
-        patient: state.get('clinicalInformation').get('patient'),
-        nodes: state.get('clinicalInformation').get('nodes'),
-    };
-};
 
-const mapDispatchToProps = {
 
-    fetchData() {
-        return {
-            type: 'clinical_information_table/FETCH',
-            status: 'fetching',
-        };
-    },
-
-};
-
-const PatientHeaderConnected = connect(mapStateToProps,
-                            actionCreators)(PatientHeader);
+export const PatientHeader = connect(mapStateToProps,
+                            actionCreators)(PatientHeaderUnconnected);
 
 export default connect(mapStateToProps, actionCreators)(ClinicalInformationContainerUnconnected);
