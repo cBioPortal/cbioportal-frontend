@@ -2,7 +2,7 @@
 import { routerReducer as push } from 'react-router-redux';
 import { combineReducers } from 'redux-immutable';
 import Immutable from 'immutable';
-import clinicalInformation from 'features/patient_view/clinicalInformation/duck';
+import clinicalInformation from 'features/patientView/clinicalInformation/duck';
 import customRoutingReducer from './customRouterReducer';
 
 // Require your modules here
