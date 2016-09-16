@@ -2,7 +2,7 @@
 
 import * as $ from 'jquery';
 
-const PORTAL_HOME = 'http://www.cbioportal.org/pdx/';
+const PORTAL_HOME = __API_ROOT__;
 
 const cbioportal_client = (function () {
 	                                const raw_service = (function () {
