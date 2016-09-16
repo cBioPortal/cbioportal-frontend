@@ -2,8 +2,6 @@
 
 import * as $ from 'jquery';
 
-const PORTAL_HOME = __API_ROOT__;
-
 const cbioportal_client = (function () {
 	                                const raw_service = (function () {
 		                                const getApiCallPromise = function (endpt, args) {
@@ -16,7 +14,7 @@ const cbioportal_client = (function () {
 			                                const arg_string = arg_strings.join('&') || '?';
 			                                        return $.ajax({
 				                                        type: 'POST',
-				                                        url: PORTAL_HOME + endpt,
+				                                        url: `//${__API_ROOT__}/${endpt}`,
 				                                        data: arg_string,
 				                                        dataType: 'json',
 			});
