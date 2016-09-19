@@ -32,6 +32,8 @@ const css = join(src, 'styles');
 var config = {
 
     "entry": [
+        //'webpack-dev-server/client?http://0.0.0.0:80',
+        //'webpack/hot/only-dev-server',
         "./src/app.js"
     ],
     "output": {
@@ -89,6 +91,10 @@ var config = {
             {
                 test: /\.(jpe?g|png|gif)$/,
                 loader: 'url-loader?limit=10000'
+            },
+            {
+                test: /\.swf$/,
+                loader: 'file-loader'
             }
         ]
     },
@@ -102,7 +108,6 @@ var config = {
         "lazy": false,
         "publicPath": "/",
         "contentBase": "dist",
-        "port": 3000,
         "https": false,
         "hostname": "localhost"
     }

@@ -7,7 +7,7 @@ import {Table, Column, Cell} from 'fixed-data-table';
 
 import ResponsiveFixedDataTable from 'responsive-fixed-data-table';
 
-
+import covertSampleData from './lib/convertSamplesData';
 
 import 'fixed-data-table/dist/fixed-data-table.min.css';
 
@@ -34,6 +34,7 @@ export class ClinicalInformationSamplesTable extends React.Component {
 
 
     render() {
+
         // const headerCells = this.props.data.get('columns').map((col, i) => {
         //     return (<th style={{ whiteSpace: 'nowrap' }} key={i}>
         //         <SampleLabelHTML color={'black'} label={i + 1} />
@@ -79,67 +80,103 @@ export class ClinicalInformationSamplesTable extends React.Component {
         //     </Table>
         // );
 
-        let items = this.props.data.get('items').toJS();
-
-        const rows = [];
 
 
-        Object.keys(items).forEach((key)=>{
-            rows.push(items[key]);
+        const data = covertSampleData(this.props.data.toArray());
+
+        const cells = [];
+
+        var i = 0;
+        Object.keys(data.items).forEach((key)=>{
+
+            const item = data.items[key];
+
+           data.columns.forEach((col)=>{
+               if (col.id in item) {
+                   cells.push({ id:i, attr_id:col.id, attr_val: item[col.id] });
+               } else {
+                   cells.push({ id:i, attr_id:col.id, attr_val: "N/A" });
+               }
+
+                i++;
+            });
+
+
         });
 
-        const cols = this.props.data.get('columns').toJS();
-        
-        //return <EnhancedFixedDataTable input={fixedData} uniqueId="SEX" maxHeight="500" tableWidth="2000" autoColumnWidth={false} />
+
+        // attr_id: The column ID.
+        //     display_name: The column display name in the table header.
+        //     datatype: The column type(filter type). 'STRING', 'NUMBER' and 'PERCENTAGE' are supported at this moment. You should include '%' sign for the PERCENTAGE column.
+        //     column_width: Specify the column width
+        // fixed: Whether Left fixed column. Default value: false
+        // show: Whether display column. Deafult value: true
+
+
+        // attr_id: The column id of the cell
+        // id(or whatever uniqueId you defined above)
+        // attr_val: The cell content
 
 
 
-
-        return(
-            <div className="fixedTable">
-            <ResponsiveFixedDataTable
-            rowsCount={rows.length}
-            rowHeight={50}
-            headerHeight={50}
-            width={1200}
-            height={500}>
-                <Column
-                    header={<Cell>Name</Cell>}
-                    cell={props => (
-                        <Cell {...props}>
-                            {rows[props.rowIndex].id}
-                        </Cell>
-                    )}
-                    width={200}
-                />
-                {
-
-                    cols.map((col)=>{
-
-                        return(
-
-                            <Column
-                                header={<Cell>{col.id}</Cell>}
-                                cell={props => (
-                                    <Cell {...props}>
-                                        {rows[props.rowIndex][col.id]}
-                                    </Cell>
-                                )}
-                                width={200}
-                            />
+        const d = {
+          attributes: data.columns.map((col)=>{
+            return { attr_id:col.id, datatype:'STRING', display_name:col.id }
+          }),
+            data: cells
+        };
 
 
-                        )
+        return null;
+
+        return <EnhancedFixedDataTable input={ fixedData } uniqueId="MUTATION_COUNT" tableWidth={1000} autoColumnWidth={false} />
 
 
-                    })
-
-
-                }
-
-        </ResponsiveFixedDataTable>
-                </div>
-        )
+        // return(
+        //     <div className="fixedTable">
+        //     <ResponsiveFixedDataTable
+        //     rowsCount={rows.length}
+        //     rowHeight={50}
+        //     headerHeight={50}
+        //     width={1200}
+        //     height={500}>
+        //         <Column
+        //             header={<Cell>Name</Cell>}
+        //             cell={props => (
+        //                 <Cell {...props}>
+        //                     {rows[props.rowIndex].id}
+        //                 </Cell>
+        //             )}
+        //             width={200}
+        //         />
+        //         {
+        //
+        //             cols.map((col)=>{
+        //
+        //                 return(
+        //
+        //                     <Column
+        //                         header={<Cell>{col.id}</Cell>}
+        //                         cell={props => (
+        //                             <Cell {...props}>
+        //                                 {rows[props.rowIndex][col.id]}
+        //                             </Cell>
+        //                         )}
+        //                         width={200}
+        //                     />
+        //
+        //
+        //                 )
+        //
+        //
+        //             })
+        //
+        //
+        //         }
+        //
+        // </ResponsiveFixedDataTable>
+        //         </div>
+        // )
 
 
     }

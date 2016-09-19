@@ -14,6 +14,7 @@ import { connect } from 'react-redux';
 import { getSamples } from 'shared/api/oldAPIWrapper';
 import FixedExample from './FixedDataTableExample';
 import PatientHeaderUnconnected from '../patientHeader/PatientHeader';
+import ReactZeroClipboard from 'react-zeroclipboard';
 
 import './style/local-styles.scss';
 
@@ -64,21 +65,35 @@ export class ClinicalInformationContainerUnconnected extends React.Component {
     }
 
     buildTabs() {
+
         return (
 
             <Tabs defaultActiveKey={1} animation={false}
               activeKey={this.props.activeTab} id="clinical-information-tabs"
               onSelect={this.selectTab.bind(this)}
             >
-                <Tab eventKey={1} title="Patient">
+                <Tab eventKey={2} title="Patient">
                     { this.buildButtonGroups() }
                     <ClinicalInformationPatientTable data={this.props.patient.get('clinicalData')} />
                 </Tab>
-                <Tab eventKey={2} title="Samples">
+                <Tab eventKey={1} title="Samples" style={{ height:500 }}>
 
+                    <div style={{display:"block"}}>
+                    <ReactZeroClipboard swfPath="" text="Hello, world!" swfPath={require('react-zeroclipboard/assets/ZeroClipboard.swf')}>
+                        <button>Copy</button>
+                    </ReactZeroClipboard>
+                    </div>
+
+
+                    <FixedExample data={this.props.samples} />
+
+                    <div style={{ display:'block' }}>
                     <ClinicalInformationSamplesTable
                       data={this.props.samples}
                     />
+
+
+
 
                     <h4 style={{ color: 'black' }}>PDX Hierarchy</h4>
                     <PurifyComponent
@@ -87,6 +102,7 @@ export class ClinicalInformationContainerUnconnected extends React.Component {
                       height={300}
                       data={this.props.nodes}
                     />
+                    </div>
                 </Tab>
             </Tabs>
 

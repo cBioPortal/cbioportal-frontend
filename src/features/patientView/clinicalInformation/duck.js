@@ -29,12 +29,14 @@ export default function reducer(state = initialState, action = {}) {
 
         case 'success':
 
-            return state.merge({
-                patient: action.payload.patient,
-                samples: Immutable.fromJS(convertSamplesData(action.payload.samples)),
-                nodes: Immutable.fromJS(action.payload.nodes),
-                status: 'complete',
+            const newState = state.withMutations(function (state) {
+                state.set('patient',Immutable.fromJS(action.payload.patient));
+                state.set('nodes',Immutable.fromJS(action.payload.nodes));
+                state.set('status','complete');
+                state.set('samples', Immutable.List(action.payload.samples));
             });
+
+            return newState
 
         case 'error':
 
