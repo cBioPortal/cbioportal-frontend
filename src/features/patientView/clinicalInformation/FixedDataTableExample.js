@@ -127,11 +127,9 @@ export class ClinicalInformationSamplesTable extends React.Component {
         };
 
 
-        console.log(d);
-
         return null;
 
-        return <EnhancedFixedDataTable input={ fixedData } uniqueId="MUTATION_COUNT"  maxHeight={500} groupHeader={false} tableWidth={1000} autoColumnWidth={false} />
+        return <EnhancedFixedDataTable input={ fixedData } uniqueId="MUTATION_COUNT" tableWidth={1000} autoColumnWidth={false} />
 
 
         // return(

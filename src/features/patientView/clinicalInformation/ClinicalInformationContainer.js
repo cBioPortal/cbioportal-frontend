@@ -14,6 +14,7 @@ import { connect } from 'react-redux';
 import { getSamples } from 'shared/api/oldAPIWrapper';
 import FixedExample from './FixedDataTableExample';
 import PatientHeaderUnconnected from '../patientHeader/PatientHeader';
+import ReactZeroClipboard from 'react-zeroclipboard';
 
 import './style/local-styles.scss';
 
@@ -76,6 +77,12 @@ export class ClinicalInformationContainerUnconnected extends React.Component {
                     <ClinicalInformationPatientTable data={this.props.patient.get('clinicalData')} />
                 </Tab>
                 <Tab eventKey={1} title="Samples" style={{ height:500 }}>
+
+                    <div style={{display:"block"}}>
+                    <ReactZeroClipboard swfPath="" text="Hello, world!" swfPath={require('react-zeroclipboard/assets/ZeroClipboard.swf')}>
+                        <button>Copy</button>
+                    </ReactZeroClipboard>
+                    </div>
 
 
                     <FixedExample data={this.props.samples} />
