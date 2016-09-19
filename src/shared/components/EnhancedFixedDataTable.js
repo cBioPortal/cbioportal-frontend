@@ -1,6 +1,5 @@
 import React from 'react';
 import FixedDataTable from 'fixed-data-table';
-import * as $ from 'jquery';
 
 var EnhancedFixedDataTable = (function() {
 // Data button component
@@ -524,10 +523,10 @@ var EnhancedFixedDataTable = (function() {
             //console.log('number of elments which has "hasQtip" as class name: ', $('.hasQtip').size());
             //console.log('number of elments which has "hasQtip" as class name under class EFDT: ', $('.EFDT-table .hasQtip').size());
 
-            $('.EFDT-table .hasQtip')
-                .each(function() {
-                    $(this).qtip('destroy', true);
-                });
+            // $('.EFDT-table .hasQtip')
+            //     .each(function() {
+            //         $(this).qtip('destroy', true);
+            //     });
         },
 
         // FixedDataTable render function
