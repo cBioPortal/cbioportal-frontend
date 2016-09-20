@@ -5,13 +5,9 @@ import { SampleLabelHTML } from './SampleLabel';
 
 import {Table, Column, Cell} from 'fixed-data-table';
 
-import ResponsiveFixedDataTable from 'responsive-fixed-data-table';
-
 import covertSampleData from './lib/convertSamplesData';
 
-import 'fixed-data-table/dist/fixed-data-table.min.css';
-
-import EnhancedFixedDataTable from 'shared/components/EnhancedFixedDataTable';
+import EnhancedFixedDataTable from 'shared/components/enhancedFixedDataTable/EnhancedFixedDataTable';
 
 import fixedData from './sample-fixed-data';
 
@@ -86,19 +82,17 @@ export class ClinicalInformationSamplesTable extends React.Component {
 
         const cells = [];
 
-        var i = 0;
+
         Object.keys(data.items).forEach((key)=>{
 
             const item = data.items[key];
 
            data.columns.forEach((col)=>{
                if (col.id in item) {
-                   cells.push({ id:i, attr_id:col.id, attr_val: item[col.id] });
+                   cells.push({ attr_name:key, attr_id:col.id, attr_val: item[col.id] });
                } else {
-                   cells.push({ id:i, attr_id:col.id, attr_val: "N/A" });
+                   cells.push({ attr_name:key, attr_id:col.id, attr_val: "N/A" });
                }
-
-                i++;
             });
 
 
@@ -126,10 +120,13 @@ export class ClinicalInformationSamplesTable extends React.Component {
             data: cells
         };
 
+        d.attributes.unshift({ attr_id:"attr_name", datatype:'STRING', display_name:"Attribute" });
 
-        return null;
 
-        return <EnhancedFixedDataTable input={ fixedData } uniqueId="MUTATION_COUNT" tableWidth={1000} autoColumnWidth={false} />
+        return <EnhancedFixedDataTable input={ d } groupHeader={false} filter="GLOBAL" rowHeight={33} headerHeight={33} download="ALL" uniqueId="attr_name" tableWidth={1210} autoColumnWidth={false} />
+
+
+        // return <EnhancedFixedDataTable input={ fixedData } uniqueId="CASE_ID" tableWidth={1000} autoColumnWidth={false} />
 
 
         // return(

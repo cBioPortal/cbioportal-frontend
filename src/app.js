@@ -20,6 +20,7 @@ let render = (routerKey = null) => {
     const routes = makeRoutes(store);
 
     const mountNode = document.querySelector('#root');
+
     ReactDOM.render(
     <App
       store={store}
@@ -29,9 +30,9 @@ let render = (routerKey = null) => {
       routerKey={routerKey}
     />, mountNode);
 
-    ReactDOM.render(<PatientHeader
-            store={store}></PatientHeader>,
-        document.getElementById("clinical_div"));
+    // ReactDOM.render(<PatientHeader
+    //         store={store}></PatientHeader>,
+    //     document.getElementById("clinical_div"));
 
 
 };

@@ -164,19 +164,6 @@ describe('ClinicalInformationContainerUnconnected', () => {
         buildTabsStub.restore();
     });
 
-    it('clicking a tab results in call to setTab with appropriate tab index', () => {
-        comp.setProps({ status: 'complete', samples: Immutable.fromJS({  }), patient: Immutable.fromJS({ clinicalData: {} }) });
-
-        assert.isFalse(props.setTab.called);
-
-        comp.find('.nav-tabs #clinical-information-tabs-tab-2').simulate('click');
-
-        assert.isTrue(props.setTab.called);
-
-        assert.isTrue(props.setTab.calledWith(2));
-    });
-
-
     after(() => {
 
 

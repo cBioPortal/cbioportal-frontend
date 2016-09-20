@@ -5,16 +5,77 @@ body {
 }
 
 #page_wrapper {
-  max-width:1000000 !important;
-  min-width:auto !important;
+  padding:0px !important;
 }
+
+#header table:first-child {
+  margin:0 10px 10px 10px;
+  width:97%;
+}
+
 
 .ui-widget {
   font-size:inherit !important;
 }
 
-#header table:nth-child(0) {
-  width:95%;
+.ui-widget-header {
+  border:none !important;
+  border-bottom:1px solid #ddd !important;
+  border-radius:0;
+  background:none !important;
+  background-image:none !important;
+
+  .ui-state-active {
+    border-color:#ddd !important;
+  }
 
 }
 
+#patient-table_wrapper {
+  display:none !important;
+}
+
+#patient-tabs {
+  border:none !important;
+  padding:0px;
+
+  .ui-tabs .ui-tabs-panel {
+    padding:0px !important;
+
+
+
+  }
+
+}
+
+#content {
+  padding:20px;
+}
+
+.ui-tabs .ui-tabs-panel {
+  padding:0px !important;
+}
+
+#content ul {
+  margin-bottom:0px;
+  margin-top:0px;
+}
+
+#clinical_div {
+  padding:15px;
+  background:#eee;
+  border-radius:5px;
+  margin-bottom:15px;
+  position:relative;
+  padding-left:60px;
+
+  i.fa {
+    color:#fff;
+    position:absolute;
+    font-size:50px;
+    top:10px;
+    left:15px;
+  }
+
+
+}
