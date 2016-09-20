@@ -1,0 +1,42 @@
+.table {
+    display:inline-block;
+
+}
+
+.headerFilters {
+    width:200px;
+}
+
+.tableControls {
+    margin-bottom:10px;
+}
+
+.resultInfo {
+    text-align:center;
+    padding:8px;
+}
+
+.sortHeaderButton {
+    text-decoration:none !important;
+    cursor:pointer;
+}
+
+.searchWrapper {
+
+    position:relative;
+
+    i {
+        position:absolute;
+        left:10px;
+        top:10px;
+    }
+
+    > input {
+       padding-left:28px;
+    }
+
+}
+
+
+
+
