@@ -9,7 +9,7 @@
     "build:size": "npm run clean && ./node_modules/.bin/cross-env NODE_ENV=production webpack --json > stats.json",
     "test": "./node_modules/.bin/cross-env NODE_ENV=test ./node_modules/karma/bin/karma start karma.conf.js",
     "test:watch": "npm run test -- --watch",
-    "lint": "eslint src/** --ext .js --ext .jsx --fix --cache"
+    "lint": "eslint src/** --ext .js --ext .jsx --cache"
   },
   "author": "",
   "license": "",
