@@ -45,11 +45,14 @@
     "redux-immutable": "^3.0.6",
     "redux-module-builder": "0.0.12-0",
     "redux-thunk": "^2.1.0",
+    "render-if": "^0.1.1",
     "resolve-url-loader": "^1.6.0",
     "responsive-fixed-data-table": "^2.0.0",
     "sass-loader": "^4.0.0",
     "style-loader": "^0.13.1",
-    "url-loader": "^0.5.7"
+    "underscore": "^1.8.3",
+    "url-loader": "^0.5.7",
+    "zeroclipboard": "^2.2.0"
   },
   "devDependencies": {
     "autoprefixer": "^6.3.7",
