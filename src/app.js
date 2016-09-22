@@ -33,8 +33,6 @@ let render = (routerKey = null) => {
     // ReactDOM.render(<PatientHeader
     //         store={store}></PatientHeader>,
     //     document.getElementById("clinical_div"));
-
-
 };
 
 if (__DEBUG__ && module.hot) {
