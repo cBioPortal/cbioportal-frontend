@@ -67,44 +67,39 @@ export class ClinicalInformationContainerUnconnected extends React.Component {
     buildTabs() {
 
         return (
+        <div>
+            <h4>Samples</h4>
+        <FixedExample data={this.props.samples} />
 
-            <Tabs defaultActiveKey={1} animation={false}
-              activeKey={this.props.activeTab} id="clinical-information-tabs"
-              onSelect={this.selectTab.bind(this)}
-            >
-                <Tab eventKey={2} title="Patient">
-                    { this.buildButtonGroups() }
-                    <ClinicalInformationPatientTable data={this.props.patient.get('clinicalData')} />
-                </Tab>
-                <Tab eventKey={1} title="Samples" style={{ height:500 }}>
+        <h4>Clinical Data</h4>
+            <ClinicalInformationPatientTable data={this.props.patient.get('clinicalData')} />
 
-                    <div style={{display:"block"}}>
-                    <ReactZeroClipboard swfPath="" text="Hello, world!" swfPath={require('react-zeroclipboard/assets/ZeroClipboard.swf')}>
-                        <button>Copy</button>
-                    </ReactZeroClipboard>
-                    </div>
+            </div>
 
-
-                    <FixedExample data={this.props.samples} />
-
-                    <div style={{ display:'block' }}>
-                    <ClinicalInformationSamplesTable
-                      data={this.props.samples}
-                    />
-
-
-
-
-                    <h4 style={{ color: 'black' }}>PDX Hierarchy</h4>
-                    <PurifyComponent
-                      component={PDXTree}
-                      width={400}
-                      height={300}
-                      data={this.props.nodes}
-                    />
-                    </div>
-                </Tab>
-            </Tabs>
+    //     <ClinicalInformationPatientTable data={this.props.patient.get('clinicalData')} />
+    //
+    //         <Tabs defaultActiveKey={1} animation={false}
+    //           activeKey={this.props.activeTab} id="clinical-information-tabs"
+    //           onSelect={this.selectTab.bind(this)}
+    //         >
+    //             <Tab eventKey={2} title="Patient">
+    //                 { this.buildButtonGroups() }
+    //                 <ClinicalInformationPatientTable data={this.props.patient.get('clinicalData')} />
+    //             </Tab>
+    //             <Tab eventKey={1} title="Samples">
+    //
+    //         <ClinicalInformationSamplesTable
+    //     data={this.props.samples}
+    // />
+    // <ClinicalInformationPatientTable data={this.props.patient.get('clinicalData')} />
+    //
+    //                 <FixedExample data={this.props.samples} />
+    //
+    //                 <div style={{ display:'none' }}>
+    //
+    //                 </div>
+    //             </Tab>
+    //         </Tabs>
 
         );
     }

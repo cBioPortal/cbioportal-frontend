@@ -29,11 +29,10 @@ const modules = join(root, 'node_modules');
 const dest = join(root, 'dist');
 const css = join(src, 'styles');
 
+
 var config = {
 
     "entry": [
-        //'webpack-dev-server/client?http://0.0.0.0:80',
-        //'webpack/hot/only-dev-server',
         "./src/app.js"
     ],
     "output": {
@@ -157,38 +156,19 @@ config.module.loaders.push(
     }
 );
 
-
-// START BOOTSTRAP LOADER
-
-// FOR PRODUCTION USE THE EXTRACT TEST PLUGIN
-// config.module.loaders.push(
-//     {
-//         test: /\.scss$/,
-//         loader: ExtractTextPlugin.extract(
-//             'style',
-//             'css?modules&importLoaders=2&localIdentName=[name]__[local]__[hash:base64:5]' +
-//             '!sass' +
-//             '!sass-resources'
-//         )
-//     }
-//
-// );
-
-// FOR DEV, DON'T USER EXTRACT TEXT PLUGIN
-
 // if we want css modules
-// config.module.loaders.push(
-//     {
-//         test: /\.scss$/,
-//         loaders: [
-//             'style',
-//             'css?modules&importLoaders=2&localIdentName=[name]__[local]__[hash:base64:5]' +
-//             '!sass' +
-//             '!sass-resources'
-//         ]
-//     }
-//
-// );
+config.module.loaders.push(
+    {
+        test: /module\.scss$/,
+        loaders: [
+            'style',
+            'css?modules&importLoaders=2&localIdentName=[name]__[local]__[hash:base64:5]' +
+            '!sass' +
+            '!sass-resources'
+        ]
+    }
+
+);
 
 if (isDev) {
 
@@ -200,6 +180,7 @@ if (isDev) {
     config.module.loaders.push(
         {
             test: /\.scss$/,
+            exclude:/\.module\.scss/,
             loaders: [
                 'style',
                 'css?' +
@@ -214,18 +195,8 @@ if (isDev) {
 
     config.module.loaders.push(
         {
-            "test": /\.css$/,
-
-            "loader": ExtractTextPlugin.extract(
-                'style',
-                'css?' +
-                '!sass' +
-                '!sass-resources'
-            )
-
-        },
-        {
-            "test": /\.scss$/,
+            "test": /\.css$|.scss$/,
+            "exclude":/\.module\.scss/,
             "loader": ExtractTextPlugin.extract(
                 'style',
                 'css?' +
@@ -260,7 +231,7 @@ config.entry.push('bootstrap-loader');
 // END BOOTSTRAP LOADER
 
 
-//config.entry.push('font-awesome-webpack');
+config.entry.push('font-awesome-webpack');
 
 
 // Roots
