@@ -22,9 +22,7 @@ import './style/local-styles.scss';
 export class ClinicalInformationContainerUnconnected extends React.Component {
 
     componentDidMount() {
-
         this.props.loadClinicalInformationTableData();
-
     }
 
     render() {
@@ -65,7 +63,6 @@ export class ClinicalInformationContainerUnconnected extends React.Component {
     }
 
     buildTabs() {
-
         return (
         <div>
             <h4>Samples</h4>
@@ -106,7 +103,6 @@ export class ClinicalInformationContainerUnconnected extends React.Component {
 
 
 }
-
 
 
 export const PatientHeader = connect(mapStateToProps,

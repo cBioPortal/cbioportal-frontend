@@ -29,14 +29,14 @@ export default function reducer(state = initialState, action = {}) {
 
         case 'success':
 
-            const newState = state.withMutations(function (state) {
-                state.set('patient',Immutable.fromJS(action.payload.patient));
-                state.set('nodes',Immutable.fromJS(action.payload.nodes));
-                state.set('status','complete');
+            const newState = state.withMutations((state) => {
+                state.set('patient', Immutable.fromJS(action.payload.patient));
+                state.set('nodes', Immutable.fromJS(action.payload.nodes));
+                state.set('status', 'complete');
                 state.set('samples', Immutable.List(action.payload.samples));
             });
 
-            return newState
+            return newState;
 
         case 'error':
 
@@ -68,7 +68,6 @@ export function loadClinicalInformationTableData() {
         getClinicalInformationData().then(
 
             (data) => {
-
                 dispatch({
                     type: actionTypes.FETCH,
                     meta: { status: 'success' },

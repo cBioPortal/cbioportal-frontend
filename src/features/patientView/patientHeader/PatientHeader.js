@@ -6,7 +6,7 @@ export default class PatientHeader extends React.Component {
         return (
             <div>
                 <div>
-                    <a onClick={()=>{this.props.setTab(2)}}>do it</a>
+                    <a onClick={() => { this.props.setTab(2); }}>do it</a>
                     {this.props.status}
                 </div>
             </div>

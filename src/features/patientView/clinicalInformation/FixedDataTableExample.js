@@ -3,7 +3,7 @@ import React, { PropTypes as T } from 'react';
 import Immutable from 'immutable';
 import { SampleLabelHTML } from './SampleLabel';
 
-import {Table, Column, Cell} from 'fixed-data-table';
+import { Table, Column, Cell } from 'fixed-data-table';
 
 import covertSampleData from './lib/convertSamplesData';
 
@@ -19,18 +19,17 @@ export class ClinicalInformationSamplesTable extends React.Component {
 
         this.state = {
             myTableData: [
-                {name: 'Rylan'},
-                {name: 'Amelia'},
-                {name: 'Estevan'},
-                {name: 'Florence'},
-                {name: 'Tressa'},
+                { name: 'Rylan' },
+                { name: 'Amelia' },
+                { name: 'Estevan' },
+                { name: 'Florence' },
+                { name: 'Tressa' },
             ],
         };
     }
 
 
     render() {
-
         // const headerCells = this.props.data.get('columns').map((col, i) => {
         //     return (<th style={{ whiteSpace: 'nowrap' }} key={i}>
         //         <SampleLabelHTML color={'black'} label={i + 1} />
@@ -77,25 +76,21 @@ export class ClinicalInformationSamplesTable extends React.Component {
         // );
 
 
-
         const data = covertSampleData(this.props.data.toArray());
 
         const cells = [];
 
 
-        Object.keys(data.items).forEach((key)=>{
-
+        Object.keys(data.items).forEach((key) => {
             const item = data.items[key];
 
-           data.columns.forEach((col)=>{
-               if (col.id in item) {
-                   cells.push({ attr_name:key, attr_id:col.id, attr_val: item[col.id] });
-               } else {
-                   cells.push({ attr_name:key, attr_id:col.id, attr_val: "N/A" });
-               }
+            data.columns.forEach((col) => {
+                if (col.id in item) {
+                    cells.push({ attr_name: key, attr_id: col.id, attr_val: item[col.id] });
+                } else {
+                    cells.push({ attr_name: key, attr_id: col.id, attr_val: 'N/A' });
+                }
             });
-
-
         });
 
 
@@ -112,18 +107,17 @@ export class ClinicalInformationSamplesTable extends React.Component {
         // attr_val: The cell content
 
 
-
         const d = {
-          attributes: data.columns.map((col)=>{
-            return { attr_id:col.id, datatype:'STRING', display_name:col.id }
-          }),
-            data: cells
+            attributes: data.columns.map((col) => {
+                return { attr_id: col.id, datatype: 'STRING', display_name: col.id };
+            }),
+            data: cells,
         };
 
-        d.attributes.unshift({ attr_id:"attr_name", datatype:'STRING', display_name:"Attribute" });
+        d.attributes.unshift({ attr_id: 'attr_name', datatype: 'STRING', display_name: 'Attribute' });
 
 
-        return <EnhancedFixedDataTable input={ d } groupHeader={false} filter="GLOBAL" rowHeight={33} headerHeight={33} download="ALL" uniqueId="attr_name" tableWidth={1210} autoColumnWidth={false} />
+        return <EnhancedFixedDataTable input={d} groupHeader={false} filter="GLOBAL" rowHeight={33} headerHeight={33} download="ALL" uniqueId="attr_name" tableWidth={1210} autoColumnWidth={false} />;
 
 
         // return <EnhancedFixedDataTable input={ fixedData } uniqueId="CASE_ID" tableWidth={1000} autoColumnWidth={false} />
@@ -174,8 +168,6 @@ export class ClinicalInformationSamplesTable extends React.Component {
         // </ResponsiveFixedDataTable>
         //         </div>
         // )
-
-
     }
 }
 
