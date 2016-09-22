@@ -10,3 +10,4 @@ coverage/
 stats.json
 *.spec.*
 enhancedFixedDataTable/
+redux/
