@@ -23,7 +23,8 @@
     "rules": {
         "indent": [
             2,
-            4
+            4,
+            {"SwitchCase": 1}
         ],
         "linebreak-style": [
             2,
@@ -39,6 +40,10 @@
         ],
         "react/jsx-indent":"off",
         "import/no-unresolved":"off",
-        "react/jsx-filename-extension":"off"
+        "react/jsx-filename-extension":"off",
+        "max-len":"off",
+        "import/imports-first":"off",
+        "import/no-extraneous-dependencies":"off",
+        "padded-blocks":"off"
     }
 }

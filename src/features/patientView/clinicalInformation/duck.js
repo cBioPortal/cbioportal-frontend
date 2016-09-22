@@ -1,6 +1,5 @@
 import Immutable from 'immutable';
 import getClinicalInformationData from './dataLayer';
-import convertSamplesData from './lib/convertSamplesData';
 
 // ACTION TYPE CONSTANTS
 export const actionTypes = {
@@ -20,44 +19,40 @@ export default function reducer(state = initialState, action = {}) {
     switch (action.type) {
         // do reducer stuff
 
-    case actionTypes.FETCH:
+        case actionTypes.FETCH:
 
-        switch (action.meta.status) {
-        case 'fetching':
+            switch (action.meta.status) {
 
-            return state.set('status', 'fetching');
+                case 'fetching':
 
-        case 'success':
+                    return state.set('status', 'fetching');
 
-            const newState = state.withMutations(function (state) {
-                state.set('patient',Immutable.fromJS(action.payload.patient));
-                state.set('nodes',Immutable.fromJS(action.payload.nodes));
-                state.set('status','complete');
-                state.set('samples', Immutable.List(action.payload.samples));
-            });
+                case 'success':
 
-            return newState
+                    return state.withMutations((state) => {
+                        state.set('patient', Immutable.fromJS(action.payload.patient));
+                        state.set('nodes', Immutable.fromJS(action.payload.nodes));
+                        state.set('status', 'complete');
+                        state.set('samples', Immutable.List(action.payload.samples));
+                    });
 
-        case 'error':
+                case 'error':
 
-            return state.merge({
-                'table_data': null,
-                'status': 'error',
-            });
+                    return state.set('status', 'error');
+
+                default:
+
+                    return state;
+
+            }
+
+        case actionTypes.SET_TAB:
+
+            return state.set('activeTab', action.payload);
 
         default:
 
             return state;
-
-        }
-
-    case actionTypes.SET_TAB:
-
-        return state.set('activeTab', action.payload);
-
-    default:
-
-        return state;
     }
 }
 
@@ -66,9 +61,7 @@ export function loadClinicalInformationTableData() {
     // this is a thunk
     return (dispatch) => {
         getClinicalInformationData().then(
-
             (data) => {
-
                 dispatch({
                     type: actionTypes.FETCH,
                     meta: { status: 'success' },

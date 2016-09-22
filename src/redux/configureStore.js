@@ -1,25 +1,16 @@
 import { browserHistory } from 'react-router';
 import { bindActionCreatorsToStore } from 'redux-module-builder';
-import { createApiMiddleware } from 'redux-module-builder/api';
 import { routerMiddleware, syncHistoryWithStore } from 'react-router-redux';
 import thunkMiddleware from 'redux-thunk';
 import { createStore, compose, applyMiddleware } from 'redux';
 import { rootReducer, actions, initialState } from './rootReducer';
 import Immutable from 'immutable';
-import { apiMiddleware } from 'redux-api-middleware';
 
 export const configureStore = ({
-    historyType = browserHistory,
-    userInitialState = {} }) => {
+        historyType = browserHistory,
+    }) => {
     const middleware = [
-        // createApiMiddleware({
-        //     baseUrl: __ROOT_URL__,
-        //     headers: {
-        //         'X-Requested-By': 'wordtwist client'
-        //     }
-        // }),
         thunkMiddleware,
-        // apiMiddleware,
         routerMiddleware(historyType),
     ];
 

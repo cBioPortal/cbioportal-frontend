@@ -1,8 +1,8 @@
 import queryString from 'query-string';
 import { mockData } from './mockData';
 import { zipObject } from 'lodash';
-import { getSamples, getPatient } from 'shared/api/oldAPIWrapper'
-import { getTreeNodesFromClinicalData } from './PDXTree'
+import { getSamples, getPatient } from 'shared/api/oldAPIWrapper';
+import { getTreeNodesFromClinicalData } from './PDXTree';
 
 
 export default function getClinicalInformationData() {
