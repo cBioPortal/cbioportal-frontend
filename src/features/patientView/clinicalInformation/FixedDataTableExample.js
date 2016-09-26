@@ -46,7 +46,7 @@ export class ClinicalInformationSamplesTable extends React.Component {
 
         d.attributes.unshift({ attr_id: 'attr_name', datatype: 'STRING', display_name: 'Attribute' });
 
-        return <EnhancedFixedDataTable input={d} groupHeader={false} filter="GLOBAL" rowHeight={33} headerHeight={33} download="ALL" uniqueId="attr_name" tableWidth={1210} autoColumnWidth={false} />;
+        return <EnhancedFixedDataTable input={d} groupHeader={false} filter="GLOBAL" rowHeight={33} headerHeight={33} download="ALL" uniqueId="attr_name" tableWidth={1190} autoColumnWidth={false} />;
     }
 }
 

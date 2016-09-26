@@ -40,7 +40,6 @@ export class ClinicalInformationContainerUnconnected extends React.Component {
 
                 <h4>Clinical Data</h4>
                 <ClinicalInformationPatientTable data={this.props.patient.get('clinicalData')} />
-
             </div>
         );
     }

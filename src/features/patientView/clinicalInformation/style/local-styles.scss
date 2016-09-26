@@ -1,4 +1,9 @@
 #content h4 {
   margin-bottom:15px !important;
-  margin-top:20px;
+
+
+  &:nth-child(n+2) {
+    margin-top:20px;
+  }
+
 }

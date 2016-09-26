@@ -1,5 +1,5 @@
 import Immutable from 'immutable';
-import { mockData } from '../mockData';
+import { mockData } from './mockData';
 import convertSampleData from './convertSamplesData';
 import { assert } from 'chai';
 import _ from 'lodash';

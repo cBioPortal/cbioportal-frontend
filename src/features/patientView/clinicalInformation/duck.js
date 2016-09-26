@@ -1,5 +1,5 @@
 import Immutable from 'immutable';
-import getClinicalInformationData from './dataLayer';
+import getClinicalInformationData from './getClinicalInformationData';
 
 // ACTION TYPE CONSTANTS
 export const actionTypes = {
