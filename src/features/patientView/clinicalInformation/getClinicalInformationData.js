@@ -1,5 +1,4 @@
 import queryString from 'query-string';
-import { mockData } from './mockData';
 import { zipObject } from 'lodash';
 import { getSamples, getPatient } from 'shared/api/oldAPIWrapper';
 import { getTreeNodesFromClinicalData } from './PDXTree';
@@ -13,8 +12,8 @@ export default function getClinicalInformationData() {
             const cancerStudyId = qs.cancer_study_id;
             const caseId = qs.case_id;
 
-            Promise.all([mockData, getSamples(cancerStudyId, caseId), getPatient(cancerStudyId, caseId)]).then(result => {
-                let [mockData, samples, patient] = result;
+            Promise.all([getSamples(cancerStudyId, caseId), getPatient(cancerStudyId, caseId)]).then(result => {
+                let [samples, patient] = result;
 
                 const sampleOrder = samples.map(x => x.id).sort();
 
@@ -42,7 +41,7 @@ export default function getClinicalInformationData() {
                 resolve(rv);
             });
         } else {
-            return resolve(mockData);
+            return reject();
         }
     });
 

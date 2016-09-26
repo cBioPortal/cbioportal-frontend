@@ -28,11 +28,6 @@ describe('clinicalInformation duck', () => {
             assert.equal(dispatchStub.args[0][0].meta.status,"fetching");
             assert.equal(dispatchStub.args[0][0].type, actionTypes.FETCH);
 
-            //assert.isTrue(dispatchStub.calledTwice);
-            //assert.equal(dispatchStub.args[1][0].meta.status,"fetching");
-            //assert.equal(dispatchStub.args[1][0].type, actionTypes.FETCH);
-
-
             RewireDuckAPI.__ResetDependency__('getClinicalInformationData');
 
         });        
