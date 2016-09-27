@@ -11,3 +11,4 @@ stats.json
 *.spec.*
 enhancedFixedDataTable/
 redux/
+webpack.config.js
