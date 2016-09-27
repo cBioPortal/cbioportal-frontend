@@ -2,7 +2,7 @@ import Immutable from 'immutable';
 import { mockData } from './mockData';
 import convertSampleData from './convertSamplesData';
 import { assert } from 'chai';
-import _ from 'lodash';
+import { size } from 'underscore';
 
 describe('', () => {
     it('api data is properly transformed into table data', () => {

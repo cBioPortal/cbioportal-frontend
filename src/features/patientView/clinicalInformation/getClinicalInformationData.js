@@ -1,5 +1,4 @@
 import queryString from 'query-string';
-import { zipObject } from 'lodash';
 import { getSamples, getPatient } from 'shared/api/oldAPIWrapper';
 import { getTreeNodesFromClinicalData } from './PDXTree';
 
