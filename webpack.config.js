@@ -1,8 +1,8 @@
-var ExtractTextPlugin = require("extract-text-webpack-plugin");
+var ExtractTextPlugin = require('extract-text-webpack-plugin');
 
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 
-var jsonFN = require("json-fn");
+var jsonFN = require('json-fn');
 
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const dotenv = require('dotenv');
@@ -29,25 +29,27 @@ const modules = join(root, 'node_modules');
 const dest = join(root, 'dist');
 const css = join(src, 'styles');
 
+const fontPath = 'reactapp/css/[hash].[ext]';
+const imgPath = 'reactapp/css/images/[hash].[ext]';
 
 var config = {
 
-    "entry": [
-        "./src/app.js"
+    'entry': [
+        './src/app.js',
     ],
-    "output": {
-        "path": "./dist/",
-        "filename": "app.js",
-        "cssFilename": "app.css",
-        "hash": false,
-        "publicPath": "/"
+    'output': {
+        'path': './dist/',
+        'filename': 'reactapp/js/app.js',
+        'cssFilename': 'reactapp/css/app.css',
+        'hash': false,
+        'publicPath': '/',
     },
-    "resolve": {
-        "extensions": [
-            "",
-            ".js",
-            ".jsx",
-            ".json"
+    'resolve': {
+        'extensions': [
+            '',
+            '.js',
+            '.jsx',
+            '.json',
         ]
     },
 
@@ -56,59 +58,59 @@ var config = {
         new webpack.optimize.DedupePlugin()
     ],
 
-    "module": {
-        "loaders": [
+    'module': {
+        'loaders': [
             {
                 test: /\.(js|jsx|babel)$/,
                 exclude: /node_modules/,
-                loader: 'babel-loader'
+                loader: 'babel-loader',
             },
             {
                 test: /\.json$/,
-                loaders: ['json']
+                loaders: ['json'],
             },
             {
                 test: /\.otf(\?\S*)?$/,
-                loader: 'url-loader?limit=10000'
+                loader: `url-loader?name=${fontPath}&limit=10000`,
             },
             {
                 test: /\.eot(\?\S*)?$/,
-                loader: 'url-loader?limit=10000',
+                loader: `url-loader?name=${fontPath}&limit=10000`,
             },
             {
                 test: /\.svg(\?\S*)?$/,
-                loader: 'url-loader?mimetype=image/svg+xml&limit=10000'
+                loader: `url-loader?name=${fontPath}&mimetype=image/svg+xml&limit=10000`,
             },
             {
                 test: /\.ttf(\?\S*)?$/,
-                loader: 'url-loader?mimetype=application/octet-stream&limit=10000'
+                loader: `url-loader?name=${fontPath}&mimetype=application/octet-stream&limit=10000`,
             },
             {
                 test: /\.woff2?(\?\S*)?$/,
-                loader: 'url-loader?mimetype=application/font-woff&limit=10000'
+                loader: `url-loader?name=${fontPath}&mimetype=application/font-woff&limit=10000`,
             },
             {
                 test: /\.(jpe?g|png|gif)$/,
-                loader: 'url-loader?limit=10000'
+                loader: `url-loader?name=${imgPath}&limit=10000`,
             },
             {
                 test: /\.swf$/,
-                loader: 'file-loader'
-            }
-        ]
+                loader: `file-loader?name=${imgPath}`,
+            },
+        ],
     },
-    "postcss": [require('autoprefixer')],
-    "devtool": "cheap-module-eval-source-map",
-    "devServer": {
-        "historyApiFallback": false,
-        "hot": false,
-        "noInfo": false,
-        "quiet": false,
-        "lazy": false,
-        "publicPath": "/",
-        "contentBase": "dist",
-        "https": false,
-        "hostname": "localhost"
+    'postcss': [require('autoprefixer')],
+    'devtool': 'cheap-module-eval-source-map',
+    'devServer': {
+        'historyApiFallback': false,
+        'hot': false,
+        'noInfo': false,
+        'quiet': false,
+        'lazy': false,
+        'publicPath': '/',
+        'contentBase': 'dist',
+        'https': false,
+        'hostname': 'localhost',
     }
 
 
@@ -136,18 +138,18 @@ const defines =
 
 config.plugins = [
     new webpack.DefinePlugin(defines),
-    new ExtractTextPlugin("styles.css")
+    new ExtractTextPlugin('reactapp/css/styles.css')
 ].concat(config.plugins);
 // END ENV variables
 
 
-// for font-awesome;
-const fontAwesomeLoaders = [
-    {test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: "url-loader?limit=10000&minetype=application/font-woff"},
-    {test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: "file-loader"}
-];
+// // for font-awesome;
+// const fontAwesomeLoaders = [
+//     {test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'url-loader?limit=10000&minetype=application/font-woff'},
+//     {test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'file-loader?name=reactapp/css/[name].[ext]'}
+// ];
 
-config.module.loaders.push.apply(this, fontAwesomeLoaders);
+config.module.loaders.push.apply(this);
 
 config.module.loaders.push(
     {
@@ -175,7 +177,7 @@ if (isDev) {
     // IN DEV WE WANT TO LOAD CSS AND SCSS BUT NOT USE EXTRACT TEXT PLUGIN
     // STYLES WILL BE IN JS BUNDLE AND APPENDED TO DOM IN <STYLE> TAGS
 
-    config.module.loaders.push({test: /\.css$/, loader: "style-loader!css-loader"});
+    config.module.loaders.push({test: /\.css$/, loader: 'style-loader!css-loader'});
 
     config.module.loaders.push(
         {
@@ -195,9 +197,9 @@ if (isDev) {
 
     config.module.loaders.push(
         {
-            "test": /\.css$|.scss$/,
-            "exclude":/\.module\.scss/,
-            "loader": ExtractTextPlugin.extract(
+            'test': /\.css$|.scss$/,
+            'exclude':/\.module\.scss/,
+            'loader': ExtractTextPlugin.extract(
                 'style',
                 'css?' +
                 '!sass' +
@@ -230,9 +232,7 @@ config.sassResources = './sass-resources.scss';
 config.entry.push('bootstrap-loader');
 // END BOOTSTRAP LOADER
 
-
 config.entry.push('font-awesome-webpack');
-
 
 // Roots
 config.resolve.root = [src, modules];
@@ -255,7 +255,7 @@ if (isDev) {
 
     // force hot module reloader to hit absolute path so it can load
     // from dev server
-    config.output.publicPath = "http://localhost:3000/";
+    config.output.publicPath = 'http://localhost:3000/';
 }
 
 // Testing
@@ -283,6 +283,6 @@ if (isTest) {
 // End Testing
 
 
-config.devtool = "inline-source-map";
+config.devtool = 'inline-source-map';
 
 module.exports = config;
