@@ -30,7 +30,19 @@ describe('clinicalInformation duck', () => {
 
             RewireDuckAPI.__ResetDependency__('getClinicalInformationData');
 
-        });        
+        });
+
+        it('dispatches a set tab action',()=>{
+
+            const dispatchStub = sinon.stub();
+
+            const action = actionCreators.setTab(8);
+
+            assert.equal(action.type, actionTypes.SET_TAB);
+
+            assert.equal(action.payload, 8);
+
+        });
         
     });
     
