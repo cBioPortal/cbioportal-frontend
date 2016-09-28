@@ -15,9 +15,8 @@
 
         [
           "istanbul", {
-          "exclude": [
-            "**/*.spec.js"
-          ]
+
+          "include": ["**/src/features/**/*.js"]
         }
         ],
 
