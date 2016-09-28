@@ -670,6 +670,9 @@ var EnhancedFixedDataTable = (function () {
         getColumnWidth: function (cols, rows, measureMethod, columnMinWidth) {
             var columnWidth = {};
             var self = this;
+
+            var $ruler = $('<span style="font-size:14px"/>').appendTo("body");
+
             if (self.props.autoColumnWidth) {
                 var rulerWidth = 0;
                 _.each(rows, function (row) {
@@ -681,10 +684,9 @@ var EnhancedFixedDataTable = (function () {
                             }
                             switch (measureMethod) {
                                 case 'jquery':
-                                    var ruler = $("#ruler");
-                                    ruler.css('font-size', '14px');
-                                    ruler.text(data);
-                                    rulerWidth = ruler.outerWidth();
+                                    $ruler.css('font-size', '14px');
+                                    $ruler.text(data);
+                                    rulerWidth = $ruler.outerWidth();
                                     break;
                                 default:
                                     var upperCaseLength = data.replace(/[^A-Z]/g, "").length;
@@ -710,6 +712,9 @@ var EnhancedFixedDataTable = (function () {
                     columnWidth[col.name] = col.width ? col.width : 200;
                 });
             }
+
+            $ruler.remove();
+
             return columnWidth;
         },
 
