@@ -45,6 +45,7 @@ export class ClinicalInformationContainerUnconnected extends React.Component {
     }
 
     render() {
+
         switch (this.props.status) {
 
             case 'fetching':
