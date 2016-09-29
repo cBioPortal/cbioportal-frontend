@@ -32,17 +32,20 @@ const css = join(src, 'styles');
 const fontPath = 'reactapp/css/[hash].[ext]';
 const imgPath = 'reactapp/css/images/[hash].[ext]';
 
+var routeComponentRegex = /routes\/([^\/]+\/?[^\/]+).js$/;
+
 var config = {
 
     'entry': [
         './src/app.js',
     ],
     'output': {
-        'path': './dist/',
-        'filename': 'reactapp/js/app.js',
-        'cssFilename': 'reactapp/css/app.css',
-        'hash': false,
-        'publicPath': '/',
+        path: './dist/',
+        filename: 'reactapp/js/[name].app.js',
+        chunkFilename: 'reactapp/js/[name].chunk.js',
+        cssFilename: 'reactapp/css/app.css',
+        hash: false,
+        publicPath: '/',
     },
     'resolve': {
         'extensions': [
@@ -97,6 +100,14 @@ var config = {
                 test: /\.swf$/,
                 loader: `file-loader?name=${imgPath}`,
             },
+            // {
+            //     test: /ClinicalInformationContainer/i,
+            //     include: path.resolve(__dirname, 'src'),
+            //     loaders: ['bundle?lazy', 'babel']
+            // }
+
+
+
         ],
     },
     'postcss': [require('autoprefixer')],
