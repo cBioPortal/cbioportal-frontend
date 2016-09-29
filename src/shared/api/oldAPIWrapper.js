@@ -3,8 +3,6 @@
 import cbioportal_client from 'shared/api/cbioportal-client';
 import { renameKeys, dropKeys } from 'shared/lib/ObjectManipulation';
 
-const API_ROOT = 'http://www.cbioportal.org/pdx/api';
-
 /* Return patient data in new API format */
 export function getPatient(studyId, patientId) {
     /* Get data from Old API */

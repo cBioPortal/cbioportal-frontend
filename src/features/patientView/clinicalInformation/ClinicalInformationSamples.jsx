@@ -1,5 +1,9 @@
 import React, { PropTypes as T } from 'react';
 
+import Immutable from 'immutable';
+
+import {Table, Column, Cell} from 'fixed-data-table';
+
 import EnhancedFixedDataTable from 'shared/components/enhancedFixedDataTable/EnhancedFixedDataTable';
 
 import covertSampleData from './lib/convertSamplesData';
