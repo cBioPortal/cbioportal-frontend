@@ -4,7 +4,7 @@ class Homepage extends React.Component {
 
     render() {
 
-        return <div>Hello</div>;
+        return <div>Hello world</div>;
 
     }
 
