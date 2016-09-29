@@ -1,25 +1,25 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-
 import App from 'containers/App/App';
-
 import { hashHistory, createMemoryHistory } from 'react-router';
-
+import { configureStore } from './redux/configureStore';
 import makeRoutes from './routes';
 
-import { PatientHeader } from 'features/patientView/clinicalInformation/ClinicalInformationContainer';
+const memoryHistory = createMemoryHistory('home');
 
-const memoryHistory = createMemoryHistory('/monkey');
+// expose router so it can be manipulated in console
+if (window) {
+    window.reactRouter = memoryHistory;
+}
 
 const initialState = {};
-import { configureStore } from './redux/configureStore';
 const { store, actions, history } = configureStore({ initialState, historyType: memoryHistory });
 
 let render = (routerKey = null) => {
-    const makeRoutes = require('./routes').default;
+
     const routes = makeRoutes(store);
 
-    const mountNode = document.querySelector('#root');
+    const rootNode = document.getElementById("reactRoot");
 
     ReactDOM.render(
     <App
@@ -28,11 +28,9 @@ let render = (routerKey = null) => {
       routes={routes}
       history={history}
       routerKey={routerKey}
-    />, mountNode);
+    />, rootNode);
 
-    // ReactDOM.render(<PatientHeader
-    //         store={store}></PatientHeader>,
-    //     document.getElementById("clinical_div"));
+
 };
 
 if (__DEBUG__ && module.hot) {
