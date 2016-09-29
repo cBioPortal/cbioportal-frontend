@@ -5,7 +5,9 @@ import { hashHistory, createMemoryHistory } from 'react-router';
 import { configureStore } from './redux/configureStore';
 import makeRoutes from './routes';
 
-const memoryHistory = createMemoryHistory('home');
+const defaultRoute = window.defaultRoute || "/home";
+
+const memoryHistory = createMemoryHistory(defaultRoute);
 
 // expose router so it can be manipulated in console
 if (window) {
