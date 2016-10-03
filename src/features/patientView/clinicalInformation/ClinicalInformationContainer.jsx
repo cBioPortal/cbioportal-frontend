@@ -5,7 +5,7 @@ import Spinner from 'react-spinkit';
 import { actionCreators, mapStateToProps } from './duck';
 import PurifyComponent from 'shared/components/PurifyComponent';
 import { connect } from 'react-redux';
-import FixedExample from './FixedDataTableExample';
+import FixedExample from './ClinicalInformationSamples';
 import PatientHeaderUnconnected from '../patientHeader/PatientHeader';
 
 import './style/local-styles.scss';

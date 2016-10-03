@@ -8,9 +8,8 @@ import { ClinicalInformationContainerUnconnected } from './ClinicalInformationCo
 import Spinner from 'react-spinkit';
 import * as $ from 'jquery';
 import ClinicalInformationPatientTable from './ClinicalInformationPatientTable';
-import ClinicalInformationSamplesTable from './ClinicalInformationSamplesTable';
 import PDXTree from './PDXTree';
-import FixedDataTableExample from './FixedDataTableExample';
+import FixedDataTableExample from './ClinicalInformationSamples';
 
 const stubComponent = function (componentClass) {
     let originalPropTypes;
@@ -130,7 +129,6 @@ describe('ClinicalInformationContainerUnconnected', () => {
         };
 
         stubComponent(ClinicalInformationPatientTable);
-        stubComponent(ClinicalInformationSamplesTable);
         stubComponent(PDXTree);
         stubComponent(FixedDataTableExample);
 
