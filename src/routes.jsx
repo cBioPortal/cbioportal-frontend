@@ -3,6 +3,11 @@ import {Route, IndexRoute} from 'react-router';
 
 import Container from 'features/Container';
 
+/* HOW TO ADD A NEW ROUTE
+* 1. Import the "page" component using the bundle-loader directives as seen in imports below
+* 2. Add a Route element with getComponent set to the result the lazyLoadComponent function passed your new component
+*/
+
 // import page components here
 // NOTE: to lazy load these, we use the bundle loader.  what we are importing are not the components but loaders
 // which are invoked at run time by the routes
@@ -11,6 +16,8 @@ import Container from 'features/Container';
 import PatientViewPage from 'bundle?lazy!babel!./features/patientView/patientViewPage';
 import HomePage from 'bundle?lazy!babel!./features/home/homePage';
 
+// accepts bundle-loader's deferred loader function and defers execution of route's render
+// until chunk is loaded
 function lazyLoadComponent(loader) {
 
     return (location, cb) => {

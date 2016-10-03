@@ -37,7 +37,7 @@ var routeComponentRegex = /routes\/([^\/]+\/?[^\/]+).js$/;
 var config = {
 
     'entry': [
-        './src/app.js',
+        './src/app.jsx',
     ],
     'output': {
         path: './dist/',
