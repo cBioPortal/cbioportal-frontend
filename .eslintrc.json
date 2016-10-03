@@ -44,6 +44,8 @@
         "max-len":0,
         "import/imports-first":0,
         "import/no-extraneous-dependencies":0,
-        "padded-blocks":0
+        "padded-blocks":0,
+        "react/prefer-stateless-function":0,
+        "comma-dangle":0
     }
 }
