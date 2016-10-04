@@ -1,4 +1,5 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 import ClinicalInformationPatientTable from './ClinicalInformationPatientTable';
 import PDXTree from './PDXTree';
 import Spinner from 'react-spinkit';
@@ -14,6 +15,7 @@ export class ClinicalInformationContainerUnconnected extends React.Component {
 
     componentDidMount() {
         this.props.loadClinicalInformationTableData();
+
     }
 
     buildButtonGroups() {
@@ -68,7 +70,6 @@ export class ClinicalInformationContainerUnconnected extends React.Component {
 
 
 }
-
 
 export const PatientHeader = connect(mapStateToProps,
     actionCreators)(PatientHeaderUnconnected);
