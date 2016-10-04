@@ -47,6 +47,7 @@ var config = {
         hash: false,
         publicPath: '/',
     },
+
     'resolve': {
         'extensions': [
             '',
@@ -111,7 +112,6 @@ var config = {
         ],
     },
     'postcss': [require('autoprefixer')],
-    'devtool': 'cheap-module-eval-source-map',
     'devServer': {
         'historyApiFallback': false,
         'hot': false,
@@ -153,15 +153,9 @@ config.plugins = [
 ].concat(config.plugins);
 // END ENV variables
 
-
-// // for font-awesome;
-// const fontAwesomeLoaders = [
-//     {test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'url-loader?limit=10000&minetype=application/font-woff'},
-//     {test: /\.(ttf|eot|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'file-loader?name=reactapp/css/[name].[ext]'}
-// ];
-
 config.module.loaders.push.apply(this);
 
+// include jquery when we load boostrap-sass
 config.module.loaders.push(
     {
         test: /bootstrap-sass[\/\\]assets[\/\\]javascripts[\/\\]/,
@@ -169,10 +163,10 @@ config.module.loaders.push(
     }
 );
 
-// if we want css modules
+// css modules for any scss matching test
 config.module.loaders.push(
     {
-        test: /module\.scss$/,
+        test: /\.module\.scss$/,
         loaders: [
             'style',
             'css?modules&importLoaders=2&localIdentName=[name]__[local]__[hash:base64:5]' +
@@ -184,6 +178,8 @@ config.module.loaders.push(
 );
 
 if (isDev) {
+
+    config.devtool = 'inline-source-map';
 
     // IN DEV WE WANT TO LOAD CSS AND SCSS BUT NOT USE EXTRACT TEXT PLUGIN
     // STYLES WILL BE IN JS BUNDLE AND APPENDED TO DOM IN <STYLE> TAGS
@@ -203,8 +199,18 @@ if (isDev) {
         }
     );
 
+    config.devServer.port = devPort;
+    config.devServer.hostname = devHost;
+
+    // force hot module reloader to hit absolute path so it can load
+    // from dev server
+    config.output.publicPath = 'http://localhost:3000/';
+
 
 } else {
+
+
+    config.devTool = 'cheap-module-source-map',
 
     config.module.loaders.push(
         {
@@ -264,16 +270,6 @@ config.resolve.alias = {
 };
 // end Roots
 
-// Dev
-if (isDev) {
-    config.devServer.port = devPort;
-    config.devServer.hostname = devHost;
-
-    // force hot module reloader to hit absolute path so it can load
-    // from dev server
-    config.output.publicPath = 'http://localhost:3000/';
-}
-
 // Testing
 if (isTest) {
     config.externals = {
@@ -298,7 +294,5 @@ if (isTest) {
 }
 // End Testing
 
-
-config.devtool = 'inline-source-map';
 
 module.exports = config;
