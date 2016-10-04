@@ -1,8 +1,10 @@
 import React from 'react';
 
-export default class PatientHeader extends React.Component {
+class PatientHeader extends React.Component {
 
     render() {
+
+        console.log("patient header render");
         return (
             <div>
                 <div>
@@ -13,3 +15,5 @@ export default class PatientHeader extends React.Component {
         );
     }
 }
+
+export default PatientHeader;
