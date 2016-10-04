@@ -8,3 +8,4 @@ dist/
 .eslintcache
 coverage/
 stats.json
+.DS_Store
