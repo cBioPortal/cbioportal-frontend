@@ -1,10 +1,12 @@
 import React, { PropTypes as T } from 'react';
 
+import './styles.scss';
+
 class PageHeader extends React.Component {
 
     handleSubmit(e) {
         e.preventDefault();
-        this.props.changeRoute(this.routeInput.value);
+        this.props.router.push(this.routeInput.value);
     }
 
     render() {
@@ -24,7 +26,7 @@ class PageHeader extends React.Component {
 }
 
 PageHeader.propTypes = {
-    changeRoute: T.func.isRequired,
+    router: T.object.isRequired,
     currentRoutePath: T.string.isRequired
 };
 
