@@ -5,6 +5,9 @@ import { hashHistory, createMemoryHistory } from 'react-router';
 import { configureStore } from './redux/configureStore';
 import makeRoutes from './routes';
 
+// we import these modules not to use them but to include them in the main app bundle
+import EnhancedFixedDataTable from 'shared/components/enhancedFixedDataTable/EnhancedFixedDataTable';
+
 const defaultRoute = window.defaultRoute || "/home";
 
 const memoryHistory = createMemoryHistory(defaultRoute);
