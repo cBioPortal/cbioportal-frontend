@@ -15,8 +15,8 @@ class PatientViewPage extends React.Component {
 
         const PatientHeader = connect(mapStateToProps)(PatientHeaderUnconnected);
 
-        ReactDOM.render(<PatientHeader store={this.props.store} />,
-            document.getElementById("clinical_div"));
+        // ReactDOM.render(<PatientHeader store={this.props.store} />,
+        //     document.getElementById("clinical_div"));
     }
     render() {
         return (
