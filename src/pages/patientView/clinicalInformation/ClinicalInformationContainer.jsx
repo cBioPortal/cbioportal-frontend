@@ -6,16 +6,16 @@ import Spinner from 'react-spinkit';
 import { actionCreators, mapStateToProps } from './duck';
 import PurifyComponent from 'shared/components/PurifyComponent';
 import { connect } from 'react-redux';
-import FixedExample from './ClinicalInformationSamples';
+import ClinicalInformationSamples from './ClinicalInformationSamples';
 import PatientHeaderUnconnected from '../patientHeader/PatientHeader';
 
 import './style/local-styles.scss';
 
+
 export class ClinicalInformationContainerUnconnected extends React.Component {
 
-    componentDidMount() {
+    componentDidMount(ar1, ar2) {
         this.props.loadClinicalInformationTableData();
-
     }
 
     buildButtonGroups() {
@@ -38,7 +38,8 @@ export class ClinicalInformationContainerUnconnected extends React.Component {
         return (
             <div>
                 <h4>Samples</h4>
-                <FixedExample data={this.props.samples} />
+
+                <ClinicalInformationSamples data={this.props.samples} />
 
                 <h4>Patient</h4>
                 <ClinicalInformationPatientTable data={this.props.patient.get('clinicalData')} />
@@ -63,6 +64,7 @@ export class ClinicalInformationContainerUnconnected extends React.Component {
                 return <div>There was an error.</div>;
 
             default:
+
                 return <div />;
 
         }

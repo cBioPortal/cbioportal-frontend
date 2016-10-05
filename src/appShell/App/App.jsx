@@ -39,7 +39,7 @@ class App extends React.Component {
   get devTools () {
     if (__DEBUG__) {
       if (!window.devToolsExtension) {
-        const DevTools = require('containers/DevTools/DevTools').default
+        const DevTools = require('../DevTools/DevTools').default
         return <DevTools />
       }
     }

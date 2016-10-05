@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import App from 'containers/App/App';
+import App from 'appShell/App/App';
 import { hashHistory, createMemoryHistory } from 'react-router';
 import { configureStore } from './redux/configureStore';
 import makeRoutes from './routes';
