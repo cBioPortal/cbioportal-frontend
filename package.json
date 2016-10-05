@@ -4,7 +4,7 @@
   "description": "",
   "scripts": {
     "start": "webpack-dev-server --define process.env.NODE_ENV='\"production\"' --inline --hot",
-    "clean": "rimraf dist",
+    "clean": "rimraf dist tsDist",
     "build": "npm run clean && webpack --define process.env.NODE_ENV='\"production\"' --progress --colors",
     "build:size": "npm run clean && webpack --define process.env.NODE_ENV='\"production\"' --json > stats.json",
     "test": "karma start karma.conf.js",
@@ -112,7 +112,11 @@
     "redux-devtools-dock-monitor": "^1.1.1",
     "redux-devtools-log-monitor": "^1.0.11",
     "sinon": "^1.17.4",
+    "source-map-loader": "^0.1.5",
+    "ts-loader": "^0.8.2",
+    "typescript": "^2.0.3",
     "webpack-dev-server": "^1.15.0",
+    "webpack-fail-plugin": "^1.0.5",
     "yargs": "^4.8.0"
   },
   "pre-commit": [
