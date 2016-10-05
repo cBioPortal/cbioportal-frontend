@@ -1,7 +1,7 @@
 import React from 'react';
 import {Button, OverlayTrigger, Popover} from 'react-bootstrap';
-import SampleInline from './SampleInline'
-import TooltipTable from '../clinicalInformation/ClinicalInformationPatientTable'
+import SampleInline from './SampleInline';
+import TooltipTable from '../clinicalInformation/ClinicalInformationPatientTable';
 import Immutable from 'immutable';
 import Spinner from 'react-spinkit';
 

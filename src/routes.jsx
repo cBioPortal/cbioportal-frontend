@@ -1,7 +1,7 @@
 import React from 'react';
-import {Route, IndexRoute} from 'react-router';
+import { Route } from 'react-router';
 
-import Container from 'features/Container';
+import Container from 'appShell/App/Container';
 
 /* HOW TO ADD A NEW ROUTE
 * 1. Import the "page" component using the bundle-loader directives as seen in imports below
@@ -13,8 +13,8 @@ import Container from 'features/Container';
 // which are invoked at run time by the routes
 // webpack knows to 'split' the code into seperate bundles accordingly
 // see article http://henleyedition.com/implicit-code-splitting-with-react-router-and-webpack/
-import PatientViewPage from 'bundle?lazy!babel!./features/patientView/patientViewPage';
-import HomePage from 'bundle?lazy!babel!./features/home/homePage';
+import PatientViewPage from 'bundle?lazy!babel!./pages/patientView/patientViewPage';
+import HomePage from 'bundle?lazy!babel!./pages/home/homePage';
 
 // accepts bundle-loader's deferred loader function and defers execution of route's render
 // until chunk is loaded
