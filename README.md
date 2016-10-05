@@ -9,14 +9,6 @@ Add .env file in root of project. Put the following in that file:  (The host can
 ```
 API_ROOT=www.cbioportal.org
 ```
-
-To embed in cBioPortal site, place the following in any jsp
-
-```html
-<div id="root">fd</div>
-<script src="//localhost:3000/app.js"></script>
-```
-
 To install all app and dev dependencies 
 ```
 npm install
@@ -24,12 +16,17 @@ npm install
 
 To start dev server with hot reload enabled
 ```
-npm start
+npm run start
 ```
 
 To run unit/integration tests
 ```
-npm test
+npm run test
+```
+
+To run unit/integration tests in watch mode
+```
+npm run test:watch
 ```
 
 To run linting
