@@ -1,6 +1,6 @@
 import React, {PropTypes as T} from 'react';
 import ReactDOM from 'react-dom';
-import PageHeader from './pageHeader/PageHeader.jsx';
+import PageHeader from '../../pages/pageHeader/PageHeader.jsx';
 
 
 export class Container extends React.Component {

@@ -4,7 +4,7 @@
   "bootstrapVersion": 3,
   "styleLoaders": ["style", "css", "sass"],
 
-  "appStyles":"./src/styles/global.scss",
+  "appStyles":"./src/globalStyles/global.scss",
 
   "styles": true,
 
@@ -18,7 +18,7 @@
   },
 
   "scripts":true,
-  "preBootstrapCustomizations": "./src/styles/pre-customizations.scss"
+  "preBootstrapCustomizations": "./src/globalStyles/bootstrap-customizations.scss"
 
 
 

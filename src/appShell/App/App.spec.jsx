@@ -3,7 +3,6 @@ import { expect } from 'chai';
 import { shallow } from 'enzyme';
 
 import App from './App';
-import styles from './styles.module.css';
 
 describe('<App />', () => {
     let wrapper;
