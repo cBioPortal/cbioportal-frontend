@@ -265,7 +265,7 @@ config.resolve.alias = {
     utils: join(src, 'utils'),
     styles: join(src, 'styles'),
     reducers: join(src, 'redux/modules'),
-    features: join(src, 'features'),
+    pages: join(src, 'pages'),
     shared: join(src,'shared')
 };
 // end Roots
