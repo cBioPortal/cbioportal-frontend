@@ -1,3 +1,4 @@
+import _ from 'underscore';
 import React, { PropTypes as T } from 'react';
 import { Router } from 'react-router';
 import { Provider } from 'react-redux';
@@ -16,10 +17,7 @@ class App extends React.Component {
 
   get content() {
     const { history, routes, routerKey, store, actions } = this.props;
-    let newProps = {
-      actions,
-      ...this.props
-    }
+    let newProps = _.extend({actions}, this.props);
 
     const createElement = (Component, props) => {
       return <Component {...newProps} {...props} />
