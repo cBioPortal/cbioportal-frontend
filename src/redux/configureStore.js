@@ -16,7 +16,7 @@ export const configureStore = ({
 
     const tools = [];
     if (__DEBUG__) {
-        const DevTools = require('containers/DevTools/DevTools').default;
+        const DevTools = require('../appShell/DevTools/DevTools').default;
         const devTools = window.devToolsExtension ? window.devToolsExtension : DevTools.instrument;
         if (typeof devTools === 'function') {
             tools.push(devTools({
