@@ -8,3 +8,4 @@ npm-debug.log
 coverage/
 stats.json
 .DS_Store
+tsDist/
