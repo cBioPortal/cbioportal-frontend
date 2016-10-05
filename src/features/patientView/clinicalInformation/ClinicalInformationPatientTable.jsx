@@ -16,6 +16,7 @@ export default class ClinicalInformationPatientTable extends React.Component {
     render() {
         const rows = [];
 
+        ;
         this.props.data.forEach((item) => {
             rows.push(
                 <tr key={item.get('id')}>
