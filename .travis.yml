@@ -1,6 +1,8 @@
 language: node_js
 node_js:
   - "4.4.7"
+before_install:
+  - if [[ `npm -v` != 3* ]]; then npm i -g npm@3; fi
 install:
   - sudo apt-get install npm
   - npm config set registry http://registry.npmjs.org/
@@ -9,6 +11,9 @@ install:
   - npm install codecov.io
 script:
   - npm test
+  # Run build and test
+  - npm run build
+  - npm run comparedist
 after_success:
  # upload coverage data to codecov.io
  - cat coverage/*/lcov.info | codecov
