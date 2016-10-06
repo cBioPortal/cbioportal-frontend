@@ -20,21 +20,21 @@ const cbioportal_client = (function () {
 			});
 		};
 		                                const functionNameToEndpointProperties = {
-			                                        'CancerTypes': { endpoint: 'api/cancertypes' },
-			                                        'SampleClinicalData': { endpoint: 'api/clinicaldata/samples' },
-			                                        'PatientClinicalData': { endpoint: 'api/clinicaldata/patients' },
-			                                        'SampleClinicalAttributes': { endpoint: 'api/clinicalattributes/samples' },
-			                                        'PatientClinicalAttributes': { endpoint: 'api/clinicalattributes/patients' },
-			                                        'ClinicalAttributes': { endpoint: 'api/clinicalattributes' },
-			                                        'Genes': { endpoint: 'api/genes' },
-			                                        'GeneticProfiles': { endpoint: 'api/geneticprofiles' },
-			                                        'SampleLists': { endpoint: 'api/samplelists' },
-			                                        'SampleListsMeta': { endpoint: 'api/samplelists', args: { metadata: true } },
-			                                        'Patients': { endpoint: 'api/patients' },
-			                                        'GeneticProfileData': { endpoint: 'api/geneticprofiledata' },
-			                                        'Samples': { endpoint: 'api/samples' },
-			                                        'Studies': { endpoint: 'api/studies' },
-			                                        'MutationCounts': { endpoint: 'api/mutation_count' },
+			                                        'CancerTypes': { endpoint: '/cancertypes' },
+			                                        'SampleClinicalData': { endpoint: '/clinicaldata/samples' },
+			                                        'PatientClinicalData': { endpoint: '/clinicaldata/patients' },
+			                                        'SampleClinicalAttributes': { endpoint: '/clinicalattributes/samples' },
+			                                        'PatientClinicalAttributes': { endpoint: '/clinicalattributes/patients' },
+			                                        'ClinicalAttributes': { endpoint: '/clinicalattributes' },
+			                                        'Genes': { endpoint: '/genes' },
+			                                        'GeneticProfiles': { endpoint: '/geneticprofiles' },
+			                                        'SampleLists': { endpoint: '/samplelists' },
+			                                        'SampleListsMeta': { endpoint: '/samplelists', args: { metadata: true } },
+			                                        'Patients': { endpoint: '/patients' },
+			                                        'GeneticProfileData': { endpoint: '/geneticprofiledata' },
+			                                        'Samples': { endpoint: '/samples' },
+			                                        'Studies': { endpoint: '/studies' },
+			                                        'MutationCounts': { endpoint: '/mutation_count' },
 		};
 		                                const ret = {};
 		                                        for (const fn_name in functionNameToEndpointProperties) {

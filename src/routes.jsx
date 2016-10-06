@@ -13,8 +13,8 @@ import Container from 'appShell/App/Container';
 // which are invoked at run time by the routes
 // webpack knows to 'split' the code into seperate bundles accordingly
 // see article http://henleyedition.com/implicit-code-splitting-with-react-router-and-webpack/
-import PatientViewPage from 'bundle?lazy!babel!./pages/patientView/patientViewPage';
-import HomePage from 'bundle?lazy!babel!./pages/home/homePage';
+import PatientViewPage from 'bundle?lazy!babel!./pages/patientView/PatientViewPage';
+import HomePage from 'bundle?lazy!babel!./pages/home/HomePage';
 
 // accepts bundle-loader's deferred loader function and defers execution of route's render
 // until chunk is loaded
