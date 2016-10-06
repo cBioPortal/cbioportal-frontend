@@ -3,7 +3,6 @@ config/
 npm-debug.log
 .env
 .awsDetails
-dist/
 .idea/**
 .eslintcache
 coverage/
