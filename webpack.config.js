@@ -1,6 +1,6 @@
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
-
 var HtmlWebpackPlugin = require('html-webpack-plugin');
+var WebpackFailPlugin = require('webpack-fail-plugin');
 
 var jsonFN = require('json-fn');
 
@@ -37,7 +37,7 @@ var routeComponentRegex = /routes\/([^\/]+\/?[^\/]+).js$/;
 var config = {
 
     'entry': [
-        './src/appBootstrapper.jsx',
+        `${path.join(src, 'appBootstrapper.jsx')}`,
     ],
     'output': {
         path: './dist/',
@@ -54,16 +54,23 @@ var config = {
             '.js',
             '.jsx',
             '.json',
+            '.ts',
+            '.tsx',
         ]
     },
 
     plugins: [
         new HtmlWebpackPlugin({cache: false, template: 'my-index.ejs'}),
-        new webpack.optimize.DedupePlugin()
+        new webpack.optimize.DedupePlugin(),
+        WebpackFailPlugin
     ],
 
     'module': {
         'loaders': [
+            {
+                test: /\.tsx?$/,
+                loader: "ts-loader"
+            },
             {
                 test: /\.(js|jsx|babel)$/,
                 exclude: /node_modules/,
@@ -110,8 +117,17 @@ var config = {
 
 
         ],
+
+        preLoaders: [
+            // All output '.js' files will have any sourcemaps re-processed by 'source-map-loader'.
+            {
+                test: /\.js$/,
+                loader: "source-map-loader"
+            }
+        ]
     },
     'postcss': [require('autoprefixer')],
+    'devtool': 'source-map',
     'devServer': {
         'historyApiFallback': false,
         'hot': false,
@@ -229,7 +245,7 @@ if (isDev) {
     config.plugins.push(
         new webpack.DefinePlugin({
             'process.env':{
-                'NODE_ENV': JSON.stringify('production')
+                'NODE_ENV': `"${process.env.NODE_ENV || 'production'}"`
             }
         }),
         new webpack.optimize.UglifyJsPlugin({
