@@ -1,6 +1,5 @@
 import React from 'react';
 import FixedDataTable from 'fixed-data-table';
-import ZeroClipboard from 'zeroclipboard';
 import {Button, ButtonGroup} from 'react-bootstrap';
 import renderIf from 'render-if';
 import _ from 'underscore';
@@ -12,8 +11,6 @@ import './styles.css';
 const Cell = FixedDataTable.Cell;
 
 import ReactZeroClipboard from 'react-zeroclipboard';
-
-//ZeroClipboard.config({swfPath: require('react-zeroclipboard/assets/ZeroClipboard.swf')});
 
 var EnhancedFixedDataTable = (function () {
 // Data button component
