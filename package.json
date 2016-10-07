@@ -10,7 +10,6 @@
     "test": "./node_modules/.bin/cross-env NODE_ENV=test ./node_modules/karma/bin/karma start karma.conf.js",
     "test:watch": "npm run test -- --watch",
     "lint": "eslint src/** --ext .js --ext .jsx --cache",
-    "prepublish": "npm run build && node prepare.js",
     "storedist": "npm run build && find dist/ | xargs git add -f",
     "comparedist": "./scripts/test_compare_dist_with_committed_dist.sh",
     "validate": "npm ls"
