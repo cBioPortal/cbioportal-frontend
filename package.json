@@ -119,10 +119,8 @@
     "webpack-fail-plugin": "^1.0.5",
     "yargs": "^4.8.0"
   },
-  "pre-commit": {
-    "run": [
-      "storedist",
-      "comparedist"
-    ]
-  }
+  "pre-commit": [
+    "storedist",
+    "comparedist"
+  ]
 }
