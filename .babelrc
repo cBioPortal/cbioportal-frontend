@@ -16,7 +16,7 @@
         [
           "istanbul", {
 
-          "include": ["**/src/features/**/*.js"]
+          "include": ["**/tsDist/features/**/*.js"]
         }
         ],
 
