@@ -120,7 +120,6 @@
     "yargs": "^4.8.0"
   },
   "pre-commit": [
-    "test",
     "storedist",
     "comparedist"
   ]
