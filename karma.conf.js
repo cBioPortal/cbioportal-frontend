@@ -1,5 +1,7 @@
 var argv = require('yargs').argv;
 
+process.env.NODE_ENV = 'test';
+
 var webpackConfig = require('./webpack.config');
 
 module.exports = function (config) {
