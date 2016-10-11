@@ -127,7 +127,6 @@ var config = {
         ]
     },
     'postcss': [require('autoprefixer')],
-    'devtool': 'source-map',
     'devServer': {
         'historyApiFallback': false,
         'hot': false,
@@ -226,7 +225,7 @@ if (isDev) {
 } else {
 
 
-    config.devTool = 'cheap-module-source-map',
+    config.devTool = 'cheap-module-source-map';
 
     config.module.loaders.push(
         {

@@ -1,6 +1,6 @@
 webpackJsonp([2],{
 
-/***/ 1112:
+/***/ 924:
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(module) {"use strict";
@@ -43,15 +43,15 @@ webpackJsonp([2],{
 	    }
 	};
 	
-	var _CCbioportalFrontendNode_modulesBabelPresetReactHmreNode_modulesReactTransformHmrLibIndexJs2 = (0, _index6.default)({
-	    filename: "C:/cbioportal-frontend/src/pages/home/HomePage.tsx",
+	var _UsersAaronlismanWebstormProjectsCbioportalFrontendNode_modulesReactTransformHmrLibIndexJs2 = (0, _index6.default)({
+	    filename: "/Users/aaronlisman/WebstormProjects/cbioportal-frontend/src/pages/home/HomePage.tsx",
 	    components: _components,
 	    locals: [module],
 	    imports: [React.default]
 	});
 	
-	var _CCbioportalFrontendNode_modulesBabelPresetReactHmreNode_modulesReactTransformCatchErrorsLibIndexJs2 = (0, _index4.default)({
-	    filename: "C:/cbioportal-frontend/src/pages/home/HomePage.tsx",
+	var _UsersAaronlismanWebstormProjectsCbioportalFrontendNode_modulesReactTransformCatchErrorsLibIndexJs2 = (0, _index4.default)({
+	    filename: "/Users/aaronlisman/WebstormProjects/cbioportal-frontend/src/pages/home/HomePage.tsx",
 	    components: _components,
 	    locals: [],
 	    imports: [React.default, _index2.default]
@@ -59,7 +59,7 @@ webpackJsonp([2],{
 	
 	function _wrapComponent(id) {
 	    return function (Component) {
-	        return _CCbioportalFrontendNode_modulesBabelPresetReactHmreNode_modulesReactTransformHmrLibIndexJs2(_CCbioportalFrontendNode_modulesBabelPresetReactHmreNode_modulesReactTransformCatchErrorsLibIndexJs2(Component, id), id);
+	        return _UsersAaronlismanWebstormProjectsCbioportalFrontendNode_modulesReactTransformHmrLibIndexJs2(_UsersAaronlismanWebstormProjectsCbioportalFrontendNode_modulesReactTransformCatchErrorsLibIndexJs2(Component, id), id);
 	    };
 	}
 	

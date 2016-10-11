@@ -12,3 +12,5 @@ stats.json
 enhancedFixedDataTable/
 redux/
 webpack.config.js
+
+src/shared/oncoprint/**
