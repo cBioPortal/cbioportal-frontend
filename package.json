@@ -32,6 +32,7 @@
     "bundle-loader": "^0.5.4",
     "css-loader": "^0.23.1",
     "cssnano": "^3.7.3",
+    "d3": "^4.2.7",
     "dotenv": "^2.0.0",
     "express": "^4.14.0",
     "extract-text-webpack-plugin": "^1.0.1",
