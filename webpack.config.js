@@ -69,7 +69,10 @@ var config = {
         'loaders': [
             {
                 test: /\.tsx?$/,
-                loader: "ts-loader"
+                loaders: [
+                	"babel-loader",
+                	"ts-loader"
+                ]
             },
             {
                 test: /\.(js|jsx|babel)$/,
