@@ -5,10 +5,6 @@
 
 This is the new React frontend for cBioPortal, currently under development. 
 
-Add .env file in root of project. Put the following in that file:  (The host can be set to whatever instance of the api you want to use as a backend.)  
-```
-API_ROOT=www.cbioportal.org/api-legacy
-```
 To install all app and dev dependencies 
 ```
 npm install
@@ -32,4 +28,13 @@ npm run test:watch
 To run linting
 ```
 npm run lint
+```
+
+## Changing the URL of API
+Add .env file in root of project. Put the following in that file:  (The host
+can be set to whatever instance of the api you want to use as a backend.)  
+
+The default is:
+```
+API_ROOT=www.cbioportal.org/api-legacy
 ```
