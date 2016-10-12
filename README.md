@@ -15,7 +15,9 @@ To start dev server with hot reload enabled
 npm run start
 ```
 
-To run unit/integration tests
+A good example page is: http://localhost:3000/?cancer_study_id=lgg_ucsf_2014&case_id=P04
+
+To run unit/integration tests (need to have API URL defined in `.env`)
 ```
 npm run test
 ```
@@ -43,4 +45,13 @@ can be set to whatever instance of the api you want to use as a backend.)
 The default is:
 ```
 API_ROOT=www.cbioportal.org/api-legacy
+```
+
+## Check in cBioPortal context
+Go to
+https://cbioportal-pr-1720.herokuapp.com/case.do?cancer_study_id=lgg_ucsf_2014&case_id=P04
+
+In console:
+```
+localStorage.setItem("localdev",true)
 ```
