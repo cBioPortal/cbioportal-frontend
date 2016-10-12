@@ -81,15 +81,15 @@ webpackJsonp([1],{
 	    }
 	};
 	
-	var _UsersDebruijiGitCbioportalFrontendCleanNode_modulesReactTransformHmrLibIndexJs2 = (0, _index6.default)({
-	    filename: '/Users/debruiji/git/cbioportal-frontend-clean/src/pages/patientView/PatientViewPage.jsx',
+	var _CCbioportalFrontendNode_modulesReactTransformHmrLibIndexJs2 = (0, _index6.default)({
+	    filename: 'C:/cbioportal-frontend/src/pages/patientView/PatientViewPage.jsx',
 	    components: _components,
 	    locals: [module],
 	    imports: [_react3.default]
 	});
 	
-	var _UsersDebruijiGitCbioportalFrontendCleanNode_modulesReactTransformCatchErrorsLibIndexJs2 = (0, _index4.default)({
-	    filename: '/Users/debruiji/git/cbioportal-frontend-clean/src/pages/patientView/PatientViewPage.jsx',
+	var _CCbioportalFrontendNode_modulesReactTransformCatchErrorsLibIndexJs2 = (0, _index4.default)({
+	    filename: 'C:/cbioportal-frontend/src/pages/patientView/PatientViewPage.jsx',
 	    components: _components,
 	    locals: [],
 	    imports: [_react3.default, _index2.default]
@@ -97,7 +97,7 @@ webpackJsonp([1],{
 	
 	function _wrapComponent(id) {
 	    return function (Component) {
-	        return _UsersDebruijiGitCbioportalFrontendCleanNode_modulesReactTransformHmrLibIndexJs2(_UsersDebruijiGitCbioportalFrontendCleanNode_modulesReactTransformCatchErrorsLibIndexJs2(Component, id), id);
+	        return _CCbioportalFrontendNode_modulesReactTransformHmrLibIndexJs2(_CCbioportalFrontendNode_modulesReactTransformCatchErrorsLibIndexJs2(Component, id), id);
 	    };
 	}
 	
@@ -217,15 +217,15 @@ webpackJsonp([1],{
 	    }
 	};
 	
-	var _UsersDebruijiGitCbioportalFrontendCleanNode_modulesReactTransformHmrLibIndexJs2 = (0, _index6.default)({
-	    filename: '/Users/debruiji/git/cbioportal-frontend-clean/src/pages/patientView/clinicalInformation/ClinicalInformationContainer.jsx',
+	var _CCbioportalFrontendNode_modulesReactTransformHmrLibIndexJs2 = (0, _index6.default)({
+	    filename: 'C:/cbioportal-frontend/src/pages/patientView/clinicalInformation/ClinicalInformationContainer.jsx',
 	    components: _components,
 	    locals: [module],
 	    imports: [_react3.default]
 	});
 	
-	var _UsersDebruijiGitCbioportalFrontendCleanNode_modulesReactTransformCatchErrorsLibIndexJs2 = (0, _index4.default)({
-	    filename: '/Users/debruiji/git/cbioportal-frontend-clean/src/pages/patientView/clinicalInformation/ClinicalInformationContainer.jsx',
+	var _CCbioportalFrontendNode_modulesReactTransformCatchErrorsLibIndexJs2 = (0, _index4.default)({
+	    filename: 'C:/cbioportal-frontend/src/pages/patientView/clinicalInformation/ClinicalInformationContainer.jsx',
 	    components: _components,
 	    locals: [],
 	    imports: [_react3.default, _index2.default]
@@ -233,7 +233,7 @@ webpackJsonp([1],{
 	
 	function _wrapComponent(id) {
 	    return function (Component) {
-	        return _UsersDebruijiGitCbioportalFrontendCleanNode_modulesReactTransformHmrLibIndexJs2(_UsersDebruijiGitCbioportalFrontendCleanNode_modulesReactTransformCatchErrorsLibIndexJs2(Component, id), id);
+	        return _CCbioportalFrontendNode_modulesReactTransformHmrLibIndexJs2(_CCbioportalFrontendNode_modulesReactTransformCatchErrorsLibIndexJs2(Component, id), id);
 	    };
 	}
 	
@@ -394,15 +394,15 @@ webpackJsonp([1],{
 	    }
 	};
 	
-	var _UsersDebruijiGitCbioportalFrontendCleanNode_modulesReactTransformHmrLibIndexJs2 = (0, _index6.default)({
-	    filename: '/Users/debruiji/git/cbioportal-frontend-clean/src/pages/patientView/clinicalInformation/ClinicalInformationPatientTable.jsx',
+	var _CCbioportalFrontendNode_modulesReactTransformHmrLibIndexJs2 = (0, _index6.default)({
+	    filename: 'C:/cbioportal-frontend/src/pages/patientView/clinicalInformation/ClinicalInformationPatientTable.jsx',
 	    components: _components,
 	    locals: [module],
 	    imports: [_react3.default]
 	});
 	
-	var _UsersDebruijiGitCbioportalFrontendCleanNode_modulesReactTransformCatchErrorsLibIndexJs2 = (0, _index4.default)({
-	    filename: '/Users/debruiji/git/cbioportal-frontend-clean/src/pages/patientView/clinicalInformation/ClinicalInformationPatientTable.jsx',
+	var _CCbioportalFrontendNode_modulesReactTransformCatchErrorsLibIndexJs2 = (0, _index4.default)({
+	    filename: 'C:/cbioportal-frontend/src/pages/patientView/clinicalInformation/ClinicalInformationPatientTable.jsx',
 	    components: _components,
 	    locals: [],
 	    imports: [_react3.default, _index2.default]
@@ -410,7 +410,7 @@ webpackJsonp([1],{
 	
 	function _wrapComponent(id) {
 	    return function (Component) {
-	        return _UsersDebruijiGitCbioportalFrontendCleanNode_modulesReactTransformHmrLibIndexJs2(_UsersDebruijiGitCbioportalFrontendCleanNode_modulesReactTransformCatchErrorsLibIndexJs2(Component, id), id);
+	        return _CCbioportalFrontendNode_modulesReactTransformHmrLibIndexJs2(_CCbioportalFrontendNode_modulesReactTransformCatchErrorsLibIndexJs2(Component, id), id);
 	    };
 	}
 	
@@ -1254,15 +1254,15 @@ webpackJsonp([1],{
 	    }
 	};
 	
-	var _UsersDebruijiGitCbioportalFrontendCleanNode_modulesReactTransformHmrLibIndexJs2 = (0, _index6.default)({
-	    filename: '/Users/debruiji/git/cbioportal-frontend-clean/src/shared/components/PurifyComponent.js',
+	var _CCbioportalFrontendNode_modulesReactTransformHmrLibIndexJs2 = (0, _index6.default)({
+	    filename: 'C:/cbioportal-frontend/src/shared/components/PurifyComponent.js',
 	    components: _components,
 	    locals: [module],
 	    imports: [_react3.default]
 	});
 	
-	var _UsersDebruijiGitCbioportalFrontendCleanNode_modulesReactTransformCatchErrorsLibIndexJs2 = (0, _index4.default)({
-	    filename: '/Users/debruiji/git/cbioportal-frontend-clean/src/shared/components/PurifyComponent.js',
+	var _CCbioportalFrontendNode_modulesReactTransformCatchErrorsLibIndexJs2 = (0, _index4.default)({
+	    filename: 'C:/cbioportal-frontend/src/shared/components/PurifyComponent.js',
 	    components: _components,
 	    locals: [],
 	    imports: [_react3.default, _index2.default]
@@ -1270,7 +1270,7 @@ webpackJsonp([1],{
 	
 	function _wrapComponent(id) {
 	    return function (Component) {
-	        return _UsersDebruijiGitCbioportalFrontendCleanNode_modulesReactTransformHmrLibIndexJs2(_UsersDebruijiGitCbioportalFrontendCleanNode_modulesReactTransformCatchErrorsLibIndexJs2(Component, id), id);
+	        return _CCbioportalFrontendNode_modulesReactTransformHmrLibIndexJs2(_CCbioportalFrontendNode_modulesReactTransformCatchErrorsLibIndexJs2(Component, id), id);
 	    };
 	}
 	
@@ -1463,15 +1463,15 @@ webpackJsonp([1],{
 	    }
 	};
 	
-	var _UsersDebruijiGitCbioportalFrontendCleanNode_modulesReactTransformHmrLibIndexJs2 = (0, _index6.default)({
-	    filename: '/Users/debruiji/git/cbioportal-frontend-clean/src/pages/patientView/clinicalInformation/ClinicalInformationSamples.jsx',
+	var _CCbioportalFrontendNode_modulesReactTransformHmrLibIndexJs2 = (0, _index6.default)({
+	    filename: 'C:/cbioportal-frontend/src/pages/patientView/clinicalInformation/ClinicalInformationSamples.jsx',
 	    components: _components,
 	    locals: [module],
 	    imports: [_react3.default]
 	});
 	
-	var _UsersDebruijiGitCbioportalFrontendCleanNode_modulesReactTransformCatchErrorsLibIndexJs2 = (0, _index4.default)({
-	    filename: '/Users/debruiji/git/cbioportal-frontend-clean/src/pages/patientView/clinicalInformation/ClinicalInformationSamples.jsx',
+	var _CCbioportalFrontendNode_modulesReactTransformCatchErrorsLibIndexJs2 = (0, _index4.default)({
+	    filename: 'C:/cbioportal-frontend/src/pages/patientView/clinicalInformation/ClinicalInformationSamples.jsx',
 	    components: _components,
 	    locals: [],
 	    imports: [_react3.default, _index2.default]
@@ -1479,7 +1479,7 @@ webpackJsonp([1],{
 	
 	function _wrapComponent(id) {
 	    return function (Component) {
-	        return _UsersDebruijiGitCbioportalFrontendCleanNode_modulesReactTransformHmrLibIndexJs2(_UsersDebruijiGitCbioportalFrontendCleanNode_modulesReactTransformCatchErrorsLibIndexJs2(Component, id), id);
+	        return _CCbioportalFrontendNode_modulesReactTransformHmrLibIndexJs2(_CCbioportalFrontendNode_modulesReactTransformCatchErrorsLibIndexJs2(Component, id), id);
 	    };
 	}
 	
@@ -1631,15 +1631,15 @@ webpackJsonp([1],{
 	    }
 	};
 	
-	var _UsersDebruijiGitCbioportalFrontendCleanNode_modulesReactTransformHmrLibIndexJs2 = (0, _index6.default)({
-	    filename: '/Users/debruiji/git/cbioportal-frontend-clean/src/pages/patientView/patientHeader/PatientHeader.jsx',
+	var _CCbioportalFrontendNode_modulesReactTransformHmrLibIndexJs2 = (0, _index6.default)({
+	    filename: 'C:/cbioportal-frontend/src/pages/patientView/patientHeader/PatientHeader.jsx',
 	    components: _components,
 	    locals: [module],
 	    imports: [_react3.default]
 	});
 	
-	var _UsersDebruijiGitCbioportalFrontendCleanNode_modulesReactTransformCatchErrorsLibIndexJs2 = (0, _index4.default)({
-	    filename: '/Users/debruiji/git/cbioportal-frontend-clean/src/pages/patientView/patientHeader/PatientHeader.jsx',
+	var _CCbioportalFrontendNode_modulesReactTransformCatchErrorsLibIndexJs2 = (0, _index4.default)({
+	    filename: 'C:/cbioportal-frontend/src/pages/patientView/patientHeader/PatientHeader.jsx',
 	    components: _components,
 	    locals: [],
 	    imports: [_react3.default, _index2.default]
@@ -1647,7 +1647,7 @@ webpackJsonp([1],{
 	
 	function _wrapComponent(id) {
 	    return function (Component) {
-	        return _UsersDebruijiGitCbioportalFrontendCleanNode_modulesReactTransformHmrLibIndexJs2(_UsersDebruijiGitCbioportalFrontendCleanNode_modulesReactTransformCatchErrorsLibIndexJs2(Component, id), id);
+	        return _CCbioportalFrontendNode_modulesReactTransformHmrLibIndexJs2(_CCbioportalFrontendNode_modulesReactTransformCatchErrorsLibIndexJs2(Component, id), id);
 	    };
 	}
 	
@@ -1790,15 +1790,15 @@ webpackJsonp([1],{
 	    }
 	};
 	
-	var _UsersDebruijiGitCbioportalFrontendCleanNode_modulesReactTransformHmrLibIndexJs2 = (0, _index6.default)({
-	    filename: '/Users/debruiji/git/cbioportal-frontend-clean/src/pages/patientView/patientHeader/SampleInline.jsx',
+	var _CCbioportalFrontendNode_modulesReactTransformHmrLibIndexJs2 = (0, _index6.default)({
+	    filename: 'C:/cbioportal-frontend/src/pages/patientView/patientHeader/SampleInline.jsx',
 	    components: _components,
 	    locals: [module],
 	    imports: [_react3.default]
 	});
 	
-	var _UsersDebruijiGitCbioportalFrontendCleanNode_modulesReactTransformCatchErrorsLibIndexJs2 = (0, _index4.default)({
-	    filename: '/Users/debruiji/git/cbioportal-frontend-clean/src/pages/patientView/patientHeader/SampleInline.jsx',
+	var _CCbioportalFrontendNode_modulesReactTransformCatchErrorsLibIndexJs2 = (0, _index4.default)({
+	    filename: 'C:/cbioportal-frontend/src/pages/patientView/patientHeader/SampleInline.jsx',
 	    components: _components,
 	    locals: [],
 	    imports: [_react3.default, _index2.default]
@@ -1806,7 +1806,7 @@ webpackJsonp([1],{
 	
 	function _wrapComponent(id) {
 	    return function (Component) {
-	        return _UsersDebruijiGitCbioportalFrontendCleanNode_modulesReactTransformHmrLibIndexJs2(_UsersDebruijiGitCbioportalFrontendCleanNode_modulesReactTransformCatchErrorsLibIndexJs2(Component, id), id);
+	        return _CCbioportalFrontendNode_modulesReactTransformHmrLibIndexJs2(_CCbioportalFrontendNode_modulesReactTransformCatchErrorsLibIndexJs2(Component, id), id);
 	    };
 	}
 	
