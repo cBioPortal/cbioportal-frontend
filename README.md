@@ -30,6 +30,12 @@ To run linting
 npm run lint
 ```
 
+## precommit hook
+There is a precommit hook installed that compiles the project before committing. This makes sure the compiled source is always up to data and allows for easy importing any branch/commit in parent cBioPortal project. The hook can be viewed in [package.json](package.json). You can skip it with 
+```bash
+git commit -n
+```
+
 ## Changing the URL of API
 Add .env file in root of project. Put the following in that file:  (The host
 can be set to whatever instance of the api you want to use as a backend.)  
