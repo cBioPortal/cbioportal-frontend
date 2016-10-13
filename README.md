@@ -49,9 +49,17 @@ API_ROOT=www.cbioportal.org/api-legacy
 
 ## Check in cBioPortal context
 Go to
-https://cbioportal-pr-1720.herokuapp.com/case.do?cancer_study_id=lgg_ucsf_2014&case_id=P04
+http://cbioportal-pr-1720.herokuapp.com/case.do?cancer_study_id=lgg_ucsf_2014&case_id=P04
 
-In console:
+In your browser console set:
 ```
 localStorage.setItem("localdev",true)
+```
+This will use whatever you are running on `localhost:3000` to serve the JS (i.e. you need to have the frontend repo running on port 3000). To unset do:
+```
+localStorage.setItem("localdev",false)
+```
+or clear entire local storage
+```
+localStorage.clear()
 ```
