@@ -37,7 +37,7 @@ export class ClinicalInformationContainerUnconnected extends React.Component {
     buildTabs() {
         return (
             <div>
-                <h4>Samples</h4>
+                <h4>My Samples</h4>
 
                 <ClinicalInformationSamples data={this.props.samples} />
 

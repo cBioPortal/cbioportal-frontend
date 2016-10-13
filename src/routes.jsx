@@ -15,6 +15,7 @@ import Container from 'appShell/App/Container';
 // see article http://henleyedition.com/implicit-code-splitting-with-react-router-and-webpack/
 import PatientViewPage from 'bundle?lazy!babel!./pages/patientView/PatientViewPage';
 import HomePage from 'bundle?lazy!babel!./pages/home/HomePage';
+import QueryResult from 'bundle?lazy!babel!./pages/queryResult/QueryResultPage';
 
 // accepts bundle-loader's deferred loader function and defers execution of route's render
 // until chunk is loaded
@@ -33,6 +34,8 @@ export const makeRoutes = () => (
         <Route path="/" component={Container}>
             <Route path="home" getComponent={lazyLoadComponent(HomePage)} />
             <Route path="patient" getComponent={lazyLoadComponent(PatientViewPage)} />
+            <Route path="queryResult" getComponent={lazyLoadComponent(QueryResult)} />
+
         </Route>
 );
 
