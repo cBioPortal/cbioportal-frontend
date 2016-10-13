@@ -12,6 +12,7 @@
     "lint": "eslint src/** --ext .js --ext .jsx --cache",
     "storedist": "npm run build && git add -f dist",
     "comparedist": "bash ./scripts/test_compare_dist_with_committed_dist.sh",
+    "syncmock": "node src/test/fetchMockData.js --diff",
     "validate": "npm ls"
   },
   "author": "",
@@ -78,11 +79,13 @@
     "webpack": "^1.13.1"
   },
   "devDependencies": {
+    "argparse": "^1.0.9",
     "babel-plugin-istanbul": "^2.0.0",
     "babel-plugin-rewire": "^1.0.0-rc-7",
     "chai": "^3.5.0",
     "chai-enzyme": "^0.5.0",
     "cheerio": "^0.20.0",
+    "colors": "^1.1.2",
     "enzyme": "^2.4.1",
     "eslint": "^3.4.0",
     "eslint-config-airbnb": "^10.0.1",
@@ -90,6 +93,7 @@
     "eslint-plugin-jsx-a11y": "^2.2.0",
     "eslint-plugin-react": "^6.2.0",
     "expect": "^1.20.2",
+    "filecompare": "0.0.5",
     "istanbul-instrumenter-loader": "^0.2.0",
     "jasmine-core": "^2.4.1",
     "karma": "^1.1.1",
