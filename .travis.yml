@@ -14,6 +14,11 @@ script:
   # Run build and test
   - npm run build
   - npm run comparedist
+  # check if mock data up to data, show warning
+  - |
+      npm run syncmock || { \
+        echo 'WARNING: mock data out of sync with API return calls'; 
+      }
 after_success:
  # upload coverage data to codecov.io
  - cat coverage/*/lcov.info | codecov
