@@ -3,7 +3,7 @@
   "version": "0.0.3",
   "description": "",
   "scripts": {
-    "start": "webpack-dev-server --define process.env.NODE_ENV='\"production\"' --inline --hot",
+    "start": "webpack-dev-server --define process.env.NODE_ENV='\"development\"' --inline --hot",
     "clean": "rimraf dist tsDist",
     "build": "npm run clean && webpack --define process.env.NODE_ENV='\"production\"' --progress --colors",
     "build:size": "npm run clean && webpack --define process.env.NODE_ENV='\"production\"' --json > stats.json",
