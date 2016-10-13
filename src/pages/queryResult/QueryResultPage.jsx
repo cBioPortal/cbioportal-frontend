@@ -6,6 +6,8 @@ import { Tabs, Tab } from 'react-bootstrap';
 
 class QueryResultPage extends React.Component {
 
+    // just add a comment
+
     constructor(){
         super();
     }
