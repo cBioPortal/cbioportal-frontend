@@ -1,14 +1,27 @@
-import React from 'react';
+import {List} from "immutable";
+import * as React from 'react';
 import {Button, OverlayTrigger, Popover} from 'react-bootstrap';
 import SampleInline from './SampleInline';
 import TooltipTable from '../clinicalInformation/ClinicalInformationPatientTable';
-import Immutable from 'immutable';
+import * as Immutable from 'immutable';
 import Spinner from 'react-spinkit';
+import OrderedMap = Immutable.OrderedMap;
 
+type TODO = any;
 
-class PatientHeader extends React.Component {
+type Sample = {clinicalData:TODO};
 
-    getPopover(sample, number) {
+export interface PatientHeaderProps
+{
+    samples:List<Sample>;
+    status:'fetching'|'complete'|'error';
+    patient:TODO;
+}
+
+export default class PatientHeader extends React.Component<PatientHeaderProps, {}>
+{
+    getPopover(sample:Sample, number:number)
+    {
         return (
             <Popover key={number} id={'popover-sample-' + number}>
                 <TooltipTable data={Immutable.fromJS(sample.clinicalData)} />
@@ -16,11 +29,13 @@ class PatientHeader extends React.Component {
         );
     }
 
-    drawHeader() {
-        if (this.props.samples && this.props.samples.size > 0) {
+    drawHeader()
+    {
+        if (this.props.samples && this.props.samples.size > 0)
+        {
             return (
                 <div>
-                    {this.props.samples.map((sample, number) => {
+                    {this.props.samples.map((sample:Sample, number:number) => {
                         //let clinicalData = this.props.samples.get('items').keys().map(attr_id => { 
                         //    return Object({'id': x, 
                         //                  'value': this.props.samples.get('items').get(attr_id).get('TCGA-P6-A5OH-01')
@@ -39,24 +54,24 @@ class PatientHeader extends React.Component {
                     })}
                 </div>
             );
-        } else {
+        }
+        else
+        {
             return <div>There was an error.</div>;
         }
     }
 
-    render() {
-        switch (this.props.status) {
-
+    render()
+    {
+        switch (this.props.status)
+        {
             case 'fetching':
-
                 return <div><Spinner spinnerName="three-bounce" /></div>;
 
             case 'complete':
-
                 return this.drawHeader();
 
             case 'error':
-
                 return <div>There was an error.</div>;
 
             default:
@@ -64,5 +79,3 @@ class PatientHeader extends React.Component {
         }
     }
 }
-
-export default PatientHeader;
