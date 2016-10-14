@@ -21,12 +21,12 @@ import HomePage from 'bundle?lazy!babel!./pages/home/HomePage';
 function lazyLoadComponent(loader) {
 
     return (location, cb) => {
-        loader(module => {
+        loader((module) => {
             cb(null, module.default);
         });
 
     };
-};
+}
 
 
 export const makeRoutes = () => (

@@ -1,5 +1,4 @@
 import React from 'react';
-import {Button, OverlayTrigger, Popover} from 'react-bootstrap';
 import { SampleLabelHTML } from '../SampleLabel';
 
 export default class SampleInline extends React.Component {
@@ -8,14 +7,15 @@ export default class SampleInline extends React.Component {
         const { sample, number } = this.props;
 
         return (
-            <span style={{"paddingRight":"10px"}}>
+            <span style={{ paddingRight: '10px' }}>
                 <SampleLabelHTML color={'black'} label={(number).toString()} />
-                {' ' + sample.id}
+                {` ${sample.id}`}
             </span>
         );
     }
 }
 SampleInline.propTypes = {
+    // eslint-disable-next-line
     sample: React.PropTypes.object.isRequired,
     number: React.PropTypes.number.isRequired
-}
+};

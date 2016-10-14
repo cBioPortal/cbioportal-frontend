@@ -1,5 +1,6 @@
+/* eslint-disable */
 import React from 'react';
-import {Button, OverlayTrigger, Popover} from 'react-bootstrap';
+import { Button, OverlayTrigger, Popover } from 'react-bootstrap';
 import SampleInline from './SampleInline';
 import TooltipTable from '../clinicalInformation/ClinicalInformationPatientTable';
 import Immutable from 'immutable';
@@ -10,7 +11,7 @@ class PatientHeader extends React.Component {
 
     getPopover(sample, number) {
         return (
-            <Popover key={number} id={'popover-sample-' + number}>
+            <Popover key={number} id={`popover-sample-${number}`}>
                 <TooltipTable data={Immutable.fromJS(sample.clinicalData)} />
             </Popover>
         );
@@ -21,18 +22,19 @@ class PatientHeader extends React.Component {
             return (
                 <div>
                     {this.props.samples.map((sample, number) => {
-                        //let clinicalData = this.props.samples.get('items').keys().map(attr_id => { 
-                        //    return Object({'id': x, 
+                        // let clinicalData = this.props.samples.get('items').keys().map(attr_id => {
+                        //    return Object({'id': x,
                         //                  'value': this.props.samples.get('items').get(attr_id).get('TCGA-P6-A5OH-01')
-                        //    }) 
-                        //}).filter(x => x.value);
+                        //    })
+                        // }).filter(x => x.value);
                         console.log(sample);
 
                         return (
-                            <OverlayTrigger delayHide={100} key={number} trigger={['hover', 'focus']} placement="bottom" 
-                             overlay={this.getPopover(sample, number+1)}>
+                            <OverlayTrigger delayHide={100} key={number} trigger={['hover', 'focus']} placement="bottom"
+                              overlay={this.getPopover(sample, number + 1)}
+                            >
                                 <span>
-                                    <SampleInline sample={sample} number={number+1} />
+                                    <SampleInline sample={sample} number={number + 1} />
                                 </span>
                             </OverlayTrigger>
                         );

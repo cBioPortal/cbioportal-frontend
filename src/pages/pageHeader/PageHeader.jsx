@@ -14,7 +14,7 @@ class PageHeader extends React.Component {
             <header className="clearfix">
                 <h1 className="pull-left">cBioPortal.com</h1>
                 <div className="pull-right">
-                    <form className="form-inline" onSubmit={(e) => this.handleSubmit(e)}>
+                    <form className="form-inline" onSubmit={e => this.handleSubmit(e)}>
                         <div className="form-group">
                                 <input className="form-control" defaultValue={this.props.currentRoutePath} ref={(c) => { this.routeInput = c; }} />
                         </div>
@@ -31,11 +31,3 @@ PageHeader.propTypes = {
 };
 
 export default PageHeader;
-
-
-
-
-
-
-
-

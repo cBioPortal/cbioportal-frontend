@@ -21,7 +21,7 @@ export const initialState = Immutable.Map({});
 export const reducers = { customRoutingReducer };
 
 
-Object.keys(modules).forEach(key => {
+Object.keys(modules).forEach((key) => {
     const reducer = modules[key];
     // initialState[key] = module.initialState || Immutable.Map({});
 

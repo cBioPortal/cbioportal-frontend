@@ -1,12 +1,6 @@
 import React, { PropTypes as T } from 'react';
-
-import Immutable from 'immutable';
-
-import {Table, Column, Cell} from 'fixed-data-table';
-
-import EnhancedFixedDataTable from 'shared/components/enhancedFixedDataTable/EnhancedFixedDataTable';
-
-import covertSampleData from './lib/convertSamplesData';
+import { EnhancedFixedDataTable } from 'shared/components/enhancedFixedDataTable/EnhancedFixedDataTable';
+import { convertSamplesData } from './lib/convertSamplesData';
 
 export class ClinicalInformationSamplesTable extends React.Component {
 
@@ -25,7 +19,7 @@ export class ClinicalInformationSamplesTable extends React.Component {
     }
 
     render() {
-        const data = covertSampleData(this.props.data.toArray());
+        const data = convertSamplesData(this.props.data.toArray());
 
         const cells = [];
 
@@ -42,6 +36,7 @@ export class ClinicalInformationSamplesTable extends React.Component {
         });
 
         const d = {
+            // eslint-disable-next-line
             attributes: data.columns.map((col) => {
                 return { attr_id: col.id, datatype: 'STRING', display_name: col.id };
             }),
@@ -50,7 +45,8 @@ export class ClinicalInformationSamplesTable extends React.Component {
 
         d.attributes.unshift({ attr_id: 'attr_name', datatype: 'STRING', display_name: 'Attribute' });
 
-        return <EnhancedFixedDataTable input={d} groupHeader={false} filter="GLOBAL" rowHeight={33} headerHeight={33} download="ALL" uniqueId="attr_name" tableWidth={1190} autoColumnWidth={true} />;
+        // eslint-disable
+        return <EnhancedFixedDataTable input={d} groupHeader={false} filter="GLOBAL" rowHeight={33} headerHeight={33} download="ALL" uniqueId="attr_name" tableWidth={1190} autoColumnWidth />;
     }
 }
 
@@ -58,6 +54,7 @@ export default ClinicalInformationSamplesTable;
 
 
 ClinicalInformationSamplesTable.propTypes = {
+    // eslint-disable-next-line
     data: T.any.isRequired,
 };
 

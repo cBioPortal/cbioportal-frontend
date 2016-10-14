@@ -1,3 +1,4 @@
+/* eslint-disable no-param-reassign */
 /* Functions related to Object manipulation */
 import { reduce } from 'underscore';
 

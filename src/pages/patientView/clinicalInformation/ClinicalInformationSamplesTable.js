@@ -1,6 +1,5 @@
-import React, { PropTypes as T } from 'react';
+import { React } from 'react';
 import { Table } from 'react-bootstrap';
-import Immutable from 'immutable';
 import { SampleLabelHTML } from '../SampleLabel';
 import convertSamplesData from './lib/convertSamplesData';
 
@@ -11,18 +10,21 @@ export class ClinicalInformationSamplesTable extends React.Component {
 
     }
 
+    // eslint-disable-next-line
     shouldComponentUpdate(nextProps, nextState) {
         return (nextProps === this.props);
     }
 
 
     render() {
+        // eslint-disable-next-line
         const data = convertSamplesData(this.props.data.toArray());
 
+        // eslint-disable-next-line
         const headerCells = data.columns.map((col, i) => {
             return (<th style={{ whiteSpace: 'nowrap' }} key={i}>
                        <SampleLabelHTML color={'black'} label={(i + 1).toString()} />
-                       {' ' + col.id}
+                       {` ${col.id}`}
                    </th>);
         });
 
@@ -37,9 +39,8 @@ export class ClinicalInformationSamplesTable extends React.Component {
                         data.columns.map((col, i) => {
                             if (col.id in row) {
                                 return <td key={i}>{row[col.id]}</td>;
-                            } else {
-                                return <td key={i}>N/A</td>;
                             }
+                            return <td key={i}>N/A</td>;
                         })
                     }
 

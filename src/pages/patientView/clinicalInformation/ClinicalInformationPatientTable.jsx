@@ -1,6 +1,5 @@
 import React, { PropTypes as T } from 'react';
 import { Table } from 'react-bootstrap';
-import Immutable from 'immutable';
 
 export default class ClinicalInformationPatientTable extends React.Component {
 
@@ -8,15 +7,15 @@ export default class ClinicalInformationPatientTable extends React.Component {
 
     }
 
-    shouldComponentUpdate(nextProps, nextState) {
-        return (nextProps === this.props);
+    shouldComponentUpdate(prevProps, nextProps) {
+        return (prevProps !== nextProps);
     }
 
 
     render() {
         const rows = [];
 
-        ;
+
         this.props.data.forEach((item) => {
             rows.push(
                 <tr key={item.get('id')}>
