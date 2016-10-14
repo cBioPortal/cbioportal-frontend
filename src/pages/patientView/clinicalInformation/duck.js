@@ -29,11 +29,12 @@ export default function reducer(state = initialState, action = {}) {
 
                 case 'success':
 
-                    return state.withMutations((state) => {
-                        state.set('patient', Immutable.fromJS(action.payload.patient));
-                        state.set('nodes', Immutable.fromJS(action.payload.nodes));
-                        state.set('status', 'complete');
-                        state.set('samples', Immutable.List(action.payload.samples));
+                    return state.withMutations((s) => {
+                        s.set('patient', Immutable.fromJS(action.payload.patient));
+                        s.set('nodes', Immutable.fromJS(action.payload.nodes));
+                        s.set('status', 'complete');
+                        // eslint-disable-next-line
+                        s.set('samples', Immutable.List(action.payload.samples));
                     });
 
                 case 'error':

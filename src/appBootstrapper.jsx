@@ -1,14 +1,15 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import App from 'appShell/App/App';
-import { hashHistory, createMemoryHistory } from 'react-router';
+import { createMemoryHistory } from 'react-router';
 import { configureStore } from './redux/configureStore';
-import makeRoutes from './routes';
+import { makeRoutes } from './routes';
 
 // we import these modules not to use them but to include them in the main app bundle
+// eslint-disable-next-line no-unused-vars
 import EnhancedFixedDataTable from 'shared/components/enhancedFixedDataTable/EnhancedFixedDataTable';
 
-const defaultRoute = window.defaultRoute || "/home";
+const defaultRoute = window.defaultRoute || '/home';
 
 const memoryHistory = createMemoryHistory(defaultRoute);
 
@@ -24,7 +25,7 @@ let render = (routerKey = null) => {
 
     const routes = makeRoutes(store);
 
-    const rootNode = document.getElementById("reactRoot");
+    const rootNode = document.getElementById('reactRoot');
 
     ReactDOM.render(
     <App

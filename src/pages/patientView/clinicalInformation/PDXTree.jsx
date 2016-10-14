@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React from 'react';
 import SampleLabelSVG from '../SampleLabel';
 
@@ -94,14 +95,14 @@ export function getTreeNodesFromClinicalData(clinicalDataMap, sampleOrder) {
         });
         if (children.length === 0) {
             return {
-                'name': sampleName,
-                'label': clinicalDataMapExtended[sampleName].label.toString(),
+                name: sampleName,
+                label: clinicalDataMapExtended[sampleName].label.toString(),
             };
         } else {
             return {
-                'name': sampleName,
-                'label': clinicalDataMapExtended[sampleName].label.toString(),
-                'children': children.map((c) => {
+                name: sampleName,
+                label: clinicalDataMapExtended[sampleName].label.toString(),
+                children: children.map((c) => {
                     return getNode(clinicalDataMapExtended, c);
                 }),
             };

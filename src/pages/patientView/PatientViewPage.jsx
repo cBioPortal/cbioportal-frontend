@@ -1,6 +1,5 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import {Button, Overlay, Tooltip, Popover} from 'react-bootstrap';
 import ClinicalInformationContainer from './clinicalInformation/ClinicalInformationContainer';
 import PatientHeaderUnconnected from './patientHeader/PatientHeader';
 import { connect } from 'react-redux';
@@ -18,9 +17,10 @@ class PatientViewPage extends React.Component {
 
         const PatientHeader = connect(mapStateToProps)(PatientHeaderUnconnected);
 
+        // eslint-disable-next-line
         ReactDOM.render(<PatientHeader store={this.props.store} />,
-          document.getElementById("clinical_div"));
-        //ReactDOM.render(<div><Example /><Example /></div>, document.getElementById("clinical_div"));
+          document.getElementById('clinical_div'));
+        // ReactDOM.render(<div><Example /><Example /></div>, document.getElementById("clinical_div"));
 
     }
     render() {
@@ -32,12 +32,4 @@ class PatientViewPage extends React.Component {
 
 
 export default PatientViewPage;
-
-
-
-
-
-
-
-
 
