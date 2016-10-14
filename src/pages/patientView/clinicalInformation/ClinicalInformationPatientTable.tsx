@@ -1,22 +1,20 @@
-import React, { PropTypes as T } from 'react';
+import {List} from "immutable";
+import * as React from 'react';
 import { Table } from 'react-bootstrap';
-import Immutable from 'immutable';
+import * as Immutable from 'immutable';
 
-export default class ClinicalInformationPatientTable extends React.Component {
+type TODO = any;
 
-    componentDidMount() {
+export interface ClinicalInformationPatientTableProps
+{
+    data: List<TODO>;
+}
 
-    }
-
-    shouldComponentUpdate(nextProps, nextState) {
-        return (nextProps === this.props);
-    }
-
-
-    render() {
-        const rows = [];
-
-        ;
+export default class ClinicalInformationPatientTable extends React.Component<ClinicalInformationPatientTableProps, {}>
+{
+    render()
+    {
+        const rows:JSX.Element[] = [];
         this.props.data.forEach((item) => {
             rows.push(
                 <tr key={item.get('id')}>
@@ -73,8 +71,3 @@ export default class ClinicalInformationPatientTable extends React.Component {
         // );
     }
 }
-
-
-ClinicalInformationPatientTable.propTypes = {
-    data: T.any.isRequired,
-};
