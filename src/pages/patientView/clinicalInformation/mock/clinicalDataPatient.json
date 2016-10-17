@@ -1,0 +1,226 @@
+[
+    {
+        "attrId": "AGE",
+        "attrValue": "22",
+        "patient": {
+            "stableId": "P04",
+            "cancerStudy": {
+                "cancerStudyIdentifier": "lgg_ucsf_2014",
+                "typeOfCancerId": "difg",
+                "name": "Low-Grade Gliomas (UCSF, Science 2014)",
+                "shortName": "Glioma (UCSF)",
+                "description": "Mutation data from whole exome sequencing of 23 grade II glioma patients.",
+                "publicStudy": true,
+                "pmid": "24336570",
+                "citation": "Johnson BE et al, Science 2014",
+                "groups": "PUBLIC",
+                "status": 0,
+                "typeOfCancer": {
+                    "typeOfCancerId": "difg",
+                    "name": "Diffuse Glioma",
+                    "clinicalTrialKeywords": "diffuse glioma",
+                    "dedicatedColor": "Gray",
+                    "shortName": "DIFG",
+                    "parent": "brain"
+                }
+            }
+        },
+        "clinicalAttribute": {
+            "attrId": "AGE",
+            "displayName": "Diagnosis Age",
+            "description": "Age at which a condition or disease was first diagnosed.",
+            "datatype": "NUMBER",
+            "patientAttribute": true,
+            "priority": "1",
+            "cancerStudyId": 195,
+            "cancerStudy": {
+                "cancerStudyIdentifier": "lgg_ucsf_2014",
+                "typeOfCancerId": "difg",
+                "name": "Low-Grade Gliomas (UCSF, Science 2014)",
+                "shortName": "Glioma (UCSF)",
+                "description": "Mutation data from whole exome sequencing of 23 grade II glioma patients.",
+                "publicStudy": true,
+                "pmid": "24336570",
+                "citation": "Johnson BE et al, Science 2014",
+                "groups": "PUBLIC",
+                "status": 0,
+                "typeOfCancer": {
+                    "typeOfCancerId": "difg",
+                    "name": "Diffuse Glioma",
+                    "clinicalTrialKeywords": "diffuse glioma",
+                    "dedicatedColor": "Gray",
+                    "shortName": "DIFG",
+                    "parent": "brain"
+                }
+            }
+        }
+    },
+    {
+        "attrId": "GENDER",
+        "attrValue": "Male",
+        "patient": {
+            "stableId": "P04",
+            "cancerStudy": {
+                "cancerStudyIdentifier": "lgg_ucsf_2014",
+                "typeOfCancerId": "difg",
+                "name": "Low-Grade Gliomas (UCSF, Science 2014)",
+                "shortName": "Glioma (UCSF)",
+                "description": "Mutation data from whole exome sequencing of 23 grade II glioma patients.",
+                "publicStudy": true,
+                "pmid": "24336570",
+                "citation": "Johnson BE et al, Science 2014",
+                "groups": "PUBLIC",
+                "status": 0,
+                "typeOfCancer": {
+                    "typeOfCancerId": "difg",
+                    "name": "Diffuse Glioma",
+                    "clinicalTrialKeywords": "diffuse glioma",
+                    "dedicatedColor": "Gray",
+                    "shortName": "DIFG",
+                    "parent": "brain"
+                }
+            }
+        },
+        "clinicalAttribute": {
+            "attrId": "GENDER",
+            "displayName": "Person Gender",
+            "description": "Patient gender.",
+            "datatype": "STRING",
+            "patientAttribute": true,
+            "priority": "1",
+            "cancerStudyId": 195,
+            "cancerStudy": {
+                "cancerStudyIdentifier": "lgg_ucsf_2014",
+                "typeOfCancerId": "difg",
+                "name": "Low-Grade Gliomas (UCSF, Science 2014)",
+                "shortName": "Glioma (UCSF)",
+                "description": "Mutation data from whole exome sequencing of 23 grade II glioma patients.",
+                "publicStudy": true,
+                "pmid": "24336570",
+                "citation": "Johnson BE et al, Science 2014",
+                "groups": "PUBLIC",
+                "status": 0,
+                "typeOfCancer": {
+                    "typeOfCancerId": "difg",
+                    "name": "Diffuse Glioma",
+                    "clinicalTrialKeywords": "diffuse glioma",
+                    "dedicatedColor": "Gray",
+                    "shortName": "DIFG",
+                    "parent": "brain"
+                }
+            }
+        }
+    },
+    {
+        "attrId": "OS_MONTHS",
+        "attrValue": "61",
+        "patient": {
+            "stableId": "P04",
+            "cancerStudy": {
+                "cancerStudyIdentifier": "lgg_ucsf_2014",
+                "typeOfCancerId": "difg",
+                "name": "Low-Grade Gliomas (UCSF, Science 2014)",
+                "shortName": "Glioma (UCSF)",
+                "description": "Mutation data from whole exome sequencing of 23 grade II glioma patients.",
+                "publicStudy": true,
+                "pmid": "24336570",
+                "citation": "Johnson BE et al, Science 2014",
+                "groups": "PUBLIC",
+                "status": 0,
+                "typeOfCancer": {
+                    "typeOfCancerId": "difg",
+                    "name": "Diffuse Glioma",
+                    "clinicalTrialKeywords": "diffuse glioma",
+                    "dedicatedColor": "Gray",
+                    "shortName": "DIFG",
+                    "parent": "brain"
+                }
+            }
+        },
+        "clinicalAttribute": {
+            "attrId": "OS_MONTHS",
+            "displayName": "Overall Survival (Months)",
+            "description": "Overall survival in months since initial diagonosis.",
+            "datatype": "NUMBER",
+            "patientAttribute": true,
+            "priority": "1",
+            "cancerStudyId": 195,
+            "cancerStudy": {
+                "cancerStudyIdentifier": "lgg_ucsf_2014",
+                "typeOfCancerId": "difg",
+                "name": "Low-Grade Gliomas (UCSF, Science 2014)",
+                "shortName": "Glioma (UCSF)",
+                "description": "Mutation data from whole exome sequencing of 23 grade II glioma patients.",
+                "publicStudy": true,
+                "pmid": "24336570",
+                "citation": "Johnson BE et al, Science 2014",
+                "groups": "PUBLIC",
+                "status": 0,
+                "typeOfCancer": {
+                    "typeOfCancerId": "difg",
+                    "name": "Diffuse Glioma",
+                    "clinicalTrialKeywords": "diffuse glioma",
+                    "dedicatedColor": "Gray",
+                    "shortName": "DIFG",
+                    "parent": "brain"
+                }
+            }
+        }
+    },
+    {
+        "attrId": "OS_STATUS",
+        "attrValue": "DECEASED",
+        "patient": {
+            "stableId": "P04",
+            "cancerStudy": {
+                "cancerStudyIdentifier": "lgg_ucsf_2014",
+                "typeOfCancerId": "difg",
+                "name": "Low-Grade Gliomas (UCSF, Science 2014)",
+                "shortName": "Glioma (UCSF)",
+                "description": "Mutation data from whole exome sequencing of 23 grade II glioma patients.",
+                "publicStudy": true,
+                "pmid": "24336570",
+                "citation": "Johnson BE et al, Science 2014",
+                "groups": "PUBLIC",
+                "status": 0,
+                "typeOfCancer": {
+                    "typeOfCancerId": "difg",
+                    "name": "Diffuse Glioma",
+                    "clinicalTrialKeywords": "diffuse glioma",
+                    "dedicatedColor": "Gray",
+                    "shortName": "DIFG",
+                    "parent": "brain"
+                }
+            }
+        },
+        "clinicalAttribute": {
+            "attrId": "OS_STATUS",
+            "displayName": "Overall Survival Status",
+            "description": "Overall patient survival status.",
+            "datatype": "STRING",
+            "patientAttribute": true,
+            "priority": "1",
+            "cancerStudyId": 195,
+            "cancerStudy": {
+                "cancerStudyIdentifier": "lgg_ucsf_2014",
+                "typeOfCancerId": "difg",
+                "name": "Low-Grade Gliomas (UCSF, Science 2014)",
+                "shortName": "Glioma (UCSF)",
+                "description": "Mutation data from whole exome sequencing of 23 grade II glioma patients.",
+                "publicStudy": true,
+                "pmid": "24336570",
+                "citation": "Johnson BE et al, Science 2014",
+                "groups": "PUBLIC",
+                "status": 0,
+                "typeOfCancer": {
+                    "typeOfCancerId": "difg",
+                    "name": "Diffuse Glioma",
+                    "clinicalTrialKeywords": "diffuse glioma",
+                    "dedicatedColor": "Gray",
+                    "shortName": "DIFG",
+                    "parent": "brain"
+                }
+            }
+        }
+    }
+]
