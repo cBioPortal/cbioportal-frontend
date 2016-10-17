@@ -77,15 +77,15 @@ webpackJsonp([2],{
 	    }
 	};
 	
-	var _CCbioportalFrontendNode_modulesReactTransformHmrLibIndexJs2 = (0, _index6.default)({
-	    filename: "C:/cbioportal-frontend/src/pages/home/HomePage.tsx",
+	var _UsersDebruijiGitCbioportalFrontendCleanNode_modulesReactTransformHmrLibIndexJs2 = (0, _index6.default)({
+	    filename: "/Users/debruiji/git/cbioportal-frontend-clean/src/pages/home/HomePage.tsx",
 	    components: _components,
 	    locals: [module],
 	    imports: [React.default]
 	});
 	
-	var _CCbioportalFrontendNode_modulesReactTransformCatchErrorsLibIndexJs2 = (0, _index4.default)({
-	    filename: "C:/cbioportal-frontend/src/pages/home/HomePage.tsx",
+	var _UsersDebruijiGitCbioportalFrontendCleanNode_modulesReactTransformCatchErrorsLibIndexJs2 = (0, _index4.default)({
+	    filename: "/Users/debruiji/git/cbioportal-frontend-clean/src/pages/home/HomePage.tsx",
 	    components: _components,
 	    locals: [],
 	    imports: [React.default, _index2.default]
@@ -93,7 +93,7 @@ webpackJsonp([2],{
 	
 	function _wrapComponent(id) {
 	    return function (Component) {
-	        return _CCbioportalFrontendNode_modulesReactTransformHmrLibIndexJs2(_CCbioportalFrontendNode_modulesReactTransformCatchErrorsLibIndexJs2(Component, id), id);
+	        return _UsersDebruijiGitCbioportalFrontendCleanNode_modulesReactTransformHmrLibIndexJs2(_UsersDebruijiGitCbioportalFrontendCleanNode_modulesReactTransformCatchErrorsLibIndexJs2(Component, id), id);
 	    };
 	}
 	
