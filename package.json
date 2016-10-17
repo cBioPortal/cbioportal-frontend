@@ -9,7 +9,8 @@
     "build:size": "npm run clean && webpack --define process.env.NODE_ENV='\"production\"' --json > stats.json",
     "test": "karma start karma.conf.js",
     "test:watch": "npm run test -- --watch",
-    "lint": "eslint src/** --ext .js --ext .jsx --cache",
+    "lint": "tslint $(find . -name '*.tsx')",
+    "eslint": "eslint src/** --ext .js --ext .jsx --cache",
     "storedist": "npm run build && git add -f dist",
     "comparedist": "bash ./scripts/test_compare_dist_with_committed_dist.sh",
     "syncmock": "node src/test/fetchMockData.js --diff",
@@ -117,12 +118,15 @@
     "sinon": "^1.17.4",
     "source-map-loader": "^0.1.5",
     "ts-loader": "^0.8.2",
+    "tslint": "^3.15.1",
+    "tslint-react": "^1.0.0",
     "typescript": "^2.0.3",
     "webpack-dev-server": "^1.15.0",
     "webpack-fail-plugin": "^1.0.5",
     "yargs": "^4.8.0"
   },
   "pre-commit": [
+    "lint",
     "storedist",
     "comparedist"
   ]
