@@ -4,7 +4,7 @@ import { createCBioPortalOncoprintWithToolbar } from 'shared/oncoprint/setup';
 
 import 'shared/oncoprint/oncoprint-bundle';
 
-class PatientViewPage extends React.Component {
+class Oncoprint extends React.Component {
 
     shouldComponentUpdate(){
         return false;
@@ -21,7 +21,7 @@ class PatientViewPage extends React.Component {
 }
 
 
-export default PatientViewPage;
+export default Oncoprint;
 
 
 

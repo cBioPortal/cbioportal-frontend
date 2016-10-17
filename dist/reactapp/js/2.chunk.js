@@ -5,6 +5,8 @@ webpackJsonp([2],{
 
 	/* WEBPACK VAR INJECTION */(function(module) {"use strict";
 	
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+	
 	Object.defineProperty(exports, "__esModule", {
 	    value: true
 	});
@@ -25,17 +27,49 @@ webpackJsonp([2],{
 	
 	var _index6 = _interopRequireDefault(_index5);
 	
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	var _createClass = function () {
+	    function defineProperties(target, props) {
+	        for (var i = 0; i < props.length; i++) {
+	            var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);
+	        }
+	    }return function (Constructor, protoProps, staticProps) {
+	        if (protoProps) defineProperties(Constructor.prototype, protoProps);if (staticProps) defineProperties(Constructor, staticProps);return Constructor;
+	    };
+	}();
 	
-	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+	function _interopRequireWildcard(obj) {
+	    if (obj && obj.__esModule) {
+	        return obj;
+	    } else {
+	        var newObj = {};if (obj != null) {
+	            for (var key in obj) {
+	                if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key];
+	            }
+	        }newObj.default = obj;return newObj;
+	    }
+	}
 	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	function _interopRequireDefault(obj) {
+	    return obj && obj.__esModule ? obj : { default: obj };
+	}
 	
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	function _classCallCheck(instance, Constructor) {
+	    if (!(instance instanceof Constructor)) {
+	        throw new TypeError("Cannot call a class as a function");
+	    }
+	}
 	
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	function _possibleConstructorReturn(self, call) {
+	    if (!self) {
+	        throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+	    }return call && ((typeof call === "undefined" ? "undefined" : _typeof(call)) === "object" || typeof call === "function") ? call : self;
+	}
 	
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	function _inherits(subClass, superClass) {
+	    if (typeof superClass !== "function" && superClass !== null) {
+	        throw new TypeError("Super expression must either be null or a function, not " + (typeof superClass === "undefined" ? "undefined" : _typeof(superClass)));
+	    }subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } });if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+	}
 	
 	var _components = {
 	    HomePage: {
@@ -80,11 +114,7 @@ webpackJsonp([2],{
 	            console.log(x);
 	            x += 4;
 	            console.log(x);
-	            return React.createElement(
-	                "div",
-	                null,
-	                "Hello TypeScript1"
-	            );
+	            return React.createElement("div", null, "Hello TypeScript1");
 	        }
 	    }]);
 	
@@ -99,4 +129,4 @@ webpackJsonp([2],{
 /***/ }
 
 });
-//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIndlYnBhY2s6Ly8vLi9zcmMvcGFnZXMvaG9tZS9Ib21lUGFnZS50c3giXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O0tBVUE7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O0FBSUUsaUJBQUssSUFBSztBQUNULGtCQUFNO0FBQ0EscUJBQUksSUFBSTtBQUNkLGtCQUFNO0FBQ0EscUJBQUksSUFBSTtBQUNUO0FBQ1A7Ozs7QUFDQTs7OztHQVgwQyxNQUVwQzs7OztBQVNMLEUiLCJmaWxlIjoicmVhY3RhcHAvanMvMi5jaHVuay5qcyIsInNvdXJjZXNDb250ZW50IjpbImltcG9ydCAqIGFzIFJlYWN0IGZyb20gXCJyZWFjdFwiO1xuXG5pbnRlcmZhY2UgSG9tZVBhZ2VQcm9wc1xue1xufVxuXG5pbnRlcmZhY2UgSG9tZVBhZ2VTdGF0ZVxue1xufVxuXG5leHBvcnQgZGVmYXVsdCBjbGFzcyBIb21lUGFnZSBleHRlbmRzIFJlYWN0LkNvbXBvbmVudDxIb21lUGFnZVByb3BzLCBIb21lUGFnZVN0YXRlPlxue1xuXHRyZW5kZXIoKVxuXHR7XG5cdFx0bGV0IHggPSAzO1xuXHRcdHggKz0gNDtcblx0XHRjb25zb2xlLmxvZyh4KTtcblx0XHR4ICs9IDQ7XG5cdFx0Y29uc29sZS5sb2coeCk7XG5cdFx0cmV0dXJuIDxkaXY+SGVsbG8gVHlwZVNjcmlwdDE8L2Rpdj47XG5cdH1cbn07XG5cblxuXG4vKiogV0VCUEFDSyBGT09URVIgKipcbiAqKiAuL3NyYy9wYWdlcy9ob21lL0hvbWVQYWdlLnRzeFxuICoqLyJdLCJzb3VyY2VSb290IjoiIn0=
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIndlYnBhY2s6Ly8vLi9zcmMvcGFnZXMvaG9tZS9Ib21lUGFnZS50c3giXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7S0FVQTs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O2tDQUlFO2lCQUFLLElBQ0o7a0JBQ007cUJBQUksSUFDVjtrQkFDTTtxQkFBSSxJQUNMOzBCQUNQLDJCQUNBOzs7OztHQVgwQyxNQUVwQzs7OztBQVNMLEUiLCJmaWxlIjoicmVhY3RhcHAvanMvMi5jaHVuay5qcyIsInNvdXJjZXNDb250ZW50IjpbImltcG9ydCAqIGFzIFJlYWN0IGZyb20gXCJyZWFjdFwiO1xuXG5pbnRlcmZhY2UgSG9tZVBhZ2VQcm9wc1xue1xufVxuXG5pbnRlcmZhY2UgSG9tZVBhZ2VTdGF0ZVxue1xufVxuXG5leHBvcnQgZGVmYXVsdCBjbGFzcyBIb21lUGFnZSBleHRlbmRzIFJlYWN0LkNvbXBvbmVudDxIb21lUGFnZVByb3BzLCBIb21lUGFnZVN0YXRlPlxue1xuXHRyZW5kZXIoKVxuXHR7XG5cdFx0bGV0IHggPSAzO1xuXHRcdHggKz0gNDtcblx0XHRjb25zb2xlLmxvZyh4KTtcblx0XHR4ICs9IDQ7XG5cdFx0Y29uc29sZS5sb2coeCk7XG5cdFx0cmV0dXJuIDxkaXY+SGVsbG8gVHlwZVNjcmlwdDE8L2Rpdj47XG5cdH1cbn07XG5cblxuXG4vKiogV0VCUEFDSyBGT09URVIgKipcbiAqKiAuL3NyYy9wYWdlcy9ob21lL0hvbWVQYWdlLnRzeFxuICoqLyJdLCJzb3VyY2VSb290IjoiIn0=

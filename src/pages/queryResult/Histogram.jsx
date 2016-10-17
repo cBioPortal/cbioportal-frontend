@@ -19,13 +19,19 @@ class QueryResultPage extends React.Component {
 
         this.histogram = new PancancerStudySummaryHistogram();
 
+
+        console.log(this.dmPresenter);
+
         this.histogram.render(this._histogramRoot, mockModel, this.dmPresenter, "KRAS")
+
+
+
 
     }
     render() {
-        return (
-            <div ref={(el)=>{ this._histogramRoot = el }} class="histogram"></div>
-        );
+        // return (
+        //     <div ref={(el)=>{ this._histogramRoot = el }} className="histogram"></div>
+        // );
     }
 }
 

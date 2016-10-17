@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { Table } from 'react-bootstrap';
 import {List} from "immutable";
-import * as React from 'react';
 import * as Immutable from 'immutable';
 
 type TODO = any;

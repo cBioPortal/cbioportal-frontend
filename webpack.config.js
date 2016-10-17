@@ -66,7 +66,7 @@ var config = {
     ],
 
     'module': {
-        'loaders': [
+        loaders: [
             {
                 test: /\.tsx?$/,
                 loaders: [
@@ -119,6 +119,11 @@ var config = {
 
 
 
+        ],
+
+        noParse: [
+            /plotly\.js/,
+            /oncoprint-bundle/
         ],
 
         preLoaders: [
@@ -296,7 +301,8 @@ if (isTest) {
         'react/lib/ExecutionEnvironment': true
     };
 
-    config.module.noParse = /[/\\]sinon\.js/;
+    config.module.noParse.push(/[/\\]sinon\.js/);
+
     config.resolve.alias.sinon = 'sinon/pkg/sinon';
 
     config.plugins = config.plugins.filter(p => {

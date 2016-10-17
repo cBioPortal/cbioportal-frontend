@@ -754,7 +754,7 @@ function HistogramPresenter(model, dmPresenter, geneId)
             };
             result.push(resultItem);
         }
-
+        console.log(result);
         return result;
     }
 
