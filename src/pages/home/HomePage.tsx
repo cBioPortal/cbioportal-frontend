@@ -1,22 +1,16 @@
-import * as React from "react";
+import * as React from 'react';
 
-interface HomePageProps
-{
+interface IHomePageProps {
 }
 
-interface HomePageState
-{
+interface IHomePageState {
 }
 
-export default class HomePage extends React.Component<HomePageProps, HomePageState>
-{
-	render()
-	{
-		let x = 3;
-		x += 4;
-		console.log(x);
-		x += 4;
-		console.log(x);
-		return <div>Hello TypeScript1</div>;
-	}
+export default class HomePage extends React.Component<IHomePageProps, IHomePageState> {
+    public render() {
+        let x = 3;
+        x += 4;
+        x += 4;
+        return <div>Hello TypeScript1</div>;
+    }
 };
