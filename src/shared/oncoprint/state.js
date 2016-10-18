@@ -71,59 +71,67 @@ const exp = (function () {
     };
 
     var populatePatientData = function() {
-        var done = new $.Deferred();
-        var clinical_attrs = utils.objectValues(State.clinical_tracks);
-        window.LoadingBar.show();
-        window.LoadingBar.msg(window.LoadingBar.DOWNLOADING_MSG);
-        $.when(QuerySession.getOncoprintPatientGenomicEventData(true),
-            ClinicalData.getPatientData(clinical_attrs),
-            QuerySession.getPatientIds())
-            .then(function (oncoprint_data_by_line,
-                            clinical_data,
-                            patient_ids) {
-                window.LoadingBar.msg("Loading oncoprint");
-                oncoprint.suppressRendering();
-                oncoprint.hideIds([], true);
-                oncoprint.keepSorted(false);
 
-                var total_tracks_to_add = Object.keys(State.genetic_alteration_tracks).length
-                    + Object.keys(State.clinical_tracks).length;
+        // var done = new $.Deferred();
+        // var clinical_attrs = utils.objectValues(State.clinical_tracks);
+        // window.LoadingBar.show();
+        // window.LoadingBar.msg(window.LoadingBar.DOWNLOADING_MSG);
+        // $.when(QuerySession.getOncoprintPatientGenomicEventData(true),
+        //     ClinicalData.getPatientData(clinical_attrs),
+        //     QuerySession.getPatientIds())
+        //     .then(function (oncoprint_data_by_line,
+        //                     clinical_data,
+        //                     patient_ids) {
+        //         window.LoadingBar.msg("Loading oncoprint");
+        //         oncoprint.suppressRendering();
+        //         oncoprint.hideIds([], true);
+        //         oncoprint.keepSorted(false);
+        //
+        //         var total_tracks_to_add = Object.keys(State.genetic_alteration_tracks).length
+        //             + Object.keys(State.clinical_tracks).length;
+        //
+        //         utils.timeoutSeparatedLoop(Object.keys(State.genetic_alteration_tracks), function (track_line, i) {
+        //             var track_id = State.genetic_alteration_tracks[track_line];
+        //             var track_data = oncoprint_data_by_line[track_line].oncoprint_data;
+        //             track_data = State.colorby_knowledge ? annotateOncoprintDataWithRecurrence(State, track_data) : track_data;
+        //             oncoprint.setTrackData(track_id, track_data, 'uid');
+        //             oncoprint.setTrackInfo(track_id, utils.proportionToPercentString(track_data.filter(oncoprintDatumIsAltered).length/patient_ids.length));
+        //             oncoprint.setTrackTooltipFn(track_id, tooltip_utils.makeGeneticTrackTooltip('patient', true));
+        //             window.LoadingBar.update(i / total_tracks_to_add);
+        //         }).then(function() {
+        //             return utils.timeoutSeparatedLoop(Object.keys(State.clinical_tracks), function(track_id, i) {
+        //                 var attr = State.clinical_tracks[track_id];
+        //                 oncoprint.setTrackData(track_id, clinical_data[attr.attr_id], 'uid');
+        //                 oncoprint.setTrackTooltipFn(track_id, tooltip_utils.makeClinicalTrackTooltip(attr, 'patient', true));
+        //                 oncoprint.setTrackInfo(track_id, "");
+        //                 window.LoadingBar.update((i + Object.keys(State.genetic_alteration_tracks).length) / total_tracks_to_add);
+        //             });
+        //         }).then(function () {
+        //             oncoprint.keepSorted();
+        //             if (State.unaltered_cases_hidden) {
+        //                 oncoprint.hideIds(State.getUnalteredIds(), true);
+        //             }
+        //             oncoprint.releaseRendering();
+        //             window.LoadingBar.msg("");
+        //             window.LoadingBar.hide();
+        //             updateAlteredPercentIndicator(State);
+        //             oncoprint.updateHorzZoomToFitIds(State.getAlteredIds());
+        //             done.resolve();
+        //         });
+        //     }).fail(function() {
+        //     done.reject();
+        // });
+        // return done.promise();
 
-                utils.timeoutSeparatedLoop(Object.keys(State.genetic_alteration_tracks), function (track_line, i) {
-                    var track_id = State.genetic_alteration_tracks[track_line];
-                    var track_data = oncoprint_data_by_line[track_line].oncoprint_data;
-                    track_data = State.colorby_knowledge ? annotateOncoprintDataWithRecurrence(State, track_data) : track_data;
-                    oncoprint.setTrackData(track_id, track_data, 'uid');
-                    oncoprint.setTrackInfo(track_id, utils.proportionToPercentString(track_data.filter(oncoprintDatumIsAltered).length/patient_ids.length));
-                    oncoprint.setTrackTooltipFn(track_id, tooltip_utils.makeGeneticTrackTooltip('patient', true));
-                    window.LoadingBar.update(i / total_tracks_to_add);
-                }).then(function() {
-                    return utils.timeoutSeparatedLoop(Object.keys(State.clinical_tracks), function(track_id, i) {
-                        var attr = State.clinical_tracks[track_id];
-                        oncoprint.setTrackData(track_id, clinical_data[attr.attr_id], 'uid');
-                        oncoprint.setTrackTooltipFn(track_id, tooltip_utils.makeClinicalTrackTooltip(attr, 'patient', true));
-                        oncoprint.setTrackInfo(track_id, "");
-                        window.LoadingBar.update((i + Object.keys(State.genetic_alteration_tracks).length) / total_tracks_to_add);
-                    });
-                }).then(function () {
-                    oncoprint.keepSorted();
-                    if (State.unaltered_cases_hidden) {
-                        oncoprint.hideIds(State.getUnalteredIds(), true);
-                    }
-                    oncoprint.releaseRendering();
-                    window.LoadingBar.msg("");
-                    window.LoadingBar.hide();
-                    updateAlteredPercentIndicator(State);
-                    oncoprint.updateHorzZoomToFitIds(State.getAlteredIds());
-                    done.resolve();
-                });
-            }).fail(function() {
-            done.reject();
-        });
-        return done.promise();
+        return new $.Deferred();
+
     };
 
     var populateClinicalTrack = function(track_id) {
+
+        debugger;
+
+
         var done = new $.Deferred();
         var attr = State.clinical_tracks[track_id];
         ClinicalData[State.using_sample_data ? 'getSampleData' : 'getPatientData'](attr).then(function(data) {
