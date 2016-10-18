@@ -123,7 +123,8 @@ var config = {
 
         noParse: [
             /plotly\.js/,
-            /oncoprint-bundle/
+            /oncoprint-bundle/,
+            /mock/
         ],
 
         preLoaders: [
@@ -233,7 +234,7 @@ if (isDev) {
 } else {
 
 
-    config.devtool = 'cheap-module-source-map',
+    config.devtool = 'inline-source-map',
 
     config.module.loaders.push(
         {

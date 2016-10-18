@@ -1,8 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { createCBioPortalOncoprintWithToolbar } from 'shared/oncoprint/setup';
 
 import 'shared/oncoprint/oncoprint-bundle';
+
+import { createCBioPortalOncoprintWithToolbar } from 'shared/oncoprint/setup';
+
 
 class Oncoprint extends React.Component {
 

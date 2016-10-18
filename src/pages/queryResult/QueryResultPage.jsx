@@ -23,7 +23,7 @@ class QueryResultPage extends React.Component {
             <div>
                 <h1>Oncoprint</h1>
 
-                <Tabs defaultActiveKey={2} id="study">
+                <Tabs defaultActiveKey={1} id="study">
                     <Tab eventKey={1} title="Oncoprint">
                         <Oncoprint />
                     </Tab>

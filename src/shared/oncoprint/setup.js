@@ -260,6 +260,7 @@ export function createCBioPortalOncoprintWithToolbar(ctr_selector, toolbar_selec
 
         return populate_data_promise;
     });
+
     window.oncoprint = oncoprint;
 
     (function setUpToolbar() {
