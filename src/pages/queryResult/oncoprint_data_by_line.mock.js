@@ -3950,7 +3950,7 @@ export default [{
             "protein_start_position": "12",
             "protein_end_position": "12",
             "reference_allele": "C",
-            "variant_allele": "T",
+            "variant_allele": "T",git
             "reference_read_count_tumor": "-1",
             "variant_read_count_tumor": "-1",
             "reference_read_count_normal": "-1",
