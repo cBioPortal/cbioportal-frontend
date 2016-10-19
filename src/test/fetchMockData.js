@@ -43,13 +43,18 @@ const downloadFileFromURL = (url, file, postData) => {
         options.json = true;
         options.method = 'POST';
         options.headers = {
-            'content-type': 'application/json'
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache',
+            'Accept': 'application/json',
+            'Content-Length': JSON.stringify(postData).length
         };
-        options.body = JSON.stringify(postData);
     } else {
         options.method = 'GET';
     }
     const req = http.request(options, storeFile(url, file));
+    if (postData) {
+        req.write(JSON.stringify(postData));
+    }
     req.end();
 
     req.on('error', (e) => {
