@@ -38,36 +38,6 @@ export default class ClinicalInformationPatientTable extends React.Component<Cli
 
             </Table>
         );
-        // const headerCells = this.props.data.get('columns').map((col)=>{
-        //     return <th>{col.get('id')}</th>
-        // });
-        //
-        // const rows = this.props.data.get('items').map((row, key) => {
-        //     return (<tr key={key}>
-        //             <th>{row.get('name')}</th>
-        //             {
-        //                 this.props.data.get('columns').map((col)=> {
-        //                     if(col.get('id') in row.toJS()) {
-        //                         return <td>{row.get(col.get('id'))}</td>
-        //                     } else {
-        //                         return <td>N/A</td>
-        //                     }
-        //
-        //                 })
-        //             }
-        //
-        //         </tr>
-        //     );
-        // });
-        //
-        // return (
-        //     <Table striped>
-        //         <thead><tr>
-        //             <th></th>
-        //             { headerCells }
-        //         </tr></thead>
-        //         <tbody>{ rows }</tbody>
-        //     </Table>
-        // );
+
     }
 }
