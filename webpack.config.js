@@ -195,7 +195,7 @@ config.module.loaders.push(
 
 );
 
-if (isDev) {
+if (isDev || isTest) {
 
     config.devtool = 'inline-source-map';
 

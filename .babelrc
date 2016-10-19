@@ -16,7 +16,9 @@
         [
           "istanbul", {
 
-          "include": ["**/tsDist/features/**/*.js"]
+          "exclude": [
+            "**/*.spec.js"
+          ]
         }
         ],
 
