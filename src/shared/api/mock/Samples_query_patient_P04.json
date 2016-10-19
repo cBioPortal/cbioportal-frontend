@@ -1,0 +1,22 @@
+[
+    {
+        "sampleType": "Primary Solid Tumor",
+        "stableId": "P04_Pri",
+        "typeOfCancerId": "Glioma"
+    },
+    {
+        "sampleType": "Recurrence",
+        "stableId": "P04_Rec1",
+        "typeOfCancerId": "Glioma"
+    },
+    {
+        "sampleType": "Recurrence",
+        "stableId": "P04_Rec2",
+        "typeOfCancerId": "Glioma"
+    },
+    {
+        "sampleType": "Recurrence",
+        "stableId": "P04_Rec3",
+        "typeOfCancerId": "Glioma"
+    }
+]
