@@ -4,12 +4,9 @@ import * as _ from 'lodash';
 
 var buckets = {};
 
+_.forEach(mockData['oncoprint_data'], (data)=>{
 
-console.log(mockData.data.length)
-
-_.forEach(mockData['altered_patients'], (sample_id)=>{
-
-    let type = _.find(cancerTypes,{ sample_id: sample_id + '-01' })['attr_val'];
+    let type = _.find(cancerTypes,{ sample_id: data.patient + '-01' })['attr_val'];
 
     let bucket;
     if (type in buckets) {
@@ -19,28 +16,13 @@ _.forEach(mockData['altered_patients'], (sample_id)=>{
         bucket = buckets[type];
     }
 
-    bucket.push({ typeOfCancer: type, caseSetLength });
-
-});
-
-_.forEach(mockData['unaltered_patients'], (sample_id)=>{
-
-    let type = _.find(cancerTypes,{ sample_id: sample_id + '-01' })['attr_val'];
-
-    let bucket;
-    if (type in buckets) {
-        bucket = buckets[type];
-    } else {
-        buckets[type] = [];
-        bucket = buckets[type];
-    }
-
-    bucket.push(sample_id);
+    bucket.push(data);
 
 });
 
 
-const mockData = [
+
+const mmmm = [
     {
         "typeOfCancer": "Colon Adenocarcinoma",
         "caseSetLength": 94,
@@ -55,5 +37,6 @@ const mockData = [
         "alterations": {"all": 24, "mutation": 23, "cnaUp": 0, "cnaDown": 0, "cnaLoss": 0, "cnaGain": 0, "multiple": 1}
     }];
 
-console.log(_.filter(mockData.data, {type:"Colorectal Cancer"}).length);
+
+console.log(_.filter(buckets['Colorectal Cancer'],(item)=>item.data.length === 0).length);
 
