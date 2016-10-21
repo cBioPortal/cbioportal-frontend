@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-"use strict";
+
+'use strict';
 
 /* eslint-disable no-console */
 const http = require('http');

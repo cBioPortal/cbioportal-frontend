@@ -8,6 +8,7 @@ import SampleInline from './SampleInline';
 type TODO = any;
 
 type Sample = {clinicalData: TODO};
+type Patient = {id: string, clinicalData: TODO};
 
 export interface IPatientHeaderProps {
     samples: Array<TODO>;
@@ -32,7 +33,7 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
         }
     }
 
-    private getPopover(sample: Sample, sampleNumber: number) {
+    private getPopoverSample(sample: Sample, sampleNumber: number) {
         return (
             <Popover key={sampleNumber} id={'popover-sample-' + sampleNumber}>
                 <TooltipTable data={sample.clinicalData} />
@@ -40,14 +41,38 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
         );
     }
 
-    private getOverlayTrigger(sample: Sample, sampleNumber: number) {
+    private getPopoverPatient(patient: Patient) {
+        return (
+            <Popover key={patient.id} id={'popover-sample-' + patient.id}>
+                <TooltipTable data={patient.clinicalData} />
+            </Popover>
+        );
+    }
+
+    private getOverlayTriggerPatient(patient: Patient) {
+        return (
+            <OverlayTrigger
+                delayHide={100}
+                key={patient.id}
+                trigger={['hover', 'focus']}
+                placement='bottom'
+                overlay={this.getPopoverPatient(patient)}
+            >
+                <span>
+                    {patient.id}
+                </span>
+            </OverlayTrigger>
+        );
+    }
+
+    private getOverlayTriggerSample(sample: Sample, sampleNumber: number) {
         return (
             <OverlayTrigger
                 delayHide={100}
                 key={sampleNumber}
                 trigger={['hover', 'focus']}
                 placement='bottom'
-                overlay={this.getPopover(sample, sampleNumber + 1)}
+                overlay={this.getPopoverSample(sample, sampleNumber + 1)}
             >
                 <span>
                     <SampleInline sample={sample} sampleNumber={sampleNumber + 1} />
@@ -60,7 +85,8 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
         if (this.props.samples && this.props.samples.length > 0) {
             return (
                 <div>
-                    {this.props.samples.map((sample:Sample, sampleNumber: number) => this.getOverlayTrigger)}
+                    {this.getOverlayTriggerPatient(this.props.patient)}<br />
+                    {this.props.samples.map((s, n) => this.getOverlayTriggerSample(s, n))}
                 </div>
             );
         }
