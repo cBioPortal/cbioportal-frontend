@@ -28,15 +28,8 @@
         "implemented": "true"
     },
     {
-        "url": "samples/query",
-        "data": [
-            {
-                "patient": {
-                    "stableId": "P04"
-                }
-            }
-        ],
+        "url": "studies/lgg_ucsf_2014/patients/P04/samples",
         "file": "src/shared/api/mock/Samples_query_patient_P04.json",
-        "implemented": "false"
+        "implemented": "true"
     }
 ]
