@@ -5,7 +5,7 @@ import PDXTree from './PDXTree';
 import Spinner from 'react-spinkit';
 import { actionCreators, mapStateToProps } from './duck';
 import { connect } from 'react-redux';
-import ClinicalInformationSamples from './ClinicalInformationSamples';
+import ClinicalInformationSamples from './ClinicalInformationSamplesTable';
 import PatientHeaderUnconnected from '../patientHeader/PatientHeader';
 
 export class ClinicalInformationContainerUnconnected extends React.Component {
@@ -21,12 +21,15 @@ export class ClinicalInformationContainerUnconnected extends React.Component {
     buildTabs() {
         return (
             <div>
-                <h4>Samples</h4>
+                <h3 style={{ color: 'black' }}>Patient</h3>
+                <p style={{ margin: '20px' }}>
+                    <ClinicalInformationPatientTable data={this.props.patient.clinicalData} />
+                </p>
 
-                <ClinicalInformationSamples data={this.props.samples} />
-
-                <h4>Patient</h4>
-                <ClinicalInformationPatientTable data={this.props.patient.clinicalData} />
+                <h3 style={{ color: 'black' }}>Samples</h3>
+                <p style={{ margin: '20px' }}>
+                    <ClinicalInformationSamples data={this.props.samples} />
+                </p>
             </div>
         );
     }
