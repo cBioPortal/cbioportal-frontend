@@ -59,6 +59,7 @@
     "react-router": "^2.5.2",
     "react-router-redux": "^4.0.5",
     "react-spinkit": "^1.1.11",
+    "react-tooltip": "^3.2.1",
     "react-zeroclipboard": "^3.2.2",
     "recharts": "^0.12.8",
     "redux": "^3.5.2",
@@ -76,6 +77,7 @@
     "sass-resources-loader": "^1.1.0",
     "seamless-immutable": "^6.3.0",
     "style-loader": "^0.13.1",
+    "swagger-client": "^2.1.23",
     "underscore": "^1.8.3",
     "url-loader": "^0.5.7",
     "webpack": "^1.13.1"

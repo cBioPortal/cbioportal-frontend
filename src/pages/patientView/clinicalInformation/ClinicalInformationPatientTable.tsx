@@ -15,14 +15,14 @@ class ClinicalInformationPatientTable extends React.Component<IClinicalInformati
         _.each(this.props.data, (item: TODO) => {
             rows.push(
                 <tr key={item.id}>
-                    <td>{item.id}</td>
+                    <td>{item.clinicalAttribute.displayName}</td>
                     <td>{item.value}</td>
                 </tr>
             );
         });
 
         return (
-            <Table striped>
+            <Table striped style={{borderCollapse: 'unset', borderSpacing: '0px'}}>
                 <thead>
                 <tr>
                     <th>Attribute</th>

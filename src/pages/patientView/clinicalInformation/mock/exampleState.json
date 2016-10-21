@@ -1,0 +1,465 @@
+{
+    "patient": {
+        "id": "P04",
+        "clinicalData": [
+            {
+                "id": "AGE",
+                "clinicalAttribute": {
+                    "attrId": "AGE",
+                    "displayName": "Diagnosis Age",
+                    "description": "Age at which a condition or disease was first diagnosed.",
+                    "datatype": "NUMBER",
+                    "patientAttribute": true,
+                    "priority": "1"
+                },
+                "value": "22"
+            },
+            {
+                "id": "GENDER",
+                "clinicalAttribute": {
+                    "attrId": "GENDER",
+                    "displayName": "Person Gender",
+                    "description": "Patient gender.",
+                    "datatype": "STRING",
+                    "patientAttribute": true,
+                    "priority": "1"
+                },
+                "value": "Male"
+            },
+            {
+                "id": "OS_MONTHS",
+                "clinicalAttribute": {
+                    "attrId": "OS_MONTHS",
+                    "displayName": "Overall Survival (Months)",
+                    "description": "Overall survival in months since initial diagonosis.",
+                    "datatype": "NUMBER",
+                    "patientAttribute": true,
+                    "priority": "1"
+                },
+                "value": "61"
+            },
+            {
+                "id": "OS_STATUS",
+                "clinicalAttribute": {
+                    "attrId": "OS_STATUS",
+                    "displayName": "Overall Survival Status",
+                    "description": "Overall patient survival status.",
+                    "datatype": "STRING",
+                    "patientAttribute": true,
+                    "priority": "1"
+                },
+                "value": "DECEASED"
+            }
+        ]
+    },
+    "samples": [
+        {
+            "id": "P04_Pri",
+            "clinicalData": [
+                {
+                    "id": "CANCER_TYPE",
+                    "clinicalAttribute": {
+                        "attrId": "CANCER_TYPE",
+                        "displayName": "Cancer Type",
+                        "description": "Disease type",
+                        "datatype": "STRING",
+                        "patientAttribute": false,
+                        "priority": "1"
+                    },
+                    "value": "Glioma"
+                },
+                {
+                    "id": "CANCER_TYPE_DETAILED",
+                    "clinicalAttribute": {
+                        "attrId": "CANCER_TYPE_DETAILED",
+                        "displayName": "Cancer Type Detailed",
+                        "description": "Cancer Type Detailed",
+                        "datatype": "STRING",
+                        "patientAttribute": false,
+                        "priority": "1"
+                    },
+                    "value": "Astrocytoma"
+                },
+                {
+                    "id": "GRADE",
+                    "clinicalAttribute": {
+                        "attrId": "GRADE",
+                        "displayName": "Neoplasm Histologic Grade",
+                        "description": "Numeric value to express the degree of abnormality of cancer cells, a measure of differentiation and aggressiveness.",
+                        "datatype": "STRING",
+                        "patientAttribute": false,
+                        "priority": "1"
+                    },
+                    "value": "II"
+                },
+                {
+                    "id": "IDH1_MUTATION",
+                    "clinicalAttribute": {
+                        "attrId": "IDH1_MUTATION",
+                        "displayName": "IDH1 Mutation",
+                        "description": "IDH1 mutation is present",
+                        "datatype": "STRING",
+                        "patientAttribute": false,
+                        "priority": "1"
+                    },
+                    "value": "R132C"
+                },
+                {
+                    "id": "IDH_1P19Q_SUBTYPE",
+                    "clinicalAttribute": {
+                        "attrId": "IDH_1P19Q_SUBTYPE",
+                        "displayName": "IDH-1P10Q Subtype",
+                        "description": "IDH-1P10Q subtype.",
+                        "datatype": "STRING",
+                        "patientAttribute": false,
+                        "priority": "1"
+                    },
+                    "value": "Intact"
+                },
+                {
+                    "id": "MGMT_STATUS",
+                    "clinicalAttribute": {
+                        "attrId": "MGMT_STATUS",
+                        "displayName": "MGMT Status",
+                        "description": "MGMT Status",
+                        "datatype": "STRING",
+                        "patientAttribute": false,
+                        "priority": "1"
+                    },
+                    "value": "Unknown"
+                },
+                {
+                    "id": "NON_SILENT_MUTATION",
+                    "clinicalAttribute": {
+                        "attrId": "NON_SILENT_MUTATION",
+                        "displayName": "Non Silent Mutations",
+                        "description": "Non Silent Mutations",
+                        "datatype": "STRING",
+                        "patientAttribute": false,
+                        "priority": "1"
+                    },
+                    "value": "TP53"
+                },
+                {
+                    "id": "SAMPLE_TYPE",
+                    "clinicalAttribute": {
+                        "attrId": "SAMPLE_TYPE",
+                        "displayName": "Sample Type",
+                        "description": "The type of sample (i.e., normal, primary, met, recurrence).",
+                        "datatype": "STRING",
+                        "patientAttribute": false,
+                        "priority": "1"
+                    },
+                    "value": "Primary"
+                }
+            ]
+        },
+        {
+            "id": "P04_Rec1",
+            "clinicalData": [
+                {
+                    "id": "CANCER_TYPE",
+                    "clinicalAttribute": {
+                        "attrId": "CANCER_TYPE",
+                        "displayName": "Cancer Type",
+                        "description": "Disease type",
+                        "datatype": "STRING",
+                        "patientAttribute": false,
+                        "priority": "1"
+                    },
+                    "value": "Glioma"
+                },
+                {
+                    "id": "CANCER_TYPE_DETAILED",
+                    "clinicalAttribute": {
+                        "attrId": "CANCER_TYPE_DETAILED",
+                        "displayName": "Cancer Type Detailed",
+                        "description": "Cancer Type Detailed",
+                        "datatype": "STRING",
+                        "patientAttribute": false,
+                        "priority": "1"
+                    },
+                    "value": "Anaplastic Astrocytoma"
+                },
+                {
+                    "id": "GRADE",
+                    "clinicalAttribute": {
+                        "attrId": "GRADE",
+                        "displayName": "Neoplasm Histologic Grade",
+                        "description": "Numeric value to express the degree of abnormality of cancer cells, a measure of differentiation and aggressiveness.",
+                        "datatype": "STRING",
+                        "patientAttribute": false,
+                        "priority": "1"
+                    },
+                    "value": "III"
+                },
+                {
+                    "id": "IDH1_MUTATION",
+                    "clinicalAttribute": {
+                        "attrId": "IDH1_MUTATION",
+                        "displayName": "IDH1 Mutation",
+                        "description": "IDH1 mutation is present",
+                        "datatype": "STRING",
+                        "patientAttribute": false,
+                        "priority": "1"
+                    },
+                    "value": "R132C"
+                },
+                {
+                    "id": "IDH_1P19Q_SUBTYPE",
+                    "clinicalAttribute": {
+                        "attrId": "IDH_1P19Q_SUBTYPE",
+                        "displayName": "IDH-1P10Q Subtype",
+                        "description": "IDH-1P10Q subtype.",
+                        "datatype": "STRING",
+                        "patientAttribute": false,
+                        "priority": "1"
+                    },
+                    "value": "Intact"
+                },
+                {
+                    "id": "MGMT_STATUS",
+                    "clinicalAttribute": {
+                        "attrId": "MGMT_STATUS",
+                        "displayName": "MGMT Status",
+                        "description": "MGMT Status",
+                        "datatype": "STRING",
+                        "patientAttribute": false,
+                        "priority": "1"
+                    },
+                    "value": "Unknown"
+                },
+                {
+                    "id": "NON_SILENT_MUTATION",
+                    "clinicalAttribute": {
+                        "attrId": "NON_SILENT_MUTATION",
+                        "displayName": "Non Silent Mutations",
+                        "description": "Non Silent Mutations",
+                        "datatype": "STRING",
+                        "patientAttribute": false,
+                        "priority": "1"
+                    },
+                    "value": "TP53"
+                },
+                {
+                    "id": "SAMPLE_TYPE",
+                    "clinicalAttribute": {
+                        "attrId": "SAMPLE_TYPE",
+                        "displayName": "Sample Type",
+                        "description": "The type of sample (i.e., normal, primary, met, recurrence).",
+                        "datatype": "STRING",
+                        "patientAttribute": false,
+                        "priority": "1"
+                    },
+                    "value": "Recurrence"
+                }
+            ]
+        },
+        {
+            "id": "P04_Rec2",
+            "clinicalData": [
+                {
+                    "id": "CANCER_TYPE",
+                    "clinicalAttribute": {
+                        "attrId": "CANCER_TYPE",
+                        "displayName": "Cancer Type",
+                        "description": "Disease type",
+                        "datatype": "STRING",
+                        "patientAttribute": false,
+                        "priority": "1"
+                    },
+                    "value": "Glioma"
+                },
+                {
+                    "id": "CANCER_TYPE_DETAILED",
+                    "clinicalAttribute": {
+                        "attrId": "CANCER_TYPE_DETAILED",
+                        "displayName": "Cancer Type Detailed",
+                        "description": "Cancer Type Detailed",
+                        "datatype": "STRING",
+                        "patientAttribute": false,
+                        "priority": "1"
+                    },
+                    "value": "Anaplastic Astrocytoma"
+                },
+                {
+                    "id": "GRADE",
+                    "clinicalAttribute": {
+                        "attrId": "GRADE",
+                        "displayName": "Neoplasm Histologic Grade",
+                        "description": "Numeric value to express the degree of abnormality of cancer cells, a measure of differentiation and aggressiveness.",
+                        "datatype": "STRING",
+                        "patientAttribute": false,
+                        "priority": "1"
+                    },
+                    "value": "III"
+                },
+                {
+                    "id": "IDH1_MUTATION",
+                    "clinicalAttribute": {
+                        "attrId": "IDH1_MUTATION",
+                        "displayName": "IDH1 Mutation",
+                        "description": "IDH1 mutation is present",
+                        "datatype": "STRING",
+                        "patientAttribute": false,
+                        "priority": "1"
+                    },
+                    "value": "R132C"
+                },
+                {
+                    "id": "IDH_1P19Q_SUBTYPE",
+                    "clinicalAttribute": {
+                        "attrId": "IDH_1P19Q_SUBTYPE",
+                        "displayName": "IDH-1P10Q Subtype",
+                        "description": "IDH-1P10Q subtype.",
+                        "datatype": "STRING",
+                        "patientAttribute": false,
+                        "priority": "1"
+                    },
+                    "value": "Intact"
+                },
+                {
+                    "id": "MGMT_STATUS",
+                    "clinicalAttribute": {
+                        "attrId": "MGMT_STATUS",
+                        "displayName": "MGMT Status",
+                        "description": "MGMT Status",
+                        "datatype": "STRING",
+                        "patientAttribute": false,
+                        "priority": "1"
+                    },
+                    "value": "Unknown"
+                },
+                {
+                    "id": "NON_SILENT_MUTATION",
+                    "clinicalAttribute": {
+                        "attrId": "NON_SILENT_MUTATION",
+                        "displayName": "Non Silent Mutations",
+                        "description": "Non Silent Mutations",
+                        "datatype": "STRING",
+                        "patientAttribute": false,
+                        "priority": "1"
+                    },
+                    "value": "TP53"
+                },
+                {
+                    "id": "SAMPLE_TYPE",
+                    "clinicalAttribute": {
+                        "attrId": "SAMPLE_TYPE",
+                        "displayName": "Sample Type",
+                        "description": "The type of sample (i.e., normal, primary, met, recurrence).",
+                        "datatype": "STRING",
+                        "patientAttribute": false,
+                        "priority": "1"
+                    },
+                    "value": "Recurrence"
+                }
+            ]
+        },
+        {
+            "id": "P04_Rec3",
+            "clinicalData": [
+                {
+                    "id": "CANCER_TYPE",
+                    "clinicalAttribute": {
+                        "attrId": "CANCER_TYPE",
+                        "displayName": "Cancer Type",
+                        "description": "Disease type",
+                        "datatype": "STRING",
+                        "patientAttribute": false,
+                        "priority": "1"
+                    },
+                    "value": "Glioma"
+                },
+                {
+                    "id": "CANCER_TYPE_DETAILED",
+                    "clinicalAttribute": {
+                        "attrId": "CANCER_TYPE_DETAILED",
+                        "displayName": "Cancer Type Detailed",
+                        "description": "Cancer Type Detailed",
+                        "datatype": "STRING",
+                        "patientAttribute": false,
+                        "priority": "1"
+                    },
+                    "value": "Anaplastic Astrocytoma"
+                },
+                {
+                    "id": "GRADE",
+                    "clinicalAttribute": {
+                        "attrId": "GRADE",
+                        "displayName": "Neoplasm Histologic Grade",
+                        "description": "Numeric value to express the degree of abnormality of cancer cells, a measure of differentiation and aggressiveness.",
+                        "datatype": "STRING",
+                        "patientAttribute": false,
+                        "priority": "1"
+                    },
+                    "value": "III"
+                },
+                {
+                    "id": "IDH1_MUTATION",
+                    "clinicalAttribute": {
+                        "attrId": "IDH1_MUTATION",
+                        "displayName": "IDH1 Mutation",
+                        "description": "IDH1 mutation is present",
+                        "datatype": "STRING",
+                        "patientAttribute": false,
+                        "priority": "1"
+                    },
+                    "value": "R132C"
+                },
+                {
+                    "id": "IDH_1P19Q_SUBTYPE",
+                    "clinicalAttribute": {
+                        "attrId": "IDH_1P19Q_SUBTYPE",
+                        "displayName": "IDH-1P10Q Subtype",
+                        "description": "IDH-1P10Q subtype.",
+                        "datatype": "STRING",
+                        "patientAttribute": false,
+                        "priority": "1"
+                    },
+                    "value": "Intact"
+                },
+                {
+                    "id": "MGMT_STATUS",
+                    "clinicalAttribute": {
+                        "attrId": "MGMT_STATUS",
+                        "displayName": "MGMT Status",
+                        "description": "MGMT Status",
+                        "datatype": "STRING",
+                        "patientAttribute": false,
+                        "priority": "1"
+                    },
+                    "value": "Unknown"
+                },
+                {
+                    "id": "NON_SILENT_MUTATION",
+                    "clinicalAttribute": {
+                        "attrId": "NON_SILENT_MUTATION",
+                        "displayName": "Non Silent Mutations",
+                        "description": "Non Silent Mutations",
+                        "datatype": "STRING",
+                        "patientAttribute": false,
+                        "priority": "1"
+                    },
+                    "value": "TP53"
+                },
+                {
+                    "id": "SAMPLE_TYPE",
+                    "clinicalAttribute": {
+                        "attrId": "SAMPLE_TYPE",
+                        "displayName": "Sample Type",
+                        "description": "The type of sample (i.e., normal, primary, met, recurrence).",
+                        "datatype": "STRING",
+                        "patientAttribute": false,
+                        "priority": "1"
+                    },
+                    "value": "Recurrence"
+                }
+            ]
+        }
+    ],
+    "nodes": {
+        "name": "P04_Pri",
+        "label": "1"
+    }
+}
