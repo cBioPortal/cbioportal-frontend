@@ -12,7 +12,8 @@
     "lint": "eslint src/** --ext .js --ext .jsx --cache",
     "storedist": "npm run build && git add -f dist",
     "comparedist": "bash ./scripts/test_compare_dist_with_committed_dist.sh",
-    "validate": "npm ls"
+    "validate": "npm ls",
+    "test:aaron": "mocha transformOncoprint.spec.js --compilers js:../../../node_modules/babel-core/register"
   },
   "author": "",
   "license": "",

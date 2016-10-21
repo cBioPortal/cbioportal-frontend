@@ -21,7 +21,7 @@ class QueryResultPage extends React.Component {
     render() {
         return (
             <div>
-                <h1>Oncoprint</h1>
+                <h1>Query Results</h1>
 
                 <Tabs defaultActiveKey={1} id="study">
                     <Tab eventKey={1} title="Oncoprint">

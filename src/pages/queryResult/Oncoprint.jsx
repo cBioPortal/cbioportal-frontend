@@ -13,11 +13,11 @@ class Oncoprint extends React.Component {
     }
 
     componentDidMount() {
-        createCBioPortalOncoprintWithToolbar(".moo");
+        createCBioPortalOncoprintWithToolbar(".oncoprint");
     }
     render() {
         return (
-            <div className="moo"></div>
+            <div className="oncoprint"></div>
         );
     }
 }

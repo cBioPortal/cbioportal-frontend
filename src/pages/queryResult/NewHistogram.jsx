@@ -47,12 +47,27 @@ class Histogram extends React.Component {
         var layout = {
             barmode: 'stack',
             yaxis: {
-                tickformat:'%'
-            }
+                tickformat: '%'
+            },
+            margin:{
+                t: 20
+            },
+            legend:{
+                orientation: 'v'
+            },
+            width:500,
+            height:250
         };
 
         return (
-            <Plotly className="whatever" data={traces} layout={layout}/>
+                <div>
+                    <h3>KRAS</h3>
+                    <Plotly className="whatever" data={traces} layout={layout}  />
+                    <h3>NRAS</h3>
+                    <Plotly className="whatever" data={traces} layout={layout}  />
+                    <h3>BRAF</h3>
+                    <Plotly className="whatever" data={traces} layout={layout}  />
+                </div>
         );
 
     }
