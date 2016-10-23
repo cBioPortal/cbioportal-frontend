@@ -1,9 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import Oncoprint from './Oncoprint';
+import Oncoprint from '../../shared/oncoprint/Oncoprint';
 import { connect } from 'react-redux';
 import { Tabs, Tab } from 'react-bootstrap';
 import NewHistogram from './NewHistogram';
+
 
 class QueryResultPage extends React.Component {
 

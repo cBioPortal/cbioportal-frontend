@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom';
 import PancancerStudySummaryHistogram from './RenderHistogram';
 import mockModel from './mockModel';
 import DataManagerPresenter from './DataManagerPresenter';
+import { connect } from 'react-redux';
+import { actionCreators, mapStateToProps } from './duck';
 
 class QueryResultPage extends React.Component {
     componentDidMount() {
@@ -35,7 +37,7 @@ class QueryResultPage extends React.Component {
     }
 }
 
-export default QueryResultPage;
+export default connect(mapStateToProps, actionCreators)(QueryResultPage);
 
 
 

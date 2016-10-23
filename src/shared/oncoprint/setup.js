@@ -2,13 +2,9 @@ import URL from './url';
 
 import utils from './utils';
 
-import State from './state';
-
 import ClinicalData from './clinicalData';
 
-import qs from './querySession';
 
-var QuerySession = qs();
 
 import mockData from './oncoprint_data_by_line.mock';
 
@@ -17,28 +13,14 @@ import * as _ from 'lodash';
 //console.log(mockData[0]['oncoprint_data']);
 
 
-export function createCBioPortalOncoprintWithToolbar(ctr_selector, toolbar_selector) {
+export function createCBioPortalOncoprintWithToolbar(oncoprint, oncoprint_data_by_line, State) {
 
+    // $(ctr_selector).css({'position': 'relative'});
+    //
+    // var oncoprint = new window.Oncoprint(ctr_selector, 1050);
 
-    $(ctr_selector).css({'position': 'relative'});
+    //window.oncoprint = oncoprint;
 
-    var oncoprint = new window.Oncoprint(ctr_selector, 1050);
-
-    window.oncoprint = oncoprint;
-
-    var clinical_attrs = utils.objectValues(State.clinical_tracks);
-
-    $.when(QuerySession.getOncoprintPatientGenomicEventData(true),
-        ClinicalData.getPatientData(clinical_attrs),
-        QuerySession.getPatientIds())
-        .then(function(oncoprint_data_by_line, clinical_data){
-            doIt(oncoprint_data_by_line, clinical_data)
-        });
-
-    function doIt(oncoprint_data_by_line) {
-
-
-        console.log(oncoprint_data_by_line);
 
         let genetic_alteration_tracks = [];
 
@@ -80,7 +62,5 @@ export function createCBioPortalOncoprintWithToolbar(ctr_selector, toolbar_selec
         oncoprint.keepSorted();
 
         oncoprint.releaseRendering();
-
-    }
 
 }

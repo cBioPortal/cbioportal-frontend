@@ -47,7 +47,12 @@ export default function (mutationData, cancerTypes)
         out.alterations = _.reduce(bucket, (memo, item)=>{
 
             if (item.data.length > 0) memo.all++;
-            if (item.data.length > 1) memo.multiple++;
+            if (item.data.length === 1) {
+                memo.mutation++;
+            }
+            if (item.data.length > 1) {
+                memo.multiple++;
+            }
             return memo;
 
         }, {"all": 0, "mutation": 0, "cnaUp": 0, "cnaDown": 0, "cnaLoss": 0, "cnaGain": 0, "multiple": 0});
