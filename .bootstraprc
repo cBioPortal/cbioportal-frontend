@@ -20,7 +20,4 @@
   "scripts":true,
   "preBootstrapCustomizations": "./src/globalStyles/bootstrap-customizations.scss"
 
-
-
-
 }
