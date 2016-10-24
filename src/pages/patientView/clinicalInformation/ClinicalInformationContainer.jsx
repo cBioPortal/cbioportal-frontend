@@ -9,25 +9,13 @@ import { connect } from 'react-redux';
 import ClinicalInformationSamples from './ClinicalInformationSamples';
 import PatientHeaderUnconnected from '../patientHeader/PatientHeader';
 
-import './style/local-styles.scss';
+import styles from './style/local.module.scss';
 
 
 export class ClinicalInformationContainerUnconnected extends React.Component {
 
     componentDidMount(ar1, ar2) {
         this.props.loadClinicalInformationTableData();
-    }
-
-    buildButtonGroups() {
-        return (
-
-            <ButtonGroup>
-                <Button>Copy</Button>
-                <Button>CSV</Button>
-                <Button>Show/Hide Columns</Button>
-            </ButtonGroup>
-
-        );
     }
 
     selectTab(tabId) {
@@ -37,7 +25,7 @@ export class ClinicalInformationContainerUnconnected extends React.Component {
     buildTabs() {
         return (
             <div>
-                <h4>Samples</h4>
+                <h4 className={ styles.color }>Samples</h4>
 
                 <ClinicalInformationSamples data={this.props.samples} />
 
