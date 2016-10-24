@@ -1,6 +1,8 @@
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var WebpackFailPlugin = require('webpack-fail-plugin');
+var ProgressBarPlugin = require('progress-bar-webpack-plugin');
+var CopyWebpackPlugin = require('copy-webpack-plugin');
 
 var jsonFN = require('json-fn');
 
@@ -62,7 +64,16 @@ var config = {
     plugins: [
         new HtmlWebpackPlugin({cache: false, template: 'my-index.ejs'}),
         new webpack.optimize.DedupePlugin(),
-        WebpackFailPlugin
+        WebpackFailPlugin,
+        new ProgressBarPlugin(),
+        new webpack.DllReferencePlugin({
+            context: '.',
+            manifest: require('./common-dist/common-manifest.json')
+        }),
+        new CopyWebpackPlugin([
+            { from: './common-dist', to: 'reactapp/js' },
+            { from: './node_modules/bootstrap/dist/css/bootstrap.min.css', to: 'reactapp/css'}
+        ]) // destination is relative to dist directory
     ],
 
     'module': {
@@ -140,6 +151,7 @@ var config = {
         'contentBase': 'dist',
         'https': false,
         'hostname': 'localhost',
+        'stats':'errors-only'
     }
 
 
@@ -192,12 +204,11 @@ config.module.loaders.push(
             '!sass-resources'
         ]
     }
-
 );
 
 if (isDev || isTest) {
 
-    config.devtool = 'inline-source-map';
+    config.devtool = 'cheap-module-eval-source-map';
 
     // IN DEV WE WANT TO LOAD CSS AND SCSS BUT NOT USE EXTRACT TEXT PLUGIN
     // STYLES WILL BE IN JS BUNDLE AND APPENDED TO DOM IN <STYLE> TAGS
@@ -259,17 +270,13 @@ if (isDev || isTest) {
         })
     );
 
-
-
-
-
 }
 
 
 config.sassResources = './sass-resources.scss';
 
 
-config.entry.push('bootstrap-loader');
+//config.entry.push('bootstrap-loader');
 // END BOOTSTRAP LOADER
 
 config.entry.push('font-awesome-webpack');
