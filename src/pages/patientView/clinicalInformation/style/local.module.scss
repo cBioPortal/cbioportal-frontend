@@ -1,10 +1,16 @@
-#content h4 {
+h4 {
   margin-bottom:15px !important;
+
 
   &:nth-child(n+2) {
     margin-top:20px;
   }
 
+
+}
+
+.color {
+  color:$mutationColor;
 }
 
 
