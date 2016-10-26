@@ -33,7 +33,7 @@ npm run lint
 ```
 
 ## precommit hook
-There is a precommit hook installed that compiles the project before committing. This makes sure the compiled source is always up to data and allows for easy importing any branch/commit in parent cBioPortal project. The hook can be viewed in [package.json](package.json). You can skip it with 
+There is a precommit hook installed that lint checks the typescript in this project. The hook can be viewed in [package.json](package.json). You can skip it with 
 ```bash
 git commit -n
 ```
