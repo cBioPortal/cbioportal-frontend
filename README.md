@@ -10,6 +10,11 @@ To install all app and dev dependencies
 npm install
 ```
 
+To build DLLs in common-dist folder (must be done prior to start of dev server)
+```
+npm run buildDLL
+```
+
 To start dev server with hot reload enabled
 ```
 npm run start
