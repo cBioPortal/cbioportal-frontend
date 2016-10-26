@@ -11,8 +11,6 @@
     "test:watch": "npm run test -- --watch",
     "lint": "tslint $(find . -name '*.tsx')",
     "eslint": "eslint src/** --ext .js --ext .jsx --cache",
-    "storedist": "npm run build && git add -f dist",
-    "comparedist": "bash ./scripts/test_compare_dist_with_committed_dist.sh",
     "syncmock": "node src/test/fetchMockData.js --diff",
     "validate": "npm ls"
   },
@@ -96,7 +94,6 @@
     "eslint-plugin-jsx-a11y": "^2.2.0",
     "eslint-plugin-react": "^6.2.0",
     "expect": "^1.20.2",
-    "filecompare": "0.0.5",
     "istanbul-instrumenter-loader": "^0.2.0",
     "jasmine-core": "^2.4.1",
     "karma": "^1.1.1",
@@ -129,8 +126,6 @@
     "yargs": "^4.8.0"
   },
   "pre-commit": [
-    "lint",
-    "storedist",
-    "comparedist"
+    "lint"
   ]
 }
