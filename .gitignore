@@ -9,3 +9,5 @@ coverage/
 stats.json
 .DS_Store
 tsDist/
+dist/
+common-dist/
