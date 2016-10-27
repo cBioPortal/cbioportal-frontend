@@ -18,9 +18,10 @@ install:
   # install codecov.io
   - npm install codecov.io
 script:
-  - npm test
   # Run build
   - npm run build
+  # Run test
+  - npm test
   # check if mock data up to data, show warning
   - |
       npm run syncmock || { \
