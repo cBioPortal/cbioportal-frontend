@@ -3,7 +3,7 @@
   "version": "0.0.3",
   "description": "",
   "scripts": {
-    "start": "webpack-dev-server --content-base /pookie/ --define process.env.NODE_ENV='\"development\"' --inline --hot",
+    "start": "webpack-dev-server --define process.env.NODE_ENV='\"development\"' --inline --hot",
     "clean": "rimraf dist tsDist common-dist",
     "build": "npm run clean && npm run buildDLL && NODE_ENV=production webpack --define --progress --colors",
     "buildDLL": "npm run clean && NODE_ENV=production webpack --config vender-bundles.webpack.config.js",
