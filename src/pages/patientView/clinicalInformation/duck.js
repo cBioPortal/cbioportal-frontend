@@ -1,4 +1,4 @@
-import Immutable from 'immutable';
+import Immutable from 'seamless-immutable';
 import getClinicalInformationData from './getClinicalInformationData';
 
 // ACTION TYPE CONSTANTS
@@ -9,7 +9,7 @@ export const actionTypes = {
 
 };
 
-export const initialState = Immutable.fromJS({
+export const initialState = Immutable({
     status: 'fetching', activeTab: 1,
 });
 
@@ -29,11 +29,11 @@ export default function reducer(state = initialState, action = {}) {
 
                 case 'success':
 
-                    return state.withMutations((state) => {
-                        state.set('patient', Immutable.fromJS(action.payload.patient));
-                        state.set('nodes', Immutable.fromJS(action.payload.nodes));
-                        state.set('status', 'complete');
-                        state.set('samples', Immutable.List(action.payload.samples));
+                    return state.merge({
+                       patient: action.payload.patient,
+                        nodes: action.payload.nodes,
+                        status: 'complete',
+                        samples: action.payload.samples
                     });
 
                 case 'error':
@@ -93,10 +93,10 @@ export const actionCreators = {
 
 export const mapStateToProps = function mapStateToProps(state) {
     return {
-        samples: state.get('clinicalInformation').get('samples'),
-        status: state.get('clinicalInformation').get('status'),
-        activeTab: state.get('clinicalInformation').get('activeTab'),
-        patient: state.get('clinicalInformation').get('patient'),
-        nodes: state.get('clinicalInformation').get('nodes'),
+        samples: state.clinicalInformation.samples,
+        status: state.clinicalInformation.status,
+        activeTab: state.clinicalInformation.activeTab,
+        patient: state.clinicalInformation.patient,
+        nodes: state.clinicalInformation.nodes,
     };
 };
