@@ -1,4 +1,4 @@
-import Immutable from 'immutable';
+import Immutable from 'seamless-immutable';
 import {
     LOCATION_CHANGE,
     } from 'react-router-redux';
