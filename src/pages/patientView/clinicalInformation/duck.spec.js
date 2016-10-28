@@ -2,7 +2,7 @@ import React from 'react';
 import sinon from 'sinon';
 import { assert } from 'chai';
 import { shallow } from 'enzyme';
-import Immutable from 'immutable';
+import Immutable from 'seamless-immutable';
 import { default as reducer, actionTypes, actionCreators, __RewireAPI__ as RewireDuckAPI } from './duck';
 
 
@@ -50,9 +50,9 @@ describe('clinicalInformation duck', () => {
         
         it('handles fetching by setting status to fetching', ()=>{
            
-            const newState = reducer(Immutable.Map({}), { type:actionTypes.FETCH, meta: { status:'fetching' } })
+            const newState = reducer(Immutable({}), { type:actionTypes.FETCH, meta: { status:'fetching' } })
             
-            assert.equal(newState.get('status'),'fetching');
+            assert.equal(newState.status,'fetching');
 
         });
 

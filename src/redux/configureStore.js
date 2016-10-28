@@ -4,7 +4,7 @@ import { routerMiddleware, syncHistoryWithStore } from 'react-router-redux';
 import thunkMiddleware from 'redux-thunk';
 import { createStore, compose, applyMiddleware } from 'redux';
 import { rootReducer, actions, initialState } from './rootReducer';
-import Immutable from 'immutable';
+//import Immutable from 'immutable';
 
 export const configureStore = ({
         historyType = browserHistory,
@@ -22,16 +22,11 @@ export const configureStore = ({
             tools.push(devTools({
 
                 deserializeState: (state) => {
-                    return Immutable.fromJS(state);
+                    return state;
                 },
 
                 deserializeAction: (action) => {
-                    if (action.noteObj) {
-                        action.noteObj = Immutable.fromJS(action.noteObj);
-                        return action;
-                    } else {
-                        return action;
-                    }
+                    return action;
                 },
 
             }));
@@ -52,7 +47,7 @@ export const configureStore = ({
     const history = syncHistoryWithStore(historyType, store, {
         adjustUrlOnReplay: true,
         selectLocationState(state) {
-            return state.get('customRoutingReducer').toJS();
+            return state.routing;
         },
     });
 
