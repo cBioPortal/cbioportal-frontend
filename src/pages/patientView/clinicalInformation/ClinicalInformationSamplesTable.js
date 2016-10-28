@@ -1,6 +1,5 @@
 import React, { PropTypes as T } from 'react';
 import { Table } from 'react-bootstrap';
-import Immutable from 'immutable';
 import { SampleLabelHTML } from '../SampleLabel';
 import convertSamplesData from './lib/convertSamplesData';
 
