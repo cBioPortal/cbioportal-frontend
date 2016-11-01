@@ -1,5 +1,5 @@
 /* Functions related to Object manipulation */
-import { reduce } from 'underscore';
+import { reduce } from 'lodash';
 
 /*
  * Rename keys in flat dictionary. Keep old keys if not in keyMap.

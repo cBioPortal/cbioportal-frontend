@@ -1,5 +1,3 @@
-import {List} from 'immutable';
-import * as Immutable from 'immutable';
 import * as React from 'react';
 import {OverlayTrigger, Popover} from 'react-bootstrap';
 import Spinner from 'react-spinkit';
@@ -12,7 +10,7 @@ type TODO = any;
 type Sample = {clinicalData: TODO};
 
 export interface IPatientHeaderProps {
-    samples: List<Sample>;
+    samples: Array<TODO>;
     status: 'fetching'|'complete'|'error';
     patient: TODO;
 }
@@ -37,7 +35,7 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
     private getPopover(sample: Sample, sampleNumber: number) {
         return (
             <Popover key={sampleNumber} id={'popover-sample-' + sampleNumber}>
-                <TooltipTable data={Immutable.fromJS(sample.clinicalData)} />
+                <TooltipTable data={sample.clinicalData} />
             </Popover>
         );
     }
@@ -59,7 +57,7 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
     }
 
     private drawHeader() {
-        if (this.props.samples && this.props.samples.size > 0) {
+        if (this.props.samples && this.props.samples.length > 0) {
             return (
                 <div>
                     {this.props.samples.map((sample:Sample, sampleNumber: number) => this.getOverlayTrigger)}

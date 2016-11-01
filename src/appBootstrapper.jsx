@@ -4,9 +4,10 @@ import App from 'appShell/App/App';
 import { hashHistory, createMemoryHistory } from 'react-router';
 import { configureStore } from './redux/configureStore';
 import makeRoutes from './routes';
+import lodash from 'lodash';
 
-// we import these modules not to use them but to include them in the main app bundle
-import EnhancedFixedDataTable from 'shared/components/enhancedFixedDataTable/EnhancedFixedDataTable';
+// make sure lodash doesn't overwrite (or set) global underscore
+lodash.noConflict();
 
 const defaultRoute = window.defaultRoute || "/home";
 

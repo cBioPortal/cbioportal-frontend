@@ -1,5 +1,3 @@
-import * as Immutable from 'immutable';
-import OrderedMap = Immutable.OrderedMap;
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { connect } from 'react-redux';
@@ -15,12 +13,12 @@ interface IPatientViewPageProps {
 }
 
 export default class PatientViewPage extends React.Component<IPatientViewPageProps, {}> {
-    private static mapStateToProps(state: OrderedMap<string, any>): IPatientHeaderProps {
-        let ci = state.get('clinicalInformation');
+    private static mapStateToProps(state: any): IPatientHeaderProps {
+        let ci = state.clinicalInformation;
         return {
-            patient: ci.get('patient'),
-            samples: ci.get('samples'),
-            status: ci.get('status'),
+            patient: ci.patient,
+            samples: ci.samples,
+            status: ci.status,
         };
     }
 
