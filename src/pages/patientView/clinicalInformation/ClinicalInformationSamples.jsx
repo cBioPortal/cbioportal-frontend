@@ -1,7 +1,5 @@
 import React, { PropTypes as T } from 'react';
 
-import Immutable from 'immutable';
-
 import {Table, Column, Cell} from 'fixed-data-table';
 
 import EnhancedFixedDataTable from 'shared/components/enhancedFixedDataTable/EnhancedFixedDataTable';
@@ -25,7 +23,7 @@ export class ClinicalInformationSamplesTable extends React.Component {
     }
 
     render() {
-        const data = covertSampleData(this.props.data.toArray());
+        const data = covertSampleData(this.props.data);
 
         const cells = [];
 

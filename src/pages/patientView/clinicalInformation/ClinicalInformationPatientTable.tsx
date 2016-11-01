@@ -1,22 +1,22 @@
-import {List} from 'immutable';
+import * as _ from 'lodash';
 import * as React from 'react';
 import { Table } from 'react-bootstrap';
 
 type TODO = any;
 
 export interface IClinicalInformationPatientTableProps {
-    data: List<TODO>;
+    data: SeamlessImmutable.ImmutableArray<TODO>;
 }
 
 class ClinicalInformationPatientTable extends React.Component<IClinicalInformationPatientTableProps, {}> {
     public render() {
         const rows: JSX.Element[] = [];
 
-        this.props.data.forEach((item) => {
+        _.each(this.props.data, (item: TODO) => {
             rows.push(
-                <tr key={item.get('id')}>
-                    <td>{item.get('id')}</td>
-                    <td>{item.get('value')}</td>
+                <tr key={item.id}>
+                    <td>{item.id}</td>
+                    <td>{item.value}</td>
                 </tr>
             );
         });

@@ -1,9 +1,9 @@
 // import { combineReducers } from 'redux';
-import { routerReducer as push } from 'react-router-redux';
-import { combineReducers } from 'redux-immutable';
-import Immutable from 'immutable';
+import { routerReducer } from 'redux-seamless-immutable';
+import { combineReducers } from 'redux-seamless-immutable';
+import Immutable from 'seamless-immutable';
 import clinicalInformation from 'pages/patientView/clinicalInformation/duck';
-import customRoutingReducer from './customRouterReducer';
+//import customRoutingReducer from './customRouterReducer';
 
 // Require your modules here
 const modules = {
@@ -16,20 +16,11 @@ export const actions = {
     },
 };
 
-export const initialState = Immutable.Map({});
-
-export const reducers = { customRoutingReducer };
+export const reducers = { routing: routerReducer };
 
 
 Object.keys(modules).forEach(key => {
     const reducer = modules[key];
-    // initialState[key] = module.initialState || Immutable.Map({});
-
-    // if (module.initialstate) {
-    //     initialState = initialState.set(key, module.initialState || Immutable.Map({}));
-    // }
-
-    // actions[key] = module.actions;
     reducers[key] = reducer;
 });
 

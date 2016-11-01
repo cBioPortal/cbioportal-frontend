@@ -4,13 +4,9 @@ import ClinicalInformationPatientTable from './ClinicalInformationPatientTable';
 import PDXTree from './PDXTree';
 import Spinner from 'react-spinkit';
 import { actionCreators, mapStateToProps } from './duck';
-import PurifyComponent from 'shared/components/PurifyComponent';
 import { connect } from 'react-redux';
 import ClinicalInformationSamples from './ClinicalInformationSamples';
 import PatientHeaderUnconnected from '../patientHeader/PatientHeader';
-
-import styles from './style/local.module.scss';
-
 
 export class ClinicalInformationContainerUnconnected extends React.Component {
 
@@ -25,12 +21,12 @@ export class ClinicalInformationContainerUnconnected extends React.Component {
     buildTabs() {
         return (
             <div>
-                <h4 className={ styles.color }>Samples</h4>
+                <h4>Samples</h4>
 
                 <ClinicalInformationSamples data={this.props.samples} />
 
                 <h4>Patient</h4>
-                <ClinicalInformationPatientTable data={this.props.patient.get('clinicalData')} />
+                <ClinicalInformationPatientTable data={this.props.patient.clinicalData} />
             </div>
         );
     }
