@@ -8,7 +8,7 @@ let config = {
     entry: {
         // create two library bundles, one with jQuery and
         // another with Angular and related libraries
-        common: ['jquery', 'react', 'react-dom', 'react-redux', 'react-bootstrap', 'immutable']
+        common: ['jquery', 'react', 'react-dom', 'react-redux', 'react-bootstrap', 'seamless-immutable', 'lodash']
     },
 
     output: {
