@@ -4,9 +4,12 @@ var WebpackFailPlugin = require('webpack-fail-plugin');
 var ProgressBarPlugin = require('progress-bar-webpack-plugin');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
 
+const NODE_ENV = process.env.NODE_ENV || 'development';
+
+
 var jsonFN = require('json-fn');
 
-const NODE_ENV = process.env.NODE_ENV || 'development';
+
 const dotenv = require('dotenv');
 
 const webpack = require('webpack');
@@ -208,7 +211,7 @@ config.module.loaders.push(
 
 if (isDev || isTest) {
 
-    config.devtool = 'cheap-module-eval-source-map';
+    config.devtool = 'source-map';
 
     // IN DEV WE WANT TO LOAD CSS AND SCSS BUT NOT USE EXTRACT TEXT PLUGIN
     // STYLES WILL BE IN JS BUNDLE AND APPENDED TO DOM IN <STYLE> TAGS

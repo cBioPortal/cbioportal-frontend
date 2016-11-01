@@ -1,7 +1,6 @@
 import React from 'react';
 import { assert } from 'chai';
 import { shallow, mount } from 'enzyme';
-import Immutable from 'immutable';
 import sinon from 'sinon';
 import { default as reducer, actionTypes } from './duck';
 import { ClinicalInformationContainerUnconnected } from './ClinicalInformationContainer';
