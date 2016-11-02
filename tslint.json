@@ -16,7 +16,7 @@
         "no-duplicate-variable": true,
         "no-eval": true,
         "no-internal-module": true,
-        "no-trailing-whitespace": true,
+        "no-trailing-whitespace": false,
         "no-unsafe-finally": true,
         "no-var-keyword": true,
         "one-line": [
@@ -50,6 +50,7 @@
             true,
             "ban-keywords"
         ],
+        "max-line-length": [false],
         "whitespace": [
             true,
             "check-branch",

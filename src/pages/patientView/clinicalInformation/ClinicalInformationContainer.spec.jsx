@@ -7,7 +7,7 @@ import { ClinicalInformationContainerUnconnected } from './ClinicalInformationCo
 import Spinner from 'react-spinkit';
 import ClinicalInformationPatientTable from './ClinicalInformationPatientTable';
 import PDXTree from './PDXTree';
-import FixedDataTableExample from './ClinicalInformationSamples';
+import FixedDataTableExample from './ClinicalInformationSamplesTable';
 
 const stubComponent = function (componentClass) {
     let originalPropTypes;
