@@ -1,16 +1,38 @@
 import * as React from 'react';
+import CBioPortalAPI from "../../shared/api/CBioPortalAPI";
+import {CancerStudy} from "../../shared/api/CBioPortalAPI";
 
-interface IHomePageProps {
+interface IHomePageProps
+{
 }
 
-interface IHomePageState {
+interface IHomePageState
+{
+    data?:CancerStudy[];
 }
 
-export default class HomePage extends React.Component<IHomePageProps, IHomePageState> {
+export default class HomePage extends React.Component<IHomePageProps, IHomePageState>
+{
+    constructor(props:IHomePageProps)
+    {
+        super(props);
+        this.state = {};
+    }
+
+    client = new CBioPortalAPI(`//${(window as any)['__API_ROOT__']}`);
+
+    componentDidMount()
+    {
+        this.client.getAllStudiesUsingGET({
+            projection: "DETAILED"
+        }).then(data => {
+            this.setState({data});
+        });
+    }
+
     public render() {
-        let x = 3;
-        x += 4;
-        x += 4;
-        return <div>Hello TypeScript1</div>;
+        return <pre>
+            { JSON.stringify(this.state.data, null, 4) }
+        </pre>;
     }
 };
