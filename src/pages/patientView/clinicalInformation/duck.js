@@ -13,7 +13,6 @@ export const initialState = Immutable({
     status: 'fetching', activeTab: 1,
 });
 
-
 // Reducer
 export default function reducer(state = initialState, action = {}) {
     switch (action.type) {
@@ -60,6 +59,7 @@ export default function reducer(state = initialState, action = {}) {
 export function loadClinicalInformationTableData() {
     // this is a thunk
     return (dispatch) => {
+
         getClinicalInformationData().then(
             (data) => {
                 dispatch({
@@ -77,17 +77,9 @@ export function loadClinicalInformationTableData() {
     };
 }
 
-export function setTab(tabId) {
-    return {
-        type: actionTypes.SET_TAB,
-        payload: tabId,
-    };
-}
-
 export const actionCreators = {
 
     loadClinicalInformationTableData,
-    setTab,
 
 };
 
@@ -95,7 +87,6 @@ export const mapStateToProps = function mapStateToProps(state) {
     return {
         samples: state.clinicalInformation.samples,
         status: state.clinicalInformation.status,
-        activeTab: state.clinicalInformation.activeTab,
         patient: state.clinicalInformation.patient,
         nodes: state.clinicalInformation.nodes,
     };
