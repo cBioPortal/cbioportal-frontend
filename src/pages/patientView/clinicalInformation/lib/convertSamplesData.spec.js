@@ -1,16 +1,19 @@
-import { mockData } from './mockData';
+import exampleState from './../mock/exampleState';
 import convertSampleData from './convertSamplesData';
 import { assert } from 'chai';
 import { size } from 'lodash';
 
 describe('', () => {
     it('api data is properly transformed into table data', () => {
-        const result = convertSampleData(mockData.samples);
+        const result = convertSampleData(exampleState.samples);
 
-        assert.isTrue('OCT_EMBEDDED' in result.items);
-        assert.equal(_.size(result.items), 4);
-        assert.equal(result.items.DAYS_TO_COLLECTION['TCGA-P6-A5OH-01'], 276);
-        assert.equal(result.items.DAYS_TO_COLLECTION['TCGA-OR-A5LI-01'], 312);
+        assert.isTrue('CANCER_TYPE' in result.items);
+        // 8 clinical attributes
+        assert.equal(size(result.items), 8);
+        // 4 samples, clinicalAttribute meta data and row id
+        assert.equal(size(result.items.SAMPLE_TYPE), 6);
+        assert.equal(result.items.SAMPLE_TYPE['P04_Pri'], 'Primary');
+        assert.equal(result.items.SAMPLE_TYPE['P04_Rec1'], 'Recurrence');
     });
 });
 

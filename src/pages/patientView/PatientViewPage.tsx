@@ -25,10 +25,15 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     public componentDidMount() {
         const PatientHeader: TODO = connect(PatientViewPage.mapStateToProps)(PatientHeaderUnconnected as TODO);
 
-        ReactDOM.render(
-            <PatientHeader store={this.props.store} />,
-            document.getElementById('clinical_div') as Element
-        );
+        // Don't try to render clinical_div_prototype in parent cbioportal
+        // project context
+        let clinicalDiv: Element | null = document.getElementById('clinical_div_prototype');
+        if (clinicalDiv) {
+            ReactDOM.render(
+                <PatientHeader store={this.props.store} />,
+                clinicalDiv
+            );
+        }
     }
 
     public render() {
