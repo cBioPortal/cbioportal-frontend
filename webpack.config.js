@@ -43,6 +43,7 @@ var config = {
 
     'entry': [
         `${path.join(src, 'appBootstrapper.jsx')}`,
+        `babel-polyfill`
     ],
     'output': {
         path: './dist/',
