@@ -1,7 +1,7 @@
 [
     {
         "url": "studies/lgg_ucsf_2014/patients/P04/clinical-data?projection=DETAILED&pageSize=1000&pageNumber=0&direction=ASC",
-        "file": "src/pages/patientView/clinicalInformation/mock/clinicalDataPatient.json",
+        "file": "src/shared/api/mock/ClinicalDataPatient.json",
         "implemented": "true"
     },
     {
@@ -24,7 +24,12 @@
                  "studyId": "lgg_ucsf_2014"
              }
         ],
-        "file": "src/pages/patientView/clinicalInformation/mock/clinicalDataSamples.json",
+        "file": "src/shared/api/mock/ClinicalDataSample.json",
+        "implemented": "true"
+    },
+    {
+        "url": "studies/lgg_ucsf_2014/patients/P04/samples",
+        "file": "src/shared/api/mock/Samples_query_patient_P04.json",
         "implemented": "true"
     }
 ]

@@ -18,6 +18,7 @@ install:
   # install codecov.io
   - npm install codecov.io
 script:
+  - echo 'API_ROOT=http://cbioportal-rc.herokuapp.com/api' > .env
   # Run build
   - npm run build
   # Run test

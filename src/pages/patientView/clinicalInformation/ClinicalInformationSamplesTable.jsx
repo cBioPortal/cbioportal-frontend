@@ -1,4 +1,4 @@
-import React, { PropTypes as T } from 'react';
+import React from 'react';
 import { Table } from 'react-bootstrap';
 import { SampleLabelHTML } from '../SampleLabel';
 import convertSamplesData from './lib/convertSamplesData';
@@ -16,7 +16,7 @@ export class ClinicalInformationSamplesTable extends React.Component {
 
 
     render() {
-        const data = convertSamplesData(this.props.data.toArray());
+        const data = convertSamplesData(this.props.data);
 
         const headerCells = data.columns.map((col, i) => {
             return (<th style={{ whiteSpace: 'nowrap' }} key={i}>
@@ -31,7 +31,7 @@ export class ClinicalInformationSamplesTable extends React.Component {
             const row = data.items[key];
             rows.push(
                 <tr key={key}>
-                    <td key={-1}>{row.id}</td>
+                    <td key={-1}>{row.clinicalAttribute.displayName}</td>
                     {
                         data.columns.map((col, i) => {
                             if (col.id in row) {
@@ -47,9 +47,10 @@ export class ClinicalInformationSamplesTable extends React.Component {
         });
 
         return (
-            <Table striped>
+            // undo global css styles from cbioportal
+            <Table striped style={{borderCollapse: 'unset', borderSpacing: '0px'}}>
                 <thead><tr>
-                    <th key={-1} />
+                    <th key={-1}>Attribute</th>
                     { headerCells }
                 </tr></thead>
                 <tbody>{ rows }</tbody>
@@ -59,8 +60,3 @@ export class ClinicalInformationSamplesTable extends React.Component {
 }
 
 export default ClinicalInformationSamplesTable;
-
-
-// ClinicalInformationSamplesTable.propTypes = {
-//     data: T.any.isRequired,
-// };
