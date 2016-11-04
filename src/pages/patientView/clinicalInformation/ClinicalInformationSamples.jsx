@@ -32,9 +32,9 @@ export class ClinicalInformationSamplesTable extends React.Component {
 
             data.columns.forEach((col) => {
                 if (col.id in item) {
-                    cells.push({ attr_name: key, attr_id: col.id, attr_val: item[col.id] });
+                    cells.push({ attr_name: item.clinicalAttribute.displayName, attr_id: col.id, attr_val: item[col.id] });
                 } else {
-                    cells.push({ attr_name: key, attr_id: col.id, attr_val: 'N/A' });
+                    cells.push({ attr_name: item.clinicalAttribute.displayName, attr_id: col.id, attr_val: 'N/A' });
                 }
             });
         });
