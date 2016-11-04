@@ -501,7 +501,6 @@ var EnhancedFixedDataTable = (function () {
         displayName: "TableMainPart",
         // Creates Qtip
         createQtip: function () {
-            console.log("RESTORE qtip !!!!!!!")
             return;
             /*
             $('.EFDT-table .hasQtip').one('mouseenter', function () {
