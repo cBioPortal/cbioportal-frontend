@@ -4,22 +4,23 @@ import { Button, ButtonGroup } from 'react-bootstrap';
 import { Table } from 'react-bootstrap';
 import ReactZeroClipboard from 'react-zeroclipboard';
 import fileDownload from 'react-file-download';
+import {ClinicalData} from "../../../shared/api/CBioPortalAPI";
 
 type TODO = any;
 
 export interface IClinicalInformationPatientTableProps {
-    data: SeamlessImmutable.ImmutableArray<TODO>;
+    data: Array<ClinicalData>;
 }
 
-let serializeTableData = function(tableData) {
+let serializeTableData = function(tableData: Array<ClinicalData>) {
 
-    let content = [];
+    let content: Array<string> = [];
     let delim = ',';
 
     content.push('Attribute', delim, 'Value');
 
-    tableData.forEach(item => {
-        content.push('\r\n', (item.clinicalAttribute.displayName || 'Unknown'), delim, item.value );
+    tableData.forEach((item: ClinicalData) => {
+        content.push('\r\n', (item.clinicalAttribute.displayName || 'Unknown'), delim, item.attrValue );
     });
 
     return content.join('');
@@ -37,9 +38,6 @@ class ClinicalInformationPatientTable extends React.Component<IClinicalInformati
 
     public render() {
         const rows: JSX.Element[] = [];
-
-
-        serializeTableData(this.props.data);
 
         _.each(this.props.data, (item: TODO) => {
             rows.push(
