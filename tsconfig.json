@@ -12,6 +12,7 @@
     },
     "include": [
         "./typings/index.d.ts",
+        "./typings/missing.d.ts",
         "./src/**/*"
     ],
     "compileOnSave": false
