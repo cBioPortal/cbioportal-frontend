@@ -13,7 +13,9 @@ interface IPatientViewPageProps {
 }
 
 export default class PatientViewPage extends React.Component<IPatientViewPageProps, {}> {
+
     private static mapStateToProps(state: any): IPatientHeaderProps {
+
         let ci = state.clinicalInformation;
         return {
             patient: ci.patient,

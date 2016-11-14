@@ -1,5 +1,6 @@
 {
   "globalDependencies": {
+    "mocha": "registry:dt/mocha#2.2.5+20161028141524",
     "react": "registry:dt/react#0.14.0+20160927082313",
     "react-bootstrap": "registry:dt/react-bootstrap#0.0.0+20160806072414",
     "react-dom": "registry:dt/react-dom#0.14.0+20160412154040",
@@ -10,6 +11,7 @@
     "underscore": "registry:dt/underscore#1.8.3+20160908111004"
   },
   "dependencies": {
+    "chai": "registry:npm/chai#3.5.0+20160723033700",
     "lodash": "registry:npm/lodash#4.0.0+20161015015725"
   }
 }

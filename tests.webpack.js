@@ -6,5 +6,5 @@ var chaiEnzyme = require('chai-enzyme');
 
 chai.use(chaiEnzyme());
 
-var context = require.context('./src', true, /\.spec\.jsx*$/);
+var context = require.context('./src', true, /\.spec\.(jsx*|tsx*)$/);
 context.keys().forEach(context);
