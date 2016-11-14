@@ -24,6 +24,8 @@ module.exports = function (config) {
             'tests.webpack.js': ['webpack', 'sourcemap'],
         },
 
+        pattern:".spec.",
+
         webpack: webpackConfig,
         webpackServer: {
             noInfo: true
@@ -35,11 +37,10 @@ module.exports = function (config) {
             'karma-webpack',
             'karma-phantomjs-launcher',
             'karma-spec-reporter',
-            'karma-sourcemap-loader',
-            'karma-coverage'
+            'karma-sourcemap-loader'
         ],
 
-        reporters: ['coverage', 'spec'],
+        reporters: ['spec'],
         port: 9876,
         colors: true,
         logLevel: config.LOG_INFO,

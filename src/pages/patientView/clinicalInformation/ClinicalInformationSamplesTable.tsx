@@ -1,8 +1,9 @@
 import * as React from 'react';
-import { Table } from 'react-bootstrap';
-import { SampleLabelHTML } from '../SampleLabel';
+import { ClinicalDataBySampleId } from "./getClinicalInformationData";
 import convertSamplesData from './lib/convertSamplesData';
-import {ClinicalDataBySampleId} from "./getClinicalInformationData";
+import { SampleLabelHTML } from '../SampleLabel';
+import { Table as DataTable, Tr, Td, Thead, Th } from 'reactableMSK';
+import TableExportButtons from '../../../shared/components/tableExportButtons/TableExportButtons';
 
 interface IClinicalInformationSamplesTableProps {
     samples: Array<ClinicalDataBySampleId>;
@@ -12,48 +13,69 @@ type TODO = any;
 
 export class ClinicalInformationSamplesTable extends React.Component<IClinicalInformationSamplesTableProps, any> {
 
-    render() {
+    public render() {
 
-        const sampleTableData = convertSamplesData(this.props.samples);
+        const sampleInvertedData: TODO = convertSamplesData(this.props.samples);
 
-        const headerCells = sampleTableData.columns.map((col: TODO, i: number) => {
-            return (<th style={{ whiteSpace: 'nowrap' }} key={i}>
-                       <SampleLabelHTML color={'black'} label={(i + 1).toString()} />
-                       {' ' + col.id}
-                   </th>);
-        });
+        const tableData = this.prepareData(sampleInvertedData);
 
-        const rows: Array<JSX.Element> = [];
-
-        Object.keys(sampleTableData.items).forEach((key: string) => {
-            const rowData: TODO = sampleTableData.items[key];
-            rows.push(
-                <tr key={key}>
-                    <td key={-1}>{rowData.clinicalAttribute.displayName}</td>
-                    {
-                        sampleTableData.columns.map((col: TODO, i: number) => {
-                            if (col.id in rowData) {
-                                return <td key={i}>{rowData[col.id]}</td>;
-                            } else {
-                                return <td key={i}>N/A</td>;
-                            }
-                        })
-                    }
-                </tr>
-            );
-        });
+        const headerCells = this.buildHeaderCells(sampleInvertedData);
 
         return (
-            // undo global css styles from cbioportal
-            <Table striped style={{borderCollapse: 'unset', borderSpacing: '0px'}}>
-                <thead><tr>
-                    <th key={-1}>Attribute</th>
-                    { headerCells }
-                </tr></thead>
-                <tbody>{ rows }</tbody>
-            </Table>
+            <div>
+                <div>
+                    <h4 className="pull-left">Samples</h4>
+                    <TableExportButtons className="pull-right" tableData={tableData} />
+                </div>
+                <DataTable className="table table-striped" data={tableData} >
+                    <Thead>{ headerCells }</Thead>
+                </DataTable>
+            </div>
         );
     }
+
+    public buildHeaderCells(sampleInvertedData: TODO){
+
+        const headerCells: Array<JSX.Element> = sampleInvertedData.columns.map((col: TODO, i: number) => {
+            return (<Th column={col.id} key={i}>
+                <SampleLabelHTML color={'black'} label={(i + 1).toString()} />
+                {' ' + col.id}
+            </Th>);
+        });
+
+        // add the row title at beg of array
+        headerCells.unshift(<Th key={-1} column="attribute">Attribute</Th>);
+
+        return headerCells;
+
+    }
+
+    public prepareData(sampleInvertedData: TODO){
+
+        const tableData: Array<any> = [];
+
+        Object.keys(sampleInvertedData.items).forEach((key: string) => {
+            const rowData: TODO = sampleInvertedData.items[key];
+
+            const row: any = {};
+            row.attribute = rowData.clinicalAttribute.displayName;
+
+            sampleInvertedData.columns.map((col: TODO, i: number) => {
+                if (col.id in rowData) {
+                    row[col.id] = rowData[col.id];
+                } else {
+                    row[col.id] = 'n/a';
+                }
+            });
+
+            tableData.push(row);
+
+        });
+
+        return tableData;
+
+    }
+
 }
 
 export default ClinicalInformationSamplesTable;
