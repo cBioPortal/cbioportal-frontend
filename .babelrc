@@ -12,17 +12,6 @@
       "compact": false,
       "plugins": [
 
-
-
-        [
-          "istanbul", {
-
-          "exclude": [
-            "**/*.spec.js"
-          ]
-        }
-        ],
-
         ["rewire",{
           "exclude": [
             "**/*.spec.js"
