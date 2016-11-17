@@ -1,11 +1,10 @@
-import * as React from 'react';
+import { ClinicalDataBySampleId } from './getClinicalInformationData';
 import ClinicalInformationPatientTable from './ClinicalInformationPatientTable';
+import ClinicalInformationSamples from './ClinicalInformationSamplesTable';
+import * as React from 'react';
 import Spinner from 'react-spinkit';
 import { actionCreators, mapStateToProps } from './duck';
 import { connect } from 'react-redux';
-import ClinicalInformationSamples from './ClinicalInformationSamplesTable';
-import PatientHeaderUnconnected from '../patientHeader/PatientHeader';
-import {ClinicalDataBySampleId} from "./getClinicalInformationData";
 
 type TODO = any;
 
@@ -20,27 +19,23 @@ interface IClinicalInformationContainerProps {
 
 export class ClinicalInformationContainerUnconnected extends React.Component<IClinicalInformationContainerProps, {}> {
 
-    componentDidMount() {
+    private componentDidMount() {
         this.props.loadClinicalInformationTableData();
     }
 
-    buildTabs() {
+    private buildTabs() {
         return (
             <div>
-                <h3 style={{ color: 'black' }}>Patient</h3>
-                <p style={{ margin: '20px' }}>
-                    <ClinicalInformationPatientTable data={this.props.patient.clinicalData} />
-                </p>
 
-                <h3 style={{ color: 'black' }}>Samples</h3>
-                <p style={{ margin: '20px' }}>
-                    <ClinicalInformationSamples samples={this.props.samples} />
-                </p>
+                <ClinicalInformationPatientTable showTitleBar={true} data={this.props.patient.clinicalData} />
+
+                <ClinicalInformationSamples samples={this.props.samples} />
+
             </div>
         );
     }
 
-    render() {
+    public render() {
 
         switch (this.props.status) {
 

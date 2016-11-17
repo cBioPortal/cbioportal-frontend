@@ -2,8 +2,9 @@ import * as React from 'react';
 import {OverlayTrigger, Popover} from 'react-bootstrap';
 import Spinner from 'react-spinkit';
 
-import TooltipTable from '../clinicalInformation/ClinicalInformationPatientTable';
+import ClinicalInformationPatientTable from '../clinicalInformation/ClinicalInformationPatientTable';
 import SampleInline from './SampleInline';
+import {ClinicalDataBySampleId} from "../clinicalInformation/getClinicalInformationData";
 
 type TODO = any;
 
@@ -11,7 +12,7 @@ type Sample = {clinicalData: TODO};
 type Patient = {id: string, clinicalData: TODO};
 
 export interface IPatientHeaderProps {
-    samples: Array<TODO>;
+    samples: Array<ClinicalDataBySampleId>;
     status: 'fetching'|'complete'|'error';
     patient: TODO;
 }
@@ -36,7 +37,7 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
     private getPopoverSample(sample: Sample, sampleNumber: number) {
         return (
             <Popover key={sampleNumber} id={'popover-sample-' + sampleNumber}>
-                <TooltipTable data={sample.clinicalData} />
+                <ClinicalInformationPatientTable showTitleBar={false} data={sample.clinicalData} />
             </Popover>
         );
     }
@@ -44,7 +45,7 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
     private getPopoverPatient(patient: Patient) {
         return (
             <Popover key={patient.id} id={'popover-sample-' + patient.id}>
-                <TooltipTable data={patient.clinicalData} />
+                <ClinicalInformationPatientTable showTitleBar={false} data={patient.clinicalData} />
             </Popover>
         );
     }
