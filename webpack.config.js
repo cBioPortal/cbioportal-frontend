@@ -315,11 +315,15 @@ if (isTest) {
         const fnName = name.match(/^function (.*)\((.*\))/);
 
         const idx = [
+            'ExtractTextPlugin',
             'DedupePlugin',
             'UglifyJsPlugin'
         ].indexOf(fnName[1]);
         return idx < 0;
     });
+
+    config.devTool = 'cheap-module-eval-source-map';
+
 }
 // End Testing
 
