@@ -20,26 +20,8 @@ export interface ClinicalDataBySampleId {
 function transformClinicalInformationToStoreShape(patientId: string, studyId: string, clinicalDataPatient: Array<ClinicalData>, clinicalDataSample: Array<ClinicalData>) {
     const patient = {
         id: patientId,
-        clinicalData: clinicalDataPatient.map((x: ClinicalData) => ({ id: x.attrId, clinicalAttribute: x.clinicalAttribute, value: x.attrValue }))
+        clinicalData: clinicalDataPatient.map((x: ClinicalData) => ({ id: x.attrId, clinicalAttribute: x.clinicalAttribute, attrValue: x.attrValue }))
     };
-
-    // group them into dictionary of arrays by sampleid
-    // then map that dictionary to an array in which
-    // const samples = chain(clinicalDataSample)
-    //     .groupBy('id')
-    //     .map((v: Array<ClinicalDataSummary> , k: string) => ({
-    //         id: k,
-    //         clinicalData: v.map((x: TODO) => ({
-    //             id: x.attrId,
-    //             clinicalAttribute: x.clinicalAttribute,
-    //             value: x.attrValue
-    //         }))
-    //     }))
-    //     .value();
-
-
-
-
 
     const samples: Array<ClinicalDataBySampleId> = chain(clinicalDataSample)
         .groupBy('id')
@@ -49,8 +31,6 @@ function transformClinicalInformationToStoreShape(patientId: string, studyId: st
         }))
         .value();
 
-    // const sampleOrder = samples.map((x: TODO) => x.id).sort();
-    //
     // // create object with sample ids as keys and values are objects
     // // that have clinical attribute ids as keys (only PDX_PARENT is
     // // important for the PDX tree)
@@ -77,7 +57,7 @@ function transformClinicalInformationToStoreShape(patientId: string, studyId: st
     return rv;
 }
 
-var tsClient = new CBioPortalAPI(`//${(window as any)['__API_ROOT__']}`);
+const tsClient = new CBioPortalAPI(`//${(window as any)['__API_ROOT__']}`);
 
 
 export default function getClinicalInformationData() {
