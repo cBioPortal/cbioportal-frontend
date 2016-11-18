@@ -1,8 +1,4 @@
 import * as request from "superagent";
-import {
-    SuperAgentStatic
-}
-from "superagent";
 
 type CallbackHandler = (err: any, res ? : request.Response) => void;
 export type ClinicalData = {

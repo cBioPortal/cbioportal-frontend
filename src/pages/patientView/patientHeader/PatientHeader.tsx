@@ -4,18 +4,16 @@ import Spinner from 'react-spinkit';
 
 import ClinicalInformationPatientTable from '../clinicalInformation/ClinicalInformationPatientTable';
 import SampleInline from './SampleInline';
+import {ClinicalInformationData} from "../clinicalInformation/Connector";
 import {ClinicalDataBySampleId} from "../clinicalInformation/getClinicalInformationData";
 
-type TODO = any;
+let _ClinicalInformationData:ClinicalInformationData = null as any;
 
-type Sample = {clinicalData: TODO};
-type Patient = {id: string, clinicalData: TODO};
-
-export interface IPatientHeaderProps {
-    samples: Array<ClinicalDataBySampleId>;
-    status: 'fetching'|'complete'|'error';
-    patient: TODO;
-}
+export type IPatientHeaderProps = {
+    status?: typeof _ClinicalInformationData.status;
+    patient?: typeof _ClinicalInformationData.patient;
+    samples?: typeof _ClinicalInformationData.samples;
+};
 
 export default class PatientHeader extends React.Component<IPatientHeaderProps, {}> {
     public render() {
@@ -34,7 +32,7 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
         }
     }
 
-    private getPopoverSample(sample: Sample, sampleNumber: number) {
+    private getPopoverSample(sample: ClinicalDataBySampleId, sampleNumber: number) {
         return (
             <Popover key={sampleNumber} id={'popover-sample-' + sampleNumber}>
                 <ClinicalInformationPatientTable showTitleBar={false} data={sample.clinicalData} />
@@ -42,16 +40,16 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
         );
     }
 
-    private getPopoverPatient(patient: Patient) {
-        return (
+    private getPopoverPatient(patient: typeof _ClinicalInformationData.patient) {
+        return patient && (
             <Popover key={patient.id} id={'popover-sample-' + patient.id}>
                 <ClinicalInformationPatientTable showTitleBar={false} data={patient.clinicalData} />
             </Popover>
         );
     }
 
-    private getOverlayTriggerPatient(patient: Patient) {
-        return (
+    private getOverlayTriggerPatient(patient: typeof _ClinicalInformationData.patient) {
+        return patient && (
             <OverlayTrigger
                 delayHide={100}
                 key={patient.id}
@@ -66,7 +64,7 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
         );
     }
 
-    private getOverlayTriggerSample(sample: Sample, sampleNumber: number) {
+    private getOverlayTriggerSample(sample: ClinicalDataBySampleId, sampleNumber: number) {
         return (
             <OverlayTrigger
                 delayHide={100}
@@ -83,7 +81,7 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
     }
 
     private drawHeader() {
-        if (this.props.samples && this.props.samples.length > 0) {
+        if (this.props.patient && this.props.samples && this.props.samples.length > 0) {
             return (
                 <div>
                     {this.getOverlayTriggerPatient(this.props.patient)}<br />

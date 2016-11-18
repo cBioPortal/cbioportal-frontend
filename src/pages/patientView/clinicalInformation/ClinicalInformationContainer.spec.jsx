@@ -2,12 +2,13 @@ import React from 'react';
 import { assert } from 'chai';
 import { shallow, mount } from 'enzyme';
 import sinon from 'sinon';
-import { default as reducer, actionTypes } from './duck';
-import { ClinicalInformationContainerUnconnected } from './ClinicalInformationContainer';
+import ClinicalInformationContainer from './ClinicalInformationContainer';
 import Spinner from 'react-spinkit';
 import ClinicalInformationPatientTable from './ClinicalInformationPatientTable';
 import PDXTree from './PDXTree';
 import FixedDataTableExample from './ClinicalInformationSamplesTable';
+
+const ComponentUnderTest = ClinicalInformationContainer.WrappedComponent;
 
 const stubComponent = function (componentClass) {
     let originalPropTypes;
@@ -49,10 +50,8 @@ describe('ClinicalInformationContainerUnconnected', () => {
 
         stubComponent(ClinicalInformationPatientTable);
         stubComponent(PDXTree);
-        stubComponent(FixedDataTableExample);
 
-
-        comp = mount(<ClinicalInformationContainerUnconnected {...props} />);
+        comp = mount(<ComponentUnderTest {...props} />);
     });
 
     it('it calls data load routine on mounting', () => {
@@ -70,7 +69,7 @@ describe('ClinicalInformationContainerUnconnected', () => {
     });
 
     it('calls buildTabs when status is "complete" ', () => {
-        buildTabsStub = sinon.stub(ClinicalInformationContainerUnconnected.prototype, 'buildTabs');
+        buildTabsStub = sinon.stub(ComponentUnderTest.prototype, 'buildTabs');
 
         assert.isFalse(buildTabsStub.called);
 

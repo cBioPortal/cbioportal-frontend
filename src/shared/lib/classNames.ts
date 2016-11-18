@@ -6,7 +6,7 @@
 declare type ClassValue = string | number | ClassDictionary | ClassArray | undefined | null;
 
 interface ClassDictionary {
-	[id: string]: boolean;
+    [id: string]: boolean;
 }
 
 interface ClassArray extends Array<ClassValue> { }
@@ -18,24 +18,24 @@ interface ClassArray extends Array<ClassValue> { }
 */
 var hasOwn = {}.hasOwnProperty;
 export default function classNames (...args:ClassValue[]) {
-	var classes:any[] = [];
+    var classes:any[] = [];
 
-	for (var i = 0; i < args.length; i++) {
-		var arg = args[i];
-		if (!arg) continue;
+    for (var i = 0; i < args.length; i++) {
+        var arg = args[i];
+        if (!arg) continue;
 
-		if (typeof arg === 'string' || typeof arg === 'number') {
-			classes.push(arg);
-		} else if (Array.isArray(arg)) {
-			classes.push(classNames.apply(null, arg));
-		} else if (typeof arg === 'object') {
-			for (var key in arg) {
-				if (hasOwn.call(arg, key) && arg[key]) {
-					classes.push(key);
-				}
-			}
-		}
-	}
+        if (typeof arg === 'string' || typeof arg === 'number') {
+            classes.push(arg);
+        } else if (Array.isArray(arg)) {
+            classes.push(classNames.apply(null, arg));
+        } else if (typeof arg === 'object') {
+            for (var key in arg) {
+                if (hasOwn.call(arg, key) && arg[key]) {
+                    classes.push(key);
+                }
+            }
+        }
+    }
 
-	return classes.join(' ');
+    return classes.join(' ');
 }

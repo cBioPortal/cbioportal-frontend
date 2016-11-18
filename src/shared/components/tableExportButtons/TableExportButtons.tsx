@@ -5,11 +5,11 @@ import fileDownload from 'react-file-download';
 import * as _ from 'lodash';
 
 export interface ITableExportButtonsProps {
-    tableData: Array<any>;
-    className: string;
+    tableData?: Array<any>;
+    className?: string;
 }
 
-let serializeTableData = (tableData: Array<any>) => {
+function serializeTableData(tableData: Array<any>) {
 
     let content: Array<string> = [];
     let delim = '\t';
@@ -31,29 +31,29 @@ let serializeTableData = (tableData: Array<any>) => {
     });
 
     return content.join('');
+}
 
-};
-
-
-export default class ClinicalInformationPatientTable extends React.Component<ITableExportButtonsProps, {}> {
+export default class TableExportButtons extends React.Component<ITableExportButtonsProps, {}> {
 
     public render() {
         return (
 
             <ButtonGroup className={this.props.className || ''}>
-                <ReactZeroClipboard swfPath={require('react-zeroclipboard/assets/ZeroClipboard.swf')} getText={ serializeTableData.bind(this, this.props.tableData) }>
+                <ReactZeroClipboard swfPath={require('react-zeroclipboard/assets/ZeroClipboard.swf')} getText={ this.getText }>
                     <Button className="btn-sm">Copy</Button>
                 </ReactZeroClipboard>
 
-                <Button className="btn-sm" onClick={ this.downloadData.bind(this) }>Download CSV</Button>
+                <Button className="btn-sm" onClick={ this.downloadData }>Download CSV</Button>
             </ButtonGroup>
         );
     }
 
-    private downloadData() {
+    private getText = () => {
+        return serializeTableData(this.props.tableData || []);
+    };
 
-        fileDownload(serializeTableData(this.props.tableData), 'patient-clinical-attributes.csv');
-
-    }
+    private downloadData = () => {
+        fileDownload(serializeTableData(this.props.tableData || []), 'patient-clinical-attributes.csv');
+    };
 }
 
