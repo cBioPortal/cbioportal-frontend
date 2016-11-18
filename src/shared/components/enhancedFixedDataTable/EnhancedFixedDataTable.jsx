@@ -1,7 +1,6 @@
 import React from 'react';
 import FixedDataTable from 'fixed-data-table';
 import {Button, ButtonGroup} from 'react-bootstrap';
-import renderIf from 'render-if';
 import _ from 'underscore';
 import 'fixed-data-table/dist/fixed-data-table.min.css';
 
@@ -65,7 +64,7 @@ var EnhancedFixedDataTable = (function () {
     var DataGrabber = React.createClass({
         displayName: "DataGrabber",
         // Prepares table content data for download or copy button
-        prepareContent: function () {
+        prepareContent: () => {
             var content = [], cols = this.props.cols, rows = this.props.rows;
 
             _.each(cols, function (e) {
@@ -94,7 +93,7 @@ var EnhancedFixedDataTable = (function () {
             return (
 
                 <ButtonGroup>
-                    <FileGrabber content={this.prepareContent} donwloadFileName={this.props.downloadFileName}></FileGrabber>
+                    <FileGrabber content={this.prepareContent} downloadFileName={this.props.downloadFileName}></FileGrabber>
 
                     <ReactZeroClipboard
                         swfPath={require('react-zeroclipboard/assets/ZeroClipboard.swf')}
@@ -428,14 +427,18 @@ var EnhancedFixedDataTable = (function () {
                     </div>
 
 
-                    {renderIf(this.props.filter === "ALL" || this.props.filter === "GLOBAL")(
-                        <Filter type="STRING" name="all" className="EFDT-filter pull-right"
+                    {
+                        (this.props.filter === "ALL" || this.props.filter === "GLOBAL")
+                        ?   <Filter type="STRING" name="all" className="EFDT-filter pull-right"
                                 onFilterKeywordChange={this.props.onFilterKeywordChange}></Filter>
-                    )}
+                        :   null
+                    }
 
-                    {renderIf(this.props.resultInfo)(
-                        <div className={`${styles.resultInfo}`}>Showing {this.props.filteredRowsSize} results</div>
-                    )}
+                    {
+                        (this.props.resultInfo)
+                        ?   <div className={`${styles.resultInfo}`}>Showing {this.props.filteredRowsSize} results</div>
+                        :   null
+                    }
 
 
                 </div>
