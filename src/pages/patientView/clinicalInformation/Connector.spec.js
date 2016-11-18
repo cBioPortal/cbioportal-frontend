@@ -3,19 +3,15 @@ import sinon from 'sinon';
 import { assert } from 'chai';
 import { shallow } from 'enzyme';
 import Immutable from 'seamless-immutable';
-import { default as reducer, actionTypes, actionCreators, __RewireAPI__ as RewireDuckAPI } from './duck';
+import { actionTypes, default as Connector, __RewireAPI__ } from './Connector';
 
+describe('clinicalInformation connector', () => {
 
-describe('clinicalInformation duck', () => {
-
-    
-    describe('actionCreators',()=>{
+    describe('mapDispatchToProps',()=>{
 
         it('dispatches a load action with status equal to fetching',()=>{
 
-            //var prom = new Promise(()=>{});
-
-            RewireDuckAPI.__Rewire__('getClinicalInformationData',()=>{
+            __RewireAPI__.__Rewire__('getClinicalInformationData',()=>{
                 return new Promise((resolve)=>{
                    setTimeout(()=>resolve(),1);
                 });
@@ -23,12 +19,12 @@ describe('clinicalInformation duck', () => {
 
             const dispatchStub = sinon.stub();
 
-            actionCreators.loadClinicalInformationTableData()(dispatchStub);
+            Connector.mapDispatchToProps.loadClinicalInformationTableData()(dispatchStub);
             
-            assert.equal(dispatchStub.args[0][0].meta.status,"fetching");
+            assert.equal(dispatchStub.args[0][0].status, "fetching");
             assert.equal(dispatchStub.args[0][0].type, actionTypes.FETCH);
 
-            RewireDuckAPI.__ResetDependency__('getClinicalInformationData');
+            __RewireAPI__.__ResetDependency__('getClinicalInformationData');
 
         });
         
@@ -38,14 +34,12 @@ describe('clinicalInformation duck', () => {
         
         it('handles fetching by setting status to fetching', ()=>{
            
-            const newState = reducer(Immutable({}), { type:actionTypes.FETCH, meta: { status:'fetching' } })
+            const newState = Connector.reducer(Immutable({}), { type: actionTypes.FETCH, status: 'fetching' })
             
-            assert.equal(newState.status,'fetching');
+            assert.equal(newState.status, 'fetching');
 
         });
 
     });
     
-
-
 });
