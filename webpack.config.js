@@ -85,8 +85,8 @@ var config = {
             {
                 test: /\.tsx?$/,
                 loaders: [
-                	"babel-loader",
-                	"ts-loader"
+                    "babel-loader",
+                    "ts-loader"
                 ]
             },
             {

@@ -4,8 +4,8 @@ import { reduce } from 'lodash';
 /*
  * Rename keys in flat dictionary. Keep old keys if not in keyMap.
  */
-export function renameKeys(dict, keyMap) {
-    return reduce(dict, (newDict, val, oldKey) => {
+export function renameKeys(dict:any, keyMap:{[key:string]:string}) {
+    return reduce(dict, (newDict:any, val:any, oldKey:string) => {
         const newKey = keyMap[oldKey];
         if (newKey) {
             newDict[newKey] = val;
@@ -19,8 +19,8 @@ export function renameKeys(dict, keyMap) {
 /*
  * Return new dict w/o given keys (only works on flat dicts)
  */
-export function dropKeys(dict, keys) {
-    return reduce(dict, (newDict, val, key) => {
+export function dropKeys<T>(dict:T, keys:string[]):T {
+    return reduce(dict, (newDict:any, val:any, key:string) => {
         if (keys.indexOf(key) === -1) {
             newDict[key] = val;
         }

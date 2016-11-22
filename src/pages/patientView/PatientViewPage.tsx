@@ -5,11 +5,10 @@ import { connect } from 'react-redux';
 import ClinicalInformationContainer from './clinicalInformation/ClinicalInformationContainer';
 import PatientHeaderUnconnected from './patientHeader/PatientHeader';
 import {IPatientHeaderProps} from './patientHeader/PatientHeader';
-
-type TODO = any;
+import {RootState} from "../../redux/rootReducer";
 
 interface IPatientViewPageProps {
-    store?: TODO;
+    store?: RootState;
 }
 
 export default class PatientViewPage extends React.Component<IPatientViewPageProps, {}> {
@@ -25,14 +24,14 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     }
 
     public componentDidMount() {
-        const PatientHeader: TODO = connect(PatientViewPage.mapStateToProps)(PatientHeaderUnconnected as TODO);
+        const PatientHeader = connect(PatientViewPage.mapStateToProps)(PatientHeaderUnconnected);
 
         // Don't try to render clinical_div_prototype in parent cbioportal
         // project context
         let clinicalDiv: Element | null = document.getElementById('clinical_div_prototype');
         if (clinicalDiv) {
             ReactDOM.render(
-                <PatientHeader store={this.props.store} />,
+                <PatientHeader {...{store: this.props.store}} />,
                 clinicalDiv
             );
         }
