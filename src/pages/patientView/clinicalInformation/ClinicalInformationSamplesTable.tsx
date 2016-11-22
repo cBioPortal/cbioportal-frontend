@@ -1,26 +1,20 @@
-import * as React from 'react';
-import { ClinicalDataBySampleId } from "./getClinicalInformationData";
-import convertSamplesData from './lib/convertSamplesData';
-import { SampleLabelHTML } from '../SampleLabel';
-import { Table as DataTable, Tr, Td, Thead, Th } from 'reactableMSK';
-import TableExportButtons from '../../../shared/components/tableExportButtons/TableExportButtons';
+import * as React from "react";
+import {ClinicalDataBySampleId} from "./getClinicalInformationData";
+import convertSamplesData, {IConvertedSamplesData} from "./lib/convertSamplesData";
+import {SampleLabelHTML} from "../SampleLabel";
+import {Table as DataTable, Tr, Td, Thead, Th} from "reactableMSK";
+import TableExportButtons from "../../../shared/components/tableExportButtons/TableExportButtons";
 
 interface IClinicalInformationSamplesTableProps {
-    samples: Array<ClinicalDataBySampleId>;
+    samples?: Array<ClinicalDataBySampleId>;
 }
 
-type TODO = any;
-
-export class ClinicalInformationSamplesTable extends React.Component<IClinicalInformationSamplesTableProps, any> {
+export default class ClinicalInformationSamplesTable extends React.Component<IClinicalInformationSamplesTableProps, void> {
 
     public render() {
-
-        const sampleInvertedData: TODO = convertSamplesData(this.props.samples);
-
+        const sampleInvertedData = convertSamplesData(this.props.samples);
         const tableData = this.prepareData(sampleInvertedData);
-
         const headerCells = this.buildHeaderCells(sampleInvertedData);
-
         return (
             <div>
                 <div>
@@ -34,9 +28,9 @@ export class ClinicalInformationSamplesTable extends React.Component<IClinicalIn
         );
     }
 
-    public buildHeaderCells(sampleInvertedData: TODO){
+    public buildHeaderCells(sampleInvertedData: IConvertedSamplesData){
 
-        const headerCells: Array<JSX.Element> = sampleInvertedData.columns.map((col: TODO, i: number) => {
+        const headerCells: Array<JSX.Element> = sampleInvertedData.columns.map((col, i) => {
             return (<Th column={col.id} key={i}>
                 <SampleLabelHTML color={'black'} label={(i + 1).toString()} />
                 {' ' + col.id}
@@ -47,35 +41,28 @@ export class ClinicalInformationSamplesTable extends React.Component<IClinicalIn
         headerCells.unshift(<Th key={-1} column="attribute">Attribute</Th>);
 
         return headerCells;
-
     }
 
-    public prepareData(sampleInvertedData: TODO){
+    public prepareData(sampleInvertedData: IConvertedSamplesData){
 
         const tableData: Array<any> = [];
 
-        Object.keys(sampleInvertedData.items).forEach((key: string) => {
-            const rowData: TODO = sampleInvertedData.items[key];
+        for (let key in sampleInvertedData.items) {
+            const rowData = sampleInvertedData.items[key];
 
             const row: any = {};
             row.attribute = rowData.clinicalAttribute.displayName;
 
-            sampleInvertedData.columns.map((col: TODO, i: number) => {
-                if (col.id in rowData) {
+            sampleInvertedData.columns.map(col => {
+                if (col.id in rowData)
                     row[col.id] = rowData[col.id];
-                } else {
+                else
                     row[col.id] = 'n/a';
-                }
             });
 
             tableData.push(row);
-
-        });
+        }
 
         return tableData;
-
     }
-
 }
-
-export default ClinicalInformationSamplesTable;

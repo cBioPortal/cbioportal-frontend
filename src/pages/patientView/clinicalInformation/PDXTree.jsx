@@ -68,6 +68,12 @@ export default class PDXTree extends React.Component {
 //     data: React.PropTypes.any.isRequired,
 // };
 
+// export type PDXNode = {
+//     name: string,
+//     label: string,
+//     children?: PDXNode[],
+// };
+
 /*
  * Convert cBioPortal clinical data format and given sampleOrder (for labels)
  * to input format accepted by the PDXTree component.

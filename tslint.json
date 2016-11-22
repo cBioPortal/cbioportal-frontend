@@ -9,24 +9,29 @@
             true,
             "check-space"
         ],
+        "curly": false,
         "indent": [
             true,
             "spaces"
         ],
+        "jsx-no-multiline-js": false,
+        "member-access": false,
         "no-consecutive-blank-lines":false,
         "no-duplicate-variable": true,
         "no-eval": true,
         "no-internal-module": true,
+        "no-string-literal": false,
         "no-trailing-whitespace": false,
         "no-unsafe-finally": true,
         "no-var-keyword": true,
+        "only-arrow-functions": false,
         "one-line": [
             true,
             "check-open-brace",
             "check-whitespace"
         ],
         "quotemark": [
-            true,
+            false,
             "single"
         ],
         "semicolon": [
@@ -54,11 +59,13 @@
         "max-line-length": [false],
         "whitespace": [
             true,
-            "check-branch",
-            "check-decl",
-            "check-operator",
-            "check-separator",
-            "check-type"
+            {
+                "check-branch": true,
+                "check-decl": true,
+                "check-operator": true,
+                "check-separator": true,
+                "check-type": true
+            }
         ]
     }
 }

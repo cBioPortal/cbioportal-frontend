@@ -1,14 +1,12 @@
-import queryString from 'query-string';
-import { chain } from 'underscore';
+import queryString from "query-string";
+import {chain} from "underscore";
 import CBioPortalAPI from "shared/api/CBioPortalAPI";
-//import { getTreeNodesFromClinicalData } from './PDXTree';
 import {ClinicalData} from "../../../shared/api/CBioPortalAPI";
+import {ClinicalInformationData} from "./Connector";
+//import { getTreeNodesFromClinicalData, PDXNode } from './PDXTree';
 //import sampleQuery from 'shared/api/mock/Samples_query_patient_P04.json';
 
-
-type TODO = any;
-
-export interface ClinicalDataBySampleId {
+export type ClinicalDataBySampleId = {
     id: string;
     clinicalData: Array<ClinicalData>;
 };
@@ -17,17 +15,17 @@ export interface ClinicalDataBySampleId {
  * Transform clinical data from API to clinical data shape as it will be stored
  * in the store
  */
-function transformClinicalInformationToStoreShape(patientId: string, studyId: string, clinicalDataPatient: Array<ClinicalData>, clinicalDataSample: Array<ClinicalData>) {
+function transformClinicalInformationToStoreShape(patientId: string, studyId: string, clinicalDataPatient: Array<ClinicalData>, clinicalDataSample: Array<ClinicalData>):ClinicalInformationData {
     const patient = {
         id: patientId,
-        clinicalData: clinicalDataPatient.map((x: ClinicalData) => ({ id: x.attrId, clinicalAttribute: x.clinicalAttribute, attrValue: x.attrValue }))
+        clinicalData: clinicalDataPatient
     };
 
     const samples: Array<ClinicalDataBySampleId> = chain(clinicalDataSample)
         .groupBy('id')
-        .map((v: Array<ClinicalData> , k: string) => ({
+        .map((v, k) => ({
             clinicalData: v,
-            id: k,
+            id: k + '',
         }))
         .value();
 
@@ -59,8 +57,7 @@ function transformClinicalInformationToStoreShape(patientId: string, studyId: st
 
 const tsClient = new CBioPortalAPI(`//${(window as any)['__API_ROOT__']}`);
 
-
-export default function getClinicalInformationData() {
+export default function getClinicalInformationData():Promise<ClinicalInformationData> {
     const promise = new Promise((resolve, reject) => {
         const qs = queryString.parse(location.search);
 

@@ -1,11 +1,9 @@
-import * as React from 'react';
-
-import { SampleLabelHTML } from '../SampleLabel';
-
-type TODO = any;
+import * as React from "react";
+import {SampleLabelHTML} from "../SampleLabel";
+import {ClinicalDataBySampleId} from "../clinicalInformation/getClinicalInformationData";
 
 interface ISampleInlineProps {
-    sample: TODO;
+    sample: ClinicalDataBySampleId;
     sampleNumber: number;
 }
 
