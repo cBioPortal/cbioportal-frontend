@@ -64,7 +64,7 @@ var EnhancedFixedDataTable = (function () {
     var DataGrabber = React.createClass({
         displayName: "DataGrabber",
         // Prepares table content data for download or copy button
-        prepareContent: () => {
+        prepareContent: function () {
             var content = [], cols = this.props.cols, rows = this.props.rows;
 
             _.each(cols, function (e) {
