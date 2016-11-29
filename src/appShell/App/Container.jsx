@@ -3,6 +3,7 @@ import React, {PropTypes as T} from 'react';
 import ReactDOM from 'react-dom';
 import PageHeader from '../../pages/pageHeader/PageHeader.jsx';
 
+import '../../globalStyles/global.scss';
 
 export class Container extends React.Component {
 

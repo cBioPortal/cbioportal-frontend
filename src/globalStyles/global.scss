@@ -1,81 +1,18 @@
-// fretboard
 
-//body {
-//  margin-top:0 !important;
-//}
-//
-//#page_wrapper {
-//  padding:0px !important;
-//}
-//
-//#header table:first-child {
-//  margin:0 10px 10px 10px;
-//  width:97%;
-//}
+th.reactable-header-sortable {
 
+  &:focus {outline:0;}
 
-//.ui-widget {
-//  font-size:inherit !important;
-//}
-//
-//.ui-widget-header {
-//  border:none !important;
-//  border-bottom:1px solid #ddd !important;
-//  border-radius:0;
-//  background:none !important;
-//  background-image:none !important;
-//
-//  .ui-state-active {
-//    border-color:#ddd !important;
-//  }
-//
-//}
+}
 
-//#patient-table_wrapper {
-//  display:none !important;
-//}
-//
-//#patient-tabs {
-//  border:none !important;
-//  padding:0px;
-//
-//  .ui-tabs .ui-tabs-panel {
-//    padding:0px !important;
-//
-//
-//
-//  }
-//
-//}
+th.reactable-header-sort-desc:after {
+  content: '\25B2';
+  padding-left: 10px;
+  padding-bottom: 5px;
+}
 
-//#content {
-//  padding:20px;
-//}
-
-//.ui-tabs .ui-tabs-panel {
-//  padding:0px !important;
-//}
-
-//#content ul {
-//  margin-bottom:0px;
-//  margin-top:0px;
-//}
-//
-//#clinical_div {
-//  padding:15px;
-//  background:#eee;
-//  border-radius:5px;
-//  margin-bottom:15px;
-//  position:relative;
-//  padding-left:60px;
-//
-//  i.fa {
-//    color:#fff;
-//    position:absolute;
-//    font-size:50px;
-//    top:10px;
-//    left:15px;
-//  }
-//
-//
-//}
+th.reactable-header-sort-asc:after {
+  content: '\25BC';
+  padding-left: 10px;
+  padding-bottom: 5px;
+}
