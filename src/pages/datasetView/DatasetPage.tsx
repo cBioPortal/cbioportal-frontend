@@ -1,5 +1,4 @@
 import * as React from "react";
-import { actionCreators, mapStateToProps } from './duck';
 import { connect } from 'react-redux';
 import { Table, unsafe }  from 'reactableMSK';
 import * as _ from 'underscore';
@@ -48,8 +47,6 @@ export default class DataSetPageUnconnected extends React.Component<IDatasetPage
     }
 }
 ;
-
-//export default connect(mapStateToProps, actionCreators)(DataSetPageUnconnected);
 
 
 
