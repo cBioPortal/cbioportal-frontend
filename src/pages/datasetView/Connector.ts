@@ -1,6 +1,6 @@
 import {RootState} from "../../redux/rootReducer";
 import {IDispatch, Connector} from "../../shared/lib/ConnectorAPI";
-import { IDatasetPageUnconnectedProps } from './DataSetPage';
+import { IDatasetPageUnconnectedProps } from './DatasetPage';
 import getDatasetsInfo from './getDatasetsInfo';
 
 export type DatasetDownloads = {
