@@ -11,8 +11,9 @@ export type DatasetDownloads = {
 const FETCH:'datasetDownloads/fetch' = 'datasetDownloads/fetch';
 
 export type ActionTypes = (
-    { type: typeof FETCH, stutus: 'fetching' }
-    | { type: typeof FETCH, status: 'success', payload: Array<any> }
+    { type: typeof FETCH, status: 'complete', payload: Array<any> } |
+    { type: typeof FETCH, status: 'fetching' }
+
 );
 
 export default new class DatasetConnector extends Connector<RootState, DatasetDownloads, ActionTypes, IDatasetPageUnconnectedProps>
@@ -30,7 +31,7 @@ export default new class DatasetConnector extends Connector<RootState, DatasetDo
 
                 dispatch({
                     type:FETCH,
-                    status:'success',
+                    status:'complete',
                     payload:data,
                 });
 
@@ -45,17 +46,21 @@ export default new class DatasetConnector extends Connector<RootState, DatasetDo
         };
     }
 
-    reducer(state:DatasetDownloads, action:ActionTypes){
+    reducer(state:DatasetDownloads, action: ActionTypes){
 
         switch(action.type) {
 
             case FETCH:
+                switch( action.status ){
 
-                return this.mergeState(state,{
-                    status:'complete',
-                    datasets:action.payload,
-                });
+                    case 'complete':
+                        return this.mergeState(state, {
+                            status: 'complete',
+                            datasets: action.payload,
+                        });
+                }
 
+            
             default:
 
                 return state;
