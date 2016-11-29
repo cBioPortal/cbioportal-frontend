@@ -52,11 +52,7 @@ export default new class ClinicalInformationConnector extends Connector<RootStat
                 type: FETCH,
                 status: 'fetching',
             });
-        },
-        setTab: (activeTab:number) => ({
-            type: SET_TAB,
-            activeTab
-        })
+        }
     };
 
     mapStateToProps(state:RootState):IClinicalInformationContainerProps {
