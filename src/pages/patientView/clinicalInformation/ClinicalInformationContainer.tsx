@@ -15,6 +15,7 @@ export interface IClinicalInformationContainerProps {
     nodes?: TODO;//PDXNode[];
     loadClinicalInformationTableData?: () => void;
     setTab?: (activeTab:number) => void;
+    store?: any;
 };
 
 @Connector.decorator
@@ -29,6 +30,7 @@ export default class ClinicalInformationContainer extends React.Component<IClini
         return (
             <div>
                 <ClinicalInformationPatientTable showTitleBar={true} data={this.props.patient && this.props.patient.clinicalData} />
+                <hr />
                 <ClinicalInformationSamples samples={this.props.samples} />
             </div>
         );
@@ -43,7 +45,7 @@ export default class ClinicalInformationContainer extends React.Component<IClini
                 return <div>{ this.buildTabs() }</div>;
 
             case 'error':
-                return <div>There was an error.</div>;
+                return <div>There was a loading error. Please try refreshing your browser.</div>;
 
             default:
                 return <div />;
