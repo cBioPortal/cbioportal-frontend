@@ -1,0 +1,12 @@
+{
+    "name": "cbioportal-frontend",
+    "description": "React Frontend of cBioPortal",
+    "repository": "https://github.com/cbioportal/cbioportal-frontend",
+    "logo": "http://www.cbioportal.org/images/cbioportal_logo.png",
+    "keywors": ["react", "redux", "cancer", "genomics"],
+    "buildpacks": [
+        {
+          "url": "https://github.com/heroku/heroku-buildpack-nodejs#v91"
+        }
+    ]
+}
