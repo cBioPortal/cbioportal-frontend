@@ -3,6 +3,8 @@ import {ClinicalData} from "../../../shared/api/CBioPortalAPI";
 import {Table as DataTable} from "reactableMSK";
 import TableExportButtons from "../../../shared/components/tableExportButtons/TableExportButtons";
 
+import styles from './style/patientTable.module.scss';
+
 export interface IClinicalInformationPatientTableProps {
     data?: Array<ClinicalData>;
     showTitleBar?: Boolean;
@@ -27,7 +29,7 @@ export default class ClinicalInformationPatientTable extends React.Component<ICl
                         </div>
                     :   null
                 }
-                <DataTable className='table table-striped' columns={[{ key:'attribute', label:'Attribute'},{ key:'value', label:'Value'}]} data={tableData} />
+                <DataTable className={ `table table-striped ${styles.patientTable}` } columns={[{ key:'attribute', label:'Attribute'},{ key:'value', label:'Value'}]} data={tableData} />
             </div>
         );
     }
