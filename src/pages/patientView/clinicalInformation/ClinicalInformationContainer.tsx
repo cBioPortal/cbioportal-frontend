@@ -12,7 +12,7 @@ export interface IClinicalInformationContainerProps {
     status?: typeof _ClinicalInformationData.status;
     patient?: typeof _ClinicalInformationData.patient;
     samples?: typeof _ClinicalInformationData.samples;
-    nodes?: TODO;//PDXNode[];
+    nodes?: TODO;// PDXNode[];
     loadClinicalInformationTableData?: () => void;
     setTab?: (activeTab:number) => void;
     store?: any;
@@ -24,16 +24,6 @@ export default class ClinicalInformationContainer extends React.Component<IClini
     componentDidMount() {
         if (this.props.loadClinicalInformationTableData)
             this.props.loadClinicalInformationTableData();
-    }
-
-    private buildTabs() {
-        return (
-            <div>
-                <ClinicalInformationPatientTable showTitleBar={true} data={this.props.patient && this.props.patient.clinicalData} />
-                <hr />
-                <ClinicalInformationSamples samples={this.props.samples} />
-            </div>
-        );
     }
 
     public render() {
@@ -51,4 +41,16 @@ export default class ClinicalInformationContainer extends React.Component<IClini
                 return <div />;
         }
     }
+
+    private buildTabs() {
+        return (
+            <div>
+                <ClinicalInformationPatientTable showTitleBar={true} data={this.props.patient && this.props.patient.clinicalData} />
+                <hr />
+                <ClinicalInformationSamples samples={this.props.samples} />
+            </div>
+        );
+    }
+
+
 }

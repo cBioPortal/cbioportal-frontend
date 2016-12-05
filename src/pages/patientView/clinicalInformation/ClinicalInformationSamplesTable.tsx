@@ -2,7 +2,7 @@ import * as React from "react";
 import {ClinicalDataBySampleId} from "./getClinicalInformationData";
 import convertSamplesData, {IConvertedSamplesData} from "./lib/convertSamplesData";
 import {SampleLabelHTML} from "../SampleLabel";
-import {Table as DataTable, Tr, Td, Thead, Th} from "reactableMSK";
+import {Table as DataTable, Thead, Th} from "reactableMSK";
 import TableExportButtons from "../../../shared/components/tableExportButtons/TableExportButtons";
 
 interface IClinicalInformationSamplesTableProps {
@@ -28,7 +28,7 @@ export default class ClinicalInformationSamplesTable extends React.Component<ICl
         );
     }
 
-    public buildHeaderCells(sampleInvertedData: IConvertedSamplesData){
+    public buildHeaderCells(sampleInvertedData: IConvertedSamplesData) {
 
         const headerCells: Array<JSX.Element> = sampleInvertedData.columns.map((col, i) => {
             return (<Th column={col.id} key={i}>
@@ -43,7 +43,7 @@ export default class ClinicalInformationSamplesTable extends React.Component<ICl
         return headerCells;
     }
 
-    public prepareData(sampleInvertedData: IConvertedSamplesData){
+    public prepareData(sampleInvertedData: IConvertedSamplesData) {
 
         const tableData: Array<any> = [];
 

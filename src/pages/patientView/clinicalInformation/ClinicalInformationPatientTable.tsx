@@ -3,6 +3,8 @@ import {ClinicalData} from "../../../shared/api/CBioPortalAPI";
 import {Table as DataTable} from "reactableMSK";
 import TableExportButtons from "../../../shared/components/tableExportButtons/TableExportButtons";
 
+import './style/patientTable.module.scss';
+
 export interface IClinicalInformationPatientTableProps {
     data?: Array<ClinicalData>;
     showTitleBar?: Boolean;
