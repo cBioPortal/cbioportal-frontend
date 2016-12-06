@@ -1,6 +1,6 @@
 {
   "name": "cbioportal-frontend",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "",
   "scripts": {
     "start": "cross-env NODE_ENV=development webpack-dev-server --inline --hot",
