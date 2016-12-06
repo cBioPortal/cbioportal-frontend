@@ -6,7 +6,6 @@ import ClinicalInformationContainer from './clinicalInformation/ClinicalInformat
 import PatientHeaderUnconnected from './patientHeader/PatientHeader';
 import {IPatientHeaderProps} from './patientHeader/PatientHeader';
 import {RootState} from "../../redux/rootReducer";
-import PageDecorator from '../../shared/components/PageDecorator/PageDecorator';
 
 interface IPatientViewPageProps {
     store?: RootState;
@@ -45,7 +44,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     // this gives the parent (legacy) cbioportal code control to mount
     // these components whenever and wherever it wants
-    exposeComponentRenderersToParentScript(){
+    exposeComponentRenderersToParentScript() {
 
         const win: any = window;
 
