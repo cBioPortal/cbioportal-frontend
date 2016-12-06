@@ -25,19 +25,21 @@
         "no-unsafe-finally": true,
         "no-var-keyword": true,
         "only-arrow-functions": false,
+        "ordered-imports": false,
         "one-line": [
             true,
-            "check-open-brace",
             "check-whitespace"
         ],
         "quotemark": [
             false,
             "single"
         ],
+        "object-literal-sort-keys": false,
         "semicolon": [
             true,
             "always"
         ],
+        "trailing-comma": [false],
         "triple-equals": [
             true,
             "allow-null-check"
