@@ -12,7 +12,7 @@ export interface ITableExportButtonsProps {
 function serializeTableData(tableData: Array<any>) {
 
     let content: Array<string> = [];
-    let delim = '\t';
+    let delim = ',';
 
     Object.keys(tableData[0]).forEach((col: any)=>content.push(col,delim));
 
