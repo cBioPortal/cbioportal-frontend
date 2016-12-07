@@ -6,6 +6,7 @@ import ClinicalInformationContainer from './clinicalInformation/ClinicalInformat
 import PatientHeaderUnconnected from './patientHeader/PatientHeader';
 import {IPatientHeaderProps} from './patientHeader/PatientHeader';
 import {RootState} from "../../redux/rootReducer";
+import ExamplePage from './example';
 
 interface IPatientViewPageProps {
     store?: RootState;
@@ -24,44 +25,15 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     }
 
     public componentDidMount() {
-        const PatientHeader = connect(PatientViewPage.mapStateToProps)(PatientHeaderUnconnected);
 
-        // Don't try to render clinical_div_prototype in parent cbioportal
-        // project context
-        let clinicalDiv: Element | null = document.getElementById('clinical_div_prototype');
-        if (clinicalDiv) {
-            ReactDOM.render(
-                <PatientHeader {...{store: this.props.store}} />,
-                clinicalDiv
-            );
-        }
-
-
-        this.exposeComponentRenderersToParentScript();
 
 
     }
 
-    // this gives the parent (legacy) cbioportal code control to mount
-    // these components whenever and wherever it wants
-    exposeComponentRenderersToParentScript() {
-
-        const win: any = window;
-
-        if(win) {
-            win.renderPatientView = (mountNode: HTMLElement): void => {
-                ReactDOM.render(
-                    <ClinicalInformationContainer store={ this.props.store } />,
-                    mountNode
-                );
-            };
-        }
-
-    }
 
     public render() {
         return (
-            <ClinicalInformationContainer />
+            <ExamplePage />
         );
     }
 }
