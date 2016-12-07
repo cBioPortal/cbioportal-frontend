@@ -34,16 +34,6 @@ export default class ContainerComponent extends React.Component {
 
 
 
-        QuerySession.getCartDatafromServer().then((cartData)=>{
-
-            this.setState({
-                cart:cartData
-            });
-
-        });
-
-
-
     }
 
     addItem(){
@@ -77,6 +67,8 @@ class Child1 extends React.Component {
     }
 
     render(){
+
+        this.fetchData(promise);
 
         return <div><h2>Child1: </h2>{this.props.cart.join(',')} <a onClick={this.props.addItem}>add apple</a></div>
 
