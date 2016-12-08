@@ -4,12 +4,31 @@ import IEnhancedReactTableProps from "../../../shared/components/enhancedReactTa
 import GeneColumnFormatter from "./column/GeneColumnFormatter";
 import SampleColumnFormatter from "./column/SampleColumnFormatter";
 
-//import styles from './styles.module.scss';
-//import './styles.css';
-
+/**
+ * @author Selcuk Onur Sumer
+ */
 export default class MutationTable extends React.Component<IEnhancedReactTableProps, {}>
 {
-    private updateProps(props:IEnhancedReactTableProps)
+    constructor(props:IEnhancedReactTableProps)
+    {
+        super(props);
+        this.state = {};
+    }
+
+    public render()
+    {
+        const {reactTableProps, columns, rawData} = this.mergeProps(this.props);
+
+        return(
+            <EnhancedReactTable
+                reactTableProps={reactTableProps}
+                columns={columns}
+                rawData={rawData}
+            />
+        );
+    }
+
+    private mergeProps(props:IEnhancedReactTableProps)
     {
         // TODO [duplicate] update and use mock/mutationData.json instead!
         const rawData:Array<any> = [
@@ -95,23 +114,6 @@ export default class MutationTable extends React.Component<IEnhancedReactTablePr
 
         // TODO merge provided props with the default props!
         return defaultProps;
-    }
-
-    constructor(props:IEnhancedReactTableProps)
-    {
-        super(props);
-        this.state = {};
-    }
-
-    public render()
-    {
-        const {reactTableProps, columns, rawData} = this.updateProps(this.props);
-
-        return(
-            <EnhancedReactTable reactTableProps={reactTableProps}
-                                columns={columns}
-                                rawData={rawData}/>
-        );
     }
 };
 
