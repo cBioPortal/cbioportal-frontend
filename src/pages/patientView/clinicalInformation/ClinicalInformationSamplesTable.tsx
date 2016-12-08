@@ -32,7 +32,6 @@ export default class ClinicalInformationSamplesTable extends React.Component<ICl
 
         const headerCells: Array<JSX.Element> = sampleInvertedData.columns.map((col, i) => {
             return (<Th column={col.id} key={i}>
-                <SampleLabelHTML color={'black'} label={(i + 1).toString()} />
                 {' ' + col.id}
             </Th>);
         });
