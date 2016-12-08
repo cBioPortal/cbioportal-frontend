@@ -2,6 +2,7 @@ import * as React from 'react';
 import {Table as DataTable} from "reactableMSK";
 import * as _ from 'underscore';
 import IEnhancedReactTableProps from "IEnhancedReactTableProps";
+import {IColumnFormatterData} from "./IColumnFormatterProps";
 
 /**
  * @author Selcuk Onur Sumer
@@ -50,18 +51,29 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
             let row:any = {};
 
             _.each(columns, function(columnDef:any) {
-                // here we actually set the same data (same mutation object) for each column.
-                // column formatter should extract the required data from the mutation.
-                if (columnDef.formatter) {
-                    row[columnDef.name] = element;
-                }
-                // if no formatter defined for a column, then try the data field option!
-                else if (columnDef.dataField) {
-                    row[columnDef.name] = element[columnDef.dataField];
+                let data:IColumnFormatterData = {
+                    tableData: rawData,
+                    rowData: element,
+                    columnData: null
+                };
+
+                // get column data (may end up being undefined)
+                if (columnDef.dataField) {
+                    data.columnData = element[columnDef.dataField];
                 }
                 // last resort: use name to get data (if there is any matching data field)
                 else {
-                    row[columnDef.name] = element[columnDef.name];
+                    data.columnData = element[columnDef.name];
+                }
+
+                // here we actually set the same data (same mutation object) for each column.
+                // column formatter should extract the required data from the mutation.
+                if (columnDef.formatter) {
+                    row[columnDef.name] = data;
+                }
+                // if no formatter defined for a column, then try the data field option!
+                else {
+                    row[columnDef.name] = data.columnData;
                 }
             });
 
