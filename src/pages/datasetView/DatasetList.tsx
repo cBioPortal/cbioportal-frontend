@@ -20,8 +20,8 @@ class CancerStudyCell extends React.Component<{ data:any },{}> {
         return (
             <span>
                 <a href={`http://www.cbioportal.org/study?id=${ this.props.data.cancerStudyIdentifier }#summary`}
-                    target='_blank' >{ this.props.data.name }</a>
-                <a href={`https://github.com/cBioPortal/datahub/blob/master/public/${ this.props.data.cancerStudyIdentifier }.tar.gz`} download><i class='fa fa-download'></i></a>
+                    target='_blank' >{ this.props.data.name }</a>&nbsp;
+                <a href={`https://github.com/cBioPortal/datahub/blob/master/public/${ this.props.data.cancerStudyIdentifier }.tar.gz`} download><i className='fa fa-download'></i></a>
             </span>
         );
 
@@ -77,7 +77,7 @@ export default class DataSetPageUnconnected extends React.Component<IDatasetPage
             });
 
             return <Table
-                          className="table"
+                          className="table table-striped"
                           data={rows}
                           sortable={true}
                           columnFormatters={{ CancerStudy: CancerStudyCell, Reference: ReferenceCell }}
