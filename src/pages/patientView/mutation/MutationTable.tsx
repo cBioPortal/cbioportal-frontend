@@ -53,6 +53,41 @@ export default class MutationTable extends React.Component<IEnhancedReactTablePr
                     name: "Start Pos",
                     dataField: "startPos",
                     sortable: true,
+                    filterable: false,
+                    visible: true
+                },
+                {
+                    name: "End Pos",
+                    dataField: "endPos",
+                    sortable: true,
+                    filterable: false,
+                    visible: true
+                },
+                {
+                    name: "Ref",
+                    dataField: "referenceAllele",
+                    sortable: false,
+                    filterable: false,
+                    visible: true
+                },
+                {
+                    name: "Var",
+                    dataField: "variantAllele",
+                    sortable: false,
+                    filterable: false,
+                    visible: true
+                },
+                {
+                    name: "MS",
+                    dataField: "mutationStatus",
+                    sortable: true,
+                    filterable: true,
+                    visible: true
+                },
+                {
+                    name: "VS",
+                    dataField: "validationStatus",
+                    sortable: true,
                     filterable: true,
                     visible: true
                 },
