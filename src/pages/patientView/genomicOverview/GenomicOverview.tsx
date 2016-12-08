@@ -1,12 +1,9 @@
 import * as React from "react";
 import Raphael from 'webpack-raphael';
-import { createRaphaelCanvas } from './genomicOverview';
-import $ from 'jquery';
+//import { createRaphaelCanvas } from './genomicOverview';
 
-export interface IClinicalInformationPatientTableProps {
-}
 
-export default class GenomicOverview extends React.Component<IClinicalInformationPatientTableProps, {}> {
+export default class GenomicOverview extends React.Component<{}, {}> {
 
     constructor(){
 

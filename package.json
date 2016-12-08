@@ -96,7 +96,7 @@
     "underscore": "^1.8.3",
     "url-loader": "^0.5.7",
     "webpack": "^1.13.1",
-    "webpack-raphael": "^2.1.4"
+    "webpack-raphael": "^2.1.4",
     "webpack-fail-plugin": "^1.0.5"
   },
   "devDependencies": {
