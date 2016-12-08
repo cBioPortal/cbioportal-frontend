@@ -1,6 +1,6 @@
 {
   "name": "cbioportal-frontend",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "",
   "scripts": {
     "start": "cross-env NODE_ENV=development webpack-dev-server --inline --hot",
@@ -36,7 +36,6 @@
     "bootstrap-loader": "^1.2.0-beta.1",
     "bootstrap-sass": "^3.3.7",
     "bundle-loader": "^0.5.4",
-    "reactableMSK":"https://github.com/alisman/reactable.git",
     "css-loader": "^0.23.1",
     "cssnano": "^3.7.3",
     "dotenv": "^2.0.0",
@@ -68,6 +67,7 @@
     "react-tooltip": "^3.2.1",
     "react-zeroclipboard": "^3.2.2",
     "reactable": "^0.14.0",
+    "reactableMSK": "https://github.com/alisman/reactable.git",
     "recharts": "^0.12.8",
     "redux": "^3.5.2",
     "redux-actions": "^0.11.0",
@@ -87,7 +87,8 @@
     "swagger-client": "^2.1.23",
     "underscore": "^1.8.3",
     "url-loader": "^0.5.7",
-    "webpack": "^1.13.1"
+    "webpack": "^1.13.1",
+    "webpack-raphael": "^2.1.4"
   },
   "devDependencies": {
     "argparse": "^1.0.9",
