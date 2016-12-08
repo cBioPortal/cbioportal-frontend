@@ -5,7 +5,7 @@ import { createRaphaelCanvas } from './genomicOverviewHelper';
 export interface IClinicalInformationPatientTableProps {
 }
 
-export default class GenomicOverview extends React.Component<IClinicalInformationPatientTableProps, {}> {
+export default class GenomicOverview extends React.Component<{}, {}> {
 
     constructor(){
 
