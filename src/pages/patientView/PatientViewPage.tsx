@@ -6,7 +6,7 @@ import ClinicalInformationContainer from './clinicalInformation/ClinicalInformat
 import PatientHeaderUnconnected from './patientHeader/PatientHeader';
 import {IPatientHeaderProps} from './patientHeader/PatientHeader';
 import {RootState} from "../../redux/rootReducer";
-import GenomicData from './genomicOverview/GenomicOverview';
+import GenomicOverview from './genomicOverview/GenomicOverview';
 
 interface IPatientViewPageProps {
     store?: RootState;
@@ -62,7 +62,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     public render() {
         return (
             <div>
-                <GenomicData data={[1,2,3]} />
+                <GenomicOverview />
                 <ClinicalInformationContainer />
             </div>
         );
