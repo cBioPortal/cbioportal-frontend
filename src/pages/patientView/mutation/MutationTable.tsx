@@ -30,53 +30,10 @@ export default class MutationTable extends React.Component<IEnhancedReactTablePr
 
     private mergeProps(props:IEnhancedReactTableProps)
     {
-        // TODO [duplicate] update and use mock/mutationData.json instead!
-        const rawData:Array<any> = [
-            {
-                "gene":
-                {
-                    "chromosome": "string",
-                    "entrezGeneId": "number",
-                    "hugoGeneSymbol": "string",
-                    "type": "string"
-                },
-                "startPos": "number",
-                "endPos": "number",
-                "referenceAllele": "string",
-                "variantAllele": "string",
-                "aminoAcidChange": "string",
-                "annotation":
-                {
-                    "proteinChange": "string",
-                    "mutationType": "string",
-                    "proteinPosEnd": "number",
-                    "proteinPosStart": "number",
-                    "keyword": "string",
-                    "uniprotEntryName": "string",
-                    "uniprotAccession": "string"
-                },
-                "mutationAssessor":
-                {
-                    "impact": "string",
-                    "score": "number",
-                    "pdb": "string",
-                    "msa": "string",
-                    "xVar": "string"
-                },
-                "center": "string",
-                "mutationStatus": "string",
-                "validationStatus": "string",
-                "geneticProfileId": "string",
-                "sampleId": "string",
-                "tumorRefCount": "number",
-                "tumorAltCount": "number",
-                "normalRefCount": "number",
-                "normalAltCount": "number"
-            }
-        ];
+        const rawData:Array<any> = props.rawData;
 
         const defaultProps:IEnhancedReactTableProps = {
-            rawData, // TODO this is mock data, replace with actual data
+            rawData,
             columns: [
                 {
                     name: "Gene",
