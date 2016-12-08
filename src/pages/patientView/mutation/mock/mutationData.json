@@ -39,5 +39,128 @@
     "tumorAltCount": "number",
     "normalRefCount": "number",
     "normalAltCount": "number"
+  },
+  {
+    "gene":
+    {
+      "chromosome": "17",
+      "entrezGeneId": null,
+      "hugoGeneSymbol": "BRCA1",
+      "type": ""
+    },
+    "startPos": 41215914,
+    "endPos": 41215914,
+    "referenceAllele": "C",
+    "variantAllele": "-",
+    "aminoAcidChange": null,
+    "annotation":
+    {
+      "proteinChange": "G1710Efs*4",
+      "mutationType": "Frame_Shift_Del",
+      "proteinPosEnd": "1710",
+      "proteinPosStart": "1710",
+      "keyword": "BRCA1 truncating",
+      "uniprotEntryName": "BRCA1_HUMAN",
+      "uniprotAccession": "P38398"
+    },
+    "mutationAssessor":
+    {
+      "impact": null,
+      "score": null,
+      "pdb": null,
+      "msa": null,
+      "xVar": null
+    },
+    "center": "Broad",
+    "mutationStatus": "Somatic",
+    "validationStatus": "Valid",
+    "geneticProfileId": "ov_tcga_pub_mutations",
+    "sampleId": "TCGA-24-2035-01",
+    "tumorRefCount": null,
+    "tumorAltCount": null,
+    "normalRefCount": null,
+    "normalAltCount": null
+  },
+  {
+    "gene":
+    {
+      "chromosome": "17",
+      "entrezGeneId": null,
+      "hugoGeneSymbol": "BRCA1",
+      "type": ""
+    },
+    "startPos": 41243753,
+    "endPos": 41243754,
+    "referenceAllele": "",
+    "variantAllele": "TT",
+    "aminoAcidChange": null,
+    "annotation":
+    {
+      "proteinChange": "N1265Kfs*4",
+      "mutationType": "Frame_Shift_Ins",
+      "proteinPosEnd": "1265",
+      "proteinPosStart": "1265",
+      "keyword": "BRCA1 truncating",
+      "uniprotEntryName": "BRCA1_HUMAN",
+      "uniprotAccession": "P38398"
+    },
+    "mutationAssessor":
+    {
+      "impact": null,
+      "score": null,
+      "pdb": null,
+      "msa": null,
+      "xVar": null
+    },
+    "center": "WashU",
+    "mutationStatus": "Somatic",
+    "validationStatus": "Valid",
+    "geneticProfileId": "ov_tcga_pub_mutations",
+    "sampleId": "TCGA-13-1489-01",
+    "tumorRefCount": null,
+    "tumorAltCount": null,
+    "normalRefCount": null,
+    "normalAltCount": null
+  },
+  {
+    "gene":
+    {
+      "chromosome": "13",
+      "entrezGeneId": null,
+      "hugoGeneSymbol": "BRCA2",
+      "type": ""
+    },
+    "startPos": 32913620,
+    "endPos": 32913623,
+    "referenceAllele": "TATG",
+    "variantAllele": "-",
+    "aminoAcidChange": null,
+    "annotation":
+    {
+      "proteinChange": "Y1710*",
+      "mutationType": "Frame_Shift_Ins",
+      "proteinPosEnd": "1711",
+      "proteinPosStart": "1710",
+      "keyword": "BRCA2 truncating",
+      "uniprotEntryName": "BRCA2_HUMAN",
+      "uniprotAccession": "P51587"
+    },
+    "mutationAssessor":
+    {
+      "impact": null,
+      "score": null,
+      "pdb": null,
+      "msa": null,
+      "xVar": null
+    },
+    "center": "Broad",
+    "mutationStatus": "Germline",
+    "validationStatus": "Valid",
+    "geneticProfileId": "ov_tcga_pub_mutations",
+    "sampleId": "TCGA-24-2024-01",
+    "tumorRefCount": null,
+    "tumorAltCount": null,
+    "normalRefCount": null,
+    "normalAltCount": null
   }
 ]
