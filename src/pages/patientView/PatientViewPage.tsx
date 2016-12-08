@@ -6,6 +6,7 @@ import ClinicalInformationContainer from './clinicalInformation/ClinicalInformat
 import PatientHeaderUnconnected from './patientHeader/PatientHeader';
 import {IPatientHeaderProps} from './patientHeader/PatientHeader';
 import {RootState} from "../../redux/rootReducer";
+import GenomicOverview from './genomicOverview/GenomicOverview';
 
 interface IPatientViewPageProps {
     store?: RootState;
@@ -39,7 +40,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         this.exposeComponentRenderersToParentScript();
 
-
     }
 
     // this gives the parent (legacy) cbioportal code control to mount
@@ -61,7 +61,10 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     public render() {
         return (
-            <ClinicalInformationContainer />
+            <div>
+                <GenomicOverview />
+                <ClinicalInformationContainer />
+            </div>
         );
     }
 }

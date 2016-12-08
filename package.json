@@ -72,6 +72,7 @@
     "react-tooltip": "^3.2.1",
     "react-zeroclipboard": "^3.2.2",
     "reactable": "^0.14.0",
+    "reactableMSK": "https://github.com/alisman/reactable.git",
     "recharts": "^0.12.8",
     "redux": "^3.5.2",
     "redux-actions": "^0.11.0",
@@ -95,6 +96,7 @@
     "underscore": "^1.8.3",
     "url-loader": "^0.5.7",
     "webpack": "^1.13.1",
+    "webpack-raphael": "^2.1.4",
     "webpack-fail-plugin": "^1.0.5"
   },
   "devDependencies": {
