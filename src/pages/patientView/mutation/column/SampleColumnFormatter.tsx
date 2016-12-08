@@ -1,6 +1,9 @@
 import * as React from 'react';
-import IMutationColumnFormatterProps from './MutationColumnFormatterProps';
+import IMutationColumnFormatterProps from './IMutationColumnFormatterProps';
 
+/**
+ * @author Selcuk Onur Sumer
+ */
 export default class SampleColumnFormatter extends React.Component<IMutationColumnFormatterProps, {}>
 {
     constructor(props:IMutationColumnFormatterProps)

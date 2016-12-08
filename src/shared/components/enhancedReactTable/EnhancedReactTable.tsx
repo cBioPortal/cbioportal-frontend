@@ -1,12 +1,11 @@
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
 import {Table as DataTable} from "reactableMSK";
 import * as _ from 'underscore';
 import IEnhancedReactTableProps from "IEnhancedReactTableProps";
 
-//import styles from './styles.module.scss';
-//import './styles.css';
-
+/**
+ * @author Selcuk Onur Sumer
+ */
 export default class EnhancedReactTable extends React.Component<IEnhancedReactTableProps, {}>
 {
     constructor(props:IEnhancedReactTableProps)
