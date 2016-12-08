@@ -22,14 +22,45 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
             rawData
         } = this.props;
 
+        // update (override) react table props
         reactTableProps.data = this.convertToTableData(columns, rawData);
         reactTableProps.columnFormatters = this.columnFormatters(columns);
+        reactTableProps.sortable = this.resolveSortable(columns);
+        reactTableProps.filterable = this.resolveFilterable(columns);
 
-        // TODO sortable, filterable, future work: column order, column visibility
+        // TODO future work: column order, column visibility
 
         return(
             <DataTable {...reactTableProps} />
         );
+    }
+
+    private resolveSortable(columns:Array<any>)
+    {
+        let sortable:Array<any> = []; // Array<string|function>
+
+        // TODO add support for custom sort function!
+        _.each(columns, function(column:any) {
+            if (column.sortable) {
+                sortable.push(column.name);
+            }
+        });
+
+        return sortable;
+    }
+
+    private resolveFilterable(columns:Array<any>)
+    {
+        let filterable:Array<any> = []; // Array<string|function>
+
+        // TODO add support for custom filter function!
+        _.each(columns, function(column:any) {
+            if (column.filterable) {
+                filterable.push(column.name);
+            }
+        });
+
+        return filterable;
     }
 
     private columnFormatters(columns:Array<any>)
