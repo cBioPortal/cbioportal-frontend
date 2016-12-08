@@ -4,7 +4,7 @@ import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
 import DatasetList from './DatasetList';
 import DisablePage from 'shared/components/PageDecorator/PageDecorator';
 
-
+@DisablePage
 export default class DatasetPage extends React.Component<{ store: any }, {}> {
 
 

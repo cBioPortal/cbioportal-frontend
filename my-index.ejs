@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html class="cbioportal-frontend">
 <head>
     <meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
     <title><%= htmlWebpackPlugin.options.title %></title>
@@ -10,8 +10,8 @@
         // Set default API in case none is specified in .env
         __API_ROOT__ = 'cbioportal-rc.herokuapp.com/api';
     </script>
-    <script src="reactapp/js/common.bundle.js"></script>
-    <link href="reactapp/css/bootstrap.min.css" rel="stylesheet"></link>
+    <script src="reactapp/common.bundle.js"></script>
+    <link href="reactapp/prefixed-bootstrap.min.css" rel="stylesheet"></link>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
 </head>
 <body class="cbioOnePageApp">
