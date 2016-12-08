@@ -1,6 +1,6 @@
 import * as React from "react";
 import Raphael from 'webpack-raphael';
-import { createRaphaelCanvas } from './genomicOverview';
+import { createRaphaelCanvas } from './genomicOverviewHelper';
 
 export interface IClinicalInformationPatientTableProps {
 }
