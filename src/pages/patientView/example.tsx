@@ -18,7 +18,10 @@ declare type MyHandler = (myArgument: IExampleDataResponse) => void;
 
 const QuerySession = {
 
-    fetchAndObserveExampleData(mutationIds:Array<number>, callback:MyHandler){
+    /**
+     * Returns a function which will unsubscribe
+     */
+    fetchAndObserveExampleData(mutationIds:Array<number>, callback:MyHandler): () => void {
 
         // check to see if data is already available for these ids
         // IF YES: return data and observe future changes
@@ -26,11 +29,13 @@ const QuerySession = {
         // respond now and on future changes by invoking the callback
         callback({ fetchStatus:'fetching' });
 
+        let subscribed = true;
+
         // for example, when network request finishes we would fire something like this
-        setTimeout(()=>callback({ fetchStatus:'complete', data:[{ id:0, type:'whatever' },{ id:1, type:'whatever' }] }), 5000);
+        setTimeout(() => subscribed && callback({ fetchStatus:'complete', data:[{ id:0, type:'whatever' },{ id:1, type:'whatever' }] }), 5000);
 
+        return () => subscribed = false;
     }
-
 };
 
 interface IExampleComponentState {
@@ -41,20 +46,24 @@ interface IExampleComponentState {
 //// ExampleComponent.tsx
 export default class ExampleComponent extends React.Component<{}, IExampleComponentState> {
 
-    componentWillMount(){
+    unobserveExampleData: () => void;
+
+    componentDidMount() {
 
         //NOTE: this cannot be used in constructor because setState is called syncronously here
         //and you cannot call setState in constructor
-        // PROBLEM: how do we unsubscribe
-        QuerySession.fetchAndObserveExampleData([0,1], (dataObject)=>{
+        this.unobserveExampleData = QuerySession.fetchAndObserveExampleData([0, 1], (dataObject) => {
             this.setState({ exampleData: dataObject });
         });
-
     }
 
-    public render(){
+    componentWillUnmount() {
+        this.unobserveExampleData();
+    }
 
-        return (<div>{ this.state.exampleData.fetchStatus }</div>);
+    public render() {
+
+        return (<div>{ this.state.exampleData ? this.state.exampleData.fetchStatus : null }</div>);
 
     }
 
