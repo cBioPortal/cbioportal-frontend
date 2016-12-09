@@ -162,5 +162,46 @@
     "tumorAltCount": null,
     "normalRefCount": null,
     "normalAltCount": null
+  },
+  {
+    "gene":
+    {
+      "chromosome": "13",
+      "entrezGeneId": null,
+      "hugoGeneSymbol": "BRCA2",
+      "type": ""
+    },
+    "startPos": 32972626,
+    "endPos": 32972626,
+    "referenceAllele": "A",
+    "variantAllele": "T",
+    "aminoAcidChange": null,
+    "annotation":
+    {
+      "proteinChange": "K1638E",
+      "mutationType": "Missense_Mutation",
+      "proteinPosEnd": "1638",
+      "proteinPosStart": "1638",
+      "keyword": "BRCA2 K1638 missense",
+      "uniprotEntryName": "BRCA2_HUMAN",
+      "uniprotAccession": "P51587"
+    },
+    "mutationAssessor":
+    {
+      "impact": "L",
+      "score": 1.67,
+      "pdb": null,
+      "msa": "http://mutationassessor.org/r2/?&cm=msa&ty=f&p=BRCA2_HUMAN&rb=1552&re=1663&var=K1638E",
+      "xVar": "http://mutationassessor.org/r2/&cm=var&var=hg19,13,32913404,A,G&fts=all"
+    },
+    "center": "Broad",
+    "mutationStatus": "Somatic",
+    "validationStatus": "Valid",
+    "geneticProfileId": "ov_tcga_pub_mutations",
+    "sampleId": "TCGA-24-1103-01 (deliberately elongated sample id)",
+    "tumorRefCount": null,
+    "tumorAltCount": null,
+    "normalRefCount": null,
+    "normalAltCount": null
   }
 ]

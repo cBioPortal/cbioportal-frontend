@@ -1,16 +1,17 @@
 import * as React from 'react';
-import {IColumnFormatterProps, IColumnFormatterData} from "../../../../shared/components/enhancedReactTable/IColumnFormatterProps";
+import {IColumnFormatterProps, IColumnFormatterData, IColumnFormatter}
+    from "../../../../shared/components/enhancedReactTable/IColumnFormatterProps";
 
 /**
  * @author Selcuk Onur Sumer
  */
-export default class SampleColumnFormatter extends React.Component<IColumnFormatterProps, {}>
+export default class SampleColumnFormatter extends React.Component<IColumnFormatterProps, {}> implements IColumnFormatter
 {
     // make these thresholds customizable if needed...
-    static MAX_LENGTH:number = 16; // max allowed length of a sample id.
-    static BUFFER:number = 2; // no need to bother with clipping the text for a few chars.
-    static SUFFIX:string = "...";
-    static TOOLTIP_STYLE:string = "simple-tip";
+    public static get MAX_LENGTH():number {return 16;}; // max allowed length of a sample id.
+    public static get BUFFER():number {return 2;}; // no need to bother with clipping the text for a few chars.
+    public static get SUFFIX():string {return "...";};
+    public static get TOOLTIP_STYLE():string {return "simple-tip";};
 
     public static sortFunction(a:IColumnFormatterData, b:IColumnFormatterData):boolean
     {
@@ -28,8 +29,6 @@ export default class SampleColumnFormatter extends React.Component<IColumnFormat
     public static getText(sampleId:string):string
     {
         let text:string = sampleId;
-        //var style = ""; // no style for short case id strings
-        //var tip = caseId; // display full case id as a tip
 
         // clip if too long
         if (SampleColumnFormatter.isTooLong(sampleId,
@@ -94,13 +93,14 @@ export default class SampleColumnFormatter extends React.Component<IColumnFormat
     {
         let data:IColumnFormatterData = this.props.data;
         let sampleId:string = SampleColumnFormatter.getValue(data);
+        let text:string = SampleColumnFormatter.getText(sampleId);
         let toolTip:string = SampleColumnFormatter.getToolTip(sampleId);
         let styleClass:string = SampleColumnFormatter.getStyleClass(sampleId);
         let linkToPatientView:string = "#"; // TODO generate or get it from somewhere else
 
         return (
             <a href={linkToPatientView} target='_blank'>
-                <span alt={toolTip} class={styleClass}>{sampleId}</span>
+                <span alt={toolTip} class={styleClass}>{text}</span>
             </a>
         );
     }
