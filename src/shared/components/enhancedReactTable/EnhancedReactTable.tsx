@@ -39,9 +39,14 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
     {
         let sortable:Array<any> = []; // Array<string|function>
 
-        // TODO add support for custom sort function!
         _.each(columns, function(column:any) {
-            if (column.sortable) {
+            if (_.isFunction(column.sortable)) {
+                sortable.push({
+                    column: column.name,
+                    sortFunction: column.sortable
+                });
+            }
+            else if (column.sortable) {
                 sortable.push(column.name);
             }
         });
@@ -53,9 +58,15 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
     {
         let filterable:Array<any> = []; // Array<string|function>
 
-        // TODO add support for custom filter function!
+        // TODO custom filter functions receive "[Object object]" as their content...
         _.each(columns, function(column:any) {
-            if (column.filterable) {
+            if (_.isFunction(column.filterable)) {
+                filterable.push({
+                    column: column.name,
+                    filterFunction: column.filterable
+                });
+            }
+            else if (column.filterable) {
                 filterable.push(column.name);
             }
         });
