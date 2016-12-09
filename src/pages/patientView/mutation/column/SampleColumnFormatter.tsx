@@ -12,6 +12,21 @@ export default class SampleColumnFormatter extends React.Component<IColumnFormat
     static SUFFIX:string = "...";
     static TOOLTIP_STYLE:string = "simple-tip";
 
+    public static sortFunction(a:IColumnFormatterData, b:IColumnFormatterData)
+    {
+        let aValue = SampleColumnFormatter.getValue(a);
+        let bValue = SampleColumnFormatter.getValue(b);
+
+        return aValue > bValue;
+    }
+
+    public static filterFunction(contents:IColumnFormatterData, filter:string)
+    {
+        let value = SampleColumnFormatter.getValue(contents);
+
+        return value.toLowerCase().indexOf(filter.toLowerCase()) > -1;
+    }
+
     public static getText(sampleId:string):string
     {
         let text:string = sampleId;
