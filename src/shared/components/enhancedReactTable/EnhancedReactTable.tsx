@@ -58,7 +58,6 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
     {
         let filterable:Array<any> = []; // Array<string|function>
 
-        // TODO custom filter functions receive "[Object object]" as their content...
         _.each(columns, function(column:any) {
             if (_.isFunction(column.filterable)) {
                 filterable.push({
@@ -111,6 +110,10 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
                 // here we actually set the same data (same mutation object) for each column.
                 // column formatter should extract the required data from the mutation.
                 if (columnDef.formatter) {
+                    // this is required for the filters to work properly!
+                    data.toString = function() {
+                        return columnDef.formatter.filterValue(data);
+                    };
                     row[columnDef.name] = data;
                 }
                 // if no formatter defined for a column, then try the data field option!
