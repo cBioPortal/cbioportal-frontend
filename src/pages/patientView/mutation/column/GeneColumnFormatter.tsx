@@ -6,16 +6,23 @@ import {IColumnFormatterProps, IColumnFormatterData} from "../../../../shared/co
  */
 export default class GeneColumnFormatter extends React.Component<IColumnFormatterProps, {}>
 {
-    constructor(props:IColumnFormatterProps)
+    public static sortFunction(a:IColumnFormatterData, b:IColumnFormatterData)
     {
-        super(props);
-        this.state = {};
+        let aValue = GeneColumnFormatter.getValue(a);
+        let bValue = GeneColumnFormatter.getValue(b);
+
+        return aValue > bValue;
     }
 
-    public render()
+    public static filterFunction(contents:IColumnFormatterData, filter:string)
     {
-        let data:IColumnFormatterData = this.props.data;
+        let value = GeneColumnFormatter.getValue(contents);
 
+        return value.toLowerCase().indexOf(filter.toLowerCase()) > -1;
+    }
+
+    public static getValue(data:IColumnFormatterData):string
+    {
         let value:any;
 
         if (data.columnData)
@@ -29,6 +36,20 @@ export default class GeneColumnFormatter extends React.Component<IColumnFormatte
         else {
             value = ""; // default value (e.g: N/A)?
         }
+
+        return value;
+    }
+
+    constructor(props:IColumnFormatterProps)
+    {
+        super(props);
+        this.state = {};
+    }
+
+    public render()
+    {
+        let data:IColumnFormatterData = this.props.data;
+        let value = GeneColumnFormatter.getValue(data);
 
         return (
             <span>{value}</span>
