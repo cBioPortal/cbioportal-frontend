@@ -39,14 +39,14 @@ export default class MutationTable extends React.Component<IEnhancedReactTablePr
                     name: "Gene",
                     formatter: GeneColumnFormatter,
                     sortable: GeneColumnFormatter.sortFunction,
-                    filterable: GeneColumnFormatter.filterFunction,
+                    filterable: true,
                     visible: true
                 },
                 {
                     name: "Sample",
                     formatter: SampleColumnFormatter,
                     sortable: SampleColumnFormatter.sortFunction,
-                    filterable: SampleColumnFormatter.filterFunction,
+                    filterable: true,
                     visible: true
                 },
                 {

@@ -6,7 +6,7 @@ import {IColumnFormatterProps, IColumnFormatterData} from "../../../../shared/co
  */
 export default class GeneColumnFormatter extends React.Component<IColumnFormatterProps, {}>
 {
-    public static sortFunction(a:IColumnFormatterData, b:IColumnFormatterData)
+    public static sortFunction(a:IColumnFormatterData, b:IColumnFormatterData):boolean
     {
         let aValue = GeneColumnFormatter.getValue(a);
         let bValue = GeneColumnFormatter.getValue(b);
@@ -14,11 +14,9 @@ export default class GeneColumnFormatter extends React.Component<IColumnFormatte
         return aValue > bValue;
     }
 
-    public static filterFunction(contents:IColumnFormatterData, filter:string)
+    public static filterValue(data:IColumnFormatterData):string
     {
-        let value = GeneColumnFormatter.getValue(contents);
-
-        return value.toLowerCase().indexOf(filter.toLowerCase()) > -1;
+        return GeneColumnFormatter.getValue(data);
     }
 
     public static getValue(data:IColumnFormatterData):string

@@ -12,7 +12,7 @@ export default class SampleColumnFormatter extends React.Component<IColumnFormat
     static SUFFIX:string = "...";
     static TOOLTIP_STYLE:string = "simple-tip";
 
-    public static sortFunction(a:IColumnFormatterData, b:IColumnFormatterData)
+    public static sortFunction(a:IColumnFormatterData, b:IColumnFormatterData):boolean
     {
         let aValue = SampleColumnFormatter.getValue(a);
         let bValue = SampleColumnFormatter.getValue(b);
@@ -20,11 +20,9 @@ export default class SampleColumnFormatter extends React.Component<IColumnFormat
         return aValue > bValue;
     }
 
-    public static filterFunction(contents:IColumnFormatterData, filter:string)
+    public static filterValue(data:IColumnFormatterData):string
     {
-        let value = SampleColumnFormatter.getValue(contents);
-
-        return value.toLowerCase().indexOf(filter.toLowerCase()) > -1;
+        return SampleColumnFormatter.getValue(data);
     }
 
     public static getText(sampleId:string):string
