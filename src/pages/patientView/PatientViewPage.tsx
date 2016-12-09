@@ -6,7 +6,7 @@ import ClinicalInformationContainer from './clinicalInformation/ClinicalInformat
 import PatientHeaderUnconnected from './patientHeader/PatientHeader';
 import {IPatientHeaderProps} from './patientHeader/PatientHeader';
 import {RootState} from "../../redux/rootReducer";
-import ExamplePage from './example';
+import Example from './example';
 
 interface IPatientViewPageProps {
     store?: RootState;
@@ -33,7 +33,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     public render() {
         return (
-            <ExamplePage />
+            <Example />
         );
     }
 }
