@@ -5,3 +5,4 @@ declare module 'react-file-download';
 declare module 'react-zeroclipboard';
 declare module 'reactableMSK';
 declare module 'redux-seamless-immutable';
+declare module 'webpack-raphael';
