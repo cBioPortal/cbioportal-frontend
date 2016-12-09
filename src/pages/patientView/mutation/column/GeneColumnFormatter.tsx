@@ -1,10 +1,11 @@
 import * as React from 'react';
-import {IColumnFormatterProps, IColumnFormatterData} from "../../../../shared/components/enhancedReactTable/IColumnFormatterProps";
+import {IColumnFormatterProps, IColumnFormatterData, IColumnFormatter}
+    from "../../../../shared/components/enhancedReactTable/IColumnFormatterProps";
 
 /**
  * @author Selcuk Onur Sumer
  */
-export default class GeneColumnFormatter extends React.Component<IColumnFormatterProps, {}>
+export default class GeneColumnFormatter extends React.Component<IColumnFormatterProps, {}> implements IColumnFormatter
 {
     public static sortFunction(a:IColumnFormatterData, b:IColumnFormatterData):boolean
     {

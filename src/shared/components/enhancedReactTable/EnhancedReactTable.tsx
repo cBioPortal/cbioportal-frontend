@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {Table as DataTable} from "reactableMSK";
 import * as _ from 'underscore';
-import IEnhancedReactTableProps from "IEnhancedReactTableProps";
+import {IEnhancedReactTableProps, IColumnDefMap} from "IEnhancedReactTableProps";
 import {IColumnFormatterData} from "./IColumnFormatterProps";
 
 /**
@@ -22,6 +22,8 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
             rawData
         } = this.props;
 
+        columns = columns || {};
+
         // update (override) react table props
         reactTableProps.data = this.convertToTableData(columns, rawData);
         reactTableProps.columnFormatters = this.columnFormatters(columns);
@@ -35,7 +37,7 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
         );
     }
 
-    private resolveSortable(columns:Array<any>)
+    private resolveSortable(columns:IColumnDefMap):Array<any>
     {
         let sortable:Array<any> = []; // Array<string|function>
 
@@ -54,7 +56,7 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
         return sortable;
     }
 
-    private resolveFilterable(columns:Array<any>)
+    private resolveFilterable(columns:IColumnDefMap):Array<any>
     {
         let filterable:Array<any> = []; // Array<string|function>
 
@@ -73,7 +75,7 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
         return filterable;
     }
 
-    private columnFormatters(columns:Array<any>)
+    private columnFormatters(columns:IColumnDefMap):any
     {
         let formatters:any = {};
 
@@ -84,7 +86,7 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
         return formatters;
     }
 
-    private convertToTableData(columns:Array<any>, rawData:Array<any>)
+    private convertToTableData(columns:IColumnDefMap, rawData:Array<any>):Array<any>
     {
         let rows:Array<any> = [];
 
