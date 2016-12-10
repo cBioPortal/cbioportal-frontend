@@ -1,4 +1,6 @@
 import * as React from 'react';
+import * as lodash from 'lodash';
+
 import EnhancedReactTable from "../enhancedReactTable/EnhancedReactTable";
 import {IEnhancedReactTableProps, IColumnDefMap} from "../enhancedReactTable/IEnhancedReactTableProps";
 import GeneColumnFormatter from "./column/GeneColumnFormatter";
@@ -104,12 +106,10 @@ export default class MutationTable extends React.Component<IEnhancedReactTablePr
         );
     }
 
-    private mergeProps(props:IEnhancedReactTableProps)
+    private mergeProps(props:IEnhancedReactTableProps):IEnhancedReactTableProps
     {
-        const rawData:Array<any> = props.rawData;
-
         const defaultProps:IEnhancedReactTableProps = {
-            rawData,
+            rawData: [],
             columns: MutationTable.defaultColumns,
             reactTableProps: {
                 className: "table",
@@ -117,8 +117,8 @@ export default class MutationTable extends React.Component<IEnhancedReactTablePr
             }
         };
 
-        // TODO merge provided props with the default props!
-        return defaultProps;
+        // merge provided props with the default props
+        return lodash.merge(defaultProps, props);
     }
 };
 
