@@ -15,37 +15,48 @@ export default class ProteinChangeColumnFormatter extends React.Component<IColum
         return aValue > bValue;
     }
 
+    // this is to sort alphabetically
+    // in case the protein position values are the same
+    public static extractNonNumerical(matched:RegExpMatchArray):Array<number>
+    {
+        let nonNumerical:RegExp = /[^0-9]+/g;
+        let buffer:RegExpMatchArray|null = matched[0].match(nonNumerical);
+        let value:Array<number> = [];
+
+        if (buffer && buffer.length > 0)
+        {
+            let str:string = buffer.join("");
+
+            // since we are returning a float value
+            // assigning numerical value for each character.
+            // we have at most 2 characters, so this should be safe...
+            for (let i:number=0; i<str.length; i++)
+            {
+                value.push(str.charCodeAt(i));
+            }
+        }
+
+        return value;
+    }
+
     public static sortValue(data:IColumnFormatterData):number
     {
         let proteinChange:string = ProteinChangeColumnFormatter.getValue(data);
+        return ProteinChangeColumnFormatter.extractSortValue(proteinChange);
+    }
 
+    /**
+     * Extracts the sort value for the protein change value.
+     * The return value is based on the protein change location.
+     *
+     * @param proteinChange
+     * @returns {number} sort value
+     */
+    public static extractSortValue(proteinChange:string):number
+    {
         // let matched = proteinChange.match(/.*[A-Z]([0-9]+)[^0-9]+/);
         let alleleAndPosition:RegExp = /[A-Za-z][0-9]+./g;
         let position:RegExp = /[0-9]+/g;
-        let nonNumerical:RegExp = /[^0-9]+/g;
-
-        function extractNonNumerical(matched:RegExpMatchArray):Array<number>
-        {
-            // this is to sort alphabetically
-            // in case the protein position values are the same
-            let buffer:RegExpMatchArray|null = matched[0].match(nonNumerical);
-            let value:Array<number> = [];
-
-            if (buffer && buffer.length > 0)
-            {
-                let str:string = buffer.join("");
-
-                // since we are returning a float value
-                // assigning numerical value for each character.
-                // we have at most 2 characters, so this should be safe...
-                for (let i:number=0; i<str.length; i++)
-                {
-                    value.push(str.charCodeAt(i));
-                }
-            }
-
-            return value;
-        }
 
         // first priority is to match values like V600E , V600, E747G, E747, X37_, X37, etc.
         let matched:RegExpMatchArray|null = proteinChange.match(alleleAndPosition);
@@ -60,7 +71,7 @@ export default class ProteinChangeColumnFormatter extends React.Component<IColum
         else
         {
             // this is to sort alphabetically
-            buffer = extractNonNumerical(matched);
+            buffer = ProteinChangeColumnFormatter.extractNonNumerical(matched);
             matched = matched[0].match(position);
         }
 
