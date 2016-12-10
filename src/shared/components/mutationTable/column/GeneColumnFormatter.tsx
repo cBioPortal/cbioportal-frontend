@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {IColumnFormatterProps, IColumnFormatterData, IColumnFormatter}
-    from "../../../../shared/components/enhancedReactTable/IColumnFormatterProps";
+    from "../../enhancedReactTable/IColumnFormatterProps";
 
 /**
  * @author Selcuk Onur Sumer

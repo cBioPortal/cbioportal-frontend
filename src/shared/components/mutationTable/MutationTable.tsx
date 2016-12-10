@@ -1,9 +1,9 @@
 import * as React from 'react';
-import EnhancedReactTable from "../../../shared/components/enhancedReactTable/EnhancedReactTable";
+import EnhancedReactTable from "../enhancedReactTable/EnhancedReactTable";
+import {IEnhancedReactTableProps, IColumnDefMap} from "../enhancedReactTable/IEnhancedReactTableProps";
 import GeneColumnFormatter from "./column/GeneColumnFormatter";
 import SampleColumnFormatter from "./column/SampleColumnFormatter";
 import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter";
-import {IEnhancedReactTableProps, IColumnDefMap} from "../../../shared/components/enhancedReactTable/IEnhancedReactTableProps";
 
 /**
  * @author Selcuk Onur Sumer
