@@ -21,6 +21,9 @@ import queryString from "query-string";
 import SampleManager from './sampleManager';
 import SelectCallback = ReactBootstrap.SelectCallback;
 import {MrnaPercentile, default as CBioPortalAPIInternal} from "../../shared/api/CBioPortalAPIInternal";
+import PatientHeader from './patientHeader/PatientHeader';
+
+import './patientHeader/style/clinicalAttributes.scss';
 
 export interface IPatientViewPageProps {
     store?: RootState;
@@ -235,22 +238,22 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     public render() {
 
         let sampleManager: SampleManager | null = null;
-        let sampleHeader: JSX.Element[] | null = null;
+        let sampleHeader: (JSX.Element | undefined)[] | null = null;
 
         if (this.props.samples) {
             sampleManager = new SampleManager(this.props.samples);
 
             sampleHeader = _.map(sampleManager!.samples,(sample: ClinicalDataBySampleId) => {
-                return <span style={{ marginRight:10 }}>{sampleManager!.getComponentForSample(sample.id)} {sample.id}</span>;
+                return sampleManager!.getComponentForSample(sample.id, true);
             });
-
         }
 
         return (
             <div>
 
                 <If condition={sampleHeader}>
-                    <div style={{marginBottom:20}}>
+                    <div style={{padding:20, borderRadius:5, background: '#eee', marginBottom: 20}}>
+                        <PatientHeader patient={this.props.patient} />
                         {sampleHeader}
                     </div>
                 </If>
