@@ -55,7 +55,7 @@ API_ROOT=www.cbioportal.org/api-legacy
 
 ## Check in cBioPortal context
 Go to
-http://cbioportal-pr-1720.herokuapp.com/case.do?cancer_study_id=lgg_ucsf_2014&case_id=P04
+http://cbioportal-rc.herokuapp.com/case.do?cancer_study_id=lgg_ucsf_2014&case_id=P04
 
 In your browser console set:
 ```
@@ -69,3 +69,8 @@ or clear entire local storage
 ```
 localStorage.clear()
 ```
+You can also use a heroku deployed cbioportal-frontend pull request for serving the JS by setting localStorage to:
+```
+localStorage.setItem("heroku", "cbioportal-frontend-pr-x")
+```
+Change `x` to the number of your pull request.
