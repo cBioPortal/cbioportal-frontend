@@ -19,7 +19,7 @@ export default class TumorColumnFormatter {
                 return (
                     <li className={(sample.id in presentSamples) ? '' : 'invisible'}>
                         {
-                        columnProps.sampleManager.getComponentForSample(sample.id, { showText: false })
+                        columnProps.sampleManager.getComponentForSample(sample.id, false)
                         }
                     </li>
                 );
