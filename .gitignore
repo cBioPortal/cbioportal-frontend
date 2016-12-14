@@ -11,3 +11,4 @@ stats.json
 tsDist/
 dist/
 common-dist/
+.sass-cache
