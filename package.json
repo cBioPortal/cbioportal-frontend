@@ -139,8 +139,5 @@
     "tslint-react": "^1.0.0",
     "webpack-dev-server": "^1.15.0",
     "yargs": "^4.8.0"
-  },
-  "pre-commit": [
-    "lint"
-  ]
+  }
 }
