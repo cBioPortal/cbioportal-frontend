@@ -15,23 +15,42 @@ export default class SampleColumnFormatter extends React.Component<IColumnFormat
 
     public static sortFunction(a:IColumnFormatterData, b:IColumnFormatterData):boolean
     {
-        let aValue = SampleColumnFormatter.getValue(a);
-        let bValue = SampleColumnFormatter.getValue(b);
+        let aValue = SampleColumnFormatter.getTextValue(a);
+        let bValue = SampleColumnFormatter.getTextValue(b);
 
         return aValue > bValue;
     }
 
     public static filterValue(data:IColumnFormatterData):string
     {
-        return SampleColumnFormatter.getValue(data);
+        return SampleColumnFormatter.getTextValue(data);
     }
 
-    public static getText(sampleId:string):string
+    public static getTextValue(data:IColumnFormatterData):string
     {
-        let text:string = sampleId;
+        let textValue:string = "";
+        let dataValue:any = SampleColumnFormatter.getData(data);
+
+        if (dataValue) {
+            textValue = dataValue.toString();
+        }
+
+        return textValue;
+    }
+
+    /**
+     * For short sample ids display value is same as the text value,
+     * but for long sample id's we truncate the id and display a partial value.
+     *
+     * @param data  column formatter data
+     * @returns {string}    display text value (may be truncated)
+     */
+    public static getDisplayValue(data:IColumnFormatterData):string
+    {
+        let text:string = SampleColumnFormatter.getTextValue(data);
 
         // clip if too long
-        if (SampleColumnFormatter.isTooLong(sampleId,
+        if (SampleColumnFormatter.isTooLong(text,
                                             SampleColumnFormatter.MAX_LENGTH,
                                             SampleColumnFormatter.BUFFER))
         {
@@ -66,7 +85,7 @@ export default class SampleColumnFormatter extends React.Component<IColumnFormat
         return sampleId != null && (sampleId.length > maxLength + buffer);
     }
 
-    public static getValue(data:IColumnFormatterData):string
+    public static getData(data:IColumnFormatterData):any
     {
         let value:any;
 
@@ -77,7 +96,7 @@ export default class SampleColumnFormatter extends React.Component<IColumnFormat
             value = data.rowData.sampleId;
         }
         else {
-            value = ""; // default value (e.g: N/A)?
+            value = null;
         }
 
         return value;
@@ -89,18 +108,18 @@ export default class SampleColumnFormatter extends React.Component<IColumnFormat
         this.state = {};
     }
 
-    public render()
+    public render():any
     {
         let data:IColumnFormatterData = this.props.data;
-        let sampleId:string = SampleColumnFormatter.getValue(data);
-        let text:string = SampleColumnFormatter.getText(sampleId);
+        let sampleId:string = SampleColumnFormatter.getTextValue(data);
+        let text:string = SampleColumnFormatter.getDisplayValue(data);
         let toolTip:string = SampleColumnFormatter.getToolTip(sampleId);
         let styleClass:string = SampleColumnFormatter.getStyleClass(sampleId);
         let linkToPatientView:string = "#"; // TODO generate or get it from somewhere else
 
         return (
             <a href={linkToPatientView} target='_blank'>
-                <span alt={toolTip} class={styleClass}>{text}</span>
+                <span alt={toolTip} className={styleClass}>{text}</span>
             </a>
         );
     }
