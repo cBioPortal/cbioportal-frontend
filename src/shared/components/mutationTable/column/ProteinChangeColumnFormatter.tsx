@@ -41,7 +41,7 @@ export default class ProteinChangeColumnFormatter extends React.Component<IColum
 
     public static sortValue(data:IColumnFormatterData):number
     {
-        let proteinChange:string = ProteinChangeColumnFormatter.getValue(data);
+        let proteinChange:string = ProteinChangeColumnFormatter.getTextValue(data);
         return ProteinChangeColumnFormatter.extractSortValue(proteinChange);
     }
 
@@ -100,26 +100,39 @@ export default class ProteinChangeColumnFormatter extends React.Component<IColum
 
     public static filterValue(data:IColumnFormatterData):string
     {
-        return ProteinChangeColumnFormatter.getValue(data);
+        return ProteinChangeColumnFormatter.getTextValue(data);
     }
 
-    public static getText(proteinChange:string):string
+    public static getTextValue(data:IColumnFormatterData):string
     {
-        return proteinChange;
+        let textValue:string = "";
+        let dataValue:any = ProteinChangeColumnFormatter.getData(data);
+
+        if (dataValue) {
+            textValue = dataValue.toString();
+        }
+
+        return textValue;
     }
 
-    public static getValue(data:IColumnFormatterData):string
+    public static getDisplayValue(data:IColumnFormatterData):string
+    {
+        // same as text value
+        return ProteinChangeColumnFormatter.getTextValue(data);
+    }
+
+    public static getData(data:IColumnFormatterData):any
     {
         let value:any;
 
         if (data.columnData) {
             value = data.columnData;
         }
-        else if (data.rowData) {
+        else if (data.rowData && data.rowData.annotation) {
             value = data.rowData.annotation.proteinChange;
         }
         else {
-            value = ""; // default value (e.g: N/A)?
+            value = null;
         }
 
         return value;
@@ -131,11 +144,10 @@ export default class ProteinChangeColumnFormatter extends React.Component<IColum
         this.state = {};
     }
 
-    public render()
+    public render():any
     {
         let data:IColumnFormatterData = this.props.data;
-        let proteinChange:string = ProteinChangeColumnFormatter.getValue(data);
-        let text:string = ProteinChangeColumnFormatter.getText(proteinChange);
+        let text:string = ProteinChangeColumnFormatter.getDisplayValue(data);
 
         // TODO we probably need two different renderer classes, one for patient view one for results page
         return (
