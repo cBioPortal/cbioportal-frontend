@@ -14,19 +14,45 @@ export default class MutationAssessorColumnFormatter extends React.Component<ICo
      */
     public static get MA_SCORE_MAP():{[key:string]:any} {
         return {
-            h: {label: "High", style: "oma-high"},
-            m: {label: "Medium", style: "oma-medium"},
-            l: {label: "Low", style: "oma-low"},
-            n: {label: "Neutral", style: "oma-neutral"}
+            h: {label: "High", style: "oma-high", priority: 4},
+            m: {label: "Medium", style: "oma-medium", priority: 3},
+            l: {label: "Low", style: "oma-low", priority: 2},
+            n: {label: "Neutral", style: "oma-neutral", priority: 1}
         };
     }
 
     public static sortFunction(a:IColumnFormatterData, b:IColumnFormatterData):boolean
     {
-        let aValue = MutationAssessorColumnFormatter.getData(a).score;
-        let bValue = MutationAssessorColumnFormatter.getData(b).score;
+        let aScore = MutationAssessorColumnFormatter.getData(a).score;
+        let bScore = MutationAssessorColumnFormatter.getData(b).score;
+        let aImpact = MutationAssessorColumnFormatter.getData(a).impact;
+        let bImpact = MutationAssessorColumnFormatter.getData(b).impact;
 
-        return aValue > bValue;
+        // use actual score values to compare (if exist)
+        if (aScore && bScore)
+        {
+            return aScore > bScore;
+        }
+        // if no score available sort by impact priority
+        else if (aImpact && bImpact)
+        {
+            let aPriority = -1;
+            let bPriority = -1;
+
+            if (MutationAssessorColumnFormatter.MA_SCORE_MAP[aImpact.toLowerCase()])
+            {
+                aPriority = MutationAssessorColumnFormatter.MA_SCORE_MAP[aImpact.toLowerCase()].priority;
+            }
+
+            if (MutationAssessorColumnFormatter.MA_SCORE_MAP[bImpact.toLowerCase()])
+            {
+                bPriority = MutationAssessorColumnFormatter.MA_SCORE_MAP[bImpact.toLowerCase()].priority;
+            }
+
+            return aPriority > bPriority;
+        }
+
+        return false;
     }
 
     public static filterValue(data:IColumnFormatterData):string
@@ -113,7 +139,13 @@ export default class MutationAssessorColumnFormatter extends React.Component<ICo
         }
         else if (data.rowData)
         {
-            maData = data.rowData.mutationAssessor;
+            maData = {
+                impact: data.rowData.functionalImpactScore,
+                score: data.rowData.fisValue,
+                pdb: data.rowData.linkPdb,
+                msa: data.rowData.linkMsa,
+                xVar: data.rowData.linkXvar
+            };
         }
         else {
             maData = {};
