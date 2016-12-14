@@ -9,31 +9,55 @@ export default class GeneColumnFormatter extends React.Component<IColumnFormatte
 {
     public static sortFunction(a:IColumnFormatterData, b:IColumnFormatterData):boolean
     {
-        let aValue = GeneColumnFormatter.getValue(a);
-        let bValue = GeneColumnFormatter.getValue(b);
+        let aValue = GeneColumnFormatter.getTextValue(a);
+        let bValue = GeneColumnFormatter.getTextValue(b);
 
         return aValue > bValue;
     }
 
     public static filterValue(data:IColumnFormatterData):string
     {
-        return GeneColumnFormatter.getValue(data);
+        return GeneColumnFormatter.getTextValue(data);
     }
 
-    public static getValue(data:IColumnFormatterData):string
+    /**
+     * Default text value for a gene is its hugo gene symbol.
+     *
+     * @param data  column formatter data
+     * @returns {string}    hugo gene symbol
+     */
+    public static getTextValue(data:IColumnFormatterData):string
+    {
+        let geneData:any = GeneColumnFormatter.getData(data);
+
+        if (geneData.hugoGeneSymbol) {
+            return geneData.hugoGeneSymbol.toString();
+        }
+        else {
+            return "";
+        }
+    }
+
+    public static getDisplayValue(data:IColumnFormatterData):string
+    {
+        // same as text value
+        return GeneColumnFormatter.getTextValue(data);
+    }
+
+    public static getData(data:IColumnFormatterData):any
     {
         let value:any;
 
         if (data.columnData)
         {
-            value = data.columnData.hugoGeneSymbol;
+            value = data.columnData;
         }
         else if (data.rowData)
         {
-            value = data.rowData.gene.hugoGeneSymbol;
+            value = data.rowData.gene;
         }
         else {
-            value = ""; // default value (e.g: N/A)?
+            value = {};
         }
 
         return value;
@@ -45,10 +69,10 @@ export default class GeneColumnFormatter extends React.Component<IColumnFormatte
         this.state = {};
     }
 
-    public render()
+    public render():any
     {
         let data:IColumnFormatterData = this.props.data;
-        let value = GeneColumnFormatter.getValue(data);
+        let value = GeneColumnFormatter.getDisplayValue(data);
 
         return (
             <span>{value}</span>
