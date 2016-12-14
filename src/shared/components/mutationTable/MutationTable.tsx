@@ -6,6 +6,7 @@ import {IEnhancedReactTableProps, IColumnDefMap} from "../enhancedReactTable/IEn
 import GeneColumnFormatter from "./column/GeneColumnFormatter";
 import SampleColumnFormatter from "./column/SampleColumnFormatter";
 import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter";
+import MutationAssessorColumnFormatter from "./column/MutationAssessorColumnFormatter";
 
 /**
  * @author Selcuk Onur Sumer
@@ -81,6 +82,13 @@ export default class MutationTable extends React.Component<IEnhancedReactTablePr
             center: {
                 name: "center",
                 sortable: true,
+                filterable: true,
+                visible: true
+            },
+            mutationAssessor: {
+                name: "Mutation Assessor",
+                formatter: MutationAssessorColumnFormatter,
+                sortable: MutationAssessorColumnFormatter.sortFunction,
                 filterable: true,
                 visible: true
             }
