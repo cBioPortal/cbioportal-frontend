@@ -3,8 +3,10 @@
     "gene":
     {
       "chromosome": "string",
+      "cytoband": "string",
       "entrezGeneId": "number",
       "hugoGeneSymbol": "string",
+      "length": "number",
       "type": "string"
     },
     "startPos": "number",
@@ -12,24 +14,6 @@
     "referenceAllele": "string",
     "variantAllele": "string",
     "aminoAcidChange": "string",
-    "annotation":
-    {
-      "proteinChange": "string",
-      "mutationType": "string",
-      "proteinPosEnd": "number",
-      "proteinPosStart": "number",
-      "keyword": "string",
-      "uniprotEntryName": "string",
-      "uniprotAccession": "string"
-    },
-    "mutationAssessor":
-    {
-      "impact": "string",
-      "score": "number",
-      "pdb": "string",
-      "msa": "string",
-      "xVar": "string"
-    },
     "center": "string",
     "mutationStatus": "string",
     "validationStatus": "string",
@@ -38,170 +22,129 @@
     "tumorRefCount": "number",
     "tumorAltCount": "number",
     "normalRefCount": "number",
-    "normalAltCount": "number"
+    "normalAltCount": "number",
+    "proteinChange": "string",
+    "mutationType": "string",
+    "proteinPosEnd": "number",
+    "proteinPosStart": "number",
+    "keyword": "string",
+    "uniprotEntryName": "string",
+    "uniprotAccession": "string",
+    "functionalImpactScore": "string",
+    "fisValue": "number",
+    "linkPdb": "string",
+    "linkMsa": "string",
+    "linkXvar": "string"
   },
   {
     "gene":
     {
-      "chromosome": "17",
-      "entrezGeneId": null,
-      "hugoGeneSymbol": "BRCA1",
-      "type": ""
+      "chromosome": "21",
+      "cytoband": null,
+      "entrezGeneId": 4685,
+      "hugoGeneSymbol": "NCAM2",
+      "length": null,
+      "type": null
     },
-    "startPos": 41215914,
-    "endPos": 41215914,
+    "startPos": 22841054,
+    "endPos": 22841054,
     "referenceAllele": "C",
-    "variantAllele": "-",
+    "variantAllele": "A",
     "aminoAcidChange": null,
-    "annotation":
-    {
-      "proteinChange": "G1710Efs*4",
-      "mutationType": "Frame_Shift_Del",
-      "proteinPosEnd": "1710",
-      "proteinPosStart": "1710",
-      "keyword": "BRCA1 truncating",
-      "uniprotEntryName": "BRCA1_HUMAN",
-      "uniprotAccession": "P38398"
-    },
-    "mutationAssessor":
-    {
-      "impact": null,
-      "score": null,
-      "pdb": null,
-      "msa": null,
-      "xVar": null
-    },
-    "center": "Broad",
+    "center": null,
     "mutationStatus": "Somatic",
-    "validationStatus": "Valid",
-    "geneticProfileId": "ov_tcga_pub_mutations",
-    "sampleId": "TCGA-24-2035-01",
-    "tumorRefCount": null,
-    "tumorAltCount": null,
-    "normalRefCount": null,
-    "normalAltCount": null
-  },
-  {
-    "gene":
-    {
-      "chromosome": "17",
-      "entrezGeneId": null,
-      "hugoGeneSymbol": "BRCA1",
-      "type": ""
-    },
-    "startPos": 41243753,
-    "endPos": 41243754,
-    "referenceAllele": "",
-    "variantAllele": "TT",
-    "aminoAcidChange": null,
-    "annotation":
-    {
-      "proteinChange": "N1265Kfs*4",
-      "mutationType": "Frame_Shift_Ins",
-      "proteinPosEnd": "1265",
-      "proteinPosStart": "1265",
-      "keyword": "BRCA1 truncating",
-      "uniprotEntryName": "BRCA1_HUMAN",
-      "uniprotAccession": "P38398"
-    },
-    "mutationAssessor":
-    {
-      "impact": null,
-      "score": null,
-      "pdb": null,
-      "msa": null,
-      "xVar": null
-    },
-    "center": "WashU",
-    "mutationStatus": "Somatic",
-    "validationStatus": "Valid",
-    "geneticProfileId": "ov_tcga_pub_mutations",
-    "sampleId": "TCGA-13-1489-01",
-    "tumorRefCount": null,
-    "tumorAltCount": null,
-    "normalRefCount": null,
-    "normalAltCount": null
-  },
-  {
-    "gene":
-    {
-      "chromosome": "13",
-      "entrezGeneId": null,
-      "hugoGeneSymbol": "BRCA2",
-      "type": ""
-    },
-    "startPos": 32913620,
-    "endPos": 32913623,
-    "referenceAllele": "TATG",
-    "variantAllele": "-",
-    "aminoAcidChange": null,
-    "annotation":
-    {
-      "proteinChange": "Y1710*",
-      "mutationType": "Frame_Shift_Ins",
-      "proteinPosEnd": "1711",
-      "proteinPosStart": "1710",
-      "keyword": "BRCA2 truncating",
-      "uniprotEntryName": "BRCA2_HUMAN",
-      "uniprotAccession": "P51587"
-    },
-    "mutationAssessor":
-    {
-      "impact": null,
-      "score": null,
-      "pdb": null,
-      "msa": null,
-      "xVar": null
-    },
-    "center": "Broad",
-    "mutationStatus": "Germline",
     "validationStatus": "Valid",
     "geneticProfileId": "ov_tcga_pub_mutations",
     "sampleId": "TCGA-24-2024-01",
     "tumorRefCount": null,
     "tumorAltCount": null,
     "normalRefCount": null,
-    "normalAltCount": null
+    "normalAltCount": null,
+    "proteinChange": "Q616K",
+    "mutationType": "Missense_Mutation",
+    "proteinPosEnd": 616,
+    "proteinPosStart": 616,
+    "keyword": "NCAM2 Q616 missense",
+    "uniprotEntryName": null,
+    "uniprotAccession": null,
+    "functionalImpactScore": "L",
+    "fisValue": null,
+    "linkPdb": "getma.org/pdb.php?prot=NCAM2_HUMAN&from=593&to=678&var=Q616K",
+    "linkMsa": "http://mutationassessor.org/r2/?cm=msa&ty=f&p=NCAM2_HUMAN&rb=593&re=678&var=Q616K",
+    "linkXvar": "http://mutationassessor.org/r2/?cm=var&var=hg19,21,22841054,C,A&fts=all"
   },
   {
     "gene":
     {
-      "chromosome": "13",
-      "entrezGeneId": null,
-      "hugoGeneSymbol": "BRCA2",
-      "type": ""
+      "chromosome": "6",
+      "cytoband": null,
+      "entrezGeneId": 23195,
+      "hugoGeneSymbol": "MDN1",
+      "length": null,
+      "type": null
     },
-    "startPos": 32972626,
-    "endPos": 32972626,
-    "referenceAllele": "A",
-    "variantAllele": "T",
+    "startPos": 90368337,
+    "endPos": 90368337,
+    "referenceAllele": "G",
+    "variantAllele": "A",
     "aminoAcidChange": null,
-    "annotation":
-    {
-      "proteinChange": "K1638E",
-      "mutationType": "Missense_Mutation",
-      "proteinPosEnd": "1638",
-      "proteinPosStart": "1638",
-      "keyword": "BRCA2 K1638 missense",
-      "uniprotEntryName": "BRCA2_HUMAN",
-      "uniprotAccession": "P51587"
-    },
-    "mutationAssessor":
-    {
-      "impact": "L",
-      "score": 1.67,
-      "pdb": null,
-      "msa": "http://mutationassessor.org/r2/?&cm=msa&ty=f&p=BRCA2_HUMAN&rb=1552&re=1663&var=K1638E",
-      "xVar": "http://mutationassessor.org/r2/&cm=var&var=hg19,13,32913404,A,G&fts=all"
-    },
-    "center": "Broad",
+    "center": null,
     "mutationStatus": "Somatic",
     "validationStatus": "Valid",
     "geneticProfileId": "ov_tcga_pub_mutations",
-    "sampleId": "TCGA-24-1103-01 (deliberately elongated sample id)",
+    "sampleId": "TCGA-24-2024-01",
     "tumorRefCount": null,
     "tumorAltCount": null,
     "normalRefCount": null,
-    "normalAltCount": null
+    "normalAltCount": null,
+    "proteinChange": "Q5005*",
+    "mutationType": "Nonsense_Mutation",
+    "proteinPosEnd": 5005,
+    "proteinPosStart": 5005,
+    "keyword": "MDN1 truncating",
+    "uniprotEntryName": null,
+    "uniprotAccession": null,
+    "functionalImpactScore": "L",
+    "fisValue": null,
+    "linkPdb": null,
+    "linkMsa": null,
+    "linkXvar": "http://mutationassessor.org/r2/?cm=var&var=hg19,6,90368337,G,A&fts=all"
+  },
+  {
+    "gene":
+    {
+      "chromosome": "5",
+      "cytoband": null,
+      "entrezGeneId": 324,
+      "hugoGeneSymbol": "APC",
+      "length": null,
+      "type": null
+    },
+    "startPos": 112175577,
+    "endPos": 112175577,
+    "referenceAllele": "A",
+    "variantAllele": "G",
+    "aminoAcidChange": null,
+    "center": null,
+    "mutationStatus": "Somatic",
+    "validationStatus": "Valid",
+    "geneticProfileId": "ov_tcga_pub_mutations",
+    "sampleId": "TCGA-24-2024-01 (deliberately elongated id)",
+    "tumorRefCount": null,
+    "tumorAltCount": null,
+    "normalRefCount": null,
+    "normalAltCount": null,
+    "proteinChange": "Q1429R",
+    "mutationType": "Missense_Mutation",
+    "proteinPosEnd": 1429,
+    "proteinPosStart": 1429,
+    "keyword": "APC Q1429 missense",
+    "uniprotEntryName": null,
+    "uniprotAccession": null,
+    "functionalImpactScore": "M",
+    "fisValue": null,
+    "linkPdb": null,
+    "linkMsa": "http://mutationassessor.org/r2/?cm=msa&ty=f&p=APC_HUMAN&rb=1395&re=1484&var=Q1429R",
+    "linkXvar": "http://mutationassessor.org/r2/?cm=var&var=hg19,5,112175577,A,G&fts=all"
   }
 ]
