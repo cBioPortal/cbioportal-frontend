@@ -120,8 +120,7 @@ export default class MutationTable extends React.Component<IEnhancedReactTablePr
             rawData: [],
             columns: MutationTable.defaultColumns,
             reactTableProps: {
-                className: "table",
-                id: "table"
+                className: "table table-striped"
             }
         };
 
