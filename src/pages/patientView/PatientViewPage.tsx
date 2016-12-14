@@ -3,6 +3,7 @@ import * as ReactDOM from 'react-dom';
 import { connect } from 'react-redux';
 import { Component } from 'react';
 import ClinicalInformationContainer from './clinicalInformation/ClinicalInformationContainer';
+import MutationInformationContainer from './mutation/MutationInformationContainer';
 import PatientHeaderUnconnected from './patientHeader/PatientHeader';
 import {IPatientHeaderProps} from './patientHeader/PatientHeader';
 import {RootState} from '../../redux/rootReducer';
@@ -38,6 +39,13 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         //     );
         // } //
 
+        let mutationDiv: Element | null = document.getElementById('mutations_div_prototype');
+        if (mutationDiv) {
+            ReactDOM.render(
+                <MutationInformationContainer {...{store: this.props.store}} />,
+                mutationDiv
+            );
+        }
 
         this.exposeComponentRenderersToParentScript();
 
