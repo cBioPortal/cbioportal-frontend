@@ -128,8 +128,8 @@ export default class ProteinChangeColumnFormatter extends React.Component<IColum
         if (data.columnData) {
             value = data.columnData;
         }
-        else if (data.rowData && data.rowData.annotation) {
-            value = data.rowData.annotation.proteinChange;
+        else if (data.rowData) {
+            value = data.rowData.proteinChange;
         }
         else {
             value = null;
