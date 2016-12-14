@@ -5,7 +5,8 @@ import { Component } from 'react';
 import ClinicalInformationContainer from './clinicalInformation/ClinicalInformationContainer';
 import PatientHeaderUnconnected from './patientHeader/PatientHeader';
 import {IPatientHeaderProps} from './patientHeader/PatientHeader';
-import {RootState} from "../../redux/rootReducer";
+import {RootState} from '../../redux/rootReducer';
+import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
 
 interface IPatientViewPageProps {
     store?: RootState;
@@ -46,22 +47,15 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     // these components whenever and wherever it wants
     exposeComponentRenderersToParentScript() {
 
-        const win: any = window;
-
-        if(win) {
-            win.renderPatientView = (mountNode: HTMLElement): void => {
-                ReactDOM.render(
-                    <ClinicalInformationContainer store={ this.props.store } />,
-                    mountNode
-                );
-            };
-        }
+        exposeComponentRenderer('renderClinicalInformationContainer', ClinicalInformationContainer,
+            { store:this.props.store }
+        );
 
     }
 
     public render() {
         return (
-            <ClinicalInformationContainer />
+            <div />
         );
     }
 }
