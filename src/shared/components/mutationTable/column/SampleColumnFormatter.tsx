@@ -85,7 +85,7 @@ export default class SampleColumnFormatter extends React.Component<IColumnFormat
         return sampleId != null && (sampleId.length > maxLength + buffer);
     }
 
-    public static getData(data:IColumnFormatterData):any
+    public static getData(data:IColumnFormatterData)
     {
         let value:any;
 
@@ -108,7 +108,7 @@ export default class SampleColumnFormatter extends React.Component<IColumnFormat
         this.state = {};
     }
 
-    public render():any
+    public render()
     {
         let data:IColumnFormatterData = this.props.data;
         let sampleId:string = SampleColumnFormatter.getTextValue(data);
