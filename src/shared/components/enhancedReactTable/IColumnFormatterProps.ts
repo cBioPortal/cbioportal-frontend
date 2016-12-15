@@ -17,7 +17,7 @@ export interface IColumnFormatterData {
 }
 
 export interface IColumnFormatter {
-    //render():any;
+    //render();
 }
 
 export interface IColumnSortFunction {

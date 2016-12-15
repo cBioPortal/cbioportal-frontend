@@ -75,7 +75,7 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
         return filterable;
     }
 
-    private columnFormatters(columns:IColumnDefMap):any
+    private columnFormatters(columns:IColumnDefMap)
     {
         let formatters:any = {};
 

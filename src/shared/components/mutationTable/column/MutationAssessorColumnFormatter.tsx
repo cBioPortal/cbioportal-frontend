@@ -3,6 +3,13 @@ import {IColumnFormatterProps, IColumnFormatterData, IColumnFormatter}
     from "../../enhancedReactTable/IColumnFormatterProps";
 import "./mutationAssessor.scss";
 
+type MA_STYLE = 'oma-high' | 'oma-medium' | 'oma-low' | 'oma-neutral';
+type IMutationAssessorFormat = {
+    label: string,
+    style: MA_STYLE,
+    priority: number
+};
+
 /**
  * @author Selcuk Onur Sumer
  */
@@ -12,7 +19,7 @@ export default class MutationAssessorColumnFormatter extends React.Component<ICo
      * Mapping between the functional impact score (data) values and
      * view values.
      */
-    public static get MA_SCORE_MAP():{[key:string]:any} {
+    public static get MA_SCORE_MAP():{[key:string]: IMutationAssessorFormat} {
         return {
             h: {label: "High", style: "oma-high", priority: 4},
             m: {label: "Medium", style: "oma-medium", priority: 3},
@@ -68,7 +75,8 @@ export default class MutationAssessorColumnFormatter extends React.Component<ICo
      */
     public static getDisplayValue(data:IColumnFormatterData):string
     {
-        let entry:any = MutationAssessorColumnFormatter.getMapEntry(data);
+        let entry:IMutationAssessorFormat|undefined =
+            MutationAssessorColumnFormatter.getMapEntry(data);
 
         // first, try to find a mapped value
         if (entry) {
@@ -95,7 +103,8 @@ export default class MutationAssessorColumnFormatter extends React.Component<ICo
 
     public static getScoreClass(data:IColumnFormatterData):string
     {
-        let value:any = MutationAssessorColumnFormatter.getMapEntry(data);
+        let value:IMutationAssessorFormat|undefined =
+            MutationAssessorColumnFormatter.getMapEntry(data);
 
         if (value) {
             return value.style;
@@ -107,7 +116,8 @@ export default class MutationAssessorColumnFormatter extends React.Component<ICo
 
     public static getMaClass(data:IColumnFormatterData):string
     {
-        let value:any = MutationAssessorColumnFormatter.getMapEntry(data);
+        let value:IMutationAssessorFormat|undefined =
+            MutationAssessorColumnFormatter.getMapEntry(data);
 
         if (value) {
             return "oma-link";
@@ -117,19 +127,19 @@ export default class MutationAssessorColumnFormatter extends React.Component<ICo
         }
     }
 
-    public static getMapEntry(data:IColumnFormatterData):any // IMutationAssessorFormat?
+    public static getMapEntry(data:IColumnFormatterData)
     {
-        let entry:any = null;
         let maData:any = MutationAssessorColumnFormatter.getData(data);
 
         if (maData && maData.impact) {
-            entry = MutationAssessorColumnFormatter.MA_SCORE_MAP[maData.impact.toLowerCase()];
+            return MutationAssessorColumnFormatter.MA_SCORE_MAP[maData.impact.toLowerCase()];
         }
-
-        return entry;
+        else {
+            return undefined;
+        }
     }
 
-    public static getData(data:IColumnFormatterData):any
+    public static getData(data:IColumnFormatterData)
     {
         let maData:any;
 
@@ -160,7 +170,7 @@ export default class MutationAssessorColumnFormatter extends React.Component<ICo
         this.state = {};
     }
 
-    public render():any
+    public render()
     {
         let data:IColumnFormatterData = this.props.data;
         let text:string = MutationAssessorColumnFormatter.getDisplayValue(data);
