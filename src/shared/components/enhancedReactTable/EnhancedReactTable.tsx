@@ -1,8 +1,20 @@
 import * as React from 'react';
 import {Table as DataTable} from "reactableMSK";
 import * as _ from 'underscore';
-import {IEnhancedReactTableProps, IColumnDefMap} from "IEnhancedReactTableProps";
-import {IColumnFormatterData} from "./IColumnFormatterProps";
+import {IEnhancedReactTableProps, IColumnDefMap, IEnhancedReactTableColumnDef}
+    from "IEnhancedReactTableProps";
+import {IColumnFormatter, IColumnFormatterData, IColumnSortFunction, IColumnFilterFunction}
+    from "./IColumnFormatterProps";
+
+type COLUMN_SORT = {
+    column: string,
+    sortFunction: IColumnSortFunction
+};
+
+type COLUMN_FILTER = {
+    column: string,
+    filterFunction: IColumnFilterFunction
+};
 
 /**
  * @author Selcuk Onur Sumer
@@ -37,11 +49,11 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
         );
     }
 
-    private resolveSortable(columns:IColumnDefMap):Array<any>
+    private resolveSortable(columns:IColumnDefMap):Array<string|COLUMN_SORT>
     {
-        let sortable:Array<any> = []; // Array<string|function>
+        let sortable:Array<string|COLUMN_SORT> = [];
 
-        _.each(columns, function(column:any) {
+        _.each(columns, function(column:IEnhancedReactTableColumnDef) {
             if (_.isFunction(column.sortable)) {
                 sortable.push({
                     column: column.name,
@@ -56,11 +68,11 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
         return sortable;
     }
 
-    private resolveFilterable(columns:IColumnDefMap):Array<any>
+    private resolveFilterable(columns:IColumnDefMap):Array<string|COLUMN_FILTER>
     {
-        let filterable:Array<any> = []; // Array<string|function>
+        let filterable:Array<string|COLUMN_FILTER> = [];
 
-        _.each(columns, function(column:any) {
+        _.each(columns, function(column:IEnhancedReactTableColumnDef) {
             if (_.isFunction(column.filterable)) {
                 filterable.push({
                     column: column.name,
@@ -75,12 +87,14 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
         return filterable;
     }
 
-    private columnFormatters(columns:IColumnDefMap)
+    private columnFormatters(columns:IColumnDefMap):{[key:string]: IColumnFormatter}
     {
-        let formatters:any = {};
+        let formatters:{[key:string]: IColumnFormatter} = {};
 
-        _.each(columns, function(column:any) {
-            formatters[column.name] = column.formatter;
+        _.each(columns, function(column:IEnhancedReactTableColumnDef) {
+            if (column.formatter) {
+                formatters[column.name] = column.formatter;
+            }
         });
 
         return formatters;
