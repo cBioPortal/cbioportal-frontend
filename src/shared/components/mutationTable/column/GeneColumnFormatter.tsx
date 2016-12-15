@@ -44,7 +44,7 @@ export default class GeneColumnFormatter extends React.Component<IColumnFormatte
         return GeneColumnFormatter.getTextValue(data);
     }
 
-    public static getData(data:IColumnFormatterData):any
+    public static getData(data:IColumnFormatterData)
     {
         let value:any;
 
@@ -69,7 +69,7 @@ export default class GeneColumnFormatter extends React.Component<IColumnFormatte
         this.state = {};
     }
 
-    public render():any
+    public render()
     {
         let data:IColumnFormatterData = this.props.data;
         let value = GeneColumnFormatter.getDisplayValue(data);
