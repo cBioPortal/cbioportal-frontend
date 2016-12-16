@@ -6,12 +6,12 @@ import {IEnhancedReactTableProps, IColumnDefMap, IEnhancedReactTableColumnDef}
 import {IColumnFormatter, IColumnFormatterData, IColumnSortFunction, IColumnFilterFunction}
     from "./IColumnFormatterProps";
 
-type COLUMN_SORT = {
+type IColumnSort = {
     column: string,
     sortFunction: IColumnSortFunction
 };
 
-type COLUMN_FILTER = {
+type IColumnFilter = {
     column: string,
     filterFunction: IColumnFilterFunction
 };
@@ -49,9 +49,9 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
         );
     }
 
-    private resolveSortable(columns:IColumnDefMap):Array<string|COLUMN_SORT>
+    private resolveSortable(columns:IColumnDefMap):Array<string|IColumnSort>
     {
-        let sortable:Array<string|COLUMN_SORT> = [];
+        let sortable:Array<string|IColumnSort> = [];
 
         _.each(columns, function(column:IEnhancedReactTableColumnDef) {
             if (_.isFunction(column.sortable)) {
@@ -68,9 +68,9 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
         return sortable;
     }
 
-    private resolveFilterable(columns:IColumnDefMap):Array<string|COLUMN_FILTER>
+    private resolveFilterable(columns:IColumnDefMap):Array<string|IColumnFilter>
     {
-        let filterable:Array<string|COLUMN_FILTER> = [];
+        let filterable:Array<string|IColumnFilter> = [];
 
         _.each(columns, function(column:IEnhancedReactTableColumnDef) {
             if (_.isFunction(column.filterable)) {
