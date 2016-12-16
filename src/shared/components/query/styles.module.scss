@@ -1,0 +1,102 @@
+.QueryContainer {
+  height: 100%;
+}
+
+.CancerStudySelector {
+
+  user-select: none;
+  label {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .treeWithStudies {
+    label:hover {
+      text-decoration: underline;
+    }
+
+    .cancerTypeTreeNode {
+      label {
+        font-weight: normal;
+      }
+      color: grey;
+      font-style: italic;
+    }
+    .cancerStudyName {
+      label {
+        font-weight: bold;
+      }
+    }
+    .cancerStudySamples {
+      font-style: italic;
+    }
+  }
+
+  .treeNodeContent {
+    flex: 1;
+    align-items: center;
+  }
+
+  :global(.checkbox) {
+    padding-left: 5px;
+    margin: 0px;
+    display: flex;
+    flex-direction: row;
+
+    input {
+      cursor: pointer;
+    }
+  }
+
+  .treeNodeLabel {
+    cursor: pointer;
+    flex: 1;
+  }
+
+  .selectable:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+
+  .selectable.selected {
+    background-color: rgb(196, 211, 230);
+  }
+
+  .selectable.selected:hover {
+    background-color: lightsteelblue;
+  }
+
+  .matchingNodeText {
+    font-weight: bold;
+  }
+
+  .nonMatchingNodeText {
+    font-weight: normal;
+  }
+
+  /* makes react-bootstrap-table work in flexbox layout */
+  :global(.react-bs-table-container),:global(.react-bs-table),:global(.react-bs-container-body) {
+  	display: flex;
+  	flex-direction: column;
+  	flex: 1;
+  	height: initial !important;
+  }
+  :global(.react-bs-table) {
+    margin: 0px;
+  }
+
+  :global(.table) {
+    margin-bottom: 0px;
+  }
+
+  :global(th.sort-column)>* {
+    display: inline;
+  }
+
+  div.studyHeader {
+    display: inline-flex;
+    align-items: center;
+    height: 100%;
+  }
+}
+

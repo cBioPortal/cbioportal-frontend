@@ -1,38 +1,44 @@
 import * as React from 'react';
-import CBioPortalAPI from "../../shared/api/CBioPortalAPI";
-import {CancerStudy} from "../../shared/api/CBioPortalAPI";
+import QueryContainer from "../../shared/components/query/QueryContainer";
+import * as styles_any from './styles.module.scss';
+
+function getRootElement()
+{
+	for (let node of document.childNodes)
+		if (node instanceof HTMLElement)
+			return node;
+	throw new Error("No HTMLElement found");
+}
+
+const styles = styles_any as {
+	rootHtml: string,
+};
 
 interface IHomePageProps
 {
 }
 
-interface IHomePageState
-{
-    data?:CancerStudy[];
-}
-
-export default class HomePage extends React.Component<IHomePageProps, IHomePageState>
+export default class HomePage extends React.Component<IHomePageProps, {}>
 {
     constructor(props:IHomePageProps)
     {
         super(props);
-        this.state = {};
     }
-
-    client = new CBioPortalAPI(`//${(window as any)['__API_ROOT__']}`);
 
     componentDidMount()
     {
-        this.client.getAllStudiesUsingGET({
-            projection: "DETAILED"
-        }).then(data => {
-            this.setState({data});
-        });
+		getRootElement().className += ' ' + styles.rootHtml
     }
 
-    public render() {
-        return <pre>
-            { JSON.stringify(this.state.data, null, 4) }
-        </pre>;
+    componentWillUnmount()
+	{
+		getRootElement().className = getRootElement().className.split(styles.rootHtml).join('');
+	}
+
+    public render()
+    {
+        return (
+       		<QueryContainer/>
+		);
     }
-};
+}
