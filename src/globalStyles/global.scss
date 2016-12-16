@@ -11,13 +11,39 @@ body {
 
 /* fix for legacy style isses. makes it bootstrap */
 #content .cbioportal-frontend {
-    h4 {
-     font-size:18px;
-     margin-top:10px;
-     margin-bottom:10px;
-      font-weight:500;
-      line-height:1.1;
-      color:$text-color;
+  h4 {
+    color: $text-color;
+    font-size: 18px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    font-weight: 500;
+    line-height: 1.1;
+  }
+}
+
+  /* Buttons */
+
+.cta { // "Call To Action"
+  background: linear-gradient(to bottom, #1f8cc5 50%, #1982b8 100%);
+  border: 0;
+  border-bottom: 1px solid rgba(0,0,0,0.2);
+  border-radius: 2px;
+  color: rgba(255, 255, 255, 1);
+  display: block;
+  text-align: center;
+  font: normal normal 500 11px/19px 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  padding: 5px 10px;
+
+  &:hover:not(:disabled) {
+    cursor: pointer;
+    background: linear-gradient(to bottom, #1982b8 50%, #1f8cc5 100%);
+    color: #fff;
+  }
+  &:disabled {
+    cursor: default;
+    background: $lightGrey;
+    border-bottom: 0;
+    color: $darkGrey;
   }
 }
 
@@ -26,6 +52,7 @@ body {
   margin:0 auto;
 }
 
+/* Tables */
 th.reactable-header-sortable {
 
   &:focus {outline:0;}
