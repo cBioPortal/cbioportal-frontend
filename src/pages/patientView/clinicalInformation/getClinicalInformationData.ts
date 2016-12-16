@@ -1,5 +1,5 @@
 import queryString from "query-string";
-import {chain} from "underscore";
+import * as _ from 'lodash';
 import CBioPortalAPI from "shared/api/CBioPortalAPI";
 import {ClinicalData} from "../../../shared/api/CBioPortalAPI";
 import {ClinicalInformationData} from "./Connector";
@@ -21,13 +21,13 @@ function transformClinicalInformationToStoreShape(patientId: string, studyId: st
         clinicalData: clinicalDataPatient
     };
 
-    const samples: Array<ClinicalDataBySampleId> = chain(clinicalDataSample)
-        .groupBy('id')
-        .map((v, k) => ({
-            clinicalData: v,
-            id: k + '',
-        }))
-        .value();
+    const samples = _.map(
+            _.groupBy(clinicalDataSample, 'id'),
+            (v:ClinicalData[], k:string):ClinicalDataBySampleId => ({
+                clinicalData: v,
+                id: k,
+            })
+        );
 
     // // create object with sample ids as keys and values are objects
     // // that have clinical attribute ids as keys (only PDX_PARENT is
