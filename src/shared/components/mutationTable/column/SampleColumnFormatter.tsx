@@ -1,6 +1,7 @@
 import * as React from 'react';
 import {IColumnFormatterProps, IColumnFormatterData, IColumnFormatter}
     from "../../enhancedReactTable/IColumnFormatterProps";
+import "./sample.scss";
 
 /**
  * @author Selcuk Onur Sumer
@@ -119,7 +120,7 @@ export default class SampleColumnFormatter extends React.Component<IColumnFormat
 
         return (
             <a href={linkToPatientView} target='_blank'>
-                <span alt={toolTip} className={className}>{text}</span>
+                <span alt={toolTip} className={`${className} text-no-wrap`}>{text}</span>
             </a>
         );
     }
