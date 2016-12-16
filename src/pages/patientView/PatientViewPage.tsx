@@ -55,7 +55,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     public render() {
         return (
-            <div />
+            <ClinicalInformationContainer />
         );
     }
 }

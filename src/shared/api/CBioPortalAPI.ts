@@ -1,4 +1,8 @@
 import * as request from "superagent";
+import {
+    SuperAgentStatic
+}
+from "superagent";
 
 type CallbackHandler = (err: any, res ? : request.Response) => void;
 export type ClinicalData = {
@@ -38,7 +42,7 @@ export type GeneticProfile = {
 
         'description': string
 
-        'geneticAlterationType': string
+        'geneticAlterationType': "MUTATION_EXTENDED" | "FUSION" | "STRUCTURAL_VARIANT" | "COPY_NUMBER_ALTERATION" | "MICRO_RNA_EXPRESSION" | "MRNA_EXPRESSION" | "MRNA_EXPRESSION_NORMALS" | "RNA_EXPRESSION" | "METHYLATION" | "METHYLATION_BINARY" | "PHOSPHORYLATION" | "PROTEIN_LEVEL" | "PROTEIN_ARRAY_PROTEIN_LEVEL" | "PROTEIN_ARRAY_PHOSPHORYLATION"
 
         'name': string
 
@@ -154,9 +158,7 @@ export type CopyNumberSegment = {
 
 };
 export type Gene = {
-    'aliases': Array < string > | string
-
-        'chromosome': string
+    'chromosome': string
 
         'cytoband': string
 
@@ -170,9 +172,15 @@ export type Gene = {
 
 };
 export type CancerStudy = {
-    'cancerStudyIdentifier': string
+    'allSampleCount': number
+
+        'cancerStudyIdentifier': string
 
         'citation': string
+
+        'cnaSampleCount': number
+
+        'completeSampleCount': number
 
         'description': string
 
@@ -180,13 +188,23 @@ export type CancerStudy = {
 
         'importDate': string
 
+        'methylationHm27SampleCount': number
+
+        'miRnaSampleCount': number
+
+        'mrnaMicroarraySampleCount': number
+
+        'mrnaRnaSeqV2SampleCount': number
+
         'name': string
 
         'pmid': string
 
         'publicStudy': boolean
 
-        'sampleCount': number
+        'rppaSampleCount': number
+
+        'sequencedSampleCount': number
 
         'shortName': string
 
@@ -289,6 +307,20 @@ export type ClinicalAttribute = {
         'patientAttribute': boolean
 
         'priority': string
+
+};
+export type SampleList = {
+    'cancerStudy': CancerStudy
+
+        'cancerStudyId': string
+
+        'category': string
+
+        'description': string
+
+        'name': string
+
+        'sampleListId': string
 
 };
 
@@ -777,6 +809,8 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
+        'sortBy' ? : "entrezGeneId" | "hugoGeneSymbol" | "type" | "cytoband" | "length" | "chromosome",
+        'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -793,6 +827,14 @@ export default class CBioPortalAPI {
             queryParameters['pageNumber'] = parameters['pageNumber'];
         }
 
+        if (parameters['sortBy'] !== undefined) {
+            queryParameters['sortBy'] = parameters['sortBy'];
+        }
+
+        if (parameters['direction'] !== undefined) {
+            queryParameters['direction'] = parameters['direction'];
+        }
+
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                 var parameter = parameters.$queryParameters[parameterName];
@@ -807,14 +849,18 @@ export default class CBioPortalAPI {
      * Get all genes
      * @method
      * @name CBioPortalAPI#getAllGenesUsingGET
-     * @param {string} projection - projection
-     * @param {integer} pageSize - pageSize
-     * @param {integer} pageNumber - pageNumber
+     * @param {string} projection - Level of detail of the response
+     * @param {integer} pageSize - Page size of the result list
+     * @param {integer} pageNumber - Page number of the result list
+     * @param {string} sortBy - Name of the property that the result list is sorted by
+     * @param {string} direction - Direction of the sort
      */
     getAllGenesUsingGET(parameters: {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
+            'sortBy' ? : "entrezGeneId" | "hugoGeneSymbol" | "type" | "cytoband" | "length" | "chromosome",
+            'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < Gene >
@@ -828,7 +874,7 @@ export default class CBioPortalAPI {
             let headers: any = {};
             let form: any = {};
             return new Promise(function(resolve, reject) {
-                headers['Accept'] = '*/*';
+                headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
                 if (parameters['projection'] !== undefined) {
@@ -841,6 +887,14 @@ export default class CBioPortalAPI {
 
                 if (parameters['pageNumber'] !== undefined) {
                     queryParameters['pageNumber'] = parameters['pageNumber'];
+                }
+
+                if (parameters['sortBy'] !== undefined) {
+                    queryParameters['sortBy'] = parameters['sortBy'];
+                }
+
+                if (parameters['direction'] !== undefined) {
+                    queryParameters['direction'] = parameters['direction'];
                 }
 
                 if (parameters.$queryParameters) {
@@ -859,7 +913,7 @@ export default class CBioPortalAPI {
 
     fetchGenesUsingPOSTURL(parameters: {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'entrezGeneIds': Array < string > | string
+        'geneIds': Array < string > | string
 
         ,
         $queryParameters ? : any
@@ -884,12 +938,12 @@ export default class CBioPortalAPI {
      * Fetch genes by ID
      * @method
      * @name CBioPortalAPI#fetchGenesUsingPOST
-     * @param {string} projection - projection
-     * @param {} entrezGeneIds - entrezGeneIds
+     * @param {string} projection - Level of detail of the response
+     * @param {} geneIds - List of Entrez Gene IDs and/or Hugo Gene Symbols
      */
     fetchGenesUsingPOST(parameters: {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            'entrezGeneIds': Array < string > | string
+            'geneIds': Array < string > | string
 
             ,
             $queryParameters ? : any,
@@ -905,115 +959,19 @@ export default class CBioPortalAPI {
             let headers: any = {};
             let form: any = {};
             return new Promise(function(resolve, reject) {
-                headers['Accept'] = '*/*';
+                headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
                 if (parameters['projection'] !== undefined) {
                     queryParameters['projection'] = parameters['projection'];
                 }
 
-                if (parameters['entrezGeneIds'] !== undefined) {
-                    body = parameters['entrezGeneIds'];
+                if (parameters['geneIds'] !== undefined) {
+                    body = parameters['geneIds'];
                 }
 
-                if (parameters['entrezGeneIds'] === undefined) {
-                    reject(new Error('Missing required  parameter: entrezGeneIds'));
-                    return;
-                }
-
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
-
-                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-            }).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-
-    queryGenesByExampleUsingPOSTURL(parameters: {
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'pageSize' ? : number,
-        'pageNumber' ? : number,
-        'exampleGene': Gene,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/genes/query';
-        if (parameters['projection'] !== undefined) {
-            queryParameters['projection'] = parameters['projection'];
-        }
-
-        if (parameters['pageSize'] !== undefined) {
-            queryParameters['pageSize'] = parameters['pageSize'];
-        }
-
-        if (parameters['pageNumber'] !== undefined) {
-            queryParameters['pageNumber'] = parameters['pageNumber'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Query genes by example
-     * @method
-     * @name CBioPortalAPI#queryGenesByExampleUsingPOST
-     * @param {string} projection - projection
-     * @param {integer} pageSize - pageSize
-     * @param {integer} pageNumber - pageNumber
-     * @param {} exampleGene - exampleGene
-     */
-    queryGenesByExampleUsingPOST(parameters: {
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            'pageSize' ? : number,
-            'pageNumber' ? : number,
-            'exampleGene': Gene,
-            $queryParameters ? : any,
-                $domain ? : string
-        }): Promise < Array < Gene >
-        > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/genes/query';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = '*/*';
-                headers['Content-Type'] = 'application/json';
-
-                if (parameters['projection'] !== undefined) {
-                    queryParameters['projection'] = parameters['projection'];
-                }
-
-                if (parameters['pageSize'] !== undefined) {
-                    queryParameters['pageSize'] = parameters['pageSize'];
-                }
-
-                if (parameters['pageNumber'] !== undefined) {
-                    queryParameters['pageNumber'] = parameters['pageNumber'];
-                }
-
-                if (parameters['exampleGene'] !== undefined) {
-                    body = parameters['exampleGene'];
-                }
-
-                if (parameters['exampleGene'] === undefined) {
-                    reject(new Error('Missing required  parameter: exampleGene'));
+                if (parameters['geneIds'] === undefined) {
+                    reject(new Error('Missing required  parameter: geneIds'));
                     return;
                 }
 
@@ -1032,13 +990,13 @@ export default class CBioPortalAPI {
         };
 
     getGeneUsingGETURL(parameters: {
-        'entrezGeneId': string,
+        'geneId': string,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/genes/{entrezGeneId}';
+        let path = '/genes/{geneId}';
 
-        path = path.replace('{entrezGeneId}', parameters['entrezGeneId']);
+        path = path.replace('{geneId}', parameters['geneId']);
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -1054,29 +1012,29 @@ export default class CBioPortalAPI {
      * Get a gene
      * @method
      * @name CBioPortalAPI#getGeneUsingGET
-     * @param {string} entrezGeneId - entrezGeneId
+     * @param {string} geneId - Entrez Gene ID or Hugo Gene Symbol e.g. 1 or A1BG
      */
     getGeneUsingGET(parameters: {
-        'entrezGeneId': string,
+        'geneId': string,
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < Gene > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
-        let path = '/genes/{entrezGeneId}';
+        let path = '/genes/{geneId}';
         let body: any;
         let queryParameters: any = {};
         let headers: any = {};
         let form: any = {};
         return new Promise(function(resolve, reject) {
-            headers['Accept'] = '*/*';
+            headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
 
-            path = path.replace('{entrezGeneId}', parameters['entrezGeneId']);
+            path = path.replace('{geneId}', parameters['geneId']);
 
-            if (parameters['entrezGeneId'] === undefined) {
-                reject(new Error('Missing required  parameter: entrezGeneId'));
+            if (parameters['geneId'] === undefined) {
+                reject(new Error('Missing required  parameter: geneId'));
                 return;
             }
 
@@ -1093,6 +1051,70 @@ export default class CBioPortalAPI {
             return response.body;
         });
     };
+
+    getAliasesOfGeneUsingGETURL(parameters: {
+        'geneId': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/genes/{geneId}/aliases';
+
+        path = path.replace('{geneId}', parameters['geneId']);
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get aliases of a gene
+     * @method
+     * @name CBioPortalAPI#getAliasesOfGeneUsingGET
+     * @param {string} geneId - Entrez Gene ID or Hugo Gene Symbol e.g. 1 or A1BG
+     */
+    getAliasesOfGeneUsingGET(parameters: {
+            'geneId': string,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < string >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/genes/{geneId}/aliases';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                path = path.replace('{geneId}', parameters['geneId']);
+
+                if (parameters['geneId'] === undefined) {
+                    reject(new Error('Missing required  parameter: geneId'));
+                    return;
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
 
     queryGeneticDataByExampleUsingPOSTURL(parameters: {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
@@ -1578,8 +1600,8 @@ export default class CBioPortalAPI {
      * Fetch patients by ID
      * @method
      * @name CBioPortalAPI#fetchPatientsUsingPOST
-     * @param {string} projection - projection
-     * @param {} patientIdentifiers - patientIdentifiers
+     * @param {string} projection - Level of detail of the response
+     * @param {} patientIdentifiers - List of patient identifiers
      */
     fetchPatientsUsingPOST(parameters: {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
@@ -1599,7 +1621,7 @@ export default class CBioPortalAPI {
             let headers: any = {};
             let form: any = {};
             return new Promise(function(resolve, reject) {
-                headers['Accept'] = '*/*';
+                headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
                 if (parameters['projection'] !== undefined) {
@@ -1629,15 +1651,16 @@ export default class CBioPortalAPI {
             });
         };
 
-    queryPatientsByExampleUsingPOSTURL(parameters: {
+    getAllSampleListsUsingGETURL(parameters: {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'examplePatient': Patient,
+        'sortBy' ? : "caseListId" | "category" | "cancerStudyId" | "name" | "description",
+        'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/patients/query';
+        let path = '/sample-lists';
         if (parameters['projection'] !== undefined) {
             queryParameters['projection'] = parameters['projection'];
         }
@@ -1648,6 +1671,14 @@ export default class CBioPortalAPI {
 
         if (parameters['pageNumber'] !== undefined) {
             queryParameters['pageNumber'] = parameters['pageNumber'];
+        }
+
+        if (parameters['sortBy'] !== undefined) {
+            queryParameters['sortBy'] = parameters['sortBy'];
+        }
+
+        if (parameters['direction'] !== undefined) {
+            queryParameters['direction'] = parameters['direction'];
         }
 
         if (parameters.$queryParameters) {
@@ -1661,33 +1692,35 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Query patients by example
+     * Get all sample lists
      * @method
-     * @name CBioPortalAPI#queryPatientsByExampleUsingPOST
-     * @param {string} projection - projection
-     * @param {integer} pageSize - pageSize
-     * @param {integer} pageNumber - pageNumber
-     * @param {} examplePatient - examplePatient
+     * @name CBioPortalAPI#getAllSampleListsUsingGET
+     * @param {string} projection - Level of detail of the response
+     * @param {integer} pageSize - Page size of the result list
+     * @param {integer} pageNumber - Page number of the result list
+     * @param {string} sortBy - Name of the property that the result list is sorted by
+     * @param {string} direction - Direction of the sort
      */
-    queryPatientsByExampleUsingPOST(parameters: {
+    getAllSampleListsUsingGET(parameters: {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'examplePatient': Patient,
+            'sortBy' ? : "caseListId" | "category" | "cancerStudyId" | "name" | "description",
+            'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
                 $domain ? : string
-        }): Promise < Array < Patient >
+        }): Promise < Array < SampleList >
         > {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
             const request = this.request;
-            let path = '/patients/query';
+            let path = '/sample-lists';
             let body: any;
             let queryParameters: any = {};
             let headers: any = {};
             let form: any = {};
             return new Promise(function(resolve, reject) {
-                headers['Accept'] = '*/*';
+                headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
                 if (parameters['projection'] !== undefined) {
@@ -1702,12 +1735,138 @@ export default class CBioPortalAPI {
                     queryParameters['pageNumber'] = parameters['pageNumber'];
                 }
 
-                if (parameters['examplePatient'] !== undefined) {
-                    body = parameters['examplePatient'];
+                if (parameters['sortBy'] !== undefined) {
+                    queryParameters['sortBy'] = parameters['sortBy'];
                 }
 
-                if (parameters['examplePatient'] === undefined) {
-                    reject(new Error('Missing required  parameter: examplePatient'));
+                if (parameters['direction'] !== undefined) {
+                    queryParameters['direction'] = parameters['direction'];
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    getSampleListUsingGETURL(parameters: {
+        'sampleListId': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/sample-lists/{sampleListId}';
+
+        path = path.replace('{sampleListId}', parameters['sampleListId']);
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get sample list
+     * @method
+     * @name CBioPortalAPI#getSampleListUsingGET
+     * @param {string} sampleListId - Sample List ID e.g. acc_tcga_all
+     */
+    getSampleListUsingGET(parameters: {
+        'sampleListId': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < SampleList > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/sample-lists/{sampleListId}';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            path = path.replace('{sampleListId}', parameters['sampleListId']);
+
+            if (parameters['sampleListId'] === undefined) {
+                reject(new Error('Missing required  parameter: sampleListId'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        }).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+
+    getAllSampleIdsInSampleListUsingGETURL(parameters: {
+        'sampleListId': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/sample-lists/{sampleListId}/sample-ids';
+
+        path = path.replace('{sampleListId}', parameters['sampleListId']);
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get all sample IDs in a sample list
+     * @method
+     * @name CBioPortalAPI#getAllSampleIdsInSampleListUsingGET
+     * @param {string} sampleListId - Sample List ID e.g. acc_tcga_all
+     */
+    getAllSampleIdsInSampleListUsingGET(parameters: {
+            'sampleListId': string,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < string >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/sample-lists/{sampleListId}/sample-ids';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                path = path.replace('{sampleListId}', parameters['sampleListId']);
+
+                if (parameters['sampleListId'] === undefined) {
+                    reject(new Error('Missing required  parameter: sampleListId'));
                     return;
                 }
 
@@ -1718,7 +1877,7 @@ export default class CBioPortalAPI {
                     });
                 }
 
-                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
 
             }).then(function(response: request.Response) {
                 return response.body;
@@ -2331,6 +2490,8 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
+        'sortBy' ? : "stableId" | "cancerStudyIdentifier",
+        'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -2349,6 +2510,14 @@ export default class CBioPortalAPI {
             queryParameters['pageNumber'] = parameters['pageNumber'];
         }
 
+        if (parameters['sortBy'] !== undefined) {
+            queryParameters['sortBy'] = parameters['sortBy'];
+        }
+
+        if (parameters['direction'] !== undefined) {
+            queryParameters['direction'] = parameters['direction'];
+        }
+
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                 var parameter = parameters.$queryParameters[parameterName];
@@ -2363,16 +2532,20 @@ export default class CBioPortalAPI {
      * Get all patients in a study
      * @method
      * @name CBioPortalAPI#getAllPatientsInStudyUsingGET
-     * @param {string} studyId - studyId
-     * @param {string} projection - projection
-     * @param {integer} pageSize - pageSize
-     * @param {integer} pageNumber - pageNumber
+     * @param {string} studyId - Study ID e.g. acc_tcga
+     * @param {string} projection - Level of detail of the response
+     * @param {integer} pageSize - Page size of the result list
+     * @param {integer} pageNumber - Page number of the result list
+     * @param {string} sortBy - Name of the property that the result list is sorted by
+     * @param {string} direction - Direction of the sort
      */
     getAllPatientsInStudyUsingGET(parameters: {
             'studyId': string,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
+            'sortBy' ? : "stableId" | "cancerStudyIdentifier",
+            'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < Patient >
@@ -2386,7 +2559,7 @@ export default class CBioPortalAPI {
             let headers: any = {};
             let form: any = {};
             return new Promise(function(resolve, reject) {
-                headers['Accept'] = '*/*';
+                headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
                 path = path.replace('{studyId}', parameters['studyId']);
@@ -2406,6 +2579,14 @@ export default class CBioPortalAPI {
 
                 if (parameters['pageNumber'] !== undefined) {
                     queryParameters['pageNumber'] = parameters['pageNumber'];
+                }
+
+                if (parameters['sortBy'] !== undefined) {
+                    queryParameters['sortBy'] = parameters['sortBy'];
+                }
+
+                if (parameters['direction'] !== undefined) {
+                    queryParameters['direction'] = parameters['direction'];
                 }
 
                 if (parameters.$queryParameters) {
@@ -2448,8 +2629,8 @@ export default class CBioPortalAPI {
      * Get a patient in a study
      * @method
      * @name CBioPortalAPI#getPatientInStudyUsingGET
-     * @param {string} studyId - studyId
-     * @param {string} patientId - patientId
+     * @param {string} studyId - Study ID e.g. acc_tcga
+     * @param {string} patientId - Patient ID e.g. TCGA-OR-A5J2
      */
     getPatientInStudyUsingGET(parameters: {
         'studyId': string,
@@ -2466,7 +2647,7 @@ export default class CBioPortalAPI {
         let headers: any = {};
         let form: any = {};
         return new Promise(function(resolve, reject) {
-            headers['Accept'] = '*/*';
+            headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
 
             path = path.replace('{studyId}', parameters['studyId']);
@@ -2963,6 +3144,124 @@ export default class CBioPortalAPI {
 
                 if (parameters['patientId'] === undefined) {
                     reject(new Error('Missing required  parameter: patientId'));
+                    return;
+                }
+
+                if (parameters['projection'] !== undefined) {
+                    queryParameters['projection'] = parameters['projection'];
+                }
+
+                if (parameters['pageSize'] !== undefined) {
+                    queryParameters['pageSize'] = parameters['pageSize'];
+                }
+
+                if (parameters['pageNumber'] !== undefined) {
+                    queryParameters['pageNumber'] = parameters['pageNumber'];
+                }
+
+                if (parameters['sortBy'] !== undefined) {
+                    queryParameters['sortBy'] = parameters['sortBy'];
+                }
+
+                if (parameters['direction'] !== undefined) {
+                    queryParameters['direction'] = parameters['direction'];
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    getAllSampleListsInStudyUsingGETURL(parameters: {
+        'studyId': string,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'pageSize' ? : number,
+        'pageNumber' ? : number,
+        'sortBy' ? : "caseListId" | "category" | "cancerStudyId" | "name" | "description",
+        'direction' ? : "ASC" | "DESC",
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/studies/{studyId}/sample-lists';
+
+        path = path.replace('{studyId}', parameters['studyId']);
+        if (parameters['projection'] !== undefined) {
+            queryParameters['projection'] = parameters['projection'];
+        }
+
+        if (parameters['pageSize'] !== undefined) {
+            queryParameters['pageSize'] = parameters['pageSize'];
+        }
+
+        if (parameters['pageNumber'] !== undefined) {
+            queryParameters['pageNumber'] = parameters['pageNumber'];
+        }
+
+        if (parameters['sortBy'] !== undefined) {
+            queryParameters['sortBy'] = parameters['sortBy'];
+        }
+
+        if (parameters['direction'] !== undefined) {
+            queryParameters['direction'] = parameters['direction'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get all sample lists in a study
+     * @method
+     * @name CBioPortalAPI#getAllSampleListsInStudyUsingGET
+     * @param {string} studyId - Study ID e.g. acc_tcga
+     * @param {string} projection - Level of detail of the response
+     * @param {integer} pageSize - Page size of the result list
+     * @param {integer} pageNumber - Page number of the result list
+     * @param {string} sortBy - Name of the property that the result list is sorted by
+     * @param {string} direction - Direction of the sort
+     */
+    getAllSampleListsInStudyUsingGET(parameters: {
+            'studyId': string,
+            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'pageSize' ? : number,
+            'pageNumber' ? : number,
+            'sortBy' ? : "caseListId" | "category" | "cancerStudyId" | "name" | "description",
+            'direction' ? : "ASC" | "DESC",
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < SampleList >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/studies/{studyId}/sample-lists';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                path = path.replace('{studyId}', parameters['studyId']);
+
+                if (parameters['studyId'] === undefined) {
+                    reject(new Error('Missing required  parameter: studyId'));
                     return;
                 }
 
