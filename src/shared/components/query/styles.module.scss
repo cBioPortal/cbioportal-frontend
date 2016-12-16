@@ -1,0 +1,109 @@
+.QueryContainer {
+  height: 100%;
+}
+
+.CancerStudySelector {
+
+  user-select: none;
+  label {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+  a {
+    cursor: pointer;
+  }
+
+  .selectCancerStudyRow {
+    align-items: center;
+
+    span.selectCancerStudyHeader {
+      color: #337ab7;
+    }
+
+ 	div.searchTextInput {
+ 	  min-width: 200px;
+ 	}
+  }
+
+  div.cancerTypeListContainer, div.cancerStudyListContainer {
+    border: 1px solid lightgray;
+    border-radius: 3px;
+    overflow: auto;
+  }
+
+  div.cancerTypeListContainer {
+  }
+
+  div.cancerStudyListContainer {
+    flex: 1;
+  }
+
+  ul.cancerTypeList {
+    padding-left: 0px;
+
+    li.cancerTypeListItem {
+      padding: 4px;
+      cursor: pointer;
+      list-style-type: none;
+      display: flex;
+      flex-direction: row;
+
+      span.cancerTypeListItemLabel {
+        flex: 1;
+        padding-right: 5px;
+      }
+
+      span.cancerTypeListItemCount {
+        padding: 2px;
+        background-color: lightgray;
+        border-radius: 2px;
+        text-align: center;
+        width: 24px;
+      }
+    }
+  }
+
+  .selectable:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+
+  .selectable.selected {
+    background-color: rgb(196, 211, 230);
+  }
+
+  .selectable.selected:hover {
+    background-color: lightsteelblue;
+  }
+
+  .matchingNodeText {
+    font-weight: bold;
+  }
+
+  .nonMatchingNodeText {
+    font-weight: normal;
+  }
+
+  .searchTextInput {
+    minWidth: 200px;
+  }
+}
+
+.GeneticProfileSelector {
+  div.singleCheckbox, div.groupCheckbox {
+    label {
+      display: inline;
+    }
+  }
+  div.radioGroup {
+    margin-left: 20px;
+
+    div.radioItem {
+    }
+  }
+  div.zScore {
+    margin-left: 40px;
+  }
+  label.profileName {
+  }
+}
