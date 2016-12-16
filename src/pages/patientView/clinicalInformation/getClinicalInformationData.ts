@@ -57,45 +57,39 @@ function transformClinicalInformationToStoreShape(patientId: string, studyId: st
 
 const tsClient = new CBioPortalAPI(`//${(window as any)['__API_ROOT__']}`);
 
-export default function getClinicalInformationData():Promise<ClinicalInformationData> {
-    const promise = new Promise((resolve, reject) => {
-        const qs = queryString.parse(location.search);
+export default async function getClinicalInformationData():Promise<ClinicalInformationData> {
+    const qs = queryString.parse(location.search);
 
-        if (qs.cancer_study_id && qs.case_id) {
-            const studyId: string = qs.cancer_study_id;
-            const patientId: string = qs.case_id;
+    const studyId: string = qs.cancer_study_id;
+    const patientId: string = qs.case_id;
 
-            const samplesOfPatient = tsClient.getAllSamplesOfPatientInStudyUsingGET({
-                studyId,
-                patientId
-            });
+    if (!studyId || !patientId)
+        throw new Error("cancer_study_id and case_id are required page query parameters");
 
-            const clinicalDataPatient = tsClient.getAllClinicalDataOfPatientInStudyUsingGET({
-                projection: 'DETAILED',
-                studyId,
-                patientId
-            });
-
-            const clinicalDataSample = samplesOfPatient.then(samples =>
-                tsClient.fetchClinicalDataUsingPOST({
-                    clinicalDataType: 'SAMPLE',
-                    identifiers: samples.map(x => (
-                    { id: x.stableId, studyId: 'lgg_ucsf_2014' }
-                    )),
-                    projection: 'DETAILED',
-                })
-            );
-
-            Promise.all([clinicalDataPatient, clinicalDataSample]).then((result) => {
-                resolve(transformClinicalInformationToStoreShape(patientId,
-                    studyId,
-                    result[0],
-                    result[1]));
-            }, reject);
-        } else {
-            reject();
-        }
+    const clinicalDataPatientPromise = tsClient.getAllClinicalDataOfPatientInStudyUsingGET({
+        projection: 'DETAILED',
+        studyId,
+        patientId
     });
 
-    return promise;
+    const samplesOfPatient = await tsClient.getAllSamplesOfPatientInStudyUsingGET({
+        studyId,
+        patientId
+    });
+
+    const clinicalDataSample = await tsClient.fetchClinicalDataUsingPOST({
+        clinicalDataType: 'SAMPLE',
+        identifiers: samplesOfPatient.map(sample => ({
+            id: sample.stableId,
+            studyId: 'lgg_ucsf_2014'
+        })),
+        projection: 'DETAILED',
+    });
+
+    return transformClinicalInformationToStoreShape(
+        patientId,
+        studyId,
+        await clinicalDataPatientPromise,
+        clinicalDataSample
+    );
 }
