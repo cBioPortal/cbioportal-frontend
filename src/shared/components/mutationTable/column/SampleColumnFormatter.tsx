@@ -11,7 +11,7 @@ export default class SampleColumnFormatter extends React.Component<IColumnFormat
     public static get MAX_LENGTH():number {return 16;}; // max allowed length of a sample id.
     public static get BUFFER():number {return 2;}; // no need to bother with clipping the text for a few chars.
     public static get SUFFIX():string {return "...";};
-    public static get TOOLTIP_STYLE():string {return "simple-tip";};
+    public static get TOOLTIP_CLASS_NAME():string {return "simple-tip";};
 
     public static sortFunction(a:IColumnFormatterData, b:IColumnFormatterData):boolean
     {
@@ -29,7 +29,7 @@ export default class SampleColumnFormatter extends React.Component<IColumnFormat
     public static getTextValue(data:IColumnFormatterData):string
     {
         let textValue:string = "";
-        let dataValue:any = SampleColumnFormatter.getData(data);
+        let dataValue = SampleColumnFormatter.getData(data);
 
         if (dataValue) {
             textValue = dataValue.toString();
@@ -60,19 +60,19 @@ export default class SampleColumnFormatter extends React.Component<IColumnFormat
         return text;
     }
 
-    public static getStyleClass(sampleId:string):string
+    public static getClassName(sampleId:string):string
     {
-        let style:string = "";
+        let className:string = "";
 
         if (SampleColumnFormatter.isTooLong(sampleId,
                                             SampleColumnFormatter.MAX_LENGTH,
                                             SampleColumnFormatter.BUFFER))
         {
             // enable tooltip for long strings
-            style = SampleColumnFormatter.TOOLTIP_STYLE;
+            className = SampleColumnFormatter.TOOLTIP_CLASS_NAME;
         }
 
-        return style;
+        return className;
     }
 
     public static getToolTip(sampleId:string):string
@@ -87,7 +87,7 @@ export default class SampleColumnFormatter extends React.Component<IColumnFormat
 
     public static getData(data:IColumnFormatterData)
     {
-        let value:any;
+        let value;
 
         if (data.columnData) {
             value = data.columnData;
@@ -114,12 +114,12 @@ export default class SampleColumnFormatter extends React.Component<IColumnFormat
         let sampleId:string = SampleColumnFormatter.getTextValue(data);
         let text:string = SampleColumnFormatter.getDisplayValue(data);
         let toolTip:string = SampleColumnFormatter.getToolTip(sampleId);
-        let styleClass:string = SampleColumnFormatter.getStyleClass(sampleId);
+        let className:string = SampleColumnFormatter.getClassName(sampleId);
         let linkToPatientView:string = "#"; // TODO generate or get it from somewhere else
 
         return (
             <a href={linkToPatientView} target='_blank'>
-                <span alt={toolTip} className={styleClass}>{text}</span>
+                <span alt={toolTip} className={className}>{text}</span>
             </a>
         );
     }
