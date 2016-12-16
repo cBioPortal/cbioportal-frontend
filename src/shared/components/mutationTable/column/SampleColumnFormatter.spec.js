@@ -26,11 +26,11 @@ describe('SampleColumnFormatter functions', () => {
     it('sample id style class is properly set', () => {
 
         // no tooltips for short ids
-        assert.notEqual(SampleColumnFormatter.getStyleClass(shortSampleId.columnData),
-                        SampleColumnFormatter.TOOLTIP_STYLE);
+        assert.notEqual(SampleColumnFormatter.getClassName(shortSampleId.columnData),
+                        SampleColumnFormatter.TOOLTIP_CLASS_NAME);
 
         // tooltips for long ids
-        assert.equal(SampleColumnFormatter.getStyleClass(longSampleId.columnData),
-                     SampleColumnFormatter.TOOLTIP_STYLE);
+        assert.equal(SampleColumnFormatter.getClassName(longSampleId.columnData),
+                     SampleColumnFormatter.TOOLTIP_CLASS_NAME);
     });
 });

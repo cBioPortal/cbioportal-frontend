@@ -106,7 +106,7 @@ export default class ProteinChangeColumnFormatter extends React.Component<IColum
     public static getTextValue(data:IColumnFormatterData):string
     {
         let textValue:string = "";
-        let dataValue:any = ProteinChangeColumnFormatter.getData(data);
+        let dataValue = ProteinChangeColumnFormatter.getData(data);
 
         if (dataValue) {
             textValue = dataValue.toString();
@@ -123,7 +123,7 @@ export default class ProteinChangeColumnFormatter extends React.Component<IColum
 
     public static getData(data:IColumnFormatterData)
     {
-        let value:any;
+        let value;
 
         if (data.columnData) {
             value = data.columnData;
