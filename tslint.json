@@ -4,30 +4,45 @@
         "tslint-react"
     ],
     "rules": {
+        "array-type": false,
+        "arrow-parens": false,
+        "callable-types": false,
         "class-name": true,
         "comment-format": false,
         "curly": false,
+        "forin": false,
         "indent": [
-            true,
+            false,
             "spaces"
         ],
+        "interface-name": false,
+        "interface-over-type-literal": false,
+        "jsx-curly-spacing": false,
+        "jsx-no-lambda": false,
         "jsx-no-multiline-js": false,
+        "max-classes-per-file": false,
+        "max-line-length": [false],
         "member-access": false,
         "member-ordering": false,
         "no-consecutive-blank-lines":false,
         "no-duplicate-variable": true,
+        "no-empty-interface": false,
         "no-eval": true,
         "no-internal-module": true,
         "no-string-literal": false,
         "no-trailing-whitespace": false,
         "no-unsafe-finally": true,
         "no-var-keyword": true,
+        "object-literal-key-quotes": false,
+        "one-variable-per-declaration": false,
         "only-arrow-functions": false,
         "ordered-imports": false,
         "one-line": [
             true,
             "check-whitespace"
         ],
+        "prefer-const": false,
+        "prefer-for-of": false,
         "quotemark": [
             false,
             "single"
@@ -37,11 +52,10 @@
             true,
             "always"
         ],
+        "space-before-function-paren": false,
+        "switch-default": false,
         "trailing-comma": [false],
-        "triple-equals": [
-            true,
-            "allow-null-check"
-        ],
+        "triple-equals": false,
         "typedef-whitespace": [
             true,
             {
@@ -56,7 +70,6 @@
             true,
             "ban-keywords"
         ],
-        "max-line-length": [false],
         "whitespace": [false]
     }
 }

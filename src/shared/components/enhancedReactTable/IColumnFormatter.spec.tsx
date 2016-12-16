@@ -1,10 +1,10 @@
-import * as classNames from './classNames';
+import * as IColumnFormatter from './IColumnFormatter';
 import React from 'react';
 import { assert } from 'chai';
 import { shallow, mount } from 'enzyme';
 import sinon from 'sinon';
 
-describe('classNames', () => {
+describe('IColumnFormatter', () => {
 
     before(()=>{
 

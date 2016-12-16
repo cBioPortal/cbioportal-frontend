@@ -1,8 +1,27 @@
 import * as React from 'react';
-import CBioPortalAPI from "../../shared/api/generated/CBioPortalAPI";
-import {CancerStudy} from "../../shared/api/generated/CBioPortalAPI";
-import AppConfig from 'appConfig';
-import {getCbioPortalApiUrl} from "../../shared/api/urls";
+import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
+import * as styles_any from './styles.module.scss';
+import {FlexCol, FlexRow} from "../../shared/components/flexbox/FlexBox";
+import {observer} from "mobx-react";
+import DevTools from "mobx-react-devtools";
+import {toJS, observable, action, computed, whyRun, expr} from "mobx";
+import LabeledCheckbox from "../../shared/components/labeledCheckbox/LabeledCheckbox";
+import ReactSelect from 'react-select';
+import 'react-select/dist/react-select.css';
+import QueryAndDownloadTabs from "../../shared/components/query/QueryAndDownloadTabs";
+import {QueryStore} from "../../shared/components/query/QueryStore";
+
+function getRootElement()
+{
+	for (let node of document.childNodes)
+		if (node instanceof HTMLElement)
+			return node;
+	throw new Error("No HTMLElement found");
+}
+
+const styles = styles_any as {
+	HomePage: string,
+};
 
 interface IHomePageProps
 {
@@ -10,31 +29,34 @@ interface IHomePageProps
 
 interface IHomePageState
 {
-    data?:CancerStudy[];
 }
 
+@observer
 export default class HomePage extends React.Component<IHomePageProps, IHomePageState>
 {
-    constructor(props:IHomePageProps)
-    {
-        super(props);
-        this.state = {};
-    }
+	constructor(props:IHomePageProps)
+	{
+		super(props);
+	}
 
-    client = new CBioPortalAPI(getCbioPortalApiUrl());
+	store = new QueryStore(window.location.href);
 
-    componentDidMount()
-    {
-        this.client.getAllStudiesUsingGET({
-            projection: "DETAILED"
-        }).then(data => {
-            this.setState({data});
-        });
-    }
+	public componentDidMount()
+	{
+		this.exposeComponentRenderersToParentScript();
+	}
 
-    public render() {
-        return <pre>
-            { JSON.stringify(this.state.data, null, 4) }
-        </pre>;
-    }
-};
+	exposeComponentRenderersToParentScript()
+	{
+		exposeComponentRenderer('renderQueryContainer', QueryAndDownloadTabs);
+	}
+
+	public render()
+	{
+		return (
+			<FlexRow padded flex={1} className={styles.HomePage}>
+				<QueryAndDownloadTabs store={this.store}/>
+			</FlexRow>
+		);
+	}
+}
