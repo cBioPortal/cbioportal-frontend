@@ -12,7 +12,7 @@ class PageHeader extends React.Component {
     render() {
         return (
             <header className="clearfix">
-                <h1 className="pull-left">cBioPortal.com</h1>
+                <h1 className="pull-left">cBioPortal.org</h1>
                 <div className="pull-right">
                     <form className="form-inline" onSubmit={(e) => this.handleSubmit(e)}>
                         <div className="form-group">
