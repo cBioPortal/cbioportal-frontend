@@ -21,85 +21,73 @@ export default class MutationTable extends React.Component<IEnhancedReactTablePr
                 name: "Sample",
                 formatter: SampleColumnFormatter,
                 sortable: SampleColumnFormatter.sortFunction,
-                filterable: true,
-                visible: true
+                filterable: true
             },
             gene: {
                 name: "Gene",
                 formatter: GeneColumnFormatter,
                 sortable: GeneColumnFormatter.sortFunction,
-                filterable: true,
-                visible: true
+                filterable: true
             },
             proteinChange: {
                 name: "Protein Change",
                 formatter: ProteinChangeColumnFormatter,
                 sortable: ProteinChangeColumnFormatter.sortFunction,
-                filterable: true,
-                visible: true
+                filterable: true
             },
             mutationType: {
                 name: "Mutation Type",
                 formatter: MutationTypeColumnFormatter,
                 sortable: MutationTypeColumnFormatter.sortFunction,
-                filterable: true,
-                visible: true
+                filterable: true
             },
             startPos: {
                 name: "Start Pos",
                 dataField: "startPos",
                 sortable: true,
-                filterable: false,
-                visible: true
+                filterable: false
             },
             endPos: {
                 name: "End Pos",
                 dataField: "endPos",
                 sortable: true,
-                filterable: false,
-                visible: true
+                filterable: false
             },
             referenceAllele: {
                 name: "Ref",
                 dataField: "referenceAllele",
                 sortable: false,
-                filterable: false,
-                visible: true
+                filterable: false
             },
             variantAllele: {
                 name: "Var",
                 dataField: "variantAllele",
                 sortable: false,
-                filterable: false,
-                visible: true
+                filterable: false
             },
             mutationStatus: {
                 name: "MS",
                 dataField: "mutationStatus",
                 sortable: true,
-                filterable: true,
-                visible: true
+                filterable: true
             },
             validationStatus: {
                 name: "VS",
                 dataField: "validationStatus",
                 sortable: true,
-                filterable: true,
-                visible: true
+                filterable: true
             },
             center: {
                 name: "Center",
                 dataField: "center",
                 sortable: true,
-                filterable: true,
-                visible: true
+                filterable: true
             },
             mutationAssessor: {
                 name: "Mutation Assessor",
                 formatter: MutationAssessorColumnFormatter,
                 sortable: MutationAssessorColumnFormatter.sortFunction,
-                filterable: true,
-                visible: true
+                filterable: true
             },
             normalRefCount: {
                 name: "Ref Count (N)",

@@ -11,9 +11,9 @@ export interface IColumnFormatterProps {
 }
 
 export interface IColumnFormatterData {
-    tableData?: Array<any>; // entire table data (array of instances)
-    rowData?: any; // single instance representing the row data
-    columnData?: any; // column specific data
+    tableData?:Array<any>; // entire table data (array of instances)
+    rowData?:any; // single instance representing the row data
+    columnData?:any; // column specific data
 }
 
 export interface IColumnFormatter {
@@ -27,5 +27,11 @@ export interface IColumnSortFunction {
 export interface IColumnFilterFunction {
     (contents:string, filter:string):boolean;
 }
+
+export interface IColumnVisibilityFunction {
+    (tableData:Array<any>):ColumnVisibility;
+}
+
+export type ColumnVisibility = "visible" | "hidden" | "excluded";
 
 export default IColumnFormatterProps;
