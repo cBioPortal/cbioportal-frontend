@@ -28,7 +28,7 @@ export default class GeneColumnFormatter extends React.Component<IColumnFormatte
      */
     public static getTextValue(data:IColumnFormatterData):string
     {
-        let geneData:any = GeneColumnFormatter.getData(data);
+        let geneData = GeneColumnFormatter.getData(data);
 
         if (geneData.hugoGeneSymbol) {
             return geneData.hugoGeneSymbol.toString();
@@ -46,7 +46,7 @@ export default class GeneColumnFormatter extends React.Component<IColumnFormatte
 
     public static getData(data:IColumnFormatterData)
     {
-        let value:any;
+        let value;
 
         if (data.columnData)
         {

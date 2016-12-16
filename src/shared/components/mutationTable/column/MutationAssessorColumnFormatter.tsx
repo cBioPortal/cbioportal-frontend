@@ -3,10 +3,10 @@ import {IColumnFormatterProps, IColumnFormatterData, IColumnFormatter}
     from "../../enhancedReactTable/IColumnFormatterProps";
 import "./mutationAssessor.scss";
 
-type MA_STYLE = 'oma-high' | 'oma-medium' | 'oma-low' | 'oma-neutral';
+type MA_CLASS_NAME = 'oma-high' | 'oma-medium' | 'oma-low' | 'oma-neutral';
 type IMutationAssessorFormat = {
     label: string,
-    style: MA_STYLE,
+    className: MA_CLASS_NAME,
     priority: number
 };
 
@@ -21,10 +21,10 @@ export default class MutationAssessorColumnFormatter extends React.Component<ICo
      */
     public static get MA_SCORE_MAP():{[key:string]: IMutationAssessorFormat} {
         return {
-            h: {label: "High", style: "oma-high", priority: 4},
-            m: {label: "Medium", style: "oma-medium", priority: 3},
-            l: {label: "Low", style: "oma-low", priority: 2},
-            n: {label: "Neutral", style: "oma-neutral", priority: 1}
+            h: {label: "High", className: "oma-high", priority: 4},
+            m: {label: "Medium", className: "oma-medium", priority: 3},
+            l: {label: "Low", className: "oma-low", priority: 2},
+            n: {label: "Neutral", className: "oma-neutral", priority: 1}
         };
     }
 
@@ -90,31 +90,31 @@ export default class MutationAssessorColumnFormatter extends React.Component<ICo
 
     public static getTextValue(data:IColumnFormatterData):string
     {
-        let maData:any = MutationAssessorColumnFormatter.getData(data);
+        let maData = MutationAssessorColumnFormatter.getData(data);
 
         // return impact value (if exists)
         if (maData && maData.impact) {
-            return maData.impact;
+            return maData.impact.toString();
         }
         else {
             return "";
         }
     }
 
-    public static getScoreClass(data:IColumnFormatterData):string
+    public static getScoreClassName(data:IColumnFormatterData):string
     {
         let value:IMutationAssessorFormat|undefined =
             MutationAssessorColumnFormatter.getMapEntry(data);
 
         if (value) {
-            return value.style;
+            return value.className;
         }
         else {
             return "";
         }
     }
 
-    public static getMaClass(data:IColumnFormatterData):string
+    public static getMaClassName(data:IColumnFormatterData):string
     {
         let value:IMutationAssessorFormat|undefined =
             MutationAssessorColumnFormatter.getMapEntry(data);
@@ -129,7 +129,7 @@ export default class MutationAssessorColumnFormatter extends React.Component<ICo
 
     public static getMapEntry(data:IColumnFormatterData)
     {
-        let maData:any = MutationAssessorColumnFormatter.getData(data);
+        let maData = MutationAssessorColumnFormatter.getData(data);
 
         if (maData && maData.impact) {
             return MutationAssessorColumnFormatter.MA_SCORE_MAP[maData.impact.toLowerCase()];
@@ -141,7 +141,7 @@ export default class MutationAssessorColumnFormatter extends React.Component<ICo
 
     public static getData(data:IColumnFormatterData)
     {
-        let maData:any;
+        let maData;
 
         if (data.columnData)
         {
@@ -174,8 +174,8 @@ export default class MutationAssessorColumnFormatter extends React.Component<ICo
     {
         let data:IColumnFormatterData = this.props.data;
         let text:string = MutationAssessorColumnFormatter.getDisplayValue(data);
-        let fisClass:string = MutationAssessorColumnFormatter.getScoreClass(data);
-        let maClass:string = MutationAssessorColumnFormatter.getMaClass(data);
+        let fisClass:string = MutationAssessorColumnFormatter.getScoreClassName(data);
+        let maClass:string = MutationAssessorColumnFormatter.getMaClassName(data);
 
         return (
             <span className={`${maClass} ${fisClass}`}>{text}</span>
