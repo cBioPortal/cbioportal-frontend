@@ -8,6 +8,9 @@ import {IPatientHeaderProps} from './patientHeader/PatientHeader';
 import {RootState} from '../../redux/rootReducer';
 import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
 import GenomicOverview from './genomicOverview/GenomicOverview';
+import {mockData as vafPlotMockData, mockColors as vafPlotMockColors, mockOrder as vafPlotMockOrder, mockLabels as vafPlotMockLabels} from './vafPlot/mockData';
+
+import {ThumbnailExpandVAFPlot} from './vafPlot/ThumbnailExpandVAFPlot';
 
 interface IPatientViewPageProps {
     store?: RootState;
@@ -57,9 +60,15 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     }
 
     public render() {
-        return (
-            <div>
-                <ClinicalInformationContainer />
+        return (<div>
+            <ClinicalInformationContainer />
+                <ThumbnailExpandVAFPlot
+                    data={vafPlotMockData}
+                    colors={vafPlotMockColors}
+                    labels={vafPlotMockLabels}
+                    order={vafPlotMockOrder}
+                    overlayPlacement="right"
+                />
             </div>
         );
     }
