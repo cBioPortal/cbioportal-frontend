@@ -1,0 +1,17 @@
+div.SectionHeader {
+  :global(.spinner) {
+    float: right;
+    height: 0;
+    overflow: visible;
+  }
+
+  h2 {
+    font: normal normal 700 16px/22px 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    flex-grow: 2;
+    margin: 0;
+  }
+
+  .error {
+    margin-top: 8px;
+  }
+}
