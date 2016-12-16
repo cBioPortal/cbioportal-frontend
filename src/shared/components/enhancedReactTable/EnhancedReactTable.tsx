@@ -3,7 +3,8 @@ import {Table as DataTable} from "reactableMSK";
 import * as _ from 'underscore';
 import {IEnhancedReactTableProps, IColumnDefMap, IEnhancedReactTableColumnDef}
     from "IEnhancedReactTableProps";
-import {IColumnFormatter, IColumnFormatterData, IColumnSortFunction, IColumnFilterFunction}
+import {IColumnFormatter, IColumnFormatterData, IColumnSortFunction, IColumnFilterFunction,
+    IColumnVisibilityFunction, ColumnVisibility}
     from "./IColumnFormatterProps";
 
 type IColumnSort = {
@@ -35,18 +36,61 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
         } = this.props;
 
         columns = columns || {};
+        let visibleCols:IColumnDefMap = this.resolveVisible(columns, rawData);
 
         // update (override) react table props
-        reactTableProps.data = this.convertToTableData(columns, rawData);
-        reactTableProps.columnFormatters = this.columnFormatters(columns);
-        reactTableProps.sortable = this.resolveSortable(columns);
-        reactTableProps.filterable = this.resolveFilterable(columns);
+        reactTableProps.data = this.convertToTableData(visibleCols, rawData);
+        reactTableProps.columnFormatters = this.columnFormatters(visibleCols);
+        reactTableProps.sortable = this.resolveSortable(visibleCols);
+        reactTableProps.filterable = this.resolveFilterable(visibleCols);
 
-        // TODO future work: column order, column visibility
+        // TODO column order (add index
 
         return(
             <DataTable {...reactTableProps} />
         );
+    }
+
+    /**
+     * Resolves the visible columns and returns column definitions for only
+     * the visible ones.
+     *
+     * @param columns   column definitions
+     * @param rawData   raw table data
+     * @returns {IColumnDefMap} column definitions for visible columns
+     */
+    private resolveVisible(columns:IColumnDefMap, rawData:Array<any>):IColumnDefMap
+    {
+        let visibleCols:IColumnDefMap = {};
+
+        _.each(_.keys(columns), function(key:string) {
+            let column:IEnhancedReactTableColumnDef = columns[key];
+
+            // every column is visible by default unless otherwise marked as hidden or excluded
+            let visibility:ColumnVisibility = "visible";
+
+            if (column.visible)
+            {
+                if (_.isFunction(column.visible)) {
+                    visibility = (column.visible as IColumnVisibilityFunction)(rawData);
+                }
+                else {
+                    visibility = column.visible as ColumnVisibility;
+                }
+            }
+
+            // TODO currently ignoring the difference between "hidden" and "excluded"
+            // include column only if it is visible for now
+            // ideally we should only exclude "excluded" ones,
+            // and make "hidden" ones initially hidden (later on they can be toggled visible)
+            // this requires implementation of show/hide columns feature
+            if (visibility === "visible")
+            {
+                visibleCols[key] = column;
+            }
+        });
+
+        return visibleCols;
     }
 
     private resolveSortable(columns:IColumnDefMap):Array<string|IColumnSort>
