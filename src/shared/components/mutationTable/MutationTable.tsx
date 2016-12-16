@@ -38,6 +38,13 @@ export default class MutationTable extends React.Component<IEnhancedReactTablePr
                 filterable: true,
                 visible: true
             },
+            mutationType: {
+                name: "Mutation Type",
+                formatter: MutationTypeColumnFormatter,
+                sortable: MutationTypeColumnFormatter.sortFunction,
+                filterable: true,
+                visible: true
+            },
             startPos: {
                 name: "Start Pos",
                 dataField: "startPos",
@@ -81,7 +88,8 @@ export default class MutationTable extends React.Component<IEnhancedReactTablePr
                 visible: true
             },
             center: {
-                name: "center",
+                name: "Center",
+                dataField: "center",
                 sortable: true,
                 filterable: true,
                 visible: true
@@ -93,12 +101,28 @@ export default class MutationTable extends React.Component<IEnhancedReactTablePr
                 filterable: true,
                 visible: true
             },
-            mutationType: {
-                name: "Mutation Type",
-                formatter: MutationTypeColumnFormatter,
-                sortable: MutationTypeColumnFormatter.sortFunction,
-                filterable: true,
-                visible: true
+            normalRefCount: {
+                name: "Ref Count (N)",
+                dataField: "normalRefCount"
+            },
+            normalAltCount: {
+                name: "Alt Count (N)",
+                dataField: "normalAltCount"
+            },
+            tumorRefCount: {
+                name: "Ref Count (T)",
+                dataField: "tumorRefCount"
+            },
+            tumorAltCount: {
+                name: "Alt Count (T)",
+                dataField: "tumorAltCount"
+            },
+            // TODO we don't have data field for frequencies, we need to calculate them!
+            normalAlleleFreq : {
+                name: "Allele Freq (N)"
+            },
+            tumorAlleleFreq: {
+                name: "Allele Freq (T)"
             }
         };
     };

@@ -11,12 +11,23 @@ export default class MutationInformationContainer extends React.Component<IMutat
     public render() {
         // TODO properly customize table for patient view specific columns!!!
         let columns = {
-            geneticProfileId: {
-                name: "geneticProfileId"
+            tumors: {
+                name: "Tumors"
             },
-            endPos: {
-                name: "End Position",
-                sortable: false
+            annotation: {
+                name: "Annotation"
+            },
+            copyNumber: {
+                name: "Copy #"
+            },
+            mRnaExp: {
+                name: "mRNA Exp."
+            },
+            cohort: {
+                name: "Cohort"
+            },
+            cosmic: {
+                name: "COSMIC"
             }
         };
 

@@ -125,11 +125,16 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
 
                 // here we actually set the same data (same mutation object) for each column.
                 // column formatter should extract the required data from the mutation.
-                if (columnDef.formatter) {
-                    // this is required for the filters to work properly!
-                    data.toString = function() {
-                        return columnDef.formatter.filterValue(data);
-                    };
+                if (columnDef.formatter)
+                {
+                    if (columnDef.formatter.filterValue)
+                    {
+                        // this is required for the filters to work properly!
+                        data.toString = function() {
+                            return columnDef.formatter.filterValue(data);
+                        };
+                    }
+
                     row[columnDef.name] = data;
                 }
                 // if no formatter defined for a column, then try the data field option!
