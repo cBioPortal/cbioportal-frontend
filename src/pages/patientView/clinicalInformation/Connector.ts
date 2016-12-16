@@ -7,9 +7,16 @@ import {IClinicalInformationContainerProps} from "./ClinicalInformationContainer
 
 declare type TODO = any;
 
-const FETCH:'clinicalInformation/fetch' = 'clinicalInformation/fetch';
-const SET_TAB:'clinicalInformation/setTab' = 'clinicalInformation/setTab';
+const FETCH = 'clinicalInformation/fetch';
+const SET_TAB = 'clinicalInformation/setTab';
 export const actionTypes = {FETCH, SET_TAB};
+
+export type ActionTypes = (
+    {type: typeof FETCH, status: 'fetching'}
+    | {type: typeof FETCH, status: 'error', error: Error}
+    | {type: typeof FETCH, status: 'success', payload: ClinicalInformationData}
+    | {type: typeof SET_TAB, activeTab: number }
+);
 
 export type ClinicalInformationData = {
     status?: 'fetching' | 'complete' | 'error',
@@ -21,13 +28,6 @@ export type ClinicalInformationData = {
     samples?: Array<ClinicalDataBySampleId>,
     nodes?: TODO[]//PDXNode[],
 };
-
-export type ActionTypes = (
-    {type: typeof FETCH, status: 'fetching'}
-    | {type: typeof FETCH, status: 'error', error: Error}
-    | {type: typeof FETCH, status: 'success', payload: ClinicalInformationData}
-    | {type: typeof SET_TAB, activeTab: number }
-);
 
 export default new class ClinicalInformationConnector extends Connector<RootState, ClinicalInformationData, ActionTypes, IClinicalInformationContainerProps>
 {
