@@ -58,6 +58,8 @@
     "postcss-loader": "^0.9.1",
     "precss": "^1.4.0",
     "progress-bar-webpack-plugin": "^1.9.0",
+    "qtip": "0.0.4",
+    "qtip2": "^3.0.3",
     "query-string": "^4.2.3",
     "react": "^15.3.0",
     "react-addons-pure-render-mixin": "^15.3.0",
@@ -94,7 +96,8 @@
     "underscore": "^1.8.3",
     "url-loader": "^0.5.7",
     "webpack": "^1.13.1",
-    "webpack-fail-plugin": "^1.0.5"
+    "webpack-fail-plugin": "^1.0.5",
+    "webpack-raphael": "^2.1.4"
   },
   "devDependencies": {
     "argparse": "^1.0.9",
