@@ -23,6 +23,9 @@ function lazyLoadComponent(loader) {
     return (location, cb) => {
         loader(module => {
             cb(null, module.default);
+            if (typeof window.onReactAppReady === 'function') {
+                window.onReactAppReady();
+            }
         });
 
     };
