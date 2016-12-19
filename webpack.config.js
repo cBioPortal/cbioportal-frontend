@@ -34,8 +34,8 @@ const modules = join(root, 'node_modules');
 const dest = join(root, 'dist');
 const css = join(src, 'styles');
 
-const fontPath = 'reactapp/css/[hash].[ext]';
-const imgPath = 'reactapp/css/images/[hash].[ext]';
+const fontPath = 'reactapp/[hash].[ext]';
+const imgPath = 'reactapp/images/[hash].[ext]';
 
 var routeComponentRegex = /routes\/([^\/]+\/?[^\/]+).js$/;
 
@@ -47,9 +47,9 @@ var config = {
     ],
     'output': {
         path: './dist/',
-        filename: 'reactapp/js/[name].app.js',
-        chunkFilename: 'reactapp/js/[name].chunk.js',
-        cssFilename: 'reactapp/css/app.css',
+        filename: 'reactapp/[name].app.js',
+        chunkFilename: 'reactapp/[name].chunk.js',
+        cssFilename: 'reactapp/app.css',
         hash: false,
         publicPath: '/',
     },
@@ -75,8 +75,9 @@ var config = {
             manifest: require('./common-dist/common-manifest.json')
         }),
         new CopyWebpackPlugin([
-            { from: './common-dist', to: 'reactapp/js' },
-            { from: './node_modules/bootstrap/dist/css/bootstrap.min.css', to: 'reactapp/css'}
+            { from: './common-dist', to: 'reactapp' },
+            { from: './src/globalStyles/prefixed-bootstrap.min.css', to:'reactapp/prefixed-bootstrap.min.css' },
+            { from: './src/globalStyles/prefixed-bootstrap.min.css.map', to:'reactapp/prefixed-bootstrap.min.css.map' }
         ]) // destination is relative to dist directory
     ],
 
@@ -183,7 +184,7 @@ const defines =
 
 config.plugins = [
     new webpack.DefinePlugin(defines),
-    new ExtractTextPlugin('reactapp/css/styles.css')
+    new ExtractTextPlugin('reactapp/styles.css')
 ].concat(config.plugins);
 // END ENV variables
 

@@ -9,6 +9,7 @@
     "buildDLL:prod": "npm run clean && cross-env NODE_ENV=production webpack --config vendor-bundles.webpack.config.js",
     "buildDLL:dev": "npm run clean && cross-env NODE_ENV=development webpack --config vendor-bundles.webpack.config.js",
     "build:size": "npm run clean && cross-env NODE_ENV=production webpack --json > stats.json",
+    "buildBootstrap": "sass --style :compressed src/globalStyles/bootstrap-entry.scss src/globalStyles/prefixed-bootstrap.min.css",
     "heroku-postbuild": "npm run build && npm install http-server -g",
     "updateAPI": "npm run fetchAPI && npm run buildAPI",
     "fetchAPI": "curl http://cbioportal-rc.herokuapp.com/api/v2/api-docs > src/shared/api/CBioPortalAPI-docs.json",
