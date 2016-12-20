@@ -1,7 +1,9 @@
 import Raphael from 'webpack-raphael';
 import $ from 'jquery';
+import * as _ from 'underscore';
 import 'qtip2';
 import 'qtip2/dist/jquery.qtip.css';
+
 export function GenomicOverviewConfig(nRows,width) {
     var sel = {};
     sel.nRows = nRows;
@@ -163,15 +165,15 @@ export function plotCnSegs(p,config,chmInfo,row,segs,chrCol,startCol,endCol,segC
         r.translate(0.5, 0.5);
         var tip = "Mean copy number log2 value: "+segMean+"<br/>from "+loc2string([chm,start],chmInfo)+"<br/>to "+loc2string([chm,end],chmInfo);
         addToolTip(r.node,tip);
-    }if (caseId!==null) {
-        //var label = caseMetaData.label[caseId];
-        var label = 1; //TODO:
-        //var c = p.circle(8,yRow+config.rowHeight/2,6).attr({'stroke':caseMetaData.color[caseId], 'fill':caseMetaData.color[caseId]}); //TODO:
-        var c = p.circle(8,yRow+config.rowHeight/2,6).attr({'stroke':'black', 'fill':'black'});
-        var t = p.text(8,yRow+config.rowHeight/2,label).attr({'text-anchor': 'center', 'fill':'white'});
-        //addToolTip(c.node, caseMetaData.tooltip[caseId],false,{my:'middle left',at:'middle right', viewport: $(window)}); //TODO:
-        //addToolTip(t.node, caseMetaData.tooltip[caseId],false,{my:'middle left',at:'middle right', viewport: $(window)}); //TODO:
-        addToolTip(c.node, "",false,{my:'middle left',at:'middle right', viewport: $(window)});
+    }if (caseId!=null) {
+        //var label = caseMetaData.label[caseId]; //TODO: needed for patient view
+        var label = "CNA"; //TODO:
+        //var c = p.circle(12,yRow+config.rowHeight/2,6).attr({'stroke':caseMetaData.color[caseId], 'fill':caseMetaData.color[caseId]}); //TODO: needed for patient view
+        //var c = p.circle(12,yRow+config.rowHeight/2,6).attr({'stroke':'black', 'fill':'black'});
+        var t = p.text(12,yRow+config.rowHeight/2,label).attr({'text-anchor': 'center', 'fill':'black'});
+        //addToolTip(c.node, caseMetaData.tooltip[caseId],false,{my:'middle left',at:'middle right', viewport: $(window)}); //TODO: needed for patient view
+        //addToolTip(t.node, caseMetaData.tooltip[caseId],false,{my:'middle left',at:'middle right', viewport: $(window)}); //TODO: needed for patient view
+        //addToolTip(c.node, "",false,{my:'middle left',at:'middle right', viewport: $(window)});
         addToolTip(t.node, "",false,{my:'middle left',at:'middle right', viewport: $(window)});
     } else {
         p.text(0,yRow+config.rowHeight/2,'CNA').attr({'text-anchor': 'start'});
@@ -186,6 +188,63 @@ export function plotCnSegs(p,config,chmInfo,row,segs,chrCol,startCol,endCol,segC
     addToolTip(t.node, tip,null,{my:'top right',at:'bottom left', viewport: $(window)});
 }
 
+export function plotMuts(p,config,chmInfo,row,mutations,caseId) {
+    var numMut = 0;
+    var mutObjs = _.filter(mutations, function(_mutObj){ return _mutObj.sampleId === caseId; } );
+
+    var pixelMap = [];
+    for (var i = 0; i < mutObjs.length; i++) {
+        var mutObj = mutObjs[i];
+        var chm = translateChm(mutObj.gene.chromosome);
+        if (chm != null||chm <= chmInfo.hg19.length) {
+            var x = Math.round(chmInfo.loc2xpixil(chm, (mutObj.startPos + mutObj.endPos)/2, config));
+            var xBin = x - x%config.pixelsPerBinMut;
+            if (pixelMap[xBin] == null) pixelMap[xBin] = [];
+            pixelMap[xBin].push("mutation event id here"); //TODO: needed for filter mutation table under mutation tab (patient view)
+            numMut++;
+        }
+    }
+
+    var maxCount = 5; // set max height to 5 mutations
+//    for (var i in pixelMap) {
+//        var arr = pixelMap[i];
+//        if (arr && arr.length>maxCount)
+//            maxCount=arr.length;
+//    }
+
+    var yRow = config.yRow(row)+config.rowHeight;
+    for (var i in pixelMap) {
+        var arr = pixelMap[i];
+        var pixil = parseInt(i);
+        if (arr) {
+            var h = arr.length>maxCount ? config.rowHeight : (config.rowHeight*arr.length/maxCount);
+            var r = p.rect(pixil,yRow-h,config.pixelsPerBinMut,h);
+            r.attr("fill","#0f0");
+            r.attr("stroke", "#0f0");
+            r.attr("stroke-width", 1);
+            r.attr("opacity", 0.5);
+            r.translate(0.5, 0.5);
+            addToolTip(r.node, mutObj.gene.hugoGeneSymbol + ": " + mutObj.proteinChange, 100);
+            //TODO: need to add "show details" link
+        }
+    }
+
+    if (caseId!==null) {
+        //var label = caseMetaData.label[caseId]; //TODO: needed for patient view
+        var label = "MUT";
+        //var c = p.circle(12,yRow-config.rowHeight/2,6).attr({'stroke':caseMetaData.color[caseId], 'fill':caseMetaData.color[caseId]}); //TODO: needed for patient view
+        var t = p.text(12,yRow-config.rowHeight/2,label).attr({'text-anchor': 'center', 'fill':'black'});
+        //addToolTip(c.node, caseMetaData.tooltip[caseId],false,{my:'middle left',at:'middle right'}); //TODO: needed for patient view
+        //addToolTip(t.node, caseMetaData.tooltip[caseId],false,{my:'middle left',at:'middle right'}); //TODO: needed for patient view
+    } else {
+        p.text(0,yRow-config.rowHeight/2,'MUT').attr({'text-anchor': 'start'});
+    }
+    var t = p.text(config.xRightText(),yRow-config.rowHeight/2,numMut).attr({'text-anchor': 'start','font-weight': 'bold'});
+    underlineText(t,p);
+    var tip =  "Number of mutation events.";
+    addToolTip(t.node,tip,null,{my:'top right',at:'bottom left'});
+}
+
 function addToolTip(node,tip,showDelay,position) {
     var param = {
         content: {text:tip},
@@ -193,7 +252,7 @@ function addToolTip(node,tip,showDelay,position) {
         hide: {fixed: true, delay: 100, event:"mouseout"},
         style: { classes: 'qtip-light qtip-rounded' },
         //position: {viewport: $(window)}
-    };
+    }; //TODO: viewport causes jquery exception
     // if (showDelay)
     //     param['show'] = { delay: showDelay };
     // if (position)
