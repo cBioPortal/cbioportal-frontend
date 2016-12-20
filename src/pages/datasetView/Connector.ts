@@ -43,6 +43,7 @@ export default new class DatasetConnector extends Connector<RootState, DatasetDo
     mapStateToProps(state:RootState):IDatasetPageUnconnectedProps {
         return {
             datasets:state.datasetDownloads.datasets,
+            status:state.datasetDownloads.status
         };
     }
 

@@ -16,3 +16,15 @@ th.reactable-header-sort-asc:after {
   padding-left: 10px;
   padding-bottom: 5px;
 }
+
+.reactable-column-header {
+
+  th {
+    border-top:1px dashed #ddd !important;
+  }
+
+}
+
+#content {
+  margin-top:8px;
+}
