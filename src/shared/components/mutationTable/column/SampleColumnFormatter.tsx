@@ -1,12 +1,13 @@
 import * as React from 'react';
-import {IColumnFormatterProps, IColumnFormatterData, IColumnFormatter}
-    from "../../enhancedReactTable/IColumnFormatterProps";
+import {Td} from 'reactableMSK';
+import {IColumnFormatterData, IColumnFormatter}
+    from "../../enhancedReactTable/IColumnFormatter";
 import "./sample.scss";
 
 /**
  * @author Selcuk Onur Sumer
  */
-export default class SampleColumnFormatter extends React.Component<IColumnFormatterProps, {}> implements IColumnFormatter
+export default class SampleColumnFormatter implements IColumnFormatter
 {
     // make these thresholds customizable if needed...
     public static get MAX_LENGTH():number {return 16;}; // max allowed length of a sample id.
@@ -103,25 +104,24 @@ export default class SampleColumnFormatter extends React.Component<IColumnFormat
         return value;
     }
 
-    constructor(props:IColumnFormatterProps)
+    public static renderFunction(data:IColumnFormatterData)
     {
-        super(props);
-        this.state = {};
-    }
-
-    public render()
-    {
-        let data:IColumnFormatterData = this.props.data;
         let sampleId:string = SampleColumnFormatter.getTextValue(data);
         let text:string = SampleColumnFormatter.getDisplayValue(data);
         let toolTip:string = SampleColumnFormatter.getToolTip(sampleId);
         let className:string = SampleColumnFormatter.getClassName(sampleId);
         let linkToPatientView:string = "#"; // TODO generate or get it from somewhere else
 
+        data.toString = function() {
+            return SampleColumnFormatter.filterValue(data);
+        };
+
         return (
-            <a href={linkToPatientView} target='_blank'>
-                <span alt={toolTip} className={`${className} text-no-wrap`}>{text}</span>
-            </a>
+            <Td column={data.name} value={data}>
+                <a href={linkToPatientView} target='_blank'>
+                    <span alt={toolTip} className={`${className} text-no-wrap`}>{text}</span>
+                </a>
+            </Td>
         );
     }
 }

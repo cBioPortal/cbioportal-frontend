@@ -1,5 +1,5 @@
-import {IColumnFormatter, IColumnSortFunction, IColumnFilterFunction, IColumnVisibilityFunction, ColumnVisibility}
-    from "./IColumnFormatterProps";
+import {IColumnRenderFunction, IColumnSortFunction, IColumnFilterFunction, IColumnVisibilityFunction, ColumnVisibility}
+    from "./IColumnFormatter";
 
 /**
  * @author Selcuk Onur Sumer
@@ -16,7 +16,7 @@ export interface IColumnDefMap {
 
 export interface IEnhancedReactTableColumnDef {
     name: string;
-    formatter?: IColumnFormatter;
+    formatter?: IColumnRenderFunction;
     sortable?: IColumnSortFunction | boolean;
     filterable?: IColumnFilterFunction | boolean;
     visible?: IColumnVisibilityFunction | ColumnVisibility;

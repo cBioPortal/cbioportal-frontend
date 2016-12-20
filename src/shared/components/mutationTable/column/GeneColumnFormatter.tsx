@@ -1,11 +1,12 @@
 import * as React from 'react';
-import {IColumnFormatterProps, IColumnFormatterData, IColumnFormatter}
-    from "../../enhancedReactTable/IColumnFormatterProps";
+import {Td} from 'reactableMSK';
+import {IColumnFormatterData, IColumnFormatter}
+    from "../../enhancedReactTable/IColumnFormatter";
 
 /**
  * @author Selcuk Onur Sumer
  */
-export default class GeneColumnFormatter extends React.Component<IColumnFormatterProps, {}> implements IColumnFormatter
+export default class GeneColumnFormatter implements IColumnFormatter
 {
     public static sortFunction(a:IColumnFormatterData, b:IColumnFormatterData):boolean
     {
@@ -63,19 +64,19 @@ export default class GeneColumnFormatter extends React.Component<IColumnFormatte
         return value;
     }
 
-    constructor(props:IColumnFormatterProps)
+    public static renderFunction(data:IColumnFormatterData)
     {
-        super(props);
-        this.state = {};
-    }
-
-    public render()
-    {
-        let data:IColumnFormatterData = this.props.data;
         let value = GeneColumnFormatter.getDisplayValue(data);
 
+        data.toString = function() {
+            return GeneColumnFormatter.filterValue(data);
+        };
+
         return (
-            <span>{value}</span>
+            <Td column={data.name} value={data}>
+                <span>{value}</span>
+            </Td>
+
         );
     }
 }
