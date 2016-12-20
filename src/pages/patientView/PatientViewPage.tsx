@@ -59,6 +59,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     public render() {
         return (
             <div>
+                <GenomicOverview />
                 <ClinicalInformationContainer />
             </div>
         );

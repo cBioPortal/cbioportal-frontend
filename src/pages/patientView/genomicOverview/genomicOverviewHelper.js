@@ -1,5 +1,7 @@
 import Raphael from 'webpack-raphael';
 import $ from 'jquery';
+import 'qtip2';
+import 'qtip2/dist/jquery.qtip.css';
 export function GenomicOverviewConfig(nRows,width) {
     var sel = {};
     sel.nRows = nRows;
@@ -190,13 +192,13 @@ function addToolTip(node,tip,showDelay,position) {
         show: {event: "mouseover"},
         hide: {fixed: true, delay: 100, event:"mouseout"},
         style: { classes: 'qtip-light qtip-rounded' },
-        position: {viewport: $(window)}
+        //position: {viewport: $(window)}
     };
-    if (showDelay)
-        param['show'] = { delay: showDelay };
-    if (position)
-        param['position'] = position;
-    //$(node).qtip(param);
+    // if (showDelay)
+    //     param['show'] = { delay: showDelay };
+    // if (position)
+    //     param['position'] = position;
+    $(node).qtip(param);
 }
 
 function underlineText(textElement,p) {
