@@ -19,25 +19,25 @@ export default class MutationTable extends React.Component<IEnhancedReactTablePr
         return {
             sampleId: {
                 name: "Sample",
-                formatter: SampleColumnFormatter,
+                formatter: SampleColumnFormatter.renderFunction,
                 sortable: SampleColumnFormatter.sortFunction,
                 filterable: true
             },
             gene: {
                 name: "Gene",
-                formatter: GeneColumnFormatter,
+                formatter: GeneColumnFormatter.renderFunction,
                 sortable: GeneColumnFormatter.sortFunction,
                 filterable: true
             },
             proteinChange: {
                 name: "Protein Change",
-                formatter: ProteinChangeColumnFormatter,
+                formatter: ProteinChangeColumnFormatter.renderFunction,
                 sortable: ProteinChangeColumnFormatter.sortFunction,
                 filterable: true
             },
             mutationType: {
                 name: "Mutation Type",
-                formatter: MutationTypeColumnFormatter,
+                formatter: MutationTypeColumnFormatter.renderFunction,
                 sortable: MutationTypeColumnFormatter.sortFunction,
                 filterable: true
             },
@@ -85,7 +85,7 @@ export default class MutationTable extends React.Component<IEnhancedReactTablePr
             },
             mutationAssessor: {
                 name: "Mutation Assessor",
-                formatter: MutationAssessorColumnFormatter,
+                formatter: MutationAssessorColumnFormatter.renderFunction,
                 sortable: MutationAssessorColumnFormatter.sortFunction,
                 filterable: true
             },

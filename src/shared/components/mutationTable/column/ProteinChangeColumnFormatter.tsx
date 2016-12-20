@@ -1,11 +1,12 @@
 import * as React from 'react';
-import {IColumnFormatterProps, IColumnFormatterData, IColumnFormatter}
-    from "../../enhancedReactTable/IColumnFormatterProps";
+import {Td} from 'reactableMSK';
+import {IColumnFormatterData, IColumnFormatter}
+    from "../../enhancedReactTable/IColumnFormatter";
 
 /**
  * @author Selcuk Onur Sumer
  */
-export default class ProteinChangeColumnFormatter extends React.Component<IColumnFormatterProps, {}> implements IColumnFormatter
+export default class ProteinChangeColumnFormatter implements IColumnFormatter
 {
     public static sortFunction(a:IColumnFormatterData, b:IColumnFormatterData):boolean
     {
@@ -138,20 +139,19 @@ export default class ProteinChangeColumnFormatter extends React.Component<IColum
         return value;
     }
 
-    constructor(props:IColumnFormatterProps)
+    public static renderFunction(data:IColumnFormatterData)
     {
-        super(props);
-        this.state = {};
-    }
-
-    public render()
-    {
-        let data:IColumnFormatterData = this.props.data;
         let text:string = ProteinChangeColumnFormatter.getDisplayValue(data);
+
+        data.toString = function() {
+            return ProteinChangeColumnFormatter.filterValue(data);
+        };
 
         // TODO we probably need two different renderer classes, one for patient view one for results page
         return (
-            <span>{text}</span>
+            <Td column={data.name} value={data}>
+                <span>{text}</span>
+            </Td>
         );
     }
 }
