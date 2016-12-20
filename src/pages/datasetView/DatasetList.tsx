@@ -1,16 +1,19 @@
 import * as React from "react";
 import * as _ from 'lodash';
-import { Table, unsafe }  from 'reactableMSK';
-import Connector from './Connector';
+import { Table, Tr, Td }  from 'reactableMSK';
+import Connector, { DatasetDownloads } from './Connector';
 import { CancerStudy }  from 'shared/api/CBioPortalAPI';
 import Spinner from "react-spinkit";
 import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
+import TableHeaderControls from "shared/components/tableHeaderControls/TableHeaderControls";
+
 
 
 export interface IDatasetPageUnconnectedProps {
 
     datasets?:Array<CancerStudy> | null;
     loadDatasetsInfo?:void;
+    status?: any;
 
 };
 
@@ -20,7 +23,7 @@ class CancerStudyCell extends React.Component<{ data:any },{}> {
         return (
             <span>
                 <a href={`http://www.cbioportal.org/study?id=${ this.props.data.cancerStudyIdentifier }#summary`}
-                    target='_blank' >{ this.props.data.name }</a>&nbsp;
+                    target='_blank'>{ this.props.data.name }</a>&nbsp;
                 <a href={`https://github.com/cBioPortal/datahub/blob/master/public/${ this.props.data.cancerStudyIdentifier }.tar.gz`} download><i className='fa fa-download'></i></a>
             </span>
         );
@@ -40,12 +43,13 @@ class ReferenceCell extends React.Component<{ data:any },{}> {
 
 }
 
-
-
-
 @Connector.decorator
-export default class DataSetPageUnconnected extends React.Component<IDatasetPageUnconnectedProps, {}> {
+export default class DataSetPageUnconnected extends React.Component<IDatasetPageUnconnectedProps, { filter: string; }> {
 
+    constructor(){
+        super();
+        this.state = { filter:'' };
+    }
 
     componentDidMount() {
 
@@ -53,37 +57,64 @@ export default class DataSetPageUnconnected extends React.Component<IDatasetPage
 
     }
 
+    buildTable(){
+
+        console.log(this.state.filter);
+
+        if (this.props.datasets) {
+            return (
+                <Table
+                    className="table table-striped"
+                    filterable={['Name','Reference']}
+                    sortable={true}
+                    hideFilterInput={true}
+                    defaultSort={{column: 'Name', direction: 'asc'}}
+                    filterBy={this.state.filter}
+                    noDataText="No matching results"
+                >
+                    {
+                        _.map(this.props.datasets, (study: CancerStudy) => {
+                            return (
+                                <Tr>
+                                    <Td column="Name" value={study.name}>
+                                        <CancerStudyCell data={study}/>
+                                    </Td>
+                                    <Td column="Reference" value={study.citation}>
+                                        <ReferenceCell data={study}/>
+                                    </Td>
+                                    <Td column="All" data={study.allSampleCount || ""}/>
+                                    <Td column="Sequenced" data={study.sequencedSampleCount || ""}/>
+                                    <Td column="CNA" data={study.cnaSampleCount}/>
+                                    <Td column="Tumor mRNA (RNA-Seq V2)" data={study.mrnaRnaSeqV2SampleCount || ""}/>
+                                    <Td column="Tumor mRNA (microarray)" data={study.mrnaMicroarraySampleCount || ""}/>
+                                    <Td column="Tumor miRNA" data={study.miRnaSampleCount || ""}/>
+                                    <Td column="Methylation (HM27)" data={study.methylationHm27SampleCount || "" }/>
+                                    <Td column="RPPA" data={study.rppaSampleCount || "" }/>
+                                    <Td column="Compete" data={study.completeSampleCount || ""}/>
+                                </Tr>
+                            );
+                        })
+                    }
+                </Table>
+
+
+            );
+        }
+
+    }
+
     render() {
         if (this.props.datasets) {
-            const rows: Array<any> = [];
 
             let sortedDatasets: Array<CancerStudy> = _.sortBy(this.props.datasets, 'name');
 
-            sortedDatasets.forEach((item: CancerStudy) => {
-                const tempObj: any = {
-                    CancerStudy:  { cancerStudyIdentifier: item.cancerStudyIdentifier, name: item.name },
-                    Reference: { pmid:item.pmid, citation:item.citation },
-                    All: item.allSampleCount,
-                    Sequenced: item.sequencedSampleCount,
-                    CNA: item.cnaSampleCount,
-                    "Tumor mRNA (RNA-Seq V2)": item.mrnaRnaSeqV2SampleCount,
-                    "Tumor mRNA (microarray)": item.mrnaMicroarraySampleCount,
-                    "Tumor miRNA": item.miRnaSampleCount,
-                    "Methylation (HM27)": item.methylationHm27SampleCount,
-                    RPPA: item.rppaSampleCount,
-                    Complete: item.completeSampleCount
-                };
-                rows.push(tempObj);
-            });
+            return (<div>
+                        <TableHeaderControls showCopyAndDownload={false} handleInput={(filter: string)=>this.setState({ filter:filter })} showSearch={true} className="pull-right" />
+                        { this.buildTable() }
+                    </div>);
 
-            return <Table
-                          className="table table-striped"
-                          data={rows}
-                          sortable={true}
-                          columnFormatters={{ CancerStudy: CancerStudyCell, Reference: ReferenceCell }}
-            />;
         } else {
-            return <div><Spinner spinnerName="three-bounce" /></div>;;
+            return <div><Spinner spinnerName="three-bounce" /></div>;
         }
     }
 }
