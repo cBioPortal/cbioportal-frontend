@@ -1,4 +1,16 @@
 
+/* fix for legacy style isses. makes it bootstrap */
+#content .cbioportal-frontend {
+    h4 {
+     font-size:18px;
+     margin-top:10px;
+     margin-bottom:10px;
+      font-weight:500;
+      line-height:1.1;
+      color:$text-color;
+  }
+}
+
 th.reactable-header-sortable {
 
   &:focus {outline:0;}
