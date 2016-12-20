@@ -1,6 +1,7 @@
 import * as React from 'react';
-import {IColumnFormatterProps, IColumnFormatterData, IColumnFormatter}
-    from "../../enhancedReactTable/IColumnFormatterProps";
+import {Td} from 'reactableMSK';
+import {IColumnFormatterData, IColumnFormatter}
+    from "../../enhancedReactTable/IColumnFormatter";
 import "./mutationType.scss";
 
 type IMutationTypeFormat = {
@@ -14,7 +15,7 @@ type IMutationTypeFormat = {
 /**
  * @author Selcuk Onur Sumer
  */
-export default class MutationTypeColumnFormatter extends React.Component<IColumnFormatterProps, {}> implements IColumnFormatter
+export default class MutationTypeColumnFormatter implements IColumnFormatter
 {
     public static get MAIN_MUTATION_TYPE_MAP():{[key:string]: IMutationTypeFormat} {
         return {
@@ -247,20 +248,19 @@ export default class MutationTypeColumnFormatter extends React.Component<IColumn
         return mutationType;
     }
 
-    constructor(props:IColumnFormatterProps)
+    public static renderFunction(data:IColumnFormatterData)
     {
-        super(props);
-        this.state = {};
-    }
-
-    public render()
-    {
-        let data:IColumnFormatterData = this.props.data;
         let text:string = MutationTypeColumnFormatter.getDisplayValue(data);
         let className:string = MutationTypeColumnFormatter.getClassName(data);
 
+        data.toString = function() {
+            return MutationTypeColumnFormatter.filterValue(data);
+        };
+
         return (
-            <span className={className}>{text}</span>
+            <Td column={data.name} value={data}>
+                <span className={className}>{text}</span>
+            </Td>
         );
     }
 }

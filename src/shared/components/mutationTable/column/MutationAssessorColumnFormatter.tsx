@@ -1,6 +1,7 @@
 import * as React from 'react';
-import {IColumnFormatterProps, IColumnFormatterData, IColumnFormatter}
-    from "../../enhancedReactTable/IColumnFormatterProps";
+import {Td} from 'reactableMSK';
+import {IColumnFormatterData, IColumnFormatter}
+    from "../../enhancedReactTable/IColumnFormatter";
 import "./mutationAssessor.scss";
 
 type MA_CLASS_NAME = 'oma-high' | 'oma-medium' | 'oma-low' | 'oma-neutral';
@@ -13,7 +14,7 @@ type IMutationAssessorFormat = {
 /**
  * @author Selcuk Onur Sumer
  */
-export default class MutationAssessorColumnFormatter extends React.Component<IColumnFormatterProps, {}> implements IColumnFormatter
+export default class MutationAssessorColumnFormatter implements IColumnFormatter
 {
     /**
      * Mapping between the functional impact score (data) values and
@@ -164,21 +165,20 @@ export default class MutationAssessorColumnFormatter extends React.Component<ICo
         return maData;
     }
 
-    constructor(props:IColumnFormatterProps)
+    public static renderFunction(data:IColumnFormatterData)
     {
-        super(props);
-        this.state = {};
-    }
-
-    public render()
-    {
-        let data:IColumnFormatterData = this.props.data;
         let text:string = MutationAssessorColumnFormatter.getDisplayValue(data);
         let fisClass:string = MutationAssessorColumnFormatter.getScoreClassName(data);
         let maClass:string = MutationAssessorColumnFormatter.getMaClassName(data);
 
+        data.toString = function() {
+            return MutationAssessorColumnFormatter.filterValue(data);
+        };
+
         return (
-            <span className={`${maClass} ${fisClass}`}>{text}</span>
+            <Td column={data.name} value={data}>
+                <span className={`${maClass} ${fisClass}`}>{text}</span>
+            </Td>
         );
     }
 }
