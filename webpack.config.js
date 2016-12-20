@@ -184,7 +184,11 @@ const defines =
 
 config.plugins = [
     new webpack.DefinePlugin(defines),
-    new ExtractTextPlugin('reactapp/styles.css')
+    new ExtractTextPlugin('reactapp/styles.css'),
+    new webpack.ProvidePlugin({
+        $: "jquery",
+        jQuery: "jquery"
+    })
 ].concat(config.plugins);
 // END ENV variables
 
