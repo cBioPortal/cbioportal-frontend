@@ -1,7 +1,9 @@
 import * as React from 'react';
+import Tooltip from 'rc-tooltip';
 import {Td} from 'reactableMSK';
 import {IColumnFormatterData, IColumnFormatter}
     from "../../enhancedReactTable/IColumnFormatter";
+import 'rc-tooltip/assets/bootstrap_white.css';
 import "./mutationAssessor.scss";
 
 type MA_CLASS_NAME = 'oma-high' | 'oma-medium' | 'oma-low' | 'oma-neutral';
@@ -165,11 +167,76 @@ export default class MutationAssessorColumnFormatter implements IColumnFormatter
         return maData;
     }
 
+    public static getTooltipContent(data:IColumnFormatterData)
+    {
+        const maData = MutationAssessorColumnFormatter.getData(data);
+        let xVar:any = "";
+        let msa:any = "";
+        let pdb:any = "";
+        let impact:any = "";
+
+        if (maData.score)
+        {
+            impact = (
+                <div>
+                    Predicted impact score: <b>{impact}</b>
+                </div>
+            );
+        }
+
+        // TODO load image file
+        if (maData.xVar)
+        {
+            xVar = (
+                <div className='mutation-assessor-main-link mutation-assessor-link'>
+                    <a href={maData.xVar} target='_blank'>
+                        <img height='15' width='19' src='/src/images/ma.png' alt='Mutation Assessor' />
+                        Go to Mutation Assessor
+                    </a>
+                </div>
+            );
+        }
+
+        if (maData.msa)
+        {
+            msa = (
+                <div className='mutation-assessor-msa-link mutation-assessor-link'>
+                    <a href={maData.msa} target='_blank'>
+                        <span className="ma-msa-icon">msa</span>
+                        Multiple Sequence Alignment
+                    </a>
+                </div>
+            );
+        }
+
+        if (maData.pdb)
+        {
+            pdb = (
+                <div className='mutation-assessor-3d-link mutation-assessor-link'>
+                    <a href={maData.pdb} target='_blank'>
+                        <span className="ma-3d-icon">3D</span>
+                        Mutation Assessor 3D View
+                    </a>
+                </div>
+            );
+        }
+
+        return (
+            <span>
+                {impact}
+                {xVar}
+                {msa}
+                {pdb}
+            </span>
+        );
+    }
+
     public static renderFunction(data:IColumnFormatterData)
     {
         let text:string = MutationAssessorColumnFormatter.getDisplayValue(data);
         let fisClass:string = MutationAssessorColumnFormatter.getScoreClassName(data);
         let maClass:string = MutationAssessorColumnFormatter.getMaClassName(data);
+        const tooltipContent = MutationAssessorColumnFormatter.getTooltipContent(data);
 
         data.toString = function() {
             return MutationAssessorColumnFormatter.filterValue(data);
@@ -177,7 +244,9 @@ export default class MutationAssessorColumnFormatter implements IColumnFormatter
 
         return (
             <Td column={data.name} value={data}>
-                <span className={`${maClass} ${fisClass}`}>{text}</span>
+                <Tooltip overlay={tooltipContent} placement="rightTop">
+                    <span className={`${maClass} ${fisClass}`}>{text}</span>
+                </Tooltip>
             </Td>
         );
     }
