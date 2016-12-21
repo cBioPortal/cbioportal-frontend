@@ -18,7 +18,7 @@ export default class SampleColumnFormatter implements IColumnFormatter
     public static getTextValue(data:IColumnFormatterData):string
     {
         let textValue:string = "";
-        let dataValue = SampleColumnFormatter.getData(data);
+        const dataValue = SampleColumnFormatter.getData(data);
 
         if (dataValue) {
             textValue = dataValue.toString();
@@ -88,10 +88,10 @@ export default class SampleColumnFormatter implements IColumnFormatter
 
     public static renderFunction(data:IColumnFormatterData)
     {
-        let sampleId:string = SampleColumnFormatter.getTextValue(data);
-        let text:string = SampleColumnFormatter.getDisplayValue(data);
-        let toolTip:string = SampleColumnFormatter.getTooltipValue(sampleId);
-        let linkToPatientView:string = "#"; // TODO generate or get it from somewhere else
+        const sampleId:string = SampleColumnFormatter.getTextValue(data);
+        const text:string = SampleColumnFormatter.getDisplayValue(data);
+        const toolTip:string = SampleColumnFormatter.getTooltipValue(sampleId);
+        const linkToPatientView:string = "#"; // TODO generate or get it from somewhere else
 
         let content = (
             <a href={linkToPatientView} target='_blank'>
@@ -99,7 +99,7 @@ export default class SampleColumnFormatter implements IColumnFormatter
             </a>
         );
 
-        let arrowContent = <div className="rc-tooltip-arrow-inner"/>;
+        const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
 
         // update content with tooltip if tooltip has a valid value
         if (toolTip.length > 0)
