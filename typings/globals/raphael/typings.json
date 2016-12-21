@@ -1,0 +1,8 @@
+{
+  "resolution": "main",
+  "tree": {
+    "src": "https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/a4f5ae309857434140d3859b5f53e69eb690a6c2/raphael/index.d.ts",
+    "raw": "registry:dt/raphael#2.1.0+20160727010356",
+    "typings": "https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/a4f5ae309857434140d3859b5f53e69eb690a6c2/raphael/index.d.ts"
+  }
+}
