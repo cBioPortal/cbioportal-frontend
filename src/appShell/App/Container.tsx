@@ -32,12 +32,13 @@ export default class Container extends React.Component<IContainerProps, void> {
             c => React.cloneElement(c as React.ReactElement<any>, childProps));
     }
     render() {
-        let children = this.renderChildren();
-
-        if (children.length > 1)
-            throw new Error("This Container component should only contain a single child");
-
-        return children[0];
+        return (
+            <div>
+                <div>
+                    {this.renderChildren()}
+                </div>
+            </div>
+        );
     }
 }
 
