@@ -1,4 +1,5 @@
 import * as React from 'react';
+import Tooltip from 'rc-tooltip';
 import {Td} from 'reactableMSK';
 import {IColumnFormatterData, IColumnFormatter}
     from "../../enhancedReactTable/IColumnFormatter";
@@ -165,7 +166,7 @@ export default class MutationTypeColumnFormatter implements IColumnFormatter
      */
     public static getDisplayValue(data:IColumnFormatterData):string
     {
-        let entry:IMutationTypeFormat|undefined =
+        const entry:IMutationTypeFormat|undefined =
             MutationTypeColumnFormatter.getMapEntry(data);
 
         // first, try to find a mapped value
@@ -181,7 +182,7 @@ export default class MutationTypeColumnFormatter implements IColumnFormatter
     public static getTextValue(data:IColumnFormatterData):string
     {
         let textValue:string = "";
-        let dataValue = MutationTypeColumnFormatter.getData(data);
+        const dataValue = MutationTypeColumnFormatter.getData(data);
 
         if (dataValue) {
             textValue = dataValue.toString();
@@ -192,7 +193,7 @@ export default class MutationTypeColumnFormatter implements IColumnFormatter
 
     public static getClassName(data:IColumnFormatterData):string
     {
-        let value:IMutationTypeFormat|undefined =
+        const value:IMutationTypeFormat|undefined =
             MutationTypeColumnFormatter.getMapEntry(data);
 
         if (value && value.className) {
@@ -206,7 +207,7 @@ export default class MutationTypeColumnFormatter implements IColumnFormatter
 
     public static getMapEntry(data:IColumnFormatterData)
     {
-        let mutationType = MutationTypeColumnFormatter.getData(data);
+        const mutationType = MutationTypeColumnFormatter.getData(data);
 
         if (mutationType) {
             return MutationTypeColumnFormatter.MUTATION_TYPE_MAP[mutationType.toLowerCase()];
@@ -238,12 +239,19 @@ export default class MutationTypeColumnFormatter implements IColumnFormatter
     public static renderFunction(data:IColumnFormatterData)
     {
         // use text for all purposes (display, sort, filter)
-        let text:string = MutationTypeColumnFormatter.getDisplayValue(data);
-        let className:string = MutationTypeColumnFormatter.getClassName(data);
+        const text:string = MutationTypeColumnFormatter.getDisplayValue(data);
+        const className:string = MutationTypeColumnFormatter.getClassName(data);
+
+        // use actual value for tooltip
+        const toolTip:string = MutationTypeColumnFormatter.getTextValue(data);
+
+        const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
 
         return (
             <Td column={data.name} value={text}>
-                <span className={className}>{text}</span>
+                <Tooltip overlay={toolTip} placement="rightTop" arrowContent={arrowContent}>
+                    <span className={className}>{text}</span>
+                </Tooltip>
             </Td>
         );
     }

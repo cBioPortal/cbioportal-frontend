@@ -16,7 +16,7 @@ export default class GeneColumnFormatter implements IColumnFormatter
      */
     public static getTextValue(data:IColumnFormatterData):string
     {
-        let geneData = GeneColumnFormatter.getData(data);
+        const geneData = GeneColumnFormatter.getData(data);
 
         if (geneData.hugoGeneSymbol) {
             return geneData.hugoGeneSymbol.toString();
@@ -54,16 +54,15 @@ export default class GeneColumnFormatter implements IColumnFormatter
     public static renderFunction(data:IColumnFormatterData)
     {
         // use text as display value
-        let text = GeneColumnFormatter.getDisplayValue(data);
+        const text = GeneColumnFormatter.getDisplayValue(data);
 
         // use value as filter & sort value
-        let value = GeneColumnFormatter.getTextValue(data);
+        const value = GeneColumnFormatter.getTextValue(data);
 
         return (
             <Td column={data.name} value={value}>
                 <span>{text}</span>
             </Td>
-
         );
     }
 }
