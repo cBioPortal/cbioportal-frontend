@@ -243,9 +243,11 @@ export default class MutationAssessorColumnFormatter implements IColumnFormatter
             return MutationAssessorColumnFormatter.filterValue(data);
         };
 
+        let arrowContent = <div className="rc-tooltip-arrow-inner"/>;
+
         return (
             <Td column={data.name} value={data}>
-                <Tooltip overlay={tooltipContent} placement="rightTop">
+                <Tooltip overlay={tooltipContent} placement="rightTop" arrowContent={arrowContent}>
                     <span className={`${maClass} ${fisClass}`}>{text}</span>
                 </Tooltip>
             </Td>
