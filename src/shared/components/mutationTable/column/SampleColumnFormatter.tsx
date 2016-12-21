@@ -15,19 +15,6 @@ export default class SampleColumnFormatter implements IColumnFormatter
     public static get SUFFIX():string {return "...";};
     public static get TOOLTIP_CLASS_NAME():string {return "simple-tip";};
 
-    public static sortFunction(a:IColumnFormatterData, b:IColumnFormatterData):boolean
-    {
-        let aValue = SampleColumnFormatter.getTextValue(a);
-        let bValue = SampleColumnFormatter.getTextValue(b);
-
-        return aValue > bValue;
-    }
-
-    public static filterValue(data:IColumnFormatterData):string
-    {
-        return SampleColumnFormatter.getTextValue(data);
-    }
-
     public static getTextValue(data:IColumnFormatterData):string
     {
         let textValue:string = "";
@@ -112,12 +99,8 @@ export default class SampleColumnFormatter implements IColumnFormatter
         let className:string = SampleColumnFormatter.getClassName(sampleId);
         let linkToPatientView:string = "#"; // TODO generate or get it from somewhere else
 
-        data.toString = function() {
-            return SampleColumnFormatter.filterValue(data);
-        };
-
         return (
-            <Td column={data.name} value={data}>
+            <Td column={data.name} value={sampleId}>
                 <a href={linkToPatientView} target='_blank'>
                     <span alt={toolTip} className={`${className} text-no-wrap`}>{text}</span>
                 </a>
