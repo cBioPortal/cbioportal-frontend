@@ -33,10 +33,10 @@ export default class MutationAssessorColumnFormatter implements IColumnFormatter
 
     public static sortFunction(a:IColumnFormatterData, b:IColumnFormatterData):boolean
     {
-        let aScore = MutationAssessorColumnFormatter.getData(a).score;
-        let bScore = MutationAssessorColumnFormatter.getData(b).score;
-        let aImpact = MutationAssessorColumnFormatter.getData(a).impact;
-        let bImpact = MutationAssessorColumnFormatter.getData(b).impact;
+        const aScore = MutationAssessorColumnFormatter.getData(a).score;
+        const bScore = MutationAssessorColumnFormatter.getData(b).score;
+        const aImpact = MutationAssessorColumnFormatter.getData(a).impact;
+        const bImpact = MutationAssessorColumnFormatter.getData(b).impact;
 
         // use actual score values to compare (if exist)
         if (aScore && bScore)
@@ -78,7 +78,7 @@ export default class MutationAssessorColumnFormatter implements IColumnFormatter
      */
     public static getDisplayValue(data:IColumnFormatterData):string
     {
-        let entry:IMutationAssessorFormat|undefined =
+        const entry:IMutationAssessorFormat|undefined =
             MutationAssessorColumnFormatter.getMapEntry(data);
 
         // first, try to find a mapped value
@@ -93,7 +93,7 @@ export default class MutationAssessorColumnFormatter implements IColumnFormatter
 
     public static getTextValue(data:IColumnFormatterData):string
     {
-        let maData = MutationAssessorColumnFormatter.getData(data);
+        const maData = MutationAssessorColumnFormatter.getData(data);
 
         // return impact value (if exists)
         if (maData && maData.impact) {
@@ -106,7 +106,7 @@ export default class MutationAssessorColumnFormatter implements IColumnFormatter
 
     public static getScoreClassName(data:IColumnFormatterData):string
     {
-        let value:IMutationAssessorFormat|undefined =
+        const value:IMutationAssessorFormat|undefined =
             MutationAssessorColumnFormatter.getMapEntry(data);
 
         if (value) {
@@ -119,7 +119,7 @@ export default class MutationAssessorColumnFormatter implements IColumnFormatter
 
     public static getMaClassName(data:IColumnFormatterData):string
     {
-        let value:IMutationAssessorFormat|undefined =
+        const value:IMutationAssessorFormat|undefined =
             MutationAssessorColumnFormatter.getMapEntry(data);
 
         if (value) {
@@ -132,7 +132,7 @@ export default class MutationAssessorColumnFormatter implements IColumnFormatter
 
     public static getMapEntry(data:IColumnFormatterData)
     {
-        let maData = MutationAssessorColumnFormatter.getData(data);
+        const maData = MutationAssessorColumnFormatter.getData(data);
 
         if (maData && maData.impact) {
             return MutationAssessorColumnFormatter.MA_SCORE_MAP[maData.impact.toLowerCase()];
@@ -233,9 +233,9 @@ export default class MutationAssessorColumnFormatter implements IColumnFormatter
 
     public static renderFunction(data:IColumnFormatterData)
     {
-        let text:string = MutationAssessorColumnFormatter.getDisplayValue(data);
-        let fisClass:string = MutationAssessorColumnFormatter.getScoreClassName(data);
-        let maClass:string = MutationAssessorColumnFormatter.getMaClassName(data);
+        const text:string = MutationAssessorColumnFormatter.getDisplayValue(data);
+        const fisClass:string = MutationAssessorColumnFormatter.getScoreClassName(data);
+        const maClass:string = MutationAssessorColumnFormatter.getMaClassName(data);
         const tooltipContent = MutationAssessorColumnFormatter.getTooltipContent(data);
 
         // this is required to have a proper filtering when we pass a complex object as Td.value
@@ -243,7 +243,7 @@ export default class MutationAssessorColumnFormatter implements IColumnFormatter
             return MutationAssessorColumnFormatter.filterValue(data);
         };
 
-        let arrowContent = <div className="rc-tooltip-arrow-inner"/>;
+        const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
 
         return (
             <Td column={data.name} value={data}>
