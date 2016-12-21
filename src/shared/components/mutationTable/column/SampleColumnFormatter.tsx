@@ -1,4 +1,5 @@
 import * as React from 'react';
+import Tooltip from 'rc-tooltip';
 import {Td} from 'reactableMSK';
 import {IColumnFormatterData, IColumnFormatter}
     from "../../enhancedReactTable/IColumnFormatter";
@@ -13,7 +14,6 @@ export default class SampleColumnFormatter implements IColumnFormatter
     public static get MAX_LENGTH():number {return 16;}; // max allowed length of a sample id.
     public static get BUFFER():number {return 2;}; // no need to bother with clipping the text for a few chars.
     public static get SUFFIX():string {return "...";};
-    public static get TOOLTIP_CLASS_NAME():string {return "simple-tip";};
 
     public static getTextValue(data:IColumnFormatterData):string
     {
@@ -49,24 +49,19 @@ export default class SampleColumnFormatter implements IColumnFormatter
         return text;
     }
 
-    public static getClassName(sampleId:string):string
+    public static getTooltipValue(sampleId:string):string
     {
-        let className:string = "";
+        let tooltip:string = "";
 
         if (SampleColumnFormatter.isTooLong(sampleId,
                                             SampleColumnFormatter.MAX_LENGTH,
                                             SampleColumnFormatter.BUFFER))
         {
             // enable tooltip for long strings
-            className = SampleColumnFormatter.TOOLTIP_CLASS_NAME;
+            tooltip = sampleId;
         }
 
-        return className;
-    }
-
-    public static getToolTip(sampleId:string):string
-    {
-        return sampleId;
+        return tooltip;
     }
 
     public static isTooLong(sampleId:string, maxLength:number, buffer:number):boolean
@@ -95,15 +90,30 @@ export default class SampleColumnFormatter implements IColumnFormatter
     {
         let sampleId:string = SampleColumnFormatter.getTextValue(data);
         let text:string = SampleColumnFormatter.getDisplayValue(data);
-        let toolTip:string = SampleColumnFormatter.getToolTip(sampleId);
-        let className:string = SampleColumnFormatter.getClassName(sampleId);
+        let toolTip:string = SampleColumnFormatter.getTooltipValue(sampleId);
         let linkToPatientView:string = "#"; // TODO generate or get it from somewhere else
+
+        let content = (
+            <a href={linkToPatientView} target='_blank'>
+                <span className="text-no-wrap">{text}</span>
+            </a>
+        );
+
+        let arrowContent = <div className="rc-tooltip-arrow-inner"/>;
+
+        // update content with tooltip if tooltip has a valid value
+        if (toolTip.length > 0)
+        {
+            content = (
+                <Tooltip overlay={toolTip} placement="rightTop" arrowContent={arrowContent}>
+                    {content}
+                </Tooltip>
+            );
+        }
 
         return (
             <Td column={data.name} value={sampleId}>
-                <a href={linkToPatientView} target='_blank'>
-                    <span alt={toolTip} className={`${className} text-no-wrap`}>{text}</span>
-                </a>
+                {content}
             </Td>
         );
     }
