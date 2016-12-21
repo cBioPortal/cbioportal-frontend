@@ -8,10 +8,10 @@ import {IColumnFormatterData, IColumnFormatter}
  */
 export default class ProteinChangeColumnFormatter implements IColumnFormatter
 {
-    public static sortFunction(a:IColumnFormatterData, b:IColumnFormatterData):boolean
+    public static sortFunction(a:string, b:string):boolean
     {
-        let aValue = ProteinChangeColumnFormatter.sortValue(a);
-        let bValue = ProteinChangeColumnFormatter.sortValue(b);
+        let aValue = ProteinChangeColumnFormatter.extractSortValue(a);
+        let bValue = ProteinChangeColumnFormatter.extractSortValue(b);
 
         return aValue > bValue;
     }
@@ -38,12 +38,6 @@ export default class ProteinChangeColumnFormatter implements IColumnFormatter
         }
 
         return value;
-    }
-
-    public static sortValue(data:IColumnFormatterData):number
-    {
-        let proteinChange:string = ProteinChangeColumnFormatter.getTextValue(data);
-        return ProteinChangeColumnFormatter.extractSortValue(proteinChange);
     }
 
     /**
@@ -99,11 +93,6 @@ export default class ProteinChangeColumnFormatter implements IColumnFormatter
         }
     }
 
-    public static filterValue(data:IColumnFormatterData):string
-    {
-        return ProteinChangeColumnFormatter.getTextValue(data);
-    }
-
     public static getTextValue(data:IColumnFormatterData):string
     {
         let textValue:string = "";
@@ -141,15 +130,15 @@ export default class ProteinChangeColumnFormatter implements IColumnFormatter
 
     public static renderFunction(data:IColumnFormatterData)
     {
+        // use text as display value
         let text:string = ProteinChangeColumnFormatter.getDisplayValue(data);
 
-        data.toString = function() {
-            return ProteinChangeColumnFormatter.filterValue(data);
-        };
+        // use value as sort & filter value
+        let value:string = ProteinChangeColumnFormatter.getTextValue(data);
 
         // TODO we probably need two different renderer classes, one for patient view one for results page
         return (
-            <Td column={data.name} value={data}>
+            <Td column={data.name} value={value}>
                 <span>{text}</span>
             </Td>
         );
