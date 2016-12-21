@@ -238,6 +238,7 @@ export default class MutationAssessorColumnFormatter implements IColumnFormatter
         let maClass:string = MutationAssessorColumnFormatter.getMaClassName(data);
         const tooltipContent = MutationAssessorColumnFormatter.getTooltipContent(data);
 
+        // this is required to have a proper filtering when we pass a complex object as Td.value
         data.toString = function() {
             return MutationAssessorColumnFormatter.filterValue(data);
         };
