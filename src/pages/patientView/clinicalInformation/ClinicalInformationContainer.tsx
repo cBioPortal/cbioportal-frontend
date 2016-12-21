@@ -6,17 +6,12 @@ import Connector, {ClinicalInformationData} from "./Connector";
 
 type TODO = any;
 
-let _ClinicalInformationData:ClinicalInformationData = null as any;
-
-export interface IClinicalInformationContainerProps {
-    status?: typeof _ClinicalInformationData.status;
-    patient?: typeof _ClinicalInformationData.patient;
-    samples?: typeof _ClinicalInformationData.samples;
-    nodes?: TODO;// PDXNode[];
+export type IClinicalInformationContainerProps = {
+    nodes?: TODO;//PDXNode[];
     loadClinicalInformationTableData?: () => void;
     setTab?: (activeTab:number) => void;
     store?: any;
-};
+} & PartialPick<ClinicalInformationData, 'status' | 'patient' | 'samples'>;
 
 @Connector.decorator
 export default class ClinicalInformationContainer extends React.Component<IClinicalInformationContainerProps, {}> {
@@ -51,6 +46,4 @@ export default class ClinicalInformationContainer extends React.Component<IClini
             </div>
         );
     }
-
-
 }
