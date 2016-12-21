@@ -10,8 +10,8 @@ export default class ProteinChangeColumnFormatter implements IColumnFormatter
 {
     public static sortFunction(a:string, b:string):boolean
     {
-        let aValue = ProteinChangeColumnFormatter.extractSortValue(a);
-        let bValue = ProteinChangeColumnFormatter.extractSortValue(b);
+        const aValue = ProteinChangeColumnFormatter.extractSortValue(a);
+        const bValue = ProteinChangeColumnFormatter.extractSortValue(b);
 
         return aValue > bValue;
     }
@@ -20,7 +20,7 @@ export default class ProteinChangeColumnFormatter implements IColumnFormatter
     // in case the protein position values are the same
     public static extractNonNumerical(matched:RegExpMatchArray):Array<number>
     {
-        let nonNumerical:RegExp = /[^0-9]+/g;
+        const nonNumerical:RegExp = /[^0-9]+/g;
         let buffer:RegExpMatchArray|null = matched[0].match(nonNumerical);
         let value:Array<number> = [];
 
@@ -50,8 +50,8 @@ export default class ProteinChangeColumnFormatter implements IColumnFormatter
     public static extractSortValue(proteinChange:string):number
     {
         // let matched = proteinChange.match(/.*[A-Z]([0-9]+)[^0-9]+/);
-        let alleleAndPosition:RegExp = /[A-Za-z][0-9]+./g;
-        let position:RegExp = /[0-9]+/g;
+        const alleleAndPosition:RegExp = /[A-Za-z][0-9]+./g;
+        const position:RegExp = /[0-9]+/g;
 
         // first priority is to match values like V600E , V600, E747G, E747, X37_, X37, etc.
         let matched:RegExpMatchArray|null = proteinChange.match(alleleAndPosition);
@@ -96,7 +96,7 @@ export default class ProteinChangeColumnFormatter implements IColumnFormatter
     public static getTextValue(data:IColumnFormatterData):string
     {
         let textValue:string = "";
-        let dataValue = ProteinChangeColumnFormatter.getData(data);
+        const dataValue = ProteinChangeColumnFormatter.getData(data);
 
         if (dataValue) {
             textValue = dataValue.toString();
@@ -131,12 +131,12 @@ export default class ProteinChangeColumnFormatter implements IColumnFormatter
     public static renderFunction(data:IColumnFormatterData)
     {
         // use text as display value
-        let text:string = ProteinChangeColumnFormatter.getDisplayValue(data);
+        const text:string = ProteinChangeColumnFormatter.getDisplayValue(data);
 
         // use value as sort & filter value
-        let value:string = ProteinChangeColumnFormatter.getTextValue(data);
+        const value:string = ProteinChangeColumnFormatter.getTextValue(data);
 
-        // TODO we probably need two different renderer classes, one for patient view one for results page
+        // TODO we probably need two different render functions, one for patient view one for results page
         return (
             <Td column={data.name} value={value}>
                 <span>{text}</span>
