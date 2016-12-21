@@ -8,19 +8,6 @@ import {IColumnFormatterData, IColumnFormatter}
  */
 export default class GeneColumnFormatter implements IColumnFormatter
 {
-    public static sortFunction(a:IColumnFormatterData, b:IColumnFormatterData):boolean
-    {
-        let aValue = GeneColumnFormatter.getTextValue(a);
-        let bValue = GeneColumnFormatter.getTextValue(b);
-
-        return aValue > bValue;
-    }
-
-    public static filterValue(data:IColumnFormatterData):string
-    {
-        return GeneColumnFormatter.getTextValue(data);
-    }
-
     /**
      * Default text value for a gene is its hugo gene symbol.
      *
@@ -66,15 +53,15 @@ export default class GeneColumnFormatter implements IColumnFormatter
 
     public static renderFunction(data:IColumnFormatterData)
     {
-        let value = GeneColumnFormatter.getDisplayValue(data);
+        // use text as display value
+        let text = GeneColumnFormatter.getDisplayValue(data);
 
-        data.toString = function() {
-            return GeneColumnFormatter.filterValue(data);
-        };
+        // use value as filter & sort value
+        let value = GeneColumnFormatter.getTextValue(data);
 
         return (
-            <Td column={data.name} value={data}>
-                <span>{value}</span>
+            <Td column={data.name} value={value}>
+                <span>{text}</span>
             </Td>
 
         );

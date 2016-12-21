@@ -16,7 +16,7 @@ export interface IColumnFormatter {
 }
 
 export interface IColumnSortFunction {
-    (a:IColumnFormatterData, b:IColumnFormatterData):boolean;
+    (a:any, b:any):boolean;
 }
 
 export interface IColumnFilterFunction {

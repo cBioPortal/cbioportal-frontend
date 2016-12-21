@@ -157,19 +157,6 @@ export default class MutationTypeColumnFormatter implements IColumnFormatter
         };
     }
 
-    public static sortFunction(a:IColumnFormatterData, b:IColumnFormatterData):boolean
-    {
-        let aText:string = MutationTypeColumnFormatter.getDisplayValue(a);
-        let bText:string = MutationTypeColumnFormatter.getDisplayValue(b);
-
-        return aText > bText;
-    }
-
-    public static filterValue(data:IColumnFormatterData):string
-    {
-        return MutationTypeColumnFormatter.getDisplayValue(data);
-    }
-
     /**
      * Determines the display value by using the impact field.
      *
@@ -250,15 +237,12 @@ export default class MutationTypeColumnFormatter implements IColumnFormatter
 
     public static renderFunction(data:IColumnFormatterData)
     {
+        // use text for all purposes (display, sort, filter)
         let text:string = MutationTypeColumnFormatter.getDisplayValue(data);
         let className:string = MutationTypeColumnFormatter.getClassName(data);
 
-        data.toString = function() {
-            return MutationTypeColumnFormatter.filterValue(data);
-        };
-
         return (
-            <Td column={data.name} value={data}>
+            <Td column={data.name} value={text}>
                 <span className={className}>{text}</span>
             </Td>
         );
