@@ -2,6 +2,7 @@ import * as React from "react";
 import mockData from "./mock/mutationData.json";
 import MutationTable from "../../../shared/components/mutationTable/MutationTable";
 import {IColumnDefMap} from "../../../shared/components/enhancedReactTable/IEnhancedReactTableProps";
+import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter";
 
 export interface IMutationInformationContainerProps {
     // setTab?: (activeTab:number) => void;
@@ -15,6 +16,10 @@ export default class MutationInformationContainer extends React.Component<IMutat
             sampleId: {
                 name: "Sample Id", // name does not matter when the column is "excluded"
                 visible: "excluded"
+            },
+            proteinChange: {
+                name: "Protein Change",
+                formatter: ProteinChangeColumnFormatter.renderFunction
             },
             tumors: {
                 name: "Tumors"
