@@ -190,7 +190,7 @@ export default class MutationAssessorColumnFormatter implements IColumnFormatter
             xVar = (
                 <div className='mutation-assessor-main-link mutation-assessor-link'>
                     <a href={maData.xVar} target='_blank'>
-                        <img height='15' width='19' src='/src/images/ma.png' alt='Mutation Assessor' />
+                        <img height='15' width='19' src={require("./mutationAssessor.png")} alt='Mutation Assessor' />
                         Go to Mutation Assessor
                     </a>
                 </div>
