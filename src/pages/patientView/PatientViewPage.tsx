@@ -1,4 +1,5 @@
 import * as React from 'react';
+import * as _ from 'lodash';
 import * as ReactDOM from 'react-dom';
 import { connect } from 'react-redux';
 import { Component } from 'react';
@@ -8,12 +9,21 @@ import {IPatientHeaderProps} from './patientHeader/PatientHeader';
 import {RootState} from '../../redux/rootReducer';
 import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
 import GenomicOverview from './genomicOverview/GenomicOverview';
+import renderIf from 'render-if';
 
 interface IPatientViewPageProps {
     store?: RootState;
 }
 
 export default class PatientViewPage extends React.Component<IPatientViewPageProps, {}> {
+
+    constructor(){
+
+        super();
+
+        this.state = { genomicOverviewData: { status: 'loading', data:null }  };
+
+    }
 
     private static mapStateToProps(state: any): IPatientHeaderProps {
 
@@ -23,6 +33,25 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             samples: ci.samples,
             status: ci.status,
         };
+    }
+
+
+    fetchData() {
+
+        var fetchJSON = function(url) {
+            return new Promise((resolve, reject) => {
+                $.getJSON(url)
+                    .done((json) => resolve(json))
+                    .fail((xhr, status, err) => reject(status + err.message));
+            });
+        }
+        var itemUrls = [
+                "http://www.cbioportal.org/api-legacy/copynumbersegments?cancerStudyId=ov_tcga_pub&chromosome=17&sampleIds=TCGA-24-2024-01",
+                "https://raw.githubusercontent.com/onursumer/cbioportal-frontend/enhanced-react-table/src/pages/patientView/mutation/mock/mutationData.json"
+            ],
+            itemPromises = _.map(itemUrls, fetchJSON);
+        return Promise.all(itemPromises);
+
     }
 
     public componentDidMount() {
@@ -42,6 +71,11 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         this.exposeComponentRenderersToParentScript();
 
 
+        this.fetchData().then((apiResult)=>{
+
+            this.setState({ 'genomicOverviewData': { status:'complete', data:apiResult }});
+        });
+
     }
 
     // this gives the parent (legacy) cbioportal code control to mount
@@ -57,10 +91,16 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     }
 
     public render() {
+
         return (
             <div>
-                <GenomicOverview />
-                <ClinicalInformationContainer />
+
+                {
+                    renderIf(this.state.genomicOverviewData.status==='complete')(
+                        <GenomicOverview data={this.state.genomicOverviewData.data } />
+                    )
+                }
+
             </div>
         );
     }
