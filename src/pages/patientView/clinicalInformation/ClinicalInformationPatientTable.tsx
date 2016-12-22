@@ -16,7 +16,7 @@ export default class ClinicalInformationPatientTable extends React.Component<ICl
 
         let tableData = this.props.data && this.props.data.map((el: ClinicalData) => ({
             attribute: el.clinicalAttribute.displayName || '',
-            value: el.attrValue
+            value: el.value
         }));
 
         return (

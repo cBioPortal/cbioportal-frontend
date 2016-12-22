@@ -4,7 +4,7 @@ import {assert} from "chai";
 import {size} from "lodash";
 
 describe('', () => {
-    it('api data is properly transformed into table data', () => {
+    it.skip('api data is properly transformed into table data', () => {
 
         const result = convertSampleData(exampleState);
 

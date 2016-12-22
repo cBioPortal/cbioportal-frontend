@@ -80,7 +80,7 @@ export default async function getClinicalInformationData():Promise<ClinicalInfor
     const clinicalDataSample = await tsClient.fetchClinicalDataUsingPOST({
         clinicalDataType: 'SAMPLE',
         identifiers: samplesOfPatient.map(sample => ({
-            id: sample.stableId,
+            entityId: sample.sampleId,
             studyId: 'lgg_ucsf_2014'
         })),
         projection: 'DETAILED',
