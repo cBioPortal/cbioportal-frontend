@@ -30,13 +30,13 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         // Don't try to render clinical_div_prototype in parent cbioportal
         // project context
-        let clinicalDiv: Element | null = document.getElementById('clinical_div_prototype');
-        if (clinicalDiv) {
-            ReactDOM.render(
-                <PatientHeader {...{store: this.props.store}} />,
-                clinicalDiv
-            );
-        }
+        // let clinicalDiv: Element | null = document.getElementById('clinical_div_prototype');
+        // if (clinicalDiv) {
+        //     ReactDOM.render(
+        //         <PatientHeader {...{store: this.props.store}} />,
+        //         clinicalDiv
+        //     );
+        // }
 
 
         this.exposeComponentRenderersToParentScript();

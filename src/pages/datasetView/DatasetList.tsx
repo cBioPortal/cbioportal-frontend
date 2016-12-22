@@ -17,14 +17,14 @@ export interface IDatasetPageUnconnectedProps {
 
 };
 
-class CancerStudyCell extends React.Component<{ data:any },{}> {
+class CancerStudyCell extends React.Component<{ study:CancerStudy },{}> {
 
     render(){
         return (
             <span>
-                <a href={`http://www.cbioportal.org/study?id=${ this.props.data.cancerStudyIdentifier }#summary`}
-                    target='_blank'>{ this.props.data.name }</a>&nbsp;
-                <a href={`https://github.com/cBioPortal/datahub/blob/master/public/${ this.props.data.cancerStudyIdentifier }.tar.gz`} download><i className='fa fa-download'></i></a>
+                <a href={`http://www.cbioportal.org/study?id=${ this.props.study.studyId }#summary`}
+                    target='_blank'>{ this.props.study.name }</a>&nbsp;
+                <a href={`https://github.com/cBioPortal/datahub/blob/master/public/${ this.props.study.studyId }.tar.gz`} download><i className='fa fa-download'></i></a>
             </span>
         );
 
@@ -32,11 +32,11 @@ class CancerStudyCell extends React.Component<{ data:any },{}> {
 
 }
 
-class ReferenceCell extends React.Component<{ data:any },{}> {
+class ReferenceCell extends React.Component<{ study:CancerStudy },{}> {
 
     render(){
         return (
-            <a target='_blank' href={`https://www.ncbi.nlm.nih.gov/pubmed/${ this.props.data.pmid }`}>{ this.props.data.citation }</a>
+            <a target='_blank' href={`https://www.ncbi.nlm.nih.gov/pubmed/${ this.props.study.pmid }`}>{ this.props.study.citation }</a>
         );
 
     }
@@ -59,8 +59,6 @@ export default class DataSetPageUnconnected extends React.Component<IDatasetPage
 
     buildTable(){
 
-        console.log(this.state.filter);
-
         if (this.props.datasets) {
             return (
                 <Table
@@ -77,10 +75,10 @@ export default class DataSetPageUnconnected extends React.Component<IDatasetPage
                             return (
                                 <Tr>
                                     <Td column="Name" value={study.name}>
-                                        <CancerStudyCell data={study}/>
+                                        <CancerStudyCell study={study}/>
                                     </Td>
                                     <Td column="Reference" value={study.citation}>
-                                        <ReferenceCell data={study}/>
+                                        <ReferenceCell study={study}/>
                                     </Td>
                                     <Td column="All" data={study.allSampleCount || ""}/>
                                     <Td column="Sequenced" data={study.sequencedSampleCount || ""}/>
