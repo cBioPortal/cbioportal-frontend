@@ -136,7 +136,6 @@ export default class ProteinChangeColumnFormatter implements IColumnFormatter
         // use value as sort & filter value
         const value:string = ProteinChangeColumnFormatter.getTextValue(data);
 
-        // TODO we probably need two different render functions, one for patient view one for results page
         return (
             <Td column={data.name} value={value}>
                 <span>{text}</span>
