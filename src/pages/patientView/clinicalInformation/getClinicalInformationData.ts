@@ -11,6 +11,20 @@ export type ClinicalDataBySampleId = {
     clinicalData: Array<ClinicalData>;
 };
 
+
+export function groupByEntityId(clinicalDataArray: Array<ClinicalData>){
+
+    return _.map(
+        _.groupBy(clinicalDataArray, 'entityId'),
+        (v:ClinicalData[], k:string):ClinicalDataBySampleId => ({
+            clinicalData: v,
+            id: k,
+        })
+    );
+
+}
+
+
 /*
  * Transform clinical data from API to clinical data shape as it will be stored
  * in the store
@@ -21,13 +35,7 @@ function transformClinicalInformationToStoreShape(patientId: string, studyId: st
         clinicalData: clinicalDataPatient
     };
 
-    const samples = _.map(
-            _.groupBy(clinicalDataSample, 'id'),
-            (v:ClinicalData[], k:string):ClinicalDataBySampleId => ({
-                clinicalData: v,
-                id: k,
-            })
-        );
+    const samples = groupByEntityId(clinicalDataSample);
 
     // // create object with sample ids as keys and values are objects
     // // that have clinical attribute ids as keys (only PDX_PARENT is
