@@ -107,6 +107,7 @@ export default class DataSetPageUnconnected extends React.Component<IDatasetPage
             let sortedDatasets: Array<CancerStudy> = _.sortBy(this.props.datasets, 'name');
 
             return (<div>
+                        <h4 className="pull-left">Data Sets</h4>
                         <TableHeaderControls showCopyAndDownload={false} handleInput={(filter: string)=>this.setState({ filter:filter })} showSearch={true} className="pull-right" />
                         { this.buildTable() }
                     </div>);
