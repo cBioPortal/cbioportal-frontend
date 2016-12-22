@@ -36,7 +36,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         //         <PatientHeader {...{store: this.props.store}} />,
         //         clinicalDiv
         //     );
-        // }
+        // } //
 
 
         this.exposeComponentRenderersToParentScript();
