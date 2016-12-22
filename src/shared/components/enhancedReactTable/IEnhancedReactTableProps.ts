@@ -1,4 +1,7 @@
-import {IColumnRenderFunction, IColumnSortFunction, IColumnFilterFunction, IColumnVisibilityFunction, ColumnVisibility}
+import {
+    IColumnRenderFunction, IColumnSortFunction, IColumnFilterFunction, IColumnVisibilityFunction, ColumnVisibility,
+    IColumnFormatterData
+}
     from "./IColumnFormatter";
 
 /**
@@ -23,6 +26,7 @@ export interface IEnhancedReactTableColumnDef {
     priority?: number;
     props?: any;
     dataField?: string;
+    columnData?:(d:IColumnFormatterData)=>any;
 }
 
 export default IEnhancedReactTableProps;
