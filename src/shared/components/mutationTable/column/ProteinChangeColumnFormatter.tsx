@@ -119,7 +119,8 @@ export default class ProteinChangeColumnFormatter implements IColumnFormatter
             value = data.columnData;
         }
         else if (data.rowData) {
-            value = data.rowData.proteinChange;
+            const rowDataArr = [].concat(data.rowData);
+            value = (rowDataArr.length > 0 ? rowDataArr[0].proteinChange : null);
         }
         else {
             value = null;

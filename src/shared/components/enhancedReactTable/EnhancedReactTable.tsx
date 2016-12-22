@@ -130,12 +130,10 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
             };
 
             // get column data (may end up being undefined)
-            if (columnDef.dataField) {
+            if (columnDef.columnData) {
+                data.columnData = columnDef.columnData(data);
+            } else if (columnDef.dataField) {
                 data.columnData = rowData[columnDef.dataField];
-            }
-            // last resort: use name to get data (if there is any matching data field)
-            else {
-                data.columnData = rowData[columnDef.name];
             }
 
             cols.push(self.generateColumn(data, columnDef));
