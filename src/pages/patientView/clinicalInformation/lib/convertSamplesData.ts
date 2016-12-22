@@ -28,10 +28,10 @@ export default function (data?: Array<ClinicalDataBySampleId>):IConvertedSamples
             output.columns.push({ id: sampleId });
 
             sample.clinicalData.forEach((dataItem) => {
-                output.items[dataItem.attrId] = output.items[dataItem.attrId] || {};
-                output.items[dataItem.attrId][sampleId] = dataItem.attrValue.toString();
-                output.items[dataItem.attrId].clinicalAttribute = dataItem.clinicalAttribute;
-                output.items[dataItem.attrId].id = dataItem.attrId;
+                output.items[dataItem.clinicalAttributeId] = output.items[dataItem.clinicalAttributeId] || {};
+                output.items[dataItem.clinicalAttributeId][sampleId] = dataItem.value.toString();
+                output.items[dataItem.clinicalAttributeId].clinicalAttribute = dataItem.clinicalAttribute;
+                output.items[dataItem.clinicalAttributeId].id = dataItem.clinicalAttributeId;
             });
         });
 
