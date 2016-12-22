@@ -39,10 +39,16 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         //     );
         // } //
 
+        let samples = ["string", "TCGA-24-2024-01", "TCGA-24-2024-01 (deliberately elongated id)"];
         let mutationDiv: Element | null = document.getElementById('mutations_div_prototype');
         if (mutationDiv) {
             ReactDOM.render(
-                <MutationInformationContainer {...{store: this.props.store}} />,
+                <MutationInformationContainer sampleOrder={samples}
+                                             sampleLabels={samples.reduce((map, sample, i) => {map[sample] = i+""; return map;}, {})}
+                                            sampleColors={samples.reduce((map, sample) => {map[sample] = (Math.random() > 0.5 ? "black": "red"); return map;}, {})}
+                                              sampleTumorType={samples.reduce((map, sample) => {map[sample] = (Math.random() > 0.5 ? "Primary": "Metastasis"); return map;},{})}
+                                              sampleCancerType={samples.reduce((map, sample) => {map[sample] = "Cancer Type of " + sample; return map;}, {})}
+                                            {...{store: this.props.store}} />,
                 mutationDiv
             );
         }

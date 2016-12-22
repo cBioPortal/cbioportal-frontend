@@ -8,12 +8,33 @@ import SampleColumnFormatter from "./column/SampleColumnFormatter";
 import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter";
 import MutationAssessorColumnFormatter from "./column/MutationAssessorColumnFormatter";
 import MutationTypeColumnFormatter from "./column/MutationTypeColumnFormatter";
+import {IColumnFormatterData} from '../enhancedReactTable/IColumnFormatter';
 
 /**
  * @author Selcuk Onur Sumer
  */
 export default class MutationTable extends React.Component<IEnhancedReactTableProps, {}>
 {
+    private static makeSingleValueColumnDataGetter(dataField:string) {
+        return function(data:IColumnFormatterData) {
+            let ret = null;
+
+            if (data.columnData)
+            {
+                ret = data.columnData;
+            }
+            else if (data.rowData)
+            {
+                const rowDataArr = [].concat(data.rowData);
+                if (rowDataArr.length > 0) {
+                    ret = rowDataArr[0][dataField];
+                }
+            }
+
+            return ret;
+        };
+    }
+
     public static get defaultColumns():IColumnDefMap
     {
         return {
@@ -48,49 +69,49 @@ export default class MutationTable extends React.Component<IEnhancedReactTablePr
             startPos: {
                 name: "Start Pos",
                 priority: 5.00,
-                dataField: "startPos",
+                columnData: MutationTable.makeSingleValueColumnDataGetter("startPos"),
                 sortable: true,
                 filterable: false
             },
             endPos: {
                 name: "End Pos",
                 priority: 6.00,
-                dataField: "endPos",
+                columnData: MutationTable.makeSingleValueColumnDataGetter("endPos"),
                 sortable: true,
                 filterable: false
             },
             referenceAllele: {
                 name: "Ref",
                 priority: 7.00,
-                dataField: "referenceAllele",
+                columnData: MutationTable.makeSingleValueColumnDataGetter("referenceAllele"),
                 sortable: false,
                 filterable: false
             },
             variantAllele: {
                 name: "Var",
                 priority: 8.00,
-                dataField: "variantAllele",
+                columnData: MutationTable.makeSingleValueColumnDataGetter("variantAllele"),
                 sortable: false,
                 filterable: false
             },
             mutationStatus: {
                 name: "MS",
                 priority: 9.00,
-                dataField: "mutationStatus",
+                columnData: MutationTable.makeSingleValueColumnDataGetter("mutationStatus"),
                 sortable: true,
                 filterable: true
             },
             validationStatus: {
                 name: "VS",
                 priority: 10.00,
-                dataField: "validationStatus",
+                columnData: MutationTable.makeSingleValueColumnDataGetter("validationStatus"),
                 sortable: true,
                 filterable: true
             },
             center: {
                 name: "Center",
                 priority: 11.00,
-                dataField: "center",
+                columnData: MutationTable.makeSingleValueColumnDataGetter("center"),
                 sortable: true,
                 filterable: true
             },
@@ -104,23 +125,24 @@ export default class MutationTable extends React.Component<IEnhancedReactTablePr
             normalRefCount: {
                 name: "Ref Count (N)",
                 priority: 13.00,
-                dataField: "normalRefCount"
+                dataField:"normalRefCount"
             },
             normalAltCount: {
                 name: "Alt Count (N)",
                 priority: 14.00,
-                dataField: "normalAltCount"
+                dataField:"normalAltCount"
             },
             tumorRefCount: {
                 name: "Ref Count (T)",
                 priority: 15.00,
-                dataField: "tumorRefCount"
+                dataField:"tumorRefCount"
             },
             tumorAltCount: {
                 name: "Alt Count (T)",
                 priority: 16.00,
-                dataField: "tumorAltCount"
+                dataField:"tumorAltCount"
             },
+            /*
             // TODO we don't have data field for frequencies, we need to calculate them!
             normalAlleleFreq : {
                 name: "Allele Freq (N)",
@@ -129,7 +151,7 @@ export default class MutationTable extends React.Component<IEnhancedReactTablePr
             tumorAlleleFreq: {
                 name: "Allele Freq (T)",
                 priority: 18.00
-            }
+            }*/
         };
     };
 

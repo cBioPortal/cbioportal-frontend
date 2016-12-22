@@ -42,7 +42,8 @@ export default class GeneColumnFormatter implements IColumnFormatter
         }
         else if (data.rowData)
         {
-            value = data.rowData.gene;
+            const rowDataArr = [].concat(data.rowData);
+            value = (rowDataArr.length > 0 ? rowDataArr[0].gene : null);
         }
         else {
             value = {};

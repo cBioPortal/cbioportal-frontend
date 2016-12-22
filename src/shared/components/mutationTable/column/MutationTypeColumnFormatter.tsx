@@ -227,7 +227,8 @@ export default class MutationTypeColumnFormatter implements IColumnFormatter
         }
         else if (data.rowData)
         {
-            mutationType = data.rowData.mutationType;
+            const rowDataArr = [].concat(data.rowData);
+            mutationType = (rowDataArr.length > 0 ? rowDataArr[0].mutationType : null);
         }
         else {
             mutationType = null;

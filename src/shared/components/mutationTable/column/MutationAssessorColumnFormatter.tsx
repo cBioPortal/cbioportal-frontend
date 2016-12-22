@@ -152,13 +152,18 @@ export default class MutationAssessorColumnFormatter implements IColumnFormatter
         }
         else if (data.rowData)
         {
-            maData = {
-                impact: data.rowData.functionalImpactScore,
-                score: data.rowData.fisValue,
-                pdb: data.rowData.linkPdb,
-                msa: data.rowData.linkMsa,
-                xVar: data.rowData.linkXvar
-            };
+            const rowDataArr = [].concat(data.rowData);
+            if (rowDataArr.length > 0) {
+                maData = {
+                    impact: rowDataArr[0].functionalImpactScore,
+                    score: rowDataArr[0].fisValue,
+                    pdb: rowDataArr[0].linkPdb,
+                    msa: rowDataArr[0].linkMsa,
+                    xVar: rowDataArr[0].linkXvar
+                };
+            } else {
+                maData = {};
+            }
         }
         else {
             maData = {};
