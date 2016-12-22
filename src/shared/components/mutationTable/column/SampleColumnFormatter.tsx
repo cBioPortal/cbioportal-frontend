@@ -77,7 +77,8 @@ export default class SampleColumnFormatter implements IColumnFormatter
             value = data.columnData;
         }
         else if (data.rowData) {
-            value = data.rowData.sampleId;
+            const rowDataArr = [].concat(data.rowData);
+            value = (rowDataArr.length > 0 ? rowDataArr[0].sampleId : null);
         }
         else {
             value = null;
