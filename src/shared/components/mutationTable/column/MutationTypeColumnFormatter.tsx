@@ -245,13 +245,23 @@ export default class MutationTypeColumnFormatter implements IColumnFormatter
         // use actual value for tooltip
         const toolTip:string = MutationTypeColumnFormatter.getTextValue(data);
 
-        const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
+        let content = <span className={className}>{text}</span>;
+
+        // add tooltip only if the display value differs from the actual text value!
+        if (toolTip.toLowerCase() !== text.toLowerCase())
+        {
+            const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
+
+            content = (
+                <Tooltip overlay={toolTip} placement="rightTop" arrowContent={arrowContent}>
+                    {content}
+                </Tooltip>
+            );
+        }
 
         return (
             <Td column={data.name} value={text}>
-                <Tooltip overlay={toolTip} placement="rightTop" arrowContent={arrowContent}>
-                    <span className={className}>{text}</span>
-                </Tooltip>
+                {content}
             </Td>
         );
     }
