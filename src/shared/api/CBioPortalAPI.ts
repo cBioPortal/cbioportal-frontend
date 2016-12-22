@@ -6,13 +6,13 @@ from "superagent";
 
 type CallbackHandler = (err: any, res ? : request.Response) => void;
 export type ClinicalData = {
-    'attrId': string
+    'clinicalAttribute': ClinicalAttribute
 
-        'attrValue': string
+        'clinicalAttributeId': string
 
-        'clinicalAttribute': ClinicalAttribute
+        'entityId': string
 
-        'id': string
+        'value': string
 
 };
 export type SampleIdentifier = {
@@ -22,41 +22,33 @@ export type SampleIdentifier = {
 
 };
 export type Sample = {
-    'patient': Patient
+    'cancerTypeId': string
 
         'patientId': string
 
+        'sampleId': string
+
         'sampleType': "Primary Solid Tumor" | "Recurrent Solid Tumor" | "Primary Blood Tumor" | "Recurrent Blood Tumor" | "Metastatic" | "Blood Derived Normal" | "Solid Tissues Normal"
 
-        'stableId': string
-
-        'typeOfCancerId': string
+        'studyId': string
 
 };
 export type GeneticProfile = {
-    'cancerStudy': CancerStudy
-
-        'cancerStudyId': string
-
-        'datatype': string
+    'datatype': string
 
         'description': string
 
         'geneticAlterationType': "MUTATION_EXTENDED" | "FUSION" | "STRUCTURAL_VARIANT" | "COPY_NUMBER_ALTERATION" | "MICRO_RNA_EXPRESSION" | "MRNA_EXPRESSION" | "MRNA_EXPRESSION_NORMALS" | "RNA_EXPRESSION" | "METHYLATION" | "METHYLATION_BINARY" | "PHOSPHORYLATION" | "PROTEIN_LEVEL" | "PROTEIN_ARRAY_PROTEIN_LEVEL" | "PROTEIN_ARRAY_PHOSPHORYLATION"
 
+        'geneticProfileId': string
+
         'name': string
 
         'showProfileInAnalysisTab': boolean
 
-        'stableId': string
+        'study': CancerStudy
 
-};
-export type Patient = {
-    'cancerStudy': CancerStudy
-
-        'cancerStudyId': string
-
-        'stableId': string
+        'studyId': string
 
 };
 export type MutationEvent = {
@@ -115,8 +107,16 @@ export type MutationEvent = {
         'variantType': string
 
 };
+export type Patient = {
+    'patientId': string
+
+        'studyId': string
+
+};
 export type TypeOfCancer = {
-    'clinicalTrialKeywords': string
+    'cancerTypeId': string
+
+        'clinicalTrialKeywords': string
 
         'dedicatedColor': string
 
@@ -126,11 +126,9 @@ export type TypeOfCancer = {
 
         'shortName': string
 
-        'typeOfCancerId': string
-
 };
 export type ClinicalDataIdentifier = {
-    'id': string
+    'entityId': string
 
         'studyId': string
 
@@ -174,7 +172,9 @@ export type Gene = {
 export type CancerStudy = {
     'allSampleCount': number
 
-        'cancerStudyIdentifier': string
+        'cancerType': TypeOfCancer
+
+        'cancerTypeId': string
 
         'citation': string
 
@@ -210,9 +210,7 @@ export type CancerStudy = {
 
         'status': number
 
-        'typeOfCancer': TypeOfCancer
-
-        'typeOfCancerId': string
+        'studyId': string
 
 };
 export type GeneticData = {
@@ -296,7 +294,7 @@ export type Mutation = {
 
 };
 export type ClinicalAttribute = {
-    'attrId': string
+    'clinicalAttributeId': string
 
         'datatype': string
 
@@ -310,17 +308,15 @@ export type ClinicalAttribute = {
 
 };
 export type SampleList = {
-    'cancerStudy': CancerStudy
-
-        'cancerStudyId': string
-
-        'category': string
+    'category': string
 
         'description': string
 
         'name': string
 
         'sampleListId': string
+
+        'studyId': string
 
 };
 
@@ -382,7 +378,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "typeOfCancerId" | "name" | "clinicalTrialKeywords" | "dedicatedColor" | "shortName" | "parent",
+        'sortBy' ? : "cancerTypeId" | "name" | "clinicalTrialKeywords" | "dedicatedColor" | "shortName" | "parent",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -432,7 +428,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "typeOfCancerId" | "name" | "clinicalTrialKeywords" | "dedicatedColor" | "shortName" | "parent",
+            'sortBy' ? : "cancerTypeId" | "name" | "clinicalTrialKeywords" | "dedicatedColor" | "shortName" | "parent",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
                 $domain ? : string
@@ -809,7 +805,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "entrezGeneId" | "hugoGeneSymbol" | "type" | "cytoband" | "length" | "chromosome",
+        'sortBy' ? : "entrezGeneId" | "hugoGeneSymbol" | "type" | "cytoband" | "length",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -859,7 +855,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "entrezGeneId" | "hugoGeneSymbol" | "type" | "cytoband" | "length" | "chromosome",
+            'sortBy' ? : "entrezGeneId" | "hugoGeneSymbol" | "type" | "cytoband" | "length",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
                 $domain ? : string
@@ -1216,7 +1212,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "stableId" | "geneticAlterationType" | "datatype" | "name" | "description" | "showProfileInAnalysisTab",
+        'sortBy' ? : "geneticProfileId" | "geneticAlterationType" | "datatype" | "name" | "description" | "showProfileInAnalysisTab",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -1266,7 +1262,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "stableId" | "geneticAlterationType" | "datatype" | "name" | "description" | "showProfileInAnalysisTab",
+            'sortBy' ? : "geneticProfileId" | "geneticAlterationType" | "datatype" | "name" | "description" | "showProfileInAnalysisTab",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
                 $domain ? : string
@@ -1655,7 +1651,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "caseListId" | "category" | "cancerStudyId" | "name" | "description",
+        'sortBy' ? : "sampleListId" | "category" | "cancerStudyId" | "name" | "description",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -1705,7 +1701,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "caseListId" | "category" | "cancerStudyId" | "name" | "description",
+            'sortBy' ? : "sampleListId" | "category" | "cancerStudyId" | "name" | "description",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
                 $domain ? : string
@@ -1966,7 +1962,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "cancerStudyIdentifier" | "typeOfCancerId" | "name" | "shortName" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
+        'sortBy' ? : "cancerStudyId" | "cancerTypeId" | "name" | "shortName" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -2016,7 +2012,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "cancerStudyIdentifier" | "typeOfCancerId" | "name" | "shortName" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
+            'sortBy' ? : "cancerStudyId" | "cancerTypeId" | "name" | "shortName" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
                 $domain ? : string
@@ -2138,7 +2134,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "attrId" | "attrValue",
+        'sortBy' ? : "clinicalAttributeId" | "value",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -2204,7 +2200,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "attrId" | "attrValue",
+            'sortBy' ? : "clinicalAttributeId" | "value",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
             $domain ? : string
@@ -2276,7 +2272,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "stableId" | "geneticAlterationType" | "datatype" | "name" | "description" | "showProfileInAnalysisTab",
+        'sortBy' ? : "geneticProfileId" | "geneticAlterationType" | "datatype" | "name" | "description" | "showProfileInAnalysisTab",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -2330,7 +2326,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "stableId" | "geneticAlterationType" | "datatype" | "name" | "description" | "showProfileInAnalysisTab",
+            'sortBy' ? : "geneticProfileId" | "geneticAlterationType" | "datatype" | "name" | "description" | "showProfileInAnalysisTab",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
             $domain ? : string
@@ -2490,7 +2486,6 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "stableId" | "cancerStudyIdentifier",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -2510,9 +2505,7 @@ export default class CBioPortalAPI {
             queryParameters['pageNumber'] = parameters['pageNumber'];
         }
 
-        if (parameters['sortBy'] !== undefined) {
-            queryParameters['sortBy'] = parameters['sortBy'];
-        }
+        queryParameters['sortBy'] = 'patientId';
 
         if (parameters['direction'] !== undefined) {
             queryParameters['direction'] = parameters['direction'];
@@ -2529,22 +2522,21 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Get all patients in a study
-     * @method
-     * @name CBioPortalAPI#getAllPatientsInStudyUsingGET
-     * @param {string} studyId - Study ID e.g. acc_tcga
-     * @param {string} projection - Level of detail of the response
-     * @param {integer} pageSize - Page size of the result list
-     * @param {integer} pageNumber - Page number of the result list
-     * @param {string} sortBy - Name of the property that the result list is sorted by
-     * @param {string} direction - Direction of the sort
-     */
+    * Get all patients in a study
+    * @method
+    * @name CBioPortalAPI#getAllPatientsInStudyUsingGET
+         * @param {string} studyId - Study ID e.g. acc_tcga
+         * @param {string} projection - Level of detail of the response
+         * @param {integer} pageSize - Page size of the result list
+         * @param {integer} pageNumber - Page number of the result list
+        
+         * @param {string} direction - Direction of the sort
+    */
     getAllPatientsInStudyUsingGET(parameters: {
             'studyId': string,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "stableId" | "cancerStudyIdentifier",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
             $domain ? : string
@@ -2581,9 +2573,7 @@ export default class CBioPortalAPI {
                     queryParameters['pageNumber'] = parameters['pageNumber'];
                 }
 
-                if (parameters['sortBy'] !== undefined) {
-                    queryParameters['sortBy'] = parameters['sortBy'];
-                }
+                queryParameters['sortBy'] = 'patientId';
 
                 if (parameters['direction'] !== undefined) {
                     queryParameters['direction'] = parameters['direction'];
@@ -2685,7 +2675,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "attrId" | "attrValue",
+        'sortBy' ? : "clinicalAttributeId" | "value",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -2749,7 +2739,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "attrId" | "attrValue",
+            'sortBy' ? : "clinicalAttributeId" | "value",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
             $domain ? : string
@@ -3057,7 +3047,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "stableId" | "sampleType" | "typeOfCancerId",
+        'sortBy' ? : "sampleId" | "sampleType" | "cancerTypeId",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -3115,7 +3105,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "stableId" | "sampleType" | "typeOfCancerId",
+            'sortBy' ? : "sampleId" | "sampleType" | "cancerTypeId",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
             $domain ? : string
@@ -3186,7 +3176,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "caseListId" | "category" | "cancerStudyId" | "name" | "description",
+        'sortBy' ? : "sampleListId" | "category" | "cancerStudyId" | "name" | "description",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -3240,7 +3230,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "caseListId" | "category" | "cancerStudyId" | "name" | "description",
+            'sortBy' ? : "sampleListId" | "category" | "cancerStudyId" | "name" | "description",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
             $domain ? : string
@@ -3304,7 +3294,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "stableId" | "sampleType" | "typeOfCancerId",
+        'sortBy' ? : "sampleId" | "sampleType" | "cancerTypeId",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -3358,7 +3348,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "stableId" | "sampleType" | "typeOfCancerId",
+            'sortBy' ? : "sampleId" | "sampleType" | "cancerTypeId",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
             $domain ? : string
@@ -3499,7 +3489,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "attrId" | "attrValue",
+        'sortBy' ? : "clinicalAttributeId" | "value",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -3563,7 +3553,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "attrId" | "attrValue",
+            'sortBy' ? : "clinicalAttributeId" | "value",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
             $domain ? : string
