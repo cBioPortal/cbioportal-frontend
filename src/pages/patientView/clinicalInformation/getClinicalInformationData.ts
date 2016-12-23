@@ -89,7 +89,7 @@ export default async function getClinicalInformationData():Promise<ClinicalInfor
         clinicalDataType: 'SAMPLE',
         identifiers: samplesOfPatient.map(sample => ({
             entityId: sample.sampleId,
-            studyId: 'lgg_ucsf_2014'
+            studyId
         })),
         projection: 'DETAILED',
     });
