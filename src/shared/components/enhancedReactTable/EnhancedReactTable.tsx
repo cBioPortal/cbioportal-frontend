@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {Table, Thead, Th, Tr, Td} from "reactableMSK";
+import {Table, Thead, Th, Tr, Td} from "reactable";
 import * as _ from 'underscore';
 import {IEnhancedReactTableProps, IColumnDefMap, IEnhancedReactTableColumnDef}
     from "IEnhancedReactTableProps";

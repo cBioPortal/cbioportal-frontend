@@ -5,7 +5,7 @@ import {IColumnRenderFunction, IColumnSortFunction, IColumnFilterFunction, IColu
  * @author Selcuk Onur Sumer
  */
 export interface IEnhancedReactTableProps {
-    reactTableProps?: any; // any available reactableMSK props
+    reactTableProps?: any; // any available reactable props
     columns?: IColumnDefMap; // column definitions (including component renderers)
     rawData: Array<any>; // raw data
 }
