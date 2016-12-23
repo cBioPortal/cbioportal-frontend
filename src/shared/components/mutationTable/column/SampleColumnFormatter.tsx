@@ -3,7 +3,7 @@ import Tooltip from 'rc-tooltip';
 import {Td} from 'reactableMSK';
 import {IColumnFormatterData, IColumnFormatter}
     from "../../enhancedReactTable/IColumnFormatter";
-import "./sample.scss";
+import styles from "./sample.module.scss";
 
 /**
  * @author Selcuk Onur Sumer
@@ -95,7 +95,7 @@ export default class SampleColumnFormatter implements IColumnFormatter
 
         let content = (
             <a href={linkToPatientView} target='_blank'>
-                <span className="text-no-wrap">{text}</span>
+                <span className={styles['text-no-wrap']}>{text}</span>
             </a>
         );
 

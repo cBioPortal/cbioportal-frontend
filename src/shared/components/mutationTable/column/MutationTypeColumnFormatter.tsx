@@ -3,7 +3,7 @@ import Tooltip from 'rc-tooltip';
 import {Td} from 'reactableMSK';
 import {IColumnFormatterData, IColumnFormatter}
     from "../../enhancedReactTable/IColumnFormatter";
-import "./mutationType.scss";
+import styles from "./mutationType.module.scss";
 
 type IMutationTypeFormat = {
     label?: string,
@@ -245,7 +245,7 @@ export default class MutationTypeColumnFormatter implements IColumnFormatter
         // use actual value for tooltip
         const toolTip:string = MutationTypeColumnFormatter.getTextValue(data);
 
-        let content = <span className={className}>{text}</span>;
+        let content = <span className={styles[className]}>{text}</span>;
 
         // add tooltip only if the display value differs from the actual text value!
         if (toolTip.toLowerCase() !== text.toLowerCase())
