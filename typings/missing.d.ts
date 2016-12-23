@@ -3,6 +3,7 @@ declare module '*.json';
 declare module 'query-string';
 declare module 'react-file-download';
 declare module 'react-zeroclipboard';
+declare module 'reactable';
 declare module 'reactableMSK';
 declare module 'redux-seamless-immutable';
 declare module 'webpack-raphael';
