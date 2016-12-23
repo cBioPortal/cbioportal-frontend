@@ -26,23 +26,25 @@
   margin-bottom: 1px;
 }
 
-.mutation-assessor-link .ma-msa-icon{
+.ma-icon {
   background-color: #88C;
   color: white;
-  padding-left: 3px;
-  padding-right: 3px;
   font-size: 80%;
+  margin-right: 3px;
 }
 
-.mutation-assessor-link .ma-3d-icon {
-  background-color: #88C;
-  color: white;
+.ma-msa-icon{
+  padding-left: 3px;
+  padding-right: 3px;
+}
+
+.ma-3d-icon {
   padding-left: 6px;
   padding-right: 6px;
-  font-size: 80%;
 }
 
-.mutation-assessor-main-link img {
+.mutation-assessor-main-img {
   padding-left: 3px;
   padding-right: 3px;
+  margin-right: 5px;
 }
