@@ -4,7 +4,7 @@ import {Td} from 'reactableMSK';
 import {IColumnFormatterData, IColumnFormatter}
     from "../../enhancedReactTable/IColumnFormatter";
 import 'rc-tooltip/assets/bootstrap_white.css';
-import "./mutationAssessor.scss";
+import styles from "./mutationAssessor.module.scss";
 
 type MA_CLASS_NAME = 'oma-high' | 'oma-medium' | 'oma-low' | 'oma-neutral';
 type IMutationAssessorFormat = {
@@ -184,13 +184,18 @@ export default class MutationAssessorColumnFormatter implements IColumnFormatter
             );
         }
 
-        // TODO load image file
         if (maData.xVar)
         {
             xVar = (
-                <div className='mutation-assessor-main-link mutation-assessor-link'>
+                <div className={styles['mutation-assessor-link']}>
                     <a href={maData.xVar} target='_blank'>
-                        <img height='15' width='19' src={require("./mutationAssessor.png")} alt='Mutation Assessor' />
+                        <img
+                            height='15'
+                            width='19'
+                            src={require("./mutationAssessor.png")}
+                            className={styles['mutation-assessor-main-img']}
+                            alt='Mutation Assessor'
+                        />
                         Go to Mutation Assessor
                     </a>
                 </div>
@@ -200,9 +205,9 @@ export default class MutationAssessorColumnFormatter implements IColumnFormatter
         if (maData.msa)
         {
             msa = (
-                <div className='mutation-assessor-msa-link mutation-assessor-link'>
+                <div className={styles['mutation-assessor-link']}>
                     <a href={maData.msa} target='_blank'>
-                        <span className="ma-msa-icon">msa</span>
+                        <span className={`${styles['ma-icon']} ${styles['ma-msa-icon']}`}>msa</span>
                         Multiple Sequence Alignment
                     </a>
                 </div>
@@ -212,9 +217,9 @@ export default class MutationAssessorColumnFormatter implements IColumnFormatter
         if (maData.pdb)
         {
             pdb = (
-                <div className='mutation-assessor-3d-link mutation-assessor-link'>
+                <div className={styles['mutation-assessor-link']}>
                     <a href={maData.pdb} target='_blank'>
-                        <span className="ma-3d-icon">3D</span>
+                        <span className={`${styles['ma-icon']} ${styles['ma-3d-icon']}`}>3D</span>
                         Mutation Assessor 3D View
                     </a>
                 </div>
@@ -248,7 +253,7 @@ export default class MutationAssessorColumnFormatter implements IColumnFormatter
         return (
             <Td column={data.name} value={data}>
                 <Tooltip overlay={tooltipContent} placement="rightTop" arrowContent={arrowContent}>
-                    <span className={`${maClass} ${fisClass}`}>{text}</span>
+                    <span className={`${styles[maClass]} ${styles[fisClass]}`}>{text}</span>
                 </Tooltip>
             </Td>
         );
