@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Tooltip from 'rc-tooltip';
-import {Td} from 'reactableMSK';
+import {Td} from 'reactable';
 import {IColumnFormatterData, IColumnFormatter}
     from "../../enhancedReactTable/IColumnFormatter";
 import 'rc-tooltip/assets/bootstrap_white.css';
