@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {Td} from 'reactableMSK';
+import {Td} from 'reactable';
 import {IColumnFormatterData, IColumnFormatter}
     from "../../../../shared/components/enhancedReactTable/IColumnFormatter";
 import {default as DefaultProteinChangeColumnFormatter} from
