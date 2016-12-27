@@ -51,7 +51,7 @@ var config = {
         chunkFilename: 'reactapp/[name].chunk.js',
         cssFilename: 'reactapp/app.css',
         hash: false,
-        publicPath: '/',
+        publicPath: '',
     },
 
     'resolve': {
