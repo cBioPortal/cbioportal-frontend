@@ -74,6 +74,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         this.fetchData().then((apiResult)=>{
 
             this.setState({ 'genomicOverviewData': { status:'complete', data:apiResult }});
+
         });
 
     }
