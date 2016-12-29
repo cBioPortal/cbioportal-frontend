@@ -12,7 +12,7 @@ export type ClinicalDataBySampleId = {
 };
 
 
-export function groupByEntityId(clinicalDataArray: Array<ClinicalData>){
+export function groupByEntityId(clinicalDataArray: Array<ClinicalData>) {
 
     return _.map(
         _.groupBy(clinicalDataArray, 'entityId'),

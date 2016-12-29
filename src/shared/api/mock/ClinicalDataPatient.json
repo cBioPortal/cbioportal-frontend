@@ -1,54 +1,54 @@
 [
     {
-        "attrId": "AGE",
-        "attrValue": "22",
         "clinicalAttribute": {
-            "attrId": "AGE",
             "displayName": "Diagnosis Age",
             "description": "Age at which a condition or disease was first diagnosed.",
             "datatype": "NUMBER",
             "patientAttribute": true,
-            "priority": "1"
+            "priority": "1",
+            "clinicalAttributeId": "AGE"
         },
-        "id": "P04"
+        "entityId": "P04",
+        "clinicalAttributeId": "AGE",
+        "value": "22"
     },
     {
-        "attrId": "GENDER",
-        "attrValue": "Male",
         "clinicalAttribute": {
-            "attrId": "GENDER",
             "displayName": "Person Gender",
             "description": "Patient gender.",
             "datatype": "STRING",
             "patientAttribute": true,
-            "priority": "1"
+            "priority": "1",
+            "clinicalAttributeId": "GENDER"
         },
-        "id": "P04"
+        "entityId": "P04",
+        "clinicalAttributeId": "GENDER",
+        "value": "Male"
     },
     {
-        "attrId": "OS_MONTHS",
-        "attrValue": "61",
         "clinicalAttribute": {
-            "attrId": "OS_MONTHS",
             "displayName": "Overall Survival (Months)",
             "description": "Overall survival in months since initial diagonosis.",
             "datatype": "NUMBER",
             "patientAttribute": true,
-            "priority": "1"
+            "priority": "1",
+            "clinicalAttributeId": "OS_MONTHS"
         },
-        "id": "P04"
+        "entityId": "P04",
+        "clinicalAttributeId": "OS_MONTHS",
+        "value": "61"
     },
     {
-        "attrId": "OS_STATUS",
-        "attrValue": "DECEASED",
         "clinicalAttribute": {
-            "attrId": "OS_STATUS",
             "displayName": "Overall Survival Status",
             "description": "Overall patient survival status.",
             "datatype": "STRING",
             "patientAttribute": true,
-            "priority": "1"
+            "priority": "1",
+            "clinicalAttributeId": "OS_STATUS"
         },
-        "id": "P04"
+        "entityId": "P04",
+        "clinicalAttributeId": "OS_STATUS",
+        "value": "DECEASED"
     }
 ]
