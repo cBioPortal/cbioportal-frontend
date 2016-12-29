@@ -6,7 +6,7 @@ import CBioPortalAPI from "shared/api/CBioPortalAPI";
 import * as genomicOverviewHelper from './genomicOverviewHelper'
 import {CopyNumberSegment} from "../../../shared/api/CBioPortalAPI";
 
-export default class GenomicOverview extends React.Component<{}, {}> {
+export default class Tracks extends React.Component<{}, {}> {
 
     constructor(){
 
@@ -14,23 +14,6 @@ export default class GenomicOverview extends React.Component<{}, {}> {
 
     }
 
-    fetchData() {
-
-        var fetchJSON = function(url) {
-            return new Promise((resolve, reject) => {
-                $.getJSON(url)
-                    .done((json) => resolve(json))
-                    .fail((xhr, status, err) => reject(status + err.message));
-            });
-        }
-        var itemUrls = [
-                "http://www.cbioportal.org/api-legacy/copynumbersegments?cancerStudyId=ov_tcga_pub&chromosome=17&sampleIds=TCGA-24-2024-01",
-                "https://raw.githubusercontent.com/onursumer/cbioportal-frontend/enhanced-react-table/src/pages/patientView/mutation/mock/mutationData.json"
-            ],
-            itemPromises = _.map(itemUrls, fetchJSON);
-        return Promise.all(itemPromises);
-
-    }
 
     componentDidMount() {
 
