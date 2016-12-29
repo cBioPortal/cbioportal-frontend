@@ -42,10 +42,11 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
         reactTableProps.sortable = this.resolveSortable(visibleCols);
         reactTableProps.filterable = this.resolveFilterable(visibleCols);
 
-        // TODO column order (add index?)
+        // sort columns
+        let sortedCols:Array<IEnhancedReactTableColumnDef> = this.resolveOrder(visibleCols);
 
-        const headers = this.generateHeaders(visibleCols);
-        const rows = this.generateRows(visibleCols, rawData);
+        const headers = this.generateHeaders(sortedCols);
+        const rows = this.generateRows(sortedCols, rawData);
 
         return(
             <Table {...reactTableProps}>
@@ -57,7 +58,31 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
         );
     }
 
-    private generateHeaders(columns:IColumnDefMap)
+    private resolveOrder(columns:IColumnDefMap):Array<IEnhancedReactTableColumnDef>
+    {
+        return _.map(columns, function(column:IEnhancedReactTableColumnDef) {
+            return column;
+        }).sort(function(a:IEnhancedReactTableColumnDef, b:IEnhancedReactTableColumnDef):number {
+            if (a.priority && b.priority) {
+                return a.priority - b.priority;
+            }
+            else if (a.priority) {
+                return -1;
+            }
+            else if (b.priority) {
+                return 1;
+            }
+            // sort alphabetically in case of no priority
+            else if (a.name > b.name) {
+                return 1;
+            }
+            else {
+                return -1;
+            }
+        });
+    }
+
+    private generateHeaders(columns:Array<IEnhancedReactTableColumnDef>)
     {
         let headers:Array<any> = [];
 
@@ -73,7 +98,7 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
         return headers;
     }
 
-    private generateRows(columns:IColumnDefMap, tableData:Array<any>)
+    private generateRows(columns:Array<IEnhancedReactTableColumnDef>, tableData:Array<any>)
     {
         let rows:Array<any> = [];
         const self = this;
@@ -91,7 +116,7 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
         return rows;
     }
 
-    private generateColumns(columns:IColumnDefMap, tableData:Array<any>, rowData:any)
+    private generateColumns(columns:Array<IEnhancedReactTableColumnDef>, tableData:Array<any>, rowData:any)
     {
         let cols:Array<any> = [];
         const self = this;
