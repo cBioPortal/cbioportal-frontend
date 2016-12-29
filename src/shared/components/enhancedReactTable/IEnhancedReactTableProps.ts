@@ -20,6 +20,7 @@ export interface IEnhancedReactTableColumnDef {
     sortable?: IColumnSortFunction | boolean;
     filterable?: IColumnFilterFunction | boolean;
     visible?: IColumnVisibilityFunction | ColumnVisibility;
+    priority?: number;
     dataField?: string;
 }
 
