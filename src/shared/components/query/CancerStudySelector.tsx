@@ -16,6 +16,9 @@ import firstDefinedValue from "../../lib/firstDefinedValue";
 import CancerStudyTreeData from "./CancerStudyTreeData";
 import {CancerTreeNode, NodeMetadata} from "./CancerStudyTreeData";
 import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
+import {EditableDropdown} from "../ExperimentalControls";
+import {Creatable as ReactSelectCreatable} from 'react-select';
+import 'react-select/dist/react-select.css';
 
 const CancerTree = DescriptorTree.of<CancerTreeNode>();
 
@@ -32,6 +35,9 @@ const styles = styles_any as {
 	matchingNodeText: string,
 	nonMatchingNodeText: string,
 	studyHeader: string,
+	selectCancerStudyHeader: string,
+	selectCancerStudyRow: string,
+	searchTextInput: string,
 };
 
 function matchesSearchText(input:string, searchText:string):boolean
@@ -58,8 +64,6 @@ export type ICancerStudySelectorProps = {
 	cancerTypes: CancerType[];
 	studies: CancerStudy[];
 
-	searchText?: string;
-
 	onStateChange?: (newState:ICancerStudySelectorState) => void;
 } & ICancerStudySelectorExperimentalOptions & ICancerStudySelectorState;
 
@@ -75,6 +79,7 @@ export interface ICancerStudySelectorExperimentalOptions
 
 export interface ICancerStudySelectorState
 {
+	searchText?: string;
 	selectedCancerTypeIds?: string[];
 	selectedStudyIds?: string[];
 }
@@ -105,6 +110,11 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 	get selectableTreeNodes()
 	{
 		return !this.props.filterBySelection && !this.props.showStudiesInTree;
+	}
+
+	get searchText()
+	{
+		return firstDefinedValue(this.props.searchText, this.state.searchText || '');
 	}
 
 	get selectedCancerTypeIds()
@@ -171,7 +181,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 
 		// returns true if the node or any related nodes match
 		let nodeFilter = memoize({
-			getAdditionalArgs: () => [this.props.maxTreeDepth, this.props.searchText],
+			getAdditionalArgs: () => [this.props.maxTreeDepth, this.searchText],
 			fixedArgsLength: 1,
 			function: (node:CancerTreeNode):boolean =>
 			{
@@ -181,13 +191,13 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 					return false;
 
 				// if no search text is entered, include all nodes
-				if (!this.props.searchText)
+				if (!this.searchText)
 					return true;
 
 				// check for matching text in this node and related nodes
 				for (let nodes of [[node], meta.descendantCancerTypes, meta.descendantStudies, meta.ancestors])
 					for (let node of nodes)
-						if (shouldConsiderNode(node) && matchesSearchText(node.name, this.props.searchText))
+						if (shouldConsiderNode(node) && matchesSearchText(node.name, this.searchText))
 							return true;
 
 				// no match
@@ -220,7 +230,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 				return true;
 
 			// if user wants to search, expand all ancestors of matching nodes
-			if (this.props.searchText)
+			if (this.searchText)
 			{
 				if (meta.descendantCancerTypes.some(nodeFilter))
 					return true;
@@ -354,10 +364,10 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 	getMatchingNodeClassNames(node:CancerTreeNode):string
 	{
 		let meta = this.getTreeInfo().map_node_meta.get(node) as NodeMetadata;
-		let matchingNode = !!this.props.searchText && matchesSearchText(node.name, this.props.searchText);
+		let matchingNode = !!this.searchText && matchesSearchText(node.name, this.searchText);
 		return classNames({
-			[styles.matchingNodeText]: !!this.props.searchText && matchingNode,
-			[styles.nonMatchingNodeText]: !!this.props.searchText && !matchingNode,
+			[styles.matchingNodeText]: !!this.searchText && matchingNode,
+			[styles.nonMatchingNodeText]: !!this.searchText && !matchingNode,
 		});
 	}
 
@@ -516,45 +526,63 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 	{
 		let treeDesc = this.getTreeDescriptor();
 		let shownStudies = this.getShownStudies();
+
+		let searchTextOptions = ['lung', 'serous', 'tcga', 'tcga -provisional'];
+		if (this.searchText && searchTextOptions.indexOf(this.searchText) < 0)
+			searchTextOptions = [this.searchText].concat(searchTextOptions);
+
 		return (
-			<FlexRow className={styles.CancerStudySelector} padded flex={1} style={this.props.style}>
-				{
-					this.props.maxTreeDepth > 0 || this.props.showStudiesInTree
-					?   <FlexCol flex={1}>
-							<CancerTree
-								className={this.props.showStudiesInTree ? styles.treeWithStudies : undefined}
-								ref={this.handleTreeRef}
-								treeDescriptor={treeDesc}
-								node={treeDesc.rootNode}
-								onExpand={treeDesc.setExpanded}
-								showRoot={!!this.props.showRoot}
-							/>
-						</FlexCol>
-					:   null
-				}
-				{
-					this.props.showStudiesInTree
-					?   null
-					:   <FlexCol flex={2}>
-							<BootstrapTable keyField="cancerStudyId" data={shownStudies}>
-								<TableHeaderColumn width="70%" dataField='name' dataSort dataFormat={this.renderStudyName}>
-									<div className={styles.studyHeader}>
-										{this.renderStudyHeaderCheckbox(shownStudies)}
-										{'Study'}
-									</div>
-								</TableHeaderColumn>
+			<FlexCol className={styles.CancerStudySelector} padded flex={1} style={this.props.style}>
+				<FlexRow padded overflow className={styles.selectCancerStudyRow}>
+					<span className={styles.selectCancerStudyHeader}>Select Cancer Study:</span>
+					<ReactSelectCreatable
+						className={styles.searchTextInput}
+						value={this.searchText}
+						options={searchTextOptions.map(str => ({label: str, value: str}))}
+						promptTextCreator={(label:string) => `Search for "${label}"`}
+						onInputChange={(searchText:string) => this.setState({searchText})}
+						onChange={(option:{value:string}) => this.setState({searchText: option ? option.value || '' : ''})}
+					/>
+				</FlexRow>
+				<FlexRow padded flex={1}>
+					{
+						this.props.maxTreeDepth > 0 || this.props.showStudiesInTree
+						?   <FlexCol flex={1}>
+								<CancerTree
+									className={this.props.showStudiesInTree ? styles.treeWithStudies : undefined}
+									ref={this.handleTreeRef}
+									treeDescriptor={treeDesc}
+									node={treeDesc.rootNode}
+									onExpand={treeDesc.setExpanded}
+									showRoot={!!this.props.showRoot}
+								/>
+							</FlexCol>
+						:   null
+					}
+					{
+						this.props.showStudiesInTree
+						?   null
+						:   <FlexCol flex={2}>
+								<BootstrapTable keyField="cancerStudyId" data={shownStudies}>
+									<TableHeaderColumn width="70%" dataField='name' dataSort dataFormat={this.renderStudyName}>
+										<div className={styles.studyHeader}>
+											{this.renderStudyHeaderCheckbox(shownStudies)}
+											{'Study'}
+										</div>
+									</TableHeaderColumn>
 
-								<TableHeaderColumn width="15%" dataField='allSampleCount' dataSort dataAlign="right">
-									{'Samples'}
-								</TableHeaderColumn>
+									<TableHeaderColumn width="15%" dataField='allSampleCount' dataSort dataAlign="right">
+										{'Samples'}
+									</TableHeaderColumn>
 
-								<TableHeaderColumn width="15%" dataField='studyId' dataSort dataFormat={this.renderStudyLinksTableCell}>
-									{'Links'}
-								</TableHeaderColumn>
-							</BootstrapTable>
-						</FlexCol>
-				}
-			</FlexRow>
+									<TableHeaderColumn width="15%" dataField='studyId' dataSort dataFormat={this.renderStudyLinksTableCell}>
+										{'Links'}
+									</TableHeaderColumn>
+								</BootstrapTable>
+							</FlexCol>
+					}
+				</FlexRow>
+			</FlexCol>
 		);
 	}
 

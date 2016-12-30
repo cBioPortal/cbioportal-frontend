@@ -18,6 +18,52 @@ export interface ISelectProps<V>
 	onChange: (option:ISelectOption<V>)=>void;
 };
 
+
+export function EditableDropdown(props:ISelectProps<string>)
+{
+	let textInput:HTMLInputElement;
+
+	function onChange(event:React.FormEvent)
+	{
+		if (props.onChange)
+			props.onChange({label: textInput.value, value: textInput.value});
+	}
+
+	function onSelect(option:ISelectOption<string>)
+	{
+		textInput.value = option.value || option.label;
+		if (option.callback)
+			option.callback();
+		if (props.onChange)
+			props.onChange(option);
+	}
+
+	return (
+		<label>
+			{props.label}
+			<div class="input-group dropdown">
+				<input
+					type="text"
+					class="form-control dropdown-toggle"
+					value={props.selected}
+					ref={input => textInput = input}
+					onChange={onChange}
+				/>
+				<ul class="dropdown-menu">
+					{
+						props.options.map((option, i) => (
+							<a key={i} href="#" onClick={() => onSelect(option)}>{option.label}</a>
+						))
+					}
+				</ul>
+				<span role="button" class="input-group-addon dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					<span class="caret"/>
+				</span>
+			</div>
+		</label>
+	);
+}
+
 export function Select(props:ISelectProps<any>)
 {
 	function onChange(event:React.FormEvent)

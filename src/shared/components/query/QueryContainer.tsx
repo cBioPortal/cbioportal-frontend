@@ -27,7 +27,6 @@ export interface IQueryContainerProps
 }
 
 export type IQueryContainerState = {
-	searchText?:string;
 } & ICancerStudySelectorExperimentalOptions & ICancerStudySelectorState;
 
 @QueryConnector.decorator
@@ -72,14 +71,6 @@ export default class QueryContainer extends React.Component<IQueryContainerProps
                 <FlexRow padded>
 					{/* demo controls */}
                 	<FlexCol className={styles.CancerStudySelector} padded style={{border: '1px solid #ddd', borderRadius: 5, padding: 5}}>
-						<label>
-							Filter cancer studies: <input onChange={(event:React.FormEvent) => {
-								this.setState({
-									searchText: (event.target as HTMLInputElement).value,
-									selectedCancerTypeIds: [],
-								})
-							}}/>
-						</label>
                 		<StateToggle label='Show all studies when nothing is selected' target={this} name='showAllStudiesByDefault' defaultValue={!!CancerStudySelector.defaultProps.showAllStudiesByDefault}/>
                 		<StateToggle label='Show root node ("All")' target={this} name='showRoot' defaultValue={!!CancerStudySelector.defaultProps.showRoot}/>
                 		<StateToggle label='Click tree node again to deselect' target={this} name='clickAgainToDeselectSingle' defaultValue={!!CancerStudySelector.defaultProps.clickAgainToDeselectSingle}/>

@@ -11,6 +11,19 @@
     align-items: center;
   }
 
+  .selectCancerStudyRow {
+    align-items: center;
+
+    span.selectCancerStudyHeader {
+      color: #337ab7;
+    }
+
+ 	div.searchTextInput {
+ 	  min-width: 200px;
+ 	}
+
+  }
+
   .treeWithStudies {
     label:hover {
       text-decoration: underline;
@@ -97,6 +110,10 @@
     display: inline-flex;
     align-items: center;
     height: 100%;
+  }
+
+  .searchTextInput {
+    minWidth: 200px;
   }
 }
 
