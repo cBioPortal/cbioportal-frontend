@@ -29,7 +29,7 @@ export default class ProteinChangeColumnFormatter implements IColumnFormatter
         return value;
     }
 
-    public static renderFunction(data:IColumnFormatterData)
+    public static renderFunction(data:IColumnFormatterData, props:any)
     {
         // use text as display value
         const text:string = DefaultProteinChangeColumnFormatter.getDisplayValue(data);
