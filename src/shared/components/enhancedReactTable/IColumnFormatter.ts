@@ -24,7 +24,7 @@ export interface IColumnFilterFunction {
 }
 
 export interface IColumnRenderFunction {
-    (a:IColumnFormatterData):any; // TODO this should return Reactable.Td!
+    (a:IColumnFormatterData, props:any):any; // TODO this should return Reactable.Td!
 }
 
 export interface IColumnVisibilityFunction {
