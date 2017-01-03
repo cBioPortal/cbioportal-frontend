@@ -86,7 +86,7 @@ export default class SampleColumnFormatter implements IColumnFormatter
         return value;
     }
 
-    public static renderFunction(data:IColumnFormatterData)
+    public static renderFunction(data:IColumnFormatterData, props:any)
     {
         const sampleId:string = SampleColumnFormatter.getTextValue(data);
         const text:string = SampleColumnFormatter.getDisplayValue(data);
