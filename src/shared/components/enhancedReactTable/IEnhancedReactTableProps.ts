@@ -1,8 +1,7 @@
 import {
     IColumnRenderFunction, IColumnSortFunction, IColumnFilterFunction, IColumnVisibilityFunction, ColumnVisibility,
-    IColumnFormatterData
-}
-    from "./IColumnFormatter";
+    IColumnDataFunction
+} from "./IColumnFormatter";
 
 /**
  * @author Selcuk Onur Sumer
@@ -26,7 +25,7 @@ export interface IEnhancedReactTableColumnDef {
     priority?: number;
     columnProps?: any;
     dataField?: string;
-    columnData?:(d:IColumnFormatterData)=>any;
+    columnData?:IColumnDataFunction;
 }
 
 export default IEnhancedReactTableProps;

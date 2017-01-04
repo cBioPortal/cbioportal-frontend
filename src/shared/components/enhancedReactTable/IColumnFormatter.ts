@@ -11,10 +11,6 @@ export interface IColumnFormatterData {
     columnData?:any; // column specific data
 }
 
-export interface IColumnFormatter {
-    //render();
-}
-
 export interface IColumnSortFunction {
     (a:any, b:any):boolean;
 }
@@ -24,13 +20,15 @@ export interface IColumnFilterFunction {
 }
 
 export interface IColumnRenderFunction {
-    (a:IColumnFormatterData, columnProps?:any):any; // TODO this should return Reactable.Td!
+    (data:IColumnFormatterData, columnProps?:any):any; // TODO this should return Reactable.Td!
 }
 
 export interface IColumnVisibilityFunction {
     (tableData:Array<any>):ColumnVisibility;
 }
 
-export type ColumnVisibility = "visible" | "hidden" | "excluded";
+export interface IColumnDataFunction {
+    (data:IColumnFormatterData):any
+}
 
-export default IColumnFormatter;
+export type ColumnVisibility = "visible" | "hidden" | "excluded";
