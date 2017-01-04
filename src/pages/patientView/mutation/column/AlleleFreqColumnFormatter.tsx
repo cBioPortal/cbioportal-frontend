@@ -1,11 +1,11 @@
 import * as React from 'react';
 import {Td} from 'reactable';
-import {IColumnFormatterData, IColumnFormatter} from "../../../../shared/components/enhancedReactTable/IColumnFormatter";
+import {IColumnFormatterData} from "../../../../shared/components/enhancedReactTable/IColumnFormatter";
 import Tooltip from 'rc-tooltip';
 import {compareNumberLists} from '../../../../shared/lib/SortUtils';
 import 'rc-tooltip/assets/bootstrap_white.css';
 
-export default class AlleleFreqColumnFormatter implements IColumnFormatter {
+export default class AlleleFreqColumnFormatter {
     static barWidth = 6;
     static barSpacing = 3;
     static maxBarHeight = 12;

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {Td} from 'reactable';
-import {IColumnFormatterData, IColumnFormatter}
+import {IColumnFormatterData}
     from "../../../../shared/components/enhancedReactTable/IColumnFormatter";
 import {default as DefaultProteinChangeColumnFormatter} from
     "../../../../shared/components/mutationTable/column/ProteinChangeColumnFormatter";
@@ -11,7 +11,7 @@ import styles from './proteinChange.module.scss';
  *
  * @author Selcuk Onur Sumer
  */
-export default class ProteinChangeColumnFormatter implements IColumnFormatter
+export default class ProteinChangeColumnFormatter
 {
     // TODO factor out this function into MutationStatusColumnFormatter class!
     public static getMutationStatus(rowData:any)

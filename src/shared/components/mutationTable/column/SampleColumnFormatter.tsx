@@ -1,14 +1,14 @@
 import * as React from 'react';
 import Tooltip from 'rc-tooltip';
 import {Td} from 'reactable';
-import {IColumnFormatterData, IColumnFormatter}
+import {IColumnFormatterData}
     from "../../enhancedReactTable/IColumnFormatter";
 import styles from "./sample.module.scss";
 
 /**
  * @author Selcuk Onur Sumer
  */
-export default class SampleColumnFormatter implements IColumnFormatter
+export default class SampleColumnFormatter
 {
     // make these thresholds customizable if needed...
     public static get MAX_LENGTH():number {return 16;}; // max allowed length of a sample id.
