@@ -1,10 +1,8 @@
 import * as React from "react";
 import mockData from "./mock/mutationData.json";
-import {Td} from 'reactableMSK';
 import MutationTable from "../../../shared/components/mutationTable/MutationTable";
 import {IColumnDefMap} from "../../../shared/components/enhancedReactTable/IEnhancedReactTableProps";
 import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter";
-import {IColumnFormatterData} from "../../../shared/components/enhancedReactTable/IColumnFormatter";
 import TumorColumnFormatter from "./column/TumorColumnFormatter";
 import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
 import AlleleCountColumnFormatter from "./column/AlleleCountColumnFormatter";
@@ -81,7 +79,6 @@ export default class MutationInformationContainer extends React.Component<IMutat
             },
             normalRefCount: {
                 name: "Ref Count (N)",
-                columnData: undefined,
                 formatter: AlleleCountColumnFormatter.renderFunction,
                 columnProps: {
                     dataField: "normalRefCount",
@@ -90,7 +87,6 @@ export default class MutationInformationContainer extends React.Component<IMutat
             },
             normalAltCount: {
                 name: "Alt Count (N)",
-                columnData: undefined,
                 formatter: AlleleCountColumnFormatter.renderFunction,
                 columnProps: {
                     dataField: "normalAltCount",
@@ -99,7 +95,6 @@ export default class MutationInformationContainer extends React.Component<IMutat
             },
             tumorRefCount: {
                 name: "Ref Count (T)",
-                columnData: undefined,
                 formatter: AlleleCountColumnFormatter.renderFunction,
                 columnProps: {
                     dataField: "tumorRefCount",
@@ -108,7 +103,6 @@ export default class MutationInformationContainer extends React.Component<IMutat
             },
             tumorAltCount: {
                 name: "Alt Count (T)",
-                columnData: undefined,
                 formatter: AlleleCountColumnFormatter.renderFunction,
                 columnProps: {
                     dataField: "tumorAltCount",
@@ -137,26 +131,5 @@ export default class MutationInformationContainer extends React.Component<IMutat
 
     private getMutationId(m):string {
         return [m.gene.chromosome, m.startPos, m.endPos, m.referenceAllele, m.variantAllele].join("_");
-    }
-
-    private makeMultipleValueColumnDataRenderFunction(dataField:string) {
-        const sampleOrder = this.props.sampleOrder;
-        return function(data:IColumnFormatterData) {
-            let ret = "";
-            if (data.rowData) {
-                const rowDataArr = [].concat(data.rowData);
-                const sampleToValue = {};
-                for (let rowDatum of rowDataArr) {
-                    sampleToValue[rowDatum.sampleId] = rowDatum[dataField];
-                }
-                const samplesWithValue = sampleOrder.filter(sampleId=>sampleToValue.hasOwnProperty(sampleId));
-                if (samplesWithValue.length === 1) {
-                    ret = sampleToValue[samplesWithValue[0]];
-                } else {
-                    ret = samplesWithValue.map(sampleId=>(`${sampleId}: ${sampleToValue[sampleId]}`)).join("\n");
-                }
-            }
-            return (<Td column={data.name} value={data}>{ret}</Td>);
-        };
     }
 }
