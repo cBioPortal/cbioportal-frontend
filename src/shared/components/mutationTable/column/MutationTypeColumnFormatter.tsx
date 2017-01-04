@@ -1,7 +1,7 @@
 import * as React from 'react';
 import Tooltip from 'rc-tooltip';
 import {Td} from 'reactable';
-import {IColumnFormatterData, IColumnFormatter}
+import {IColumnFormatterData}
     from "../../enhancedReactTable/IColumnFormatter";
 import styles from "./mutationType.module.scss";
 
@@ -16,7 +16,7 @@ type IMutationTypeFormat = {
 /**
  * @author Selcuk Onur Sumer
  */
-export default class MutationTypeColumnFormatter implements IColumnFormatter
+export default class MutationTypeColumnFormatter
 {
     public static get MAIN_MUTATION_TYPE_MAP():{[key:string]: IMutationTypeFormat} {
         return {

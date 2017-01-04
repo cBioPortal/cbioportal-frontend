@@ -1,12 +1,12 @@
 import * as React from 'react';
 import {Td} from 'reactable';
-import {IColumnFormatterData, IColumnFormatter}
+import {IColumnFormatterData}
     from "../../enhancedReactTable/IColumnFormatter";
 
 /**
  * @author Selcuk Onur Sumer
  */
-export default class ProteinChangeColumnFormatter implements IColumnFormatter
+export default class ProteinChangeColumnFormatter
 {
     public static sortFunction(a:string, b:string):boolean
     {

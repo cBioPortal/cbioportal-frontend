@@ -1,12 +1,12 @@
 import * as React from 'react';
 import {Td} from 'reactable';
-import {IColumnFormatterData, IColumnFormatter} from "../../../../shared/components/enhancedReactTable/IColumnFormatter";
+import {IColumnFormatterData} from "../../../../shared/components/enhancedReactTable/IColumnFormatter";
 import Tooltip from 'rc-tooltip';
 import {compareNumberLists} from '../../../../shared/lib/SortUtils';
 import 'rc-tooltip/assets/bootstrap_white.css';
 
 
-export default class TumorColumnFormatter implements IColumnFormatter {
+export default class TumorColumnFormatter {
 
     static circleRadius = 6;
     static circleSpacing = 4;

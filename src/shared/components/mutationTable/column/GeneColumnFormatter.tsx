@@ -1,12 +1,12 @@
 import * as React from 'react';
 import {Td} from 'reactable';
-import {IColumnFormatterData, IColumnFormatter}
+import {IColumnFormatterData}
     from "../../enhancedReactTable/IColumnFormatter";
 
 /**
  * @author Selcuk Onur Sumer
  */
-export default class GeneColumnFormatter implements IColumnFormatter
+export default class GeneColumnFormatter
 {
     /**
      * Default text value for a gene is its hugo gene symbol.
