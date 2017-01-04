@@ -8,7 +8,7 @@ import ClinicalInformationPatientTable from './ClinicalInformationPatientTable';
 import PDXTree from './PDXTree';
 import FixedDataTableExample from './ClinicalInformationSamplesTable';
 
-const ComponentUnderTest = ClinicalInformationContainer.WrappedComponent;
+const ComponentUnderTest = ClinicalInformationContainer;
 
 const stubComponent = function (componentClass) {
     let originalPropTypes;
@@ -54,14 +54,11 @@ describe('ClinicalInformationContainerUnconnected', () => {
         comp = mount(<ComponentUnderTest {...props} />);
     });
 
-    it('it calls data load routine on mounting', () => {
-        assert.isTrue(props.loadClinicalInformationTableData.calledOnce);
-    });
 
     it('has a spinner when in status is fetching', () => {
         assert.isFalse(comp.contains(<Spinner />));
 
-        comp.setProps({ status: 'fetching' });
+        comp.setProps({ status: 'pending' });
 
         assert.isTrue(comp.find('.spinner').length > 0);
 
