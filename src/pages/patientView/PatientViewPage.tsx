@@ -9,6 +9,7 @@ import {IPatientHeaderProps} from './patientHeader/PatientHeader';
 import {RootState} from '../../redux/rootReducer';
 import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
 import GenomicOverview from './genomicOverview/GenomicOverview';
+import mockData from './mock/sampleData.json';
 
 interface IPatientViewPageProps {
     store?: RootState;
@@ -39,16 +40,17 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         //     );
         // } //
 
-        let samples = ["string", "TCGA-24-2024-01", "TCGA-24-2024-01 (deliberately elongated id)"];
         let mutationDiv: Element | null = document.getElementById('mutations_div_prototype');
         if (mutationDiv) {
             ReactDOM.render(
-                <MutationInformationContainer sampleOrder={samples}
-                                             sampleLabels={samples.reduce((map, sample, i) => {map[sample] = i+""; return map;}, {})}
-                                            sampleColors={samples.reduce((map, sample) => {map[sample] = (Math.random() > 0.5 ? "black": "red"); return map;}, {})}
-                                              sampleTumorType={samples.reduce((map, sample) => {map[sample] = (Math.random() > 0.5 ? "Primary": "Metastasis"); return map;},{})}
-                                              sampleCancerType={samples.reduce((map, sample) => {map[sample] = "Cancer Type of " + sample; return map;}, {})}
-                                            {...{store: this.props.store}} />,
+                <MutationInformationContainer
+                    sampleOrder={mockData.order}
+                    sampleLabels={mockData.labels}
+                    sampleColors={mockData.colors}
+                    sampleTumorType={mockData.tumorType}
+                    sampleCancerType={mockData.cancerType}
+                    {...{store: this.props.store}}
+                />,
                 mutationDiv
             );
         }
