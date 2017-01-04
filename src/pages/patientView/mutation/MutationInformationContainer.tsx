@@ -24,42 +24,6 @@ export default class MutationInformationContainer extends React.Component<IMutat
         this.mergedMutations = this.mergeMutations(mockData);
     }
 
-    private mergeMutations(data) {
-        let idToMutations = {};
-        let id;
-        for (let mutation of data) {
-            id = this.getMutationId(mutation);
-            idToMutations[id] = idToMutations[id] || [];
-            idToMutations[id].push(mutation);
-        }
-        return Object.keys(idToMutations).map(function(id) { return idToMutations[id]; });
-    }
-
-    private getMutationId(m):string {
-        return [m.gene.chromosome, m.startPos, m.endPos, m.referenceAllele, m.variantAllele].join("_");
-    }
-
-    private makeMultipleValueColumnDataRenderFunction(dataField:string) {
-        const sampleOrder = this.props.sampleOrder;
-        return function(data:IColumnFormatterData) {
-            let ret = "";
-            if (data.rowData) {
-                const rowDataArr = [].concat(data.rowData);
-                const sampleToValue = {};
-                for (let data of rowDataArr) {
-                    sampleToValue[data.sampleId] = data[dataField];
-                }
-                const samplesWithValue = sampleOrder.filter(sampleId=>sampleToValue.hasOwnProperty(sampleId))
-                if (samplesWithValue.length === 1) {
-                    ret = sampleToValue[samplesWithValue[0]];
-                } else {
-                    ret = samplesWithValue.map(sampleId=>(`${sampleId}: ${sampleToValue[sampleId]}`)).join("\n");
-                }
-            }
-            return (<Td column={data.name} value={data}>{ret}</Td>);
-        };
-    }
-
     public render() {
         // TODO properly customize table for patient view specific columns!!!
         let columns:IColumnDefMap = {
@@ -137,5 +101,41 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 <MutationTable rawData={this.mergedMutations} columns={columns}/>
             </div>
         );
+    }
+
+    private mergeMutations(data) {
+        let idToMutations = {};
+        let mutationId;
+        for (let mutation of data) {
+            mutationId = this.getMutationId(mutation);
+            idToMutations[mutationId] = idToMutations[mutationId] || [];
+            idToMutations[mutationId].push(mutation);
+        }
+        return Object.keys(idToMutations).map(id => idToMutations[id]);
+    }
+
+    private getMutationId(m):string {
+        return [m.gene.chromosome, m.startPos, m.endPos, m.referenceAllele, m.variantAllele].join("_");
+    }
+
+    private makeMultipleValueColumnDataRenderFunction(dataField:string) {
+        const sampleOrder = this.props.sampleOrder;
+        return function(data:IColumnFormatterData) {
+            let ret = "";
+            if (data.rowData) {
+                const rowDataArr = [].concat(data.rowData);
+                const sampleToValue = {};
+                for (let rowDatum of rowDataArr) {
+                    sampleToValue[rowDatum.sampleId] = rowDatum[dataField];
+                }
+                const samplesWithValue = sampleOrder.filter(sampleId=>sampleToValue.hasOwnProperty(sampleId));
+                if (samplesWithValue.length === 1) {
+                    ret = sampleToValue[samplesWithValue[0]];
+                } else {
+                    ret = samplesWithValue.map(sampleId=>(`${sampleId}: ${sampleToValue[sampleId]}`)).join("\n");
+                }
+            }
+            return (<Td column={data.name} value={data}>{ret}</Td>);
+        };
     }
 }
