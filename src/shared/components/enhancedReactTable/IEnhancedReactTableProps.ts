@@ -24,7 +24,7 @@ export interface IEnhancedReactTableColumnDef {
     filterable?: IColumnFilterFunction | boolean;
     visible?: IColumnVisibilityFunction | ColumnVisibility;
     priority?: number;
-    props?: any;
+    columnProps?: any;
     dataField?: string;
     columnData?:(d:IColumnFormatterData)=>any;
 }

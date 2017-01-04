@@ -237,7 +237,7 @@ export default class MutationTypeColumnFormatter implements IColumnFormatter
         return mutationType;
     }
 
-    public static renderFunction(data:IColumnFormatterData, props:any)
+    public static renderFunction(data:IColumnFormatterData)
     {
         // use text for all purposes (display, sort, filter)
         const text:string = MutationTypeColumnFormatter.getDisplayValue(data);
