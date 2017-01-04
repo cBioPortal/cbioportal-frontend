@@ -142,7 +142,6 @@ export default class MutationTable extends React.Component<IEnhancedReactTablePr
                 priority: 16.00,
                 dataField:"tumorAltCount"
             },
-            /*
             // TODO we don't have data field for frequencies, we need to calculate them!
             normalAlleleFreq : {
                 name: "Allele Freq (N)",
@@ -151,7 +150,7 @@ export default class MutationTable extends React.Component<IEnhancedReactTablePr
             tumorAlleleFreq: {
                 name: "Allele Freq (T)",
                 priority: 18.00
-            }*/
+            }
         };
     };
 
