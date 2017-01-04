@@ -146,7 +146,7 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
     {
         if (columnDef.formatter)
         {
-            return columnDef.formatter(data, columnDef.props);
+            return columnDef.formatter(data, columnDef.columnProps);
         }
         else
         {

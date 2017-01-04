@@ -41,7 +41,7 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 formatter: TumorColumnFormatter.renderFunction,
                 sortable: TumorColumnFormatter.sortFunction,
                 filterable: false,
-                props: {
+                columnProps: {
                     sampleOrder: this.props.sampleOrder,
                     sampleColors: this.props.sampleColors,
                     sampleLabels: this.props.sampleLabels,
@@ -73,7 +73,7 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 formatter: AlleleFreqColumnFormatter.renderFunction,
                 sortable: AlleleFreqColumnFormatter.sortFunction,
                 filterable: false,
-                props: {
+                columnProps: {
                     sampleOrder: this.props.sampleOrder,
                     sampleColors: this.props.sampleColors,
                     sampleLabels: this.props.sampleLabels
@@ -83,7 +83,7 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 name: "Ref Count (N)",
                 columnData: undefined,
                 formatter: AlleleCountColumnFormatter.renderFunction,
-                props: {
+                columnProps: {
                     dataField: "normalRefCount",
                     sampleOrder: this.props.sampleOrder
                 }
@@ -92,7 +92,7 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 name: "Alt Count (N)",
                 columnData: undefined,
                 formatter: AlleleCountColumnFormatter.renderFunction,
-                props: {
+                columnProps: {
                     dataField: "normalAltCount",
                     sampleOrder: this.props.sampleOrder
                 }
@@ -101,7 +101,7 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 name: "Ref Count (T)",
                 columnData: undefined,
                 formatter: AlleleCountColumnFormatter.renderFunction,
-                props: {
+                columnProps: {
                     dataField: "tumorRefCount",
                     sampleOrder: this.props.sampleOrder
                 }
@@ -110,7 +110,7 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 name: "Alt Count (T)",
                 columnData: undefined,
                 formatter: AlleleCountColumnFormatter.renderFunction,
-                props: {
+                columnProps: {
                     dataField: "tumorAltCount",
                     sampleOrder: this.props.sampleOrder
                 }
