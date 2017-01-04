@@ -24,7 +24,7 @@ export interface IColumnRenderFunction {
 }
 
 export interface IColumnVisibilityFunction {
-    (tableData:Array<any>):ColumnVisibility;
+    (tableData:Array<any>, columnProps?:any):ColumnVisibility;
 }
 
 export interface IColumnDataFunction {
