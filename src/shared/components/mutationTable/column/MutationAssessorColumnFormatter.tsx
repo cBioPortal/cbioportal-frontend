@@ -1,7 +1,7 @@
 import * as React from 'react';
 import Tooltip from 'rc-tooltip';
 import {Td} from 'reactable';
-import {IColumnFormatterData, IColumnFormatter}
+import {IColumnFormatterData}
     from "../../enhancedReactTable/IColumnFormatter";
 import 'rc-tooltip/assets/bootstrap_white.css';
 import styles from "./mutationAssessor.module.scss";
@@ -16,7 +16,7 @@ type IMutationAssessorFormat = {
 /**
  * @author Selcuk Onur Sumer
  */
-export default class MutationAssessorColumnFormatter implements IColumnFormatter
+export default class MutationAssessorColumnFormatter
 {
     /**
      * Mapping between the functional impact score (data) values and
