@@ -184,7 +184,7 @@ export default class MutationAssessorColumnFormatter implements IColumnFormatter
         {
             impact = (
                 <div>
-                    Predicted impact score: <b>{impact}</b>
+                    Predicted impact score: <b>{maData.score}</b>
                 </div>
             );
         }
