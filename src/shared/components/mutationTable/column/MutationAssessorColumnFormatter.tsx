@@ -241,7 +241,7 @@ export default class MutationAssessorColumnFormatter implements IColumnFormatter
         );
     }
 
-    public static renderFunction(data:IColumnFormatterData, props:any)
+    public static renderFunction(data:IColumnFormatterData)
     {
         const text:string = MutationAssessorColumnFormatter.getDisplayValue(data);
         const fisClass:string = MutationAssessorColumnFormatter.getScoreClassName(data);
