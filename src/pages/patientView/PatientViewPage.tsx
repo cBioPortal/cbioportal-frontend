@@ -6,38 +6,52 @@ import ClinicalInformationContainer from './clinicalInformation/ClinicalInformat
 import PatientHeaderUnconnected from './patientHeader/PatientHeader';
 import {IPatientHeaderProps} from './patientHeader/PatientHeader';
 import {RootState} from '../../redux/rootReducer';
-import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
+import exposeComponentRenderer from '../../shared/lib/exposeComponentRenderer';
 import GenomicOverview from './genomicOverview/GenomicOverview';
+import Connector, { ClinicalInformationData } from "./Connector";
+import { ClinicalData } from "shared/api/CBioPortalAPI";
+import { ClinicalDataBySampleId } from "../../shared/api/api-types-extended";
+import { RequestStatus } from "../../shared/api/api-types-extended";
 
-interface IPatientViewPageProps {
+
+export interface IPatientViewPageProps {
     store?: RootState;
+    samples?: Array<ClinicalDataBySampleId>;
+    loadClinicalInformationTableData?: () => void;
+    patient?: {
+        id: string,
+        clinicalData: Array<ClinicalData>
+    };
+    clinicalDataStatus?: RequestStatus;
 }
 
+@Connector.decorator
 export default class PatientViewPage extends React.Component<IPatientViewPageProps, {}> {
 
-    private static mapStateToProps(state: RootState): IPatientHeaderProps {
-
-        let ci = state.clinicalInformation;
-        return {
-            patient: ci.patient,
-            samples: ci.samples,
-            status: ci.status,
-        };
-    }
+    // private static mapStateToProps(state: RootState): IPatientHeaderProps {
+    //
+    //     let ci = state.clinicalInformation;
+    //     return {
+    //         patient: ci.patient,
+    //         samples: ci.samples,
+    //         status: ci.status,
+    //     };
+    // }
 
     public componentDidMount() {
-        const PatientHeader = connect(PatientViewPage.mapStateToProps)(PatientHeaderUnconnected);
+        // const PatientHeader = connect(PatientViewPage.mapStateToProps)(PatientHeaderUnconnected);
+        //
+        // // Don't try to render clinical_div_prototype in parent cbioportal
+        // // project context
+        // // let clinicalDiv: Element | null = document.getElementById('clinical_div_prototype');
+        // // if (clinicalDiv) {
+        // //     ReactDOM.render(
+        // //         <PatientHeader {...{store: this.props.store}} />,
+        // //         clinicalDiv
+        // //     );
+        // // } //
 
-        // Don't try to render clinical_div_prototype in parent cbioportal
-        // project context
-        // let clinicalDiv: Element | null = document.getElementById('clinical_div_prototype');
-        // if (clinicalDiv) {
-        //     ReactDOM.render(
-        //         <PatientHeader {...{store: this.props.store}} />,
-        //         clinicalDiv
-        //     );
-        // } //
-
+        this.props.loadClinicalInformationTableData && this.props.loadClinicalInformationTableData();
 
         this.exposeComponentRenderersToParentScript();
 
@@ -59,7 +73,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     public render() {
         return (
             <div>
-                <ClinicalInformationContainer />
+                <ClinicalInformationContainer status={ this.props.clinicalDataStatus } patient={this.props.patient} samples={this.props.samples} />
             </div>
         );
     }
