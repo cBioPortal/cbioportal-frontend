@@ -103,7 +103,7 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
         let rows:Array<any> = [];
         const self = this;
 
-        _.each(tableData, function(rowData) {
+        _.each(tableData, function(rowData:any) {
             const cols = self.generateColumns(columns, tableData, rowData);
 
             rows.push(
@@ -179,7 +179,7 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
             if (column.visible)
             {
                 if (_.isFunction(column.visible)) {
-                    visibility = (column.visible as IColumnVisibilityFunction)(rawData);
+                    visibility = (column.visible as IColumnVisibilityFunction)(rawData, column.columnProps);
                 }
                 else {
                     visibility = column.visible as ColumnVisibility;
@@ -208,7 +208,7 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
             if (_.isFunction(column.sortable)) {
                 sortable.push({
                     column: column.name,
-                    sortFunction: column.sortable
+                    sortFunction: column.sortable as IColumnSortFunction
                 });
             }
             else if (column.sortable) {
@@ -227,7 +227,7 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
             if (_.isFunction(column.filterable)) {
                 filterable.push({
                     column: column.name,
-                    filterFunction: column.filterable
+                    filterFunction: column.filterable as IColumnFilterFunction
                 });
             }
             else if (column.filterable) {

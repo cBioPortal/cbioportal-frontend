@@ -10,3 +10,4 @@ declare module 'webpack-raphael';
 declare module 'render-if';
 declare type PartialPick<T, K extends keyof T> = Partial<Pick<T, K>>;
 declare module 'rc-tooltip';
+declare module 'underscore';
