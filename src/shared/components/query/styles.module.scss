@@ -10,6 +10,9 @@
     flex-direction: row;
     align-items: center;
   }
+  a {
+    cursor: pointer;
+  }
 
   .selectCancerStudyRow {
     align-items: center;
@@ -21,7 +24,6 @@
  	div.searchTextInput {
  	  min-width: 200px;
  	}
-
   }
 
   .treeWithStudies {

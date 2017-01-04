@@ -16,8 +16,7 @@ import firstDefinedValue from "../../lib/firstDefinedValue";
 import CancerStudyTreeData from "./CancerStudyTreeData";
 import {CancerTreeNode, NodeMetadata} from "./CancerStudyTreeData";
 import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
-import {EditableDropdown} from "../ExperimentalControls";
-import {Creatable as ReactSelectCreatable} from 'react-select';
+import ReactSelect from 'react-select';
 import 'react-select/dist/react-select.css';
 
 const CancerTree = DescriptorTree.of<CancerTreeNode>();
@@ -38,6 +37,7 @@ const styles = styles_any as {
 	selectCancerStudyHeader: string,
 	selectCancerStudyRow: string,
 	searchTextInput: string,
+	showHideTreeLink: string,
 };
 
 function matchesSearchText(input:string, searchText:string):boolean
@@ -79,6 +79,7 @@ export interface ICancerStudySelectorExperimentalOptions
 
 export interface ICancerStudySelectorState
 {
+	hideTree?: boolean;
 	searchText?: string;
 	selectedCancerTypeIds?: string[];
 	selectedStudyIds?: string[];
@@ -115,6 +116,13 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 	get searchText()
 	{
 		return firstDefinedValue(this.props.searchText, this.state.searchText || '');
+	}
+
+	get maxTreeDepth()
+	{
+		if (firstDefinedValue(this.props.hideTree, this.state.hideTree))
+			return 0;
+		return this.props.maxTreeDepth;
 	}
 
 	get selectedCancerTypeIds()
@@ -170,7 +178,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 			if (meta.isCancerType)
 			{
 				// ignore cancer types excluded by depth
-				if (meta.ancestors.length > this.props.maxTreeDepth)
+				if (meta.ancestors.length > this.maxTreeDepth)
 					return false;
 				// ignore cancer types with no descendant studies
 				if (meta.descendantStudies.length == 0)
@@ -181,7 +189,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 
 		// returns true if the node or any related nodes match
 		let nodeFilter = memoize({
-			getAdditionalArgs: () => [this.props.maxTreeDepth, this.searchText],
+			getAdditionalArgs: () => [this.maxTreeDepth, this.searchText],
 			fixedArgsLength: 1,
 			function: (node:CancerTreeNode):boolean =>
 			{
@@ -211,7 +219,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 			if (meta.isCancerType)
 			{
 				// ignore cancer types excluded by depth
-				if (meta.ancestors.length > this.props.maxTreeDepth)
+				if (meta.ancestors.length > this.maxTreeDepth)
 					return false;
 
 				return meta.descendantStudies.some(nodeFilter);
@@ -265,7 +273,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 			let children:CancerTreeNode[] = meta.childCancerTypes;
 			if (this.props.showStudiesInTree)
 			{
-				let childStudies = meta.ancestors.length == this.props.maxTreeDepth ? meta.descendantStudies : meta.childStudies;
+				let childStudies = meta.ancestors.length == this.maxTreeDepth ? meta.descendantStudies : meta.childStudies;
 				children = children.concat(childStudies);
 			}
 			return children.filter(nodeFilter);
@@ -422,7 +430,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 		let studies:CancerStudy[] = _.union.apply(_, selectedCancerTypes.map(getDescendantStudies));
 
 		// if filtering by selection, expand studies list to include siblings
-		if (this.props.filterBySelection && this.props.maxTreeDepth)
+		if (this.props.filterBySelection && this.maxTreeDepth)
 		{
 			function getSiblings(studyId:string)
 			{
@@ -434,7 +442,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 		}
 
 		// handle case where there are no descendant studies
-		if ((studies.length == 0 && this.props.showAllStudiesByDefault) || !this.props.maxTreeDepth)
+		if ((studies.length == 0 && this.props.showAllStudiesByDefault) || !this.maxTreeDepth)
 		{
 			let rootMeta = treeInfo.map_node_meta.get(treeInfo.rootCancerType) as NodeMetadata;
 			studies = rootMeta.descendantStudies;
@@ -535,18 +543,27 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 			<FlexCol className={styles.CancerStudySelector} padded flex={1} style={this.props.style}>
 				<FlexRow padded overflow className={styles.selectCancerStudyRow}>
 					<span className={styles.selectCancerStudyHeader}>Select Cancer Study:</span>
-					<ReactSelectCreatable
+					<ReactSelect
 						className={styles.searchTextInput}
 						value={this.searchText}
+						autofocus={true}
 						options={searchTextOptions.map(str => ({label: str, value: str}))}
 						promptTextCreator={(label:string) => `Search for "${label}"`}
+						placeholder='Search...'
+						noResultsText={false}
+						onCloseResetsInput={false}
 						onInputChange={(searchText:string) => this.setState({searchText})}
 						onChange={(option:{value:string}) => this.setState({searchText: option ? option.value || '' : ''})}
 					/>
+					<a className={styles.showHideTreeLink} onClick={() => this.setState({hideTree: !!this.maxTreeDepth})}>
+						{this.state.hideTree ? 'Show Tree' : 'Hide Tree'}
+					</a>
+					<div style={{flex: 1}}/>
+					Number of Studies Selected: {this.selectedStudyIds.length}
 				</FlexRow>
 				<FlexRow padded flex={1}>
 					{
-						this.props.maxTreeDepth > 0 || this.props.showStudiesInTree
+						this.maxTreeDepth > 0 || this.props.showStudiesInTree
 						?   <FlexCol flex={1}>
 								<CancerTree
 									className={this.props.showStudiesInTree ? styles.treeWithStudies : undefined}
