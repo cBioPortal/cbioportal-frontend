@@ -7,6 +7,7 @@ import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter"
 import {IColumnFormatterData} from "../../../shared/components/enhancedReactTable/IColumnFormatter";
 import TumorColumnFormatter from "./column/TumorColumnFormatter";
 import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
+import AlleleCountColumnFormatter from "./column/AlleleCountColumnFormatter";
 
 export interface IMutationInformationContainerProps {
     // setTab?: (activeTab:number) => void;
@@ -63,6 +64,10 @@ export default class MutationInformationContainer extends React.Component<IMutat
             cosmic: {
                 name: "COSMIC"
             },
+            normalAlleleFreq : {
+                name: "Allele Freq (N)",
+                visible: "excluded"
+            },
             tumorAlleleFreq: {
                 name: "Variant Allele Frequency",
                 formatter: AlleleFreqColumnFormatter.renderFunction,
@@ -77,22 +82,38 @@ export default class MutationInformationContainer extends React.Component<IMutat
             normalRefCount: {
                 name: "Ref Count (N)",
                 columnData: undefined,
-                formatter: this.makeMultipleValueColumnDataRenderFunction("normalRefCount"),
+                formatter: AlleleCountColumnFormatter.renderFunction,
+                props: {
+                    dataField: "normalRefCount",
+                    sampleOrder: this.props.sampleOrder
+                }
             },
             normalAltCount: {
                 name: "Alt Count (N)",
                 columnData: undefined,
-                formatter: this.makeMultipleValueColumnDataRenderFunction("normalAltCount"),
+                formatter: AlleleCountColumnFormatter.renderFunction,
+                props: {
+                    dataField: "normalAltCount",
+                    sampleOrder: this.props.sampleOrder
+                }
             },
             tumorRefCount: {
                 name: "Ref Count (T)",
                 columnData: undefined,
-                formatter: this.makeMultipleValueColumnDataRenderFunction("tumorRefCount"),
+                formatter: AlleleCountColumnFormatter.renderFunction,
+                props: {
+                    dataField: "tumorRefCount",
+                    sampleOrder: this.props.sampleOrder
+                }
             },
             tumorAltCount: {
                 name: "Alt Count (T)",
                 columnData: undefined,
-                formatter: this.makeMultipleValueColumnDataRenderFunction("tumorAltCount"),
+                formatter: AlleleCountColumnFormatter.renderFunction,
+                props: {
+                    dataField: "tumorAltCount",
+                    sampleOrder: this.props.sampleOrder
+                }
             },
         };
 
