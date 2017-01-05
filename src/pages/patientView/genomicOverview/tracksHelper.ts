@@ -3,9 +3,10 @@ import $ from 'jquery';
 import * as _ from 'underscore';
 import 'qtip2';
 import 'qtip2/dist/jquery.qtip.css';
+import { Mutation } from "shared/api/CBioPortalAPI";
 
-export function GenomicOverviewConfig(nRows,width) {
-    var sel = {};
+export function GenomicOverviewConfig(nRows: any,width: any) {
+    let sel: any = {};
     sel.nRows = nRows;
     sel.canvasWidth = width;
     sel.wideLeftText = 25;
@@ -15,9 +16,9 @@ export function GenomicOverviewConfig(nRows,width) {
     sel.rowHeight = 20;
     sel.rowMargin = 5;
     sel.ticHeight = 10;
-    sel.cnTh = [0.2,1.5]; //TODO: ????
+    sel.cnTh = [0.2,1.5];
     sel.cnLengthTh = 50000;
-    sel.getCnColor = function(cnValue) {
+    sel.getCnColor = function(cnValue: any) {
         if (cnValue>=sel.cnTh[1])
             return "#f00";
         if (cnValue<=-sel.cnTh[1])
@@ -31,7 +32,7 @@ export function GenomicOverviewConfig(nRows,width) {
     sel.canvasHeight = function() {
         return 2*sel.rowMargin+sel.ticHeight+sel.nRows*(sel.rowHeight+sel.rowMargin);
     };
-    sel.yRow = function(row) {
+    sel.yRow = function(row: any) {
         return 2*sel.rowMargin+sel.ticHeight+row*(sel.rowHeight+sel.rowMargin);
     };
     sel.xRightText = function() {
@@ -40,11 +41,11 @@ export function GenomicOverviewConfig(nRows,width) {
     return sel;
 }
 
-export function createRaphaelCanvas(elementId, config) {
+export function createRaphaelCanvas(elementId: any, config: any) {
     return Raphael(elementId, config.canvasWidth, config.canvasHeight());
 }
 
-function getChmEndsPerc(chms, total) {
+function getChmEndsPerc(chms: Array<any>, total: any) {
     var ends = [0];
     for (var i=1; i<chms.length; i++) {
         ends.push(ends[i-1]+chms[i]/total);
@@ -56,17 +57,17 @@ function getChmEndsPerc(chms, total) {
  * storing chromesome length info
  */
 export function getChmInfo() {
-    var sel = {};
+    let sel: any = {};
     sel.hg19 = [0,249250621,243199373,198022430,191154276,180915260,171115067,159138663,146364022,141213431,135534747,135006516,133851895,115169878,107349540,102531392,90354753,81195210,78077248,59128983,63025520,48129895,51304566,155270560,59373566];
     sel.total = 3095677412;
     sel.perc = getChmEndsPerc(sel.hg19,sel.total);
-    sel.loc2perc = function(chm,loc) {
+    sel.loc2perc = function(chm: any,loc: any) {
         return sel.perc[chm-1] + loc/sel.total;
     };
-    sel.loc2xpixil = function(chm,loc,goConfig) {
+    sel.loc2xpixil = function(chm: any, loc: any, goConfig: any) {
         return sel.loc2perc(chm,loc)*goConfig.GenomeWidth+goConfig.wideLeftText;
     };
-    sel.perc2loc = function(xPerc,startChm) {
+    sel.perc2loc = function(xPerc: any,startChm: any) {
         var chm;
         if (!startChm) {//binary search
             var low = 1, high = sel.hg19.length-1, i;
@@ -86,15 +87,15 @@ export function getChmInfo() {
         var loc = Math.round(sel.total*(xPerc-sel.perc[chm-1]));
         return [chm,loc];
     };
-    sel.xpixil2loc = function(goConfig,x,startChm) {
+    sel.xpixil2loc = function(goConfig: any, x: any, startChm: any) {
         var xPerc = (x-goConfig.wideLeftText)/goConfig.GenomeWidth;
         return sel.perc2loc(xPerc,startChm);
     };
-    sel.middle = function(chm, goConfig) {
+    sel.middle = function(chm: any, goConfig: any) {
         var loc = sel.hg19[chm]/2;
         return sel.loc2xpixil(chm,loc,goConfig);
     };
-    sel.chmName = function(chm) {
+    sel.chmName = function(chm: any) {
         if (chm === 23) return "X";
         if (chm === 24) return "Y";
         return chm;
@@ -102,7 +103,7 @@ export function getChmInfo() {
     return sel;
 }
 
-export function plotChromosomes(p,config,chmInfo) {
+export function plotChromosomes(p: any, config: any,chmInfo: any) {
     var yRuler = config.rowMargin+config.ticHeight;
     drawLine(config.wideLeftText,yRuler,config.wideLeftText+config.GenomeWidth,yRuler,p,'#000',1);
     // ticks & texts
@@ -116,7 +117,7 @@ export function plotChromosomes(p,config,chmInfo) {
     drawLine(config.wideLeftText+config.GenomeWidth,yRuler,config.wideLeftText+config.GenomeWidth,config.rowMargin,p,'#000',1);
 }
 
-function drawLine(x1, y1, x2, y2, p, cl, width) {
+function drawLine(x1: any, y1: any, x2: any, y2: any, p: any, cl: any, width: any) {
     var path = "M" + x1 + " " + y1 + " L" + x2 + " " + y2;
     var line = p.path(path);
     line.attr("stroke", cl);
@@ -126,11 +127,11 @@ function drawLine(x1, y1, x2, y2, p, cl, width) {
     return line;
 }
 
-function loc2string(loc,chmInfo) {
+function loc2string(loc: any, chmInfo: any) {
     return "chr"+chmInfo.chmName(loc[0])+":"+addCommas(loc[1]);
 }
 
-function addCommas(x)
+function addCommas(x: any)
 {
     var strX = x.toString();
     var rgx = /(\d+)(\d{3})/;
@@ -140,32 +141,35 @@ function addCommas(x)
     return strX;
 }
 
-export function plotCnSegs(p,config,chmInfo,row,segs,chrCol,startCol,endCol,segCol,caseId) {
+export function plotCnSegs(p: any,config: any,chmInfo: any,row: any, segs: Array<any>, chrCol: any, startCol: any,endCol: any,segCol: any,caseId: any) {
     var yRow = config.yRow(row);
     var genomeMeasured = 0;
     var genomeAltered = 0;
-    for (var i=0; i<segs.length; i++) {
-        var chm = translateChm(segs[i][chrCol]);
-        if (chm == 'null' ||chm[0]>=chmInfo.hg19.length) continue;
-        var start = segs[i][startCol];
-        var end = segs[i][endCol];
-        var segMean = segs[i][segCol];
+
+    _.each(segs, function(seg) {
+        let chm: any = translateChm(seg[chrCol]);
+        if (chm == null || chm[0]>=chmInfo.hg19.length) return;
+        var start = seg[startCol];
+        var end = seg[endCol];
+        var segMean = seg[segCol];
         genomeMeasured += end-start;
-        if (Math.abs(segMean)<config.cnTh[0]) continue;
-        if (end-start<config.cnLengthTh) continue; //filter cnv
+        if (Math.abs(segMean)<config.cnTh[0]) return;
+        if (end-start<config.cnLengthTh) return; //filter cnv
         genomeAltered += end-start;
-        var x1 = chmInfo.loc2xpixil(chm,start,config);
-        var x2 = chmInfo.loc2xpixil(chm,end,config);
-        var r = p.rect(x1,yRow,x2-x1,config.rowHeight);
-        var cl = config.getCnColor(segMean);
+        var x1: any = chmInfo.loc2xpixil(chm,start,config);
+        var x2: any = chmInfo.loc2xpixil(chm,end,config);
+        var r: any = p.rect(x1,yRow,x2-x1,config.rowHeight);
+        var cl: any = config.getCnColor(segMean);
         r.attr("fill",cl);
         r.attr("stroke", cl);
         r.attr("stroke-width", 1);
         r.attr("opacity", 0.5);
         r.translate(0.5, 0.5);
         var tip = "Mean copy number log2 value: "+segMean+"<br/>from "+loc2string([chm,start],chmInfo)+"<br/>to "+loc2string([chm,end],chmInfo);
-        addToolTip(r.node,tip);
-    }if (caseId!=null) {
+        addToolTip(r.node,tip, '', '');
+    });
+
+    if (caseId!=null) {
         //var label = caseMetaData.label[caseId]; //TODO: needed for patient view
         var label = "CNA"; //TODO:
         //var c = p.circle(12,yRow+config.rowHeight/2,6).attr({'stroke':caseMetaData.color[caseId], 'fill':caseMetaData.color[caseId]}); //TODO: needed for patient view
@@ -188,34 +192,28 @@ export function plotCnSegs(p,config,chmInfo,row,segs,chrCol,startCol,endCol,segC
     addToolTip(t.node, tip,null,{my:'top right',at:'bottom left', viewport: $(window)});
 }
 
-export function plotMuts(p,config,chmInfo,row,mutations,caseId) {
+export function plotMuts(p: any, config: any,chmInfo: any,row: any, mutations: Array<Mutation>, caseId: any) {
     var numMut = 0;
-    var mutObjs = _.filter(mutations, function(_mutObj){ return _mutObj.sampleId === caseId; } );
+    var mutObjs = _.filter(mutations, function(_mutObj: Mutation){ return _mutObj.sampleId === caseId; } );
 
-    var pixelMap = [];
+    let pixelMap: Array<Array<string>> = [];
     for (var i = 0; i < mutObjs.length; i++) {
-        var mutObj = mutObjs[i];
+        var mutObj: Mutation = mutObjs[i];
         var chm = translateChm(mutObj.gene.chromosome);
         if (chm != null||chm <= chmInfo.hg19.length) {
             var x = Math.round(chmInfo.loc2xpixil(chm, (mutObj.startPosition + mutObj.endPosition)/2, config));
             var xBin = x - x%config.pixelsPerBinMut;
             if (pixelMap[xBin] == null) pixelMap[xBin] = [];
-            pixelMap[xBin].push("mutation event id here"); //TODO: needed for filter mutation table under mutation tab (patient view)
+            pixelMap[xBin].push(mutObj.gene.hugoGeneSymbol + ": " + mutObj.proteinChange);
             numMut++;
         }
-    }
 
+    }
     var maxCount = 5; // set max height to 5 mutations
-//    for (var i in pixelMap) {
-//        var arr = pixelMap[i];
-//        if (arr && arr.length>maxCount)
-//            maxCount=arr.length;
-//    }
 
     var yRow = config.yRow(row)+config.rowHeight;
-    for (var i in pixelMap) {
-        var arr = pixelMap[i];
-        var pixil = parseInt(i);
+    $.each(pixelMap, function(i: number, arr: Array<any>) {
+        var pixil = i;
         if (arr) {
             var h = arr.length>maxCount ? config.rowHeight : (config.rowHeight*arr.length/maxCount);
             var r = p.rect(pixil,yRow-h,config.pixelsPerBinMut,h);
@@ -224,10 +222,9 @@ export function plotMuts(p,config,chmInfo,row,mutations,caseId) {
             r.attr("stroke-width", 1);
             r.attr("opacity", 0.5);
             r.translate(0.5, 0.5);
-            addToolTip(r.node, mutObj.gene.hugoGeneSymbol + ": " + mutObj.proteinChange, 100);
-            //TODO: need to add "show details" link
+            addToolTip(r.node, arr.join("</br>"), 100, '');
         }
-    }
+    });
 
     if (caseId!==null) {
         //var label = caseMetaData.label[caseId]; //TODO: needed for patient view
@@ -243,9 +240,10 @@ export function plotMuts(p,config,chmInfo,row,mutations,caseId) {
     underlineText(t,p);
     var tip =  "Number of mutation events.";
     addToolTip(t.node,tip,null,{my:'top right',at:'bottom left'});
+
 }
 
-function addToolTip(node,tip,showDelay,position) {
+function addToolTip(node: any, tip: any,showDelay: any, position: any) {
     var param = {
         content: {text:tip},
         show: {event: "mouseover"},
@@ -260,12 +258,12 @@ function addToolTip(node,tip,showDelay,position) {
     $(node).qtip(param);
 }
 
-function underlineText(textElement,p) {
+function underlineText(textElement: any, p: any) {
     var textBBox = textElement.getBBox();
     return p.path("M"+textBBox.x+" "+(textBBox.y+textBBox.height)+"L"+(textBBox.x+textBBox.width)+" "+(textBBox.y+textBBox.height));
 }
 
-function translateChm(chm) {
+function translateChm(chm: any) {
     if (chm.toLowerCase().indexOf("chr")===0) chm=chm.substring(3);
     if (chm==='X'||chm==='x') chm = 23;
     if (chm==='Y'||chm==='y') chm = 24;

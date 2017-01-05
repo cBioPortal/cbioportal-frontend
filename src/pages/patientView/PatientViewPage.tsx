@@ -11,7 +11,6 @@ import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
 import GenomicOverview from './genomicOverview/GenomicOverview';
 import renderIf from 'render-if';
 import CBioPortalAPI from "shared/api/CBioPortalAPI";
-import queryString from "query-string";
 
 interface IPatientViewPageProps {
     store?: RootState;
@@ -22,8 +21,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     constructor(){
 
         super();
-
-        this.state = { genomicOverviewData: { status: 'loading', data:null }  };
+        this.state = { 'genomicOverviewData': { status: 'loading', data:null }  };
 
     }
 
@@ -40,9 +38,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     fetchData() {
 
-        //const qs = queryString.parse(location.search);
-        //const studyId: string = qs.cancer_study_id;
-        //const patientId: string = qs.case_id;
         const studyId: string = "ov_tcga_pub";
         const sampleIds: Array<any> = ["TCGA-24-2035-01"];
 
