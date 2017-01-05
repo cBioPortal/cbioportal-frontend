@@ -7,8 +7,7 @@ export default class GenomicOverview extends React.Component<{ data: any }, {}> 
 
         return (
             <div>
-                <Tracks data={this.props.data} />
-                <div>adam's component</div>
+                <Tracks mutations={this.props.data[0]} cnaSegments={this.props.data[1]} />
             </div>
         );
     }

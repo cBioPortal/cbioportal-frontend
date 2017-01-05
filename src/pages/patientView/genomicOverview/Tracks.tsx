@@ -1,44 +1,39 @@
-import * as React from "react";
-import * as $ from 'jquery';
+import * as React from 'react';
 import * as _ from 'underscore';
-import CBioPortalAPI from "shared/api/CBioPortalAPI";
-import * as genomicOverviewHelper from './genomicOverviewHelper'
-import {CopyNumberSegment} from "../../../shared/api/CBioPortalAPI";
+import * as tracksHelper from './tracksHelper'
+import {CopyNumberSegment, Mutation} from 'shared/api/CBioPortalAPI';
 
-export default class Tracks extends React.Component<{}, {}> {
+interface TracksPropTypes {
+    mutations:Array<Mutation>;
+    cnaSegments:Array<CopyNumberSegment>;
+}
+
+export default class Tracks extends React.Component<TracksPropTypes, {}> {
 
     constructor(){
-
         super();
-
     }
-
 
     componentDidMount() {
 
-            const apiResult = this.props.data;
-
-            var cnaResult = apiResult[1];
-            var mutationResult = apiResult[0];
-
             // --- construct params ---
-            let sampleId = _.uniq(_.pluck(cnaResult, 'sample'))[0];
-            var config = genomicOverviewHelper.GenomicOverviewConfig(2, 1000);
+            let sampleId = _.uniq(_.pluck(this.props.cnaSegments, 'sample'))[0];
+            var config = tracksHelper.GenomicOverviewConfig(2, 1000);
             // --- end of params ---
 
             // --- raphael config ---
-            var paper = genomicOverviewHelper.createRaphaelCanvas('tracks_div', config);
+            var paper = tracksHelper.createRaphaelCanvas('tracks_div', config);
             // --- end of raphael config ---
             
             // --- chromosome chart ---
-            var chmInfo = genomicOverviewHelper.getChmInfo();
-            genomicOverviewHelper.plotChromosomes(paper,config,chmInfo);
+            var chmInfo = tracksHelper.getChmInfo();
+            tracksHelper.plotChromosomes(paper,config,chmInfo);
             // --- end of chromosome chart ---
 
             // --- CNA bar chart ---
             let cnaRaphaelData: any = {};
             cnaRaphaelData[sampleId] = [];
-            _.each(cnaResult, function(_dataObj: any) {
+            _.each(this.props.cnaSegments, function(_dataObj: any) {
                 var _tmp: Array<any> = [];
                 _tmp.push(_dataObj.sample);
                 _tmp.push(_dataObj.chr);
@@ -48,11 +43,12 @@ export default class Tracks extends React.Component<{}, {}> {
                 _tmp.push(_dataObj.value);
                 cnaRaphaelData[sampleId].push(_tmp);
             });
-            genomicOverviewHelper.plotCnSegs(paper, config, chmInfo, 0, cnaRaphaelData[sampleId], 1, 3, 2, 5, sampleId);
+            tracksHelper.plotCnSegs(paper, config, chmInfo, 0, cnaRaphaelData[sampleId], 1, 3, 2, 5, sampleId);
             // --- end of CNA bar chart ---
 
             // --- mutation events bar chart ---
-            genomicOverviewHelper.plotMuts(paper, config, chmInfo, 1, mutationResult, sampleId);
+            //let mutationResultTS: Array<Mutation> = _.map(mutationResult, function(_mutObj: Mutation) {});
+            tracksHelper.plotMuts(paper, config, chmInfo, 1, this.props.mutations, sampleId);
             // --- end of mutation events bar chart ---
 
     }
