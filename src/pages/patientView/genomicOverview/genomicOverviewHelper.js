@@ -197,7 +197,7 @@ export function plotMuts(p,config,chmInfo,row,mutations,caseId) {
         var mutObj = mutObjs[i];
         var chm = translateChm(mutObj.gene.chromosome);
         if (chm != null||chm <= chmInfo.hg19.length) {
-            var x = Math.round(chmInfo.loc2xpixil(chm, (mutObj.startPos + mutObj.endPos)/2, config));
+            var x = Math.round(chmInfo.loc2xpixil(chm, (mutObj.startPosition + mutObj.endPosition)/2, config));
             var xBin = x - x%config.pixelsPerBinMut;
             if (pixelMap[xBin] == null) pixelMap[xBin] = [];
             pixelMap[xBin].push("mutation event id here"); //TODO: needed for filter mutation table under mutation tab (patient view)

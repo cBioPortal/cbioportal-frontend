@@ -6,13 +6,13 @@ from "superagent";
 
 type CallbackHandler = (err: any, res ? : request.Response) => void;
 export type ClinicalData = {
-    'attrId': string
+    'clinicalAttribute': ClinicalAttribute
 
-        'attrValue': string
+        'clinicalAttributeId': string
 
-        'clinicalAttribute': ClinicalAttribute
+        'entityId': string
 
-        'id': string
+        'value': string
 
 };
 export type SampleIdentifier = {
@@ -22,101 +22,45 @@ export type SampleIdentifier = {
 
 };
 export type Sample = {
-    'patient': Patient
+    'cancerTypeId': string
 
         'patientId': string
 
+        'sampleId': string
+
         'sampleType': "Primary Solid Tumor" | "Recurrent Solid Tumor" | "Primary Blood Tumor" | "Recurrent Blood Tumor" | "Metastatic" | "Blood Derived Normal" | "Solid Tissues Normal"
 
-        'stableId': string
-
-        'typeOfCancerId': string
+        'studyId': string
 
 };
 export type GeneticProfile = {
-    'cancerStudy': CancerStudy
-
-        'cancerStudyId': string
-
-        'datatype': string
+    'datatype': string
 
         'description': string
 
         'geneticAlterationType': "MUTATION_EXTENDED" | "FUSION" | "STRUCTURAL_VARIANT" | "COPY_NUMBER_ALTERATION" | "MICRO_RNA_EXPRESSION" | "MRNA_EXPRESSION" | "MRNA_EXPRESSION_NORMALS" | "RNA_EXPRESSION" | "METHYLATION" | "METHYLATION_BINARY" | "PHOSPHORYLATION" | "PROTEIN_LEVEL" | "PROTEIN_ARRAY_PROTEIN_LEVEL" | "PROTEIN_ARRAY_PHOSPHORYLATION"
 
+        'geneticProfileId': string
+
         'name': string
 
         'showProfileInAnalysisTab': boolean
 
-        'stableId': string
+        'study': CancerStudy
+
+        'studyId': string
 
 };
 export type Patient = {
-    'cancerStudy': CancerStudy
+    'patientId': string
 
-        'cancerStudyId': string
-
-        'stableId': string
-
-};
-export type MutationEvent = {
-    'canonicalTranscript': boolean
-
-        'chr': string
-
-        'dbSnpRs': string
-
-        'dbSnpValStatus': string
-
-        'endPosition': number
-
-        'entrezGeneId': number
-
-        'fisValue': number
-
-        'functionalImpactScore': string
-
-        'keyword': string
-
-        'linkMsa': string
-
-        'linkPdb': string
-
-        'linkXvar': string
-
-        'mutationType': string
-
-        'ncbiBuild': string
-
-        'oncotatorCodonChange': string
-
-        'oncotatorDbsnpRs': string
-
-        'oncotatorProteinPosEnd': number
-
-        'oncotatorProteinPosStart': number
-
-        'oncotatorRefseqMrnaId': string
-
-        'oncotatorUniprotAccession': string
-
-        'oncotatorUniprotEntryName': string
-
-        'proteinChange': string
-
-        'referenceAllele': string
-
-        'startPosition': number
-
-        'strand': string
-
-        'tumorSeqAllele': string
-
-        'variantType': string
+        'studyId': string
 
 };
 export type TypeOfCancer = {
-    'clinicalTrialKeywords': string
+    'cancerTypeId': string
+
+        'clinicalTrialKeywords': string
 
         'dedicatedColor': string
 
@@ -126,11 +70,9 @@ export type TypeOfCancer = {
 
         'shortName': string
 
-        'typeOfCancerId': string
-
 };
 export type ClinicalDataIdentifier = {
-    'id': string
+    'entityId': string
 
         'studyId': string
 
@@ -174,7 +116,9 @@ export type Gene = {
 export type CancerStudy = {
     'allSampleCount': number
 
-        'cancerStudyIdentifier': string
+        'cancerType': TypeOfCancer
+
+        'cancerTypeId': string
 
         'citation': string
 
@@ -210,9 +154,7 @@ export type CancerStudy = {
 
         'status': number
 
-        'typeOfCancer': TypeOfCancer
-
-        'typeOfCancerId': string
+        'studyId': string
 
 };
 export type GeneticData = {
@@ -234,69 +176,55 @@ export type GeneticData = {
 export type Mutation = {
     'aminoAcidChange': string
 
-        'bamFile': string
-
         'center': string
+
+        'endPosition': number
 
         'entrezGeneId': number
 
         'gene': Gene
 
-        'geneticProfile': GeneticProfile
-
         'geneticProfileId': string
 
-        'matchNormSeqAllele1': string
-
-        'matchNormSeqAllele2': string
-
-        'matchNormValidationAllele1': string
-
-        'matchNormValidationAllele2': string
-
-        'matchedNormSampleBarcode': string
-
-        'mutationEvent': MutationEvent
+        'keyword': string
 
         'mutationStatus': string
+
+        'mutationType': string
+
+        'ncbiBuild': string
 
         'normalAltCount': number
 
         'normalRefCount': number
 
-        'sample': Sample
+        'proteinChange': string
+
+        'proteinPosEnd': number
+
+        'proteinPosStart': number
+
+        'referenceAllele': string
+
+        'refseqMrnaId': string
 
         'sampleId': string
 
-        'score': string
-
-        'sequenceSource': string
-
-        'sequencer': string
-
-        'sequencingPhase': string
+        'startPosition': number
 
         'tumorAltCount': number
 
         'tumorRefCount': number
 
-        'tumorSeqAllele1': string
-
-        'tumorSeqAllele2': string
-
-        'tumorValidationAllele1': string
-
-        'tumorValidationAllele2': string
-
-        'validationMethod': string
-
         'validationStatus': string
 
-        'verificationStatus': string
+        'variantAllele': string
+
+        'variantType': string
 
 };
 export type ClinicalAttribute = {
-    'attrId': string
+    'clinicalAttributeId': string
 
         'datatype': string
 
@@ -310,17 +238,15 @@ export type ClinicalAttribute = {
 
 };
 export type SampleList = {
-    'cancerStudy': CancerStudy
-
-        'cancerStudyId': string
-
-        'category': string
+    'category': string
 
         'description': string
 
         'name': string
 
         'sampleListId': string
+
+        'studyId': string
 
 };
 
@@ -382,7 +308,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "typeOfCancerId" | "name" | "clinicalTrialKeywords" | "dedicatedColor" | "shortName" | "parent",
+        'sortBy' ? : "cancerTypeId" | "name" | "clinicalTrialKeywords" | "dedicatedColor" | "shortName" | "parent",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -432,7 +358,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "typeOfCancerId" | "name" | "clinicalTrialKeywords" | "dedicatedColor" | "shortName" | "parent",
+            'sortBy' ? : "cancerTypeId" | "name" | "clinicalTrialKeywords" | "dedicatedColor" | "shortName" | "parent",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
                 $domain ? : string
@@ -809,7 +735,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "entrezGeneId" | "hugoGeneSymbol" | "type" | "cytoband" | "length" | "chromosome",
+        'sortBy' ? : "entrezGeneId" | "hugoGeneSymbol" | "type" | "cytoband" | "length",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -859,7 +785,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "entrezGeneId" | "hugoGeneSymbol" | "type" | "cytoband" | "length" | "chromosome",
+            'sortBy' ? : "entrezGeneId" | "hugoGeneSymbol" | "type" | "cytoband" | "length",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
                 $domain ? : string
@@ -1216,7 +1142,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "stableId" | "geneticAlterationType" | "datatype" | "name" | "description" | "showProfileInAnalysisTab",
+        'sortBy' ? : "geneticProfileId" | "geneticAlterationType" | "datatype" | "name" | "description" | "showProfileInAnalysisTab",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -1266,7 +1192,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "stableId" | "geneticAlterationType" | "datatype" | "name" | "description" | "showProfileInAnalysisTab",
+            'sortBy' ? : "geneticProfileId" | "geneticAlterationType" | "datatype" | "name" | "description" | "showProfileInAnalysisTab",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
                 $domain ? : string
@@ -1477,15 +1403,24 @@ export default class CBioPortalAPI {
             });
         };
 
-    queryMutationsByExampleUsingPOSTURL(parameters: {
+    getMutationsInGeneticProfileUsingGETURL(parameters: {
+        'geneticProfileId': string,
+        'sampleId' ? : string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'exampleMutation': Mutation,
+        'sortBy' ? : "entrezGeneId" | "center" | "mutationStatus" | "validationStatus" | "tumorAltCount" | "tumorRefCount" | "normalAltCount" | "normalRefCount" | "aminoAcidChange" | "startPosition" | "endPosition" | "referenceAllele" | "variantAllele" | "proteinChange" | "mutationType" | "ncbiBuild" | "variantType" | "refseqMrnaId" | "proteinPosStart" | "proteinPosEnd" | "keyword",
+        'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/mutations/query';
+        let path = '/genetic-profiles/{geneticProfileId}/mutations';
+
+        path = path.replace('{geneticProfileId}', parameters['geneticProfileId']);
+        if (parameters['sampleId'] !== undefined) {
+            queryParameters['sampleId'] = parameters['sampleId'];
+        }
+
         if (parameters['projection'] !== undefined) {
             queryParameters['projection'] = parameters['projection'];
         }
@@ -1496,6 +1431,14 @@ export default class CBioPortalAPI {
 
         if (parameters['pageNumber'] !== undefined) {
             queryParameters['pageNumber'] = parameters['pageNumber'];
+        }
+
+        if (parameters['sortBy'] !== undefined) {
+            queryParameters['sortBy'] = parameters['sortBy'];
+        }
+
+        if (parameters['direction'] !== undefined) {
+            queryParameters['direction'] = parameters['direction'];
         }
 
         if (parameters.$queryParameters) {
@@ -1509,34 +1452,51 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Query mutations by example
+     * Get mutations in a genetic profile
      * @method
-     * @name CBioPortalAPI#queryMutationsByExampleUsingPOST
-     * @param {string} projection - projection
-     * @param {integer} pageSize - pageSize
-     * @param {integer} pageNumber - pageNumber
-     * @param {} exampleMutation - exampleMutation
+     * @name CBioPortalAPI#getMutationsInGeneticProfileUsingGET
+     * @param {string} geneticProfileId - Genetic Profile ID e.g. acc_tcga_mutations
+     * @param {string} sampleId - Sample ID e.g. TCGA-OR-A5J2-01
+     * @param {string} projection - Level of detail of the response
+     * @param {integer} pageSize - Page size of the result list
+     * @param {integer} pageNumber - Page number of the result list
+     * @param {string} sortBy - Name of the property that the result list is sorted by
+     * @param {string} direction - Direction of the sort
      */
-    queryMutationsByExampleUsingPOST(parameters: {
+    getMutationsInGeneticProfileUsingGET(parameters: {
+            'geneticProfileId': string,
+            'sampleId' ? : string,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'exampleMutation': Mutation,
+            'sortBy' ? : "entrezGeneId" | "center" | "mutationStatus" | "validationStatus" | "tumorAltCount" | "tumorRefCount" | "normalAltCount" | "normalRefCount" | "aminoAcidChange" | "startPosition" | "endPosition" | "referenceAllele" | "variantAllele" | "proteinChange" | "mutationType" | "ncbiBuild" | "variantType" | "refseqMrnaId" | "proteinPosStart" | "proteinPosEnd" | "keyword",
+            'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
-                $domain ? : string
+            $domain ? : string
         }): Promise < Array < Mutation >
         > {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
             const request = this.request;
-            let path = '/mutations/query';
+            let path = '/genetic-profiles/{geneticProfileId}/mutations';
             let body: any;
             let queryParameters: any = {};
             let headers: any = {};
             let form: any = {};
             return new Promise(function(resolve, reject) {
-                headers['Accept'] = '*/*';
+                headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
+
+                path = path.replace('{geneticProfileId}', parameters['geneticProfileId']);
+
+                if (parameters['geneticProfileId'] === undefined) {
+                    reject(new Error('Missing required  parameter: geneticProfileId'));
+                    return;
+                }
+
+                if (parameters['sampleId'] !== undefined) {
+                    queryParameters['sampleId'] = parameters['sampleId'];
+                }
 
                 if (parameters['projection'] !== undefined) {
                     queryParameters['projection'] = parameters['projection'];
@@ -1550,13 +1510,147 @@ export default class CBioPortalAPI {
                     queryParameters['pageNumber'] = parameters['pageNumber'];
                 }
 
-                if (parameters['exampleMutation'] !== undefined) {
-                    body = parameters['exampleMutation'];
+                if (parameters['sortBy'] !== undefined) {
+                    queryParameters['sortBy'] = parameters['sortBy'];
                 }
 
-                if (parameters['exampleMutation'] === undefined) {
-                    reject(new Error('Missing required  parameter: exampleMutation'));
+                if (parameters['direction'] !== undefined) {
+                    queryParameters['direction'] = parameters['direction'];
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    fetchMutationsInGeneticProfileUsingPOSTURL(parameters: {
+        'geneticProfileId': string,
+        'sampleIds': Array < string > | string
+
+        ,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'pageSize' ? : number,
+        'pageNumber' ? : number,
+        'sortBy' ? : "entrezGeneId" | "center" | "mutationStatus" | "validationStatus" | "tumorAltCount" | "tumorRefCount" | "normalAltCount" | "normalRefCount" | "aminoAcidChange" | "startPosition" | "endPosition" | "referenceAllele" | "variantAllele" | "proteinChange" | "mutationType" | "ncbiBuild" | "variantType" | "refseqMrnaId" | "proteinPosStart" | "proteinPosEnd" | "keyword",
+        'direction' ? : "ASC" | "DESC",
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/genetic-profiles/{geneticProfileId}/mutations/fetch';
+
+        path = path.replace('{geneticProfileId}', parameters['geneticProfileId']);
+
+        if (parameters['projection'] !== undefined) {
+            queryParameters['projection'] = parameters['projection'];
+        }
+
+        if (parameters['pageSize'] !== undefined) {
+            queryParameters['pageSize'] = parameters['pageSize'];
+        }
+
+        if (parameters['pageNumber'] !== undefined) {
+            queryParameters['pageNumber'] = parameters['pageNumber'];
+        }
+
+        if (parameters['sortBy'] !== undefined) {
+            queryParameters['sortBy'] = parameters['sortBy'];
+        }
+
+        if (parameters['direction'] !== undefined) {
+            queryParameters['direction'] = parameters['direction'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch mutations in a genetic profile by sample ID
+     * @method
+     * @name CBioPortalAPI#fetchMutationsInGeneticProfileUsingPOST
+     * @param {string} geneticProfileId - Genetic Profile ID e.g. acc_tcga_mutations
+     * @param {} sampleIds - List of Sample IDs
+     * @param {string} projection - Level of detail of the response
+     * @param {integer} pageSize - Page size of the result list
+     * @param {integer} pageNumber - Page number of the result list
+     * @param {string} sortBy - Name of the property that the result list is sorted by
+     * @param {string} direction - Direction of the sort
+     */
+    fetchMutationsInGeneticProfileUsingPOST(parameters: {
+            'geneticProfileId': string,
+            'sampleIds': Array < string > | string
+
+            ,
+            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'pageSize' ? : number,
+            'pageNumber' ? : number,
+            'sortBy' ? : "entrezGeneId" | "center" | "mutationStatus" | "validationStatus" | "tumorAltCount" | "tumorRefCount" | "normalAltCount" | "normalRefCount" | "aminoAcidChange" | "startPosition" | "endPosition" | "referenceAllele" | "variantAllele" | "proteinChange" | "mutationType" | "ncbiBuild" | "variantType" | "refseqMrnaId" | "proteinPosStart" | "proteinPosEnd" | "keyword",
+            'direction' ? : "ASC" | "DESC",
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < Mutation >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/genetic-profiles/{geneticProfileId}/mutations/fetch';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                path = path.replace('{geneticProfileId}', parameters['geneticProfileId']);
+
+                if (parameters['geneticProfileId'] === undefined) {
+                    reject(new Error('Missing required  parameter: geneticProfileId'));
                     return;
+                }
+
+                if (parameters['sampleIds'] !== undefined) {
+                    body = parameters['sampleIds'];
+                }
+
+                if (parameters['sampleIds'] === undefined) {
+                    reject(new Error('Missing required  parameter: sampleIds'));
+                    return;
+                }
+
+                if (parameters['projection'] !== undefined) {
+                    queryParameters['projection'] = parameters['projection'];
+                }
+
+                if (parameters['pageSize'] !== undefined) {
+                    queryParameters['pageSize'] = parameters['pageSize'];
+                }
+
+                if (parameters['pageNumber'] !== undefined) {
+                    queryParameters['pageNumber'] = parameters['pageNumber'];
+                }
+
+                if (parameters['sortBy'] !== undefined) {
+                    queryParameters['sortBy'] = parameters['sortBy'];
+                }
+
+                if (parameters['direction'] !== undefined) {
+                    queryParameters['direction'] = parameters['direction'];
                 }
 
                 if (parameters.$queryParameters) {
@@ -1655,7 +1749,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "caseListId" | "category" | "cancerStudyId" | "name" | "description",
+        'sortBy' ? : "sampleListId" | "category" | "cancerStudyId" | "name" | "description",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -1705,7 +1799,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "caseListId" | "category" | "cancerStudyId" | "name" | "description",
+            'sortBy' ? : "sampleListId" | "category" | "cancerStudyId" | "name" | "description",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
                 $domain ? : string
@@ -1966,7 +2060,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "cancerStudyIdentifier" | "typeOfCancerId" | "name" | "shortName" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
+        'sortBy' ? : "cancerStudyId" | "cancerTypeId" | "name" | "shortName" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -2016,7 +2110,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "cancerStudyIdentifier" | "typeOfCancerId" | "name" | "shortName" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
+            'sortBy' ? : "cancerStudyId" | "cancerTypeId" | "name" | "shortName" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
                 $domain ? : string
@@ -2138,7 +2232,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "attrId" | "attrValue",
+        'sortBy' ? : "clinicalAttributeId" | "value",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -2204,7 +2298,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "attrId" | "attrValue",
+            'sortBy' ? : "clinicalAttributeId" | "value",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
             $domain ? : string
@@ -2276,7 +2370,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "stableId" | "geneticAlterationType" | "datatype" | "name" | "description" | "showProfileInAnalysisTab",
+        'sortBy' ? : "geneticProfileId" | "geneticAlterationType" | "datatype" | "name" | "description" | "showProfileInAnalysisTab",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -2330,7 +2424,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "stableId" | "geneticAlterationType" | "datatype" | "name" | "description" | "showProfileInAnalysisTab",
+            'sortBy' ? : "geneticProfileId" | "geneticAlterationType" | "datatype" | "name" | "description" | "showProfileInAnalysisTab",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
             $domain ? : string
@@ -2389,108 +2483,11 @@ export default class CBioPortalAPI {
             });
         };
 
-    getAllMutationsInStudyUsingGETURL(parameters: {
-        'studyId': string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'pageSize' ? : number,
-        'pageNumber' ? : number,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/studies/{studyId}/mutations';
-
-        path = path.replace('{studyId}', parameters['studyId']);
-        if (parameters['projection'] !== undefined) {
-            queryParameters['projection'] = parameters['projection'];
-        }
-
-        if (parameters['pageSize'] !== undefined) {
-            queryParameters['pageSize'] = parameters['pageSize'];
-        }
-
-        if (parameters['pageNumber'] !== undefined) {
-            queryParameters['pageNumber'] = parameters['pageNumber'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Get all mutations in a study
-     * @method
-     * @name CBioPortalAPI#getAllMutationsInStudyUsingGET
-     * @param {string} studyId - studyId
-     * @param {string} projection - projection
-     * @param {integer} pageSize - pageSize
-     * @param {integer} pageNumber - pageNumber
-     */
-    getAllMutationsInStudyUsingGET(parameters: {
-            'studyId': string,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            'pageSize' ? : number,
-            'pageNumber' ? : number,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < Mutation >
-        > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/studies/{studyId}/mutations';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = '*/*';
-                headers['Content-Type'] = 'application/json';
-
-                path = path.replace('{studyId}', parameters['studyId']);
-
-                if (parameters['studyId'] === undefined) {
-                    reject(new Error('Missing required  parameter: studyId'));
-                    return;
-                }
-
-                if (parameters['projection'] !== undefined) {
-                    queryParameters['projection'] = parameters['projection'];
-                }
-
-                if (parameters['pageSize'] !== undefined) {
-                    queryParameters['pageSize'] = parameters['pageSize'];
-                }
-
-                if (parameters['pageNumber'] !== undefined) {
-                    queryParameters['pageNumber'] = parameters['pageNumber'];
-                }
-
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
-
-                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-            }).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-
     getAllPatientsInStudyUsingGETURL(parameters: {
         'studyId': string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "stableId" | "cancerStudyIdentifier",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -2510,9 +2507,7 @@ export default class CBioPortalAPI {
             queryParameters['pageNumber'] = parameters['pageNumber'];
         }
 
-        if (parameters['sortBy'] !== undefined) {
-            queryParameters['sortBy'] = parameters['sortBy'];
-        }
+        queryParameters['sortBy'] = 'patientId';
 
         if (parameters['direction'] !== undefined) {
             queryParameters['direction'] = parameters['direction'];
@@ -2529,22 +2524,21 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Get all patients in a study
-     * @method
-     * @name CBioPortalAPI#getAllPatientsInStudyUsingGET
-     * @param {string} studyId - Study ID e.g. acc_tcga
-     * @param {string} projection - Level of detail of the response
-     * @param {integer} pageSize - Page size of the result list
-     * @param {integer} pageNumber - Page number of the result list
-     * @param {string} sortBy - Name of the property that the result list is sorted by
-     * @param {string} direction - Direction of the sort
-     */
+    * Get all patients in a study
+    * @method
+    * @name CBioPortalAPI#getAllPatientsInStudyUsingGET
+         * @param {string} studyId - Study ID e.g. acc_tcga
+         * @param {string} projection - Level of detail of the response
+         * @param {integer} pageSize - Page size of the result list
+         * @param {integer} pageNumber - Page number of the result list
+        
+         * @param {string} direction - Direction of the sort
+    */
     getAllPatientsInStudyUsingGET(parameters: {
             'studyId': string,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "stableId" | "cancerStudyIdentifier",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
             $domain ? : string
@@ -2581,9 +2575,7 @@ export default class CBioPortalAPI {
                     queryParameters['pageNumber'] = parameters['pageNumber'];
                 }
 
-                if (parameters['sortBy'] !== undefined) {
-                    queryParameters['sortBy'] = parameters['sortBy'];
-                }
+                queryParameters['sortBy'] = 'patientId';
 
                 if (parameters['direction'] !== undefined) {
                     queryParameters['direction'] = parameters['direction'];
@@ -2685,7 +2677,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "attrId" | "attrValue",
+        'sortBy' ? : "clinicalAttributeId" | "value",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -2749,7 +2741,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "attrId" | "attrValue",
+            'sortBy' ? : "clinicalAttributeId" | "value",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
             $domain ? : string
@@ -2943,121 +2935,13 @@ export default class CBioPortalAPI {
             });
         };
 
-    getAllMutationsInPatientInStudyUsingGETURL(parameters: {
-        'studyId': string,
-        'patientId': string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'pageSize' ? : number,
-        'pageNumber' ? : number,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/studies/{studyId}/patients/{patientId}/mutations';
-
-        path = path.replace('{studyId}', parameters['studyId']);
-
-        path = path.replace('{patientId}', parameters['patientId']);
-        if (parameters['projection'] !== undefined) {
-            queryParameters['projection'] = parameters['projection'];
-        }
-
-        if (parameters['pageSize'] !== undefined) {
-            queryParameters['pageSize'] = parameters['pageSize'];
-        }
-
-        if (parameters['pageNumber'] !== undefined) {
-            queryParameters['pageNumber'] = parameters['pageNumber'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Get all mutations in a patient in a study
-     * @method
-     * @name CBioPortalAPI#getAllMutationsInPatientInStudyUsingGET
-     * @param {string} studyId - studyId
-     * @param {string} patientId - patientId
-     * @param {string} projection - projection
-     * @param {integer} pageSize - pageSize
-     * @param {integer} pageNumber - pageNumber
-     */
-    getAllMutationsInPatientInStudyUsingGET(parameters: {
-            'studyId': string,
-            'patientId': string,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            'pageSize' ? : number,
-            'pageNumber' ? : number,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < Mutation >
-        > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/studies/{studyId}/patients/{patientId}/mutations';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = '*/*';
-                headers['Content-Type'] = 'application/json';
-
-                path = path.replace('{studyId}', parameters['studyId']);
-
-                if (parameters['studyId'] === undefined) {
-                    reject(new Error('Missing required  parameter: studyId'));
-                    return;
-                }
-
-                path = path.replace('{patientId}', parameters['patientId']);
-
-                if (parameters['patientId'] === undefined) {
-                    reject(new Error('Missing required  parameter: patientId'));
-                    return;
-                }
-
-                if (parameters['projection'] !== undefined) {
-                    queryParameters['projection'] = parameters['projection'];
-                }
-
-                if (parameters['pageSize'] !== undefined) {
-                    queryParameters['pageSize'] = parameters['pageSize'];
-                }
-
-                if (parameters['pageNumber'] !== undefined) {
-                    queryParameters['pageNumber'] = parameters['pageNumber'];
-                }
-
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
-
-                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-            }).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-
     getAllSamplesOfPatientInStudyUsingGETURL(parameters: {
         'studyId': string,
         'patientId': string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "stableId" | "sampleType" | "typeOfCancerId",
+        'sortBy' ? : "sampleId" | "sampleType" | "cancerTypeId",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -3115,7 +2999,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "stableId" | "sampleType" | "typeOfCancerId",
+            'sortBy' ? : "sampleId" | "sampleType" | "cancerTypeId",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
             $domain ? : string
@@ -3186,7 +3070,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "caseListId" | "category" | "cancerStudyId" | "name" | "description",
+        'sortBy' ? : "sampleListId" | "category" | "cancerStudyId" | "name" | "description",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -3240,7 +3124,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "caseListId" | "category" | "cancerStudyId" | "name" | "description",
+            'sortBy' ? : "sampleListId" | "category" | "cancerStudyId" | "name" | "description",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
             $domain ? : string
@@ -3304,7 +3188,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "stableId" | "sampleType" | "typeOfCancerId",
+        'sortBy' ? : "sampleId" | "sampleType" | "cancerTypeId",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -3358,7 +3242,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "stableId" | "sampleType" | "typeOfCancerId",
+            'sortBy' ? : "sampleId" | "sampleType" | "cancerTypeId",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
             $domain ? : string
@@ -3499,7 +3383,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "attrId" | "attrValue",
+        'sortBy' ? : "clinicalAttributeId" | "value",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -3563,7 +3447,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "attrId" | "attrValue",
+            'sortBy' ? : "clinicalAttributeId" | "value",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
             $domain ? : string
@@ -3836,114 +3720,6 @@ export default class CBioPortalAPI {
 
                 if (parameters['geneticProfileId'] === undefined) {
                     reject(new Error('Missing required  parameter: geneticProfileId'));
-                    return;
-                }
-
-                if (parameters['projection'] !== undefined) {
-                    queryParameters['projection'] = parameters['projection'];
-                }
-
-                if (parameters['pageSize'] !== undefined) {
-                    queryParameters['pageSize'] = parameters['pageSize'];
-                }
-
-                if (parameters['pageNumber'] !== undefined) {
-                    queryParameters['pageNumber'] = parameters['pageNumber'];
-                }
-
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
-
-                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-            }).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-
-    getAllMutationsInSampleInStudyUsingGETURL(parameters: {
-        'studyId': string,
-        'sampleId': string,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'pageSize' ? : number,
-        'pageNumber' ? : number,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/studies/{studyId}/samples/{sampleId}/mutations';
-
-        path = path.replace('{studyId}', parameters['studyId']);
-
-        path = path.replace('{sampleId}', parameters['sampleId']);
-        if (parameters['projection'] !== undefined) {
-            queryParameters['projection'] = parameters['projection'];
-        }
-
-        if (parameters['pageSize'] !== undefined) {
-            queryParameters['pageSize'] = parameters['pageSize'];
-        }
-
-        if (parameters['pageNumber'] !== undefined) {
-            queryParameters['pageNumber'] = parameters['pageNumber'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Get all mutations in a sample in a study
-     * @method
-     * @name CBioPortalAPI#getAllMutationsInSampleInStudyUsingGET
-     * @param {string} studyId - studyId
-     * @param {string} sampleId - sampleId
-     * @param {string} projection - projection
-     * @param {integer} pageSize - pageSize
-     * @param {integer} pageNumber - pageNumber
-     */
-    getAllMutationsInSampleInStudyUsingGET(parameters: {
-            'studyId': string,
-            'sampleId': string,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            'pageSize' ? : number,
-            'pageNumber' ? : number,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < Mutation >
-        > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/studies/{studyId}/samples/{sampleId}/mutations';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = '*/*';
-                headers['Content-Type'] = 'application/json';
-
-                path = path.replace('{studyId}', parameters['studyId']);
-
-                if (parameters['studyId'] === undefined) {
-                    reject(new Error('Missing required  parameter: studyId'));
-                    return;
-                }
-
-                path = path.replace('{sampleId}', parameters['sampleId']);
-
-                if (parameters['sampleId'] === undefined) {
-                    reject(new Error('Missing required  parameter: sampleId'));
                     return;
                 }
 
