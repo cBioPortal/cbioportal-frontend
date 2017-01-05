@@ -42,7 +42,7 @@ export default class GeneColumnFormatter
         }
         else if (data.rowData)
         {
-            const rowDataArr = [].concat(data.rowData);
+            const rowDataArr:Array<any> = [].concat(data.rowData);
             value = (rowDataArr.length > 0 ? rowDataArr[0].gene : null);
         }
         else {

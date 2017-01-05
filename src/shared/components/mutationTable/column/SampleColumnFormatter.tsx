@@ -77,7 +77,7 @@ export default class SampleColumnFormatter
             value = data.columnData;
         }
         else if (data.rowData) {
-            const rowDataArr = [].concat(data.rowData);
+            const rowDataArr:Array<any> = [].concat(data.rowData);
             value = (rowDataArr.length > 0 ? rowDataArr[0].sampleId : null);
         }
         else {
