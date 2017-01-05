@@ -6,10 +6,13 @@ import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter"
 import TumorColumnFormatter from "./column/TumorColumnFormatter";
 import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
 import AlleleCountColumnFormatter from "./column/AlleleCountColumnFormatter";
+import { Mutation } from "../../../shared/api/CBioPortalAPI";
+
 
 export interface IMutationInformationContainerProps {
     // setTab?: (activeTab:number) => void;
     store?: any;
+    mutations: Array<Mutation>;
     sampleOrder:string[];
     sampleColors:{ [s:string]: string};
     sampleLabels:{ [s:string]: string};

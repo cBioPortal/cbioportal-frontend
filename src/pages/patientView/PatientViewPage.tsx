@@ -14,7 +14,8 @@ import Connector, { ClinicalInformationData } from "./Connector";
 import { ClinicalData } from "shared/api/CBioPortalAPI";
 import { ClinicalDataBySampleId } from "../../shared/api/api-types-extended";
 import { RequestStatus } from "../../shared/api/api-types-extended";
-
+import CBioPortalAPI from "../../shared/api/CBioPortalAPI";
+import renderIf from 'render-if';
 
 export interface IPatientViewPageProps {
     store?: RootState;
@@ -28,7 +29,7 @@ export interface IPatientViewPageProps {
 }
 
 @Connector.decorator
-export default class PatientViewPage extends React.Component<IPatientViewPageProps, {}> {
+export default class PatientViewPage extends React.Component<IPatientViewPageProps, { mutationData:any }> {
 
     // private static mapStateToProps(state: RootState): IPatientHeaderProps {
     //
@@ -39,6 +40,16 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     //         status: ci.status,
     //     };
     // }
+
+    constructor(){
+
+        super();
+
+        this.state = {
+            mutationData: undefined
+        };
+
+    }
 
     public componentDidMount() {
         // const PatientHeader = connect(PatientViewPage.mapStateToProps)(PatientHeaderUnconnected);
@@ -52,22 +63,34 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         // //         clinicalDiv
         // //     );
         // // } //
-        
 
-        let mutationDiv: Element | null = document.getElementById('mutations_div_prototype');
-        if (mutationDiv) {
-            ReactDOM.render(
-                <MutationInformationContainer
-                    sampleOrder={mockData.order}
-                    sampleLabels={mockData.labels}
-                    sampleColors={mockData.colors}
-                    sampleTumorType={mockData.tumorType}
-                    sampleCancerType={mockData.cancerType}
-                    {...{store: this.props.store}}
-                />,
-                mutationDiv
-            );
-        }
+        const tsClient = new CBioPortalAPI(`//${(window as any)['__API_ROOT__']}`);
+
+        tsClient.fetchMutationsInGeneticProfileUsingPOST({ geneticProfileId:'lgg_ucsf_2014_mutations', sampleIds:["P04_Pri", "P04_Rec1", "P04_Rec2", "P04_Rec3"] })
+            .then((mutationData)=>{
+
+                this.setState({ mutationData: mutationData });
+
+                // let mutationDiv: Element | null = document.getElementById('mutations_div_prototype');
+                // if (mutationDiv) {
+                //     ReactDOM.render(
+                //         <MutationInformationContainer
+                //             mutations={mutationData}
+                //             sampleOrder={mockData.order}
+                //             sampleLabels={mockData.labels}
+                //             sampleColors={mockData.colors}
+                //             sampleTumorType={mockData.tumorType}
+                //             sampleCancerType={mockData.cancerType}
+                //             {...{store: this.props.store}}
+                //         />,
+                //         mutationDiv
+                //     );
+                // }
+
+            });
+
+
+
         
         this.props.loadClinicalInformationTableData && this.props.loadClinicalInformationTableData();
 
@@ -91,7 +114,22 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     public render() {
         return (
             <div>
+
+                { renderIf(this.state.mutationData)(
+                    < MutationInformationContainer
+                        mutations={this.state.mutationData}
+                        sampleOrder={mockData.order}
+                        sampleLabels={mockData.labels}
+                        sampleColors={mockData.colors}
+                        sampleTumorType={mockData.tumorType}
+                        sampleCancerType={mockData.cancerType}
+                        {...{store: this.props.store}}
+                    />
+                )
+                }
+
                 <ClinicalInformationContainer status={ this.props.clinicalDataStatus } patient={this.props.patient} samples={this.props.samples} />
+
             </div>
         );
     }
