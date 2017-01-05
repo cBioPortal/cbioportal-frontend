@@ -4,6 +4,7 @@ import {IColumnFormatterData}
     from "../../../../shared/components/enhancedReactTable/IColumnFormatter";
 import {default as DefaultProteinChangeColumnFormatter} from
     "../../../../shared/components/mutationTable/column/ProteinChangeColumnFormatter";
+import MutationStatusColumnFormatter from "../../../../shared/components/mutationTable/column/MutationStatusColumnFormatter";
 import styles from './proteinChange.module.scss';
 
 /**
@@ -13,22 +14,6 @@ import styles from './proteinChange.module.scss';
  */
 export default class ProteinChangeColumnFormatter
 {
-    // TODO factor out this function into MutationStatusColumnFormatter class!
-    public static getMutationStatus(rowData:any)
-    {
-        let value;
-
-        if (rowData) {
-            let rowDataArray:Array<any> = [].concat(rowData);
-            value = rowDataArray[0].mutationStatus;
-        }
-        else {
-            value = null;
-        }
-
-        return value;
-    }
-
     public static renderFunction(data:IColumnFormatterData)
     {
         // use text as display value
@@ -37,7 +22,7 @@ export default class ProteinChangeColumnFormatter
         // use value as sort & filter value
         const value:string = DefaultProteinChangeColumnFormatter.getTextValue(data);
 
-        let mutationStatus:string|null = ProteinChangeColumnFormatter.getMutationStatus(data.rowData);
+        let mutationStatus:string|null = MutationStatusColumnFormatter.getDataFromRow(data.rowData);
 
         let content = <span className={styles.proteinChange}>{text}</span>;
 
