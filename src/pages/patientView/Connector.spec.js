@@ -21,7 +21,7 @@ describe('clinicalInformation connector', () => {
 
             Connector.mapDispatchToProps.loadClinicalInformationTableData()(dispatchStub);
             
-            assert.equal(dispatchStub.args[0][0].status, "fetching");
+            assert.equal(dispatchStub.args[0][0].status, "pending");
             assert.equal(dispatchStub.args[0][0].type, actionTypes.FETCH);
 
             __RewireAPI__.__ResetDependency__('getClinicalInformationData');
@@ -34,9 +34,9 @@ describe('clinicalInformation connector', () => {
         
         it('handles fetching by setting status to fetching', ()=>{
            
-            const newState = Connector.reducer(Immutable({}), { type: actionTypes.FETCH, status: 'fetching' })
+            const newState = Connector.reducer(Immutable({}), { type: actionTypes.FETCH, status: 'pending' })
             
-            assert.equal(newState.status, 'fetching');
+            assert.equal(newState.clinicalDataStatus, 'pending');
 
         });
 

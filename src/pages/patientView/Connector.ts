@@ -1,9 +1,9 @@
-import getClinicalInformationData from './getClinicalInformationData';
-import {RootState} from "../../../redux/rootReducer";
-import {ClinicalData} from "../../../shared/api/CBioPortalAPI";
-import {ClinicalDataBySampleId} from "./getClinicalInformationData";
-import {IDispatch, Connector} from "../../../shared/lib/ConnectorAPI";
-import {IClinicalInformationContainerProps} from "./ClinicalInformationContainer";
+import getClinicalInformationData from './clinicalInformation/getClinicalInformationData';
+import {RootState} from "../../redux/rootReducer";
+import {ClinicalData} from "../../shared/api/CBioPortalAPI";
+import { ClinicalDataBySampleId, RequestStatus } from "../../shared/api/api-types-extended";
+import {IDispatch, Connector} from "../../shared/lib/ConnectorAPI";
+import { IPatientViewPageProps } from "./PatientViewPage";
 
 declare type TODO = any;
 
@@ -12,15 +12,14 @@ const SET_TAB = 'clinicalInformation/setTab';
 export const actionTypes = {FETCH, SET_TAB};
 
 export type ActionTypes = (
-    {type: typeof FETCH, status: 'fetching'}
+    {type: typeof FETCH, status: 'pending'}
     | {type: typeof FETCH, status: 'error', error: Error}
-    | {type: typeof FETCH, status: 'success', payload: ClinicalInformationData}
+    | {type: typeof FETCH, status: 'complete', payload: ClinicalInformationData}
     | {type: typeof SET_TAB, activeTab: number }
 );
 
 export type ClinicalInformationData = {
-    status?: 'fetching' | 'complete' | 'error',
-    activeTab?: number,
+    clinicalDataStatus?: RequestStatus,
     patient?: {
         id: string,
         clinicalData: Array<ClinicalData>
@@ -29,11 +28,10 @@ export type ClinicalInformationData = {
     nodes?: TODO[]//PDXNode[],
 };
 
-export default new class ClinicalInformationConnector extends Connector<RootState, ClinicalInformationData, ActionTypes, IClinicalInformationContainerProps>
+export default new class ClinicalInformationConnector extends Connector<RootState, ClinicalInformationData, ActionTypes, IPatientViewPageProps>
 {
     initialState:ClinicalInformationData = {
-        status: 'fetching',
-        activeTab: 1,
+        clinicalDataStatus: 'pending'
     };
 
     mapDispatchToProps = {
@@ -42,7 +40,7 @@ export default new class ClinicalInformationConnector extends Connector<RootStat
                 (data) => {
                     dispatch({
                         type: FETCH,
-                        status: 'success',
+                        status: 'complete',
                         payload: data,
                     });
                 }
@@ -50,17 +48,16 @@ export default new class ClinicalInformationConnector extends Connector<RootStat
 
             dispatch({
                 type: FETCH,
-                status: 'fetching',
+                status: 'pending',
             });
         }
     };
 
-    mapStateToProps(state:RootState):IClinicalInformationContainerProps {
+    mapStateToProps(state:RootState):IPatientViewPageProps {
         return {
             samples: state.clinicalInformation.samples,
-            status: state.clinicalInformation.status,
-            patient: state.clinicalInformation.patient,
-            nodes: state.clinicalInformation.nodes,
+            clinicalDataStatus: state.clinicalInformation.clinicalDataStatus,
+            patient: state.clinicalInformation.patient
         };
     }
 
@@ -68,26 +65,23 @@ export default new class ClinicalInformationConnector extends Connector<RootStat
         switch (action.type) {
             case FETCH: {
                 switch (action.status) {
-                    case 'fetching':
-                        return this.mergeState(state, {'status': 'fetching'});
+                    case 'pending':
+                        return this.mergeState(state, {'clinicalDataStatus': 'pending'});
 
-                    case 'success':
+                    case 'complete':
                         return this.mergeState(state, {
-                            status: 'complete',
+                            clinicalDataStatus: 'complete',
                             patient: action.payload.patient,
                             nodes: action.payload.nodes,
                             samples: action.payload.samples
                         });
 
                     case 'error':
-                        return this.mergeState(state, {'status': 'error'});
+                        return this.mergeState(state, {'clinicalDataStatus': 'error'});
 
                     default:
                         return state;
                 }
-            }
-            case SET_TAB: {
-                return this.mergeState(state, {'activeTab': action.activeTab});
             }
             default: {
                 return state;

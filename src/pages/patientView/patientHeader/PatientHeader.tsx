@@ -4,15 +4,15 @@ import Spinner from 'react-spinkit';
 
 import ClinicalInformationPatientTable from '../clinicalInformation/ClinicalInformationPatientTable';
 import SampleInline from './SampleInline';
-import {ClinicalInformationData} from "../clinicalInformation/Connector";
-import {ClinicalDataBySampleId} from "../clinicalInformation/getClinicalInformationData";
+import {ClinicalInformationData} from "../Connector";
+import { ClinicalDataBySampleId } from "../../../shared/api/api-types-extended";
 
-export type IPatientHeaderProps = PartialPick<ClinicalInformationData, 'status' | 'patient' | 'samples'>;
+export type IPatientHeaderProps = PartialPick<ClinicalInformationData, 'clinicalDataStatus' | 'patient' | 'samples'>;
 
 export default class PatientHeader extends React.Component<IPatientHeaderProps, {}> {
     public render() {
-        switch (this.props.status) {
-            case 'fetching':
+        switch (this.props.clinicalDataStatus) {
+            case 'pending':
                 return <div><Spinner spinnerName='three-bounce' /></div>;
 
             case 'complete':

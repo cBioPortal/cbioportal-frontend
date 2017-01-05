@@ -1,8 +1,8 @@
 import * as SeamlessImmutable from 'seamless-immutable';
 import { routerReducer } from 'redux-seamless-immutable';
 import { combineReducers } from 'redux-seamless-immutable';
-import clinicalInformation from 'pages/patientView/clinicalInformation/Connector';
-import {ClinicalInformationData} from "../pages/patientView/clinicalInformation/Connector";
+import clinicalInformation from '../pages/patientView/Connector';
+import {ClinicalInformationData} from "../pages/patientView/Connector";
 import datasetDownloads from 'pages/datasetView/Connector';
 import {DatasetDownloads} from "../pages/datasetView/Connector";
 import {Connector} from "../shared/lib/ConnectorAPI";
