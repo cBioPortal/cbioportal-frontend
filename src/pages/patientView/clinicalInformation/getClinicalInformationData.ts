@@ -1,18 +1,13 @@
 import queryString from "query-string";
 import * as _ from 'lodash';
-import CBioPortalAPI from "shared/api/CBioPortalAPI";
+import CBioPortalAPI from "../../../shared/api/CBioPortalAPI";
+import { ClinicalDataBySampleId } from "../../../shared/api/api-types-extended";
 import {ClinicalData} from "../../../shared/api/CBioPortalAPI";
-import {ClinicalInformationData} from "./Connector";
+import {ClinicalInformationData} from "../Connector";
 //import { getTreeNodesFromClinicalData, PDXNode } from './PDXTree';
 //import sampleQuery from 'shared/api/mock/Samples_query_patient_P04.json';
 
-export type ClinicalDataBySampleId = {
-    id: string;
-    clinicalData: Array<ClinicalData>;
-};
-
-
-export function groupByEntityId(clinicalDataArray: Array<ClinicalData>){
+export function groupByEntityId(clinicalDataArray: Array<ClinicalData>) {
 
     return _.map(
         _.groupBy(clinicalDataArray, 'entityId'),
