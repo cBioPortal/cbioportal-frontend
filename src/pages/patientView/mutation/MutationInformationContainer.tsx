@@ -20,7 +20,11 @@ export interface IMutationInformationContainerProps {
     sampleCancerType:{ [s:string]: string};
 };
 
-export default class MutationInformationContainer extends React.Component<IMutationInformationContainerProps, {}> {
+export default class MutationInformationContainer extends React.Component<IMutationInformationContainerProps, {}>
+{
+    // a row in the table may represent more than one mutation...
+    private mergedMutations:Array<Array<Mutation>>;
+
     constructor() {
         super();
         this.mergedMutations = this.mergeMutations(mockData);
@@ -121,18 +125,20 @@ export default class MutationInformationContainer extends React.Component<IMutat
         );
     }
 
-    private mergeMutations(data) {
-        let idToMutations = {};
-        let mutationId;
+    private mergeMutations(data:Array<Mutation>):Array<Array<Mutation>> {
+        let idToMutations:{[key:string]: Array<Mutation>} = {};
+        let mutationId:string;
+
         for (let mutation of data) {
             mutationId = this.getMutationId(mutation);
             idToMutations[mutationId] = idToMutations[mutationId] || [];
             idToMutations[mutationId].push(mutation);
         }
+
         return Object.keys(idToMutations).map(id => idToMutations[id]);
     }
 
-    private getMutationId(m):string {
+    private getMutationId(m:Mutation):string {
         return [m.gene.chromosome, m.startPosition, m.endPosition, m.referenceAllele, m.variantAllele].join("_");
     }
 }

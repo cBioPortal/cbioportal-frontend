@@ -8,7 +8,6 @@ import SampleColumnFormatter from "./column/SampleColumnFormatter";
 import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter";
 import MutationAssessorColumnFormatter from "./column/MutationAssessorColumnFormatter";
 import MutationTypeColumnFormatter from "./column/MutationTypeColumnFormatter";
-import {IColumnFormatterData} from '../enhancedReactTable/IColumnFormatter';
 
 /**
  * @author Selcuk Onur Sumer
