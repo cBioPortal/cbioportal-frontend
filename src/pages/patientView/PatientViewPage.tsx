@@ -91,6 +91,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 let sampleIds: Array<string> = this.props.samples.map((item: ClinicalDataBySampleId)=>item.id);
 
                 tsClient.fetchMutationsInGeneticProfileUsingPOST({
+                    projection: "DETAILED",
                     geneticProfileId: this.geneticProfileId,
                     sampleIds: sampleIds
                 })
