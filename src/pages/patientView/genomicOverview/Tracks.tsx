@@ -2,7 +2,6 @@ import * as React from "react";
 import * as $ from 'jquery';
 import * as _ from 'underscore';
 import CBioPortalAPI from "shared/api/CBioPortalAPI";
-//import { GenomicOverviewConfig, createRaphaelCanvas, getChmInfo, plotChromosomes, plotCnSegs } from './genomicOverviewHelper';
 import * as genomicOverviewHelper from './genomicOverviewHelper'
 import {CopyNumberSegment} from "../../../shared/api/CBioPortalAPI";
 
@@ -19,16 +18,16 @@ export default class Tracks extends React.Component<{}, {}> {
 
             const apiResult = this.props.data;
 
-            var cnaResult = apiResult[0];
-            var mutationResult = apiResult[1];
+            var cnaResult = apiResult[1];
+            var mutationResult = apiResult[0];
 
             // --- construct params ---
-            let sampleId = _.uniq(_.pluck(cnaResult, 'sample'))[0]; //TODO: multiple samples
-            var config = genomicOverviewHelper.GenomicOverviewConfig(2, 1000); //TODO: nRows, width
+            let sampleId = _.uniq(_.pluck(cnaResult, 'sample'))[0];
+            var config = genomicOverviewHelper.GenomicOverviewConfig(2, 1000);
             // --- end of params ---
 
             // --- raphael config ---
-            var paper = genomicOverviewHelper.createRaphaelCanvas('genomic_overview_div', config);
+            var paper = genomicOverviewHelper.createRaphaelCanvas('tracks_div', config);
             // --- end of raphael config ---
             
             // --- chromosome chart ---
@@ -62,7 +61,7 @@ export default class Tracks extends React.Component<{}, {}> {
     public render() {
         return (
             <div className="genomicOverViewContainer" style={{ backgroundColor: '#F0FFFF'}}>
-                <div id="genomic_overview_div"></div>
+                <div id="tracks_div"></div>
             </div>
         );
     }
