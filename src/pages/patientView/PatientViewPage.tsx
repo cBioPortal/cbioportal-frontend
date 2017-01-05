@@ -2,6 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { connect } from 'react-redux';
 import { Component } from 'react';
+import * as _ from 'lodash';
 import ClinicalInformationContainer from './clinicalInformation/ClinicalInformationContainer';
 import MutationInformationContainer from './mutation/MutationInformationContainer';
 import PatientHeaderUnconnected from './patientHeader/PatientHeader';
@@ -16,17 +17,19 @@ import { ClinicalDataBySampleId } from "../../shared/api/api-types-extended";
 import { RequestStatus } from "../../shared/api/api-types-extended";
 import CBioPortalAPI from "../../shared/api/CBioPortalAPI";
 import renderIf from 'render-if';
+import queryString from "query-string";
 
 export interface IPatientViewPageProps {
     store?: RootState;
     samples?: Array<ClinicalDataBySampleId>;
-    loadClinicalInformationTableData?: () => void;
+    loadClinicalInformationTableData?: () => Promise;
     patient?: {
         id: string,
         clinicalData: Array<ClinicalData>
     };
     clinicalDataStatus?: RequestStatus;
 }
+
 
 @Connector.decorator
 export default class PatientViewPage extends React.Component<IPatientViewPageProps, { mutationData:any }> {
@@ -41,6 +44,12 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     //     };
     // }
 
+    private studyId:string;
+
+    private patientId:string;
+
+    private geneticProfileId:string;
+
     constructor(){
 
         super();
@@ -48,6 +57,12 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         this.state = {
             mutationData: undefined
         };
+
+        //TODO: this should be done by a module so that it can be reused on other pages
+        const qs = queryString.parse((window as any).location.search);
+        this.studyId = qs.cancer_study_id;
+        this.patientId = qs.case_id;
+        this.geneticProfileId = `${this.studyId}_mutations`;
 
     }
 
@@ -66,36 +81,20 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         const tsClient = new CBioPortalAPI(`//${(window as any)['__API_ROOT__']}`);
 
-        tsClient.fetchMutationsInGeneticProfileUsingPOST({ geneticProfileId:'lgg_ucsf_2014_mutations', sampleIds:["P04_Pri", "P04_Rec1", "P04_Rec2", "P04_Rec3"] })
-            .then((mutationData)=>{
-
-                this.setState({ mutationData: mutationData });
-
-                // let mutationDiv: Element | null = document.getElementById('mutations_div_prototype');
-                // if (mutationDiv) {
-                //     ReactDOM.render(
-                //         <MutationInformationContainer
-                //             mutations={mutationData}
-                //             sampleOrder={mockData.order}
-                //             sampleLabels={mockData.labels}
-                //             sampleColors={mockData.colors}
-                //             sampleTumorType={mockData.tumorType}
-                //             sampleCancerType={mockData.cancerType}
-                //             {...{store: this.props.store}}
-                //         />,
-                //         mutationDiv
-                //     );
-                // }
-
-            });
 
 
+        this.props.loadClinicalInformationTableData && this.props.loadClinicalInformationTableData().then(() => {
 
-        
-        this.props.loadClinicalInformationTableData && this.props.loadClinicalInformationTableData();
+            let sampleIds: String[] = _.map(this.props.samples, (item: ClinicalDataBySampleId)=>item.id)
+
+            tsClient.fetchMutationsInGeneticProfileUsingPOST({ geneticProfileId:this.geneticProfileId, sampleIds:sampleIds })
+                .then((mutationData) => {
+                    this.setState({ mutationData: mutationData });
+                });
+
+        });
 
         this.exposeComponentRenderersToParentScript();
-
 
     }
 
@@ -123,7 +122,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                         sampleColors={mockData.colors}
                         sampleTumorType={mockData.tumorType}
                         sampleCancerType={mockData.cancerType}
-                        {...{store: this.props.store}}
                     />
                 )
                 }
