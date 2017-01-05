@@ -26,13 +26,13 @@ export default class AlleleCountColumnFormatter
                 sampleToValue[rowDatum.sampleId] = rowDatum[dataField];
             }
 
-            const samplesWithValue = sampleOrder.filter(sampleId=>sampleToValue.hasOwnProperty(sampleId));
+            const samplesWithValue = sampleOrder.filter((sampleId:string) => sampleToValue.hasOwnProperty(sampleId));
 
             if (samplesWithValue.length === 1) {
                 ret = sampleToValue[samplesWithValue[0]];
             }
             else {
-                ret = samplesWithValue.map(sampleId=>(`${sampleId}: ${sampleToValue[sampleId]}`)).join("\n");
+                ret = samplesWithValue.map((sampleId:string) => (`${sampleId}: ${sampleToValue[sampleId]}`)).join("\n");
             }
         }
 
