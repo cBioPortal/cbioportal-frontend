@@ -9,11 +9,11 @@ export default class AlleleFreqColumnFormatter {
     static barWidth = 6;
     static barSpacing = 3;
     static maxBarHeight = 12;
-    static indexToBarLeft = (n) => n*(AlleleFreqColumnFormatter.barWidth + AlleleFreqColumnFormatter.barSpacing);
+    static indexToBarLeft = (n:number) => n*(AlleleFreqColumnFormatter.barWidth + AlleleFreqColumnFormatter.barSpacing);
 
     public static renderFunction(data:IColumnFormatterData, columnProps:any) {
-        const barX = columnProps.sampleOrder.reduce((map, sampleId, i) => {map[sampleId] = AlleleFreqColumnFormatter.indexToBarLeft(i); return map;}, {});
-        const sampleElements = data.rowData.map(function(mutation) {
+        const barX = columnProps.sampleOrder.reduce((map:{[s:string]:number}, sampleId:string, i:number) => {map[sampleId] = AlleleFreqColumnFormatter.indexToBarLeft(i); return map;}, {});
+        const sampleElements = data.rowData.map(function(mutation:any) {
             const altReads = mutation.tumorAltCount;
             const refReads = mutation.tumorRefCount;
             const freq = altReads / (altReads + refReads);
@@ -41,11 +41,11 @@ export default class AlleleFreqColumnFormatter {
                 sampleId, bar, circle, text, freq
             };
         });
-        const sampleToElements = sampleElements.reduce((map, elements) => {map[elements.sampleId] = elements; return map; }, {});
-        const elementsInSampleOrder = columnProps.sampleOrder.map(sampleId => sampleToElements[sampleId]).filter(x => !!x);
-        const tooltipLines = elementsInSampleOrder.map(elements=>(<span key={elements.sampleId}>{elements.circle}  {elements.text}<br/></span>));
-        const freqs = columnProps.sampleOrder.map(sampleId => (sampleToElements[sampleId] && sampleToElements[sampleId].freq) || undefined);
-        const bars = elementsInSampleOrder.map(elements=>elements.bar);
+        const sampleToElements = sampleElements.reduce((map:{[s:string]:any}, elements:any) => {map[elements.sampleId] = elements; return map; }, {});
+        const elementsInSampleOrder = columnProps.sampleOrder.map((sampleId:string) => sampleToElements[sampleId]).filter((x:any) => !!x);
+        const tooltipLines = elementsInSampleOrder.map((elements:any)=>(<span key={elements.sampleId}>{elements.circle}  {elements.text}<br/></span>));
+        const freqs = columnProps.sampleOrder.map((sampleId:string) => (sampleToElements[sampleId] && sampleToElements[sampleId].freq) || undefined);
+        const bars = elementsInSampleOrder.map((elements:any)=>elements.bar);
 
         return (<Td column={data.name} value={freqs}>
             <Tooltip
