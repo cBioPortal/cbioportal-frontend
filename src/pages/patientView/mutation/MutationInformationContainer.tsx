@@ -133,6 +133,6 @@ export default class MutationInformationContainer extends React.Component<IMutat
     }
 
     private getMutationId(m):string {
-        return [m.gene.chromosome, m.startPos, m.endPos, m.referenceAllele, m.variantAllele].join("_");
+        return [m.gene.chromosome, m.startPosition, m.endPosition, m.referenceAllele, m.variantAllele].join("_");
     }
 }
