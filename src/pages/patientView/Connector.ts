@@ -36,7 +36,13 @@ export default new class ClinicalInformationConnector extends Connector<RootStat
 
     mapDispatchToProps = {
         loadClinicalInformationTableData: () => (dispatch:IDispatch<ActionTypes>) => { // this is a thunk
-            getClinicalInformationData().then(
+
+            dispatch({
+                type: FETCH,
+                status: 'pending',
+            });
+
+            return getClinicalInformationData().then(
                 (data) => {
                     dispatch({
                         type: FETCH,
@@ -45,11 +51,6 @@ export default new class ClinicalInformationConnector extends Connector<RootStat
                     });
                 }
             );
-
-            dispatch({
-                type: FETCH,
-                status: 'pending',
-            });
         }
     };
 
