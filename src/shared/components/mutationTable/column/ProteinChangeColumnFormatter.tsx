@@ -119,7 +119,7 @@ export default class ProteinChangeColumnFormatter
             value = data.columnData;
         }
         else if (data.rowData) {
-            const rowDataArr = [].concat(data.rowData);
+            const rowDataArr:Array<any> = [].concat(data.rowData);
             value = (rowDataArr.length > 0 ? rowDataArr[0].proteinChange : null);
         }
         else {

@@ -152,7 +152,8 @@ export default class MutationAssessorColumnFormatter
         }
         else if (data.rowData)
         {
-            const rowDataArr = [].concat(data.rowData);
+            const rowDataArr:Array<any> = [].concat(data.rowData);
+
             if (rowDataArr.length > 0) {
                 maData = {
                     impact: rowDataArr[0].functionalImpactScore,
