@@ -10,6 +10,8 @@ import {RootState} from '../../redux/rootReducer';
 import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
 import GenomicOverview from './genomicOverview/GenomicOverview';
 import renderIf from 'render-if';
+import CBioPortalAPI from "shared/api/CBioPortalAPI";
+import queryString from "query-string";
 
 interface IPatientViewPageProps {
     store?: RootState;
@@ -38,19 +40,18 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     fetchData() {
 
-        var fetchJSON = function(url) {
-            return new Promise((resolve, reject) => {
-                $.getJSON(url)
-                    .done((json) => resolve(json))
-                    .fail((xhr, status, err) => reject(status + err.message));
-            });
-        }
-        var itemUrls = [
-                "http://www.cbioportal.org/api-legacy/copynumbersegments?cancerStudyId=ov_tcga_pub&chromosome=17&sampleIds=TCGA-24-2024-01",
-                "https://raw.githubusercontent.com/onursumer/cbioportal-frontend/enhanced-react-table/src/pages/patientView/mutation/mock/mutationData.json"
-            ],
-            itemPromises = _.map(itemUrls, fetchJSON);
-        return Promise.all(itemPromises);
+        //const qs = queryString.parse(location.search);
+        //const studyId: string = qs.cancer_study_id;
+        //const patientId: string = qs.case_id;
+        const studyId: string = "ov_tcga_pub";
+        const sampleIds: Array<any> = ["TCGA-24-2035-01"];
+
+        const tsClient = new CBioPortalAPI(`//${(window as any)['__API_ROOT__']}`);
+        let mutationDataPromise = tsClient.fetchMutationsInGeneticProfileUsingPOST({geneticProfileId: studyId + "_mutations", sampleIds: sampleIds, projection: "DETAILED"});
+        let p = Promise.resolve(
+            $.get("http://www.cbioportal.org/api-legacy/copynumbersegments?cancerStudyId=ov_tcga_pub&chromosome=17&sampleIds=TCGA-24-2035-01")
+        );
+        return Promise.all([mutationDataPromise, p]);
 
     }
 
