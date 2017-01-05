@@ -1,6 +1,6 @@
 import * as React from "react";
 import {SampleLabelHTML} from "../SampleLabel";
-import {ClinicalDataBySampleId} from "../clinicalInformation/getClinicalInformationData";
+import { ClinicalDataBySampleId } from "../../../shared/api/api-types-extended";
 
 interface ISampleInlineProps {
     sample: ClinicalDataBySampleId;
