@@ -1,6 +1,7 @@
 declare module '*.scss';
 declare module '*.json';
 declare module 'query-string';
+declare module 'rc-tooltip';
 declare module 'react-file-download';
 declare module 'react-zeroclipboard';
 declare module 'reactable';
