@@ -49,14 +49,14 @@ export default class MutationTable extends React.Component<IEnhancedReactTablePr
             startPos: {
                 name: "Start Pos",
                 priority: 5.00,
-                dataField: "startPos",
+                dataField: "startPosition",
                 sortable: true,
                 filterable: false
             },
             endPos: {
                 name: "End Pos",
                 priority: 6.00,
-                dataField: "endPos",
+                dataField: "endPosition",
                 sortable: true,
                 filterable: false
             },
