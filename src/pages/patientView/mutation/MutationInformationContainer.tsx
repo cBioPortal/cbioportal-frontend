@@ -11,7 +11,6 @@ import { Mutation } from "../../../shared/api/CBioPortalAPI";
 
 export interface IMutationInformationContainerProps {
     // setTab?: (activeTab:number) => void;
-    store?: any;
     mutations: Array<Mutation>;
     sampleOrder:string[];
     sampleColors:{ [s:string]: string};
