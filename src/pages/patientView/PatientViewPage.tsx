@@ -15,14 +15,14 @@ import Connector, { ClinicalInformationData } from "./Connector";
 import { ClinicalData } from "shared/api/CBioPortalAPI";
 import { ClinicalDataBySampleId } from "../../shared/api/api-types-extended";
 import { RequestStatus } from "../../shared/api/api-types-extended";
-import CBioPortalAPI from "../../shared/api/CBioPortalAPI";
+import { default as CBioPortalAPI, Mutation }  from "../../shared/api/CBioPortalAPI";
 import renderIf from 'render-if';
 import queryString from "query-string";
 
 export interface IPatientViewPageProps {
     store?: RootState;
     samples?: Array<ClinicalDataBySampleId>;
-    loadClinicalInformationTableData?: () => Promise;
+    loadClinicalInformationTableData?: () => Promise<any>;
     patient?: {
         id: string,
         clinicalData: Array<ClinicalData>
@@ -85,12 +85,17 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         this.props.loadClinicalInformationTableData && this.props.loadClinicalInformationTableData().then(() => {
 
-            let sampleIds: String[] = _.map(this.props.samples, (item: ClinicalDataBySampleId)=>item.id)
+            if (this.props.samples) {
+                let sampleIds: Array<string> = this.props.samples.map((item: ClinicalDataBySampleId)=>item.id);
 
-            tsClient.fetchMutationsInGeneticProfileUsingPOST({ geneticProfileId:this.geneticProfileId, sampleIds:sampleIds })
-                .then((mutationData) => {
-                    this.setState({ mutationData: mutationData });
-                });
+                tsClient.fetchMutationsInGeneticProfileUsingPOST({
+                    geneticProfileId: this.geneticProfileId,
+                    sampleIds: sampleIds
+                })
+                    .then((mutationData: Array<Mutation>) => {
+                        this.setState({mutationData: mutationData});
+                    });
+            }
 
         });
 
