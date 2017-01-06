@@ -255,8 +255,9 @@ function addToolTip(node: any, tip: any,showDelay: any, position: any) {
     //     param['show'] = { delay: showDelay };
     // if (position)
     //     param['position'] = position;
-    let $el : any = $(node);
-    $el.qtip(param);
+
+    ($(node) as any).qtip(param);
+
 }
 
 function underlineText(textElement: any, p: any) {
