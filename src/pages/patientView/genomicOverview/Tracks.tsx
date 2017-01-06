@@ -22,7 +22,7 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
         // --- end of params ---
 
         // --- raphael config ---
-        var paper = tracksHelper.createRaphaelCanvas('tracks_div', config);
+        var paper = tracksHelper.createRaphaelCanvas(document.getElementsByClassName('genomicOverviewTracksContainer')[0], config);
         // --- end of raphael config ---
 
         // --- chromosome chart ---
@@ -56,9 +56,7 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
 
     public render() {
         return (
-            <div className="genomicOverViewContainer" style={{ backgroundColor: '#F0FFFF'}}>
-                <div id="tracks_div"></div>
-            </div>
+            <div className="genomicOverviewTracksContainer" />
         );
     }
 }
