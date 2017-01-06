@@ -10,7 +10,6 @@ import { Mutation } from "../../../shared/api/CBioPortalAPI";
 
 
 export interface IMutationInformationContainerProps {
-    // setTab?: (activeTab:number) => void;
     mutations: Array<Mutation>;
     sampleOrder:string[];
     sampleColors:{ [s:string]: string};
@@ -30,7 +29,6 @@ export default class MutationInformationContainer extends React.Component<IMutat
     }
 
     public render() {
-        // TODO properly customize table for patient view specific columns!!!
         let columns:IColumnDefMap = {
             sampleId: {
                 name: "Sample Id", // name does not matter when the column is "excluded"
@@ -119,7 +117,7 @@ export default class MutationInformationContainer extends React.Component<IMutat
 
         return (
             <div>
-                <MutationTable rawData={this.mergedMutations} columns={columns}/>
+                <MutationTable rawData={this.mergedMutations} columns={columns} title="Mutations of Interest"/>
             </div>
         );
     }
