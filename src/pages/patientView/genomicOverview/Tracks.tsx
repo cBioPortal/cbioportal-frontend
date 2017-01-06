@@ -16,40 +16,40 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
 
     componentDidMount() {
 
-            // --- construct params ---
-            let sampleId = _.uniq(_.pluck(this.props.cnaSegments, 'sample'))[0];
-            var config = tracksHelper.GenomicOverviewConfig(2, 1000);
-            // --- end of params ---
+        // --- construct params ---
+        let sampleId = _.uniq(_.pluck(this.props.cnaSegments, 'sample'))[0];
+        var config = tracksHelper.GenomicOverviewConfig(2, 1000);
+        // --- end of params ---
 
-            // --- raphael config ---
-            var paper = tracksHelper.createRaphaelCanvas('tracks_div', config);
-            // --- end of raphael config ---
-            
-            // --- chromosome chart ---
-            var chmInfo = tracksHelper.getChmInfo();
-            tracksHelper.plotChromosomes(paper,config,chmInfo);
-            // --- end of chromosome chart ---
+        // --- raphael config ---
+        var paper = tracksHelper.createRaphaelCanvas('tracks_div', config);
+        // --- end of raphael config ---
 
-            // --- CNA bar chart ---
-            let cnaRaphaelData: any = {};
-            cnaRaphaelData[sampleId] = [];
-            _.each(this.props.cnaSegments, function(_dataObj: any) {
-                var _tmp: Array<any> = [];
-                _tmp.push(_dataObj.sample);
-                _tmp.push(_dataObj.chr);
-                _tmp.push(_dataObj.end);
-                _tmp.push(_dataObj.start);
-                _tmp.push(_dataObj.numProbes);
-                _tmp.push(_dataObj.value);
-                cnaRaphaelData[sampleId].push(_tmp);
-            });
-            tracksHelper.plotCnSegs(paper, config, chmInfo, 0, cnaRaphaelData[sampleId], 1, 3, 2, 5, sampleId);
-            // --- end of CNA bar chart ---
+        // --- chromosome chart ---
+        var chmInfo = tracksHelper.getChmInfo();
+        tracksHelper.plotChromosomes(paper,config,chmInfo);
+        // --- end of chromosome chart ---
 
-            // --- mutation events bar chart ---
-            //let mutationResultTS: Array<Mutation> = _.map(mutationResult, function(_mutObj: Mutation) {});
-            tracksHelper.plotMuts(paper, config, chmInfo, 1, this.props.mutations, sampleId);
-            // --- end of mutation events bar chart ---
+        // --- CNA bar chart ---
+        let cnaRaphaelData: any = {};
+        cnaRaphaelData[sampleId] = [];
+        _.each(this.props.cnaSegments, function(_dataObj: any) {
+            var _tmp: Array<any> = [];
+            _tmp.push(_dataObj.sample);
+            _tmp.push(_dataObj.chr);
+            _tmp.push(_dataObj.end);
+            _tmp.push(_dataObj.start);
+            _tmp.push(_dataObj.numProbes);
+            _tmp.push(_dataObj.value);
+            cnaRaphaelData[sampleId].push(_tmp);
+        });
+        tracksHelper.plotCnSegs(paper, config, chmInfo, 0, cnaRaphaelData[sampleId], 1, 3, 2, 5, sampleId);
+        // --- end of CNA bar chart ---
+
+        // --- mutation events bar chart ---
+        //let mutationResultTS: Array<Mutation> = _.map(mutationResult, function(_mutObj: Mutation) {});
+        tracksHelper.plotMuts(paper, config, chmInfo, 1, this.props.mutations, sampleId);
+        // --- end of mutation events bar chart ---
 
     }
 

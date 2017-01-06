@@ -146,7 +146,7 @@ export function plotCnSegs(p: any,config: any,chmInfo: any,row: any, segs: Array
     var genomeMeasured = 0;
     var genomeAltered = 0;
 
-    _.each(segs, function(seg) {
+    _.each(segs, function(seg: any) {
         let chm: any = translateChm(seg[chrCol]);
         if (chm == null || chm[0]>=chmInfo.hg19.length) return;
         var start = seg[startCol];
