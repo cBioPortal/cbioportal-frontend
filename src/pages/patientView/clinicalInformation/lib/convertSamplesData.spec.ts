@@ -5,7 +5,7 @@ import { groupByEntityId } from '../getClinicalInformationData';
 import { ClinicalDataBySampleId } from "../../../../shared/api/api-types-extended";
 import {assert} from "chai";
 
-describe('', () => {
+describe('convertSamplesData', () => {
     it('api data is properly transformed into table data', () => {
 
         const res: Array<ClinicalDataBySampleId> = groupByEntityId(mockClinicalData as Array<ClinicalData>);
