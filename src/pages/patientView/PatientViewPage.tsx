@@ -166,12 +166,15 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
 
                     renderIf(this.state.genomicOverviewData.status==='complete')(
-                        <GenomicOverview data={this.state.genomicOverviewData.data } plotComponent={plotComp} />
+                        <div>
+                            <h4>Genomic Overview</h4>
+                            <GenomicOverview data={this.state.genomicOverviewData.data } plotComponent={plotComp} />
+                        </div>
                     )
                 }
-
+                <hr />
                 { renderIf(this.state.mutationData)(
-                    < MutationInformationContainer
+                    <MutationInformationContainer
                         mutations={this.state.mutationData}
                         sampleOrder={mockData.order}
                         sampleLabels={mockData.labels}
@@ -181,7 +184,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     />
                 )
                 }
-
+                <hr />
                 <ClinicalInformationContainer status={ this.props.clinicalDataStatus } patient={this.props.patient} samples={this.props.samples} />
 
             </div>
