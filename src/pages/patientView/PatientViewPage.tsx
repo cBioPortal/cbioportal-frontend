@@ -135,13 +135,13 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 }
 
                 <ClinicalInformationContainer status={ this.props.clinicalDataStatus } patient={this.props.patient} samples={this.props.samples} />
-                {/*<ThumbnailExpandVAFPlot*/}
-                    {/*data={vafPlotMockData}*/}
-                    {/*colors={vafPlotMockColors}*/}
-                    {/*labels={vafPlotMockLabels}*/}
-                    {/*order={vafPlotMockOrder}*/}
-                    {/*overlayPlacement="right"*/}
-                {/*/>*/}
+                <ThumbnailExpandVAFPlot
+                    data={vafPlotMockData}
+                    colors={vafPlotMockColors}
+                    labels={vafPlotMockLabels}
+                    order={vafPlotMockOrder}
+                    overlayPlacement="right"
+                />
             </div>
         );
     }
