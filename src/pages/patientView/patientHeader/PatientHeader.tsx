@@ -4,21 +4,15 @@ import Spinner from 'react-spinkit';
 
 import ClinicalInformationPatientTable from '../clinicalInformation/ClinicalInformationPatientTable';
 import SampleInline from './SampleInline';
-import {ClinicalInformationData} from "../clinicalInformation/Connector";
-import {ClinicalDataBySampleId} from "../clinicalInformation/getClinicalInformationData";
+import {ClinicalInformationData} from "../Connector";
+import { ClinicalDataBySampleId } from "../../../shared/api/api-types-extended";
 
-let _ClinicalInformationData:ClinicalInformationData = null as any;
-
-export type IPatientHeaderProps = {
-    status?: typeof _ClinicalInformationData.status;
-    patient?: typeof _ClinicalInformationData.patient;
-    samples?: typeof _ClinicalInformationData.samples;
-};
+export type IPatientHeaderProps = PartialPick<ClinicalInformationData, 'clinicalDataStatus' | 'patient' | 'samples'>;
 
 export default class PatientHeader extends React.Component<IPatientHeaderProps, {}> {
     public render() {
-        switch (this.props.status) {
-            case 'fetching':
+        switch (this.props.clinicalDataStatus) {
+            case 'pending':
                 return <div><Spinner spinnerName='three-bounce' /></div>;
 
             case 'complete':
@@ -40,7 +34,7 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
         );
     }
 
-    private getPopoverPatient(patient: typeof _ClinicalInformationData.patient) {
+    private getPopoverPatient(patient: ClinicalInformationData['patient']) {
         return patient && (
             <Popover key={patient.id} id={'popover-sample-' + patient.id}>
                 <ClinicalInformationPatientTable showTitleBar={false} data={patient.clinicalData} />
@@ -48,7 +42,7 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
         );
     }
 
-    private getOverlayTriggerPatient(patient: typeof _ClinicalInformationData.patient) {
+    private getOverlayTriggerPatient(patient: ClinicalInformationData['patient']) {
         return patient && (
             <OverlayTrigger
                 delayHide={100}

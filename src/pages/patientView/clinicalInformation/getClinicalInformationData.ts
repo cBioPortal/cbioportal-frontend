@@ -1,15 +1,24 @@
 import queryString from "query-string";
-import {chain} from "underscore";
-import CBioPortalAPI from "shared/api/CBioPortalAPI";
+import * as _ from 'lodash';
+import CBioPortalAPI from "../../../shared/api/CBioPortalAPI";
+import { ClinicalDataBySampleId } from "../../../shared/api/api-types-extended";
 import {ClinicalData} from "../../../shared/api/CBioPortalAPI";
-import {ClinicalInformationData} from "./Connector";
+import {ClinicalInformationData} from "../Connector";
 //import { getTreeNodesFromClinicalData, PDXNode } from './PDXTree';
 //import sampleQuery from 'shared/api/mock/Samples_query_patient_P04.json';
 
-export type ClinicalDataBySampleId = {
-    id: string;
-    clinicalData: Array<ClinicalData>;
-};
+export function groupByEntityId(clinicalDataArray: Array<ClinicalData>) {
+
+    return _.map(
+        _.groupBy(clinicalDataArray, 'entityId'),
+        (v:ClinicalData[], k:string):ClinicalDataBySampleId => ({
+            clinicalData: v,
+            id: k,
+        })
+    );
+
+}
+
 
 /*
  * Transform clinical data from API to clinical data shape as it will be stored
@@ -21,13 +30,7 @@ function transformClinicalInformationToStoreShape(patientId: string, studyId: st
         clinicalData: clinicalDataPatient
     };
 
-    const samples: Array<ClinicalDataBySampleId> = chain(clinicalDataSample)
-        .groupBy('id')
-        .map((v, k) => ({
-            clinicalData: v,
-            id: k + '',
-        }))
-        .value();
+    const samples = groupByEntityId(clinicalDataSample);
 
     // // create object with sample ids as keys and values are objects
     // // that have clinical attribute ids as keys (only PDX_PARENT is
@@ -80,8 +83,8 @@ export default async function getClinicalInformationData():Promise<ClinicalInfor
     const clinicalDataSample = await tsClient.fetchClinicalDataUsingPOST({
         clinicalDataType: 'SAMPLE',
         identifiers: samplesOfPatient.map(sample => ({
-            id: sample.stableId,
-            studyId: 'lgg_ucsf_2014'
+            entityId: sample.sampleId,
+            studyId
         })),
         projection: 'DETAILED',
     });
