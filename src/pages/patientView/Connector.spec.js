@@ -5,7 +5,7 @@ import { shallow } from 'enzyme';
 import Immutable from 'seamless-immutable';
 import { actionTypes, default as Connector, __RewireAPI__ } from './Connector';
 
-describe('clinicalInformation connector', () => {
+describe('ClinicalInformation connector', () => {
 
     describe('mapDispatchToProps',()=>{
 
