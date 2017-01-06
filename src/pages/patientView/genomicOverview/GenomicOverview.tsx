@@ -1,13 +1,13 @@
 import * as React from 'react';
 import Tracks from './Tracks';
 
-export default class GenomicOverview extends React.Component<{ data: any }, {}> {
+export default class GenomicOverview extends React.Component<{ mutationData: any, cnaSegmentData: any }, {}> {
 
     public render() {
 
         return (
             <div>
-                <Tracks mutations={this.props.data[0]} cnaSegments={this.props.data[1]} />
+                <Tracks mutations={this.props.mutationData} cnaSegments={this.props.cnaSegmentData} />
             </div>
         );
     }
