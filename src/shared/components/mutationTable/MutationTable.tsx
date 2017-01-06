@@ -140,6 +140,9 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
     {
         super(props);
         this.state = { filter:'' };
+
+        // binding "this" to handler functions
+        this.handleFilterInput = this.handleFilterInput.bind(this);
     }
 
     public render()
@@ -149,7 +152,7 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
         return(
             <div>
                 <h4 className="pull-left">{title}</h4>
-                <TableHeaderControls showCopyAndDownload={false} handleInput={(filter: string)=>this.setState({ filter:filter })} showSearch={true} className="pull-right" />
+                <TableHeaderControls showCopyAndDownload={false} handleInput={this.handleFilterInput} showSearch={true} className="pull-right" />
                 <EnhancedReactTable
                     reactTableProps={reactTableProps}
                     columns={columns}
@@ -157,6 +160,11 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
                 />
             </div>
         );
+    }
+
+    private handleFilterInput(filter: string)
+    {
+        return this.setState({ filter:filter });
     }
 
     private mergeProps(props:IMutationTableProps):IMutationTableProps
