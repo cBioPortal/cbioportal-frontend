@@ -32,9 +32,16 @@ export interface IPatientViewPageProps {
     clinicalDataStatus?: RequestStatus;
 }
 
+interface IPatientViewState {
+
+    mutationData:any;
+    genomicOverviewData: any;
+
+}
 
 @Connector.decorator
-export default class PatientViewPage extends React.Component<IPatientViewPageProps, { mutationData:any }> {
+export default class PatientViewPage extends React.Component<IPatientViewPageProps, IPatientViewState> {
+
 
     // private static mapStateToProps(state: RootState): IPatientHeaderProps {
     //
@@ -57,7 +64,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         super();
 
         this.state = {
-            mutationData: undefined
+            mutationData: undefined,
+            genomicOverviewData: { status: 'loading', data:null }
         };
 
         //TODO: this should be done by a module so that it can be reused on other pages
@@ -65,6 +73,21 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         this.studyId = qs.cancer_study_id;
         this.patientId = qs.case_id;
         this.geneticProfileId = `${this.studyId}_mutations`;
+
+    }
+
+
+    fetchData() {
+
+        const studyId: string = "ov_tcga_pub";
+        const sampleIds: Array<any> = ["TCGA-24-2035-01"];
+
+        const tsClient = new CBioPortalAPI(`//${(window as any)['__API_ROOT__']}`);
+        let mutationDataPromise = tsClient.fetchMutationsInGeneticProfileUsingPOST({geneticProfileId: studyId + "_mutations", sampleIds: sampleIds, projection: "DETAILED"});
+        let p = Promise.resolve(
+            $.get("http://www.cbioportal.org/api-legacy/copynumbersegments?cancerStudyId=ov_tcga_pub&chromosome=17&sampleIds=TCGA-24-2035-01")
+        );
+        return Promise.all([mutationDataPromise, p]);
 
     }
 
@@ -95,14 +118,20 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     geneticProfileId: this.geneticProfileId,
                     sampleIds: sampleIds
                 })
-                    .then((mutationData: Array<Mutation>) => {
-                        this.setState({mutationData: mutationData});
-                    });
+                .then((mutationData: Array<Mutation>) => {
+                    this.setState(({mutationData: mutationData} as IPatientViewState));
+                });
             }
 
         });
 
         this.exposeComponentRenderersToParentScript();
+
+        this.fetchData().then((apiResult)=>{
+
+            this.setState(({ 'genomicOverviewData': { status:'complete', data:apiResult }}  as IPatientViewState));
+
+        });
 
     }
 
@@ -119,8 +148,27 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     }
 
     public render() {
+
+        let plotComp = <ThumbnailExpandVAFPlot
+            data={vafPlotMockData}
+            colors={vafPlotMockColors}
+            labels={vafPlotMockLabels}
+            order={vafPlotMockOrder}
+            overlayPlacement="right"
+        />;
+
         return (
             <div>
+
+                {
+
+
+
+
+                    renderIf(this.state.genomicOverviewData.status==='complete')(
+                        <GenomicOverview data={this.state.genomicOverviewData.data } plotComponent={plotComp} />
+                    )
+                }
 
                 { renderIf(this.state.mutationData)(
                     < MutationInformationContainer
@@ -135,13 +183,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 }
 
                 <ClinicalInformationContainer status={ this.props.clinicalDataStatus } patient={this.props.patient} samples={this.props.samples} />
-                <ThumbnailExpandVAFPlot
-                    data={vafPlotMockData}
-                    colors={vafPlotMockColors}
-                    labels={vafPlotMockLabels}
-                    order={vafPlotMockOrder}
-                    overlayPlacement="right"
-                />
+
             </div>
         );
     }
