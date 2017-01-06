@@ -2,7 +2,8 @@ import * as React from 'react';
 import * as lodash from 'lodash';
 
 import EnhancedReactTable from "../enhancedReactTable/EnhancedReactTable";
-import {IEnhancedReactTableProps, IColumnDefMap} from "../enhancedReactTable/IEnhancedReactTableProps";
+import {IColumnDefMap} from "../enhancedReactTable/IEnhancedReactTableProps";
+import {IMutationTableProps} from "./IMutationTableProps";
 import GeneColumnFormatter from "./column/GeneColumnFormatter";
 import SampleColumnFormatter from "./column/SampleColumnFormatter";
 import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter";
@@ -14,7 +15,7 @@ import TableHeaderControls from "shared/components/tableHeaderControls/TableHead
 /**
  * @author Selcuk Onur Sumer
  */
-export default class MutationTable extends React.Component<IEnhancedReactTableProps, { filter:string }>
+export default class MutationTable extends React.Component<IMutationTableProps, { filter:string }>
 {
     public static get defaultColumns():IColumnDefMap
     {
@@ -135,7 +136,7 @@ export default class MutationTable extends React.Component<IEnhancedReactTablePr
         };
     };
 
-    constructor(props:IEnhancedReactTableProps)
+    constructor(props:IMutationTableProps)
     {
         super(props);
         this.state = { filter:'' };
@@ -143,11 +144,11 @@ export default class MutationTable extends React.Component<IEnhancedReactTablePr
 
     public render()
     {
-        const {reactTableProps, columns, rawData} = this.mergeProps(this.props);
+        const {reactTableProps, columns, rawData, title} = this.mergeProps(this.props);
 
         return(
             <div>
-                <h4 className="pull-left">Mutations of Interest</h4>
+                <h4 className="pull-left">{title}</h4>
                 <TableHeaderControls showCopyAndDownload={false} handleInput={(filter: string)=>this.setState({ filter:filter })} showSearch={true} className="pull-right" />
                 <EnhancedReactTable
                     reactTableProps={reactTableProps}
@@ -158,9 +159,10 @@ export default class MutationTable extends React.Component<IEnhancedReactTablePr
         );
     }
 
-    private mergeProps(props:IEnhancedReactTableProps):IEnhancedReactTableProps
+    private mergeProps(props:IMutationTableProps):IMutationTableProps
     {
-        const defaultProps:IEnhancedReactTableProps = {
+        const defaultProps:IMutationTableProps = {
+            title: "Mutations",
             rawData: [],
             columns: MutationTable.defaultColumns,
             reactTableProps: {
