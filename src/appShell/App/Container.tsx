@@ -1,11 +1,22 @@
 import * as _ from 'lodash';
-import React, {PropTypes as T} from 'react';
-import ReactDOM from 'react-dom';
-import PageHeader from '../../pages/pageHeader/PageHeader.jsx';
+import * as React from 'react';
+import * as ReactDOM from 'react-dom';
+import PageHeader from '../../pages/pageHeader/PageHeader';
 
 import '../../globalStyles/global.scss';
 
-export class Container extends React.Component {
+interface IContainerProps {
+    location: Location;
+    children: React.ReactNode;
+}
+
+export default class Container extends React.Component<IContainerProps, void> {
+
+    static contextTypes = {
+        router: React.PropTypes.object,
+    };
+
+    context: {router: any};
 
     componentDidMount() {
         const headerNode = document.getElementById("reactHeader");
@@ -15,10 +26,10 @@ export class Container extends React.Component {
         }
     }
     renderChildren() {
-        const childProps = _.extend({}, this.props);
+        const childProps = {...this.props};
         const {children} = this.props;
         return React.Children.map(children,
-            c => React.cloneElement(c, childProps));
+            c => React.cloneElement(c as React.ReactElement<any>, childProps));
     }
     render() {
         return (
@@ -31,8 +42,3 @@ export class Container extends React.Component {
     }
 }
 
-Container.contextTypes = {
-    router: T.object,
-};
-
-export default Container;
