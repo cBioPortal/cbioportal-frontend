@@ -8,11 +8,13 @@ import SampleColumnFormatter from "./column/SampleColumnFormatter";
 import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter";
 import MutationAssessorColumnFormatter from "./column/MutationAssessorColumnFormatter";
 import MutationTypeColumnFormatter from "./column/MutationTypeColumnFormatter";
+import TableHeaderControls from "shared/components/tableHeaderControls/TableHeaderControls";
+
 
 /**
  * @author Selcuk Onur Sumer
  */
-export default class MutationTable extends React.Component<IEnhancedReactTableProps, {}>
+export default class MutationTable extends React.Component<IEnhancedReactTableProps, { filter:string }>
 {
     public static get defaultColumns():IColumnDefMap
     {
@@ -136,7 +138,7 @@ export default class MutationTable extends React.Component<IEnhancedReactTablePr
     constructor(props:IEnhancedReactTableProps)
     {
         super(props);
-        this.state = {};
+        this.state = { filter:'' };
     }
 
     public render()
@@ -144,11 +146,15 @@ export default class MutationTable extends React.Component<IEnhancedReactTablePr
         const {reactTableProps, columns, rawData} = this.mergeProps(this.props);
 
         return(
-            <EnhancedReactTable
-                reactTableProps={reactTableProps}
-                columns={columns}
-                rawData={rawData}
-            />
+            <div>
+                <h4 className="pull-left">Mutations of Interest</h4>
+                <TableHeaderControls showCopyAndDownload={false} handleInput={(filter: string)=>this.setState({ filter:filter })} showSearch={true} className="pull-right" />
+                <EnhancedReactTable
+                    reactTableProps={reactTableProps}
+                    columns={columns}
+                    rawData={rawData}
+                />
+            </div>
         );
     }
 
@@ -158,7 +164,9 @@ export default class MutationTable extends React.Component<IEnhancedReactTablePr
             rawData: [],
             columns: MutationTable.defaultColumns,
             reactTableProps: {
-                className: "table table-striped"
+                className: "table table-striped",
+                hideFilterInput:true,
+                filterBy:this.state.filter
             }
         };
 
