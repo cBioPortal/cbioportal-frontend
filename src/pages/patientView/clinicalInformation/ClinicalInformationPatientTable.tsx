@@ -1,7 +1,7 @@
 import * as React from "react";
 import {ClinicalData} from "../../../shared/api/CBioPortalAPI";
 import {Table as DataTable} from "reactableMSK";
-import TableExportButtons from "../../../shared/components/tableExportButtons/TableExportButtons";
+import TableHeaderControls from "shared/components/tableHeaderControls/TableHeaderControls";
 
 import styles from './style/patientTable.module.scss';
 
@@ -16,7 +16,7 @@ export default class ClinicalInformationPatientTable extends React.Component<ICl
 
         let tableData = this.props.data && this.props.data.map((el: ClinicalData) => ({
             attribute: el.clinicalAttribute.displayName || '',
-            value: el.attrValue
+            value: el.value
         }));
 
         return (
@@ -25,7 +25,7 @@ export default class ClinicalInformationPatientTable extends React.Component<ICl
                     this.props.showTitleBar
                     ?   <div>
                             <h4 className="pull-left">Patient</h4>
-                            <TableExportButtons className="pull-right" tableData={tableData} />
+                            <TableHeaderControls className="pull-right" tableData={tableData} />
                         </div>
                     :   null
                 }

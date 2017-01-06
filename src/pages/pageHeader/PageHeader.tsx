@@ -1,10 +1,17 @@
-import React, { PropTypes as T } from 'react';
-
+import * as React from 'react';
 import './styles.scss';
+import Router = ReactRouter.Router;
 
-class PageHeader extends React.Component {
+interface IPageHeaderProps {
+    router: any;
+    currentRoutePath: string;
+}
 
-    handleSubmit(e) {
+export default class PageHeader extends React.Component<IPageHeaderProps, void> {
+
+    routeInput: HTMLInputElement;
+
+    handleSubmit(e:React.FormEvent) {
         e.preventDefault();
         this.props.router.push(this.routeInput.value);
     }
@@ -24,18 +31,3 @@ class PageHeader extends React.Component {
         );
     }
 }
-
-PageHeader.propTypes = {
-    router: T.object.isRequired,
-    currentRoutePath: T.string.isRequired
-};
-
-export default PageHeader;
-
-
-
-
-
-
-
-
