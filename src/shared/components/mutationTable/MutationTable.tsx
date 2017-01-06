@@ -2,17 +2,20 @@ import * as React from 'react';
 import * as lodash from 'lodash';
 
 import EnhancedReactTable from "../enhancedReactTable/EnhancedReactTable";
-import {IEnhancedReactTableProps, IColumnDefMap} from "../enhancedReactTable/IEnhancedReactTableProps";
+import {IColumnDefMap} from "../enhancedReactTable/IEnhancedReactTableProps";
+import {IMutationTableProps} from "./IMutationTableProps";
 import GeneColumnFormatter from "./column/GeneColumnFormatter";
 import SampleColumnFormatter from "./column/SampleColumnFormatter";
 import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter";
 import MutationAssessorColumnFormatter from "./column/MutationAssessorColumnFormatter";
 import MutationTypeColumnFormatter from "./column/MutationTypeColumnFormatter";
+import TableHeaderControls from "shared/components/tableHeaderControls/TableHeaderControls";
+
 
 /**
  * @author Selcuk Onur Sumer
  */
-export default class MutationTable extends React.Component<IEnhancedReactTableProps, {}>
+export default class MutationTable extends React.Component<IMutationTableProps, { filter:string }>
 {
     public static get defaultColumns():IColumnDefMap
     {
@@ -133,32 +136,39 @@ export default class MutationTable extends React.Component<IEnhancedReactTablePr
         };
     };
 
-    constructor(props:IEnhancedReactTableProps)
+    constructor(props:IMutationTableProps)
     {
         super(props);
-        this.state = {};
+        this.state = { filter:'' };
     }
 
     public render()
     {
-        const {reactTableProps, columns, rawData} = this.mergeProps(this.props);
+        const {reactTableProps, columns, rawData, title} = this.mergeProps(this.props);
 
         return(
-            <EnhancedReactTable
-                reactTableProps={reactTableProps}
-                columns={columns}
-                rawData={rawData}
-            />
+            <div>
+                <h4 className="pull-left">{title}</h4>
+                <TableHeaderControls showCopyAndDownload={false} handleInput={(filter: string)=>this.setState({ filter:filter })} showSearch={true} className="pull-right" />
+                <EnhancedReactTable
+                    reactTableProps={reactTableProps}
+                    columns={columns}
+                    rawData={rawData}
+                />
+            </div>
         );
     }
 
-    private mergeProps(props:IEnhancedReactTableProps):IEnhancedReactTableProps
+    private mergeProps(props:IMutationTableProps):IMutationTableProps
     {
-        const defaultProps:IEnhancedReactTableProps = {
+        const defaultProps:IMutationTableProps = {
+            title: "Mutations",
             rawData: [],
             columns: MutationTable.defaultColumns,
             reactTableProps: {
-                className: "table table-striped"
+                className: "table table-striped",
+                hideFilterInput:true,
+                filterBy:this.state.filter
             }
         };
 

@@ -138,13 +138,13 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
                 // also taking into account that row data might be an array of instances
                 // (instead of a single instance)
                 // this converts row data into an array in case it refers to a single instance
-                const rowData:Array<any> = [].concat(data.rowData);
+                const rowDataArr:Array<any> = [].concat(data.rowData);
 
                 // In case row data is an array of instances, by default retrieving only the first
                 // element's data as the column data. For advanced combining of all elements' data,
                 // one needs to provide a custom columnData function.
-                if (rowData.length > 0) {
-                    data.columnData = rowData[0][columnDef.dataField];
+                if (rowDataArr.length > 0) {
+                    data.columnData = rowDataArr[0][columnDef.dataField];
                 }
             }
 
