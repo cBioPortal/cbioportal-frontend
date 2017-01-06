@@ -1,8 +1,8 @@
 import * as React from 'react';
-import * as _ from 'lodash';
 import * as ReactDOM from 'react-dom';
 import { connect } from 'react-redux';
 import { Component } from 'react';
+import * as _ from 'lodash';
 import ClinicalInformationContainer from './clinicalInformation/ClinicalInformationContainer';
 import MutationInformationContainer from './mutation/MutationInformationContainer';
 import PatientHeaderUnconnected from './patientHeader/PatientHeader';
@@ -10,14 +10,16 @@ import {IPatientHeaderProps} from './patientHeader/PatientHeader';
 import {RootState} from '../../redux/rootReducer';
 import exposeComponentRenderer from '../../shared/lib/exposeComponentRenderer';
 import GenomicOverview from './genomicOverview/GenomicOverview';
-import renderIf from 'render-if';
 import mockData from './mock/sampleData.json';
 import Connector, { ClinicalInformationData } from "./Connector";
 import { ClinicalData } from "shared/api/CBioPortalAPI";
 import { ClinicalDataBySampleId } from "../../shared/api/api-types-extended";
 import { RequestStatus } from "../../shared/api/api-types-extended";
 import { default as CBioPortalAPI, Mutation }  from "../../shared/api/CBioPortalAPI";
+import renderIf from 'render-if';
 import queryString from "query-string";
+import {mockData as vafPlotMockData, mockColors as vafPlotMockColors, mockOrder as vafPlotMockOrder, mockLabels as vafPlotMockLabels} from './vafPlot/mockData';
+import {ThumbnailExpandVAFPlot} from './vafPlot/ThumbnailExpandVAFPlot';
 
 export interface IPatientViewPageProps {
     store?: RootState;
@@ -133,6 +135,14 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     public render() {
 
+        let plotComp = <ThumbnailExpandVAFPlot
+            data={vafPlotMockData}
+            colors={vafPlotMockColors}
+            labels={vafPlotMockLabels}
+            order={vafPlotMockOrder}
+            overlayPlacement="right"
+        />;
+
         return (
             <div>
 
@@ -154,7 +164,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                         />
                     )
                 }
-
+                <hr />
                 <ClinicalInformationContainer status={ this.props.clinicalDataStatus } patient={this.props.patient} samples={this.props.samples} />
 
             </div>

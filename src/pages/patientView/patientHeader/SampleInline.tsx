@@ -1,5 +1,5 @@
 import * as React from "react";
-import {SampleLabelHTML} from "../SampleLabel";
+import {SampleLabelHTML} from "../../../shared/components/sampleLabel/SampleLabel";
 import { ClinicalDataBySampleId } from "../../../shared/api/api-types-extended";
 
 interface ISampleInlineProps {
