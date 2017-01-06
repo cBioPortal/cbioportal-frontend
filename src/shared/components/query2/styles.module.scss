@@ -1,0 +1,160 @@
+.QueryContainer {
+  height: 100%;
+}
+
+.CancerStudySelector {
+
+  user-select: none;
+  label {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+  a {
+    cursor: pointer;
+  }
+
+  .selectCancerStudyRow {
+    align-items: center;
+
+    span.selectCancerStudyHeader {
+      color: #337ab7;
+    }
+
+ 	div.searchTextInput {
+ 	  min-width: 200px;
+ 	}
+  }
+
+  div.cancerTypeListContainer, div.cancerStudyListContainer {
+    border: 1px solid lightgray;
+    border-radius: 3px;
+    overflow: auto;
+  }
+
+  div.cancerTypeListContainer {
+  }
+
+  div.cancerStudyListContainer {
+    flex: 1;
+  }
+
+  ul.cancerTypeList {
+    padding-left: 0px;
+
+    li.cancerTypeListItem {
+      padding: 4px;
+      cursor: pointer;
+      list-style-type: none;
+      display: flex;
+      flex-direction: row;
+
+      span.cancerTypeListItemLabel {
+        flex: 1;
+        padding-right: 5px;
+      }
+
+      span.cancerTypeListItemCount {
+        padding: 2px;
+        background-color: lightgray;
+        border-radius: 2px;
+        text-align: center;
+        width: 24px;
+      }
+    }
+  }
+
+  .treeWithStudies {
+
+    label:hover {
+      text-decoration: underline;
+    }
+
+    .cancerTypeTreeNode {
+      label {
+        font-weight: normal;
+      }
+      color: grey;
+      font-style: italic;
+    }
+    .cancerStudyName {
+      label {
+        font-weight: bold;
+      }
+    }
+    .cancerStudySamples {
+      font-style: italic;
+    }
+  }
+
+  .treeNodeContent {
+    flex: 1;
+    align-items: center;
+  }
+
+  :global(.checkbox) {
+    padding-left: 5px;
+    margin: 0px;
+    display: flex;
+    flex-direction: row;
+
+    input {
+      cursor: pointer;
+    }
+  }
+
+  .treeNodeLabel {
+    cursor: pointer;
+    flex: 1;
+  }
+
+  .selectable:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+
+  .selectable.selected {
+    background-color: rgb(196, 211, 230);
+  }
+
+  .selectable.selected:hover {
+    background-color: lightsteelblue;
+  }
+
+  .matchingNodeText {
+    font-weight: bold;
+  }
+
+  .nonMatchingNodeText {
+    font-weight: normal;
+  }
+
+  /* makes react-bootstrap-table work in flexbox layout */
+  :global(.react-bs-table-container),:global(.react-bs-table),:global(.react-bs-container-body) {
+  	display: flex;
+  	flex-direction: column;
+  	flex: 1;
+  	height: initial !important;
+  }
+  :global(.react-bs-table) {
+    margin: 0px;
+  }
+
+  :global(.table) {
+    margin-bottom: 0px;
+  }
+
+  :global(th.sort-column)>* {
+    display: inline;
+  }
+
+  div.studyHeader {
+    display: inline-flex;
+    align-items: center;
+    height: 100%;
+  }
+
+  .searchTextInput {
+    minWidth: 200px;
+  }
+}
+

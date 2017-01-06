@@ -1,5 +1,5 @@
 import * as React from 'react';
-import QueryContainer from "../../shared/components/query/QueryContainer";
+import QueryContainer from "../../shared/components/query2/QueryContainer";
 import * as styles_any from './styles.module.scss';
 
 function getRootElement()

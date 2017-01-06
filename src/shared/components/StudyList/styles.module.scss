@@ -1,0 +1,41 @@
+.selectAllStudies {
+  color: #1982b8;
+  font: normal normal 600 10px/18px 'Helvetica Neue';
+  margin: 0 0 0 10px;
+  text-transform: uppercase;
+}
+
+ul.StudyList {
+
+  li.CancerType {
+
+    .CancerTypeName {
+    }
+  }
+
+  li.Study {
+
+    .StudyName {
+    }
+
+    .StudySamples {
+    }
+
+    .StudyLinks {
+      margin: 0 10px;
+      display: inline;
+
+      a {
+        display: inline-block;
+        margin: 0 3px;
+        color: #1982b8;
+
+        span:global(.fa) {
+          margin: 0 5px 0 0;
+          min-width: 15px;
+        }
+      }
+    }
+  }
+}
+

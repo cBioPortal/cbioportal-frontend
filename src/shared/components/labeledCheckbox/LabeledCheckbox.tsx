@@ -6,7 +6,7 @@ const styles = styles_any as {
 	labeledCheckbox: string;
 };
 
-interface ICheckboxProps extends React.HTMLAttributes
+export interface ILabeledCheckboxProps extends React.HTMLAttributes
 {
 	checked?: boolean;
 	indeterminate?: boolean;
@@ -14,7 +14,7 @@ interface ICheckboxProps extends React.HTMLAttributes
 	inputProps?: React.HTMLProps<HTMLInputElement>;
 }
 
-export default class LabeledCheckbox extends React.Component<ICheckboxProps, undefined>
+export default class LabeledCheckbox extends React.Component<ILabeledCheckboxProps, undefined>
 {
 	private input:HTMLInputElement;
 

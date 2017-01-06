@@ -61,6 +61,7 @@ function matchesSearchText(input:string, searchText:string):boolean
 export type ICancerStudySelectorProps = {
 	style?: React.CSSProperties;
 
+	searchTextPresets: string[];
 	cancerTypes: CancerType[];
 	studies: CancerStudy[];
 
@@ -535,7 +536,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 		let treeDesc = this.getTreeDescriptor();
 		let shownStudies = this.getShownStudies();
 
-		let searchTextOptions = ['lung', 'serous', 'tcga', 'tcga -provisional'];
+		let searchTextOptions = this.props.searchTextPresets;
 		if (this.searchText && searchTextOptions.indexOf(this.searchText) < 0)
 			searchTextOptions = [this.searchText].concat(searchTextOptions);
 
