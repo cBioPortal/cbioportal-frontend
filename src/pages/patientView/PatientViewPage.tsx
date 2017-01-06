@@ -161,17 +161,14 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             <div>
 
                 {
-
-
-
-
                     renderIf(this.state.genomicOverviewData.status==='complete')(
                         <div>
                             <h4>Genomic Overview</h4>
-                            <GenomicOverview data={this.state.genomicOverviewData.data } plotComponent={plotComp} />
+                            <GenomicOverview mutations={this.state.genomicOverviewData.data[0]} cnaSegments={this.state.genomicOverviewData.data[1]} plotComponent={plotComp} />
                         </div>
                     )
                 }
+
                 <hr />
                 { renderIf(this.state.mutationData)(
                     <MutationInformationContainer
