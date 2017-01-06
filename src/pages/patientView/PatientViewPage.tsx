@@ -80,7 +80,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         const tsClient = new CBioPortalAPI(`//${(window as any)['__API_ROOT__']}`);
         let mutationDataPromise = tsClient.fetchMutationsInGeneticProfileUsingPOST({geneticProfileId: this.mutationGeneticProfileId, sampleIds: _sampleIds, projection: "DETAILED"});
         let cnaSegmentPromise = Promise.resolve(
-            $.get("http://www.cbioportal.org/api-legacy/copynumbersegments?cancerStudyId=ov_tcga_pub&chromosome=17&sampleIds=TCGA-24-2035-01")
+            $.get("http://www.cbioportal.org/api-legacy/copynumbersegments?cancerStudyId=" + this.studyId + "&sampleIds=" + _sampleIds.join(","))
         );
         return Promise.all([mutationDataPromise, cnaSegmentPromise]);
 
