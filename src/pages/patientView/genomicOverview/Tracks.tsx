@@ -17,11 +17,13 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
     componentDidMount() {
 
         // --- construct params ---
-        let sampleIds = _.uniq(_.pluck(this.props.cnaSegments, 'sample'));
-        var config = tracksHelper.GenomicOverviewConfig(sampleIds.length, 1000);
+        let uniqCnasampleIds = _.uniq(_.pluck(this.props.cnaSegments, 'sample'));
+        let uniqMutSampleIds = _.uniq(_.pluck(this.props.mutations, 'sampleId'));
+        var config = tracksHelper.GenomicOverviewConfig(uniqCnasampleIds.length + uniqMutSampleIds.length, 1000);
         // --- end of params ---
 
         // --- raphael config ---
+        let rowIndex: number = 0;
         var paper = tracksHelper.createRaphaelCanvas(document.getElementsByClassName('genomicOverviewTracksContainer')[0], config);
         // --- end of raphael config ---
 
@@ -31,12 +33,10 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
         // --- end of chromosome chart ---
 
         // --- CNA bar chart ---
-
-        let rowIndex: number = 0;
-        _.each(sampleIds, (_sampleId: string) => {
+        _.each(uniqCnasampleIds, (_sampleId: string) => {
             let raphaelData: Array<any> = [];
-            var _sampleTrackData = _.filter(this.props.cnaSegments, function(_cnaObj: any) { return _cnaObj.sample === _sampleId; });
-            _.each(_sampleTrackData, function(_dataObj: any) {
+            var _trackData = _.filter(this.props.cnaSegments, function(_cnaObj: any) { return _cnaObj.sample === _sampleId; });
+            _.each(_trackData, function(_dataObj: any) {
                 var _tmp: Array<any> = [];
                 _tmp.push(_dataObj.sample);
                 _tmp.push(_dataObj.chr);
@@ -52,8 +52,11 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
         // --- end of CNA bar chart ---
 
         // --- mutation events bar chart ---
-        //let mutationResultTS: Array<Mutation> = _.map(mutationResult, function(_mutObj: Mutation) {});
-        //tracksHelper.plotMuts(paper, config, chmInfo, 1, this.props.mutations, sampleId);
+        _.each(uniqMutSampleIds, (_sampleId: string) => {
+            var _trackData = _.filter(this.props.mutations, function(_mutObj: any) {   return _mutObj.sampleId === _sampleId; });
+            tracksHelper.plotMuts(paper, config, chmInfo, rowIndex, _trackData, _sampleId);
+            rowIndex = rowIndex + 1;
+        });
         // --- end of mutation events bar chart ---
 
     }
