@@ -6,9 +6,11 @@ export default class GenomicOverview extends React.Component<{ data: any, plotCo
     public render() {
 
         return (
-            <div style={{ position:'relative' }}>
-                <Tracks mutations={this.props.data[0]} cnaSegments={this.props.data[1]} />
-                { this.props.plotComponent }
+            <div className="clearfix" style={{ display:'flex', alignItems:'center' }}>
+                <div className="pull-left">
+                    <Tracks mutations={this.props.data[0]} cnaSegments={this.props.data[1]} />
+                </div>
+                <div className="pull-left" style={{ marginLeft:30 }}>{ this.props.plotComponent }</div>
             </div>
         );
     }
