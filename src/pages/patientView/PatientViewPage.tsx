@@ -3,7 +3,6 @@ import * as _ from 'lodash';
 import * as ReactDOM from 'react-dom';
 import { connect } from 'react-redux';
 import { Component } from 'react';
-import * as _ from 'lodash';
 import ClinicalInformationContainer from './clinicalInformation/ClinicalInformationContainer';
 import MutationInformationContainer from './mutation/MutationInformationContainer';
 import PatientHeaderUnconnected from './patientHeader/PatientHeader';
@@ -11,17 +10,14 @@ import {IPatientHeaderProps} from './patientHeader/PatientHeader';
 import {RootState} from '../../redux/rootReducer';
 import exposeComponentRenderer from '../../shared/lib/exposeComponentRenderer';
 import GenomicOverview from './genomicOverview/GenomicOverview';
-import CBioPortalAPI from "shared/api/CBioPortalAPI";
+import renderIf from 'render-if';
 import mockData from './mock/sampleData.json';
 import Connector, { ClinicalInformationData } from "./Connector";
 import { ClinicalData } from "shared/api/CBioPortalAPI";
 import { ClinicalDataBySampleId } from "../../shared/api/api-types-extended";
 import { RequestStatus } from "../../shared/api/api-types-extended";
 import { default as CBioPortalAPI, Mutation }  from "../../shared/api/CBioPortalAPI";
-import renderIf from 'render-if';
 import queryString from "query-string";
-import {mockData as vafPlotMockData, mockColors as vafPlotMockColors, mockOrder as vafPlotMockOrder, mockLabels as vafPlotMockLabels} from './vafPlot/mockData';
-import {ThumbnailExpandVAFPlot} from './vafPlot/ThumbnailExpandVAFPlot';
 
 export interface IPatientViewPageProps {
     store?: RootState;
@@ -34,7 +30,16 @@ export interface IPatientViewPageProps {
     clinicalDataStatus?: RequestStatus;
 }
 
-export default class PatientViewPage extends React.Component<IPatientViewPageProps, { mutationData:any }> {
+interface IPatientViewState {
+
+    mutationData:any;
+    genomicOverviewData: any;
+
+}
+
+@Connector.decorator
+export default class PatientViewPage extends React.Component<IPatientViewPageProps, IPatientViewState> {
+
 
     // private static mapStateToProps(state: RootState): IPatientHeaderProps {
     //
@@ -57,8 +62,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         super();
 
         this.state = {
-            mutationData: undefined;
-            this.state = { 'genomicOverviewData': { status: 'loading', data:null }  };
+            mutationData: undefined,
+            genomicOverviewData: { status: 'loading', data:null }
         };
 
         //TODO: this should be done by a module so that it can be reused on other pages
@@ -107,12 +112,11 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 let sampleIds: Array<string> = this.props.samples.map((item: ClinicalDataBySampleId)=>item.id);
 
                 tsClient.fetchMutationsInGeneticProfileUsingPOST({
-                    projection: "DETAILED",
-                    geneticProfileId: this.geneticProfileId,
-                    sampleIds: sampleIds
-                })
+                        geneticProfileId: this.geneticProfileId,
+                        sampleIds: sampleIds
+                    })
                     .then((mutationData: Array<Mutation>) => {
-                        this.setState({mutationData: mutationData});
+                        this.setState(({mutationData: mutationData} as IPatientViewState));
                     });
             }
 
@@ -122,7 +126,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         this.fetchData().then((apiResult)=>{
 
-            this.setState({ 'genomicOverviewData': { status:'complete', data:apiResult }});
+            this.setState(({ 'genomicOverviewData': { status:'complete', data:apiResult }}  as IPatientViewState));
 
         });
 
@@ -164,13 +168,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 }
 
                 <ClinicalInformationContainer status={ this.props.clinicalDataStatus } patient={this.props.patient} samples={this.props.samples} />
-                {/*<ThumbnailExpandVAFPlot*/}
-                    {/*data={vafPlotMockData}*/}
-                    {/*colors={vafPlotMockColors}*/}
-                    {/*labels={vafPlotMockLabels}*/}
-                    {/*order={vafPlotMockOrder}*/}
-                    {/*overlayPlacement="right"*/}
-                {/*/>*/}
+
             </div>
         );
     }
