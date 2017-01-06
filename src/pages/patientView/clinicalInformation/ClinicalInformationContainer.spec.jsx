@@ -36,7 +36,7 @@ const stubComponent = function (componentClass) {
     });
 };
 
-describe('ClinicalInformationContainerUnconnected', () => {
+describe('ClinicalInformationContainer', () => {
     let comp, props, buildTabsStub;
 
     before(() => {
@@ -49,7 +49,7 @@ describe('ClinicalInformationContainerUnconnected', () => {
         };
 
         stubComponent(ClinicalInformationPatientTable);
-        stubComponent(PDXTree);
+        //stubComponent(PDXTree);
 
         comp = mount(<ComponentUnderTest {...props} />);
     });
