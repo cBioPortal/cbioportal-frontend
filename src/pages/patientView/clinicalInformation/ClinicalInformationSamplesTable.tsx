@@ -1,7 +1,7 @@
 import * as React from "react";
 import { ClinicalDataBySampleId } from "../../../shared/api/api-types-extended";
 import convertSamplesData, {IConvertedSamplesData} from "./lib/convertSamplesData";
-import {SampleLabelHTML} from "../SampleLabel";
+import {SampleLabelHTML} from "../../../shared/components/sampleLabel/SampleLabel";
 import {Table as DataTable, Thead, Th} from "reactableMSK";
 import TableHeaderControls from "shared/components/tableHeaderControls/TableHeaderControls";
 
