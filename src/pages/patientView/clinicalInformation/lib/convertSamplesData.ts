@@ -1,5 +1,5 @@
 import {ClinicalData, ClinicalAttribute, Sample} from '../../../../shared/api/CBioPortalAPI';
-import {ClinicalDataBySampleId} from "../getClinicalInformationData";
+import { ClinicalDataBySampleId } from "../../../../shared/api/api-types-extended";
 
 export interface IColumn {
     id:string;
@@ -27,11 +27,11 @@ export default function (data?: Array<ClinicalDataBySampleId>):IConvertedSamples
 
             output.columns.push({ id: sampleId });
 
-            sample.clinicalData.forEach((dataItem) => {
-                output.items[dataItem.attrId] = output.items[dataItem.attrId] || {};
-                output.items[dataItem.attrId][sampleId] = dataItem.attrValue.toString();
-                output.items[dataItem.attrId].clinicalAttribute = dataItem.clinicalAttribute;
-                output.items[dataItem.attrId].id = dataItem.attrId;
+            sample.clinicalData.forEach((clinicalData: ClinicalData) => {
+                output.items[clinicalData.clinicalAttributeId] = output.items[clinicalData.clinicalAttributeId] || {};
+                output.items[clinicalData.clinicalAttributeId][sampleId] = clinicalData.value.toString();
+                output.items[clinicalData.clinicalAttributeId].clinicalAttribute = clinicalData.clinicalAttribute;
+                output.items[clinicalData.clinicalAttributeId].id = clinicalData.clinicalAttributeId;
             });
         });
 

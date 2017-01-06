@@ -2,32 +2,31 @@ import {RootState} from "../../redux/rootReducer";
 import {IDispatch, Connector} from "../../shared/lib/ConnectorAPI";
 import { IDatasetPageUnconnectedProps } from './DatasetList';
 import getDatasetsInfo from './getDatasetsInfo';
+import {CancerStudy} from "../../shared/api/CBioPortalAPI";
 
 export type DatasetDownloads = {
-    datasets: null | Array<any>,
+    datasets?: CancerStudy[],
     status?: 'fetching' | 'complete' | 'error'
 };
 
-const FETCH:'datasetDownloads/fetch' = 'datasetDownloads/fetch';
+const FETCH = 'datasetDownloads/fetch';
 
 export type ActionTypes = (
-    { type: typeof FETCH, status: 'complete', payload: Array<any> } |
+    { type: typeof FETCH, status: 'complete', payload: CancerStudy[] } |
     { type: typeof FETCH, status: 'fetching' }
-
 );
 
 export default new class DatasetConnector extends Connector<RootState, DatasetDownloads, ActionTypes, IDatasetPageUnconnectedProps>
 {
 
     initialState:DatasetDownloads = {
-        datasets:null,
-        status:'fetching'
+        status: 'fetching'
     };
 
     mapDispatchToProps = {
         loadDatasetsInfo: () => (dispatch:IDispatch<ActionTypes>) => {
 
-            getDatasetsInfo().then((data: Array<any>) => {
+            getDatasetsInfo().then((data: CancerStudy[]) => {
 
                 dispatch({
                     type:FETCH,
@@ -42,7 +41,8 @@ export default new class DatasetConnector extends Connector<RootState, DatasetDo
 
     mapStateToProps(state:RootState):IDatasetPageUnconnectedProps {
         return {
-            datasets:state.datasetDownloads.datasets,
+            datasets: state.datasetDownloads.datasets,
+            status: state.datasetDownloads.status
         };
     }
 
