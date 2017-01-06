@@ -146,7 +146,7 @@ export function plotCnSegs(p: any,config: any,chmInfo: any,row: any, segs: Array
     var genomeMeasured = 0;
     var genomeAltered = 0;
 
-    _.each(segs, function(seg) {
+    _.each(segs, function(seg: any) {
         let chm: any = translateChm(seg[chrCol]);
         if (chm == null || chm[0]>=chmInfo.hg19.length) return;
         var start = seg[startCol];
@@ -255,7 +255,8 @@ function addToolTip(node: any, tip: any,showDelay: any, position: any) {
     //     param['show'] = { delay: showDelay };
     // if (position)
     //     param['position'] = position;
-    $(node).qtip(param);
+    let $el : any = $(node);
+    $el.qtip(param);
 }
 
 function underlineText(textElement: any, p: any) {
