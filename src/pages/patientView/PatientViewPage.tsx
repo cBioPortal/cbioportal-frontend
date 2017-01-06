@@ -68,23 +68,29 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             cnaSegmentData: undefined
         };
 
+        this.tsClient = new CBioPortalAPI(`//${(window as any)['__API_ROOT__']}`);
+
         //TODO: this should be done by a module so that it can be reused on other pages
         const qs = queryString.parse((window as any).location.search);
         this.studyId = qs.cancer_study_id;
         this.patientId = qs.case_id;
         this.mutationGeneticProfileId = `${this.studyId}_mutations`;
-
     }
 
 
-    fetchData(_sampleIds: Array<string>) {
+    fetchCnaSegmentData(_sampleIds: Array<string>) {
 
-        const tsClient = new CBioPortalAPI(`//${(window as any)['__API_ROOT__']}`);
-        let mutationDataPromise = tsClient.fetchMutationsInGeneticProfileUsingPOST({geneticProfileId: this.mutationGeneticProfileId, sampleIds: _sampleIds, projection: "DETAILED"});
         let cnaSegmentPromise = Promise.resolve(
             $.get("http://www.cbioportal.org/api-legacy/copynumbersegments?cancerStudyId=" + this.studyId + "&sampleIds=" + _sampleIds.join(","))
         );
-        return Promise.all([mutationDataPromise, cnaSegmentPromise]);
+        return cnaSegmentPromise;
+
+    }
+
+    fetchMutationData(_sampleIds: Array<string>) {
+
+        let mutationDataPromise = this.tsClient.fetchMutationsInGeneticProfileUsingPOST({geneticProfileId: this.mutationGeneticProfileId, sampleIds: _sampleIds, projection: "DETAILED"});
+        return mutationDataPromise;
 
     }
 
@@ -108,9 +114,12 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                 let sampleIds: Array<string> = this.props.samples.map((item: ClinicalDataBySampleId)=>item.id);
 
-                this.fetchData(sampleIds).then((apiResult)=>{
-                    this.setState(({ 'mutationData' : apiResult[0] } as IPatientViewState));
-                    this.setState(({ 'cnaSegmentData':  apiResult[1] } as IPatientViewState));
+                this.fetchCnaSegmentData(sampleIds).then((_result) => {
+                    this.setState(({ 'cnaSegmentData':  _result } as IPatientViewState));
+                });
+
+                this.fetchMutationData(sampleIds).then((_result) => {
+                    this.setState(({ 'mutationData' : _result } as IPatientViewState));
                 });
 
             }
