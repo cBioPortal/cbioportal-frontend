@@ -1,9 +1,9 @@
 import * as React from "react";
-import {ClinicalDataBySampleId} from "./getClinicalInformationData";
+import { ClinicalDataBySampleId } from "../../../shared/api/api-types-extended";
 import convertSamplesData, {IConvertedSamplesData} from "./lib/convertSamplesData";
 import {SampleLabelHTML} from "../SampleLabel";
 import {Table as DataTable, Thead, Th} from "reactableMSK";
-import TableExportButtons from "../../../shared/components/tableExportButtons/TableExportButtons";
+import TableHeaderControls from "shared/components/tableHeaderControls/TableHeaderControls";
 
 interface IClinicalInformationSamplesTableProps {
     samples?: Array<ClinicalDataBySampleId>;
@@ -19,7 +19,7 @@ export default class ClinicalInformationSamplesTable extends React.Component<ICl
             <div>
                 <div>
                     <h4 className="pull-left">Samples</h4>
-                    <TableExportButtons className="pull-right" tableData={tableData} />
+                    <TableHeaderControls className="pull-right" tableData={tableData} />
                 </div>
                 <DataTable className="table table-striped" data={tableData} >
                     <Thead>{ headerCells }</Thead>
