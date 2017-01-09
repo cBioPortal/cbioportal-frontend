@@ -31,7 +31,7 @@ export default class MutationAssessorColumnFormatter
         };
     }
 
-    public static sortFunction(a:IColumnFormatterData, b:IColumnFormatterData):boolean
+    public static sortFunction(a:IColumnFormatterData, b:IColumnFormatterData):number
     {
         const aScore = MutationAssessorColumnFormatter.getData(a).score;
         const bScore = MutationAssessorColumnFormatter.getData(b).score;
@@ -41,7 +41,7 @@ export default class MutationAssessorColumnFormatter
         // use actual score values to compare (if exist)
         if (aScore && bScore)
         {
-            return aScore > bScore;
+            return aScore > bScore ? 1 : -1;
         }
         // if no score available sort by impact priority
         else if (aImpact && bImpact)
@@ -59,10 +59,10 @@ export default class MutationAssessorColumnFormatter
                 bPriority = MutationAssessorColumnFormatter.MA_SCORE_MAP[bImpact.toLowerCase()].priority;
             }
 
-            return aPriority > bPriority;
+            return aPriority > bPriority ? 1 : -1;
         }
 
-        return false;
+        return 0;
     }
 
     public static filterValue(data:IColumnFormatterData):string

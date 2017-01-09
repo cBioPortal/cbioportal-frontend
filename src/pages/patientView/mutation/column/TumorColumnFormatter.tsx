@@ -41,10 +41,8 @@ export default class TumorColumnFormatter {
         );
     };
 
-    public static sortFunction(a:number[], b:number[]) {
-        // return true iff a > b
-        const result = compareNumberLists(a,b);
-        return (result === 1);
+    public static sortFunction(a:number[], b:number[]):number {
+        return compareNumberLists(a, b);
     }
 
     private static getSampleIds(data:IColumnFormatterData) {

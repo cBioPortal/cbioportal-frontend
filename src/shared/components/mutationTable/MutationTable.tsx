@@ -5,6 +5,7 @@ import EnhancedReactTable from "../enhancedReactTable/EnhancedReactTable";
 import {IColumnDefMap} from "../enhancedReactTable/IEnhancedReactTableProps";
 import {IMutationTableProps} from "./IMutationTableProps";
 import GeneColumnFormatter from "./column/GeneColumnFormatter";
+import ChromosomeColumnFormatter from "./column/ChromosomeColumnFormatter";
 import SampleColumnFormatter from "./column/SampleColumnFormatter";
 import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter";
 import MutationAssessorColumnFormatter from "./column/MutationAssessorColumnFormatter";
@@ -41,11 +42,11 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
                 sortable: ProteinChangeColumnFormatter.sortFunction,
                 filterable: true
             },
-            mutationType: {
-                name: "Mutation Type",
+            chromosome: {
+                name: "Chromosome",
                 priority: 4.00,
-                formatter: MutationTypeColumnFormatter.renderFunction,
-                sortable: true,
+                columnData: ChromosomeColumnFormatter.getData,
+                sortable: ChromosomeColumnFormatter.sortFunction,
                 filterable: true
             },
             startPos: {
@@ -90,18 +91,18 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
                 sortable: true,
                 filterable: true
             },
-            center: {
-                name: "Center",
+            mutationType: {
+                name: "Mutation Type",
                 priority: 11.00,
-                dataField: "center",
+                formatter: MutationTypeColumnFormatter.renderFunction,
                 sortable: true,
                 filterable: true
             },
-            mutationAssessor: {
-                name: "Mutation Assessor",
+            center: {
+                name: "Center",
                 priority: 12.00,
-                formatter: MutationAssessorColumnFormatter.renderFunction,
-                sortable: MutationAssessorColumnFormatter.sortFunction,
+                dataField: "center",
+                sortable: true,
                 filterable: true
             },
             normalRefCount: {
@@ -138,6 +139,13 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
                 name: "Allele Freq (T)",
                 priority: 18.00,
                 sortable: true
+            },
+            mutationAssessor: {
+                name: "Mutation Assessor",
+                priority: 19.00,
+                formatter: MutationAssessorColumnFormatter.renderFunction,
+                sortable: MutationAssessorColumnFormatter.sortFunction,
+                filterable: true
             }
         };
     };

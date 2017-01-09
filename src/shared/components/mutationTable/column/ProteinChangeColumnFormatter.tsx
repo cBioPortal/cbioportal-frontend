@@ -8,12 +8,12 @@ import {IColumnFormatterData}
  */
 export default class ProteinChangeColumnFormatter
 {
-    public static sortFunction(a:string, b:string):boolean
+    public static sortFunction(a:string, b:string):number
     {
         const aValue = ProteinChangeColumnFormatter.extractSortValue(a);
         const bValue = ProteinChangeColumnFormatter.extractSortValue(b);
 
-        return aValue > bValue;
+        return aValue > bValue ? 1 : -1;
     }
 
     // this is to sort alphabetically
