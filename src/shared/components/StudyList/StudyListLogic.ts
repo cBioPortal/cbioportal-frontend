@@ -34,24 +34,24 @@ export default class StudyListLogic implements IStudyListLogic
 		'maxTreeDepth': number,
 	};
 
-	treeInfo: CancerStudyTreeData;
+	treeData: CancerStudyTreeData;
 	handleSelectedStudiesChange: (selectedStudyIds: string[]) => void
 
-	constructor(params: Pick<StudyListLogic, 'state' | 'treeInfo' | 'handleSelectedStudiesChange'>)
+	constructor(params: Pick<StudyListLogic, 'state' | 'treeData' | 'handleSelectedStudiesChange'>)
 	{
 		this.state = params.state;
-		this.treeInfo = params.treeInfo;
+		this.treeData = params.treeData;
 		this.handleSelectedStudiesChange = params.handleSelectedStudiesChange;
 	}
 
 	getRootCancerType()
 	{
-		return this.treeInfo.rootCancerType;
+		return this.treeData.rootCancerType;
 	}
 
 	getMetadata(node:CancerTreeNode)
 	{
-		return this.treeInfo.map_node_meta.get(node) as NodeMetadata;
+		return this.treeData.map_node_meta.get(node) as NodeMetadata;
 	}
 
 	// filters out empty CancerType subtrees
@@ -60,6 +60,14 @@ export default class StudyListLogic implements IStudyListLogic
 		let meta = this.getMetadata(node);
 		if (meta.isCancerType)
 		{
+			// ignore cancer types excluded by selection
+			if (this.state.selectedCancerTypeIds.length)
+			{
+				let idToCancerType = (cancerTypeId:string) => this.treeData.map_cancerTypeId_cancerType.get(cancerTypeId) as CancerType;
+				let selectedCancerTypes = this.state.selectedCancerTypeIds.map(idToCancerType);
+				if (_.intersection(selectedCancerTypes, [node].concat(meta.ancestors)).length == 0)
+					return false;
+			}
 			// ignore cancer types excluded by depth
 			if (meta.ancestors.length > this.state.maxTreeDepth)
 				return false;
@@ -72,7 +80,7 @@ export default class StudyListLogic implements IStudyListLogic
 
 	// returns true if the node or any related nodes match
 	nodeFilter = memoize({
-		getAdditionalArgs: () => [this.treeInfo, this.state.maxTreeDepth, this.state.searchText],
+		getAdditionalArgs: () => [this.treeData, this.state.maxTreeDepth, this.state.searchText],
 		fixedArgsLength: 1,
 		function: (node:CancerTreeNode):boolean =>
 		{
@@ -133,7 +141,7 @@ export default class StudyListLogic implements IStudyListLogic
 		if (meta.isCancerType)
 		{
 			let selectedStudyIds = this.state.selectedStudyIds || [];
-			let selectedStudies = selectedStudyIds.map(studyId => this.treeInfo.map_studyId_cancerStudy.get(studyId) as CancerStudy);
+			let selectedStudies = selectedStudyIds.map(studyId => this.treeData.map_studyId_cancerStudy.get(studyId) as CancerStudy);
 			let shownStudies = this.getDescendantCancerStudies(node);
 			let shownAndSelectedStudies = _.intersection(shownStudies, selectedStudies);
 			let checked = shownAndSelectedStudies.length > 0;

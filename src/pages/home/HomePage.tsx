@@ -1,6 +1,8 @@
 import * as React from 'react';
-import QueryContainer from "../../shared/components/query2/QueryContainer";
+import QueryContainer from "../../shared/components/query/QueryContainer";
+import QueryContainer2 from "../../shared/components/query2/QueryContainer";
 import * as styles_any from './styles.module.scss';
+import {FlexCol} from "../../shared/components/flexbox/FlexBox";
 
 function getRootElement()
 {
@@ -18,11 +20,17 @@ interface IHomePageProps
 {
 }
 
-export default class HomePage extends React.Component<IHomePageProps, {}>
+interface IHomePageState
+{
+	mode: number;
+}
+
+export default class HomePage extends React.Component<IHomePageProps, IHomePageState>
 {
     constructor(props:IHomePageProps)
     {
         super(props);
+        this.state = {mode: 2}
     }
 
     componentDidMount()
@@ -38,7 +46,10 @@ export default class HomePage extends React.Component<IHomePageProps, {}>
     public render()
     {
         return (
-       		<QueryContainer/>
+        	<FlexCol style={{height: '100%'}}>
+				<a style={{alignSelf: 'center'}} onClick={() => this.setState({ mode: this.state.mode == 2 ? 1 : 2 })}>Switch to {this.state.mode == 2 ? 'old' : 'new'} view</a>
+				{this.state.mode == 2 ? <QueryContainer2/> : <QueryContainer/>}
+			</FlexCol>
 		);
     }
 }

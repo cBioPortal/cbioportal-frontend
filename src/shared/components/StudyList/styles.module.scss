@@ -6,23 +6,42 @@
 }
 
 ul.StudyList {
+  &.Level0, &.Level1 {
+    padding-left: 0px;
+  }
+
+  &.Level0 {
+    padding: 5px;
+  }
+
 
   li.CancerType {
+    list-style-type: none;
 
     .CancerTypeName {
+      font-style: italic;
+      color: gray;
     }
   }
 
   li.Study {
+    list-style-type: none;
+    margin-left: 40px;
+
+    label {
+      display: inline;
+    }
 
     .StudyName {
+      font-weight: bold;
     }
 
     .StudySamples {
+      margin: 0 10px;
+      font-style: italic;
     }
 
     .StudyLinks {
-      margin: 0 10px;
       display: inline;
 
       a {

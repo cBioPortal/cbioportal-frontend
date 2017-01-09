@@ -11,6 +11,7 @@ const styles = {
 		StudyList: string,
 
 		CancerType: string,
+		CancerTypeName: string,
 
 		Study: string,
 		StudyName: string,
@@ -19,7 +20,7 @@ const styles = {
 
 		highlighted: string,
 	},
-	Level: (level:number) => `Level${level}`
+	Level: (level:number) => styles_any[`Level${level}`]
 };
 
 export type IStudyListProps = {

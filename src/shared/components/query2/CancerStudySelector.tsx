@@ -16,7 +16,6 @@ import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
 import ReactSelect from 'react-select';
 import 'react-select/dist/react-select.css';
 import StudyList from "../StudyList/StudyList";
-import {IStudyListLogic} from "../StudyList/StudyList";
 import StudyListLogic from "../StudyList/StudyListLogic";
 
 const styles = styles_any as {
@@ -180,7 +179,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 	renderCancerTypeList()
 	{
 		let logic = this.getStudyListLogic();
-		let rootMeta = logic.getMetadata(logic.treeInfo.rootCancerType);
+		let rootMeta = logic.getMetadata(logic.treeData.rootCancerType);
 		let listItems = rootMeta && rootMeta.childCancerTypes.map(this.renderCancerTypeListItem);
 
 		return (
@@ -225,7 +224,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 	renderStudyHeaderCheckbox = (shownStudies:CancerStudy[]) =>
 	{
 		let logic = this.getStudyListLogic();
-		let selectedStudies = this.selectedStudyIds.map(studyId => logic.treeInfo.map_studyId_cancerStudy.get(studyId) as CancerStudy);
+		let selectedStudies = this.selectedStudyIds.map(studyId => logic.treeData.map_studyId_cancerStudy.get(studyId) as CancerStudy);
 		let shownAndSelectedStudies = _.intersection(shownStudies, selectedStudies);
 		let checked = shownAndSelectedStudies.length > 0;
 		let indeterminate = checked && shownAndSelectedStudies.length != shownStudies.length;
@@ -246,7 +245,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 		);
 	}
 
-	getTreeInfo = memoize({
+	getTreeData = memoize({
 		getAdditionalArgs: () => [
 			this.props.cancerTypes,
 			this.props.studies
@@ -259,15 +258,14 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 
 	getStudyListLogic = memoize({
 		getAdditionalArgs: () => [
-			this.props.cancerTypes,
-			this.props.studies,
+			this.getTreeData(),
 			this.maxTreeDepth,
 			this.searchText,
 			this.selectedCancerTypeIds,
 			this.selectedStudyIds
 		],
 		function: () => new StudyListLogic({
-			treeInfo: this.getTreeInfo(),
+			treeData: this.getTreeData(),
 			state: {
 				maxTreeDepth: this.maxTreeDepth,
 				searchText: this.searchText,
@@ -297,8 +295,14 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 						placeholder='Search...'
 						noResultsText={false}
 						onCloseResetsInput={false}
-						onInputChange={(searchText:string) => this.setState({searchText})}
-						onChange={(option:{value:string}) => this.setState({searchText: option ? option.value || '' : ''})}
+						onInputChange={(searchText:string) => this.setState({
+							searchText,
+							selectedCancerTypeIds: []
+						})}
+						onChange={(option:{value:string}) => this.setState({
+							searchText: option ? option.value || '' : '',
+							selectedCancerTypeIds: []
+						})}
 					/>
 					<div style={{flex: 1}}/>
 					Number of Studies Selected: {this.selectedStudyIds.length}
