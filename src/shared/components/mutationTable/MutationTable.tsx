@@ -66,14 +66,14 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
                 name: "Ref",
                 priority: 7.00,
                 dataField: "referenceAllele",
-                sortable: false,
+                sortable: true,
                 filterable: false
             },
             variantAllele: {
                 name: "Var",
                 priority: 8.00,
                 dataField: "variantAllele",
-                sortable: false,
+                sortable: true,
                 filterable: false
             },
             mutationStatus: {
@@ -107,31 +107,37 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
             normalRefCount: {
                 name: "Ref Count (N)",
                 priority: 13.00,
-                dataField: "normalRefCount"
+                dataField: "normalRefCount",
+                sortable: true
             },
             normalAltCount: {
                 name: "Alt Count (N)",
                 priority: 14.00,
-                dataField: "normalAltCount"
+                dataField: "normalAltCount",
+                sortable: true
             },
             tumorRefCount: {
                 name: "Ref Count (T)",
                 priority: 15.00,
-                dataField: "tumorRefCount"
+                dataField: "tumorRefCount",
+                sortable: true
             },
             tumorAltCount: {
                 name: "Alt Count (T)",
                 priority: 16.00,
-                dataField: "tumorAltCount"
+                dataField: "tumorAltCount",
+                sortable: true
             },
             // TODO we don't have data field for frequencies, we need to calculate them!
             normalAlleleFreq : {
                 name: "Allele Freq (N)",
-                priority: 17.00
+                priority: 17.00,
+                sortable: true
             },
             tumorAlleleFreq: {
                 name: "Allele Freq (T)",
-                priority: 18.00
+                priority: 18.00,
+                sortable: true
             }
         };
     };
@@ -164,7 +170,7 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
 
     private handleFilterInput(filter: string)
     {
-        return this.setState({ filter:filter });
+        return this.setState({ filter });
     }
 
     private mergeProps(props:IMutationTableProps):IMutationTableProps
