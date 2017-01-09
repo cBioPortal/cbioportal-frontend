@@ -34,8 +34,8 @@ export interface IPatientViewPageProps {
 
 interface IPatientViewState {
 
-    mutationData:any;
-    genomicOverviewData: any;
+    cnaSegmentData: any;
+    mutationData: any;
 
 }
 
@@ -57,7 +57,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     private patientId:string;
 
-    private geneticProfileId:string;
+    private mutationGeneticProfileId:string;
 
     constructor(){
 
@@ -65,33 +65,37 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         this.state = {
             mutationData: undefined,
-            genomicOverviewData: { status: 'loading', data:null }
+            cnaSegmentData: undefined
         };
+
+        this.tsClient = new CBioPortalAPI(`//${(window as any)['__API_ROOT__']}`);
 
         //TODO: this should be done by a module so that it can be reused on other pages
         const qs = queryString.parse((window as any).location.search);
         this.studyId = qs.cancer_study_id;
         this.patientId = qs.case_id;
-        this.geneticProfileId = `${this.studyId}_mutations`;
-
+        this.mutationGeneticProfileId = `${this.studyId}_mutations`;
     }
 
 
-    fetchData() {
+    fetchCnaSegmentData(_sampleIds: Array<string>) {
 
-        const studyId: string = "ov_tcga_pub";
-        const sampleIds: Array<any> = ["TCGA-24-2035-01"];
-
-        const tsClient = new CBioPortalAPI(`//${(window as any)['__API_ROOT__']}`);
-        let mutationDataPromise = tsClient.fetchMutationsInGeneticProfileUsingPOST({geneticProfileId: studyId + "_mutations", sampleIds: sampleIds, projection: "DETAILED"});
-        let p = Promise.resolve(
-            $.get("http://www.cbioportal.org/api-legacy/copynumbersegments?cancerStudyId=ov_tcga_pub&chromosome=17&sampleIds=TCGA-24-2035-01")
+        let cnaSegmentPromise = Promise.resolve(
+            $.get("http://www.cbioportal.org/api-legacy/copynumbersegments?cancerStudyId=" + this.studyId + "&sampleIds=" + _sampleIds.join(","))
         );
-        return Promise.all([mutationDataPromise, p]);
+        return cnaSegmentPromise;
+
+    }
+
+    fetchMutationData(_sampleIds: Array<string>) {
+
+        let mutationDataPromise = this.tsClient.fetchMutationsInGeneticProfileUsingPOST({geneticProfileId: this.mutationGeneticProfileId, sampleIds: _sampleIds, projection: "DETAILED"});
+        return mutationDataPromise;
 
     }
 
     public componentDidMount() {
+
         // const PatientHeader = connect(PatientViewPage.mapStateToProps)(PatientHeaderUnconnected);
         //
         // // Don't try to render clinical_div_prototype in parent cbioportal
@@ -104,34 +108,25 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         // //     );
         // // } //
 
-        const tsClient = new CBioPortalAPI(`//${(window as any)['__API_ROOT__']}`);
-
-
-
         this.props.loadClinicalInformationTableData && this.props.loadClinicalInformationTableData().then(() => {
 
             if (this.props.samples) {
+
                 let sampleIds: Array<string> = this.props.samples.map((item: ClinicalDataBySampleId)=>item.id);
 
-                tsClient.fetchMutationsInGeneticProfileUsingPOST({
-                    projection: "DETAILED",
-                    geneticProfileId: this.geneticProfileId,
-                    sampleIds: sampleIds
-                })
-                .then((mutationData: Array<Mutation>) => {
-                    this.setState(({mutationData: mutationData} as IPatientViewState));
+                this.fetchCnaSegmentData(sampleIds).then((_result) => {
+                    this.setState(({ 'cnaSegmentData':  _result } as IPatientViewState));
                 });
+
+                this.fetchMutationData(sampleIds).then((_result) => {
+                    this.setState(({ 'mutationData' : _result } as IPatientViewState));
+                });
+
             }
 
         });
 
         this.exposeComponentRenderersToParentScript();
-
-        this.fetchData().then((apiResult)=>{
-
-            this.setState(({ 'genomicOverviewData': { status:'complete', data:apiResult }}  as IPatientViewState));
-
-        });
 
     }
 
@@ -161,25 +156,22 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             <div>
 
                 {
-                    renderIf(this.state.genomicOverviewData.status==='complete')(
-                        <div>
-                            <h4>Genomic Overview</h4>
-                            <GenomicOverview mutations={this.state.genomicOverviewData.data[0]} cnaSegments={this.state.genomicOverviewData.data[1]} plotComponent={plotComp} />
-                        </div>
+                    renderIf(this.state.mutationData && this.state.cnaSegmentData)(
+                        <GenomicOverview mutationData={this.state.mutationData} cnaSegmentData={this.state.cnaSegmentData} />
                     )
                 }
 
-                <hr />
-                { renderIf(this.state.mutationData)(
-                    <MutationInformationContainer
-                        mutations={this.state.mutationData}
-                        sampleOrder={mockData.order}
-                        sampleLabels={mockData.labels}
-                        sampleColors={mockData.colors}
-                        sampleTumorType={mockData.tumorType}
-                        sampleCancerType={mockData.cancerType}
-                    />
-                )
+                {
+                    renderIf(this.state.mutationData)(
+                        < MutationInformationContainer
+                            mutations={this.state.mutationData}
+                            sampleOrder={mockData.order}
+                            sampleLabels={mockData.labels}
+                            sampleColors={mockData.colors}
+                            sampleTumorType={mockData.tumorType}
+                            sampleCancerType={mockData.cancerType}
+                        />
+                    )
                 }
                 <hr />
                 <ClinicalInformationContainer status={ this.props.clinicalDataStatus } patient={this.props.patient} samples={this.props.samples} />
