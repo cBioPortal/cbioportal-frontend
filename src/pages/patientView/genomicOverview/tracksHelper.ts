@@ -199,15 +199,16 @@ export function plotMuts(p: any, config: any,chmInfo: any,row: any, mutations: A
     let pixelMap: Array<Array<string>> = [];
     for (var i = 0; i < mutObjs.length; i++) {
         var mutObj: Mutation = mutObjs[i];
-        var chm = translateChm(mutObj.gene.chromosome);
-        if (chm != null||chm <= chmInfo.hg19.length) {
-            var x = Math.round(chmInfo.loc2xpixil(chm, (mutObj.startPosition + mutObj.endPosition)/2, config));
-            var xBin = x - x%config.pixelsPerBinMut;
-            if (pixelMap[xBin] == null) pixelMap[xBin] = [];
-            pixelMap[xBin].push(mutObj.gene.hugoGeneSymbol + ": " + mutObj.proteinChange);
-            numMut++;
+        if (typeof mutObj.gene.chromosome !== 'undefined') {
+            var chm = translateChm(mutObj.gene.chromosome);
+            if (chm != null||chm <= chmInfo.hg19.length) {
+                var x = Math.round(chmInfo.loc2xpixil(chm, (mutObj.startPosition + mutObj.endPosition)/2, config));
+                var xBin = x - x%config.pixelsPerBinMut;
+                if (pixelMap[xBin] == null) pixelMap[xBin] = [];
+                pixelMap[xBin].push(mutObj.gene.hugoGeneSymbol + ": " + mutObj.proteinChange);
+                numMut++;
+            }
         }
-
     }
     var maxCount = 5; // set max height to 5 mutations
 
@@ -255,7 +256,9 @@ function addToolTip(node: any, tip: any,showDelay: any, position: any) {
     //     param['show'] = { delay: showDelay };
     // if (position)
     //     param['position'] = position;
+
     ($(node) as any).qtip(param);
+
 }
 
 function underlineText(textElement: any, p: any) {
