@@ -39,6 +39,7 @@ export default class MutationInformationContainer extends React.Component<IMutat
             },
             tumors: {
                 name: "Tumors",
+                priority: 0.50,
                 formatter: TumorColumnFormatter.renderFunction,
                 sortable: TumorColumnFormatter.sortFunction,
                 filterable: false,
@@ -50,27 +51,52 @@ export default class MutationInformationContainer extends React.Component<IMutat
                     sampleCancerType: this.props.sampleCancerType
                 }
             },
-            annotation: {
-                name: "Annotation"
+            chromosome: {
+                name: "Chr"
             },
-            copyNumber: {
-                name: "Copy #"
+            startPos: {
+                name: "Start"
             },
-            mRnaExp: {
-                name: "mRNA Exp."
+            endPos: {
+                name: "End"
             },
-            cohort: {
-                name: "Cohort"
-            },
-            cosmic: {
-                name: "COSMIC"
-            },
-            normalAlleleFreq : {
-                name: "Allele Freq (N)",
+            mutationStatus: {
+                name: "Status",
                 visible: "excluded"
             },
+            validationStatus: {
+                name: "Validation"
+            },
+            mutationType: {
+                name: "Type"
+            },
+            annotation: {
+                name: "Annotation",
+                priority: 3.50,
+                sortable: true
+            },
+            copyNumber: {
+                name: "Copy #",
+                priority: 18.10,
+                sortable: true
+            },
+            mRnaExp: {
+                name: "mRNA Expr.",
+                priority: 18.20,
+                sortable: true
+            },
+            cohort: {
+                name: "Cohort",
+                priority: 18.30,
+                sortable: true
+            },
+            cosmic: {
+                name: "COSMIC",
+                priority: 18.40,
+                sortable: true
+            },
             tumorAlleleFreq: {
-                name: "Variant Allele Frequency",
+                name: "Allele Freq",
                 formatter: AlleleFreqColumnFormatter.renderFunction,
                 sortable: AlleleFreqColumnFormatter.sortFunction,
                 filterable: false,
@@ -80,8 +106,11 @@ export default class MutationInformationContainer extends React.Component<IMutat
                     sampleLabels: this.props.sampleLabels
                 }
             },
+            normalAlleleFreq : {
+                name: "Allele Freq (N)"
+            },
             normalRefCount: {
-                name: "Ref Count (N)",
+                name: "Ref Reads (N)",
                 formatter: AlleleCountColumnFormatter.renderFunction,
                 columnProps: {
                     dataField: "normalRefCount",
@@ -89,7 +118,7 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 }
             },
             normalAltCount: {
-                name: "Alt Count (N)",
+                name: "Variant Reads (N)",
                 formatter: AlleleCountColumnFormatter.renderFunction,
                 columnProps: {
                     dataField: "normalAltCount",
@@ -97,7 +126,7 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 }
             },
             tumorRefCount: {
-                name: "Ref Count (T)",
+                name: "Ref Reads",
                 formatter: AlleleCountColumnFormatter.renderFunction,
                 columnProps: {
                     dataField: "tumorRefCount",
@@ -105,7 +134,7 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 }
             },
             tumorAltCount: {
-                name: "Alt Count (T)",
+                name: "Variant Reads",
                 formatter: AlleleCountColumnFormatter.renderFunction,
                 columnProps: {
                     dataField: "tumorAltCount",
