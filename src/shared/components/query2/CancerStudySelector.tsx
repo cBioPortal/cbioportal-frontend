@@ -56,7 +56,6 @@ export type ICancerStudySelectorProps = {
 
 export interface ICancerStudySelectorExperimentalOptions
 {
-	showAllStudiesByDefault?: boolean;
 	maxTreeDepth?: number;
 	clickAgainToDeselectSingle?: boolean;
 }
@@ -74,7 +73,6 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 	{
 		return {
 			maxTreeDepth: 9,
-			showAllStudiesByDefault: true,
 			clickAgainToDeselectSingle: true,
 		};
 	}
@@ -295,11 +293,11 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 						placeholder='Search...'
 						noResultsText={false}
 						onCloseResetsInput={false}
-						onInputChange={(searchText:string) => this.setState({
+						onInputChange={(searchText:string) => this.updateState({
 							searchText,
 							selectedCancerTypeIds: []
 						})}
-						onChange={(option:{value:string}) => this.setState({
+						onChange={(option:{value:string}) => this.updateState({
 							searchText: option ? option.value || '' : '',
 							selectedCancerTypeIds: []
 						})}

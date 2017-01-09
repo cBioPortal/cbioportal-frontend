@@ -71,7 +71,6 @@ export default class QueryContainer extends React.Component<IQueryContainerProps
                 <FlexRow padded>
 					{/* demo controls */}
                 	<FlexCol className={styles.CancerStudySelector} padded style={{border: '1px solid #ddd', borderRadius: 5, padding: 5}}>
-                		<StateToggle label='Show all studies when nothing is selected' target={this} name='showAllStudiesByDefault' defaultValue={!!CancerStudySelector.defaultProps.showAllStudiesByDefault}/>
                 		<StateToggle label='Click tree node again to deselect' target={this} name='clickAgainToDeselectSingle' defaultValue={!!CancerStudySelector.defaultProps.clickAgainToDeselectSingle}/>
 						<Select
 							label="Tree depth: "
