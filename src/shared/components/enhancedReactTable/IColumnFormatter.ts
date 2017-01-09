@@ -12,7 +12,7 @@ export interface IColumnFormatterData {
 }
 
 export interface IColumnSortFunction {
-    (a:any, b:any):boolean;
+    (a:any, b:any):number;
 }
 
 export interface IColumnFilterFunction {

@@ -63,8 +63,7 @@ export default class AlleleFreqColumnFormatter {
             </Tooltip>
         </Td>);
     }
-    public static sortFunction(a:number[], b:number[]) {
-        const result = compareNumberLists(a,b);
-        return (result === 1);
+    public static sortFunction(a:number[], b:number[]):number {
+        return compareNumberLists(a, b);
     }
 }

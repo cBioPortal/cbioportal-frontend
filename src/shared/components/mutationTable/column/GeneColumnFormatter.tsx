@@ -32,21 +32,30 @@ export default class GeneColumnFormatter
         return GeneColumnFormatter.getTextValue(data);
     }
 
-    public static getData(data:IColumnFormatterData)
+    public static getDataFromRow(rowData:any)
     {
         let value;
 
-        if (data.columnData)
-        {
-            value = data.columnData;
-        }
-        else if (data.rowData)
-        {
-            const rowDataArr:Array<any> = [].concat(data.rowData);
+        if (rowData) {
+            const rowDataArr:Array<any> = [].concat(rowData);
             value = (rowDataArr.length > 0 ? rowDataArr[0].gene : null);
         }
         else {
             value = {};
+        }
+
+        return value;
+    }
+
+    public static getData(data:IColumnFormatterData)
+    {
+        let value;
+
+        if (data.columnData) {
+            value = data.columnData;
+        }
+        else {
+            value = GeneColumnFormatter.getDataFromRow(data.rowData);
         }
 
         return value;
