@@ -105,16 +105,15 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
                 sortable: true,
                 filterable: true
             },
-            normalRefCount: {
-                name: "Ref Count (N)",
+            tumorAlleleFreq: {
+                name: "Allele Freq (T)",
                 priority: 13.00,
-                dataField: "normalRefCount",
                 sortable: true
             },
-            normalAltCount: {
-                name: "Alt Count (N)",
+            tumorAltCount: {
+                name: "Alt Count (T)",
                 priority: 14.00,
-                dataField: "normalAltCount",
+                dataField: "tumorAltCount",
                 sortable: true
             },
             tumorRefCount: {
@@ -123,21 +122,21 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
                 dataField: "tumorRefCount",
                 sortable: true
             },
-            tumorAltCount: {
-                name: "Alt Count (T)",
-                priority: 16.00,
-                dataField: "tumorAltCount",
-                sortable: true
-            },
-            // TODO we don't have data field for frequencies, we need to calculate them!
             normalAlleleFreq : {
                 name: "Allele Freq (N)",
-                priority: 17.00,
+                priority: 16.00,
                 sortable: true
             },
-            tumorAlleleFreq: {
-                name: "Allele Freq (T)",
+            normalAltCount: {
+                name: "Alt Count (N)",
+                priority: 17.00,
+                dataField: "normalAltCount",
+                sortable: true
+            },
+            normalRefCount: {
+                name: "Ref Count (N)",
                 priority: 18.00,
+                dataField: "normalRefCount",
                 sortable: true
             },
             mutationAssessor: {
