@@ -59,6 +59,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     private mutationGeneticProfileId:string;
 
+    private tsClient:CBioPortalAPI;
+
     constructor(){
 
         super();
@@ -157,7 +159,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                 {
                     renderIf(this.state.mutationData && this.state.cnaSegmentData)(
-                        <GenomicOverview mutationData={this.state.mutationData} cnaSegmentData={this.state.cnaSegmentData} />
+                        <GenomicOverview mutations={this.state.mutationData} cnaSegments={this.state.cnaSegmentData} />
                     )
                 }
 
