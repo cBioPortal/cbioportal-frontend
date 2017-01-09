@@ -1,5 +1,4 @@
 import * as React from "react";
-import mockData from "./mock/mutationData.json";
 import MutationTable from "../../../shared/components/mutationTable/MutationTable";
 import {IColumnDefMap} from "../../../shared/components/enhancedReactTable/IEnhancedReactTableProps";
 import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter";
@@ -23,9 +22,9 @@ export default class MutationInformationContainer extends React.Component<IMutat
     // a row in the table may represent more than one mutation...
     private mergedMutations:Array<Array<Mutation>>;
 
-    constructor() {
-        super();
-        this.mergedMutations = this.mergeMutations(mockData);
+    constructor(props:IMutationInformationContainerProps) {
+        super(props);
+        this.mergedMutations = this.mergeMutations(this.props.mutations);
     }
 
     public render() {
