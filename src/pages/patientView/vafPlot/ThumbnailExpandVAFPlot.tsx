@@ -9,6 +9,7 @@ export type IThumbnailExpandVAFPlotProps = {
     colors?: { [s: string]:string };
     labels?: { [s:string]:string };
     overlayPlacement?: string;
+    cssClass?: string;
 };
 
 export class ThumbnailExpandVAFPlot extends React.Component<IThumbnailExpandVAFPlotProps, {}> {
@@ -56,12 +57,13 @@ export class ThumbnailExpandVAFPlot extends React.Component<IThumbnailExpandVAFP
                 overlay={<VAFPlot {...expandedProps}/>}
                 arrowContent={<div className="rc-tooltip-arrow-inner"/>}
                 destroyTooltipOnHide={false}
+                mouseLeaveDelay={1000000}
             >
-                <span>
+                <div className={ this.props.cssClass || '' }>
                     <VAFPlot
                             {...thumbnailProps}
                     />
-                </span>
+                </div>
             </Tooltip>
         );
     }
