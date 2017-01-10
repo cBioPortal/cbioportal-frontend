@@ -4,7 +4,11 @@
 [![Code Climate](https://codeclimate.com/github/cBioPortal/cbioportal-frontend/badges/gpa.svg)](https://codeclimate.com/github/cBioPortal/cbioportal-frontend)
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
 
-This is the new React frontend for cBioPortal, currently under development. 
+This is the new React frontend for cBioPortal, currently under development.
+
+Make sure you have the latest stable node version installed:
+
+https://nodejs.org/en/
 
 To install all app and dev dependencies 
 ```
@@ -13,7 +17,7 @@ npm install
 
 To build DLLs in common-dist folder (must be done prior to start of dev server)
 ```
-npm run buildDLL
+npm run buildDLL:dev
 ```
 
 To start dev server with hot reload enabled
@@ -50,7 +54,7 @@ can be set to whatever instance of the api you want to use as a backend.)
 
 The default is:
 ```
-API_ROOT=www.cbioportal.org/api-legacy
+API_ROOT=www.cbioportal.org/api
 ```
 
 ## Check in cBioPortal context
