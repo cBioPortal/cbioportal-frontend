@@ -40,3 +40,9 @@ th.reactable-header-sort-asc:after {
 #content {
   margin-top:8px;
 }
+
+/* override for rc-tooltip */
+
+.rc-tooltip {
+  opacity:1 !important;
+}

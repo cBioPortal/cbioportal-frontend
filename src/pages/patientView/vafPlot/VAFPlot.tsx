@@ -129,12 +129,14 @@ export class VAFPlot extends React.Component<IVAFPlotProps, IVAFPlotState> {
         const histogramCheckbox = (
             <label
                 key="histogram-toggle"
+                style={{ marginRight:10 }}
             >
                 <input
                     ref={this.refHandlers.histogramCheckbox}
                     type="checkbox"
                     checked={ this.state.show_histogram }
                     onChange= { this.toggleShowHistogram }
+                    style={{ marginRight:3 }}
                 />histogram
             </label>);
         const curveCheckbox = (
@@ -146,6 +148,7 @@ export class VAFPlot extends React.Component<IVAFPlotProps, IVAFPlotState> {
                     type="checkbox"
                     checked={ this.state.show_curve }
                     onChange = { this.toggleShowCurve }
+                    style={{ marginRight:3 }}
                 />density estimation
             </label>);
         const controls = [histogramCheckbox, curveCheckbox];
