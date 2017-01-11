@@ -165,7 +165,7 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
         return(
             <div>
                 <h4 className="pull-left">{title}</h4>
-                <TableHeaderControls showCopyAndDownload={false} handleInput={this.handleFilterInput} showSearch={true} className="pull-right" />
+                <TableHeaderControls showCopyAndDownload={true} showHideShowColumnButton={true} columns={columns} handleInput={this.handleFilterInput} showSearch={true} className="pull-right" />
                 <EnhancedReactTable
                     reactTableProps={reactTableProps}
                     columns={columns}
