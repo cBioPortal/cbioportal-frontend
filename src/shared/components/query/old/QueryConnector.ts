@@ -1,8 +1,6 @@
-import * as _ from 'lodash';
-import {Dictionary} from 'lodash';
-import {TypeOfCancer, CancerStudy, default as CBioPortalAPI} from "../../api/CBioPortalAPI";
-import {Connector, IDispatch} from "../../lib/ConnectorAPI";
-import {RootState} from "../../../redux/rootReducer";
+import {TypeOfCancer, CancerStudy, default as CBioPortalAPI} from "../../../api/CBioPortalAPI";
+import {Connector, IDispatch} from "../../../lib/ConnectorAPI";
+import {RootState} from "../../../../redux/rootReducer";
 import {IQueryContainerProps} from "./QueryContainer";
 
 const FETCH = 'query/fetch';

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import QueryContainer from "../../shared/components/query/QueryContainer";
+import QueryContainer from "../../shared/components/query/old/QueryContainer";
 import QueryContainer2 from "../../shared/components/query2/QueryContainer";
 import * as styles_any from './styles.module.scss';
 import {FlexCol} from "../../shared/components/flexbox/FlexBox";

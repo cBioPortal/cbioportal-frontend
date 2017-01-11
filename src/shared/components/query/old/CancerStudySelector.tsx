@@ -1,21 +1,21 @@
 import * as _ from "lodash";
 import * as React from "react";
 import Dictionary = _.Dictionary;
-import {TypeOfCancer as CancerType, CancerStudy} from "../../api/CBioPortalAPI";
-import {ITreeDescriptor, default as DescriptorTree} from "../tree/DescriptorTree";
+import {TypeOfCancer as CancerType, CancerStudy} from "../../../api/CBioPortalAPI";
+import {ITreeDescriptor, default as DescriptorTree} from "../../tree/DescriptorTree";
 import {BootstrapTable} from "react-bootstrap-table";
 import {TableHeaderColumn} from "react-bootstrap-table";
 import "react-bootstrap-table/css/react-bootstrap-table.css";
 import FontAwesome from "react-fontawesome";
-import {FlexCol, FlexRow} from "../flexbox/FlexBox";
+import {FlexCol, FlexRow} from "../../flexbox/FlexBox";
 import * as styles_any from './styles.module.scss';
-import memoize, {memoizeWith} from "../../lib/memoize";
+import memoize, {memoizeWith} from "../../../lib/memoize";
 import HTMLAttributes = __React.HTMLAttributes;
-import classNames from "../../lib/classNames";
-import firstDefinedValue from "../../lib/firstDefinedValue";
-import CancerStudyTreeData from "./CancerStudyTreeData";
-import {CancerTreeNode, NodeMetadata} from "./CancerStudyTreeData";
-import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
+import classNames from "../../../lib/classNames";
+import firstDefinedValue from "../../../lib/firstDefinedValue";
+import CancerStudyTreeData from "../CancerStudyTreeData";
+import {CancerTreeNode, NodeMetadata} from "../CancerStudyTreeData";
+import LabeledCheckbox from "../../labeledCheckbox/LabeledCheckbox";
 import ReactSelect from 'react-select';
 import 'react-select/dist/react-select.css';
 
@@ -372,7 +372,6 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 
 	getMatchingNodeClassNames(node:CancerTreeNode):string
 	{
-		let meta = this.getTreeInfo().map_node_meta.get(node) as NodeMetadata;
 		let matchingNode = !!this.searchText && matchesSearchText(node.name, this.searchText);
 		return classNames({
 			[styles.matchingNodeText]: !!this.searchText && matchingNode,

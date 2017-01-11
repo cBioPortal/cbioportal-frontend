@@ -6,13 +6,13 @@ import Spinner from "react-spinkit";
 import Dictionary = _.Dictionary;
 import CancerStudySelector from "./CancerStudySelector";
 import {ICancerStudySelectorState} from "./CancerStudySelector";
-import {FlexRow, FlexCol} from "../flexbox/FlexBox";
+import {FlexRow, FlexCol} from "../../flexbox/FlexBox";
 import Radio = ReactBootstrap.Radio;
 import {ICancerStudySelectorExperimentalOptions} from "./CancerStudySelector";
 import Checkbox = ReactBootstrap.Checkbox;
-import {Select, StateToggle} from "../ExperimentalControls";
+import {Select, StateToggle} from "../../ExperimentalControls";
 import * as styles_any from './styles.module.scss';
-import firstDefinedValue from "../../lib/firstDefinedValue";
+import firstDefinedValue from "../../../lib/firstDefinedValue";
 
 const styles = styles_any as {
 	QueryContainer: string,
