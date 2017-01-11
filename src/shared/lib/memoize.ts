@@ -14,17 +14,21 @@ function isPrimitive(value:any):boolean
 /**
  * Provides Map-like interface that uses Map for primitive keys and WeakMap for non-primitive keys.
  */
-class Cache<K,V> {
+class Cache<K,V>
+{
 	private map = new Map<any, V>();
 	private weakMap = new WeakMap<any, V>();
 
-	has(key:K):boolean {
+	has(key:K):boolean
+	{
 		return isPrimitive(key) ? this.map.has(key) : this.weakMap.has(key);
 	}
-	get(key:K):V|undefined {
+	get(key:K):V|undefined
+	{
 		return isPrimitive(key) ? this.map.get(key) : this.weakMap.get(key);
 	}
-	set(key:K, value:V):this {
+	set(key:K, value:V):this
+	{
 		if (isPrimitive(key))
 			this.map.set(key, value);
 		else
@@ -36,19 +40,23 @@ class Cache<K,V> {
 /**
  * Provides a multi-dimensional Map-like interface
  */
-class HyperMap<T> {
-	has(args:any[]):boolean {
+class HyperMap<T>
+{
+	has(args:any[]):boolean
+	{
 		let cache:Cache<any, any>|undefined = this.getCache(args.length);
 		if (args.length > 1)
 			cache = this.traverse(cache, args.slice(0, args.length - 1)) as any;
 		return cache !== undefined && cache.has(args[args.length - 1]);
 	}
 
-	get(args:any[]):T | undefined {
+	get(args:any[]):T | undefined
+	{
 		return this.traverse(this.getCache(args.length), args);
 	}
 
-	set(args:any[], value:T):void {
+	set(args:any[], value:T):void
+	{
 		this.traverse(this.getCache(args.length), args, value);
 	}
 
@@ -66,10 +74,12 @@ class HyperMap<T> {
 
 	// dual-purpose setter/getter
 	// note: does not work if subsequent calls vary the length of the keys array for the same cache param
-	private traverse(cache:Cache<any, any>, keys:any[], value?:T):T|undefined {
+	private traverse(cache:Cache<any, any>, keys:any[], value?:T):T|undefined
+	{
 		if (keys.length == 0)
 			return undefined;
-		if (keys.length == 1) {
+		if (keys.length == 1)
+		{
 			if (value === undefined)
 				return cache.get(keys[0]);
 			return void cache.set(keys[0], value);
@@ -82,12 +92,13 @@ class HyperMap<T> {
 	}
 }
 
-class Memoizer<Result, Transform extends (...args:any[])=>Result> {
-
+class Memoizer<Result, Transform extends (...args:any[])=>Result>
+{
 	private transform:Transform;
 	private cache = new HyperMap<Result>();
 
-	constructor(transform:Transform, getAdditionalArgs?:()=>any[], fixedArgsLength?:number) {
+	constructor(transform:Transform, getAdditionalArgs?:()=>any[], fixedArgsLength?:number)
+	{
 		this.transform = transform;
 		let cache = this.cache;
 		this.get = function(...args:any[]) {
@@ -129,7 +140,8 @@ export default function memoize<F extends AnyFunction>(params:MemoizeParams<F>):
  */
 export default function memoize<T extends AnyFunction>(target: Object, propertyKey: string | symbol, descriptor: TypedPropertyDescriptor<T>):TypedPropertyDescriptor<T> | void;
 
-export default function memoize<T extends AnyFunction>():TypedPropertyDescriptor<T> | void {
+export default function memoize<T extends AnyFunction>():TypedPropertyDescriptor<T> | void
+{
 	// called as decorator, target is prototype; return modified descriptor
 	if (arguments.length == 3)
 	{
