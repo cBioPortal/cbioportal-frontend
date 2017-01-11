@@ -3,6 +3,7 @@ import * as ReactDOM from 'react-dom';
 import { connect } from 'react-redux';
 import { Component } from 'react';
 import * as _ from 'lodash';
+import { Tabs, Tab } from 'react-bootstrap';
 import ClinicalInformationContainer from './clinicalInformation/ClinicalInformationContainer';
 import MutationInformationContainer from './mutation/MutationInformationContainer';
 import PatientHeaderUnconnected from './patientHeader/PatientHeader';
@@ -17,7 +18,9 @@ import { ClinicalDataBySampleId } from "../../shared/api/api-types-extended";
 import { RequestStatus } from "../../shared/api/api-types-extended";
 import { default as CBioPortalAPI, Mutation }  from "../../shared/api/CBioPortalAPI";
 import renderIf from 'render-if';
+import { If, Then, Else } from 'react-if';
 import queryString from "query-string";
+import SelectCallback = ReactBootstrap.SelectCallback;
 
 export interface IPatientViewPageProps {
     store?: RootState;
@@ -34,6 +37,7 @@ interface IPatientViewState {
 
     cnaSegmentData: any;
     mutationData: any;
+    activeTabKey: Number;
 
 }
 
@@ -65,8 +69,11 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         this.state = {
             mutationData: undefined,
-            cnaSegmentData: undefined
+            cnaSegmentData: undefined,
+            activeTabKey:1
         };
+
+        this.handleSelect.bind(this);
 
         this.tsClient = new CBioPortalAPI(`//${(window as any)['__API_ROOT__']}`);
 
@@ -142,36 +149,52 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     }
 
+    public handleSelect(key: Number): void {
+        this.setState(({ 'activeTabKey' : key } as IPatientViewState));
+    }
+
     public render() {
+
+        console.log(this.state.activeTabKey);
 
         return (
             <div>
 
-                {
-                    renderIf(this.state.mutationData && this.state.cnaSegmentData)(
-                        <GenomicOverview mutations={this.state.mutationData}
-                                         cnaSegments={this.state.cnaSegmentData}
-                                         sampleOrder={mockData.order}
-                                         sampleLabels={mockData.labels}
-                                         sampleColors={mockData.colors}
-                        />
-                    )
-                }
+                <Tabs animation={false} activeKey={this.state.activeTabKey} onSelect={ (this.handleSelect.bind(this) as SelectCallback ) } className="mainTabs">
+                    <Tab eventKey={1} title="Summary">
 
-                {
-                    renderIf(this.state.mutationData)(
-                        < MutationInformationContainer
-                            mutations={this.state.mutationData}
-                            sampleOrder={mockData.order}
-                            sampleLabels={mockData.labels}
-                            sampleColors={mockData.colors}
-                            sampleTumorType={mockData.tumorType}
-                            sampleCancerType={mockData.cancerType}
-                        />
-                    )
-                }
-                <hr />
-                <ClinicalInformationContainer status={ this.props.clinicalDataStatus } patient={this.props.patient} samples={this.props.samples} />
+                        <h4>Genomic Overview</h4>
+                        {
+                            renderIf(this.state.mutationData && this.state.cnaSegmentData)(
+                                <GenomicOverview mutations={this.state.mutationData}
+                                                 cnaSegments={this.state.cnaSegmentData}
+                                                 sampleOrder={mockData.order}
+                                                 sampleLabels={mockData.labels}
+                                                 sampleColors={mockData.colors}
+                                />
+                            )
+                        }
+                        <hr />
+                        {
+                            renderIf(this.state.mutationData)(
+                                < MutationInformationContainer
+                                    mutations={this.state.mutationData}
+                                    sampleOrder={mockData.order}
+                                    sampleLabels={mockData.labels}
+                                    sampleColors={mockData.colors}
+                                    sampleTumorType={mockData.tumorType}
+                                    sampleCancerType={mockData.cancerType}
+                                />
+                            )
+                        }
+                    </Tab>
+                    <Tab eventKey={2} title="Clinical Data">
+
+                        <ClinicalInformationContainer status={ this.props.clinicalDataStatus } patient={this.props.patient} samples={this.props.samples} />
+
+                    </Tab>
+                </Tabs>
+
 
             </div>
         );
