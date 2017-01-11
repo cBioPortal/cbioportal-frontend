@@ -1,6 +1,6 @@
 import * as React from 'react';
-import QueryContainer from "../../shared/components/query/old/QueryContainer";
-import QueryContainer2 from "../../shared/components/query2/QueryContainer";
+import QueryContainerOld from "../../shared/components/query/old/QueryContainer";
+import QueryContainer from "../../shared/components/query/QueryContainer";
 import * as styles_any from './styles.module.scss';
 import {FlexCol} from "../../shared/components/flexbox/FlexBox";
 
@@ -22,7 +22,7 @@ interface IHomePageProps
 
 interface IHomePageState
 {
-	mode: number;
+	selectorVersion: 'old'|'new';
 }
 
 export default class HomePage extends React.Component<IHomePageProps, IHomePageState>
@@ -30,12 +30,12 @@ export default class HomePage extends React.Component<IHomePageProps, IHomePageS
     constructor(props:IHomePageProps)
     {
         super(props);
-        this.state = {mode: 2}
+        this.state = {selectorVersion: 'new'};
     }
 
     componentDidMount()
     {
-		getRootElement().className += ' ' + styles.rootHtml
+		getRootElement().className += ' ' + styles.rootHtml;
     }
 
     componentWillUnmount()
@@ -47,8 +47,8 @@ export default class HomePage extends React.Component<IHomePageProps, IHomePageS
     {
         return (
         	<FlexCol style={{height: '100%'}}>
-				<a style={{alignSelf: 'center'}} onClick={() => this.setState({ mode: this.state.mode == 2 ? 1 : 2 })}>Switch to {this.state.mode == 2 ? 'old' : 'new'} view</a>
-				{this.state.mode == 2 ? <QueryContainer2/> : <QueryContainer/>}
+				<a style={{alignSelf: 'center'}} onClick={() => this.setState({ selectorVersion: this.state.selectorVersion == 'new' ? 'old' : 'new' })}>Switch to {this.state.selectorVersion == 'new' ? 'old' : 'new'} view</a>
+				{this.state.selectorVersion == 'new' ? <QueryContainer/> : <QueryContainerOld/>}
 			</FlexCol>
 		);
     }
