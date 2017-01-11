@@ -12,8 +12,16 @@ export interface IEnhancedReactTableProps {
     rawData: Array<any>; // raw data
 }
 
+export interface IEnhancedReactTableState {
+    columnVisibility: IColumnVisibilityState;
+}
+
 export interface IColumnDefMap {
     [key: string]: IEnhancedReactTableColumnDef;
+}
+
+export interface IColumnVisibilityState {
+    [key: string]: ColumnVisibility
 }
 
 export interface IEnhancedReactTableColumnDef {
