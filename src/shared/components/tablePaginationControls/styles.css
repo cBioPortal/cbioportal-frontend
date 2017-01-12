@@ -1,0 +1,11 @@
+.auto-cursor {
+    cursor: auto !important;
+}
+
+.bootstrap-mimic-select {
+    height: 30px;
+    background-color: #ffffff;
+    margin-left:5px !important;
+    border-color: rgb(204,204,204);
+    cursor:pointer;
+}
