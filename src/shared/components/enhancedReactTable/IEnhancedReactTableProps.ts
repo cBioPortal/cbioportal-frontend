@@ -12,11 +12,16 @@ export interface IEnhancedReactTableProps<T> {
     headerControlsProps?: ITableExportButtonsProps;
     columns?: IColumnDefMap; // column definitions (including component renderers)
     rawData: Array<T>; // raw data
+    initItemsPerPage?: number; // initial number of items per page
+    initPage?:number; // initial page
+    itemsName?:string; // name of items, e.g. "mutations"
 }
 
 export interface IEnhancedReactTableState {
     columnVisibility: IColumnVisibilityState;
     filter: string;
+    itemsPerPage:number;
+    currentPage:number;
 }
 
 export interface IColumnDefMap {
