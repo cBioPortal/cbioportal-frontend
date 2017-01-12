@@ -5,7 +5,6 @@
     "react-bootstrap": "registry:dt/react-bootstrap#0.0.0+20160806072414",
     "react-dom": "registry:dt/react-dom#0.14.0+20160412154040",
     "react-redux": "registry:dt/react-redux#4.4.0+20160908183346",
-    "react-spinkit": "registry:dt/react-spinkit#1.1.4+20160316155526",
     "redux": "registry:dt/redux#3.5.2+20160703092728",
     "seamless-immutable": "registry:dt/seamless-immutable#6.1.3+20161006171753",
     "underscore": "registry:dt/underscore#1.8.3+20160908111004"
