@@ -113,7 +113,7 @@ export default class SampleColumnFormatter
         }
 
         return (
-            <Td column={data.name} value={sampleId}>
+            <Td key={data.name} column={data.name} value={sampleId}>
                 {content}
             </Td>
         );

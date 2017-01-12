@@ -47,7 +47,7 @@ export default class AlleleFreqColumnFormatter {
         const freqs = columnProps.sampleOrder.map((sampleId:string) => (sampleToElements[sampleId] && sampleToElements[sampleId].freq) || undefined);
         const bars = elementsInSampleOrder.map((elements:any)=>elements.bar);
 
-        return (<Td column={data.name} value={freqs}>
+        return (<Td key={data.name} column={data.name} value={freqs}>
             <Tooltip
                 placement="left"
                 overlay={tooltipLines}
