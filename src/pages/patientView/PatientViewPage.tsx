@@ -89,7 +89,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     fetchCnaSegmentData(_sampleIds: Array<string>) {
 
         let cnaSegmentPromise = Promise.resolve(
-            $.get("http://www.cbioportal.org/api-legacy/copynumbersegments?cancerStudyId=" + this.studyId + "&sampleIds=" + _sampleIds.join(","))
+            $.get("//www.cbioportal.org/api-legacy/copynumbersegments?cancerStudyId=" + this.studyId + "&sampleIds=" + _sampleIds.join(","))
         );
         return cnaSegmentPromise;
 
