@@ -170,7 +170,7 @@ export default class MutationInformationContainer extends React.Component<IMutat
 
         return (
             <div>
-                <MutationTable rawData={this.mergedMutations} columns={columns} title="Mutations of Interest"/>
+                <MutationTable rawData={this.mergedMutations} columns={columns} />
             </div>
         );
     }
