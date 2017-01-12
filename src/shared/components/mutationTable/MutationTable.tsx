@@ -160,7 +160,6 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
 
         return(
             <div>
-                <h4 className="pull-left">{title}</h4>
                 <EnhancedReactTable
                     reactTableProps={reactTableProps}
                     columns={columns}

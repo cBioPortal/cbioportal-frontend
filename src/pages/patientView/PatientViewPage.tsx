@@ -21,6 +21,7 @@ import renderIf from 'render-if';
 import { If, Then, Else } from 'react-if';
 import queryString from "query-string";
 import SelectCallback = ReactBootstrap.SelectCallback;
+import Spinner from "react-spinkit";
 
 export interface IPatientViewPageProps {
     store?: RootState;
@@ -88,7 +89,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     fetchCnaSegmentData(_sampleIds: Array<string>) {
 
         let cnaSegmentPromise = Promise.resolve(
-            $.get("http://www.cbioportal.org/api-legacy/copynumbersegments?cancerStudyId=" + this.studyId + "&sampleIds=" + _sampleIds.join(","))
+            $.get("//www.cbioportal.org/api-legacy/copynumbersegments?cancerStudyId=" + this.studyId + "&sampleIds=" + _sampleIds.join(","))
         );
         return cnaSegmentPromise;
 
@@ -155,15 +156,19 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     public render() {
 
-        console.log(this.state.activeTabKey);
-
         return (
             <div>
 
-                <Tabs animation={false} activeKey={this.state.activeTabKey} onSelect={ (this.handleSelect.bind(this) as SelectCallback ) } className="mainTabs">
+                <Tabs animation={false} activeKey={this.state.activeTabKey} unmountOnExit={true} onSelect={ (this.handleSelect.bind(this) as SelectCallback ) } className="mainTabs">
                     <Tab eventKey={1} title="Summary">
 
-                        <h4>Genomic Overview</h4>
+                        <h4>Genomic Overview
+                            <If condition={!(this.state.mutationData && this.state.cnaSegmentData)}>
+                                <Spinner spinnerName="three-bounce" noFadeIn={true} style={{ textAlign:'center' }}  />
+                            </If>
+                        </h4>
+
+
                         {
                             renderIf(this.state.mutationData && this.state.cnaSegmentData)(
                                 <GenomicOverview mutations={this.state.mutationData}
@@ -175,6 +180,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             )
                         }
                         <hr />
+                        <h4>Mutations of Interest</h4>
                         {
                             renderIf(this.state.mutationData)(
                                 < MutationInformationContainer
