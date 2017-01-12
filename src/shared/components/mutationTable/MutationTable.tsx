@@ -156,12 +156,13 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
 
     public render()
     {
-        const {reactTableProps, title, columns, rawData} = this.mergeProps(this.props);
+        const {reactTableProps, headerControlsProps, columns, rawData} = this.mergeProps(this.props);
 
         return(
             <div>
                 <EnhancedReactTable
                     reactTableProps={reactTableProps}
+                    headerControlsProps={headerControlsProps}
                     columns={columns}
                     rawData={rawData}
                 />
@@ -175,6 +176,9 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
             title: "Mutations",
             rawData: [],
             columns: MutationTable.defaultColumns,
+            headerControlsProps: {
+                className: "pull-right"
+            },
             reactTableProps: {
                 className: "table table-striped",
                 hideFilterInput:true
