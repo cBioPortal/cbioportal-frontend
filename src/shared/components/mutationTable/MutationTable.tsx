@@ -10,13 +10,12 @@ import SampleColumnFormatter from "./column/SampleColumnFormatter";
 import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter";
 import MutationAssessorColumnFormatter from "./column/MutationAssessorColumnFormatter";
 import MutationTypeColumnFormatter from "./column/MutationTypeColumnFormatter";
-import TableHeaderControls from "shared/components/tableHeaderControls/TableHeaderControls";
 
 
 /**
  * @author Selcuk Onur Sumer
  */
-export default class MutationTable extends React.Component<IMutationTableProps, { filter:string }>
+export default class MutationTable extends React.Component<IMutationTableProps, {}>
 {
     public static get defaultColumns():IColumnDefMap
     {
@@ -152,20 +151,16 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
     constructor(props:IMutationTableProps)
     {
         super(props);
-        this.state = { filter:'' };
-
-        // binding "this" to handler functions
-        this.handleFilterInput = this.handleFilterInput.bind(this);
+        this.state = {};
     }
 
     public render()
     {
-        const {reactTableProps, columns, rawData, title} = this.mergeProps(this.props);
+        const {reactTableProps, title, columns, rawData} = this.mergeProps(this.props);
 
         return(
             <div>
                 <h4 className="pull-left">{title}</h4>
-                <TableHeaderControls showCopyAndDownload={true} showHideShowColumnButton={true} columns={columns} handleInput={this.handleFilterInput} showSearch={true} className="pull-right" />
                 <EnhancedReactTable
                     reactTableProps={reactTableProps}
                     columns={columns}
@@ -173,11 +168,6 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
                 />
             </div>
         );
-    }
-
-    private handleFilterInput(filter: string)
-    {
-        return this.setState({ filter });
     }
 
     private mergeProps(props:IMutationTableProps):IMutationTableProps
@@ -188,8 +178,7 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
             columns: MutationTable.defaultColumns,
             reactTableProps: {
                 className: "table table-striped",
-                hideFilterInput:true,
-                filterBy:this.state.filter
+                hideFilterInput:true
             }
         };
 
