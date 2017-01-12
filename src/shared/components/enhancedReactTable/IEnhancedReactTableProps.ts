@@ -14,6 +14,7 @@ export interface IEnhancedReactTableProps {
 
 export interface IEnhancedReactTableState {
     columnVisibility: IColumnVisibilityState;
+    filter: string;
 }
 
 export interface IColumnDefMap {
@@ -21,7 +22,13 @@ export interface IColumnDefMap {
 }
 
 export interface IColumnVisibilityState {
-    [key: string]: ColumnVisibility
+    [key: string]: ColumnVisibility;
+}
+
+export interface IColumnVisibilityDef {
+    id: string;
+    name: string;
+    visibility: ColumnVisibility;
 }
 
 export interface IEnhancedReactTableColumnDef {
