@@ -2,7 +2,7 @@ import * as React from "react";
 import { ClinicalDataBySampleId } from "../../../shared/api/api-types-extended";
 import convertSamplesData, {IConvertedSamplesData} from "./lib/convertSamplesData";
 import {SampleLabelHTML} from "../../../shared/components/sampleLabel/SampleLabel";
-import {Table as DataTable, Thead, Th} from "reactableMSK";
+import {Table as DataTable, Thead, Th} from "reactable";
 import TableHeaderControls from "shared/components/tableHeaderControls/TableHeaderControls";
 
 interface IClinicalInformationSamplesTableProps {
@@ -21,7 +21,7 @@ export default class ClinicalInformationSamplesTable extends React.Component<ICl
                     <h4 className="pull-left">Samples</h4>
                     <TableHeaderControls className="pull-right" tableData={tableData} />
                 </div>
-                <DataTable className="table table-striped" data={tableData} >
+                <DataTable className="table table-striped table-border-top" data={tableData} >
                     <Thead>{ headerCells }</Thead>
                 </DataTable>
             </div>

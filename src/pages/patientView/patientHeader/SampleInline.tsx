@@ -12,10 +12,7 @@ export default class SampleInline extends React.Component<ISampleInlineProps, {}
         const { sample, sampleNumber } = this.props;
 
         return (
-            <span style={{paddingRight: '10px'}}>
-                <SampleLabelHTML color={'black'} label={(sampleNumber).toString()} />
-                {' ' + sample.id}
-            </span>
+            <SampleLabelHTML color={'black'} label={(sampleNumber).toString()} />
         );
     }
 }

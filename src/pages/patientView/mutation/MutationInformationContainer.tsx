@@ -6,6 +6,7 @@ import TumorColumnFormatter from "./column/TumorColumnFormatter";
 import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
 import AlleleCountColumnFormatter from "./column/AlleleCountColumnFormatter";
 import { Mutation } from "../../../shared/api/CBioPortalAPI";
+import SampleManager from "../sampleManager";
 
 
 export interface IMutationInformationContainerProps {
@@ -15,6 +16,7 @@ export interface IMutationInformationContainerProps {
     sampleLabels:{ [s:string]: string};
     sampleTumorType:{ [s:string]: string};
     sampleCancerType:{ [s:string]: string};
+    sampleManager:SampleManager;
 };
 
 export default class MutationInformationContainer extends React.Component<IMutationInformationContainerProps, {}>
@@ -48,7 +50,8 @@ export default class MutationInformationContainer extends React.Component<IMutat
                     sampleColors: this.props.sampleColors,
                     sampleLabels: this.props.sampleLabels,
                     sampleTumorType: this.props.sampleTumorType,
-                    sampleCancerType: this.props.sampleCancerType
+                    sampleCancerType: this.props.sampleCancerType,
+                    sampleManager:this.props.sampleManager
                 }
             },
             chromosome: {
