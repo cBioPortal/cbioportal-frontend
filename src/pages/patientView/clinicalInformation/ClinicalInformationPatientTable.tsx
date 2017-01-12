@@ -29,7 +29,7 @@ export default class ClinicalInformationPatientTable extends React.Component<ICl
                         </div>
                     :   null
                 }
-                <DataTable className={ `table table-striped ${styles.patientTable}` } columns={[{ key:'attribute', label:'Attribute'},{ key:'value', label:'Value'}]} data={tableData} />
+                <DataTable className={ `table table-striped table-border-top ${styles.patientTable}` } columns={[{ key:'attribute', label:'Attribute'},{ key:'value', label:'Value'}]} data={tableData} />
             </div>
         );
     }
