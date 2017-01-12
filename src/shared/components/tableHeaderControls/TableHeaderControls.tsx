@@ -3,7 +3,7 @@ import { Button, ButtonGroup, Dropdown, ButtonToolbar, Form, FormGroup, Checkbox
 import ReactZeroClipboard from 'react-zeroclipboard';
 import fileDownload from 'react-file-download';
 import * as _ from 'lodash';
-import {IColumnDefMap, IEnhancedReactTableColumnDef} from "../enhancedReactTable/IEnhancedReactTableProps";
+import { IColumnVisibilityDef } from "../enhancedReactTable/IEnhancedReactTableProps";
 import { If, Then, Else } from 'react-if';
 export interface ITableExportButtonsProps {
     tableData?: Array<any>;
@@ -12,7 +12,7 @@ export interface ITableExportButtonsProps {
     showCopyAndDownload?: boolean;
     showHideShowColumnButton?: boolean;
     handleInput?: Function;
-    columns?:IColumnDefMap;
+    columnVisibility?:Array<IColumnVisibilityDef>;
     onColumnToggled?: (columnId: String) => void;
 }
 
@@ -92,9 +92,9 @@ export default class TableExportButtons extends React.Component<ITableExportButt
                             <Dropdown.Menu bsRole="menu" style={{ paddingLeft:10, overflow:'auto', maxHeight:300, whiteSpace:'nowrap' }}>
                                 <ul className="list-unstyled">
                                 {
-
-                                    this.props.columns && _.map(this.props.columns, (col: IEnhancedReactTableColumnDef, key: String) => {
-                                        return <li><Checkbox data-id={key} onChange={this.handleSelect} checked={col.visible === "visible"} inline>{ col.name }</Checkbox></li>;
+                                    this.props.columnVisibility &&
+                                    _.map(this.props.columnVisibility, (visibility: IColumnVisibilityDef) => {
+                                        return <li><Checkbox data-id={visibility.id} onChange={this.handleSelect} checked={visibility.visibility === "visible"} inline>{visibility.name}</Checkbox></li>;
                                     })
                                 }
                                 </ul>

@@ -30,7 +30,7 @@ export default class MutationInformationContainer extends React.Component<IMutat
     public render() {
         let columns:IColumnDefMap = {
             sampleId: {
-                name: "Sample Id", // name does not matter when the column is "excluded"
+                name: "Sample",
                 visible: "excluded"
             },
             proteinChange: {
@@ -52,20 +52,24 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 }
             },
             chromosome: {
-                name: "Chr"
+                name: "Chr",
+                visible: "hidden"
             },
             startPos: {
-                name: "Start"
+                name: "Start",
+                visible: "hidden"
             },
             endPos: {
-                name: "End"
+                name: "End",
+                visible: "hidden"
             },
             mutationStatus: {
                 name: "Status",
-                visible: "excluded"
+                visible: "hidden"
             },
             validationStatus: {
-                name: "Validation"
+                name: "Validation",
+                visible: "hidden"
             },
             mutationType: {
                 name: "Type"
@@ -107,7 +111,8 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 }
             },
             normalAlleleFreq : {
-                name: "Allele Freq (N)"
+                name: "Allele Freq (N)",
+                visible: "hidden"
             },
             normalRefCount: {
                 name: "Ref Reads (N)",
@@ -115,7 +120,8 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 columnProps: {
                     dataField: "normalRefCount",
                     sampleOrder: this.props.sampleOrder
-                }
+                },
+                visible: "hidden"
             },
             normalAltCount: {
                 name: "Variant Reads (N)",
@@ -123,7 +129,8 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 columnProps: {
                     dataField: "normalAltCount",
                     sampleOrder: this.props.sampleOrder
-                }
+                },
+                visible: "hidden"
             },
             tumorRefCount: {
                 name: "Ref Reads",
@@ -131,7 +138,8 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 columnProps: {
                     dataField: "tumorRefCount",
                     sampleOrder: this.props.sampleOrder
-                }
+                },
+                visible: "hidden"
             },
             tumorAltCount: {
                 name: "Variant Reads",
@@ -139,8 +147,25 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 columnProps: {
                     dataField: "tumorAltCount",
                     sampleOrder: this.props.sampleOrder
-                }
+                },
+                visible: "hidden"
             },
+            referenceAllele: {
+                name: "Ref",
+                visible: "hidden"
+            },
+            variantAllele: {
+                name: "Var",
+                visible: "hidden"
+            },
+            center: {
+                name: "Center",
+                visible: "hidden"
+            },
+            mutationAssessor: {
+                name: "Mutation Assessor",
+                visible: "hidden"
+            }
         };
 
         return (
