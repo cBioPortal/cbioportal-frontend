@@ -138,7 +138,7 @@ export default class ProteinChangeColumnFormatter
         const value:string = ProteinChangeColumnFormatter.getTextValue(data);
 
         return (
-            <Td column={data.name} value={value}>
+            <Td key={data.name} column={data.name} value={value}>
                 <span>{text}</span>
             </Td>
         );

@@ -39,7 +39,7 @@ export default class ProteinChangeColumnFormatter
         }
 
         return (
-            <Td column={data.name} value={value}>
+            <Td key={data.name} column={data.name} value={value}>
                 {content}
             </Td>
         );

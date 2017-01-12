@@ -257,7 +257,7 @@ export default class MutationAssessorColumnFormatter
         const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
 
         return (
-            <Td column={data.name} value={data}>
+            <Td key={data.name} column={data.name} value={data}>
                 <Tooltip overlay={tooltipContent} placement="rightTop" arrowContent={arrowContent}>
                     <span className={`${styles[maClass]} ${styles[fisClass]}`}>{text}</span>
                 </Tooltip>
