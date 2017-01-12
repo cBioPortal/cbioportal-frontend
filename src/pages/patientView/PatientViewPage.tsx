@@ -6,7 +6,7 @@ import * as _ from 'lodash';
 import { Tabs, Tab } from 'react-bootstrap';
 import ClinicalInformationContainer from './clinicalInformation/ClinicalInformationContainer';
 import MutationInformationContainer from './mutation/MutationInformationContainer';
-import PatientHeaderUnconnected from './patientHeader/PatientHeader';
+import PatientHeader from './patientHeader/PatientHeader';
 import {IPatientHeaderProps} from './patientHeader/PatientHeader';
 import {RootState} from '../../redux/rootReducer';
 import exposeComponentRenderer from '../../shared/lib/exposeComponentRenderer';
@@ -17,11 +17,14 @@ import { ClinicalData } from "shared/api/CBioPortalAPI";
 import { ClinicalDataBySampleId } from "../../shared/api/api-types-extended";
 import { RequestStatus } from "../../shared/api/api-types-extended";
 import { default as CBioPortalAPI, Mutation }  from "../../shared/api/CBioPortalAPI";
+import FeatureTitle from '../../shared/components/featureTitle/FeatureTitle';
 import renderIf from 'render-if';
 import { If, Then, Else } from 'react-if';
 import queryString from "query-string";
 import SelectCallback = ReactBootstrap.SelectCallback;
 import Spinner from "react-spinkit";
+import SampleManager from './sampleManager';
+import SyntheticEvent = __React.SyntheticEvent;
 
 export interface IPatientViewPageProps {
     store?: RootState;
@@ -150,46 +153,64 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     }
 
-    public handleSelect(key: Number): void {
+    public handleSelect(key: Number, e:SyntheticEvent): void {
+        debugger;
         this.setState(({ 'activeTabKey' : key } as IPatientViewState));
     }
 
     public render() {
 
+        let sampleManager: SampleManager | null = null;
+        let sampleHeader: JSX.Element[] | null = null;
+
+        if (this.props.samples) {
+            sampleManager = new SampleManager(this.props.samples);
+
+            sampleHeader = _.map(sampleManager!.samples,(sample: ClinicalDataBySampleId) => {
+                return <span style={{ marginRight:10 }}>{sampleManager!.getComponentForSample(sample.id)} {sample.id}</span>;
+            });
+
+        }
+
+
+
         return (
             <div>
 
-                <Tabs animation={false} activeKey={this.state.activeTabKey} unmountOnExit={true} onSelect={ (this.handleSelect.bind(this) as SelectCallback ) } className="mainTabs">
+                <If condition={sampleHeader}>
+                    <div style={{marginBottom:20}}>
+                        {sampleHeader}
+                    </div>
+                </If>
+
+                <Tabs animation={false} activeKey={this.state.activeTabKey} unmountOnExit={false} onSelect={ (this.handleSelect as SelectCallback) } className="mainTabs">
                     <Tab eventKey={1} title="Summary">
 
-                        <h4>Genomic Overview
-                            <If condition={!(this.state.mutationData && this.state.cnaSegmentData)}>
-                                <Spinner spinnerName="three-bounce" noFadeIn={true} style={{ textAlign:'center' }}  />
-                            </If>
-                        </h4>
-
+                        <FeatureTitle title="Genomic Data" isLoading={ !(this.state.mutationData && this.state.cnaSegmentData) } />
 
                         {
                             renderIf(this.state.mutationData && this.state.cnaSegmentData)(
-                                <GenomicOverview mutations={this.state.mutationData}
-                                                 cnaSegments={this.state.cnaSegmentData}
-                                                 sampleOrder={mockData.order}
-                                                 sampleLabels={mockData.labels}
-                                                 sampleColors={mockData.colors}
+                                <GenomicOverview
+                                    mutations={this.state.mutationData}
+                                    cnaSegments={this.state.cnaSegmentData}
+                                    sampleOrder={mockData.order}
+                                    sampleLabels={mockData.labels}
+                                    sampleColors={mockData.colors}
                                 />
                             )
                         }
-                        <hr />
-                        <h4>Mutations of Interest</h4>
+
+                        <FeatureTitle title="Mutations" isLoading={ !this.state.mutationData } />
                         {
-                            renderIf(this.state.mutationData)(
-                                < MutationInformationContainer
+                            (this.state.mutationData && !!sampleManager) && (
+                                <MutationInformationContainer
                                     mutations={this.state.mutationData}
                                     sampleOrder={mockData.order}
                                     sampleLabels={mockData.labels}
                                     sampleColors={mockData.colors}
                                     sampleTumorType={mockData.tumorType}
                                     sampleCancerType={mockData.cancerType}
+                                    sampleManager={ sampleManager }
                                 />
                             )
                         }
