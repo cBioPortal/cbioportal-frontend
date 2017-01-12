@@ -12,7 +12,6 @@
         "experimentalDecorators": true
     },
     "include": [
-        "./typings/index.d.ts",
         "./typings/missing.d.ts",
         "./src/**/*"
     ],
