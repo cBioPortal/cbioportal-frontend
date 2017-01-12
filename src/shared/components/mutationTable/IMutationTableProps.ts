@@ -1,4 +1,5 @@
 import {IEnhancedReactTableProps} from "../enhancedReactTable/IEnhancedReactTableProps";
+import {ClinicalDataBySampleId} from "../../api/api-types-extended";
 import {Mutation} from "../../api/CBioPortalAPI";
 
 /**
@@ -7,6 +8,7 @@ import {Mutation} from "../../api/CBioPortalAPI";
 export interface IMutationTableProps extends IEnhancedReactTableProps<MutationTableRowData>
 {
     title?:string;
+    samples?: ClinicalDataBySampleId;
 }
 
 export type MutationTableRowData = Mutation|Array<Mutation>;

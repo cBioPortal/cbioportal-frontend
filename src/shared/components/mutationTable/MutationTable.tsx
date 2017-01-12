@@ -182,7 +182,7 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
                 className: "pull-right"
             },
             reactTableProps: {
-                className: "table table-striped",
+                className: "table table-striped table-border-top",
                 hideFilterInput:true
             }
         };

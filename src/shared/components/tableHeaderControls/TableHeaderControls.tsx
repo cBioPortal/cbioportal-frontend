@@ -5,6 +5,7 @@ import fileDownload from 'react-file-download';
 import * as _ from 'lodash';
 import { IColumnVisibilityDef } from "../enhancedReactTable/IEnhancedReactTableProps";
 import { If, Then, Else } from 'react-if';
+
 export interface ITableExportButtonsProps {
     tableData?: Array<any>;
     className?: string;
