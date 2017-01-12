@@ -261,7 +261,7 @@ export default class MutationTypeColumnFormatter
         }
 
         return (
-            <Td column={data.name} value={text}>
+            <Td key={data.name} column={data.name} value={text}>
                 {content}
             </Td>
         );

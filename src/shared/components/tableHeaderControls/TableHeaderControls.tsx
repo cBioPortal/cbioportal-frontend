@@ -94,7 +94,11 @@ export default class TableExportButtons extends React.Component<ITableExportButt
                                 {
                                     this.props.columnVisibility &&
                                     _.map(this.props.columnVisibility, (visibility: IColumnVisibilityDef) => {
-                                        return <li><Checkbox data-id={visibility.id} onChange={this.handleSelect} checked={visibility.visibility === "visible"} inline>{visibility.name}</Checkbox></li>;
+                                        return (
+                                            <li key={visibility.id}>
+                                                <Checkbox data-id={visibility.id} onChange={this.handleSelect} checked={visibility.visibility === "visible"} inline>{visibility.name}</Checkbox>
+                                            </li>
+                                        );
                                     })
                                 }
                                 </ul>

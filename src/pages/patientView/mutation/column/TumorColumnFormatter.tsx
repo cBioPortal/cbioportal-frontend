@@ -18,7 +18,7 @@ export default class TumorColumnFormatter {
         const tooltipText = (sampleId:string) => (`${sampleId}, ${columnProps.sampleTumorType[sampleId]}, ${columnProps.sampleCancerType[sampleId]}`);
         const circles = samples.map(function(sampleId:string) {
             return (
-                <Tooltip placement="right" overlay={tooltipText(sampleId)} arrowContent={<div className="rc-tooltip-arrow-inner"/>}>
+                <Tooltip key={sampleId} placement="right" overlay={tooltipText(sampleId)} arrowContent={<div className="rc-tooltip-arrow-inner"/>}>
                     <svg width={2*TumorColumnFormatter.circleRadius} height={2*TumorColumnFormatter.circleRadius} style={{position:'absolute', left:svgX[sampleId]}}>
                         <g key={sampleId} transform={`translate(${TumorColumnFormatter.circleRadius},${TumorColumnFormatter.circleRadius})`}>
                             <circle r={TumorColumnFormatter.circleRadius} fill={columnProps.sampleColors[sampleId]}/>
@@ -33,7 +33,7 @@ export default class TumorColumnFormatter {
         const presentSamples = samples.reduce((map:{[s:string]:boolean}, sampleId:string) => {map[sampleId] = true; return map;}, {});
         const tdValue = columnProps.sampleOrder.map((sampleId:string) => (presentSamples[sampleId] ? 1 : 0));
         return (
-            <Td column={data.name} value={tdValue}>
+            <Td key={data.name} column={data.name} value={tdValue}>
                 <div style={{position:'relative'}}>
                     {circles}
                 </div>

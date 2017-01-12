@@ -70,7 +70,7 @@ export default class GeneColumnFormatter
         const value = GeneColumnFormatter.getTextValue(data);
 
         return (
-            <Td column={data.name} value={value}>
+            <Td key={data.name} column={data.name} value={value}>
                 <span>{text}</span>
             </Td>
         );

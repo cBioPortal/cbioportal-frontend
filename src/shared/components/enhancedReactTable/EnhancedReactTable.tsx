@@ -223,7 +223,7 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
         _.each(columns, function(columnDef:IEnhancedReactTableColumnDef) {
 
             headers.push(
-                <Th columns={columnDef.name}>
+                <Th key={columnDef.name} columns={columnDef.name}>
                     {columnDef.name}
                 </Th>
             );
@@ -237,11 +237,11 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
         let rows:Array<any> = [];
         const self = this;
 
-        _.each(tableData, function(rowData:any) {
+        _.each(tableData, function(rowData:any, index:number) {
             const cols = self.generateColumns(columns, tableData, rowData);
 
             rows.push(
-                <Tr>
+                <Tr key={index}>
                     {cols}
                 </Tr>
             );
@@ -297,7 +297,7 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
         else
         {
             return (
-                <Td column={columnDef.name} value={data.columnData}>
+                <Td key={columnDef.name} column={columnDef.name} value={data.columnData}>
                     {data.columnData}
                 </Td>
             );

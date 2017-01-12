@@ -36,7 +36,6 @@ export default class AlleleCountColumnFormatter
             }
         }
 
-        return (<Td column={data.name} value={data}>{ret}</Td>);
-
+        return (<Td key={data.name} column={data.name} value={data}>{ret}</Td>);
     }
 }
