@@ -113,6 +113,7 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
     public render() {
         let {
             reactTableProps,
+            headerControlsProps,
             columns,
             rawData
         } = this.props;
@@ -145,7 +146,7 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
                     handleInput={this.handleFilterInput}
                     onColumnToggled={this.handleVisibilityToggle}
                     showSearch={true}
-                    className="pull-right"
+                    {...headerControlsProps}
                 />
                 <Table {...reactTableProps}>
                     <Thead>
