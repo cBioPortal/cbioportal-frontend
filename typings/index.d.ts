@@ -12,5 +12,6 @@
 /// <reference path="globals/react-router/index.d.ts" />
 /// <reference path="globals/react/index.d.ts" />
 /// <reference path="globals/redux/index.d.ts" />
+/// <reference path="globals/reselect/index.d.ts" />
 /// <reference path="globals/seamless-immutable/index.d.ts" />
 /// <reference path="globals/superagent/index.d.ts" />

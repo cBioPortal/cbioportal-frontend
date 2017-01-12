@@ -1,4 +1,5 @@
 import * as React from "react";
+import { createSelector } from "reselect";
 import MutationTable from "../../../shared/components/mutationTable/MutationTable";
 import {IColumnDefMap} from "../../../shared/components/enhancedReactTable/IEnhancedReactTableProps";
 import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter";
@@ -21,12 +22,11 @@ export interface IMutationInformationContainerProps {
 
 export default class MutationInformationContainer extends React.Component<IMutationInformationContainerProps, {}>
 {
-    // a row in the table may represent more than one mutation...
-    private mergedMutations:Array<Array<Mutation>>;
+    private mutationsSelector = (state: any, props:IMutationInformationContainerProps) => props.mutations;
+    private mergedMutationsSelector = createSelector(this.mutationsSelector, (mutations:Array<Mutation>) => this.mergeMutations(mutations));
 
     constructor(props:IMutationInformationContainerProps) {
         super(props);
-        this.mergedMutations = this.mergeMutations(this.props.mutations);
     }
 
     public render() {
@@ -173,7 +173,7 @@ export default class MutationInformationContainer extends React.Component<IMutat
 
         return (
             <div>
-                <MutationTable rawData={this.mergedMutations} columns={columns} />
+                <MutationTable rawData={this.mergedMutationsSelector(this.state, this.props)} columns={columns} />
             </div>
         );
     }

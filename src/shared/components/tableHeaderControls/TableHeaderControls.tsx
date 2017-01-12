@@ -1,9 +1,10 @@
 import * as React  from 'react';
-import { Button, ButtonGroup, Dropdown, ButtonToolbar, Checkbox } from 'react-bootstrap';
+import { Button, ButtonGroup, Dropdown, ButtonToolbar, Form, FormGroup, Checkbox, MenuItem } from 'react-bootstrap';
 import ReactZeroClipboard from 'react-zeroclipboard';
 import fileDownload from 'react-file-download';
 import * as _ from 'lodash';
 import { IColumnVisibilityDef } from "../enhancedReactTable/IEnhancedReactTableProps";
+import {TablePaginationControls, ITablePaginationControlsProps} from "../tablePaginationControls/TablePaginationControls";
 import { If } from 'react-if';
 
 export interface ITableExportButtonsProps {
@@ -12,9 +13,11 @@ export interface ITableExportButtonsProps {
     showSearch?: boolean;
     showCopyAndDownload?: boolean;
     showHideShowColumnButton?: boolean;
+    showPagination?:boolean;
     handleInput?: Function;
     columnVisibility?:Array<IColumnVisibilityDef>;
     onColumnToggled?: (columnId: String) => void;
+    paginationProps?:ITablePaginationControlsProps;
 }
 
 function serializeTableData(tableData: Array<any>) {
@@ -55,7 +58,9 @@ export default class TableExportButtons extends React.Component<ITableExportButt
 
     public static defaultProps: ITableExportButtonsProps = {
         showSearch:false,
-        showCopyAndDownload:true
+        showCopyAndDownload:true,
+        showPagination:true,
+        paginationProps:{}
     };
 
 
@@ -85,6 +90,10 @@ export default class TableExportButtons extends React.Component<ITableExportButt
 
 
                 <ButtonToolbar>
+                    <If condition={this.props.showPagination}>
+                        <TablePaginationControls className="pull-left" {...this.props.paginationProps}/>
+                    </If>
+
                     <If condition={this.props.showHideShowColumnButton}>
                         <Dropdown id="dropdown-custom-1">
                             <Dropdown.Toggle rootCloseEvent="click" className="btn-sm">
@@ -126,11 +135,6 @@ export default class TableExportButtons extends React.Component<ITableExportButt
                     </If>
 
                 </ButtonToolbar>
-
-
-
-
-
 
             </div>
         );
