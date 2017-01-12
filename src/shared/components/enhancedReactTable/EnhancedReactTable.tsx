@@ -9,6 +9,7 @@ import {
 import {
     IColumnFormatterData, IColumnSortFunction, IColumnFilterFunction, IColumnVisibilityFunction, ColumnVisibility
 } from "./IColumnFormatter";
+import './styles.css';
 
 type IColumnSort = {
     column: string,
@@ -93,14 +94,43 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
     // sorted list of columns (by priority)
     private sortedColumns:Array<IEnhancedReactTableColumnDef>;
 
+    private filteredDataLength:number;
+
+    private shouldSetState:boolean;
+
     constructor(props:IEnhancedReactTableProps<T>)
     {
         super(props);
 
         this.state = {
             columnVisibility: EnhancedReactTable.resolveVisibility(props.columns, props.rawData),
-            filter: ""
+            filter: "",
+            itemsPerPage: this.props.initItemsPerPage || 25,
+            currentPage: this.props.initPage || 0
         };
+
+        // Begin code designed to get around the fact that data filtering happens inside Table
+        // but we need that information to properly paginate.
+
+        // Monkey patch to get access to filtered data for pagination num pages calculation
+        this.filteredDataLength = props.rawData.length;
+        this.shouldSetState = false;
+
+        const setFilteredDataLength = (n:number) => {
+            if (n !== this.filteredDataLength) {
+                this.filteredDataLength = n;
+                this.shouldSetState = true;
+            }
+        };
+
+        const Table_applyFilter = Table.prototype.applyFilter;
+        Table.prototype.applyFilter = function(){
+            const result = Table_applyFilter.apply(this, arguments);
+            setFilteredDataLength(result.length);
+            return result;
+        };
+        //
+
 
         this.colNameToId = this.mapColNameToId(props.columns);
         this.sortedColumns = this.resolveOrder(props.columns);
@@ -108,6 +138,9 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
         // binding "this" to handler functions
         this.handleFilterInput = this.handleFilterInput.bind(this);
         this.handleVisibilityToggle = this.handleVisibilityToggle.bind(this);
+        this.handleChangeItemsPerPage = this.handleChangeItemsPerPage.bind(this);
+        this.handlePreviousPageClick = this.handlePreviousPageClick.bind(this);
+        this.handleNextPageClick = this.handleNextPageClick.bind(this);
     }
 
     public render() {
@@ -139,6 +172,14 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
         // table rows: an array of Tr components
         const rows = this.generateRows(sortedCols, rawData);
 
+        let firstItemShownIndex:number;
+        if (this.filteredDataLength === 0) {
+            firstItemShownIndex = 0;
+        } else {
+            firstItemShownIndex = (this.state.itemsPerPage === -1 ? 0 : this.state.itemsPerPage*this.state.currentPage) + 1;
+        }
+        const lastItemShownIndex:number = (this.state.itemsPerPage === -1 ? this.filteredDataLength : Math.min(this.filteredDataLength, firstItemShownIndex + this.state.itemsPerPage - 1));
+
         return(
             <div>
                 <TableHeaderControls
@@ -148,12 +189,23 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
                     handleInput={this.handleFilterInput}
                     onColumnToggled={this.handleVisibilityToggle}
                     showSearch={true}
+                    className="pull-right"
+                    paginationProps={{itemsPerPage:this.state.itemsPerPage,
+                                        currentPage: this.state.currentPage,
+                                        onChangeItemsPerPage: this.handleChangeItemsPerPage,
+                                        onPreviousPageClick: this.handlePreviousPageClick,
+                                        onNextPageClick: this.handleNextPageClick,
+                                        textBetweenButtons: `${firstItemShownIndex}-${lastItemShownIndex} of ${this.filteredDataLength}`,
+                                        previousPageDisabled: (this.state.currentPage === 0),
+                                        nextPageDisabled: (this.state.currentPage >= this.numPages()-1)}}
                     {...headerControlsProps}
                 />
                 <Table
                     sortable={sortable}
                     filterable={filterable}
                     filterBy={this.state.filter}
+                    itemsPerPage={this.state.itemsPerPage === -1 ? undefined : this.state.itemsPerPage}
+                    currentPage={this.state.currentPage}
                     {...reactTableProps}
                 >
                     <Thead>
@@ -163,6 +215,34 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
                 </Table>
             </div>
         );
+    }
+
+    componentWillUpdate(nextProps:IEnhancedReactTableProps<T>, nextState:IEnhancedReactTableState) {
+        if (nextState.filter.length === 0) {
+            // Normally, the way we update this.filteredDataLength is when Table.applyFilter is
+            // called (see "monkey patching" of Table.prototype.applyFilter).
+            // But if the filter text is empty, Table.applyFilter is not called and the
+            // entire input data is used, so we have to manually catch and handle this case here
+            // to keep this.filteredDataLength up to date.
+            this.filteredDataLength = this.props.rawData.length;
+        }
+    }
+    componentDidUpdate() {
+        if (this.shouldSetState) {
+            this.shouldSetState = false;
+            this.setState({
+                currentPage: Math.max(0, Math.min(this.state.currentPage, this.numPages() - 1))
+            } as IEnhancedReactTableState);
+        }
+    }
+
+    private numPages(itemsPerPage?:number) {
+        itemsPerPage = itemsPerPage || this.state.itemsPerPage;
+        if (itemsPerPage === -1) {
+            return 1;
+        } else {
+            return Math.ceil(this.filteredDataLength / itemsPerPage);
+        }
     }
 
     private mapColNameToId(columns:IColumnDefMap|undefined):{[key:string]: string}
@@ -392,5 +472,24 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
             columnVisibility,
             ...this.state
         });
+    }
+
+    private handleChangeItemsPerPage(itemsPerPage:number) {
+        this.setState({
+            itemsPerPage: itemsPerPage,
+            currentPage: Math.min(this.state.currentPage, this.numPages(itemsPerPage)-1)
+        } as IEnhancedReactTableState);
+    }
+
+    private handlePreviousPageClick() {
+        this.setState({
+            currentPage: Math.max(0, this.state.currentPage - 1)
+        } as IEnhancedReactTableState);
+    }
+
+    private handleNextPageClick() {
+        this.setState({
+            currentPage: Math.min(this.state.currentPage + 1, this.numPages() - 1)
+        } as IEnhancedReactTableState);
     }
 };

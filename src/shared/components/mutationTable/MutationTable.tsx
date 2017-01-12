@@ -163,6 +163,7 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
         return(
             <div>
                 <ReactTable
+                    itemsName="mutations"
                     reactTableProps={reactTableProps}
                     headerControlsProps={headerControlsProps}
                     columns={columns}
