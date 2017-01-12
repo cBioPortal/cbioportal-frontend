@@ -2,12 +2,14 @@ import {
     IColumnRenderFunction, IColumnSortFunction, IColumnFilterFunction, IColumnVisibilityFunction, ColumnVisibility,
     IColumnDataFunction
 } from "./IColumnFormatter";
+import {ITableExportButtonsProps} from "../tableHeaderControls/TableHeaderControls";
 
 /**
  * @author Selcuk Onur Sumer
  */
 export interface IEnhancedReactTableProps {
     reactTableProps?: any; // any available reactable props
+    headerControlsProps?: ITableExportButtonsProps;
     columns?: IColumnDefMap; // column definitions (including component renderers)
     rawData: Array<any>; // raw data
 }
