@@ -1,9 +1,10 @@
 import * as React from 'react';
 import {Table, Thead, Th, Tr, Td} from "reactable";
 import * as _ from 'underscore';
+import TableHeaderControls from "shared/components/tableHeaderControls/TableHeaderControls";
 import {
     IEnhancedReactTableProps, IColumnDefMap, IEnhancedReactTableColumnDef, IColumnVisibilityState,
-    IEnhancedReactTableState
+    IEnhancedReactTableState, IColumnVisibilityDef
 } from "IEnhancedReactTableProps";
 import {
     IColumnFormatterData, IColumnSortFunction, IColumnFilterFunction, IColumnVisibilityFunction, ColumnVisibility
@@ -86,13 +87,27 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
         }
     }
 
+    // mapping of column name to column id
+    private colNameToId:{[key:string]: string};
+
+    // sorted list of columns (by priority)
+    private sortedColumns:Array<IEnhancedReactTableColumnDef>;
+
     constructor(props:IEnhancedReactTableProps)
     {
         super(props);
 
         this.state = {
-            columnVisibility: EnhancedReactTable.resolveVisibility(props.columns, props.rawData)
+            columnVisibility: EnhancedReactTable.resolveVisibility(props.columns, props.rawData),
+            filter: ""
         };
+
+        this.colNameToId = this.mapColNameToId(props.columns);
+        this.sortedColumns = this.resolveOrder(props.columns);
+
+        // binding "this" to handler functions
+        this.handleFilterInput = this.handleFilterInput.bind(this);
+        this.handleVisibilityToggle = this.handleVisibilityToggle.bind(this);
     }
 
     public render() {
@@ -108,26 +123,97 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
         // update (override) react table props
         reactTableProps.sortable = this.resolveSortable(visibleCols);
         reactTableProps.filterable = this.resolveFilterable(visibleCols);
+        reactTableProps.filterBy = this.state.filter;
 
         // sort columns
         let sortedCols:Array<IEnhancedReactTableColumnDef> = this.resolveOrder(visibleCols);
+
+        // always use the initially sorted columns (this.sortedColumns),
+        // otherwise already hidden columns will never appear in the dropdown menu!
+        let columnVisibility:Array<IColumnVisibilityDef> = this.resolveColumnVisibility(
+            this.colNameToId, this.sortedColumns, this.state.columnVisibility);
 
         const headers = this.generateHeaders(sortedCols);
         const rows = this.generateRows(sortedCols, rawData);
 
         return(
-            <Table {...reactTableProps}>
-                <Thead>
-                    {headers}
-                </Thead>
-                {rows}
-            </Table>
+            <div>
+                <TableHeaderControls
+                    showCopyAndDownload={true}
+                    showHideShowColumnButton={true}
+                    columnVisibility={columnVisibility}
+                    handleInput={this.handleFilterInput}
+                    onColumnToggled={this.handleVisibilityToggle}
+                    showSearch={true}
+                    className="pull-right"
+                />
+                <Table {...reactTableProps}>
+                    <Thead>
+                        {headers}
+                    </Thead>
+                    {rows}
+                </Table>
+            </div>
         );
     }
 
-    private resolveOrder(columns:IColumnDefMap):Array<IEnhancedReactTableColumnDef>
+    private mapColNameToId(columns:IColumnDefMap|undefined):{[key:string]: string}
     {
-        return _.values(columns).sort(EnhancedReactTable.columnSort);
+        let colNameToId:{[key:string]:string} = {};
+
+        if (columns)
+        {
+            _.each(columns, function(value:IEnhancedReactTableColumnDef, key:string) {
+                if (value.name) {
+                    if (colNameToId[value.name] != null) {
+                        // TODO console.log("[EnhancedReactTable] Warning: Duplicate column name: " + value.name);
+                    }
+                    colNameToId[value.name] = key;
+                }
+            });
+        }
+
+        return colNameToId;
+    }
+
+    private resolveOrder(columns:IColumnDefMap|undefined):Array<IEnhancedReactTableColumnDef>
+    {
+        if (columns) {
+            return _.values(columns).sort(EnhancedReactTable.columnSort);
+        }
+        else {
+            return [];
+        }
+    }
+
+    /**
+     * Resolves the IColumnVisibilityDef to be passed to the TableHeaderControls.
+     *
+     * @param colNameToId
+     * @param sortedCols
+     * @param columnVisibility
+     * @returns {Array<IColumnVisibilityDef>}
+     */
+    private resolveColumnVisibility(colNameToId:{[key:string]:string},
+                                    sortedCols:Array<IEnhancedReactTableColumnDef>,
+                                    columnVisibility: IColumnVisibilityState):Array<IColumnVisibilityDef>
+    {
+        let colVis:Array<IColumnVisibilityDef>  = [];
+
+        _.each(sortedCols, function(col:IEnhancedReactTableColumnDef) {
+            let id:string = colNameToId[col.name];
+
+            if (columnVisibility[id])
+            {
+                colVis.push({
+                    id,
+                    name: col.name,
+                    visibility: columnVisibility[id]
+                });
+            }
+        });
+
+        return colVis;
     }
 
     private generateHeaders(columns:Array<IEnhancedReactTableColumnDef>)
@@ -267,5 +353,35 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
         });
 
         return filterable;
+    }
+
+    private handleFilterInput(filter: string):void
+    {
+        this.setState({
+            ...this.state,
+            filter
+        });
+    }
+
+    private handleVisibilityToggle(columnId: String):void
+    {
+        const key:string = columnId as string;
+
+        let visibility:ColumnVisibility = this.state.columnVisibility[key];
+        let columnVisibility:IColumnVisibilityState = this.state.columnVisibility;
+
+        if (visibility === "hidden") {
+            visibility = "visible";
+        }
+        else if (visibility === "visible") {
+            visibility = "hidden";
+        }
+
+        columnVisibility[key] = visibility;
+
+        this.setState({
+            columnVisibility,
+            ...this.state
+        });
     }
 };
