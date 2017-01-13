@@ -121,10 +121,9 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
         columns = columns || {};
         let visibleCols:IColumnDefMap = this.resolveVisible(columns, this.state.columnVisibility);
 
-        // update (override) react table props
-        reactTableProps.sortable = this.resolveSortable(visibleCols);
-        reactTableProps.filterable = this.resolveFilterable(visibleCols);
-        reactTableProps.filterBy = this.state.filter;
+        // dynamic reactable props (depends on the columnVisibility state)
+        let sortable:Array<string|IColumnSort> = this.resolveSortable(visibleCols);
+        let filterable:Array<string|IColumnFilter> = this.resolveFilterable(visibleCols);
 
         // sort columns
         let sortedCols:Array<IEnhancedReactTableColumnDef> = this.resolveOrder(visibleCols);
@@ -134,7 +133,10 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
         let columnVisibility:Array<IColumnVisibilityDef> = this.resolveColumnVisibility(
             this.colNameToId, this.sortedColumns, this.state.columnVisibility);
 
+        // column headers: an array of Th components
         const headers = this.generateHeaders(sortedCols);
+
+        // table rows: an array of Tr components
         const rows = this.generateRows(sortedCols, rawData);
 
         return(
@@ -148,7 +150,12 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
                     showSearch={true}
                     {...headerControlsProps}
                 />
-                <Table {...reactTableProps}>
+                <Table
+                    sortable={sortable}
+                    filterable={filterable}
+                    filterBy={this.state.filter}
+                    {...reactTableProps}
+                >
                     <Thead>
                         {headers}
                     </Thead>
@@ -239,6 +246,7 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
         const self = this;
 
         _.each(tableData, function(rowData:any, index:number) {
+            // columns for this row: an array of Td elements
             const cols = self.generateColumns(columns, tableData, rowData);
 
             rows.push(
