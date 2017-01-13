@@ -15,8 +15,8 @@ import * as styles_any from './styles.module.scss';
 import firstDefinedValue from "../../../lib/firstDefinedValue";
 
 const styles = styles_any as {
-	QueryContainer: string,
-	CancerStudySelector: string,
+    QueryContainer: string,
+    CancerStudySelector: string,
 };
 
 export interface IQueryContainerProps
@@ -40,8 +40,7 @@ export default class QueryContainer extends React.Component<IQueryContainerProps
 
     componentDidMount()
     {
-        if (this.props.loadQueryData)
-            this.props.loadQueryData();
+        QueryConnector.actions.loadQueryData();
     }
 
     // for demo only
@@ -61,59 +60,59 @@ export default class QueryContainer extends React.Component<IQueryContainerProps
             <FlexCol padded flex={1} className={styles.QueryContainer}>
 
                 <CancerStudySelector
-					searchTextPresets={['lung', 'serous', 'tcga', 'tcga -provisional']}
+                    searchTextPresets={['lung', 'serous', 'tcga', 'tcga -provisional']}
                     cancerTypes={this.props.data.cancerTypes}
                     studies={this.props.data.studies}
                     onStateChange={this.onStateChange}
                     showStudiesInTree={this.state.showStudiesInTree}
-					{...this.state}
+                    {...this.state}
                 />
 
                 <FlexRow padded>
-					{/* demo controls */}
-                	<FlexCol className={styles.CancerStudySelector} padded style={{border: '1px solid #ddd', borderRadius: 5, padding: 5}}>
-                		<StateToggle label='Show all studies when nothing is selected' target={this} name='showAllStudiesByDefault' defaultValue={!!CancerStudySelector.defaultProps.showAllStudiesByDefault}/>
-                		<StateToggle label='Show root node ("All")' target={this} name='showRoot' defaultValue={!!CancerStudySelector.defaultProps.showRoot}/>
-                		<StateToggle label='Click tree node again to deselect' target={this} name='clickAgainToDeselectSingle' defaultValue={!!CancerStudySelector.defaultProps.clickAgainToDeselectSingle}/>
-                		<StateToggle label='Filter studies list by tree checkboxes' target={this} name='filterBySelection' defaultValue={!!CancerStudySelector.defaultProps.filterBySelection}/>
-                		<StateToggle label='Show studies in tree' target={this} name='showStudiesInTree' defaultValue={!!CancerStudySelector.defaultProps.showStudiesInTree}/>
-						<Select
-							label="Tree depth: "
-							selected={firstDefinedValue(this.state.maxTreeDepth, CancerStudySelector.defaultProps.maxTreeDepth)}
-							options={[
-								{label: "0"},
-								{label: "1"},
-								{label: "2"},
-								{label: "3"},
-								{label: "4"},
-								{label: "5"},
-								{label: "6"},
-								{label: "7"},
-								{label: "8"},
-								{label: "9"},
-							]}
-							onChange={option => this.setState({
-								maxTreeDepth: parseInt(option.label)
-							})}
-						/>
-						<span>Note: Use cmd+click tree node arrow to expand/collapse entire subtree.</span>
-						{
-							this.state.filterBySelection || this.state.showStudiesInTree
-							?   <span>&nbsp;</span>
-							:   <span>Note: Use cmd+click to select/deselect multiple tree nodes.</span>
-						}
-					</FlexCol>
+                    {/* demo controls */}
+                    <FlexCol className={styles.CancerStudySelector} padded style={{border: '1px solid #ddd', borderRadius: 5, padding: 5}}>
+                        <StateToggle label='Show all studies when nothing is selected' target={this} name='showAllStudiesByDefault' defaultValue={!!CancerStudySelector.defaultProps.showAllStudiesByDefault}/>
+                        <StateToggle label='Show root node ("All")' target={this} name='showRoot' defaultValue={!!CancerStudySelector.defaultProps.showRoot}/>
+                        <StateToggle label='Click tree node again to deselect' target={this} name='clickAgainToDeselectSingle' defaultValue={!!CancerStudySelector.defaultProps.clickAgainToDeselectSingle}/>
+                        <StateToggle label='Filter studies list by tree checkboxes' target={this} name='filterBySelection' defaultValue={!!CancerStudySelector.defaultProps.filterBySelection}/>
+                        <StateToggle label='Show studies in tree' target={this} name='showStudiesInTree' defaultValue={!!CancerStudySelector.defaultProps.showStudiesInTree}/>
+                        <Select
+                            label="Tree depth: "
+                            selected={firstDefinedValue(this.state.maxTreeDepth, CancerStudySelector.defaultProps.maxTreeDepth)}
+                            options={[
+                                {label: "0"},
+                                {label: "1"},
+                                {label: "2"},
+                                {label: "3"},
+                                {label: "4"},
+                                {label: "5"},
+                                {label: "6"},
+                                {label: "7"},
+                                {label: "8"},
+                                {label: "9"},
+                            ]}
+                            onChange={option => this.setState({
+                                maxTreeDepth: parseInt(option.label)
+                            })}
+                        />
+                        <span>Note: Use cmd+click tree node arrow to expand/collapse entire subtree.</span>
+                        {
+                            this.state.filterBySelection || this.state.showStudiesInTree
+                            ?   <span>&nbsp;</span>
+                            :   <span>Note: Use cmd+click to select/deselect multiple tree nodes.</span>
+                        }
+                    </FlexCol>
 
-					{/* display state for demo */}
-					<pre style={{flex: 1, height: 200}}>
-						{
-							JSON.stringify({
-								selectedCancerTypeIds: this.state.selectedCancerTypeIds,
-								selectedStudyIds: this.state.selectedStudyIds,
-							}, null, 4)
-						}
-					</pre>
-				</FlexRow>
+                    {/* display state for demo */}
+                    <pre style={{flex: 1, height: 200}}>
+                        {
+                            JSON.stringify({
+                                selectedCancerTypeIds: this.state.selectedCancerTypeIds,
+                                selectedStudyIds: this.state.selectedStudyIds,
+                            }, null, 4)
+                        }
+                    </pre>
+                </FlexRow>
 
             </FlexCol>
         );

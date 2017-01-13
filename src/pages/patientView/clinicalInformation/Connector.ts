@@ -36,6 +36,7 @@ export default new class ClinicalInformationConnector extends Connector<RootStat
         activeTab: 1,
     };
 
+    actions = {};
     mapDispatchToProps = {
         loadClinicalInformationTableData: () => (dispatch:IDispatch<ActionTypes>) => { // this is a thunk
             getClinicalInformationData().then(

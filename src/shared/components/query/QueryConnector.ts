@@ -29,9 +29,9 @@ export default new class QueryConnector extends Connector<RootState, QueryData, 
         status: 'fetching',
     };
 
-    mapDispatchToProps = {
-        loadQueryData: () => (dispatch:IDispatch<ActionTypes>) => { // this is a thunk
-            dispatch({
+    actions = {
+        loadQueryData: () => {
+            this.dispatch({
                 type: FETCH,
                 status: 'fetching',
             });
@@ -41,7 +41,7 @@ export default new class QueryConnector extends Connector<RootState, QueryData, 
                 client.getAllStudiesUsingGET({})
             ]).then(
                 ([cancerTypes, studies]) => {
-                    dispatch({
+                    this.dispatch({
                         type: FETCH,
                         status: 'complete',
                         payload: {
@@ -50,7 +50,7 @@ export default new class QueryConnector extends Connector<RootState, QueryData, 
                         }
                     });
                 },
-                reason => dispatch({
+                reason => this.dispatch({
                     type: FETCH,
                     status: 'error',
                     error: reason

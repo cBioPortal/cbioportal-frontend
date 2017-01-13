@@ -27,8 +27,6 @@ const styles = styles_any as {
 export interface IQueryContainerProps
 {
     data?: QueryData,
-
-    loadQueryData?: () => void,
 }
 
 export type IQueryContainerState = {
@@ -45,8 +43,7 @@ export default class QueryContainer extends React.Component<IQueryContainerProps
 
     componentDidMount()
     {
-        if (this.props.loadQueryData)
-            this.props.loadQueryData();
+		QueryConnector.actions.loadQueryData();
     }
 
     // for demo only
