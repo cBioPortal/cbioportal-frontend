@@ -4,10 +4,10 @@ import * as React from 'react';
  * @author Selcuk Onur Sumer
  */
 
-export interface IColumnFormatterData {
+export interface IColumnFormatterData<T> {
     name:string; // column name
-    tableData?:Array<any>; // entire table data (array of instances)
-    rowData?:any; // single instance representing the row data
+    tableData?:Array<T>; // entire table data (array of instances)
+    rowData?:T; // single instance representing the row data
     columnData?:any; // column specific data
 }
 
@@ -20,15 +20,15 @@ export interface IColumnFilterFunction {
 }
 
 export interface IColumnRenderFunction {
-    (data:IColumnFormatterData, columnProps?:any):any; // TODO this should return Reactable.Td!
+    <T>(data:IColumnFormatterData<T>, columnProps?:any):any; // TODO this should return Reactable.Td!
 }
 
 export interface IColumnVisibilityFunction {
-    (tableData:Array<any>, columnProps?:any):ColumnVisibility;
+    <T>(tableData:Array<T>, columnProps?:any):ColumnVisibility;
 }
 
 export interface IColumnDataFunction {
-    (data:IColumnFormatterData):any
+    <T>(data:IColumnFormatterData<T>):any
 }
 
 export type ColumnVisibility = "visible" | "hidden" | "excluded";

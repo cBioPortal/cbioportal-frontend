@@ -3,7 +3,7 @@ import * as lodash from 'lodash';
 
 import EnhancedReactTable from "../enhancedReactTable/EnhancedReactTable";
 import {IColumnDefMap} from "../enhancedReactTable/IEnhancedReactTableProps";
-import {IMutationTableProps} from "./IMutationTableProps";
+import {IMutationTableProps, MutationTableRowData} from "./IMutationTableProps";
 import GeneColumnFormatter from "./column/GeneColumnFormatter";
 import ChromosomeColumnFormatter from "./column/ChromosomeColumnFormatter";
 import SampleColumnFormatter from "./column/SampleColumnFormatter";
@@ -11,6 +11,8 @@ import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter"
 import MutationAssessorColumnFormatter from "./column/MutationAssessorColumnFormatter";
 import MutationTypeColumnFormatter from "./column/MutationTypeColumnFormatter";
 
+// EnhancedReactTable is a generic component which requires data type argument
+class ReactTable extends EnhancedReactTable<MutationTableRowData> {};
 
 /**
  * @author Selcuk Onur Sumer
@@ -160,7 +162,7 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
 
         return(
             <div>
-                <EnhancedReactTable
+                <ReactTable
                     reactTableProps={reactTableProps}
                     headerControlsProps={headerControlsProps}
                     columns={columns}

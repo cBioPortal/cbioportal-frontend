@@ -4,6 +4,8 @@ import {IColumnFormatterData} from "../../../../shared/components/enhancedReactT
 import Tooltip from 'rc-tooltip';
 import {compareNumberLists} from '../../../../shared/lib/SortUtils';
 import 'rc-tooltip/assets/bootstrap_white.css';
+import {MutationTableRowData} from "../../../../shared/components/mutationTable/IMutationTableProps";
+import {Mutation} from "../../../../shared/api/CBioPortalAPI";
 
 export default class AlleleFreqColumnFormatter {
     static barWidth = 6;
@@ -11,9 +13,10 @@ export default class AlleleFreqColumnFormatter {
     static maxBarHeight = 12;
     static indexToBarLeft = (n:number) => n*(AlleleFreqColumnFormatter.barWidth + AlleleFreqColumnFormatter.barSpacing);
 
-    public static renderFunction(data:IColumnFormatterData, columnProps:any) {
+    public static renderFunction(data:IColumnFormatterData<MutationTableRowData>, columnProps:any) {
         const barX = columnProps.sampleOrder.reduce((map:{[s:string]:number}, sampleId:string, i:number) => {map[sampleId] = AlleleFreqColumnFormatter.indexToBarLeft(i); return map;}, {});
-        const sampleElements = data.rowData.map(function(mutation:any) {
+        const mutations:Array<Mutation> = new Array<Mutation>().concat(data.rowData || []);
+        const sampleElements = mutations.map(function(mutation:Mutation) {
             const altReads = mutation.tumorAltCount;
             const refReads = mutation.tumorRefCount;
             const freq = altReads / (altReads + refReads);

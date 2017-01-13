@@ -23,7 +23,7 @@ type IColumnFilter = {
 /**
  * @author Selcuk Onur Sumer
  */
-export default class EnhancedReactTable extends React.Component<IEnhancedReactTableProps, IEnhancedReactTableState>
+export default class EnhancedReactTable<T> extends React.Component<IEnhancedReactTableProps<T>, IEnhancedReactTableState>
 {
     /**
      * Resolves the visible columns and returns the state for the ones except "excluded".
@@ -32,7 +32,7 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
      * @param tableData raw table data
      * @returns {IColumnVisibilityState} column visibility state for not excluded columns
      */
-    public static resolveVisibility(columns:IColumnDefMap|undefined, tableData:Array<any>):IColumnVisibilityState
+    public static resolveVisibility<T>(columns:IColumnDefMap|undefined, tableData:Array<T>):IColumnVisibilityState
     {
         let visibilityState:IColumnVisibilityState = {};
 
@@ -93,7 +93,7 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
     // sorted list of columns (by priority)
     private sortedColumns:Array<IEnhancedReactTableColumnDef>;
 
-    constructor(props:IEnhancedReactTableProps)
+    constructor(props:IEnhancedReactTableProps<T>)
     {
         super(props);
 
@@ -240,12 +240,12 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
         return headers;
     }
 
-    private generateRows(columns:Array<IEnhancedReactTableColumnDef>, tableData:Array<any>)
+    private generateRows(columns:Array<IEnhancedReactTableColumnDef>, tableData:Array<T>)
     {
         let rows:Array<any> = [];
         const self = this;
 
-        _.each(tableData, function(rowData:any, index:number) {
+        _.each(tableData, function(rowData:T, index:number) {
             // columns for this row: an array of Td elements
             const cols = self.generateColumns(columns, tableData, rowData);
 
@@ -259,13 +259,13 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
         return rows;
     }
 
-    private generateColumns(columns:Array<IEnhancedReactTableColumnDef>, tableData:Array<any>, rowData:any)
+    private generateColumns(columns:Array<IEnhancedReactTableColumnDef>, tableData:Array<T>, rowData:T)
     {
         let cols:Array<any> = [];
         const self = this;
 
         _.each(columns, function(columnDef:IEnhancedReactTableColumnDef) {
-            let data:IColumnFormatterData = {
+            let data:IColumnFormatterData<T> = {
                 name: columnDef.name,
                 tableData,
                 rowData,
@@ -281,13 +281,13 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
                 // also taking into account that row data might be an array of instances
                 // (instead of a single instance)
                 // this converts row data into an array in case it refers to a single instance
-                const rowDataArr:Array<any> = [].concat(data.rowData);
+                const instances:Array<any> = new Array<any>().concat(data.rowData);
 
                 // In case row data is an array of instances, by default retrieving only the first
                 // element's data as the column data. For advanced combining of all elements' data,
                 // one needs to provide a custom columnData function.
-                if (rowDataArr.length > 0) {
-                    data.columnData = rowDataArr[0][columnDef.dataField];
+                if (instances.length > 0) {
+                    data.columnData = instances[0][columnDef.dataField];
                 }
             }
 
@@ -297,7 +297,7 @@ export default class EnhancedReactTable extends React.Component<IEnhancedReactTa
         return cols;
     }
 
-    private generateColumn(data:IColumnFormatterData, columnDef:IEnhancedReactTableColumnDef)
+    private generateColumn(data:IColumnFormatterData<T>, columnDef:IEnhancedReactTableColumnDef)
     {
         if (columnDef.formatter)
         {

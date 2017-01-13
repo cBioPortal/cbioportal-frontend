@@ -2,6 +2,8 @@ import * as React from 'react';
 import {Td} from 'reactable';
 import {IColumnFormatterData}
     from "../../enhancedReactTable/IColumnFormatter";
+import {MutationTableRowData} from "../IMutationTableProps";
+import {Mutation} from "../../../api/CBioPortalAPI";
 
 /**
  * @author Selcuk Onur Sumer
@@ -93,7 +95,7 @@ export default class ProteinChangeColumnFormatter
         }
     }
 
-    public static getTextValue(data:IColumnFormatterData):string
+    public static getTextValue(data:IColumnFormatterData<MutationTableRowData>):string
     {
         let textValue:string = "";
         const dataValue = ProteinChangeColumnFormatter.getData(data);
@@ -105,13 +107,13 @@ export default class ProteinChangeColumnFormatter
         return textValue;
     }
 
-    public static getDisplayValue(data:IColumnFormatterData):string
+    public static getDisplayValue(data:IColumnFormatterData<MutationTableRowData>):string
     {
         // same as text value
         return ProteinChangeColumnFormatter.getTextValue(data);
     }
 
-    public static getData(data:IColumnFormatterData)
+    public static getData(data:IColumnFormatterData<MutationTableRowData>)
     {
         let value;
 
@@ -119,8 +121,8 @@ export default class ProteinChangeColumnFormatter
             value = data.columnData;
         }
         else if (data.rowData) {
-            const rowDataArr:Array<any> = [].concat(data.rowData);
-            value = (rowDataArr.length > 0 ? rowDataArr[0].proteinChange : null);
+            const mutations:Array<Mutation> = (new Array<Mutation>()).concat(data.rowData);
+            value = (mutations.length > 0 ? mutations[0].proteinChange : null);
         }
         else {
             value = null;
@@ -129,7 +131,7 @@ export default class ProteinChangeColumnFormatter
         return value;
     }
 
-    public static renderFunction(data:IColumnFormatterData)
+    public static renderFunction(data:IColumnFormatterData<MutationTableRowData>)
     {
         // use text as display value
         const text:string = ProteinChangeColumnFormatter.getDisplayValue(data);

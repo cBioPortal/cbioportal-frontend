@@ -7,11 +7,11 @@ import {ITableExportButtonsProps} from "../tableHeaderControls/TableHeaderContro
 /**
  * @author Selcuk Onur Sumer
  */
-export interface IEnhancedReactTableProps {
+export interface IEnhancedReactTableProps<T> {
     reactTableProps?: any; // any available reactable props
     headerControlsProps?: ITableExportButtonsProps;
     columns?: IColumnDefMap; // column definitions (including component renderers)
-    rawData: Array<any>; // raw data
+    rawData: Array<T>; // raw data
 }
 
 export interface IEnhancedReactTableState {

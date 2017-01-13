@@ -5,6 +5,8 @@ import {IColumnFormatterData}
     from "../../enhancedReactTable/IColumnFormatter";
 import 'rc-tooltip/assets/bootstrap_white.css';
 import styles from "./mutationAssessor.module.scss";
+import {MutationTableRowData} from "../IMutationTableProps";
+import {Mutation} from "../../../api/CBioPortalAPI";
 
 type MA_CLASS_NAME = 'oma-high' | 'oma-medium' | 'oma-low' | 'oma-neutral';
 type IMutationAssessorFormat = {
@@ -31,7 +33,7 @@ export default class MutationAssessorColumnFormatter
         };
     }
 
-    public static sortFunction(a:IColumnFormatterData, b:IColumnFormatterData):number
+    public static sortFunction(a:IColumnFormatterData<MutationTableRowData>, b:IColumnFormatterData<MutationTableRowData>):number
     {
         const aScore = MutationAssessorColumnFormatter.getData(a).score;
         const bScore = MutationAssessorColumnFormatter.getData(b).score;
@@ -65,7 +67,7 @@ export default class MutationAssessorColumnFormatter
         return 0;
     }
 
-    public static filterValue(data:IColumnFormatterData):string
+    public static filterValue(data:IColumnFormatterData<MutationTableRowData>):string
     {
         return MutationAssessorColumnFormatter.getDisplayValue(data);
     }
@@ -76,7 +78,7 @@ export default class MutationAssessorColumnFormatter
      * @param data  column formatter data
      * @returns {string}    mutation assessor text value
      */
-    public static getDisplayValue(data:IColumnFormatterData):string
+    public static getDisplayValue(data:IColumnFormatterData<MutationTableRowData>):string
     {
         const entry:IMutationAssessorFormat|undefined =
             MutationAssessorColumnFormatter.getMapEntry(data);
@@ -91,7 +93,7 @@ export default class MutationAssessorColumnFormatter
         }
     }
 
-    public static getTextValue(data:IColumnFormatterData):string
+    public static getTextValue(data:IColumnFormatterData<MutationTableRowData>):string
     {
         const maData = MutationAssessorColumnFormatter.getData(data);
 
@@ -104,7 +106,7 @@ export default class MutationAssessorColumnFormatter
         }
     }
 
-    public static getScoreClassName(data:IColumnFormatterData):string
+    public static getScoreClassName(data:IColumnFormatterData<MutationTableRowData>):string
     {
         const value:IMutationAssessorFormat|undefined =
             MutationAssessorColumnFormatter.getMapEntry(data);
@@ -117,7 +119,7 @@ export default class MutationAssessorColumnFormatter
         }
     }
 
-    public static getMaClassName(data:IColumnFormatterData):string
+    public static getMaClassName(data:IColumnFormatterData<MutationTableRowData>):string
     {
         const value:IMutationAssessorFormat|undefined =
             MutationAssessorColumnFormatter.getMapEntry(data);
@@ -130,7 +132,7 @@ export default class MutationAssessorColumnFormatter
         }
     }
 
-    public static getMapEntry(data:IColumnFormatterData)
+    public static getMapEntry(data:IColumnFormatterData<MutationTableRowData>)
     {
         const maData = MutationAssessorColumnFormatter.getData(data);
 
@@ -142,7 +144,7 @@ export default class MutationAssessorColumnFormatter
         }
     }
 
-    public static getData(data:IColumnFormatterData)
+    public static getData(data:IColumnFormatterData<MutationTableRowData>)
     {
         let maData;
 
@@ -152,15 +154,16 @@ export default class MutationAssessorColumnFormatter
         }
         else if (data.rowData)
         {
-            const rowDataArr:Array<any> = [].concat(data.rowData);
+            const mutations:Array<Mutation> = new Array<Mutation>().concat(data.rowData);
 
-            if (rowDataArr.length > 0) {
+            if (mutations.length > 0) {
                 maData = {
-                    impact: rowDataArr[0].functionalImpactScore,
-                    score: rowDataArr[0].fisValue,
-                    pdb: rowDataArr[0].linkPdb,
-                    msa: rowDataArr[0].linkMsa,
-                    xVar: rowDataArr[0].linkXvar
+                    // TODO these are not in the mutation model anymore, need to get it from somewhere else
+                    // impact: mutations[0].functionalImpactScore,
+                    // score: mutations[0].fisValue,
+                    // pdb: mutations[0].linkPdb,
+                    // msa: mutations[0].linkMsa,
+                    // xVar: mutations[0].linkXvar
                 };
             } else {
                 maData = {};
@@ -173,7 +176,7 @@ export default class MutationAssessorColumnFormatter
         return maData;
     }
 
-    public static getTooltipContent(data:IColumnFormatterData)
+    public static getTooltipContent(data:IColumnFormatterData<MutationTableRowData>)
     {
         const maData = MutationAssessorColumnFormatter.getData(data);
         let xVar:any = "";
@@ -242,7 +245,7 @@ export default class MutationAssessorColumnFormatter
         );
     }
 
-    public static renderFunction(data:IColumnFormatterData)
+    public static renderFunction(data:IColumnFormatterData<MutationTableRowData>)
     {
         const text:string = MutationAssessorColumnFormatter.getDisplayValue(data);
         const fisClass:string = MutationAssessorColumnFormatter.getScoreClassName(data);

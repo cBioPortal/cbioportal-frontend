@@ -1,17 +1,23 @@
 import {IColumnFormatterData}
     from "../../../../shared/components/enhancedReactTable/IColumnFormatter";
 import GeneColumnFormatter from "./GeneColumnFormatter";
+import {MutationTableRowData} from "../IMutationTableProps";
 
 /**
  * @author Selcuk Onur Sumer
  */
 export default class ChromosomeColumnFormatter
 {
-    public static getDataFromRow(rowData:any)
+    public static getDataFromRow(rowData:MutationTableRowData|undefined)
     {
         let geneData = GeneColumnFormatter.getDataFromRow(rowData);
 
-        return geneData.chromosome;
+        if (geneData) {
+            return geneData.chromosome;
+        }
+        else {
+            return null;
+        }
     }
 
     public static sortFunction(a:string, b:string):number
@@ -46,7 +52,7 @@ export default class ChromosomeColumnFormatter
         return value;
     }
 
-    public static getData(data:IColumnFormatterData)
+    public static getData(data:IColumnFormatterData<MutationTableRowData>)
     {
         let chromosome;
 

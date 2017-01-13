@@ -4,6 +4,8 @@ import {Td} from 'reactable';
 import {IColumnFormatterData}
     from "../../enhancedReactTable/IColumnFormatter";
 import styles from "./sample.module.scss";
+import {MutationTableRowData} from "../IMutationTableProps";
+import {Mutation} from "../../../api/CBioPortalAPI";
 
 /**
  * @author Selcuk Onur Sumer
@@ -15,7 +17,7 @@ export default class SampleColumnFormatter
     public static get BUFFER():number {return 2;}; // no need to bother with clipping the text for a few chars.
     public static get SUFFIX():string {return "...";};
 
-    public static getTextValue(data:IColumnFormatterData):string
+    public static getTextValue(data:IColumnFormatterData<MutationTableRowData>):string
     {
         let textValue:string = "";
         const dataValue = SampleColumnFormatter.getData(data);
@@ -34,7 +36,7 @@ export default class SampleColumnFormatter
      * @param data  column formatter data
      * @returns {string}    display text value (may be truncated)
      */
-    public static getDisplayValue(data:IColumnFormatterData):string
+    public static getDisplayValue(data:IColumnFormatterData<MutationTableRowData>):string
     {
         let text:string = SampleColumnFormatter.getTextValue(data);
 
@@ -69,7 +71,7 @@ export default class SampleColumnFormatter
         return sampleId != null && (sampleId.length > maxLength + buffer);
     }
 
-    public static getData(data:IColumnFormatterData)
+    public static getData(data:IColumnFormatterData<MutationTableRowData>)
     {
         let value;
 
@@ -77,8 +79,8 @@ export default class SampleColumnFormatter
             value = data.columnData;
         }
         else if (data.rowData) {
-            const rowDataArr:Array<any> = [].concat(data.rowData);
-            value = (rowDataArr.length > 0 ? rowDataArr[0].sampleId : null);
+            const mutations:Array<Mutation> = new Array<Mutation>().concat(data.rowData);
+            value = (mutations.length > 0 ? mutations[0].sampleId : null);
         }
         else {
             value = null;
@@ -87,7 +89,7 @@ export default class SampleColumnFormatter
         return value;
     }
 
-    public static renderFunction(data:IColumnFormatterData)
+    public static renderFunction(data:IColumnFormatterData<MutationTableRowData>)
     {
         const sampleId:string = SampleColumnFormatter.getTextValue(data);
         const text:string = SampleColumnFormatter.getDisplayValue(data);
