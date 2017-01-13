@@ -13,6 +13,11 @@ import Checkbox = ReactBootstrap.Checkbox;
 import {Select, StateToggle} from "../ExperimentalControls";
 import * as styles_any from './styles.module.scss';
 import firstDefinedValue from "../../lib/firstDefinedValue";
+import GeneticProfileSelector from "./GeneticProfileSelector";
+import client from "../../api/cbioportalClientInstance";
+import memoize from "../../lib/memoize";
+import getPromiseResult from "../../lib/getPromiseResult";
+import {IGeneticProfileSelectorState} from "./GeneticProfileSelector";
 
 const styles = styles_any as {
 	QueryContainer: string,
@@ -27,7 +32,7 @@ export interface IQueryContainerProps
 }
 
 export type IQueryContainerState = {
-} & ICancerStudySelectorExperimentalOptions & ICancerStudySelectorState;
+} & ICancerStudySelectorExperimentalOptions & ICancerStudySelectorState & IGeneticProfileSelectorState;
 
 @QueryConnector.decorator
 export default class QueryContainer extends React.Component<IQueryContainerProps, IQueryContainerState>
@@ -50,6 +55,25 @@ export default class QueryContainer extends React.Component<IQueryContainerProps
         this.setState(selectionState);
     }
 
+	@memoize
+    requestGeneticProfiles(studyId:string)
+    {
+    	return client.getAllGeneticProfilesInStudyUsingGET({studyId})
+    		.then(result => {
+    			console.log('forcing update for', studyId);
+    			//this.forceUpdate();
+    			return result;
+			});
+	}
+
+	getGeneticProfiles()
+	{
+		let studyIds = this.state.selectedStudyIds;
+		if (studyIds && studyIds.length == 1)
+			return getPromiseResult(this.requestGeneticProfiles(studyIds[0])) || [];
+		return [];
+	}
+
     render():JSX.Element
     {
         if (this.props.data && this.props.data.status == 'fetching')
@@ -67,6 +91,15 @@ export default class QueryContainer extends React.Component<IQueryContainerProps
                     onStateChange={this.onStateChange}
 					{...this.state}
                 />
+
+				{/*
+					this.state.selectedStudyIds && this.state.selectedStudyIds.length == 1
+					?   <GeneticProfileSelector
+							profiles={this.getGeneticProfiles()}
+							selectedProfileIds={this.state.selectedProfileIds}
+            			/>
+            		:   null
+				*/}
 
                 <FlexRow padded>
 					{/* demo controls */}

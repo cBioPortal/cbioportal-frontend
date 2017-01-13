@@ -35,7 +35,7 @@ export interface IStudyListLogic
 	getDepth: (node:CancerType) => number;
 	isHighlighted: (node:CancerTreeNode) => boolean;
 	getCheckboxProps: (node: CancerTreeNode) => {checked: boolean, indeterminate?: boolean};
-	onCheck: (node:CancerTreeNode, event:React.FormEvent) => void;
+	onCheck: (node:CancerTreeNode, event:React.FormEvent/*<HTMLInputElement>*/) => void;
 }
 
 export default class StudiesList extends React.Component<IStudyListProps, {}>

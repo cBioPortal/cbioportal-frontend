@@ -4,6 +4,7 @@ import {TypeOfCancer, CancerStudy, default as CBioPortalAPI} from "../../api/CBi
 import {Connector, IDispatch} from "../../lib/ConnectorAPI";
 import {RootState} from "../../../redux/rootReducer";
 import {IQueryContainerProps} from "./QueryContainer";
+import client from "../../api/cbioportalClientInstance";
 
 const FETCH = 'query/fetch';
 const SELECT = 'query/select';
@@ -21,8 +22,6 @@ export type QueryData = {
     cancerTypes?: TypeOfCancer[],
     studies?: CancerStudy[],
 };
-
-const client = new CBioPortalAPI(`//${(window as any)['__API_ROOT__']}`);
 
 export default new class QueryConnector extends Connector<RootState, QueryData, ActionTypes, IQueryContainerProps>
 {

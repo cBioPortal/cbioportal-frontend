@@ -2,16 +2,14 @@ import * as _ from "lodash";
 import * as React from "react";
 import Dictionary = _.Dictionary;
 import {TypeOfCancer as CancerType, CancerStudy} from "../../api/CBioPortalAPI";
-import {ITreeDescriptor} from "../tree/DescriptorTree";
 import "react-bootstrap-table/css/react-bootstrap-table.css";
-import FontAwesome from "react-fontawesome";
 import {FlexCol, FlexRow} from "../flexbox/FlexBox";
 import * as styles_any from './styles.module.scss';
-import memoize, {memoizeWith} from "../../lib/memoize";
+import memoize from "../../lib/memoize";
 import HTMLAttributes = __React.HTMLAttributes;
 import classNames from "../../lib/classNames";
 import firstDefinedValue from "../../lib/firstDefinedValue";
-import {default as CancerStudyTreeData, CancerTreeNode, NodeMetadata} from "../query/CancerStudyTreeData";
+import {default as CancerStudyTreeData, CancerTreeNode} from "../query/CancerStudyTreeData";
 import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
 import ReactSelect from 'react-select';
 import 'react-select/dist/react-select.css';
@@ -20,21 +18,13 @@ import StudyListLogic from "../StudyList/StudyListLogic";
 
 const styles = styles_any as {
 	CancerStudySelector: string,
-	treeNodeContent: string,
 	selectable: string,
 	selected: string,
-	treeNodeLabel: string,
-	treeWithStudies: string,
-	cancerTypeTreeNode: string,
-	cancerStudyName: string,
-	cancerStudySamples: string,
 	matchingNodeText: string,
 	nonMatchingNodeText: string,
-	studyHeader: string,
 	selectCancerStudyHeader: string,
 	selectCancerStudyRow: string,
 	searchTextInput: string,
-	showHideTreeLink: string,
 
 	cancerTypeListContainer: string,
 	cancerTypeList: string,
@@ -109,28 +99,22 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 
 	updateState(newState:ICancerStudySelectorState)
 	{
-		this.setState(newState);
-
-		if (this.props.onStateChange)
-		{
-			this.props.onStateChange({
-				selectedCancerTypeIds: this.selectedCancerTypeIds,
-				selectedStudyIds: this.selectedStudyIds,
-				...newState
-			});
-		}
+		this.setState(newState, () => {
+			if (this.props.onStateChange)
+			{
+				this.props.onStateChange({
+					selectedCancerTypeIds: this.selectedCancerTypeIds,
+					selectedStudyIds: this.selectedStudyIds,
+					...newState
+				});
+			}
+		});
 	}
 
 	@memoize
-	getTreeSelectHandler(node:CancerTreeNode)
+	getCancerTypeListClickHandler(node:CancerTreeNode)
 	{
 		return (event:React.MouseEvent) => {
-			// stop if we clicked on the checkbox
-			if (event.target instanceof HTMLInputElement)
-				return;
-
-			event.stopPropagation();
-
 			let clickedCancerTypeId = node.cancerTypeId;
 
 			let selectedCancerTypeIds = this.selectedCancerTypeIds;
@@ -165,15 +149,6 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 		this.updateState({selectedStudyIds});
 	}
 
-	getMatchingNodeClassNames(node:CancerTreeNode):string
-	{
-		let matchingNode = this.getStudyListLogic().isHighlighted(node);
-		return classNames({
-			[styles.matchingNodeText]: !!this.searchText && matchingNode,
-			[styles.nonMatchingNodeText]: !!this.searchText && !matchingNode,
-		});
-	}
-
 	renderCancerTypeList()
 	{
 		let logic = this.getStudyListLogic();
@@ -187,7 +162,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 		);
 	}
 
-	renderCancerTypeListItem = (cancerType:CancerType) =>
+	renderCancerTypeListItem = (cancerType:CancerType, arrayIndex:number) =>
 	{
 		let logic = this.getStudyListLogic();
 		let meta = logic.getMetadata(cancerType);
@@ -197,17 +172,22 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 			return null;
 
 		let selected = meta.isCancerType && _.includes(this.selectedCancerTypeIds, cancerType.cancerTypeId);
+		let highlighted = this.getStudyListLogic().isHighlighted(cancerType);
 		let liClassName = classNames(
 			styles.cancerTypeListItem,
 			styles.selectable,
-			{[styles.selected]: selected},
-			this.getMatchingNodeClassNames(cancerType)
+			{
+				[styles.selected]: selected,
+				[styles.matchingNodeText]: !!this.searchText && highlighted,
+				[styles.nonMatchingNodeText]: !!this.searchText && !highlighted,
+			},
 		);
 
 		return (
 			<li
+				key={arrayIndex}
 				className={liClassName}
-				onMouseDown={this.getTreeSelectHandler(cancerType)}
+				onMouseDown={this.getCancerTypeListClickHandler(cancerType)}
 			>
 				<span className={styles.cancerTypeListItemLabel}>
 					{cancerType.name}

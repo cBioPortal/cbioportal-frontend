@@ -23,7 +23,7 @@ export function EditableDropdown(props:ISelectProps<string>)
 {
 	let textInput:HTMLInputElement;
 
-	function onChange(event:React.FormEvent)
+	function onChange(event:React.FormEvent/*<HTMLInputElement>*/)
 	{
 		if (props.onChange)
 			props.onChange({label: textInput.value, value: textInput.value});
@@ -41,23 +41,23 @@ export function EditableDropdown(props:ISelectProps<string>)
 	return (
 		<label>
 			{props.label}
-			<div class="input-group dropdown">
+			<div className="input-group dropdown">
 				<input
 					type="text"
-					class="form-control dropdown-toggle"
+					className="form-control dropdown-toggle"
 					value={props.selected}
 					ref={input => textInput = input}
 					onChange={onChange}
 				/>
-				<ul class="dropdown-menu">
+				<ul className="dropdown-menu">
 					{
 						props.options.map((option, i) => (
 							<a key={i} href="#" onClick={() => onSelect(option)}>{option.label}</a>
 						))
 					}
 				</ul>
-				<span role="button" class="input-group-addon dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-					<span class="caret"/>
+				<span role="button" className="input-group-addon dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					<span className="caret"/>
 				</span>
 			</div>
 		</label>
@@ -66,7 +66,7 @@ export function EditableDropdown(props:ISelectProps<string>)
 
 export function Select(props:ISelectProps<any>)
 {
-	function onChange(event:React.FormEvent)
+	function onChange(event:React.FormEvent/*<HTMLSelectElement>*/)
 	{
 		let option = props.options[parseInt((event.target as HTMLInputElement).value)];
 		if (option.callback)
@@ -112,7 +112,7 @@ export function StateToggle(props:IStateToggleProps<any>)
 		<LabeledCheckbox
 			checked={firstDefinedValue(target.state[name], defaultValue)}
 			inputProps={{
-				onChange: (event:React.FormEvent) => target.setState({[name]: (event.target as HTMLInputElement).checked})
+				onChange: event => target.setState({[name]: (event.target as HTMLInputElement).checked})
 			}}
 		>
 			{label || name}

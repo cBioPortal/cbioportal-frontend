@@ -157,7 +157,7 @@ export default class StudyListLogic implements IStudyListLogic
 		}
 	}
 
-	onCheck(node:CancerTreeNode, event:React.FormEvent): void
+	onCheck(node:CancerTreeNode, event:React.FormEvent/*<HTMLInputElement>*/): void
 	{
 		let clickedStudyIds:string[];
 		let meta = this.getMetadata(node);
@@ -168,7 +168,7 @@ export default class StudyListLogic implements IStudyListLogic
 		this.handleCheckboxStudyIds(event, clickedStudyIds);
 	}
 
-	handleCheckboxStudyIds(event:React.FormEvent, clickedStudyIds:string[])
+	handleCheckboxStudyIds(event:React.FormEvent/*<HTMLInputElement>*/, clickedStudyIds:string[])
 	{
 		let selectedStudyIds = this.state.selectedStudyIds;
 		if ((event.target as HTMLInputElement).checked)
