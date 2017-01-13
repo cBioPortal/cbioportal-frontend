@@ -6,6 +6,7 @@ import {default as DefaultProteinChangeColumnFormatter} from
     "../../../../shared/components/mutationTable/column/ProteinChangeColumnFormatter";
 import MutationStatusColumnFormatter from "../../../../shared/components/mutationTable/column/MutationStatusColumnFormatter";
 import styles from './proteinChange.module.scss';
+import {MutationTableRowData} from "../../../../shared/components/mutationTable/IMutationTableProps";
 
 /**
  * Designed to customize protein change column content for patient view page.
@@ -14,7 +15,7 @@ import styles from './proteinChange.module.scss';
  */
 export default class ProteinChangeColumnFormatter
 {
-    public static renderFunction(data:IColumnFormatterData)
+    public static renderFunction(data:IColumnFormatterData<MutationTableRowData>)
     {
         // use text as display value
         const text:string = DefaultProteinChangeColumnFormatter.getDisplayValue(data);

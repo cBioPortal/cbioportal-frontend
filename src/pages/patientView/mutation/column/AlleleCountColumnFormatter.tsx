@@ -2,6 +2,8 @@ import * as React from 'react';
 import {Td} from 'reactable';
 import {IColumnFormatterData}
     from "../../../../shared/components/enhancedReactTable/IColumnFormatter";
+import {MutationTableRowData} from "../../../../shared/components/mutationTable/IMutationTableProps";
+import {Mutation} from "../../../../shared/api/CBioPortalAPI";
 
 /**
  * Designed to customize allele count column content for patient view page.
@@ -10,7 +12,7 @@ import {IColumnFormatterData}
  */
 export default class AlleleCountColumnFormatter
 {
-    public static renderFunction(data:IColumnFormatterData, columnProps:any)
+    public static renderFunction(data:IColumnFormatterData<MutationTableRowData>, columnProps:any)
     {
         const sampleOrder = columnProps.sampleOrder;
         const dataField = columnProps.dataField;
@@ -19,11 +21,11 @@ export default class AlleleCountColumnFormatter
 
         if (data.rowData)
         {
-            const rowDataArr:Array<any> = [].concat(data.rowData);
+            const mutations:Array<Mutation> = new Array<Mutation>().concat(data.rowData);
             const sampleToValue:{[key: string]: any} = {};
 
-            for (let rowDatum of rowDataArr) {
-                sampleToValue[rowDatum.sampleId] = rowDatum[dataField];
+            for (let rowDatum of mutations) {
+                sampleToValue[rowDatum.sampleId] = (rowDatum as any)[dataField]; // TODO this is not type safe...
             }
 
             const samplesWithValue = sampleOrder.filter((sampleId:string) => sampleToValue.hasOwnProperty(sampleId));
