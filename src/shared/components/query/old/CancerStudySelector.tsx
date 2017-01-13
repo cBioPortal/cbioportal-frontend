@@ -491,7 +491,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 
 	renderStudyName = (name:string, study:CancerStudy) =>
 	{
-		let checked = !!_.find(this.selectedStudyIds, id => id == study.studyId);
+		let checked = !!this.selectedStudyIds.find(id => id == study.studyId);
 		return (
 			<LabeledCheckbox
 				className={styles.cancerStudyName}
@@ -562,42 +562,38 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 					Number of Studies Selected: {this.selectedStudyIds.length}
 				</FlexRow>
 				<FlexRow padded flex={1}>
-					{
-						this.maxTreeDepth > 0 || this.props.showStudiesInTree
-						?   <FlexCol flex={1}>
-								<CancerTree
-									className={this.props.showStudiesInTree ? styles.treeWithStudies : undefined}
-									ref={this.handleTreeRef}
-									treeDescriptor={treeDesc}
-									node={treeDesc.rootNode}
-									onExpand={treeDesc.setExpanded}
-									showRoot={!!this.props.showRoot}
-								/>
-							</FlexCol>
-						:   null
-					}
-					{
-						this.props.showStudiesInTree
-						?   null
-						:   <FlexCol flex={2}>
-								<BootstrapTable keyField="cancerStudyId" data={shownStudies}>
-									<TableHeaderColumn width="70%" dataField='name' dataSort dataFormat={this.renderStudyName}>
-										<div className={styles.studyHeader}>
-											{this.renderStudyHeaderCheckbox(shownStudies)}
-											{'Study'}
-										</div>
-									</TableHeaderColumn>
+					{/*if*/(this.maxTreeDepth > 0 || this.props.showStudiesInTree) && (
+						<FlexCol flex={1}>
+							<CancerTree
+								className={this.props.showStudiesInTree ? styles.treeWithStudies : undefined}
+								ref={this.handleTreeRef}
+								treeDescriptor={treeDesc}
+								node={treeDesc.rootNode}
+								onExpand={treeDesc.setExpanded}
+								showRoot={!!this.props.showRoot}
+							/>
+						</FlexCol>
+					)}
+					{/*if*/(!this.props.showStudiesInTree) && (
+						<FlexCol flex={2}>
+							<BootstrapTable keyField="cancerStudyId" data={shownStudies}>
+								<TableHeaderColumn width="70%" dataField='name' dataSort dataFormat={this.renderStudyName}>
+									<div className={styles.studyHeader}>
+										{this.renderStudyHeaderCheckbox(shownStudies)}
+										{'Study'}
+									</div>
+								</TableHeaderColumn>
 
-									<TableHeaderColumn width="15%" dataField='allSampleCount' dataSort dataAlign="right">
-										{'Samples'}
-									</TableHeaderColumn>
+								<TableHeaderColumn width="15%" dataField='allSampleCount' dataSort dataAlign="right">
+									{'Samples'}
+								</TableHeaderColumn>
 
-									<TableHeaderColumn width="15%" dataField='studyId' dataSort dataFormat={this.renderStudyLinksTableCell}>
-										{'Links'}
-									</TableHeaderColumn>
-								</BootstrapTable>
-							</FlexCol>
-					}
+								<TableHeaderColumn width="15%" dataField='studyId' dataSort dataFormat={this.renderStudyLinksTableCell}>
+									{'Links'}
+								</TableHeaderColumn>
+							</BootstrapTable>
+						</FlexCol>
+					)}
 				</FlexRow>
 			</FlexCol>
 		);

@@ -31,7 +31,7 @@ export class IFlexBoxProps<T>
 			...props.style,
 			flexDirection
 		};
-		let className = classNames(props.className, styles[flexDirection], padded ? styles.padded : null);
+		let className = classNames(props.className, styles[flexDirection], padded && styles.padded);
 		return <div {...attributes as React.HTMLAttributes} style={style} className={className}/>;
 	}
 }

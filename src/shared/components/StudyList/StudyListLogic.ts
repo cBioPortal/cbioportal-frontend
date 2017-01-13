@@ -84,7 +84,7 @@ export default class StudyListLogic implements IStudyListLogic
 		fixedArgsLength: 1,
 		function: (node:CancerTreeNode):boolean =>
 		{
-			let meta = this.getMetadata(node)
+			let meta = this.getMetadata(node);
 
 			if (!this.shouldConsiderNode(node))
 				return false;
@@ -152,7 +152,7 @@ export default class StudyListLogic implements IStudyListLogic
 		else
 		{
 			let study = node as CancerStudy;
-			let checked = !!_.find(this.state.selectedStudyIds, id => id == study.studyId);
+			let checked = !!this.state.selectedStudyIds.find(id => id == study.studyId);
 			return {checked};
 		}
 	}

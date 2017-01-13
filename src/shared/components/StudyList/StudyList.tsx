@@ -59,7 +59,7 @@ export default class StudiesList extends React.Component<IStudyListProps, {}>
 			let liClassName = classNames(
 				styles.CancerType,
 				styles.Level(currentLevel),
-				this.logic.isHighlighted(cancerType) ? styles.highlighted : null,
+				this.logic.isHighlighted(cancerType) && styles.highlighted,
 			);
 			heading = (
 				<li className={liClassName}>
@@ -94,7 +94,7 @@ export default class StudiesList extends React.Component<IStudyListProps, {}>
 	{
 		let liClassName = classNames(
 			styles.Study,
-			this.logic.isHighlighted(study) ? styles.highlighted : null,
+			this.logic.isHighlighted(study) && styles.highlighted,
 		);
 		return (
 			<li key={arrayIndex} className={liClassName}>

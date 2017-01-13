@@ -97,17 +97,6 @@ export default class GeneticProfileSelector extends React.Component<IGeneticProf
 		);
 	}
 
-	handleChecked(geneticProfileIds:string[], event:React.FormEvent)
-	{
-		let {checked} = event.target as HTMLInputElement;
-		let selectedProfileIds:string[];
-		if (checked)
-			selectedProfileIds = _.union(this.selectedProfileIds, geneticProfileIds);
-		else
-			selectedProfileIds = _.difference(this.selectedProfileIds, geneticProfileIds);
-		this.updateState({selectedProfileIds});
-	}
-
 	renderCheckboxes(groupedProfiles:GeneticProfile[][])
 	{
 		let output:JSX.Element[] = [];
@@ -150,11 +139,9 @@ export default class GeneticProfileSelector extends React.Component<IGeneticProf
 					{label}
 				</LabeledCheckbox>
 
-				{
-					profiles.length == 1
-					?   <FontAwesome name='question-circle' alt={firstProfile.description}/>
-					:   null
-				}
+				{/*if*/(profiles.length == 1) && (
+					<FontAwesome name='question-circle' alt={firstProfile.description}/>
+				)}
 			</div>
 		);
 

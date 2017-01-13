@@ -174,7 +174,7 @@ export default class DescriptorTree<TreeNode> extends React.Component<IDescripto
 		liProps.className = classNames(liProps.className, styles.treeNodeItem);
 
 		let content = desc.getContent(node);
-		let childList = expand ? this.renderUL(false, this.renderChildNodes(children)) : null;
+		let childList = expand && this.renderUL(false, this.renderChildNodes(children));
 
 		let liElement = (
 			<li {...liProps}>

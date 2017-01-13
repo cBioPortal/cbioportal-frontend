@@ -92,14 +92,12 @@ export default class QueryContainer extends React.Component<IQueryContainerProps
 					{...this.state}
                 />
 
-				{/*
-					this.state.selectedStudyIds && this.state.selectedStudyIds.length == 1
-					?   <GeneticProfileSelector
+				{/*if*//*(this.state.selectedStudyIds && this.state.selectedStudyIds.length) && (
+					<GeneticProfileSelector
 							profiles={this.getGeneticProfiles()}
 							selectedProfileIds={this.state.selectedProfileIds}
             			/>
-            		:   null
-				*/}
+				)*/}
 
                 <FlexRow padded>
 					{/* demo controls */}
