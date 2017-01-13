@@ -55,44 +55,6 @@ export default class QueryContainer extends React.Component<IQueryContainerProps
 						selectedProfileIds={this.state.selectedProfileIds}
 					/>
 				)}
-
-                <FlexRow padded>
-					{/* demo controls */}
-                	<FlexCol className={styles.CancerStudySelector} padded style={{border: '1px solid #ddd', borderRadius: 5, padding: 5}}>
-                		<StateToggle label='Click tree node again to deselect' target={queryStore} name='clickAgainToDeselectSingle' defaultValue={queryStore.clickAgainToDeselectSingle}/>
-						<Select
-							label="Tree depth: "
-							selected={queryStore.maxTreeDepth}
-							options={[
-								{label: "0"},
-								{label: "1"},
-								{label: "2"},
-								{label: "3"},
-								{label: "4"},
-								{label: "5"},
-								{label: "6"},
-								{label: "7"},
-								{label: "8"},
-								{label: "9"},
-							]}
-							onChange={option => queryStore.maxTreeDepth = parseInt(option.label)}
-						/>
-						<span>Note: Use cmd+click to select/deselect multiple cancer types.</span>
-					</FlexCol>
-
-					{/* display state for demo */}
-					<pre style={{flex: 1, height: 200}}>
-						{
-							JSON.stringify({
-								selectedCancerTypeIds: queryStore.selectedCancerTypeIds,
-								selectedStudyIds: queryStore.selectedCancerStudyIds,
-							}, null, 4)
-						}
-					</pre>
-				</FlexRow>
-
-				<DevTools/>
-
             </FlexCol>
         );
     }

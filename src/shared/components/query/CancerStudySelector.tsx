@@ -19,8 +19,13 @@ import memoize from "../../lib/memoize";
 
 const styles = styles_any as {
 	CancerStudySelector: string,
+	cancerStudySelectorHeader: string,
 	selectable: string,
 	selected: string,
+	selectAll: string,
+	selectedCount: string,
+	cancerStudyName: string,
+	cancerStudySamples: string,
 	matchingNodeText: string,
 	nonMatchingNodeText: string,
 	selectCancerStudyHeader: string,
@@ -172,34 +177,46 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 		if (queryStore.searchText && searchTextOptions.indexOf(queryStore.searchText) < 0)
 			searchTextOptions = [queryStore.searchText].concat(searchTextOptions);
 
+		let logic = this.getStudyListLogic();
+		let allSelectedCheckboxProps = logic.getCheckboxProps(logic.getRootCancerType());
+		let allSelected = allSelectedCheckboxProps.checked && !allSelectedCheckboxProps.indeterminate;
+
 		return (
-			<FlexCol className={styles.CancerStudySelector} padded flex={1} style={this.props.style}>
+			<FlexCol className={styles.CancerStudySelector} flex={1} style={this.props.style}>
 				<FlexRow padded overflow className={styles.selectCancerStudyRow}>
-					<span className={styles.selectCancerStudyHeader}>Select Cancer Study:</span>
-					<ReactSelect
-						className={styles.searchTextInput}
-						value={queryStore.searchText}
-						autofocus={true}
-						options={searchTextOptions.map(str => ({label: str, value: str}))}
-						promptTextCreator={(label:string) => `Search for "${label}"`}
-						placeholder='Search...'
-						noResultsText={false}
-						onCloseResetsInput={false}
-						onInputChange={(searchText:string) => {
-							queryStore.searchText = searchText;
-							queryStore.selectedCancerTypeIds = [];
-						}}
-						onChange={(option:{value:string}) => {
-							queryStore.searchText = option ? option.value || '' : '';
-							queryStore.selectedCancerTypeIds = [];
-						}}
-					/>
-					<div style={{flex: 1}}/>
-					Number of Studies Selected: {queryStore.selectedCancerStudyIds.length}
+					<h2>Select Studies</h2>
+					<span className={styles.selectedCount}>
+						<b>{queryStore.selectedCancerStudyIds.length}</b> Studies Selected
+					</span>
 				</FlexRow>
 
-				<FlexRow padded flex={1}>
-					<div className={styles.cancerTypeListContainer}>
+				<FlexRow overflow className={styles.cancerStudySelectorHeader}>
+						<ReactSelect
+							className={styles.searchTextInput}
+							value={queryStore.searchText}
+							autofocus={true}
+							options={searchTextOptions.map(str => ({label: str, value: str}))}
+							promptTextCreator={(label:string) => `Search for "${label}"`}
+							placeholder='Search...'
+							noResultsText={false}
+							onCloseResetsInput={false}
+							onInputChange={(searchText:string) => {
+								queryStore.searchText = searchText;
+								queryStore.selectedCancerTypeIds = [];
+							}}
+							onChange={(option:{value:string}) => {
+								queryStore.searchText = option ? option.value || '' : '';
+								queryStore.selectedCancerTypeIds = [];
+							}}
+						/>
+
+						<span className={styles.selectAll} onClick={() => logic.hack_handleSelectAll(!allSelected)}>
+							{allSelected ? "Deselect All" : "Select All"}
+						</span>
+				</FlexRow>
+
+				<FlexRow flex={1}>
+					<div className={styles.cancerTypeListContainer}>				
 						{this.renderCancerTypeList()}
 					</div>
 					<div className={styles.cancerStudyListContainer}>

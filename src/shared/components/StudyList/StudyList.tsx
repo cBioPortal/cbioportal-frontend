@@ -12,11 +12,17 @@ const styles = {
 
 		CancerType: string,
 		CancerTypeName: string,
+		SelectAll: string,
 
 		Study: string,
 		StudyName: string,
+		StudyMeta: string,
 		StudySamples: string,
 		StudyLinks: string,
+
+		disabled: string,
+		enabled: string,
+		indentArrow: string,
 
 		highlighted: string,
 	},
@@ -54,6 +60,8 @@ export default class StudiesList extends React.Component<IStudyListProps, {}>
 		let childStudies = this.logic.getChildCancerStudies(cancerType);
 
 		let heading:JSX.Element | undefined;
+		let indentArrow:JSX.Element | undefined;
+
 		if (cancerType != this.logic.getRootCancerType())
 		{
 			let liClassName = classNames(
@@ -61,6 +69,12 @@ export default class StudiesList extends React.Component<IStudyListProps, {}>
 				styles.Level(currentLevel),
 				this.logic.isHighlighted(cancerType) && styles.highlighted,
 			);
+
+			if (currentLevel === 3)
+				indentArrow = (
+					<FontAwesome className={styles.indentArrow} name="long-arrow-right" />
+				)
+
 			heading = (
 				<li className={liClassName}>
 					<LabeledCheckbox
@@ -69,8 +83,12 @@ export default class StudiesList extends React.Component<IStudyListProps, {}>
 							onChange: event => this.logic.onCheck(cancerType, event)
 						}}
 					>
+						{indentArrow} 
 						<span className={styles.CancerTypeName}>
 							{cancerType.name}
+						</span>
+						<span className={styles.SelectAll}>
+							Select All
 						</span>
 					</LabeledCheckbox>
 				</li>
@@ -99,8 +117,10 @@ export default class StudiesList extends React.Component<IStudyListProps, {}>
 		return (
 			<li key={arrayIndex} className={liClassName}>
 				{this.renderStudyName(study)}
-				{this.renderSamples(study)}
-				{this.renderStudyLinks(study)}
+				<div className={styles.StudyMeta}>
+					{this.renderSamples(study)}
+					{this.renderStudyLinks(study)}
+				</div>
 			</li>
 		);
 	}
@@ -114,7 +134,7 @@ export default class StudiesList extends React.Component<IStudyListProps, {}>
 					onChange: event => this.logic.onCheck(study, event)
 				}}
 			>
-				<span className={styles.StudyName}>
+				<span className={styles.StudyName} title={study.name}>
 					{study.name}
 				</span>
 			</LabeledCheckbox>
@@ -134,17 +154,21 @@ export default class StudiesList extends React.Component<IStudyListProps, {}>
 	{
 		let links = [];
 		if (study.studyId)
-			links.push({icon: 'cube', url: `/study?id=${study.studyId}#summary`});
+			links.push({icon: 'bar-chart', url: `/study?id=${study.studyId}#summary`});
 		if (study.pmid)
 			links.push({icon: 'book', url: `http://www.ncbi.nlm.nih.gov/pubmed/${study.pmid}`});
+		else 
+			links.push({icon: 'book', url: undefined });
 		return (
-			<div className={styles.StudyLinks}>
+			<span className={styles.StudyLinks}>
 				{links.map((link, i) => (
+					link.url ?
 					<a key={i} href={link.url}>
 						<FontAwesome name={link.icon}/>
-					</a>
+					</a> :
+						<FontAwesome name={link.icon}/>
 				))}
-			</div>
+			</span>
 		);
 	}
 }

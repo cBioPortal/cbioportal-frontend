@@ -426,7 +426,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 			let meta = treeInfo.map_node_meta.get(cancerType);
 			return meta ? meta.descendantStudies : [];
 		}
-		let studies:CancerStudy[] = _.union.apply(_, selectedCancerTypes.map(getDescendantStudies));
+		let studies:CancerStudy[] = _.union(...selectedCancerTypes.map(getDescendantStudies));
 
 		// if filtering by selection, expand studies list to include siblings
 		if (this.props.filterBySelection && this.maxTreeDepth)
@@ -437,7 +437,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 				let meta = treeInfo.map_node_meta.get(study) as NodeMetadata;
 				return meta.siblings;
 			}
-			studies = _.union.apply(_, this.selectedStudyIds.map(getSiblings));
+			studies = _.union(...this.selectedStudyIds.map(getSiblings));
 		}
 
 		// handle case where there are no descendant studies
