@@ -1,6 +1,6 @@
 .selectAllStudies {
   color: #1982b8;
-  font: normal normal 600 10px/18px 'Helvetica Neue';
+  font: normal normal 600 10px/18px 'Helvetica Neue', Helvetica, Arial, sans-serif;
   margin: 0 0 0 10px;
   text-transform: uppercase;
 }
@@ -29,7 +29,7 @@ ul.StudyList {
 
     .SelectAll {
       opacity: 0;
-      font: normal normal 500 10px/18px 'Helvetica Neue';
+      font: normal normal 500 10px/18px 'Helvetica Neue', Helvetica, Arial, sans-serif;
       color: #666;
       text-transform: uppercase;
       margin: 0 10px;
@@ -46,7 +46,7 @@ ul.StudyList {
 
     &.Level1 {
       label {      
-        font: normal normal 500 16px/18px 'Helvetica Neue';
+        font: normal normal 500 16px/18px 'Helvetica Neue', Helvetica, Arial, sans-serif;
         color: #333;
         border-bottom: 1px solid rgb(232, 241, 248);
         padding: 10px 5px;
@@ -58,7 +58,7 @@ ul.StudyList {
       padding-top: 10px;
 
       label {
-        font: normal normal 400 15px/18px 'Helvetica Neue';
+        font: normal normal 400 15px/18px 'Helvetica Neue', Helvetica, Arial, sans-serif;
         color: #085e8a;
         padding: 5px 15px 5px 0;
       }
@@ -66,7 +66,7 @@ ul.StudyList {
 
     &.Level3 {
       label {
-        font: normal normal 400 14px/18px 'Helvetica Neue';
+        font: normal normal 400 14px/18px 'Helvetica Neue', Helvetica, Arial, sans-serif;
         color: #1982b8;
         padding: 5px 15px 5px 0;
       }
@@ -74,7 +74,7 @@ ul.StudyList {
 
     &.Level4 {
       label {
-        font: normal normal 500 13px/18px 'Helvetica Neue';
+        font: normal normal 500 13px/18px 'Helvetica Neue', Helvetica, Arial, sans-serif;
         color: #444;
         padding: 0 15px 5px 0;
       }
