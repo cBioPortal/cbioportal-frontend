@@ -2,34 +2,74 @@
   height: 100%;
 }
 
-.CancerStudySelector {
+.cancerStudySelectorHeader {
+  background-color: #1982b8;
+  border-bottom: 1px solid rgb(17, 116, 167);
+  padding: 10px;
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+}
 
+.CancerStudySelector {
+  height: 400px;
+  width: 850px;
   user-select: none;
+  
   label {
     display: flex;
     flex-direction: row;
-    align-items: center;
+    align-items: flex-start;
+    max-width: 450px;
   }
   a {
     cursor: pointer;
   }
 
-  .selectCancerStudyRow {
-    align-items: center;
+  .selectAll {
+    background: rgb(17, 116, 167);
+    border: 1px solid rgba(0,0,0,0.05);
+    border-radius: 2px;
+    display: block;
+    text-align: right;
+    text-transform: uppercase;
+    color: #fff;
+    font: normal normal 500 11px/19px 'Helvetica Neue';
+    padding: 5px 10px;
 
-    span.selectCancerStudyHeader {
-      color: #337ab7;
+    &:hover {
+      cursor: pointer;
     }
+  }
 
- 	div.searchTextInput {
- 	  min-width: 200px;
- 	}
+  h2 {
+    font: normal normal 300 20px/30px 'Helvetica Neue';
+    flex-grow: 2;
+    margin: 0px;
+  }
+
+  .selectedCount {
+    font-size: 12px;
+    line-height: 30px;
+    text-align: right;
+    margin: 0 15px;
+  }
+
+  h3 {
+    background-color: #1982b8;
+    border-bottom: 1px solid rgb(17, 116, 167);
+    color: #fff;
+    font: normal normal 500 13px/18px 'Helvetica Neue';
+    text-transform: uppercase;
+    margin: 0;
+    padding: 10px 15px;
+
+    .selectedCount {
+      float: right;
+    }
   }
 
   div.cancerTypeListContainer, div.cancerStudyListContainer {
-    border: 1px solid lightgray;
-    border-radius: 3px;
-    overflow: auto;
   }
 
   div.cancerTypeListContainer {
@@ -40,40 +80,47 @@
   }
 
   ul.cancerTypeList {
-    padding-left: 0px;
+    background: rgb(232, 241, 248);
+    padding: 0px;
+    margin: 0px;
+    width: 215px;
 
-    li.cancerTypeListItem {
-      padding: 4px;
+    li {
       cursor: pointer;
       list-style-type: none;
       display: flex;
       flex-direction: row;
 
-      span.cancerTypeListItemLabel {
-        flex: 1;
-        padding-right: 5px;
-      }
+      font-size: 13px;
+      color: #043852;
+      border-bottom: 1px solid rgb(222, 233, 241);
+      border-top: 1px solid rgb(243, 248, 251);
+      padding: 10px;
 
-      span.cancerTypeListItemCount {
-        padding: 2px;
-        background-color: lightgray;
-        border-radius: 2px;
-        text-align: center;
-        width: 24px;
+      span {
+        &.cancerTypeListItemLabel {
+          flex: 1;
+          margin: 0 10px 0 0;
+        }
+
+        &.cancerTypeListItemCount {
+          background-color: rgb(222, 233, 241);
+          border-radius: 2px;
+          font: normal normal 400 10px/19px 'Helvetica Neue';
+          text-align: center;
+          width: 25px;
+        }
       }
     }
   }
 
   .selectable:hover {
-    background-color: rgba(0, 0, 0, 0.05);
+    color: #000;
+    background-color: #deeaf3;
   }
 
   .selectable.selected {
-    background-color: rgb(196, 211, 230);
-  }
-
-  .selectable.selected:hover {
-    background-color: lightsteelblue;
+    background-color: rgba(143, 189, 212, 0.42);
   }
 
   .matchingNodeText {
@@ -85,7 +132,14 @@
   }
 
   .searchTextInput {
-    minWidth: 200px;
+    min-width: 200px;
+    height: 28px;
+
+    .Select-control {
+      .Select-input {
+        height: 28px;
+      }
+    }
   }
 }
 

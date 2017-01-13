@@ -6,7 +6,9 @@
 }
 
 ul.StudyList {
-  &.Level0, &.Level1 {
+  padding: 0 0 0 15px;
+
+  &.Level0, &.Level1, &.Level3, &.Level4 {
     padding-left: 0px;
   }
 
@@ -21,42 +23,100 @@ ul.StudyList {
   li.CancerType {
     list-style-type: none;
 
-    .CancerTypeName {
-      font-style: italic;
-      color: gray;
+    input {
+      display: none;
+    }
+
+    .SelectAll {
+      opacity: 0;
+      font: normal normal 500 10px/18px 'Helvetica Neue';
+      color: #666;
+      text-transform: uppercase;
+      margin: 0 10px;
+      transition: opacity .1s ease-in-out;
+      -moz-transition: opacity .1s ease-in-out;
+      -webkit-transition: opacity .1s ease-in-out;
+    }
+
+    &:hover {
+      .SelectAll {
+        opacity: 1;
+      }
+    }
+
+    &.Level1 {
+      label {      
+        font: normal normal 500 16px/18px 'Helvetica Neue';
+        color: #333;
+        border-bottom: 1px solid rgb(232, 241, 248);
+        padding: 10px 5px;
+        margin: 0px 10px;
+      }
+    }
+
+    &.Level2 {
+      padding-top: 10px;
+
+      label {
+        font: normal normal 400 15px/18px 'Helvetica Neue';
+        color: #085e8a;
+        padding: 5px 15px 5px 0;
+      }
+    }
+
+    &.Level3 {
+      label {
+        font: normal normal 400 14px/18px 'Helvetica Neue';
+        color: #1982b8;
+        padding: 5px 15px 5px 0;
+      }
+    }
+
+    &.Level4 {
+      label {
+        font: normal normal 500 13px/18px 'Helvetica Neue';
+        color: #444;
+        padding: 0 15px 5px 0;
+      }
     }
   }
 
   li.Study {
     list-style-type: none;
-    margin-left: 40px;
-
-    label {
-      display: inline;
-    }
+    padding: 5px 0;
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    align-items: flex-start;
 
     .StudyName {
-      font-weight: bold;
+      color: #444;
     }
 
     .StudySamples {
-      margin: 0 10px;
-      font-style: italic;
+      text-align: right;
+      margin-right: 5px;
+      display: inline-block;
     }
 
-    .StudyLinks {
-      display: inline;
+    .StudyMeta {
+      color: #999;
+      font-size: 12px;
 
-      a {
-        display: inline-block;
-        margin: 0 3px;
-        color: #1982b8;
+      .StudyLinks {
+        display: inline;
 
-        span:global(.fa) {
-          margin: 0 5px 0 0;
-          min-width: 15px;
+        a {
+          color: #1982b8;
+          text-align: center;
+
+          span:global(.fa) {
+            margin: 0 5px 0 0;
+            min-width: 15px;
+          }
         }
       }
+
     }
   }
 }

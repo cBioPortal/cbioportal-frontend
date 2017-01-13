@@ -12,9 +12,11 @@ const styles = {
 
 		CancerType: string,
 		CancerTypeName: string,
+		SelectAll: string,
 
 		Study: string,
 		StudyName: string,
+		StudyMeta: string,
 		StudySamples: string,
 		StudyLinks: string,
 
@@ -72,6 +74,9 @@ export default class StudiesList extends React.Component<IStudyListProps, {}>
 						<span className={styles.CancerTypeName}>
 							{cancerType.name}
 						</span>
+						<span className={styles.SelectAll}>
+							Select All
+						</span>
 					</LabeledCheckbox>
 				</li>
 			);
@@ -99,8 +104,10 @@ export default class StudiesList extends React.Component<IStudyListProps, {}>
 		return (
 			<li key={arrayIndex} className={liClassName}>
 				{this.renderStudyName(study)}
-				{this.renderSamples(study)}
-				{this.renderStudyLinks(study)}
+				<div className={styles.StudyMeta}>
+					{this.renderSamples(study)}
+					{this.renderStudyLinks(study)}
+				</div>
 			</li>
 		);
 	}
@@ -138,13 +145,13 @@ export default class StudiesList extends React.Component<IStudyListProps, {}>
 		if (study.pmid)
 			links.push({icon: 'book', url: `http://www.ncbi.nlm.nih.gov/pubmed/${study.pmid}`});
 		return (
-			<div className={styles.StudyLinks}>
+			<span className={styles.StudyLinks}>
 				{links.map((link, i) => (
 					<a key={i} href={link.url}>
 						<FontAwesome name={link.icon}/>
 					</a>
 				))}
-			</div>
+			</span>
 		);
 	}
 }

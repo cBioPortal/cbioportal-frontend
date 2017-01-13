@@ -20,8 +20,13 @@ import memoize from "../../lib/memoize";
 
 const styles = styles_any as {
 	CancerStudySelector: string,
+	cancerStudySelectorHeader: string,
 	selectable: string,
 	selected: string,
+	selectAll: string,
+	selectedCount: string,
+	cancerStudyName: string,
+	cancerStudySamples: string,
 	matchingNodeText: string,
 	nonMatchingNodeText: string,
 	selectCancerStudyHeader: string,
@@ -174,8 +179,9 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 			searchTextOptions = [queryStore.searchText].concat(searchTextOptions);
 
 		return (
-			<FlexCol className={styles.CancerStudySelector} padded flex={1} style={this.props.style}>
+			<FlexCol className={styles.CancerStudySelector} flex={1} style={this.props.style}>
 				<FlexRow padded overflow className={styles.selectCancerStudyRow}>
+<<<<<<< e10cf9c5481c906f612dbcf741cd41641bf4ceda
 					<span className={styles.selectCancerStudyHeader}>Select Cancer Study:</span>
 					<ReactSelect
 						className={styles.searchTextInput}
@@ -197,10 +203,39 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 					/>
 					<div style={{flex: 1}}/>
 					Number of Studies Selected: {queryStore.selectedCancerStudyIds.length}
+=======
+					<h2>Select Studies</h2>
+					<span className={styles.selectedCount}>
+						Number of Studies Selected: {this.selectedStudyIds.length}
+					</span>
+>>>>>>> Style study selector
 				</FlexRow>
 
-				<FlexRow padded flex={1}>
-					<div className={styles.cancerTypeListContainer}>
+				<FlexRow overflow className={styles.cancerStudySelectorHeader}>
+						<ReactSelect
+							className={styles.searchTextInput}
+							value={this.searchText}
+							autofocus={true}
+							options={searchTextOptions.map(str => ({label: str, value: str}))}
+							promptTextCreator={(label:string) => `Search for "${label}"`}
+							placeholder='Search...'
+							noResultsText={false}
+							onCloseResetsInput={false}
+							onInputChange={(searchText:string) => this.updateState({
+								searchText,
+								selectedCancerTypeIds: []
+							})}
+							onChange={(option:{value:string}) => this.updateState({
+								searchText: option ? option.value || '' : '',
+								selectedCancerTypeIds: []
+							})}
+						/>
+
+						<span className={styles.selectAll}>Select All</span>
+				</FlexRow>
+
+				<FlexRow flex={1}>
+					<div className={styles.cancerTypeListContainer}>				
 						{this.renderCancerTypeList()}
 					</div>
 					<div className={styles.cancerStudyListContainer}>

@@ -90,9 +90,6 @@ export default class QueryContainer extends React.Component<IQueryContainerProps
 						}
 					</pre>
 				</FlexRow>
-
-				<DevTools/>
-
             </FlexCol>
         );
     }
