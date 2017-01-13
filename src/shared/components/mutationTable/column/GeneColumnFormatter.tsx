@@ -2,6 +2,8 @@ import * as React from 'react';
 import {Td} from 'reactable';
 import {IColumnFormatterData}
     from "../../enhancedReactTable/IColumnFormatter";
+import {MutationTableRowData} from "../IMutationTableProps";
+import {Mutation, Gene} from "../../../api/CBioPortalAPI";
 
 /**
  * @author Selcuk Onur Sumer
@@ -14,7 +16,7 @@ export default class GeneColumnFormatter
      * @param data  column formatter data
      * @returns {string}    hugo gene symbol
      */
-    public static getTextValue(data:IColumnFormatterData):string
+    public static getTextValue(data:IColumnFormatterData<MutationTableRowData>):string
     {
         const geneData = GeneColumnFormatter.getData(data);
 
@@ -26,28 +28,28 @@ export default class GeneColumnFormatter
         }
     }
 
-    public static getDisplayValue(data:IColumnFormatterData):string
+    public static getDisplayValue(data:IColumnFormatterData<MutationTableRowData>):string
     {
         // same as text value
         return GeneColumnFormatter.getTextValue(data);
     }
 
-    public static getDataFromRow(rowData:any)
+    public static getDataFromRow(rowData:MutationTableRowData|undefined)
     {
-        let value;
+        let value: Gene|null;
 
         if (rowData) {
-            const rowDataArr:Array<any> = [].concat(rowData);
+            const rowDataArr:Array<Mutation> = new Array<Mutation>().concat(rowData);
             value = (rowDataArr.length > 0 ? rowDataArr[0].gene : null);
         }
         else {
-            value = {};
+            value = null;
         }
 
         return value;
     }
 
-    public static getData(data:IColumnFormatterData)
+    public static getData(data:IColumnFormatterData<MutationTableRowData>)
     {
         let value;
 
@@ -61,7 +63,7 @@ export default class GeneColumnFormatter
         return value;
     }
 
-    public static renderFunction(data:IColumnFormatterData)
+    public static renderFunction(data:IColumnFormatterData<MutationTableRowData>)
     {
         // use text as display value
         const text = GeneColumnFormatter.getDisplayValue(data);
