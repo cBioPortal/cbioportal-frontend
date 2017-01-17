@@ -229,7 +229,7 @@ export default class MutationTypeColumnFormatter
         }
         else if (data.rowData)
         {
-            const mutations:Array<Mutation> = (new Array<Mutation>()).concat(data.rowData);
+            const mutations:Array<Mutation> = data.rowData;
             mutationType = (mutations.length > 0 ? mutations[0].mutationType : null);
         }
         else {

@@ -11,6 +11,6 @@ export interface IMutationTableProps extends IEnhancedReactTableProps<MutationTa
     samples?: ClinicalDataBySampleId;
 }
 
-export type MutationTableRowData = Mutation|Array<Mutation>;
+export type MutationTableRowData = Array<Mutation>;
 
 export default IMutationTableProps;
