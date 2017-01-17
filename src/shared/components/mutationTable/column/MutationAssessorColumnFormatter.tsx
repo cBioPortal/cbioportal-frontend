@@ -154,7 +154,7 @@ export default class MutationAssessorColumnFormatter
         }
         else if (data.rowData)
         {
-            const mutations:Array<Mutation> = new Array<Mutation>().concat(data.rowData);
+            const mutations:Array<Mutation> = data.rowData;
 
             if (mutations.length > 0) {
                 maData = {

@@ -13,7 +13,7 @@ export default class MutationStatusColumnFormatter
         let value;
 
         if (rowData) {
-            let mutations:Array<Mutation> = new Array<Mutation>().concat(rowData);
+            let mutations:Array<Mutation> = rowData;
             value = mutations[0].mutationStatus;
         }
         else {

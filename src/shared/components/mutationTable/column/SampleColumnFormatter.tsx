@@ -79,7 +79,7 @@ export default class SampleColumnFormatter
             value = data.columnData;
         }
         else if (data.rowData) {
-            const mutations:Array<Mutation> = new Array<Mutation>().concat(data.rowData);
+            const mutations:Array<Mutation> = data.rowData;
             value = (mutations.length > 0 ? mutations[0].sampleId : null);
         }
         else {
