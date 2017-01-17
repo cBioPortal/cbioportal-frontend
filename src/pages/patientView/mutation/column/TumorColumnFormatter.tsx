@@ -9,10 +9,6 @@ import {Mutation} from "../../../../shared/api/CBioPortalAPI";
 
 export default class TumorColumnFormatter {
 
-    static circleRadius = 6;
-    static circleSpacing = 4;
-    static indexToCircleLeft = (n:number) => n*(TumorColumnFormatter.circleSpacing + 2*TumorColumnFormatter.circleRadius);
-
     public static renderFunction(data:IColumnFormatterData<MutationTableRowData>, columnProps:any) {
 
         const samples = TumorColumnFormatter.getSampleIds(data);
