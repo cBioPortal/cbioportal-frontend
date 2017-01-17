@@ -21,7 +21,7 @@ export default class AlleleCountColumnFormatter
 
         if (data.rowData)
         {
-            const mutations:Array<Mutation> = new Array<Mutation>().concat(data.rowData);
+            const mutations:Array<Mutation> = data.rowData;
             const sampleToValue:{[key: string]: any} = {};
 
             for (let rowDatum of mutations) {

@@ -1,7 +1,6 @@
 import * as React from 'react';
 import {Td} from 'reactable';
 import {IColumnFormatterData} from "../../../../shared/components/enhancedReactTable/IColumnFormatter";
-import Tooltip from 'rc-tooltip';
 import {compareNumberLists} from '../../../../shared/lib/SortUtils';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {MutationTableRowData} from "../../../../shared/components/mutationTable/IMutationTableProps";
@@ -27,7 +26,7 @@ export default class TumorColumnFormatter {
                         columnProps.sampleManager.getComponentForSample(sample.id, { showText: false })
                         }
                     </li>
-                )
+                );
         });
 
         return (
@@ -44,6 +43,6 @@ export default class TumorColumnFormatter {
     }
 
     private static getSampleIds(data:IColumnFormatterData<MutationTableRowData>) {
-        return (data.rowData as Mutation[]).map((x:any) => x.sampleId);
+        return (data.rowData || []).map((x:Mutation) => x.sampleId);
     }
 }
