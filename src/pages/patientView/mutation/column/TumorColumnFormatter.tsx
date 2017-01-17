@@ -4,6 +4,8 @@ import {IColumnFormatterData} from "../../../../shared/components/enhancedReactT
 import Tooltip from 'rc-tooltip';
 import {compareNumberLists} from '../../../../shared/lib/SortUtils';
 import 'rc-tooltip/assets/bootstrap_white.css';
+import {MutationTableRowData} from "../../../../shared/components/mutationTable/IMutationTableProps";
+import {Mutation} from "../../../../shared/api/CBioPortalAPI";
 
 
 export default class TumorColumnFormatter {
@@ -12,7 +14,7 @@ export default class TumorColumnFormatter {
     static circleSpacing = 4;
     static indexToCircleLeft = (n:number) => n*(TumorColumnFormatter.circleSpacing + 2*TumorColumnFormatter.circleRadius);
 
-    public static renderFunction(data:IColumnFormatterData, columnProps:any) {
+    public static renderFunction(data:IColumnFormatterData<MutationTableRowData>, columnProps:any) {
 
         const samples = TumorColumnFormatter.getSampleIds(data);
 
@@ -41,7 +43,7 @@ export default class TumorColumnFormatter {
         return compareNumberLists(a, b);
     }
 
-    private static getSampleIds(data:IColumnFormatterData) {
-        return data.rowData.map((x:any) => x.sampleId);
+    private static getSampleIds(data:IColumnFormatterData<MutationTableRowData>) {
+        return (data.rowData as Mutation[]).map((x:any) => x.sampleId);
     }
 }
