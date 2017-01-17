@@ -15,7 +15,7 @@ export default class AlleleFreqColumnFormatter {
 
     public static renderFunction(data:IColumnFormatterData<MutationTableRowData>, columnProps:any) {
         const barX = columnProps.sampleOrder.reduce((map:{[s:string]:number}, sampleId:string, i:number) => {map[sampleId] = AlleleFreqColumnFormatter.indexToBarLeft(i); return map;}, {});
-        const mutations:Array<Mutation> = new Array<Mutation>().concat(data.rowData || []);
+        const mutations:Array<Mutation> = data.rowData || [];
         const sampleElements = mutations.map(function(mutation:Mutation) {
             const altReads = mutation.tumorAltCount;
             const refReads = mutation.tumorRefCount;

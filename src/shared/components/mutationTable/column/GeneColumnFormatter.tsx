@@ -39,8 +39,8 @@ export default class GeneColumnFormatter
         let value: Gene|null;
 
         if (rowData) {
-            const rowDataArr:Array<Mutation> = new Array<Mutation>().concat(rowData);
-            value = (rowDataArr.length > 0 ? rowDataArr[0].gene : null);
+            const mutations:Array<Mutation> = rowData;
+            value = (mutations.length > 0 ? mutations[0].gene : null);
         }
         else {
             value = null;
