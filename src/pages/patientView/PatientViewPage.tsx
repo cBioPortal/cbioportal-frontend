@@ -77,7 +77,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             activeTabKey:1
         };
 
-        this.handleSelect.bind(this);
+        this.handleSelect = this.handleSelect.bind(this);
 
         this.tsClient = new CBioPortalAPI(`//${(window as any)['__API_ROOT__']}`);
 
@@ -153,9 +153,10 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     }
 
-    public handleSelect(key: Number, e:SyntheticEvent): void {
-        debugger;
+    private handleSelect(key: Number, e:SyntheticEvent): void {
+
         this.setState(({ 'activeTabKey' : key } as IPatientViewState));
+
     }
 
     public render() {
@@ -183,7 +184,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     </div>
                 </If>
 
-                <Tabs animation={false} activeKey={this.state.activeTabKey} unmountOnExit={false} onSelect={ (this.handleSelect as SelectCallback) } className="mainTabs">
+                <Tabs animation={false} activeKey={this.state.activeTabKey} unmountOnExit={true} onSelect={ this.handleSelect as SelectCallback} className="mainTabs">
                     <Tab eventKey={1} title="Summary">
 
                         <FeatureTitle title="Genomic Data" isLoading={ !(this.state.mutationData && this.state.cnaSegmentData) } />
