@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Spinner from "react-spinkit";
-import { If, Then, Else } from 'react-if';
+import { If } from 'react-if';
 
 export interface IFeatureTitleProps {
     isLoading:Boolean;
