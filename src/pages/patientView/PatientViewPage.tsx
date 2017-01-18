@@ -1,13 +1,10 @@
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import { connect } from 'react-redux';
-import { Component } from 'react';
 import * as _ from 'lodash';
 import { Tabs, Tab } from 'react-bootstrap';
 import ClinicalInformationContainer from './clinicalInformation/ClinicalInformationContainer';
 import MutationInformationContainer from './mutation/MutationInformationContainer';
-import PatientHeader from './patientHeader/PatientHeader';
-import {IPatientHeaderProps} from './patientHeader/PatientHeader';
+//import PatientHeader from './patientHeader/PatientHeader';
+//import {IPatientHeaderProps} from './patientHeader/PatientHeader';
 import {RootState} from '../../redux/rootReducer';
 import exposeComponentRenderer from '../../shared/lib/exposeComponentRenderer';
 import GenomicOverview from './genomicOverview/GenomicOverview';
@@ -28,11 +25,11 @@ import SyntheticEvent = __React.SyntheticEvent;
 
 export interface IPatientViewPageProps {
     store?: RootState;
-    samples?: Array<ClinicalDataBySampleId>;
+    samples?: ClinicalDataBySampleId[];
     loadClinicalInformationTableData?: () => Promise<any>;
     patient?: {
         id: string,
-        clinicalData: Array<ClinicalData>
+        clinicalData: ClinicalData[]
     };
     clinicalDataStatus?: RequestStatus;
 }
@@ -67,7 +64,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     private tsClient:CBioPortalAPI;
 
-    constructor(){
+    constructor() {
 
         super();
 
@@ -77,7 +74,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             activeTabKey:1
         };
 
-        this.handleSelect = this.handleSelect.bind(this);
+        //this.handleSelect = this.handleSelect.bind(this);
 
         this.tsClient = new CBioPortalAPI(`//${(window as any)['__API_ROOT__']}`);
 
@@ -89,7 +86,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     }
 
 
-    fetchCnaSegmentData(_sampleIds: Array<string>) {
+    fetchCnaSegmentData(_sampleIds: string[]) {
 
         let cnaSegmentPromise = Promise.resolve(
             $.get("//www.cbioportal.org/api-legacy/copynumbersegments?cancerStudyId=" + this.studyId + "&sampleIds=" + _sampleIds.join(","))
@@ -98,7 +95,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     }
 
-    fetchMutationData(_sampleIds: Array<string>) {
+    fetchMutationData(_sampleIds: string[]) {
 
         let mutationDataPromise = this.tsClient.fetchMutationsInGeneticProfileUsingPOST({geneticProfileId: this.mutationGeneticProfileId, sampleIds: _sampleIds, projection: "DETAILED"});
         return mutationDataPromise;
@@ -119,18 +116,18 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         // //     );
         // // } //
 
-        this.props.loadClinicalInformationTableData && this.props.loadClinicalInformationTableData().then(() => {
+        if (this.props.loadClinicalInformationTableData) this.props.loadClinicalInformationTableData().then(() => {
 
             if (this.props.samples) {
 
-                let sampleIds: Array<string> = this.props.samples.map((item: ClinicalDataBySampleId)=>item.id);
+                let sampleIds: string[] = this.props.samples.map((item: ClinicalDataBySampleId)=>item.id);
 
                 this.fetchCnaSegmentData(sampleIds).then((_result) => {
-                    this.setState(({ 'cnaSegmentData':  _result } as IPatientViewState));
+                    this.setState(({ cnaSegmentData:  _result } as IPatientViewState));
                 });
 
                 this.fetchMutationData(sampleIds).then((_result) => {
-                    this.setState(({ 'mutationData' : _result } as IPatientViewState));
+                    this.setState(({ mutationData : _result } as IPatientViewState));
                 });
 
             }
@@ -154,9 +151,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     }
 
     private handleSelect(key: Number, e:SyntheticEvent): void {
-
-        this.setState(({ 'activeTabKey' : key } as IPatientViewState));
-
+        this.setState(({ activeTabKey : key } as IPatientViewState));
     }
 
     public render() {
@@ -173,8 +168,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         }
 
-
-
         return (
             <div>
 
@@ -184,7 +177,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     </div>
                 </If>
 
-                <Tabs animation={false} activeKey={this.state.activeTabKey} unmountOnExit={true} onSelect={ this.handleSelect as SelectCallback} className="mainTabs">
+                <Tabs animation={false} activeKey={this.state.activeTabKey} onSelect={ this.handleSelect as SelectCallback} className="mainTabs" unmountOnExit={true}>
                     <Tab eventKey={1} title="Summary">
 
                         <FeatureTitle title="Genomic Data" isLoading={ !(this.state.mutationData && this.state.cnaSegmentData) } />
