@@ -74,7 +74,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             activeTabKey:1
         };
 
-        //this.handleSelect = this.handleSelect.bind(this);
+        this.handleSelect = this.handleSelect.bind(this);
 
         this.tsClient = new CBioPortalAPI(`//${(window as any)['__API_ROOT__']}`);
 
