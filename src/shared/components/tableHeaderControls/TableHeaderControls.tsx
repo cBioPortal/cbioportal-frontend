@@ -1,10 +1,10 @@
 import * as React  from 'react';
-import { Button, ButtonGroup, Dropdown, ButtonToolbar, Form, FormGroup, Checkbox, MenuItem } from 'react-bootstrap';
+import { Button, ButtonGroup, Dropdown, ButtonToolbar, Checkbox } from 'react-bootstrap';
 import ReactZeroClipboard from 'react-zeroclipboard';
 import fileDownload from 'react-file-download';
 import * as _ from 'lodash';
 import { IColumnVisibilityDef } from "../enhancedReactTable/IEnhancedReactTableProps";
-import { If, Then, Else } from 'react-if';
+import { If } from 'react-if';
 
 export interface ITableExportButtonsProps {
     tableData?: Array<any>;
