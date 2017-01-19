@@ -14,3 +14,4 @@ declare module 'rc-tooltip';
 declare module 'underscore';
 declare module 'react-if';
 declare module 'react-spinkit';
+declare module 'reselect';
