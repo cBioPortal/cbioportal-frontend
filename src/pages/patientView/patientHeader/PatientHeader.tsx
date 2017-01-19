@@ -1,6 +1,5 @@
 import * as React from 'react';
 import {OverlayTrigger, Popover} from 'react-bootstrap';
-import Spinner from 'react-spinkit';
 
 import ClinicalInformationPatientTable from '../clinicalInformation/ClinicalInformationPatientTable';
 import SampleInline from './SampleInline';
@@ -9,7 +8,7 @@ import { ClinicalDataBySampleId } from "../../../shared/api/api-types-extended";
 
 import styles from './styles.module.scss';
 
-export type IPatientHeaderProps = PartialPick<ClinicalInformationData, 'clinicalDataStatus' | 'patient' | 'samples'>;
+export type IPatientHeaderProps = Partial<Pick<ClinicalInformationData, 'clinicalDataStatus' | 'patient' | 'samples'>>;
 
 export default class PatientHeader extends React.Component<IPatientHeaderProps, {}> {
     public render() {
