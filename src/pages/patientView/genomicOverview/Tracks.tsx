@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as _ from 'underscore';
+import * as _ from 'lodash';
 import * as tracksHelper from './tracksHelper'
 import {CopyNumberSegment, Mutation} from 'shared/api/CBioPortalAPI';
 
@@ -17,8 +17,8 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
     componentDidMount() {
 
         // --- construct params ---
-        let uniqCnasampleIds = _.uniq(_.pluck(this.props.cnaSegments, 'sample'));
-        let uniqMutSampleIds = _.uniq(_.pluck(this.props.mutations, 'sampleId'));
+        let uniqCnasampleIds = _.uniq(_.map(this.props.cnaSegments, 'sample'));
+        let uniqMutSampleIds = _.uniq(_.map(this.props.mutations, 'sampleId'));
         var config = tracksHelper.GenomicOverviewConfig(uniqCnasampleIds.length + uniqMutSampleIds.length, 1000);
         // --- end of params ---
 
