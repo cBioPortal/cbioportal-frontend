@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import { Tabs, Tab } from 'react-bootstrap';
+import {Tabs, Tab, default as ReactBootstrap} from 'react-bootstrap';
 import ClinicalInformationContainer from './clinicalInformation/ClinicalInformationContainer';
 import MutationInformationContainer from './mutation/MutationInformationContainer';
 //import PatientHeader from './patientHeader/PatientHeader';
@@ -18,10 +18,8 @@ import FeatureTitle from '../../shared/components/featureTitle/FeatureTitle';
 import renderIf from 'render-if';
 import { If, Then, Else } from 'react-if';
 import queryString from "query-string";
-import SelectCallback = ReactBootstrap.SelectCallback;
-import Spinner from "react-spinkit";
 import SampleManager from './sampleManager';
-import SyntheticEvent = __React.SyntheticEvent;
+import SelectCallback = ReactBootstrap.SelectCallback;
 
 export interface IPatientViewPageProps {
     store?: RootState;
@@ -38,7 +36,7 @@ interface IPatientViewState {
 
     cnaSegmentData: any;
     mutationData: any;
-    activeTabKey: Number;
+    activeTabKey: number;
 
 }
 
@@ -80,8 +78,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         //TODO: this should be done by a module so that it can be reused on other pages
         const qs = queryString.parse((window as any).location.search);
-        this.studyId = qs.cancer_study_id;
-        this.patientId = qs.case_id;
+        this.studyId = qs['cancer_study_id'] + '';
+        this.patientId = qs['case_id'] + '';
         this.mutationGeneticProfileId = `${this.studyId}_mutations`;
     }
 
@@ -150,7 +148,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     }
 
-    private handleSelect(key: Number, e:SyntheticEvent): void {
+    private handleSelect(key: number, e:React.SyntheticEvent<any>): void {
         this.setState(({ activeTabKey : key } as IPatientViewState));
     }
 
@@ -177,7 +175,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     </div>
                 </If>
 
-                <Tabs animation={false} activeKey={this.state.activeTabKey} onSelect={ this.handleSelect as SelectCallback} className="mainTabs" unmountOnExit={true}>
+                <Tabs animation={false} activeKey={this.state.activeTabKey} onSelect={this.handleSelect as SelectCallback} className="mainTabs" unmountOnExit={true}>
                     <Tab eventKey={1} title="Summary">
 
                         <FeatureTitle title="Genomic Data" isLoading={ !(this.state.mutationData && this.state.cnaSegmentData) } />
