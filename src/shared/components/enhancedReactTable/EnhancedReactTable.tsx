@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {Table, Thead, Th, Tr, Td} from "reactable";
-import * as _ from 'underscore';
+import * as _ from 'lodash';
 import TableHeaderControls from "shared/components/tableHeaderControls/TableHeaderControls";
 import {
     IEnhancedReactTableProps, IColumnDefMap, IEnhancedReactTableColumnDef, IColumnVisibilityState,

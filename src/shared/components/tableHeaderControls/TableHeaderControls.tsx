@@ -72,11 +72,11 @@ export default class TableExportButtons extends React.Component<ITableExportButt
 
     }
 
-    handleSelect(evt: React.UIEvent) {
+    handleSelect(evt: React.FormEvent<HTMLInputElement>) {
 
-        let id = (evt.currentTarget as any).getAttribute("data-id");
+        let id = evt.currentTarget.getAttribute("data-id");
 
-        if (this.props.onColumnToggled) {
+        if (this.props.onColumnToggled && id) {
             this.props.onColumnToggled(id);
         }
 
@@ -96,17 +96,17 @@ export default class TableExportButtons extends React.Component<ITableExportButt
 
                     <If condition={this.props.showHideShowColumnButton}>
                         <Dropdown id="dropdown-custom-1">
-                            <Dropdown.Toggle rootCloseEvent="click" className="btn-sm">
+                            <Dropdown.Toggle {...{rootCloseEvent: "click"}} className="btn-sm">
                                 Show/Hide Columns
                             </Dropdown.Toggle>
-                            <Dropdown.Menu bsRole="menu" style={{ paddingLeft:10, overflow:'auto', maxHeight:300, whiteSpace:'nowrap' }}>
+                            <Dropdown.Menu {...{bsRole: "menu"}} style={{ paddingLeft:10, overflow:'auto', maxHeight:300, whiteSpace:'nowrap' }}>
                                 <ul className="list-unstyled">
                                 {
                                     this.props.columnVisibility &&
                                     _.map(this.props.columnVisibility, (visibility: IColumnVisibilityDef) => {
                                         return (
                                             <li key={visibility.id}>
-                                                <Checkbox data-id={visibility.id} onChange={this.handleSelect} checked={visibility.visibility === "visible"} inline>{visibility.name}</Checkbox>
+                                                <Checkbox data-id={visibility.id} onChange={this.handleSelect as React.FormEventHandler<any>} checked={visibility.visibility === "visible"} inline>{visibility.name}</Checkbox>
                                             </li>
                                         );
                                     })

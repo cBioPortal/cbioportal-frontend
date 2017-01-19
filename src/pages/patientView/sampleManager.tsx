@@ -19,14 +19,13 @@ class SampleManager {
         });
     }
 
-    getComponentForSample(sampleId: string, options?: { showText:Boolean }): JSX.Element  {
+    getComponentForSample(sampleId: string, options?: { showText:Boolean }) {
 
-        let sample: ClinicalDataBySampleId = _.find(this.samples, (sample: ClinicalDataBySampleId)=>{
+        let sample = _.find(this.samples, (sample: ClinicalDataBySampleId)=>{
             return sample.id === sampleId;
         });
 
-        return this.getOverlayTriggerSample(sample, this.sampleIndex[sample.id]);
-
+        return sample && this.getOverlayTriggerSample(sample, this.sampleIndex[sample.id]);
     }
 
     getComponentsForSamples() {
