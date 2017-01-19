@@ -38,7 +38,7 @@ export class TablePaginationControls extends React.Component<ITablePaginationCon
         this.handleChangeItemsPerPage = this.handleChangeItemsPerPage.bind(this);
     }
 
-    handleChangeItemsPerPage(evt:React.FormEvent) {
+    handleChangeItemsPerPage(evt:React.FormEvent<HTMLSelectElement>) {
         (this.props.onChangeItemsPerPage || (()=>0))(parseInt((evt.target as HTMLSelectElement).value,10));
     }
 
