@@ -10,10 +10,12 @@ import AlleleCountColumnFormatter from "./column/AlleleCountColumnFormatter";
 import { Mutation } from "../../../shared/api/CBioPortalAPI";
 import SampleManager from "../sampleManager";
 import { MrnaRankData } from "../PatientViewPage";
-
+import AnnotationColumnFormatter from "./column/AnnotationColumnFormatter";
+import {IHotspotData} from "./column/AnnotationColumnFormatter";
 
 export interface IMutationInformationContainerProps {
     mutations: Array<Mutation>;
+    hotspots: IHotspotData;
     mrnaExprRankData?: MrnaRankData;
     sampleOrder:string[];
     sampleColors:{ [s:string]: string};
@@ -87,8 +89,15 @@ export default class MutationInformationContainer extends React.Component<IMutat
             },
             annotation: {
                 name: "Annotation",
+                formatter: AnnotationColumnFormatter.renderFunction,
                 priority: 3.50,
-                sortable: true
+                sortable: AnnotationColumnFormatter.sortFunction,
+                filterable: false,
+                columnProps: {
+                    hotspots: this.props.hotspots,
+                    enableMyCancerGenome: true,
+                    showHotspot: true
+                }
             },
             copyNumber: {
                 name: "Copy #",

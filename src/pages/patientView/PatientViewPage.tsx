@@ -20,6 +20,8 @@ import { If, Then, Else } from 'react-if';
 import queryString from "query-string";
 import SampleManager from './sampleManager';
 import SelectCallback = ReactBootstrap.SelectCallback;
+import CancerHotspotsAPI from "../../shared/api/CancerHotspotsAPI";
+import {HotspotMutation} from "../../shared/api/CancerHotspotsAPI";
 import {MrnaPercentile, default as CBioPortalAPIInternal} from "../../shared/api/CBioPortalAPIInternal";
 import PatientHeader from './patientHeader/PatientHeader';
 
@@ -43,6 +45,7 @@ interface IPatientViewState {
     mutationData: any;
     mrnaExprRankData?: MrnaRankData;
     activeTabKey: number;
+    hotspotsData: any;
 
 }
 
@@ -68,6 +71,9 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     private tsClient:CBioPortalAPI;
 
+    private hotspotsClient:CancerHotspotsAPI;
+    private hotspots3dClient:CancerHotspotsAPI;
+
     private tsInternalClient:CBioPortalAPIInternal;
 
     constructor() {
@@ -77,6 +83,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         this.state = {
             mutationData: undefined,
             cnaSegmentData: undefined,
+            hotspotsData: undefined,
             mrnaExprRankData: undefined,
             activeTabKey:1
         };
@@ -85,6 +92,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         this.tsClient = new CBioPortalAPI(`//${(window as any)['__API_ROOT__']}`);
         this.tsInternalClient = new CBioPortalAPIInternal(`//${(window as any)['__API_ROOT__']}`);
+        this.hotspotsClient = new CancerHotspotsAPI(`//${(window as any)['__HOTSPOTS_API_ROOT__']}`);
+        this.hotspots3dClient = new CancerHotspotsAPI(`//${(window as any)['__3D_HOTSPOTS_API_ROOT__']}`);
 
         //TODO: this should be done by a module so that it can be reused on other pages
         const qs = queryString.parse((window as any).location.search);
@@ -93,6 +102,47 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         this.mutationGeneticProfileId = `${this.studyId}_mutations`;
     }
 
+    fetchHotspotsData(mutations:Mutation[]) {
+        const generateMap = function(hotspots:HotspotMutation[]) {
+            // key => geneSymbol_proteinPosition
+            // protienPosition => start[_end]
+            const map: {[key:string]: boolean} = {};
+
+            // create a map for a faster lookup
+            _.each(hotspots, function(hotspot:HotspotMutation) {
+                const positions = hotspot.residue.match(/[0-9]+/g) || []; // start (and optionally end) positions
+                const key = [hotspot.hugoSymbol.toUpperCase()].concat(positions).join("_");
+                map[key] = true;
+            });
+
+            return map;
+        };
+
+        const promiseSingle = new Promise((resolve, reject) => {
+            const promise = this.hotspotsClient.getAllHotspotMutations({});
+
+            promise.then((data) => {
+                resolve(generateMap(data));
+            });
+        });
+
+        const promiseClustered = new Promise((resolve, reject) => {
+            const promise = this.hotspots3dClient.getAll3dHotspotMutations({});
+
+            promise.then((data) => {
+                resolve(generateMap(data));
+            });
+        });
+
+        return new Promise((resolve, reject) => {
+           Promise.all([promiseSingle, promiseClustered]).then((values) => {
+               resolve({
+                   single: values[0],
+                   clustered: values[1]
+               });
+           });
+        });
+    }
 
     fetchMrnaZscoreProfile():Promise<string> {
         return new Promise((resolve, reject) => {
@@ -195,6 +245,9 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 });
 
                 this.fetchMutationData(sampleIds).then((_result) => {
+                    this.fetchHotspotsData(_result).then((hotspotsData) => {
+                        this.setState(({ hotspotsData } as IPatientViewState));
+                    });
                     this.setState(({ mutationData : _result } as IPatientViewState));
 
                     const sampleToEntrezGeneIds = _result.reduce((map:{ [s:string]:Set<number> }, next:Mutation) => {
@@ -282,6 +335,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             (this.state.mutationData && !!sampleManager) && (
                                 <MutationInformationContainer
                                     mutations={this.state.mutationData}
+                                    hotspots={this.state.hotspotsData}
                                     mrnaExprRankData={this.state.mrnaExprRankData}
                                     sampleOrder={sampleManager.sampleOrder}
                                     sampleLabels={sampleManager.sampleLabels}
