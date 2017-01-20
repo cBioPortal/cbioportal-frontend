@@ -1,11 +1,15 @@
 import * as React from 'react';
+import * as ReactDOM from 'react-dom';
 import * as _ from 'lodash';
 import * as tracksHelper from './tracksHelper'
 import {CopyNumberSegment, Mutation} from 'shared/api/CBioPortalAPI';
+import SampleManager from "../sampleManager";
+import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
 
 interface TracksPropTypes {
     mutations:Array<Mutation>;
     cnaSegments:Array<CopyNumberSegment>;
+    sampleManager:SampleManager;
 }
 
 export default class Tracks extends React.Component<TracksPropTypes, {}> {
@@ -51,13 +55,32 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
         });
         // --- end of CNA bar chart ---
 
+
         // --- mutation events bar chart ---
-        _.each(uniqMutSampleIds, (_sampleId: string) => {
-            var _trackData = _.filter(this.props.mutations, function(_mutObj: any) {   return _mutObj.sampleId === _sampleId; });
-            tracksHelper.plotMuts(paper, config, chmInfo, rowIndex, _trackData, _sampleId);
+        _.each(this.props.sampleManager.samples, (sample: ClinicalDataBySampleId) => {
+            var _trackData = _.filter(this.props.mutations, function(_mutObj: any) {   return _mutObj.sampleId === sample.id; });
+            tracksHelper.plotMuts(paper, config, chmInfo, rowIndex, _trackData, sample.id);
             rowIndex = rowIndex + 1;
+
+            if (this.props.sampleManager.samples.length > 1) {
+                const $container = $(`#track${sample.id}`);
+                const pos = {x: $container.attr('x'), y: $container.attr('y')};
+                const $newContainer = $('<svg height="12" width="12" />').attr(pos);
+                $container.replaceWith($newContainer);
+
+                let comp: any = this.props.sampleManager.getComponentForSample(sample.id);
+
+                ReactDOM.render(
+                    comp,
+                    $newContainer[0]
+                );
+            }
+
         });
         // --- end of mutation events bar chart ---
+
+
+
 
     }
 

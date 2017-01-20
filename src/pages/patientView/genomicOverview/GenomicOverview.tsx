@@ -2,6 +2,7 @@ import * as React from 'react';
 import Tracks from './Tracks';
 import {ThumbnailExpandVAFPlot} from '../vafPlot/ThumbnailExpandVAFPlot';
 import {Mutation} from "../../../shared/api/CBioPortalAPI";
+import SampleManager from "../sampleManager";
 
 interface IGenomicOverviewProps {
     mutations: Mutation[];
@@ -9,6 +10,7 @@ interface IGenomicOverviewProps {
     sampleOrder: {[s:string]:number};
     sampleLabels: {[s:string]:string};
     sampleColors: {[s:string]:string};
+    sampleManager: SampleManager;
 }
 export default class GenomicOverview extends React.Component<IGenomicOverviewProps, {vafPlotData:{[s:string]:number[]}}> {
 
@@ -24,7 +26,7 @@ export default class GenomicOverview extends React.Component<IGenomicOverviewPro
 
         return (
             <div style={{ display:'flex', alignItems:'center'  }}>
-                <Tracks mutations={this.props.mutations} cnaSegments={this.props.cnaSegments} />
+                <Tracks mutations={this.props.mutations} sampleManager={this.props.sampleManager} cnaSegments={this.props.cnaSegments} />
                 <ThumbnailExpandVAFPlot
                     data={this.state.vafPlotData}
                     order={this.props.sampleOrder}

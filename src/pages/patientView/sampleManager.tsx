@@ -44,12 +44,12 @@ class SampleManager {
                 placement='bottom'
                 overlay={this.getPopoverSample(sample, sampleNumberText)}
             >
-                <span>
+                <svg width="12" height="12">
                     <SampleInline
                         sample={sample}
                         sampleNumber={sampleNumberText}
                     />
-                </span>
+                </svg>
             </OverlayTrigger>
         );
     }
