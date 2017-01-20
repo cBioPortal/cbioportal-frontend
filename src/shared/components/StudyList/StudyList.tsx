@@ -134,7 +134,7 @@ export default class StudiesList extends React.Component<IStudyListProps, {}>
 					onChange: event => this.logic.onCheck(study, event)
 				}}
 			>
-				<span className={styles.StudyName}>
+				<span className={styles.StudyName} title={study.name}>
 					{study.name}
 				</span>
 			</LabeledCheckbox>
