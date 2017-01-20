@@ -18,6 +18,8 @@ import client from "../../api/cbioportalClientInstance";
 import memoize from "../../lib/memoize";
 import getPromiseResult from "../../lib/getPromiseResult";
 import {IGeneticProfileSelectorState} from "./GeneticProfileSelector";
+import {observable, computed} from "../../../../node_modules/mobx/lib/mobx";
+import {GeneticProfile} from "../../api/CBioPortalAPI";
 
 const styles = styles_any as {
 	QueryContainer: string,
@@ -31,6 +33,22 @@ export interface IQueryContainerProps
 
 export type IQueryContainerState = {
 } & ICancerStudySelectorExperimentalOptions & ICancerStudySelectorState & IGeneticProfileSelectorState;
+
+// class RemoteData<P, R, M extends (params:P)=>Promise<R>>
+// {
+// 	constructor(apiMethod:M)
+// 	{
+// 		this.params.observe(
+// 	}
+//
+// 	@observable params:P;
+// 	@observable private status:'idle'|'fetching'|'ready' = 'idle';
+// 	@computed get result():R
+// 	{
+// 		if (observable(
+// 	}
+// 	@observable result:R;
+// }
 
 @QueryConnector.decorator
 export default class QueryContainer extends React.Component<IQueryContainerProps, IQueryContainerState>
@@ -52,22 +70,27 @@ export default class QueryContainer extends React.Component<IQueryContainerProps
         this.setState(selectionState);
     }
 
+    @observable store = {
+
+	};
+
 	@memoize
     requestGeneticProfiles(studyId:string)
     {
     	return client.getAllGeneticProfilesInStudyUsingGET({studyId})
     		.then(result => {
-    			console.log('forcing update for', studyId);
+    			console.log('forcing update for', studyId, this.getGeneticProfiles());
     			this.forceUpdate();
     			return result;
 			});
 	}
 
+	// @observable.shallow geneticProfiles:GeneticProfile[];
 	getGeneticProfiles()
 	{
 		let studyIds = this.state.selectedStudyIds;
 		if (studyIds && studyIds.length == 1)
-			return getPromiseResult(this.requestGeneticProfiles(studyIds[0])) || [];
+			return getPromiseResult(this.requestGeneticProfiles(studyIds[0]), () => this.forceUpdate()) || [];
 		return [];
 	}
 

@@ -56,6 +56,7 @@
     "json-loader": "^0.5.4",
     "less": "^2.7.1",
     "lodash": "^4.17.2",
+    "mobx": "^3.0.2",
     "node-sass": "^3.8.0",
     "postcss-loader": "^0.9.1",
     "precss": "^1.4.0",
