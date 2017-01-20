@@ -36,62 +36,69 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
         tracksHelper.plotChromosomes(paper,config,chmInfo);
         // --- end of chromosome chart ---
 
-        // --- CNA bar chart ---
+
         _.each(this.props.sampleManager.samples, (sample: ClinicalDataBySampleId) => {
-            let raphaelData: Array<any> = [];
-            var _trackData = _.filter(this.props.cnaSegments, function(_cnaObj: any) { return _cnaObj.sample === sample.id; });
-            _.each(_trackData, function(_dataObj: any) {
-                var _tmp: Array<any> = [];
-                _tmp.push(_dataObj.sample);
-                _tmp.push(_dataObj.chr);
-                _tmp.push(_dataObj.end);
-                _tmp.push(_dataObj.start);
-                _tmp.push(_dataObj.numProbes);
-                _tmp.push(_dataObj.value);
-                raphaelData.push(_tmp);
-            });
-            tracksHelper.plotCnSegs(paper, config, chmInfo, rowIndex, raphaelData, 1, 3, 2, 5, sample.id);
-            rowIndex = rowIndex + 1;
 
-            if (this.props.sampleManager.samples.length > 1) {
-                const $container = $(`#cnaTrack${sample.id}`);
-                const pos = {x: $container.attr('x'), y: $container.attr('y')};
-                const $newContainer = $('<svg height="12" width="12" />').attr(pos);
-                $container.replaceWith($newContainer);
+            // --- CNA bar chart ---
+            if (_.includes(uniqCnasampleIds, sample.id)) {
+                let raphaelData: Array<any> = [];
+                var _trackData = _.filter(this.props.cnaSegments, function (_cnaObj: any) {
+                    return _cnaObj.sample === sample.id;
+                });
+                _.each(_trackData, function (_dataObj: any) {
+                    var _tmp: Array<any> = [];
+                    _tmp.push(_dataObj.sample);
+                    _tmp.push(_dataObj.chr);
+                    _tmp.push(_dataObj.end);
+                    _tmp.push(_dataObj.start);
+                    _tmp.push(_dataObj.numProbes);
+                    _tmp.push(_dataObj.value);
+                    raphaelData.push(_tmp);
+                });
+                tracksHelper.plotCnSegs(paper, config, chmInfo, rowIndex, raphaelData, 1, 3, 2, 5, sample.id);
+                rowIndex = rowIndex + 1;
 
-                let comp: any = this.props.sampleManager.getComponentForSample(sample.id);
+                if (this.props.sampleManager.samples.length > 1) {
+                    const $container = $(`#cnaTrack${sample.id}`);
+                    const pos = {x: $container.attr('x'), y: $container.attr('y')};
+                    const $newContainer = $('<svg height="12" width="12" />').attr(pos);
+                    $container.replaceWith($newContainer);
 
-                ReactDOM.render(
-                    comp,
-                    $newContainer[0]
-                );
+                    let comp: any = this.props.sampleManager.getComponentForSample(sample.id);
+
+                    ReactDOM.render(
+                        comp,
+                        $newContainer[0]
+                    );
+                }
             }
-
-
         });
         // --- end of CNA bar chart ---
 
 
         // --- mutation events bar chart ---
         _.each(this.props.sampleManager.samples, (sample: ClinicalDataBySampleId) => {
-            var _trackData = _.filter(this.props.mutations, function(_mutObj: any) {   return _mutObj.sampleId === sample.id; });
-            tracksHelper.plotMuts(paper, config, chmInfo, rowIndex, _trackData, sample.id);
-            rowIndex = rowIndex + 1;
+            if (_.includes(uniqMutSampleIds, sample.id)) {
+                var _trackData = _.filter(this.props.mutations, function (_mutObj: any) {
+                    return _mutObj.sampleId === sample.id;
+                });
+                tracksHelper.plotMuts(paper, config, chmInfo, rowIndex, _trackData, sample.id);
+                rowIndex = rowIndex + 1;
 
-            if (this.props.sampleManager.samples.length > 1) {
-                const $container = $(`#mutTrack${sample.id}`);
-                const pos = {x: $container.attr('x'), y: $container.attr('y')};
-                const $newContainer = $('<svg height="12" width="12" />').attr(pos);
-                $container.replaceWith($newContainer);
+                if (this.props.sampleManager.samples.length > 1) {
+                    const $container = $(`#mutTrack${sample.id}`);
+                    const pos = {x: $container.attr('x'), y: $container.attr('y')};
+                    const $newContainer = $('<svg height="12" width="12" />').attr(pos);
+                    $container.replaceWith($newContainer);
 
-                let comp: any = this.props.sampleManager.getComponentForSample(sample.id);
+                    let comp: any = this.props.sampleManager.getComponentForSample(sample.id);
 
-                ReactDOM.render(
-                    comp,
-                    $newContainer[0]
-                );
+                    ReactDOM.render(
+                        comp,
+                        $newContainer[0]
+                    );
+                }
             }
-
         });
         // --- end of mutation events bar chart ---
 
