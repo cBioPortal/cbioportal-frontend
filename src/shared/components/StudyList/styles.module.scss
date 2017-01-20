@@ -123,11 +123,11 @@ ul.StudyList {
         display: inline-block;
         width: 40px;
 
-        a.disabled {
-          color: #ccc !important;
-          &:hover {
-            cursor: default;
-          }
+        > span {
+          color: #ccc;
+          margin: 0 0 0 2px;
+          min-width: 15px;
+          display: inline-block;
         }
 
         a {

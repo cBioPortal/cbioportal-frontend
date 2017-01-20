@@ -154,17 +154,19 @@ export default class StudiesList extends React.Component<IStudyListProps, {}>
 	{
 		let links = [];
 		if (study.studyId)
-			links.push({icon: 'bar-chart', linkClass: 'enabled', url: `/study?id=${study.studyId}#summary`});
+			links.push({icon: 'bar-chart', url: `/study?id=${study.studyId}#summary`});
 		if (study.pmid)
-			links.push({icon: 'book', linkClass: 'enabled', url: `http://www.ncbi.nlm.nih.gov/pubmed/${study.pmid}`});
+			links.push({icon: 'book', url: `http://www.ncbi.nlm.nih.gov/pubmed/${study.pmid}`});
 		else 
-			links.push({icon: 'book', linkClass: 'disabled', url: '#' });
+			links.push({icon: 'book', url: undefined });
 		return (
 			<span className={styles.StudyLinks}>
 				{links.map((link, i) => (
-					<a className={styles[link.linkClass]} key={i} href={link.url}>
+					link.url ?
+					<a key={i} href={link.url}>
 						<FontAwesome name={link.icon}/>
-					</a>
+					</a> :
+						<FontAwesome name={link.icon}/>
 				))}
 			</span>
 		);
