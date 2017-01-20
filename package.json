@@ -106,9 +106,7 @@
     "url-loader": "^0.5.7",
     "webpack": "^1.14.0",
     "webpack-fail-plugin": "^1.0.5",
-    "webpack-raphael": "^2.1.4"
-  },
-  "devDependencies": {
+    "webpack-raphael": "^2.1.4",
     "@types/jquery": "^2.0.39",
     "@types/lodash": "^4.14.48",
     "@types/query-string": "^3.0.31",
@@ -121,7 +119,10 @@
     "@types/react-spinkit": "^1.1.28",
     "@types/redux": "^3.6.0",
     "@types/seamless-immutable": "^6.1.2",
-    "@types/superagent": "^2.0.36",
+    "@types/superagent": "^2.0.36"
+  },
+  "devDependencies": {
+
     "argparse": "^1.0.9",
     "babel-plugin-istanbul": "^3.1.2",
     "babel-plugin-rewire": "^1.0.0",
