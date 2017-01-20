@@ -12,8 +12,8 @@ ul.StudyList {
     padding-left: 0px;
   }
 
-  &.Level3 {
-    padding-bottom: 15px;
+  &.Level1 li:last-of-type, &.Level2 li:last-of-type, &.Level3 li:last-of-type {
+    margin-bottom: 10px;
   }
 
   &.Level0 {
@@ -34,15 +34,22 @@ ul.StudyList {
 
   li.CancerType {
     list-style-type: none;
+    margin-bottom: 0px !important;
 
     input {
       display: none;
     }
 
+    .indentArrow {
+      color: #999;
+      line-height: 18px;
+      margin-right: 5px;
+    }
+
     .SelectAll {
       opacity: 0;
       font: normal normal 500 10px/18px 'Helvetica Neue', Helvetica, Arial, sans-serif;
-      color: #666;
+      color: #999;
       text-transform: uppercase;
       margin: 0 10px;
       transition: opacity .1s ease-in-out;
@@ -70,20 +77,11 @@ ul.StudyList {
       padding-top: 0px;
 
       label {
-        font: normal normal 400 16px/18px 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        font: normal normal 400 15px/18px 'Helvetica Neue', Helvetica, Arial, sans-serif;
         color: #1982b8;
         padding: 5px 15px 5px 0;
-        // color: #085e8a;
       }
     }
-
-    // &.Level3 {
-    //   label {
-    //     font: normal normal 400 14px/18px 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    //     color: #1982b8;
-    //     padding: 5px 15px 5px 0;
-    //   }
-    // }
 
     &.Level3 {
       label {
@@ -105,7 +103,7 @@ ul.StudyList {
 
     .StudyName {
       color: #444;
-      max-width: 450px;
+      max-width: 435px;
       text-overflow: ellipsis;    
       white-space: nowrap;
       overflow: hidden;

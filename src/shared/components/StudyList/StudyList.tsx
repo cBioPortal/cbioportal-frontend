@@ -19,7 +19,10 @@ const styles = {
 		StudyMeta: string,
 		StudySamples: string,
 		StudyLinks: string,
+
 		disabled: string,
+		enabled: string,
+		indentArrow: string,
 
 		highlighted: string,
 	},
@@ -57,6 +60,8 @@ export default class StudiesList extends React.Component<IStudyListProps, {}>
 		let childStudies = this.logic.getChildCancerStudies(cancerType);
 
 		let heading:JSX.Element | undefined;
+		let indentArrow:JSX.Element | undefined;
+
 		if (cancerType != this.logic.getRootCancerType())
 		{
 			let liClassName = classNames(
@@ -64,6 +69,12 @@ export default class StudiesList extends React.Component<IStudyListProps, {}>
 				styles.Level(currentLevel),
 				this.logic.isHighlighted(cancerType) && styles.highlighted,
 			);
+
+			if (currentLevel === 3)
+				indentArrow = (
+					<FontAwesome className={styles.indentArrow} name="long-arrow-right" />
+				)
+
 			heading = (
 				<li className={liClassName}>
 					<LabeledCheckbox
@@ -72,6 +83,7 @@ export default class StudiesList extends React.Component<IStudyListProps, {}>
 							onChange: event => this.logic.onCheck(cancerType, event)
 						}}
 					>
+						{indentArrow} 
 						<span className={styles.CancerTypeName}>
 							{cancerType.name}
 						</span>
