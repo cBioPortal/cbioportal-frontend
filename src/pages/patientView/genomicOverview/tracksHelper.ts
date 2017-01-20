@@ -232,6 +232,7 @@ export function plotMuts(p: any, config: any,chmInfo: any,row: any, mutations: A
         var label = "MUT";
         //var c = p.circle(12,yRow-config.rowHeight/2,6).attr({'stroke':caseMetaData.color[caseId], 'fill':caseMetaData.color[caseId]}); //TODO: needed for patient view
         var t = p.text(12,yRow-config.rowHeight/2,label).attr({'text-anchor': 'center', 'fill':'black'});
+        t.node.setAttribute('id','track' + caseId);
         //addToolTip(c.node, caseMetaData.tooltip[caseId],false,{my:'middle left',at:'middle right'}); //TODO: needed for patient view
         //addToolTip(t.node, caseMetaData.tooltip[caseId],false,{my:'middle left',at:'middle right'}); //TODO: needed for patient view
     } else {
