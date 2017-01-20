@@ -58,7 +58,7 @@ export default class QueryContainer extends React.Component<IQueryContainerProps
     	return client.getAllGeneticProfilesInStudyUsingGET({studyId})
     		.then(result => {
     			console.log('forcing update for', studyId);
-    			//this.forceUpdate();
+    			this.forceUpdate();
     			return result;
 			});
 	}
@@ -89,12 +89,12 @@ export default class QueryContainer extends React.Component<IQueryContainerProps
 					{...this.state}
                 />
 
-				{/*if*//*(this.state.selectedStudyIds && this.state.selectedStudyIds.length) && (
+				{/*if*/(this.state.selectedStudyIds && this.state.selectedStudyIds.length) && (
 					<GeneticProfileSelector
 							profiles={this.getGeneticProfiles()}
 							selectedProfileIds={this.state.selectedProfileIds}
             			/>
-				)*/}
+				)}
 
                 <FlexRow padded>
 					{/* demo controls */}

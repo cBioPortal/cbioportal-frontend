@@ -6,6 +6,17 @@ import firstDefinedValue from "../../lib/firstDefinedValue";
 import {RadioGroup} from "react-radio-group";
 import {Radio} from "react-radio-group";
 import FontAwesome from "react-fontawesome";
+import * as styles_any from './styles.module.scss';
+
+const styles = styles_any as {
+	GeneticProfileSelector: string,
+	singleCheckbox: string,
+	groupCheckbox: string,
+	radioGroup: string,
+	radioItem: string,
+	zScore: string,
+	profileName: string,
+};
 
 export const DATATYPE_ZSCORE = 'Z-SCORE';
 export const defaultSelectedAlterationTypes:GeneticProfile['geneticAlterationType'][] = [
@@ -91,7 +102,7 @@ export default class GeneticProfileSelector extends React.Component<IGeneticProf
 		);
 
 		return (
-			<div>
+			<div className={styles.GeneticProfileSelector}>
 				{this.renderCheckboxes(altTypes.map(altType => groupedProfiles[altType]))}
 			</div>
 		);
@@ -122,7 +133,7 @@ export default class GeneticProfileSelector extends React.Component<IGeneticProf
 		}
 
 		output.push(
-			<div>
+			<div className={profiles.length > 1 ? styles.groupCheckbox : styles.singleCheckbox}>
 				<LabeledCheckbox
 					key={output.length}
 					checked={checked}
@@ -148,33 +159,39 @@ export default class GeneticProfileSelector extends React.Component<IGeneticProf
 		if (profiles.length > 1)
 		{
 			output.push(
-				<RadioGroup>
+				<div className={styles.radioGroup}>
 					{profiles.map(profile => (
-						<div>
+						<div className={styles.radioItem}>
 							<label>
-								<Radio
+								<input
+									type='radio'
+									checked={_.includes(this.selectedProfileIds, profile.geneticProfileId)}
 									style={{userSelect: 'text'}}
-									onChange={event => this.updateState({
-										selectedProfileIds: (
-											(event.target as HTMLInputElement).checked
-											?   _.union(this.selectedProfileIds, [ids[0]])
-											:   _.difference(this.selectedProfileIds, ids)
-										)
-									})}
+									onChange={event => {
+										if ((event.target as HTMLInputElement).checked)
+											this.updateState({
+												selectedProfileIds: (
+													_.union(
+														_.difference(this.selectedProfileIds, ids),
+														[profile.geneticProfileId]
+													)
+												)
+											})
+									}}
 								/>
-								{profile.name}
+								<span className={styles.profileName}>{profile.name}</span>
 							</label>
 							<FontAwesome name='question-circle' alt={profile.description}/>
 						</div>
 					))}
-				</RadioGroup>
+				</div>
 			);
 		}
 
 		if (firstProfile.datatype == DATATYPE_ZSCORE)
 		{
 			output.push(
-				<div key={output.length}>
+				<div className={styles.zScore} key={output.length}>
 					Enter a z-score threshold ±:
 					<input
 						type="text"

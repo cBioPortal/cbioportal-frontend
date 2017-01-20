@@ -89,3 +89,21 @@
   }
 }
 
+.GeneticProfileSelector {
+  div.singleCheckbox, div.groupCheckbox {
+    label {
+      display: inline;
+    }
+  }
+  div.radioGroup {
+    margin-left: 20px;
+
+    div.radioItem {
+    }
+  }
+  div.zScore {
+    margin-left: 40px;
+  }
+  label.profileName {
+  }
+}
