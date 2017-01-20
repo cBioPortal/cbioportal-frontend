@@ -4,14 +4,11 @@ import {OverlayTrigger, Popover} from 'react-bootstrap';
 
 import ClinicalInformationPatientTable from '../clinicalInformation/ClinicalInformationPatientTable';
 import SampleInline from './SampleInline';
-import {ClinicalInformationData} from "../Connector";
 import { ClinicalDataBySampleId } from "../../../shared/api/api-types-extended";
-import {ClinicalInformationData} from "../clinicalInformation/Connector";
-import {ClinicalDataBySampleId} from "../clinicalInformation/getClinicalInformationData";
+import {ClinicalInformationData} from "../Connector";
 import {getSpans} from '../clinicalInformation/lib/clinicalAttributesUtil.js';
 
 import styles from './styles.module.scss';
-let _ClinicalInformationData:ClinicalInformationData = null as any;
 
 export type IPatientHeaderProps = Partial<Pick<ClinicalInformationData, 'clinicalDataStatus' | 'patient' | 'samples'>>;
 
@@ -58,7 +55,7 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
                 <span>
                     {patient.id}
                     <span dangerouslySetInnerHTML={{__html:
-                        getSpans(_.object(patient.clinicalData.map((x) => [x.attrId, x.attrValue])), 'lgg_ucsf_2014')}}>
+                        getSpans(_.object(patient.clinicalData.map((x) => [x.clinicalAttributeId, x.value])), 'lgg_ucsf_2014')}}>
                     </span>
                 </span>
             </OverlayTrigger>
@@ -75,10 +72,9 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
                 overlay={this.getPopoverSample(sample, sampleNumber + 1)}
             >
                 <span>
-                    <SampleInline sample={sample} sampleNumber={sampleNumber + 1} />
+                    <SampleInline sample={sample} sampleNumber={sampleNumber + 1} showClinical={true} />
                 </span>
             </OverlayTrigger>
         );
     }
-
 }

@@ -19,20 +19,21 @@ class SampleManager {
         });
     }
 
-    getComponentForSample(sampleId: string, options?: { showText:Boolean }) {
+    getComponentForSample(sampleId: string, showClinical = false): JSX.Element  {
 
         let sample = _.find(this.samples, (sample: ClinicalDataBySampleId)=>{
             return sample.id === sampleId;
         });
 
-        return sample && this.getOverlayTriggerSample(sample, this.sampleIndex[sample.id]);
+        return this.getOverlayTriggerSample(sample, this.sampleIndex[sample.id], showClinical);
+
     }
 
     getComponentsForSamples() {
         this.samples.map((sample)=>this.getComponentForSample(sample.id));
     }
 
-    getOverlayTriggerSample(sample: ClinicalDataBySampleId, sampleIndex: number) {
+    getOverlayTriggerSample(sample: ClinicalDataBySampleId, sampleIndex: number, showClinical = false) {
 
         let sampleNumberText: number = sampleIndex+1;
 
@@ -48,6 +49,7 @@ class SampleManager {
                     <SampleInline
                         sample={sample}
                         sampleNumber={sampleNumberText}
+                        showClinical={showClinical}
                     />
                 </svg>
             </OverlayTrigger>

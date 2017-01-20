@@ -161,7 +161,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             sampleManager = new SampleManager(this.props.samples);
 
             sampleHeader = _.map(sampleManager!.samples,(sample: ClinicalDataBySampleId) => {
-                return <span style={{ marginRight:10 }}>{sampleManager!.getComponentForSample(sample.id)} {sample.id}</span>;
+                return <span style={{ marginRight:10 }}>{sampleManager!.getComponentForSample(sample.id, true)}</span>;
             });
 
         }
