@@ -206,7 +206,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 =======
 					<h2>Select Studies</h2>
 					<span className={styles.selectedCount}>
-						Number of Studies Selected: {this.selectedStudyIds.length}
+						Number of Studies Selected: <b>{this.selectedStudyIds.length}</b>
 					</span>
 >>>>>>> Style study selector
 				</FlexRow>

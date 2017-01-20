@@ -141,7 +141,7 @@ export default class StudiesList extends React.Component<IStudyListProps, {}>
 	{
 		let links = [];
 		if (study.studyId)
-			links.push({icon: 'cube', url: `/study?id=${study.studyId}#summary`});
+			links.push({icon: 'bar-chart', url: `/study?id=${study.studyId}#summary`});
 		if (study.pmid)
 			links.push({icon: 'book', url: `http://www.ncbi.nlm.nih.gov/pubmed/${study.pmid}`});
 		return (
