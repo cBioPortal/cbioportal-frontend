@@ -20,7 +20,7 @@ export default class SampleInline extends React.Component<ISampleInlineProps, {}
                 <span style={{paddingRight: '10px'}}>
                     <SampleLabelHTML color={'black'} label={(sampleNumber).toString()} />
                     {' ' + sample.id}
-                    <span dangerouslySetInnerHTML={{__html:
+                    <span className="clinical-spans" dangerouslySetInnerHTML={{__html:
                         getSpans(_.object(sample.clinicalData.map((x) => [x.clinicalAttributeId, x.value])), 'lgg_ucsf_2014')}}>
                     </span>
                 </span>

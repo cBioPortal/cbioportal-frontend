@@ -18,8 +18,12 @@ import FeatureTitle from '../../shared/components/featureTitle/FeatureTitle';
 import renderIf from 'render-if';
 import { If, Then, Else } from 'react-if';
 import queryString from "query-string";
-import SampleManager from './sampleManager';
 import SelectCallback = ReactBootstrap.SelectCallback;
+import SampleManager from './sampleManager';
+import PatientHeader from './patientHeader/PatientHeader';
+import SyntheticEvent = __React.SyntheticEvent;
+
+import './patientHeader/style/ClinicalAttributes.scss';
 
 export interface IPatientViewPageProps {
     store?: RootState;
@@ -168,6 +172,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         return (
             <div>
+                
+                <PatientHeader patient={this.props.patient} />
 
                 <If condition={sampleHeader}>
                     <div style={{marginBottom:20}}>
