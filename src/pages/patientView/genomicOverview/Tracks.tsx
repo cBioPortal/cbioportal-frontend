@@ -37,9 +37,9 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
         // --- end of chromosome chart ---
 
         // --- CNA bar chart ---
-        _.each(uniqCnasampleIds, (_sampleId: string) => {
+        _.each(this.props.sampleManager.samples, (sample: ClinicalDataBySampleId) => {
             let raphaelData: Array<any> = [];
-            var _trackData = _.filter(this.props.cnaSegments, function(_cnaObj: any) { return _cnaObj.sample === _sampleId; });
+            var _trackData = _.filter(this.props.cnaSegments, function(_cnaObj: any) { return _cnaObj.sample === sample.id; });
             _.each(_trackData, function(_dataObj: any) {
                 var _tmp: Array<any> = [];
                 _tmp.push(_dataObj.sample);
@@ -50,8 +50,24 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
                 _tmp.push(_dataObj.value);
                 raphaelData.push(_tmp);
             });
-            tracksHelper.plotCnSegs(paper, config, chmInfo, rowIndex, raphaelData, 1, 3, 2, 5, _sampleId);
+            tracksHelper.plotCnSegs(paper, config, chmInfo, rowIndex, raphaelData, 1, 3, 2, 5, sample.id);
             rowIndex = rowIndex + 1;
+
+            if (this.props.sampleManager.samples.length > 1) {
+                const $container = $(`#cnaTrack${sample.id}`);
+                const pos = {x: $container.attr('x'), y: $container.attr('y')};
+                const $newContainer = $('<svg height="12" width="12" />').attr(pos);
+                $container.replaceWith($newContainer);
+
+                let comp: any = this.props.sampleManager.getComponentForSample(sample.id);
+
+                ReactDOM.render(
+                    comp,
+                    $newContainer[0]
+                );
+            }
+
+
         });
         // --- end of CNA bar chart ---
 
@@ -63,7 +79,7 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
             rowIndex = rowIndex + 1;
 
             if (this.props.sampleManager.samples.length > 1) {
-                const $container = $(`#track${sample.id}`);
+                const $container = $(`#mutTrack${sample.id}`);
                 const pos = {x: $container.attr('x'), y: $container.attr('y')};
                 const $newContainer = $('<svg height="12" width="12" />').attr(pos);
                 $container.replaceWith($newContainer);
