@@ -12,12 +12,23 @@ ul.StudyList {
     padding-left: 0px;
   }
 
+  &.Level3 {
+    padding-bottom: 15px;
+  }
+
   &.Level0 {
     padding: 5px;
-    margin-top: -20px;
+    max-height: 400px;
+    overflow: auto;
 
     > li.CancerType, > li.Study {
       margin-left: 0px;
+    }
+  }
+
+  &.Level1 {
+    > li.Study {
+      margin-left: 15px;
     }
   }
 
@@ -47,44 +58,46 @@ ul.StudyList {
 
     &.Level1 {
       label {      
-        font: normal normal 500 16px/18px 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        font: normal normal 500 17px/18px 'Helvetica Neue', Helvetica, Arial, sans-serif;
         color: #333;
         border-bottom: 1px solid rgb(232, 241, 248);
         padding: 10px 5px 5px 5px;
-        margin: 20px 10px 0px 10px;
+        margin: 20px 10px 5px 10px;
       }
     }
 
     &.Level2 {
-      padding-top: 10px;
+      padding-top: 0px;
 
       label {
-        font: normal normal 400 15px/18px 'Helvetica Neue', Helvetica, Arial, sans-serif;
-        color: #085e8a;
+        font: normal normal 400 16px/18px 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        color: #1982b8;
         padding: 5px 15px 5px 0;
+        // color: #085e8a;
       }
     }
+
+    // &.Level3 {
+    //   label {
+    //     font: normal normal 400 14px/18px 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    //     color: #1982b8;
+    //     padding: 5px 15px 5px 0;
+    //   }
+    // }
 
     &.Level3 {
       label {
-        font: normal normal 400 14px/18px 'Helvetica Neue', Helvetica, Arial, sans-serif;
-        color: #1982b8;
-        padding: 5px 15px 5px 0;
-      }
-    }
-
-    &.Level4 {
-      label {
-        font: normal normal 500 13px/18px 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        font: normal normal 600 11px/18px 'Helvetica Neue', Helvetica, Arial, sans-serif;
         color: #444;
-        padding: 0 15px 5px 0;
+        padding: 0px 15px 0px 0;
+        text-transform: uppercase;
       }
     }
   }
 
   li.Study {
     list-style-type: none;
-    padding: 5px 0;
+    padding: 2px 0;
     display: flex;
     justify-content: space-between;
     font-size: 13px;

@@ -85,6 +85,8 @@
     padding: 0px;
     margin: 0px;
     width: 215px;
+    max-height: 400px;
+    overflow: auto;
 
     li {
       cursor: pointer;

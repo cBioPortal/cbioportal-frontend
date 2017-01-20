@@ -181,34 +181,10 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 		return (
 			<FlexCol className={styles.CancerStudySelector} flex={1} style={this.props.style}>
 				<FlexRow padded overflow className={styles.selectCancerStudyRow}>
-<<<<<<< e10cf9c5481c906f612dbcf741cd41641bf4ceda
-					<span className={styles.selectCancerStudyHeader}>Select Cancer Study:</span>
-					<ReactSelect
-						className={styles.searchTextInput}
-						value={queryStore.searchText}
-						autofocus={true}
-						options={searchTextOptions.map(str => ({label: str, value: str}))}
-						promptTextCreator={(label:string) => `Search for "${label}"`}
-						placeholder='Search...'
-						noResultsText={false}
-						onCloseResetsInput={false}
-						onInputChange={(searchText:string) => {
-							queryStore.searchText = searchText;
-							queryStore.selectedCancerTypeIds = [];
-						}}
-						onChange={(option:{value:string}) => {
-							queryStore.searchText = option ? option.value || '' : '';
-							queryStore.selectedCancerTypeIds = [];
-						}}
-					/>
-					<div style={{flex: 1}}/>
-					Number of Studies Selected: {queryStore.selectedCancerStudyIds.length}
-=======
 					<h2>Select Studies</h2>
 					<span className={styles.selectedCount}>
 						Number of Studies Selected: <b>{this.selectedStudyIds.length}</b>
 					</span>
->>>>>>> Style study selector
 				</FlexRow>
 
 				<FlexRow overflow className={styles.cancerStudySelectorHeader}>
