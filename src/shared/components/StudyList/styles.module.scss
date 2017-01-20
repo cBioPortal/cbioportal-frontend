@@ -92,6 +92,10 @@ ul.StudyList {
 
     .StudyName {
       color: #444;
+      max-width: 450px;
+      text-overflow: ellipsis;    
+      white-space: nowrap;
+      overflow: hidden;
     }
 
     .StudySamples {
@@ -107,6 +111,13 @@ ul.StudyList {
       .StudyLinks {
         display: inline-block;
         width: 40px;
+
+        a.disabled {
+          color: #ccc !important;
+          &:hover {
+            cursor: default;
+          }
+        }
 
         a {
           color: #1982b8;
