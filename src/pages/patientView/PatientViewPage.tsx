@@ -181,13 +181,14 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                         <FeatureTitle title="Genomic Data" isLoading={ !(this.state.mutationData && this.state.cnaSegmentData) } />
 
                         {
-                            renderIf(this.state.mutationData && this.state.cnaSegmentData)(
+                            (this.state.mutationData && this.state.cnaSegmentData && sampleManager) && (
                                 <GenomicOverview
                                     mutations={this.state.mutationData}
                                     cnaSegments={this.state.cnaSegmentData}
                                     sampleOrder={mockData.order}
                                     sampleLabels={mockData.labels}
                                     sampleColors={mockData.colors}
+                                    sampleManager={sampleManager}
                                 />
                             )
                         }
