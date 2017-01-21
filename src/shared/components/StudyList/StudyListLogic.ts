@@ -84,6 +84,8 @@ export default class StudyListLogic implements IStudyListLogic
 		fixedArgsLength: 1,
 		function: (node:CancerTreeNode):boolean =>
 		{
+			//TODO this logic is broken - search for 'eas' and then select/deselect Breast cancer type to see bug
+
 			let meta = this.getMetadata(node);
 
 			if (!this.shouldConsiderNode(node))
@@ -94,9 +96,9 @@ export default class StudyListLogic implements IStudyListLogic
 				return true;
 
 			// check for matching text in this node and related nodes
-			for (let nodes of [[node], meta.descendantCancerTypes, meta.descendantStudies, meta.ancestors])
-				for (let node of nodes)
-					if (this.shouldConsiderNode(node) && matchesSearchText(node.name, this.state.searchText))
+			for (let others of [[node], meta.descendantCancerTypes, meta.descendantStudies, meta.ancestors])
+				for (let other of others)
+					if (this.shouldConsiderNode(other) && matchesSearchText(other.name, this.state.searchText))
 						return true;
 
 			// no match

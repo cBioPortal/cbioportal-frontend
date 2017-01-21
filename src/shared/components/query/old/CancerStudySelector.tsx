@@ -562,7 +562,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 					Number of Studies Selected: {this.selectedStudyIds.length}
 				</FlexRow>
 				<FlexRow padded flex={1}>
-					{/*if*/(this.maxTreeDepth > 0 || this.props.showStudiesInTree) && (
+					{!!(this.maxTreeDepth > 0 || this.props.showStudiesInTree) && (
 						<FlexCol flex={1}>
 							<CancerTree
 								className={this.props.showStudiesInTree ? styles.treeWithStudies : undefined}
@@ -574,7 +574,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 							/>
 						</FlexCol>
 					)}
-					{/*if*/(!this.props.showStudiesInTree) && (
+					{!!(!this.props.showStudiesInTree) && (
 						<FlexCol flex={2}>
 							<BootstrapTable keyField="cancerStudyId" data={shownStudies}>
 								<TableHeaderColumn width="70%" dataField='name' dataSort dataFormat={this.renderStudyName}>

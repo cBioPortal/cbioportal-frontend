@@ -5,10 +5,10 @@ import clinicalInformation from 'pages/patientView/clinicalInformation/Connector
 import {ClinicalInformationData} from "../pages/patientView/clinicalInformation/Connector";
 import datasetDownloads from 'pages/datasetView/Connector';
 import {DatasetDownloads} from "../pages/datasetView/Connector";
-import {default as query, QueryData} from "../shared/components/query/QueryConnector";
 import {Connector} from "../shared/lib/ConnectorAPI";
 import {Reducer} from "redux";
 import Action = Redux.Action;
+import {default as old_query, QueryData} from "../shared/components/query/old/QueryConnector";
 
 //import customRoutingReducer from './customRouterReducer';
 
@@ -16,14 +16,14 @@ import Action = Redux.Action;
 const modules:{[name:string]:Connector<any, any, any, any>} = {
     clinicalInformation,
     datasetDownloads,
-    query,
+    old_query,
 };
 
 // Add state nodes corresponding to your modules here
 export type RootState = {
     datasetDownloads:DatasetDownloads,
     clinicalInformation:ClinicalInformationData,
-    query: QueryData,
+    old_query: QueryData,
 }
 
 export const actions = {};

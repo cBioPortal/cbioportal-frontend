@@ -3,8 +3,6 @@ import * as React from 'react';
 import {GeneticProfile} from "../../api/CBioPortalAPI";
 import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
 import firstDefinedValue from "../../lib/firstDefinedValue";
-import {RadioGroup} from "react-radio-group";
-import {Radio} from "react-radio-group";
 import FontAwesome from "react-fontawesome";
 import * as styles_any from './styles.module.scss';
 
@@ -150,7 +148,7 @@ export default class GeneticProfileSelector extends React.Component<IGeneticProf
 					{label}
 				</LabeledCheckbox>
 
-				{/*if*/(profiles.length == 1) && (
+				{!!(profiles.length == 1) && (
 					<FontAwesome name='question-circle' alt={firstProfile.description}/>
 				)}
 			</div>

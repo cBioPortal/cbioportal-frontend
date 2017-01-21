@@ -59,7 +59,7 @@ export default new class QueryConnector extends Connector<RootState, QueryData, 
     };
 
     mapStateToProps(state:RootState):IQueryContainerProps {
-        return {data: state.query};
+        return {data: state.old_query};
     }
 
     reducer(state:QueryData, action:ActionTypes) {

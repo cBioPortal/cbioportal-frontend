@@ -54,7 +54,7 @@ export default class StudiesList extends React.Component<IStudyListProps, {}>
 		let childStudies = this.logic.getChildCancerStudies(cancerType);
 
 		let heading:JSX.Element | undefined;
-		if (cancerType != this.logic.getRootCancerType())
+		//if (cancerType != this.logic.getRootCancerType())
 		{
 			let liClassName = classNames(
 				styles.CancerType,
