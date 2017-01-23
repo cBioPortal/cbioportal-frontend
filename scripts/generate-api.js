@@ -7,3 +7,10 @@ var CodeGen = require('swagger-js-codegen').CodeGen;
 var swagger = JSON.parse(fs.readFileSync('src/shared/api/CBioPortalAPI-docs.json'));
 var tsSourceCode = CodeGen.getTypescriptCode({className: 'CBioPortalAPI', swagger});
 fs.writeFileSync('src/shared/api/CBioPortalAPI.ts', tsSourceCode);
+
+
+swagger = JSON.parse(fs.readFileSync('src/shared/api/CBioPortalAPIInternal-docs.json'));
+tsSourceCode = CodeGen.getTypescriptCode({className: 'CBioPortalAPIInternal', swagger});
+fs.writeFileSync('src/shared/api/CBioPortalAPIInternal.ts', tsSourceCode);
+
+
