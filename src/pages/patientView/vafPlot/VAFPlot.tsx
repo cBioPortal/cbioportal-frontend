@@ -93,6 +93,7 @@ export class VAFPlot extends React.Component<IVAFPlotProps, IVAFPlotState> {
     }
 
     componentDidMount() {
+
         AlleleFreqPlotMulti(this, this.props.data, this.state.options, this.props.order, this.props.colors, this.props.labels);
     }
 
