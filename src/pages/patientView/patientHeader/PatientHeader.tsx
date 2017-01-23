@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as _ from 'underscore';
+import {fromPairs} from 'lodash';
 import {OverlayTrigger, Popover} from 'react-bootstrap';
 
 import ClinicalInformationPatientTable from '../clinicalInformation/ClinicalInformationPatientTable';
@@ -42,7 +42,7 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
                 <span>
                     {patient.id}
                     <span className='clinical-spans' dangerouslySetInnerHTML={{__html:
-                        getSpans(_.object(patient.clinicalData.map((x) => [x.clinicalAttributeId, x.value])), 'lgg_ucsf_2014')}}>
+                        getSpans(fromPairs(patient.clinicalData.map((x) => [x.clinicalAttributeId, x.value])), 'lgg_ucsf_2014')}}>
                     </span>
                 </span>
             </OverlayTrigger>

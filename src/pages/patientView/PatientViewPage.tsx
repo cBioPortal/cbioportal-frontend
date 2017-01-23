@@ -21,7 +21,6 @@ import queryString from "query-string";
 import SelectCallback = ReactBootstrap.SelectCallback;
 import SampleManager from './sampleManager';
 import PatientHeader from './patientHeader/PatientHeader';
-import SyntheticEvent = __React.SyntheticEvent;
 
 import './patientHeader/style/ClinicalAttributes.scss';
 
@@ -165,14 +164,12 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             sampleManager = new SampleManager(this.props.samples);
 
             sampleHeader = _.map(sampleManager!.samples,(sample: ClinicalDataBySampleId) => {
-                return <span style={{ marginRight:10 }}>{sampleManager!.getComponentForSample(sample.id, true)}</span>;
+                return sampleManager!.getComponentForSample(sample.id, true);
             });
-
         }
 
         return (
             <div>
-                
                 <PatientHeader patient={this.props.patient} />
 
                 <If condition={sampleHeader}>

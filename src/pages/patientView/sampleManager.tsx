@@ -19,13 +19,14 @@ class SampleManager {
         });
     }
 
-    getComponentForSample(sampleId: string, showClinical = false): JSX.Element  {
+    getComponentForSample(sampleId: string, showClinical = false) {
 
-        let sample = _.find(this.samples, (sample: ClinicalDataBySampleId)=>{
-            return sample.id === sampleId;
+        let sample = _.find(this.samples, (s: ClinicalDataBySampleId)=> {
+            return s.id === sampleId;
         });
 
-        return this.getOverlayTriggerSample(sample, this.sampleIndex[sample.id], showClinical);
+        console.log(sample);
+        return sample && this.getOverlayTriggerSample(sample, this.sampleIndex[sample.id], showClinical);
 
     }
 
@@ -45,13 +46,11 @@ class SampleManager {
                 placement='bottom'
                 overlay={this.getPopoverSample(sample, sampleNumberText)}
             >
-                <svg width="12" height="12">
-                    <SampleInline
-                        sample={sample}
-                        sampleNumber={sampleNumberText}
-                        showClinical={showClinical}
-                    />
-                </svg>
+                <SampleInline
+                    sample={sample}
+                    sampleNumber={sampleNumberText}
+                    showClinical={showClinical}
+                />
             </OverlayTrigger>
         );
     }

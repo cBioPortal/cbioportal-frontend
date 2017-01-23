@@ -1,7 +1,7 @@
 import * as React from "react";
 import {SampleLabelHTML} from "../../../shared/components/sampleLabel/SampleLabel";
 import { ClinicalDataBySampleId } from "../../../shared/api/api-types-extended";
-import * as _ from 'underscore';
+import {fromPairs} from 'lodash';
 import {getSpans} from '../clinicalInformation/lib/clinicalAttributesUtil.js';
 
 interface ISampleInlineProps {
@@ -21,7 +21,7 @@ export default class SampleInline extends React.Component<ISampleInlineProps, {}
                     <SampleLabelHTML color={'black'} label={(sampleNumber).toString()} />
                     {' ' + sample.id}
                     <span className="clinical-spans" dangerouslySetInnerHTML={{__html:
-                        getSpans(_.object(sample.clinicalData.map((x) => [x.clinicalAttributeId, x.value])), 'lgg_ucsf_2014')}}>
+                        getSpans(fromPairs(sample.clinicalData.map((x) => [x.clinicalAttributeId, x.value])), 'lgg_ucsf_2014')}}>
                     </span>
                 </span>
             );
