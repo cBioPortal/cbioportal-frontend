@@ -180,7 +180,8 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
             rawData: [],
             columns: MutationTable.defaultColumns,
             headerControlsProps: {
-                className: "pull-right"
+                className: "pull-right",
+                showPagination: true
             },
             reactTableProps: {
                 className: "table table-striped table-border-top",
