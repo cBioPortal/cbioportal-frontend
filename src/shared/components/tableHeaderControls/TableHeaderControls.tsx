@@ -59,7 +59,7 @@ export default class TableExportButtons extends React.Component<ITableExportButt
     public static defaultProps: ITableExportButtonsProps = {
         showSearch:false,
         showCopyAndDownload:true,
-        showPagination:true,
+        showPagination:false,
         paginationProps:{}
     };
 
