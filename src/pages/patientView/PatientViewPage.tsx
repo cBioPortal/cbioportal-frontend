@@ -193,6 +193,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             )
                         }
 
+                        <hr />
+
                         <FeatureTitle title="Mutations" isLoading={ !this.state.mutationData } />
                         {
                             (this.state.mutationData && !!sampleManager) && (
