@@ -1,8 +1,10 @@
 import * as React from 'react';
+import * as _ from 'lodash';
 import Tracks from './Tracks';
 import {ThumbnailExpandVAFPlot} from '../vafPlot/ThumbnailExpandVAFPlot';
 import {Mutation} from "../../../shared/api/CBioPortalAPI";
 import SampleManager from "../sampleManager";
+import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
 
 interface IGenomicOverviewProps {
     mutations: Mutation[];
@@ -24,16 +26,20 @@ export default class GenomicOverview extends React.Component<IGenomicOverviewPro
 
     public render() {
 
+        const labels = _.reduce(this.props.sampleManager.samples, (result: any, sample: ClinicalDataBySampleId, i: number)=>{
+            result[sample.id] = i + 1;
+            return result;
+        }, {});
+
         return (
             <div style={{ display:'flex', alignItems:'center'  }}>
                 <Tracks mutations={this.props.mutations} sampleManager={this.props.sampleManager} cnaSegments={this.props.cnaSegments} />
                 <ThumbnailExpandVAFPlot
                     data={this.state.vafPlotData}
-                    order={this.props.sampleOrder}
+                    order={this.props.sampleManager.sampleIndex}
                     colors={this.props.sampleColors}
-                    labels={this.props.sampleLabels}
+                    labels={labels}
                     overlayPlacement="right"
-                    cssClass="moo"
                 />
             </div>
         );
