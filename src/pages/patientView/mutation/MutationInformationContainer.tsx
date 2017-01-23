@@ -35,12 +35,17 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 name: "Sample",
                 visible: "excluded"
             },
+            gene: {
+                name: "Gene",
+                description: "HUGO Symbol"
+            },
             proteinChange: {
                 name: "Protein Change",
                 formatter: ProteinChangeColumnFormatter.renderFunction
             },
             tumors: {
                 name: "Tumors",
+                description: "Cases/Samples",
                 priority: 0.50,
                 formatter: TumorColumnFormatter.renderFunction,
                 sortable: TumorColumnFormatter.sortFunction,
@@ -75,7 +80,8 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 visible: "hidden"
             },
             mutationType: {
-                name: "Type"
+                name: "Type",
+                description: "Mutation Type"
             },
             annotation: {
                 name: "Annotation",
@@ -94,16 +100,19 @@ export default class MutationInformationContainer extends React.Component<IMutat
             },
             cohort: {
                 name: "Cohort",
+                description: "Mutation frequency in cohort",
                 priority: 18.30,
                 sortable: true
             },
             cosmic: {
                 name: "COSMIC",
+                description: "COSMIC occurrences",
                 priority: 18.40,
                 sortable: true
             },
             tumorAlleleFreq: {
                 name: "Allele Freq",
+                description: "Variant allele frequency in the tumor sample",
                 formatter: AlleleFreqColumnFormatter.renderFunction,
                 sortable: AlleleFreqColumnFormatter.sortFunction,
                 filterable: false,
@@ -115,6 +124,7 @@ export default class MutationInformationContainer extends React.Component<IMutat
             },
             normalAlleleFreq : {
                 name: "Allele Freq (N)",
+                description: "Variant allele frequency in the normal sample",
                 visible: "hidden"
             },
             normalRefCount: {

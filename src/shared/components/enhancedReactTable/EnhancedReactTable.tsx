@@ -1,5 +1,6 @@
 import * as React from 'react';
 import {Table, Thead, Th, Tr, Td} from "reactable";
+import Tooltip from 'rc-tooltip';
 import * as _ from 'lodash';
 import TableHeaderControls from "shared/components/tableHeaderControls/TableHeaderControls";
 import {
@@ -309,10 +310,28 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
         let headers:Array<any> = [];
 
         _.each(columns, function(columnDef:IEnhancedReactTableColumnDef) {
+            // basic content (with no tooltip)
+            let headerContent = (
+                <span>
+                    {columnDef.name}
+                </span>
+            );
+
+            // if description is provided, add a tooltip
+            if (columnDef.description)
+            {
+                const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
+
+                headerContent = (
+                    <Tooltip overlay={columnDef.description} placement="rightTop" arrowContent={arrowContent}>
+                        {headerContent}
+                    </Tooltip>
+                );
+            }
 
             headers.push(
-                <Th key={columnDef.name} columns={columnDef.name}>
-                    {columnDef.name}
+                <Th key={columnDef.name} column={columnDef.name}>
+                    {headerContent}
                 </Th>
             );
         });
