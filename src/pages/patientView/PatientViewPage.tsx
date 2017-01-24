@@ -1,7 +1,6 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import {Tabs, Tab, default as ReactBootstrap} from 'react-bootstrap';
-import $ from 'jquery';
 import ClinicalInformationContainer from './clinicalInformation/ClinicalInformationContainer';
 import MutationInformationContainer from './mutation/MutationInformationContainer';
 //import PatientHeader from './patientHeader/PatientHeader';
@@ -40,7 +39,7 @@ interface IPatientViewState {
 
     cnaSegmentData: any;
     mutationData: any;
-    mrnaExprRankData: MrnaRankData | undefined;
+    mrnaExprRankData?: MrnaRankData;
     activeTabKey: number;
 
 }
