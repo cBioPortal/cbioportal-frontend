@@ -1,6 +1,7 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import {Tabs, Tab, default as ReactBootstrap} from 'react-bootstrap';
+import $ from 'jquery';
 import ClinicalInformationContainer from './clinicalInformation/ClinicalInformationContainer';
 import MutationInformationContainer from './mutation/MutationInformationContainer';
 //import PatientHeader from './patientHeader/PatientHeader';
@@ -10,7 +11,7 @@ import exposeComponentRenderer from '../../shared/lib/exposeComponentRenderer';
 import GenomicOverview from './genomicOverview/GenomicOverview';
 import mockData from './mock/sampleData.json';
 import Connector, { ClinicalInformationData } from "./Connector";
-import {ClinicalData, SampleIdentifier} from "shared/api/CBioPortalAPI";
+import {ClinicalData, SampleIdentifier, GeneticProfile} from "shared/api/CBioPortalAPI";
 import { ClinicalDataBySampleId } from "../../shared/api/api-types-extended";
 import { RequestStatus } from "../../shared/api/api-types-extended";
 import { default as CBioPortalAPI, Mutation }  from "../../shared/api/CBioPortalAPI";
@@ -20,6 +21,7 @@ import { If, Then, Else } from 'react-if';
 import queryString from "query-string";
 import SampleManager from './sampleManager';
 import SelectCallback = ReactBootstrap.SelectCallback;
+import {MrnaPercentile, default as CBioPortalAPIInternal} from "../../shared/api/CBioPortalAPIInternal";
 
 export interface IPatientViewPageProps {
     store?: RootState;
@@ -32,10 +34,13 @@ export interface IPatientViewPageProps {
     clinicalDataStatus?: RequestStatus;
 }
 
+export type MrnaRankData = { [sampleId:string]: { [entrezGeneId:string]: {percentile:number, zScore:number}}};
+
 interface IPatientViewState {
 
     cnaSegmentData: any;
     mutationData: any;
+    mrnaExprRankData: MrnaRankData | undefined;
     activeTabKey: number;
 
 }
@@ -62,6 +67,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     private tsClient:CBioPortalAPI;
 
+    private tsInternalClient:CBioPortalAPIInternal;
+
     constructor() {
 
         super();
@@ -69,12 +76,14 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         this.state = {
             mutationData: undefined,
             cnaSegmentData: undefined,
+            mrnaExprRankData: undefined,
             activeTabKey:1
         };
 
         this.handleSelect = this.handleSelect.bind(this);
 
         this.tsClient = new CBioPortalAPI(`//${(window as any)['__API_ROOT__']}`);
+        this.tsInternalClient = new CBioPortalAPIInternal(`//${(window as any)['__API_ROOT__']}`);
 
         //TODO: this should be done by a module so that it can be reused on other pages
         const qs = queryString.parse((window as any).location.search);
@@ -83,6 +92,31 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         this.mutationGeneticProfileId = `${this.studyId}_mutations`;
     }
 
+
+    fetchMrnaZscoreProfile():Promise<string> {
+        return new Promise((resolve, reject) => {
+            let geneticProfilesPromise = this.tsClient.getAllGeneticProfilesInStudyUsingGET({studyId: this.studyId});
+            const regex1 = /^.+rna_seq.*_zscores$/;
+            const regex2 = /^.*_zscores$/;
+            geneticProfilesPromise.then((d) => {
+                const chosenProfile:GeneticProfile = d.reduce((curr: GeneticProfile, next: GeneticProfile) => {
+                    const nextId = next.geneticProfileId.toLowerCase();
+                    if (curr && curr.geneticProfileId.toLowerCase().match(regex1) !== null) {
+                        return curr;
+                    } else if (nextId.match(regex1) !== null ||
+                        nextId.match(regex2) !== null) {
+                        return next;
+                    }
+                    return curr;
+                }, undefined);
+                if (chosenProfile) {
+                    resolve(chosenProfile.geneticProfileId);
+                } else {
+                    reject();
+                }
+            });
+        });
+    }
 
     fetchCnaSegmentData(_sampleIds: string[]) {
 
@@ -97,6 +131,42 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         let mutationDataPromise = this.tsClient.fetchMutationsInGeneticProfileUsingPOST({geneticProfileId: this.mutationGeneticProfileId, sampleIds: _sampleIds, projection: "DETAILED"});
         return mutationDataPromise;
 
+    }
+
+    fetchMrnaExprRank(_sampleToEntrezGeneIds:{ [s:string]:Set<number> }):Promise<MrnaRankData> {
+        return new Promise((resolve, reject) => {
+            const _sampleIds = Object.keys(_sampleToEntrezGeneIds);
+            const fetchProfilePromise = this.fetchMrnaZscoreProfile();
+            fetchProfilePromise.then((profile) => {
+                const mrnaPercentiles: MrnaPercentile[] = [];
+                const fetchAllMrnaPercentilesPromise = Promise.all(_sampleIds.map(sampleId => (new Promise((resolve, reject) => {
+                    const entrezGeneIds = _sampleToEntrezGeneIds[sampleId];
+                    if (typeof entrezGeneIds === "undefined" || entrezGeneIds.size === 0) {
+                        resolve();
+                    } else {
+                        const fetchMrnaPercentilesPromise = this.tsInternalClient.fetchMrnaPercentileUsingPOST({geneticProfileId:profile, sampleId:sampleId, entrezGeneIds: Array.from(entrezGeneIds)});
+                        fetchMrnaPercentilesPromise.then((d) => {
+                            mrnaPercentiles.push(...d);
+                            resolve();
+                        });
+                        fetchMrnaPercentilesPromise.catch(() => reject());
+                    }
+                }))));
+                fetchAllMrnaPercentilesPromise.then(() => {
+                    let mrnaRankData:MrnaRankData = mrnaPercentiles.reduce((map: any, next: any) => {
+                        map[next.sampleId] = map[next.sampleId] || {};
+                        map[next.sampleId][next.entrezGeneId] = {
+                            percentile: next.percentile,
+                            zScore: next.zScore
+                        };
+                        return map;
+                    }, {});
+                    resolve(mrnaRankData);
+                });
+                fetchAllMrnaPercentilesPromise.catch(() => reject());
+            });
+            fetchProfilePromise.catch(() => reject());
+        });
     }
 
     public componentDidMount() {
@@ -125,6 +195,18 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                 this.fetchMutationData(sampleIds).then((_result) => {
                     this.setState(({ mutationData : _result } as IPatientViewState));
+
+                    const sampleToEntrezGeneIds = _result.reduce((map:{ [s:string]:Set<number> }, next:Mutation) => {
+                        const sampleId = next.sampleId;
+                        map[sampleId] = map[sampleId] || new Set();
+                        map[sampleId].add(next.entrezGeneId);
+                        return map;
+                    }, {});
+                    const fetchMrnaExprRankPromise = this.fetchMrnaExprRank(sampleToEntrezGeneIds);
+                    fetchMrnaExprRankPromise.then((_mrna_result:any) => {
+                        this.setState(({ mrnaExprRankData : _mrna_result }) as IPatientViewState);
+                    });
+                    fetchMrnaExprRankPromise.catch(()=>{});
                 });
 
             }
@@ -199,6 +281,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             (this.state.mutationData && !!sampleManager) && (
                                 <MutationInformationContainer
                                     mutations={this.state.mutationData}
+                                    mrnaExprRankData={this.state.mrnaExprRankData}
                                     sampleOrder={mockData.order}
                                     sampleLabels={mockData.labels}
                                     sampleColors={mockData.colors}
