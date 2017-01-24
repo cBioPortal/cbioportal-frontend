@@ -10,7 +10,7 @@ import exposeComponentRenderer from '../../shared/lib/exposeComponentRenderer';
 import GenomicOverview from './genomicOverview/GenomicOverview';
 import mockData from './mock/sampleData.json';
 import Connector, { ClinicalInformationData } from "./Connector";
-import { ClinicalData } from "shared/api/CBioPortalAPI";
+import {ClinicalData, SampleIdentifier} from "shared/api/CBioPortalAPI";
 import { ClinicalDataBySampleId } from "../../shared/api/api-types-extended";
 import { RequestStatus } from "../../shared/api/api-types-extended";
 import { default as CBioPortalAPI, Mutation }  from "../../shared/api/CBioPortalAPI";
@@ -86,10 +86,9 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     fetchCnaSegmentData(_sampleIds: string[]) {
 
-        let cnaSegmentPromise = Promise.resolve(
-            $.get("//www.cbioportal.org/api-legacy/copynumbersegments?cancerStudyId=" + this.studyId + "&sampleIds=" + _sampleIds.join(","))
-        );
-        return cnaSegmentPromise;
+        const ids: SampleIdentifier[] = _sampleIds.map((id: string) => { return { sampleId:id, studyId: this.studyId }; });
+
+        return this.tsClient.fetchCopyNumberSegmentsUsingPOST({sampleIdentifiers:ids, projection: 'DETAILED'});
 
     }
 

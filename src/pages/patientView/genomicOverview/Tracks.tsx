@@ -2,13 +2,13 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as _ from 'lodash';
 import * as tracksHelper from './tracksHelper'
-import {CopyNumberSegment, Mutation} from 'shared/api/CBioPortalAPI';
+import {CopyNumberSeg, Mutation} from 'shared/api/CBioPortalAPI';
 import SampleManager from "../sampleManager";
 import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
 
 interface TracksPropTypes {
     mutations:Array<Mutation>;
-    cnaSegments:Array<CopyNumberSegment>;
+    cnaSegments:Array<CopyNumberSeg>;
     sampleManager:SampleManager;
 }
 
