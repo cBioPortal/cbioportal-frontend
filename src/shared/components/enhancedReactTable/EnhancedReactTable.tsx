@@ -185,19 +185,24 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
                 <TableHeaderControls
                     showCopyAndDownload={true}
                     showHideShowColumnButton={true}
-                    columnVisibility={columnVisibility}
                     handleInput={this.handleFilterInput}
-                    onColumnToggled={this.handleVisibilityToggle}
                     showSearch={true}
-                    className="pull-right"
-                    paginationProps={{itemsPerPage:this.state.itemsPerPage,
-                                        currentPage: this.state.currentPage,
-                                        onChangeItemsPerPage: this.handleChangeItemsPerPage,
-                                        onPreviousPageClick: this.handlePreviousPageClick,
-                                        onNextPageClick: this.handleNextPageClick,
-                                        textBetweenButtons: `${firstItemShownIndex}-${lastItemShownIndex} of ${this.filteredDataLength}`,
-                                        previousPageDisabled: (this.state.currentPage === 0),
-                                        nextPageDisabled: (this.state.currentPage >= this.numPages()-1)}}
+                    columnVisibilityProps={{
+                        className: "pull-right",
+                        columnVisibility: columnVisibility,
+                        onColumnToggled: this.handleVisibilityToggle
+                    }}
+                    paginationProps={{
+                        className: "pull-right",
+                        itemsPerPage:this.state.itemsPerPage,
+                        currentPage: this.state.currentPage,
+                        onChangeItemsPerPage: this.handleChangeItemsPerPage,
+                        onPreviousPageClick: this.handlePreviousPageClick,
+                        onNextPageClick: this.handleNextPageClick,
+                        textBetweenButtons: `${firstItemShownIndex}-${lastItemShownIndex} of ${this.filteredDataLength}`,
+                        previousPageDisabled: (this.state.currentPage === 0),
+                        nextPageDisabled: (this.state.currentPage >= this.numPages()-1)
+                    }}
                     {...headerControlsProps}
                 />
                 <Table
