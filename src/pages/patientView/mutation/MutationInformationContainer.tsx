@@ -14,7 +14,7 @@ import { MrnaRankData } from "../PatientViewPage";
 
 export interface IMutationInformationContainerProps {
     mutations: Array<Mutation>;
-    mrnaExprRankData: MrnaRankData | undefined;
+    mrnaExprRankData?: MrnaRankData;
     sampleOrder:string[];
     sampleColors:{ [s:string]: string};
     sampleLabels:{ [s:string]: string};
