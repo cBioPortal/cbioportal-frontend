@@ -16,6 +16,7 @@ export type ITablePaginationControlsProps = {
     className?:string;
     previousPageDisabled?:boolean;
     nextPageDisabled?:boolean;
+    marginLeft?: number
 }
 
 export class TablePaginationControls extends React.Component<ITablePaginationControlsProps, {}> {
@@ -29,6 +30,7 @@ export class TablePaginationControls extends React.Component<ITablePaginationCon
         onPreviousPageClick: ()=>0,
         onNextPageClick: ()=>0,
         className: "",
+        marginLeft: 10,
         previousPageDisabled:false,
         nextPageDisabled:false
     };
@@ -47,7 +49,7 @@ export class TablePaginationControls extends React.Component<ITablePaginationCon
         if (this.props.showAllOption) {
             pageSizeOptionElts.push(<option value={SHOW_ALL_PAGE_SIZE+""}>all</option>);
         }
-        return (<div className={this.props.className}>
+        return (<div className={this.props.className} style={{marginLeft: this.props.marginLeft}}>
             <ButtonGroup bsSize="sm">
             <Button key="prevPageBtn" disabled={!!this.props.previousPageDisabled} onClick={this.props.onPreviousPageClick}>Previous</Button>
             <Button key="textBetweenButtons" className="auto-cursor" disabled={true}>{this.props.textBetweenButtons}</Button>
