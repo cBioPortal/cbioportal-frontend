@@ -5,13 +5,16 @@ import {IColumnDefMap} from "../../../shared/components/enhancedReactTable/IEnha
 import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter";
 import TumorColumnFormatter from "./column/TumorColumnFormatter";
 import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
+import MrnaExprColumnFormatter from "./column/MrnaExprColumnFormatter";
 import AlleleCountColumnFormatter from "./column/AlleleCountColumnFormatter";
 import { Mutation } from "../../../shared/api/CBioPortalAPI";
 import SampleManager from "../sampleManager";
+import { MrnaRankData } from "../PatientViewPage";
 
 
 export interface IMutationInformationContainerProps {
     mutations: Array<Mutation>;
+    mrnaExprRankData: MrnaRankData | undefined;
     sampleOrder:string[];
     sampleColors:{ [s:string]: string};
     sampleLabels:{ [s:string]: string};
@@ -90,7 +93,11 @@ export default class MutationInformationContainer extends React.Component<IMutat
             mRnaExp: {
                 name: "mRNA Expr.",
                 priority: 18.20,
-                sortable: true
+                formatter: MrnaExprColumnFormatter.renderFunction,
+                sortable: true,
+                columnProps: {
+                    data: this.props.mrnaExprRankData
+                }
             },
             cohort: {
                 name: "Cohort",
