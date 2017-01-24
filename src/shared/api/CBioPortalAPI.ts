@@ -160,7 +160,7 @@ export type CancerStudy = {
 export type GeneticData = {
     'entrezGeneId': number
 
-        'value': number
+        'value': string
 
 };
 export type Mutation = {
@@ -700,6 +700,85 @@ export default class CBioPortalAPI {
 
                 if (parameters['identifiers'] === undefined) {
                     reject(new Error('Missing required  parameter: identifiers'));
+                    return;
+                }
+
+                if (parameters['projection'] !== undefined) {
+                    queryParameters['projection'] = parameters['projection'];
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    fetchCopyNumberSegmentsUsingPOSTURL(parameters: {
+        'sampleIdentifiers': Array < SampleIdentifier > | SampleIdentifier
+
+        ,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/copy-number-segments/fetch';
+
+        if (parameters['projection'] !== undefined) {
+            queryParameters['projection'] = parameters['projection'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch copy number segments by sample ID
+     * @method
+     * @name CBioPortalAPI#fetchCopyNumberSegmentsUsingPOST
+     * @param {} sampleIdentifiers - List of sample identifiers
+     * @param {string} projection - Level of detail of the response
+     */
+    fetchCopyNumberSegmentsUsingPOST(parameters: {
+            'sampleIdentifiers': Array < SampleIdentifier > | SampleIdentifier
+
+            ,
+            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < CopyNumberSeg >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/copy-number-segments/fetch';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                if (parameters['sampleIdentifiers'] !== undefined) {
+                    body = parameters['sampleIdentifiers'];
+                }
+
+                if (parameters['sampleIdentifiers'] === undefined) {
+                    reject(new Error('Missing required  parameter: sampleIdentifiers'));
                     return;
                 }
 
