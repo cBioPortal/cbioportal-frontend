@@ -28,46 +28,54 @@ class SampleManager {
         });
     }
 
-    getComponentForSample(sampleId: string, options?: { showText:Boolean }) {
+    getComponentForSample(sampleId: string, showClinical = false) {
 
-        let sample = _.find(this.samples, (sample: ClinicalDataBySampleId)=>{
-            return sample.id === sampleId;
+        let sample = _.find(this.samples, (s: ClinicalDataBySampleId)=> {
+            return s.id === sampleId;
         });
 
-        return sample && this.getOverlayTriggerSample(sample, this.sampleIndex[sample.id]);
+        return sample && this.getOverlayTriggerSample(sample, this.sampleIndex[sample.id], showClinical);
+
     }
 
     getComponentsForSamples() {
         this.samples.map((sample)=>this.getComponentForSample(sample.id));
     }
 
-    getOverlayTriggerSample(sample: ClinicalDataBySampleId, sampleIndex: number) {
+    getOverlayTriggerSample(sample: ClinicalDataBySampleId, sampleIndex: number, showClinical = false) {
 
         const sampleNumberText: number = sampleIndex+1;
 
-        const align = {
-            points: ['tl', 'tr'], // align top left point of sourceNode with top right point of targetNode
-            offset: [0, 20], // the offset sourceNode by 10px in x and 20px in y,
-            targetOffset: ['0','0'], // the offset targetNode by 30% of targetNode width in x and 40% of targetNode height in y,
-        };
+        // const align = {
+        //     points: ['tl', 'tr'], // align top left point of sourceNode with top right point of targetNode
+        //     offset: [0, 20], // the offset sourceNode by 10px in x and 20px in y,
+        //     targetOffset: ['0','0'], // the offset targetNode by 30% of targetNode width in x and 40% of targetNode height in y,
+        // };
 
 
         return (<Tooltip
-            placement='topRight'
+            placement='bottomLeft'
             trigger={['hover', 'focus']}
             overlay={this.getPopoverSample(sample, sampleNumberText)}
             arrowContent={<div className="rc-tooltip-arrow-inner" />}
             destroyTooltipOnHide={false}
             onPopupAlign={placeArrow}
-
             >
-            <svg width="12" height="12">
+            <span>
                 <SampleInline
                              sample={sample}
                              sampleNumber={sampleNumberText}
-                         />
-            </svg>
+                             showClinical={showClinical}
+                         >
+                </SampleInline>
+             </span>
         </Tooltip>);
+
+           // <SampleInline
+           //              sample={sample}
+           //              sampleNumber={sampleNumberText}
+           //              showClinical={showClinical}
+           //          />
 
         // return (
         //     <OverlayTrigger
