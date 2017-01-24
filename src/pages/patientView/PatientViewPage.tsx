@@ -158,7 +158,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     public render() {
 
         let sampleManager: SampleManager | null = null;
-        let sampleHeader: JSX.Element[] | null = null;
+        let sampleHeader: JSX.Element[] | null | undefined = null;
 
         if (this.props.samples) {
             sampleManager = new SampleManager(this.props.samples);
