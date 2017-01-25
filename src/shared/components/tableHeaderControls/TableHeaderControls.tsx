@@ -1,4 +1,5 @@
 import * as React  from 'react';
+import Tooltip from 'rc-tooltip';
 import {Button, ButtonGroup, ButtonToolbar, Form, FormGroup, MenuItem} from 'react-bootstrap';
 import ReactZeroClipboard from 'react-zeroclipboard';
 import fileDownload from 'react-file-download';
@@ -80,6 +81,8 @@ export default class TableExportButtons extends React.Component<ITableExportButt
 
     public render() {
 
+        const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
+
         return (
             <div className={ (this.props.className || '') + '' }>
 
@@ -94,11 +97,19 @@ export default class TableExportButtons extends React.Component<ITableExportButt
 
                     <If condition={ this.props.showCopyAndDownload}>
                         <ButtonGroup className={this.props.copyDownloadClassName} style={{ marginLeft:10 }}>
-                            <ReactZeroClipboard swfPath={require('react-zeroclipboard/assets/ZeroClipboard.swf')} getText={ this.getText }>
-                                <Button className="btn-sm">Copy</Button>
+                            <ReactZeroClipboard swfPath={require('react-zeroclipboard/assets/ZeroClipboard.swf')} getText={this.getText}>
+                                <Tooltip overlay="Copy" placement="top" arrowContent={arrowContent}>
+                                    <Button className="btn-sm">
+                                        <i className='fa fa-clipboard'/>
+                                    </Button>
+                                </Tooltip>
                             </ReactZeroClipboard>
 
-                            <Button className="btn-sm" onClick={ this.downloadData }>Download CSV</Button>
+                            <Tooltip overlay="Download CSV" placement="top" arrowContent={arrowContent}>
+                                <Button className="btn-sm" onClick={this.downloadData}>
+                                    <i className='fa fa-cloud-download'/>
+                                </Button>
+                            </Tooltip>
                         </ButtonGroup>
                     </If>
 
