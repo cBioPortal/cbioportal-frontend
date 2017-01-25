@@ -7,10 +7,10 @@ export default class SampleLabelSVG extends React.Component<ISampleLabelSVGProps
     }
 
     public render() {
-        const { label, color, x, y } = this.props;
+        const { label, customCircleAttributes, x, y } = this.props;
         return (
             <g>
-                <circle cx={x} cy={y} fill={color} r={10} />
+                <circle cx={x} cy={y} r={10} className='sample-label-circle' {...customCircleAttributes} />
                 <text x={x} y={y + 5} fill={'white'} fontSize={10} textAnchor={'middle'}>{label}</text>
             </g>
         );
@@ -19,7 +19,9 @@ export default class SampleLabelSVG extends React.Component<ISampleLabelSVGProps
 
 export interface ISampleLabelSVGProps {
     label: string;
-    color: string;
+    // have to be prefixed by data-
+    // http://stackoverflow.com/questions/31273093/how-to-add-custom-html-attributes-in-jsx
+    customCircleAttributes: Object;
     x: number;
     y: number;
 }
@@ -31,11 +33,12 @@ export class SampleLabelHTML extends React.Component<ISampleLabelHTMLProps, {}> 
     }
 
     public render() {
-        const { label, color } = this.props;
+        const { label, customCircleAttributes } = this.props;
+
         return (
             <svg width='12' height='12' className='case-label-header'>
                 <g transform='translate(6,6)'>
-                    <circle r='6' fill={color} />
+                    <circle r='6' className='sample-label-circle' {...customCircleAttributes} />
                     <text y='4' textAnchor='middle' fontSize='10' fill='white'>{label}</text>
                 </g>
             </svg>
@@ -45,5 +48,7 @@ export class SampleLabelHTML extends React.Component<ISampleLabelHTMLProps, {}> 
 
 interface ISampleLabelHTMLProps {
     label: string;
-    color: string;
+    // have to be prefixed by data-
+    // http://stackoverflow.com/questions/31273093/how-to-add-custom-html-attributes-in-jsx
+    customCircleAttributes: Object;
 }
