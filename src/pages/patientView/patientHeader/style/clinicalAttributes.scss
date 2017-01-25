@@ -145,3 +145,14 @@
         order: 10;
     }
 }
+/* sample label coloring */
+.sample-label-circle {
+    fill: black;
+}
+.sample-label-circle[data-derived-normalized-case-type="Progressed"], 
+.sample-label-circle[data-derived-normalized-case-type="Recurrence"] {
+    fill: orange;
+}
+.sample-label-circle[data-derived-normalized-case-type="Metastasis"] {
+    fill: red;
+}
