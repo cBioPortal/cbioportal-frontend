@@ -29,12 +29,13 @@
     border: 1px solid rgba(0,0,0,0.05);
     border-radius: 2px;
     display: block;
-    text-align: right;
+    text-align: center;
     text-transform: uppercase;
     color: rgba(255, 255, 255, 0.90);
     font: normal normal 500 11px/19px 'Helvetica Neue', Helvetica, Arial, sans-serif;
     padding: 5px 10px;
     box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.1);
+    min-width: 115px;
 
     &:hover {
       cursor: pointer;
