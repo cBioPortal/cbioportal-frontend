@@ -178,6 +178,10 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 		if (queryStore.searchText && searchTextOptions.indexOf(queryStore.searchText) < 0)
 			searchTextOptions = [queryStore.searchText].concat(searchTextOptions);
 
+		let logic = this.getStudyListLogic();
+		let allSelectedCheckboxProps = logic.getCheckboxProps(logic.getRootCancerType());
+		let allSelected = allSelectedCheckboxProps.checked && !allSelectedCheckboxProps.indeterminate;
+
 		return (
 			<FlexCol className={styles.CancerStudySelector} flex={1} style={this.props.style}>
 				<FlexRow padded overflow className={styles.selectCancerStudyRow}>
@@ -207,7 +211,9 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 							})}
 						/>
 
-						<span className={styles.selectAll}>Select All</span>
+						<span className={styles.selectAll} onClick={() => logic.hack_handleSelectAll(!allSelected)}>
+							{allSelected ? "Deselect All" : "Select All"}
+						</span>
 				</FlexRow>
 
 				<FlexRow flex={1}>

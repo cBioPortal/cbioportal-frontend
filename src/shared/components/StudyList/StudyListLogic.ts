@@ -122,6 +122,9 @@ export default class StudyListLogic implements IStudyListLogic
 
 	getDescendantCancerStudies(node:CancerTreeNode):CancerStudy[]
 	{
+		if (node === this.getRootCancerType())
+			return this.hack_getAllStudies();
+
 		let meta = this.getMetadata(node);
 		return meta.descendantStudies.filter(this.nodeFilter);
 	}
@@ -157,6 +160,26 @@ export default class StudyListLogic implements IStudyListLogic
 			let checked = !!this.state.selectedStudyIds.find(id => id == study.studyId);
 			return {checked};
 		}
+	}
+
+	hack_getAllStudies()
+	{
+		return _.union(...(
+			this.getChildCancerTypes(this.getRootCancerType())
+				.map(cancerType => this.getDescendantCancerStudies(cancerType))
+		));
+	}
+
+	hack_handleSelectAll(checked:boolean)
+	{
+		let selectedStudyIds = this.state.selectedStudyIds;
+		let clickedStudyIds = this.hack_getAllStudies().map(study => study.studyId);
+		if (checked)
+			selectedStudyIds = _.union(selectedStudyIds, clickedStudyIds);
+		else
+			selectedStudyIds = _.difference(selectedStudyIds, clickedStudyIds);
+
+		this.handleSelectedStudiesChange(selectedStudyIds);
 	}
 
 	onCheck(node:CancerTreeNode, event:React.FormEvent/*<HTMLInputElement>*/): void
