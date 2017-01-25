@@ -124,9 +124,7 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 sortable: AlleleFreqColumnFormatter.sortFunction,
                 filterable: false,
                 columnProps: {
-                    sampleOrder: this.props.sampleOrder,
-                    sampleColors: this.props.sampleColors,
-                    sampleLabels: this.props.sampleLabels
+                    sampleManager: this.props.sampleManager
                 }
             },
             normalAlleleFreq : {
