@@ -187,7 +187,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 				<FlexRow padded overflow className={styles.selectCancerStudyRow}>
 					<h2>Select Studies</h2>
 					<span className={styles.selectedCount}>
-						Number of Studies Selected: <b>{this.selectedStudyIds.length}</b>
+						<b>{this.selectedStudyIds.length}</b> Studies Selected
 					</span>
 				</FlexRow>
 
