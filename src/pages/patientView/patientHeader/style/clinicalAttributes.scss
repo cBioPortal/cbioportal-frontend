@@ -1,3 +1,14 @@
+$sample-color-primary: black;
+$sample-color-recurrence: orange;
+$sample-color-metastasis: red;
+
+/* shared style and JS code variables */
+:export {
+    sampleColorPrimary: $sample-color-primary;
+    sampleColorRecurrence: $sample-color-recurrence;
+    sampleColorMetastasis: $sample-color-metastasis;
+}
+
 /* Do not display clinical attributes on default */
 .clinical-spans {
     display: inline-flex;
@@ -101,14 +112,14 @@
         color: rgb(0, 128, 0);
     }
     .clinical-attribute[attr-id="DERIVED_NORMALIZED_CASE_TYPE"][attr-value='Primary'] {
-      color: black;
+      color: $sample-color-primary;
     }
     .clinical-attribute[attr-id="DERIVED_NORMALIZED_CASE_TYPE"][attr-value="Progressed"],
     .clinical-attribute[attr-id="DERIVED_NORMALIZED_CASE_TYPE"][attr-value="Recurrence"] {
-      color: orange;
+      color: $sample-color-recurrence;
     }
     .clinical-attribute[attr-id="DERIVED_NORMALIZED_CASE_TYPE"][attr-value="Metastasis"] {
-      color: red;
+      color: $sample-color-metastasis;
     }
 }
 #patient-attributes {
