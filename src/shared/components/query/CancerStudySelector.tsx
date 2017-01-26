@@ -187,28 +187,28 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 				<FlexRow padded overflow className={styles.selectCancerStudyRow}>
 					<h2>Select Studies</h2>
 					<span className={styles.selectedCount}>
-						<b>{this.selectedStudyIds.length}</b> Studies Selected
+						<b>{queryStore.selectedCancerStudyIds.length}</b> Studies Selected
 					</span>
 				</FlexRow>
 
 				<FlexRow overflow className={styles.cancerStudySelectorHeader}>
 						<ReactSelect
 							className={styles.searchTextInput}
-							value={this.searchText}
+							value={queryStore.searchText}
 							autofocus={true}
 							options={searchTextOptions.map(str => ({label: str, value: str}))}
 							promptTextCreator={(label:string) => `Search for "${label}"`}
 							placeholder='Search...'
 							noResultsText={false}
 							onCloseResetsInput={false}
-							onInputChange={(searchText:string) => this.updateState({
-								searchText,
-								selectedCancerTypeIds: []
-							})}
-							onChange={(option:{value:string}) => this.updateState({
-								searchText: option ? option.value || '' : '',
-								selectedCancerTypeIds: []
-							})}
+							onInputChange={(searchText:string) => {
+								queryStore.searchText = searchText;
+								queryStore.selectedCancerTypeIds = [];
+							}}
+							onChange={(option:{value:string}) => {
+								queryStore.searchText = option ? option.value || '' : '';
+								queryStore.selectedCancerTypeIds = [];
+							}}
 						/>
 
 						<span className={styles.selectAll} onClick={() => logic.hack_handleSelectAll(!allSelected)}>
