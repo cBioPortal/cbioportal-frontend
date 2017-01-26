@@ -23,7 +23,6 @@ import SelectCallback = ReactBootstrap.SelectCallback;
 import {MrnaPercentile, default as CBioPortalAPIInternal} from "../../shared/api/CBioPortalAPIInternal";
 import PatientHeader from './patientHeader/PatientHeader';
 
-import './patientHeader/style/clinicalAttributes.scss';
 
 export interface IPatientViewPageProps {
     store?: RootState;
@@ -268,9 +267,9 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 <GenomicOverview
                                     mutations={this.state.mutationData}
                                     cnaSegments={this.state.cnaSegmentData}
-                                    sampleOrder={mockData.order}
-                                    sampleLabels={mockData.labels}
-                                    sampleColors={mockData.colors}
+                                    sampleOrder={sampleManager.sampleIndex}
+                                    sampleLabels={sampleManager.sampleLabels}
+                                    sampleColors={sampleManager.sampleColors}
                                     sampleManager={sampleManager}
                                 />
                             )
@@ -284,9 +283,9 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 <MutationInformationContainer
                                     mutations={this.state.mutationData}
                                     mrnaExprRankData={this.state.mrnaExprRankData}
-                                    sampleOrder={mockData.order}
-                                    sampleLabels={mockData.labels}
-                                    sampleColors={mockData.colors}
+                                    sampleOrder={sampleManager.sampleOrder}
+                                    sampleLabels={sampleManager.sampleLabels}
+                                    sampleColors={sampleManager.sampleColors}
                                     sampleTumorType={mockData.tumorType}
                                     sampleCancerType={mockData.cancerType}
                                     sampleManager={ sampleManager }

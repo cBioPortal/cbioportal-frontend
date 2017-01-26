@@ -181,8 +181,7 @@ function getSpans(clinicalData, cancerStudyId) {
  * This way the first element can be styled in a different manner. If flex
  * order attributes were working properly in CSS, one would be able to say
  * .clinical-attribute:first, this is unfortunately not the case, therefore
- * this hack is required. See clinical-attributes.css to see how this is
- * used.
+ * this hack is required (this is no longer used).
  */
 function addFirstOrderClass() {
     $('.sample-record-inline, #more-patient-info').each(() => {
