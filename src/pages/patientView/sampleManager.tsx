@@ -6,6 +6,8 @@ import {ClinicalDataBySampleId} from "../../shared/api/api-types-extended";
 import ClinicalInformationPatientTable from "./clinicalInformation/ClinicalInformationPatientTable";
 import {Sample} from "../../shared/api/CBioPortalAPI";
 import Tooltip from 'rc-tooltip';
+import {cleanAndDerive} from './clinicalInformation/lib/clinicalAttributesUtil.js';
+import styles from './patientHeader/style/clinicalAttributes.scss';
 
 // we need this to account for issue with rc-tooltip when dealing with large tooltip overlay content
 export function placeArrow(tooltipEl: any) {
@@ -18,14 +20,43 @@ export function placeArrow(tooltipEl: any) {
 class SampleManager {
 
     sampleIndex: { [s:string]:number };
+    sampleLabels: { [s:string]:string };
+    sampleOrder: string[];
+    clinicalDataLegacyCleanAndDerived: { [s:string]:any };
+    sampleColors: { [s:string]:string };
 
-    constructor(public samples: Array<ClinicalDataBySampleId>){
+    constructor(public samples: Array<ClinicalDataBySampleId>) {
 
         this.sampleIndex = {};
+        this.sampleLabels = {};
+        this.clinicalDataLegacyCleanAndDerived = {};
+        this.sampleColors = {};
 
-        samples.forEach((sample, i)=>{
+        samples.forEach((sample, i) => {
            this.sampleIndex[sample.id] = i;
-        });
+           this.sampleLabels[sample.id] = String(i+1);
+
+           // add legacy clinical data
+           this.clinicalDataLegacyCleanAndDerived[sample.id] = cleanAndDerive(
+               _.fromPairs(sample.clinicalData.map((x) => [x.clinicalAttributeId, x.value]))
+           );
+
+           // determine color based on DERIVED_NORMALIZED_CASE_TYPE
+           let color = 'black';
+           if (this.clinicalDataLegacyCleanAndDerived[sample.id]['DERIVED_NORMALIZED_CASE_TYPE'] === 'Primary') {
+               color = styles.sampleColorPrimary;
+           } else if (this.clinicalDataLegacyCleanAndDerived[sample.id].DERIVED_NORMALIZED_CASE_TYPE === 'Recurrence' ||
+                      this.clinicalDataLegacyCleanAndDerived[sample.id].DERIVED_NORMALIZED_CASE_TYPE === 'Progressed') {
+               color = styles.sampleColorRecurrence;
+           } else if (this.clinicalDataLegacyCleanAndDerived[sample.id].DERIVED_NORMALIZED_CASE_TYPE === 'Metastasis') {
+               color = styles.sampleColorMetastasis;
+           }
+
+           this.sampleColors[sample.id] = color;
+       });
+
+       // order
+       this.sampleOrder = _.sortBy(Object.keys(this.sampleIndex), (k) => this.sampleIndex[k]);
     }
 
     getComponentForSample(sampleId: string, showClinical = false) {
@@ -34,7 +65,7 @@ class SampleManager {
             return s.id === sampleId;
         });
 
-        return sample && this.getOverlayTriggerSample(sample, this.sampleIndex[sample.id], showClinical);
+        return sample && this.getOverlayTriggerSample(sample, this.sampleIndex[sample.id], this.sampleColors[sample.id], showClinical);
 
     }
 
@@ -42,7 +73,7 @@ class SampleManager {
         this.samples.map((sample)=>this.getComponentForSample(sample.id));
     }
 
-    getOverlayTriggerSample(sample: ClinicalDataBySampleId, sampleIndex: number, showClinical = false) {
+    getOverlayTriggerSample(sample: ClinicalDataBySampleId, sampleIndex: number, sampleColor: string, showClinical = false) {
 
         const sampleNumberText: number = sampleIndex+1;
 
@@ -65,6 +96,7 @@ class SampleManager {
                 <SampleInline
                              sample={sample}
                              sampleNumber={sampleNumberText}
+                             sampleColor={sampleColor}
                              showClinical={showClinical}
                          >
                 </SampleInline>

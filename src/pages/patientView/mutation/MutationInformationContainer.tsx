@@ -54,7 +54,6 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 sortable: TumorColumnFormatter.sortFunction,
                 filterable: false,
                 columnProps: {
-                    sampleOrder: this.props.sampleOrder,
                     sampleColors: this.props.sampleColors,
                     sampleLabels: this.props.sampleLabels,
                     sampleTumorType: this.props.sampleTumorType,
