@@ -12,6 +12,7 @@
 }
 
 .CancerStudySelector {
+  max-height: 400px;
   width: 850px;
   user-select: none;
   
@@ -75,9 +76,11 @@
   }
 
   div.cancerTypeListContainer {
+    overflow: auto;
   }
 
   div.cancerStudyListContainer {
+    overflow: auto;
     flex: 1;
   }
 
@@ -87,7 +90,6 @@
     margin: 0px;
     width: 230px;
     max-height: 400px;
-    overflow: auto;
 
     li {
       cursor: pointer;
