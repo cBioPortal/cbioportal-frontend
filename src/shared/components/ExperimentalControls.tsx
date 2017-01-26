@@ -100,22 +100,33 @@ export function Select(props:ISelectProps<any>)
 export interface IStateToggleProps<S>
 {
 	label?: string;
-	target: React.Component<any, S>;
+	target: S | React.Component<any, S>;
 	name: keyof S;
 	defaultValue: boolean;
 }
 
-export function StateToggle(props:IStateToggleProps<any>)
+export function TypedStateToggle<T>(props:IStateToggleProps<T>)
 {
 	let {label, target, name, defaultValue} = props;
+	let currentValue = target instanceof React.Component ? !!(target as React.Component<any, T>).state[name] : !!target[name];
 	return (
 		<LabeledCheckbox
-			checked={firstDefinedValue(target.state[name], defaultValue)}
+			checked={firstDefinedValue(currentValue, defaultValue)}
 			inputProps={{
-				onChange: event => target.setState({[name]: (event.target as HTMLInputElement).checked})
+				onChange: event => {
+					if (target instanceof React.Component)
+						target.setState({[name]: (event.target as HTMLInputElement).checked} as any);
+					else
+						target[name] = (event.target as HTMLInputElement).checked as any;
+				}
 			}}
 		>
 			{label || name}
 		</LabeledCheckbox>
 	);
+}
+
+export function StateToggle(props:IStateToggleProps<any>)
+{
+	return TypedStateToggle(props);
 }

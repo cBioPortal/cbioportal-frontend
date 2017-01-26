@@ -59,7 +59,7 @@ export default class QueryContainer extends React.Component<IQueryContainerProps
                 <FlexRow padded>
 					{/* demo controls */}
                 	<FlexCol className={styles.CancerStudySelector} padded style={{border: '1px solid #ddd', borderRadius: 5, padding: 5}}>
-                		<StateToggle label='Click tree node again to deselect' target={this} name='clickAgainToDeselectSingle' defaultValue={queryStore.clickAgainToDeselectSingle}/>
+                		<StateToggle label='Click tree node again to deselect' target={queryStore} name='clickAgainToDeselectSingle' defaultValue={queryStore.clickAgainToDeselectSingle}/>
 						<Select
 							label="Tree depth: "
 							selected={queryStore.maxTreeDepth}
@@ -75,9 +75,7 @@ export default class QueryContainer extends React.Component<IQueryContainerProps
 								{label: "8"},
 								{label: "9"},
 							]}
-							onChange={option => this.setState({
-								maxTreeDepth: parseInt(option.label)
-							})}
+							onChange={option => queryStore.maxTreeDepth = parseInt(option.label)}
 						/>
 						<span>Note: Use cmd+click to select/deselect multiple cancer types.</span>
 					</FlexCol>

@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import {observe, toJS, observable, action, computed, reaction, extras} from "../../../node_modules/mobx/lib/mobx";
+import {toJS, observable, action, computed, reaction} from "../../../node_modules/mobx/lib/mobx";
 import * as seamlessImmutable from 'seamless-immutable';
 
 // mobx observable
@@ -46,9 +46,9 @@ export default class RemoteData<H, P, R>
 	/**
 	 * Status of result.
 	 */
-	get status()
+	@computed get status()
 	{
-		if (this.shouldFetch)
+		if (this.shouldFetch) // checking this here makes sure we call lazyFetch again when conditions change
 		{
 			this.lazyFetch();
 			return 'fetching'; // we will be fetching soon
@@ -68,21 +68,22 @@ export default class RemoteData<H, P, R>
 	/**
 	 * Result from RPC.
 	 */
-	get result()
+	@computed get result()
 	{
-		this.lazyFetch();
+		if (this.shouldFetch) // checking this here makes sure we call lazyFetch again when conditions change
+			this.lazyFetch();
 		return this.lastResult;
+	}
+
+	@computed get shouldFetch()
+	{
+		return this.params && this.internalStatus === 'invalid';
 	}
 
 	private lazyFetch = _.debounce(() => {
 		if (this.shouldFetch)
 			this.fetch();
 	});
-
-	@computed get shouldFetch()
-	{
-		return this.params && this.internalStatus === 'invalid';
-	}
 
 	@action.bound private fetch()
 	{

@@ -51,28 +51,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 	@memoize
 	getCancerTypeListClickHandler(node:CancerType)
 	{
-		return (event:React.MouseEvent) => this.selectCancerType(node as CancerType, event);
-	}
-
-	@action selectCancerType(cancerType:CancerType, event:React.MouseEvent)
-	{
-		let clickedCancerTypeId = cancerType.cancerTypeId;
-
-		if (event.ctrlKey)
-		{
-			if (_.includes(queryStore.selectedCancerTypeIds, clickedCancerTypeId))
-				queryStore.selectedCancerTypeIds = _.difference(queryStore.selectedCancerTypeIds, [clickedCancerTypeId]);
-			else
-				queryStore.selectedCancerTypeIds = _.union(queryStore.selectedCancerTypeIds, [clickedCancerTypeId]);
-		}
-		else if (queryStore.clickAgainToDeselectSingle && _.isEqual(queryStore.selectedCancerTypeIds, [clickedCancerTypeId]))
-		{
-			queryStore.selectedCancerTypeIds = [];
-		}
-		else
-		{
-			queryStore.selectedCancerTypeIds = [clickedCancerTypeId];
-		}
+		return (event:React.MouseEvent) => queryStore.selectCancerType(node as CancerType, event.ctrlKey);
 	}
 
 	handleStudiesCheckbox(event:React.FormEvent, clickedStudyIds:string[])
@@ -85,7 +64,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 
 	renderCancerTypeList()
 	{
-		let logic = this.studyListLogic;
+		let logic = this.getStudyListLogic();
 		let rootMeta = logic.getMetadata(logic.treeData.rootCancerType);
 		let listItems = rootMeta && rootMeta.childCancerTypes.map(this.renderCancerTypeListItem);
 
@@ -98,7 +77,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 
 	renderCancerTypeListItem = (cancerType:CancerType, arrayIndex:number) =>
 	{
-		let logic = this.studyListLogic;
+		let logic = this.getStudyListLogic();
 		let meta = logic.getMetadata(cancerType);
 		let numStudies = logic.getDescendantCancerStudies(cancerType).length;
 
@@ -106,7 +85,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 			return null;
 
 		let selected = meta.isCancerType && _.includes(queryStore.selectedCancerTypeIds, cancerType.cancerTypeId);
-		let highlighted = this.studyListLogic.isHighlighted(cancerType);
+		let highlighted = this.getStudyListLogic().isHighlighted(cancerType);
 		let liClassName = classNames(
 			styles.cancerTypeListItem,
 			styles.selectable,
@@ -135,7 +114,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 
 	renderStudyHeaderCheckbox = (shownStudies:CancerStudy[]) =>
 	{
-		let logic = this.studyListLogic;
+		let logic = this.getStudyListLogic();
 		let selectedStudies = queryStore.selectedCancerStudyIds.map(studyId => logic.treeData.map_studyId_cancerStudy.get(studyId) as CancerStudy);
 		let shownAndSelectedStudies = _.intersection(shownStudies, selectedStudies);
 		let checked = shownAndSelectedStudies.length > 0;
@@ -157,18 +136,27 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 		);
 	}
 
-	@computed get treeData()
-	{
-		return new CancerStudyTreeData({
+	getTreeData = memoize({
+		getAdditionalArgs: () => [
+			queryStore.cancerTypes.result,
+			queryStore.cancerStudies.result
+		],
+		function: () => new CancerStudyTreeData({
 			cancerTypes: queryStore.cancerTypes.result || [],
-			studies: queryStore.cancerStudies.result || [],
-		});
-	}
+			studies: queryStore.cancerStudies.result || []
+		}),
+	});
 
-	@computed get studyListLogic()
-	{
-		return new StudyListLogic({
-			treeData: this.treeData,
+	getStudyListLogic = memoize({
+		getAdditionalArgs: () => [
+			this.getTreeData(),
+			queryStore.maxTreeDepth,
+			queryStore.searchText,
+			queryStore.selectedCancerTypeIds,
+			queryStore.selectedCancerStudyIds
+		],
+		function: () => new StudyListLogic({
+			treeData: this.getTreeData(),
 			state: {
 				maxTreeDepth: queryStore.maxTreeDepth,
 				searchText: queryStore.searchText,
@@ -176,8 +164,8 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 				selectedStudyIds: queryStore.selectedCancerStudyIds,
 			},
 			handleSelectedStudiesChange: selectedStudyIds => queryStore.selectedCancerStudyIds = selectedStudyIds,
-		});
-	}
+		}),
+	});
 
 	render()
 	{
@@ -217,7 +205,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 					</div>
 					<div className={styles.cancerStudyListContainer}>
 						<StudyList
-							logic={this.studyListLogic}
+							logic={this.getStudyListLogic()}
 						/>
 					</div>
 				</FlexRow>
