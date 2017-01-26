@@ -34,7 +34,7 @@ export class QueryStore
 
 	// experimental options
 	@observable.shallow selectedCancerTypeIds:string[] = [];
-	@observable maxTreeDepth:number = 9;
+	@observable maxTreeDepth:number = 3;
 	@observable clickAgainToDeselectSingle:boolean = true;
 
 	@action selectCancerType(cancerType:CancerType, multiSelect?:boolean)
