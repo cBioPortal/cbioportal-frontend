@@ -3,6 +3,8 @@ import RemoteData from "../../api/RemoteData";
 import client from "../../api/cbioportalClientInstance";
 import {reaction, toJS, observable, action, computed, whyRun} from "../../../../node_modules/mobx/lib/mobx";
 import {TypeOfCancer as CancerType} from "../../api/CBioPortalAPI";
+import CancerStudyTreeData from "./CancerStudyTreeData";
+import StudyListLogic from "../StudyList/StudyListLogic";
 
 // mobx observable
 export class QueryStore
@@ -36,6 +38,28 @@ export class QueryStore
 	@observable.shallow selectedCancerTypeIds:string[] = [];
 	@observable maxTreeDepth:number = 9;
 	@observable clickAgainToDeselectSingle:boolean = true;
+
+	@computed get treeData()
+	{
+		return new CancerStudyTreeData({
+			cancerTypes: this.cancerTypes.result || [],
+			studies: this.cancerStudies.result || []
+		});
+	}
+
+	@computed get studyListLogic()
+	{
+		return new StudyListLogic({
+			treeData: this.treeData,
+			state: {
+				maxTreeDepth: this.maxTreeDepth,
+				searchText: this.searchText,
+				selectedCancerTypeIds: this.selectedCancerTypeIds,
+				selectedStudyIds: this.selectedCancerStudyIds,
+			},
+			handleSelectedStudiesChange: selectedStudyIds => this.selectedCancerStudyIds = selectedStudyIds,
+		});
+	}
 
 	@action selectCancerType(cancerType:CancerType, multiSelect?:boolean)
 	{

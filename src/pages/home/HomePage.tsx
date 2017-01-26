@@ -3,6 +3,7 @@ import QueryContainerOld from "../../shared/components/query/old/QueryContainer"
 import QueryContainer from "../../shared/components/query/QueryContainer";
 import * as styles_any from './styles.module.scss';
 import {FlexCol} from "../../shared/components/flexbox/FlexBox";
+import devMode from "../../shared/lib/devMode";
 
 function getRootElement()
 {
@@ -47,7 +48,7 @@ export default class HomePage extends React.Component<IHomePageProps, IHomePageS
     {
         return (
         	<FlexCol style={{height: '100%'}}>
-				<a style={{alignSelf: 'center'}} onClick={() => this.setState({ selectorVersion: this.state.selectorVersion == 'new' ? 'old' : 'new' })}>Switch to {this.state.selectorVersion == 'new' ? 'old' : 'new'} view</a>
+				{devMode && <a style={{alignSelf: 'center'}} onClick={() => this.setState({ selectorVersion: this.state.selectorVersion == 'new' ? 'old' : 'new' })}>Switch to {this.state.selectorVersion == 'new' ? 'old' : 'new'} view</a>}
 				{this.state.selectorVersion == 'new' ? <QueryContainer/> : <QueryContainerOld/>}
 			</FlexCol>
 		);
