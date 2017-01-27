@@ -16,7 +16,7 @@ import { MutSigData, MrnaRankData } from "../PatientViewPage";
 
 export interface IMutationInformationContainerProps {
     mutations: Array<Mutation>;
-    hotspots: IHotspotData;
+    hotspots?: IHotspotData;
     mrnaExprRankData?: MrnaRankData;
     mutSigData?: MutSigData;
     sampleOrder:string[];
