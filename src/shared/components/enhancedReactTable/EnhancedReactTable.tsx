@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { createSelector } from "reselect";
 import {Table, Thead, Th, Tr, Td} from "reactable";
 import Tooltip from 'rc-tooltip';
 import * as _ from 'lodash';
@@ -99,6 +100,33 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
 
     private shouldSetState:boolean;
 
+    private rawDataSelector = (state:IEnhancedReactTableState, props:IEnhancedReactTableProps<T>) => props.rawData;
+
+    private columnsSelector = (state:IEnhancedReactTableState, props:IEnhancedReactTableProps<T>) => props.columns;
+
+    private columnVisibilitySelector = (state:IEnhancedReactTableState) => state.columnVisibility;
+
+    private visibleColsSelector = createSelector([this.columnsSelector, this.columnVisibilitySelector],
+        (columns:IColumnDefMap, columnVisibility:IColumnVisibilityState) => this.resolveVisible(columns, columnVisibility));
+
+    private sortableColsSelector = createSelector(this.visibleColsSelector,
+        (visibleCols:IColumnDefMap)=>this.resolveSortable(visibleCols));
+
+    private filterableColsSelector = createSelector(this.visibleColsSelector,
+        (visibleCols:IColumnDefMap)=>this.resolveFilterable(visibleCols));
+
+    private sortedColsSelector = createSelector(this.visibleColsSelector,
+        (visibleCols:IColumnDefMap)=>this.resolveOrder(visibleCols));
+
+    private columnVisibilityArraySelector = createSelector(this.columnVisibilitySelector,
+        (columnVisibility:IColumnVisibilityState) => this.resolveColumnVisibility(this.colNameToId, this.sortedColumns, columnVisibility));
+
+    private headersSelector = createSelector(this.sortedColsSelector,
+        (sortedCols:Array<IEnhancedReactTableColumnDef>) => this.generateHeaders(sortedCols));
+
+    private rowsSelector = createSelector([this.sortedColsSelector, this.rawDataSelector],
+        (sortedCols:Array<IEnhancedReactTableColumnDef>, rawData:Array<T>) => this.generateRows(sortedCols, rawData));
+
     constructor(props:IEnhancedReactTableProps<T>)
     {
         super(props);
@@ -153,25 +181,24 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
         } = this.props;
 
         columns = columns || {};
-        let visibleCols:IColumnDefMap = this.resolveVisible(columns, this.state.columnVisibility);
+        let visibleCols:IColumnDefMap = this.visibleColsSelector(this.state, this.props);
 
         // dynamic reactable props (depends on the columnVisibility state)
-        let sortable:Array<string|IColumnSort> = this.resolveSortable(visibleCols);
-        let filterable:Array<string|IColumnFilter> = this.resolveFilterable(visibleCols);
+        let sortable:Array<string|IColumnSort> = this.sortableColsSelector(this.state, this.props);
+        let filterable:Array<string|IColumnFilter> = this.filterableColsSelector(this.state, this.props);
 
         // sort columns
-        let sortedCols:Array<IEnhancedReactTableColumnDef> = this.resolveOrder(visibleCols);
+        let sortedCols:Array<IEnhancedReactTableColumnDef> = this.sortedColsSelector(this.state, this.props);
 
         // always use the initially sorted columns (this.sortedColumns),
         // otherwise already hidden columns will never appear in the dropdown menu!
-        let columnVisibility:Array<IColumnVisibilityDef> = this.resolveColumnVisibility(
-            this.colNameToId, this.sortedColumns, this.state.columnVisibility);
+        let columnVisibility:Array<IColumnVisibilityDef> = this.columnVisibilityArraySelector(this.state, this.props);
 
         // column headers: an array of Th components
-        const headers = this.generateHeaders(sortedCols);
+        const headers = this.headersSelector(this.state, this.props);
 
         // table rows: an array of Tr components
-        const rows = this.generateRows(sortedCols, rawData);
+        const rows = this.rowsSelector(this.state, this.props);
 
         let firstItemShownIndex:number;
         if (this.filteredDataLength === 0) {
