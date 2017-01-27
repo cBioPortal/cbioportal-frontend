@@ -22,7 +22,7 @@ import SampleManager from './sampleManager';
 import SelectCallback = ReactBootstrap.SelectCallback;
 import CancerHotspotsAPI from "../../shared/api/CancerHotspotsAPI";
 import {HotspotMutation} from "../../shared/api/CancerHotspotsAPI";
-import {MutSig, MgrnaPercentile, default as CBioPortalAPIInternal} from "../../shared/api/CBioPortalAPIInternal";
+import {MutSig, MrnaPercentile, default as CBioPortalAPIInternal} from "../../shared/api/CBioPortalAPIInternal";
 import PatientHeader from './patientHeader/PatientHeader';
 
 
