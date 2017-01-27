@@ -5,7 +5,7 @@ import {IColumnFormatterData}
 import {default as DefaultProteinChangeColumnFormatter} from
     "../../../../shared/components/mutationTable/column/ProteinChangeColumnFormatter";
 import MutationStatusColumnFormatter from "../../../../shared/components/mutationTable/column/MutationStatusColumnFormatter";
-import styles from './proteinChange.module.scss';
+import styles from './style/proteinChange.module.scss';
 import {MutationTableRowData} from "../../../../shared/components/mutationTable/IMutationTableProps";
 
 /**
