@@ -24,7 +24,7 @@ import CancerHotspotsAPI from "../../shared/api/CancerHotspotsAPI";
 import {HotspotMutation} from "../../shared/api/CancerHotspotsAPI";
 import {MutSig, MrnaPercentile, default as CBioPortalAPIInternal} from "../../shared/api/CBioPortalAPIInternal";
 import PatientHeader from './patientHeader/PatientHeader';
-
+import {TablePaginationControls} from "../../shared/components/tablePaginationControls/TablePaginationControls";
 
 export interface IPatientViewPageProps {
     store?: RootState;
@@ -78,6 +78,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     private tsInternalClient:CBioPortalAPIInternal;
 
+    private patientIdsInCohort:string[];
+
     constructor() {
 
         super();
@@ -102,6 +104,9 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         this.studyId = qs['cancer_study_id'] + '';
         this.patientId = qs['case_id'] + '';
         this.mutationGeneticProfileId = `${this.studyId}_mutations`;
+
+        const qs_hash = queryString.parse((window as any).location.hash);
+        this.patientIdsInCohort = (!!qs_hash['nav_case_ids'] ? (qs_hash['nav_case_ids'] as string).split(",") : []);
     }
 
     fetchHotspotsData(mutations:Mutation[]) {
@@ -137,12 +142,12 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         });
 
         return new Promise((resolve, reject) => {
-           Promise.all([promiseSingle, promiseClustered]).then((values) => {
-               resolve({
-                   single: values[0],
-                   clustered: values[1]
-               });
-           });
+            Promise.all([promiseSingle, promiseClustered]).then((values) => {
+                resolve({
+                    single: values[0],
+                    clustered: values[1]
+                });
+            });
         });
     }
 
@@ -296,6 +301,29 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     }
 
+    private buildURL(caseId:string='', studyId:string='', cohort:string[]=[]) {
+        let url = window.location.origin + window.location.pathname;
+        let searchElements = [];
+        if (caseId.length > 0) {
+            searchElements.push(`case_id=${caseId}`);
+        }
+        if (studyId.length > 0) {
+            searchElements.push(`cancer_study_id=${studyId}`);
+        }
+        if (searchElements.length > 0) {
+            url += '?'+searchElements.join('&');
+        }
+
+        let hashElements = [];
+        if (cohort.length > 0) {
+            hashElements.push(`nav_case_ids=${cohort.join(',')}`);
+        }
+        if (hashElements.length > 0) {
+            url += '#'+hashElements.join('&');
+        }
+        return url;
+    }
+
     private handleSelect(key: number, e:React.SyntheticEvent<any>): void {
         this.setState(({ activeTabKey : key } as IPatientViewState));
     }
@@ -304,6 +332,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         let sampleManager: SampleManager | null = null;
         let sampleHeader: (JSX.Element | undefined)[] | null = null;
+        let cohortNav: JSX.Element | null = null;
 
         if (this.props.samples) {
             sampleManager = new SampleManager(this.props.samples);
@@ -313,6 +342,40 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             });
         }
 
+        if (this.patientIdsInCohort && this.patientIdsInCohort.length > 0) {
+            const indexInCohort = this.patientIdsInCohort.indexOf(this.patientId);
+            cohortNav = (<TablePaginationControls
+                            showItemsPerPageSelector={false}
+                            showFirstPage={true}
+                            showLastPage={true}
+                            textBetweenButtons={`${indexInCohort+1} of ${this.patientIdsInCohort.length} patients`}
+                            firstPageDisabled={indexInCohort === 0}
+                            previousPageDisabled={indexInCohort === 0}
+                            nextPageDisabled={indexInCohort === this.patientIdsInCohort.length-1}
+                            lastPageDisabled={indexInCohort === this.patientIdsInCohort.length-1}
+                            onFirstPageClick={() =>
+                                window.location.href = this.buildURL(
+                                    this.patientIdsInCohort[0],
+                                    this.studyId,
+                                    this.patientIdsInCohort)}
+                            onPreviousPageClick={() =>
+                                window.location.href = this.buildURL(
+                                    this.patientIdsInCohort[indexInCohort-1],
+                                    this.studyId,
+                                    this.patientIdsInCohort)}
+                            onNextPageClick={() =>
+                                window.location.href = this.buildURL(
+                                    this.patientIdsInCohort[indexInCohort+1],
+                                    this.studyId,
+                                    this.patientIdsInCohort)}
+                            onLastPageClick={() =>
+                                window.location.href = this.buildURL(
+                                    this.patientIdsInCohort[this.patientIdsInCohort.length-1],
+                                    this.studyId,
+                                    this.patientIdsInCohort)}
+                            />);
+        }
+
         return (
             <div>
 
@@ -320,6 +383,12 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     <div style={{padding:20, borderRadius:5, background: '#eee', marginBottom: 20}}>
                         <PatientHeader patient={this.props.patient} />
                         {sampleHeader}
+                    </div>
+                </If>
+
+                <If condition={cohortNav}>
+                    <div style={{marginBottom:20}}>
+                        {cohortNav}
                     </div>
                 </If>
 
