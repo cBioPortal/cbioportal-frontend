@@ -7,16 +7,18 @@ import TumorColumnFormatter from "./column/TumorColumnFormatter";
 import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
 import MrnaExprColumnFormatter from "./column/MrnaExprColumnFormatter";
 import AlleleCountColumnFormatter from "./column/AlleleCountColumnFormatter";
+import CohortColumnFormatter from "./column/CohortColumnFormatter";
 import { Mutation } from "../../../shared/api/CBioPortalAPI";
 import SampleManager from "../sampleManager";
-import { MrnaRankData } from "../PatientViewPage";
 import AnnotationColumnFormatter from "./column/AnnotationColumnFormatter";
 import {IHotspotData} from "./column/AnnotationColumnFormatter";
+import { MutSigData, MrnaRankData } from "../PatientViewPage";
 
 export interface IMutationInformationContainerProps {
     mutations: Array<Mutation>;
     hotspots: IHotspotData;
     mrnaExprRankData?: MrnaRankData;
+    mutSigData?: MutSigData;
     sampleOrder:string[];
     sampleColors:{ [s:string]: string};
     sampleLabels:{ [s:string]: string};
@@ -117,7 +119,11 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 name: "Cohort",
                 description: "Mutation frequency in cohort",
                 priority: 18.30,
-                sortable: true
+                formatter: CohortColumnFormatter.renderFunction,
+                sortable: true,
+                columnProps: {
+                    data: this.props.mutSigData
+                }
             },
             cosmic: {
                 name: "COSMIC",

@@ -22,7 +22,7 @@ import SampleManager from './sampleManager';
 import SelectCallback = ReactBootstrap.SelectCallback;
 import CancerHotspotsAPI from "../../shared/api/CancerHotspotsAPI";
 import {HotspotMutation} from "../../shared/api/CancerHotspotsAPI";
-import {MrnaPercentile, default as CBioPortalAPIInternal} from "../../shared/api/CBioPortalAPIInternal";
+import {MutSig, MgrnaPercentile, default as CBioPortalAPIInternal} from "../../shared/api/CBioPortalAPIInternal";
 import PatientHeader from './patientHeader/PatientHeader';
 
 
@@ -38,12 +38,14 @@ export interface IPatientViewPageProps {
 }
 
 export type MrnaRankData = { [sampleId:string]: { [entrezGeneId:string]: {percentile:number, zScore:number}}};
+export type MutSigData = { [entrezGeneId:string]:{ qValue:number } }
 
 interface IPatientViewState {
 
     cnaSegmentData: any;
     mutationData: any;
     mrnaExprRankData?: MrnaRankData;
+    mutSigData?: MutSigData;
     activeTabKey: number;
     hotspotsData: any;
 
@@ -220,6 +222,10 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         });
     }
 
+    fetchMutSigData():Promise<MutSig[]> {
+        return this.tsInternalClient.getSignificantlyMutatedGenesUsingGET({studyId: this.studyId});
+    }
+
     public componentDidMount() {
 
         // const PatientHeader = connect(PatientViewPage.mapStateToProps)(PatientHeaderUnconnected);
@@ -263,6 +269,13 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     fetchMrnaExprRankPromise.catch(()=>{});
                 });
 
+                this.fetchMutSigData().then((_result) => {
+                    const data = _result.reduce((map:MutSigData, next:MutSig) => {
+                        map[next.entrezGeneId] = { qValue: next.qValue };
+                        return map;
+                    }, {});
+                    this.setState(({ mutSigData: data } as IPatientViewState));
+                });
             }
 
         });
@@ -337,6 +350,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                     mutations={this.state.mutationData}
                                     hotspots={this.state.hotspotsData}
                                     mrnaExprRankData={this.state.mrnaExprRankData}
+                                    mutSigData={this.state.mutSigData}
                                     sampleOrder={sampleManager.sampleOrder}
                                     sampleLabels={sampleManager.sampleLabels}
                                     sampleColors={sampleManager.sampleColors}
