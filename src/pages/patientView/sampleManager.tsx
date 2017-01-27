@@ -69,6 +69,15 @@ class SampleManager {
 
     }
 
+    getColorForSample(sampleId: string):string {
+        // TODO
+        return "black";
+    }
+
+    getSampleIdsInOrder():string[] {
+        return this.samples.map((sample:ClinicalDataBySampleId) => sample.id);
+    }
+
     getComponentsForSamples() {
         this.samples.map((sample)=>this.getComponentForSample(sample.id));
     }
