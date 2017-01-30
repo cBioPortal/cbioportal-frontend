@@ -21,9 +21,14 @@ import SampleManager from './sampleManager';
 import SelectCallback = ReactBootstrap.SelectCallback;
 import CancerHotspotsAPI from "../../shared/api/CancerHotspotsAPI";
 import {HotspotMutation} from "../../shared/api/CancerHotspotsAPI";
-import {MutSig, MrnaPercentile, default as CBioPortalAPIInternal} from "../../shared/api/CBioPortalAPIInternal";
+import {
+    MutSig, MrnaPercentile, default as CBioPortalAPIInternal,
+    VariantCountIdentifier, VariantCount
+} from "../../shared/api/CBioPortalAPIInternal";
 import PatientHeader from './patientHeader/PatientHeader';
 import {TablePaginationControls} from "../../shared/components/tablePaginationControls/TablePaginationControls";
+import {IVariantCountData} from "./mutation/column/CohortColumnFormatter";
+
 import {IHotspotData, IMyCancerGenomeData, IMyCancerGenome} from "./mutation/column/AnnotationColumnFormatter";
 import {getSpans} from './clinicalInformation/lib/clinicalAttributesUtil.js';
 
@@ -50,6 +55,7 @@ interface IPatientViewState {
     hotspotsData?: IHotspotData;
     mrnaExprRankData?: MrnaRankData;
     mutSigData?: MutSigData;
+    variantCountData?: IVariantCountData;
     activeTabKey: number;
 }
 
@@ -91,6 +97,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             cnaSegmentData: undefined,
             hotspotsData: undefined,
             mrnaExprRankData: undefined,
+            variantCountData: undefined,
             activeTabKey:1
         };
 
@@ -270,6 +277,65 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         return this.tsInternalClient.getSignificantlyMutatedGenesUsingGET({studyId: this.studyId});
     }
 
+    fetchVariantCountData(mutations:Mutation[]):Promise<IVariantCountData> {
+        return new Promise((resolve, reject) => {
+            const variantCountIdentifiers:VariantCountIdentifier[] = [];
+            const toQuery:{ [entrezGeneId:string]:{ [keyword:string]:boolean}} = {};
+            for (const mutation of mutations) {
+                let entrezGeneId = mutation.entrezGeneId;
+                let keyword = mutation.keyword;
+                toQuery[entrezGeneId] = toQuery[entrezGeneId] || {};
+                if (keyword) {
+                    toQuery[entrezGeneId][keyword] = true;
+                }
+            }
+            for (const entrezGeneId in toQuery) {
+                if (toQuery.hasOwnProperty(entrezGeneId)) {
+                    const entrezGeneIdInt = parseInt(entrezGeneId, 10);
+                    let keywords = Object.keys(toQuery[entrezGeneId]);
+                    if (keywords.length === 0) {
+                        variantCountIdentifiers.push({
+                            entrezGeneId: entrezGeneIdInt
+                        } as VariantCountIdentifier);
+                    } else {
+                        for (const keyword of keywords) {
+                            variantCountIdentifiers.push({
+                                entrezGeneId: entrezGeneIdInt,
+                                keyword: keyword
+                            });
+                        }
+                    }
+                }
+            }
+            const fetchPromise = this.tsInternalClient.getVariantCountsUsingPOST({
+                geneticProfileId: this.mutationGeneticProfileId,
+                variantCountIdentifiers
+            });
+            fetchPromise.then((variantCounts:VariantCount[]) => {
+                const ret:IVariantCountData = {};
+                if (variantCounts.length > 0) {
+                    ret.numberOfSamples = variantCounts[0].numberOfSamples;
+                    ret.geneData = {};
+                    for (const variantCount of variantCounts) {
+                        let entrezGeneId = variantCount.entrezGeneId;
+                        ret.geneData[entrezGeneId] = { numberOfSamplesWithKeyword: {} };
+                    }
+                    for (const variantCount of variantCounts) {
+                        let geneData = ret.geneData[variantCount.entrezGeneId];
+                        geneData.numberOfSamplesWithMutationInGene = variantCount.numberOfSamplesWithMutationInGene;
+                        if (typeof variantCount.keyword !== "undefined") {
+                            (geneData.numberOfSamplesWithKeyword as {[keyword:string]:number})
+                                [variantCount.keyword] = variantCount.numberOfSamplesWithKeyword;
+                        }
+                    }
+                }
+                resolve(ret);
+            });
+            fetchPromise.catch(() => reject());
+        });
+    }
+
+
     public componentDidMount() {
 
         // const PatientHeader = connect(PatientViewPage.mapStateToProps)(PatientHeaderUnconnected);
@@ -301,6 +367,9 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 this.fetchMutationData(sampleIds).then((_result) => {
                     this.fetchHotspotsData(_result).then((hotspotsData:IHotspotData) => {
                         this.setState(({ hotspotsData } as IPatientViewState));
+                    });
+                    this.fetchVariantCountData(_result).then((variantCountData:IVariantCountData) => {
+                        this.setState(({ variantCountData } as IPatientViewState));
                     });
                     this.setState(({ mutationData : _result } as IPatientViewState));
 
@@ -472,6 +541,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                     hotspots={this.state.hotspotsData}
                                     mrnaExprRankData={this.state.mrnaExprRankData}
                                     mutSigData={this.state.mutSigData}
+                                    variantCountData={this.state.variantCountData}
                                     sampleOrder={sampleManager.sampleOrder}
                                     sampleLabels={sampleManager.sampleLabels}
                                     sampleColors={sampleManager.sampleColors}
