@@ -11,10 +11,9 @@ export default class CohortColumnFormatter {
 
     public static renderFunction(data:IColumnFormatterData<MutationTableRowData>, columnProps:any) {
         const qValue:number = CohortColumnFormatter.getQValue(data, columnProps.data);
-        const qValueThreshold:number = 0.1; // TODO: what to use here?
         return (
             <Td key={data.name} column={data.name}>
-                <If condition={(qValue !== null) && (qValue <= qValueThreshold)}>
+                <If condition={qValue !== null}>
                     {CohortColumnFormatter.makeMutSigIcon(qValue)};
                 </If>
             </Td>
