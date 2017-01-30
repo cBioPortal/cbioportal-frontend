@@ -7,7 +7,7 @@ import TumorColumnFormatter from "./column/TumorColumnFormatter";
 import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
 import MrnaExprColumnFormatter from "./column/MrnaExprColumnFormatter";
 import AlleleCountColumnFormatter from "./column/AlleleCountColumnFormatter";
-import CohortColumnFormatter from "./column/CohortColumnFormatter";
+import {IVariantCountData, default as CohortColumnFormatter} from "./column/CohortColumnFormatter";
 import { Mutation } from "../../../shared/api/CBioPortalAPI";
 import SampleManager from "../sampleManager";
 import {
@@ -21,6 +21,7 @@ export interface IMutationInformationContainerProps {
     hotspots?: IHotspotData;
     mrnaExprRankData?: MrnaRankData;
     mutSigData?: MutSigData;
+    variantCountData?: IVariantCountData;
     sampleOrder:string[];
     sampleColors:{ [s:string]: string};
     sampleLabels:{ [s:string]: string};
@@ -125,7 +126,8 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 formatter: CohortColumnFormatter.renderFunction,
                 sortable: true,
                 columnProps: {
-                    data: this.props.mutSigData
+                    mutSigData: this.props.mutSigData,
+                    variantCountData: this.props.variantCountData
                 }
             },
             cosmic: {
