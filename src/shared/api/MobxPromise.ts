@@ -1,8 +1,13 @@
 import * as seamlessImmutable from 'seamless-immutable';
 import {computed, observable} from "../../../node_modules/mobx/lib/mobx";
 
-type MobxPromiseInputParams<R> = {await: MobxPromise<any>[], invoke: () => (Promise<R> | R)};
-type MobxPromiseInput<R> = Promise<R> | (() => Promise<R>) | MobxPromiseInputParams<R>;
+type MobxPromiseInputParams<R> = {await: MobxPromise<any>[], invoke: () => (PromiseLike<R> | R)};
+type MobxPromiseInput<R> = PromiseLike<R> | (() => PromiseLike<R>) | MobxPromiseInputParams<R>;
+
+function isPromiseLike(value?:Partial<PromiseLike<any>>)
+{
+    return !!value && typeof value.then === 'function';
+}
 
 export default class MobxPromise<R>
 {
@@ -13,13 +18,14 @@ export default class MobxPromise<R>
             this.await = [];
             this.invoke = input;
         }
-        else if (input instanceof Promise)
+        else if (isPromiseLike(input))
         {
             this.await = [];
-            this.invoke = () => input;
+            this.invoke = () => input as PromiseLike<R>;
         }
         else
         {
+            input = input as MobxPromiseInputParams<R>;
             this.await = input.await;
             this.invoke = input.invoke;
         }
@@ -28,12 +34,14 @@ export default class MobxPromise<R>
 
         // if not awaiting, invoke now to make sure observable property accesses are tracked
         if (!this.await.length)
-            this.lazyInvoke();
+            this.lazyInvoke;
     }
 
     private immutable:boolean;
     private await:MobxPromise<any>[];
-    private invoke?:() => (Promise<R> | R);
+    private invoke:() => (PromiseLike<R> | R);
+    private invokeId:number = 0;
+
     @observable private internalStatus:'pending'|'complete'|'error' = 'pending';
     @observable.ref private internalResult?:R = undefined;
     @observable.ref private internalError?:Error = undefined;
@@ -44,7 +52,7 @@ export default class MobxPromise<R>
             if (!mobxPromise.isComplete)
                 return mobxPromise.status;
 
-        this.lazyInvoke();
+        this.lazyInvoke;
         return this.internalStatus;
     }
 
@@ -54,7 +62,7 @@ export default class MobxPromise<R>
 
     @computed get result():R|undefined
     {
-        this.lazyInvoke();
+        this.lazyInvoke;
         return this.internalResult;
     }
 
@@ -64,35 +72,43 @@ export default class MobxPromise<R>
             if (mobxPromise.isError)
                 return mobxPromise.error;
 
-        this.lazyInvoke();
+        this.lazyInvoke;
         return this.internalError;
     }
 
-    private lazyInvoke()
+    /**
+     * This lets mobx determine when to call this.invoke(),
+     * taking advantage of caching based on observable property accesses tracking.
+     */
+    @computed get lazyInvoke()
     {
-        if (!this.invoke)
-            return;
-
         let result = this.invoke();
-        this.invoke = undefined;
 
-        let promise;
-        if (result instanceof Promise)
-            promise = result;
+        let invokeId = ++this.invokeId;
+        let promise:PromiseLike<R>;
+        if (isPromiseLike(result))
+            promise = result as PromiseLike<R>;
         else
             promise = Promise.resolve(result);
         promise.then(
             result => {
-                if (this.immutable)
-                    this.internalResult = seamlessImmutable.from(result);
-                else
-                    this.internalResult = result;
-                this.internalStatus = 'complete';
+                if (invokeId === this.invokeId)
+                {
+                    if (this.immutable)
+                        this.internalResult = seamlessImmutable.from(result);
+                    else
+                        this.internalResult = result;
+                    this.internalStatus = 'complete';
+                }
             },
             error => {
-                this.internalError = error;
-                this.internalStatus = 'error';
+                if (invokeId === this.invokeId)
+                {
+                    this.internalError = error;
+                    this.internalStatus = 'error';
+                }
             }
         );
+        return invokeId;
     }
 }
