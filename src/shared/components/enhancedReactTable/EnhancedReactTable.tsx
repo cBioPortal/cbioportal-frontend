@@ -208,6 +208,9 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
         }
         const lastItemShownIndex:number = (this.state.itemsPerPage === -1 ? this.filteredDataLength : Math.min(this.filteredDataLength, firstItemShownIndex + this.state.itemsPerPage - 1));
 
+
+
+
         return(
             <div>
                 <TableHeaderControls

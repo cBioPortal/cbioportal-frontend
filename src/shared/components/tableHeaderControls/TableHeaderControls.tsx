@@ -1,7 +1,7 @@
 import * as React  from 'react';
 import Tooltip from 'rc-tooltip';
 import {Button, ButtonGroup, ButtonToolbar, Form, FormGroup, MenuItem} from 'react-bootstrap';
-import ReactZeroClipboard from 'react-zeroclipboard';
+var ClipboardButton = require('react-clipboard.js');
 import fileDownload from 'react-file-download';
 import * as _ from 'lodash';
 import {TablePaginationControls, ITablePaginationControlsProps} from "../tablePaginationControls/TablePaginationControls";
@@ -57,6 +57,7 @@ export default class TableExportButtons extends React.Component<ITableExportButt
         super();
 
         this.handleInput = this.handleInput.bind(this);
+        this.getText = this.getText.bind(this);
 
     }
 
@@ -95,15 +96,15 @@ export default class TableExportButtons extends React.Component<ITableExportButt
                         <ColumnVisibilityControls {...this.props.columnVisibilityProps}/>
                     </If>
 
-                    <If condition={ this.props.showCopyAndDownload}>
+                    <If condition={this.props.showCopyAndDownload}>
                         <ButtonGroup className={this.props.copyDownloadClassName} style={{ marginLeft:10 }}>
-                            <ReactZeroClipboard swfPath={require('react-zeroclipboard/assets/ZeroClipboard.swf')} getText={this.getText}>
+
                                 <Tooltip overlay="Copy" placement="top" arrowContent={arrowContent}>
-                                    <Button className="btn-sm">
-                                        <i className='fa fa-clipboard'/>
-                                    </Button>
+                                    <ClipboardButton className="btn btn-sm btn-default" option-text={ this.getText }>
+                                            <i className='fa fa-clipboard'/>
+                                    </ClipboardButton>
                                 </Tooltip>
-                            </ReactZeroClipboard>
+
 
                             <Tooltip overlay="Download CSV" placement="top" arrowContent={arrowContent}>
                                 <Button className="btn-sm" onClick={this.downloadData}>
@@ -126,9 +127,9 @@ export default class TableExportButtons extends React.Component<ITableExportButt
         );
     }
 
-    private getText = () => {
+    public getText() {
         return serializeTableData(this.props.tableData || []);
-    };
+    }
 
     private downloadData = () => {
         fileDownload(serializeTableData(this.props.tableData || []), 'patient-clinical-attributes.csv');
