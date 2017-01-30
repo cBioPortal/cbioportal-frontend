@@ -9,9 +9,7 @@ import Radio = ReactBootstrap.Radio;
 import Checkbox = ReactBootstrap.Checkbox;
 import {Select, StateToggle} from "../ExperimentalControls";
 import * as styles_any from './styles.module.scss';
-import firstDefinedValue from "../../lib/firstDefinedValue";
 import GeneticProfileSelector from "./GeneticProfileSelector";
-import {IGeneticProfileSelectorState} from "./GeneticProfileSelector";
 import {observer} from "../../../../node_modules/mobx-react/custom";
 import queryStore from "./QueryStore";
 import DevTools from "../../../../node_modules/mobx-react-devtools/index";
@@ -22,22 +20,9 @@ const styles = styles_any as {
 	CancerStudySelector: string,
 };
 
-export interface IQueryContainerProps
-{
-}
-
-export type IQueryContainerState = {
-} & IGeneticProfileSelectorState;
-
 @observer
-export default class QueryContainer extends React.Component<IQueryContainerProps, IQueryContainerState>
+export default class QueryContainer extends React.Component<{}, {}>
 {
-    constructor(props:IQueryContainerProps)
-    {
-        super(props);
-        this.state = {};
-    }
-
     render():JSX.Element
     {
         if (queryStore.cancerTypes.isPending || queryStore.cancerStudies.isPending)
@@ -51,10 +36,7 @@ export default class QueryContainer extends React.Component<IQueryContainerProps
                 <CancerStudySelector/>
 
 				{!!(devMode && queryStore.geneticProfiles.result) && (
-					<GeneticProfileSelector
-						profiles={queryStore.geneticProfiles.result}
-						selectedProfileIds={this.state.selectedProfileIds}
-					/>
+					<GeneticProfileSelector/>
 				)}
 
 				{!!(devMode) && (

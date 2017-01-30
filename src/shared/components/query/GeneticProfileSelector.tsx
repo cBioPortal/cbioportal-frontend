@@ -2,9 +2,11 @@ import * as _ from 'lodash';
 import * as React from 'react';
 import {GeneticProfile} from "../../api/CBioPortalAPI";
 import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
-import firstDefinedValue from "../../lib/firstDefinedValue";
 import FontAwesome from "react-fontawesome";
 import * as styles_any from './styles.module.scss';
+import queryStore from "./QueryStore";
+import {toJS, computed} from "../../../../node_modules/mobx/lib/mobx";
+import {observer} from "../../../../node_modules/mobx-react/custom";
 
 const styles = styles_any as {
 	GeneticProfileSelector: string,
@@ -25,72 +27,27 @@ export const geneticAlterationTypeGroupLabels:{[K in GeneticProfile['geneticAlte
 	"MRNA_EXPRESSION": "mRNA Expression data",
 };
 
-export type IGeneticProfileSelectorProps = {
-	profiles: GeneticProfile[];
-	onStateChange?: (newState:IGeneticProfileSelectorState) => void;
-} & IGeneticProfileSelectorState;
-
-export interface IGeneticProfileSelectorState
+@observer
+export default class GeneticProfileSelector extends React.Component<{}, {}>
 {
-	selectedProfileIds?: string[];
-	zScoreThreshold?: string;
-}
-
-export default class GeneticProfileSelector extends React.Component<IGeneticProfileSelectorProps, IGeneticProfileSelectorState>
-{
-	static defaultProps:IGeneticProfileSelectorProps = {
-		profiles: [],
-	};
-
-	constructor(props: IGeneticProfileSelectorProps)
+	@computed get profiles()
 	{
-		super(props);
-		this.state = {zScoreThreshold: '2.0'};
+		return queryStore.geneticProfiles.result || [];
 	}
 
-	get selectedProfileIds()
+	@computed get selectedProfileIds()
 	{
-		return firstDefinedValue(this.props.selectedProfileIds, this.state.selectedProfileIds || []);
-	}
+		if (queryStore.selectedProfileIds.length)
+			return queryStore.selectedProfileIds;
 
-	get zScoreThreshold()
-	{
-		return firstDefinedValue(this.props.zScoreThreshold, this.state.zScoreThreshold);
-	}
-
-	updateState(newState:IGeneticProfileSelectorState)
-	{
-		this.setState(newState, () => {
-			if (this.props.onStateChange)
-				this.props.onStateChange(this.state)
-		});
-	}
-
-	componentDidMount()
-	{
-		this.validateState();
-	}
-
-	componentDidUpdate()
-	{
-		this.validateState();
-	}
-
-	validateState()
-	{
-		if (this.props.selectedProfileIds)
-			return;
-
-		let selectedProfileIds = this.props.profiles
+		return this.profiles
 			.filter(profile => _.includes(defaultSelectedAlterationTypes, profile.geneticAlterationType))
 			.map(profile => profile.geneticProfileId);
-
-		//this.updateState({selectedProfileIds});
 	}
 
 	render()
 	{
-		let profiles = this.props.profiles.filter(profile => profile.showProfileInAnalysisTab);
+		let profiles = this.profiles.filter(profile => profile.showProfileInAnalysisTab);
 		let groupedProfiles = _.groupBy(profiles, profile => profile.geneticAlterationType);
 
 		// puts default alteration types first
@@ -136,13 +93,13 @@ export default class GeneticProfileSelector extends React.Component<IGeneticProf
 					key={output.length}
 					checked={checked}
 					inputProps={{
-						onChange: event => this.updateState({
-							selectedProfileIds: (
+						onChange: event => {
+							queryStore.selectedProfileIds = (
 								(event.target as HTMLInputElement).checked
 								?   _.union(this.selectedProfileIds, [ids[0]])
 								:   _.difference(this.selectedProfileIds, ids)
-							)
-						})
+							);
+						}
 					}}
 				>
 					{label}
@@ -167,14 +124,12 @@ export default class GeneticProfileSelector extends React.Component<IGeneticProf
 									style={{userSelect: 'text'}}
 									onChange={event => {
 										if ((event.target as HTMLInputElement).checked)
-											this.updateState({
-												selectedProfileIds: (
-													_.union(
-														_.difference(this.selectedProfileIds, ids),
-														[profile.geneticProfileId]
-													)
+											queryStore.selectedProfileIds = (
+												_.union(
+													_.difference(this.selectedProfileIds, ids),
+													[profile.geneticProfileId]
 												)
-											})
+											);
 									}}
 								/>
 								<span className={styles.profileName}>{profile.name}</span>
@@ -193,10 +148,9 @@ export default class GeneticProfileSelector extends React.Component<IGeneticProf
 					Enter a z-score threshold ±:
 					<input
 						type="text"
-						value={this.zScoreThreshold}
+						value={queryStore.zScoreThreshold}
 						onChange={event => {
-							let zScoreThreshold = (event.target as HTMLInputElement).value;
-							this.updateState({zScoreThreshold});
+							queryStore.zScoreThreshold = (event.target as HTMLInputElement).value;
 						}}
 					/>
 				</div>

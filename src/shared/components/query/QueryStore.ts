@@ -1,5 +1,4 @@
 import * as _ from 'lodash';
-import RemoteData from "../../api/RemoteData";
 import client from "../../api/cbioportalClientInstance";
 import {toJS, observable, action, computed, whyRun} from "../../../../node_modules/mobx/lib/mobx";
 import {TypeOfCancer as CancerType} from "../../api/CBioPortalAPI";
@@ -26,6 +25,8 @@ export class QueryStore
 	@observable searchText:string = '';
 	@observable.shallow searchTextPresets = ['lung', 'serous', 'tcga', 'tcga -provisional'];
 	@observable.shallow selectedCancerStudyIds:string[] = [];
+	@observable.shallow selectedProfileIds:string[] = [];
+	@observable zScoreThreshold:string = '2.0';
 
 	// experimental options
 	@observable.shallow selectedCancerTypeIds:string[] = [];
