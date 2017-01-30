@@ -25,6 +25,8 @@ import {HotspotMutation} from "../../shared/api/CancerHotspotsAPI";
 import {MutSig, MrnaPercentile, default as CBioPortalAPIInternal} from "../../shared/api/CBioPortalAPIInternal";
 import PatientHeader from './patientHeader/PatientHeader';
 import {TablePaginationControls} from "../../shared/components/tablePaginationControls/TablePaginationControls";
+import {IHotspotData} from "./mutation/column/AnnotationColumnFormatter";
+
 
 export interface IPatientViewPageProps {
     store?: RootState;
@@ -44,11 +46,10 @@ interface IPatientViewState {
 
     cnaSegmentData: any;
     mutationData: any;
+    hotspotsData?: IHotspotData;
     mrnaExprRankData?: MrnaRankData;
     mutSigData?: MutSigData;
     activeTabKey: number;
-    hotspotsData: any;
-
 }
 
 @Connector.decorator
@@ -109,7 +110,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         this.patientIdsInCohort = (!!qs_hash['nav_case_ids'] ? (qs_hash['nav_case_ids'] as string).split(",") : []);
     }
 
-    fetchHotspotsData(mutations:Mutation[]) {
+    fetchHotspotsData(mutations:Mutation[]):Promise<IHotspotData> {
         const generateMap = function(hotspots:HotspotMutation[]) {
             // key => geneSymbol_proteinPosition
             // protienPosition => start[_end]
@@ -125,8 +126,21 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             return map;
         };
 
+        // do not retreive all available hotspots from the service,
+        // only retrieve hotspots for the current genes on the page
+        const queryGenes:string[] = _.uniq(_.map(mutations, function(mutation:Mutation) {
+            if (mutation && mutation.gene) {
+                return mutation.gene.hugoGeneSymbol;
+            }
+            else {
+                return "";
+            }
+        }));
+
         const promiseSingle = new Promise((resolve, reject) => {
-            const promise = this.hotspotsClient.getAllHotspotMutations({});
+            const promise = this.hotspotsClient.fetchSingleResidueHotspotMutationsByGenePOST({
+                hugoSymbols: queryGenes
+            });
 
             promise.then((data) => {
                 resolve(generateMap(data));
@@ -134,7 +148,9 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         });
 
         const promiseClustered = new Promise((resolve, reject) => {
-            const promise = this.hotspots3dClient.getAll3dHotspotMutations({});
+            const promise = this.hotspots3dClient.fetch3dHotspotMutationsByGenePOST({
+                hugoSymbols: queryGenes
+            });
 
             promise.then((data) => {
                 resolve(generateMap(data));
@@ -256,7 +272,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 });
 
                 this.fetchMutationData(sampleIds).then((_result) => {
-                    this.fetchHotspotsData(_result).then((hotspotsData) => {
+                    this.fetchHotspotsData(_result).then((hotspotsData:IHotspotData) => {
                         this.setState(({ hotspotsData } as IPatientViewState));
                     });
                     this.setState(({ mutationData : _result } as IPatientViewState));
