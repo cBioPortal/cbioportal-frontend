@@ -2,11 +2,9 @@ import * as request from "superagent";
 
 type CallbackHandler = (err: any, res ? : request.Response) => void;
 export type HotspotMutation = any;
-export type SingleResidueHotspotMutation = any;
 export type IntegerRange = any;
 export type TumorTypeComposition = any;
 export type Cluster = any;
-export type ClusteredHotspotMutation = any;
 
 /**
  * Cancer Hotspots API
@@ -62,7 +60,7 @@ export default class CancerHotspotsAPI {
         });
     }
 
-    postClustersURL(parameters: {
+    fetchClustersPOSTURL(parameters: {
         'clusterIds' ? : Array < string > | string
 
         ,
@@ -72,9 +70,6 @@ export default class CancerHotspotsAPI {
     }): string {
         let queryParameters: any = {};
         let path = '/api/clusters';
-        if (parameters['clusterIds'] !== undefined) {
-            queryParameters['clusterIds'] = parameters['clusterIds'];
-        }
 
         if (parameters['hugoSymbol'] !== undefined) {
             queryParameters['hugoSymbol'] = parameters['hugoSymbol'];
@@ -97,12 +92,12 @@ export default class CancerHotspotsAPI {
     /**
      * get clusters
      * @method
-     * @name CancerHotspotsAPI#postClusters
-     * @param {array} clusterIds - Comma separated list of cluster ids, for example 1,2,3
+     * @name CancerHotspotsAPI#fetchClustersPOST
+     * @param {} clusterIds - List of cluster ids, for example [1,2,3]
      * @param {string} hugoSymbol - Hugo gene symbol, for example BRAF
      * @param {string} residue - Residue, for example F595
      */
-    postClusters(parameters: {
+    fetchClustersPOST(parameters: {
             'clusterIds' ? : Array < string > | string
 
             ,
@@ -125,7 +120,7 @@ export default class CancerHotspotsAPI {
                 headers['Content-Type'] = 'application/json';
 
                 if (parameters['clusterIds'] !== undefined) {
-                    queryParameters['clusterIds'] = parameters['clusterIds'];
+                    body = parameters['clusterIds'];
                 }
 
                 if (parameters['hugoSymbol'] !== undefined) {
@@ -150,8 +145,8 @@ export default class CancerHotspotsAPI {
             });
         };
 
-    getClustersByClusterIdURL(parameters: {
-        'clusterIds' ? : Array < string > | string
+    fetchClustersByClusterIdGETURL(parameters: {
+        'clusterIds': Array < string > | string
 
         ,
         $queryParameters ? : any
@@ -174,15 +169,15 @@ export default class CancerHotspotsAPI {
     /**
      * get clusters by cluster id
      * @method
-     * @name CancerHotspotsAPI#getClustersByClusterId
+     * @name CancerHotspotsAPI#fetchClustersByClusterIdGET
      * @param {array} clusterIds - Comma separated list of cluster ids, for example 1,2,3
      */
-    getClustersByClusterId(parameters: {
-            'clusterIds' ? : Array < string > | string
+    fetchClustersByClusterIdGET(parameters: {
+            'clusterIds': Array < string > | string
 
             ,
             $queryParameters ? : any,
-                $domain ? : string
+            $domain ? : string
         }): Promise < Array < Cluster >
         > {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
@@ -199,6 +194,11 @@ export default class CancerHotspotsAPI {
 
                 path = path.replace('{clusterIds}', parameters['clusterIds'] + '');
 
+                if (parameters['clusterIds'] === undefined) {
+                    reject(new Error('Missing required  parameter: clusterIds'));
+                    return;
+                }
+
                 if (parameters.$queryParameters) {
                     Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                         var parameter = parameters.$queryParameters[parameterName];
@@ -213,7 +213,7 @@ export default class CancerHotspotsAPI {
             });
         };
 
-    getClustersByHugoSymbolURL(parameters: {
+    fetchClustersByHugoSymbolGETURL(parameters: {
         'hugoSymbol': string,
         $queryParameters ? : any
     }): string {
@@ -235,10 +235,10 @@ export default class CancerHotspotsAPI {
     /**
      * get clusters by hugo symbol
      * @method
-     * @name CancerHotspotsAPI#getClustersByHugoSymbol
+     * @name CancerHotspotsAPI#fetchClustersByHugoSymbolGET
      * @param {string} hugoSymbol - Hugo gene symbol, for example BRAF
      */
-    getClustersByHugoSymbol(parameters: {
+    fetchClustersByHugoSymbolGET(parameters: {
             'hugoSymbol': string,
             $queryParameters ? : any,
             $domain ? : string
@@ -277,7 +277,7 @@ export default class CancerHotspotsAPI {
             });
         };
 
-    getClustersByHugoSymbolAndResidueURL(parameters: {
+    fetchClustersByHugoSymbolAndResidueGETURL(parameters: {
         'hugoSymbol': string,
         'residue': string,
         $queryParameters ? : any
@@ -302,11 +302,11 @@ export default class CancerHotspotsAPI {
     /**
      * get clusters by hugo symbol and residue
      * @method
-     * @name CancerHotspotsAPI#getClustersByHugoSymbolAndResidue
+     * @name CancerHotspotsAPI#fetchClustersByHugoSymbolAndResidueGET
      * @param {string} hugoSymbol - Hugo gene symbol, for example BRAF
      * @param {string} residue - Residue, for example F595
      */
-    getClustersByHugoSymbolAndResidue(parameters: {
+    fetchClustersByHugoSymbolAndResidueGET(parameters: {
             'hugoSymbol': string,
             'residue': string,
             $queryParameters ? : any,
@@ -353,7 +353,7 @@ export default class CancerHotspotsAPI {
             });
         };
 
-    getAll3dHotspotMutationsURL(parameters: {
+    fetch3dHotspotMutationsPOSTURL(parameters: {
         'hugoSymbols' ? : Array < string > | string
 
         ,
@@ -376,18 +376,18 @@ export default class CancerHotspotsAPI {
     };
 
     /**
-     * get 3D hotspot mutations
+     * get all 3D hotspot mutations
      * @method
-     * @name CancerHotspotsAPI#getAll3dHotspotMutations
+     * @name CancerHotspotsAPI#fetch3dHotspotMutationsPOST
      * @param {array} hugoSymbols - Comma separated list of hugo symbols. For example PTEN,BRAF,TP53
      */
-    getAll3dHotspotMutations(parameters: {
+    fetch3dHotspotMutationsPOST(parameters: {
             'hugoSymbols' ? : Array < string > | string
 
             ,
             $queryParameters ? : any,
                 $domain ? : string
-        }): Promise < Array < ClusteredHotspotMutation >
+        }): Promise < Array < HotspotMutation >
         > {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
@@ -419,7 +419,143 @@ export default class CancerHotspotsAPI {
             });
         };
 
-    get3dHotspotMutationsByGeneURL(parameters: {
+    fetch3dHotspotMutationsByGenePOSTURL(parameters: {
+        'hugoSymbols': Array < string > | string
+
+        ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/api/hotspots/3d/byGene';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * get all hotspot mutations for the specified genes
+     * @method
+     * @name CancerHotspotsAPI#fetch3dHotspotMutationsByGenePOST
+     * @param {} hugoSymbols - List of hugo symbols. For example ["PTEN","BRAF","TP53"]
+     */
+    fetch3dHotspotMutationsByGenePOST(parameters: {
+            'hugoSymbols': Array < string > | string
+
+            ,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < HotspotMutation >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/api/hotspots/3d/byGene';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                if (parameters['hugoSymbols'] !== undefined) {
+                    body = parameters['hugoSymbols'];
+                }
+
+                if (parameters['hugoSymbols'] === undefined) {
+                    reject(new Error('Missing required  parameter: hugoSymbols'));
+                    return;
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    fetch3dHotspotMutationsByGeneGETURL(parameters: {
+        'hugoSymbols': Array < string > | string
+
+        ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/api/hotspots/3d/byGene/{hugoSymbols}';
+
+        path = path.replace('{hugoSymbols}', parameters['hugoSymbols'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * get all hotspot mutations for the specified genes
+     * @method
+     * @name CancerHotspotsAPI#fetch3dHotspotMutationsByGeneGET
+     * @param {array} hugoSymbols - Comma separated list of hugo symbols. For example PTEN,BRAF,TP53
+     */
+    fetch3dHotspotMutationsByGeneGET(parameters: {
+            'hugoSymbols': Array < string > | string
+
+            ,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < HotspotMutation >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/api/hotspots/3d/byGene/{hugoSymbols}';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                path = path.replace('{hugoSymbols}', parameters['hugoSymbols'] + '');
+
+                if (parameters['hugoSymbols'] === undefined) {
+                    reject(new Error('Missing required  parameter: hugoSymbols'));
+                    return;
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    fetch3dHotspotMutationsByGene_LegacyURL(parameters: {
         'hugoSymbols': Array < string > | string
 
         ,
@@ -443,16 +579,16 @@ export default class CancerHotspotsAPI {
     /**
      * get all hotspot mutations for the specified genes
      * @method
-     * @name CancerHotspotsAPI#get3dHotspotMutationsByGene
+     * @name CancerHotspotsAPI#fetch3dHotspotMutationsByGene_Legacy
      * @param {array} hugoSymbols - Comma separated list of hugo symbols. For example PTEN,BRAF,TP53
      */
-    get3dHotspotMutationsByGene(parameters: {
+    fetch3dHotspotMutationsByGene_Legacy(parameters: {
             'hugoSymbols': Array < string > | string
 
             ,
             $queryParameters ? : any,
             $domain ? : string
-        }): Promise < Array < ClusteredHotspotMutation >
+        }): Promise < Array < HotspotMutation >
         > {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
@@ -487,7 +623,7 @@ export default class CancerHotspotsAPI {
             });
         };
 
-    getAllHotspotMutationsURL(parameters: {
+    fetchSingleResidueHotspotMutationsURL(parameters: {
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -504,14 +640,14 @@ export default class CancerHotspotsAPI {
     };
 
     /**
-     * get all hotspot mutations
+     * get all single residue hotspot mutations
      * @method
-     * @name CancerHotspotsAPI#getAllHotspotMutations
+     * @name CancerHotspotsAPI#fetchSingleResidueHotspotMutations
      */
-    getAllHotspotMutations(parameters: {
+    fetchSingleResidueHotspotMutations(parameters: {
             $queryParameters ? : any,
                 $domain ? : string
-        }): Promise < Array < SingleResidueHotspotMutation >
+        }): Promise < Array < HotspotMutation >
         > {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
@@ -539,7 +675,7 @@ export default class CancerHotspotsAPI {
             });
         };
 
-    getAllHotspotMutations_1URL(parameters: {
+    fetchSingleResidueHotspotMutations_1URL(parameters: {
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -556,14 +692,14 @@ export default class CancerHotspotsAPI {
     };
 
     /**
-     * get all hotspot mutations
+     * get all single residue hotspot mutations
      * @method
-     * @name CancerHotspotsAPI#getAllHotspotMutations_1
+     * @name CancerHotspotsAPI#fetchSingleResidueHotspotMutations_1
      */
-    getAllHotspotMutations_1(parameters: {
+    fetchSingleResidueHotspotMutations_1(parameters: {
             $queryParameters ? : any,
                 $domain ? : string
-        }): Promise < Array < SingleResidueHotspotMutation >
+        }): Promise < Array < HotspotMutation >
         > {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
@@ -591,7 +727,143 @@ export default class CancerHotspotsAPI {
             });
         };
 
-    postSingleResidueHotspotMutationsByTranscriptURL(parameters: {
+    fetchSingleResidueHotspotMutationsByGenePOSTURL(parameters: {
+        'hugoSymbols': Array < string > | string
+
+        ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/api/hotspots/single/byGene';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * get hotspot mutations by hugo gene symbol
+     * @method
+     * @name CancerHotspotsAPI#fetchSingleResidueHotspotMutationsByGenePOST
+     * @param {} hugoSymbols - List of hugo gene symbols. For example ["PTEN","BRAF","TP53"]
+     */
+    fetchSingleResidueHotspotMutationsByGenePOST(parameters: {
+            'hugoSymbols': Array < string > | string
+
+            ,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < HotspotMutation >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/api/hotspots/single/byGene';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                if (parameters['hugoSymbols'] !== undefined) {
+                    body = parameters['hugoSymbols'];
+                }
+
+                if (parameters['hugoSymbols'] === undefined) {
+                    reject(new Error('Missing required  parameter: hugoSymbols'));
+                    return;
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    fetchSingleResidueHotspotMutationsByGeneGETURL(parameters: {
+        'hugoSymbols': Array < string > | string
+
+        ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/api/hotspots/single/byGene/{transcriptIds}';
+
+        path = path.replace('{hugoSymbols}', parameters['hugoSymbols'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * get hotspot mutations by hugo gene symbol
+     * @method
+     * @name CancerHotspotsAPI#fetchSingleResidueHotspotMutationsByGeneGET
+     * @param {array} hugoSymbols - Comma separated list of hugo gene symbols. For example PTEN,BRAF,TP53
+     */
+    fetchSingleResidueHotspotMutationsByGeneGET(parameters: {
+            'hugoSymbols': Array < string > | string
+
+            ,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < HotspotMutation >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/api/hotspots/single/byGene/{transcriptIds}';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                path = path.replace('{hugoSymbols}', parameters['hugoSymbols'] + '');
+
+                if (parameters['hugoSymbols'] === undefined) {
+                    reject(new Error('Missing required  parameter: hugoSymbols'));
+                    return;
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    fetchSingleResidueHotspotMutationsByTranscriptPOSTURL(parameters: {
         'transcriptIds': Array < string > | string
 
         ,
@@ -599,9 +871,6 @@ export default class CancerHotspotsAPI {
     }): string {
         let queryParameters: any = {};
         let path = '/api/hotspots/single/byTranscript';
-        if (parameters['transcriptIds'] !== undefined) {
-            queryParameters['transcriptIds'] = parameters['transcriptIds'];
-        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -616,10 +885,10 @@ export default class CancerHotspotsAPI {
     /**
      * get hotspot mutations by transcript id
      * @method
-     * @name CancerHotspotsAPI#postSingleResidueHotspotMutationsByTranscript
-     * @param {array} transcriptIds - Comma separated list of transcript IDs. For example ENST00000288602,ENST00000275493
+     * @name CancerHotspotsAPI#fetchSingleResidueHotspotMutationsByTranscriptPOST
+     * @param {} transcriptIds - List of transcript IDs. For example ["ENST00000288602","ENST00000275493"]
      */
-    postSingleResidueHotspotMutationsByTranscript(parameters: {
+    fetchSingleResidueHotspotMutationsByTranscriptPOST(parameters: {
             'transcriptIds': Array < string > | string
 
             ,
@@ -640,7 +909,7 @@ export default class CancerHotspotsAPI {
                 headers['Content-Type'] = 'application/json';
 
                 if (parameters['transcriptIds'] !== undefined) {
-                    queryParameters['transcriptIds'] = parameters['transcriptIds'];
+                    body = parameters['transcriptIds'];
                 }
 
                 if (parameters['transcriptIds'] === undefined) {
@@ -662,7 +931,7 @@ export default class CancerHotspotsAPI {
             });
         };
 
-    getSingleResidueHotspotMutationsByTranscriptURL(parameters: {
+    fetchSingleResidueHotspotMutationsByTranscriptGETURL(parameters: {
         'transcriptIds': Array < string > | string
 
         ,
@@ -686,16 +955,16 @@ export default class CancerHotspotsAPI {
     /**
      * get hotspot mutations by transcript id
      * @method
-     * @name CancerHotspotsAPI#getSingleResidueHotspotMutationsByTranscript
+     * @name CancerHotspotsAPI#fetchSingleResidueHotspotMutationsByTranscriptGET
      * @param {array} transcriptIds - Comma separated list of transcript IDs. For example ENST00000288602,ENST00000275493
      */
-    getSingleResidueHotspotMutationsByTranscript(parameters: {
+    fetchSingleResidueHotspotMutationsByTranscriptGET(parameters: {
             'transcriptIds': Array < string > | string
 
             ,
             $queryParameters ? : any,
             $domain ? : string
-        }): Promise < Array < SingleResidueHotspotMutation >
+        }): Promise < Array < HotspotMutation >
         > {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
@@ -730,7 +999,7 @@ export default class CancerHotspotsAPI {
             });
         };
 
-    getMetadataURL(parameters: {
+    fetchMetadataURL(parameters: {
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -749,9 +1018,9 @@ export default class CancerHotspotsAPI {
     /**
      * get metadata
      * @method
-     * @name CancerHotspotsAPI#getMetadata
+     * @name CancerHotspotsAPI#fetchMetadata
      */
-    getMetadata(parameters: {
+    fetchMetadata(parameters: {
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < {} > {
@@ -781,7 +1050,7 @@ export default class CancerHotspotsAPI {
         });
     };
 
-    getMetadata_1URL(parameters: {
+    fetchMetadata_1URL(parameters: {
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -800,9 +1069,9 @@ export default class CancerHotspotsAPI {
     /**
      * get metadata
      * @method
-     * @name CancerHotspotsAPI#getMetadata_1
+     * @name CancerHotspotsAPI#fetchMetadata_1
      */
-    getMetadata_1(parameters: {
+    fetchMetadata_1(parameters: {
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < {} > {
@@ -832,7 +1101,7 @@ export default class CancerHotspotsAPI {
         });
     };
 
-    getAllVariantsURL(parameters: {
+    fetchAllVariantsGETURL(parameters: {
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -851,9 +1120,9 @@ export default class CancerHotspotsAPI {
     /**
      * get all variant tumor type composition
      * @method
-     * @name CancerHotspotsAPI#getAllVariants
+     * @name CancerHotspotsAPI#fetchAllVariantsGET
      */
-    getAllVariants(parameters: {
+    fetchAllVariantsGET(parameters: {
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < TumorTypeComposition >
@@ -884,7 +1153,7 @@ export default class CancerHotspotsAPI {
             });
         };
 
-    postVariantsURL(parameters: {
+    fetchVariantsPOSTURL(parameters: {
         'hugoSymbol' ? : string,
         'aminoAcidChanges' ? : Array < string > | string
 
@@ -895,10 +1164,6 @@ export default class CancerHotspotsAPI {
         let path = '/api/variants';
         if (parameters['hugoSymbol'] !== undefined) {
             queryParameters['hugoSymbol'] = parameters['hugoSymbol'];
-        }
-
-        if (parameters['aminoAcidChanges'] !== undefined) {
-            queryParameters['aminoAcidChanges'] = parameters['aminoAcidChanges'];
         }
 
         if (parameters.$queryParameters) {
@@ -914,11 +1179,11 @@ export default class CancerHotspotsAPI {
     /**
      * get variant tumor type compositions
      * @method
-     * @name CancerHotspotsAPI#postVariants
+     * @name CancerHotspotsAPI#fetchVariantsPOST
      * @param {string} hugoSymbol - Hugo gene symbol, for example BRAF
-     * @param {array} aminoAcidChanges - Comma separated list of amino acid change values. For example V600E,V600K
+     * @param {} aminoAcidChanges - List of amino acid change values. For example ["V600E","V600K"]
      */
-    postVariants(parameters: {
+    fetchVariantsPOST(parameters: {
             'hugoSymbol' ? : string,
             'aminoAcidChanges' ? : Array < string > | string
 
@@ -944,7 +1209,7 @@ export default class CancerHotspotsAPI {
                 }
 
                 if (parameters['aminoAcidChanges'] !== undefined) {
-                    queryParameters['aminoAcidChanges'] = parameters['aminoAcidChanges'];
+                    body = parameters['aminoAcidChanges'];
                 }
 
                 if (parameters.$queryParameters) {
@@ -961,7 +1226,7 @@ export default class CancerHotspotsAPI {
             });
         };
 
-    getVariantsByHugoSymbolAndAminoAcidChangeURL(parameters: {
+    fetchVariantsGETURL(parameters: {
         'hugoSymbol': string,
         'aminoAcidChanges': Array < string > | string
 
@@ -986,13 +1251,13 @@ export default class CancerHotspotsAPI {
     };
 
     /**
-     * get variant tumor type compositions
+     * get variant tumor type compositions by gene and amino acid change
      * @method
-     * @name CancerHotspotsAPI#getVariantsByHugoSymbolAndAminoAcidChange
+     * @name CancerHotspotsAPI#fetchVariantsGET
      * @param {string} hugoSymbol - Hugo gene symbol, for example BRAF
      * @param {array} aminoAcidChanges - Comma separated list of amino acid change values. For example V600E,V600K
      */
-    getVariantsByHugoSymbolAndAminoAcidChange(parameters: {
+    fetchVariantsGET(parameters: {
             'hugoSymbol': string,
             'aminoAcidChanges': Array < string > | string
 
