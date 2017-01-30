@@ -59,7 +59,7 @@
     "cross-env": "^3.1.4",
     "css-loader": "^0.26.1",
     "cssnano": "^3.10.0",
-    "d3": "^4.4.4",
+    "d3": "^3.5.6",
     "dotenv": "^4.0.0",
     "express": "^4.14.0",
     "extract-text-webpack-plugin": "^1.0.1",
