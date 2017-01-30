@@ -1,34 +1,27 @@
 import * as _ from 'lodash';
 import RemoteData from "../../api/RemoteData";
 import client from "../../api/cbioportalClientInstance";
-import {reaction, toJS, observable, action, computed, whyRun} from "../../../../node_modules/mobx/lib/mobx";
+import {toJS, observable, action, computed, whyRun} from "../../../../node_modules/mobx/lib/mobx";
 import {TypeOfCancer as CancerType} from "../../api/CBioPortalAPI";
 import CancerStudyTreeData from "./CancerStudyTreeData";
 import StudyListLogic from "../StudyList/StudyListLogic";
+import MobxPromise from "../../api/MobxPromise";
 
 // mobx observable
 export class QueryStore
 {
-	constructor()
+	@observable cancerTypes = new MobxPromise(client.getAllCancerTypesUsingGET({}));
+	@observable cancerStudies = new MobxPromise(client.getAllStudiesUsingGET({}));
+	@computed get geneticProfiles()
 	{
-		reaction(
-			() => toJS(this.selectedCancerStudyIds),
-			studyIds => {
-				if (studyIds && studyIds.length == 1)
-					this.geneticProfiles.params = {studyId: studyIds[0]};
-				else
-					this.geneticProfiles.cancel();
-			},
-			{
-				name: 'refreshGeneticProfiles',
-				compareStructural: true
-			}
-		);
+		return new MobxPromise(() => {
+			let studyIds = this.selectedCancerStudyIds;
+			if (studyIds && studyIds.length == 1)
+				return client.getAllGeneticProfilesInStudyUsingGET({studyId: studyIds[0]});
+			else
+				return Promise.resolve([]);
+		});
 	}
-
-	@observable cancerTypes = new RemoteData(client, client.getAllCancerTypesUsingGET, {});
-	@observable cancerStudies = new RemoteData(client, client.getAllStudiesUsingGET, {});
-	@observable geneticProfiles = new RemoteData(client, client.getAllGeneticProfilesInStudyUsingGET);
 
 	@observable searchText:string = '';
 	@observable.shallow searchTextPresets = ['lung', 'serous', 'tcga', 'tcga -provisional'];

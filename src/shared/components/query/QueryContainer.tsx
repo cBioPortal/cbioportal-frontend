@@ -40,7 +40,7 @@ export default class QueryContainer extends React.Component<IQueryContainerProps
 
     render():JSX.Element
     {
-        if (queryStore.cancerTypes.status == 'fetching' || queryStore.cancerStudies.status == 'fetching')
+        if (queryStore.cancerTypes.isPending || queryStore.cancerStudies.isPending)
             return <Spinner/>;
         if (!queryStore.cancerTypes.result || !queryStore.cancerStudies.result)
             return <span>No data</span>;
