@@ -4,7 +4,7 @@ import {ClinicalData} from "../../../shared/api/CBioPortalAPI";
 import {ClinicalInformationData} from "../Connector";
 import client from "../../../shared/api/cbioportalClientInstance";
 import {computed, observable} from "../../../../node_modules/mobx/lib/mobx";
-import ObservablePromise from "../../../shared/api/ObservablePromise";
+import MobxPromise from "../../../shared/api/MobxPromise";
 
 export function groupByEntityId(clinicalDataArray: Array<ClinicalData>)
 {
@@ -44,7 +44,7 @@ export class PatientViewPageStore {
 
     @computed get clinicalDataPatient()
     {
-        return new ObservablePromise(client.getAllClinicalDataOfPatientInStudyUsingGET({
+        return new MobxPromise(client.getAllClinicalDataOfPatientInStudyUsingGET({
             projection: 'DETAILED',
             studyId: this.studyId,
             patientId: this.patientId
@@ -53,7 +53,7 @@ export class PatientViewPageStore {
 
     @computed get samplesOfPatient()
     {
-        return new ObservablePromise(client.getAllSamplesOfPatientInStudyUsingGET({
+        return new MobxPromise(client.getAllSamplesOfPatientInStudyUsingGET({
             studyId: this.studyId,
             patientId: this.patientId
         }));
@@ -61,35 +61,34 @@ export class PatientViewPageStore {
 
     @computed get clinicalDataSample()
     {
-        return new ObservablePromise(async () => {
-            let samplesOfPatient = await this.samplesOfPatient.promise;
-            return client.fetchClinicalDataUsingPOST({
+        return new MobxPromise({
+            await: [
+                this.samplesOfPatient
+            ],
+            invoke: () => client.fetchClinicalDataUsingPOST({
                 clinicalDataType: 'SAMPLE',
-                identifiers: samplesOfPatient.map(sample => ({
+                identifiers: this.samplesOfPatient.result!.map(sample => ({
                     entityId: sample.sampleId,
                     studyId: this.studyId
                 })),
                 projection: 'DETAILED',
-            });
+            })
         });
     }
 
     @computed get patientViewData()
     {
-        //TODO - find a way to prevent then() from occurring after observable was disposed
-        return new ObservablePromise(
-            Promise.all([
-                this.clinicalDataPatient.promise,
-                this.clinicalDataSample.promise
-            ]).then(
-                () => transformClinicalInformationToStoreShape(
-                    this.patientId,
-                    this.studyId,
-                    this.clinicalDataPatient.result || [],
-                    this.clinicalDataSample.result || []
-                )
+        return new MobxPromise({
+            await: [
+                this.clinicalDataPatient,
+                this.clinicalDataSample
+            ],
+            invoke: () => transformClinicalInformationToStoreShape(
+                this.patientId,
+                this.studyId,
+                this.clinicalDataPatient.result!,
+                this.clinicalDataSample.result!
             )
-        );
+        });
     }
-
 }
