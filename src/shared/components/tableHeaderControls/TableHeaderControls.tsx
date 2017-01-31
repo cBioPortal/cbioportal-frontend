@@ -23,6 +23,7 @@ export interface ITableExportButtonsProps {
     handleInput?: Function;
     paginationProps?: ITablePaginationControlsProps;
     columnVisibilityProps?: IColumnVisibilityControlsProps;
+    searchDelayMs?:number;
 }
 
 function serializeTableData(tableData: Array<any>) {
@@ -52,6 +53,8 @@ function serializeTableData(tableData: Array<any>) {
 export default class TableExportButtons extends React.Component<ITableExportButtonsProps, {}> {
 
 
+    private searchTimeout:number | null;
+
     constructor(){
 
         super();
@@ -69,14 +72,24 @@ export default class TableExportButtons extends React.Component<ITableExportButt
         copyDownloadClassName: '',
         paginationProps:{},
         columnVisibilityProps:{},
+        searchDelayMs: 400
     };
 
 
     public handleInput(evt: any){
 
-        if (this.props.handleInput) {
-            this.props.handleInput(evt.currentTarget.value);
+        if (this.searchTimeout !== null) {
+            clearTimeout(this.searchTimeout);
+            this.searchTimeout = null;
         }
+
+        const filterValue = evt.currentTarget.value;
+
+        this.searchTimeout = setTimeout(() => {
+            if (this.props.handleInput) {
+                this.props.handleInput(filterValue);
+            }
+        }, this.props.searchDelayMs);
 
     }
 
