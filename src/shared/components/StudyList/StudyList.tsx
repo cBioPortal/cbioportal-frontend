@@ -44,7 +44,7 @@ export interface IStudyListLogic
 	onCheck: (node:CancerTreeNode, event:React.FormEvent<HTMLInputElement>) => void;
 }
 
-export default class StudiesList extends React.Component<IStudyListProps, {}>
+export default class StudyList extends React.Component<IStudyListProps, {}>
 {
 	get logic() { return this.props.logic; }
 
@@ -53,7 +53,7 @@ export default class StudiesList extends React.Component<IStudyListProps, {}>
 		return this.renderCancerType(this.logic.getRootCancerType());
 	}
 
-	renderCancerType = (cancerType:CancerType, arrayIndex?:number):JSX.Element =>
+	renderCancerType = (cancerType:CancerType, arrayIndex:number = 0):JSX.Element =>
 	{
 		let currentLevel = this.logic.getDepth(cancerType);
 		let childCancerTypes = this.logic.getChildCancerTypes(cancerType);
