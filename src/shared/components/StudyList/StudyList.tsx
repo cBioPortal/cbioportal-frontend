@@ -162,11 +162,13 @@ export default class StudyList extends React.Component<IStudyListProps, {}>
 		return (
 			<span className={styles.StudyLinks}>
 				{links.map((link, i) => (
-					link.url ?
-					<a key={i} href={link.url}>
-						<FontAwesome name={link.icon}/>
-					</a> :
-						<FontAwesome name={link.icon}/>
+					(link.url) ? (
+						<a key={i} href={link.url}>
+							<FontAwesome name={link.icon}/>
+						</a>
+					) : (
+						<FontAwesome key={i} name={link.icon}/>
+					)
 				))}
 			</span>
 		);
