@@ -1,11 +1,15 @@
 import * as React from 'react';
 import './styles.scss';
+import {StateToggle} from "../../shared/components/ExperimentalControls";
+import devMode from "../../shared/lib/devMode";
+import {observer} from "../../../node_modules/mobx-react/index";
 
 interface IPageHeaderProps {
     router: any;
     currentRoutePath: string;
 }
 
+@observer
 export default class PageHeader extends React.Component<IPageHeaderProps, void> {
 
     routeInput: HTMLInputElement;
@@ -25,6 +29,7 @@ export default class PageHeader extends React.Component<IPageHeaderProps, void> 
                                 <input className="form-control" defaultValue={this.props.currentRoutePath} ref={(c) => { this.routeInput = c; }} />
                         </div>
                     </form>
+					<StateToggle label='Show work in progress' style={{color: 'white'}} target={devMode} name='enabled' defaultValue={devMode.enabled}/>
                 </div>
             </header>
         );

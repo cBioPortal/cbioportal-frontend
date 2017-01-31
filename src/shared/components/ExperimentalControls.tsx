@@ -103,15 +103,17 @@ export interface IStateToggleProps<S>
 	target: S | React.Component<any, S>;
 	name: keyof S;
 	defaultValue: boolean;
+	style?: React.CSSProperties;
 }
 
 export function TypedStateToggle<T>(props:IStateToggleProps<T>)
 {
-	let {label, target, name, defaultValue} = props;
+	let {label, target, name, defaultValue, style} = props;
 	let currentValue = target instanceof React.Component ? !!(target as React.Component<any, T>).state[name] : !!target[name];
 	return (
 		<LabeledCheckbox
 			checked={firstDefinedValue(currentValue, defaultValue)}
+			labelProps={{style}}
 			inputProps={{
 				onChange: event => {
 					if (target instanceof React.Component)

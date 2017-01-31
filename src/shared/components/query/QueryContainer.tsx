@@ -35,11 +35,11 @@ export default class QueryContainer extends React.Component<{}, {}>
 
                 <CancerStudySelector/>
 
-				{!!(devMode && queryStore.geneticProfiles.result) && (
+				{!!(devMode.enabled && queryStore.geneticProfiles.result) && (
 					<GeneticProfileSelector/>
 				)}
 
-				{!!(devMode) && (
+				{!!(devMode.enabled) && (
 					<FlexRow padded>
 						{/* demo controls */}
 						<FlexCol className={styles.CancerStudySelector} padded style={{border: '1px solid #ddd', borderRadius: 5, padding: 5}}>
@@ -76,7 +76,7 @@ export default class QueryContainer extends React.Component<{}, {}>
 					</FlexRow>
 				)}
 
-				{devMode && <DevTools/>}
+				{devMode.enabled && <DevTools/>}
 
             </FlexCol>
         );

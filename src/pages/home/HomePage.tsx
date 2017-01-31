@@ -4,6 +4,7 @@ import QueryContainer from "../../shared/components/query/QueryContainer";
 import * as styles_any from './styles.module.scss';
 import {FlexCol} from "../../shared/components/flexbox/FlexBox";
 import devMode from "../../shared/lib/devMode";
+import {observer} from "../../../node_modules/mobx-react/index";
 
 function getRootElement()
 {
@@ -26,6 +27,7 @@ interface IHomePageState
 	selectorVersion: 'old'|'new';
 }
 
+@observer
 export default class HomePage extends React.Component<IHomePageProps, IHomePageState>
 {
     constructor(props:IHomePageProps)
@@ -48,8 +50,8 @@ export default class HomePage extends React.Component<IHomePageProps, IHomePageS
     {
         return (
         	<FlexCol style={{height: '100%'}}>
-				{devMode && <a style={{alignSelf: 'center'}} onClick={() => this.setState({ selectorVersion: this.state.selectorVersion == 'new' ? 'old' : 'new' })}>Switch to {this.state.selectorVersion == 'new' ? 'old' : 'new'} view</a>}
 				{this.state.selectorVersion == 'new' ? <QueryContainer/> : <QueryContainerOld/>}
+				{devMode.enabled && <a style={{alignSelf: 'center'}} onClick={() => this.setState({ selectorVersion: this.state.selectorVersion == 'new' ? 'old' : 'new' })}>Switch to {this.state.selectorVersion == 'new' ? 'old' : 'new'} view</a>}
 			</FlexCol>
 		);
     }
