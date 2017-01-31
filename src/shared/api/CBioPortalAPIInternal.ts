@@ -5,6 +5,30 @@ import {
 from "superagent";
 
 type CallbackHandler = (err: any, res ? : request.Response) => void;
+export type GisticToGene = {
+    'entrezGeneId': number
+
+        'hugoGeneSymbol': string
+
+};
+export type Gistic = {
+    'amp': boolean
+
+        'chromosome': number
+
+        'cytoband': string
+
+        'genes': Array < GisticToGene > | GisticToGene
+
+        'qValue': number
+
+        'studyId': string
+
+        'widePeakEnd': number
+
+        'widePeakStart': number
+
+};
 export type VariantCountIdentifier = {
     'entrezGeneId': number
 
@@ -355,6 +379,124 @@ export default class CBioPortalAPIInternal {
                 }
 
                 request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    getSignificantCopyNumberRegionsUsingGETURL(parameters: {
+        'studyId': string,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'pageSize' ? : number,
+        'pageNumber' ? : number,
+        'sortBy' ? : "chromosome" | "cytoband" | "widePeakStart" | "widePeakEnd" | "qValue" | "amp",
+        'direction' ? : "ASC" | "DESC",
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/studies/{studyId}/significant-copy-number-regions';
+
+        path = path.replace('{studyId}', parameters['studyId']);
+        if (parameters['projection'] !== undefined) {
+            queryParameters['projection'] = parameters['projection'];
+        }
+
+        if (parameters['pageSize'] !== undefined) {
+            queryParameters['pageSize'] = parameters['pageSize'];
+        }
+
+        if (parameters['pageNumber'] !== undefined) {
+            queryParameters['pageNumber'] = parameters['pageNumber'];
+        }
+
+        if (parameters['sortBy'] !== undefined) {
+            queryParameters['sortBy'] = parameters['sortBy'];
+        }
+
+        if (parameters['direction'] !== undefined) {
+            queryParameters['direction'] = parameters['direction'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get significant copy number alteration regions in a study
+     * @method
+     * @name CBioPortalAPIInternal#getSignificantCopyNumberRegionsUsingGET
+     * @param {string} studyId - Study ID e.g. acc_tcga
+     * @param {string} projection - Level of detail of the response
+     * @param {integer} pageSize - Page size of the result list
+     * @param {integer} pageNumber - Page number of the result list
+     * @param {string} sortBy - Name of the property that the result list is sorted by
+     * @param {string} direction - Direction of the sort
+     */
+    getSignificantCopyNumberRegionsUsingGET(parameters: {
+            'studyId': string,
+            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'pageSize' ? : number,
+            'pageNumber' ? : number,
+            'sortBy' ? : "chromosome" | "cytoband" | "widePeakStart" | "widePeakEnd" | "qValue" | "amp",
+            'direction' ? : "ASC" | "DESC",
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < Gistic >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/studies/{studyId}/significant-copy-number-regions';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                path = path.replace('{studyId}', parameters['studyId']);
+
+                if (parameters['studyId'] === undefined) {
+                    reject(new Error('Missing required  parameter: studyId'));
+                    return;
+                }
+
+                if (parameters['projection'] !== undefined) {
+                    queryParameters['projection'] = parameters['projection'];
+                }
+
+                if (parameters['pageSize'] !== undefined) {
+                    queryParameters['pageSize'] = parameters['pageSize'];
+                }
+
+                if (parameters['pageNumber'] !== undefined) {
+                    queryParameters['pageNumber'] = parameters['pageNumber'];
+                }
+
+                if (parameters['sortBy'] !== undefined) {
+                    queryParameters['sortBy'] = parameters['sortBy'];
+                }
+
+                if (parameters['direction'] !== undefined) {
+                    queryParameters['direction'] = parameters['direction'];
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
 
             }).then(function(response: request.Response) {
                 return response.body;
