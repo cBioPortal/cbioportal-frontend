@@ -70,8 +70,7 @@ class SampleManager {
     }
 
     getColorForSample(sampleId: string):string {
-        // TODO
-        return "black";
+        return this.sampleColors[sampleId];
     }
 
     getSampleIdsInOrder():string[] {
