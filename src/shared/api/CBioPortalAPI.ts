@@ -113,6 +113,18 @@ export type Gene = {
         'type': string
 
 };
+export type DiscreteCopyNumberData = {
+    'alteration': number
+
+        'entrezGeneId': number
+
+        'gene': Gene
+
+        'geneticProfileId': string
+
+        'sampleId': string
+
+};
 export type CancerStudy = {
     'allSampleCount': number
 
@@ -160,6 +172,8 @@ export type CancerStudy = {
 export type GeneticData = {
     'entrezGeneId': number
 
+        'gene': Gene
+
         'value': string
 
 };
@@ -172,11 +186,21 @@ export type Mutation = {
 
         'entrezGeneId': number
 
+        'fisValue': number
+
+        'functionalImpactScore': string
+
         'gene': Gene
 
         'geneticProfileId': string
 
         'keyword': string
+
+        'linkMsa': string
+
+        'linkPdb': string
+
+        'linkXvar': string
 
         'mutationStatus': string
 
@@ -1397,6 +1421,208 @@ export default class CBioPortalAPI {
             return response.body;
         });
     };
+
+    getDiscreteCopyNumbersInGeneticProfileUsingGETURL(parameters: {
+        'geneticProfileId': string,
+        'sampleId': string,
+        'discreteCopyNumberEventType' ? : "HOMDEL_AND_AMP" | "HOMDEL" | "AMP" | "GAIN" | "HETLOSS" | "DIPLOID" | "ALL",
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/genetic-profiles/{geneticProfileId}/discrete-copy-number';
+
+        path = path.replace('{geneticProfileId}', parameters['geneticProfileId']);
+        if (parameters['sampleId'] !== undefined) {
+            queryParameters['sampleId'] = parameters['sampleId'];
+        }
+
+        if (parameters['discreteCopyNumberEventType'] !== undefined) {
+            queryParameters['discreteCopyNumberEventType'] = parameters['discreteCopyNumberEventType'];
+        }
+
+        if (parameters['projection'] !== undefined) {
+            queryParameters['projection'] = parameters['projection'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get discrete copy number alterations in a genetic profile
+     * @method
+     * @name CBioPortalAPI#getDiscreteCopyNumbersInGeneticProfileUsingGET
+     * @param {string} geneticProfileId - Genetic Profile ID e.g. acc_tcga_gistic
+     * @param {string} sampleId - Sample ID e.g. TCGA-OR-A5J2-01
+     * @param {string} discreteCopyNumberEventType - Type of the copy number event
+     * @param {string} projection - Level of detail of the response
+     */
+    getDiscreteCopyNumbersInGeneticProfileUsingGET(parameters: {
+            'geneticProfileId': string,
+            'sampleId': string,
+            'discreteCopyNumberEventType' ? : "HOMDEL_AND_AMP" | "HOMDEL" | "AMP" | "GAIN" | "HETLOSS" | "DIPLOID" | "ALL",
+            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < DiscreteCopyNumberData >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/genetic-profiles/{geneticProfileId}/discrete-copy-number';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                path = path.replace('{geneticProfileId}', parameters['geneticProfileId']);
+
+                if (parameters['geneticProfileId'] === undefined) {
+                    reject(new Error('Missing required  parameter: geneticProfileId'));
+                    return;
+                }
+
+                if (parameters['sampleId'] !== undefined) {
+                    queryParameters['sampleId'] = parameters['sampleId'];
+                }
+
+                if (parameters['sampleId'] === undefined) {
+                    reject(new Error('Missing required  parameter: sampleId'));
+                    return;
+                }
+
+                if (parameters['discreteCopyNumberEventType'] !== undefined) {
+                    queryParameters['discreteCopyNumberEventType'] = parameters['discreteCopyNumberEventType'];
+                }
+
+                if (parameters['projection'] !== undefined) {
+                    queryParameters['projection'] = parameters['projection'];
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    fetchDiscreteCopyNumbersInGeneticProfileUsingPOSTURL(parameters: {
+        'geneticProfileId': string,
+        'discreteCopyNumberEventType' ? : "HOMDEL_AND_AMP" | "HOMDEL" | "AMP" | "GAIN" | "HETLOSS" | "DIPLOID" | "ALL",
+        'sampleIds': Array < string > | string
+
+        ,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/genetic-profiles/{geneticProfileId}/discrete-copy-number/fetch';
+
+        path = path.replace('{geneticProfileId}', parameters['geneticProfileId']);
+        if (parameters['discreteCopyNumberEventType'] !== undefined) {
+            queryParameters['discreteCopyNumberEventType'] = parameters['discreteCopyNumberEventType'];
+        }
+
+        if (parameters['projection'] !== undefined) {
+            queryParameters['projection'] = parameters['projection'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch discrete copy number alterations in a genetic profile by sample ID
+     * @method
+     * @name CBioPortalAPI#fetchDiscreteCopyNumbersInGeneticProfileUsingPOST
+     * @param {string} geneticProfileId - Genetic Profile ID e.g. acc_tcga_gistic
+     * @param {string} discreteCopyNumberEventType - Type of the copy number event
+     * @param {} sampleIds - List of Sample IDs
+     * @param {string} projection - Level of detail of the response
+     */
+    fetchDiscreteCopyNumbersInGeneticProfileUsingPOST(parameters: {
+            'geneticProfileId': string,
+            'discreteCopyNumberEventType' ? : "HOMDEL_AND_AMP" | "HOMDEL" | "AMP" | "GAIN" | "HETLOSS" | "DIPLOID" | "ALL",
+            'sampleIds': Array < string > | string
+
+            ,
+            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < DiscreteCopyNumberData >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/genetic-profiles/{geneticProfileId}/discrete-copy-number/fetch';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                path = path.replace('{geneticProfileId}', parameters['geneticProfileId']);
+
+                if (parameters['geneticProfileId'] === undefined) {
+                    reject(new Error('Missing required  parameter: geneticProfileId'));
+                    return;
+                }
+
+                if (parameters['discreteCopyNumberEventType'] !== undefined) {
+                    queryParameters['discreteCopyNumberEventType'] = parameters['discreteCopyNumberEventType'];
+                }
+
+                if (parameters['sampleIds'] !== undefined) {
+                    body = parameters['sampleIds'];
+                }
+
+                if (parameters['sampleIds'] === undefined) {
+                    reject(new Error('Missing required  parameter: sampleIds'));
+                    return;
+                }
+
+                if (parameters['projection'] !== undefined) {
+                    queryParameters['projection'] = parameters['projection'];
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
 
     getAllGeneticDataInGeneticProfileUsingGETURL(parameters: {
         'geneticProfileId': string,
