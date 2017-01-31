@@ -58,6 +58,7 @@ export default class GeneticProfileSelector extends React.Component<{}, {}>
 
 		return (
 			<div className={styles.GeneticProfileSelector}>
+				<h2>Select Genomic Profiles</h2>
 				{this.renderCheckboxes(altTypes.map(altType => groupedProfiles[altType]))}
 			</div>
 		);
@@ -141,7 +142,7 @@ export default class GeneticProfileSelector extends React.Component<{}, {}>
 			);
 		}
 
-		if (firstProfile.datatype == DATATYPE_ZSCORE)
+		if (firstProfile.datatype == DATATYPE_ZSCORE && checked)
 		{
 			output.push(
 				<div className={styles.zScore} key={output.length}>

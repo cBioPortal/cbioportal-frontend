@@ -32,6 +32,7 @@ const styles = styles_any as {
 	selectCancerStudyRow: string,
 	searchTextInput: string,
 
+	cancerStudySelectorBody: string,
 	cancerTypeListContainer: string,
 	cancerTypeList: string,
 	cancerTypeListItem: string,
@@ -151,7 +152,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 		let allSelected = allSelectedCheckboxProps.checked && !allSelectedCheckboxProps.indeterminate;
 
 		return (
-			<FlexCol className={styles.CancerStudySelector} flex={1} style={this.props.style}>
+			<FlexCol className={styles.CancerStudySelector} style={this.props.style}>
 				<FlexRow padded overflow className={styles.selectCancerStudyRow}>
 					<h2>Select Studies</h2>
 					<span className={styles.selectedCount}>
@@ -184,8 +185,8 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 						</span>
 				</FlexRow>
 
-				<FlexRow flex={1}>
-					<div className={styles.cancerTypeListContainer}>				
+				<FlexRow className={styles.cancerStudySelectorBody}>
+					<div className={styles.cancerTypeListContainer}>
 						{this.renderCancerTypeList()}
 					</div>
 					<div className={styles.cancerStudyListContainer}>

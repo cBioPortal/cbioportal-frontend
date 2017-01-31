@@ -1,5 +1,11 @@
 .QueryContainer {
   height: 100%;
+
+  h2 {
+    font: normal normal 300 20px/23px 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    flex-grow: 2;
+    margin: 0px;
+  }
 }
 
 .cancerStudySelectorHeader {
@@ -12,7 +18,6 @@
 }
 
 .CancerStudySelector {
-  max-height: 400px;
   width: 850px;
   user-select: none;
   
@@ -45,12 +50,6 @@
     }
   }
 
-  h2 {
-    font: normal normal 300 20px/23px 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    flex-grow: 2;
-    margin: 0px;
-  }
-
   .selectedCount {
     font-size: 12px;
     line-height: 30px;
@@ -70,6 +69,10 @@
     .selectedCount {
       float: right;
     }
+  }
+
+  div.cancerStudySelectorBody {
+    height: 350px;
   }
 
   div.cancerTypeListContainer, div.cancerStudyListContainer {
@@ -152,18 +155,19 @@
 
 .GeneticProfileSelector {
   div.singleCheckbox, div.groupCheckbox {
+    margin-left: 20px;
     label {
       display: inline;
     }
   }
   div.radioGroup {
-    margin-left: 20px;
+    margin-left: 40px;
 
     div.radioItem {
     }
   }
   div.zScore {
-    margin-left: 40px;
+    margin-left: 60px;
   }
   label.profileName {
   }

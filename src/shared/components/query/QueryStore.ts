@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import client from "../../api/cbioportalClientInstance";
-import {toJS, observable, action, computed, whyRun} from "../../../../node_modules/mobx/lib/mobx";
-import {TypeOfCancer as CancerType} from "../../api/CBioPortalAPI";
+import {toJS, observable, action, computed, whyRun, expr} from "../../../../node_modules/mobx/lib/mobx";
+import {TypeOfCancer as CancerType, GeneticProfile} from "../../api/CBioPortalAPI";
 import CancerStudyTreeData from "./CancerStudyTreeData";
 import StudyListLogic from "../StudyList/StudyListLogic";
 import MobxPromise from "../../api/MobxPromise";
@@ -24,6 +24,12 @@ export class QueryStore
 	@observable.shallow selectedCancerStudyIds:string[] = [];
 	@observable.shallow selectedProfileIds:string[] = [];
 	@observable zScoreThreshold:string = '2.0';
+
+	@computed get selectedProfiles()
+	{
+		let idToProfile = expr(() => _.keyBy(this.geneticProfiles.result || [], profile => profile.geneticProfileId));
+		return this.selectedProfileIds.map(id => idToProfile[id]);
+	}
 
 	// experimental options
 	@observable.shallow selectedCancerTypeIds:string[] = [];

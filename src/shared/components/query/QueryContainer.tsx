@@ -12,7 +12,6 @@ import * as styles_any from './styles.module.scss';
 import GeneticProfileSelector from "./GeneticProfileSelector";
 import {observer} from "../../../../node_modules/mobx-react/custom";
 import queryStore from "./QueryStore";
-import DevTools from "../../../../node_modules/mobx-react-devtools/index";
 import devMode from "../../lib/devMode";
 
 const styles = styles_any as {
@@ -31,18 +30,22 @@ export default class QueryContainer extends React.Component<{}, {}>
             return <span>No data</span>;
 
         return (
-            <FlexCol padded flex={1} className={styles.QueryContainer}>
+            <FlexRow padded flex={1} className={styles.QueryContainer}>
 
-                <CancerStudySelector/>
+				<FlexCol padded>
 
-				{!!(devMode.enabled && queryStore.geneticProfiles.result) && (
-					<GeneticProfileSelector/>
-				)}
+					<CancerStudySelector/>
+
+					{!!(devMode.enabled && queryStore.geneticProfiles.isComplete && queryStore.geneticProfiles.result.length) && (
+						<GeneticProfileSelector/>
+					)}
+
+				</FlexCol>
 
 				{!!(devMode.enabled) && (
-					<FlexRow padded>
+					<FlexCol padded>
 						{/* demo controls */}
-						<FlexCol className={styles.CancerStudySelector} padded style={{border: '1px solid #ddd', borderRadius: 5, padding: 5}}>
+						<FlexCol padded style={{border: '1px solid #ddd', borderRadius: 5, padding: 5}}>
 							<StateToggle label='Click tree node again to deselect' target={queryStore} name='clickAgainToDeselectSingle' defaultValue={queryStore.clickAgainToDeselectSingle}/>
 							<Select
 								label="Tree depth: "
@@ -65,7 +68,7 @@ export default class QueryContainer extends React.Component<{}, {}>
 						</FlexCol>
 
 						{/* display state for demo */}
-						<pre style={{flex: 1, height: 200}}>
+						<pre>
 							{
 								JSON.stringify({
 									selectedCancerTypeIds: queryStore.selectedCancerTypeIds,
@@ -73,12 +76,10 @@ export default class QueryContainer extends React.Component<{}, {}>
 								}, null, 4)
 							}
 						</pre>
-					</FlexRow>
+					</FlexCol>
 				)}
 
-				{devMode.enabled && <DevTools/>}
-
-            </FlexCol>
+            </FlexRow>
         );
     }
 }
