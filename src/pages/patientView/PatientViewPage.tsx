@@ -3,8 +3,7 @@ import * as _ from 'lodash';
 import {Tabs, Tab, default as ReactBootstrap} from 'react-bootstrap';
 import ClinicalInformationContainer from './clinicalInformation/ClinicalInformationContainer';
 import MutationInformationContainer from './mutation/MutationInformationContainer';
-//import PatientHeader from './patientHeader/PatientHeader';
-//import {IPatientHeaderProps} from './patientHeader/PatientHeader';
+
 import {RootState} from '../../redux/rootReducer';
 import exposeComponentRenderer from '../../shared/lib/exposeComponentRenderer';
 import GenomicOverview from './genomicOverview/GenomicOverview';
@@ -26,6 +25,7 @@ import {MutSig, MrnaPercentile, default as CBioPortalAPIInternal} from "../../sh
 import PatientHeader from './patientHeader/PatientHeader';
 import {TablePaginationControls} from "../../shared/components/tablePaginationControls/TablePaginationControls";
 import {IHotspotData} from "./mutation/column/AnnotationColumnFormatter";
+import {getSpans} from './clinicalInformation/lib/clinicalAttributesUtil.js';
 
 
 export interface IPatientViewPageProps {
@@ -354,7 +354,15 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             sampleManager = new SampleManager(this.props.samples);
 
             sampleHeader = _.map(sampleManager!.samples,(sample: ClinicalDataBySampleId) => {
-                return sampleManager!.getComponentForSample(sample.id, true);
+                const clinicalDataLegacy: any = _.fromPairs(sample.clinicalData.map((x) => [x.clinicalAttributeId, x.value]));
+                return (
+                    <span style={{paddingRight: '10px'}}>
+                        {  sampleManager!.getComponentForSample(sample.id, true) }
+                        {'\u00A0' + sample.id}
+                        <span className='clinical-spans' dangerouslySetInnerHTML={{__html:getSpans(clinicalDataLegacy, 'lgg_ucsf_2014')}}></span>
+                    </span>
+
+                )
             });
         }
 
