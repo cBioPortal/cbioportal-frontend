@@ -25,7 +25,6 @@ export default class ClinicalInformationPatientTable extends React.Component<ICl
                 {
                     this.props.showTitleBar
                     ?   <div>
-                            <h4 className="pull-left">Patient</h4>
                             <TableHeaderControls className="pull-right" tableData={tableData} />
                         </div>
                     :   null

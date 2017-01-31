@@ -6,6 +6,7 @@ import MutationInformationContainer from './mutation/MutationInformationContaine
 //import PatientHeader from './patientHeader/PatientHeader';
 //import {IPatientHeaderProps} from './patientHeader/PatientHeader';
 import {RootState} from '../../redux/rootReducer';
+import Spinner from "react-spinkit";
 import exposeComponentRenderer from '../../shared/lib/exposeComponentRenderer';
 import GenomicOverview from './genomicOverview/GenomicOverview';
 import mockData from './mock/sampleData.json';
@@ -26,7 +27,12 @@ import {MutSig, MrnaPercentile, default as CBioPortalAPIInternal} from "../../sh
 import PatientHeader from './patientHeader/PatientHeader';
 import {TablePaginationControls} from "../../shared/components/tablePaginationControls/TablePaginationControls";
 import {IHotspotData} from "./mutation/column/AnnotationColumnFormatter";
+import { PatientViewPageStore } from './clinicalInformation/PatientViewPageStore';
+import { observer } from 'mobx-react';
+import ClinicalInformationPatientTable from "./clinicalInformation/ClinicalInformationPatientTable";
+import ClinicalInformationSamples from "./clinicalInformation/ClinicalInformationSamplesTable";
 
+const patientViewPageStore = new PatientViewPageStore();
 
 export interface IPatientViewPageProps {
     store?: RootState;
@@ -53,18 +59,8 @@ interface IPatientViewState {
 }
 
 @Connector.decorator
+@observer
 export default class PatientViewPage extends React.Component<IPatientViewPageProps, IPatientViewState> {
-
-
-    // private static mapStateToProps(state: RootState): IPatientHeaderProps {
-    //
-    //     let ci = state.clinicalInformation;
-    //     return {
-    //         patient: ci.patient,
-    //         samples: ci.samples,
-    //         status: ci.status,
-    //     };
-    // }
 
     private studyId:string;
 
@@ -102,12 +98,15 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         //TODO: this should be done by a module so that it can be reused on other pages
         const qs = queryString.parse((window as any).location.search);
-        this.studyId = qs['cancer_study_id'] + '';
-        this.patientId = qs['case_id'] + '';
-        this.mutationGeneticProfileId = `${this.studyId}_mutations`;
+        patientViewPageStore.studyId = qs['cancer_study_id'] + '';
+
+        patientViewPageStore.patientId = qs['case_id'] + '';
 
         const qs_hash = queryString.parse((window as any).location.hash);
         this.patientIdsInCohort = (!!qs_hash['nav_case_ids'] ? (qs_hash['nav_case_ids'] as string).split(",") : []);
+
+        this.mutationGeneticProfileId = `${patientViewPageStore.studyId}_mutations`;
+
     }
 
     fetchHotspotsData(mutations:Mutation[]):Promise<IHotspotData> {
@@ -169,7 +168,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     fetchMrnaZscoreProfile():Promise<string> {
         return new Promise((resolve, reject) => {
-            let geneticProfilesPromise = this.tsClient.getAllGeneticProfilesInStudyUsingGET({studyId: this.studyId});
+            let geneticProfilesPromise = this.tsClient.getAllGeneticProfilesInStudyUsingGET({studyId: patientViewPageStore.studyId});
             const regex1 = /^.+rna_seq.*_zscores$/;
             const regex2 = /^.*_zscores$/;
             geneticProfilesPromise.then((d) => {
@@ -194,7 +193,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     fetchCnaSegmentData(_sampleIds: string[]) {
 
-        const ids: SampleIdentifier[] = _sampleIds.map((id: string) => { return { sampleId:id, studyId: this.studyId }; });
+        const ids: SampleIdentifier[] = _sampleIds.map((id: string) => { return { sampleId:id, studyId: patientViewPageStore.studyId }; });
 
         return this.tsClient.fetchCopyNumberSegmentsUsingPOST({sampleIdentifiers:ids, projection: 'DETAILED'});
 
@@ -244,7 +243,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     }
 
     fetchMutSigData():Promise<MutSig[]> {
-        return this.tsInternalClient.getSignificantlyMutatedGenesUsingGET({studyId: this.studyId});
+        return this.tsInternalClient.getSignificantlyMutatedGenesUsingGET({studyId: patientViewPageStore.studyId});
     }
 
     public componentDidMount() {
@@ -350,8 +349,9 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         let sampleHeader: (JSX.Element | undefined)[] | null = null;
         let cohortNav: JSX.Element | null = null;
 
-        if (this.props.samples) {
-            sampleManager = new SampleManager(this.props.samples);
+        if (patientViewPageStore.patientViewData.isComplete) {
+            let patientData = patientViewPageStore.patientViewData.result!;
+            sampleManager = new SampleManager(patientData.samples!);
 
             sampleHeader = _.map(sampleManager!.samples,(sample: ClinicalDataBySampleId) => {
                 return sampleManager!.getComponentForSample(sample.id, true);
@@ -359,57 +359,46 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         }
 
         if (this.patientIdsInCohort && this.patientIdsInCohort.length > 0) {
-            const indexInCohort = this.patientIdsInCohort.indexOf(this.patientId);
-            cohortNav = (<TablePaginationControls
-                            showItemsPerPageSelector={false}
-                            showFirstPage={true}
-                            showLastPage={true}
-                            textBetweenButtons={`${indexInCohort+1} of ${this.patientIdsInCohort.length} patients`}
-                            firstPageDisabled={indexInCohort === 0}
-                            previousPageDisabled={indexInCohort === 0}
-                            nextPageDisabled={indexInCohort === this.patientIdsInCohort.length-1}
-                            lastPageDisabled={indexInCohort === this.patientIdsInCohort.length-1}
-                            onFirstPageClick={() =>
-                                window.location.href = this.buildURL(
-                                    this.patientIdsInCohort[0],
-                                    this.studyId,
-                                    this.patientIdsInCohort)}
-                            onPreviousPageClick={() =>
-                                window.location.href = this.buildURL(
-                                    this.patientIdsInCohort[indexInCohort-1],
-                                    this.studyId,
-                                    this.patientIdsInCohort)}
-                            onNextPageClick={() =>
-                                window.location.href = this.buildURL(
-                                    this.patientIdsInCohort[indexInCohort+1],
-                                    this.studyId,
-                                    this.patientIdsInCohort)}
-                            onLastPageClick={() =>
-                                window.location.href = this.buildURL(
-                                    this.patientIdsInCohort[this.patientIdsInCohort.length-1],
-                                    this.studyId,
-                                    this.patientIdsInCohort)}
-                            />);
+            const indexInCohort = this.patientIdsInCohort.indexOf(patientViewPageStore.patientId);
+            cohortNav = (
+                <TablePaginationControls
+                    showItemsPerPageSelector={false}
+                    showFirstPage={true}
+                    showLastPage={true}
+                    textBetweenButtons={`${indexInCohort+1} of ${this.patientIdsInCohort.length} patients`}
+                    firstPageDisabled={indexInCohort === 0}
+                    previousPageDisabled={indexInCohort === 0}
+                    nextPageDisabled={indexInCohort === this.patientIdsInCohort.length-1}
+                    lastPageDisabled={indexInCohort === this.patientIdsInCohort.length-1}
+                    onFirstPageClick={() => patientViewPageStore.changePatientId(this.patientIdsInCohort[0]) }
+                    onPreviousPageClick={() => patientViewPageStore.changePatientId(this.patientIdsInCohort[indexInCohort-1]) }
+                    onNextPageClick={() => patientViewPageStore.changePatientId(this.patientIdsInCohort[indexInCohort+1]) }
+                    onLastPageClick={() => patientViewPageStore.changePatientId(this.patientIdsInCohort[this.patientIdsInCohort.length-1]) }
+                />
+            );
         }
 
         return (
             <div>
 
-                <If condition={sampleHeader}>
-                    <div style={{padding:20, borderRadius:5, background: '#eee', marginBottom: 20}}>
-                        <PatientHeader patient={this.props.patient} />
+                <If condition={(cohortNav != null)}>
+                    <div className="clearfix">
+                        <div className="pull-right" style={{marginBottom:20}}>
+                            {cohortNav}
+                        </div>
+                    </div>
+                </If>
+
+                {  (patientViewPageStore.patientViewData.isComplete) && (
+                    <div className="clearfix" style={{padding:20, borderRadius:5, background: '#eee', marginBottom: 20}}>
+                        <PatientHeader patient={patientViewPageStore.patientViewData.result!.patient!}/>
                         {sampleHeader}
                     </div>
-                </If>
+                    )
+                }
 
-                <If condition={cohortNav}>
-                    <div style={{marginBottom:20}}>
-                        {cohortNav}
-                    </div>
-                </If>
-
-                <Tabs animation={false} activeKey={this.state.activeTabKey} onSelect={this.handleSelect as SelectCallback} className="mainTabs" unmountOnExit={true}>
-                    <Tab eventKey={1} title="Summary">
+                <Tabs animation={false} activeKey={this.state.activeTabKey} id="patientViewPageTabs" onSelect={this.handleSelect as SelectCallback} className="mainTabs" unmountOnExit={true}>
+                    <Tab eventKey={2} id="summaryTab" title="Summary">
 
                         <FeatureTitle title="Genomic Data" isLoading={ !(this.state.mutationData && this.state.cnaSegmentData) } />
 
@@ -446,9 +435,29 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             )
                         }
                     </Tab>
-                    <Tab eventKey={2} title="Clinical Data">
+                    <Tab eventKey={1} id="clinicalDataTab" title="Clinical Data">
 
-                        <ClinicalInformationContainer status={ this.props.clinicalDataStatus } patient={this.props.patient} samples={this.props.samples} />
+                            <div className="clearfix">
+                            <FeatureTitle title="Patient" isLoading={ patientViewPageStore.clinicalDataPatient.isPending } className="pull-left" />
+                            { (patientViewPageStore.clinicalDataPatient.isComplete) && (
+                                <ClinicalInformationPatientTable showTitleBar={true}
+                                                                 data={patientViewPageStore.clinicalDataPatient.result} />
+
+                                )
+                            }
+                            </div>
+
+                            <br />
+
+                            <div className="clearfix">
+                            <FeatureTitle title="Samples" isLoading={ patientViewPageStore.clinicalDataGroupedBySample.isPending } className="pull-left" />
+                            {  (patientViewPageStore.clinicalDataGroupedBySample.isComplete) && (
+                                <ClinicalInformationSamples
+                                    samples={patientViewPageStore.clinicalDataGroupedBySample.result!}/>
+                                )
+                            }
+                            </div>
+
 
                     </Tab>
                 </Tabs>
