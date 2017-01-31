@@ -1,9 +1,10 @@
 import * as _ from 'lodash';
 import { ClinicalDataBySampleId } from "../../../shared/api/api-types-extended";
-import {ClinicalData} from "../../../shared/api/CBioPortalAPI";
+import {ClinicalData, SampleIdentifier} from "../../../shared/api/CBioPortalAPI";
 import {ClinicalInformationData} from "../Connector";
 import client from "../../../shared/api/cbioportalClientInstance";
-import {computed, observable} from "../../../../node_modules/mobx/lib/mobx";
+import {computed, observable, action} from "../../../../node_modules/mobx/lib/mobx";
+import MobxPromise from "../../../shared/api/MobxPromise";
 import {remoteData} from "../../../shared/api/remoteData";
 
 export function groupByEntityId(clinicalDataArray: Array<ClinicalData>)
@@ -57,7 +58,20 @@ export class PatientViewPageStore {
         });
     }, []);
 
-    readonly clinicalDataSample = remoteData({
+    readonly cnaSegments = remoteData({
+        await: () => [
+            this.samplesOfPatient
+        ],
+        invoke: () => client.fetchCopyNumberSegmentsUsingPOST({
+            sampleIdentifiers: this.samplesOfPatient.result!.map(sample => ({
+                sampleId: sample.sampleId,
+                studyId: this.studyId
+            })),
+            projection: 'DETAILED',
+        })
+    }, []);
+
+    readonly clinicalDataForSamples = remoteData({
         await: () => [
             this.samplesOfPatient
         ],
@@ -68,9 +82,13 @@ export class PatientViewPageStore {
                 studyId: this.studyId
             })),
             projection: 'DETAILED',
-        }),
-        default: []
-    });
+        })
+    }, []);
+
+    readonly clinicalDataGroupedBySample = remoteData({
+        await:() => [this.clinicalDataForSamples],
+        invoke: ()=> groupByEntityId(this.clinicalDataForSamples.result!)
+    }, {});
 
     readonly patientViewData = remoteData({
         await: () => [
@@ -84,4 +102,9 @@ export class PatientViewPageStore {
             this.clinicalDataSample.result
         )
     });
+
+    @action("ChangePatientId") changePatientId(newId: string) {
+        this.patientId = newId;
+    }
+
 }
