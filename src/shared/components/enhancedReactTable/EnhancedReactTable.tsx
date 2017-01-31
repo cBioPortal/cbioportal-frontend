@@ -358,7 +358,7 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
                 const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
 
                 headerContent = (
-                    <Tooltip overlay={columnDef.description} placement="rightTop" arrowContent={arrowContent}>
+                    <Tooltip overlay={columnDef.description} placement="top" arrowContent={arrowContent}>
                         {headerContent}
                     </Tooltip>
                 );

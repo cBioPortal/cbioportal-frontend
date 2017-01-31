@@ -256,7 +256,7 @@ export default class MutationTypeColumnFormatter
             const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
 
             content = (
-                <Tooltip overlay={toolTip} placement="rightTop" arrowContent={arrowContent}>
+                <Tooltip overlay={toolTip} placement="left" arrowContent={arrowContent}>
                     {content}
                 </Tooltip>
             );
