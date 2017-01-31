@@ -19,6 +19,8 @@ export interface IEnhancedReactTableProps<T> {
 
 export interface IEnhancedReactTableState {
     columnVisibility: IColumnVisibilityState;
+    sortableColumns:Array<string|IColumnSort>;
+    filterableColumns:Array<string|IColumnFilter>;
     filter: string;
     itemsPerPage:number;
     currentPage:number;
@@ -50,5 +52,15 @@ export interface IEnhancedReactTableColumnDef {
     dataField?: string; // data field to retrieve display data (in case no formatter provided, otherwise ignored)
     columnData?:IColumnDataFunction; // column data function to retrieve display data (in case no formatter provided)
 }
+
+export type IColumnSort = {
+    column: string;
+    sortFunction: IColumnSortFunction;
+};
+
+export type IColumnFilter = {
+    column: string;
+    filterFunction: IColumnFilterFunction;
+};
 
 export default IEnhancedReactTableProps;

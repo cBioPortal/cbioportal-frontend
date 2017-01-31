@@ -6,22 +6,12 @@ import * as _ from 'lodash';
 import TableHeaderControls from "shared/components/tableHeaderControls/TableHeaderControls";
 import {
     IEnhancedReactTableProps, IColumnDefMap, IEnhancedReactTableColumnDef, IColumnVisibilityState,
-    IEnhancedReactTableState, IColumnVisibilityDef
+    IEnhancedReactTableState, IColumnVisibilityDef, IColumnSort, IColumnFilter
 } from "IEnhancedReactTableProps";
 import {
     IColumnFormatterData, IColumnSortFunction, IColumnFilterFunction, IColumnVisibilityFunction, ColumnVisibility
 } from "./IColumnFormatter";
 import './styles.css';
-
-type IColumnSort = {
-    column: string,
-    sortFunction: IColumnSortFunction
-};
-
-type IColumnFilter = {
-    column: string,
-    filterFunction: IColumnFilterFunction
-};
 
 /**
  * @author Selcuk Onur Sumer
@@ -93,9 +83,6 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
     // mapping of column name to column id
     private colNameToId:{[key:string]: string};
 
-    // sorted list of columns (by priority)
-    private sortedColumns:Array<IEnhancedReactTableColumnDef>;
-
     private filteredDataLength:number;
 
     private shouldSetState:boolean;
@@ -106,24 +93,29 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
 
     private columnVisibilitySelector = (state:IEnhancedReactTableState) => state.columnVisibility;
 
+    // visible columns depend on both column definitions and visibility
     private visibleColsSelector = createSelector([this.columnsSelector, this.columnVisibilitySelector],
         (columns:IColumnDefMap, columnVisibility:IColumnVisibilityState) => this.resolveVisible(columns, columnVisibility));
 
-    private sortableColsSelector = createSelector(this.visibleColsSelector,
-        (visibleCols:IColumnDefMap)=>this.resolveSortable(visibleCols));
-
-    private filterableColsSelector = createSelector(this.visibleColsSelector,
-        (visibleCols:IColumnDefMap)=>this.resolveFilterable(visibleCols));
-
-    private sortedColsSelector = createSelector(this.visibleColsSelector,
+    // sorted list of visible columns are required to calculate table header
+    private sortedVisibleColsSelector = createSelector(this.visibleColsSelector,
         (visibleCols:IColumnDefMap)=>this.resolveOrder(visibleCols));
 
-    private columnVisibilityArraySelector = createSelector(this.columnVisibilitySelector,
-        (columnVisibility:IColumnVisibilityState) => this.resolveColumnVisibility(this.colNameToId, this.sortedColumns, columnVisibility));
+    // sorted columns depend on column definition, but not on the visibility
+    private sortedColsSelector = createSelector(this.columnsSelector,
+        (columns:IColumnDefMap)=>this.resolveOrder(columns));
 
-    private headersSelector = createSelector(this.sortedColsSelector,
+    private columnVisibilityArraySelector = createSelector([this.sortedColsSelector, this.columnVisibilitySelector],
+         (sortedColumns:Array<IEnhancedReactTableColumnDef>, columnVisibility:IColumnVisibilityState) =>
+             this.resolveColumnVisibility(this.colNameToId, sortedColumns, columnVisibility));
+
+    // we need to calculate the header values every time the visibility or column definitions change
+    private headersSelector = createSelector(this.sortedVisibleColsSelector,
         (sortedCols:Array<IEnhancedReactTableColumnDef>) => this.generateHeaders(sortedCols));
 
+    // no need to calculate column render values every time the visibility changes,
+    // we only need to do it when the column definitions change
+    // reactable is clever enough to not render the column if its header is missing
     private rowsSelector = createSelector([this.sortedColsSelector, this.rawDataSelector],
         (sortedCols:Array<IEnhancedReactTableColumnDef>, rawData:Array<T>) => this.generateRows(sortedCols, rawData));
 
@@ -131,8 +123,12 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
     {
         super(props);
 
+        this.colNameToId = this.mapColNameToId(props.columns);
+
         this.state = {
             columnVisibility: EnhancedReactTable.resolveVisibility(props.columns, props.rawData),
+            sortableColumns: this.resolveSortable(this.props.columns || {}),
+            filterableColumns: this.resolveFilterable(this.props.columns || {}),
             filter: "",
             itemsPerPage: this.props.initItemsPerPage || 25,
             currentPage: this.props.initPage || 0
@@ -160,10 +156,6 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
         };
         //
 
-
-        this.colNameToId = this.mapColNameToId(props.columns);
-        this.sortedColumns = this.resolveOrder(props.columns);
-
         // binding "this" to handler functions
         this.handleFilterInput = this.handleFilterInput.bind(this);
         this.handleVisibilityToggle = this.handleVisibilityToggle.bind(this);
@@ -175,20 +167,8 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
     public render() {
         let {
             reactTableProps,
-            headerControlsProps,
-            columns,
-            rawData
+            headerControlsProps
         } = this.props;
-
-        columns = columns || {};
-        let visibleCols:IColumnDefMap = this.visibleColsSelector(this.state, this.props);
-
-        // dynamic reactable props (depends on the columnVisibility state)
-        let sortable:Array<string|IColumnSort> = this.sortableColsSelector(this.state, this.props);
-        let filterable:Array<string|IColumnFilter> = this.filterableColsSelector(this.state, this.props);
-
-        // sort columns
-        let sortedCols:Array<IEnhancedReactTableColumnDef> = this.sortedColsSelector(this.state, this.props);
 
         // always use the initially sorted columns (this.sortedColumns),
         // otherwise already hidden columns will never appear in the dropdown menu!
@@ -207,8 +187,6 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
             firstItemShownIndex = (this.state.itemsPerPage === -1 ? 0 : this.state.itemsPerPage*this.state.currentPage) + 1;
         }
         const lastItemShownIndex:number = (this.state.itemsPerPage === -1 ? this.filteredDataLength : Math.min(this.filteredDataLength, firstItemShownIndex + this.state.itemsPerPage - 1));
-
-
 
 
         return(
@@ -237,8 +215,8 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
                     {...headerControlsProps}
                 />
                 <Table
-                    sortable={sortable}
-                    filterable={filterable}
+                    sortable={this.state.sortableColumns}
+                    filterable={this.state.filterableColumns}
                     filterBy={this.state.filter}
                     itemsPerPage={this.state.itemsPerPage === -1 ? undefined : this.state.itemsPerPage}
                     currentPage={this.state.currentPage}
@@ -300,6 +278,12 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
         return colNameToId;
     }
 
+    /**
+     * Generate a list of column definitions sorted by priority.
+     *
+     * @param columns
+     * @returns {Array<IEnhancedReactTableColumnDef>}
+     */
     private resolveOrder(columns:IColumnDefMap|undefined):Array<IEnhancedReactTableColumnDef>
     {
         if (columns) {
@@ -501,9 +485,8 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
     private handleFilterInput(filter: string):void
     {
         this.setState({
-            ...this.state,
             filter
-        });
+        } as IEnhancedReactTableState);
     }
 
     private handleVisibilityToggle(columnId: String):void
@@ -511,7 +494,7 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
         const key:string = columnId as string;
 
         let visibility:ColumnVisibility = this.state.columnVisibility[key];
-        let columnVisibility:IColumnVisibilityState = this.state.columnVisibility;
+        const columnVisibility:IColumnVisibilityState = {...this.state.columnVisibility};
 
         if (visibility === "hidden") {
             visibility = "visible";
@@ -523,9 +506,8 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
         columnVisibility[key] = visibility;
 
         this.setState({
-            columnVisibility,
-            ...this.state
-        });
+            columnVisibility
+        } as IEnhancedReactTableState);
     }
 
     private handleChangeItemsPerPage(itemsPerPage:number) {
