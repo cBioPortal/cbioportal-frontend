@@ -42,53 +42,45 @@ export class PatientViewPageStore {
 
     @observable studyId = '';
 
-    @computed get clinicalDataPatient()
-    {
-        return new MobxPromise(client.getAllClinicalDataOfPatientInStudyUsingGET({
+    @observable clinicalDataPatient = new MobxPromise(() => {
+        return client.getAllClinicalDataOfPatientInStudyUsingGET({
             projection: 'DETAILED',
             studyId: this.studyId,
             patientId: this.patientId
-        }));
-    }
+        });
+    });
 
-    @computed get samplesOfPatient()
-    {
-        return new MobxPromise(client.getAllSamplesOfPatientInStudyUsingGET({
+    @observable samplesOfPatient = new MobxPromise(() => {
+        return client.getAllSamplesOfPatientInStudyUsingGET({
             studyId: this.studyId,
             patientId: this.patientId
-        }));
-    }
-
-    @computed get clinicalDataSample()
-    {
-        return new MobxPromise({
-            await: [
-                this.samplesOfPatient
-            ],
-            invoke: () => client.fetchClinicalDataUsingPOST({
-                clinicalDataType: 'SAMPLE',
-                identifiers: this.samplesOfPatient.result!.map(sample => ({
-                    entityId: sample.sampleId,
-                    studyId: this.studyId
-                })),
-                projection: 'DETAILED',
-            })
         });
-    }
+    });
 
-    @computed get patientViewData()
-    {
-        return new MobxPromise({
-            await: [
-                this.clinicalDataPatient,
-                this.clinicalDataSample
-            ],
-            invoke: () => transformClinicalInformationToStoreShape(
-                this.patientId,
-                this.studyId,
-                this.clinicalDataPatient.result!,
-                this.clinicalDataSample.result!
-            )
-        });
-    }
+    @observable clinicalDataSample = new MobxPromise({
+        await: () => [
+            this.samplesOfPatient
+        ],
+        invoke: () => client.fetchClinicalDataUsingPOST({
+            clinicalDataType: 'SAMPLE',
+            identifiers: this.samplesOfPatient.result!.map(sample => ({
+                entityId: sample.sampleId,
+                studyId: this.studyId
+            })),
+            projection: 'DETAILED',
+        })
+    });
+
+    @observable patientViewData = new MobxPromise({
+        await: () => [
+            this.clinicalDataPatient,
+            this.clinicalDataSample
+        ],
+        invoke: () => transformClinicalInformationToStoreShape(
+            this.patientId,
+            this.studyId,
+            this.clinicalDataPatient.result!,
+            this.clinicalDataSample.result!
+        )
+    });
 }
