@@ -101,7 +101,7 @@ class SampleManager {
             destroyTooltipOnHide={false}
             onPopupAlign={placeArrow}
             >
-            <span>
+                <svg height="12" width="12">
                 <SampleInline
                              sample={sample}
                              sampleNumber={sampleNumberText}
@@ -109,7 +109,8 @@ class SampleManager {
                              showClinical={showClinical}
                          >
                 </SampleInline>
-             </span>
+                </svg>
+
         </Tooltip>);
 
            // <SampleInline

@@ -16,24 +16,25 @@ export default class SampleInline extends React.Component<ISampleInlineProps, {}
     public render() {
         const { sample, sampleNumber, sampleColor, showClinical } = this.props;
 
-        if (showClinical) {
-            const clinicalDataLegacy: any = fromPairs(sample.clinicalData.map((x) => [x.clinicalAttributeId, x.value]));
 
-            return (
-                <span style={{paddingRight: '10px'}}>
-                    <SampleLabelHTML color={sampleColor} label={(sampleNumber).toString()} />
-                    {' ' + sample.id}
-                    <span className='clinical-spans' dangerouslySetInnerHTML={{__html:
-                        getSpans(clinicalDataLegacy, 'lgg_ucsf_2014')}}>
-                    </span>
-                </span>
-            );
-        } else {
-            return (
-                <span>
-                    <SampleLabelHTML color={sampleColor} label={(sampleNumber).toString()} />
-                </span>
-            );
-        }
+        return (
+            <SampleLabelHTML color={sampleColor} label={(sampleNumber).toString()} />
+        );
+
+        // if (showClinical) {
+        //     const clinicalDataLegacy: any = fromPairs(sample.clinicalData.map((x) => [x.clinicalAttributeId, x.value]));
+        //
+        //     return (
+        //         <span style={{paddingRight: '10px'}}>
+        //             <SampleLabelHTML color={sampleColor} label={(sampleNumber).toString()} />
+        //             {' ' + sample.id}
+        //             <span className='clinical-spans' dangerouslySetInnerHTML={{__html:
+        //                 getSpans(clinicalDataLegacy, 'lgg_ucsf_2014')}}>
+        //             </span>
+        //         </span>
+        //     );
+        // } else {
+        //
+        // }
     }
 }
