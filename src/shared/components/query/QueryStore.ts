@@ -11,16 +11,13 @@ export class QueryStore
 {
 	@observable cancerTypes = new MobxPromise(client.getAllCancerTypesUsingGET({}));
 	@observable cancerStudies = new MobxPromise(client.getAllStudiesUsingGET({}));
-	@computed get geneticProfiles()
-	{
-		return new MobxPromise(() => {
-			let studyIds = this.selectedCancerStudyIds;
-			if (studyIds && studyIds.length == 1)
-				return client.getAllGeneticProfilesInStudyUsingGET({studyId: studyIds[0]});
-			else
-				return Promise.resolve([]);
-		});
-	}
+	@observable geneticProfiles = new MobxPromise(() => {
+		let studyIds = this.selectedCancerStudyIds;
+		if (studyIds && studyIds.length == 1)
+			return client.getAllGeneticProfilesInStudyUsingGET({studyId: studyIds[0]});
+		else
+			return Promise.resolve([]);
+	});
 
 	@observable searchText:string = '';
 	@observable.shallow searchTextPresets = ['lung', 'serous', 'tcga', 'tcga -provisional'];
