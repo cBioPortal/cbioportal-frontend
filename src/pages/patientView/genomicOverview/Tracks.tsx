@@ -60,7 +60,7 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
 
                 if (this.props.sampleManager.samples.length > 1) {
                     const $container = $(`#cnaTrack${sample.id}`);
-                    const pos = {x: $container.attr('x'), y: $container.attr('y')};
+                    const pos = {x: parseInt($container.attr('x')) - 10, y: parseInt($container.attr('y')) - 5};
                     const $newContainer = $('<svg height="12" width="12" />').attr(pos);
                     $container.replaceWith($newContainer);
 
@@ -88,7 +88,7 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
                 if (this.props.sampleManager.samples.length > 1) {
                     const id = `#mutTrack${sample.id}`;
                     const $container = $(id);
-                    const pos = {x: parseInt($container.attr('x')) - 10, y: $container.attr('y')};
+                    const pos = {x: parseInt($container.attr('x')) - 10, y: parseInt($container.attr('y')) - 5};
                     const $newContainer = $(`<svg id="${id}" height="12" width="12" />`);
                     $newContainer.attr(pos);
                     $container.replaceWith($newContainer);
