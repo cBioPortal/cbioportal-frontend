@@ -31,10 +31,6 @@ export default class MobxPromise<R>
         }
 
         this.immutable = immutable;
-
-        // if not awaiting, invoke now to make sure observable property accesses are tracked
-        if (!this.await.length)
-            this.lazyInvoke;
     }
 
     private immutable:boolean;
@@ -78,7 +74,7 @@ export default class MobxPromise<R>
 
     /**
      * This lets mobx determine when to call this.invoke(),
-     * taking advantage of caching based on observable property accesses tracking.
+     * taking advantage of caching based on observable property access tracking.
      */
     @computed get lazyInvoke()
     {
