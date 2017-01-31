@@ -19,14 +19,18 @@ import { If, Then, Else } from 'react-if';
 import queryString from "query-string";
 import SampleManager from './sampleManager';
 import SelectCallback = ReactBootstrap.SelectCallback;
+import {
+    default as CancerHotspotsAPI, HotspotMutation
+} from "../../shared/api/CancerHotspotsAPI";
 import CancerHotspotsAPI from "../../shared/api/CancerHotspotsAPI";
 import {HotspotMutation} from "../../shared/api/CancerHotspotsAPI";
 import {
     MutSig, MrnaPercentile, default as CBioPortalAPIInternal,
-    VariantCountIdentifier, VariantCount
+    VariantCountIdentifier, VariantCount, CosmicMutation
 } from "../../shared/api/CBioPortalAPIInternal";
 import PatientHeader from './patientHeader/PatientHeader';
 import {TablePaginationControls} from "../../shared/components/tablePaginationControls/TablePaginationControls";
+import {ICosmicData} from "../../shared/components/mutationTable/column/CosmicColumnFormatter";
 import {IVariantCountData} from "./mutation/column/CohortColumnFormatter";
 
 import {IHotspotData, IMyCancerGenomeData, IMyCancerGenome} from "./mutation/column/AnnotationColumnFormatter";
@@ -53,6 +57,7 @@ interface IPatientViewState {
     mutationData: any;
     myCancerGenomeData?: IMyCancerGenomeData;
     hotspotsData?: IHotspotData;
+    cosmicData?: ICosmicData;
     mrnaExprRankData?: MrnaRankData;
     mutSigData?: MutSigData;
     variantCountData?: IVariantCountData;
@@ -193,6 +198,37 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     single: values[0],
                     clustered: values[1]
                 });
+            });
+        });
+    }
+
+    fetchCosmicData(mutations:Mutation[]):Promise<ICosmicData> {
+        const generateMap = function(cosmicMutations:CosmicMutation[]) {
+            // key => geneSymbol_proteinPosition
+            // protienPosition => start[_end]
+            const map: ICosmicData = {};
+
+            // create a map for a faster lookup
+            _.each(cosmicMutations, function(cosmic:CosmicMutation) {
+                if (!(cosmic.keyword in map)) {
+                    map[cosmic.keyword] = [];
+                }
+
+                map[cosmic.keyword].push(cosmic);
+            });
+
+            return map;
+        };
+
+        const queryKeywords:string[] = _.uniq(_.map(mutations, (mutation:Mutation) => mutation.keyword));
+
+        return new Promise((resolve, reject) => {
+            const promise = this.tsInternalClient.fetchCosmicCountsUsingPOST({
+                keywords: _.filter(queryKeywords, (query) => {return query != null;})
+            });
+
+            promise.then((data) => {
+                resolve(generateMap(data));
             });
         });
     }
@@ -371,6 +407,14 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     this.fetchVariantCountData(_result).then((variantCountData:IVariantCountData) => {
                         this.setState(({ variantCountData } as IPatientViewState));
                     });
+                    const hotspotDataPromise = this.fetchHotspotsData(_result).then((hotspotsData:IHotspotData) =>
+                        this.setState(({ hotspotsData } as IPatientViewState)));
+                    hotspotDataPromise.catch(()=>{});
+
+                    const cosmicDataPromise = this.fetchCosmicData(_result).then((cosmicData:ICosmicData) =>
+                        this.setState(({ cosmicData } as IPatientViewState)));
+                    cosmicDataPromise.catch(()=>{});
+
                     this.setState(({ mutationData : _result } as IPatientViewState));
 
                     const sampleToEntrezGeneIds = _result.reduce((map:{ [s:string]:Set<number> }, next:Mutation) => {
@@ -539,6 +583,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                     mutations={this.state.mutationData}
                                     myCancerGenomeData={this.state.myCancerGenomeData}
                                     hotspots={this.state.hotspotsData}
+                                    cosmicData={this.state.cosmicData}
                                     mrnaExprRankData={this.state.mrnaExprRankData}
                                     mutSigData={this.state.mutSigData}
                                     variantCountData={this.state.variantCountData}
