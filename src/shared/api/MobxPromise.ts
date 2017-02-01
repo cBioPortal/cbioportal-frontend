@@ -1,5 +1,4 @@
-import * as seamlessImmutable from 'seamless-immutable';
-import {computed, observable} from "../../../node_modules/mobx/lib/mobx";
+import {computed, observable, action} from "../../../node_modules/mobx/lib/mobx";
 
 /**
  * This tagged union type describes the interoperability of MobxPromise properties.
@@ -9,56 +8,79 @@ export type MobxPromiseUnionType<R> = (
     { status: 'error', isPending: false, isError: true, isComplete: false, result: undefined, error: Error } |
     { status: 'complete', isPending: false, isError: false, isComplete: true, result: R, error: undefined }
 );
+export type MobxPromiseUnionTypeWithDefault<R> = (
+    { status: 'pending', isPending: true, isError: false, isComplete: false, result: R, error: undefined } |
+    { status: 'error', isPending: false, isError: true, isComplete: false, result: R, error: Error } |
+    { status: 'complete', isPending: false, isError: false, isComplete: true, result: R, error: undefined }
+);
 
-export type MobxPromiseInput<R> = PromiseLike<R> | (() => PromiseLike<R>) | MobxPromiseInputParams<R>;
-
+export type MobxPromiseInputUnion<R> = PromiseLike<R> | (() => PromiseLike<R>) | MobxPromiseInputParams<R>;
 export type MobxPromiseInputParams<R> = {
     /**
      * A function that returns a list of MobxPromise objects which are dependencies of the invoke function.
      */
-    await: () => Array<MobxPromise<any> | MobxPromiseUnionType<any>>,
+    await: MobxPromise_await,
     /**
      * A function that returns the async result or a promise for the async result.
      */
-    invoke: () => (PromiseLike<R> | R)
-};
+    invoke: MobxPromise_invoke<R>,
 
-function isPromiseLike(value?:Partial<PromiseLike<any>>)
-{
-    return !!value && typeof value.then === 'function';
-}
+    /**
+     * Default result in place of undefined
+     */
+    default?: R
+};
+export type MobxPromise_await = () => Array<MobxPromise<any> | MobxPromiseUnionType<any> | MobxPromiseUnionTypeWithDefault<any>>;
+export type MobxPromise_invoke<R> = () => (PromiseLike<R> | R);
+export type MobxPromiseInputParamsWithDefault<R> = {
+    await: MobxPromise_await,
+    invoke: MobxPromise_invoke<R>,
+    default: R
+};
 
 class MobxPromise<R>
 {
-    /**
-     * @param input Either an "invoke" function or a structure containing "await" and "invoke" functions.
-     * @param immutable
-     */
-    constructor(input:MobxPromiseInput<R>, immutable:boolean = true)
+    static isPromiseLike(value?:Partial<PromiseLike<any>>)
     {
-        if (typeof input === 'function')
-        {
-            this.await = () => [];
-            this.invoke = input;
-        }
-        else if (isPromiseLike(input))
-        {
-            this.await = () => [];
-            this.invoke = () => input as PromiseLike<R>;
-        }
-        else
-        {
-            input = input as MobxPromiseInputParams<R>;
-            this.await = input.await;
-            this.invoke = input.invoke;
-        }
-
-        this.immutable = immutable;
+        return !!value && typeof value.then === 'function';
     }
 
-    private immutable:boolean;
-    private await:MobxPromiseInputParams<R>['await'];
-    private invoke:MobxPromiseInputParams<R>['invoke'];
+    static toPromiseLike<R>(result:PromiseLike<R> | R):PromiseLike<R>
+    {
+        return MobxPromise.isPromiseLike(result) ? result as PromiseLike<R> : Promise.resolve(result as R);
+    }
+
+    static normalizeInput<R>(input:MobxPromiseInputUnion<R>):MobxPromiseInputParams<R>
+    {
+        if (typeof input === 'function')
+            return {
+                await: () => [],
+                invoke: input
+            };
+
+        if (MobxPromise.isPromiseLike(input))
+            return {
+                await: () => [],
+                invoke: () => input as PromiseLike<R>
+            };
+
+        return input as MobxPromiseInputParams<R>;
+    }
+
+    /**
+     * @param input Either an "invoke" function or a structure containing "await" and "invoke" functions.
+     */
+    constructor(input:MobxPromiseInputUnion<R>, defaultResult?:R)
+    {
+        input = MobxPromise.normalizeInput(input);
+        this.await = input.await;
+        this.invoke = input.invoke;
+        this.defaultResult = defaultResult !== undefined ? defaultResult : input.default;
+    }
+
+    private await:MobxPromise_await;
+    private invoke:MobxPromise_invoke<R>;
+    private defaultResult?:R;
     private invokeId:number = 0;
 
     @observable private internalStatus:'pending'|'complete'|'error' = 'pending';
@@ -84,9 +106,10 @@ class MobxPromise<R>
 
     @computed get result():R|undefined
     {
-        let result = this.internalResult; // force mobx to track changes to internalResult
         // checking status may trigger invoke
-        return this.isComplete ? result : undefined;
+        if (this.isError || this.internalResult == null)
+            return this.defaultResult;
+        return this.internalResult;
     }
 
     @computed get error():Error|undefined
@@ -106,39 +129,47 @@ class MobxPromise<R>
     @computed private get lazyInvokeId()
     {
         let invokeId = ++this.invokeId;
-        let result = this.invoke();
-        let promise = isPromiseLike(result) ? result as PromiseLike<R> : Promise.resolve(result as R);
-        setTimeout(() => {
-            if (invokeId !== this.invokeId)
-                return;
-
-            this.internalStatus = 'pending';
-            this.internalResult = undefined;
-
-            promise.then(
-                result => {
-                    if (invokeId !== this.invokeId)
-                        return;
-
-                    if (this.immutable)
-                        this.internalResult = seamlessImmutable.from(result);
-                    else
-                        this.internalResult = result;
-                    this.internalStatus = 'complete';
-                },
-                error => {
-                    if (invokeId !== this.invokeId)
-                        return;
-
-                    this.internalError = error;
-                    this.internalStatus = 'error';
-                }
-            );
-        });
+        let promise = MobxPromise.toPromiseLike(this.invoke());
+        setTimeout(() => this.setPending(invokeId, promise));
         return invokeId;
+    }
+
+    @action private setPending(invokeId:number, promise:PromiseLike<R>)
+    {
+        if (invokeId === this.invokeId)
+        {
+            promise.then(
+                result => this.setComplete(invokeId, result),
+                error => this.setError(invokeId, error)
+            );
+            this.internalStatus = 'pending';
+        }
+    }
+
+    @action private setComplete(invokeId:number, result:R)
+    {
+        if (invokeId === this.invokeId)
+        {
+            this.internalResult = result;
+            this.internalStatus = 'complete';
+        }
+    }
+
+    @action private setError(invokeId:number, error:Error)
+    {
+        if (invokeId === this.invokeId)
+        {
+            this.internalError = error;
+            this.internalStatus = 'error';
+        }
     }
 }
 
 // This type casting provides more information for TypeScript code flow analysis
-const _MobxPromise = MobxPromise as new<R>(input:MobxPromiseInput<R>, immutable?:boolean) => MobxPromiseUnionType<R>;
+const _MobxPromise = MobxPromise as {
+    new<R>(input:MobxPromiseInputParamsWithDefault<R>): MobxPromiseUnionTypeWithDefault<R>;
+    new<R>(input:MobxPromiseInputUnion<R>, defaultResult: R): MobxPromiseUnionTypeWithDefault<R>;
+    new<R>(input:MobxPromiseInputUnion<R>): MobxPromiseUnionType<R>;
+};
 export default _MobxPromise;
+export const MobxPromiseClass = MobxPromise;
