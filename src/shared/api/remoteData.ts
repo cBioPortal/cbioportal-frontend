@@ -4,7 +4,8 @@ import {
     MobxPromiseUnionTypeWithDefault,
     MobxPromiseInputUnion,
     MobxPromiseUnionType,
-    MobxPromiseClass
+    MobxPromiseClass,
+    default as MobxPromise
 } from "./MobxPromise";
 
 /**
@@ -20,5 +21,5 @@ export function remoteData<R>(input:MobxPromiseInputUnion<R>, defaultResult?: R)
     input.invoke = () => MobxPromiseClass.toPromiseLike(invoke()).then(result => seamlessImmutable.from(result));
     input.default = seamlessImmutable.from(input.default);
     defaultResult = seamlessImmutable.from(defaultResult);
-    return new MobxPromiseClass(input, defaultResult) as MobxPromiseUnionTypeWithDefault<R>;
+    return new MobxPromise(input, defaultResult);
 }
