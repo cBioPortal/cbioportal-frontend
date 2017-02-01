@@ -42,7 +42,7 @@ class MobxPromise<R>
 {
     static isPromiseLike(value?:Partial<PromiseLike<any>>)
     {
-        return !!value && typeof value.then === 'function';
+        return value != null && typeof value === 'object' && typeof value.then === 'function';
     }
 
     static toPromiseLike<R>(result:PromiseLike<R> | R):PromiseLike<R>
