@@ -28,9 +28,9 @@ import PatientHeader from './patientHeader/PatientHeader';
 import {TablePaginationControls} from "../../shared/components/tablePaginationControls/TablePaginationControls";
 import {IHotspotData} from "./mutation/column/AnnotationColumnFormatter";
 import { PatientViewPageStore } from './clinicalInformation/PatientViewPageStore';
-import { observer } from 'mobx-react';
 import ClinicalInformationPatientTable from "./clinicalInformation/ClinicalInformationPatientTable";
 import ClinicalInformationSamples from "./clinicalInformation/ClinicalInformationSamplesTable";
+import {observer} from "../../../node_modules/mobx-react/index";
 
 const patientViewPageStore = new PatientViewPageStore();
 

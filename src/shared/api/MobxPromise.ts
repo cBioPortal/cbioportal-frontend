@@ -31,7 +31,7 @@ export type MobxPromiseInputParams<R> = {
     default?: R
 };
 export type MobxPromise_await = () => Array<MobxPromise<any> | MobxPromiseUnionType<any> | MobxPromiseUnionTypeWithDefault<any>>;
-export type MobxPromise_invoke<R> = () => (PromiseLike<R> | R);
+export type MobxPromise_invoke<R> = () => PromiseLike<R>;
 export type MobxPromiseInputParamsWithDefault<R> = {
     await?: MobxPromise_await,
     invoke: MobxPromise_invoke<R>,
@@ -43,11 +43,6 @@ class MobxPromise<R>
     static isPromiseLike(value?:Partial<PromiseLike<any>>)
     {
         return value != null && typeof value === 'object' && typeof value.then === 'function';
-    }
-
-    static toPromiseLike<R>(result:PromiseLike<R> | R):PromiseLike<R>
-    {
-        return MobxPromise.isPromiseLike(result) ? result as PromiseLike<R> : Promise.resolve(result as R);
     }
 
     static normalizeInput<R>(input:MobxPromiseInputUnion<R>):MobxPromiseInputParams<R>
@@ -124,7 +119,7 @@ class MobxPromise<R>
     @computed private get lazyInvokeId()
     {
         let invokeId = ++this.invokeId;
-        let promise = MobxPromise.toPromiseLike(this.invoke());
+        let promise = this.invoke();
         setTimeout(() => this.setPending(invokeId, promise));
         return invokeId;
     }
