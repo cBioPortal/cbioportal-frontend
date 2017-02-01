@@ -21,8 +21,8 @@ script:
   - echo 'API_ROOT=http://cbioportal-rc.herokuapp.com/api' > .env
   # Run build
   - npm run build
-  # Run test
-  - npm test
+  # Run test with coverage
+  - npm run test:coverage
   # check if mock data up to data, show warning
   - |
       npm run syncmock || { \
