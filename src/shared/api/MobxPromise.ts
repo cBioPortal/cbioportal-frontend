@@ -19,7 +19,7 @@ export type MobxPromiseInputParams<R> = {
     /**
      * A function that returns a list of MobxPromise objects which are dependencies of the invoke function.
      */
-    await: MobxPromise_await,
+    await?: MobxPromise_await,
     /**
      * A function that returns the async result or a promise for the async result.
      */
@@ -33,7 +33,7 @@ export type MobxPromiseInputParams<R> = {
 export type MobxPromise_await = () => Array<MobxPromise<any> | MobxPromiseUnionType<any> | MobxPromiseUnionTypeWithDefault<any>>;
 export type MobxPromise_invoke<R> = () => (PromiseLike<R> | R);
 export type MobxPromiseInputParamsWithDefault<R> = {
-    await: MobxPromise_await,
+    await?: MobxPromise_await,
     invoke: MobxPromise_invoke<R>,
     default: R
 };
@@ -53,16 +53,10 @@ class MobxPromise<R>
     static normalizeInput<R>(input:MobxPromiseInputUnion<R>):MobxPromiseInputParams<R>
     {
         if (typeof input === 'function')
-            return {
-                await: () => [],
-                invoke: input
-            };
+            return {invoke: input};
 
         if (MobxPromise.isPromiseLike(input))
-            return {
-                await: () => [],
-                invoke: () => input as PromiseLike<R>
-            };
+            return {invoke: () => input as PromiseLike<R>};
 
         return input as MobxPromiseInputParams<R>;
     }
@@ -78,7 +72,7 @@ class MobxPromise<R>
         this.defaultResult = defaultResult !== undefined ? defaultResult : input.default;
     }
 
-    private await:MobxPromise_await;
+    private await?:MobxPromise_await;
     private invoke:MobxPromise_invoke<R>;
     private defaultResult?:R;
     private invokeId:number = 0;
@@ -90,9 +84,10 @@ class MobxPromise<R>
     @computed get status():'pending'|'complete'|'error'
     {
         // wait until all MobxPromise dependencies are complete
-        for (let mobxPromise of this.await())
-            if (!mobxPromise.isComplete)
-                return mobxPromise.status;
+        if (this.await)
+            for (let mobxPromise of this.await())
+                if (!mobxPromise.isComplete)
+                    return mobxPromise.status;
 
         let status = this.internalStatus; // force mobx to track changes to internalStatus
         if (this.invokeId != this.lazyInvokeId)
@@ -115,7 +110,7 @@ class MobxPromise<R>
     @computed get error():Error|undefined
     {
         // checking status may trigger invoke
-        if (this.isError)
+        if (this.isError && this.await)
             for (let mobxPromise of this.await())
                 if (mobxPromise.isError)
                     return mobxPromise.error;
