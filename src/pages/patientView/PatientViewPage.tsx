@@ -3,7 +3,6 @@ import * as _ from 'lodash';
 import {Tabs, Tab, default as ReactBootstrap} from 'react-bootstrap';
 import ClinicalInformationContainer from './clinicalInformation/ClinicalInformationContainer';
 import MutationInformationContainer from './mutation/MutationInformationContainer';
-
 import {RootState} from '../../redux/rootReducer';
 import Spinner from "react-spinkit";
 import exposeComponentRenderer from '../../shared/lib/exposeComponentRenderer';
