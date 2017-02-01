@@ -93,15 +93,15 @@ export class PatientViewPageStore {
     readonly patientViewData = remoteData({
         await: () => [
             this.clinicalDataPatient,
-            this.clinicalDataSample
+            this.clinicalDataForSamples
         ],
         invoke: () => transformClinicalInformationToStoreShape(
             this.patientId,
             this.studyId,
             this.clinicalDataPatient.result,
-            this.clinicalDataSample.result
+            this.clinicalDataForSamples.result
         )
-    });
+    },{});
 
     @action("ChangePatientId") changePatientId(newId: string) {
         this.patientId = newId;
