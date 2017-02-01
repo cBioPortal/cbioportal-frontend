@@ -30,12 +30,11 @@ import PatientHeader from './patientHeader/PatientHeader';
 import {TablePaginationControls} from "../../shared/components/tablePaginationControls/TablePaginationControls";
 import {IHotspotData} from "./mutation/column/AnnotationColumnFormatter";
 import { PatientViewPageStore } from './clinicalInformation/PatientViewPageStore';
-import { observer } from 'mobx-react';
 import ClinicalInformationPatientTable from "./clinicalInformation/ClinicalInformationPatientTable";
 import ClinicalInformationSamples from "./clinicalInformation/ClinicalInformationSamplesTable";
 import {ICosmicData} from "../../shared/components/mutationTable/column/CosmicColumnFormatter";
 import {IVariantCountData} from "./mutation/column/CohortColumnFormatter";
-
+import {observer} from "mobx-react";
 import {IHotspotData, IMyCancerGenomeData, IMyCancerGenome} from "./mutation/column/AnnotationColumnFormatter";
 import {getSpans} from './clinicalInformation/lib/clinicalAttributesUtil.js';
 

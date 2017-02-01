@@ -87,20 +87,20 @@ export class PatientViewPageStore {
 
     readonly clinicalDataGroupedBySample = remoteData({
         await:() => [this.clinicalDataForSamples],
-        invoke: ()=> groupByEntityId(this.clinicalDataForSamples.result!)
-    }, {});
+        invoke: () => Promise.resolve(groupByEntityId(this.clinicalDataForSamples.result!))
+    }, []);
 
     readonly patientViewData = remoteData({
         await: () => [
             this.clinicalDataPatient,
             this.clinicalDataForSamples
         ],
-        invoke: () => transformClinicalInformationToStoreShape(
+        invoke: () => Promise.resolve(transformClinicalInformationToStoreShape(
             this.patientId,
             this.studyId,
             this.clinicalDataPatient.result,
             this.clinicalDataForSamples.result
-        )
+        ))
     },{});
 
     @action("ChangePatientId") changePatientId(newId: string) {
