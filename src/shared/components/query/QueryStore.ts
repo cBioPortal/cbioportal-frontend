@@ -4,20 +4,20 @@ import {toJS, observable, action, computed, whyRun, expr} from "../../../../node
 import {TypeOfCancer as CancerType, GeneticProfile} from "../../api/CBioPortalAPI";
 import CancerStudyTreeData from "./CancerStudyTreeData";
 import StudyListLogic from "../StudyList/StudyListLogic";
-import MobxPromise from "../../api/MobxPromise";
+import {remoteData} from "../../api/remoteData";
 
 // mobx observable
 export class QueryStore
 {
-	@observable cancerTypes = new MobxPromise(client.getAllCancerTypesUsingGET({}));
-	@observable cancerStudies = new MobxPromise(client.getAllStudiesUsingGET({}));
-	@observable geneticProfiles = new MobxPromise(() => {
+	readonly cancerTypes = remoteData(client.getAllCancerTypesUsingGET({}), []);
+	readonly cancerStudies = remoteData(client.getAllStudiesUsingGET({}), []);
+	readonly geneticProfiles = remoteData(() => {
 		let studyIds = this.selectedCancerStudyIds;
 		if (studyIds && studyIds.length == 1)
 			return client.getAllGeneticProfilesInStudyUsingGET({studyId: studyIds[0]});
 		else
 			return Promise.resolve([]);
-	});
+	}, []);
 
 	@observable searchText:string = '';
 	@observable.shallow searchTextPresets = ['lung', 'serous', 'tcga', 'tcga -provisional'];
@@ -27,7 +27,7 @@ export class QueryStore
 
 	@computed get selectedProfiles()
 	{
-		let idToProfile = expr(() => _.keyBy(this.geneticProfiles.result || [], profile => profile.geneticProfileId));
+		let idToProfile = expr(() => _.keyBy(this.geneticProfiles.result, profile => profile.geneticProfileId));
 		return this.selectedProfileIds.map(id => idToProfile[id]);
 	}
 
@@ -39,8 +39,8 @@ export class QueryStore
 	@computed get treeData()
 	{
 		return new CancerStudyTreeData({
-			cancerTypes: this.cancerTypes.result || [],
-			studies: this.cancerStudies.result || []
+			cancerTypes: this.cancerTypes.result,
+			studies: this.cancerStudies.result
 		});
 	}
 

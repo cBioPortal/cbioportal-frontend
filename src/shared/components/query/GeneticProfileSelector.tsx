@@ -7,6 +7,7 @@ import * as styles_any from './styles.module.scss';
 import queryStore from "./QueryStore";
 import {toJS, computed} from "../../../../node_modules/mobx/lib/mobx";
 import {observer} from "../../../../node_modules/mobx-react/custom";
+import Dictionary = _.Dictionary;
 
 const styles = styles_any as {
 	GeneticProfileSelector: string,
@@ -30,25 +31,20 @@ export const geneticAlterationTypeGroupLabels:{[K in GeneticProfile['geneticAlte
 @observer
 export default class GeneticProfileSelector extends React.Component<{}, {}>
 {
-	@computed get profiles()
-	{
-		return queryStore.geneticProfiles.result || [];
-	}
-
 	@computed get selectedProfileIds()
 	{
 		if (queryStore.selectedProfileIds.length)
 			return queryStore.selectedProfileIds;
 
-		return this.profiles
+		return queryStore.geneticProfiles.result
 			.filter(profile => _.includes(defaultSelectedAlterationTypes, profile.geneticAlterationType))
 			.map(profile => profile.geneticProfileId);
 	}
 
 	render()
 	{
-		let profiles = this.profiles.filter(profile => profile.showProfileInAnalysisTab);
-		let groupedProfiles = _.groupBy(profiles, profile => profile.geneticAlterationType);
+		let profiles = queryStore.geneticProfiles.result.filter(profile => profile.showProfileInAnalysisTab);
+		let groupedProfiles:Dictionary<GeneticProfile[]|undefined> = _.groupBy(profiles, profile => profile.geneticAlterationType);
 
 		// puts default alteration types first
 		let altTypes = _.union(
@@ -59,7 +55,7 @@ export default class GeneticProfileSelector extends React.Component<{}, {}>
 		return (
 			<div className={styles.GeneticProfileSelector}>
 				<h2>Select Genomic Profiles</h2>
-				{this.renderCheckboxes(altTypes.map(altType => groupedProfiles[altType]))}
+				{this.renderCheckboxes(altTypes.map(altType => groupedProfiles[altType] || []))}
 			</div>
 		);
 	}
@@ -74,7 +70,7 @@ export default class GeneticProfileSelector extends React.Component<{}, {}>
 
 	renderGroup(profiles:GeneticProfile[], output:JSX.Element[])
 	{
-		if (!profiles || !profiles.length)
+		if (!profiles.length)
 			return;
 
 		let firstProfile = profiles[0];
