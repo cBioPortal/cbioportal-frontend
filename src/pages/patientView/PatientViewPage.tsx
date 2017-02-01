@@ -548,13 +548,13 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                         <PatientHeader patient={patientViewPageStore.patientViewData.result!.patient!}/>
                         {sampleHeader}
                     </div>
-                )
+                    )
                 }
 
-                <Tabs animation={false} activeKey={this.state.activeTabKey} onSelect={this.handleSelect as SelectCallback} className="mainTabs" unmountOnExit={true}>
-                    <Tab eventKey={1} id="summaryTab" title="Summary">
+                <Tabs animation={false} activeKey={this.state.activeTabKey} id="patientViewPageTabs" onSelect={this.handleSelect as SelectCallback} className="mainTabs" unmountOnExit={true}>
+                    <Tab eventKey={2} id="summaryTab" title="Summary">
 
-                        <FeatureTitle title="Genomic Overview" isLoading={ !(this.state.mutationData && this.state.cnaSegmentData) } />
+                        <FeatureTitle title="Genomic Data" isLoading={ !(this.state.mutationData && this.state.cnaSegmentData) } />
 
                         {
                             (this.state.mutationData && this.state.cnaSegmentData && sampleManager) && (
