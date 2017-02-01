@@ -18,6 +18,11 @@ export interface IAnnotation {
     myCancerGenome: string[];
 }
 
+export function placeArrow(tooltipEl: any) {
+    const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');
+    arrowEl.style.left = '10px';
+}
+
 /**
  * @author Selcuk Onur Sumer
  */
@@ -140,9 +145,20 @@ export default class AnnotationColumnFormatter
             const hotspotTooltipContent = AnnotationColumnFormatter.hotspotInfo(isHotspot, is3dHotspot);
 
             hotspotContent = (
-                <Tooltip overlay={hotspotTooltipContent} placement="rightTop" arrowContent={arrowContent}>
+                <Tooltip
+                    overlay={hotspotTooltipContent}
+                    placement="topLeft"
+                    trigger={['hover', 'focus']}
+                    arrowContent={arrowContent}
+                    onPopupAlign={placeArrow}
+                >
                     <span className='annotation-item chang_hotspot'>
-                        <img width={hotspotsImgWidth} height={hotspotsImgHeight} src={hotspotsImgSrc} alt='Recurrent Hotspot Symbol' />
+                        <img
+                            width={hotspotsImgWidth}
+                            height={hotspotsImgHeight}
+                            src={hotspotsImgSrc}
+                            alt='Recurrent Hotspot Symbol'
+                        />
                     </span>
                 </Tooltip>
             );
