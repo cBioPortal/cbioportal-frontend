@@ -389,7 +389,13 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     </div>
                 </If>
 
-
+                {  (patientViewPageStore.patientViewData.isComplete) && (
+                    <div className="clearfix" style={{padding:20, borderRadius:5, background: '#eee', marginBottom: 20}}>
+                        <PatientHeader patient={patientViewPageStore.patientViewData.result!.patient!}/>
+                        {sampleHeader}
+                    </div>
+                    )
+                }
 
                 <Tabs animation={false} activeKey={this.state.activeTabKey} id="patientViewPageTabs" onSelect={this.handleSelect as SelectCallback} className="mainTabs" unmountOnExit={true}>
                     <Tab eventKey={2} id="summaryTab" title="Summary">
