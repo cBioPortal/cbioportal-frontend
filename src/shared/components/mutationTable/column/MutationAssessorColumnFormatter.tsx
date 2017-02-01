@@ -1,19 +1,20 @@
 import * as React from 'react';
 import Tooltip from 'rc-tooltip';
 import {Td} from 'reactable';
-import {IColumnFormatterData}
-    from "../../enhancedReactTable/IColumnFormatter";
+import {IColumnFormatterData} from "../../enhancedReactTable/IColumnFormatter";
 import 'rc-tooltip/assets/bootstrap_white.css';
 import styles from "./mutationAssessor.module.scss";
 import {MutationTableRowData} from "../IMutationTableProps";
 import {Mutation} from "../../../api/CBioPortalAPI";
 
-type MA_CLASS_NAME = 'oma-high' | 'oma-medium' | 'oma-low' | 'oma-neutral';
-type IMutationAssessorFormat = {
-    label: string,
-    className: MA_CLASS_NAME,
-    priority: number
-};
+type MA_CLASS_NAME = 'oma-high' | 'oma-medium' | 'oma-low' | 'oma-neutral' | 'oma-na';
+
+export interface IMutationAssessorFormat
+{
+    label: string;
+    className: MA_CLASS_NAME;
+    priority: number;
+}
 
 /**
  * @author Selcuk Onur Sumer
@@ -24,47 +25,43 @@ export default class MutationAssessorColumnFormatter
      * Mapping between the functional impact score (data) values and
      * view values.
      */
-    public static get MA_SCORE_MAP():{[key:string]: IMutationAssessorFormat} {
+    public static get MA_SCORE_MAP():{[impact:string]: IMutationAssessorFormat} {
         return {
             h: {label: "High", className: "oma-high", priority: 4},
             m: {label: "Medium", className: "oma-medium", priority: 3},
             l: {label: "Low", className: "oma-low", priority: 2},
-            n: {label: "Neutral", className: "oma-neutral", priority: 1}
+            n: {label: "Neutral", className: "oma-neutral", priority: 1},
+            na: {label: "NA", className: "oma-na", priority: 0},
         };
     }
 
     public static sortFunction(a:IColumnFormatterData<MutationTableRowData>, b:IColumnFormatterData<MutationTableRowData>):number
     {
-        const aScore = MutationAssessorColumnFormatter.getData(a).score;
-        const bScore = MutationAssessorColumnFormatter.getData(b).score;
-        const aImpact = MutationAssessorColumnFormatter.getData(a).impact;
-        const bImpact = MutationAssessorColumnFormatter.getData(b).impact;
+        const NA:string = MutationAssessorColumnFormatter.MA_SCORE_MAP["na"].label;
+
+        const aScore:number = MutationAssessorColumnFormatter.getData(a).score;
+        const bScore:number = MutationAssessorColumnFormatter.getData(b).score;
+
+        const aFormat:IMutationAssessorFormat|undefined = MutationAssessorColumnFormatter.getMapEntry(a);
+        const bFormat:IMutationAssessorFormat|undefined = MutationAssessorColumnFormatter.getMapEntry(b);
+
+        const aPriority:number = aFormat ? aFormat.priority : -1;
+        const bPriority:number = bFormat ? bFormat.priority : -1;
+
+        const hasNa = (aFormat && aFormat.label === NA) || (bFormat && bFormat.label === NA);
 
         // use actual score values to compare (if exist)
-        if (aScore && bScore)
+        // score for NA values are zero, but negative scores are also valid,
+        // so comparing scores when there is an NA value is not always accurate!
+        if (aScore && bScore && !hasNa)
         {
             return aScore > bScore ? 1 : -1;
         }
         // if no score available sort by impact priority
-        else if (aImpact && bImpact)
+        else
         {
-            let aPriority = -1;
-            let bPriority = -1;
-
-            if (MutationAssessorColumnFormatter.MA_SCORE_MAP[aImpact.toLowerCase()])
-            {
-                aPriority = MutationAssessorColumnFormatter.MA_SCORE_MAP[aImpact.toLowerCase()].priority;
-            }
-
-            if (MutationAssessorColumnFormatter.MA_SCORE_MAP[bImpact.toLowerCase()])
-            {
-                bPriority = MutationAssessorColumnFormatter.MA_SCORE_MAP[bImpact.toLowerCase()].priority;
-            }
-
             return aPriority > bPriority ? 1 : -1;
         }
-
-        return 0;
     }
 
     public static filterValue(data:IColumnFormatterData<MutationTableRowData>):string
@@ -154,16 +151,15 @@ export default class MutationAssessorColumnFormatter
         }
         else if (data.rowData)
         {
-            const mutations:Array<Mutation> = data.rowData;
+            const mutations:Mutation[] = data.rowData;
 
             if (mutations.length > 0) {
                 maData = {
-                    // TODO these are not in the mutation model anymore, need to get it from somewhere else
-                    // impact: mutations[0].functionalImpactScore,
-                    // score: mutations[0].fisValue,
-                    // pdb: mutations[0].linkPdb,
-                    // msa: mutations[0].linkMsa,
-                    // xVar: mutations[0].linkXvar
+                    impact: mutations[0].functionalImpactScore,
+                    score: mutations[0].fisValue,
+                    pdb: mutations[0].linkPdb,
+                    msa: mutations[0].linkMsa,
+                    xVar: mutations[0].linkXvar
                 };
             } else {
                 maData = {};
@@ -184,20 +180,25 @@ export default class MutationAssessorColumnFormatter
         let pdb:any = "";
         let impact:any = "";
 
+        // workaround: links in the database are not working anymore!
+        const xVarLink = MutationAssessorColumnFormatter.maLink(maData.xVar);
+        const msaLink = MutationAssessorColumnFormatter.maLink(maData.msa);
+        const pdbLink = MutationAssessorColumnFormatter.maLink(maData.pdb);
+
         if (maData.score)
         {
             impact = (
                 <div>
-                    Predicted impact score: <b>{maData.score}</b>
+                    Predicted impact score: <b>{maData.score.toFixed(2)}</b>
                 </div>
             );
         }
 
-        if (maData.xVar)
+        if (xVarLink)
         {
             xVar = (
                 <div className={styles['mutation-assessor-link']}>
-                    <a href={maData.xVar} target='_blank'>
+                    <a href={xVarLink} target='_blank'>
                         <img
                             height='15'
                             width='19'
@@ -211,11 +212,11 @@ export default class MutationAssessorColumnFormatter
             );
         }
 
-        if (maData.msa)
+        if (msaLink)
         {
             msa = (
                 <div className={styles['mutation-assessor-link']}>
-                    <a href={maData.msa} target='_blank'>
+                    <a href={msaLink} target='_blank'>
                         <span className={`${styles['ma-icon']} ${styles['ma-msa-icon']}`}>msa</span>
                         Multiple Sequence Alignment
                     </a>
@@ -223,11 +224,11 @@ export default class MutationAssessorColumnFormatter
             );
         }
 
-        if (maData.pdb)
+        if (pdbLink)
         {
             pdb = (
                 <div className={styles['mutation-assessor-link']}>
-                    <a href={maData.pdb} target='_blank'>
+                    <a href={pdbLink} target='_blank'>
                         <span className={`${styles['ma-icon']} ${styles['ma-3d-icon']}`}>3D</span>
                         Mutation Assessor 3D View
                     </a>
@@ -245,25 +246,64 @@ export default class MutationAssessorColumnFormatter
         );
     }
 
+    // This is mostly to make the legacy MA links work
+    public static maLink(link:string)
+    {
+        let url = null;
+
+        // ignore invalid links ("", "NA", "Not Available")
+        if (link &&
+            link.length > 0 &&
+            link.toLowerCase() !== "na" &&
+            link.toLowerCase().indexOf("not available") === -1)
+        {
+            // getma.org is the legacy link, need to replace it with the actual value
+            url = link.replace("getma.org", "mutationassessor.org/r2");
+
+            // prepend "http://" if needed
+            if (url.indexOf("http://") !== 0)
+            {
+                url = `http://${url}`;
+            }
+        }
+
+        return url;
+    }
+
     public static renderFunction(data:IColumnFormatterData<MutationTableRowData>)
     {
+        const NA:string = MutationAssessorColumnFormatter.MA_SCORE_MAP["na"].label;
+
         const text:string = MutationAssessorColumnFormatter.getDisplayValue(data);
         const fisClass:string = MutationAssessorColumnFormatter.getScoreClassName(data);
         const maClass:string = MutationAssessorColumnFormatter.getMaClassName(data);
-        const tooltipContent = MutationAssessorColumnFormatter.getTooltipContent(data);
+
+        let content = (
+            <span className={`${styles[maClass]} ${styles[fisClass]}`}>{text}</span>
+        );
+
+        // add tooltip for valid values
+        if (text.length > 0 && text !== NA)
+        {
+            const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
+            const tooltipContent = MutationAssessorColumnFormatter.getTooltipContent(data);
+
+            // update content with the tooltip
+            content = (
+                <Tooltip overlay={tooltipContent} placement="left" arrowContent={arrowContent}>
+                    {content}
+                </Tooltip>
+            );
+        }
 
         // this is required to have a proper filtering when we pass a complex object as Td.value
         data.toString = function() {
             return MutationAssessorColumnFormatter.filterValue(data);
         };
 
-        const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
-
         return (
             <Td key={data.name} column={data.name} value={data}>
-                <Tooltip overlay={tooltipContent} placement="rightTop" arrowContent={arrowContent}>
-                    <span className={`${styles[maClass]} ${styles[fisClass]}`}>{text}</span>
-                </Tooltip>
+                {content}
             </Td>
         );
     }
