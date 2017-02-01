@@ -1,26 +1,32 @@
 import * as React from 'react';
 import {Td} from 'reactable';
-import Tooltip from 'rc-tooltip';
-import * as _ from 'lodash';
+import {If} from 'react-if';
 import {IColumnFormatterData} from "../../../../shared/components/enhancedReactTable/IColumnFormatter";
 import {MutationTableRowData} from "../../../../shared/components/mutationTable/IMutationTableProps";
+import CancerHotspots from "../../../../shared/components/annotation/CancerHotspots";
+import MyCancerGenome from "../../../../shared/components/annotation/MyCancerGenome";
 import {Mutation} from "../../../../shared/api/CBioPortalAPI";
-import styles from "./style/annotation.module.scss";
+
+export interface IMyCancerGenome {
+    "hugoGeneSymbol": string;
+    "alteration": string;
+    "cancerType": string;
+    "linkHTML": string;
+}
 
 export interface IHotspotData {
     single: {[s:string]: boolean};
     clustered: {[s:string]: boolean};
 }
 
+export interface IMyCancerGenomeData {
+    [hugoSymbol:string]: IMyCancerGenome[];
+}
+
 export interface IAnnotation {
     isHotspot: boolean;
     is3dHotspot: boolean;
-    myCancerGenome: string[];
-}
-
-export function placeArrow(tooltipEl: any) {
-    const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');
-    arrowEl.style.left = '10px';
+    myCancerGenomeLinks: string[];
 }
 
 /**
@@ -28,7 +34,9 @@ export function placeArrow(tooltipEl: any) {
  */
 export default class AnnotationColumnFormatter
 {
-    public static getData(data:IColumnFormatterData<MutationTableRowData>, hotspotsData?:IHotspotData)
+    public static getData(data:IColumnFormatterData<MutationTableRowData>,
+                          hotspotsData?:IHotspotData,
+                          myCancerGenomeData?:IMyCancerGenomeData)
     {
         let annotation;
 
@@ -36,25 +44,29 @@ export default class AnnotationColumnFormatter
             annotation = data.columnData;
         }
         else {
-            annotation = AnnotationColumnFormatter.getDataFromRow(data.rowData, hotspotsData);
+            annotation = AnnotationColumnFormatter.getDataFromRow(data.rowData, hotspotsData, myCancerGenomeData);
         }
 
         return annotation;
     }
 
-    public static getDataFromRow(rowData:MutationTableRowData|undefined, hotspotsData?:IHotspotData)
+    public static getDataFromRow(rowData:MutationTableRowData|undefined,
+                                 hotspotsData?:IHotspotData,
+                                 myCancerGenomeData?:IMyCancerGenomeData)
     {
         let value: any;
 
         if (rowData) {
             const mutations:Mutation[] = rowData;
+            const mutation = mutations[0];
 
             value = {
-                myCancerGenome: [], // TODO need to get it from external service ["link a", "link b", "link c"]
+                myCancerGenomeLinks: myCancerGenomeData ?
+                    AnnotationColumnFormatter.getMyCancerGenomeLinks(mutation, myCancerGenomeData) : [],
                 isHotspot: hotspotsData ?
-                    AnnotationColumnFormatter.isHotspot(mutations[0], hotspotsData.single) : false,
+                    CancerHotspots.isHotspot(mutation, hotspotsData.single) : false,
                 is3dHotspot: hotspotsData ?
-                    AnnotationColumnFormatter.isHotspot(mutations[0], hotspotsData.clustered) : false
+                    CancerHotspots.isHotspot(mutation, hotspotsData.clustered) : false
             };
         }
         else {
@@ -64,11 +76,51 @@ export default class AnnotationColumnFormatter
         return value;
     }
 
+    public static getMyCancerGenomeLinks(mutation:Mutation, myCancerGenomeData: IMyCancerGenomeData):string[] {
+        const myCancerGenomes:IMyCancerGenome[]|null = myCancerGenomeData[mutation.gene.hugoGeneSymbol];
+        let links:string[] = [];
+
+        if (myCancerGenomes) {
+            // further filtering required by alteration field
+            links = AnnotationColumnFormatter.filterByAlteration(mutation, myCancerGenomes).map(
+                (myCancerGenome:IMyCancerGenome) => myCancerGenome.linkHTML);
+        }
+
+        return links;
+    }
+
+    // TODO for now ignoring anything but protein change position, this needs to be improved!
+    public static filterByAlteration(mutation:Mutation, myCancerGenomes:IMyCancerGenome[]):IMyCancerGenome[]
+    {
+        return myCancerGenomes.filter((myCancerGenome:IMyCancerGenome) => {
+            const proteinChangeRegExp:RegExp = /^[A-Za-z][0-9]+[A-Za-z]/;
+            const numericalRegExp:RegExp = /[0-9]+/;
+
+            const matched = myCancerGenome.alteration.trim().match(proteinChangeRegExp);
+
+            if (matched && mutation.proteinChange)
+            {
+                const mutationPos = mutation.proteinChange.match(numericalRegExp);
+                const alterationPos = myCancerGenome.alteration.match(numericalRegExp);
+
+                return (mutationPos && alterationPos && mutationPos[0] === alterationPos[0]);
+            }
+
+            return false;
+        });
+    }
+
     public static sortFunction(a:IAnnotation, b:IAnnotation):number
     {
-        // TODO we have hotspot annotation only, so our array has one value for now
-        const aValue:number[] = [AnnotationColumnFormatter.hotspotSortValue(a)];
-        const bValue:number[] = [AnnotationColumnFormatter.hotspotSortValue(b)];
+        // TODO add oncoKb value to the beginning of the array when it is ready!
+        const aValue:number[] = [
+            MyCancerGenome.sortValue(a.myCancerGenomeLinks),
+            CancerHotspots.sortValue(a.isHotspot, a.is3dHotspot)
+        ];
+        const bValue:number[] = [
+            MyCancerGenome.sortValue(b.myCancerGenomeLinks),
+            CancerHotspots.sortValue(b.isHotspot, b.is3dHotspot)
+        ];
 
         let diff = 0;
 
@@ -86,87 +138,36 @@ export default class AnnotationColumnFormatter
         return diff;
     }
 
-    public static hotspotSortValue(annotation:IAnnotation):number // annotation:Annotation
-    {
-        let score:number = 0;
-
-        if (annotation.isHotspot) {
-            score += 1;
-        }
-
-        if (annotation.is3dHotspot) {
-            score += 0.5;
-        }
-
-        return score;
-    }
-
-    // TODO if certain data (hotspots, mycancergenome, etc. is not yet available, show a loader image!)
     public static renderFunction(data:IColumnFormatterData<MutationTableRowData>, columnProps:any)
     {
-        const annotation:IAnnotation = AnnotationColumnFormatter.getDataFromRow(data.rowData, columnProps.hotspots);
+        const annotation:IAnnotation = AnnotationColumnFormatter.getDataFromRow(
+            data.rowData, columnProps.hotspots, columnProps.myCancerGenomeData);
 
-        const hotspotContent:JSX.Element|null = AnnotationColumnFormatter.hotspotContent(
-            columnProps.showHotspot, annotation.isHotspot, annotation.is3dHotspot);
-        const myCancerGenomeContent:JSX.Element|null = AnnotationColumnFormatter.myCancerGenomeContent(
-            annotation.myCancerGenome, columnProps.enableMyCancerGenome);
-        const oncoKbContent:JSX.Element|null = AnnotationColumnFormatter.oncoKbContent();
-
-        // TODO if data is not yet fetched, just return a generic column with loader image
+        // TODO if certain data (hotspots, mycancergenome, etc.) is not yet available (i.e. status==fetching),
+        // show a loader image!
         return (
             <Td key={data.name} column={data.name} value={annotation}>
                 <span>
-                    {oncoKbContent || ""}
-                    {myCancerGenomeContent || ""}
-                    {hotspotContent || ""}
+                    <If condition={columnProps.enableOncoKb || false}>
+                        {/* TODO <OncoKB></OncoKB>*/}
+                    </If>
+                    <If condition={columnProps.enableMyCancerGenome || false}>
+                        <MyCancerGenome
+                            linksHTML={annotation.myCancerGenomeLinks}
+                        />
+                    </If>
+                    <If condition={columnProps.enableHotspot || false}>
+                        <CancerHotspots
+                            isHotspot={annotation.isHotspot}
+                            is3dHotspot={annotation.is3dHotspot}
+                        />
+                    </If>
                 </span>
             </Td>
         );
     }
 
-    public static hotspotContent(showHotspot:boolean, isHotspot:boolean, is3dHotspot:boolean)
-    {
-        const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
-        let hotspotContent:JSX.Element|null = null;
-
-        if (showHotspot && (isHotspot || is3dHotspot))
-        {
-            const hotspotsImgWidth:number = 14;
-            let hotspotsImgHeight:number = 14;
-            let hotspotsImgSrc = require("./images/cancer-hotspots.svg");
-
-            // if it is a 3D hotspot but not a recurrent hotspot, show the 3D hotspot icon
-            if (!isHotspot)
-            {
-                hotspotsImgSrc = require("./images/3d-hotspots.svg");
-                hotspotsImgHeight = 18;
-            }
-
-            const hotspotTooltipContent = AnnotationColumnFormatter.hotspotInfo(isHotspot, is3dHotspot);
-
-            hotspotContent = (
-                <Tooltip
-                    overlay={hotspotTooltipContent}
-                    placement="topLeft"
-                    trigger={['hover', 'focus']}
-                    arrowContent={arrowContent}
-                    onPopupAlign={placeArrow}
-                >
-                    <span className='annotation-item chang_hotspot'>
-                        <img
-                            width={hotspotsImgWidth}
-                            height={hotspotsImgHeight}
-                            src={hotspotsImgSrc}
-                            alt='Recurrent Hotspot Symbol'
-                        />
-                    </span>
-                </Tooltip>
-            );
-        }
-
-        return hotspotContent;
-    }
-
+    // TODO move this to OncoKB component!
     public static oncoKbContent()
     {
         // return (
@@ -176,137 +177,6 @@ export default class AnnotationColumnFormatter
         // )
 
         return null;
-    }
-
-    public static myCancerGenomeContent(myCancerGenome:string[], enable:boolean)
-    {
-        const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
-        let myCancerGenomeContent:JSX.Element|null = null;
-
-        if (enable && myCancerGenome.length > 0)
-        {
-            const mcgTooltipContent = AnnotationColumnFormatter.myCancerGenomeLinks(myCancerGenome);
-
-            myCancerGenomeContent = (
-                <Tooltip overlay={mcgTooltipContent} placement="rightTop" arrowContent={arrowContent}>
-                    <span className={`${styles["annotation-item"]} mcg`}>
-                        <img width='14' height='14' src={require("./images/mcg_logo.png")} alt='My Cancer Genome Symbol' />
-                    </span>
-                </Tooltip>
-            );
-        }
-
-        return myCancerGenomeContent;
-    }
-
-    public static myCancerGenomeLinks(myCancerGenome:string[])
-    {
-        const links:any[] = [];
-
-        _.each(myCancerGenome, function(link:string){
-            links.push(
-                <li>{link}</li>
-            );
-        });
-
-        return (
-            <span>
-                <b>My Cancer Genome links:</b>
-                <br/>
-                <ul style={{"list-style-position": "inside;padding-left:0;"}}>
-                    {links}
-                </ul>
-            </span>
-        );
-    }
-
-    public static isHotspot(mutation:Mutation, map:{[key:string]: boolean}):boolean
-    {
-        let key:string = mutation.gene.hugoGeneSymbol + "_" + mutation.proteinPosStart;
-
-        if (mutation.proteinPosEnd &&
-            (mutation.proteinPosEnd !== mutation.proteinPosStart))
-        {
-            key = key + "_" + mutation.proteinPosEnd;
-        }
-
-        return map[key] || false;
-    }
-
-    public static hotspotInfo(isHotspot:boolean, is3dHotspot:boolean)
-    {
-        return (
-            <span className={styles["hotspot-info"]}>
-                {AnnotationColumnFormatter.title(isHotspot, is3dHotspot)}
-                <br/>
-                {AnnotationColumnFormatter.publication(isHotspot, is3dHotspot)}
-                <br/><br/>
-                {AnnotationColumnFormatter.link(isHotspot, is3dHotspot)}
-            </span>
-        );
-    }
-
-    public static title(isHotspot:boolean, is3dHotspot:boolean)
-    {
-        const recurrentHotspot = isHotspot ? (<b>Recurrent Hotspot</b>) : "";
-        const maybeAnd = isHotspot && is3dHotspot ? "and" : "";
-        const clusteredHotspot = is3dHotspot ? (<b>3D Clustered Hotspot</b>) : "";
-
-        return (
-            <span>
-                {recurrentHotspot} {maybeAnd} {clusteredHotspot}
-            </span>
-        );
-    }
-
-    public static publication(isHotspot:boolean, is3dHotspot:boolean)
-    {
-        const recurrentHotspot = isHotspot ? "a recurrent hotspot (statistically significant)" : "";
-        const maybeAnd = isHotspot && is3dHotspot ? "and" : "";
-        const clusteredHotspot = is3dHotspot ? "a 3D clustered hotspot" : "";
-
-        const recurrentPublication = isHotspot ? (
-            <a href="http://www.ncbi.nlm.nih.gov/pubmed/26619011" target="_blank">
-                Chang et al., Nat Biotechnol, 2016
-            </a>
-        ) : "";
-
-        const clusteredPublication = is3dHotspot ? (
-            <a href="http://genomemedicine.biomedcentral.com/articles/10.1186/s13073-016-0393-x" target="_blank">
-                Gao et al., Genome Medicine, 2017
-            </a>
-        ) : "";
-
-        return (
-            <span>
-                This mutated amino acid was identified as {recurrentHotspot} {maybeAnd} {clusteredHotspot} in a
-                population-scale cohort of tumor samples of various cancer types using methodology based in part
-                on {recurrentPublication} {maybeAnd} {clusteredPublication}.
-            </span>
-        );
-    }
-
-    public static link(isHotspot:boolean, is3dHotspot:boolean)
-    {
-        const recurrentLink = isHotspot ? (
-            <a href="http://cancerhotspots.org/" target="_blank">
-                http://cancerhotspots.org/
-            </a>
-        ) : "";
-
-        const maybeAnd = isHotspot && is3dHotspot ? "and" : "";
-
-        const clusteredLink = is3dHotspot ? (
-            <a href="http://3dhotspots.org/" target="_blank">
-                http://3dhotspots.org/
-            </a>
-        ) : "";
-
-        return (
-            <span>
-                Explore all mutations at {recurrentLink} {maybeAnd} {clusteredLink}.
-            </span>
-        );
     }
 
 }
