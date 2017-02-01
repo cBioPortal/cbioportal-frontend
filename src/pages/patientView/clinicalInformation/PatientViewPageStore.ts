@@ -4,7 +4,7 @@ import {ClinicalData} from "../../../shared/api/CBioPortalAPI";
 import {ClinicalInformationData} from "../Connector";
 import client from "../../../shared/api/cbioportalClientInstance";
 import {computed, observable} from "../../../../node_modules/mobx/lib/mobx";
-import MobxPromise from "../../../shared/api/MobxPromise";
+import {remoteData} from "../../../shared/api/remoteData";
 
 export function groupByEntityId(clinicalDataArray: Array<ClinicalData>)
 {
@@ -42,36 +42,37 @@ export class PatientViewPageStore {
 
     @observable studyId = '';
 
-    @observable clinicalDataPatient = new MobxPromise(() => {
+    readonly clinicalDataPatient = remoteData(() => {
         return client.getAllClinicalDataOfPatientInStudyUsingGET({
             projection: 'DETAILED',
             studyId: this.studyId,
             patientId: this.patientId
         });
-    });
+    }, []);
 
-    @observable samplesOfPatient = new MobxPromise(() => {
+    readonly samplesOfPatient = remoteData(() => {
         return client.getAllSamplesOfPatientInStudyUsingGET({
             studyId: this.studyId,
             patientId: this.patientId
         });
-    });
+    }, []);
 
-    @observable clinicalDataSample = new MobxPromise({
+    readonly clinicalDataSample = remoteData({
         await: () => [
             this.samplesOfPatient
         ],
         invoke: () => client.fetchClinicalDataUsingPOST({
             clinicalDataType: 'SAMPLE',
-            identifiers: this.samplesOfPatient.result!.map(sample => ({
+            identifiers: this.samplesOfPatient.result.map(sample => ({
                 entityId: sample.sampleId,
                 studyId: this.studyId
             })),
             projection: 'DETAILED',
-        })
+        }),
+        default: []
     });
 
-    @observable patientViewData = new MobxPromise({
+    readonly patientViewData = remoteData({
         await: () => [
             this.clinicalDataPatient,
             this.clinicalDataSample
@@ -79,8 +80,8 @@ export class PatientViewPageStore {
         invoke: () => transformClinicalInformationToStoreShape(
             this.patientId,
             this.studyId,
-            this.clinicalDataPatient.result!,
-            this.clinicalDataSample.result!
+            this.clinicalDataPatient.result,
+            this.clinicalDataSample.result
         )
     });
 }
