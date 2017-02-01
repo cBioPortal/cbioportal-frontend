@@ -32,7 +32,7 @@ export default class QueryContainer extends React.Component<{}, {}>
         return (
             <FlexRow padded flex={1} className={styles.QueryContainer}>
 
-				<FlexCol padded>
+				<FlexCol padded overflow>
 
 					<CancerStudySelector/>
 
@@ -43,7 +43,7 @@ export default class QueryContainer extends React.Component<{}, {}>
 				</FlexCol>
 
 				{!!(devMode.enabled) && (
-					<FlexCol padded>
+					<FlexCol padded overflow>
 						{/* demo controls */}
 						<FlexCol padded style={{border: '1px solid #ddd', borderRadius: 5, padding: 5}}>
 							<StateToggle label='Click tree node again to deselect' target={queryStore} name='clickAgainToDeselectSingle' defaultValue={queryStore.clickAgainToDeselectSingle}/>
