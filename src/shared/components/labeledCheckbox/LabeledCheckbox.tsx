@@ -14,7 +14,7 @@ export interface ILabeledCheckboxProps
 	inputProps?: React.HTMLProps<HTMLInputElement>;
 }
 
-export default class LabeledCheckbox extends React.Component<ILabeledCheckboxProps, undefined>
+export default class LabeledCheckbox extends React.Component<ILabeledCheckboxProps, {}>
 {
 	private input:HTMLInputElement;
 

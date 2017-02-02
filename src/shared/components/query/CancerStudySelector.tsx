@@ -10,7 +10,7 @@ import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
 import ReactSelect from 'react-select';
 import 'react-select/dist/react-select.css';
 import StudyList from "../StudyList/StudyList";
-import {observer} from "../../../../node_modules/mobx-react/custom";
+import {observer} from "../../../../node_modules/mobx-react/index";
 import queryStore from "./QueryStore";
 import {action, toJS, computed} from "../../../../node_modules/mobx/lib/mobx";
 import memoize from "../../lib/memoize";
