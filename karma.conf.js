@@ -40,8 +40,6 @@ module.exports = function (config) {
 
         },
 
-        pattern:".spec.",
-
         webpack: webpackConfig,
         webpackServer: {
             noInfo: true
@@ -53,7 +51,6 @@ module.exports = function (config) {
         browsers: ['PhantomJS'],
         singleRun: !argv.watch,
         coverageReporter: {
-            includeAllSources: true,
             reporters: [
                 {type: 'lcov'},
                 {type: 'text-summary'}
