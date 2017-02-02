@@ -24,7 +24,7 @@ import {HotspotMutation} from "../../shared/api/CancerHotspotsAPI";
 import {MutSig, MrnaPercentile, default as CBioPortalAPIInternal} from "../../shared/api/CBioPortalAPIInternal";
 import PatientHeader from './patientHeader/PatientHeader';
 import {TablePaginationControls} from "../../shared/components/tablePaginationControls/TablePaginationControls";
-import {IHotspotData} from "./mutation/column/AnnotationColumnFormatter";
+import {IHotspotData, IMyCancerGenomeData, IMyCancerGenome} from "./mutation/column/AnnotationColumnFormatter";
 import {getSpans} from './clinicalInformation/lib/clinicalAttributesUtil.js';
 
 
@@ -46,6 +46,7 @@ interface IPatientViewState {
 
     cnaSegmentData: any;
     mutationData: any;
+    myCancerGenomeData?: IMyCancerGenomeData;
     hotspotsData?: IHotspotData;
     mrnaExprRankData?: MrnaRankData;
     mutSigData?: MutSigData;
@@ -108,6 +109,28 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         const qs_hash = queryString.parse((window as any).location.hash);
         this.patientIdsInCohort = (!!qs_hash['nav_case_ids'] ? (qs_hash['nav_case_ids'] as string).split(",") : []);
+    }
+
+    fetchMyCancerGenomeData():Promise<IMyCancerGenomeData> {
+        // mapping by hugo gene symbol
+        const generateMap = function(myCancerGenomes:IMyCancerGenome[]) {
+            const map:IMyCancerGenomeData = {};
+
+            _.each(myCancerGenomes, function (myCancerGenome) {
+                if (!(myCancerGenome.hugoGeneSymbol in map)) {
+                    map[myCancerGenome.hugoGeneSymbol] = [];
+                }
+
+                map[myCancerGenome.hugoGeneSymbol].push(myCancerGenome);
+            });
+
+            return map;
+        };
+
+        return new Promise((resolve, reject) => {
+            const data:IMyCancerGenome[] = require('../../../resources/mycancergenome.json');
+            resolve(generateMap(data));
+        });
     }
 
     fetchHotspotsData(mutations:Mutation[]):Promise<IHotspotData> {
@@ -269,6 +292,10 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                 this.fetchCnaSegmentData(sampleIds).then((_result) => {
                     this.setState(({ cnaSegmentData:  _result } as IPatientViewState));
+                });
+
+                this.fetchMyCancerGenomeData().then((_result) => {
+                    this.setState(({myCancerGenomeData: _result} as IPatientViewState));
                 });
 
                 this.fetchMutationData(sampleIds).then((_result) => {
@@ -441,6 +468,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             (this.state.mutationData && !!sampleManager) && (
                                 <MutationInformationContainer
                                     mutations={this.state.mutationData}
+                                    myCancerGenomeData={this.state.myCancerGenomeData}
                                     hotspots={this.state.hotspotsData}
                                     mrnaExprRankData={this.state.mrnaExprRankData}
                                     mutSigData={this.state.mutSigData}
