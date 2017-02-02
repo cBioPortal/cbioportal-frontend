@@ -1,11 +1,11 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import {IStudyListLogic} from "./StudyList";
-import CancerStudyTreeData from "../query/CancerStudyTreeData";
 import {CancerTreeNode} from "../query/CancerStudyTreeData";
 import {NodeMetadata} from "../query/CancerStudyTreeData";
 import {TypeOfCancer as CancerType, CancerStudy} from "../../api/CBioPortalAPI";
 import memoize from "../../lib/memoize";
+import {QueryStore} from "../query/QueryStore";
+import {computed, action} from "../../../../node_modules/mobx/lib/mobx";
 
 export function matchesSearchText(input:string, searchText:string):boolean
 {
@@ -25,33 +25,20 @@ export function matchesSearchText(input:string, searchText:string):boolean
 	});
 }
 
-export default class StudyListLogic implements IStudyListLogic
+export default class StudyListLogic
 {
-	state:{
-		'searchText': string,
-		'selectedStudyIds': string[],
-		'selectedCancerTypeIds': string[],
-		'maxTreeDepth': number,
-	};
-
-	treeData: CancerStudyTreeData;
-	handleSelectedStudiesChange: (selectedStudyIds: string[]) => void
-
-	constructor(params: Pick<StudyListLogic, 'state' | 'treeData' | 'handleSelectedStudiesChange'>)
+	constructor(readonly store:QueryStore)
 	{
-		this.state = params.state;
-		this.treeData = params.treeData;
-		this.handleSelectedStudiesChange = params.handleSelectedStudiesChange;
 	}
 
-	getRootCancerType()
+	@computed get rootCancerType()
 	{
-		return this.treeData.rootCancerType;
+		return this.store.treeData.rootCancerType;
 	}
 
 	getMetadata(node:CancerTreeNode)
 	{
-		return this.treeData.map_node_meta.get(node) as NodeMetadata;
+		return this.store.treeData.map_node_meta.get(node) as NodeMetadata;
 	}
 
 	// filters out empty CancerType subtrees
@@ -61,15 +48,15 @@ export default class StudyListLogic implements IStudyListLogic
 		if (meta.isCancerType)
 		{
 			// ignore cancer types excluded by selection
-			if (this.state.selectedCancerTypeIds.length)
+			if (this.store.selectedCancerTypeIds.length)
 			{
-				let idToCancerType = (cancerTypeId:string) => this.treeData.map_cancerTypeId_cancerType.get(cancerTypeId) as CancerType;
-				let selectedCancerTypes = this.state.selectedCancerTypeIds.map(idToCancerType);
+				let idToCancerType = (cancerTypeId:string) => this.store.treeData.map_cancerTypeId_cancerType.get(cancerTypeId) as CancerType;
+				let selectedCancerTypes = this.store.selectedCancerTypeIds.map(idToCancerType);
 				if (_.intersection(selectedCancerTypes, [node].concat(meta.ancestors)).length == 0)
 					return false;
 			}
 			// ignore cancer types excluded by depth
-			if (meta.ancestors.length > this.state.maxTreeDepth)
+			if (meta.ancestors.length > this.store.maxTreeDepth)
 				return false;
 			// ignore cancer types with no descendant studies
 			if (meta.descendantStudies.length == 0)
@@ -80,7 +67,7 @@ export default class StudyListLogic implements IStudyListLogic
 
 	// returns true if the node or any related nodes match
 	nodeFilter = memoize({
-		getAdditionalArgs: () => [this.treeData, this.state.maxTreeDepth, this.state.searchText],
+		getAdditionalArgs: () => [this.store.treeData, this.store.maxTreeDepth, this.store.searchText],
 		fixedArgsLength: 1,
 		function: (node:CancerTreeNode):boolean =>
 		{
@@ -92,13 +79,13 @@ export default class StudyListLogic implements IStudyListLogic
 				return false;
 
 			// if no search text is entered, include all nodes
-			if (!this.state.searchText)
+			if (!this.store.searchText)
 				return true;
 
 			// check for matching text in this node and related nodes
 			for (let others of [[node], meta.descendantCancerTypes, meta.descendantStudies, meta.ancestors])
 				for (let other of others)
-					if (this.shouldConsiderNode(other) && matchesSearchText(other.name, this.state.searchText))
+					if (this.shouldConsiderNode(other) && matchesSearchText(other.name, this.store.searchText))
 						return true;
 
 			// no match
@@ -109,20 +96,20 @@ export default class StudyListLogic implements IStudyListLogic
 	getChildCancerTypes(cancerType:CancerType):CancerType[]
 	{
 		let meta = this.getMetadata(cancerType);
-		let childTypes = meta.ancestors.length < this.state.maxTreeDepth ? meta.childCancerTypes : [];
+		let childTypes = meta.ancestors.length < this.store.maxTreeDepth ? meta.childCancerTypes : [];
 		return childTypes.filter(this.nodeFilter);
 	}
 
 	getChildCancerStudies(cancerType:CancerType):CancerStudy[]
 	{
 		let meta = this.getMetadata(cancerType);
-		let studies = meta.ancestors.length < this.state.maxTreeDepth ? meta.childStudies : meta.descendantStudies;
+		let studies = meta.ancestors.length < this.store.maxTreeDepth ? meta.childStudies : meta.descendantStudies;
 		return studies.filter(this.nodeFilter);
 	}
 
 	getDescendantCancerStudies(node:CancerTreeNode):CancerStudy[]
 	{
-		if (node === this.getRootCancerType())
+		if (node === this.rootCancerType)
 			return this.hack_getAllStudies();
 
 		let meta = this.getMetadata(node);
@@ -137,7 +124,7 @@ export default class StudyListLogic implements IStudyListLogic
 
 	isHighlighted(node:CancerTreeNode):boolean
 	{
-		return !!this.state.searchText && matchesSearchText(node.name, this.state.searchText);
+		return !!this.store.searchText && matchesSearchText(node.name, this.store.searchText);
 	}
 
 	getCheckboxProps(node: CancerTreeNode): {checked: boolean, indeterminate?: boolean}
@@ -145,8 +132,8 @@ export default class StudyListLogic implements IStudyListLogic
 		let meta = this.getMetadata(node);
 		if (meta.isCancerType)
 		{
-			let selectedStudyIds = this.state.selectedStudyIds || [];
-			let selectedStudies = selectedStudyIds.map(studyId => this.treeData.map_studyId_cancerStudy.get(studyId) as CancerStudy);
+			let selectedStudyIds = this.store.selectedStudyIds || [];
+			let selectedStudies = selectedStudyIds.map(studyId => this.store.treeData.map_studyId_cancerStudy.get(studyId) as CancerStudy);
 			let shownStudies = this.getDescendantCancerStudies(node);
 			let shownAndSelectedStudies = _.intersection(shownStudies, selectedStudies);
 			let checked = shownAndSelectedStudies.length > 0;
@@ -157,7 +144,7 @@ export default class StudyListLogic implements IStudyListLogic
 		else
 		{
 			let study = node as CancerStudy;
-			let checked = !!this.state.selectedStudyIds.find(id => id == study.studyId);
+			let checked = !!this.store.selectedStudyIds.find(id => id == study.studyId);
 			return {checked};
 		}
 	}
@@ -165,24 +152,24 @@ export default class StudyListLogic implements IStudyListLogic
 	hack_getAllStudies()
 	{
 		return _.union(...(
-			this.getChildCancerTypes(this.getRootCancerType())
+			this.getChildCancerTypes(this.rootCancerType)
 				.map(cancerType => this.getDescendantCancerStudies(cancerType))
 		));
 	}
 
-	hack_handleSelectAll(checked:boolean)
+	@action hack_handleSelectAll(checked:boolean)
 	{
-		let selectedStudyIds = this.state.selectedStudyIds;
+		let selectedStudyIds = this.store.selectedStudyIds;
 		let clickedStudyIds = this.hack_getAllStudies().map(study => study.studyId);
 		if (checked)
 			selectedStudyIds = _.union(selectedStudyIds, clickedStudyIds);
 		else
 			selectedStudyIds = _.difference(selectedStudyIds, clickedStudyIds);
 
-		this.handleSelectedStudiesChange(selectedStudyIds);
+		this.store.selectedStudyIds = selectedStudyIds;
 	}
 
-	onCheck(node:CancerTreeNode, event:React.FormEvent<HTMLInputElement>): void
+	@action onCheck(node:CancerTreeNode, checked:boolean): void
 	{
 		let clickedStudyIds:string[];
 		let meta = this.getMetadata(node);
@@ -190,17 +177,17 @@ export default class StudyListLogic implements IStudyListLogic
 			clickedStudyIds = this.getDescendantCancerStudies(node).map(study => study.studyId);
 		else
 			clickedStudyIds = [(node as CancerStudy).studyId];
-		this.handleCheckboxStudyIds(event, clickedStudyIds);
+		this.handleCheckboxStudyIds(clickedStudyIds, checked);
 	}
 
-	handleCheckboxStudyIds(event:React.FormEvent<HTMLInputElement>, clickedStudyIds:string[])
+	 private handleCheckboxStudyIds(clickedStudyIds:string[], checked:boolean)
 	{
-		let selectedStudyIds = this.state.selectedStudyIds;
-		if ((event.target as HTMLInputElement).checked)
+		let selectedStudyIds = this.store.selectedStudyIds;
+		if (checked)
 			selectedStudyIds = _.union(selectedStudyIds, clickedStudyIds);
 		else
 			selectedStudyIds = _.difference(selectedStudyIds, clickedStudyIds);
 
-		this.handleSelectedStudiesChange(selectedStudyIds);
+		this.store.selectedStudyIds = selectedStudyIds;
 	}
 }

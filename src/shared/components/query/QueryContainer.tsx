@@ -72,7 +72,7 @@ export default class QueryContainer extends React.Component<{}, {}>
 							{
 								JSON.stringify({
 									selectedCancerTypeIds: queryStore.selectedCancerTypeIds,
-									selectedStudyIds: queryStore.selectedCancerStudyIds,
+									selectedStudyIds: queryStore.selectedStudyIds,
 								}, null, 4)
 							}
 						</pre>

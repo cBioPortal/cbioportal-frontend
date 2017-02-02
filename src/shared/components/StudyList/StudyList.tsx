@@ -3,8 +3,9 @@ import {TypeOfCancer as CancerType, CancerStudy} from "../../api/CBioPortalAPI";
 import * as styles_any from './styles.module.scss';
 import classNames from "../../lib/classNames";
 import FontAwesome from "react-fontawesome";
-import {CancerTreeNode} from "../query/CancerStudyTreeData";
 import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
+import queryStore from "../query/QueryStore";
+import {observer} from "../../../../node_modules/mobx-react/index";
 
 const styles = {
 	...styles_any as {
@@ -29,28 +30,15 @@ const styles = {
 	Level: (level:number) => styles_any[`Level${level}`]
 };
 
-export type IStudyListProps = {
-	logic: IStudyListLogic;
-};
-
-export interface IStudyListLogic
+@observer
+export default class StudyList extends React.Component<{}, {}>
 {
-	getRootCancerType: () => CancerType;
-	getChildCancerTypes: (cancerType:CancerType) => CancerType[];
-	getChildCancerStudies: (cancerType:CancerType) => CancerStudy[];
-	getDepth: (node:CancerType) => number;
-	isHighlighted: (node:CancerTreeNode) => boolean;
-	getCheckboxProps: (node: CancerTreeNode) => {checked: boolean, indeterminate?: boolean};
-	onCheck: (node:CancerTreeNode, event:React.FormEvent<HTMLInputElement>) => void;
-}
-
-export default class StudyList extends React.Component<IStudyListProps, {}>
-{
-	get logic() { return this.props.logic; }
+	get store() { return queryStore; }
+	get logic() { return queryStore.studyListLogic; }
 
 	render()
 	{
-		return this.renderCancerType(this.logic.getRootCancerType());
+		return this.renderCancerType(this.logic.rootCancerType);
 	}
 
 	renderCancerType = (cancerType:CancerType, arrayIndex:number = 0):JSX.Element =>
@@ -62,7 +50,7 @@ export default class StudyList extends React.Component<IStudyListProps, {}>
 		let heading:JSX.Element | undefined;
 		let indentArrow:JSX.Element | undefined;
 
-		if (cancerType != this.logic.getRootCancerType())
+		if (cancerType != this.logic.rootCancerType)
 		{
 			let liClassName = classNames(
 				styles.CancerType,
@@ -80,7 +68,7 @@ export default class StudyList extends React.Component<IStudyListProps, {}>
 					<LabeledCheckbox
 						{...this.logic.getCheckboxProps(cancerType)}
 						inputProps={{
-							onChange: event => this.logic.onCheck(cancerType, event)
+							onChange: event => this.logic.onCheck(cancerType, (event.target as HTMLInputElement).checked)
 						}}
 					>
 						{indentArrow} 
@@ -131,7 +119,7 @@ export default class StudyList extends React.Component<IStudyListProps, {}>
 			<LabeledCheckbox
 				{...this.logic.getCheckboxProps(study)}
 				inputProps={{
-					onChange: event => this.logic.onCheck(study, event)
+					onChange: event => this.logic.onCheck(study, (event.target as HTMLInputElement).checked)
 				}}
 			>
 				<span className={styles.StudyName} title={study.name}>

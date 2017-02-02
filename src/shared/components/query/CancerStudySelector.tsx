@@ -6,12 +6,10 @@ import "react-bootstrap-table/css/react-bootstrap-table.css";
 import {FlexCol, FlexRow} from "../flexbox/FlexBox";
 import * as styles_any from './styles.module.scss';
 import classNames from "../../lib/classNames";
-import {default as CancerStudyTreeData, CancerTreeNode} from "../query/CancerStudyTreeData";
 import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
 import ReactSelect from 'react-select';
 import 'react-select/dist/react-select.css';
 import StudyList from "../StudyList/StudyList";
-import StudyListLogic from "../StudyList/StudyListLogic";
 import {observer} from "../../../../node_modules/mobx-react/custom";
 import queryStore from "./QueryStore";
 import {action, toJS, computed} from "../../../../node_modules/mobx/lib/mobx";
@@ -53,24 +51,26 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 		super(props);
 	}
 
+	get store() { return queryStore; }
+
 	@memoize
 	getCancerTypeListClickHandler<T>(node:CancerType)
 	{
-		return (event:React.MouseEvent<T>) => queryStore.selectCancerType(node as CancerType, event.ctrlKey);
+		return (event:React.MouseEvent<T>) => this.store.selectCancerType(node as CancerType, event.ctrlKey);
 	}
 
 	handleStudiesCheckbox<T>(event:React.FormEvent<T>, clickedStudyIds:string[])
 	{
 		if ((event.target as HTMLInputElement).checked)
-			queryStore.selectedCancerStudyIds = _.union(queryStore.selectedCancerStudyIds, clickedStudyIds);
+			this.store.selectedStudyIds = _.union(this.store.selectedStudyIds, clickedStudyIds);
 		else
-			queryStore.selectedCancerStudyIds = _.difference(queryStore.selectedCancerStudyIds, clickedStudyIds);
+			this.store.selectedStudyIds = _.difference(this.store.selectedStudyIds, clickedStudyIds);
 	}
 
 	renderCancerTypeList()
 	{
-		let logic = queryStore.studyListLogic;
-		let rootMeta = logic.getMetadata(logic.treeData.rootCancerType);
+		let logic = this.store.studyListLogic;
+		let rootMeta = logic.getMetadata(logic.store.treeData.rootCancerType);
 		let listItems = rootMeta && rootMeta.childCancerTypes.map(this.renderCancerTypeListItem);
 
 		return (
@@ -82,22 +82,22 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 
 	renderCancerTypeListItem = (cancerType:CancerType, arrayIndex:number) =>
 	{
-		let logic = queryStore.studyListLogic;
+		let logic = this.store.studyListLogic;
 		let meta = logic.getMetadata(cancerType);
 		let numStudies = logic.getDescendantCancerStudies(cancerType).length;
 
 		if (!numStudies)
 			return null;
 
-		let selected = meta.isCancerType && _.includes(queryStore.selectedCancerTypeIds, cancerType.cancerTypeId);
-		let highlighted = queryStore.studyListLogic.isHighlighted(cancerType);
+		let selected = meta.isCancerType && _.includes(this.store.selectedCancerTypeIds, cancerType.cancerTypeId);
+		let highlighted = this.store.studyListLogic.isHighlighted(cancerType);
 		let liClassName = classNames(
 			styles.cancerTypeListItem,
 			styles.selectable,
 			{
 				[styles.selected]: selected,
-				[styles.matchingNodeText]: !!queryStore.searchText && highlighted,
-				[styles.nonMatchingNodeText]: !!queryStore.searchText && !highlighted,
+				[styles.matchingNodeText]: !!this.store.searchText && highlighted,
+				[styles.nonMatchingNodeText]: !!this.store.searchText && !highlighted,
 			},
 		);
 
@@ -119,8 +119,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 
 	renderStudyHeaderCheckbox = (shownStudies:CancerStudy[]) =>
 	{
-		let logic = queryStore.studyListLogic;
-		let selectedStudies = queryStore.selectedCancerStudyIds.map(studyId => logic.treeData.map_studyId_cancerStudy.get(studyId) as CancerStudy);
+		let selectedStudies = this.store.selectedStudyIds.map(studyId => this.store.treeData.map_studyId_cancerStudy.get(studyId) as CancerStudy);
 		let shownAndSelectedStudies = _.intersection(shownStudies, selectedStudies);
 		let checked = shownAndSelectedStudies.length > 0;
 		let indeterminate = checked && shownAndSelectedStudies.length != shownStudies.length;
@@ -143,12 +142,12 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 
 	render()
 	{
-		let searchTextOptions = queryStore.searchTextPresets;
-		if (queryStore.searchText && searchTextOptions.indexOf(queryStore.searchText) < 0)
-			searchTextOptions = [queryStore.searchText].concat(searchTextOptions);
+		let searchTextOptions = this.store.searchTextPresets;
+		if (this.store.searchText && searchTextOptions.indexOf(this.store.searchText) < 0)
+			searchTextOptions = [this.store.searchText].concat(searchTextOptions as string[]);
 
-		let logic = queryStore.studyListLogic;
-		let allSelectedCheckboxProps = logic.getCheckboxProps(logic.getRootCancerType());
+		let logic = this.store.studyListLogic;
+		let allSelectedCheckboxProps = logic.getCheckboxProps(logic.rootCancerType);
 		let allSelected = allSelectedCheckboxProps.checked && !allSelectedCheckboxProps.indeterminate;
 
 		return (
@@ -156,14 +155,14 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 				<FlexRow padded overflow className={styles.selectCancerStudyRow}>
 					<h2>Select Studies</h2>
 					<span className={styles.selectedCount}>
-						<b>{queryStore.selectedCancerStudyIds.length}</b> Studies Selected
+						<b>{this.store.selectedStudyIds.length}</b> Studies Selected
 					</span>
 				</FlexRow>
 
 				<FlexRow overflow className={styles.cancerStudySelectorHeader}>
 						<ReactSelect
 							className={styles.searchTextInput}
-							value={queryStore.searchText}
+							value={this.store.searchText}
 							autofocus={true}
 							options={searchTextOptions.map(str => ({label: str, value: str}))}
 							promptTextCreator={(label:string) => `Search for "${label}"`}
@@ -171,12 +170,12 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 							noResultsText={false}
 							onCloseResetsInput={false}
 							onInputChange={(searchText:string) => {
-								queryStore.searchText = searchText;
-								queryStore.selectedCancerTypeIds = [];
+								this.store.searchText = searchText;
+								this.store.selectedCancerTypeIds = [];
 							}}
 							onChange={(option:{value:string}) => {
-								queryStore.searchText = option ? option.value || '' : '';
-								queryStore.selectedCancerTypeIds = [];
+								this.store.searchText = option ? option.value || '' : '';
+								this.store.selectedCancerTypeIds = [];
 							}}
 						/>
 
@@ -190,9 +189,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 						{this.renderCancerTypeList()}
 					</div>
 					<div className={styles.cancerStudyListContainer}>
-						<StudyList
-							logic={queryStore.studyListLogic}
-						/>
+						<StudyList/>
 					</div>
 				</FlexRow>
 			</FlexCol>
