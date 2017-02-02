@@ -149,6 +149,7 @@ export default class MutationInformationContainer extends React.Component<IMutat
             normalRefCount: {
                 name: "Ref Reads (N)",
                 formatter: AlleleCountColumnFormatter.renderFunction,
+                downloader: AlleleCountColumnFormatter.getTextValue,
                 columnProps: {
                     dataField: "normalRefCount",
                     sampleOrder: this.props.sampleOrder
@@ -158,6 +159,7 @@ export default class MutationInformationContainer extends React.Component<IMutat
             normalAltCount: {
                 name: "Variant Reads (N)",
                 formatter: AlleleCountColumnFormatter.renderFunction,
+                downloader: AlleleCountColumnFormatter.getTextValue,
                 columnProps: {
                     dataField: "normalAltCount",
                     sampleOrder: this.props.sampleOrder
@@ -167,6 +169,7 @@ export default class MutationInformationContainer extends React.Component<IMutat
             tumorRefCount: {
                 name: "Ref Reads",
                 formatter: AlleleCountColumnFormatter.renderFunction,
+                downloader: AlleleCountColumnFormatter.getTextValue,
                 columnProps: {
                     dataField: "tumorRefCount",
                     sampleOrder: this.props.sampleOrder
@@ -176,6 +179,7 @@ export default class MutationInformationContainer extends React.Component<IMutat
             tumorAltCount: {
                 name: "Variant Reads",
                 formatter: AlleleCountColumnFormatter.renderFunction,
+                downloader: AlleleCountColumnFormatter.getTextValue,
                 columnProps: {
                     dataField: "tumorAltCount",
                     sampleOrder: this.props.sampleOrder

@@ -23,6 +23,10 @@ export interface IColumnRenderFunction {
     <T>(data:IColumnFormatterData<T>, columnProps?:any):any; // TODO this should return Reactable.Td!
 }
 
+export interface IColumnDownloadFunction {
+    <T>(data:IColumnFormatterData<T>, columnProps?:any):string;
+}
+
 export interface IColumnVisibilityFunction {
     <T>(tableData:Array<T>, columnProps?:any):ColumnVisibility;
 }
