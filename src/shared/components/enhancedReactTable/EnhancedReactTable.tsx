@@ -109,6 +109,10 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
          (sortedColumns:Array<IEnhancedReactTableColumnDef>, columnVisibility:IColumnVisibilityState) =>
              this.resolveColumnVisibility(this.colNameToId, sortedColumns, columnVisibility));
 
+    private downloadDataSelector = createSelector([this.sortedColsSelector, this.columnVisibilitySelector, this.rawDataSelector],
+        (sortedCols:Array<IEnhancedReactTableColumnDef>, visibility:IColumnVisibilityState, rawData:Array<T>) =>
+            this.generateDownloadData(sortedCols, visibility, rawData));
+
     // we need to calculate the header values every time the visibility or column definitions change
     private headersSelector = createSelector(this.sortedVisibleColsSelector,
         (sortedCols:Array<IEnhancedReactTableColumnDef>) => this.generateHeaders(sortedCols));
@@ -157,6 +161,7 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
         //
 
         // binding "this" to handler functions
+        this.handleDownload = this.handleDownload.bind(this);
         this.handleFilterInput = this.handleFilterInput.bind(this);
         this.handleVisibilityToggle = this.handleVisibilityToggle.bind(this);
         this.handleChangeItemsPerPage = this.handleChangeItemsPerPage.bind(this);
@@ -195,6 +200,9 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
                     showCopyAndDownload={true}
                     showHideShowColumnButton={true}
                     handleInput={this.handleFilterInput}
+                    downloadDataGenerator={this.handleDownload}
+                    downloadDataContainsHeader={true}
+                    downloadFilename="mutations.csv"
                     showSearch={true}
                     columnVisibilityProps={{
                         className: "pull-right",
@@ -358,14 +366,93 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
         return headers;
     }
 
+    private generateDownloadData(columns:Array<IEnhancedReactTableColumnDef>,
+                                 visibility:IColumnVisibilityState,
+                                 tableData:Array<T>)
+    {
+        const tableDownloadData:string[][] = [];
+
+        // add header
+        tableDownloadData[0] = [];
+        _.each(columns, (columnDef:IEnhancedReactTableColumnDef) => {
+            const colId = this.colNameToId[columnDef.name];
+
+            // don't include excluded columns
+            if (colId in visibility && visibility[colId] !== "excluded") {
+                tableDownloadData[0].push(columnDef.name);
+            }
+        });
+
+        // add rows
+        _.each(tableData, (rowData:T, index:number) => {
+            const rowDownloadData:string[] = [];
+
+            _.each(columns, (columnDef:IEnhancedReactTableColumnDef) => {
+                const colId = this.colNameToId[columnDef.name];
+
+                // include both visible and hidden columns, but not the excluded ones
+                if (colId in visibility && visibility[colId] !== "excluded") {
+                    const columnData = this.getColumnData(columnDef, tableData, rowData);
+
+                    if (columnDef.downloader) {
+                        rowDownloadData.push(columnDef.downloader(columnData, columnDef.columnProps));
+                    }
+                    else {
+                        rowDownloadData.push((columnData.columnData || "").toString());
+                    }
+                }
+            });
+
+            tableDownloadData.push(rowDownloadData);
+        });
+
+        return tableDownloadData;
+    }
+
+    private getColumnData(columnDef:IEnhancedReactTableColumnDef, tableData:Array<T>, rowData:T):IColumnFormatterData<T>
+    {
+        const data:IColumnFormatterData<T> = {
+            name: columnDef.name,
+            tableData,
+            rowData,
+            columnData: null
+        };
+
+        // get column data (may end up being undefined)
+        if (columnDef.columnDataFunction) {
+            data.columnData = columnDef.columnDataFunction(data);
+        }
+        else if (columnDef.dataField)
+        {
+            let instance:any = null;
+
+            // also taking into account that row data might be an array of instances
+            if (_.isArray(data.rowData) && data.rowData.length > 0) {
+                // In case row data is an array of instances, by default retrieving only the first
+                // element's data as the column data. For advanced combining of all elements' data,
+                // one needs to provide a custom columnData function.
+                instance = data.rowData[0];
+            }
+            else {
+                // assuming that rowData is a flat type instance
+                instance = data.rowData;
+            }
+
+            if (instance) {
+                data.columnData = instance[columnDef.dataField];
+            }
+        }
+
+        return data;
+    }
+
     private generateRows(columns:Array<IEnhancedReactTableColumnDef>, tableData:Array<T>)
     {
-        let rows:Array<any> = [];
-        const self = this;
+        const rows:Array<any> = [];
 
-        _.each(tableData, function(rowData:T, index:number) {
+        _.each(tableData, (rowData:T, index:number) => {
             // columns for this row: an array of Td elements
-            const cols = self.generateColumns(columns, tableData, rowData);
+            const cols = this.generateColumns(columns, tableData, rowData);
 
             rows.push(
                 <Tr key={index}>
@@ -379,37 +466,11 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
 
     private generateColumns(columns:Array<IEnhancedReactTableColumnDef>, tableData:Array<T>, rowData:T)
     {
-        let cols:Array<any> = [];
-        const self = this;
+        const cols:Array<any> = [];
 
-        _.each(columns, function(columnDef:IEnhancedReactTableColumnDef) {
-            let data:IColumnFormatterData<T> = {
-                name: columnDef.name,
-                tableData,
-                rowData,
-                columnData: null
-            };
-
-            // get column data (may end up being undefined)
-            if (columnDef.columnData) {
-                data.columnData = columnDef.columnData(data);
-            }
-            else if (columnDef.dataField)
-            {
-                // also taking into account that row data might be an array of instances
-                // (instead of a single instance)
-                // this converts row data into an array in case it refers to a single instance
-                const instances:Array<any> = new Array<any>().concat(data.rowData);
-
-                // In case row data is an array of instances, by default retrieving only the first
-                // element's data as the column data. For advanced combining of all elements' data,
-                // one needs to provide a custom columnData function.
-                if (instances.length > 0) {
-                    data.columnData = instances[0][columnDef.dataField];
-                }
-            }
-
-            cols.push(self.generateColumn(data, columnDef));
+        _.each(columns, (columnDef:IEnhancedReactTableColumnDef) => {
+            const columnData = this.getColumnData(columnDef, tableData, rowData);
+            cols.push(this.generateColumn(columnData, columnDef));
         });
 
         return cols;
@@ -487,6 +548,11 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
         this.setState({
             filter
         } as IEnhancedReactTableState);
+    }
+
+    private handleDownload():string[][]
+    {
+        return this.downloadDataSelector(this.state, this.props);
     }
 
     private handleVisibilityToggle(columnId: String):void
