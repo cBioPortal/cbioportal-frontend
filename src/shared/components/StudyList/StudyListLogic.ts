@@ -99,6 +99,12 @@ export default class StudyListLogic
 		}
 	});
 
+	cancerTypeContainsSelectedStudies(cancerType:CancerType):boolean
+	{
+		let descendantStudies = this.getMetadata(cancerType).descendantStudies;
+		return _.intersection(this.store.selectedStudies, descendantStudies).length > 0;
+	}
+
 	getChildCancerTypes(cancerType:CancerType):CancerType[]
 	{
 		let meta = this.getMetadata(cancerType);

@@ -143,11 +143,15 @@
   }
 
   .matchingNodeText {
-    font-weight: bold;
+    font-style: italic;
   }
 
   .nonMatchingNodeText {
-    font-weight: normal;
+    font-style: normal;
+  }
+
+  .containsSelectedStudies {
+    font-weight: bold;
   }
 
   .searchTextInput {

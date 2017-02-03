@@ -27,6 +27,7 @@ const styles = styles_any as {
 	cancerStudySamples: string,
 	matchingNodeText: string,
 	nonMatchingNodeText: string,
+	containsSelectedStudies: string,
 	selectCancerStudyHeader: string,
 	selectCancerStudyRow: string,
 	searchTextInput: string,
@@ -90,7 +91,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 		if (!numStudies)
 			return null;
 
-		let selected = meta.isCancerType && _.includes(this.store.selectedCancerTypeIds, cancerType.cancerTypeId);
+		let selected = _.includes(this.store.selectedCancerTypeIds, cancerType.cancerTypeId);
 		let highlighted = this.store.studyListLogic.isHighlighted(cancerType);
 		let liClassName = classNames(
 			styles.cancerTypeListItem,
@@ -99,6 +100,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 				[styles.selected]: selected,
 				[styles.matchingNodeText]: !!this.store.searchText && highlighted,
 				[styles.nonMatchingNodeText]: !!this.store.searchText && !highlighted,
+				[styles.containsSelectedStudies]: this.store.studyListLogic.cancerTypeContainsSelectedStudies(cancerType),
 			},
 		);
 
