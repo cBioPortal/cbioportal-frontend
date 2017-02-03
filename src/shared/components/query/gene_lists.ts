@@ -1,4 +1,4 @@
-[{
+const gene_lists = [{
 	"id": "Prostate Cancer: AR Signaling",
 	"genes": ["SOX9", "RAN", "TNK2", "EP300", "PXN", "NCOA2", "AR", "NRIP1", "NCOR1", "NCOR2"]
 }, {
@@ -67,4 +67,6 @@
 }, {
 	"id": "General: Invasion and metastasis",
 	"genes": ["MMP1", "MMP2", "MMP3", "MMP7", "MMP9", "MMP10", "MMP11", "MMP12", "MMP13", "MMP14", "MMP15", "MMP16", "MMP17", "MMP19", "MMP21", "MMP23B", "MMP24", "MMP25", "MMP26", "MMP27", "MMP28", "ITGB3", "ITGAV", "PTK2", "CDH1", "SPARC", "WFDC2"]
-}]
+}];
+
+export default gene_lists;

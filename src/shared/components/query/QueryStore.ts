@@ -12,11 +12,11 @@ export class QueryStore
 	// query parameters
 	@observable searchText:string = '';
 	@observable.ref selectedStudyIds:ReadonlyArray<string> = [];
+	@observable dataTypePriority = {mutation: true, cna: true};
 	@observable.ref selectedProfileIds:ReadonlyArray<string> = [];
 	@observable zScoreThreshold:string = '2.0';
-	@observable dataTypePriority = {mutation: true, cna: true};
-	@observable patientCaseSet = 'TODO';
-	@observable geneSet = 'TODO';
+	@observable selectedSampleListId = '';
+	@observable geneSet = '';
 
 	// visual options
 	@observable.ref searchTextPresets:ReadonlyArray<string> = ['lung', 'serous', 'tcga', 'tcga -provisional'];
@@ -33,16 +33,21 @@ export class QueryStore
 			return client.getAllGeneticProfilesInStudyUsingGET({studyId: this.singleSelectedStudyId});
 		return Promise.resolve([]);
 	}, []);
+	readonly sampleLists = remoteData(() => {
+		if (this.singleSelectedStudyId)
+			return client.getAllSampleListsInStudyUsingGET({studyId: this.singleSelectedStudyId});
+		return Promise.resolve([]);
+	}, []);
 
 	@computed get stateToSerialize()
 	{
 		let keys:Array<keyof this> = [
 			'searchText',
 			'selectedStudyIds',
+			'dataTypePriority',
 			'selectedProfileIds',
 			'zScoreThreshold',
-			'dataTypePriority',
-			'patientCaseSet',
+			'selectedSampleListId',
 			'geneSet',
 		];
 		return _.pick(this, keys);
