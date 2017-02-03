@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import client from "../../api/cbioportalClientInstance";
 import {toJS, observable, action, computed, whyRun, expr} from "../../../../node_modules/mobx/lib/mobx";
-import {TypeOfCancer as CancerType, GeneticProfile, CancerStudy} from "../../api/CBioPortalAPI";
+import {TypeOfCancer as CancerType, GeneticProfile, CancerStudy, SampleList} from "../../api/CBioPortalAPI";
 import CancerStudyTreeData from "./CancerStudyTreeData";
 import StudyListLogic from "../StudyList/StudyListLogic";
 import {remoteData} from "../../api/remoteData";
@@ -33,9 +33,10 @@ export class QueryStore
 			return client.getAllGeneticProfilesInStudyUsingGET({studyId: this.singleSelectedStudyId});
 		return Promise.resolve([]);
 	}, []);
-	readonly sampleLists = remoteData(() => {
+	readonly sampleLists = remoteData<SampleList[]>(() => {
 		if (this.singleSelectedStudyId)
-			return client.getAllSampleListsInStudyUsingGET({studyId: this.singleSelectedStudyId});
+			return client.getAllSampleListsInStudyUsingGET({studyId: this.singleSelectedStudyId})
+				.then(sampleLists => _.sortBy<SampleList>(sampleLists, sampleList => sampleList.name));
 		return Promise.resolve([]);
 	}, []);
 
