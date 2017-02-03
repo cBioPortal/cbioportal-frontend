@@ -9,6 +9,22 @@ import {remoteData} from "../../api/remoteData";
 // mobx observable
 export class QueryStore
 {
+	@computed get stateToSerialize()
+	{
+		let keys:Array<keyof this> = [
+			'searchText',
+			'selectedStudyIds',
+			'dataTypePriority',
+			'selectedProfileIds',
+			'zScoreThreshold',
+			'selectedSampleListId',
+			'caseIds',
+			'caseIdsMode',
+			'geneSet',
+		];
+		return _.pick(this, keys);
+	}
+
 	// query parameters
 	@observable searchText:string = '';
 	@observable.ref selectedStudyIds:ReadonlyArray<string> = [];
@@ -16,6 +32,8 @@ export class QueryStore
 	@observable.ref selectedProfileIds:ReadonlyArray<string> = [];
 	@observable zScoreThreshold:string = '2.0';
 	@observable selectedSampleListId = '';
+	@observable caseIds = '';
+	@observable caseIdsMode:'sample'|'patient' = 'sample';
 	@observable geneSet = '';
 
 	// visual options
@@ -28,7 +46,7 @@ export class QueryStore
 	// remote data
 	readonly cancerTypes = remoteData(client.getAllCancerTypesUsingGET({}), []);
 	readonly cancerStudies = remoteData(client.getAllStudiesUsingGET({}), []);
-	readonly geneticProfiles = remoteData(() => {
+	readonly geneticProfiles = remoteData<GeneticProfile[]>(() => {
 		if (this.singleSelectedStudyId)
 			return client.getAllGeneticProfilesInStudyUsingGET({studyId: this.singleSelectedStudyId});
 		return Promise.resolve([]);
@@ -39,20 +57,7 @@ export class QueryStore
 				.then(sampleLists => _.sortBy<SampleList>(sampleLists, sampleList => sampleList.name));
 		return Promise.resolve([]);
 	}, []);
-
-	@computed get stateToSerialize()
-	{
-		let keys:Array<keyof this> = [
-			'searchText',
-			'selectedStudyIds',
-			'dataTypePriority',
-			'selectedProfileIds',
-			'zScoreThreshold',
-			'selectedSampleListId',
-			'geneSet',
-		];
-		return _.pick(this, keys);
-	}
+	//TODO select last sampleList when new list arrives
 
 	@computed get singleSelectedStudyId()
 	{

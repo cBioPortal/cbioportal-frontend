@@ -3,6 +3,8 @@ import queryStore from "./QueryStore";
 import * as styles_any from './styles.module.scss';
 import ReactSelect from 'react-select';
 import {observer} from "../../../../node_modules/mobx-react/index";
+import {FlexCol} from "../flexbox/FlexBox";
+import {QueryStore} from "./QueryStore";
 
 const styles = styles_any as {
 	SampleListSelector: string,
@@ -27,7 +29,12 @@ export default class SampleListSelector extends React.Component<{}, {}>
 				label: `${sampleList.name} ({sampleList.count})`,
 				value: sampleList.sampleListId
 			};
-		});
+		}).concat([{
+			label: 'User-defined Case List',
+			value: ''
+		}]);
+
+		const CaseIdsModeRadio = this.CaseIdsModeRadio;
 
 		return (
 			<div className={styles.SampleListSelector}>
@@ -39,7 +46,41 @@ export default class SampleListSelector extends React.Component<{}, {}>
 					onChange={(option:{value:string}) => this.store.selectedSampleListId = option.value}
 				/>
 				<a href={`/study?id=${this.store.singleSelectedStudyId}`}>To build your own case set, try out our enhanced Study View.</a>
+
+				{!!(!this.store.selectedSampleListId) && (
+					<FlexCol>
+						<span>Enter case IDs below:</span>
+						<textarea
+							title="Enter case IDs"
+							rows={6}
+							cols={80}
+							value={this.store.caseIds}
+							onChange={event => {
+								this.store.caseIds = (event.target as HTMLTextAreaElement).value;
+							}}
+						/>
+						<CaseIdsModeRadio label='By sample ID' state='sample'/>
+						<CaseIdsModeRadio label='By patient ID' state='patient'/>
+					</FlexCol>
+				)}
 			</div>
 		);
 	}
+
+	CaseIdsModeRadio = observer((props: {label: string, state:QueryStore['caseIdsMode']}) =>
+	{
+		return (
+			<label>
+				<input
+					type="radio"
+					checked={this.store.caseIdsMode == props.state}
+					onChange={event => {
+						if ((event.target as HTMLInputElement).checked)
+							this.store.caseIdsMode = props.state
+					}}
+				/>
+				{props.label}
+			</label>
+		);
+	});
 }
