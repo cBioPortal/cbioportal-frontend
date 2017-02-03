@@ -55,10 +55,10 @@ class MobxPromise<R>
         if (MobxPromise.isPromiseLike(input))
             return {invoke: () => input as PromiseLike<R>, default: defaultResult};
 
-		input = input as MobxPromiseInputParams<R>;
-		if (defaultResult !== undefined)
-			input = {...input, default: defaultResult};
-		return input;
+        input = input as MobxPromiseInputParams<R>;
+        if (defaultResult !== undefined)
+            input = {...input, default: defaultResult};
+        return input;
     }
 
     /**
