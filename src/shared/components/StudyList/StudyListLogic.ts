@@ -61,7 +61,11 @@ export default class StudyListLogic
 			// ignore cancer types with no descendant studies
 			if (meta.descendantStudies.length == 0)
 				return false;
+
+			return true;
 		}
+
+		// cancer study
 		if (this.store.showSelectedStudiesOnly && !_.includes(this.store.selectedStudies, node as CancerStudy))
 			return false;
 		return true;
