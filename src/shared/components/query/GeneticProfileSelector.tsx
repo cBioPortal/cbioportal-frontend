@@ -122,7 +122,6 @@ export default class GeneticProfileSelector extends React.Component<{}, {}>
 								<input
 									type='radio'
 									checked={_.includes(this.selectedProfileIds, profile.geneticProfileId)}
-									style={{userSelect: 'text'}}
 									onChange={event => {
 										if ((event.target as HTMLInputElement).checked)
 											queryStore.selectedProfileIds = (

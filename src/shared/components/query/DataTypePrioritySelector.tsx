@@ -35,17 +35,20 @@ export default class DataTypePrioritySelector extends React.Component<{}, {}>
 		);
 	}
 
-	DataTypePriorityRadio = (props: {label: string, state:QueryStore['dataTypePriority']}) =>
+	DataTypePriorityRadio = observer((props: {label: string, state:QueryStore['dataTypePriority']}) =>
 	{
 		return (
 			<label>
 				<input
 					type="radio"
 					checked={_.isEqual(toJS(this.store.dataTypePriority), props.state)}
-					onClick={() => this.store.dataTypePriority = props.state}
+					onChange={event => {
+						if ((event.target as HTMLInputElement).checked)
+							this.store.dataTypePriority = props.state
+					}}
 				/>
 				{props.label}
 			</label>
 		);
-	}
+	});
 }
