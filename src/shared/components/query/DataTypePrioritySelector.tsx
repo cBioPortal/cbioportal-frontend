@@ -35,7 +35,7 @@ export default class DataTypePrioritySelector extends React.Component<{}, {}>
 		);
 	}
 
-	DataTypePriorityRadio(props: {label: string, state:QueryStore['dataTypePriority']})
+	DataTypePriorityRadio = (props: {label: string, state:QueryStore['dataTypePriority']}) =>
 	{
 		return (
 			<label>
