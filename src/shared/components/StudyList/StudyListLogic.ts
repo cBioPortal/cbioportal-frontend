@@ -62,7 +62,7 @@ export default class StudyListLogic
 			if (meta.descendantStudies.length == 0)
 				return false;
 		}
-		if (this.store.showSelectedStudiesOnly && _.includes(this.store.selectedStudies, node as CancerStudy))
+		if (this.store.showSelectedStudiesOnly && !_.includes(this.store.selectedStudies, node as CancerStudy))
 			return false;
 		return true;
 	}
