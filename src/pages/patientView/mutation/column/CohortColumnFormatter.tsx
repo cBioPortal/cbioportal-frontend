@@ -1,39 +1,97 @@
 import * as React from 'react';
 import {Td} from 'reactable';
-import {If} from 'react-if';
 import {IColumnFormatterData} from "../../../../shared/components/enhancedReactTable/IColumnFormatter";
 import Tooltip from 'rc-tooltip';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {MutationTableRowData} from "../../../../shared/components/mutationTable/IMutationTableProps";
+import {MutSigData} from "../../PatientViewPage";
 
+export interface IVariantCountData {
+    numberOfSamples?:number;
+    geneData?:{ [entrezGeneId:string]: {
+        numberOfSamplesWithMutationInGene?:number,
+        numberOfSamplesWithKeyword?:{ [keyword:string]:number }
+    }};
+};
 
 export default class CohortColumnFormatter {
 
     public static renderFunction(data:IColumnFormatterData<MutationTableRowData>, columnProps:any) {
-        const qValue:number = CohortColumnFormatter.getQValue(data, columnProps.data);
+        const mutSigQValue:number|null = CohortColumnFormatter.getMutSigQValue(data, columnProps.mutSigData);
+        const variantCountData = CohortColumnFormatter.getVariantCountData(data, (columnProps.variantCountData as IVariantCountData));
+        const freqViz = CohortColumnFormatter.makeCohortFrequencyViz(data, (columnProps.variantCountData as IVariantCountData))
         return (
-            <Td key={data.name} column={data.name}>
-                <If condition={qValue !== null}>
-                    {CohortColumnFormatter.makeMutSigIcon(qValue)};
-                </If>
+            <Td key={data.name} column={data.name} value={variantCountData && variantCountData.numberOfSamplesWithMutationInGene}>
+                <div>
+                    {(freqViz !== null) && freqViz}
+                    {(mutSigQValue !== null) && CohortColumnFormatter.makeMutSigIcon(mutSigQValue)}
+                </div>
             </Td>
         );
     };
 
-    private static getQValue(data:IColumnFormatterData<MutationTableRowData>, mutSigData:any) {
+    private static getVariantCountData(data:IColumnFormatterData<MutationTableRowData>, variantCountData:IVariantCountData) {
+        if (!variantCountData || !variantCountData.geneData || !data.rowData || data.rowData.length === 0) {
+            return null;
+        }
+        const entrezGeneId = data.rowData[0].entrezGeneId;
+        const hugoGeneSymbol = data.rowData[0].gene.hugoGeneSymbol;
+        const keyword = data.rowData[0].keyword;
+
+        const numberOfSamples = variantCountData.numberOfSamples;
+        const geneData = variantCountData.geneData[entrezGeneId];
+
+        let numberOfSamplesWithMutationInGene, numberOfSamplesWithKeyword;
+        if (geneData) {
+            numberOfSamplesWithMutationInGene = geneData.numberOfSamplesWithMutationInGene;
+            if (keyword && geneData.numberOfSamplesWithKeyword) {
+                numberOfSamplesWithKeyword = geneData.numberOfSamplesWithKeyword[keyword];
+            }
+        }
+        return {
+            hugoGeneSymbol, keyword, numberOfSamples, numberOfSamplesWithKeyword, numberOfSamplesWithMutationInGene
+        };
+    }
+
+    private static getMutSigQValue(data:IColumnFormatterData<MutationTableRowData>, mutSigData:MutSigData) {
         if (!mutSigData || !data.rowData || data.rowData.length === 0) {
             return null;
         }
-        mutSigData = mutSigData[data.rowData[0].entrezGeneId];
-        if (!mutSigData) {
+        const thisData = mutSigData[data.rowData[0].entrezGeneId];
+        if (!thisData) {
             return null;
         }
-        return mutSigData.qValue;
+        return thisData.qValue;
+    }
+
+    private static makeCohortFrequencyViz(data:IColumnFormatterData<MutationTableRowData>, variantCountData:IVariantCountData) {
+        const variantCount = CohortColumnFormatter.getVariantCountData(data, variantCountData);
+        if (variantCount) {
+            const geneProportion = variantCount.numberOfSamplesWithMutationInGene / variantCount.numberOfSamples;
+            const keywordProportion = variantCount.keyword ? (variantCount.numberOfSamplesWithKeyword / variantCount.numberOfSamples) : null;
+            const barWidth = 30;
+            const barHeight = 8;
+            return (<Tooltip
+                    placement="left"
+                    overlay={CohortColumnFormatter.getCohortFrequencyTooltip(variantCount)}
+                    arrowContent={<div className="rc-tooltip-arrow-inner"/>}
+                    >
+                <svg width="70" height="12">
+                    <text x="36" y="9.5" textAnchor="start" fontSize="10">{(100*geneProportion).toFixed(1) + "%"}</text>
+                    <rect y="2" width={barWidth} height={barHeight} fill="#ccc"/>
+                    <rect y="2" width={geneProportion*barWidth} height={barHeight} fill="lightgreen"/>
+                    {(keywordProportion !== null) &&
+                        (<rect y="2" width={keywordProportion*barWidth} height={barHeight} fill="green"/>)}
+                </svg>
+            </Tooltip>);
+        } else {
+            return null;
+        }
     }
 
     private static makeMutSigIcon(qValue:number) {
         return (<Tooltip
-            placement="left"
+            placement="right"
             overlay={CohortColumnFormatter.getMutSigTooltip(qValue)}
             arrowContent={<div className="rc-tooltip-arrow-inner"/>}
         >
@@ -44,6 +102,30 @@ export default class CohortColumnFormatter {
                 </text>
             </svg>
         </Tooltip>);
+    }
+
+    private static getBoldPercentage(proportion:number) {
+        return (
+            <span style={{fontWeight:'bold'}}>
+                {(100*proportion).toFixed(1) + "%"}
+            </span>
+        );
+    }
+
+    private static getCohortFrequencyTooltip(variantCount:any) {
+        return (<div>
+            <span>{variantCount.numberOfSamplesWithMutationInGene} samples
+            ({CohortColumnFormatter.getBoldPercentage(variantCount.numberOfSamplesWithMutationInGene / variantCount.numberOfSamples)})
+            in this study have mutated {variantCount.hugoGeneSymbol}
+                {(!!variantCount.keyword) && (
+                    <span>
+                        , out of which {variantCount.numberOfSamplesWithKeyword} ({CohortColumnFormatter.getBoldPercentage(variantCount.numberOfSamplesWithKeyword / variantCount.numberOfSamples)}) have {variantCount.keyword} mutations
+                    </span>
+                )}
+                .
+            </span>
+        </div>);
+
     }
 
     private static getMutSigTooltip(qValue:number) {
