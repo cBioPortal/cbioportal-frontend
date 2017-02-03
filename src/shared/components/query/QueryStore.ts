@@ -53,8 +53,14 @@ export class QueryStore
 	}, []);
 	readonly sampleLists = remoteData<SampleList[]>(() => {
 		if (this.singleSelectedStudyId)
-			return client.getAllSampleListsInStudyUsingGET({studyId: this.singleSelectedStudyId})
-				.then(sampleLists => _.sortBy<SampleList>(sampleLists, sampleList => sampleList.name));
+			return (
+				client.getAllSampleListsInStudyUsingGET({
+					studyId: this.singleSelectedStudyId,
+					projection: 'DETAILED'
+				}).then(
+					sampleLists => _.sortBy(sampleLists, sampleList => sampleList.name)
+				)
+			);
 		return Promise.resolve([]);
 	}, []);
 	//TODO select last sampleList when new list arrives

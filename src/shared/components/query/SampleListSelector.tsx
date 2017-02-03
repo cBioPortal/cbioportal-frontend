@@ -26,7 +26,7 @@ export default class SampleListSelector extends React.Component<{}, {}>
 
 		let options = this.store.sampleLists.result.map(sampleList => {
 			return {
-				label: `${sampleList.name} ({sampleList.count})`,
+				label: `${sampleList.name} (${sampleList.sampleCount})`,
 				value: sampleList.sampleListId
 			};
 		}).concat([{
