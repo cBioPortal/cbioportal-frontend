@@ -21,20 +21,27 @@ export interface ITableExportButtonsProps {
     showHideShowColumnButton?: boolean;
     showPagination?:boolean;
     handleInput?: Function;
+    downloadDataGenerator?: Function;
+    downloadDataContainsHeader?: boolean;
+    downloadFilename?: string;
     paginationProps?: ITablePaginationControlsProps;
     columnVisibilityProps?: IColumnVisibilityControlsProps;
     searchDelayMs?:number;
 }
 
-function serializeTableData(tableData: Array<any>) {
+function serializeTableData(tableData: Array<any>, containsHeader?:boolean) {
 
     let content: Array<string> = [];
     let delim = ',';
 
-    Object.keys(tableData[0]).forEach((col: any)=>content.push(col,delim));
+    if (!containsHeader) {
+        // try to get the header from object keys in case no header provided
+        // if contains header, assuming that the first element represents the header values
+        Object.keys(tableData[0]).forEach((col: any)=>content.push(col,delim));
 
-    content.pop();
-    content.push('\r\n');
+        content.pop();
+        content.push('\r\n');
+    }
 
     tableData.forEach((row: any) => {
 
@@ -70,6 +77,8 @@ export default class TableExportButtons extends React.Component<ITableExportButt
         showPagination:false,
         searchClassName: '',
         copyDownloadClassName: '',
+        downloadFilename: 'patient-clinical-attributes.csv',
+        downloadDataContainsHeader: false,
         paginationProps:{},
         columnVisibilityProps:{},
         searchDelayMs: 400
@@ -141,10 +150,27 @@ export default class TableExportButtons extends React.Component<ITableExportButt
     }
 
     public getText() {
-        return serializeTableData(this.props.tableData || []);
+        if (this.props.downloadDataGenerator) {
+            return serializeTableData(this.props.downloadDataGenerator() || [], this.props.downloadDataContainsHeader);
+        }
+        else {
+            return serializeTableData(this.props.tableData || [], this.props.downloadDataContainsHeader);
+        }
     }
 
     private downloadData = () => {
-        fileDownload(serializeTableData(this.props.tableData || []), 'patient-clinical-attributes.csv');
+        if (this.props.downloadDataGenerator) {
+            fileDownload(
+                serializeTableData(this.props.downloadDataGenerator() || [], this.props.downloadDataContainsHeader),
+                this.props.downloadFilename
+            );
+        }
+        else {
+            fileDownload(
+                serializeTableData(this.props.tableData || [], this.props.downloadDataContainsHeader),
+                this.props.downloadFilename
+            );
+        }
+
     };
 }

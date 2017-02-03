@@ -1,7 +1,6 @@
 import * as React from 'react';
 import {Td} from 'reactable';
-import {IColumnFormatterData}
-    from "../../../../shared/components/enhancedReactTable/IColumnFormatter";
+import {IColumnFormatterData} from "../../../../shared/components/enhancedReactTable/IColumnFormatter";
 import {MutationTableRowData} from "../../../../shared/components/mutationTable/IMutationTableProps";
 import {Mutation} from "../../../../shared/api/CBioPortalAPI";
 
@@ -12,32 +11,51 @@ import {Mutation} from "../../../../shared/api/CBioPortalAPI";
  */
 export default class AlleleCountColumnFormatter
 {
-    public static renderFunction(data:IColumnFormatterData<MutationTableRowData>, columnProps:any)
+    public static getValues(data:IColumnFormatterData<MutationTableRowData>, columnProps:any)
     {
         const sampleOrder = columnProps.sampleOrder;
         const dataField = columnProps.dataField;
 
-        let ret = "";
+        let values:string[] = [];
 
         if (data.rowData)
         {
-            const mutations:Array<Mutation> = data.rowData;
+            const mutations:Mutation[] = data.rowData;
             const sampleToValue:{[key: string]: any} = {};
 
-            for (let rowDatum of mutations) {
+            for (const rowDatum of mutations) {
                 sampleToValue[rowDatum.sampleId] = (rowDatum as any)[dataField]; // TODO this is not type safe...
             }
 
             const samplesWithValue = sampleOrder.filter((sampleId:string) => sampleToValue.hasOwnProperty(sampleId));
 
             if (samplesWithValue.length === 1) {
-                ret = sampleToValue[samplesWithValue[0]];
+                values = [sampleToValue[samplesWithValue[0]]];
             }
             else {
-                ret = samplesWithValue.map((sampleId:string) => (`${sampleId}: ${sampleToValue[sampleId]}`)).join("\n");
+                values = samplesWithValue.map((sampleId:string) => (`${sampleId}: ${sampleToValue[sampleId]}`));
             }
         }
 
-        return (<Td key={data.name} column={data.name} value={data}>{ret}</Td>);
+        return values;
+    }
+
+    public static getTextValue(data:IColumnFormatterData<MutationTableRowData>, columnProps:any)
+    {
+        return AlleleCountColumnFormatter.getValues(data, columnProps).join(";");
+    }
+
+    public static getDisplayValue(data:IColumnFormatterData<MutationTableRowData>, columnProps:any)
+    {
+        return AlleleCountColumnFormatter.getValues(data, columnProps).join("\n");
+    }
+
+    public static renderFunction(data:IColumnFormatterData<MutationTableRowData>, columnProps:any)
+    {
+        return (
+            <Td key={data.name} column={data.name} value={data}>
+                {AlleleCountColumnFormatter.getDisplayValue(data, columnProps)}
+            </Td>
+        );
     }
 }
