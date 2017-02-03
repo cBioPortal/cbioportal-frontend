@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as lodash from 'lodash';
+import * as _ from 'lodash';
 
 import EnhancedReactTable from "../enhancedReactTable/EnhancedReactTable";
 import {IColumnDefMap} from "../enhancedReactTable/IEnhancedReactTableProps";
@@ -163,13 +163,20 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
 
     public render()
     {
-        const {reactTableProps, headerControlsProps, columns, rawData} = this.mergeProps(this.props);
+        const {
+            reactTableProps,
+            initItemsPerPage,
+            headerControlsProps,
+            columns,
+            rawData
+        } = this.mergeProps(this.props);
 
         return(
             <div>
                 <ReactTable
                     itemsName="mutations"
                     reactTableProps={reactTableProps}
+                    initItemsPerPage={initItemsPerPage}
                     headerControlsProps={headerControlsProps}
                     columns={columns}
                     rawData={rawData}
@@ -184,6 +191,7 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
             title: "Mutations",
             rawData: [],
             columns: MutationTable.defaultColumns,
+            initItemsPerPage: 25,
             headerControlsProps: {
                 showPagination: true,
                 copyDownloadClassName: "pull-right",
@@ -196,7 +204,7 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
         };
 
         // merge provided props with the default props
-        return lodash.merge(defaultProps, props);
+        return _.merge(defaultProps, props);
     }
 };
 
