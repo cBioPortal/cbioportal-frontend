@@ -9,33 +9,57 @@ import {remoteData} from "../../api/remoteData";
 // mobx observable
 export class QueryStore
 {
-	readonly cancerTypes = remoteData(client.getAllCancerTypesUsingGET({}), []);
-	readonly cancerStudies = remoteData(client.getAllStudiesUsingGET({}), []);
-	readonly geneticProfiles = remoteData(() => {
-		let studyIds = this.selectedStudyIds;
-		if (studyIds && studyIds.length == 1)
-			return client.getAllGeneticProfilesInStudyUsingGET({studyId: studyIds[0]});
-		else
-			return Promise.resolve([]);
-	}, []);
-
+	// query parameters
 	@observable searchText:string = '';
-	@observable.ref searchTextPresets:ReadonlyArray<string> = ['lung', 'serous', 'tcga', 'tcga -provisional'];
 	@observable.ref selectedStudyIds:ReadonlyArray<string> = [];
 	@observable.ref selectedProfileIds:ReadonlyArray<string> = [];
 	@observable zScoreThreshold:string = '2.0';
-	@observable.ref showingSelected:boolean;
+	@observable dataTypePriority = {mutation: true, cna: true};
+	@observable patientCaseSet = 'TODO';
 
-	@computed get selectedProfiles()
-	{
-		let idToProfile = expr(() => _.keyBy(this.geneticProfiles.result, profile => profile.geneticProfileId));
-		return this.selectedProfileIds.map(id => idToProfile[id]);
-	}
-
-	// experimental options
+	// visual options
+	@observable.ref searchTextPresets:ReadonlyArray<string> = ['lung', 'serous', 'tcga', 'tcga -provisional'];
+	@observable showSelectedStudiesOnly:boolean = false;
 	@observable.shallow selectedCancerTypeIds:string[] = [];
 	@observable maxTreeDepth:number = 9;
 	@observable clickAgainToDeselectSingle:boolean = true;
+
+	// remote data
+	readonly cancerTypes = remoteData(client.getAllCancerTypesUsingGET({}), []);
+	readonly cancerStudies = remoteData(client.getAllStudiesUsingGET({}), []);
+	readonly geneticProfiles = remoteData(() => {
+		if (this.singleSelectedStudyId)
+			return client.getAllGeneticProfilesInStudyUsingGET({studyId: this.singleSelectedStudyId});
+		return Promise.resolve([]);
+	}, []);
+
+	@computed get stateToSerialize()
+	{
+		let keys:Array<keyof this> = [
+			'searchText',
+			'selectedStudyIds',
+			'selectedProfileIds',
+			'zScoreThreshold',
+			'dataTypePriority',
+			'patientCaseSet',
+		];
+		return _.pick(this, keys);
+	}
+
+	@computed get singleSelectedStudyId()
+	{
+		return this.selectedStudyIds.length == 1 ? this.selectedStudyIds[0] : undefined;
+	}
+
+	@computed get map_geneticProfileId_geneticProfile()
+	{
+		return _.keyBy(this.geneticProfiles.result, profile => profile.geneticProfileId);
+	}
+
+	@computed get selectedProfiles()
+	{
+		return this.selectedProfileIds.map(id => this.map_geneticProfileId_geneticProfile[id]);
+	}
 
 	@computed get treeData()
 	{
@@ -47,13 +71,14 @@ export class QueryStore
 
 	@computed get studyListLogic()
 	{
-		// hack - dependencies
+		// temporary hack - dependencies
+		// TODO review StudyListLogic code
 		this.treeData;
 		this.maxTreeDepth;
 		this.searchText;
 		this.selectedCancerTypeIds;
 		this.selectedStudyIds;
-		this.showingSelected;
+		this.showSelectedStudiesOnly;
 
 		return new StudyListLogic(this);
 	}

@@ -164,9 +164,8 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 					<h2>Select Studies</h2>
 					<span 
 						onClick={() => {
-							if (this.store.selectedStudyIds.length) {
-								logic.hack_showAllSelected(!this.store.showingSelected);
-							}
+							if (this.store.selectedStudyIds.length)
+								this.store.showSelectedStudiesOnly = !this.store.showSelectedStudiesOnly;
 						}}
 						className={selectedCountClass}
 					>
@@ -176,28 +175,28 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 				</FlexRow>
 
 				<FlexRow overflow className={styles.cancerStudySelectorHeader}>
-						<ReactSelect
-							className={styles.searchTextInput}
-							value={this.store.searchText}
-							autofocus={true}
-							options={searchTextOptions.map(str => ({label: str, value: str}))}
-							promptTextCreator={(label:string) => `Search for "${label}"`}
-							placeholder='Search...'
-							noResultsText={false}
-							onCloseResetsInput={false}
-							onInputChange={(searchText:string) => {
-								this.store.searchText = searchText;
-								this.store.selectedCancerTypeIds = [];
-							}}
-							onChange={(option:{value:string}) => {
-								this.store.searchText = option ? option.value || '' : '';
-								this.store.selectedCancerTypeIds = [];
-							}}
-						/>
+					<ReactSelect
+						className={styles.searchTextInput}
+						value={this.store.searchText}
+						autofocus={true}
+						options={searchTextOptions.map(str => ({label: str, value: str}))}
+						promptTextCreator={(label:string) => `Search for "${label}"`}
+						placeholder='Search...'
+						noResultsText={false}
+						onCloseResetsInput={false}
+						onInputChange={(searchText:string) => {
+							this.store.searchText = searchText;
+							this.store.selectedCancerTypeIds = [];
+						}}
+						onChange={(option:{value:string}) => {
+							this.store.searchText = option ? option.value || '' : '';
+							this.store.selectedCancerTypeIds = [];
+						}}
+					/>
 
-						<span className={styles.selectAll} onClick={() => logic.hack_handleSelectAll(!allSelected)}>
-							{allSelected ? "Deselect All" : "Select All"}
-						</span>
+					<span className={styles.selectAll} onClick={() => logic.hack_handleSelectAll(!allSelected)}>
+						{allSelected ? "Deselect All" : "Select All"}
+					</span>
 				</FlexRow>
 
 				<FlexRow className={styles.cancerStudySelectorBody}>

@@ -62,6 +62,8 @@ export default class StudyListLogic
 			if (meta.descendantStudies.length == 0)
 				return false;
 		}
+		if (this.store.showSelectedStudiesOnly && _.includes(this.store.selectedStudies, node as CancerStudy))
+			return false;
 		return true;
 	}
 
@@ -157,11 +159,6 @@ export default class StudyListLogic
 		));
 	}
 
-	@action hack_showAllSelected(checked:boolean)
-	{
-		this.store.showingSelected = checked;
-	}
-
 	@action hack_handleSelectAll(checked:boolean)
 	{
 		let selectedStudyIds = this.store.selectedStudyIds;
@@ -185,7 +182,7 @@ export default class StudyListLogic
 		this.handleCheckboxStudyIds(clickedStudyIds, checked);
 	}
 
-	 private handleCheckboxStudyIds(clickedStudyIds:string[], checked:boolean)
+	private handleCheckboxStudyIds(clickedStudyIds:string[], checked:boolean)
 	{
 		let selectedStudyIds = this.store.selectedStudyIds;
 		if (checked)

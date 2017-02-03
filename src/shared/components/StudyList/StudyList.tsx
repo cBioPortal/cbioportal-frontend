@@ -41,7 +41,7 @@ export default class StudyList extends React.Component<{}, {}>
 
 	render()
 	{
-		if (this.store.showingSelected) {
+		if (this.store.showSelectedStudiesOnly) {
 			return this.renderSelectedStudies();
 		} else {
 			return this.renderCancerType(this.logic.rootCancerType);
@@ -50,20 +50,17 @@ export default class StudyList extends React.Component<{}, {}>
 
 	renderSelectedStudies = () =>
 	{
-		let selectedStudies = this.store.selectedStudyIds.map(studyId => this.store.treeData.map_studyId_cancerStudy.get(studyId) as CancerStudy);
 		return (
 			<div className={styles.SelectedStudyList}>
 				<h4>
 						Selected Studies 
 						<span 
-							onClick={() => this.logic.hack_showAllSelected(!this.store.showingSelected)}
+							onClick={() => this.store.showSelectedStudiesOnly = !this.store.showSelectedStudiesOnly}
 							className={styles.closeSelected}
 						>Return to Study Selector</span>
 				</h4>
 				<ul className={styles.StudyList}>
-					{selectedStudies.map((study, index) => {
-						return this.renderCancerStudy(study, index);
-					})}
+					{this.renderCancerType(this.logic.rootCancerType)}
 				</ul>
 			</div>
 		);

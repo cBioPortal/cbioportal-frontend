@@ -8,6 +8,7 @@ import queryStore from "./QueryStore";
 import {toJS, computed} from "../../../../node_modules/mobx/lib/mobx";
 import {observer} from "../../../../node_modules/mobx-react/custom";
 import Dictionary = _.Dictionary;
+import devMode from "../../lib/devMode";
 
 const styles = styles_any as {
 	GeneticProfileSelector: string,
@@ -43,6 +44,9 @@ export default class GeneticProfileSelector extends React.Component<{}, {}>
 
 	render()
 	{
+		if (!devMode.enabled)
+			return null;
+
 		let profiles = queryStore.geneticProfiles.result.filter(profile => profile.showProfileInAnalysisTab);
 		let groupedProfiles:Dictionary<GeneticProfile[]|undefined> = _.groupBy(profiles, profile => profile.geneticAlterationType);
 

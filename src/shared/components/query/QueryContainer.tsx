@@ -13,6 +13,8 @@ import GeneticProfileSelector from "./GeneticProfileSelector";
 import {observer} from "../../../../node_modules/mobx-react/custom";
 import queryStore from "./QueryStore";
 import devMode from "../../lib/devMode";
+import DataTypePrioritySelector from "./DataTypePrioritySelector";
+import PatientCaseSetSelector from "./PatientCaseSetSelector";
 
 const styles = styles_any as {
 	QueryContainer: string,
@@ -33,13 +35,10 @@ export default class QueryContainer extends React.Component<{}, {}>
             <FlexRow padded flex={1} className={styles.QueryContainer}>
 
 				<FlexCol padded overflow>
-
 					<CancerStudySelector/>
-
-					{!!(devMode.enabled && queryStore.geneticProfiles.isComplete && queryStore.geneticProfiles.result.length) && (
-						<GeneticProfileSelector/>
-					)}
-
+					<GeneticProfileSelector/>
+					<PatientCaseSetSelector/>
+					<DataTypePrioritySelector/>
 				</FlexCol>
 
 				{!!(devMode.enabled) && (
@@ -69,12 +68,7 @@ export default class QueryContainer extends React.Component<{}, {}>
 
 						{/* display state for demo */}
 						<pre>
-							{
-								JSON.stringify({
-									selectedCancerTypeIds: queryStore.selectedCancerTypeIds,
-									selectedStudyIds: queryStore.selectedStudyIds,
-								}, null, 4)
-							}
+							{JSON.stringify(queryStore.stateToSerialize, null, 4)}
 						</pre>
 					</FlexCol>
 				)}
