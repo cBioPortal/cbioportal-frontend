@@ -22,8 +22,6 @@ import SelectCallback = ReactBootstrap.SelectCallback;
 import {
     default as CancerHotspotsAPI, HotspotMutation
 } from "../../shared/api/CancerHotspotsAPI";
-import CancerHotspotsAPI from "../../shared/api/CancerHotspotsAPI";
-import {HotspotMutation} from "../../shared/api/CancerHotspotsAPI";
 import {
     MutSig, MrnaPercentile, default as CBioPortalAPIInternal,
     VariantCountIdentifier, VariantCount, CosmicMutation
