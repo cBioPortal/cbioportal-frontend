@@ -10,6 +10,7 @@ import {observer} from "../../../../node_modules/mobx-react/index";
 const styles = {
 	...styles_any as {
 		StudyList: string,
+		SelectedStudyList: string,
 
 		CancerType: string,
 		CancerTypeName: string,
@@ -25,6 +26,8 @@ const styles = {
 		enabled: string,
 		indentArrow: string,
 
+
+		closeSelected: string,
 		highlighted: string,
 	},
 	Level: (level:number) => styles_any[`Level${level}`]
@@ -38,7 +41,32 @@ export default class StudyList extends React.Component<{}, {}>
 
 	render()
 	{
-		return this.renderCancerType(this.logic.rootCancerType);
+		if (this.store.showingSelected) {
+			return this.renderSelectedStudies();
+		} else {
+			return this.renderCancerType(this.logic.rootCancerType);
+		}
+	}
+
+	renderSelectedStudies = () =>
+	{
+		let selectedStudies = this.store.selectedStudyIds.map(studyId => this.store.treeData.map_studyId_cancerStudy.get(studyId) as CancerStudy);
+		return (
+			<div className={styles.SelectedStudyList}>
+				<h4>
+						Selected Studies 
+						<span 
+							onClick={() => this.logic.hack_showAllSelected(!this.store.showingSelected)}
+							className={styles.closeSelected}
+						>Return to Study Selector</span>
+				</h4>
+				<ul className={styles.StudyList}>
+					{selectedStudies.map((study, index) => {
+						return this.renderCancerStudy(study, index);
+					})}
+				</ul>
+			</div>
+		);
 	}
 
 	renderCancerType = (cancerType:CancerType, arrayIndex:number = 0):JSX.Element =>

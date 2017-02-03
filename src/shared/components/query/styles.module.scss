@@ -18,7 +18,9 @@
 }
 
 .CancerStudySelector {
+  position: relative;
   width: 850px;
+  overflow: hidden;
   user-select: none;
   
   label {
@@ -55,6 +57,14 @@
     line-height: 30px;
     text-align: right;
     margin: 0 10px;
+
+    &.selectionsExist {
+      color: #337ab7;
+      text-decoration: underline;
+      &:hover {
+        cursor: pointer;
+      }
+    }
   }
 
   h3 {
@@ -92,7 +102,6 @@
     padding: 0px;
     margin: 0px;
     width: 230px;
-    max-height: 400px;
 
     li {
       cursor: pointer;

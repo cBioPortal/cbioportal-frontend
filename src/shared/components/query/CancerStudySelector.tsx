@@ -22,6 +22,7 @@ const styles = styles_any as {
 	selected: string,
 	selectAll: string,
 	selectedCount: string,
+	selectionsExist: string,
 	cancerStudyName: string,
 	cancerStudySamples: string,
 	matchingNodeText: string,
@@ -150,12 +151,27 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 		let allSelectedCheckboxProps = logic.getCheckboxProps(logic.rootCancerType);
 		let allSelected = allSelectedCheckboxProps.checked && !allSelectedCheckboxProps.indeterminate;
 
+		let selectedCountClass = classNames(
+			styles.selectedCount,
+			{
+				[styles.selectionsExist]: (this.store.selectedStudyIds.length > 0)
+			},
+		);
+
 		return (
-			<FlexCol className={styles.CancerStudySelector} style={this.props.style}>
+			<FlexCol overflow className={styles.CancerStudySelector}>
 				<FlexRow padded overflow className={styles.selectCancerStudyRow}>
 					<h2>Select Studies</h2>
-					<span className={styles.selectedCount}>
-						<b>{this.store.selectedStudyIds.length}</b> Studies Selected
+					<span 
+						onClick={() => {
+							if (this.store.selectedStudyIds.length) {
+								logic.hack_showAllSelected(!this.store.showingSelected);
+							}
+						}}
+						className={selectedCountClass}
+					>
+						<b> {this.store.selectedStudyIds.length}</b> Studies Selected
+						(<b>{this.store.totalSelectedSampleCount}</b> Samples)
 					</span>
 				</FlexRow>
 

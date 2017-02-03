@@ -157,6 +157,11 @@ export default class StudyListLogic
 		));
 	}
 
+	@action hack_showAllSelected(checked:boolean)
+	{
+		this.store.showingSelected = checked;
+	}
+
 	@action hack_handleSelectAll(checked:boolean)
 	{
 		let selectedStudyIds = this.store.selectedStudyIds;

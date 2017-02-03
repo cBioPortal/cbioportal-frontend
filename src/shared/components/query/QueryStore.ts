@@ -24,6 +24,7 @@ export class QueryStore
 	@observable.ref selectedStudyIds:ReadonlyArray<string> = [];
 	@observable.ref selectedProfileIds:ReadonlyArray<string> = [];
 	@observable zScoreThreshold:string = '2.0';
+	@observable.ref showingSelected:boolean;
 
 	@computed get selectedProfiles()
 	{
@@ -52,6 +53,7 @@ export class QueryStore
 		this.searchText;
 		this.selectedCancerTypeIds;
 		this.selectedStudyIds;
+		this.showingSelected;
 
 		return new StudyListLogic(this);
 	}
