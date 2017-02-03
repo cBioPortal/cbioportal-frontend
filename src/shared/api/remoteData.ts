@@ -16,10 +16,9 @@ export function remoteData<R>(input:MobxPromiseInputUnion<R>, defaultResult: R):
 export function remoteData<R>(input:MobxPromiseInputUnion<R>):MobxPromiseUnionType<R>;
 export function remoteData<R>(input:MobxPromiseInputUnion<R>, defaultResult?: R)
 {
-    input = MobxPromiseClass.normalizeInput(input);
+    input = MobxPromiseClass.normalizeInput(input, defaultResult);
     const invoke = input.invoke;
     input.invoke = () => invoke().then(result => seamlessImmutable.from(result));
     input.default = seamlessImmutable.from(input.default);
-    defaultResult = seamlessImmutable.from(defaultResult);
-    return new MobxPromise(input, defaultResult);
+    return new MobxPromise(input);
 }

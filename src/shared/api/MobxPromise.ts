@@ -45,15 +45,20 @@ class MobxPromise<R>
         return value != null && typeof value === 'object' && typeof value.then === 'function';
     }
 
-    static normalizeInput<R>(input:MobxPromiseInputUnion<R>):MobxPromiseInputParams<R>
+    static normalizeInput<R>(input:MobxPromiseInputParamsWithDefault<R>):MobxPromiseInputParamsWithDefault<R>
+    static normalizeInput<R>(input:MobxPromiseInputUnion<R>, defaultResult:R):MobxPromiseInputParamsWithDefault<R>
+    static normalizeInput<R>(input:MobxPromiseInputUnion<R>, defaultResult?:R)
     {
         if (typeof input === 'function')
-            return {invoke: input};
+            return {invoke: input, default: defaultResult};
 
         if (MobxPromise.isPromiseLike(input))
-            return {invoke: () => input as PromiseLike<R>};
+            return {invoke: () => input as PromiseLike<R>, default: defaultResult};
 
-        return input as MobxPromiseInputParams<R>;
+		input = input as MobxPromiseInputParams<R>;
+		if (defaultResult !== undefined)
+			input = {...input, default: defaultResult};
+		return input;
     }
 
     /**
@@ -61,10 +66,10 @@ class MobxPromise<R>
      */
     constructor(input:MobxPromiseInputUnion<R>, defaultResult?:R)
     {
-        input = MobxPromise.normalizeInput(input);
+        input = MobxPromise.normalizeInput(input, defaultResult);
         this.await = input.await;
         this.invoke = input.invoke;
-        this.defaultResult = defaultResult !== undefined ? defaultResult : input.default;
+        this.defaultResult = input.default;
     }
 
     private await?:MobxPromise_await;
