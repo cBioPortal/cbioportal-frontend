@@ -163,8 +163,8 @@
 }
 
 .GeneticProfileSelector {
-  border: 1px solid rgba(0,0,0,0.05);
-  border-radius: 2px;
+  border: 1px solid rgba(0,0,0,0.5);
+  border-radius: 5px;
   padding: 5px;
 
   div.singleCheckbox, div.groupCheckbox {
@@ -187,16 +187,33 @@
 }
 
 .DataTypePrioritySelector {
-  border: 1px solid rgba(0,0,0,0.05);
-  border-radius: 2px;
+  border: 1px solid rgba(0,0,0,0.5);
+  border-radius: 5px;
   padding: 5px;
 }
 
 .PatientCaseSetSelector {
-  border: 1px solid rgba(0,0,0,0.05);
-  border-radius: 2px;
+  border: 1px solid rgba(0,0,0,0.5);
+  border-radius: 5px;
   padding: 5px;
 
   .ReactSelect {
+  }
+}
+
+.GeneSetSelector {
+  border: 1px solid rgba(0,0,0,0.5);
+  border-radius: 5px;
+  padding: 5px;
+
+  .ReactSelect {
+  }
+
+  button {
+  }
+
+  input.geneSet {
+    width: 775px;
+    height: 135px;
   }
 }

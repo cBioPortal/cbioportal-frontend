@@ -15,6 +15,7 @@ import queryStore from "./QueryStore";
 import devMode from "../../lib/devMode";
 import DataTypePrioritySelector from "./DataTypePrioritySelector";
 import PatientCaseSetSelector from "./PatientCaseSetSelector";
+import GeneSetSelector from "./GeneSetSelector";
 
 const styles = styles_any as {
 	QueryContainer: string,
@@ -52,6 +53,10 @@ export default class QueryContainer extends React.Component<{}, {}>
 
 					{!!(devMode.enabled && !this.store.singleSelectedStudyId) && (
 						<DataTypePrioritySelector/>
+					)}
+
+					{!!(devMode.enabled) && (
+						<GeneSetSelector/>
 					)}
 				</FlexCol>
 

@@ -1,7 +1,6 @@
 import * as React from 'react';
 import queryStore from "./QueryStore";
 import * as styles_any from './styles.module.scss';
-import devMode from "../../lib/devMode";
 import ReactSelect from 'react-select';
 import {observer} from "../../../../node_modules/mobx-react/index";
 
@@ -20,7 +19,7 @@ export default class PatientCaseSetSelector extends React.Component<{}, {}>
 
 	render()
 	{
-		if (!devMode.enabled || !this.store.singleSelectedStudyId)
+		if (!this.store.singleSelectedStudyId)
 			return null;
 
 		return (

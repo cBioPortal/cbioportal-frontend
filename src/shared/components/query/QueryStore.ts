@@ -16,6 +16,7 @@ export class QueryStore
 	@observable zScoreThreshold:string = '2.0';
 	@observable dataTypePriority = {mutation: true, cna: true};
 	@observable patientCaseSet = 'TODO';
+	@observable geneSet = 'TODO';
 
 	// visual options
 	@observable.ref searchTextPresets:ReadonlyArray<string> = ['lung', 'serous', 'tcga', 'tcga -provisional'];
@@ -42,6 +43,7 @@ export class QueryStore
 			'zScoreThreshold',
 			'dataTypePriority',
 			'patientCaseSet',
+			'geneSet',
 		];
 		return _.pick(this, keys);
 	}

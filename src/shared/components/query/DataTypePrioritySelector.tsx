@@ -5,7 +5,6 @@ import * as styles_any from './styles.module.scss';
 import {QueryStore} from "./QueryStore";
 import {toJS} from "../../../../node_modules/mobx/lib/mobx";
 import {observer} from "../../../../node_modules/mobx-react/index";
-import devMode from "../../lib/devMode";
 
 const styles = styles_any as {
 	DataTypePrioritySelector: string
@@ -21,7 +20,7 @@ export default class DataTypePrioritySelector extends React.Component<{}, {}>
 
 	render()
 	{
-		if (!devMode.enabled || this.store.singleSelectedStudyId)
+		if (this.store.singleSelectedStudyId)
 			return null;
 
 		const DataTypePriorityRadio = this.DataTypePriorityRadio;

@@ -8,7 +8,6 @@ import queryStore from "./QueryStore";
 import {toJS, computed} from "../../../../node_modules/mobx/lib/mobx";
 import {observer} from "../../../../node_modules/mobx-react/custom";
 import Dictionary = _.Dictionary;
-import devMode from "../../lib/devMode";
 
 const styles = styles_any as {
 	GeneticProfileSelector: string,
@@ -32,22 +31,27 @@ export const geneticAlterationTypeGroupLabels:{[K in GeneticProfile['geneticAlte
 @observer
 export default class GeneticProfileSelector extends React.Component<{}, {}>
 {
+	get store()
+	{
+		return queryStore;
+	}
+
 	@computed get selectedProfileIds()
 	{
-		if (queryStore.selectedProfileIds.length)
-			return queryStore.selectedProfileIds;
+		if (this.store.selectedProfileIds.length)
+			return this.store.selectedProfileIds;
 
-		return queryStore.geneticProfiles.result
+		return this.store.geneticProfiles.result
 			.filter(profile => _.includes(defaultSelectedAlterationTypes, profile.geneticAlterationType))
 			.map(profile => profile.geneticProfileId);
 	}
 
 	render()
 	{
-		let profiles = queryStore.geneticProfiles.result.filter(profile => profile.showProfileInAnalysisTab);
+		let profiles = this.store.geneticProfiles.result.filter(profile => profile.showProfileInAnalysisTab);
 		let groupedProfiles:Dictionary<GeneticProfile[]|undefined> = _.groupBy(profiles, profile => profile.geneticAlterationType);
 
-		if (!profiles.length)
+		if (!this.store.singleSelectedStudyId || !profiles.length)
 			return null;
 
 		// puts default alteration types first
@@ -89,13 +93,12 @@ export default class GeneticProfileSelector extends React.Component<{}, {}>
 		}
 
 		output.push(
-			<div className={profiles.length > 1 ? styles.groupCheckbox : styles.singleCheckbox}>
+			<div key={output.length} className={profiles.length > 1 ? styles.groupCheckbox : styles.singleCheckbox}>
 				<LabeledCheckbox
-					key={output.length}
 					checked={checked}
 					inputProps={{
 						onChange: event => {
-							queryStore.selectedProfileIds = (
+							this.store.selectedProfileIds = (
 								(event.target as HTMLInputElement).checked
 								?   _.union(this.selectedProfileIds, [ids[0]])
 								:   _.difference(this.selectedProfileIds, ids)
@@ -115,7 +118,7 @@ export default class GeneticProfileSelector extends React.Component<{}, {}>
 		if (profiles.length > 1)
 		{
 			output.push(
-				<div className={styles.radioGroup}>
+				<div key={output.length} className={styles.radioGroup}>
 					{profiles.map(profile => (
 						<div className={styles.radioItem}>
 							<label>
@@ -124,7 +127,7 @@ export default class GeneticProfileSelector extends React.Component<{}, {}>
 									checked={_.includes(this.selectedProfileIds, profile.geneticProfileId)}
 									onChange={event => {
 										if ((event.target as HTMLInputElement).checked)
-											queryStore.selectedProfileIds = (
+											this.store.selectedProfileIds = (
 												_.union(
 													_.difference(this.selectedProfileIds, ids),
 													[profile.geneticProfileId]
@@ -144,13 +147,13 @@ export default class GeneticProfileSelector extends React.Component<{}, {}>
 		if (firstProfile.datatype == DATATYPE_ZSCORE && checked)
 		{
 			output.push(
-				<div className={styles.zScore} key={output.length}>
+				<div key={output.length} className={styles.zScore}>
 					Enter a z-score threshold ±:
 					<input
 						type="text"
-						value={queryStore.zScoreThreshold}
+						value={this.store.zScoreThreshold}
 						onChange={event => {
-							queryStore.zScoreThreshold = (event.target as HTMLInputElement).value;
+							this.store.zScoreThreshold = (event.target as HTMLInputElement).value;
 						}}
 					/>
 				</div>
