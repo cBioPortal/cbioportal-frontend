@@ -47,7 +47,7 @@ export default class GeneticProfileSelector extends React.Component<{}, {}>
 		let profiles = queryStore.geneticProfiles.result.filter(profile => profile.showProfileInAnalysisTab);
 		let groupedProfiles:Dictionary<GeneticProfile[]|undefined> = _.groupBy(profiles, profile => profile.geneticAlterationType);
 
-		if (!devMode.enabled || !profiles.length)
+		if (!profiles.length)
 			return null;
 
 		// puts default alteration types first

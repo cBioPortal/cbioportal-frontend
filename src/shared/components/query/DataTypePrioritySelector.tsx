@@ -21,7 +21,7 @@ export default class DataTypePrioritySelector extends React.Component<{}, {}>
 
 	render()
 	{
-		if (!devMode.enabled)
+		if (!devMode.enabled || this.store.singleSelectedStudyId)
 			return null;
 
 		const DataTypePriorityRadio = this.DataTypePriorityRadio;

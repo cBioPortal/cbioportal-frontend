@@ -48,7 +48,7 @@ export default class StudyListLogic
 		if (meta.isCancerType)
 		{
 			// ignore cancer types excluded by selection
-			if (this.store.selectedCancerTypeIds.length)
+			if (!this.store.showSelectedStudiesOnly && this.store.selectedCancerTypeIds.length)
 			{
 				let idToCancerType = (cancerTypeId:string) => this.store.treeData.map_cancerTypeId_cancerType.get(cancerTypeId) as CancerType;
 				let selectedCancerTypes = this.store.selectedCancerTypeIds.map(idToCancerType);

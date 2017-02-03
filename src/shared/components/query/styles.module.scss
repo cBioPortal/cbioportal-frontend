@@ -163,6 +163,10 @@
 }
 
 .GeneticProfileSelector {
+  border: 1px solid rgba(0,0,0,0.05);
+  border-radius: 2px;
+  padding: 5px;
+
   div.singleCheckbox, div.groupCheckbox {
     margin-left: 20px;
     label {
@@ -183,9 +187,16 @@
 }
 
 .DataTypePrioritySelector {
+  border: 1px solid rgba(0,0,0,0.05);
+  border-radius: 2px;
+  padding: 5px;
 }
 
 .PatientCaseSetSelector {
+  border: 1px solid rgba(0,0,0,0.05);
+  border-radius: 2px;
+  padding: 5px;
+
   .ReactSelect {
   }
 }

@@ -24,11 +24,16 @@ const styles = styles_any as {
 @observer
 export default class QueryContainer extends React.Component<{}, {}>
 {
+	get store()
+	{
+		return queryStore;
+	}
+
     render():JSX.Element
     {
-        if (queryStore.cancerTypes.isPending || queryStore.cancerStudies.isPending)
+        if (this.store.cancerTypes.isPending || this.store.cancerStudies.isPending)
             return <Spinner/>;
-        if (!queryStore.cancerTypes.result || !queryStore.cancerStudies.result)
+        if (!this.store.cancerTypes.result.length || !this.store.cancerStudies.result.length)
             return <span>No data</span>;
 
         return (
@@ -36,19 +41,28 @@ export default class QueryContainer extends React.Component<{}, {}>
 
 				<FlexCol padded overflow>
 					<CancerStudySelector/>
-					<GeneticProfileSelector/>
-					<PatientCaseSetSelector/>
-					<DataTypePrioritySelector/>
+
+					{!!(devMode.enabled && this.store.singleSelectedStudyId) && (
+						<GeneticProfileSelector/>
+					)}
+
+					{!!(devMode.enabled && this.store.singleSelectedStudyId) && (
+						<PatientCaseSetSelector/>
+					)}
+
+					{!!(devMode.enabled && !this.store.singleSelectedStudyId) && (
+						<DataTypePrioritySelector/>
+					)}
 				</FlexCol>
 
 				{!!(devMode.enabled) && (
 					<FlexCol padded overflow>
 						{/* demo controls */}
 						<FlexCol padded style={{border: '1px solid #ddd', borderRadius: 5, padding: 5}}>
-							<StateToggle label='Click tree node again to deselect' target={queryStore} name='clickAgainToDeselectSingle' defaultValue={queryStore.clickAgainToDeselectSingle}/>
+							<StateToggle label='Click tree node again to deselect' target={this.store} name='clickAgainToDeselectSingle' defaultValue={queryStore.clickAgainToDeselectSingle}/>
 							<Select
 								label="Tree depth: "
-								selected={queryStore.maxTreeDepth}
+								selected={this.store.maxTreeDepth}
 								options={[
 									{label: "0"},
 									{label: "1"},
@@ -61,14 +75,14 @@ export default class QueryContainer extends React.Component<{}, {}>
 									{label: "8"},
 									{label: "9"},
 								]}
-								onChange={option => queryStore.maxTreeDepth = parseInt(option.label)}
+								onChange={option => this.store.maxTreeDepth = parseInt(option.label)}
 							/>
 							<span>Note: Use cmd+click to select/deselect multiple cancer types.</span>
 						</FlexCol>
 
 						{/* display state for demo */}
 						<pre>
-							{JSON.stringify(queryStore.stateToSerialize, null, 4)}
+							{JSON.stringify(this.store.stateToSerialize, null, 4)}
 						</pre>
 					</FlexCol>
 				)}

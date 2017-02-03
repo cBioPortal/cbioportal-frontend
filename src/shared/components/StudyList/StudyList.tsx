@@ -66,8 +66,14 @@ export default class StudyList extends React.Component<{}, {}>
 		);
 	}
 
-	renderCancerType = (cancerType:CancerType, arrayIndex:number = 0):JSX.Element =>
+	renderCancerType = (cancerType:CancerType, arrayIndex:number = 0):JSX.Element | null =>
 	{
+		// BEGIN TEMP HACK
+		let descendantStudies = this.logic.getDescendantCancerStudies(cancerType);
+		if (!descendantStudies.length)
+			return null;
+		// END TEMP HACK
+
 		let currentLevel = this.logic.getDepth(cancerType);
 		let childCancerTypes = this.logic.getChildCancerTypes(cancerType);
 		let childStudies = this.logic.getChildCancerStudies(cancerType);
