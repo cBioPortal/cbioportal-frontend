@@ -29,6 +29,7 @@ import {
 import PatientHeader from './patientHeader/PatientHeader';
 import {TablePaginationControls} from "../../shared/components/tablePaginationControls/TablePaginationControls";
 import {IHotspotData} from "./mutation/column/AnnotationColumnFormatter";
+import {MrnaRankData} from "./mutation/column/MrnaExprColumnFormatter";
 import { PatientViewPageStore } from './clinicalInformation/PatientViewPageStore';
 import ClinicalInformationPatientTable from "./clinicalInformation/ClinicalInformationPatientTable";
 import ClinicalInformationSamples from "./clinicalInformation/ClinicalInformationSamplesTable";
@@ -269,42 +270,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     }
 
-    fetchMrnaExprRank(_sampleToEntrezGeneIds:{ [s:string]:Set<number> }):Promise<MrnaRankData> {
-        return new Promise((resolve, reject) => {
-            const _sampleIds = Object.keys(_sampleToEntrezGeneIds);
-            const fetchProfilePromise = this.fetchMrnaZscoreProfile();
-            fetchProfilePromise.then((profile) => {
-                const mrnaPercentiles: MrnaPercentile[] = [];
-                const fetchAllMrnaPercentilesPromise = Promise.all(_sampleIds.map(sampleId => (new Promise((resolve, reject) => {
-                    const entrezGeneIds = _sampleToEntrezGeneIds[sampleId];
-                    if (typeof entrezGeneIds === "undefined" || entrezGeneIds.size === 0) {
-                        resolve();
-                    } else {
-                        const fetchMrnaPercentilesPromise = this.tsInternalClient.fetchMrnaPercentileUsingPOST({geneticProfileId:profile, sampleId:sampleId, entrezGeneIds: Array.from(entrezGeneIds)});
-                        fetchMrnaPercentilesPromise.then((d) => {
-                            mrnaPercentiles.push(...d);
-                            resolve();
-                        });
-                        fetchMrnaPercentilesPromise.catch(() => reject());
-                    }
-                }))));
-                fetchAllMrnaPercentilesPromise.then(() => {
-                    let mrnaRankData:MrnaRankData = mrnaPercentiles.reduce((map: any, next: any) => {
-                        map[next.sampleId] = map[next.sampleId] || {};
-                        map[next.sampleId][next.entrezGeneId] = {
-                            percentile: next.percentile,
-                            zScore: next.zScore
-                        };
-                        return map;
-                    }, {});
-                    resolve(mrnaRankData);
-                });
-                fetchAllMrnaPercentilesPromise.catch(() => reject());
-            });
-            fetchProfilePromise.catch(() => reject());
-        });
-    }
-
     fetchMutSigData():Promise<MutSig[]> {
         return this.tsInternalClient.getSignificantlyMutatedGenesUsingGET({studyId: patientViewPageStore.studyId});
     }
@@ -412,18 +377,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     cosmicDataPromise.catch(()=>{});
 
                     this.setState(({ mutationData : _result } as IPatientViewState));
-
-                    const sampleToEntrezGeneIds = _result.reduce((map:{ [s:string]:Set<number> }, next:Mutation) => {
-                        const sampleId = next.sampleId;
-                        map[sampleId] = map[sampleId] || new Set();
-                        map[sampleId].add(next.entrezGeneId);
-                        return map;
-                    }, {});
-                    const fetchMrnaExprRankPromise = this.fetchMrnaExprRank(sampleToEntrezGeneIds);
-                    fetchMrnaExprRankPromise.then((_mrna_result:any) => {
-                        this.setState(({ mrnaExprRankData : _mrna_result }) as IPatientViewState);
-                    });
-                    fetchMrnaExprRankPromise.catch(()=>{});
                 });
 
                 this.fetchMutSigData().then((_result) => {
@@ -579,6 +532,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                     hotspots={this.state.hotspotsData}
                                     cosmicData={this.state.cosmicData}
                                     mrnaExprRankData={this.state.mrnaExprRankData}
+                                    mrnaExprRankData={patientViewPageStore.mrnaExprRankData.isComplete ? patientViewPageStore.mrnaExprRankData.result : undefined }
                                     mutSigData={this.state.mutSigData}
                                     variantCountData={this.state.variantCountData}
                                     sampleOrder={sampleManager.sampleOrder}
