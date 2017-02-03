@@ -14,11 +14,16 @@ import {
     default as AnnotationColumnFormatter, IHotspotData, IMyCancerGenomeData
 } from "./column/AnnotationColumnFormatter";
 import { MutSigData, MrnaRankData } from "../PatientViewPage";
+import {
+    default as CosmicColumnFormatter, ICosmicData
+} from "../../../shared/components/mutationTable/column/CosmicColumnFormatter";
+
 
 export interface IMutationInformationContainerProps {
     mutations: Array<Mutation>;
     myCancerGenomeData?: IMyCancerGenomeData
     hotspots?: IHotspotData;
+    cosmicData?: ICosmicData;
     mrnaExprRankData?: MrnaRankData;
     mutSigData?: MutSigData;
     variantCountData?: IVariantCountData;
@@ -133,8 +138,12 @@ export default class MutationInformationContainer extends React.Component<IMutat
             cosmic: {
                 name: "COSMIC",
                 description: "COSMIC occurrences",
+                formatter: CosmicColumnFormatter.renderFunction,
                 priority: 18.40,
-                sortable: true
+                sortable: true,
+                columnProps: {
+                    cosmicData: this.props.cosmicData
+                }
             },
             tumorAlleleFreq: {
                 name: "Allele Freq",
