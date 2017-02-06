@@ -241,7 +241,7 @@ export function plotMuts(p: any, config: any,chmInfo: any,row: any, mutations: A
     } else {
         p.text(0,yRow-config.rowHeight/2,'MUT').attr({'text-anchor': 'start'});
     }
-    var t = p.text(config.xRightText(),yRow-config.rowHeight/2,numMut).attr({'text-anchor': 'start','font-weight': 'bold'});
+    var t = p.text(config.xRightText(),yRow-config.rowHeight/2,mutations.length).attr({'text-anchor': 'start','font-weight': 'bold'});
     underlineText(t,p);
     var tip =  "Number of mutation events.";
     addToolTip(t.node,tip,null,{my:'top right',at:'bottom left'});
