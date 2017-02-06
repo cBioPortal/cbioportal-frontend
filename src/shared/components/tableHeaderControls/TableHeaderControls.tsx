@@ -1,7 +1,9 @@
 import * as React  from 'react';
+import * as ReactDOM from 'react-dom';
 import Tooltip from 'rc-tooltip';
 import {Button, ButtonGroup, ButtonToolbar, Form, FormGroup, MenuItem} from 'react-bootstrap';
 var ClipboardButton = require('react-clipboard.js');
+var Clipboard = require('clipboard');
 import fileDownload from 'react-file-download';
 import * as _ from 'lodash';
 import {TablePaginationControls, ITablePaginationControlsProps} from "../tablePaginationControls/TablePaginationControls";
@@ -62,12 +64,27 @@ export default class TableExportButtons extends React.Component<ITableExportButt
 
     private searchTimeout:number | null;
 
+    private _copyButton: HTMLElement;
+
     constructor(){
 
         super();
 
+
         this.handleInput = this.handleInput.bind(this);
         this.getText = this.getText.bind(this);
+
+    }
+
+    componentDidMount(){
+
+        // this is necessary because the clipboard wrapper library
+        // doesn't work with tooltips :(
+        new Clipboard(this._copyButton, {
+            text: function() {
+                return this.getText();
+            }.bind(this)
+        });
 
     }
 
@@ -121,14 +138,14 @@ export default class TableExportButtons extends React.Component<ITableExportButt
                     <If condition={this.props.showCopyAndDownload}>
                         <ButtonGroup className={this.props.copyDownloadClassName} style={{ marginLeft:10 }}>
 
-                                <Tooltip overlay="Copy" placement="top" arrowContent={arrowContent}>
-                                    <ClipboardButton className="btn btn-sm btn-default" option-text={ this.getText }>
+                                <Tooltip overlay="Copy" placement="top" mouseLeaveDelay={0} mouseEnterDelay={0.5}  arrowContent={arrowContent}>
+                                    <button ref={(el)=>{ this._copyButton = el }} className="btn btn-sm btn-default" data-clipboard-text="blablabhabha" id="donkey" option-text={ this.getText }>
                                             <i className='fa fa-clipboard'/>
-                                    </ClipboardButton>
+                                    </button>
                                 </Tooltip>
 
 
-                            <Tooltip overlay="Download CSV" placement="top" arrowContent={arrowContent}>
+                            <Tooltip overlay="Download CSV" mouseLeaveDelay={0} mouseEnterDelay={0.5} placement="top" arrowContent={arrowContent}>
                                 <Button className="btn-sm" onClick={this.downloadData}>
                                     <i className='fa fa-cloud-download'/>
                                 </Button>
