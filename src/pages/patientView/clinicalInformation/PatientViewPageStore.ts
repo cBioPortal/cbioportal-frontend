@@ -4,8 +4,8 @@ import {ClinicalData, SampleIdentifier} from "../../../shared/api/CBioPortalAPI"
 import {ClinicalInformationData} from "../Connector";
 import client from "../../../shared/api/cbioportalClientInstance";
 import {computed, observable, action} from "../../../../node_modules/mobx/lib/mobx";
-import MobxPromise from "../../../shared/api/MobxPromise";
 import {remoteData} from "../../../shared/api/remoteData";
+import {labelMobxPromises} from "../../../shared/api/MobxPromise";
 
 export function groupByEntityId(clinicalDataArray: Array<ClinicalData>)
 {
@@ -37,7 +37,12 @@ function transformClinicalInformationToStoreShape(patientId: string, studyId: st
     return rv;
 }
 
-export class PatientViewPageStore {
+export class PatientViewPageStore
+{
+    constructor()
+    {
+        labelMobxPromises(this);
+    }
 
     @observable patientId = '';
 
