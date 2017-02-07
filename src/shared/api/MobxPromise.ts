@@ -170,7 +170,7 @@ export default _MobxPromise;
 export const MobxPromiseClass = MobxPromise;
 
 /**
- * Sets MobxPromise debug names equal to their property names on a given object.
+ * Update MobxPromise debug names to reflect their property names on a given object.
  * @param target An object which has properties that are MobxPromises.
  */
 export function labelMobxPromises(target:Object)
