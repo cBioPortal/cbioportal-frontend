@@ -1,5 +1,5 @@
 import * as React from 'react';
-import Tooltip from 'rc-tooltip';
+import DefaultTooltip from 'shared/components/DefaultTooltip';
 import {Td} from 'reactable';
 import {IColumnFormatterData}
     from "../../enhancedReactTable/IColumnFormatter";
@@ -108,9 +108,9 @@ export default class SampleColumnFormatter
         if (toolTip.length > 0)
         {
             content = (
-                <Tooltip overlay={toolTip} placement="rightTop" arrowContent={arrowContent}>
+                <DefaultTooltip overlay={<span>{toolTip}</span>} placement="rightTop" arrowContent={arrowContent}>
                     {content}
-                </Tooltip>
+                </DefaultTooltip>
             );
         }
 

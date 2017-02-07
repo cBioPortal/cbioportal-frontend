@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import Tooltip from 'rc-tooltip';
+import DefaultTooltip from 'shared/components/DefaultTooltip';
 import {Mutation} from "../../api/CBioPortalAPI";
 import annotationStyles from "./styles/annotation.module.scss";
 import hotspotStyles from "./styles/cancerHotspots.module.scss";
@@ -155,7 +155,7 @@ export default class CancerHotspots extends React.Component<ICancerHotspotsProps
             const tooltipContent = CancerHotspots.hotspotInfo(isHotspot, is3dHotspot);
 
             hotspotContent = (
-                <Tooltip
+                <DefaultTooltip
                     overlay={tooltipContent}
                     placement="topLeft"
                     trigger={['hover', 'focus']}
@@ -170,7 +170,7 @@ export default class CancerHotspots extends React.Component<ICancerHotspotsProps
                             alt='Recurrent Hotspot Symbol'
                         />
                     </span>
-                </Tooltip>
+                </DefaultTooltip>
             );
         }
 
