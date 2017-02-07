@@ -14,7 +14,7 @@
 
         ["rewire",{
           "exclude": [
-            "**/*.spec.js"
+            "src/**/*.spec.js"
           ]
         }]
 
