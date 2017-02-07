@@ -18,6 +18,15 @@ install:
   - npm install codecov.io
 script:
   - echo 'API_ROOT=http://cbioportal-rc.herokuapp.com/api' > .env
+  # make sure json is in sync on master and rc branch (since these are branches
+  # about to be deployed)
+  - |
+      if [ "${TRAVIS_BRANCH}" == "master" ] || [[ "${TRAVIS_BRANCH}" =~ ^rc.* ]]; then
+        (npm run fetchAPI && git diff --quiet src/shared/api/generated/CBioPortalAPI-docs.json) || (echo 'src/shared/api/generated/CBioPortalAPI-docs.json out of sync' && exit 1);
+        (git diff --quiet src/shared/api/generated/CBioPortalAPIInternal-docs.json) || (echo 'src/shared/api/generated/CBioPortalAPIInternal-docs.json out of sync' && exit 1);
+        (npm run fetchHotspotsAPI && git diff --quiet src/shared/api/generated/CancerHotspotsAPI-docs.json) || (echo 'src/shared/api/generated/CancerHotspotsAPI-docs.json out of sync' && exit 1);
+        (npm run fetchOncoKbAPI && git diff --quiet src/shared/api/generated/OncoKbAPI-docs.json) || (echo 'src/shared/api/generated/OncoKbAPI-docs.json out of sync' && exit 1);
+      fi
   # Run build
   - npm run build
   # Run test
