@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {Td} from 'reactable';
 import {IColumnFormatterData} from "../../../../shared/components/enhancedReactTable/IColumnFormatter";
-import Tooltip from 'rc-tooltip';
+import DefaultTooltip from 'shared/components/DefaultTooltip';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {MutationTableRowData} from "../../../../shared/components/mutationTable/IMutationTableProps";
 import {MutSigData} from "../../PatientViewPage";
@@ -71,7 +71,7 @@ export default class CohortColumnFormatter {
             const keywordProportion = variantCount.keyword ? (variantCount.numberOfSamplesWithKeyword / variantCount.numberOfSamples) : null;
             const barWidth = 30;
             const barHeight = 8;
-            return (<Tooltip
+            return (<DefaultTooltip
                     placement="left"
                     overlay={CohortColumnFormatter.getCohortFrequencyTooltip(variantCount)}
                     arrowContent={<div className="rc-tooltip-arrow-inner"/>}
@@ -83,14 +83,14 @@ export default class CohortColumnFormatter {
                     {(keywordProportion !== null) &&
                         (<rect y="2" width={keywordProportion*barWidth} height={barHeight} fill="green"/>)}
                 </svg>
-            </Tooltip>);
+            </DefaultTooltip>);
         } else {
             return null;
         }
     }
 
     private static makeMutSigIcon(qValue:number) {
-        return (<Tooltip
+        return (<DefaultTooltip
             placement="right"
             overlay={CohortColumnFormatter.getMutSigTooltip(qValue)}
             arrowContent={<div className="rc-tooltip-arrow-inner"/>}
@@ -101,7 +101,7 @@ export default class CohortColumnFormatter {
                     M
                 </text>
             </svg>
-        </Tooltip>);
+        </DefaultTooltip>);
     }
 
     private static getBoldPercentage(proportion:number) {
