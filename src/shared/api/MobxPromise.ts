@@ -1,4 +1,4 @@
-import {computed, observable, action} from "../../../node_modules/mobx/lib/mobx";
+import {computed, observable, action, extras} from "../../../node_modules/mobx/lib/mobx";
 
 /**
  * This tagged union type describes the interoperability of MobxPromise properties.
@@ -168,3 +168,17 @@ const _MobxPromise = MobxPromise as {
 };
 export default _MobxPromise;
 export const MobxPromiseClass = MobxPromise;
+
+/**
+ * Sets MobxPromise debug names equal to their property names on a given object.
+ * @param target An object which has properties that are MobxPromises.
+ */
+export function labelMobxPromises(target:Object)
+{
+    for (let key in target)
+    {
+        let desc = Object.getOwnPropertyDescriptor(target, key);
+        if (desc.value instanceof MobxPromise)
+            extras.getAdministration(desc.value).name = key;
+    }
+}
