@@ -8,6 +8,7 @@ import queryStore from "./QueryStore";
 import {toJS, computed} from "../../../../node_modules/mobx/lib/mobx";
 import {observer} from "../../../../node_modules/mobx-react/custom";
 import Dictionary = _.Dictionary;
+import {defaultSelectedAlterationTypes} from "./QueryStore";
 
 const styles = styles_any as {
 	GeneticProfileSelector: string,
@@ -20,10 +21,6 @@ const styles = styles_any as {
 };
 
 export const DATATYPE_ZSCORE = 'Z-SCORE';
-export const defaultSelectedAlterationTypes:GeneticProfile['geneticAlterationType'][] = [
-	'MUTATION_EXTENDED',
-	'COPY_NUMBER_ALTERATION'
-];
 export const geneticAlterationTypeGroupLabels:{[K in GeneticProfile['geneticAlterationType']]?: string} = {
 	"MRNA_EXPRESSION": "mRNA Expression data",
 };
@@ -34,16 +31,6 @@ export default class GeneticProfileSelector extends React.Component<{}, {}>
 	get store()
 	{
 		return queryStore;
-	}
-
-	@computed get selectedProfileIds()
-	{
-		if (this.store.selectedProfileIds.length)
-			return this.store.selectedProfileIds;
-
-		return this.store.geneticProfiles.result
-			.filter(profile => _.includes(defaultSelectedAlterationTypes, profile.geneticAlterationType))
-			.map(profile => profile.geneticProfileId);
 	}
 
 	render()
@@ -62,7 +49,7 @@ export default class GeneticProfileSelector extends React.Component<{}, {}>
 
 		return (
 			<div className={styles.GeneticProfileSelector}>
-				<h2>Select Genomic Profiles</h2>
+				<h2>Select Genomic Profiles:</h2>
 				{this.renderCheckboxes(altTypes.map(altType => groupedProfiles[altType] || []))}
 			</div>
 		);
@@ -84,7 +71,7 @@ export default class GeneticProfileSelector extends React.Component<{}, {}>
 		let firstProfile = profiles[0];
 		let altType = firstProfile.geneticAlterationType;
 		let ids = profiles.map(profile => profile.geneticProfileId);
-		let checked = _.intersection(this.selectedProfileIds, ids).length > 0;
+		let checked = _.intersection(this.store.selectedProfileIds, ids).length > 0;
 		let label = firstProfile.name;
 		if (profiles.length > 1)
 		{
@@ -100,8 +87,8 @@ export default class GeneticProfileSelector extends React.Component<{}, {}>
 						onChange: event => {
 							this.store.selectedProfileIds = (
 								(event.target as HTMLInputElement).checked
-								?   _.union(this.selectedProfileIds, [ids[0]])
-								:   _.difference(this.selectedProfileIds, ids)
+								?   _.union(this.store.selectedProfileIds, [ids[0]])
+								:   _.difference(this.store.selectedProfileIds, ids)
 							);
 						}
 					}}
@@ -119,17 +106,17 @@ export default class GeneticProfileSelector extends React.Component<{}, {}>
 		{
 			output.push(
 				<div key={output.length} className={styles.radioGroup}>
-					{profiles.map(profile => (
-						<div className={styles.radioItem}>
+					{profiles.map((profile, profileIndex) => (
+						<div key={profileIndex} className={styles.radioItem}>
 							<label>
 								<input
 									type='radio'
-									checked={_.includes(this.selectedProfileIds, profile.geneticProfileId)}
+									checked={_.includes(this.store.selectedProfileIds, profile.geneticProfileId)}
 									onChange={event => {
 										if ((event.target as HTMLInputElement).checked)
 											this.store.selectedProfileIds = (
 												_.union(
-													_.difference(this.selectedProfileIds, ids),
+													_.difference(this.store.selectedProfileIds, ids),
 													[profile.geneticProfileId]
 												)
 											);

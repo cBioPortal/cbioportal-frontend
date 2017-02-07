@@ -194,6 +194,9 @@
   border: 1px solid rgb(170, 170, 170);
   border-radius: 10px;
   padding: 10px;
+  h2 {
+    flex-grow: 0;
+  }
 }
 
 .SampleListSelector {

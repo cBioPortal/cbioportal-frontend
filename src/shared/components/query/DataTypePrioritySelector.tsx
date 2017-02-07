@@ -5,6 +5,7 @@ import * as styles_any from './styles.module.scss';
 import {QueryStore} from "./QueryStore";
 import {toJS} from "../../../../node_modules/mobx/lib/mobx";
 import {observer} from "../../../../node_modules/mobx-react/index";
+import {FlexRow} from "../flexbox/FlexBox";
 
 const styles = styles_any as {
 	DataTypePrioritySelector: string
@@ -25,12 +26,12 @@ export default class DataTypePrioritySelector extends React.Component<{}, {}>
 
 		const DataTypePriorityRadio = this.DataTypePriorityRadio;
 		return (
-			<div className={styles.DataTypePrioritySelector}>
-				<h2>Select Data Type Priority</h2>
+			<FlexRow padded className={styles.DataTypePrioritySelector}>
+				<h2>Select Data Type Priority:</h2>
 				<DataTypePriorityRadio label='Mutation and CNA' state={{mutation: true, cna: true}}/>
 				<DataTypePriorityRadio label='Only Mutation' state={{mutation: true, cna: false}}/>
 				<DataTypePriorityRadio label='Only CNA' state={{mutation: false, cna: true}}/>
-			</div>
+			</FlexRow>
 		);
 	}
 

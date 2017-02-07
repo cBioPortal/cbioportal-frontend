@@ -22,11 +22,18 @@ export default class GeneSetSelector extends React.Component<{}, {}>
 
 	render()
 	{
-		let options = gene_lists.map(item => ({label: item.id, value: item.genes.join(' ')}));
+		let options = gene_lists.map(item => ({
+			label: `${item.id} (${item.genes.length} genes)`,
+			value: item.genes.join(' ')
+		}));
+		options = [{
+			label: 'User-defined List',
+			value: ''
+		}].concat(options);
 
 		return (
 			<FlexCol padded overflow className={styles.GeneSetSelector}>
-				<h2>Enter Gene Set</h2>
+				<h2>Enter Gene Set:</h2>
 				<a href='/onco_query_lang_desc.jsp'>Advanced: Onco Query Language (OQL)</a>
 				<ReactSelect
 					className={styles.ReactSelect}
@@ -34,10 +41,13 @@ export default class GeneSetSelector extends React.Component<{}, {}>
 					options={options}
 					onChange={(option:{value:string}) => this.store.geneSet = option.value}
 				/>
+
+				{/*TODO when do these buttons show/hide?*/}
 				<FlexRow padded>
 					<button>Select from Recurrently Mutated Genes (MutSig)</button>
 					<button>Select Genes from Recurrent CNAs (Gistic)</button>
 				</FlexRow>
+
 				<textarea
 					className={styles.geneSet}
 					rows={5}

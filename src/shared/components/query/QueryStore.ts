@@ -1,14 +1,41 @@
 import * as _ from 'lodash';
 import client from "../../api/cbioportalClientInstance";
-import {toJS, observable, action, computed, whyRun, expr} from "../../../../node_modules/mobx/lib/mobx";
+import {toJS, observable, reaction, action, computed, whyRun, expr} from "../../../../node_modules/mobx/lib/mobx";
 import {TypeOfCancer as CancerType, GeneticProfile, CancerStudy, SampleList} from "../../api/CBioPortalAPI";
 import CancerStudyTreeData from "./CancerStudyTreeData";
 import StudyListLogic from "../StudyList/StudyListLogic";
 import {remoteData} from "../../api/remoteData";
+import {labelMobxPromises} from "../../api/MobxPromise";
+
+export type PriorityStudies = {
+	[category:string]: string[]
+};
+export const defaultSelectedAlterationTypes:GeneticProfile['geneticAlterationType'][] = [
+	'MUTATION_EXTENDED',
+	'COPY_NUMBER_ALTERATION'
+];
 
 // mobx observable
 export class QueryStore
 {
+	constructor()
+	{
+ 		labelMobxPromises(this);
+		reaction(
+			() => this.geneticProfiles.result,
+			profiles => {
+				let selectedProfileIds = [];
+				for (let profile of profiles)
+					if (_.includes(defaultSelectedAlterationTypes, profile.geneticAlterationType))
+						selectedProfileIds.push(profile.geneticProfileId);
+				this.selectedProfileIds = selectedProfileIds;
+			},
+			{
+				name: "Select default Genetic Profile IDs"
+			}
+		);
+	}
+
 	@computed get stateToSerialize()
 	{
 		let keys:Array<keyof this> = [
@@ -37,7 +64,21 @@ export class QueryStore
 	@observable geneSet = '';
 
 	// visual options
-	@observable.ref searchTextPresets:ReadonlyArray<string> = ['lung', 'serous', 'tcga', 'tcga -provisional'];
+	@observable.ref searchTextPresets:ReadonlyArray<string> = [
+		'tcga',
+		'tcga -provisional',
+		'tcga -moratorium',
+		'tcga OR icgc',
+		'-"cell line"',
+		'prostate mskcc',
+		'esophageal OR stomach',
+		'serous',
+		'breast',
+	];
+	@observable priorityStudies:PriorityStudies = {
+		'Shared institutional Data Sets': ['mskimpact', 'cellline_mskcc'],
+		'Priority Studies': ['blca_tcga_pub', 'coadread_tcga_pub', 'brca_tcga_pub2015'], // for demo
+	};
 	@observable showSelectedStudiesOnly:boolean = false;
 	@observable.shallow selectedCancerTypeIds:string[] = [];
 	@observable maxTreeDepth:number = 9;
@@ -63,7 +104,7 @@ export class QueryStore
 			);
 		return Promise.resolve([]);
 	}, []);
-	//TODO select last sampleList when new list arrives
+	//TODO What is the default selected sampleList logic? depends on what profiles are selected?
 
 	@computed get singleSelectedStudyId()
 	{
@@ -84,7 +125,8 @@ export class QueryStore
 	{
 		return new CancerStudyTreeData({
 			cancerTypes: this.cancerTypes.result,
-			studies: this.cancerStudies.result
+			studies: this.cancerStudies.result,
+			priorityStudies: this.priorityStudies,
 		});
 	}
 

@@ -38,7 +38,7 @@ export default class SampleListSelector extends React.Component<{}, {}>
 
 		return (
 			<div className={styles.SampleListSelector}>
-				<h2>Select Patient/Case Set</h2>
+				<h2>Select Patient/Case Set:</h2>
 				<ReactSelect
 					className={styles.ReactSelect}
 					value={this.store.selectedSampleListId}

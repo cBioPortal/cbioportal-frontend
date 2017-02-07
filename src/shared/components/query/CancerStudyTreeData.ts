@@ -1,5 +1,6 @@
 import {CancerStudy, TypeOfCancer as CancerType} from "../../api/CBioPortalAPI";
 import * as _ from 'lodash';
+import {PriorityStudies} from "./QueryStore";
 
 export const CANCER_TYPE_ROOT = 'tissue';
 
@@ -34,13 +35,29 @@ export default class CancerStudyTreeData
 	map_cancerTypeId_cancerType = new Map<string, CancerType>();
 	map_studyId_cancerStudy = new Map<string, CancerStudy>();
 
-	constructor({cancerTypes = [], studies = []}: {cancerTypes: CancerType[], studies: CancerStudy[]})
+	constructor({cancerTypes = [], studies = [], priorityStudies = {}}: {cancerTypes: CancerType[], studies: CancerStudy[], priorityStudies?:PriorityStudies})
 	{
-		cancerTypes = [this.rootCancerType].concat(cancerTypes);
-
 		let nodes:CancerTreeNode[];
 		let node:CancerTreeNode;
 		let meta:NodeMetadata;
+
+		// sort by name
+		cancerTypes = CancerStudyTreeData.sortNodes(cancerTypes);
+		studies = CancerStudyTreeData.sortNodes(studies);
+
+		let priorityCategories:CancerType[] = [];
+		for (let name in priorityStudies)
+		{
+			priorityCategories.push({
+				clinicalTrialKeywords: '',
+				dedicatedColor: '',
+				name,
+				parent: CANCER_TYPE_ROOT,
+				shortName: name,
+				cancerTypeId: name
+			});
+		}
+		cancerTypes = priorityCategories.concat(this.rootCancerType, cancerTypes);
 
 		// initialize lookups and metadata entries
 		for (nodes of [cancerTypes, studies])
@@ -48,9 +65,13 @@ export default class CancerStudyTreeData
 			for (node of nodes)
 			{
 				if (nodes == cancerTypes)
+				{
 					this.map_cancerTypeId_cancerType.set(node.cancerTypeId, node as CancerType);
+				}
 				else
+				{
 					this.map_studyId_cancerStudy.set((node as CancerStudy).studyId, node as CancerStudy);
+				}
 
 				this.map_node_meta.set(node, {
 					isCancerType: nodes == cancerTypes,
@@ -61,6 +82,21 @@ export default class CancerStudyTreeData
 					ancestors: [],
 					siblings: [],
 				});
+			}
+		}
+
+		// fill in childStudies for priorityCategories using existing CancerStudy objects
+		for (let category of priorityCategories)
+		{
+			meta = this.map_node_meta.get(category) as NodeMetadata;
+			for (let studyId of priorityStudies[category.cancerTypeId])
+			{
+				let study = this.map_studyId_cancerStudy.get(studyId);
+				if (study)
+				{
+					meta.childStudies.push(study);
+					meta.descendantStudies.push(study);
+				}
 			}
 		}
 
@@ -99,29 +135,16 @@ export default class CancerStudyTreeData
 			}
 		}
 
-		// final pass
-		for (nodes of [cancerTypes, studies])
+		// get sibling studies
+		for (node of studies)
 		{
-			for (node of nodes)
+			meta = this.map_node_meta.get(node) as NodeMetadata;
+			// firstLevelAncestor is the ancestor below the rootCancerType
+			let firstLevelAncestor = meta.ancestors[meta.ancestors.length - 2];
+			if (firstLevelAncestor)
 			{
-				meta = this.map_node_meta.get(node) as NodeMetadata;
-
-				// sort related node lists (except ancestors)
-				meta.descendantCancerTypes = CancerStudyTreeData.sortNodes(meta.descendantCancerTypes);
-				meta.descendantStudies = CancerStudyTreeData.sortNodes(meta.descendantStudies);
-				meta.childCancerTypes = CancerStudyTreeData.sortNodes(meta.childCancerTypes);
-				meta.childStudies = CancerStudyTreeData.sortNodes(meta.childStudies);
-
-				// get sibling studies
-				if (!meta.isCancerType)
-				{
-					let firstLevelAncestor = meta.ancestors[meta.ancestors.length - 2];
-					if (firstLevelAncestor)
-					{
-						let ancestorMeta = this.map_node_meta.get(firstLevelAncestor) as NodeMetadata;
-						meta.siblings = ancestorMeta.descendantStudies;
-					}
-				}
+				let ancestorMeta = this.map_node_meta.get(firstLevelAncestor) as NodeMetadata;
+				meta.siblings = ancestorMeta.descendantStudies;
 			}
 		}
 	}
