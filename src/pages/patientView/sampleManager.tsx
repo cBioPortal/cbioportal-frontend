@@ -5,7 +5,7 @@ import SampleInline from './patientHeader/SampleInline';
 import {ClinicalDataBySampleId} from "../../shared/api/api-types-extended";
 import ClinicalInformationPatientTable from "./clinicalInformation/ClinicalInformationPatientTable";
 import {Sample} from "../../shared/api/CBioPortalAPI";
-import Tooltip from 'rc-tooltip';
+import DefaultTooltip from 'shared/components/DefaultTooltip';
 import {cleanAndDerive} from './clinicalInformation/lib/clinicalAttributesUtil.js';
 import styles from './patientHeader/style/clinicalAttributes.scss';
 
@@ -92,7 +92,7 @@ class SampleManager {
         // };
 
 
-        return (<Tooltip
+        return (<DefaultTooltip
             placement='bottomLeft'
             trigger={['hover', 'focus']}
             overlay={this.getPopoverSample(sample, sampleNumberText)}
@@ -110,7 +110,7 @@ class SampleManager {
                 </SampleInline>
                 </svg>
 
-        </Tooltip>);
+        </DefaultTooltip>);
 
            // <SampleInline
            //              sample={sample}

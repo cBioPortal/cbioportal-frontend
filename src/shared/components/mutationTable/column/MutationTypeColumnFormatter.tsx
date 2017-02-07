@@ -1,5 +1,5 @@
 import * as React from 'react';
-import Tooltip from 'rc-tooltip';
+import DefaultTooltip from 'shared/components/DefaultTooltip';
 import {Td} from 'reactable';
 import {IColumnFormatterData}
     from "../../enhancedReactTable/IColumnFormatter";
@@ -256,9 +256,9 @@ export default class MutationTypeColumnFormatter
             const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
 
             content = (
-                <Tooltip overlay={toolTip} placement="left" arrowContent={arrowContent}>
+                <DefaultTooltip overlay={<span>{toolTip}</span>} placement="left" arrowContent={arrowContent}>
                     {content}
-                </Tooltip>
+                </DefaultTooltip>
             );
         }
 
