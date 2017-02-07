@@ -179,6 +179,9 @@ export function labelMobxPromises(target:Object)
     {
         let desc = Object.getOwnPropertyDescriptor(target, key);
         if (desc.value instanceof MobxPromise)
-            extras.getAdministration(desc.value).name = key;
+        {
+            let admin = extras.getAdministration(desc.value);
+            admin.name = `${key}(${admin.name})`;
+        }
     }
 }
