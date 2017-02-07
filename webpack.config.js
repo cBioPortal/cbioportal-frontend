@@ -48,7 +48,7 @@ var config = {
     'output': {
         path: './dist/',
         filename: 'reactapp/[name].app.js',
-        chunkFilename: 'reactapp/[name].chunk.js',
+        chunkFilename: 'reactapp/[name].[chunkhash].chunk.js',
         cssFilename: 'reactapp/app.css',
         hash: false,
         publicPath: '',
