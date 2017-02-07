@@ -1,6 +1,6 @@
 import * as React  from 'react';
 import * as ReactDOM from 'react-dom';
-import Tooltip from 'rc-tooltip';
+import DefaultTooltip from 'shared/components/DefaultTooltip';
 import {Button, ButtonGroup, ButtonToolbar, Form, FormGroup, MenuItem} from 'react-bootstrap';
 var ClipboardButton = require('react-clipboard.js');
 var Clipboard = require('clipboard');
@@ -138,18 +138,18 @@ export default class TableExportButtons extends React.Component<ITableExportButt
                     <If condition={this.props.showCopyAndDownload}>
                         <ButtonGroup className={this.props.copyDownloadClassName} style={{ marginLeft:10 }}>
 
-                                <Tooltip overlay="Copy" placement="top" mouseLeaveDelay={0} mouseEnterDelay={0.5}  arrowContent={arrowContent}>
+                            <DefaultTooltip overlay={<span>Copy</span>} placement="top" mouseLeaveDelay={0} mouseEnterDelay={0.5}  arrowContent={arrowContent}>
                                     <button ref={(el)=>{ this._copyButton = el }} className="btn btn-sm btn-default" data-clipboard-text="blablabhabha" id="donkey" option-text={ this.getText }>
                                             <i className='fa fa-clipboard'/>
                                     </button>
-                                </Tooltip>
+                                </DefaultTooltip>
 
 
-                            <Tooltip overlay="Download CSV" mouseLeaveDelay={0} mouseEnterDelay={0.5} placement="top" arrowContent={arrowContent}>
+                            <DefaultTooltip overlay={<span>Download CSV</span>} mouseLeaveDelay={0} mouseEnterDelay={0.5} placement="top" arrowContent={arrowContent}>
                                 <Button className="btn-sm" onClick={this.downloadData}>
                                     <i className='fa fa-cloud-download'/>
                                 </Button>
-                            </Tooltip>
+                            </DefaultTooltip>
                         </ButtonGroup>
                     </If>
 

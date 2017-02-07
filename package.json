@@ -33,6 +33,7 @@
     "@types/mocha": "^2.2.38",
     "@types/query-string": "^3.0.31",
     "@types/raphael": "^2.1.30",
+    "@types/rc-tooltip": "^3.4.2",
     "@types/react": "^15.0.4",
     "@types/react-bootstrap": "^0.0.43",
     "@types/react-dom": "^0.14.21",
