@@ -5,14 +5,14 @@ import {IColumnDefMap} from "../../../shared/components/enhancedReactTable/IEnha
 import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter";
 import TumorColumnFormatter from "./column/TumorColumnFormatter";
 import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
-import MrnaExprColumnFormatter from "./column/MrnaExprColumnFormatter";
+import {MrnaRankData, default as MrnaExprColumnFormatter} from "./column/MrnaExprColumnFormatter";
 import AlleleCountColumnFormatter from "./column/AlleleCountColumnFormatter";
 import CohortColumnFormatter from "./column/CohortColumnFormatter";
 import { Mutation } from "../../../shared/api/CBioPortalAPI";
 import SampleManager from "../sampleManager";
 import AnnotationColumnFormatter from "./column/AnnotationColumnFormatter";
 import {IHotspotData} from "./column/AnnotationColumnFormatter";
-import { MutSigData, MrnaRankData } from "../PatientViewPage";
+import { MutSigData } from "../PatientViewPage";
 
 export interface IMutationInformationContainerProps {
     mutations: Array<Mutation>;

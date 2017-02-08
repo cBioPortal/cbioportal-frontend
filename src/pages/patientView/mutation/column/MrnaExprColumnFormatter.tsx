@@ -6,6 +6,8 @@ import {compareNumberLists} from '../../../../shared/lib/SortUtils';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {MutationTableRowData} from "../../../../shared/components/mutationTable/IMutationTableProps";
 
+export type MrnaRankData = { [sampleId:string]: { [entrezGeneId:string]: {percentile:number, zScore:number}}};
+
 export default class MrnaExprColumnFormatter {
 
     private static getCircleX(data: IColumnFormatterData<MutationTableRowData>, percentile:number, circleLeft: number, circleRight:number) {

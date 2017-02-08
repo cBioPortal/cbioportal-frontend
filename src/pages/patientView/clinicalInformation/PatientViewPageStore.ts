@@ -1,10 +1,14 @@
 import * as _ from 'lodash';
 import { ClinicalDataBySampleId } from "../../../shared/api/api-types-extended";
-import {ClinicalData, SampleIdentifier} from "../../../shared/api/CBioPortalAPI";
+import {ClinicalData, SampleIdentifier,
+    GeneticProfile, Sample, Mutation} from "../../../shared/api/CBioPortalAPI";
 import {ClinicalInformationData} from "../Connector";
 import client from "../../../shared/api/cbioportalClientInstance";
+import internalClient from "../../../shared/api/cbioportalInternalClientInstance";
 import {computed, observable, action} from "../../../../node_modules/mobx/lib/mobx";
 import {remoteData} from "../../../shared/api/remoteData";
+import {MrnaRankData} from "../mutation/column/MrnaExprColumnFormatter";
+import {MrnaPercentile} from "../../../shared/api/CBioPortalAPIInternal";
 import {labelMobxPromises} from "../../../shared/api/MobxPromise";
 
 export function groupByEntityId(clinicalDataArray: Array<ClinicalData>)
@@ -47,6 +51,10 @@ export class PatientViewPageStore
     @observable patientId = '';
 
     @observable studyId = '';
+
+    @computed get mutationGeneticProfileId() {
+        return `${this.studyId}_mutations`;
+    }
 
     readonly clinicalDataPatient = remoteData(() => {
         return client.getAllClinicalDataOfPatientInStudyUsingGET({
@@ -107,6 +115,98 @@ export class PatientViewPageStore
             this.clinicalDataForSamples.result
         ))
     },{});
+
+    readonly geneticProfilesInStudy = remoteData(() => client.getAllGeneticProfilesInStudyUsingGET({
+        studyId: this.studyId
+    }), []);
+
+    private readonly mrnaRankGeneticProfileId = remoteData({
+        await: () => [
+            this.geneticProfilesInStudy
+        ],
+        invoke: () => {
+            const regex1 = /^.+rna_seq.*_zscores$/; // We prefer profiles that look like this
+            const regex2 = /^.*_zscores$/; // If none of the above are available, we'll look for ones like this
+            const preferredProfile:(GeneticProfile | undefined) = this.geneticProfilesInStudy.result.find(
+                (gp:GeneticProfile) => regex1.test(gp.geneticProfileId.toLowerCase()));
+
+            if (preferredProfile) {
+                return Promise.resolve(preferredProfile.geneticProfileId);
+            } else {
+                const fallbackProfile:(GeneticProfile | undefined) = this.geneticProfilesInStudy.result.find(
+                    (gp:GeneticProfile) => regex2.test(gp.geneticProfileId.toLowerCase()));
+
+                return Promise.resolve(fallbackProfile ? fallbackProfile.geneticProfileId : null);
+            }
+        }
+    }, null);
+
+    readonly mutationData = remoteData({
+        await: () => [
+            this.samplesOfPatient
+        ],
+        invoke: ()=> {
+            const geneticProfileId = this.mutationGeneticProfileId;
+            if (geneticProfileId) {
+                return client.fetchMutationsInGeneticProfileUsingPOST({
+                    geneticProfileId: geneticProfileId,
+                    sampleIds: this.samplesOfPatient.result.map((sample:Sample) => sample.sampleId),
+                    projection: "DETAILED"
+                });
+            } else {
+                return Promise.resolve([]);
+            }
+    }}, []);
+
+    readonly mrnaExprRankData = remoteData<MrnaRankData>({
+        await: () => [
+            this.mrnaRankGeneticProfileId,
+            this.mutationData
+        ],
+        invoke: () => {
+            const sampleToEntrezGeneIds = _.reduce(this.mutationData.result, (map:{ [s:string]:Set<number> }, next:Mutation) => {
+                const sampleId = next.sampleId;
+                map[sampleId] = map[sampleId] || new Set();
+                map[sampleId].add(next.entrezGeneId);
+                return map;
+            }, {});
+
+            return new Promise((resolve, reject) => {
+                const mrnaPercentiles: MrnaPercentile[] = [];
+                const fetchAllMrnaPercentilesPromise = Promise.all(Object.keys(sampleToEntrezGeneIds).map((sampleId:string) =>
+                    new Promise((sampleResolve, sampleReject) => {
+                        const entrezGeneIds = sampleToEntrezGeneIds[sampleId];
+                        if (typeof entrezGeneIds === "undefined" || entrezGeneIds.size === 0 || this.mrnaRankGeneticProfileId.result === null) {
+                            sampleResolve();
+                        } else {
+                            const fetchMrnaPercentilesPromise = internalClient.fetchMrnaPercentileUsingPOST({
+                                geneticProfileId:this.mrnaRankGeneticProfileId.result,
+                                sampleId:sampleId,
+                                entrezGeneIds: Array.from(entrezGeneIds)
+                            });
+                            fetchMrnaPercentilesPromise.then((d) => {
+                                mrnaPercentiles.push.apply(mrnaPercentiles, d);
+                                sampleResolve();
+                            });
+                            fetchMrnaPercentilesPromise.catch(() => sampleReject());
+                        }
+                    })
+                ));
+                fetchAllMrnaPercentilesPromise.then(() => {
+                    let mrnaRankData:MrnaRankData = mrnaPercentiles.reduce((map: any, next: any) => {
+                        map[next.sampleId] = map[next.sampleId] || {};
+                        map[next.sampleId][next.entrezGeneId] = {
+                            percentile: next.percentile,
+                            zScore: next.zScore
+                        };
+                        return map;
+                    }, {});
+                    resolve(mrnaRankData);
+                });
+                fetchAllMrnaPercentilesPromise.catch(() => reject());
+            });
+        }
+    }, {});
 
     @action("ChangePatientId") changePatientId(newId: string) {
         this.patientId = newId;
