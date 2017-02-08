@@ -80,6 +80,14 @@ export default class TableExportButtons extends React.Component<ITableExportButt
 
         // this is necessary because the clipboard wrapper library
         // doesn't work with tooltips :(
+        if (this.props.showCopyAndDownload && this._copyButton) {
+            this.bindCopyButton();
+        }
+
+    }
+
+    public bindCopyButton(){
+
         new Clipboard(this._copyButton, {
             text: function() {
                 return this.getText();
