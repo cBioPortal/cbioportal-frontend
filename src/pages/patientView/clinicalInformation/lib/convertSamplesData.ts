@@ -37,3 +37,4 @@ export default function (data?: Array<ClinicalDataBySampleId>):IConvertedSamples
 
     return output;
 }
+
