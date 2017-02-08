@@ -33,6 +33,7 @@ export interface IMutationInformationContainerProps {
     sampleTumorType:{ [s:string]: string};
     sampleCancerType:{ [s:string]: string};
     sampleManager:SampleManager;
+    onVisibleRowsChange?:(data:Mutation[][]) => void;
 };
 
 export default class MutationInformationContainer extends React.Component<IMutationInformationContainerProps, {}>
@@ -119,7 +120,7 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 name: "mRNA Expr.",
                 priority: 18.20,
                 formatter: MrnaExprColumnFormatter.renderFunction,
-                sortable: true,
+                sortable: false,
                 columnProps: {
                     data: this.props.mrnaExprRankData
                 }
@@ -220,7 +221,8 @@ export default class MutationInformationContainer extends React.Component<IMutat
 
         return (
             <div>
-                <MutationTable rawData={this.mergedMutationsSelector(this.state, this.props)} columns={columns} />
+                <MutationTable rawData={this.mergedMutationsSelector(this.state, this.props)} columns={columns}
+                                onVisibleRowsChange={this.props.onVisibleRowsChange} />
             </div>
         );
     }
