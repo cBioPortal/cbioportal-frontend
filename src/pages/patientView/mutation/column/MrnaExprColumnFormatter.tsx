@@ -6,7 +6,13 @@ import {compareNumberLists} from '../../../../shared/lib/SortUtils';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {MutationTableRowData} from "../../../../shared/components/mutationTable/IMutationTableProps";
 
-export type MrnaRankData = { [sampleId:string]: { [entrezGeneId:string]: {percentile:number, zScore:number}}};
+export type MrnaRankDatum = {status:"available", percentile:number, zScore:number} |
+                            {status:"not available"} |
+                            {status:"pending"};
+
+export type MrnaRankData = { [sampleId:string]: {
+                                [entrezGeneId:string]: MrnaRankDatum
+                            }};
 
 export default class MrnaExprColumnFormatter {
 
@@ -25,9 +31,9 @@ export default class MrnaExprColumnFormatter {
         }
     }
 
-    private static getTooltipContents(data:IColumnFormatterData<MutationTableRowData>, mrnaExprData: any) {
+    private static getTooltipContents(data:IColumnFormatterData<MutationTableRowData>, mrnaExprData: MrnaRankData) {
         const exprData = MrnaExprColumnFormatter.getData(data, mrnaExprData);
-        if (exprData) {
+        if (exprData && exprData.status === "available") {
             return (
                 <div>
                     <span>mRNA level of the gene in this tumor</span><br/>
@@ -35,13 +41,14 @@ export default class MrnaExprColumnFormatter {
                     <span><b>Percentile: </b>{exprData.percentile}</span><br/>
                 </div>
             );
-        } else {
+        } else if (exprData && exprData.status === "not available") {
             return (<span>mRNA data is not available for this gene.</span>);
-
+        } else {
+            return (<span>Querying server for data.</span>);
         }
     }
 
-    private static getTdContents(data:IColumnFormatterData<MutationTableRowData>, mrnaExprData: any) {
+    private static getTdContents(data:IColumnFormatterData<MutationTableRowData>, mrnaExprData: MrnaRankData) {
         const barWidth = 30;
         const circleRadius = 3;
         const barXLeft = 0;
@@ -52,7 +59,7 @@ export default class MrnaExprColumnFormatter {
         const textXLeft = circleXRight + circleRadius + 3;
         const width = textXLeft + textWidth;
         const exprData = MrnaExprColumnFormatter.getData(data, mrnaExprData);
-        if (exprData) {
+        if (exprData && exprData.status === "available") {
             return (<svg
                 width={width}
                 height={12}
@@ -81,7 +88,7 @@ export default class MrnaExprColumnFormatter {
                     />
                 </g>
             </svg>);
-        } else {
+        } else if (exprData && exprData.status === "not available") {
             return (
                 <span
                     style={{color: "gray", fontSize:"xx-small", textAlign:"center"}}
@@ -90,10 +97,19 @@ export default class MrnaExprColumnFormatter {
                     NA
                 </span>
             );
+        } else {
+            return (
+                <span
+                    style={{color: "gray", fontSize:"xx-small", textAlign:"center"}}
+                    alt="Querying server for data."
+                >
+                    LOADING
+                </span>
+            );
         }
     }
 
-    private static getData(data: IColumnFormatterData<MutationTableRowData>, mrnaExprData:any) {
+    private static getData(data: IColumnFormatterData<MutationTableRowData>, mrnaExprData:MrnaRankData) {
         if (!data.rowData || data.rowData.length === 0) {
             return null;
         }
@@ -105,10 +121,10 @@ export default class MrnaExprColumnFormatter {
 
     public static renderFunction(data: IColumnFormatterData<MutationTableRowData>, columnProps: any) {
         const exprData = MrnaExprColumnFormatter.getData(data, columnProps.data);
-        return (<Td key={data.name} column={data.name} value={exprData? exprData.percentile : Number.POSITIVE_INFINITY}>
+        return (<Td key={data.name} column={data.name} value={(exprData && exprData.status === "available") ? exprData.percentile : Number.POSITIVE_INFINITY}>
             <DefaultTooltip
                 placement="left"
-                overlay={MrnaExprColumnFormatter.getTooltipContents(data, columnProps.data)}
+                overlay={MrnaExprColumnFormatter.getTooltipContents(data, columnProps.data as MrnaRankData)}
                 arrowContent={<div className="rc-tooltip-arrow-inner"/>}
             >
                 {MrnaExprColumnFormatter.getTdContents(data, columnProps.data)}

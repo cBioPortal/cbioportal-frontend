@@ -28,7 +28,6 @@ import {
 } from "../../shared/api/CBioPortalAPIInternal";
 import PatientHeader from './patientHeader/PatientHeader';
 import {TablePaginationControls} from "../../shared/components/tablePaginationControls/TablePaginationControls";
-import {MrnaRankData} from "./mutation/column/MrnaExprColumnFormatter";
 import { PatientViewPageStore } from './clinicalInformation/PatientViewPageStore';
 import ClinicalInformationPatientTable from "./clinicalInformation/ClinicalInformationPatientTable";
 import ClinicalInformationSamples from "./clinicalInformation/ClinicalInformationSamplesTable";
@@ -61,7 +60,6 @@ interface IPatientViewState {
     myCancerGenomeData?: IMyCancerGenomeData;
     hotspotsData?: IHotspotData;
     cosmicData?: ICosmicData;
-    mrnaExprRankData?: MrnaRankData;
     mutSigData?: MutSigData;
     variantCountData?: IVariantCountData;
     activeTabKey: number;
@@ -94,7 +92,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             mutationData: undefined,
             cnaSegmentData: undefined,
             hotspotsData: undefined,
-            mrnaExprRankData: undefined,
             variantCountData: undefined,
             activeTabKey:1
         };
@@ -225,31 +222,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
             promise.then((data) => {
                 resolve(generateMap(data));
-            });
-        });
-    }
-
-    fetchMrnaZscoreProfile():Promise<string> {
-        return new Promise((resolve, reject) => {
-            let geneticProfilesPromise = this.tsClient.getAllGeneticProfilesInStudyUsingGET({studyId: patientViewPageStore.studyId});
-            const regex1 = /^.+rna_seq.*_zscores$/;
-            const regex2 = /^.*_zscores$/;
-            geneticProfilesPromise.then((d) => {
-                const chosenProfile:GeneticProfile = d.reduce((curr: GeneticProfile, next: GeneticProfile) => {
-                    const nextId = next.geneticProfileId.toLowerCase();
-                    if (curr && curr.geneticProfileId.toLowerCase().match(regex1) !== null) {
-                        return curr;
-                    } else if (nextId.match(regex1) !== null ||
-                        nextId.match(regex2) !== null) {
-                        return next;
-                    }
-                    return curr;
-                }, undefined);
-                if (chosenProfile) {
-                    resolve(chosenProfile.geneticProfileId);
-                } else {
-                    reject();
-                }
             });
         });
     }
@@ -530,7 +502,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                     myCancerGenomeData={this.state.myCancerGenomeData}
                                     hotspots={this.state.hotspotsData}
                                     cosmicData={this.state.cosmicData}
-                                    mrnaExprRankData={patientViewPageStore.mrnaExprRankData.isComplete ? patientViewPageStore.mrnaExprRankData.result : undefined }
+                                    mrnaExprRankData={ patientViewPageStore.mrnaExprRankCache.cache }
                                     mutSigData={this.state.mutSigData}
                                     variantCountData={this.state.variantCountData}
                                     sampleOrder={sampleManager.sampleOrder}
@@ -539,6 +511,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                     sampleTumorType={mockData.tumorType}
                                     sampleCancerType={mockData.cancerType}
                                     sampleManager={ sampleManager }
+                                    onVisibleRowsChange={ patientViewPageStore.setVisibleRows }
                                 />
                             )
                         }
