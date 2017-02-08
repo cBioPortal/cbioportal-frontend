@@ -30,7 +30,7 @@ script:
       }
 after_success:
  # upload coverage data to codecov.io
- - cat coverage/*/lcov.info | codecov
+ - cat test/fixtures/outputs/lcov.info | codecov
 cache:
   directories:
     - node_modules
