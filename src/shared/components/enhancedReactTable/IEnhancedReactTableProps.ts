@@ -15,6 +15,7 @@ export interface IEnhancedReactTableProps<T> {
     initItemsPerPage?: number; // initial number of items per page
     initPage?:number; // initial page
     itemsName?:string; // name of items, e.g. "mutations"
+    onVisibleRowsChange?:(data:T[]) => any; // executed whenever the visible rows change (sorting or paginating), argument is the row data of visible rows, in order
 }
 
 export interface IEnhancedReactTableState {

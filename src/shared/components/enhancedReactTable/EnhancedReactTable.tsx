@@ -145,12 +145,19 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
         this.filteredDataLength = props.rawData.length;
         this.shouldSetState = false;
 
-        const setFilteredDataLength = (n:number) => {
+        const setFilteredDataLength = ((n:number) => {
             if (n !== this.filteredDataLength) {
                 this.filteredDataLength = n;
                 this.shouldSetState = true;
             }
-        };
+        }).bind(this);
+
+        const sendVisibleRows = ((tableRenderResult:JSX.Element) => {
+            const tbodyElt = tableRenderResult.props.children.find((x:JSX.Element) => (x.type === "tbody"));
+            const visibleRows = tbodyElt.props.children || [];
+            this.props.onVisibleRowsChange &&
+                this.props.onVisibleRowsChange(visibleRows.map((r:JSX.Element) => r.props.rowData));
+        }).bind(this);
 
         const Table_applyFilter = Table.prototype.applyFilter;
         Table.prototype.applyFilter = function(){
@@ -158,6 +165,12 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
             setFilteredDataLength(result.length);
             return result;
         };
+        const Table_render = Table.prototype.render;
+        Table.prototype.render = function() {
+            const result = Table_render.apply(this, arguments);
+            sendVisibleRows(result);
+            return result;
+        }
         //
 
 
@@ -200,13 +213,7 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
         // table rows: an array of Tr components
         const rows = this.rowsSelector(this.state, this.props);
 
-        let firstItemShownIndex:number;
-        if (this.filteredDataLength === 0) {
-            firstItemShownIndex = 0;
-        } else {
-            firstItemShownIndex = (this.state.itemsPerPage === -1 ? 0 : this.state.itemsPerPage*this.state.currentPage) + 1;
-        }
-        const lastItemShownIndex:number = (this.state.itemsPerPage === -1 ? this.filteredDataLength : Math.min(this.filteredDataLength, firstItemShownIndex + this.state.itemsPerPage - 1));
+        const {firstIndex, numIndexes} = this.rowIndexesOnPage();
 
         return(
             <div>
@@ -227,7 +234,7 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
                         onChangeItemsPerPage: this.handleChangeItemsPerPage,
                         onPreviousPageClick: this.handlePreviousPageClick,
                         onNextPageClick: this.handleNextPageClick,
-                        textBetweenButtons: `${firstItemShownIndex}-${lastItemShownIndex} of ${this.filteredDataLength}`,
+                        textBetweenButtons: `${this.filteredDataLength ? (firstIndex+1) : 0}-${firstIndex+numIndexes} of ${this.filteredDataLength}`,
                         previousPageDisabled: (this.state.currentPage === 0),
                         nextPageDisabled: (this.state.currentPage >= this.numPages()-1)
                     }}
@@ -267,6 +274,19 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
                 currentPage: Math.max(0, Math.min(this.state.currentPage, this.numPages() - 1))
             } as IEnhancedReactTableState);
         }
+    }
+
+    private rowIndexesOnPage() {
+        let firstIndex:number;
+        let numIndexes:number;
+        if (this.state.itemsPerPage === -1) {
+            firstIndex = 0;
+            numIndexes = this.filteredDataLength;
+        } else {
+            firstIndex = this.state.itemsPerPage * this.state.currentPage;
+            numIndexes = Math.min(this.filteredDataLength - firstIndex, this.state.itemsPerPage);
+        }
+        return {firstIndex, numIndexes};
     }
 
     private numPages(itemsPerPage?:number) {
@@ -381,7 +401,7 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
             const cols = self.generateColumns(columns, tableData, rowData);
 
             rows.push(
-                <Tr key={index}>
+                <Tr key={index} rowData={rowData}>
                     {cols}
                 </Tr>
             );

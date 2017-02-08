@@ -10,6 +10,7 @@ import {remoteData} from "../../../shared/api/remoteData";
 import {MrnaRankData} from "../mutation/column/MrnaExprColumnFormatter";
 import {MrnaPercentile} from "../../../shared/api/CBioPortalAPIInternal";
 import {labelMobxPromises} from "../../../shared/api/MobxPromise";
+import Immutable from "seamless-immutable";
 
 export function groupByEntityId(clinicalDataArray: Array<ClinicalData>)
 {
@@ -47,6 +48,8 @@ export class PatientViewPageStore
     {
         labelMobxPromises(this);
     }
+
+    @observable.ref mrnaExprRankData:MrnaRankData = {};
 
     @observable patientId = '';
 
@@ -122,7 +125,7 @@ export class PatientViewPageStore
 
     private readonly mrnaRankGeneticProfileId = remoteData({
         await: () => [
-            this.geneticProfilesInStudy
+            this.geneticProfilesInStudy,
         ],
         invoke: () => {
             const regex1 = /^.+rna_seq.*_zscores$/; // We prefer profiles that look like this
@@ -158,31 +161,42 @@ export class PatientViewPageStore
             }
     }}, []);
 
-    readonly mrnaExprRankData = remoteData<MrnaRankData>({
+    @action("ChangePatientId") changePatientId(newId: string) {
+        this.patientId = newId;
+    }
+    readonly requestMrnaExprRankData = remoteData({
         await: () => [
-            this.mrnaRankGeneticProfileId,
-            this.mutationData
+            this.mrnaRankGeneticProfileId
         ],
         invoke: () => {
-            const sampleToEntrezGeneIds = _.reduce(this.mutationData.result, (map:{ [s:string]:Set<number> }, next:Mutation) => {
-                const sampleId = next.sampleId;
-                map[sampleId] = map[sampleId] || new Set();
-                map[sampleId].add(next.entrezGeneId);
-                return map;
-            }, {});
-
-            return new Promise((resolve, reject) => {
+            return Promise.resolve(function(sampleToEntrezGeneIds:{ [sampleId:string]:Set<number> }) {
+                // Reference to new immutable map
+                // See which we need to fetch, and set "pending" for those data
+                const toQuery:{ [sampleId:string]:number[]} = {};
+                for (const sampleId in sampleToEntrezGeneIds) {
+                    if (sampleToEntrezGeneIds.hasOwnProperty(sampleId)) {
+                        this.mrnaExprRankData[sampleId] = this.mrnaExprRankData[sampleId] || {};
+                        for (const entrezGeneId of sampleToEntrezGeneIds[sampleId]) {
+                            if (!this.mrnaExprRankData[sampleId].hasOwnProperty(entrezGeneId)) {
+                                toQuery[sampleId] = toQuery[sampleId] || [];
+                                toQuery[sampleId].push(entrezGeneId);
+                                this.mrnaExprRankData[sampleId][entrezGeneId] = { status:"pending" };
+                            }
+                        }
+                    }
+                }
+                // Fetch that data
                 const mrnaPercentiles: MrnaPercentile[] = [];
-                const fetchAllMrnaPercentilesPromise = Promise.all(Object.keys(sampleToEntrezGeneIds).map((sampleId:string) =>
+                const fetchAllMrnaPercentilesPromise = Promise.all(Object.keys(toQuery).map((sampleId:string) =>
                     new Promise((sampleResolve, sampleReject) => {
-                        const entrezGeneIds = sampleToEntrezGeneIds[sampleId];
-                        if (typeof entrezGeneIds === "undefined" || entrezGeneIds.size === 0 || this.mrnaRankGeneticProfileId.result === null) {
+                        const entrezGeneIds = toQuery[sampleId];
+                        if (this.mrnaRankGeneticProfileId.result === null) {
                             sampleResolve();
                         } else {
                             const fetchMrnaPercentilesPromise = internalClient.fetchMrnaPercentileUsingPOST({
                                 geneticProfileId:this.mrnaRankGeneticProfileId.result,
-                                sampleId:sampleId,
-                                entrezGeneIds: Array.from(entrezGeneIds)
+                                sampleId,
+                                entrezGeneIds
                             });
                             fetchMrnaPercentilesPromise.then((d) => {
                                 mrnaPercentiles.push.apply(mrnaPercentiles, d);
@@ -193,23 +207,46 @@ export class PatientViewPageStore
                     })
                 ));
                 fetchAllMrnaPercentilesPromise.then(() => {
-                    let mrnaRankData:MrnaRankData = mrnaPercentiles.reduce((map: any, next: any) => {
-                        map[next.sampleId] = map[next.sampleId] || {};
-                        map[next.sampleId][next.entrezGeneId] = {
-                            percentile: next.percentile,
-                            zScore: next.zScore
+                    const haveData:{ [sampleId:string]: { [entrezGeneId: string]:boolean}} = {};
+                    for (const mrnaPercentile of mrnaPercentiles) {
+                        // Add data
+                        this.mrnaExprRankData[mrnaPercentile.sampleId] = this.mrnaExprRankData[mrnaPercentile.sampleId] || {};
+                        this.mrnaExprRankData[mrnaPercentile.sampleId][mrnaPercentile.entrezGeneId] = {
+                            status: "available",
+                            percentile: mrnaPercentile.percentile,
+                            zScore: mrnaPercentile.zScore
                         };
-                        return map;
-                    }, {});
-                    resolve(mrnaRankData);
-                });
-                fetchAllMrnaPercentilesPromise.catch(() => reject());
-            });
-        }
-    }, {});
+                        // As we go through, keep track of which we have data for
+                        haveData[mrnaPercentile.sampleId] = haveData[mrnaPercentile.sampleId] || {};
+                        haveData[mrnaPercentile.sampleId][mrnaPercentile.entrezGeneId] = true;
+                    }
+                    // Go through and mark those we don't have data for as unavailable
+                    for (const sampleId in toQuery) {
+                        if (toQuery.hasOwnProperty(sampleId)) {
+                            for (const entrezGeneId of toQuery[sampleId]) {
+                                if (!haveData[sampleId] || !haveData[sampleId][entrezGeneId]) {
+                                    this.mrnaExprRankData[sampleId][entrezGeneId] = { status: "not available" };
+                                }
+                            }
+                        }
+                    }
 
-    @action("ChangePatientId") changePatientId(newId: string) {
-        this.patientId = newId;
-    }
+                    if (mrnaPercentiles.length > 0) {
+                        this.mrnaExprRankData = Object.assign({}, this.mrnaExprRankData); // trigger observable
+                    }
+                });
+                fetchAllMrnaPercentilesPromise.catch(() => {
+                    // Delete all the pending statuses for what we queried
+                    for (const sampleId in toQuery) {
+                        if (toQuery.hasOwnProperty(sampleId)) {
+                            for (const entrezGeneId of toQuery[sampleId]) {
+                                delete this.mrnaExprRankData[sampleId][entrezGeneId];
+                            }
+                        }
+                    }
+                });
+            }.bind(this));
+        }
+    }, ()=>{});
 
 }

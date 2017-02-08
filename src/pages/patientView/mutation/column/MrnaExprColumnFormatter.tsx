@@ -6,7 +6,12 @@ import {compareNumberLists} from '../../../../shared/lib/SortUtils';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {MutationTableRowData} from "../../../../shared/components/mutationTable/IMutationTableProps";
 
-export type MrnaRankData = { [sampleId:string]: { [entrezGeneId:string]: {percentile:number, zScore:number}}};
+export type MrnaRankData = { [sampleId:string]: {
+                                [entrezGeneId:string]:
+                                    ({status:"available", percentile:number, zScore:number} |
+                                    {status:"not available"} |
+                                    {status:"pending"})
+                            }};
 
 export default class MrnaExprColumnFormatter {
 
@@ -27,7 +32,7 @@ export default class MrnaExprColumnFormatter {
 
     private static getTooltipContents(data:IColumnFormatterData<MutationTableRowData>, mrnaExprData: any) {
         const exprData = MrnaExprColumnFormatter.getData(data, mrnaExprData);
-        if (exprData) {
+        if (exprData && exprData.status === "available") {
             return (
                 <div>
                     <span>mRNA level of the gene in this tumor</span><br/>
@@ -35,9 +40,10 @@ export default class MrnaExprColumnFormatter {
                     <span><b>Percentile: </b>{exprData.percentile}</span><br/>
                 </div>
             );
-        } else {
+        } else if (exprData && exprData.status === "not available") {
             return (<span>mRNA data is not available for this gene.</span>);
-
+        } else {
+            return (<span>Querying server for data.</span>);
         }
     }
 
@@ -52,7 +58,7 @@ export default class MrnaExprColumnFormatter {
         const textXLeft = circleXRight + circleRadius + 3;
         const width = textXLeft + textWidth;
         const exprData = MrnaExprColumnFormatter.getData(data, mrnaExprData);
-        if (exprData) {
+        if (exprData && exprData.status === "available") {
             return (<svg
                 width={width}
                 height={12}
@@ -81,13 +87,22 @@ export default class MrnaExprColumnFormatter {
                     />
                 </g>
             </svg>);
-        } else {
+        } else if (exprData && exprData.status === "not available") {
             return (
                 <span
                     style={{color: "gray", fontSize:"xx-small", textAlign:"center"}}
                     alt="mRNA data is not available for this gene."
                 >
                     NA
+                </span>
+            );
+        } else {
+            return (
+                <span
+                    style={{color: "gray", fontSize:"xx-small", textAlign:"center"}}
+                    alt="Querying server for data."
+                >
+                    LOADING
                 </span>
             );
         }

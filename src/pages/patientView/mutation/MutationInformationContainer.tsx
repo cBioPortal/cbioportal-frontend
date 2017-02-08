@@ -25,6 +25,7 @@ export interface IMutationInformationContainerProps {
     sampleTumorType:{ [s:string]: string};
     sampleCancerType:{ [s:string]: string};
     sampleManager:SampleManager;
+    onVisibleRowsChange?:(data:Mutation[][]) => any;
 };
 
 export default class MutationInformationContainer extends React.Component<IMutationInformationContainerProps, {}>
@@ -202,7 +203,8 @@ export default class MutationInformationContainer extends React.Component<IMutat
 
         return (
             <div>
-                <MutationTable rawData={this.mergedMutationsSelector(this.state, this.props)} columns={columns} />
+                <MutationTable rawData={this.mergedMutationsSelector(this.state, this.props)} columns={columns}
+                                onVisibleRowsChange={this.props.onVisibleRowsChange} />
             </div>
         );
     }
