@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {Td} from 'reactable';
 import {IColumnFormatterData} from "../../../../shared/components/enhancedReactTable/IColumnFormatter";
-import Tooltip from 'rc-tooltip';
+import DefaultTooltip from 'shared/components/DefaultTooltip';
 import {compareNumberLists} from '../../../../shared/lib/SortUtils';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {MutationTableRowData} from "../../../../shared/components/mutationTable/IMutationTableProps";
@@ -104,13 +104,13 @@ export default class MrnaExprColumnFormatter {
     public static renderFunction(data: IColumnFormatterData<MutationTableRowData>, columnProps: any) {
         const exprData = MrnaExprColumnFormatter.getData(data, columnProps.data);
         return (<Td key={data.name} column={data.name} value={exprData? exprData.percentile : Number.POSITIVE_INFINITY}>
-            <Tooltip
+            <DefaultTooltip
                 placement="left"
                 overlay={MrnaExprColumnFormatter.getTooltipContents(data, columnProps.data)}
                 arrowContent={<div className="rc-tooltip-arrow-inner"/>}
             >
                 {MrnaExprColumnFormatter.getTdContents(data, columnProps.data)}
-            </Tooltip>
+            </DefaultTooltip>
         </Td>);
     }
 }

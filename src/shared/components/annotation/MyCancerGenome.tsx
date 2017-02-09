@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import Tooltip from 'rc-tooltip';
+import DefaultTooltip from 'shared/components/DefaultTooltip';
 import annotationStyles from "./styles/annotation.module.scss";
 import mcgStyles from "./styles/myCancerGenome.module.scss";
 
@@ -63,7 +63,7 @@ export default class MyCancerGenome extends React.Component<IMyCancerGenomeProps
             const tooltipContent = MyCancerGenome.myCancerGenomeLinks(this.props.linksHTML);
 
             myCancerGenomeContent = (
-                <Tooltip
+                <DefaultTooltip
                     overlay={tooltipContent}
                     placement="topLeft"
                     trigger={['hover', 'focus']}
@@ -73,7 +73,7 @@ export default class MyCancerGenome extends React.Component<IMyCancerGenomeProps
                     <span className={`${annotationStyles["annotation-item"]} mcg`}>
                         <img width='14' height='14' src={require("./images/mcg_logo.png")} alt='My Cancer Genome Symbol' />
                     </span>
-                </Tooltip>
+                </DefaultTooltip>
             );
         }
 
