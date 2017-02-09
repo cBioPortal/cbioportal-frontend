@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {Td} from 'reactable';
-import Tooltip from 'rc-tooltip';
+import DefaultTooltip from 'shared/components/DefaultTooltip';
 import * as _ from 'lodash';
 import {IColumnFormatterData} from "../../enhancedReactTable/IColumnFormatter";
 import {MutationTableRowData} from "../IMutationTableProps";
@@ -114,14 +114,14 @@ export default class CosmicColumnFormatter
             const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
 
             content = (
-                <Tooltip
+                <DefaultTooltip
                     overlay={overlay}
                     placement="topLeft"
                     arrowContent={arrowContent}
                     onPopupAlign={placeArrow}
                 >
                     {content}
-                </Tooltip>
+                </DefaultTooltip>
             );
         }
 
