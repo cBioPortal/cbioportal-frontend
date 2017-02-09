@@ -7,7 +7,6 @@ import * as styles_any from './styles.module.scss';
 import queryStore from "./QueryStore";
 import {toJS, computed} from "../../../../node_modules/mobx/lib/mobx";
 import {observer} from "../../../../node_modules/mobx-react/custom";
-import Dictionary = _.Dictionary;
 import {defaultSelectedAlterationTypes} from "./QueryStore";
 
 const styles = styles_any as {
@@ -35,32 +34,23 @@ export default class GeneticProfileSelector extends React.Component<{}, {}>
 
 	render()
 	{
-		let profiles = this.store.geneticProfiles.result.filter(profile => profile.showProfileInAnalysisTab);
-		let groupedProfiles:Dictionary<GeneticProfile[]|undefined> = _.groupBy(profiles, profile => profile.geneticAlterationType);
-
-		if (!this.store.singleSelectedStudyId || !profiles.length)
+		if (!this.store.singleSelectedStudyId
+			|| !this.store.geneticProfiles.isComplete
+			|| !this.store.geneticProfiles.result.length)
+		{
 			return null;
+		}
 
-		// puts default alteration types first
-		let altTypes = _.union(
-			defaultSelectedAlterationTypes,
-			Object.keys(groupedProfiles).sort()
-		);
+		let checkboxes:JSX.Element[] = [];
+		for (let profiles of this.store.geneticProfilesGroupedByType)
+			this.renderGroup(profiles, checkboxes);
 
 		return (
 			<div className={styles.GeneticProfileSelector}>
 				<h2>Select Genomic Profiles:</h2>
-				{this.renderCheckboxes(altTypes.map(altType => groupedProfiles[altType] || []))}
+				{checkboxes}
 			</div>
 		);
-	}
-
-	renderCheckboxes(groupedProfiles:GeneticProfile[][])
-	{
-		let output:JSX.Element[] = [];
-		for (let profiles of groupedProfiles)
-			this.renderGroup(profiles, output);
-		return output;
 	}
 
 	renderGroup(profiles:GeneticProfile[], output:JSX.Element[])
@@ -148,87 +138,3 @@ export default class GeneticProfileSelector extends React.Component<{}, {}>
 		}
 	}
 }
-
-let sample_profiles:Partial<GeneticProfile>[] = [
-  {
-    "geneticAlterationType": "METHYLATION",
-    "datatype": "CONTINUOUS",
-    "name": "Methylation (HM450)",
-    "description": "Methylation (HM450) beta-values for genes in 194 cases. For genes with multiple methylation probes, the probe most anti-correlated with expression.",
-    "showProfileInAnalysisTab": false,
-    "geneticProfileId": "laml_tcga_methylation_hm450",
-    "studyId": "laml_tcga"
-  },
-  {
-    "geneticAlterationType": "METHYLATION",
-    "datatype": "CONTINUOUS",
-    "name": "Methylation (HM27)",
-    "description": "Methylation (HM27) beta-values for genes in 194 cases. For genes with multiple methylation probes, the probe most anti-correlated with expression.",
-    "showProfileInAnalysisTab": false,
-    "geneticProfileId": "laml_tcga_methylation_hm27",
-    "studyId": "laml_tcga"
-  },
-  {
-    "geneticAlterationType": "COPY_NUMBER_ALTERATION",
-    "datatype": "CONTINUOUS",
-    "name": "Relative linear copy-number values",
-    "description": "Relative linear copy-number values for each gene (from Affymetrix SNP6).",
-    "showProfileInAnalysisTab": false,
-    "geneticProfileId": "laml_tcga_linear_CNA",
-    "studyId": "laml_tcga"
-  },
-  {
-    "geneticAlterationType": "MRNA_EXPRESSION",
-    "datatype": "Z-SCORE",
-    "name": "mRNA Expression z-Scores (RNA Seq V2 RSEM)",
-    "description": "mRNA z-Scores (RNA Seq V2 RSEM) compared to the expression distribution of each gene tumors that are diploid for this gene.",
-    "showProfileInAnalysisTab": true,
-    "geneticProfileId": "laml_tcga_rna_seq_v2_mrna_median_Zscores",
-    "studyId": "laml_tcga"
-  },
-  {
-    "geneticAlterationType": "MRNA_EXPRESSION",
-    "datatype": "CONTINUOUS",
-    "name": "mRNA expression (RNA Seq RPKM)",
-    "description": "Expression levels for 20443 genes in 179 aml cases (RNA Seq RPKM).",
-    "showProfileInAnalysisTab": false,
-    "geneticProfileId": "laml_tcga_rna_seq_mrna",
-    "studyId": "laml_tcga"
-  },
-  {
-    "geneticAlterationType": "MRNA_EXPRESSION",
-    "datatype": "CONTINUOUS",
-    "name": "mRNA expression (RNA Seq V2 RSEM)",
-    "description": "Expression levels for 20532 genes in 173 aml cases (RNA Seq V2 RSEM).",
-    "showProfileInAnalysisTab": false,
-    "geneticProfileId": "laml_tcga_rna_seq_v2_mrna",
-    "studyId": "laml_tcga"
-  },
-  {
-    "geneticAlterationType": "MRNA_EXPRESSION",
-    "datatype": "Z-SCORE",
-    "name": "mRNA Expression z-Scores (RNA Seq RPKM)",
-    "description": "mRNA z-Scores (RNA Seq RPKM) compared to the expression distribution of each gene tumors that are diploid for this gene.",
-    "showProfileInAnalysisTab": true,
-    "geneticProfileId": "laml_tcga_rna_seq_mrna_median_Zscores",
-    "studyId": "laml_tcga"
-  },
-  {
-    "geneticAlterationType": "COPY_NUMBER_ALTERATION",
-    "datatype": "DISCRETE",
-    "name": "Putative copy-number alterations from GISTIC",
-    "description": "Putative copy-number calls on 191 cases determined using GISTIC 2.0. Values: -2 = homozygous deletion; -1 = hemizygous deletion; 0 = neutral / no change; 1 = gain; 2 = high level amplification.",
-    "showProfileInAnalysisTab": true,
-    "geneticProfileId": "laml_tcga_gistic",
-    "studyId": "laml_tcga"
-  },
-  {
-    "geneticAlterationType": "MUTATION_EXTENDED",
-    "datatype": "MAF",
-    "name": "Mutations",
-    "description": "Mutation data from whole exome sequencing.",
-    "showProfileInAnalysisTab": true,
-    "geneticProfileId": "laml_tcga_mutations",
-    "studyId": "laml_tcga"
-  }
-];

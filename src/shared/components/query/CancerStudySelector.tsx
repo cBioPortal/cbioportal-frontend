@@ -172,7 +172,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 						className={selectedCountClass}
 					>
 						<b> {this.store.selectedStudyIds.length}</b> Studies Selected
-						(<b>{this.store.totalSelectedSampleCount}</b> Samples)
+						(<b>{this.store.selectedStudies_totalSampleCount}</b> Samples)
 					</span>
 				</FlexRow>
 

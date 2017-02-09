@@ -42,10 +42,13 @@ export default class GeneSetSelector extends React.Component<{}, {}>
 					onChange={(option:{value:string}) => this.store.geneSet = option.value}
 				/>
 
-				{/*TODO when do these buttons show/hide?*/}
 				<FlexRow padded>
-					<button>Select from Recurrently Mutated Genes (MutSig)</button>
-					<button>Select Genes from Recurrent CNAs (Gistic)</button>
+					{!!(this.store.mutSigForSingleStudy.result.length) && (
+						<button>Select from Recurrently Mutated Genes (MutSig)</button>
+					)}
+					{!!(this.store.gisticForSingleStudy.result.length) && (
+						<button>Select Genes from Recurrent CNAs (Gistic)</button>
+					)}
 				</FlexRow>
 
 				<textarea
