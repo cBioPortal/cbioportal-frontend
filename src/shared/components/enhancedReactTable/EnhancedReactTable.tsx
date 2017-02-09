@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { createSelector } from "reselect";
 import {Table, Thead, Th, Tr, Td} from "reactable";
-import Tooltip from 'rc-tooltip';
+import DefaultTooltip from 'shared/components/DefaultTooltip';
 import * as _ from 'lodash';
 import TableHeaderControls from "shared/components/tableHeaderControls/TableHeaderControls";
 import {
@@ -350,9 +350,9 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
                 const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
 
                 headerContent = (
-                    <Tooltip overlay={columnDef.description} placement="top" arrowContent={arrowContent}>
+                    <DefaultTooltip overlay={<span>{columnDef.description}</span>} placement="top" arrowContent={arrowContent}>
                         {headerContent}
-                    </Tooltip>
+                    </DefaultTooltip>
                 );
             }
 

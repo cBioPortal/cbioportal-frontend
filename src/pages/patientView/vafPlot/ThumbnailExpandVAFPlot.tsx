@@ -1,5 +1,5 @@
 import * as React from 'react';
-import Tooltip from 'rc-tooltip';
+import DefaultTooltip from 'shared/components/DefaultTooltip';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {VAFPlot, IVAFPlotProps} from './VAFPlot';
 
@@ -51,7 +51,7 @@ export class ThumbnailExpandVAFPlot extends React.Component<IThumbnailExpandVAFP
         };
 
         return (
-            <Tooltip
+            <DefaultTooltip
                 placement={this.props.overlayPlacement}
                 trigger={['hover', 'focus']}
                 overlay={<VAFPlot {...expandedProps}/>}
@@ -63,7 +63,7 @@ export class ThumbnailExpandVAFPlot extends React.Component<IThumbnailExpandVAFP
                             {...thumbnailProps}
                     />
                 </div>
-            </Tooltip>
+            </DefaultTooltip>
         );
     }
 }
