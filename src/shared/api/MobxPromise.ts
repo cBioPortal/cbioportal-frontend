@@ -20,6 +20,7 @@ export type MobxPromiseInputParams<R> = {
      * A function that returns a list of MobxPromise objects which are dependencies of the invoke function.
      */
     await?: MobxPromise_await,
+
     /**
      * A function that returns the async result or a promise for the async result.
      */
@@ -28,14 +29,21 @@ export type MobxPromiseInputParams<R> = {
     /**
      * Default result in place of undefined
      */
-    default?: R
+    default?: R,
+
+    /**
+     * A function that will be called when the latest promise from invoke() is resolved.
+     * It will not be called for out-of-date promises.
+     */
+    reaction?: (result?:R) => void,
 };
 export type MobxPromise_await = () => Array<MobxPromise<any> | MobxPromiseUnionType<any> | MobxPromiseUnionTypeWithDefault<any>>;
 export type MobxPromise_invoke<R> = () => PromiseLike<R>;
 export type MobxPromiseInputParamsWithDefault<R> = {
     await?: MobxPromise_await,
     invoke: MobxPromise_invoke<R>,
-    default: R
+    default: R,
+    reaction?: (result:R) => void,
 };
 
 class MobxPromise<R>
@@ -70,10 +78,12 @@ class MobxPromise<R>
         this.await = input.await;
         this.invoke = input.invoke;
         this.defaultResult = input.default;
+        this.reaction = input.reaction;
     }
 
     private await?:MobxPromise_await;
     private invoke:MobxPromise_invoke<R>;
+    private reaction?:(result?:R) => void;
     private defaultResult?:R;
     private invokeId:number = 0;
 
@@ -147,6 +157,9 @@ class MobxPromise<R>
         {
             this.internalResult = result;
             this.internalStatus = 'complete';
+
+            if (this.reaction)
+                this.reaction(this.result);
         }
     }
 
