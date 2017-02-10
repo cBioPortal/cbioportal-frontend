@@ -595,7 +595,14 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             )
                         }
                     </Tab>
-                    <Tab eventKey={2} title="Clinical Data">
+                    <Tab eventKey={2} title="Copy Number Alterations">
+                        <FeatureTitle title="Copy Number Alteractions" isLoading={ !(this.state.cnaSegmentData) } />
+
+
+
+
+                    </Tab>
+                    <Tab eventKey={3} title="Clinical Data">
 
                         <ClinicalInformationContainer status={ this.props.clinicalDataStatus } patient={this.props.patient} samples={this.props.samples} />
 
