@@ -13,7 +13,7 @@ import {
     ColumnVisibilityControls
 } from "../columnVisibilityControls/ColumnVisibilityControls";
 
-export interface ITableExportButtonsProps {
+export interface ITableHeaderControlsProps {
     tableData?: Array<any>;
     className?: string;
     searchClassName?: string;
@@ -59,7 +59,7 @@ function serializeTableData(tableData: Array<any>, containsHeader?:boolean) {
     return content.join('');
 }
 
-export default class TableExportButtons extends React.Component<ITableExportButtonsProps, {}> {
+export default class TableHeaderControls extends React.Component<ITableHeaderControlsProps, {}> {
 
 
     private searchTimeout:number | null;
@@ -96,7 +96,7 @@ export default class TableExportButtons extends React.Component<ITableExportButt
 
     }
 
-    public static defaultProps: ITableExportButtonsProps = {
+    public static defaultProps: ITableHeaderControlsProps = {
         showSearch:false,
         showCopyAndDownload:true,
         showPagination:false,
@@ -163,7 +163,7 @@ export default class TableExportButtons extends React.Component<ITableExportButt
 
                     <If condition={this.props.showSearch}>
                         <div className={`${this.props.searchClassName} form-group has-feedback input-group-sm`} style={{ display:'inline-block', marginLeft:10  }}>
-                            <input type="text" onInput={this.handleInput} className="form-control" style={{ width:200 }}  />
+                            <input type="text" onInput={this.handleInput} className="form-control tableSearchInput" style={{ width:200 }}  />
                             <span className="fa fa-search form-control-feedback" aria-hidden="true"></span>
                         </div>
                     </If>
