@@ -12,10 +12,6 @@ import {MutSig, Gistic} from "../../api/CBioPortalAPIInternal";
 export type PriorityStudies = {
 	[category:string]: string[]
 };
-export const defaultSelectedAlterationTypes:GeneticProfile['geneticAlterationType'][] = [
-	'MUTATION_EXTENDED',
-	'COPY_NUMBER_ALTERATION',
-];
 
 // mobx observable
 export class QueryStore
@@ -33,6 +29,7 @@ export class QueryStore
 			'dataTypePriority',
 			'selectedProfileIds',
 			'zScoreThreshold',
+			'rppaScoreThreshold',
 			'selectedSampleListId',
 			'caseIds',
 			'caseIdsMode',
@@ -44,6 +41,8 @@ export class QueryStore
 	////////////////////////////////////////////////////////////////////////////////
 	// QUERY PARAMETERS
 	////////////////////////////////////////////////////////////////////////////////
+
+	@observable forDownloadTab:boolean = false;
 
 	@observable searchText:string = '';
 
@@ -59,10 +58,17 @@ export class QueryStore
 			return this._selectedProfileIds;
 
 		// compute default selection
+		const altTypes:GeneticProfile['geneticAlterationType'][] = [
+			'MUTATION_EXTENDED',
+			'COPY_NUMBER_ALTERATION',
+		];
 		let ids = [];
-		for (let profiles of this.geneticProfilesGroupedByType)
-			if (_.includes(defaultSelectedAlterationTypes, profiles[0].geneticAlterationType))
+		for (let altType of altTypes)
+		{
+			let profiles = this.getFilteredProfiles(altType);
+			if (profiles.length)
 				ids.push(profiles[0].geneticProfileId);
+		}
 		return ids;
 	}
 	set selectedProfileIds(value:ReadonlyArray<string>)
@@ -71,6 +77,8 @@ export class QueryStore
 	}
 
 	@observable zScoreThreshold:string = '2.0';
+
+	@observable rppaScoreThreshold:string = '2.0';
 
 	// sample list id
 	@observable private _selectedSampleListId?:string = undefined; // user selection
@@ -269,13 +277,14 @@ export class QueryStore
 		return _.keyBy(this.geneticProfiles.result, profile => profile.geneticProfileId);
 	}
 
-	@computed get geneticProfilesGroupedByType():GeneticProfile[][]
+	getFilteredProfiles(geneticAlterationType:GeneticProfile['geneticAlterationType'])
 	{
-		let profiles = this.geneticProfiles.result.filter(profile => profile.showProfileInAnalysisTab);
-		let groupedProfiles = _.groupBy(profiles, profile => profile.geneticAlterationType);
-		// puts default alteration types first
-		let types = _.union(defaultSelectedAlterationTypes, Object.keys(groupedProfiles).sort());
-		return types.map(type => groupedProfiles[type]).filter(_.identity);
+		return this.geneticProfiles.result.filter(profile => {
+			if (profile.geneticAlterationType != geneticAlterationType)
+				return false;
+
+			return profile.showProfileInAnalysisTab || this.forDownloadTab;
+		});
 	}
 
 	isProfileSelected(geneticProfileId:string)

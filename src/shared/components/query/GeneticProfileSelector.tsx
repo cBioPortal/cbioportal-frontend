@@ -7,7 +7,6 @@ import * as styles_any from './styles.module.scss';
 import queryStore from "./QueryStore";
 import {toJS, computed} from "../../../../node_modules/mobx/lib/mobx";
 import {observer} from "../../../../node_modules/mobx-react/custom";
-import {defaultSelectedAlterationTypes} from "./QueryStore";
 
 const styles = styles_any as {
 	GeneticProfileSelector: string,
@@ -16,12 +15,8 @@ const styles = styles_any as {
 	radioGroup: string,
 	radioItem: string,
 	zScore: string,
+	groupName: string,
 	profileName: string,
-};
-
-export const DATATYPE_ZSCORE = 'Z-SCORE';
-export const geneticAlterationTypeGroupLabels:{[K in GeneticProfile['geneticAlterationType']]?: string} = {
-	"MRNA_EXPRESSION": "mRNA Expression data",
 };
 
 @observer
@@ -34,41 +29,42 @@ export default class GeneticProfileSelector extends React.Component<{}, {}>
 
 	render()
 	{
-		if (!this.store.singleSelectedStudyId
-			|| !this.store.geneticProfiles.isComplete
-			|| !this.store.geneticProfiles.result.length)
-		{
+		if (!this.store.singleSelectedStudyId || !this.store.geneticProfiles.isComplete)
 			return null;
-		}
-
-		let checkboxes:JSX.Element[] = [];
-		for (let profiles of this.store.geneticProfilesGroupedByType)
-			this.renderGroup(profiles, checkboxes);
 
 		return (
 			<div className={styles.GeneticProfileSelector}>
 				<h2>Select Genomic Profiles:</h2>
-				{checkboxes}
+				{[
+					this.renderGroup("MUTATION_EXTENDED", "Mutation"),
+					this.renderGroup("COPY_NUMBER_ALTERATION", "Copy Number"),
+					this.renderGroup("MRNA_EXPRESSION", "mRNA Expression"),
+					this.renderGroup("METHYLATION", "DNA Methylation"),
+					this.renderGroup("METHYLATION_BINARY", "DNA Methylation"),
+					this.renderGroup("PROTEIN_LEVEL", "Protein/phosphoprotein level"),
+				]}
+				{!!(!this.store.geneticProfiles.result.length) && (
+					<strong>No Genomic Profiles available for this Cancer Study</strong>
+				)}
 			</div>
 		);
 	}
 
-	renderGroup(profiles:GeneticProfile[], output:JSX.Element[])
+	renderGroup(geneticAlterationType:GeneticProfile['geneticAlterationType'], groupLabel:string)
 	{
+		let profiles = this.store.getFilteredProfiles(geneticAlterationType);
 		if (!profiles.length)
-			return;
+			return null;
 
-		let firstProfile = profiles[0];
-		let altType = firstProfile.geneticAlterationType;
 		let ids = profiles.map(profile => profile.geneticProfileId);
 		let checked = _.intersection(this.store.selectedProfileIds, ids).length > 0;
-		let label = firstProfile.name;
-		if (profiles.length > 1)
-		{
-			let groupLabel = geneticAlterationTypeGroupLabels[altType] || altType;
+		let label;
+		if (profiles.length == 1)
+			label = profiles[0].name;
+		else
 			label = `${groupLabel}. Select one of the profiles below:`;
-		}
 
+		let output = [];
 		output.push(
 			<div key={output.length} className={profiles.length > 1 ? styles.groupCheckbox : styles.singleCheckbox}>
 				<LabeledCheckbox
@@ -83,12 +79,12 @@ export default class GeneticProfileSelector extends React.Component<{}, {}>
 						}
 					}}
 				>
-					{label}
+					<span className={profiles.length > 1 ? styles.groupName : styles.profileName}>{label}</span>
+					{!!(profiles.length == 1) && (
+						<FontAwesome name='question-circle' {...{title: profiles[0].description}}/>
+					)}
 				</LabeledCheckbox>
 
-				{!!(profiles.length == 1) && (
-					<FontAwesome name='question-circle' {...{alt: firstProfile.description}}/>
-				)}
 			</div>
 		);
 
@@ -113,15 +109,15 @@ export default class GeneticProfileSelector extends React.Component<{}, {}>
 									}}
 								/>
 								<span className={styles.profileName}>{profile.name}</span>
+								<FontAwesome name='question-circle' {...{title: profile.description}}/>
 							</label>
-							<FontAwesome name='question-circle' {...{alt: profile.description}}/>
 						</div>
 					))}
 				</div>
 			);
 		}
 
-		if (firstProfile.datatype == DATATYPE_ZSCORE && checked)
+		if (checked && geneticAlterationType == 'MRNA_EXPRESSION')
 		{
 			output.push(
 				<div key={output.length} className={styles.zScore}>
@@ -136,5 +132,23 @@ export default class GeneticProfileSelector extends React.Component<{}, {}>
 				</div>
 			);
 		}
+
+		if (checked && geneticAlterationType == 'PROTEIN_LEVEL')
+		{
+			output.push(
+				<div key={output.length} className={styles.zScore}>
+					Enter a z-score threshold ±:
+					<input
+						type="text"
+						value={this.store.rppaScoreThreshold}
+						onChange={event => {
+							this.store.rppaScoreThreshold = (event.target as HTMLInputElement).value;
+						}}
+					/>
+				</div>
+			);
+		}
+
+		return output;
 	}
 }

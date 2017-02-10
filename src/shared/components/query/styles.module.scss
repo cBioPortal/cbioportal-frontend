@@ -1,6 +1,11 @@
 .QueryContainer {
   height: 100%;
 
+  label {
+    margin-bottom: 0px;
+    font-weight: normal;
+  }
+
   h2 {
     font: normal normal 300 20px/23px 'Helvetica Neue', Helvetica, Arial, sans-serif;
     flex-grow: 2;
@@ -173,20 +178,36 @@
 
   div.singleCheckbox, div.groupCheckbox {
     margin-left: 20px;
+
     label {
       display: inline;
+      cursor: pointer;
     }
   }
+
   div.radioGroup {
     margin-left: 40px;
 
     div.radioItem {
+      label {
+        cursor: pointer;
+
+        input {
+          margin-right: 6px;
+        }
+      }
     }
   }
+
   div.zScore {
     margin-left: 60px;
   }
-  label.profileName {
+
+  span.groupName {
+  }
+
+  span.profileName {
+    margin-right: 6px;
   }
 }
 
