@@ -2,14 +2,14 @@ import {
     IColumnRenderFunction, IColumnSortFunction, IColumnFilterFunction, IColumnVisibilityFunction, ColumnVisibility,
     IColumnDataFunction, IColumnDownloadFunction
 } from "./IColumnFormatter";
-import {ITableExportButtonsProps} from "../tableHeaderControls/TableHeaderControls";
+import {ITableHeaderControlsProps} from "../tableHeaderControls/TableHeaderControls";
 
 /**
  * @author Selcuk Onur Sumer
  */
 export interface IEnhancedReactTableProps<T> {
     reactTableProps?: any; // any available reactable props
-    headerControlsProps?: ITableExportButtonsProps;
+    headerControlsProps?: ITableHeaderControlsProps;
     columns?: IColumnDefMap; // column definitions (including component renderers)
     rawData: Array<T>; // raw data
     initItemsPerPage?: number; // initial number of items per page
