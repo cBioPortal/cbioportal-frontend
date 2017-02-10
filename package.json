@@ -42,6 +42,8 @@
     "@types/reselect": "^2.0.27",
     "@types/seamless-immutable": "^6.1.2",
     "@types/superagent": "^2.0.36",
+    "@types/enzyme": "^2.7.4",
+    "@types/sinon": "^1.16.35",
     "autoprefixer": "^6.7.0",
     "babel-core": "^6.22.1",
     "babel-loader": "^6.2.10",
@@ -129,8 +131,6 @@
     "webpack-raphael": "^2.1.4"
   },
   "devDependencies": {
-    "@types/enzyme": "^2.7.4",
-    "@types/sinon": "^1.16.35",
     "argparse": "^1.0.9",
     "babel-plugin-istanbul": "^3.1.2",
     "babel-plugin-rewire": "^1.0.0",
