@@ -129,6 +129,8 @@
     "webpack-raphael": "^2.1.4"
   },
   "devDependencies": {
+    "@types/enzyme": "^2.7.4",
+    "@types/sinon": "^1.16.35",
     "argparse": "^1.0.9",
     "babel-plugin-istanbul": "^3.1.2",
     "babel-plugin-rewire": "^1.0.0",
