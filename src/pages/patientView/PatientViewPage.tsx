@@ -482,6 +482,14 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         this.setState(({ activeTabKey : key } as IPatientViewState));
     }
 
+
+    private getSampleIndent() {
+        return (<svg width='20' height='15' style={{marginRight: '5px'}}>
+            <line x1='10' y1='0' x2='10' y2='10' stroke='gray' stroke-width='2'></line>
+            <line x1='10' y1='10' x2='50' y2='10' stroke='gray' stroke-width='2'></line>
+        </svg>);
+    }
+
     public render() {
 
         let sampleManager: SampleManager | null = null;
@@ -544,7 +552,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 <If condition={sampleHeader}>
                     <div style={{padding:20, borderRadius:5, background: '#eee', marginBottom: 20}}>
                         <PatientHeader patient={this.props.patient} />
-                        {sampleHeader}
+                        {this.getSampleIndent()}{sampleHeader}
                     </div>
                 </If>
 
