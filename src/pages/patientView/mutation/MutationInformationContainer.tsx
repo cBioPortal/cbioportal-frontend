@@ -25,7 +25,7 @@ export interface IMutationInformationContainerProps {
     sampleTumorType:{ [s:string]: string};
     sampleCancerType:{ [s:string]: string};
     sampleManager:SampleManager;
-    onVisibleRowsChange?:(data:Mutation[][]) => any;
+    onVisibleRowsChange?:(data:Mutation[][]) => void;
 };
 
 export default class MutationInformationContainer extends React.Component<IMutationInformationContainerProps, {}>

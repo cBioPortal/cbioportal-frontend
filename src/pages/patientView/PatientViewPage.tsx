@@ -88,7 +88,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         };
 
         this.handleSelect = this.handleSelect.bind(this);
-        this.lazyFetchVisibleRowData = this.lazyFetchVisibleRowData.bind(this);
 
         this.tsClient = new CBioPortalAPI(`//${(window as any)['__API_ROOT__']}`);
         this.tsInternalClient = new CBioPortalAPIInternal(`//${(window as any)['__API_ROOT__']}`);
@@ -269,9 +268,9 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         this.setState(({ activeTabKey : key } as IPatientViewState));
     }
 
-    private lazyFetchVisibleRowData(data:Mutation[][],
+    private lazyFetchVisibleRowData = (data:Mutation[][],
                                     requestMrnaExprRankData:(sampleToEntrezGeneIds:{ [sampleId:string]:Set<number> })=>any
-                                    ) {
+                                    ) => {
         const sampleToEntrezGeneIds:{ [sampleId:string]:Set<number> } = {};
         for (const mutations of data) {
             if (mutations.length > 0) {

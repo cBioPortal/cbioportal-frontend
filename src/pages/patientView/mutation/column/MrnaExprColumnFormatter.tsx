@@ -30,7 +30,7 @@ export default class MrnaExprColumnFormatter {
         }
     }
 
-    private static getTooltipContents(data:IColumnFormatterData<MutationTableRowData>, mrnaExprData: any) {
+    private static getTooltipContents(data:IColumnFormatterData<MutationTableRowData>, mrnaExprData: MrnaRankData) {
         const exprData = MrnaExprColumnFormatter.getData(data, mrnaExprData);
         if (exprData && exprData.status === "available") {
             return (
@@ -47,7 +47,7 @@ export default class MrnaExprColumnFormatter {
         }
     }
 
-    private static getTdContents(data:IColumnFormatterData<MutationTableRowData>, mrnaExprData: any) {
+    private static getTdContents(data:IColumnFormatterData<MutationTableRowData>, mrnaExprData: MrnaRankData) {
         const barWidth = 30;
         const circleRadius = 3;
         const barXLeft = 0;
@@ -108,7 +108,7 @@ export default class MrnaExprColumnFormatter {
         }
     }
 
-    private static getData(data: IColumnFormatterData<MutationTableRowData>, mrnaExprData:any) {
+    private static getData(data: IColumnFormatterData<MutationTableRowData>, mrnaExprData:MrnaRankData) {
         if (!data.rowData || data.rowData.length === 0) {
             return null;
         }
@@ -120,10 +120,10 @@ export default class MrnaExprColumnFormatter {
 
     public static renderFunction(data: IColumnFormatterData<MutationTableRowData>, columnProps: any) {
         const exprData = MrnaExprColumnFormatter.getData(data, columnProps.data);
-        return (<Td key={data.name} column={data.name} value={exprData? exprData.percentile : Number.POSITIVE_INFINITY}>
+        return (<Td key={data.name} column={data.name} value={(exprData && exprData.status === "available") ? exprData.percentile : Number.POSITIVE_INFINITY}>
             <Tooltip
                 placement="left"
-                overlay={MrnaExprColumnFormatter.getTooltipContents(data, columnProps.data)}
+                overlay={MrnaExprColumnFormatter.getTooltipContents(data, columnProps.data as MrnaRankData)}
                 arrowContent={<div className="rc-tooltip-arrow-inner"/>}
             >
                 {MrnaExprColumnFormatter.getTdContents(data, columnProps.data)}

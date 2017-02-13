@@ -145,19 +145,19 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
         this.filteredDataLength = props.rawData.length;
         this.shouldSetState = false;
 
-        const setFilteredDataLength = ((n:number) => {
+        const setFilteredDataLength = (n:number) => {
             if (n !== this.filteredDataLength) {
                 this.filteredDataLength = n;
                 this.shouldSetState = true;
             }
-        }).bind(this);
+        };
 
-        const sendVisibleRows = ((tableRenderResult:JSX.Element) => {
+        const sendVisibleRows = (tableRenderResult:JSX.Element) => {
             const tbodyElt = tableRenderResult.props.children.find((x:JSX.Element) => (x.type === "tbody"));
             const visibleRows = tbodyElt.props.children || [];
             this.props.onVisibleRowsChange &&
                 this.props.onVisibleRowsChange(visibleRows.map((r:JSX.Element) => r.props.rowData));
-        }).bind(this);
+        };
 
         const Table_applyFilter = Table.prototype.applyFilter;
         Table.prototype.applyFilter = function(){
