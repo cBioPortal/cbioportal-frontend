@@ -111,7 +111,7 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 name: "mRNA Expr.",
                 priority: 18.20,
                 formatter: MrnaExprColumnFormatter.renderFunction,
-                sortable: true,
+                sortable: false,
                 columnProps: {
                     data: this.props.mrnaExprRankData
                 }
