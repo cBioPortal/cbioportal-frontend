@@ -5,7 +5,7 @@ import EnhancedReactTable from "../../../shared/components/enhancedReactTable/En
 import {IColumnDefMap} from "../../../shared/components/enhancedReactTable/IEnhancedReactTableProps";
 
 // EnhancedReactTable is a generic component which requires data type argument
-class ReactTable extends EnhancedReactTable<MutationTableRowData> {};
+class ReactTable extends EnhancedReactTable<{}> {};
 
 export interface ICopyNumberAlterationsTableProps  {
 
@@ -16,40 +16,40 @@ export interface ICopyNumberAlterationsTableProps  {
 /**
  * @author Selcuk Onur Sumer
  */
-export default class MutationTable extends React.Component<ICopyNumberAlterationsTableProps, {}>
+export default class CopyNumberAlterationsTable extends React.Component<ICopyNumberAlterationsTableProps, {}>
 {
-    public static get defaultColumns():IColumnDefMap
+    public static get columns():IColumnDefMap
     {
         return {
 
             startPos: {
                 name: "Start Pos",
                 priority: 5.00,
-                dataField: "startPosition",
+                dataField: "sampleId",
                 sortable: true,
                 filterable: false
             },
-            endPos: {
-                name: "End Pos",
-                priority: 6.00,
-                dataField: "endPosition",
-                sortable: true,
-                filterable: false
-            },
-            referenceAllele: {
-                name: "Ref",
-                priority: 7.00,
-                dataField: "referenceAllele",
-                sortable: true,
-                filterable: false
-            },
-            variantAllele: {
-                name: "Var",
-                priority: 8.00,
-                dataField: "variantAllele",
-                sortable: true,
-                filterable: false
-            }
+            // endPos: {
+            //     name: "End Pos",
+            //     priority: 6.00,
+            //     dataField: "endPosition",
+            //     sortable: true,
+            //     filterable: false
+            // },
+            // referenceAllele: {
+            //     name: "Ref",
+            //     priority: 7.00,
+            //     dataField: "referenceAllele",
+            //     sortable: true,
+            //     filterable: false
+            // },
+            // variantAllele: {
+            //     name: "Var",
+            //     priority: 8.00,
+            //     dataField: "variantAllele",
+            //     sortable: true,
+            //     filterable: false
+            // }
         };
     };
 
@@ -61,48 +61,37 @@ export default class MutationTable extends React.Component<ICopyNumberAlteration
 
     public render()
     {
-        const {
-            reactTableProps,
-            initItemsPerPage,
-            headerControlsProps,
-            columns,
-            rawData
-        } = this.props;
+
+        const defaultProps:ICopyNumberAlterationsTableProps = {
+            title: "Copy Number Alterations",
+            rawData: [],
+            initItemsPerPage: 25,
+            headerControlsProps: {
+                showPagination: true,
+                copyDownloadClassName: "pull-right",
+                searchClassName: "pull-left",
+            },
+            reactTableProps: {
+                className: "table table-striped table-border-top",
+                hideFilterInput:true
+            }
+        };
+
+
+        console.log(this);
 
         return(
             <div>
                 <ReactTable
-                    itemsName="mutations"
-                    reactTableProps={reactTableProps}
-                    initItemsPerPage={initItemsPerPage}
-                    headerControlsProps={headerControlsProps}
-                    columns={columns}
-                    rawData={rawData}
+                    reactTableProps={defaultProps.reactTableProps}
+                    initItemsPerPage={defaultProps.initItemsPerPage}
+                    headerControlsProps={defaultProps.headerControlsProps}
+                    columns={CopyNumberAlterationsTable.columns}
+                    rawData={this.props.rawData}
                 />
             </div>
         );
     }
 
-    // private mergeProps(props:IMutationTableProps):IMutationTableProps
-    // {
-    //     const defaultProps:IMutationTableProps = {
-    //         title: "Mutations",
-    //         rawData: [],
-    //         columns: MutationTable.defaultColumns,
-    //         initItemsPerPage: 25,
-    //         headerControlsProps: {
-    //             showPagination: true,
-    //             copyDownloadClassName: "pull-right",
-    //             searchClassName: "pull-left",
-    //         },
-    //         reactTableProps: {
-    //             className: "table table-striped table-border-top",
-    //             hideFilterInput:true
-    //         }
-    //     };
-    //
-    //     // merge provided props with the default props
-    //     return _.merge(defaultProps, props);
-    // }
 };
 

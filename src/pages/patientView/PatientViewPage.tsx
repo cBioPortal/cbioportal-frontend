@@ -33,6 +33,7 @@ import {IVariantCountData} from "./mutation/column/CohortColumnFormatter";
 
 import {IHotspotData, IMyCancerGenomeData, IMyCancerGenome} from "./mutation/column/AnnotationColumnFormatter";
 import {getSpans} from './clinicalInformation/lib/clinicalAttributesUtil.js';
+import CopyNumberAlterationsTable from "./copyNumberAlterations/CopyNumberAlterationsTable";
 
 
 export interface IPatientViewPageProps {
@@ -264,6 +265,18 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     }
 
+    fetchDiscreteCnaData(_sampleIds: string[]) {
+
+
+        //const ids: SampleIdentifier[] = _sampleIds.map((id: string) => { return { sampleId:id, studyId: this.studyId }; });
+        this.tsClient.fetchDiscreteCopyNumbersInGeneticProfileUsingPOST({
+            projection:'DETAILED',
+            sampleIds: _sampleIds,
+            geneticProfileId: this.studyId + '_gistic'
+        }).then((data)=>console.log(data));
+
+    }
+
     fetchMutationData(_sampleIds: string[]) {
 
         let mutationDataPromise = this.tsClient.fetchMutationsInGeneticProfileUsingPOST({geneticProfileId: this.mutationGeneticProfileId, sampleIds: _sampleIds, projection: "DETAILED"});
@@ -393,6 +406,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 this.fetchCnaSegmentData(sampleIds).then((_result) => {
                     this.setState(({ cnaSegmentData:  _result } as IPatientViewState));
                 });
+
+                this.fetchDiscreteCnaData(sampleIds);
 
                 this.fetchMyCancerGenomeData().then((_result) => {
                     this.setState(({myCancerGenomeData: _result} as IPatientViewState));
@@ -555,7 +570,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 </If>
 
                 <Tabs animation={false} activeKey={this.state.activeTabKey} onSelect={this.handleSelect as SelectCallback} className="mainTabs" unmountOnExit={true}>
-                    <Tab eventKey={1} title="Summary">
+                    <Tab eventKey={2} title="Summary">
 
                         <FeatureTitle title="Genomic Overview" isLoading={ !(this.state.mutationData && this.state.cnaSegmentData) } />
 
@@ -595,10 +610,14 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             )
                         }
                     </Tab>
-                    <Tab eventKey={2} title="Copy Number Alterations">
+                    <Tab eventKey={1} title="Copy Number Alterations">
                         <FeatureTitle title="Copy Number Alteractions" isLoading={ !(this.state.cnaSegmentData) } />
 
-
+                        {
+                            (this.state.cnaSegmentData) && (
+                                <CopyNumberAlterationsTable rawData={this.state.cnaSegmentData}/>
+                            )
+                        }
 
 
                     </Tab>
