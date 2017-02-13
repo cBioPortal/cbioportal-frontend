@@ -113,7 +113,7 @@ export default class MutationInformationContainer extends React.Component<IMutat
             copyNumber: {
                 name: "Copy #",
                 priority: 18.10,
-                sortable: true
+                sortable: false
             },
             mRnaExp: {
                 name: "mRNA Expr.",
