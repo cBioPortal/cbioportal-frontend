@@ -9,7 +9,10 @@ import exposeComponentRenderer from '../../shared/lib/exposeComponentRenderer';
 import GenomicOverview from './genomicOverview/GenomicOverview';
 import mockData from './mock/sampleData.json';
 import Connector, { ClinicalInformationData } from "./Connector";
-import {ClinicalData, SampleIdentifier, GeneticProfile} from "shared/api/CBioPortalAPI";
+import {
+    ClinicalData, SampleIdentifier, GeneticProfile, DiscreteCopyNumberFilter,
+    DiscreteCopyNumberData
+} from "shared/api/CBioPortalAPI";
 import { ClinicalDataBySampleId } from "../../shared/api/api-types-extended";
 import { RequestStatus } from "../../shared/api/api-types-extended";
 import { default as CBioPortalAPI, Mutation }  from "../../shared/api/CBioPortalAPI";
@@ -61,6 +64,7 @@ interface IPatientViewState {
     mutSigData?: MutSigData;
     variantCountData?: IVariantCountData;
     activeTabKey: number;
+    discreteCnaData?: DiscreteCopyNumberData[];
 }
 
 @Connector.decorator
@@ -102,7 +106,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             hotspotsData: undefined,
             mrnaExprRankData: undefined,
             variantCountData: undefined,
-            activeTabKey:1
+            activeTabKey:1,
+            discreteCnaData:undefined
         };
 
         this.handleSelect = this.handleSelect.bind(this);
@@ -266,14 +271,11 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     }
 
     fetchDiscreteCnaData(_sampleIds: string[]) {
-
-
-        //const ids: SampleIdentifier[] = _sampleIds.map((id: string) => { return { sampleId:id, studyId: this.studyId }; });
-        this.tsClient.fetchDiscreteCopyNumbersInGeneticProfileUsingPOST({
+        return this.tsClient.fetchDiscreteCopyNumbersInGeneticProfileUsingPOST({
             projection:'DETAILED',
-            sampleIds: _sampleIds,
+            discreteCopyNumberFilter:{ sampleIds:  _sampleIds } as DiscreteCopyNumberFilter,
             geneticProfileId: this.studyId + '_gistic'
-        }).then((data)=>console.log(data));
+        });
 
     }
 
@@ -354,7 +356,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     }
                 }
             }
-            const fetchPromise = this.tsInternalClient.getVariantCountsUsingPOST({
+            const fetchPromise = this.tsInternalClient.fetchVariantCountsUsingPOST({
                 geneticProfileId: this.mutationGeneticProfileId,
                 variantCountIdentifiers
             });
@@ -407,7 +409,10 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     this.setState(({ cnaSegmentData:  _result } as IPatientViewState));
                 });
 
-                this.fetchDiscreteCnaData(sampleIds);
+                this.fetchDiscreteCnaData(sampleIds).then((_result)=>{
+                    console.log(_result);
+                    this.setState(({ discreteCnaData:_result } as IPatientViewState))
+                });
 
                 this.fetchMyCancerGenomeData().then((_result) => {
                     this.setState(({myCancerGenomeData: _result} as IPatientViewState));
@@ -570,7 +575,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 </If>
 
                 <Tabs animation={false} activeKey={this.state.activeTabKey} onSelect={this.handleSelect as SelectCallback} className="mainTabs" unmountOnExit={true}>
-                    <Tab eventKey={2} title="Summary">
+                    <Tab eventKey={1} title="Summary">
 
                         <FeatureTitle title="Genomic Overview" isLoading={ !(this.state.mutationData && this.state.cnaSegmentData) } />
 
@@ -610,13 +615,14 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             )
                         }
                     </Tab>
-                    <Tab eventKey={1} title="Copy Number Alterations">
-                        <FeatureTitle title="Copy Number Alteractions" isLoading={ !(this.state.cnaSegmentData) } />
+                    <Tab eventKey={2} title="Copy Number Alterations">
+                        <FeatureTitle title="Copy Number Alterations" isLoading={ !this.state.discreteCnaData } />
 
                         {
-                            (this.state.cnaSegmentData) && (
-                                <CopyNumberAlterationsTable rawData={this.state.cnaSegmentData}/>
+                            (this.state.discreteCnaData) && (
+                                <CopyNumberAlterationsTable rawData={this.state.discreteCnaData} />
                             )
+
                         }
 
 

@@ -1,16 +1,17 @@
 import * as React from 'react';
-import * as _ from 'lodash';
-
 import EnhancedReactTable from "../../../shared/components/enhancedReactTable/EnhancedReactTable";
-import {IColumnDefMap} from "../../../shared/components/enhancedReactTable/IEnhancedReactTableProps";
+import {
+    IColumnDefMap
+} from "../../../shared/components/enhancedReactTable/IEnhancedReactTableProps";
+import {DiscreteCopyNumberData} from "../../../shared/api/CBioPortalAPI";
+import {IColumnFormatterData} from "../../../shared/components/enhancedReactTable/IColumnFormatter";
+import {ITableHeaderControlsProps} from "../../../shared/components/tableHeaderControls/TableHeaderControls";
 
 // EnhancedReactTable is a generic component which requires data type argument
 class ReactTable extends EnhancedReactTable<{}> {};
 
 export interface ICopyNumberAlterationsTableProps  {
-
-
-
+    rawData:DiscreteCopyNumberData[]
 };
 
 /**
@@ -21,71 +22,46 @@ export default class CopyNumberAlterationsTable extends React.Component<ICopyNum
     public static get columns():IColumnDefMap
     {
         return {
-
-            startPos: {
-                name: "Start Pos",
+            gene: {
+                name: "Gene",
                 priority: 5.00,
-                dataField: "sampleId",
+                columnDataFunction: (data: IColumnFormatterData<DiscreteCopyNumberData>)=>{ return data.rowData!.gene.hugoGeneSymbol },
                 sortable: true,
-                filterable: false
+                filterable: true
             },
-            // endPos: {
-            //     name: "End Pos",
-            //     priority: 6.00,
-            //     dataField: "endPosition",
-            //     sortable: true,
-            //     filterable: false
-            // },
-            // referenceAllele: {
-            //     name: "Ref",
-            //     priority: 7.00,
-            //     dataField: "referenceAllele",
-            //     sortable: true,
-            //     filterable: false
-            // },
-            // variantAllele: {
-            //     name: "Var",
-            //     priority: 8.00,
-            //     dataField: "variantAllele",
-            //     sortable: true,
-            //     filterable: false
-            // }
+
+            cytoBand: {
+                name: "Cytoband",
+                priority: 5.00,
+                columnDataFunction: (data: IColumnFormatterData<DiscreteCopyNumberData>)=>{ return data.rowData!.gene.cytoband },
+                sortable: true,
+                filterable: true
+            },
         };
     };
+
+    private headerControlsProps:ITableHeaderControlsProps;
 
     constructor(props:ICopyNumberAlterationsTableProps)
     {
         super(props);
         this.state = {};
+
+        this.headerControlsProps = {
+            showPagination: true,
+            copyDownloadClassName: "pull-right",
+            searchClassName: "pull-left",
+        }
     }
 
-    public render()
-    {
+    public render() {
 
-        const defaultProps:ICopyNumberAlterationsTableProps = {
-            title: "Copy Number Alterations",
-            rawData: [],
-            initItemsPerPage: 25,
-            headerControlsProps: {
-                showPagination: true,
-                copyDownloadClassName: "pull-right",
-                searchClassName: "pull-left",
-            },
-            reactTableProps: {
-                className: "table table-striped table-border-top",
-                hideFilterInput:true
-            }
-        };
-
-
-        console.log(this);
-
-        return(
+        return (
             <div>
                 <ReactTable
-                    reactTableProps={defaultProps.reactTableProps}
-                    initItemsPerPage={defaultProps.initItemsPerPage}
-                    headerControlsProps={defaultProps.headerControlsProps}
+                    reactTableProps={{ className:"table table-striped table-border-top", hideFilterInput:true }}
+                    initItemsPerPage={25}
+                    headerControlsProps={this.headerControlsProps}
                     columns={CopyNumberAlterationsTable.columns}
                     rawData={this.props.rawData}
                 />
