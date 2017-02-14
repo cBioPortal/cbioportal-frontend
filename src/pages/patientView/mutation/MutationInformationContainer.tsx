@@ -13,7 +13,7 @@ import SampleManager from "../sampleManager";
 import {
     default as AnnotationColumnFormatter, IHotspotData, IMyCancerGenomeData
 } from "./column/AnnotationColumnFormatter";
-import { MutSigData, MrnaRankData } from "../PatientViewPage";
+import { MutSigData } from "../PatientViewPage";
 import {
     default as CosmicColumnFormatter, ICosmicData
 } from "../../../shared/components/mutationTable/column/CosmicColumnFormatter";
