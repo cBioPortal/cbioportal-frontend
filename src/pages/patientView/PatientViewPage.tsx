@@ -399,9 +399,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 });
 
                 this.fetchMutationData(sampleIds).then((_result) => {
-                    this.fetchHotspotsData(_result).then((hotspotsData:IHotspotData) => {
-                        this.setState(({ hotspotsData } as IPatientViewState));
-                    });
                     this.fetchVariantCountData(_result).then((variantCountData:IVariantCountData) => {
                         this.setState(({ variantCountData } as IPatientViewState));
                     });
