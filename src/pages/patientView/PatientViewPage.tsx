@@ -28,7 +28,6 @@ import {
 } from "../../shared/api/CBioPortalAPIInternal";
 import PatientHeader from './patientHeader/PatientHeader';
 import {TablePaginationControls} from "../../shared/components/tablePaginationControls/TablePaginationControls";
-import {IHotspotData} from "./mutation/column/AnnotationColumnFormatter";
 import {MrnaRankData} from "./mutation/column/MrnaExprColumnFormatter";
 import { PatientViewPageStore } from './clinicalInformation/PatientViewPageStore';
 import ClinicalInformationPatientTable from "./clinicalInformation/ClinicalInformationPatientTable";
@@ -531,7 +530,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                     myCancerGenomeData={this.state.myCancerGenomeData}
                                     hotspots={this.state.hotspotsData}
                                     cosmicData={this.state.cosmicData}
-                                    mrnaExprRankData={this.state.mrnaExprRankData}
                                     mrnaExprRankData={patientViewPageStore.mrnaExprRankData.isComplete ? patientViewPageStore.mrnaExprRankData.result : undefined }
                                     mutSigData={this.state.mutSigData}
                                     variantCountData={this.state.variantCountData}
