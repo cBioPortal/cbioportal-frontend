@@ -173,18 +173,16 @@ export class PatientViewPageStore
                 // Reference to new immutable map
                 // See which we need to fetch, and set "pending" for those data
                 const toQuery:{ [sampleId:string]:number[]} = {};
-                for (const sampleId in sampleToEntrezGeneIds) {
-                    if (sampleToEntrezGeneIds.hasOwnProperty(sampleId)) {
+                _.forEach(sampleToEntrezGeneIds, (entrezGeneIds:number[], sampleId:string) => {
                         this.mrnaExprRankData[sampleId] = this.mrnaExprRankData[sampleId] || {};
-                        for (const entrezGeneId of sampleToEntrezGeneIds[sampleId]) {
+                        for (const entrezGeneId of entrezGeneIds) {
                             if (!this.mrnaExprRankData[sampleId].hasOwnProperty(entrezGeneId)) {
                                 toQuery[sampleId] = toQuery[sampleId] || [];
                                 toQuery[sampleId].push(entrezGeneId);
                                 this.mrnaExprRankData[sampleId][entrezGeneId] = { status:"pending" };
                             }
                         }
-                    }
-                }
+                });
                 // Fetch that data
                 const mrnaPercentiles: MrnaPercentile[] = [];
                 const fetchAllMrnaPercentilesPromise = Promise.all(Object.keys(toQuery).map((sampleId:string) =>
@@ -199,7 +197,7 @@ export class PatientViewPageStore
                                 entrezGeneIds
                             });
                             fetchMrnaPercentilesPromise.then((d) => {
-                                mrnaPercentiles.push.apply(mrnaPercentiles, d);
+                                mrnaPercentiles.push(...d);
                                 sampleResolve();
                             });
                             fetchMrnaPercentilesPromise.catch(() => sampleReject());
