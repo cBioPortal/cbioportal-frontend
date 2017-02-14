@@ -53,7 +53,6 @@ interface IPatientViewState {
     cnaSegmentData: any;
     mutationData: any;
     hotspotsData?: IHotspotData;
-    mrnaExprRankData?: MrnaRankData;
     mutSigData?: MutSigData;
     activeTabKey: number;
 }
@@ -85,7 +84,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             mutationData: undefined,
             cnaSegmentData: undefined,
             hotspotsData: undefined,
-            mrnaExprRankData: undefined,
             activeTabKey:1
         };
 
@@ -270,6 +268,19 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         this.setState(({ activeTabKey : key } as IPatientViewState));
     }
 
+    private lazyFetchVisibleRowData = (data:Mutation[][],
+                                    requestMrnaExprRankData:(sampleToEntrezGeneIds:{ [sampleId:string]:Set<number> })=>any
+                                    ) => {
+        const sampleToEntrezGeneIds:{ [sampleId:string]:Set<number> } = {};
+        for (const mutations of data) {
+            if (mutations.length > 0) {
+                sampleToEntrezGeneIds[mutations[0].sampleId] = sampleToEntrezGeneIds[mutations[0].sampleId] || new Set();
+                sampleToEntrezGeneIds[mutations[0].sampleId].add(mutations[0].entrezGeneId);
+            }
+        }
+        requestMrnaExprRankData(sampleToEntrezGeneIds);
+    }
+
     public render() {
 
         let sampleManager: SampleManager | null = null;
@@ -350,7 +361,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 <MutationInformationContainer
                                     mutations={this.state.mutationData}
                                     hotspots={this.state.hotspotsData}
-                                    mrnaExprRankData={patientViewPageStore.mrnaExprRankData.isComplete ? patientViewPageStore.mrnaExprRankData.result : undefined }
+                                    mrnaExprRankData={ patientViewPageStore.mrnaExprRankData }
                                     mutSigData={this.state.mutSigData}
                                     sampleOrder={sampleManager.sampleOrder}
                                     sampleLabels={sampleManager.sampleLabels}
@@ -358,6 +369,9 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                     sampleTumorType={mockData.tumorType}
                                     sampleCancerType={mockData.cancerType}
                                     sampleManager={ sampleManager }
+                                    onVisibleRowsChange={ patientViewPageStore.requestMrnaExprRankData.isComplete
+                                    ? (data:Mutation[][]) => this.lazyFetchVisibleRowData(data, patientViewPageStore.requestMrnaExprRankData.result)
+                                    : undefined}
                                 />
                             )
                         }
