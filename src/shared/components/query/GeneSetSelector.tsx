@@ -5,6 +5,7 @@ import ReactSelect from 'react-select';
 import {observer} from "../../../../node_modules/mobx-react/index";
 import {FlexRow, FlexCol} from "../flexbox/FlexBox";
 import gene_lists from './gene_lists';
+import GeneSymbolValidator from "./GeneSymbolValidator";
 
 const styles = styles_any as {
 	GeneSetSelector: string,
@@ -62,6 +63,8 @@ export default class GeneSetSelector extends React.Component<{}, {}>
 						this.store.geneSet = (event.target as HTMLTextAreaElement).value;
 					}}
 				/>
+
+				<GeneSymbolValidator/>
 			</FlexCol>
 		);
 	}
