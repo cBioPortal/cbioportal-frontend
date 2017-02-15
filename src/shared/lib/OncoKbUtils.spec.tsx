@@ -1,20 +1,20 @@
-import * as SortUtils from './SortUtils';
+import * as OncoKbUtils from './OncoKbUtils';
 import React from 'react';
 import { assert } from 'chai';
 import { shallow, mount } from 'enzyme';
 import sinon from 'sinon';
 
-describe('SortUtils', () => {
+describe('OncoKbUtils', () => {
 
-    before(()=>{
-
-    });
-
-    after(()=>{
+    before(() => {
 
     });
 
-    it('what does it do?', ()=>{
+    after(() => {
+
+    });
+
+    it('what does it do?', () => {
 
     });
 
