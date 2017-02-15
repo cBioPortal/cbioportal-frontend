@@ -37,6 +37,8 @@ import {IVariantCountData} from "./mutation/column/CohortColumnFormatter";
 import {observer} from "mobx-react";
 import {IHotspotData, IMyCancerGenomeData, IMyCancerGenome} from "./mutation/column/AnnotationColumnFormatter";
 import {getSpans} from './clinicalInformation/lib/clinicalAttributesUtil.js';
+import CopyNumberAlterationsTable from "./copyNumberAlterations/CopyNumberAlterationsTable";
+import CopyNumberTableWrapper from "./copyNumberAlterations/CopyNumberTableWrapper";
 
 const patientViewPageStore = new PatientViewPageStore();
 
@@ -55,7 +57,6 @@ export type MrnaRankData = { [sampleId:string]: { [entrezGeneId:string]: {percen
 export type MutSigData = { [entrezGeneId:string]:{ qValue:number } }
 
 interface IPatientViewState {
-
     cnaSegmentData: any;
     mutationData: any;
     myCancerGenomeData?: IMyCancerGenomeData;
@@ -303,7 +304,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     }
                 }
             }
-            const fetchPromise = this.tsInternalClient.getVariantCountsUsingPOST({
+            const fetchPromise = this.tsInternalClient.fetchVariantCountsUsingPOST({
                 geneticProfileId: this.mutationGeneticProfileId,
                 variantCountIdentifiers
             });
@@ -543,7 +544,12 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             )
                         }
                     </Tab>
-                    <Tab eventKey={1} id="clinicalDataTab" title="Clinical Data">
+                    <Tab eventKey={1} id="discreteCNAData" title="Copy Number Alterations">
+
+                        <CopyNumberTableWrapper store={patientViewPageStore} />
+
+                    </Tab>
+                    <Tab eventKey={3} id="clinicalDataTab" title="Clinical Data">
 
                             <div className="clearfix">
                             <FeatureTitle title="Patient" isLoading={ patientViewPageStore.clinicalDataPatient.isPending } className="pull-left" />
