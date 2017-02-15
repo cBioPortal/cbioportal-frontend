@@ -34,6 +34,7 @@ export interface IMutationInformationContainerProps {
     sampleCancerType:{ [s:string]: string};
     sampleManager:SampleManager;
     onVisibleRowsChange?:(data:Mutation[][]) => void;
+    onSort?:(columnName:string)=>void; // executed whenever a column is clicked to sort
 };
 
 export default class MutationInformationContainer extends React.Component<IMutationInformationContainerProps, {}>
@@ -222,7 +223,8 @@ export default class MutationInformationContainer extends React.Component<IMutat
         return (
             <div>
                 <MutationTable rawData={this.mergedMutationsSelector(this.state, this.props)} columns={columns}
-                                onVisibleRowsChange={this.props.onVisibleRowsChange} />
+                                onVisibleRowsChange={this.props.onVisibleRowsChange}
+                                onSort={this.props.onSort} />
             </div>
         );
     }

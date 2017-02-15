@@ -5,6 +5,7 @@ import DefaultTooltip from 'shared/components/DefaultTooltip';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {MutationTableRowData} from "../../../../shared/components/mutationTable/IMutationTableProps";
 import {MutSigData} from "../../PatientViewPage";
+import LoadingText from "shared/components/mutationTable/column/LoadingText";
 
 export interface IVariantCountData {
     numberOfSamples?:number;
@@ -23,8 +24,14 @@ export default class CohortColumnFormatter {
         return (
             <Td key={data.name} column={data.name} value={variantCountData && variantCountData.numberOfSamplesWithMutationInGene}>
                 <div>
+                { (!!variantCountData) && (
+                <div>
                     {(freqViz !== null) && freqViz}
                     {(mutSigQValue !== null) && CohortColumnFormatter.makeMutSigIcon(mutSigQValue)}
+                </div>)}
+                { (!variantCountData) && (
+                    <LoadingText/>
+                )}
                 </div>
             </Td>
         );
@@ -35,11 +42,16 @@ export default class CohortColumnFormatter {
             return null;
         }
         const entrezGeneId = data.rowData[0].entrezGeneId;
+        const geneData = variantCountData.geneData[entrezGeneId];
+
+        if (!geneData) {
+            return null;
+        }
+
         const hugoGeneSymbol = data.rowData[0].gene.hugoGeneSymbol;
         const keyword = data.rowData[0].keyword;
 
         const numberOfSamples = variantCountData.numberOfSamples;
-        const geneData = variantCountData.geneData[entrezGeneId];
 
         let numberOfSamplesWithMutationInGene, numberOfSamplesWithKeyword;
         if (geneData) {
@@ -114,6 +126,7 @@ export default class CohortColumnFormatter {
 
     private static getCohortFrequencyTooltip(variantCount:any) {
         return (<div>
+            {(!!variantCount) && (
             <span>{variantCount.numberOfSamplesWithMutationInGene} samples
             ({CohortColumnFormatter.getBoldPercentage(variantCount.numberOfSamplesWithMutationInGene / variantCount.numberOfSamples)})
             in this study have mutated {variantCount.hugoGeneSymbol}
@@ -123,7 +136,10 @@ export default class CohortColumnFormatter {
                     </span>
                 )}
                 .
-            </span>
+            </span>)}
+            {(!variantCount) && (
+                <span>Querying server for data.</span>
+            )}
         </div>);
 
     }
