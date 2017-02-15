@@ -55,7 +55,6 @@ export type MutSigData = { [entrezGeneId:string]:{ qValue:number } }
 
 interface IPatientViewState {
 
-    cnaSegmentData: any;
     mutationData: any;
     myCancerGenomeData?: IMyCancerGenomeData;
     hotspotsData?: IHotspotData;
@@ -90,7 +89,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         this.state = {
             mutationData: undefined,
-            cnaSegmentData: undefined,
             hotspotsData: undefined,
             variantCountData: undefined,
             activeTabKey:1
@@ -324,10 +322,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                 let sampleIds: string[] = this.props.samples.map((item: ClinicalDataBySampleId)=>item.id);
 
-                this.fetchCnaSegmentData(sampleIds).then((_result) => {
-                    this.setState(({ cnaSegmentData:  _result } as IPatientViewState));
-                });
-
                 this.fetchMyCancerGenomeData().then((_result) => {
                     this.setState(({myCancerGenomeData: _result} as IPatientViewState));
                 });
@@ -475,15 +469,15 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 }
 
                 <Tabs animation={false} activeKey={this.state.activeTabKey} id="patientViewPageTabs" onSelect={this.handleSelect as SelectCallback} className="mainTabs" unmountOnExit={true}>
-                    <Tab eventKey={2} id="summaryTab" title="Summary">
+                    <Tab eventKey={1} id="summaryTab" title="Summary">
 
-                        <FeatureTitle title="Genomic Data" isLoading={ !(this.state.mutationData && this.state.cnaSegmentData) } />
+                        <FeatureTitle title="Genomic Data" isLoading={ (patientViewPageStore.mutationData.isPending || patientViewPageStore.cnaSegments.isPending) } />
 
                         {
-                            (this.state.mutationData && this.state.cnaSegmentData && sampleManager) && (
+                            (patientViewPageStore.mutationData.isComplete && patientViewPageStore.cnaSegments.isComplete && sampleManager) && (
                                 <GenomicOverview
-                                    mutations={this.state.mutationData}
-                                    cnaSegments={this.state.cnaSegmentData}
+                                    mutations={patientViewPageStore.mutationData.result}
+                                    cnaSegments={patientViewPageStore.cnaSegments.result}
                                     sampleOrder={sampleManager.sampleIndex}
                                     sampleLabels={sampleManager.sampleLabels}
                                     sampleColors={sampleManager.sampleColors}
@@ -516,7 +510,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             )
                         }
                     </Tab>
-                    <Tab eventKey={1} id="clinicalDataTab" title="Clinical Data">
+                    <Tab eventKey={2} id="clinicalDataTab" title="Clinical Data">
 
                             <div className="clearfix">
                             <FeatureTitle title="Patient" isLoading={ patientViewPageStore.clinicalDataPatient.isPending } className="pull-left" />
