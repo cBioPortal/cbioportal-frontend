@@ -7,7 +7,11 @@ import {
 import {ClinicalInformationData} from "../Connector";
 import client from "../../../shared/api/cbioportalClientInstance";
 import {computed, observable, action, reaction, autorun} from "mobx";
+import oncokbClient from "../../../shared/api/oncokbClientInstance";
 import {remoteData} from "../../../shared/api/remoteData";
+import {IOncoKbData} from "../mutation/column/AnnotationColumnFormatter";
+import {generateQueryVariant, generateEvidenceQuery} from "../../../shared/lib/OncoKbUtils";
+import {IndicatorQueryResp} from "shared/api/generated/OncoKbAPI";
 import {labelMobxPromises} from "../../../shared/api/MobxPromise";
 import MrnaExprRankCache from './MrnaExprRankCache';
 import DebouncingCache from "./DebouncingCache";
@@ -264,6 +268,71 @@ export class PatientViewPageStore
                 return [];
             }
     }}, []);
+
+
+    readonly oncoKbData = remoteData<IOncoKbData>({
+        await: () => [
+            this.mutationData,
+            this.clinicalDataForSamples
+        ],
+        invoke: () => {
+            // generate sample id to cancer type mapping
+            const generateSampleToTumorMap = function(data:ClinicalData[]) {
+                const map:{[sampleId:string]: string} = {};
+
+                _.each(data, function(clinicalData) {
+                    if (clinicalData.clinicalAttributeId === "CANCER_TYPE") {
+                        map[clinicalData.entityId] = clinicalData.value;
+                    }
+                });
+
+                return map;
+            };
+
+            // generate query id to indicator map
+            const generateIdToIndicatorMap = function(data:IndicatorQueryResp[]) {
+                const map:{[id:string]: IndicatorQueryResp} = {};
+
+                _.each(data, function(indicator) {
+                    map[indicator.query.id] = indicator;
+                });
+
+                return map;
+            };
+
+            const sampleIdToTumorType = generateSampleToTumorMap(this.clinicalDataForSamples.result);
+
+            const queryVariants = _.uniqBy(_.map(this.mutationData.result, function(mutation:Mutation) {
+                return generateQueryVariant(mutation.gene.hugoGeneSymbol,
+                    mutation.mutationType,
+                    mutation.proteinChange,
+                    mutation.proteinPosStart,
+                    mutation.proteinPosEnd,
+                    sampleIdToTumorType[mutation.sampleId]);
+            }), "id");
+
+            return new Promise((resolve, reject) => {
+                const oncokbSearchPromise = oncokbClient.searchPostUsingPOST(
+                    {body: generateEvidenceQuery(queryVariants)});
+
+                // TODO return type is not correct for the auto-generated API!
+                // generated return type is Array<IndicatorQueryResp>,
+                // but the actual return type is {meta: {} data: Array<IndicatorQueryResp>}
+                // that's why here we need to force data type to be any and get actual data by data.data
+                oncokbSearchPromise.then((data:any) => {
+                    const oncoKbData:IOncoKbData = {
+                        sampleToTumorMap: sampleIdToTumorType,
+                        indicatorMap: generateIdToIndicatorMap(data.data)
+                    };
+
+                    resolve(oncoKbData);
+                });
+
+                oncokbSearchPromise.catch(() => reject());
+            });
+        }
+    }, {sampleToTumorMap: {}, indicatorMap: {}});
+
 
     @action("SetSampleId") setSampleId(newId: string) {
         if (newId)
