@@ -11,7 +11,7 @@ import {IVariantCountData, default as CohortColumnFormatter} from "./column/Coho
 import { Mutation } from "../../../shared/api/generated/CBioPortalAPI";
 import SampleManager from "../sampleManager";
 import {
-    default as AnnotationColumnFormatter, IHotspotData, IMyCancerGenomeData
+    default as AnnotationColumnFormatter, IHotspotData, IMyCancerGenomeData, IOncoKbData
 } from "./column/AnnotationColumnFormatter";
 import { MutSigData } from "../PatientViewPage";
 import {
@@ -21,9 +21,10 @@ import {
 
 export interface IMutationInformationContainerProps {
     mutations: Array<Mutation>;
-    myCancerGenomeData?: IMyCancerGenomeData
+    myCancerGenomeData?: IMyCancerGenomeData;
     hotspots?: IHotspotData;
     cosmicData?: ICosmicData;
+    oncoKbData?: IOncoKbData;
     mrnaExprRankData?: MrnaRankData;
     mutSigData?: MutSigData;
     variantCountData?: IVariantCountData;
@@ -107,6 +108,8 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 columnProps: {
                     hotspots: this.props.hotspots,
                     myCancerGenomeData: this.props.myCancerGenomeData,
+                    oncoKbData: this.props.oncoKbData,
+                    enableOncoKb: true,
                     enableMyCancerGenome: true,
                     enableHotspot: true
                 }
