@@ -240,6 +240,12 @@
   button {
   }
 
-  input.geneSet {
+  textarea.geneSet {
+
+    &.empty {
+    }
+    &.notEmpty {
+      text-transform: uppercase;
+    }
   }
 }

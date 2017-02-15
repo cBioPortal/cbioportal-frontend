@@ -1,17 +1,25 @@
 import * as _ from 'lodash';
 import client from "../../api/cbioportalClientInstance";
 import {toJS, observable, reaction, action, computed, whyRun, expr} from "../../../../node_modules/mobx/lib/mobx";
-import {TypeOfCancer as CancerType, GeneticProfile, CancerStudy, SampleList} from "../../api/CBioPortalAPI";
+import {TypeOfCancer as CancerType, GeneticProfile, CancerStudy, SampleList, Gene} from "../../api/CBioPortalAPI";
 import CancerStudyTreeData from "./CancerStudyTreeData";
 import StudyListLogic from "../StudyList/StudyListLogic";
 import {remoteData} from "../../api/remoteData";
 import {labelMobxPromises} from "../../api/MobxPromise";
 import internalClient from "../../api/cbioportalInternalClientInstance";
 import {MutSig, Gistic} from "../../api/CBioPortalAPIInternal";
+import oql_parser from "../../lib/oql/oql-parser";
+import {SyntaxError} from "../../lib/oql/oql-parser";
+import memoize from "../../lib/memoize";
 
 export type PriorityStudies = {
 	[category:string]: string[]
 };
+
+function isInteger(str:string)
+{
+	return Number.isInteger(Number(str));
+}
 
 // mobx observable
 export class QueryStore
@@ -33,7 +41,7 @@ export class QueryStore
 			'selectedSampleListId',
 			'caseIds',
 			'caseIdsMode',
-			'geneSet',
+			'geneQuery',
 		];
 		return _.pick(this, keys);
 	}
@@ -144,7 +152,7 @@ export class QueryStore
 
 	@observable caseIdsMode:'sample'|'patient' = 'sample';
 
-	@observable geneSet = '';
+	@observable geneQuery = '9 99 CFD FD FF DD';
 
 
 	////////////////////////////////////////////////////////////////////////////////
@@ -224,6 +232,42 @@ export class QueryStore
 		},
 		default: []
 	});
+
+	//TODO - delay this
+	readonly genes = remoteData<{found: Gene[], suggestions: {alias: string, genes: Gene[]}[]}>({
+		invoke: async () => {
+			let [entrezIds, hugoIds] = _.partition(this.geneIds, isInteger);
+
+			let entrezPromise:Promise<Gene[]>;
+			if (entrezIds.length)
+				entrezPromise = client.fetchGenesUsingPOST({geneIdType: "ENTREZ_GENE_ID", geneIds: entrezIds});
+			else
+				entrezPromise = Promise.resolve([]);
+
+			let hugoPromise:Promise<Gene[]>;
+			if (hugoIds.length)
+				hugoPromise = client.fetchGenesUsingPOST({geneIdType: "HUGO_GENE_SYMBOL", geneIds: hugoIds});
+			else
+				hugoPromise = Promise.resolve([]);
+
+			let [entrezGenes, hugoGenes] = await Promise.all([entrezPromise, hugoPromise]);
+			let found = [...entrezGenes, ...hugoGenes];
+			let missingEntrezIds = _.difference(entrezIds, entrezGenes.map(gene => gene.entrezGeneId + ''));
+			let missingHugoIds = _.difference(hugoIds, hugoGenes.map(gene => gene.hugoGeneSymbol));
+			let missingIds = _.union(missingEntrezIds, missingHugoIds);
+			let suggestions = await Promise.all(missingIds.map(alias => this.getGeneSuggestions(alias)));
+			return {found, suggestions};
+		},
+		default: {found: [], suggestions: []}
+	});
+
+	@memoize
+	getGeneSuggestions(alias:string):Promise<{alias: string, genes: Gene[]}>
+	{
+		if (isInteger(alias))
+			return Promise.resolve({alias, genes: []});
+		return client.getAllGenesUsingGET({alias}).then(genes => ({alias, genes}));
+	}
 
 
 	////////////////////////////////////////////////////////////////////////////////
@@ -307,7 +351,35 @@ export class QueryStore
 		return _.keyBy(this.sampleLists.result, sampleList => sampleList.sampleListId);
 	}
 
-	// GENE SET
+	// GENES
+
+	@computed get oqlParserResult():{gene?: string, error?: SyntaxError}[]
+	{
+		try
+		{
+			let geneQuery = this.geneQuery.toUpperCase().split(' ').filter(_.identity).join(' ');
+			if (!geneQuery)
+				return [];
+			return oql_parser.parse(geneQuery) || [];
+		}
+		catch (e)
+		{
+			return [{error: e as SyntaxError}];
+		}
+	}
+
+	@computed get geneIds():string[]
+	{
+		try
+		{
+			return this.oqlParserResult.map(line => line.gene).filter(gene => gene && gene !== 'DATATYPES') as string[];
+		}
+		catch (e)
+		{
+			return [];
+		}
+	}
+
 
 	////////////////////////////////////////////////////////////////////////////////
 	// ACTIONS

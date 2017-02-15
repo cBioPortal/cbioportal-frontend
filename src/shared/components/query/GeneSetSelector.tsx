@@ -6,11 +6,14 @@ import {observer} from "../../../../node_modules/mobx-react/index";
 import {FlexRow, FlexCol} from "../flexbox/FlexBox";
 import gene_lists from './gene_lists';
 import GeneSymbolValidator from "./GeneSymbolValidator";
+import classNames from "../../lib/classNames";
 
 const styles = styles_any as {
 	GeneSetSelector: string,
 	ReactSelect: string,
 	geneSet: string,
+	empty: string,
+	notEmpty: string,
 };
 
 @observer
@@ -38,9 +41,9 @@ export default class GeneSetSelector extends React.Component<{}, {}>
 				<a href='/onco_query_lang_desc.jsp'>Advanced: Onco Query Language (OQL)</a>
 				<ReactSelect
 					className={styles.ReactSelect}
-					value={this.store.geneSet}
+					value={this.store.geneQuery}
 					options={options}
-					onChange={(option:{value:string}) => this.store.geneSet = option.value}
+					onChange={(option:{value:string}) => this.store.geneQuery = option.value}
 				/>
 
 				<FlexRow padded>
@@ -53,14 +56,14 @@ export default class GeneSetSelector extends React.Component<{}, {}>
 				</FlexRow>
 
 				<textarea
-					className={styles.geneSet}
+					className={classNames(styles.geneSet, this.store.geneQuery ? styles.notEmpty : styles.empty)}
 					rows={5}
 					cols={80}
 					placeholder="Enter HUGO Gene Symbols or Gene Aliases"
 					title="Enter HUGO Gene Symbols or Gene Aliases"
-					value={this.store.geneSet}
+					value={this.store.geneQuery}
 					onChange={event => {
-						this.store.geneSet = (event.target as HTMLTextAreaElement).value;
+						this.store.geneQuery = (event.target as HTMLTextAreaElement).value;
 					}}
 				/>
 
