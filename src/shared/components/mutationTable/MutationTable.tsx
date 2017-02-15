@@ -180,6 +180,7 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
                     headerControlsProps={headerControlsProps}
                     columns={columns}
                     rawData={rawData}
+                    onVisibleRowsChange={this.props.onVisibleRowsChange}
                 />
             </div>
         );
