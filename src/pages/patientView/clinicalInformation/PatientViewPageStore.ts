@@ -1,7 +1,9 @@
 import * as _ from 'lodash';
 import { ClinicalDataBySampleId } from "../../../shared/api/api-types-extended";
-import {ClinicalData, SampleIdentifier,
-    GeneticProfile, Sample, Mutation} from "../../../shared/api/CBioPortalAPI";
+import {
+    ClinicalData, SampleIdentifier,
+    GeneticProfile, Sample, Mutation, DiscreteCopyNumberFilter
+} from "../../../shared/api/CBioPortalAPI";
 import {ClinicalInformationData} from "../Connector";
 import client from "../../../shared/api/cbioportalClientInstance";
 import internalClient from "../../../shared/api/cbioportalInternalClientInstance";
@@ -140,6 +142,44 @@ export class PatientViewPageStore
             }
         }
     }, null);
+
+    readonly discreteCNAData = remoteData({
+
+        await: ()=> [
+            this.geneticProfilesInStudy,
+            this.samplesOfPatient
+        ],
+        invoke: () => {
+
+            const sampleIds = this.samplesOfPatient.result.map((sample)=>sample.sampleId);
+
+            if (this.geneticProfileIdDiscrete.isComplete && this.geneticProfileIdDiscrete.result) {
+                return client.fetchDiscreteCopyNumbersInGeneticProfileUsingPOST({
+                    projection: 'DETAILED',
+                    discreteCopyNumberFilter: {sampleIds: sampleIds} as DiscreteCopyNumberFilter,
+                    geneticProfileId: this.geneticProfileIdDiscrete.result
+                });
+            } else {
+                return Promise.resolve([]);
+            }
+
+        }
+
+    },[]);
+
+    readonly geneticProfileIdDiscrete = remoteData({
+
+        await: ()=> [
+           this.geneticProfilesInStudy
+        ],
+        invoke: () => {
+            const profile = this.geneticProfilesInStudy.result!.find((profile: GeneticProfile)=> {
+                return profile.datatype === 'DISCRETE';
+            });
+            return (profile) ? Promise.resolve(profile.geneticProfileId) : Promise.resolve(undefined);
+        }
+
+    });
 
     readonly mutationData = remoteData({
         await: () => [
