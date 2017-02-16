@@ -189,46 +189,49 @@ export class QueryStore
 	readonly cancerStudies = remoteData(client.getAllStudiesUsingGET({}), []);
 
 	readonly geneticProfiles = remoteData<GeneticProfile[]>({
-		invoke: () => {
-			if (this.singleSelectedStudyId)
-				return client.getAllGeneticProfilesInStudyUsingGET({studyId: this.singleSelectedStudyId});
-			return Promise.resolve([]);
+		invoke: async () => {
+			if (!this.singleSelectedStudyId)
+				return [];
+			return await client.getAllGeneticProfilesInStudyUsingGET({
+				studyId: this.singleSelectedStudyId
+			});
 		},
 		default: [],
 		reaction: () => this._selectedProfileIds = undefined
 	});
 
 	readonly sampleLists = remoteData<SampleList[]>({
-		invoke: () => {
-			if (this.singleSelectedStudyId)
-				return (
-					client.getAllSampleListsInStudyUsingGET({
-						studyId: this.singleSelectedStudyId,
-						projection: 'DETAILED'
-					}).then(
-						sampleLists => _.sortBy(sampleLists, sampleList => sampleList.name)
-					)
-				);
-			return Promise.resolve([]);
+		invoke: async () => {
+			if (!this.singleSelectedStudyId)
+				return [];
+			let sampleLists = await client.getAllSampleListsInStudyUsingGET({
+				studyId: this.singleSelectedStudyId,
+				projection: 'DETAILED'
+			});
+			return _.sortBy(sampleLists, sampleList => sampleList.name);
 		},
 		default: [],
 		reaction: () => this._selectedSampleListId = undefined
 	});
 
 	readonly mutSigForSingleStudy = remoteData<MutSig[]>({
-		invoke: () => {
-			if (this.singleSelectedStudyId)
-				return internalClient.getSignificantlyMutatedGenesUsingGET({studyId: this.singleSelectedStudyId});
-			return Promise.resolve([]);
+		invoke: async () => {
+			if (!this.singleSelectedStudyId)
+				return [];
+			return await internalClient.getSignificantlyMutatedGenesUsingGET({
+				studyId: this.singleSelectedStudyId
+			});
 		},
 		default: []
 	});
 
 	readonly gisticForSingleStudy = remoteData<Gistic[]>({
-		invoke: () => {
-			if (this.singleSelectedStudyId)
-				return internalClient.getSignificantCopyNumberRegionsUsingGET({studyId: this.singleSelectedStudyId});
-			return Promise.resolve([]);
+		invoke: async () => {
+			if (!this.singleSelectedStudyId)
+				return [];
+			return await internalClient.getSignificantCopyNumberRegionsUsingGET({
+				studyId: this.singleSelectedStudyId
+			});
 		},
 		default: []
 	});
@@ -238,17 +241,17 @@ export class QueryStore
 		invoke: async () => {
 			let [entrezIds, hugoIds] = _.partition(this.geneIds, isInteger);
 
-			let entrezPromise:Promise<Gene[]>;
+			let entrezPromise;
 			if (entrezIds.length)
 				entrezPromise = client.fetchGenesUsingPOST({geneIdType: "ENTREZ_GENE_ID", geneIds: entrezIds});
 			else
-				entrezPromise = Promise.resolve([]);
+				entrezPromise = [];
 
-			let hugoPromise:Promise<Gene[]>;
+			let hugoPromise;
 			if (hugoIds.length)
 				hugoPromise = client.fetchGenesUsingPOST({geneIdType: "HUGO_GENE_SYMBOL", geneIds: hugoIds});
 			else
-				hugoPromise = Promise.resolve([]);
+				hugoPromise = [];
 
 			let [entrezGenes, hugoGenes] = await Promise.all([entrezPromise, hugoPromise]);
 			let found = [...entrezGenes, ...hugoGenes];
@@ -262,11 +265,12 @@ export class QueryStore
 	});
 
 	@memoize
-	getGeneSuggestions(alias:string):Promise<{alias: string, genes: Gene[]}>
+	async getGeneSuggestions(alias:string)
 	{
-		if (isInteger(alias))
-			return Promise.resolve({alias, genes: []});
-		return client.getAllGenesUsingGET({alias}).then(genes => ({alias, genes}));
+		return {
+			alias,
+			genes: isInteger(alias) ? [] : await client.getAllGenesUsingGET({alias})
+		};
 	}
 
 
