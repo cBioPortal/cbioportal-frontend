@@ -1,4 +1,4 @@
-.QueryContainer {
+.QueryContainerParent {
   height: 100%;
 
   label {
@@ -13,6 +13,10 @@
   }
 }
 
+.QueryContainer {
+  width: 850px;
+}
+
 .cancerStudySelectorHeader {
   background-color: #1982b8;
   border-bottom: 1px solid rgb(17, 116, 167);
@@ -24,7 +28,6 @@
 
 .CancerStudySelector {
   position: relative;
-  width: 850px;
   overflow: hidden;
   user-select: none;
   
@@ -269,6 +272,7 @@
 .GeneSymbolValidator {
   cursor: default;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   span.icon {
     text-align: center;

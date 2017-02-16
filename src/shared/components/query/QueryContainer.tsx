@@ -18,6 +18,7 @@ import GeneSetSelector from "./GeneSetSelector";
 import SampleListSelector from "./SampleListSelector";
 
 const styles = styles_any as {
+	QueryContainerParent: string,
 	QueryContainer: string,
 	SubmitButton: string
 };
@@ -38,9 +39,9 @@ export default class QueryContainer extends React.Component<{}, {}>
             return <span>No data</span>;
 
         return (
-            <FlexRow padded flex={1} className={styles.QueryContainer}>
+            <FlexRow padded flex={1} className={styles.QueryContainerParent}>
 
-				<FlexCol padded overflow>
+				<FlexCol padded overflow className={styles.QueryContainer}>
 					<CancerStudySelector/>
 
 					{!!(devMode.enabled && this.store.singleSelectedStudyId) && (
@@ -59,9 +60,11 @@ export default class QueryContainer extends React.Component<{}, {}>
 						<GeneSetSelector/>
 					)}
 
-					<button className={styles.SubmitButton}>
-						Submit
-					</button>
+					{!!(devMode.enabled) && (
+						<button className={styles.SubmitButton}>
+							Submit
+						</button>
+					)}
 				</FlexCol>
 
 				{!!(devMode.enabled) && (
