@@ -21,6 +21,11 @@ function isInteger(str:string)
 	return Number.isInteger(Number(str));
 }
 
+function normalizeQuery(geneQuery:string)
+{
+	return geneQuery.replace(/ +/g, ' ').toUpperCase();
+}
+
 // mobx observable
 export class QueryStore
 {
@@ -361,7 +366,7 @@ export class QueryStore
 	{
 		try
 		{
-			let geneQuery = this.geneQuery.toUpperCase().split(' ').filter(_.identity).join(' ');
+			let geneQuery = normalizeQuery(this.geneQuery);
 			if (!geneQuery)
 				return [];
 			return oql_parser.parse(geneQuery) || [];
@@ -408,6 +413,11 @@ export class QueryStore
 		{
 			this.selectedCancerTypeIds = [clickedCancerTypeId];
 		}
+	}
+
+	@action replaceGene(oldSymbol:string, newSymbol:string)
+	{
+		this.geneQuery = normalizeQuery(this.geneQuery.toUpperCase().replace(new RegExp(`\\b${oldSymbol.toUpperCase()}\\b`, 'g'), () => newSymbol.toUpperCase()));
 	}
 }
 

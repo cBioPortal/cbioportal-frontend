@@ -265,3 +265,77 @@
     }
   }
 }
+
+.GeneSymbolValidator {
+  cursor: default;
+  display: flex;
+  align-items: center;
+  span.icon {
+    text-align: center;
+    margin-right: 4px;
+    width: 16px;
+    height: 16px;
+  }
+  span.pendingMessage, span.errorMessage {
+    font-size: small;
+  }
+  div.validBubble, div.invalidBubble {
+    display: flex;
+    align-items: center;
+    margin: 2px;
+    padding: 4px;
+    background-color: white;
+    border: 1px solid #aaaaaa;
+    border-radius: 4px;
+    span.icon {
+      color: #484848;
+    }
+  }
+  div.invalidBubble {
+    font-weight: bold;
+  }
+  div.suggestionBubble {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    margin: 2px;
+    padding: 4px;
+    background-color: #e6e6e6;
+    border: 1px solid #d3d3d3;
+    border-radius: 4px;
+    &:hover {
+      background-color: #dadada;
+      border-color: #999999;
+    }
+    span.icon {
+      color: #888888;
+    }
+    span.noChoiceLabel {
+      font-weight: normal;
+    }
+    span.singleChoiceLabel {
+      font-weight: bold;
+    }
+    span.multiChoiceLabel {
+      font-weight: normal;
+    }
+    .ReactSelect {
+      width: 140px;
+      margin-left: 4px;
+      float: left;
+    }
+  }
+}
+
+button.SubmitButton {
+  font-weight: 400;
+  font-size: 18px;
+  width: 400px;
+  padding: 10px 16px;
+  background-color: #e6e6e6;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  &:hover {
+    border-color: #adadad;
+  }
+}

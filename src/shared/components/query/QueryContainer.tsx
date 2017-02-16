@@ -19,7 +19,7 @@ import SampleListSelector from "./SampleListSelector";
 
 const styles = styles_any as {
 	QueryContainer: string,
-	CancerStudySelector: string,
+	SubmitButton: string
 };
 
 @observer
@@ -58,6 +58,10 @@ export default class QueryContainer extends React.Component<{}, {}>
 					{!!(devMode.enabled) && (
 						<GeneSetSelector/>
 					)}
+
+					<button className={styles.SubmitButton}>
+						Submit
+					</button>
 				</FlexCol>
 
 				{!!(devMode.enabled) && (
