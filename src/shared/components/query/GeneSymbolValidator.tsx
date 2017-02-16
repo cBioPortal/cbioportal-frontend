@@ -344,7 +344,7 @@ export default class GeneSymbolValidator extends React.Component<{}, {}>
 				<div key={key} className={styles.suggestionBubble} title={title} onClick={onClick}>
 					<FontAwesome className={styles.icon} name='question'/>
 					<span className={styles.singleChoiceLabel}>{alias}</span>
-					<span>{`: ${genes[0].hugoGeneSymbol}`}</span>
+					<span>{`: ${hugoGeneSymbol}`}</span>
 				</div>
 			);
 		}

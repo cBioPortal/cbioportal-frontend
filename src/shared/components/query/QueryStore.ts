@@ -23,7 +23,7 @@ function isInteger(str:string)
 
 function normalizeQuery(geneQuery:string)
 {
-	return geneQuery.replace(/ +/g, ' ').toUpperCase();
+	return geneQuery.replace(/^\s+|\s+$/g, '').replace(/ +/g, ' ').toUpperCase();
 }
 
 // mobx observable
