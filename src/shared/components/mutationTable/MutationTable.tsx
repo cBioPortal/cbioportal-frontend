@@ -181,6 +181,7 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
                     columns={columns}
                     rawData={rawData}
                     onVisibleRowsChange={this.props.onVisibleRowsChange}
+                    onSort={this.props.onSort}
                 />
             </div>
         );

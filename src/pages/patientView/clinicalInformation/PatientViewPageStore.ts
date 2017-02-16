@@ -6,10 +6,11 @@ import {
 } from "../../../shared/api/CBioPortalAPI";
 import {ClinicalInformationData} from "../Connector";
 import client from "../../../shared/api/cbioportalClientInstance";
-import {computed, observable, action, reaction} from "../../../../node_modules/mobx/lib/mobx";
+import {computed, observable, action, reaction, autorun} from "../../../../node_modules/mobx/lib/mobx";
 import {remoteData} from "../../../shared/api/remoteData";
 import {labelMobxPromises} from "../../../shared/api/MobxPromise";
 import MrnaExprRankCache from './MrnaExprRankCache';
+import VariantCountCache from './VariantCountCache';
 
 export function groupByEntityId(clinicalDataArray: Array<ClinicalData>)
 {
@@ -50,7 +51,8 @@ export class PatientViewPageStore
         reaction(
             () => [
                 this.visibleRows,
-                this.mrnaExprRankCache
+                this.mrnaExprRankCache,
+                this.variantCountCache
             ],
             ()=> {
                 const sampleToEntrezGeneIds:{ [sampleId:string]:Set<number> } = {};
@@ -61,6 +63,15 @@ export class PatientViewPageStore
                     }
                 }
                 this.mrnaExprRankCache.populate(sampleToEntrezGeneIds);
+                this.variantCountCache.populate(this.visibleRows);
+            }
+        );
+
+        autorun(
+            ()=>{
+                if (this.allVariantCountDataRequested && this.mutationData.isComplete) {
+                    this.variantCountCache.populate(this.mutationData.result.map((x:Mutation)=>[x]));
+                }
             }
         );
 
@@ -68,6 +79,7 @@ export class PatientViewPageStore
     }
 
     @observable.ref private visibleRows:Mutation[][] = [];
+    @observable allVariantCountDataRequested:boolean = false;
 
     @observable patientId = '';
 
@@ -225,7 +237,15 @@ export class PatientViewPageStore
         return new MrnaExprRankCache(this.mrnaRankGeneticProfileId.result);
     }
 
+    @computed get variantCountCache() {
+        return new VariantCountCache(this.mutationGeneticProfileId);
+    }
+
     @action setVisibleRows(rows:Mutation[][]) {
         this.visibleRows = rows || [];
+    }
+
+    @action requestAllVariantCountData() {
+        this.allVariantCountDataRequested = true;
     }
 }

@@ -5,6 +5,7 @@ import DefaultTooltip from 'shared/components/DefaultTooltip';
 import {compareNumberLists} from '../../../../shared/lib/SortUtils';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {MutationTableRowData} from "../../../../shared/components/mutationTable/IMutationTableProps";
+import LoadingText from "shared/components/mutationTable/column/LoadingText";
 
 export type MrnaRankDatum = {status:"available", percentile:number, zScore:number} |
                             {status:"not available"} |
@@ -99,12 +100,7 @@ export default class MrnaExprColumnFormatter {
             );
         } else {
             return (
-                <span
-                    style={{color: "gray", fontSize:"xx-small", textAlign:"center"}}
-                    alt="Querying server for data."
-                >
-                    LOADING
-                </span>
+                <LoadingText/>
             );
         }
     }
