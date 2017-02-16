@@ -11,6 +11,24 @@ export type GisticToGene = {
         'hugoGeneSymbol': string
 
 };
+export type CopyNumberCount = {
+    'alteration': number
+
+        'entrezGeneId': number
+
+        'geneticProfileId': string
+
+        'numberOfSamples': number
+
+        'numberOfSamplesWithAlterationInGene': number
+
+};
+export type CopyNumberCountIdentifier = {
+    'alteration': number
+
+        'entrezGeneId': number
+
+};
 export type Gistic = {
     'amp': boolean
 
@@ -210,6 +228,86 @@ export default class CBioPortalAPIInternal {
             });
         };
 
+    fetchCopyNumberCountsUsingPOSTURL(parameters: {
+        'geneticProfileId': string,
+        'copyNumberCountIdentifiers': Array < CopyNumberCountIdentifier > | CopyNumberCountIdentifier
+
+        ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/genetic-profiles/{geneticProfileId}/copy-number-counts/fetch';
+
+        path = path.replace('{geneticProfileId}', parameters['geneticProfileId']);
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get counts of specific genes and alterations within a CNA genetic profile
+     * @method
+     * @name CBioPortalAPIInternal#fetchCopyNumberCountsUsingPOST
+     * @param {string} geneticProfileId - Genetic Profile ID e.g. acc_tcga_mutations
+     * @param {} copyNumberCountIdentifiers - List of copy number count identifiers
+     */
+    fetchCopyNumberCountsUsingPOST(parameters: {
+            'geneticProfileId': string,
+            'copyNumberCountIdentifiers': Array < CopyNumberCountIdentifier > | CopyNumberCountIdentifier
+
+            ,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < CopyNumberCount >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/genetic-profiles/{geneticProfileId}/copy-number-counts/fetch';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                path = path.replace('{geneticProfileId}', parameters['geneticProfileId']);
+
+                if (parameters['geneticProfileId'] === undefined) {
+                    reject(new Error('Missing required  parameter: geneticProfileId'));
+                    return;
+                }
+
+                if (parameters['copyNumberCountIdentifiers'] !== undefined) {
+                    body = parameters['copyNumberCountIdentifiers'];
+                }
+
+                if (parameters['copyNumberCountIdentifiers'] === undefined) {
+                    reject(new Error('Missing required  parameter: copyNumberCountIdentifiers'));
+                    return;
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
     fetchMrnaPercentileUsingPOSTURL(parameters: {
         'geneticProfileId': string,
         'sampleId': string,
@@ -305,7 +403,7 @@ export default class CBioPortalAPIInternal {
             });
         };
 
-    getVariantCountsUsingPOSTURL(parameters: {
+    fetchVariantCountsUsingPOSTURL(parameters: {
         'geneticProfileId': string,
         'variantCountIdentifiers': Array < VariantCountIdentifier > | VariantCountIdentifier
 
@@ -330,11 +428,11 @@ export default class CBioPortalAPIInternal {
     /**
      * Get counts of specific variants within a mutation genetic profile
      * @method
-     * @name CBioPortalAPIInternal#getVariantCountsUsingPOST
+     * @name CBioPortalAPIInternal#fetchVariantCountsUsingPOST
      * @param {string} geneticProfileId - Genetic Profile ID e.g. acc_tcga_mutations
-     * @param {} variantCountIdentifiers - List of Entrez Gene IDs
+     * @param {} variantCountIdentifiers - List of variant count identifiers
      */
-    getVariantCountsUsingPOST(parameters: {
+    fetchVariantCountsUsingPOST(parameters: {
             'geneticProfileId': string,
             'variantCountIdentifiers': Array < VariantCountIdentifier > | VariantCountIdentifier
 
