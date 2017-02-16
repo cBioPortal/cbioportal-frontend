@@ -156,7 +156,23 @@
   }
 
   .containsSelectedStudies {
-    font-weight: bold;
+    color: #000;
+
+    .cancerTypeListItemCount {
+      position: relative;
+
+      &:before {
+        background: rgba(25, 130, 184, 0.5);
+        display: block;
+        position: absolute;
+        top: 0px;
+        right: 0px;
+        border-radius: 1px 2px 1px 2px;
+        content: ' ';
+        height: 5px;
+        width: 5px;
+      }
+    }
   }
 
   .searchTextInput {
