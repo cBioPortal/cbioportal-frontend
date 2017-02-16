@@ -93,6 +93,20 @@ export type ClinicalDataIdentifier = {
         'studyId': string
 
 };
+export type ClinicalEvent = {
+    'attributes': Array < ClinicalEventData > | ClinicalEventData
+
+        'endNumberOfDaysSinceDiagnosis': number
+
+        'eventType': string
+
+        'patientId': string
+
+        'startNumberOfDaysSinceDiagnosis': number
+
+        'studyId': string
+
+};
 export type PatientIdentifier = {
     'patientId': string
 
@@ -123,6 +137,12 @@ export type DiscreteCopyNumberData = {
         'geneticProfileId': string
 
         'sampleId': string
+
+};
+export type ClinicalEventData = {
+    'key': string
+
+        'value': string
 
 };
 export type CancerStudy = {
@@ -237,6 +257,12 @@ export type Mutation = {
         'variantType': string
 
 };
+export type DiscreteCopyNumberFilter = {
+    'entrezGeneIds': Array < number > | number
+
+        'sampleIds': Array < string > | string
+
+};
 export type ClinicalAttribute = {
     'clinicalAttributeId': string
 
@@ -257,6 +283,8 @@ export type SampleList = {
         'description': string
 
         'name': string
+
+        'sampleCount': number
 
         'sampleListId': string
 
@@ -1526,9 +1554,7 @@ export default class CBioPortalAPI {
     fetchDiscreteCopyNumbersInGeneticProfileUsingPOSTURL(parameters: {
         'geneticProfileId': string,
         'discreteCopyNumberEventType' ? : "HOMDEL_AND_AMP" | "HOMDEL" | "AMP" | "GAIN" | "HETLOSS" | "DIPLOID" | "ALL",
-        'sampleIds': Array < string > | string
-
-        ,
+        'discreteCopyNumberFilter': DiscreteCopyNumberFilter,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         $queryParameters ? : any
     }): string {
@@ -1560,15 +1586,13 @@ export default class CBioPortalAPI {
      * @name CBioPortalAPI#fetchDiscreteCopyNumbersInGeneticProfileUsingPOST
      * @param {string} geneticProfileId - Genetic Profile ID e.g. acc_tcga_gistic
      * @param {string} discreteCopyNumberEventType - Type of the copy number event
-     * @param {} sampleIds - List of Sample IDs
+     * @param {} discreteCopyNumberFilter - List of Sample IDs and Entrez Gene IDs
      * @param {string} projection - Level of detail of the response
      */
     fetchDiscreteCopyNumbersInGeneticProfileUsingPOST(parameters: {
             'geneticProfileId': string,
             'discreteCopyNumberEventType' ? : "HOMDEL_AND_AMP" | "HOMDEL" | "AMP" | "GAIN" | "HETLOSS" | "DIPLOID" | "ALL",
-            'sampleIds': Array < string > | string
-
-            ,
+            'discreteCopyNumberFilter': DiscreteCopyNumberFilter,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             $queryParameters ? : any,
             $domain ? : string
@@ -1597,12 +1621,12 @@ export default class CBioPortalAPI {
                     queryParameters['discreteCopyNumberEventType'] = parameters['discreteCopyNumberEventType'];
                 }
 
-                if (parameters['sampleIds'] !== undefined) {
-                    body = parameters['sampleIds'];
+                if (parameters['discreteCopyNumberFilter'] !== undefined) {
+                    body = parameters['discreteCopyNumberFilter'];
                 }
 
-                if (parameters['sampleIds'] === undefined) {
-                    reject(new Error('Missing required  parameter: sampleIds'));
+                if (parameters['discreteCopyNumberFilter'] === undefined) {
+                    reject(new Error('Missing required  parameter: discreteCopyNumberFilter'));
                     return;
                 }
 
@@ -3099,6 +3123,136 @@ export default class CBioPortalAPI {
 
                 if (parameters['attributeId'] !== undefined) {
                     queryParameters['attributeId'] = parameters['attributeId'];
+                }
+
+                if (parameters['projection'] !== undefined) {
+                    queryParameters['projection'] = parameters['projection'];
+                }
+
+                if (parameters['pageSize'] !== undefined) {
+                    queryParameters['pageSize'] = parameters['pageSize'];
+                }
+
+                if (parameters['pageNumber'] !== undefined) {
+                    queryParameters['pageNumber'] = parameters['pageNumber'];
+                }
+
+                if (parameters['sortBy'] !== undefined) {
+                    queryParameters['sortBy'] = parameters['sortBy'];
+                }
+
+                if (parameters['direction'] !== undefined) {
+                    queryParameters['direction'] = parameters['direction'];
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    getAllClinicalEventsOfPatientInStudyUsingGETURL(parameters: {
+        'studyId': string,
+        'patientId': string,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'pageSize' ? : number,
+        'pageNumber' ? : number,
+        'sortBy' ? : "eventType" | "startNumberOfDaysSinceDiagnosis" | "endNumberOfDaysSinceDiagnosis",
+        'direction' ? : "ASC" | "DESC",
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/studies/{studyId}/patients/{patientId}/clinical-events';
+
+        path = path.replace('{studyId}', parameters['studyId']);
+
+        path = path.replace('{patientId}', parameters['patientId']);
+        if (parameters['projection'] !== undefined) {
+            queryParameters['projection'] = parameters['projection'];
+        }
+
+        if (parameters['pageSize'] !== undefined) {
+            queryParameters['pageSize'] = parameters['pageSize'];
+        }
+
+        if (parameters['pageNumber'] !== undefined) {
+            queryParameters['pageNumber'] = parameters['pageNumber'];
+        }
+
+        if (parameters['sortBy'] !== undefined) {
+            queryParameters['sortBy'] = parameters['sortBy'];
+        }
+
+        if (parameters['direction'] !== undefined) {
+            queryParameters['direction'] = parameters['direction'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get all clinical events of a patient in a study
+     * @method
+     * @name CBioPortalAPI#getAllClinicalEventsOfPatientInStudyUsingGET
+     * @param {string} studyId - Study ID e.g. lgg_ucsf_2014
+     * @param {string} patientId - Patient ID e.g. P01
+     * @param {string} projection - Level of detail of the response
+     * @param {integer} pageSize - Page size of the result list
+     * @param {integer} pageNumber - Page number of the result list
+     * @param {string} sortBy - Name of the property that the result list is sorted by
+     * @param {string} direction - Direction of the sort
+     */
+    getAllClinicalEventsOfPatientInStudyUsingGET(parameters: {
+            'studyId': string,
+            'patientId': string,
+            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'pageSize' ? : number,
+            'pageNumber' ? : number,
+            'sortBy' ? : "eventType" | "startNumberOfDaysSinceDiagnosis" | "endNumberOfDaysSinceDiagnosis",
+            'direction' ? : "ASC" | "DESC",
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < ClinicalEvent >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/studies/{studyId}/patients/{patientId}/clinical-events';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                path = path.replace('{studyId}', parameters['studyId']);
+
+                if (parameters['studyId'] === undefined) {
+                    reject(new Error('Missing required  parameter: studyId'));
+                    return;
+                }
+
+                path = path.replace('{patientId}', parameters['patientId']);
+
+                if (parameters['patientId'] === undefined) {
+                    reject(new Error('Missing required  parameter: patientId'));
+                    return;
                 }
 
                 if (parameters['projection'] !== undefined) {
