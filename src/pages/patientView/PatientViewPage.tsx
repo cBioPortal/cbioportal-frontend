@@ -106,7 +106,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         const qs = queryString.parse((window as any).location.search);
         patientViewPageStore.studyId = qs['cancer_study_id'] + '';
 
-        patientViewPageStore.patientId = qs['case_id'] + '';
+        patientViewPageStore.setPatientId(qs['case_id'] + '');
 
         const qs_hash = queryString.parse((window as any).location.hash);
         this.patientIdsInCohort = (!!qs_hash['nav_case_ids'] ? (qs_hash['nav_case_ids'] as string).split(",") : []);
