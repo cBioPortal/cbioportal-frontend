@@ -9,7 +9,7 @@ import exposeComponentRenderer from '../../shared/lib/exposeComponentRenderer';
 import GenomicOverview from './genomicOverview/GenomicOverview';
 import mockData from './mock/sampleData.json';
 import Connector, { ClinicalInformationData } from "./Connector";
-import {ClinicalData, SampleIdentifier, GeneticProfile} from "shared/api/CBioPortalAPI";
+import {ClinicalData, SampleIdentifier, GeneticProfile, Sample} from "shared/api/CBioPortalAPI";
 import { ClinicalDataBySampleId } from "../../shared/api/api-types-extended";
 import { RequestStatus } from "../../shared/api/api-types-extended";
 import { default as CBioPortalAPI, Mutation }  from "../../shared/api/CBioPortalAPI";
@@ -38,6 +38,7 @@ import {IHotspotData, IMyCancerGenomeData, IMyCancerGenome} from "./mutation/col
 import {getSpans} from './clinicalInformation/lib/clinicalAttributesUtil.js';
 import CopyNumberAlterationsTable from "./copyNumberAlterations/CopyNumberAlterationsTable";
 import CopyNumberTableWrapper from "./copyNumberAlterations/CopyNumberTableWrapper";
+import {reaction} from "mobx";
 
 const patientViewPageStore = new PatientViewPageStore();
 
@@ -65,7 +66,6 @@ interface IPatientViewState {
     activeTabKey: number;
 }
 
-@Connector.decorator
 @observer
 export default class PatientViewPage extends React.Component<IPatientViewPageProps, IPatientViewState> {
 
@@ -305,56 +305,50 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     public componentDidMount() {
 
-        // const PatientHeader = connect(PatientViewPage.mapStateToProps)(PatientHeaderUnconnected);
-        //
-        // // Don't try to render clinical_div_prototype in parent cbioportal
-        // // project context
-        // // let clinicalDiv: Element | null = document.getElementById('clinical_div_prototype');
-        // // if (clinicalDiv) {
-        // //     ReactDOM.render(
-        // //         <PatientHeader {...{store: this.props.store}} />,
-        // //         clinicalDiv
-        // //     );
-        // // } //
+        const reaction1 = reaction(
+            () => { return patientViewPageStore.mutationData.isComplete },
+            (isComplete:Boolean) => {
+                if (isComplete) {
+                    let sampleIds: string[] = patientViewPageStore.samples.result.map((sample:Sample) => sample.sampleId);  //this.props.samples.map((item: ClinicalDataBySampleId)=>item.id);
 
-        if (this.props.loadClinicalInformationTableData) this.props.loadClinicalInformationTableData().then(() => {
+                    this.fetchMyCancerGenomeData().then((_result) => {
+                        this.setState(({myCancerGenomeData: _result} as IPatientViewState));
+                    });
 
-            if (this.props.samples) {
-
-                let sampleIds: string[] = this.props.samples.map((item: ClinicalDataBySampleId)=>item.id);
-
-                this.fetchMyCancerGenomeData().then((_result) => {
-                    this.setState(({myCancerGenomeData: _result} as IPatientViewState));
-                });
-
-                this.fetchMutationData(sampleIds).then((_result) => {
-                    this.fetchHotspotsData(_result).then((hotspotsData:IHotspotData) => {
+                    this.fetchHotspotsData(patientViewPageStore.mutationData.result).then((hotspotsData:IHotspotData) => {
                         this.setState(({ hotspotsData } as IPatientViewState));
                     });
-                    this.fetchVariantCountData(_result).then((variantCountData:IVariantCountData) => {
+                    this.fetchVariantCountData(patientViewPageStore.mutationData.result).then((variantCountData:IVariantCountData) => {
                         this.setState(({ variantCountData } as IPatientViewState));
                     });
-                    const hotspotDataPromise = this.fetchHotspotsData(_result).then((hotspotsData:IHotspotData) =>
+                    const hotspotDataPromise = this.fetchHotspotsData(patientViewPageStore.mutationData.result).then((hotspotsData:IHotspotData) =>
                         this.setState(({ hotspotsData } as IPatientViewState)));
                     hotspotDataPromise.catch(()=>{});
 
-                    const cosmicDataPromise = this.fetchCosmicData(_result).then((cosmicData:ICosmicData) =>
+                    const cosmicDataPromise = this.fetchCosmicData(patientViewPageStore.mutationData.result).then((cosmicData:ICosmicData) =>
                         this.setState(({ cosmicData } as IPatientViewState)));
                     cosmicDataPromise.catch(()=>{});
 
-                    this.setState(({ mutationData : _result } as IPatientViewState));
-                });
+                    this.setState(({ mutationData : patientViewPageStore.mutationData.result } as IPatientViewState));
 
-                this.fetchMutSigData().then((_result) => {
-                    const data = _result.reduce((map:MutSigData, next:MutSig) => {
-                        map[next.entrezGeneId] = { qValue: next.qValue };
-                        return map;
-                    }, {});
-                    this.setState(({ mutSigData: data } as IPatientViewState));
-                });
+                    this.fetchMutSigData().then((_result) => {
+                        const data = _result.reduce((map:MutSigData, next:MutSig) => {
+                            map[next.entrezGeneId] = { qValue: next.qValue };
+                            return map;
+                        }, {});
+                        this.setState(({ mutSigData: data } as IPatientViewState));
+                    });
+                } else {
+
+                    this.setState({
+                        mutationData: undefined,
+                        hotspotsData: undefined,
+                        variantCountData: undefined
+                    } as IPatientViewState)
+
+                }
             }
-
-        });
+        );
 
         this.exposeComponentRenderersToParentScript();
 
@@ -364,11 +358,11 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     // these components whenever and wherever it wants
     exposeComponentRenderersToParentScript() {
 
-        exposeComponentRenderer('renderClinicalInformationContainer', ClinicalInformationContainer,
-            { store:this.props.store }
-        );
-
-        exposeComponentRenderer('renderGenomicOverview', GenomicOverview);
+        // exposeComponentRenderer('renderClinicalInformationContainer', ClinicalInformationContainer,
+        //     { store:this.props.store }
+        // );
+        //
+        // exposeComponentRenderer('renderGenomicOverview', GenomicOverview);
 
     }
 
@@ -399,6 +393,10 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         this.setState(({ activeTabKey : key } as IPatientViewState));
     }
 
+    private handleSampleClick(id: string){
+        patientViewPageStore.setSampleId(id);
+    }
+
 
     private getSampleIndent() {
         return (<svg width='20' height='15' style={{marginRight: '5px'}}>
@@ -422,7 +420,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 return (
                     <span style={{paddingRight: '10px'}}>
                         {  sampleManager!.getComponentForSample(sample.id, true) }
-                        {'\u00A0' + sample.id}
+                        {'\u00A0'}
+                        <a onClick={()=>{ this.handleSampleClick(sample.id) }}>{sample.id}</a>
                         <span className='clinical-spans' dangerouslySetInnerHTML={{__html:getSpans(clinicalDataLegacy, 'lgg_ucsf_2014')}}></span>
                     </span>
 
@@ -442,10 +441,10 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     previousPageDisabled={indexInCohort === 0}
                     nextPageDisabled={indexInCohort === this.patientIdsInCohort.length-1}
                     lastPageDisabled={indexInCohort === this.patientIdsInCohort.length-1}
-                    onFirstPageClick={() => patientViewPageStore.changePatientId(this.patientIdsInCohort[0]) }
-                    onPreviousPageClick={() => patientViewPageStore.changePatientId(this.patientIdsInCohort[indexInCohort-1]) }
-                    onNextPageClick={() => patientViewPageStore.changePatientId(this.patientIdsInCohort[indexInCohort+1]) }
-                    onLastPageClick={() => patientViewPageStore.changePatientId(this.patientIdsInCohort[this.patientIdsInCohort.length-1]) }
+                    onFirstPageClick={() => patientViewPageStore.setPatientId(this.patientIdsInCohort[0]) }
+                    onPreviousPageClick={() => patientViewPageStore.setPatientId(this.patientIdsInCohort[indexInCohort-1]) }
+                    onNextPageClick={() => patientViewPageStore.setPatientId(this.patientIdsInCohort[indexInCohort+1]) }
+                    onLastPageClick={() => patientViewPageStore.setPatientId(this.patientIdsInCohort[this.patientIdsInCohort.length-1]) }
                 />
             );
         }
@@ -516,31 +515,33 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                         <CopyNumberTableWrapper store={patientViewPageStore} />
 
                     </Tab>
-                    <Tab eventKey={3} id="clinicalDataTab" title="Clinical Data">
+                    {(patientViewPageStore.pageMode === 'patient') && (
+                        <Tab eventKey={2} id="clinicalDataTab" title="Clinical Data">
 
                             <div className="clearfix">
-                            <FeatureTitle title="Patient" isLoading={ patientViewPageStore.clinicalDataPatient.isPending } className="pull-left" />
-                            { (patientViewPageStore.clinicalDataPatient.isComplete) && (
-                                <ClinicalInformationPatientTable showTitleBar={true}
-                                                                 data={patientViewPageStore.clinicalDataPatient.result} />
+                                <FeatureTitle title="Patient" isLoading={ patientViewPageStore.clinicalDataPatient.isPending } className="pull-left" />
+                                { (patientViewPageStore.clinicalDataPatient.isComplete) && (
+                                    <ClinicalInformationPatientTable showTitleBar={true}
+                                                                     data={patientViewPageStore.clinicalDataPatient.result} />
 
                                 )
-                            }
+                                }
                             </div>
 
                             <br />
 
                             <div className="clearfix">
-                            <FeatureTitle title="Samples" isLoading={ patientViewPageStore.clinicalDataGroupedBySample.isPending } className="pull-left" />
-                            {  (patientViewPageStore.clinicalDataGroupedBySample.isComplete) && (
-                                <ClinicalInformationSamples
-                                    samples={patientViewPageStore.clinicalDataGroupedBySample.result!}/>
+                                <FeatureTitle title="Samples" isLoading={ patientViewPageStore.clinicalDataGroupedBySample.isPending } className="pull-left" />
+                                {  (patientViewPageStore.clinicalDataGroupedBySample.isComplete) && (
+                                    <ClinicalInformationSamples
+                                        samples={patientViewPageStore.clinicalDataGroupedBySample.result!}/>
                                 )
-                            }
+                                }
                             </div>
 
 
-                    </Tab>
+                        </Tab>
+                    )}
                 </Tabs>
 
 

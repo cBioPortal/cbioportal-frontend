@@ -6,10 +6,12 @@ import {
 } from "../../../shared/api/CBioPortalAPI";
 import {ClinicalInformationData} from "../Connector";
 import client from "../../../shared/api/cbioportalClientInstance";
-import {computed, observable, action, reaction} from "../../../../node_modules/mobx/lib/mobx";
+import {computed, observable, action, reaction, autorun} from "../../../../node_modules/mobx/lib/mobx";
 import {remoteData} from "../../../shared/api/remoteData";
 import {labelMobxPromises} from "../../../shared/api/MobxPromise";
 import MrnaExprRankCache from './MrnaExprRankCache';
+
+type PageMode = 'patient' | 'sample';
 
 export function groupByEntityId(clinicalDataArray: Array<ClinicalData>)
 {
@@ -47,22 +49,20 @@ export class PatientViewPageStore
     {
         labelMobxPromises(this);
 
-        reaction(
-            () => [
-                this.visibleRows,
-                this.mrnaExprRankCache
-            ],
+        autorun(
             ()=> {
+                if (!this.visibleRows || this.visibleRows.length === 0) {
+                    return;
+                }
                 const sampleToEntrezGeneIds:{ [sampleId:string]:Set<number> } = {};
                 for (const mutations of this.visibleRows) {
-                    if (mutations.length > 0) {
+                    if (mutations && mutations.length > 0) {
                         sampleToEntrezGeneIds[mutations[0].sampleId] = sampleToEntrezGeneIds[mutations[0].sampleId] || new Set();
                         sampleToEntrezGeneIds[mutations[0].sampleId].add(mutations[0].entrezGeneId);
                     }
                 }
                 this.mrnaExprRankCache.populate(sampleToEntrezGeneIds);
-            }
-        );
+            });
 
         this.setVisibleRows = this.setVisibleRows.bind(this);
     }
@@ -72,6 +72,10 @@ export class PatientViewPageStore
     @observable patientId = '';
 
     @observable studyId = '';
+
+    @observable sampleId = 'P04_Pri';
+
+    @observable pageMode: PageMode = 'patient';
 
     @computed get mutationGeneticProfileId() {
         return `${this.studyId}_mutations`;
@@ -85,19 +89,29 @@ export class PatientViewPageStore
         });
     }, []);
 
-    readonly samplesOfPatient = remoteData(() => {
-        return client.getAllSamplesOfPatientInStudyUsingGET({
-            studyId: this.studyId,
-            patientId: this.patientId
-        });
+    readonly samples = remoteData(() => {
+        if (this.pageMode === 'patient') {
+            return client.getAllSamplesOfPatientInStudyUsingGET({
+                studyId: this.studyId,
+                patientId: this.patientId
+            });
+        } else {
+            const prom = new Promise((resolve, reject) => {
+                client.getSampleInStudyUsingGET({ studyId:this.studyId, sampleId:this.sampleId }).then((data)=>{
+                    resolve([data]);
+                })
+            });
+            return prom;
+        }
     }, []);
+
 
     readonly cnaSegments = remoteData({
         await: () => [
-            this.samplesOfPatient
+            this.samples
         ],
         invoke: () => client.fetchCopyNumberSegmentsUsingPOST({
-            sampleIdentifiers: this.samplesOfPatient.result!.map(sample => ({
+            sampleIdentifiers: this.samples.result!.map(sample => ({
                 sampleId: sample.sampleId,
                 studyId: this.studyId
             })),
@@ -107,11 +121,11 @@ export class PatientViewPageStore
 
     readonly clinicalDataForSamples = remoteData({
         await: () => [
-            this.samplesOfPatient
+            this.samples
         ],
         invoke: () => client.fetchClinicalDataUsingPOST({
             clinicalDataType: 'SAMPLE',
-            identifiers: this.samplesOfPatient.result.map(sample => ({
+            identifiers: this.samples.result.map(sample => ({
                 entityId: sample.sampleId,
                 studyId: this.studyId
             })),
@@ -137,9 +151,14 @@ export class PatientViewPageStore
         ))
     },{});
 
-    readonly geneticProfilesInStudy = remoteData(() => client.getAllGeneticProfilesInStudyUsingGET({
-        studyId: this.studyId
-    }), []);
+    readonly geneticProfilesInStudy = remoteData(() => {
+            console.log("here",this.studyId);
+            return client.getAllGeneticProfilesInStudyUsingGET({
+            studyId: this.studyId
+            })
+        }
+        , []
+    );
 
     private readonly mrnaRankGeneticProfileId = remoteData({
         await: () => [
@@ -166,11 +185,11 @@ export class PatientViewPageStore
 
         await: ()=> [
             this.geneticProfilesInStudy,
-            this.samplesOfPatient
+            this.samples
         ],
         invoke: () => {
 
-            const sampleIds = this.samplesOfPatient.result.map((sample)=>sample.sampleId);
+            const sampleIds = this.samples.result.map((sample)=>sample.sampleId);
 
             if (this.geneticProfileIdDiscrete.isComplete && this.geneticProfileIdDiscrete.result) {
                 return client.fetchDiscreteCopyNumbersInGeneticProfileUsingPOST({
@@ -202,14 +221,14 @@ export class PatientViewPageStore
 
     readonly mutationData = remoteData({
         await: () => [
-            this.samplesOfPatient
+            this.samples
         ],
         invoke: ()=> {
             const geneticProfileId = this.mutationGeneticProfileId;
             if (geneticProfileId) {
                 return client.fetchMutationsInGeneticProfileUsingPOST({
                     geneticProfileId: geneticProfileId,
-                    sampleIds: this.samplesOfPatient.result.map((sample:Sample) => sample.sampleId),
+                    sampleIds: this.samples.result.map((sample:Sample) => sample.sampleId),
                     projection: "DETAILED"
                 });
             } else {
@@ -217,7 +236,12 @@ export class PatientViewPageStore
             }
     }}, []);
 
-    @action("ChangePatientId") changePatientId(newId: string) {
+    @action("SetSampleId") setSampleId(newId: string) {
+        this.sampleId = newId;
+        this.pageMode = 'sample';
+    }
+
+    @action("SetPatientId") setPatientId(newId: string) {
         this.patientId = newId;
     }
 
