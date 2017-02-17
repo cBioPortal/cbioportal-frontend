@@ -421,7 +421,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     <span style={{paddingRight: '10px'}}>
                         {  sampleManager!.getComponentForSample(sample.id, true) }
                         {'\u00A0'}
-                        <a onClick={()=>{ this.handleSampleClick(sample.id) }}>{sample.id}</a>
+                        <a href="javascript:void(0)" onClick={()=>{ this.handleSampleClick(sample.id) }}>{sample.id}</a>
                         <span className='clinical-spans' dangerouslySetInnerHTML={{__html:getSpans(clinicalDataLegacy, 'lgg_ucsf_2014')}}></span>
                     </span>
 
@@ -462,7 +462,9 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                 {  (patientViewPageStore.patientViewData.isComplete) && (
                     <div className="clearfix" style={{padding:20, borderRadius:5, background: '#eee', marginBottom: 20}}>
-                        <PatientHeader patient={patientViewPageStore.patientViewData.result!.patient!}/>
+                        <PatientHeader
+                                       handlePatientClick={(id: string)=>patientViewPageStore.setPatientId(id)}
+                                       patient={patientViewPageStore.patientViewData.result!.patient!}/>
                         {sampleHeader}
                     </div>
                     )
