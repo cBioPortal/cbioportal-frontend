@@ -104,9 +104,20 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         //TODO: this should be done by a module so that it can be reused on other pages
         const qs = queryString.parse((window as any).location.search);
+
+
         patientViewPageStore.studyId = qs['cancer_study_id'] + '';
 
-        patientViewPageStore.setPatientId(qs['case_id'] + '');
+        // set mode based on qs present
+        if ('case_id' in qs) {
+            patientViewPageStore.setPatientId(qs['case_id'] as string);
+        } else if ('sample_id' in qs){
+            patientViewPageStore.setSampleId(qs['sample_id'] as string);
+        } else {
+            // error!
+        }
+
+
 
         const qs_hash = queryString.parse((window as any).location.hash);
         this.patientIdsInCohort = (!!qs_hash['nav_case_ids'] ? (qs_hash['nav_case_ids'] as string).split(",") : []);
@@ -518,7 +529,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                     </Tab>
                     {(patientViewPageStore.pageMode === 'patient') && (
-                        <Tab eventKey={2} id="clinicalDataTab" title="Clinical Data">
+                        <Tab eventKey={3} id="clinicalDataTab" title="Clinical Data">
 
                             <div className="clearfix">
                                 <FeatureTitle title="Patient" isLoading={ patientViewPageStore.clinicalDataPatient.isPending } className="pull-left" />
