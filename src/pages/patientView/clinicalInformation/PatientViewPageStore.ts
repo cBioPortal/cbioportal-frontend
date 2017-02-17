@@ -99,7 +99,7 @@ export class PatientViewPageStore
             const prom = new Promise((resolve, reject) => {
                 client.getSampleInStudyUsingGET({ studyId:this.studyId, sampleId:this.sampleId }).then((data)=>{
                     resolve([data]);
-                })
+                });
             });
             return prom;
         }
@@ -243,6 +243,7 @@ export class PatientViewPageStore
 
     @action("SetPatientId") setPatientId(newId: string) {
         this.patientId = newId;
+        this.pageMode = 'patient';
     }
 
     @computed get mrnaExprRankCache() {
