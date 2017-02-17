@@ -69,39 +69,68 @@ export class PatientViewPageStore
 
     @observable.ref private visibleRows:Mutation[][] = [];
 
-    @observable patientId = '';
+    @observable private _patientId = '';
+    @computed get patientId():string {
+        if (this._patientId)
+            return this._patientId;
+
+        return this.derivedPatientId.result;
+    }
 
     @observable studyId = '';
 
-    @observable sampleId = 'P04_Pri';
+    @observable _sampleId = '';
+    @computed get sampleId() {
+        return this._sampleId;
+    }
 
-    @observable pageMode: PageMode = 'patient';
+    @computed get pageMode(): PageMode {
+        return this._sampleId ? 'sample' : 'patient';
+    }
 
     @computed get mutationGeneticProfileId() {
         return `${this.studyId}_mutations`;
     }
 
-    readonly clinicalDataPatient = remoteData(() => {
-        return client.getAllClinicalDataOfPatientInStudyUsingGET({
-            projection: 'DETAILED',
-            studyId: this.studyId,
-            patientId: this.patientId
-        });
-    }, []);
+    readonly derivedPatientId = remoteData<string>({
+        await: () => [this.samples],
+        invoke: async () => {
+            for (let sample of this.samples.result)
+                return sample.patientId;
+            return '';
+        },
+        default: ''
+    });
 
-    readonly samples = remoteData(() => {
-        if (this.pageMode === 'patient') {
-            return client.getAllSamplesOfPatientInStudyUsingGET({
-                studyId: this.studyId,
-                patientId: this.patientId
-            });
-        } else {
-            const prom = new Promise((resolve, reject) => {
-                client.getSampleInStudyUsingGET({ studyId:this.studyId, sampleId:this.sampleId }).then((data)=>{
-                    resolve([data]);
+    readonly clinicalDataPatient = remoteData({
+        await: () => this.pageMode === 'patient' ? [] : [this.derivedPatientId],
+        invoke: async () => {
+            if (this.studyId && this.patientId)
+                return await client.getAllClinicalDataOfPatientInStudyUsingGET({
+                    projection: 'DETAILED',
+                    studyId: this.studyId,
+                    patientId: this.patientId
                 });
-            });
-            return prom;
+            return [];
+        },
+        default: []
+    });
+
+    readonly samples = remoteData(async () => {
+        if (this.pageMode === 'patient') {
+            if (this.studyId && this.patientId)
+                return await client.getAllSamplesOfPatientInStudyUsingGET({
+                    studyId: this.studyId,
+                    patientId: this.patientId
+                });
+            return [];
+        } else {
+            if (this.studyId && this.sampleId)
+                return await client.getSampleInStudyUsingGET({
+                    studyId:this.studyId,
+                    sampleId:this.sampleId
+                }).then(data => [data]);
+            return [];
         }
     }, []);
 
@@ -111,7 +140,7 @@ export class PatientViewPageStore
             this.samples
         ],
         invoke: () => client.fetchCopyNumberSegmentsUsingPOST({
-            sampleIdentifiers: this.samples.result!.map(sample => ({
+            sampleIdentifiers: this.samples.result.map(sample => ({
                 sampleId: sample.sampleId,
                 studyId: this.studyId
             })),
@@ -135,7 +164,7 @@ export class PatientViewPageStore
 
     readonly clinicalDataGroupedBySample = remoteData({
         await:() => [this.clinicalDataForSamples],
-        invoke: () => Promise.resolve(groupByEntityId(this.clinicalDataForSamples.result!))
+        invoke: async () => groupByEntityId(this.clinicalDataForSamples.result)
     }, []);
 
     readonly patientViewData = remoteData({
@@ -143,62 +172,60 @@ export class PatientViewPageStore
             this.clinicalDataPatient,
             this.clinicalDataForSamples
         ],
-        invoke: () => Promise.resolve(transformClinicalInformationToStoreShape(
+        invoke: async () => transformClinicalInformationToStoreShape(
             this.patientId,
             this.studyId,
             this.clinicalDataPatient.result,
             this.clinicalDataForSamples.result
-        ))
+        )
     },{});
 
     readonly geneticProfilesInStudy = remoteData(() => {
-            console.log("here",this.studyId);
-            return client.getAllGeneticProfilesInStudyUsingGET({
+        console.log("here",this.studyId);
+        return client.getAllGeneticProfilesInStudyUsingGET({
             studyId: this.studyId
-            })
-        }
-        , []
-    );
+        })
+    }, []);
 
     private readonly mrnaRankGeneticProfileId = remoteData({
         await: () => [
             this.geneticProfilesInStudy
         ],
-        invoke: () => {
+        invoke: async () => {
             const regex1 = /^.+rna_seq.*_zscores$/; // We prefer profiles that look like this
             const regex2 = /^.*_zscores$/; // If none of the above are available, we'll look for ones like this
             const preferredProfile:(GeneticProfile | undefined) = this.geneticProfilesInStudy.result.find(
                 (gp:GeneticProfile) => regex1.test(gp.geneticProfileId.toLowerCase()));
 
             if (preferredProfile) {
-                return Promise.resolve(preferredProfile.geneticProfileId);
+                return preferredProfile.geneticProfileId;
             } else {
                 const fallbackProfile:(GeneticProfile | undefined) = this.geneticProfilesInStudy.result.find(
                     (gp:GeneticProfile) => regex2.test(gp.geneticProfileId.toLowerCase()));
 
-                return Promise.resolve(fallbackProfile ? fallbackProfile.geneticProfileId : null);
+                return fallbackProfile ? fallbackProfile.geneticProfileId : null;
             }
         }
     }, null);
 
     readonly discreteCNAData = remoteData({
 
-        await: ()=> [
+        await: () => [
             this.geneticProfilesInStudy,
             this.samples
         ],
-        invoke: () => {
+        invoke: async () => {
 
-            const sampleIds = this.samples.result.map((sample)=>sample.sampleId);
+            const sampleIds = this.samples.result.map((sample) => sample.sampleId);
 
             if (this.geneticProfileIdDiscrete.isComplete && this.geneticProfileIdDiscrete.result) {
-                return client.fetchDiscreteCopyNumbersInGeneticProfileUsingPOST({
+                return await client.fetchDiscreteCopyNumbersInGeneticProfileUsingPOST({
                     projection: 'DETAILED',
                     discreteCopyNumberFilter: {sampleIds: sampleIds} as DiscreteCopyNumberFilter,
                     geneticProfileId: this.geneticProfileIdDiscrete.result
                 });
             } else {
-                return Promise.resolve([]);
+                return [];
             }
 
         }
@@ -207,14 +234,14 @@ export class PatientViewPageStore
 
     readonly geneticProfileIdDiscrete = remoteData({
 
-        await: ()=> [
+        await: () => [
            this.geneticProfilesInStudy
         ],
-        invoke: () => {
-            const profile = this.geneticProfilesInStudy.result!.find((profile: GeneticProfile)=> {
+        invoke: async () => {
+            const profile = this.geneticProfilesInStudy.result.find((profile: GeneticProfile)=> {
                 return profile.datatype === 'DISCRETE';
             });
-            return (profile) ? Promise.resolve(profile.geneticProfileId) : Promise.resolve(undefined);
+            return profile ? profile.geneticProfileId : undefined;
         }
 
     });
@@ -223,27 +250,27 @@ export class PatientViewPageStore
         await: () => [
             this.samples
         ],
-        invoke: ()=> {
+        invoke: async () => {
             const geneticProfileId = this.mutationGeneticProfileId;
             if (geneticProfileId) {
-                return client.fetchMutationsInGeneticProfileUsingPOST({
+                return await client.fetchMutationsInGeneticProfileUsingPOST({
                     geneticProfileId: geneticProfileId,
                     sampleIds: this.samples.result.map((sample:Sample) => sample.sampleId),
                     projection: "DETAILED"
                 });
             } else {
-                return Promise.resolve([]);
+                return [];
             }
     }}, []);
 
     @action("SetSampleId") setSampleId(newId: string) {
-        this.sampleId = newId;
-        this.pageMode = 'sample';
+        this._patientId = '';
+        this._sampleId = newId;
     }
 
     @action("SetPatientId") setPatientId(newId: string) {
-        this.patientId = newId;
-        this.pageMode = 'patient';
+        this._sampleId = '';
+        this._patientId = newId;
     }
 
     @computed get mrnaExprRankCache() {
