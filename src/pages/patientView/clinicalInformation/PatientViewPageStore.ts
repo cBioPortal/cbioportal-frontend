@@ -264,12 +264,14 @@ export class PatientViewPageStore
     }}, []);
 
     @action("SetSampleId") setSampleId(newId: string) {
-        this._patientId = '';
+        if (newId)
+            this._patientId = '';
         this._sampleId = newId;
     }
 
     @action("SetPatientId") setPatientId(newId: string) {
-        this._sampleId = '';
+        if (newId)
+            this._sampleId = '';
         this._patientId = newId;
     }
 
