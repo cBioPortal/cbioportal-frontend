@@ -8,8 +8,10 @@ import {getSpans} from '../clinicalInformation/lib/clinicalAttributesUtil.js';
 
 import styles from './styles.module.scss';
 
-export type IPatientHeaderProps = Partial<Pick<ClinicalInformationData, 'clinicalDataStatus' | 'patient' | 'samples'>>;
-
+export type IPatientHeaderProps = {
+    patient:any;
+    handlePatientClick:any;
+}
 export default class PatientHeader extends React.Component<IPatientHeaderProps, {}> {
     public render() {
 
@@ -40,7 +42,7 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
                 overlay={this.getPopoverPatient(patient)}
             >
                 <span>
-                    {patient.id}
+                    <a href="javascript:void(0)" onClick={()=>this.props.handlePatientClick(patient.id)}>{patient.id}</a>
                     <span className='clinical-spans' id='patient-attributes' dangerouslySetInnerHTML={{__html:
                         getSpans(fromPairs(patient.clinicalData.map((x) => [x.clinicalAttributeId, x.value])), 'lgg_ucsf_2014')}}>
                     </span>
