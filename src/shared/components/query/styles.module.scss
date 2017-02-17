@@ -331,6 +331,24 @@
   }
 }
 
+div.MutSigGeneSelectorWindow {
+  width: 650px;
+  height: 375px;
+
+  div.MutSigGeneSelector {
+    flex: 1;
+  }
+}
+
+div.GisticGeneSelectorWindow {
+  width: 800px;
+  height: 550px;
+
+  div.GisticGeneSelector {
+    flex: 1;
+  }
+}
+
 button.SubmitButton {
   font-weight: 400;
   font-size: 18px;

@@ -1,0 +1,39 @@
+div.PopupWindow {
+  position: fixed;
+  box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2);
+  background-color: white;
+  border: 1px solid #aaa;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+}
+div.titleBar {
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  background-color: #ccc;
+  font-size: 16px;
+  font-weight: bold;
+}
+span.windowTitle {
+  flex: 1;
+  text-align: center;
+}
+div.closeButton {
+  cursor: pointer;
+  background-color: #e6e6e6;
+  border: 1px solid lightgrey;
+  border-radius: 2px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: darkgrey;
+  text-align: center;
+
+  &:hover {
+    color: black;
+    border-color: darkgrey;
+  }
+}

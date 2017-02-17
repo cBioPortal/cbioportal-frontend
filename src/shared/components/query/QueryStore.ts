@@ -16,6 +16,8 @@ export type PriorityStudies = {
 	[category:string]: string[]
 };
 
+export type GeneReplacement = {alias: string, genes: Gene[]};
+
 function isInteger(str:string)
 {
 	return Number.isInteger(Number(str));
@@ -164,6 +166,8 @@ export class QueryStore
 	// VISUAL OPTIONS
 	////////////////////////////////////////////////////////////////////////////////
 
+	@observable showMutSigPopup = false;
+	@observable showGisticPopup = false;
 	@observable.ref searchTextPresets:ReadonlyArray<string> = [
 		'tcga',
 		'tcga -provisional',
@@ -205,7 +209,7 @@ export class QueryStore
 		reaction: () => this._selectedProfileIds = undefined
 	});
 
-	readonly sampleLists = remoteData<SampleList[]>({
+	readonly sampleLists = remoteData({
 		invoke: async () => {
 			if (!this.singleSelectedStudyId)
 				return [];
@@ -219,7 +223,7 @@ export class QueryStore
 		reaction: () => this._selectedSampleListId = undefined
 	});
 
-	readonly mutSigForSingleStudy = remoteData<MutSig[]>({
+	readonly mutSigForSingleStudy = remoteData({
 		invoke: async () => {
 			if (!this.singleSelectedStudyId)
 				return [];
@@ -230,7 +234,7 @@ export class QueryStore
 		default: []
 	});
 
-	readonly gisticForSingleStudy = remoteData<Gistic[]>({
+	readonly gisticForSingleStudy = remoteData({
 		invoke: async () => {
 			if (!this.singleSelectedStudyId)
 				return [];
@@ -242,7 +246,7 @@ export class QueryStore
 	});
 
 	//TODO - delay this
-	readonly genes = remoteData<{found: Gene[], suggestions: {alias: string, genes: Gene[]}[]}>({
+	readonly genes = remoteData<{found: Gene[], suggestions: GeneReplacement[]}>({
 		invoke: async () => {
 			let [entrezIds, hugoIds] = _.partition(this.geneIds, isInteger);
 
@@ -259,18 +263,21 @@ export class QueryStore
 				hugoPromise = [];
 
 			let [entrezGenes, hugoGenes] = await Promise.all([entrezPromise, hugoPromise]);
-			let found = [...entrezGenes, ...hugoGenes];
+			let entrezToHugoReplacements:GeneReplacement[] = entrezGenes.map(gene => ({alias: gene.entrezGeneId + '', genes: [gene]}));
 			let missingEntrezIds = _.difference(entrezIds, entrezGenes.map(gene => gene.entrezGeneId + ''));
 			let missingHugoIds = _.difference(hugoIds, hugoGenes.map(gene => gene.hugoGeneSymbol));
-			let missingIds = _.union(missingEntrezIds, missingHugoIds);
-			let suggestions = await Promise.all(missingIds.map(alias => this.getGeneSuggestions(alias)));
-			return {found, suggestions};
+			let aliases = _.union(missingEntrezIds, missingHugoIds);
+			let aliasSuggestions = await Promise.all(aliases.map(alias => this.getGeneSuggestions(alias)));
+			return {
+				found: [...entrezGenes, ...hugoGenes],
+				suggestions: [...entrezToHugoReplacements, ...aliasSuggestions]
+			};
 		},
 		default: {found: [], suggestions: []}
 	});
 
 	@memoize
-	async getGeneSuggestions(alias:string)
+	async getGeneSuggestions(alias:string):Promise<GeneReplacement>
 	{
 		return {
 			alias,

@@ -48,10 +48,14 @@ export default class GeneSetSelector extends React.Component<{}, {}>
 
 				<FlexRow padded>
 					{!!(this.store.mutSigForSingleStudy.result.length) && (
-						<button>Select from Recurrently Mutated Genes (MutSig)</button>
+						<button onClick={() => this.store.showMutSigPopup = true}>
+							Select from Recurrently Mutated Genes (MutSig)
+						</button>
 					)}
 					{!!(this.store.gisticForSingleStudy.result.length) && (
-						<button>Select Genes from Recurrent CNAs (Gistic)</button>
+						<button onClick={() => this.store.showGisticPopup = true}>
+							Select Genes from Recurrent CNAs (Gistic)
+						</button>
 					)}
 				</FlexRow>
 

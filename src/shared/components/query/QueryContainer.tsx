@@ -16,11 +16,16 @@ import devMode from "../../lib/devMode";
 import DataTypePrioritySelector from "./DataTypePrioritySelector";
 import GeneSetSelector from "./GeneSetSelector";
 import SampleListSelector from "./SampleListSelector";
+import MutSigGeneSelector from "./MutSigGeneSelector";
+import GisticGeneSelector from "./GisticGeneSelector";
+import PopupWindow from "../popupWindow/PopupWindow";
 
 const styles = styles_any as {
 	QueryContainerParent: string,
 	QueryContainer: string,
-	SubmitButton: string
+	MutSigGeneSelectorWindow: string,
+	GisticGeneSelectorWindow: string,
+	SubmitButton: string,
 };
 
 @observer
@@ -58,6 +63,24 @@ export default class QueryContainer extends React.Component<{}, {}>
 
 					{!!(devMode.enabled) && (
 						<GeneSetSelector/>
+					)}
+
+					{!!(devMode.enabled && this.store.showMutSigPopup) && (
+						<PopupWindow
+							className={styles.MutSigGeneSelectorWindow}
+							windowTitle="Recurrently Mutated Genes"
+							onClickClose={() => this.store.showMutSigPopup = false}
+							children={<MutSigGeneSelector/>}
+						/>
+					)}
+
+					{!!(devMode.enabled && this.store.showGisticPopup) && (
+						<PopupWindow
+							className={styles.GisticGeneSelectorWindow}
+							windowTitle="Recurrent Copy Number Alterations (Gistic)"
+							onClickClose={() => this.store.showGisticPopup = false}
+							children={<GisticGeneSelector/>}
+						/>
 					)}
 
 					{!!(devMode.enabled) && (
