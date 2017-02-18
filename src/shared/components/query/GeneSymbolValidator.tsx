@@ -278,13 +278,13 @@ export default class GeneSymbolValidator extends React.Component<{}, {}>
 */
 	render()
 	{
-		if (this.store.genes.isPending)
+		if (this.store.genes.isPending && this.store.genes.result.suggestions.length == 0)
 			return (
 				<div className={styles.GeneSymbolValidator}>
-					<Spinner/>
 					<span className={styles.pendingMessage}>
 						Validating gene symbols...
 					</span>
+					<Spinner/>
 				</div>
 			);
 
@@ -308,6 +308,7 @@ export default class GeneSymbolValidator extends React.Component<{}, {}>
 					</div>
 
 					{this.store.genes.result.suggestions.map(this.renderSuggestion, this)}
+					{this.store.genes.isPending && <Spinner/>}
 				</div>
 			);
 

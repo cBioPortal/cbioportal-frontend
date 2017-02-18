@@ -11,6 +11,7 @@ import {MutSig, Gistic} from "../../api/CBioPortalAPIInternal";
 import oql_parser from "../../lib/oql/oql-parser";
 import {SyntaxError} from "../../lib/oql/oql-parser";
 import memoize from "../../lib/memoize";
+import debounceAsync from "../../lib/debounceAsync";
 
 export type PriorityStudies = {
 	[category:string]: string[]
@@ -245,10 +246,15 @@ export class QueryStore
 		default: []
 	});
 
-	//TODO - delay this
-	readonly genes = remoteData<{found: Gene[], suggestions: GeneReplacement[]}>({
-		invoke: async () => {
-			let [entrezIds, hugoIds] = _.partition(this.geneIds, isInteger);
+	readonly genes = remoteData({
+		invoke: () => this.debounceInvokeGenes(this.geneIds),
+		default: {found: [], suggestions: []}
+	});
+
+	private debounceInvokeGenes = debounceAsync(
+		async (geneIds:string[]):Promise<{found: Gene[], suggestions: GeneReplacement[]}> =>
+		{
+			let [entrezIds, hugoIds] = _.partition(geneIds, isInteger);
 
 			let entrezPromise;
 			if (entrezIds.length)
@@ -273,8 +279,8 @@ export class QueryStore
 				suggestions: [...entrezToHugoReplacements, ...aliasSuggestions]
 			};
 		},
-		default: {found: [], suggestions: []}
-	});
+		500
+	);
 
 	@memoize
 	async getGeneSuggestions(alias:string):Promise<GeneReplacement>
