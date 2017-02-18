@@ -10,6 +10,9 @@ import {computed, observable, action, reaction, autorun} from "../../../../node_
 import {remoteData} from "../../../shared/api/remoteData";
 import {labelMobxPromises} from "../../../shared/api/MobxPromise";
 import MrnaExprRankCache from './MrnaExprRankCache';
+import DiscreteCNACache from './DiscreteCNACache';
+import {default as CohortVariantCountCache, EntrezToKeywordList} from './CohortVariantCountCache';
+import {SampleToEntrezListOrNull} from './SampleGeneCache';
 
 type PageMode = 'patient' | 'sample';
 
@@ -49,19 +52,90 @@ export class PatientViewPageStore
     {
         labelMobxPromises(this);
 
-        autorun(
-            ()=> {
-                if (!this.visibleRows || this.visibleRows.length === 0) {
+        reaction(() => {
+                    if (this.allDiscreteCNADataRequested) {
+                        return {
+                            allDiscreteCNADataRequested: this.allDiscreteCNADataRequested,
+                            sampleIds: this.samples.result.map((s:Sample)=>s.sampleId),
+                            discreteCNACache: this.discreteCNACache
+                        };
+                    }
+            },
+            (data:any) => {
+                if (data.allDiscreteCNADataRequested) {
+                    data.discreteCNACache.populate(data.sampleIds.reduce(
+                        (arg:SampleToEntrezListOrNull, next:string) => {
+                            arg[next] = null;
+                            return arg;
+                        }, {}));
+                }
+            });
+
+        reaction(() => {
+                if (this.allVariantCountDataRequested) {
+                    return {
+                        allVariantCountDataRequested: this.allVariantCountDataRequested,
+                        mutationData: this.mutationData.result,
+                        cohortVariantCountCache: this.cohortVariantCountCache
+                    };
+                }
+            },
+            (data:any) => {
+                if (data.allVariantCountDataRequested) {
+                    const querySet:{ [entrezGeneId:string]:{[s:string]:boolean}} = {};
+                    for (const mutation of data.mutationData) {
+                        querySet[mutation.entrezGeneId] = querySet[mutation.entrezGeneId] || {};
+                        if (mutation.keyword) {
+                            querySet[mutation.entrezGeneId][mutation.keyword] = true;
+                        }
+                    }
+                    const query:EntrezToKeywordList = {};
+                    for (const entrezGeneId of Object.keys(querySet)) {
+                        query[parseInt(entrezGeneId, 10)] = Object.keys(querySet[entrezGeneId]);
+                    }
+                    data.cohortVariantCountCache.populate(query);
+                }
+            });
+
+        reaction(() => {
+            if (this.visibleRows && this.visibleRows.length > 0) {
+                return {
+                    visibleRows: this.visibleRows,
+                    mrnaExprRankCache: this.mrnaExprRankCache,
+                    discreteCNACache: this.discreteCNACache,
+                    cohortVariantCountCache: this.cohortVariantCountCache
+                };
+            } else {
+                return {};
+            }
+        },
+            (data:any)=> {
+                if (!data.visibleRows || data.visibleRows.length === 0) {
                     return;
                 }
-                const sampleToEntrezGeneIds:{ [sampleId:string]:Set<number> } = {};
+                const sampleToEntrezGeneIdsSet:{ [sampleId:string]:Set<number> } = {};
+                const entrezToKeywordSet: { [entrezGeneId:number]:{[s:string]:boolean} } = {};
                 for (const mutations of this.visibleRows) {
                     if (mutations && mutations.length > 0) {
-                        sampleToEntrezGeneIds[mutations[0].sampleId] = sampleToEntrezGeneIds[mutations[0].sampleId] || new Set();
-                        sampleToEntrezGeneIds[mutations[0].sampleId].add(mutations[0].entrezGeneId);
+                        sampleToEntrezGeneIdsSet[mutations[0].sampleId] = sampleToEntrezGeneIdsSet[mutations[0].sampleId] || new Set();
+                        sampleToEntrezGeneIdsSet[mutations[0].sampleId].add(mutations[0].entrezGeneId);
+                        entrezToKeywordSet[mutations[0].entrezGeneId] = entrezToKeywordSet[mutations[0].entrezGeneId] || new Set();
+                        if (mutations[0].keyword) {
+                            entrezToKeywordSet[mutations[0].entrezGeneId][mutations[0].keyword] = true;
+                        }
                     }
                 }
-                this.mrnaExprRankCache.populate(sampleToEntrezGeneIds);
+                const sampleToEntrezList:{ [sampleId:string]:number[]} = {};
+                for (const sampleId of Object.keys(sampleToEntrezGeneIdsSet)) {
+                    sampleToEntrezList[sampleId] = Array.from(sampleToEntrezGeneIdsSet[sampleId]);
+                }
+                const entrezToKeywordList:{ [entrezGeneId:number]:string[] } = {};
+                for (const entrez of Object.keys(entrezToKeywordSet)) {
+                    entrezToKeywordList[parseInt(entrez, 10)] = Object.keys(entrezToKeywordSet[parseInt(entrez, 10)]);
+                }
+                data.mrnaExprRankCache.populate(sampleToEntrezList);
+                data.discreteCNACache.populate(sampleToEntrezList);
+                data.cohortVariantCountCache.populate(entrezToKeywordList);
             });
 
         this.setVisibleRows = this.setVisibleRows.bind(this);
@@ -69,6 +143,8 @@ export class PatientViewPageStore
 
     @observable.ref private visibleRows:Mutation[][] = [];
 
+    @observable private allDiscreteCNADataRequested = false;
+    @observable private allVariantCountDataRequested = false;
     @observable private _patientId = '';
     @computed get patientId():string {
         if (this._patientId)
@@ -274,10 +350,30 @@ export class PatientViewPageStore
     }
 
     @computed get mrnaExprRankCache() {
-        return new MrnaExprRankCache(this.mrnaRankGeneticProfileId.result);
+        return new MrnaExprRankCache(this.samples.result.map((s:Sample)=>s.sampleId),
+                                    this.mrnaRankGeneticProfileId.result);
+    }
+    
+    @computed get discreteCNACache() {
+        return new DiscreteCNACache(this.samples.result.map((s:Sample)=>s.sampleId),
+                                    this.geneticProfileIdDiscrete.result);
+    }
+
+    @computed get cohortVariantCountCache() {
+        return new CohortVariantCountCache(this.mutationGeneticProfileId);
     }
 
     @action setVisibleRows(rows:Mutation[][]) {
-        this.visibleRows = rows || [];
+        if (!_.isEqual(rows, this.visibleRows)) {
+            this.visibleRows = rows;
+        }
+    }
+
+    @action requestAllDiscreteCNAData() {
+        this.allDiscreteCNADataRequested = true;
+    }
+
+    @action requestAllVariantCountData() {
+        this.allVariantCountDataRequested = true;
     }
 }
