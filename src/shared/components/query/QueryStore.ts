@@ -254,29 +254,36 @@ export class QueryStore
 	private invokeGenesLater = debounceAsync(
 		async (geneIds:string[]):Promise<{found: Gene[], suggestions: GeneReplacement[]}> =>
 		{
-			let [entrezIds, hugoIds] = _.partition(geneIds, isInteger);
+			let [entrezIds, hugoIds] = _.partition(_.uniq(geneIds), isInteger);
 
-			let entrezPromise;
-			if (entrezIds.length)
-				entrezPromise = client.fetchGenesUsingPOST({geneIdType: "ENTREZ_GENE_ID", geneIds: entrezIds});
-			else
-				entrezPromise = [];
+			let getEntrezResults = async () => {
+				let found:Gene[];
+				if (entrezIds.length)
+					found = await client.fetchGenesUsingPOST({geneIdType: "ENTREZ_GENE_ID", geneIds: entrezIds});
+				else
+					found = [];
+				let missingIds = _.difference(entrezIds, found.map(gene => gene.entrezGeneId + ''));
+				let removals = missingIds.map(entrezId => ({alias: entrezId, genes: []}));
+				let replacements = found.map(gene => ({alias: gene.entrezGeneId + '', genes: [gene]}));
+				let suggestions = [...removals, ...replacements];
+				return {found, suggestions};
+			};
 
-			let hugoPromise;
-			if (hugoIds.length)
-				hugoPromise = client.fetchGenesUsingPOST({geneIdType: "HUGO_GENE_SYMBOL", geneIds: hugoIds});
-			else
-				hugoPromise = [];
+			let getHugoResults = async () => {
+				let found:Gene[];
+				if (hugoIds.length)
+					found = await client.fetchGenesUsingPOST({geneIdType: "HUGO_GENE_SYMBOL", geneIds: hugoIds});
+				else
+					found = [];
+				let missingIds = _.difference(hugoIds, found.map(gene => gene.hugoGeneSymbol));
+				let suggestions = await Promise.all(missingIds.map(alias => this.getGeneSuggestions(alias)));
+				return {found, suggestions};
+			};
 
-			let [entrezGenes, hugoGenes] = await Promise.all([entrezPromise, hugoPromise]);
-			let entrezToHugoReplacements:GeneReplacement[] = entrezGenes.map(gene => ({alias: gene.entrezGeneId + '', genes: [gene]}));
-			let missingEntrezIds = _.difference(entrezIds, entrezGenes.map(gene => gene.entrezGeneId + ''));
-			let missingHugoIds = _.difference(hugoIds, hugoGenes.map(gene => gene.hugoGeneSymbol));
-			let aliases = _.union(missingEntrezIds, missingHugoIds);
-			let aliasSuggestions = await Promise.all(aliases.map(alias => this.getGeneSuggestions(alias)));
+			let [entrezResults, hugoResults] = await Promise.all([getEntrezResults(), getHugoResults()]);
 			return {
-				found: [...entrezGenes, ...hugoGenes],
-				suggestions: [...entrezToHugoReplacements, ...aliasSuggestions]
+				found: [...entrezResults.found, ...hugoResults.found],
+				suggestions: [...entrezResults.suggestions, ...hugoResults.suggestions]
 			};
 		},
 		500
@@ -287,7 +294,7 @@ export class QueryStore
 	{
 		return {
 			alias,
-			genes: isInteger(alias) ? [] : await client.getAllGenesUsingGET({alias})
+			genes: await client.getAllGenesUsingGET({alias})
 		};
 	}
 

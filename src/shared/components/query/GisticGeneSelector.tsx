@@ -6,7 +6,7 @@ import FontAwesome from "react-fontawesome";
 import * as styles_any from './styles.module.scss';
 import queryStore from "./QueryStore";
 import {toJS, computed} from "../../../../node_modules/mobx/lib/mobx";
-import {observer} from "../../../../node_modules/mobx-react/custom";
+import {observer} from "../../../../node_modules/mobx-react/index";
 
 const styles = styles_any as {
 	GisticGeneSelector: string,
