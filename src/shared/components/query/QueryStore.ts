@@ -247,11 +247,11 @@ export class QueryStore
 	});
 
 	readonly genes = remoteData({
-		invoke: () => this.debounceInvokeGenes(this.geneIds),
+		invoke: () => this.invokeGenesLater(this.geneIds),
 		default: {found: [], suggestions: []}
 	});
 
-	private debounceInvokeGenes = debounceAsync(
+	private invokeGenesLater = debounceAsync(
 		async (geneIds:string[]):Promise<{found: Gene[], suggestions: GeneReplacement[]}> =>
 		{
 			let [entrezIds, hugoIds] = _.partition(geneIds, isInteger);
