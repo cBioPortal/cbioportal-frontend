@@ -9,7 +9,10 @@ import exposeComponentRenderer from '../../shared/lib/exposeComponentRenderer';
 import GenomicOverview from './genomicOverview/GenomicOverview';
 import mockData from './mock/sampleData.json';
 import Connector, { ClinicalInformationData } from "./Connector";
-import {ClinicalData, SampleIdentifier, GeneticProfile} from "shared/api/CBioPortalAPI";
+import {
+    ClinicalData, SampleIdentifier, GeneticProfile, DiscreteCopyNumberFilter,
+    DiscreteCopyNumberData
+} from "shared/api/CBioPortalAPI";
 import { ClinicalDataBySampleId } from "../../shared/api/api-types-extended";
 import { RequestStatus } from "../../shared/api/api-types-extended";
 import { default as CBioPortalAPI, Mutation }  from "../../shared/api/CBioPortalAPI";
@@ -33,6 +36,7 @@ import {IVariantCountData} from "./mutation/column/CohortColumnFormatter";
 
 import {IHotspotData, IMyCancerGenomeData, IMyCancerGenome} from "./mutation/column/AnnotationColumnFormatter";
 import {getSpans} from './clinicalInformation/lib/clinicalAttributesUtil.js';
+import CopyNumberAlterationsTable from "./copyNumberAlterations/CopyNumberAlterationsTable";
 
 
 export interface IPatientViewPageProps {
@@ -60,6 +64,7 @@ interface IPatientViewState {
     mutSigData?: MutSigData;
     variantCountData?: IVariantCountData;
     activeTabKey: number;
+    discreteCnaData?: DiscreteCopyNumberData[];
 }
 
 @Connector.decorator
@@ -101,7 +106,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             hotspotsData: undefined,
             mrnaExprRankData: undefined,
             variantCountData: undefined,
-            activeTabKey:1
+            activeTabKey:1,
+            discreteCnaData:undefined
         };
 
         this.handleSelect = this.handleSelect.bind(this);
@@ -264,6 +270,15 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     }
 
+    fetchDiscreteCnaData(_sampleIds: string[]) {
+        return this.tsClient.fetchDiscreteCopyNumbersInGeneticProfileUsingPOST({
+            projection:'DETAILED',
+            discreteCopyNumberFilter:{ sampleIds:  _sampleIds } as DiscreteCopyNumberFilter,
+            geneticProfileId: this.studyId + '_gistic'
+        });
+
+    }
+
     fetchMutationData(_sampleIds: string[]) {
 
         let mutationDataPromise = this.tsClient.fetchMutationsInGeneticProfileUsingPOST({geneticProfileId: this.mutationGeneticProfileId, sampleIds: _sampleIds, projection: "DETAILED"});
@@ -341,7 +356,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     }
                 }
             }
-            const fetchPromise = this.tsInternalClient.getVariantCountsUsingPOST({
+            const fetchPromise = this.tsInternalClient.fetchVariantCountsUsingPOST({
                 geneticProfileId: this.mutationGeneticProfileId,
                 variantCountIdentifiers
             });
@@ -392,6 +407,11 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                 this.fetchCnaSegmentData(sampleIds).then((_result) => {
                     this.setState(({ cnaSegmentData:  _result } as IPatientViewState));
+                });
+
+                this.fetchDiscreteCnaData(sampleIds).then((_result)=>{
+                    console.log(_result);
+                    this.setState(({ discreteCnaData:_result } as IPatientViewState))
                 });
 
                 this.fetchMyCancerGenomeData().then((_result) => {
@@ -600,7 +620,19 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             )
                         }
                     </Tab>
-                    <Tab eventKey={2} title="Clinical Data">
+                    <Tab eventKey={2} title="Copy Number Alterations">
+                        <FeatureTitle title="Copy Number Alterations" isLoading={ !this.state.discreteCnaData } />
+
+                        {
+                            (this.state.discreteCnaData) && (
+                                <CopyNumberAlterationsTable rawData={this.state.discreteCnaData} />
+                            )
+
+                        }
+
+
+                    </Tab>
+                    <Tab eventKey={3} title="Clinical Data">
 
                         <ClinicalInformationContainer status={ this.props.clinicalDataStatus } patient={this.props.patient} samples={this.props.samples} />
 
