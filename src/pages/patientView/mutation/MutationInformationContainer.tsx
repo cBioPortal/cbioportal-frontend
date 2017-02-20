@@ -5,7 +5,7 @@ import {IColumnDefMap} from "../../../shared/components/enhancedReactTable/IEnha
 import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter";
 import TumorColumnFormatter from "./column/TumorColumnFormatter";
 import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
-import MrnaExprColumnFormatter from "./column/MrnaExprColumnFormatter";
+import {MrnaRankData, default as MrnaExprColumnFormatter} from "./column/MrnaExprColumnFormatter";
 import AlleleCountColumnFormatter from "./column/AlleleCountColumnFormatter";
 import {IVariantCountData, default as CohortColumnFormatter} from "./column/CohortColumnFormatter";
 import { Mutation } from "../../../shared/api/CBioPortalAPI";
@@ -13,7 +13,7 @@ import SampleManager from "../sampleManager";
 import {
     default as AnnotationColumnFormatter, IHotspotData, IMyCancerGenomeData
 } from "./column/AnnotationColumnFormatter";
-import { MutSigData, MrnaRankData } from "../PatientViewPage";
+import { MutSigData } from "../PatientViewPage";
 import {
     default as CosmicColumnFormatter, ICosmicData
 } from "../../../shared/components/mutationTable/column/CosmicColumnFormatter";
