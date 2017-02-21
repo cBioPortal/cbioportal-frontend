@@ -15,6 +15,11 @@
 
 .QueryContainer {
   width: 850px;
+
+  errorMessage: {
+    color: maroon;
+    font-weight: bold;
+  }
 }
 
 .cancerStudySelectorHeader {

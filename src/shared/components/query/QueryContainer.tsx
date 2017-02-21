@@ -26,6 +26,7 @@ const styles = styles_any as {
 	MutSigGeneSelectorWindow: string,
 	GisticGeneSelectorWindow: string,
 	SubmitButton: string,
+	errorMessage: string,
 };
 
 @observer
@@ -40,6 +41,18 @@ export default class QueryContainer extends React.Component<{}, {}>
     {
         if (this.store.cancerTypes.isPending || this.store.cancerStudies.isPending)
             return <Spinner/>;
+
+        let error = this.store.cancerTypes.error
+        	|| this.store.cancerStudies.error
+        	|| this.store.geneticProfiles.error
+        	|| this.store.sampleLists.error
+        	|| this.store.mutSigForSingleStudy.error
+        	|| this.store.gisticForSingleStudy.error
+        	|| this.store.genes.error;
+        if (error)
+			return <span className={styles.errorMessage}>{`Error: ${error}`}</span>;
+
+
         if (!this.store.cancerTypes.result.length || !this.store.cancerStudies.result.length)
             return <span>No data</span>;
 
