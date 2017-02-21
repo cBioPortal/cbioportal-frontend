@@ -144,9 +144,10 @@ ul.StudyList {
 
     &.Level1 {
       label {      
-        font: normal normal 500 17px/18px 'Helvetica Neue', Helvetica, Arial, sans-serif;
-        color: #333;
         border-bottom: 1px solid rgb(232, 241, 248);
+        color: #333;
+        display: block;
+        font: normal normal 500 17px/18px 'Helvetica Neue', Helvetica, Arial, sans-serif;
         padding: 10px 5px 5px 5px;
         margin: 20px 10px 5px 10px;
       }
@@ -173,16 +174,19 @@ ul.StudyList {
   }
 }
 
-
-
 li.Study {
   list-style-type: none;
   padding: 2px 0;
   display: flex;
   justify-content: space-between;
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
-  font-weight: 400 !important;
   align-items: flex-start;
+
+  label {
+    font-weight: 400;
+    margin: 0;
+    display: flex;
+  }
 
   input[type="checkbox"] {
     margin: 3px 6px 0 0;
