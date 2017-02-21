@@ -184,6 +184,10 @@ li.Study {
   font-weight: 400 !important;
   align-items: flex-start;
 
+  input[type="checkbox"] {
+    margin: 3px 6px 0 0;
+  }
+
   .StudyName {
     color: #444;
     max-width: 435px;
