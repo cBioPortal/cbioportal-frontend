@@ -117,21 +117,19 @@ export class PatientViewPageStore
     });
 
     readonly samples = remoteData(async () => {
-        if (this.pageMode === 'patient') {
-            if (this.studyId && this.patientId)
-                return await client.getAllSamplesOfPatientInStudyUsingGET({
-                    studyId: this.studyId,
-                    patientId: this.patientId
-                });
-            return [];
-        } else {
-            if (this.studyId && this.sampleId)
-                return await client.getSampleInStudyUsingGET({
-                    studyId:this.studyId,
-                    sampleId:this.sampleId
-                }).then(data => [data]);
-            return [];
-        }
+        if (this.studyId && this._patientId)
+        	return await client.getAllSamplesOfPatientInStudyUsingGET({
+				studyId: this.studyId,
+				patientId: this.patientId
+			});
+
+		if (this.studyId && this._sampleId)
+			return await client.getSampleInStudyUsingGET({
+				studyId: this.studyId,
+				sampleId: this.sampleId
+			}).then(data => [data]);
+
+		return [];
     }, []);
 
 
