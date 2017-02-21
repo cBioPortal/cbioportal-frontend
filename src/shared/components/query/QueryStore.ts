@@ -186,7 +186,7 @@ export class QueryStore
 	};
 	@observable showSelectedStudiesOnly:boolean = false;
 	@observable.shallow selectedCancerTypeIds:string[] = [];
-	@observable maxTreeDepth:number = 9;
+	@observable maxTreeDepth:number = 3;
 	@observable clickAgainToDeselectSingle:boolean = true;
 
 
