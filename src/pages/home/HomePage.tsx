@@ -1,4 +1,5 @@
 import * as React from 'react';
+import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
 import QueryContainerOld from "../../shared/components/query/old/QueryContainer";
 import QueryContainer from "../../shared/components/query/QueryContainer";
 import * as styles_any from './styles.module.scss';
@@ -36,15 +37,13 @@ export default class HomePage extends React.Component<IHomePageProps, IHomePageS
         super(props);
     }
 
-    componentDidMount()
-    {
-		getRootElement().className += ' ' + styles.rootHtml;
+    public componentDidMount() {
+      this.exposeComponentRenderersToParentScript();
     }
 
-    componentWillUnmount()
-	{
-		getRootElement().className = getRootElement().className.split(styles.rootHtml).join('');
-	}
+    exposeComponentRenderersToParentScript() {
+        exposeComponentRenderer('renderQueryContainer', QueryContainer);
+    }
 
 	@observable selectorVersion:'new'|'old' = 'new';
 
@@ -52,10 +51,10 @@ export default class HomePage extends React.Component<IHomePageProps, IHomePageS
     {
         return (
         	<FlexCol style={{height: '100%'}}>
-				{this.selectorVersion == 'new' ? <QueryContainer/> : <QueryContainerOld/>}
-				{/*devMode.enabled && <a style={{alignSelf: 'center'}} onClick={() => this.selectorVersion = this.selectorVersion == 'new' ? 'old' : 'new' }>Switch to {this.selectorVersion == 'new' ? 'old' : 'new'} view</a>*/}
-				{devMode.enabled && <DevTools/>}
-			</FlexCol>
+    				{this.selectorVersion == 'new' ? <QueryContainer/> : <QueryContainerOld/>}
+    				{/*devMode.enabled && <a style={{alignSelf: 'center'}} onClick={() => this.selectorVersion = this.selectorVersion == 'new' ? 'old' : 'new' }>Switch to {this.selectorVersion == 'new' ? 'old' : 'new'} view</a>*/}
+    				{devMode.enabled && <DevTools/>}
+    			</FlexCol>
 		);
     }
 }

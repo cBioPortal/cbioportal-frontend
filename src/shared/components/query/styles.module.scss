@@ -108,7 +108,7 @@
   ul.cancerTypeList {
     background: rgb(232, 241, 248);
     padding: 0px;
-    margin: 0px;
+    margin: 0px !important;
     width: 230px;
 
     li {
@@ -116,8 +116,8 @@
       list-style-type: none;
       display: flex;
       flex-direction: row;
-
       font-size: 13px;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
       color: #043852;
       border-bottom: 1px solid rgb(222, 233, 241);
       border-top: 1px solid rgb(243, 248, 251);

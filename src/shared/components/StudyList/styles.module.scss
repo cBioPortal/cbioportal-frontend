@@ -180,7 +180,8 @@ li.Study {
   padding: 2px 0;
   display: flex;
   justify-content: space-between;
-  font-size: 13px;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+  font-weight: 400 !important;
   align-items: flex-start;
 
   .StudyName {
