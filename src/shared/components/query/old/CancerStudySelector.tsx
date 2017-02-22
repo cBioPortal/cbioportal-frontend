@@ -122,7 +122,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 	{
 		if (firstDefinedValue(this.props.hideTree, this.state.hideTree))
 			return 0;
-		return this.props.maxTreeDepth;
+		return this.props.maxTreeDepth as number; // defined in defaultProps
 	}
 
 	get selectedCancerTypeIds()

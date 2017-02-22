@@ -57,85 +57,49 @@ export default class QueryContainer extends React.Component<{}, {}>
             return <span>No data</span>;
 
         return (
-            <FlexRow padded flex={1} className={styles.QueryContainerParent}>
+			<FlexCol padded overflow className={styles.QueryContainer}>
+				<CancerStudySelector/>
 
-				<FlexCol padded overflow className={styles.QueryContainer}>
-					<CancerStudySelector/>
-
-					{!!(devMode.enabled && this.store.singleSelectedStudyId) && (
-						<GeneticProfileSelector/>
-					)}
-
-					{!!(devMode.enabled && this.store.singleSelectedStudyId) && (
-						<SampleListSelector/>
-					)}
-
-					{!!(devMode.enabled && !this.store.singleSelectedStudyId) && (
-						<DataTypePrioritySelector/>
-					)}
-
-					{!!(devMode.enabled) && (
-						<GeneSetSelector/>
-					)}
-
-					{!!(devMode.enabled && this.store.showMutSigPopup) && (
-						<PopupWindow
-							className={styles.MutSigGeneSelectorWindow}
-							windowTitle="Recurrently Mutated Genes"
-							onClickClose={() => this.store.showMutSigPopup = false}
-							children={<MutSigGeneSelector/>}
-						/>
-					)}
-
-					{!!(devMode.enabled && this.store.showGisticPopup) && (
-						<PopupWindow
-							className={styles.GisticGeneSelectorWindow}
-							windowTitle="Recurrent Copy Number Alterations (Gistic)"
-							onClickClose={() => this.store.showGisticPopup = false}
-							children={<GisticGeneSelector/>}
-						/>
-					)}
-
-					{!!(devMode.enabled) && (
-						<button className={styles.SubmitButton}>
-							Submit
-						</button>
-					)}
-				</FlexCol>
-
-				{!!(devMode.enabled) && (
-					<FlexCol padded overflow>
-						{/* demo controls */}
-						<FlexCol padded style={{border: '1px solid #ddd', borderRadius: 5, padding: 5}}>
-							<StateToggle label='Click tree node again to deselect' target={this.store} name='clickAgainToDeselectSingle' defaultValue={queryStore.clickAgainToDeselectSingle}/>
-							<Select
-								label="Tree depth: "
-								selected={this.store.maxTreeDepth}
-								options={[
-									{label: "0"},
-									{label: "1"},
-									{label: "2"},
-									{label: "3"},
-									{label: "4"},
-									{label: "5"},
-									{label: "6"},
-									{label: "7"},
-									{label: "8"},
-									{label: "9"},
-								]}
-								onChange={option => this.store.maxTreeDepth = parseInt(option.label)}
-							/>
-							<span>Note: Use cmd+click to select/deselect multiple cancer types.</span>
-						</FlexCol>
-
-						{/* display state for demo */}
-						<pre>
-							{JSON.stringify(this.store.stateToSerialize, null, 4)}
-						</pre>
-					</FlexCol>
+				{!!(devMode.enabled && this.store.singleSelectedStudyId) && (
+					<GeneticProfileSelector/>
 				)}
 
-            </FlexRow>
+				{!!(devMode.enabled && this.store.singleSelectedStudyId) && (
+					<SampleListSelector/>
+				)}
+
+				{!!(devMode.enabled && !this.store.singleSelectedStudyId) && (
+					<DataTypePrioritySelector/>
+				)}
+
+				{!!(devMode.enabled) && (
+					<GeneSetSelector/>
+				)}
+
+				{!!(devMode.enabled && this.store.showMutSigPopup) && (
+					<PopupWindow
+						className={styles.MutSigGeneSelectorWindow}
+						windowTitle="Recurrently Mutated Genes"
+						onClickClose={() => this.store.showMutSigPopup = false}
+						children={<MutSigGeneSelector/>}
+					/>
+				)}
+
+				{!!(devMode.enabled && this.store.showGisticPopup) && (
+					<PopupWindow
+						className={styles.GisticGeneSelectorWindow}
+						windowTitle="Recurrent Copy Number Alterations (Gistic)"
+						onClickClose={() => this.store.showGisticPopup = false}
+						children={<GisticGeneSelector/>}
+					/>
+				)}
+
+				{!!(devMode.enabled) && (
+					<button className={styles.SubmitButton}>
+						Submit
+					</button>
+				)}
+			</FlexCol>
         );
     }
 }

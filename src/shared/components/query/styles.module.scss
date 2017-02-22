@@ -1,5 +1,5 @@
-.QueryContainerParent {
-  height: 100%;
+.QueryContainer {
+  width: 850px;
 
   label {
     margin-bottom: 0px;
@@ -11,10 +11,6 @@
     flex-grow: 2;
     margin: 0px;
   }
-}
-
-.QueryContainer {
-  width: 850px;
 
   errorMessage: {
     color: maroon;
