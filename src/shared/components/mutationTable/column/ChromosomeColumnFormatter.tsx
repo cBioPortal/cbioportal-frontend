@@ -1,5 +1,4 @@
-import {IColumnFormatterData}
-    from "../../../../shared/components/enhancedReactTable/IColumnFormatter";
+import {IColumnFormatterData} from "shared/components/enhancedReactTable/IColumnFormatter";
 import GeneColumnFormatter from "./GeneColumnFormatter";
 import {MutationTableRowData} from "../IMutationTableProps";
 
@@ -10,7 +9,7 @@ export default class ChromosomeColumnFormatter
 {
     public static getDataFromRow(rowData:MutationTableRowData|undefined)
     {
-        let geneData = GeneColumnFormatter.getDataFromRow(rowData);
+        const geneData = GeneColumnFormatter.getDataFromRow(rowData);
 
         if (geneData) {
             return geneData.chromosome;
@@ -22,8 +21,8 @@ export default class ChromosomeColumnFormatter
 
     public static sortFunction(a:string, b:string):number
     {
-        let aValue = ChromosomeColumnFormatter.extractSortValue(a);
-        let bValue = ChromosomeColumnFormatter.extractSortValue(b);
+        const aValue = ChromosomeColumnFormatter.extractSortValue(a);
+        const bValue = ChromosomeColumnFormatter.extractSortValue(b);
 
         return aValue > bValue ? 1 : -1;
     }
@@ -32,7 +31,7 @@ export default class ChromosomeColumnFormatter
     {
         const numerical:RegExp = /[0-9]+/g;
 
-        let matched:RegExpMatchArray|null = chromosome.match(numerical);
+        const matched:RegExpMatchArray|null = chromosome.match(numerical);
         let value:number = -1;
 
         // if no match, then search for X or Y
