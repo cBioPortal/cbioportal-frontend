@@ -4,13 +4,13 @@ import ProteinChangeColumnFormatter from "./ProteinChangeColumnFormatter";
 /**
  * @author Selcuk Onur Sumer
  */
-describe('ProteinChangeColumnFormatter functions', () => {
+describe('ProteinChangeColumnFormatter', () => {
     let a = "E746_A750del";
     let b = "E747_T749del";
     let c = "K754E";
     let d = "K754I";
 
-    it('protein change sort values are properly extracted', () => {
+    it('extractSortValue function', () => {
         assert.isAbove(ProteinChangeColumnFormatter.extractSortValue(b),
                        ProteinChangeColumnFormatter.extractSortValue(a));
 

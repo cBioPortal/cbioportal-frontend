@@ -32,6 +32,7 @@ import { PatientViewPageStore } from './clinicalInformation/PatientViewPageStore
 import ClinicalInformationPatientTable from "./clinicalInformation/ClinicalInformationPatientTable";
 import ClinicalInformationSamples from "./clinicalInformation/ClinicalInformationSamplesTable";
 import {ICosmicData} from "../../shared/components/mutationTable/column/CosmicColumnFormatter";
+import {keywordToCosmic, geneToMyCancerGenome, geneAndProteinPosToHotspots} from 'shared/lib/AnnotationUtils';
 import {IVariantCountData} from "./mutation/column/CohortColumnFormatter";
 import {observer} from "mobx-react";
 import {IHotspotData, IMyCancerGenomeData, IMyCancerGenome} from "./mutation/column/AnnotationColumnFormatter";
@@ -127,43 +128,13 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     }
 
     fetchMyCancerGenomeData():Promise<IMyCancerGenomeData> {
-        // mapping by hugo gene symbol
-        const generateMap = function(myCancerGenomes:IMyCancerGenome[]) {
-            const map:IMyCancerGenomeData = {};
-
-            _.each(myCancerGenomes, function (myCancerGenome) {
-                if (!(myCancerGenome.hugoGeneSymbol in map)) {
-                    map[myCancerGenome.hugoGeneSymbol] = [];
-                }
-
-                map[myCancerGenome.hugoGeneSymbol].push(myCancerGenome);
-            });
-
-            return map;
-        };
-
         return new Promise((resolve, reject) => {
             const data:IMyCancerGenome[] = require('../../../resources/mycancergenome.json');
-            resolve(generateMap(data));
+            resolve(geneToMyCancerGenome(data));
         });
     }
 
     fetchHotspotsData(mutations:Mutation[]):Promise<IHotspotData> {
-        const generateMap = function(hotspots:HotspotMutation[]) {
-            // key => geneSymbol_proteinPosition
-            // protienPosition => start[_end]
-            const map: {[key:string]: boolean} = {};
-
-            // create a map for a faster lookup
-            _.each(hotspots, function(hotspot:HotspotMutation) {
-                const positions = hotspot.residue.match(/[0-9]+/g) || []; // start (and optionally end) positions
-                const key = [hotspot.hugoSymbol.toUpperCase()].concat(positions).join("_");
-                map[key] = true;
-            });
-
-            return map;
-        };
-
         // do not retreive all available hotspots from the service,
         // only retrieve hotspots for the current genes on the page
         const queryGenes:string[] = _.uniq(_.map(mutations, function(mutation:Mutation) {
@@ -181,7 +152,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             });
 
             promise.then((data) => {
-                resolve(generateMap(data));
+                resolve(geneAndProteinPosToHotspots(data));
             });
         });
 
@@ -191,7 +162,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             });
 
             promise.then((data) => {
-                resolve(generateMap(data));
+                resolve(geneAndProteinPosToHotspots(data));
             });
         });
 
@@ -206,23 +177,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     }
 
     fetchCosmicData(mutations:Mutation[]):Promise<ICosmicData> {
-        const generateMap = function(cosmicMutations:CosmicMutation[]) {
-            // key => geneSymbol_proteinPosition
-            // protienPosition => start[_end]
-            const map: ICosmicData = {};
-
-            // create a map for a faster lookup
-            _.each(cosmicMutations, function(cosmic:CosmicMutation) {
-                if (!(cosmic.keyword in map)) {
-                    map[cosmic.keyword] = [];
-                }
-
-                map[cosmic.keyword].push(cosmic);
-            });
-
-            return map;
-        };
-
         const queryKeywords:string[] = _.uniq(_.map(mutations, (mutation:Mutation) => mutation.keyword));
 
         return new Promise((resolve, reject) => {
@@ -231,7 +185,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             });
 
             promise.then((data) => {
-                resolve(generateMap(data));
+                resolve(keywordToCosmic(data));
             });
         });
     }
