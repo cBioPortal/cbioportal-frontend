@@ -1,19 +1,18 @@
 import * as React from 'react';
 import DefaultTooltip from 'shared/components/DefaultTooltip';
 import {Td} from 'reactable';
-import {IColumnFormatterData}
-    from "../../enhancedReactTable/IColumnFormatter";
+import {IColumnFormatterData} from "../../enhancedReactTable/IColumnFormatter";
 import styles from "./mutationType.module.scss";
 import {MutationTableRowData} from "../IMutationTableProps";
 import {Mutation} from "../../../api/CBioPortalAPI";
 
-type IMutationTypeFormat = {
-    label?: string,
-    longName?: string,
-    className: string,
-    mainType: string,
-    priority?: number
-};
+interface IMutationTypeFormat {
+    label?: string;
+    longName?: string;
+    className: string;
+    mainType: string;
+    priority?: number;
+}
 
 /**
  * @author Selcuk Onur Sumer
@@ -108,55 +107,55 @@ export default class MutationTypeColumnFormatter
     }
 
     public static get MUTATION_TYPE_MAP():{[key:string]: IMutationTypeFormat} {
-        let mainMap = MutationTypeColumnFormatter.MAIN_MUTATION_TYPE_MAP;
+        const mainMap = MutationTypeColumnFormatter.MAIN_MUTATION_TYPE_MAP;
         
         return {
-            missense_mutation: mainMap["missense"],
-            missense: mainMap["missense"],
-            missense_variant: mainMap["missense"],
-            frame_shift_ins: mainMap["frame_shift_ins"],
-            frame_shift_del: mainMap["frame_shift_del"],
-            frameshift: mainMap["frameshift"],
-            frameshift_deletion: mainMap["frame_shift_del"],
-            frameshift_insertion: mainMap["frame_shift_ins"],
-            de_novo_start_outofframe: mainMap["frameshift"],
-            frameshift_variant: mainMap["frameshift"],
-            nonsense_mutation: mainMap["nonsense"],
-            nonsense: mainMap["nonsense"],
-            stopgain_snv: mainMap["nonsense"],
-            stop_gained: mainMap["nonsense"],
-            splice_site: mainMap["splice_site"],
-            splice: mainMap["splice_site"],
+            "missense_mutation": mainMap["missense"],
+            "missense": mainMap["missense"],
+            "missense_variant": mainMap["missense"],
+            "frame_shift_ins": mainMap["frame_shift_ins"],
+            "frame_shift_del": mainMap["frame_shift_del"],
+            "frameshift": mainMap["frameshift"],
+            "frameshift_deletion": mainMap["frame_shift_del"],
+            "frameshift_insertion": mainMap["frame_shift_ins"],
+            "de_novo_start_outofframe": mainMap["frameshift"],
+            "frameshift_variant": mainMap["frameshift"],
+            "nonsense_mutation": mainMap["nonsense"],
+            "nonsense": mainMap["nonsense"],
+            "stopgain_snv": mainMap["nonsense"],
+            "stop_gained": mainMap["nonsense"],
+            "splice_site": mainMap["splice_site"],
+            "splice": mainMap["splice_site"],
             "splice site": mainMap["splice_site"],
-            splicing: mainMap["splice_site"],
-            splice_site_snp: mainMap["splice_site"],
-            splice_site_del: mainMap["splice_site"],
-            splice_site_indel: mainMap["splice_site"],
-            splice_region_variant: mainMap["splice_site"],
-            translation_start_site:  mainMap["nonstart"],
-            initiator_codon_variant: mainMap["nonstart"],
-            start_codon_snp: mainMap["nonstart"],
-            start_codon_del: mainMap["nonstart"],
-            nonstop_mutation: mainMap["nonstop"],
-            stop_lost: mainMap["nonstop"],
-            in_frame_del: mainMap["in_frame_del"],
-            in_frame_deletion: mainMap["in_frame_del"],
-            in_frame_ins: mainMap["in_frame_ins"],
-            in_frame_insertion: mainMap["in_frame_ins"],
-            indel: mainMap["in_frame_del"],
-            nonframeshift_deletion: mainMap["inframe"],
-            nonframeshift: mainMap["inframe"],
+            "splicing": mainMap["splice_site"],
+            "splice_site_snp": mainMap["splice_site"],
+            "splice_site_del": mainMap["splice_site"],
+            "splice_site_indel": mainMap["splice_site"],
+            "splice_region_variant": mainMap["splice_site"],
+            "translation_start_site":  mainMap["nonstart"],
+            "initiator_codon_variant": mainMap["nonstart"],
+            "start_codon_snp": mainMap["nonstart"],
+            "start_codon_del": mainMap["nonstart"],
+            "nonstop_mutation": mainMap["nonstop"],
+            "stop_lost": mainMap["nonstop"],
+            "in_frame_del": mainMap["in_frame_del"],
+            "in_frame_deletion": mainMap["in_frame_del"],
+            "in_frame_ins": mainMap["in_frame_ins"],
+            "in_frame_insertion": mainMap["in_frame_ins"],
+            "indel": mainMap["in_frame_del"],
+            "nonframeshift_deletion": mainMap["inframe"],
+            "nonframeshift": mainMap["inframe"],
             "nonframeshift insertion": mainMap["inframe"],
-            nonframeshift_insertion: mainMap["inframe"],
-            targeted_region: mainMap["inframe"],
-            inframe: mainMap["inframe"],
-            truncating: mainMap["truncating"],
-            feature_truncation: mainMap["truncating"],
-            fusion: mainMap["fusion"],
-            silent: mainMap["silent"],
-            synonymous_variant: mainMap["silent"],
-            any: mainMap["default"],
-            other: mainMap["default"]
+            "nonframeshift_insertion": mainMap["inframe"],
+            "targeted_region": mainMap["inframe"],
+            "inframe": mainMap["inframe"],
+            "truncating": mainMap["truncating"],
+            "feature_truncation": mainMap["truncating"],
+            "fusion": mainMap["fusion"],
+            "silent": mainMap["silent"],
+            "synonymous_variant": mainMap["silent"],
+            "any": mainMap["default"],
+            "other": mainMap["default"]
         };
     }
 
@@ -229,7 +228,7 @@ export default class MutationTypeColumnFormatter
         }
         else if (data.rowData)
         {
-            const mutations:Array<Mutation> = data.rowData;
+            const mutations:Mutation[] = data.rowData;
             mutationType = (mutations.length > 0 ? mutations[0].mutationType : null);
         }
         else {
