@@ -12,34 +12,7 @@ import {MutSig} from "../../api/CBioPortalAPIInternal";
 import {IColumnFormatterData} from "../enhancedReactTable/IColumnFormatter";
 import {IColumnDefMap, IEnhancedReactTableProps} from "../enhancedReactTable/IEnhancedReactTableProps";
 import {ITableHeaderControlsProps} from "../tableHeaderControls/TableHeaderControls";
-import {Table, Td} from 'reactable';
-
-// todo - unfinished
-type ReactTableProps_column = string | {column: string, sortable?: boolean};
-type ReactTableProps_filterableColumn = string | {column: string, filterFunction?: Function};
-
-type ReactTableProps = React.HTMLProps<HTMLTableElement> & {
-	sortBy?: boolean,
-	defaultSort?: boolean,
-	defaultSortDescending?: boolean,
-	itemsPerPage?: number,
-	filterBy?: string,
-	hideFilterInput?: boolean,
-	pageButtonLimit?: number,
-	noDataText?: React.ReactChild,
-	filterClassName?: string,
-	onFilter?: (filter?: string) => void,
-	currentPage?: number,
-	hideTableHeader?: boolean,
-	sortable?: boolean,
-	onPageChange?: (page: number) => void,
-	onSort?: (currentSort: {column: ReactTableProps_column, direction: number}) => void,
-	columns?: ReactTableProps_column[],
-	filterable?: ReactTableProps_filterableColumn[],
-	filterPlaceholder?: string,
-	previousPageLabel?: React.ReactChild,
-	nextPageLabel?: React.ReactChild,
-};
+import {Table, Td, TableProps} from 'reactable';
 
 const styles = styles_any as {
 	MutSigGeneSelector: string,
@@ -110,7 +83,7 @@ export default class MutSigGeneSelector extends React.Component<{}, {}>
 			},
 		};
 
-		let reactTableProps:ReactTableProps = {
+		let reactTableProps:TableProps = {
 			className: "table table-striped table-border-top",
 			hideFilterInput:true
 		};
