@@ -12,7 +12,7 @@ describe('ChromosomeColumnFormatter functions', () => {
     let e = "Y";
     let f = "chrY";
 
-    it('chromosome integer values are properly extracted', () => {
+    it('extractSortValue function', () => {
         assert.isAbove(ChromosomeColumnFormatter.extractSortValue(b),
             ChromosomeColumnFormatter.extractSortValue(a));
 

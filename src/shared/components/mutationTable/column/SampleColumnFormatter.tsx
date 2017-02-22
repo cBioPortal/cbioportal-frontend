@@ -1,8 +1,7 @@
 import * as React from 'react';
 import DefaultTooltip from 'shared/components/DefaultTooltip';
 import {Td} from 'reactable';
-import {IColumnFormatterData}
-    from "../../enhancedReactTable/IColumnFormatter";
+import {IColumnFormatterData} from "../../enhancedReactTable/IColumnFormatter";
 import styles from "./sample.module.scss";
 import {MutationTableRowData} from "../IMutationTableProps";
 import {Mutation} from "../../../api/CBioPortalAPI";
@@ -79,7 +78,7 @@ export default class SampleColumnFormatter
             value = data.columnData;
         }
         else if (data.rowData) {
-            const mutations:Array<Mutation> = data.rowData;
+            const mutations:Mutation[] = data.rowData;
             value = (mutations.length > 0 ? mutations[0].sampleId : null);
         }
         else {
