@@ -13,7 +13,7 @@
         "allowSyntheticDefaultImports": true
     },
     "include": [
-        "./typings/missing.d.ts",
+        "./typings/**/*",
         "./src/**/*"
     ],
     "compileOnSave": false
