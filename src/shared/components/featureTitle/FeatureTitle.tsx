@@ -13,7 +13,7 @@ export default class FeatureTitle extends React.Component<IFeatureTitleProps, {}
 
     public render() {
        return (
-            <If condition={this.props.isHidden}>
+            <If condition={this.props.isHidden || false}>
 
                 <Else><h4 className={this.props.className || ''}>{this.props.title}
                     <If condition={this.props.isLoading || false}>

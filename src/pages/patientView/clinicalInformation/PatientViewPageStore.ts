@@ -54,18 +54,16 @@ export class PatientViewPageStore
 
         reaction(() => {
                     if (this.allDiscreteCNADataRequested) {
-                        return {
-                            allDiscreteCNADataRequested: this.allDiscreteCNADataRequested,
-                            sampleIds: this.samples.result.map((s:Sample)=>s.sampleId),
-                            discreteCNACache: this.discreteCNACache
-                        };
+                        return [this.samples.result, this.discreteCNACache];
+                    } else {
+                        return [];
                     }
             },
-            (data:any) => {
-                if (data.allDiscreteCNADataRequested) {
-                    data.discreteCNACache.populate(data.sampleIds.reduce(
-                        (arg:SampleToEntrezListOrNull, next:string) => {
-                            arg[next] = null;
+            () => {
+                if (this.allDiscreteCNADataRequested) {
+                    this.discreteCNACache.populate(this.samples.result.reduce(
+                        (arg:SampleToEntrezListOrNull, next:Sample) => {
+                            arg[next.sampleId] = null;
                             return arg;
                         }, {}));
                 }
@@ -73,17 +71,15 @@ export class PatientViewPageStore
 
         reaction(() => {
                 if (this.allVariantCountDataRequested) {
-                    return {
-                        allVariantCountDataRequested: this.allVariantCountDataRequested,
-                        mutationData: this.mutationData.result,
-                        cohortVariantCountCache: this.cohortVariantCountCache
-                    };
+                    return [this.mutationData.result, this.cohortVariantCountCache];
+                } else {
+                    return [];
                 }
             },
-            (data:any) => {
-                if (data.allVariantCountDataRequested) {
+            () => {
+                if (this.allVariantCountDataRequested) {
                     const querySet:{ [entrezGeneId:string]:{[s:string]:boolean}} = {};
-                    for (const mutation of data.mutationData) {
+                    for (const mutation of this.mutationData.result) {
                         querySet[mutation.entrezGeneId] = querySet[mutation.entrezGeneId] || {};
                         if (mutation.keyword) {
                             querySet[mutation.entrezGeneId][mutation.keyword] = true;
@@ -93,24 +89,19 @@ export class PatientViewPageStore
                     for (const entrezGeneId of Object.keys(querySet)) {
                         query[parseInt(entrezGeneId, 10)] = Object.keys(querySet[entrezGeneId]);
                     }
-                    data.cohortVariantCountCache.populate(query);
+                    this.cohortVariantCountCache.populate(query);
                 }
             });
 
         reaction(() => {
             if (this.visibleRows && this.visibleRows.length > 0) {
-                return {
-                    visibleRows: this.visibleRows,
-                    mrnaExprRankCache: this.mrnaExprRankCache,
-                    discreteCNACache: this.discreteCNACache,
-                    cohortVariantCountCache: this.cohortVariantCountCache
-                };
+                return [this.mrnaExprRankCache, this.discreteCNACache, this.cohortVariantCountCache];
             } else {
-                return {};
+                return [];
             }
         },
-            (data:any)=> {
-                if (!data.visibleRows || data.visibleRows.length === 0) {
+            ()=> {
+                if (!this.visibleRows || this.visibleRows.length === 0) {
                     return;
                 }
                 const sampleToEntrezGeneIdsSet:{ [sampleId:string]:Set<number> } = {};
@@ -133,9 +124,9 @@ export class PatientViewPageStore
                 for (const entrez of Object.keys(entrezToKeywordSet)) {
                     entrezToKeywordList[parseInt(entrez, 10)] = Object.keys(entrezToKeywordSet[parseInt(entrez, 10)]);
                 }
-                data.mrnaExprRankCache.populate(sampleToEntrezList);
-                data.discreteCNACache.populate(sampleToEntrezList);
-                data.cohortVariantCountCache.populate(entrezToKeywordList);
+                this.mrnaExprRankCache.populate(sampleToEntrezList);
+                this.discreteCNACache.populate(sampleToEntrezList);
+                this.cohortVariantCountCache.populate(entrezToKeywordList);
             });
 
         this.setVisibleRows = this.setVisibleRows.bind(this);

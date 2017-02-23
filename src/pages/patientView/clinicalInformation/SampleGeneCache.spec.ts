@@ -1,5 +1,6 @@
 import {default as SampleGeneCache, SampleToEntrezListOrNull, Cache} from './SampleGeneCache';
 import { assert, default as chai } from 'chai';
+import * as _ from 'lodash';
 import sinon from 'sinon';
 
 chai.config.truncateThreshold = 0;
@@ -53,7 +54,7 @@ describe('SampleGeneCache', () => {
         data = [{sampleId:"sample1", entrezGeneId:0, data:"a"}, {sampleId:"sample1", entrezGeneId:1, data:"b"},
                 {sampleId:"sample2", entrezGeneId:0, data:"c"},{sampleId:"sample2", entrezGeneId:2, data:"d"}];
 
-        sampleIds = Object.keys(data.reduce((map:any, d:Data)=>{ map[d.sampleId] = true; return map; }, {}));
+        sampleIds = _.uniq(data.map(d=>d.sampleId));
 
         fetchPromise = Promise.resolve(data);
 
