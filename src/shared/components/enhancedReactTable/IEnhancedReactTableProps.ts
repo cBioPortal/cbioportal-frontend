@@ -3,12 +3,13 @@ import {
     IColumnDataFunction, IColumnDownloadFunction
 } from "./IColumnFormatter";
 import {ITableHeaderControlsProps} from "../tableHeaderControls/TableHeaderControls";
+import {TableProps} from "reactable";
 
 /**
  * @author Selcuk Onur Sumer
  */
 export interface IEnhancedReactTableProps<T> {
-    reactTableProps?: any; // any available reactable props
+    reactTableProps?: TableProps; // any available reactable props
     headerControlsProps?: ITableHeaderControlsProps;
     columns?: IColumnDefMap; // column definitions (including component renderers)
     rawData: Array<T>; // raw data
