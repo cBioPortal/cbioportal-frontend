@@ -118,18 +118,18 @@ export class PatientViewPageStore
 
     readonly samples = remoteData(async () => {
         if (this.studyId && this._patientId)
-        	return await client.getAllSamplesOfPatientInStudyUsingGET({
-				studyId: this.studyId,
-				patientId: this.patientId
-			});
+            return await client.getAllSamplesOfPatientInStudyUsingGET({
+                studyId: this.studyId,
+                patientId: this.patientId
+            });
 
-		if (this.studyId && this._sampleId)
-			return await client.getSampleInStudyUsingGET({
-				studyId: this.studyId,
-				sampleId: this.sampleId
-			}).then(data => [data]);
+        if (this.studyId && this._sampleId)
+            return await client.getSampleInStudyUsingGET({
+                studyId: this.studyId,
+                sampleId: this.sampleId
+            }).then(data => [data]);
 
-		return [];
+        return [];
     }, []);
 
 
