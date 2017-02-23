@@ -4,8 +4,7 @@ import {GeneticProfile} from "../../api/CBioPortalAPI";
 import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
 import FontAwesome from "react-fontawesome";
 import * as styles_any from './styles.module.scss';
-import queryStore from "./QueryStore";
-import {toJS, computed} from "../../../../node_modules/mobx/lib/mobx";
+import {ObservableMap, expr, toJS, computed, observable} from "../../../../node_modules/mobx/lib/mobx";
 import {observer} from "../../../../node_modules/mobx-react/index";
 import EnhancedReactTable from "../enhancedReactTable/EnhancedReactTable";
 import {MutSig} from "../../api/CBioPortalAPIInternal";
@@ -16,38 +15,28 @@ import {Table, Td, TableProps} from 'reactable';
 
 const styles = styles_any as {
 	MutSigGeneSelector: string,
+	selectButton: string,
 };
 
-class MutSigTable extends EnhancedReactTable<MutSig> {};
+class MutSigTable extends EnhancedReactTable<MutSig> {}
+
+export interface MutSigGeneSelectorProps
+{
+	initialSelection: string[];
+	data: MutSig[];
+	onSelect: (map_geneSymbol_selected:ObservableMap<boolean>) => void;
+}
 
 @observer
-export default class MutSigGeneSelector extends React.Component<{}, {}>
+export default class MutSigGeneSelector extends React.Component<MutSigGeneSelectorProps, {}>
 {
-	get store()
+	constructor(props:MutSigGeneSelectorProps)
 	{
-		return queryStore;
+		super(props);
+		this.map_geneSymbol_selected.replace(props.initialSelection.map(geneSymbol => [geneSymbol, true]));
 	}
 
-	formatSelected = (data:IColumnFormatterData<MutSig>) =>
-	{
-		let selected = _.includes(this.store.geneIds, data.rowData && data.rowData.hugoGeneSymbol);
-		let text = selected + '';
-		return (
-			<Td key={data.name} column={data.name} value={text}>
-				{text}
-			</Td>
-		);
-	}
-
-	downloadSelected = (data:IColumnFormatterData<MutSig>):string =>
-	{
-		return data.columnData + '';
-	}
-
-	onVisibleRowsChange = (data:MutSig[]) =>
-	{
-		console.log('onVisibleRowsChange', data);
-	}
+	map_geneSymbol_selected = observable.map<boolean>();
 
 	render()
 	{
@@ -76,8 +65,13 @@ export default class MutSigGeneSelector extends React.Component<{}, {}>
 			'selected': {
 				name: "All",
 				priority: 4,
-				formatter: this.formatSelected,
-				downloader: this.downloadSelected,
+				formatter: (data:IColumnFormatterData<MutSig>) => (
+					<Td key={data.name} column={data.name}>
+						{!!(data.rowData) && (
+							<ObservableMapCheckbox map={this.map_geneSymbol_selected} mapKey={data.rowData.hugoGeneSymbol}/>
+						)}
+					</Td>
+				),
 				sortable: true,
 				filterable: true
 			},
@@ -109,15 +103,35 @@ export default class MutSigGeneSelector extends React.Component<{}, {}>
 		return (
 			<div className={styles.MutSigGeneSelector}>
 				<MutSigTable
-					itemsName="mutations"
+					itemsName="genes"
 					reactTableProps={reactTableProps}
 					initItemsPerPage={10}
 					headerControlsProps={headerControlsProps}
 					columns={columns}
-					rawData={this.store.mutSigForSingleStudy.result}
-					onVisibleRowsChange={this.onVisibleRowsChange}
+					rawData={this.props.data}
 				/>
+				<button className={styles.selectButton} onClick={() => this.props.onSelect(this.map_geneSymbol_selected)}>
+					Select
+				</button>
 			</div>
+		);
+	}
+}
+
+@observer
+class ObservableMapCheckbox extends React.Component<{map:ObservableMap<boolean>, mapKey:string, children?: React.ReactNode}, {}>
+{
+	render()
+	{
+		return (
+			<LabeledCheckbox
+				checked={!!this.props.map.get(this.props.mapKey)}
+				inputProps={{
+					onChange: event => this.props.map.set(this.props.mapKey, (event.target as HTMLInputElement).checked)
+				}}
+			>
+				{this.props.children}
+			</LabeledCheckbox>
 		);
 	}
 }

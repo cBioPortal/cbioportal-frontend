@@ -24,7 +24,7 @@ export default class DataTypePrioritySelector extends React.Component<{}, {}>
 		if (this.store.singleSelectedStudyId)
 			return null;
 
-		const DataTypePriorityRadio = this.DataTypePriorityRadio;
+		const {DataTypePriorityRadio} = this;
 		return (
 			<FlexRow padded className={styles.DataTypePrioritySelector}>
 				<h2>Select Data Type Priority:</h2>

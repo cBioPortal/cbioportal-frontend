@@ -2,17 +2,17 @@
   width: 850px;
 
   label {
-    margin-bottom: 0px;
+    margin-bottom: 0;
     font-weight: normal;
   }
 
   h2 {
     font: normal normal 300 20px/23px 'Helvetica Neue', Helvetica, Arial, sans-serif;
     flex-grow: 2;
-    margin: 0px;
+    margin: 0;
   }
 
-  errorMessage: {
+  .errorMessage {
     color: maroon;
     font-weight: bold;
   }
@@ -338,6 +338,9 @@ div.MutSigGeneSelectorWindow {
 
   div.MutSigGeneSelector {
     flex: 1;
+    button.selectButton {
+      float: right;
+    }
   }
 }
 
@@ -347,6 +350,47 @@ div.GisticGeneSelectorWindow {
 
   div.GisticGeneSelector {
     flex: 1;
+
+    div.GisticGeneToggles {
+    }
+
+    .someGenes, .moreGenes {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    span.GeneToggle {
+      padding: 3px;
+
+      &:not(.simulateHovered) {
+        cursor: pointer;
+      }
+      &:hover, &.simulateHovered {
+        padding: 1px;
+        border: 2px solid #1974b8;
+        border-radius: 5px;
+      }
+      &.selected {
+        font-weight: bold;
+      }
+      &.notSelected {
+        font-weight: normal;
+      }
+    }
+
+    a.showMoreLess {
+      cursor: pointer;
+      padding: 3px;
+      color: blue;
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    button.selectButton {
+      float: right;
+    }
   }
 }
 

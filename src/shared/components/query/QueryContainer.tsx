@@ -81,8 +81,16 @@ export default class QueryContainer extends React.Component<{}, {}>
 						className={styles.MutSigGeneSelectorWindow}
 						windowTitle="Recurrently Mutated Genes"
 						onClickClose={() => this.store.showMutSigPopup = false}
-						children={<MutSigGeneSelector/>}
-					/>
+					>
+						<MutSigGeneSelector
+							initialSelection={this.store.geneIds}
+							data={this.store.mutSigForSingleStudy.result}
+							onSelect={map_geneSymbol_selected => {
+								this.store.applyGeneSelection(map_geneSymbol_selected);
+								this.store.showMutSigPopup = false;
+							}}
+						/>
+					</PopupWindow>
 				)}
 
 				{!!(devMode.enabled && this.store.showGisticPopup) && (
@@ -90,8 +98,16 @@ export default class QueryContainer extends React.Component<{}, {}>
 						className={styles.GisticGeneSelectorWindow}
 						windowTitle="Recurrent Copy Number Alterations (Gistic)"
 						onClickClose={() => this.store.showGisticPopup = false}
-						children={<GisticGeneSelector/>}
-					/>
+					>
+						<GisticGeneSelector
+							initialSelection={this.store.geneIds}
+							data={this.store.gisticForSingleStudy.result}
+							onSelect={map_geneSymbol_selected => {
+								this.store.applyGeneSelection(map_geneSymbol_selected);
+								this.store.showGisticPopup = false;
+							}}
+						/>
+					</PopupWindow>
 				)}
 
 				{!!(devMode.enabled) && (

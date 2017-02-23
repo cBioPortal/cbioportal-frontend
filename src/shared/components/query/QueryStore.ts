@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import client from "../../api/cbioportalClientInstance";
-import {toJS, observable, reaction, action, computed, whyRun, expr} from "../../../../node_modules/mobx/lib/mobx";
+import {ObservableMap, toJS, observable, reaction, action, computed, whyRun, expr} from "../../../../node_modules/mobx/lib/mobx";
 import {TypeOfCancer as CancerType, GeneticProfile, CancerStudy, SampleList, Gene} from "../../api/CBioPortalAPI";
 import CancerStudyTreeData from "./CancerStudyTreeData";
 import StudyListLogic from "../StudyList/StudyListLogic";
@@ -438,6 +438,16 @@ export class QueryStore
 	@action replaceGene(oldSymbol:string, newSymbol:string)
 	{
 		this.geneQuery = normalizeQuery(this.geneQuery.toUpperCase().replace(new RegExp(`\\b${oldSymbol.toUpperCase()}\\b`, 'g'), () => newSymbol.toUpperCase()));
+	}
+
+	@action applyGeneSelection(map_geneSymbol_selected:ObservableMap<boolean>)
+	{
+		let [toAppend, toRemove] = _.partition(map_geneSymbol_selected.keys(), geneSymbol => map_geneSymbol_selected.get(geneSymbol));
+		toAppend = _.difference(toAppend, this.geneIds);
+		toRemove = _.intersection(toRemove, this.geneIds);
+		for (let geneSymbol of toRemove)
+			this.replaceGene(geneSymbol, '');
+		this.geneQuery = normalizeQuery([this.geneQuery, ...toAppend].join(' '));
 	}
 }
 

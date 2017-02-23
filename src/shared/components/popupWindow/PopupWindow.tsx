@@ -9,6 +9,7 @@ const styles = styles_any as {
 	windowTitle: string,
 	closeButton: string,
 	icon: string,
+	content: string,
 };
 
 interface IPopupWindowProps extends React.HTMLAttributes<HTMLDivElement>
@@ -42,7 +43,9 @@ export default class PopupWindow extends React.Component<IPopupWindowProps, IPop
 						<FontAwesome className={styles.icon} name="times"/>
 					</div>
 				</div>
-				{this.props.children}
+				<div className={styles.content}>
+					{this.props.children}
+				</div>
 			</div>
 		);
 	}

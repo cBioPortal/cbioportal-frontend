@@ -37,3 +37,8 @@ div.closeButton {
     border-color: darkgrey;
   }
 }
+div.content {
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+}
