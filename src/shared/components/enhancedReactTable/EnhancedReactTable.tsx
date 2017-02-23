@@ -16,6 +16,7 @@ import './styles.css';
 /**
  * @author Selcuk Onur Sumer
  */
+
 export default class EnhancedReactTable<T> extends React.Component<IEnhancedReactTableProps<T>, IEnhancedReactTableState>
 {
     /**
@@ -156,7 +157,7 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
             const tbodyElt = tableRenderResult.props.children.find((x:JSX.Element) => (x.type === "tbody"));
             const visibleRows = tbodyElt.props.children || [];
             this.props.onVisibleRowsChange &&
-                this.props.onVisibleRowsChange(visibleRows.map((r:JSX.Element) => r.props.rowData));
+                this.props.onVisibleRowsChange(visibleRows.map((r:JSX.Element) => r.props["data-rowData"]));
         };
 
         const Table_applyFilter = Table.prototype.applyFilter;
@@ -476,7 +477,7 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
             const cols = this.generateColumns(columns, tableData, rowData);
 
             rows.push(
-                <Tr key={index} rowData={rowData}>
+                <Tr key={index} data-rowData={rowData}>
                     {cols}
                 </Tr>
             );
