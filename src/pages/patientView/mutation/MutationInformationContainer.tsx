@@ -5,9 +5,9 @@ import {IColumnDefMap} from "../../../shared/components/enhancedReactTable/IEnha
 import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter";
 import TumorColumnFormatter from "./column/TumorColumnFormatter";
 import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
-import {MrnaRankData, default as MrnaExprColumnFormatter} from "./column/MrnaExprColumnFormatter";
+import MrnaExprColumnFormatter from "./column/MrnaExprColumnFormatter";
 import AlleleCountColumnFormatter from "./column/AlleleCountColumnFormatter";
-import {IVariantCountData, default as CohortColumnFormatter} from "./column/CohortColumnFormatter";
+import CohortColumnFormatter from "./column/CohortColumnFormatter";
 import { Mutation } from "../../../shared/api/CBioPortalAPI";
 import SampleManager from "../sampleManager";
 import {
@@ -17,6 +17,8 @@ import { MutSigData } from "../PatientViewPage";
 import {
     default as CosmicColumnFormatter, ICosmicData
 } from "../../../shared/components/mutationTable/column/CosmicColumnFormatter";
+import {MrnaExprRankCacheType} from "../clinicalInformation/MrnaExprRankCache";
+import {VariantCountCacheType} from "../clinicalInformation/CohortVariantCountCache";
 
 
 export interface IMutationInformationContainerProps {
@@ -24,9 +26,9 @@ export interface IMutationInformationContainerProps {
     myCancerGenomeData?: IMyCancerGenomeData
     hotspots?: IHotspotData;
     cosmicData?: ICosmicData;
-    mrnaExprRankData?: MrnaRankData;
+    mrnaExprRankData?: MrnaExprRankCacheType;
     mutSigData?: MutSigData;
-    variantCountData?: IVariantCountData;
+    variantCountData?: VariantCountCacheType;
     sampleOrder:string[];
     sampleColors:{ [s:string]: string};
     sampleLabels:{ [s:string]: string};
@@ -34,6 +36,7 @@ export interface IMutationInformationContainerProps {
     sampleCancerType:{ [s:string]: string};
     sampleManager:SampleManager;
     onVisibleRowsChange?:(data:Mutation[][]) => void;
+    onSort?:(columnName:string) => void;
 };
 
 export default class MutationInformationContainer extends React.Component<IMutationInformationContainerProps, {}>
@@ -222,7 +225,8 @@ export default class MutationInformationContainer extends React.Component<IMutat
         return (
             <div>
                 <MutationTable rawData={this.mergedMutationsSelector(this.state, this.props)} columns={columns}
-                                onVisibleRowsChange={this.props.onVisibleRowsChange} />
+                                onVisibleRowsChange={this.props.onVisibleRowsChange}
+                                onSort={this.props.onSort}/>
             </div>
         );
     }

@@ -9,12 +9,13 @@ export default class CopyNumberTableWrapper extends React.Component<{ store:Pati
 
     render(){
 
+        this.props.store.requestAllDiscreteCNAData();
         return (
             <div>
 
                 <FeatureTitle title="Copy Number Alterations"
                               isHidden={ this.props.store.geneticProfileIdDiscrete.isComplete && this.props.store.geneticProfileIdDiscrete.result === undefined }
-                              isLoading={ this.props.store.discreteCNAData.isPending } />
+                />
 
 
                 {
@@ -26,9 +27,8 @@ export default class CopyNumberTableWrapper extends React.Component<{ store:Pati
             {
                 (this.props.store.geneticProfileIdDiscrete.isComplete
                     && this.props.store.geneticProfileIdDiscrete.result
-                    && this.props.store.discreteCNAData.isComplete
                 ) && (
-                    <CopyNumberAlterationsTable rawData={this.props.store.discreteCNAData.result} />
+                    <CopyNumberAlterationsTable rawData={this.props.store.discreteCNACache.data} />
                 )
             }
             </div>
