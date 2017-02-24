@@ -452,7 +452,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                     sampleTumorType={mockData.tumorType}
                                     sampleCancerType={mockData.cancerType}
                                     sampleManager={ sampleManager }
-                                    onVisibleRowsChange={ patientViewPageStore.setVisibleRows }
+                                    onVisibleRowsChange={ (data:Mutation[][])=>{patientViewPageStore.visibleRows = data;} }
                                     onSort={(columnName:string)=>{
                                             if (columnName === "Cohort") {
                                                 patientViewPageStore.requestAllVariantCountData();

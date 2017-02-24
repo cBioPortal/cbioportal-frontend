@@ -92,47 +92,9 @@ export class PatientViewPageStore
                     this.cohortVariantCountCache.populate(query);
                 }
             });
-
-        reaction(() => {
-            if (this.visibleRows && this.visibleRows.length > 0) {
-                return [this.mrnaExprRankCache, this.discreteCNACache, this.cohortVariantCountCache];
-            } else {
-                return [];
-            }
-        },
-            ()=> {
-                if (!this.visibleRows || this.visibleRows.length === 0) {
-                    return;
-                }
-                const sampleToEntrezGeneIdsSet:{ [sampleId:string]:Set<number> } = {};
-                const entrezToKeywordSet: { [entrezGeneId:number]:{[s:string]:boolean} } = {};
-                for (const mutations of this.visibleRows) {
-                    if (mutations && mutations.length > 0) {
-                        sampleToEntrezGeneIdsSet[mutations[0].sampleId] = sampleToEntrezGeneIdsSet[mutations[0].sampleId] || new Set();
-                        sampleToEntrezGeneIdsSet[mutations[0].sampleId].add(mutations[0].entrezGeneId);
-                        entrezToKeywordSet[mutations[0].entrezGeneId] = entrezToKeywordSet[mutations[0].entrezGeneId] || new Set();
-                        if (mutations[0].keyword) {
-                            entrezToKeywordSet[mutations[0].entrezGeneId][mutations[0].keyword] = true;
-                        }
-                    }
-                }
-                const sampleToEntrezList:{ [sampleId:string]:number[]} = {};
-                for (const sampleId of Object.keys(sampleToEntrezGeneIdsSet)) {
-                    sampleToEntrezList[sampleId] = Array.from(sampleToEntrezGeneIdsSet[sampleId]);
-                }
-                const entrezToKeywordList:{ [entrezGeneId:number]:string[] } = {};
-                for (const entrez of Object.keys(entrezToKeywordSet)) {
-                    entrezToKeywordList[parseInt(entrez, 10)] = Object.keys(entrezToKeywordSet[parseInt(entrez, 10)]);
-                }
-                this.mrnaExprRankCache.populate(sampleToEntrezList);
-                this.discreteCNACache.populate(sampleToEntrezList);
-                this.cohortVariantCountCache.populate(entrezToKeywordList);
-            });
-
-        this.setVisibleRows = this.setVisibleRows.bind(this);
     }
 
-    @observable.ref private visibleRows:Mutation[][] = [];
+    private _visibleRows:Mutation[][] = [];
 
     @observable private allDiscreteCNADataRequested = false;
     @observable private allVariantCountDataRequested = false;
@@ -354,10 +316,46 @@ export class PatientViewPageStore
         return new CohortVariantCountCache(this.mutationGeneticProfileId);
     }
 
-    @action setVisibleRows(rows:Mutation[][]) {
-        if (!_.isEqual(rows, this.visibleRows)) {
-            this.visibleRows = rows;
+    private populateCachesForVisibleRows() {
+        if (!this.visibleRows || this.visibleRows.length === 0) {
+            return;
         }
+        const sampleToEntrezGeneIdsSet:{ [sampleId:string]:Set<number> } = {};
+        const entrezToKeywordSet: { [entrezGeneId:number]:{[s:string]:boolean} } = {};
+        for (const mutations of this.visibleRows) {
+            if (mutations && mutations.length > 0) {
+                sampleToEntrezGeneIdsSet[mutations[0].sampleId] = sampleToEntrezGeneIdsSet[mutations[0].sampleId] || new Set();
+                sampleToEntrezGeneIdsSet[mutations[0].sampleId].add(mutations[0].entrezGeneId);
+                entrezToKeywordSet[mutations[0].entrezGeneId] = entrezToKeywordSet[mutations[0].entrezGeneId] || new Set();
+                if (mutations[0].keyword) {
+                    entrezToKeywordSet[mutations[0].entrezGeneId][mutations[0].keyword] = true;
+                }
+            }
+        }
+        const sampleToEntrezList:{ [sampleId:string]:number[]} = {};
+        for (const sampleId of Object.keys(sampleToEntrezGeneIdsSet)) {
+            sampleToEntrezList[sampleId] = Array.from(sampleToEntrezGeneIdsSet[sampleId]);
+        }
+        const entrezToKeywordList:{ [entrezGeneId:number]:string[] } = {};
+        for (const entrez of Object.keys(entrezToKeywordSet)) {
+            entrezToKeywordList[parseInt(entrez, 10)] = Object.keys(entrezToKeywordSet[parseInt(entrez, 10)]);
+        }
+        this.mrnaExprRankCache.populate(sampleToEntrezList);
+        this.discreteCNACache.populate(sampleToEntrezList);
+        this.cohortVariantCountCache.populate(entrezToKeywordList);
+    }
+
+    public get visibleRows() {
+        return this._visibleRows;
+    }
+
+    public set visibleRows(val:Mutation[][]) {
+        if (_.isEqual(val, this._visibleRows)) {
+            return;
+        }
+        this._visibleRows = val;
+
+        this.populateCachesForVisibleRows();
     }
 
     @action requestAllDiscreteCNAData() {
