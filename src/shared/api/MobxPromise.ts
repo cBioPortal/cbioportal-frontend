@@ -69,9 +69,6 @@ class MobxPromise<R>
         return input;
     }
 
-    /**
-     * @param input Either an "invoke" function or a structure containing "await" and "invoke" functions.
-     */
     constructor(input:MobxPromiseInputUnion<R>, defaultResult?:R)
     {
         input = MobxPromise.normalizeInput(input, defaultResult);
@@ -86,6 +83,7 @@ class MobxPromise<R>
     private reaction?:(result?:R) => void;
     private defaultResult?:R;
     private invokeId:number = 0;
+    private _latestInvokeId:number = 0;
 
     @observable private internalStatus:'pending'|'complete'|'error' = 'pending';
     @observable.ref private internalResult?:R = undefined;
@@ -100,8 +98,8 @@ class MobxPromise<R>
                     return mobxPromise.status;
 
         let status = this.internalStatus; // force mobx to track changes to internalStatus
-        if (this.invokeId != this.lazyInvokeId)
-            status = 'pending'; // pending while invoking again
+        if (this.latestInvokeId != this.invokeId)
+            status = 'pending';
         return status;
     }
 
@@ -131,24 +129,22 @@ class MobxPromise<R>
      * This lets mobx determine when to call this.invoke(),
      * taking advantage of caching based on observable property access tracking.
      */
-    @computed private get lazyInvokeId()
+    @computed private get latestInvokeId()
     {
-        let invokeId = ++this.invokeId;
+        window.clearTimeout(this._latestInvokeId);
         let promise = this.invoke();
-        setTimeout(() => this.setPending(invokeId, promise));
-        return invokeId;
+        let invokeId:number = window.setTimeout(() => this.setPending(invokeId, promise));
+        return this._latestInvokeId = invokeId;
     }
 
     @action private setPending(invokeId:number, promise:PromiseLike<R>)
     {
-        if (invokeId === this.invokeId)
-        {
-            promise.then(
-                result => this.setComplete(invokeId, result),
-                error => this.setError(invokeId, error)
-            );
-            this.internalStatus = 'pending';
-        }
+        this.invokeId = invokeId;
+        promise.then(
+            result => this.setComplete(invokeId, result),
+            error => this.setError(invokeId, error)
+        );
+        this.internalStatus = 'pending';
     }
 
     @action private setComplete(invokeId:number, result:R)
