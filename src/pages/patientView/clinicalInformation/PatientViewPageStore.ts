@@ -94,7 +94,7 @@ export class PatientViewPageStore
             });
     }
 
-    private _visibleRows:Mutation[][] = [];
+    private _visibleMutations:Mutation[][] = [];
 
     @observable private allDiscreteCNADataRequested = false;
     @observable private allVariantCountDataRequested = false;
@@ -316,13 +316,13 @@ export class PatientViewPageStore
         return new CohortVariantCountCache(this.mutationGeneticProfileId);
     }
 
-    private populateCachesForVisibleRows() {
-        if (!this.visibleRows || this.visibleRows.length === 0) {
+    private populateCachesForVisibleMutations() {
+        if (!this.visibleMutations || this.visibleMutations.length === 0) {
             return;
         }
         const sampleToEntrezGeneIdsSet:{ [sampleId:string]:Set<number> } = {};
         const entrezToKeywordSet: { [entrezGeneId:number]:{[s:string]:boolean} } = {};
-        for (const mutations of this.visibleRows) {
+        for (const mutations of this.visibleMutations) {
             if (mutations && mutations.length > 0) {
                 sampleToEntrezGeneIdsSet[mutations[0].sampleId] = sampleToEntrezGeneIdsSet[mutations[0].sampleId] || new Set();
                 sampleToEntrezGeneIdsSet[mutations[0].sampleId].add(mutations[0].entrezGeneId);
@@ -345,17 +345,17 @@ export class PatientViewPageStore
         this.cohortVariantCountCache.populate(entrezToKeywordList);
     }
 
-    public get visibleRows() {
-        return this._visibleRows;
+    public get visibleMutations() {
+        return this._visibleMutations;
     }
 
-    public set visibleRows(val:Mutation[][]) {
-        if (_.isEqual(val, this._visibleRows)) {
+    public set visibleMutations(val:Mutation[][]) {
+        /*if (_.isEqual(val, this._visibleMutations)) {
             return;
-        }
-        this._visibleRows = val;
+        }*/
+        this._visibleMutations = val;
 
-        this.populateCachesForVisibleRows();
+        this.populateCachesForVisibleMutations();
     }
 
     @action requestAllDiscreteCNAData() {
