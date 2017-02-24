@@ -7,6 +7,7 @@ import {FlexRow, FlexCol} from "../flexbox/FlexBox";
 import gene_lists from './gene_lists';
 import GeneSymbolValidator from "./GeneSymbolValidator";
 import classNames from "../../lib/classNames";
+import AsyncStatus from "../asyncStatus/AsyncStatus";
 
 const styles = styles_any as {
 	GeneSetSelector: string,
@@ -47,16 +48,20 @@ export default class GeneSetSelector extends React.Component<{}, {}>
 				/>
 
 				<FlexRow padded>
-					{!!(this.store.mutSigForSingleStudy.result.length) && (
-						<button onClick={() => this.store.showMutSigPopup = true}>
-							Select from Recurrently Mutated Genes (MutSig)
-						</button>
-					)}
-					{!!(this.store.gisticForSingleStudy.result.length) && (
-						<button onClick={() => this.store.showGisticPopup = true}>
-							Select Genes from Recurrent CNAs (Gistic)
-						</button>
-					)}
+					<AsyncStatus promise={this.store.mutSigForSingleStudy}>
+						{!!(this.store.mutSigForSingleStudy.result.length) && (
+							<button onClick={() => this.store.showMutSigPopup = true}>
+								Select from Recurrently Mutated Genes (MutSig)
+							</button>
+						)}
+					</AsyncStatus>
+					<AsyncStatus promise={this.store.gisticForSingleStudy}>
+						{!!(this.store.gisticForSingleStudy.result.length) && (
+							<button onClick={() => this.store.showGisticPopup = true}>
+								Select Genes from Recurrent CNAs (Gistic)
+							</button>
+						)}
+					</AsyncStatus>
 				</FlexRow>
 
 				<textarea

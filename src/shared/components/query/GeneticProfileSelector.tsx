@@ -7,6 +7,7 @@ import * as styles_any from './styles.module.scss';
 import queryStore from "./QueryStore";
 import {toJS, computed} from "../../../../node_modules/mobx/lib/mobx";
 import {observer} from "../../../../node_modules/mobx-react/index";
+import AsyncStatus from "../asyncStatus/AsyncStatus";
 
 const styles = styles_any as {
 	GeneticProfileSelector: string,
@@ -29,23 +30,25 @@ export default class GeneticProfileSelector extends React.Component<{}, {}>
 
 	render()
 	{
-		if (!this.store.singleSelectedStudyId || !this.store.geneticProfiles.isComplete)
+		if (!this.store.singleSelectedStudyId)
 			return null;
 
 		return (
 			<div className={styles.GeneticProfileSelector}>
 				<h2>Select Genomic Profiles:</h2>
-				{[
-					this.renderGroup("MUTATION_EXTENDED", "Mutation"),
-					this.renderGroup("COPY_NUMBER_ALTERATION", "Copy Number"),
-					this.renderGroup("MRNA_EXPRESSION", "mRNA Expression"),
-					this.renderGroup("METHYLATION", "DNA Methylation"),
-					this.renderGroup("METHYLATION_BINARY", "DNA Methylation"),
-					this.renderGroup("PROTEIN_LEVEL", "Protein/phosphoprotein level"),
-				]}
-				{!!(!this.store.geneticProfiles.result.length) && (
-					<strong>No Genomic Profiles available for this Cancer Study</strong>
-				)}
+				<AsyncStatus promise={this.store.geneticProfiles}>
+					{[
+						this.renderGroup("MUTATION_EXTENDED", "Mutation"),
+						this.renderGroup("COPY_NUMBER_ALTERATION", "Copy Number"),
+						this.renderGroup("MRNA_EXPRESSION", "mRNA Expression"),
+						this.renderGroup("METHYLATION", "DNA Methylation"),
+						this.renderGroup("METHYLATION_BINARY", "DNA Methylation"),
+						this.renderGroup("PROTEIN_LEVEL", "Protein/phosphoprotein level"),
+					]}
+					{!!(!this.store.geneticProfiles.result.length) && (
+						<strong>No Genomic Profiles available for this Cancer Study</strong>
+					)}
+				</AsyncStatus>
 			</div>
 		);
 	}

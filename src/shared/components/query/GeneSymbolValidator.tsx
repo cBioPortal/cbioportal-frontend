@@ -13,6 +13,7 @@ import {Gene} from "../../api/CBioPortalAPI";
 import Spinner from "react-spinkit";
 import FontAwesome from "react-fontawesome";
 import ReactSelect from 'react-select';
+import AsyncStatus from "../asyncStatus/AsyncStatus";
 
 const styles = styles_any as {
 	GeneSymbolValidator: string,
@@ -308,7 +309,7 @@ export default class GeneSymbolValidator extends React.Component<{}, {}>
 					</div>
 
 					{this.store.genes.result.suggestions.map(this.renderSuggestion, this)}
-					{this.store.genes.isPending && <Spinner/>}
+					<AsyncStatus promise={this.store.genes}/>
 				</div>
 			);
 
