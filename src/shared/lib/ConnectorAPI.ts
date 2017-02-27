@@ -1,7 +1,7 @@
 import * as SeamlessImmutable from 'seamless-immutable';
 import {connect} from 'react-redux';
 import * as React from 'react';
-import {Action} from "../../../node_modules/redux/index";
+import {Action} from "redux";
 
 interface ActionCreator<A> {
   (...args: any[]): A;

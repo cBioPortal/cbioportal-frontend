@@ -17,5 +17,3 @@ declare module 'react-router';
 declare module 'react-redux';
 declare module 'react-spinkit';
 declare module 'reselect';
-declare module 'mobx-react';
-declare module 'mobx';
