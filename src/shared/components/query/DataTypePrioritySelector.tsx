@@ -3,8 +3,8 @@ import * as React from 'react';
 import queryStore from "./QueryStore";
 import * as styles_any from './styles.module.scss';
 import {QueryStore} from "./QueryStore";
-import {toJS} from "../../../../node_modules/mobx/lib/mobx";
-import {observer} from "../../../../node_modules/mobx-react/index";
+import {toJS} from "mobx";
+import {observer} from "mobx-react";
 import {FlexRow} from "../flexbox/FlexBox";
 
 const styles = styles_any as {

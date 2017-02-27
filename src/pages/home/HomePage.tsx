@@ -5,9 +5,9 @@ import QueryContainer from "../../shared/components/query/QueryContainer";
 import * as styles_any from './styles.module.scss';
 import {FlexCol, FlexRow} from "../../shared/components/flexbox/FlexBox";
 import devMode from "../../shared/lib/devMode";
-import {observer} from "../../../node_modules/mobx-react/index";
-import DevTools from "../../../node_modules/mobx-react-devtools/index";
-import {toJS, observable, action, computed, whyRun, expr} from "../../../node_modules/mobx/lib/mobx";
+import {observer} from "mobx-react";
+import DevTools from "mobx-react-devtools";
+import {toJS, observable, action, computed, whyRun, expr} from "mobx";
 import queryStore from "../../shared/components/query/QueryStore";
 import {Select, StateToggle} from "../../shared/components/ExperimentalControls";
 

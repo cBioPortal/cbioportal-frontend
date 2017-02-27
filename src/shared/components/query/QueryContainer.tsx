@@ -10,7 +10,7 @@ import Checkbox = ReactBootstrap.Checkbox;
 import {Select, StateToggle} from "../ExperimentalControls";
 import * as styles_any from './styles.module.scss';
 import GeneticProfileSelector from "./GeneticProfileSelector";
-import {observer} from "../../../../node_modules/mobx-react/index";
+import {observer} from "mobx-react";
 import queryStore from "./QueryStore";
 import devMode from "../../lib/devMode";
 import DataTypePrioritySelector from "./DataTypePrioritySelector";

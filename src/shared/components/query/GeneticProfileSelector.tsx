@@ -5,8 +5,8 @@ import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
 import FontAwesome from "react-fontawesome";
 import * as styles_any from './styles.module.scss';
 import queryStore from "./QueryStore";
-import {toJS, computed} from "../../../../node_modules/mobx/lib/mobx";
-import {observer} from "../../../../node_modules/mobx-react/index";
+import {toJS, computed} from "mobx";
+import {observer} from "mobx-react";
 import AsyncStatus from "../asyncStatus/AsyncStatus";
 
 const styles = styles_any as {

@@ -2,7 +2,7 @@ import * as React from 'react';
 import './styles.scss';
 import {StateToggle} from "../../shared/components/ExperimentalControls";
 import devMode from "../../shared/lib/devMode";
-import {observer} from "../../../node_modules/mobx-react/index";
+import {observer} from "mobx-react";
 
 interface IPageHeaderProps {
     router: any;

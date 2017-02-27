@@ -1,4 +1,4 @@
-import {observable} from "../../../node_modules/mobx/lib/mobx";
+import {observable} from "mobx";
 
 class DevMode
 {

@@ -5,7 +5,7 @@ import classNames from "../../lib/classNames";
 import FontAwesome from "react-fontawesome";
 import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
 import queryStore from "../query/QueryStore";
-import {observer} from "../../../../node_modules/mobx-react/index";
+import {observer} from "mobx-react";
 
 const styles = {
 	...styles_any as {

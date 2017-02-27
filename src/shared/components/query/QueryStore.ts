@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import client from "../../api/cbioportalClientInstance";
-import {ObservableMap, toJS, observable, reaction, action, computed, whyRun, expr} from "../../../../node_modules/mobx/lib/mobx";
+import {ObservableMap, toJS, observable, reaction, action, computed, whyRun, expr} from "mobx";
 import {TypeOfCancer as CancerType, GeneticProfile, CancerStudy, SampleList, Gene} from "../../api/CBioPortalAPI";
 import CancerStudyTreeData from "./CancerStudyTreeData";
 import StudyListLogic from "../StudyList/StudyListLogic";

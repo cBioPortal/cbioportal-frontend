@@ -2,7 +2,7 @@ import * as React from 'react';
 import queryStore from "./QueryStore";
 import * as styles_any from './styles.module.scss';
 import ReactSelect from 'react-select';
-import {observer} from "../../../../node_modules/mobx-react/index";
+import {observer} from "mobx-react";
 import {FlexCol} from "../flexbox/FlexBox";
 import {QueryStore} from "./QueryStore";
 

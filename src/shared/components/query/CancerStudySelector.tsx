@@ -10,9 +10,9 @@ import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
 import ReactSelect from 'react-select';
 import 'react-select/dist/react-select.css';
 import StudyList from "../StudyList/StudyList";
-import {observer} from "../../../../node_modules/mobx-react/index";
+import {observer} from "mobx-react";
 import queryStore from "./QueryStore";
-import {action, toJS, computed} from "../../../../node_modules/mobx/lib/mobx";
+import {action, toJS, computed} from "mobx";
 import memoize from "../../lib/memoize";
 
 const styles = styles_any as {

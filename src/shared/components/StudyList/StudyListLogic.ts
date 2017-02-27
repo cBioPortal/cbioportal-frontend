@@ -5,7 +5,7 @@ import {NodeMetadata} from "../query/CancerStudyTreeData";
 import {TypeOfCancer as CancerType, CancerStudy} from "../../api/CBioPortalAPI";
 import memoize from "../../lib/memoize";
 import {QueryStore} from "../query/QueryStore";
-import {computed, action} from "../../../../node_modules/mobx/lib/mobx";
+import {computed, action} from "mobx";
 
 export function matchesSearchText(input:string, searchText:string):boolean
 {
