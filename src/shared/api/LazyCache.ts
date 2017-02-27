@@ -1,4 +1,4 @@
-import {observable, action} from '../../../node_modules/mobx/lib/mobx';
+import {observable, action} from 'mobx';
 
 export default class LazyCache {
     @observable.ref protected _cache:any;
