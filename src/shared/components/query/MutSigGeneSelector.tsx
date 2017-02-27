@@ -90,7 +90,7 @@ export default class MutSigGeneSelector extends React.Component<MutSigGeneSelect
 			showCopyAndDownload: false,
 		    // copyDownloadClassName?: string;
 		    showHideShowColumnButton: false,
-		    // showPagination?:boolean;
+		    showPagination: true,
 		    // handleInput?: Function;
 		    // downloadDataGenerator?: Function;
 		    // downloadDataContainsHeader?: boolean;

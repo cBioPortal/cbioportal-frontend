@@ -126,7 +126,7 @@ export default class GisticGeneSelector extends React.Component<GisticGeneSelect
 			showCopyAndDownload: false,
 		    // copyDownloadClassName?: string;
 		    showHideShowColumnButton: false,
-		    // showPagination?:boolean;
+		    showPagination: true
 		    // handleInput?: Function;
 		    // downloadDataGenerator?: Function;
 		    // downloadDataContainsHeader?: boolean;
