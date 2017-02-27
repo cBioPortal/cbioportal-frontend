@@ -9,6 +9,7 @@ import {TableProps} from "reactable";
  * @author Selcuk Onur Sumer
  */
 export interface IEnhancedReactTableProps<T> {
+    className?: string; // className for outer div
     reactTableProps?: TableProps; // any available reactable props
     headerControlsProps?: ITableHeaderControlsProps;
     columns?: IColumnDefMap; // column definitions (including component renderers)
@@ -44,6 +45,7 @@ export interface IColumnVisibilityDef {
 
 export interface IEnhancedReactTableColumnDef {
     name: string; // display name for the column header
+    header?: React.ReactChild;
     description?: string | JSX.Element; // column description (used as a column header tooltip value)
     formatter?: IColumnRenderFunction; // actual renderer function
     downloader?: IColumnDownloadFunction; // function to determine the download value
@@ -52,7 +54,7 @@ export interface IEnhancedReactTableColumnDef {
     visible?: IColumnVisibilityFunction | ColumnVisibility; // visibility value, or visibility function
     priority?: number; // column priority (used for column ordering)
     columnProps?: any; // any additional column props (passed as argument to the formatter)
-    dataField?: string; // data field to retrieve display data (in case no formatter provided, otherwise ignored)
+    dataField?: string; // data field to retrieve display data used for sorting (in case no formatter provided, otherwise ignored)
     columnDataFunction?:IColumnDataFunction; // column data function to retrieve display data (in case no formatter provided)
 }
 
