@@ -17,21 +17,16 @@ declare module 'reactable' {
         (contents:string, filter:string):boolean;
     }
 
-    export type IColumnFilter = {
-        column: string;
-        filterFunction: IColumnFilterFunction;
-    };
-
     export type ISortDirection = -1 | 1 | 'desc' | 'asc';
 
     export type ICurrentSort = {
         column: string,
         direction: ISortDirection
-    }
+    };
 
     export type TableProps = IntrinsicElementProps['table'] & {
         data?: any,
-        sortBy?: boolean,
+        sortBy?: string | ICurrentSort,
         defaultSort?: string | ICurrentSort,
         defaultSortDescending?: boolean,
         itemsPerPage?: number,
@@ -51,31 +46,33 @@ declare module 'reactable' {
         filterPlaceholder?: string,
         previousPageLabel?: React.ReactChild,
         nextPageLabel?: React.ReactChild,
-    }
+    };
 
     export type TdProps = IntrinsicElementProps['td'] & {
         column: string;
         value?: any;
-    }
+    };
 
     export type TfootProps = IntrinsicElementProps['tfoot'] & {
-    }
+    };
 
     export type ThProps = IntrinsicElementProps['th'] & {
         column: string;
-    }
+    };
 
     export type TheadProps = IntrinsicElementProps['thead'] & {
-    }
+    };
 
     export type TrProps = IntrinsicElementProps['tr'] & {
         rowData?: any;
-    }
+    };
 
-    export var Table:React.ComponentClass<TableProps>;
-    export var Td:React.ComponentClass<TdProps>;
-    export var Tfoot:React.ComponentClass<TheadProps>;
-    export var Th:React.ComponentClass<ThProps>;
-    export var Thead:React.ComponentClass<TheadProps>;
-    export var Tr:React.ComponentClass<TrProps>;
+    const Table:React.ComponentClass<TableProps>;
+    const Td:React.ComponentClass<TdProps>;
+    const Tfoot:React.ComponentClass<TfootProps>;
+    const Th:React.ComponentClass<ThProps>;
+    const Thead:React.ComponentClass<TheadProps>;
+    const Tr:React.ComponentClass<TrProps>;
+
+    export {Table, Td, Tfoot, Th, Thead, Tr};
 }

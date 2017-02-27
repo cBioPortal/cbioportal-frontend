@@ -155,7 +155,7 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
         const sendVisibleRows = (tableRenderResult:JSX.Element) => {
             const tbodyElt = tableRenderResult.props.children.find((x:JSX.Element) => (x.type === "tbody"));
             const visibleRows = tbodyElt.props.children || [];
-            this.props.onVisibleRowsChange &&
+            if (this.props.onVisibleRowsChange)
                 this.props.onVisibleRowsChange(visibleRows.map((r:JSX.Element) => r.props.rowData));
         };
 
@@ -170,7 +170,7 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
             const result = Table_render.apply(this, arguments);
             sendVisibleRows(result);
             return result;
-        }
+        };
         //
 
         // binding "this" to handler functions
@@ -184,6 +184,7 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
 
     public render() {
         let {
+            className,
             reactTableProps,
             headerControlsProps
         } = this.props;
@@ -202,7 +203,7 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
 
 
         return(
-            <div>
+            <div className={className}>
                 <TableHeaderControls
                     showCopyAndDownload={true}
                     showHideShowColumnButton={true}
@@ -213,7 +214,7 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
                     showSearch={true}
                     columnVisibilityProps={{
                         className: "pull-right",
-                        columnVisibility: columnVisibility,
+                        columnVisibility,
                         onColumnToggled: this.handleVisibilityToggle
                     }}
                     paginationProps={{
@@ -358,7 +359,7 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
 
         _.each(columns, function(columnDef:IEnhancedReactTableColumnDef) {
             // basic content (with no tooltip)
-            let headerContent = (
+            let headerContent = columnDef.header || (
                 <span>
                     {columnDef.name}
                 </span>
@@ -598,7 +599,7 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
 
     private handleChangeItemsPerPage(itemsPerPage:number) {
         this.setState({
-            itemsPerPage: itemsPerPage,
+            itemsPerPage,
             currentPage: Math.min(this.state.currentPage, this.numPages(itemsPerPage)-1)
         } as IEnhancedReactTableState);
     }
