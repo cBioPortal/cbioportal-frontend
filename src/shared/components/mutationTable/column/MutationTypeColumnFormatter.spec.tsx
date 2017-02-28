@@ -1,42 +1,43 @@
 import MutationTypeColumnFormatter from './MutationTypeColumnFormatter';
 import styles from './mutationType.module.scss';
+import {initMutation} from "test/MutationMockUtils";
 import React from 'react';
 import { assert } from 'chai';
-import { shallow, mount } from 'enzyme';
+import {shallow, mount, ReactWrapper} from 'enzyme';
 import sinon from 'sinon';
 
 describe('MutationTypeColumnFormatter', () => {
-    const missenseVariant = {
+    const missenseVariant = initMutation({
         mutationType: "Missense_Variant"
-    };
+    });
 
-    const missenseMutation = {
+    const missenseMutation = initMutation({
         mutationType: "Missense_mutation"
-    };
+    });
 
-    const stopgainSnv = {
+    const stopgainSnv = initMutation({
         mutationType: "stopgain_SNV"
-    };
+    });
 
-    const nonFrameShiftDeletion = {
+    const nonFrameShiftDeletion = initMutation({
         mutationType: "NonFrameShift_deletion"
-    };
+    });
 
-    const spliceSite = {
+    const spliceSite = initMutation({
         mutationType: "Splice Site"
-    };
+    });
 
-    const frameshiftDeletion = {
+    const frameshiftDeletion = initMutation({
         mutationType: "FrameShift_Deletion"
-    };
+    });
 
-    const otherMutation = {
+    const otherMutation = initMutation({
         mutationType: "other"
-    };
+    });
 
-    const unknownMutation = {
+    const unknownMutation = initMutation({
         mutationType: "a_strange_type_of_mutation"
-    };
+    });
 
     const tableData = [
         [missenseVariant],
@@ -49,14 +50,19 @@ describe('MutationTypeColumnFormatter', () => {
         [unknownMutation]
     ];
 
-    let msVarComponent, msMutComponent, stopgainSnvComponent,
-        nonFsDelComponent, unknownMutComponent, fsDelComponent,
-        otherMutComponent, spliceComponent;
+    let msVarComponent: ReactWrapper<any, any>;
+    let msMutComponent: ReactWrapper<any, any>;
+    let stopgainSnvComponent: ReactWrapper<any, any>;
+    let nonFsDelComponent: ReactWrapper<any, any>;
+    let unknownMutComponent: ReactWrapper<any, any>;
+    let fsDelComponent: ReactWrapper<any, any>;
+    let otherMutComponent: ReactWrapper<any, any>;
+    let spliceComponent: ReactWrapper<any, any>;
 
     before(() => {
-        let data = {
+        const data = {
             name: "Mutation Type",
-            tableData: tableData,
+            tableData,
             rowData: [missenseVariant]
         };
         msVarComponent = mount(MutationTypeColumnFormatter.renderFunction(data));
@@ -83,7 +89,10 @@ describe('MutationTypeColumnFormatter', () => {
         otherMutComponent = mount(MutationTypeColumnFormatter.renderFunction(data));
     });
 
-    function testRenderedValues(component, mutationType, className, value)
+    function testRenderedValues(component: ReactWrapper<any, any>,
+                                mutationType: string,
+                                className: string,
+                                value: string)
     {
         assert.isTrue(component.find(`span.${styles[className]}`).exists(),
             `Span has the correct class name for ${mutationType}`);
@@ -93,7 +102,7 @@ describe('MutationTypeColumnFormatter', () => {
             `Cell (Td) value property is correct for ${mutationType}`);
     }
 
-    it('component display value, class name, and cell value property', () => {
+    it('renders component display value, class name, and cell value property', () => {
         testRenderedValues(msVarComponent, "Missense_Variant", "missense-mutation", "Missense");
         testRenderedValues(msMutComponent, "Missense_mutation", "missense-mutation", "Missense");
         testRenderedValues(stopgainSnvComponent, "stopgain_SNV", "trunc-mutation", "Nonsense");
@@ -104,7 +113,7 @@ describe('MutationTypeColumnFormatter', () => {
         testRenderedValues(otherMutComponent, "other", "other-mutation", "Other");
     });
 
-    after(()=>{
+    after(() => {
 
     });
 
