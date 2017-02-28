@@ -7,7 +7,6 @@ import StudyListLogic from "../StudyList/StudyListLogic";
 import {remoteData} from "../../api/remoteData";
 import {labelMobxPromises} from "../../api/MobxPromise";
 import internalClient from "../../api/cbioportalInternalClientInstance";
-import {MutSig, Gistic} from "../../api/CBioPortalAPIInternal";
 import oql_parser from "../../lib/oql/oql-parser";
 import {SyntaxError} from "../../lib/oql/oql-parser";
 import memoize from "../../lib/memoize";

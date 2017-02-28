@@ -1,7 +1,7 @@
 import * as React from 'react';
 import Spinner from 'react-spinkit';
 import {MobxPromiseUnionType, MobxPromiseUnionTypeWithDefault} from "../../api/MobxPromise";
-import {observer} from "node_modules/mobx-react/index";
+import {observer} from "mobx-react";
 import FontAwesome from "react-fontawesome";
 import * as styles_any from './styles.module.scss';
 import classNames from "../../lib/classNames";

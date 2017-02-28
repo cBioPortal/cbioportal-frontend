@@ -1,10 +1,8 @@
 import * as _ from 'lodash';
 import * as React from 'react';
-import {GeneticProfile} from "../../api/CBioPortalAPI";
 import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
-import FontAwesome from "react-fontawesome";
 import * as styles_any from './styles.module.scss';
-import {ObservableMap, expr, toJS, computed, observable} from "mobx";
+import {action, ObservableMap, expr, toJS, computed, observable} from "mobx";
 import {observer} from "mobx-react";
 import EnhancedReactTable from "../enhancedReactTable/EnhancedReactTable";
 import {MutSig} from "../../api/CBioPortalAPIInternal";
@@ -36,7 +34,23 @@ export default class MutSigGeneSelector extends React.Component<MutSigGeneSelect
 		this.map_geneSymbol_selected.replace(props.initialSelection.map(geneSymbol => [geneSymbol, true]));
 	}
 
-	map_geneSymbol_selected = observable.map<boolean>();
+	private readonly map_geneSymbol_selected = observable.map<boolean>();
+
+	@computed get allGenes()
+	{
+		return _.uniq(this.props.data.map(mutSig => mutSig.hugoGeneSymbol));
+	}
+
+	@computed get selectedGenes()
+	{
+		return this.allGenes.filter(symbol => this.map_geneSymbol_selected.get(symbol));
+	}
+
+	@action selectAll(selected:boolean)
+	{
+		for (let gene of this.allGenes)
+			this.map_geneSymbol_selected.set(gene, selected);
+	}
 
 	render()
 	{
@@ -63,8 +77,19 @@ export default class MutSigGeneSelector extends React.Component<MutSigGeneSelect
 				filterable: true
 			},
 			'selected': {
-				name: "All",
+				name: "Selected",
 				priority: 4,
+				header: (
+					<LabeledCheckbox
+						checked={this.selectedGenes.length > 0}
+						indeterminate={this.selectedGenes.length > 0 && this.selectedGenes.length < this.allGenes.length}
+						inputProps={{
+							onChange: event => this.selectAll((event.target as HTMLInputElement).checked)
+						}}
+					>
+						All
+					</LabeledCheckbox>
+				),
 				formatter: (data:IColumnFormatterData<MutSig>) => (
 					<Td key={data.name} column={data.name}>
 						{!!(data.rowData) && (
@@ -72,8 +97,8 @@ export default class MutSigGeneSelector extends React.Component<MutSigGeneSelect
 						)}
 					</Td>
 				),
-				sortable: true,
-				filterable: true
+				sortable: false,
+				filterable: false
 			},
 		};
 
