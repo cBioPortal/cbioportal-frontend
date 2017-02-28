@@ -1,14 +1,16 @@
 import MyCancerGenome from './MyCancerGenome';
 import React from 'react';
 import { assert } from 'chai';
-import { shallow, mount } from 'enzyme';
+import {shallow, mount, ReactWrapper} from 'enzyme';
 import sinon from 'sinon';
 
 describe('MyCancerGenome', () => {
+    let component: ReactWrapper<any, any>;
+    let emptyListComponent: ReactWrapper<any, any>;
+    let tooltip: ReactWrapper<any, any>;
+    let emptyListTooltip: ReactWrapper<any, any>;
 
-    let component, emptyListComponent, tooltip, emptyListTooltip;
-
-    before(()=>{
+    before(() => {
         component = mount(<MyCancerGenome linksHTML={["link1, link2"]}/>);
         emptyListComponent = mount(<MyCancerGenome linksHTML={[]}/>);
         tooltip = mount(MyCancerGenome.myCancerGenomeLinks(["link1, link2"]));
@@ -30,7 +32,7 @@ describe('MyCancerGenome', () => {
             "There should not be a list element for an invalid list of links");
     });
 
-    after(()=>{
+    after(() => {
 
     });
 });
