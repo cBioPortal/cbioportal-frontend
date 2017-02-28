@@ -1,24 +1,25 @@
 import GeneColumnFormatter from './GeneColumnFormatter';
 import React from 'react';
 import { assert } from 'chai';
-import { shallow, mount } from 'enzyme';
+import {shallow, mount, ReactWrapper} from 'enzyme';
 import sinon from 'sinon';
+import {initMutation} from "test/MutationMockUtils";
 
 describe('GeneColumnFormatter', () => {
 
-    const mutation = {
+    const mutation = initMutation({
         gene: {
             hugoGeneSymbol: "DIABLO"
         }
-    };
+    });
 
     const tableData = [[mutation]];
-    let component;
+    let component: ReactWrapper<any, any>;
 
     before(() => {
-        let data = {
+        const data = {
             name: "Gene",
-            tableData: tableData,
+            tableData,
             rowData: [mutation]
         };
 
@@ -26,18 +27,17 @@ describe('GeneColumnFormatter', () => {
         component = mount(GeneColumnFormatter.renderFunction(data));
     });
 
-    it('component display value', () => {
+    it('renders display value', () => {
         assert.isTrue(component.find(`span`).text().indexOf("DIABLO") > -1,
             'Gene symbol display value is correct');
     });
 
-    it('component cell value property', () => {
+    it('sets component cell value property', () => {
         assert.equal(component.prop("value"), "DIABLO",
             'Cell (Td) value property is correct');
     });
 
-    after(()=>{
+    after(() => {
 
     });
-
 });

@@ -1,55 +1,58 @@
 import MutationAssessorColumnFormatter from './MutationAssessorColumnFormatter';
 import styles from "./mutationAssessor.module.scss";
+import {initMutation} from "test/MutationMockUtils";
+import {IColumnFormatterData} from "shared/components/enhancedReactTable/IColumnFormatter";
+import {MutationTableRowData} from "../IMutationTableProps";
 import React from 'react';
 import { assert } from 'chai';
-import { shallow, mount } from 'enzyme';
+import {shallow, mount, ReactWrapper} from 'enzyme';
 import sinon from 'sinon';
 
 describe('MutationAssessorColumnFormatter', () => {
     const mutations = [
-        {
+        initMutation({
             functionalImpactScore: "H",
             fisValue: 3.5,
             linkPdb: "http://mutationassessor.org/r2/pdb.php?var=Q616K",
             linkMsa: "http://mutationassessor.org/r2/?cm=msa&var=Q616K",
             linkXvar: "http://mutationassessor.org/r2/?cm=var&var=hg19,0,0,X,X"
-        },
-        {
+        }),
+        initMutation({
 
             functionalImpactScore: "H",
             fisValue: 3.8,
             linkPdb: null,
             linkMsa: null,
             linkXvar: "http://mutationassessor.org/r2/?cm=var&var=hg19,0,0,Y,Y"
-        },
-        {
+        }),
+        initMutation({
             functionalImpactScore: "M",
             fisValue: null,
             linkPdb: null,
             linkMsa: "http://mutationassessor.org/r2/?cm=msa&var=Q1429R",
             linkXvar: "http://mutationassessor.org/r2/?cm=var&var=hg19,0,0,Z,Z"
-        },
-        {
+        }),
+        initMutation({
             functionalImpactScore: "M",
             fisValue: 2.2,
             linkPdb: null,
             linkMsa: "http://mutationassessor.org/r2/?cm=msa&var=Q1429R",
             linkXvar: null
-        },
-        {
+        }),
+        initMutation({
             functionalImpactScore: "L",
             fisValue: 0.7,
             linkPdb: null,
             linkMsa: null,
             linkXvar: null
-        },
-        {
+        }),
+        initMutation({
             functionalImpactScore: "Unknown",
             fisValue: null,
             linkPdb: null,
             linkMsa: null,
             linkXvar: null
-        }
+        })
     ];
 
     const tableData = [
@@ -61,26 +64,26 @@ describe('MutationAssessorColumnFormatter', () => {
         [mutations[5]]
     ];
 
-    let components = [];
-    let tooltips = [];
-    let formatterData = [];
+    const components: Array<ReactWrapper<any, any>> = [];
+    const tooltips: Array<ReactWrapper<any, any>> = [];
+    const formatterData: Array<IColumnFormatterData<MutationTableRowData>> = [];
 
-    before(()=>{
+    before(() => {
         // prepare the data and component arrays for test
         mutations.forEach((mutation) => {
             const data = {
                 name: "Mutation Assessor",
-                tableData: tableData,
+                tableData,
                 rowData: [mutation]
             };
 
             formatterData.push(data);
             components.push(mount(MutationAssessorColumnFormatter.renderFunction(data)));
-            tooltips.push(mount(MutationAssessorColumnFormatter.getTooltipContent(data)))
+            tooltips.push(mount(MutationAssessorColumnFormatter.getTooltipContent(data)));
         });
     });
 
-    it('component class name', () => {
+    it('sets component class name', () => {
         assert.isTrue(components[0].find(`span.${styles['oma-high']}`).exists(),
             `Span has the correct class name for impact score H(3.5)`);
         assert.isTrue(components[1].find(`span.${styles['oma-high']}`).exists(),
@@ -95,7 +98,7 @@ describe('MutationAssessorColumnFormatter', () => {
             `Span has the correct class name for impact score Unknown(null)`);
     });
 
-    it('mutation assessor main link for the tooltip', () => {
+    it('renders mutation assessor main link for the tooltip', () => {
         assert.isTrue(tooltips[0].find(`.${styles['mutation-assessor-main-img']}`).exists(),
             `Main mutation assessor link exists for impact score H(3.5)`);
         assert.isTrue(tooltips[1].find(`.${styles['mutation-assessor-main-img']}`).exists(),
@@ -110,7 +113,7 @@ describe('MutationAssessorColumnFormatter', () => {
             `Main mutation assessor link should not exist for impact score Unknown(null)`);
     });
 
-    it('MSA link for the tooltip', () => {
+    it('renders MSA link for the tooltip', () => {
         assert.isTrue(tooltips[0].find(`.${styles['ma-msa-icon']}`).exists(),
             `MSA link exists for impact score H(3.5)`);
         assert.isFalse(tooltips[1].find(`.${styles['ma-msa-icon']}`).exists(),
@@ -125,7 +128,7 @@ describe('MutationAssessorColumnFormatter', () => {
             `MSA link should not exist for impact score Unknown(null)`);
     });
 
-    it('PDB link for the tooltip', () => {
+    it('renders PDB link for the tooltip', () => {
         assert.isTrue(tooltips[0].find(`.${styles['ma-3d-icon']}`).exists(),
             `PDB link exists for impact score H(3.5)`);
         assert.isFalse(tooltips[1].find(`.${styles['ma-3d-icon']}`).exists(),
@@ -140,7 +143,7 @@ describe('MutationAssessorColumnFormatter', () => {
             `PDB link should not exist for impact score Unknown(null)`);
     });
 
-    it('sortFunction', ()=>{
+    it('properly sorts by Mutation Assessor column', () => {
         assert.isAbove(MutationAssessorColumnFormatter.sortFunction(formatterData[0], formatterData[2]), 0,
             "H(3.5) should rank higher than M(null)");
         assert.isBelow(MutationAssessorColumnFormatter.sortFunction(formatterData[0], formatterData[1]), 0,
@@ -155,7 +158,7 @@ describe('MutationAssessorColumnFormatter', () => {
             "L(0.7) should rank higher than Unknown(null)");
     });
 
-    after(()=>{
+    after(() => {
 
     });
 

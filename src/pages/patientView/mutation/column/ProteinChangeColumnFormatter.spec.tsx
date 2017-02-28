@@ -1,31 +1,36 @@
 import ProteinChangeColumnFormatter from './ProteinChangeColumnFormatter';
 import styles from './style/proteinChange.module.scss';
+import {IColumnFormatterData} from "shared/components/enhancedReactTable/IColumnFormatter";
+import {MutationTableRowData} from "shared/components/mutationTable/IMutationTableProps";
+import {initMutation} from "test/MutationMockUtils";
+import {Mutation} from "shared/api/CBioPortalAPI";
 import React from 'react';
 import { assert } from 'chai';
-import { shallow, mount } from 'enzyme';
+import {shallow, mount, ReactWrapper} from 'enzyme';
 import sinon from 'sinon';
 
 describe('ProteinChangeColumnFormatter (customized for patient view)', () => {
-    const germlineMutation = {
+    const germlineMutation:Mutation = initMutation({
         proteinChange: "Q616K",
         mutationStatus: "Germline"
-    };
+    });
 
-    const somaticMutation = {
+    const somaticMutation:Mutation = initMutation({
         proteinChange: "Q616L",
         mutationStatus: "Somatic"
-    };
+    });
 
     const tableData = [[germlineMutation], [somaticMutation]];
 
-    let germlineComponent, somaticComponent;
+    let germlineComponent: ReactWrapper<any, any>;
+    let somaticComponent:ReactWrapper<any, any>;
 
     before(() => {
-
-        let data = {
+        let data:IColumnFormatterData<MutationTableRowData> = {
             name:"Protein Change",
-            tableData: tableData,
-            rowData: [germlineMutation]
+            tableData,
+            rowData: [germlineMutation],
+            columnData: null
         };
 
         // mount a single cell component (Td) for a germline mutation
@@ -33,7 +38,7 @@ describe('ProteinChangeColumnFormatter (customized for patient view)', () => {
 
         data = {
             name:"Protein Change",
-            tableData: tableData,
+            tableData,
             rowData: [somaticMutation]
         };
 
@@ -41,7 +46,7 @@ describe('ProteinChangeColumnFormatter (customized for patient view)', () => {
         somaticComponent = mount(ProteinChangeColumnFormatter.renderFunction(data));
     });
 
-    it('component protein change display value', () => {
+    it('renders protein change display value', () => {
         assert.isTrue(germlineComponent.find(`.${styles.proteinChange}`).exists(),
             'Germline mutation should have the protein change value');
         assert.isTrue(germlineComponent.find(`.${styles.proteinChange}`).text().indexOf("Q616K") > -1,
@@ -52,21 +57,21 @@ describe('ProteinChangeColumnFormatter (customized for patient view)', () => {
             'Protein change value for somatic mutation is correct');
     });
 
-    it('component germline indicator', () => {
+    it('renders germline indicator', () => {
         assert.isTrue(germlineComponent.find(`.${styles.germline}`).exists(),
             'Germline mutation should have the additional germline indicator');
         assert.isFalse(somaticComponent.find(`.${styles.germline}`).exists(),
             'Somatic mutation should not have the additional germline indicator');
     });
 
-    it('component cell value property', () => {
+    it('sets component cell value property', () => {
         assert.equal(germlineComponent.prop("value"), "Q616K",
             'Cell (Td) value property for germline mutation is correct');
         assert.equal(somaticComponent.prop("value"), "Q616L",
             'Cell (Td) value property for somatic mutation is correct');
     });
 
-    after(()=>{
+    after(() => {
         
     });
 });

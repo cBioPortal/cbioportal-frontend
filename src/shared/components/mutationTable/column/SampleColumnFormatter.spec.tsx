@@ -1,31 +1,41 @@
 import SampleColumnFormatter from "./SampleColumnFormatter";
+import {initMutation} from "test/MutationMockUtils";
 import React from 'react';
 import { assert } from 'chai';
-import { shallow, mount } from 'enzyme';
+import {shallow, mount, ReactWrapper} from 'enzyme';
 import sinon from 'sinon';
 
 /**
  * @author Selcuk Onur Sumer
  */
 describe('SampleColumnFormatter', () => {
-    const mutationShort = {
+    const mutationShort = initMutation({
         sampleId: "Short_Id"
-    };
+    });
 
-    const mutationLong = {
+    const mutationLong = initMutation({
         sampleId: "This_is_a_quite_long_Sample_Id_in_my_opinion!"
+    });
+
+    const shortSampleId = {
+        name: "Sample",
+        columnData: mutationShort.sampleId
     };
 
-    const shortSampleId = {columnData: mutationShort.sampleId};
-    const longSampleId = {columnData: mutationLong.sampleId};
+    const longSampleId = {
+        name: "Sample",
+        columnData: mutationLong.sampleId
+    };
 
-    let componentShort, componentLong;
+    let componentShort:ReactWrapper<any, any>;
+    let componentLong:ReactWrapper<any, any>;
+
     const tableData = [[mutationShort], [mutationLong]];
 
     before(() => {
         let data = {
             name: "Sample",
-            tableData: tableData,
+            tableData,
             rowData: [mutationShort]
         };
 
@@ -34,7 +44,7 @@ describe('SampleColumnFormatter', () => {
 
         data = {
             name: "Sample",
-            tableData: tableData,
+            tableData,
             rowData: [mutationLong]
         };
 
@@ -68,28 +78,28 @@ describe('SampleColumnFormatter', () => {
                      SampleColumnFormatter.getTextValue(longSampleId));
     });
 
-    it('component display value', () => {
+    it('renders sample display value', () => {
         assert.isTrue(componentShort.find(`span`).text().indexOf("Short_Id") > -1,
             'Display value is correct for short sample id');
         assert.isFalse(componentLong.find(`span`).text().indexOf("This_is_a_quite_long_Sample_Id_in_my_opinion!") > -1,
             'Display value for long sample id should not be equal to the actual value');
     });
 
-    it('component cell value property', () => {
+    it('sets component cell value property', () => {
         assert.equal(componentShort.prop("value"), "Short_Id",
             'Cell (Td) value property is correct for short sample id');
         assert.equal(componentLong.prop("value"), "This_is_a_quite_long_Sample_Id_in_my_opinion!",
             'Cell (Td) value property is correct for long sample id');
     });
 
-    it('component tooltip', () => {
+    it('generates component tooltip', () => {
         assert.isFalse(componentShort.find('DefaultTooltip').exists(),
             'Tooltip should not exists for short sample id');
         assert.isTrue(componentLong.find('DefaultTooltip').exists(),
             'Tooltip should exists for long sample id');
     });
 
-    after(()=>{
+    after(() => {
 
     });
 });
