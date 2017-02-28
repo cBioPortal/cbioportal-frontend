@@ -1,4 +1,4 @@
-import {computed, observable, action, extras} from "../../../node_modules/mobx/lib/mobx";
+import {computed, observable, action, extras} from "mobx";
 
 /**
  * This tagged union type describes the interoperability of MobxPromise properties.
