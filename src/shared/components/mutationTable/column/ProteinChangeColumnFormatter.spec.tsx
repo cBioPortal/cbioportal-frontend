@@ -5,12 +5,12 @@ import ProteinChangeColumnFormatter from "./ProteinChangeColumnFormatter";
  * @author Selcuk Onur Sumer
  */
 describe('ProteinChangeColumnFormatter', () => {
-    let a = "E746_A750del";
-    let b = "E747_T749del";
-    let c = "K754E";
-    let d = "K754I";
+    const a = "E746_A750del";
+    const b = "E747_T749del";
+    const c = "K754E";
+    const d = "K754I";
 
-    it('extractSortValue function', () => {
+    it('properly extracts sort value from a protein change string value', () => {
         assert.isAbove(ProteinChangeColumnFormatter.extractSortValue(b),
                        ProteinChangeColumnFormatter.extractSortValue(a));
 
