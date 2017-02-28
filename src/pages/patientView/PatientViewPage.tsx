@@ -34,6 +34,7 @@ import ClinicalInformationSamples from "./clinicalInformation/ClinicalInformatio
 import {ICosmicData} from "../../shared/components/mutationTable/column/CosmicColumnFormatter";
 import {keywordToCosmic, geneToMyCancerGenome, geneAndProteinPosToHotspots} from 'shared/lib/AnnotationUtils';
 import {IVariantCountData} from "./mutation/column/CohortColumnFormatter";
+import {observable} from "mobx";
 import {observer} from "mobx-react";
 import {IHotspotData, IMyCancerGenomeData, IMyCancerGenome} from "./mutation/column/AnnotationColumnFormatter";
 import {getSpans} from './clinicalInformation/lib/clinicalAttributesUtil.js';
@@ -41,6 +42,11 @@ import CopyNumberAlterationsTable from "./copyNumberAlterations/CopyNumberAltera
 import CopyNumberTableWrapper from "./copyNumberAlterations/CopyNumberTableWrapper";
 import {reaction} from "mobx";
 import AppConfig from 'appConfig';
+import SimpleTable from "../../shared/components/simpleTable/SimpleTable";
+import MSKTable from "../../shared/components/msktable/MSKTable";
+
+class NameTable extends MSKTable<{first:string}> {
+}
 
 const patientViewPageStore = new PatientViewPageStore();
 
@@ -510,6 +516,47 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                         </Tab>
                     )}
+                    <Tab eventKey={4} id="test" title="Test">
+                        <div className="clearfix">
+                            <NameTable
+                                columns={[
+                                    {
+                                        name:"First Name",
+                                        render:(d:any)=>(<span>{d.first}</span>),
+                                        //sort:(d1:any, d2:any)=>d1.text.localeCompare(d2.text)
+                                        },
+                                        {
+                                            name:"Last Name",
+                                        render:(d:any)=>{
+                                                const lastName = patientViewPageStore.nameCache.get(d.first);
+                                                if (typeof lastName === "undefined") {
+                                                    return (<span>Loading</span>);
+                                                } else if (lastName === null) {
+                                                    return (<span>N/A</span>);
+                                                } else {
+                                                    return (<span>{lastName}</span>);
+                                                }
+                                            },
+                                        sort:(d1:any, d2:any)=>{
+                                                const last1 = patientViewPageStore.nameCache.get(d1.first);
+                                                const last2 = patientViewPageStore.nameCache.get(d2.first);
+                                                if (last1 && last2) {
+                                                    return last1.localeCompare(last2);
+                                                } else {
+                                                    return 0;
+                                                }
+                                            }
+                                        },
+                                ]}
+                                data={[
+                                    {first:"ADAM"},
+                                    {first:"AARON"},
+                                    {first:"ONUR"},
+                                    {first:"NONAME"}
+                                ]}
+                            />
+                        </div>
+                    </Tab>
                 </Tabs>
 
 
