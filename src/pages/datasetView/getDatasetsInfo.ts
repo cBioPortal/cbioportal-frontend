@@ -1,7 +1,8 @@
 import * as _ from 'lodash';
 import CBioPortalAPI, { CancerStudy }  from 'shared/api/generated/CBioPortalAPI';
+import AppConfig from 'appConfig';
 
-const tsClient = new CBioPortalAPI(`//${(window as any)['__API_ROOT__']}`);
+const tsClient = new CBioPortalAPI(`//${AppConfig.apiRoot}`);
 
 export default function getDatasetsInfo(): Promise<CancerStudy[]> {
 
