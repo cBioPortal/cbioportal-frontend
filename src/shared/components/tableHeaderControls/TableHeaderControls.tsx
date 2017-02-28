@@ -6,7 +6,7 @@ var ClipboardButton = require('react-clipboard.js');
 var Clipboard = require('clipboard');
 import fileDownload from 'react-file-download';
 import * as _ from 'lodash';
-import {TablePaginationControls, ITablePaginationControlsProps} from "../tablePaginationControls/TablePaginationControls";
+import {PaginationControls, IPaginationControlsProps} from "../paginationControls/PaginationControls";
 import { If } from 'react-if';
 import {
     IColumnVisibilityControlsProps,
@@ -26,7 +26,7 @@ export interface ITableHeaderControlsProps {
     downloadDataGenerator?: Function;
     downloadDataContainsHeader?: boolean;
     downloadFilename?: string;
-    paginationProps?: ITablePaginationControlsProps;
+    paginationProps?: IPaginationControlsProps;
     columnVisibilityProps?: IColumnVisibilityControlsProps;
     searchDelayMs?:number;
 }
@@ -136,7 +136,7 @@ export default class TableHeaderControls extends React.Component<ITableHeaderCon
 
                 <ButtonToolbar>
                     <If condition={this.props.showPagination}>
-                        <TablePaginationControls className="pull-left" {...this.props.paginationProps}/>
+                        <PaginationControls className="pull-left" {...this.props.paginationProps}/>
                     </If>
 
                     <If condition={this.props.showHideShowColumnButton}>
