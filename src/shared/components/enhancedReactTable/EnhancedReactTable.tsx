@@ -7,7 +7,7 @@ import TableHeaderControls from "shared/components/tableHeaderControls/TableHead
 import {
     IEnhancedReactTableProps, IColumnDefMap, IEnhancedReactTableColumnDef, IColumnVisibilityState,
     IEnhancedReactTableState, IColumnVisibilityDef, IColumnSort, IColumnFilter
-} from "IEnhancedReactTableProps";
+} from "./IEnhancedReactTableProps";
 import {
     IColumnFormatterData, IColumnSortFunction, IColumnFilterFunction, IColumnVisibilityFunction, ColumnVisibility
 } from "./IColumnFormatter";
