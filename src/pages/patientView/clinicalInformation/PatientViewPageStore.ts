@@ -10,6 +10,7 @@ import {computed, observable, action, reaction, autorun} from "mobx";
 import {remoteData} from "../../../shared/api/remoteData";
 import {labelMobxPromises} from "mobxpromise";
 import MrnaExprRankCache from './MrnaExprRankCache';
+import DebouncingCache from "./DebouncingCache";
 
 type PageMode = 'patient' | 'sample';
 
@@ -65,9 +66,12 @@ export class PatientViewPageStore
             });
 
         this.setVisibleRows = this.setVisibleRows.bind(this);
+
+        this.nameCache = new DebouncingCache();
     }
 
     @observable.ref private visibleRows:Mutation[][] = [];
+    public nameCache:DebouncingCache;
 
     @observable private _patientId = '';
     @computed get patientId():string {
@@ -280,4 +284,5 @@ export class PatientViewPageStore
     @action setVisibleRows(rows:Mutation[][]) {
         this.visibleRows = rows || [];
     }
+
 }
