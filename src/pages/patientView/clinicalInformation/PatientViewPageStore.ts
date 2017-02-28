@@ -6,7 +6,7 @@ import {
 } from "../../../shared/api/CBioPortalAPI";
 import {ClinicalInformationData} from "../Connector";
 import client from "../../../shared/api/cbioportalClientInstance";
-import {computed, observable, action, reaction, autorun} from "../../../../node_modules/mobx/lib/mobx";
+import {computed, observable, action, reaction, autorun} from "mobx";
 import {remoteData} from "../../../shared/api/remoteData";
 import {labelMobxPromises} from "../../../shared/api/MobxPromise";
 import MrnaExprRankCache from './MrnaExprRankCache';
