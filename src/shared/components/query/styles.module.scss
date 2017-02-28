@@ -334,10 +334,22 @@
 
 div.MutSigGeneSelectorWindow {
   width: 650px;
-  height: 375px;
 
   div.MutSigGeneSelector {
+    margin: 10px;
     flex: 1;
+    div.selectionColumnHeader, div.selectionColumnCell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      label {
+        min-height: 1em !important;
+        input[type='checkbox'] {
+          margin: 4px 0 0 0;
+        }
+      }
+    }
     button.selectButton {
       float: right;
     }
@@ -346,12 +358,13 @@ div.MutSigGeneSelectorWindow {
 
 div.GisticGeneSelectorWindow {
   width: 800px;
-  height: 550px;
 
   div.GisticGeneSelector {
+    margin: 10px;
     flex: 1;
 
     div.GisticGeneToggles {
+      width: 400px;
     }
 
     .someGenes, .moreGenes {

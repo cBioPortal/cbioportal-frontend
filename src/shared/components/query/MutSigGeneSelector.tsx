@@ -14,6 +14,8 @@ import {Table, Td, TableProps} from 'reactable';
 const styles = styles_any as {
 	MutSigGeneSelector: string,
 	selectButton: string,
+	selectionColumnHeader: string,
+	selectionColumnCell: string,
 };
 
 class MutSigTable extends EnhancedReactTable<MutSig> {}
@@ -80,20 +82,23 @@ export default class MutSigGeneSelector extends React.Component<MutSigGeneSelect
 				name: "Selected",
 				priority: 4,
 				header: (
-					<LabeledCheckbox
-						checked={this.selectedGenes.length > 0}
-						indeterminate={this.selectedGenes.length > 0 && this.selectedGenes.length < this.allGenes.length}
-						inputProps={{
-							onChange: event => this.selectAll((event.target as HTMLInputElement).checked)
-						}}
-					>
-						All
-					</LabeledCheckbox>
+					<div className={styles.selectionColumnHeader}>
+						<span>All</span>
+						<LabeledCheckbox
+							checked={this.selectedGenes.length > 0}
+							indeterminate={this.selectedGenes.length > 0 && this.selectedGenes.length < this.allGenes.length}
+							inputProps={{
+								onChange: event => this.selectAll((event.target as HTMLInputElement).checked)
+							}}
+						/>
+					</div>
 				),
 				formatter: (data:IColumnFormatterData<MutSig>) => (
 					<Td key={data.name} column={data.name}>
 						{!!(data.rowData) && (
-							<ObservableMapCheckbox map={this.map_geneSymbol_selected} mapKey={data.rowData.hugoGeneSymbol}/>
+							<div className={styles.selectionColumnCell}>
+								<ObservableMapCheckbox map={this.map_geneSymbol_selected} mapKey={data.rowData.hugoGeneSymbol}/>
+							</div>
 						)}
 					</Td>
 				),
@@ -123,7 +128,7 @@ export default class MutSigGeneSelector extends React.Component<MutSigGeneSelect
 		    // paginationProps?: ITablePaginationControlsProps;
 		    // columnVisibilityProps?: IColumnVisibilityControlsProps;
 		    // searchDelayMs?:number;
-		}
+		};
 
 		return (
 			<div className={styles.MutSigGeneSelector}>
