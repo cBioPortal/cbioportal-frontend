@@ -54,7 +54,7 @@ export default class HomePage extends React.Component<IHomePageProps, IHomePageS
 	public render()
 	{
 		let selectorVersionToggle = (
-			<a style={{alignSelf: 'center'}} onClick={() => this.selectorVersion = this.selectorVersion == 'new' ? 'old' : 'new' }>
+			<a onClick={() => this.selectorVersion = this.selectorVersion == 'new' ? 'old' : 'new' }>
 				Switch to {this.selectorVersion == 'new' ? 'old' : 'new'} view
 			</a>
 		);

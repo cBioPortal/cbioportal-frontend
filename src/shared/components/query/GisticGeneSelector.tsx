@@ -135,13 +135,13 @@ export default class GisticGeneSelector extends React.Component<GisticGeneSelect
 		let reactTableProps: TableProps = {
 			className: "table table-striped table-border-top",
 			hideFilterInput: true,
-			defaultSort: 'qValue',
+			defaultSort: 'Q Value',
 		};
 
 		let headerControlsProps: ITableHeaderControlsProps = {
 			showCopyAndDownload: false,
 			showHideShowColumnButton: false,
-			showPagination: true
+			showPagination: true,
 		};
 
 		return (
