@@ -11,7 +11,12 @@
   text-align: center;
   width: 1em;
   height: 1em;
+
+  &.hidden {
+    visibility: hidden;
+  }
 }
+
 
 .row {
   display: flex;

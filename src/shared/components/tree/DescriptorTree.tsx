@@ -8,6 +8,7 @@ const styles = styles_any as {
 	treeNodeItem: string,
 	row: string,
 	arrow: string,
+	hidden: string,
 	noIndent: string,
 };
 
@@ -158,13 +159,14 @@ export default class DescriptorTree<TreeNode> extends React.Component<IDescripto
 		// to keep indentation consistent, we always render an icon for the arrow and style controls visibility
 		let expand = this.expand;
 		let showArrow = !!children && children.length > 0;
-		let arrowStyle = showArrow ? undefined : {visibility: 'hidden'};
+		let htmlProps:Pick<React.HTMLProps<HTMLSpanElement>, 'onMouseDown'> = {
+			onMouseDown: this.onExpand,
+		};
 		let arrow = (
 			<FontAwesome
-				className={styles.arrow}
+				className={classNames(styles.arrow, !showArrow && styles.hidden)}
 				name={expand ? 'caret-down' : 'caret-right'}
-				style={arrowStyle}
-				{...{onMouseDown: this.onExpand}}
+				{...htmlProps}
 			/>
 		);
 
