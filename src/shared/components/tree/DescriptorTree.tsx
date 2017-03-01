@@ -34,31 +34,31 @@ export class BasicTreeDescriptor<TreeNode extends IBasicTreeNode> implements ITr
 
 export interface ITreeDescriptor<TreeNode>
 {
-    isExpanded(node:TreeNode):boolean;
-    getContent(node:TreeNode):React.ReactChild;
-    getChildren(node:TreeNode):TreeNode[]|undefined;
+	isExpanded(node:TreeNode):boolean;
+	getContent(node:TreeNode):React.ReactChild;
+	getChildren(node:TreeNode):TreeNode[]|undefined;
 
-    /**
+	/**
 	 * Allows customizing the LI element of each node.
 	 */
-    getListItemProps?(node:TreeNode):React.HTMLAttributes<HTMLLIElement>|undefined;
+	getListItemProps?(node:TreeNode):React.HTMLAttributes<HTMLLIElement>|undefined;
 }
 
 export interface IDescriptorTreeProps<TreeNode>
 {
-    treeDescriptor?: ITreeDescriptor<TreeNode>;
-    node: TreeNode;
+	treeDescriptor?: ITreeDescriptor<TreeNode>;
+	node: TreeNode;
 
-    className?: string;
-    style?: React.CSSProperties;
-    onExpand?: <T>(node:TreeNode, expand:boolean, event:React.MouseEvent<T>)=>void;
-    isChild?: boolean;
-    showRoot?: boolean;
+	className?: string;
+	style?: React.CSSProperties;
+	onExpand?: <T>(node:TreeNode, expand:boolean, event:React.MouseEvent<T>)=>void;
+	isChild?: boolean;
+	showRoot?: boolean;
 }
 
 export interface IDescriptorTreeState
 {
-    expand?: boolean;
+	expand?: boolean;
 }
 
 /**
@@ -89,30 +89,30 @@ export default class DescriptorTree<TreeNode> extends React.Component<IDescripto
 		};
 	}
 
-    constructor(props:IDescriptorTreeProps<TreeNode>)
-    {
-        super(props);
-        this.state = {};
-    }
+	constructor(props:IDescriptorTreeProps<TreeNode>)
+	{
+		super(props);
+		this.state = {};
+	}
 
-    onExpand = (event:React.MouseEvent<any>) =>
-    {
-        let expand = !this.expand;
-        if (this.props.onExpand)
-            this.props.onExpand(this.props.node, expand, event);
-        this.setState({expand});
-    }
+	onExpand = (event:React.MouseEvent<any>) =>
+	{
+		let expand = !this.expand;
+		if (this.props.onExpand)
+			this.props.onExpand(this.props.node, expand, event);
+		this.setState({expand});
+	}
 
-    get expand():boolean
-    {
+	get expand():boolean
+	{
 		let desc = this.props.treeDescriptor as ITreeDescriptor<TreeNode>;
-        let expand = this.state.expand;
-        if (expand === undefined || this.props.onExpand)
-            expand = desc.isExpanded(this.props.node);
-        return expand;
-    }
+		let expand = this.state.expand;
+		if (expand === undefined || this.props.onExpand)
+			expand = desc.isExpanded(this.props.node);
+		return expand;
+	}
 
-    renderChildNodes(children:TreeNode[] | undefined):JSX.Element[]
+	renderChildNodes(children:TreeNode[] | undefined):JSX.Element[]
 	{
 		return (children || []).map((child, i) => (
 			<DescriptorTree
@@ -122,7 +122,7 @@ export default class DescriptorTree<TreeNode> extends React.Component<IDescripto
 				onExpand={this.props.onExpand}
 				isChild={true}
 			/>
-		))
+		));
 	}
 
 	renderUL(asRootElement:boolean, children:React.ReactNode):JSX.Element
@@ -145,28 +145,28 @@ export default class DescriptorTree<TreeNode> extends React.Component<IDescripto
 		);
 	}
 
-    render():JSX.Element
-    {
-    	let desc = this.props.treeDescriptor as ITreeDescriptor<TreeNode>;
-    	let node = this.props.node;
-        let children = desc.getChildren(node);
+	render():JSX.Element
+	{
+		let desc = this.props.treeDescriptor as ITreeDescriptor<TreeNode>;
+		let node = this.props.node;
+		let children = desc.getChildren(node);
 
 		// if we're hiding the root node, render children at top level
-        if (!this.props.showRoot)
+		if (!this.props.showRoot)
 			return this.renderUL(true, this.renderChildNodes(children));
 
-        // to keep indentation consistent, we always render an icon for the arrow and style controls visibility
-        let expand = this.expand;
-        let showArrow = !!children && children.length > 0;
-        let arrowStyle = showArrow ? undefined : {visibility: 'hidden'};
-        let arrow = (
-            <FontAwesome
-            	className={styles.arrow}
-                name={expand ? 'caret-down' : 'caret-right'}
-                style={arrowStyle}
+		// to keep indentation consistent, we always render an icon for the arrow and style controls visibility
+		let expand = this.expand;
+		let showArrow = !!children && children.length > 0;
+		let arrowStyle = showArrow ? undefined : {visibility: 'hidden'};
+		let arrow = (
+			<FontAwesome
+				className={styles.arrow}
+				name={expand ? 'caret-down' : 'caret-right'}
+				style={arrowStyle}
 				{...{onMouseDown: this.onExpand}}
-            />
-        );
+			/>
+		);
 
 		// the node is rendered as an LI element
 		let customProps = desc.getListItemProps && desc.getListItemProps(node);
@@ -192,7 +192,7 @@ export default class DescriptorTree<TreeNode> extends React.Component<IDescripto
 
 		// root node needs an outer UL element
 		return this.renderUL(true, liElement);
-    }
+	}
 }
 
 /**

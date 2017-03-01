@@ -14,7 +14,7 @@ const styles = styles_any as {
 
 interface IPopupWindowProps extends React.HTMLAttributes<HTMLDivElement>
 {
-	windowTitle: string,
+	windowTitle: string;
 	onClickClose: React.MouseEventHandler<HTMLDivElement>;
 }
 

@@ -68,7 +68,7 @@ export function Select(props:ISelectProps<any>)
 {
 	function onChange(event:React.FormEvent<HTMLSelectElement>)
 	{
-		let option = props.options[parseInt((event.target as HTMLInputElement).value)];
+		let option = props.options[parseInt((event.target as HTMLInputElement).value, 10)];
 		if (option.callback)
 			option.callback();
 		if (props.onChange)

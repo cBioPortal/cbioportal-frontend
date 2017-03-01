@@ -7,7 +7,6 @@ import CancerStudySelector from "./CancerStudySelector";
 import {FlexRow, FlexCol} from "../flexbox/FlexBox";
 import Radio = ReactBootstrap.Radio;
 import Checkbox = ReactBootstrap.Checkbox;
-import {Select, StateToggle} from "../ExperimentalControls";
 import * as styles_any from './styles.module.scss';
 import GeneticProfileSelector from "./GeneticProfileSelector";
 import {observer} from "mobx-react";
@@ -50,7 +49,7 @@ export default class QueryContainer extends React.Component<{}, {}>
         	|| this.store.gisticForSingleStudy.error
         	|| this.store.genes.error;
         if (error)
-			return <span className={styles.errorMessage}>{`Error: ${error}`}</span>;
+			return <span className={styles.errorMessage}>{error.toString()}</span>;
 
 
         if (!this.store.cancerTypes.result.length || !this.store.cancerStudies.result.length)

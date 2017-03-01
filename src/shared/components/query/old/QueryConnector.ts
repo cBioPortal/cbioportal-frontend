@@ -86,4 +86,4 @@ export default new class QueryConnector extends Connector<RootState, QueryData, 
             }
         }
     }
-};
+}();

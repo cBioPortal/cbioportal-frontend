@@ -44,7 +44,7 @@ export default class DataTypePrioritySelector extends React.Component<{}, {}>
 					checked={_.isEqual(toJS(this.store.dataTypePriority), props.state)}
 					onChange={event => {
 						if ((event.target as HTMLInputElement).checked)
-							this.store.dataTypePriority = props.state
+							this.store.dataTypePriority = props.state;
 					}}
 				/>
 				{props.label}

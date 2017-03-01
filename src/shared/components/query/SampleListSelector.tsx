@@ -76,7 +76,7 @@ export default class SampleListSelector extends React.Component<{}, {}>
 					checked={this.store.caseIdsMode == props.state}
 					onChange={event => {
 						if ((event.target as HTMLInputElement).checked)
-							this.store.caseIdsMode = props.state
+							this.store.caseIdsMode = props.state;
 					}}
 				/>
 				{props.label}

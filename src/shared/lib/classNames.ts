@@ -16,12 +16,12 @@ interface ClassArray extends Array<ClassValue> { }
   Licensed under the MIT License (MIT), see
   http://jedwatson.github.io/classnames
 */
-var hasOwn = {}.hasOwnProperty;
+let hasOwn = {}.hasOwnProperty;
 export default function classNames (...args:ClassValue[]) {
-    var classes:any[] = [];
+    let classes:any[] = [];
 
-    for (var i = 0; i < args.length; i++) {
-        var arg = args[i];
+    for (let i = 0; i < args.length; i++) {
+        let arg = args[i];
         if (!arg) continue;
 
         if (typeof arg === 'string' || typeof arg === 'number') {
@@ -29,7 +29,7 @@ export default function classNames (...args:ClassValue[]) {
         } else if (Array.isArray(arg)) {
             classes.push(classNames.apply(null, arg));
         } else if (typeof arg === 'object') {
-            for (var key in arg) {
+            for (let key in arg) {
                 if (hasOwn.call(arg, key) && arg[key]) {
                     classes.push(key);
                 }

@@ -21,9 +21,9 @@ const styles = styles_any as {
 
 export interface IQueryContainerProps
 {
-    data?: QueryData,
+    data?: QueryData;
 
-    loadQueryData?: () => void,
+    loadQueryData?: () => void;
 }
 
 export type IQueryContainerState = {
@@ -92,7 +92,7 @@ export default class QueryContainer extends React.Component<IQueryContainerProps
                                 {label: "9"},
                             ]}
                             onChange={option => this.setState({
-                                maxTreeDepth: parseInt(option.label)
+                                maxTreeDepth: parseInt(option.label, 10)
                             })}
                         />
                         <span>Note: Use cmd+click tree node arrow to expand/collapse entire subtree.</span>

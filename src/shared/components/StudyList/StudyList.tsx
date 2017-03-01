@@ -57,7 +57,9 @@ export default class StudyList extends React.Component<{}, {}>
 						<span 
 							onClick={() => this.store.showSelectedStudiesOnly = !this.store.showSelectedStudiesOnly}
 							className={styles.closeSelected}
-						>Return to Study Selector</span>
+						>
+							Return to Study Selector
+						</span>
 				</h4>
 				<ul className={styles.StudyList}>
 					{this.renderCancerType(this.logic.rootCancerType)}
@@ -92,7 +94,7 @@ export default class StudyList extends React.Component<{}, {}>
 			if (currentLevel === 3)
 				indentArrow = (
 					<FontAwesome className={styles.indentArrow} name="long-arrow-right" />
-				)
+				);
 
 			heading = (
 				<li className={liClassName}>

@@ -34,32 +34,32 @@ interface IHomePageState
 @observer
 export default class HomePage extends React.Component<IHomePageProps, IHomePageState>
 {
-    constructor(props:IHomePageProps)
-    {
-        super(props);
-    }
+	constructor(props:IHomePageProps)
+	{
+		super(props);
+	}
 
 	get store() { return queryStore; }
 
-    public componentDidMount() {
-      this.exposeComponentRenderersToParentScript();
-    }
+	public componentDidMount() {
+	  this.exposeComponentRenderersToParentScript();
+	}
 
-    exposeComponentRenderersToParentScript() {
-        exposeComponentRenderer('renderQueryContainer', QueryContainer);
-    }
+	exposeComponentRenderersToParentScript() {
+		exposeComponentRenderer('renderQueryContainer', QueryContainer);
+	}
 
 	@observable selectorVersion:'new'|'old' = 'new';
 
-    public render()
-    {
-    	let selectorVersionToggle = (
-    		<a style={{alignSelf: 'center'}} onClick={() => this.selectorVersion = this.selectorVersion == 'new' ? 'old' : 'new' }>
-    			Switch to {this.selectorVersion == 'new' ? 'old' : 'new'} view
-    		</a>
+	public render()
+	{
+		let selectorVersionToggle = (
+			<a style={{alignSelf: 'center'}} onClick={() => this.selectorVersion = this.selectorVersion == 'new' ? 'old' : 'new' }>
+				Switch to {this.selectorVersion == 'new' ? 'old' : 'new'} view
+			</a>
 		);
 
-    	if (this.selectorVersion == 'old')
+		if (this.selectorVersion == 'old')
 			return (
 				<FlexCol className={styles.HomePage}>
 					<QueryContainerOld/>
@@ -67,7 +67,7 @@ export default class HomePage extends React.Component<IHomePageProps, IHomePageS
 				</FlexCol>
 			);
 
-        return (
+		return (
 			<FlexRow padded flex={1} className={styles.HomePage}>
 
 				<QueryContainer/>
@@ -92,7 +92,7 @@ export default class HomePage extends React.Component<IHomePageProps, IHomePageS
 									{label: "8"},
 									{label: "9"},
 								]}
-								onChange={option => this.store.maxTreeDepth = parseInt(option.label)}
+								onChange={option => this.store.maxTreeDepth = parseInt(option.label, 10)}
 							/>
 							<span>Note: Use cmd+click to select/deselect multiple cancer types.</span>
 						</FlexCol>
@@ -111,5 +111,5 @@ export default class HomePage extends React.Component<IHomePageProps, IHomePageS
 
 			</FlexRow>
 		);
-    }
+	}
 }

@@ -199,8 +199,9 @@ function decorate<T extends AnyFunction>(descriptor:TypedPropertyDescriptor<T>, 
  * Generates a method decorator that creates a memoized version of a function with additional args to control memoization
  * @param getMemoizeParams_propName The name of another class method that returns additional arguments for controlling memoization.
  */
-export function memoizeWith<T extends AnyFunction, P extends string, TARGET extends {[X in P]: (this:TARGET)=>any[]}>(getMemoizeParams_propName:P)
-	:<T>(
+export function memoizeWith
+	<T extends AnyFunction, P extends string, TARGET extends {[X in P]: (this:TARGET)=>any[]}>
+	(getMemoizeParams_propName:P):<T>(
 		target: TARGET,
 		propertyKey: string | symbol,
 		descriptor: TypedPropertyDescriptor<T>
@@ -210,8 +211,8 @@ export function memoizeWith<T extends AnyFunction, P extends string, TARGET exte
 		return decorate(
 			descriptor,
 			{
-				getAdditionalArgs: function(this:TARGET) {
-					let fn:()=>any[] = this[getMemoizeParams_propName] as any;
+				getAdditionalArgs(this:TARGET) {
+					let fn = this[getMemoizeParams_propName] as any as () => any[];
 					return fn.call(this);
 				}
 			}

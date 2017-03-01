@@ -104,10 +104,6 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 		this.state = {};
 	}
 
-	componentDidMount()
-	{
-	}
-
 	get selectableTreeNodes()
 	{
 		return !this.props.filterBySelection && !this.props.showStudiesInTree;
@@ -185,7 +181,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 					return false;
 			}
 			return true;
-		}
+		};
 
 		// returns true if the node or any related nodes match
 		let nodeFilter = memoize({
@@ -204,8 +200,8 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 
 				// check for matching text in this node and related nodes
 				for (let nodes of [[node], meta.descendantCancerTypes, meta.descendantStudies, meta.ancestors])
-					for (let node of nodes)
-						if (shouldConsiderNode(node) && matchesSearchText(node.name, this.searchText))
+					for (let other of nodes)
+						if (shouldConsiderNode(other) && matchesSearchText(other.name, this.searchText))
 							return true;
 
 				// no match
@@ -226,7 +222,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 			}
 
 			return false;
-		}
+		};
 
 		let isExpanded = (node:CancerTreeNode) =>
 		{
@@ -251,7 +247,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 			}
 
 			return false;
-		}
+		};
 
 		function setExpanded<T>(node:CancerTreeNode, value:boolean, event:React.MouseEvent<T>):void
 		{
@@ -277,7 +273,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 				children = children.concat(childStudies);
 			}
 			return children.filter(nodeFilter);
-		}
+		};
 
 		let getContent = (node:CancerTreeNode) =>
 		{
@@ -286,7 +282,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 				return this.renderCancerTypeTreeNode(node as CancerType);
 			else
 				return this.renderCancerStudyTreeNode(node as CancerStudy);
-		}
+		};
 
 		return {
 			rootNode: rootCancerType,
@@ -367,7 +363,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 				[styles.selected]: this.selectableTreeNodes && meta.isCancerType && _.includes(this.selectedCancerTypeIds, node.cancerTypeId),
 			})
 		};
-	};
+	}
 
 	getMatchingNodeClassNames(node:CancerTreeNode):string
 	{
