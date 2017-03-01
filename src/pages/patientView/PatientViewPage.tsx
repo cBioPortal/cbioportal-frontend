@@ -431,7 +431,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                     myCancerGenomeData={this.state.myCancerGenomeData}
                                     hotspots={this.state.hotspotsData}
                                     cosmicData={this.state.cosmicData}
-                                    oncoKbData={patientViewPageStore.oncoKbData.isComplete ? patientViewPageStore.oncoKbData.result : undefined}
+                                    oncoKbData={patientViewPageStore.oncoKbData.result}
+                                    pmidData={patientViewPageStore.pmidData.result}
                                     sampleOrder={sampleManager.sampleOrder}
                                     sampleLabels={sampleManager.sampleLabels}
                                     sampleColors={sampleManager.sampleColors}
