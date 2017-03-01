@@ -37,7 +37,7 @@ export default class AsyncStatus extends React.Component<IAsyncStatusProps, {}>
 				return (
 					<div className={classNames(className, styles.error)} {...divProps}>
 						<FontAwesome className={styles.icon} name='exclamation-triangle'/>
-						<span className={styles.message}>{promise.error.message}</span>
+						<span className={styles.message}>{promise.error.toString()}</span>
 					</div>
 				);
 			case 'complete':

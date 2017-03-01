@@ -363,6 +363,40 @@ div.GisticGeneSelectorWindow {
     margin: 10px;
     flex: 1;
 
+    div.header.amp.del {
+      display: flex;
+      flex-direction: column;
+
+      span.amp {
+        color: red;
+      }
+      span.del {
+        color: blue;
+      }
+    }
+
+    div.gisticTable {
+      margin: 10px 0;
+      max-height: 525px;
+      overflow: auto;
+      :global(.table) {
+        margin: 0;
+        & > tbody > tr > td {
+          vertical-align: middle;
+          padding: 3px 10px;
+
+          .amp {
+            height: 1em;
+            background-color: red;
+          }
+          .del {
+            height: 1em;
+            background-color: blue;
+          }
+        }
+      }
+    }
+
     div.GisticGeneToggles {
       width: 400px;
     }

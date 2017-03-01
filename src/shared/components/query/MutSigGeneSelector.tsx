@@ -93,11 +93,11 @@ export default class MutSigGeneSelector extends React.Component<MutSigGeneSelect
 						/>
 					</div>
 				),
-				formatter: (data:IColumnFormatterData<MutSig>) => (
-					<Td key={data.name} column={data.name}>
-						{!!(data.rowData) && (
+				formatter: ({name, rowData: mutSig}:IColumnFormatterData<MutSig>) => (
+					<Td key={name} column={name}>
+						{!!(mutSig) && (
 							<div className={styles.selectionColumnCell}>
-								<ObservableMapCheckbox map={this.map_geneSymbol_selected} mapKey={data.rowData.hugoGeneSymbol}/>
+								<ObservableMapCheckbox map={this.map_geneSymbol_selected} mapKey={mutSig.hugoGeneSymbol}/>
 							</div>
 						)}
 					</Td>
