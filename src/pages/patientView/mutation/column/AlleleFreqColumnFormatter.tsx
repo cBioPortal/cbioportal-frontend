@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {If} from 'react-if';
+import {If, Else, Then } from 'react-if';
 import {Td} from 'reactable';
 import {IColumnFormatterData} from "../../../../shared/components/enhancedReactTable/IColumnFormatter";
 import DefaultTooltip from "shared/components/DefaultTooltip";
@@ -49,20 +49,27 @@ export default class AlleleFreqColumnFormatter {
         const bars = elementsInSampleOrder.map((elements:any)=>elements.bar);
 
         return (<Td key={data.name} column={data.name} value={freqs}>
-            <If condition={tooltipLines.length > 0}>
-                <DefaultTooltip
-                    placement="left"
-                    overlay={tooltipLines}
-                    arrowContent={<div className="rc-tooltip-arrow-inner"/>}
-                >
-
-                    <svg
-                        width={AlleleFreqColumnFormatter.getSVGWidth(sampleOrder.length)}
-                        height={AlleleFreqColumnFormatter.maxBarHeight}
+            <If condition={columnProps.sampleManager.samples.length === 1}>
+            <Then>
+                <span>{ (!isNaN(freqs[0]) ? Math.round(100*freqs[0])/100 : '') }</span>
+            </Then>
+            <Else>
+                <If condition={tooltipLines.length > 0}>
+                    <DefaultTooltip
+                        placement="left"
+                        overlay={tooltipLines}
+                        arrowContent={<div className="rc-tooltip-arrow-inner"/>}
                     >
-                        {bars}
-                    </svg>
-                </DefaultTooltip>
+
+                        <svg
+                            width={AlleleFreqColumnFormatter.getSVGWidth(sampleOrder.length)}
+                            height={AlleleFreqColumnFormatter.maxBarHeight}
+                        >
+                            {bars}
+                        </svg>
+                    </DefaultTooltip>
+                </If>
+            </Else>
             </If>
         </Td>);
     }
