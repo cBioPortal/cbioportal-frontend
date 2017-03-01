@@ -1,9 +1,8 @@
 import * as React from 'react';
 import {Td} from 'reactable';
-import {IColumnFormatterData}
-    from "../../enhancedReactTable/IColumnFormatter";
+import {IColumnFormatterData} from "shared/components/enhancedReactTable/IColumnFormatter";
 import {MutationTableRowData} from "../IMutationTableProps";
-import {Mutation, Gene} from "../../../api/CBioPortalAPI";
+import {Mutation, Gene} from "shared/api/CBioPortalAPI";
 
 /**
  * @author Selcuk Onur Sumer
@@ -39,7 +38,7 @@ export default class GeneColumnFormatter
         let value: Gene|null;
 
         if (rowData) {
-            const mutations:Array<Mutation> = rowData;
+            const mutations:Mutation[] = rowData;
             value = (mutations.length > 0 ? mutations[0].gene : null);
         }
         else {

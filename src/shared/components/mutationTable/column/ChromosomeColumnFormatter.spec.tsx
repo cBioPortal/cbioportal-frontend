@@ -4,15 +4,15 @@ import ChromosomeColumnFormatter from "./ChromosomeColumnFormatter";
 /**
  * @author Selcuk Onur Sumer
  */
-describe('ChromosomeColumnFormatter functions', () => {
-    let a = "1";
-    let b = "chr2";
-    let c = "22";
-    let d = "chrX";
-    let e = "Y";
-    let f = "chrY";
+describe('ChromosomeColumnFormatter', () => {
+    const a = "1";
+    const b = "chr2";
+    const c = "22";
+    const d = "chrX";
+    const e = "Y";
+    const f = "chrY";
 
-    it('chromosome integer values are properly extracted', () => {
+    it('properly extracts sort value from a chromosome string value', () => {
         assert.isAbove(ChromosomeColumnFormatter.extractSortValue(b),
             ChromosomeColumnFormatter.extractSortValue(a));
 
