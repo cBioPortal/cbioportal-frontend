@@ -66,16 +66,27 @@ export default class CohortColumnFormatter {
 
     private static makeCohortFrequencyViz(data:IColumnFormatterData<MutationTableRowData>, variantCountData:IVariantCountData) {
         const variantCount = CohortColumnFormatter.getVariantCountData(data, variantCountData);
-        if (variantCount) {
-            const geneProportion = variantCount.numberOfSamplesWithMutationInGene / variantCount.numberOfSamples;
-            const keywordProportion = variantCount.keyword ? (variantCount.numberOfSamplesWithKeyword / variantCount.numberOfSamples) : null;
-            const barWidth = 30;
-            const barHeight = 8;
-            return (<DefaultTooltip
-                    placement="left"
-                    overlay={CohortColumnFormatter.getCohortFrequencyTooltip(variantCount)}
-                    arrowContent={<div className="rc-tooltip-arrow-inner"/>}
-                    >
+
+        if (
+            !variantCount
+            || variantCount.numberOfSamplesWithMutationInGene === undefined
+            || variantCount.numberOfSamples === undefined
+            || variantCount.numberOfSamplesWithKeyword === undefined
+        ) {
+            return null;
+        }
+
+        const geneProportion = variantCount.numberOfSamplesWithMutationInGene / variantCount.numberOfSamples;
+        const keywordProportion = variantCount.keyword ? (variantCount.numberOfSamplesWithKeyword / variantCount.numberOfSamples) : null;
+        const barWidth = 30;
+        const barHeight = 8;
+
+        return (
+            <DefaultTooltip
+                placement="left"
+                overlay={CohortColumnFormatter.getCohortFrequencyTooltip(variantCount)}
+                arrowContent={<div className="rc-tooltip-arrow-inner"/>}
+            >
                 <svg width="70" height="12">
                     <text x="36" y="9.5" textAnchor="start" fontSize="10">{(100*geneProportion).toFixed(1) + "%"}</text>
                     <rect y="2" width={barWidth} height={barHeight} fill="#ccc"/>
@@ -83,10 +94,8 @@ export default class CohortColumnFormatter {
                     {(keywordProportion !== null) &&
                         (<rect y="2" width={keywordProportion*barWidth} height={barHeight} fill="green"/>)}
                 </svg>
-            </DefaultTooltip>);
-        } else {
-            return null;
-        }
+            </DefaultTooltip>
+        );
     }
 
     private static makeMutSigIcon(qValue:number) {
