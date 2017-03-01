@@ -1,11 +1,12 @@
 import * as React from 'react';
 import DefaultTooltip from 'shared/components/DefaultTooltip';
 import {Td} from 'reactable';
-import {IColumnFormatterData} from "../../enhancedReactTable/IColumnFormatter";
+import {IColumnFormatterData} from "shared/components/enhancedReactTable/IColumnFormatter";
 import 'rc-tooltip/assets/bootstrap_white.css';
 import styles from "./mutationAssessor.module.scss";
 import {MutationTableRowData} from "../IMutationTableProps";
-import {Mutation} from "../../../api/CBioPortalAPI";
+import {Mutation} from "shared/api/CBioPortalAPI";
+import {compareNumberLists} from "shared/lib/SortUtils";
 
 type MA_CLASS_NAME = 'oma-high' | 'oma-medium' | 'oma-low' | 'oma-neutral' | 'oma-na';
 
@@ -37,8 +38,6 @@ export default class MutationAssessorColumnFormatter
 
     public static sortFunction(a:IColumnFormatterData<MutationTableRowData>, b:IColumnFormatterData<MutationTableRowData>):number
     {
-        const NA:string = MutationAssessorColumnFormatter.MA_SCORE_MAP["na"].label;
-
         const aScore:number = MutationAssessorColumnFormatter.getData(a).score;
         const bScore:number = MutationAssessorColumnFormatter.getData(b).score;
 
@@ -48,20 +47,8 @@ export default class MutationAssessorColumnFormatter
         const aPriority:number = aFormat ? aFormat.priority : -1;
         const bPriority:number = bFormat ? bFormat.priority : -1;
 
-        const hasNa = (aFormat && aFormat.label === NA) || (bFormat && bFormat.label === NA);
-
-        // use actual score values to compare (if exist)
-        // score for NA values are zero, but negative scores are also valid,
-        // so comparing scores when there is an NA value is not always accurate!
-        if (aScore && bScore && !hasNa)
-        {
-            return aScore > bScore ? 1 : -1;
-        }
-        // if no score available sort by impact priority
-        else
-        {
-            return aPriority > bPriority ? 1 : -1;
-        }
+        // first sort by priority, then sort by score
+        return compareNumberLists([aPriority, aScore], [bPriority, bScore]);
     }
 
     public static filterValue(data:IColumnFormatterData<MutationTableRowData>):string

@@ -1,9 +1,8 @@
 import * as React from 'react';
 import {Td} from 'reactable';
-import {IColumnFormatterData}
-    from "../../enhancedReactTable/IColumnFormatter";
+import {IColumnFormatterData} from "shared/components/enhancedReactTable/IColumnFormatter";
 import {MutationTableRowData} from "../IMutationTableProps";
-import {Mutation} from "../../../api/CBioPortalAPI";
+import {Mutation} from "shared/api/CBioPortalAPI";
 
 /**
  * @author Selcuk Onur Sumer
@@ -20,15 +19,15 @@ export default class ProteinChangeColumnFormatter
 
     // this is to sort alphabetically
     // in case the protein position values are the same
-    public static extractNonNumerical(matched:RegExpMatchArray):Array<number>
+    public static extractNonNumerical(matched:RegExpMatchArray):number[]
     {
         const nonNumerical:RegExp = /[^0-9]+/g;
-        let buffer:RegExpMatchArray|null = matched[0].match(nonNumerical);
-        let value:Array<number> = [];
+        const buffer:RegExpMatchArray|null = matched[0].match(nonNumerical);
+        const value:number[] = [];
 
         if (buffer && buffer.length > 0)
         {
-            let str:string = buffer.join("");
+            const str:string = buffer.join("");
 
             // since we are returning a float value
             // assigning numerical value for each character.
@@ -57,7 +56,7 @@ export default class ProteinChangeColumnFormatter
 
         // first priority is to match values like V600E , V600, E747G, E747, X37_, X37, etc.
         let matched:RegExpMatchArray|null = proteinChange.match(alleleAndPosition);
-        let buffer:Array<number> = [];
+        let buffer:number[] = [];
 
         // if no match, then search for numerical (position) match only
         if (!matched || matched.length === 0)
@@ -121,7 +120,7 @@ export default class ProteinChangeColumnFormatter
             value = data.columnData;
         }
         else if (data.rowData) {
-            const mutations:Array<Mutation> = data.rowData;
+            const mutations:Mutation[] = data.rowData;
             value = (mutations.length > 0 ? mutations[0].proteinChange : null);
         }
         else {
