@@ -2,7 +2,7 @@ import {RootState} from "../../redux/rootReducer";
 import {IDispatch, Connector} from "../../shared/lib/ConnectorAPI";
 import { IDatasetPageUnconnectedProps } from './DatasetList';
 import getDatasetsInfo from './getDatasetsInfo';
-import {CancerStudy} from "../../shared/api/CBioPortalAPI";
+import {CancerStudy} from "../../shared/api/generated/CBioPortalAPI";
 
 export type DatasetDownloads = {
     datasets?: CancerStudy[],

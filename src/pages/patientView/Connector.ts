@@ -1,6 +1,6 @@
 import getClinicalInformationData from './clinicalInformation/getClinicalInformationData';
 import {RootState} from "../../redux/rootReducer";
-import {ClinicalData} from "../../shared/api/CBioPortalAPI";
+import {ClinicalData} from "../../shared/api/generated/CBioPortalAPI";
 import { ClinicalDataBySampleId, RequestStatus } from "../../shared/api/api-types-extended";
 import {IDispatch, Connector} from "../../shared/lib/ConnectorAPI";
 import { IPatientViewPageProps } from "./PatientViewPage";

@@ -4,7 +4,7 @@ import {IColumnFormatterData} from "../../../../shared/components/enhancedReactT
 import {compareNumberLists} from '../../../../shared/lib/SortUtils';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {MutationTableRowData} from "../../../../shared/components/mutationTable/IMutationTableProps";
-import {Mutation} from "../../../../shared/api/CBioPortalAPI";
+import {Mutation} from "../../../../shared/api/generated/CBioPortalAPI";
 
 
 export default class TumorColumnFormatter {
