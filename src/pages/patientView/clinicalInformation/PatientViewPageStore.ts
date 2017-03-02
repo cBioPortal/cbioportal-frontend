@@ -8,7 +8,7 @@ import {ClinicalInformationData} from "../Connector";
 import client from "../../../shared/api/cbioportalClientInstance";
 import {computed, observable, action, reaction, autorun} from "mobx";
 import {remoteData} from "../../../shared/api/remoteData";
-import {labelMobxPromises} from "../../../shared/api/MobxPromise";
+import {labelMobxPromises} from "mobxpromise";
 import MrnaExprRankCache from './MrnaExprRankCache';
 
 type PageMode = 'patient' | 'sample';
