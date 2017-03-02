@@ -29,7 +29,7 @@
   "dependencies": {
     "@types/chai": "^3.4.34",
     "@types/jquery": "^2.0.39",
-    "@types/lodash": "^4.14.50",
+    "@types/lodash": "^4.14.53",
     "@types/mocha": "^2.2.38",
     "@types/query-string": "^3.0.31",
     "@types/raphael": "^2.1.30",
@@ -127,7 +127,7 @@
     "swagger-client": "^2.1.32",
     "swagger-js-codegen": "git+https://github.com/cBioPortal/swagger-js-codegen.git#f1a436a3ca3dfa5e8199083915a0c13ec28700e5",
     "ts-loader": "^2.0.0",
-    "typescript": "^2.1.5",
+    "typescript": "^2.2.1",
     "underscore": "^1.8.3",
     "url-loader": "^0.5.7",
     "webpack": "^1.14.0",
