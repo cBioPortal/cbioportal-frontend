@@ -80,8 +80,10 @@ export class VAFPlot extends React.Component<IVAFPlotProps, IVAFPlotState> {
             height: this.props.height
         };
         // margin bottom must be computed before height because height computation makes use of it
-        options.margin.bottom = ((typeof options.margin.bottom === "undefined") ? (30 + (label_dist_to_axis / 2)) : options.margin.bottom);
-        options.height = (typeof options.height === "undefined") ? (((500 + label_dist_to_axis) / 2) - options.margin.top - options.margin.bottom) : options.height;
+        if (options.margin.bottom === undefined)
+            options.margin.bottom = 30 + (label_dist_to_axis / 2);
+        if (options.height === undefined && options.margin.top !== undefined)
+            options.height = ((500 + label_dist_to_axis) / 2) - options.margin.top - options.margin.bottom;
         this.state = {
             show_histogram: !!this.props.init_show_histogram,
             show_curve: !!this.props.init_show_curve,
