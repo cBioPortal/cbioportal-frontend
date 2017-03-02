@@ -4,9 +4,9 @@ import {
     MobxPromiseUnionTypeWithDefault,
     MobxPromiseInputUnion,
     MobxPromiseUnionType,
-    MobxPromiseImpl,
-    MobxPromise
-} from "mobxpromise";
+    MobxPromiseClass,
+    default as MobxPromise
+} from "./MobxPromise";
 
 /**
  * Constructs a MobxPromise which will call seamlessImmutable.from() on the result and the default value.
@@ -16,7 +16,7 @@ export function remoteData<R>(input:MobxPromiseInputUnion<R>, defaultResult: R):
 export function remoteData<R>(input:MobxPromiseInputUnion<R>):MobxPromiseUnionType<R>;
 export function remoteData<R>(input:MobxPromiseInputUnion<R>, defaultResult?: R)
 {
-    input = MobxPromiseImpl.normalizeInput(input, defaultResult);
+    input = MobxPromiseClass.normalizeInput(input, defaultResult);
     const invoke = input.invoke;
     input.invoke = () => invoke().then(result => seamlessImmutable.from(result));
     input.default = seamlessImmutable.from(input.default);
