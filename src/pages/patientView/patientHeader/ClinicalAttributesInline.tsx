@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {ClinicalData} from "../../../shared/api/CBioPortalAPI";
+import {ClinicalData} from "../../../shared/api/generated/CBioPortalAPI";
 
 export type IClinicalAttributesInlineProps = {
     clinicalData?: ClinicalData;

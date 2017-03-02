@@ -1,7 +1,7 @@
-import {CosmicMutation} from "shared/api/CBioPortalAPIInternal";
+import {CosmicMutation} from "shared/api/generated/CBioPortalAPIInternal";
 import {ICosmicData} from "shared/components/mutationTable/column/CosmicColumnFormatter";
 import {IMyCancerGenome, IMyCancerGenomeData} from "pages/patientView/mutation/column/AnnotationColumnFormatter";
-import {HotspotMutation} from "../api/CancerHotspotsAPI";
+import {HotspotMutation} from "../api/generated/CancerHotspotsAPI";
 
 /**
  * Utility functions related to annotation data.
