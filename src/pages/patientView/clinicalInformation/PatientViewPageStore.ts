@@ -3,7 +3,7 @@ import { ClinicalDataBySampleId } from "../../../shared/api/api-types-extended";
 import {
     ClinicalData, SampleIdentifier,
     GeneticProfile, Sample, Mutation, DiscreteCopyNumberFilter
-} from "../../../shared/api/CBioPortalAPI";
+} from "../../../shared/api/generated/CBioPortalAPI";
 import {ClinicalInformationData} from "../Connector";
 import client from "../../../shared/api/cbioportalClientInstance";
 import {computed, observable, action, reaction, autorun} from "mobx";

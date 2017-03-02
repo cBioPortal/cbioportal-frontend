@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import Tracks from './Tracks';
 import {ThumbnailExpandVAFPlot} from '../vafPlot/ThumbnailExpandVAFPlot';
-import {Mutation} from "../../../shared/api/CBioPortalAPI";
+import {Mutation} from "../../../shared/api/generated/CBioPortalAPI";
 import SampleManager from "../sampleManager";
 import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
 

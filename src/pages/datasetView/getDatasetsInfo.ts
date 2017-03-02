@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import CBioPortalAPI, { CancerStudy }  from 'shared/api/CBioPortalAPI';
+import CBioPortalAPI, { CancerStudy }  from 'shared/api/generated/CBioPortalAPI';
 
 const tsClient = new CBioPortalAPI(`//${(window as any)['__API_ROOT__']}`);
 

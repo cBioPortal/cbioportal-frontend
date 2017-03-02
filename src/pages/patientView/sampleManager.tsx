@@ -4,7 +4,7 @@ import * as _ from 'lodash';
 import SampleInline from './patientHeader/SampleInline';
 import {ClinicalDataBySampleId} from "../../shared/api/api-types-extended";
 import ClinicalInformationPatientTable from "./clinicalInformation/ClinicalInformationPatientTable";
-import {Sample} from "../../shared/api/CBioPortalAPI";
+import {Sample} from "../../shared/api/generated/CBioPortalAPI";
 import DefaultTooltip from 'shared/components/DefaultTooltip';
 import {cleanAndDerive} from './clinicalInformation/lib/clinicalAttributesUtil.js';
 import styles from './patientHeader/style/clinicalAttributes.scss';
