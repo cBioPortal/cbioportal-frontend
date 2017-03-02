@@ -65,6 +65,8 @@ var config = {
         ]
     },
 
+
+
     plugins: [
         new HtmlWebpackPlugin({cache: false, template: 'my-index.ejs'}),
         new webpack.optimize.DedupePlugin(),
@@ -300,7 +302,8 @@ config.resolve.alias = {
     styles: join(src, 'styles'),
     reducers: join(src, 'redux/modules'),
     pages: join(src, 'pages'),
-    shared: join(src,'shared')
+    shared: join(src,'shared'),
+    appConfig: path.join(__dirname + '/src', 'config', process.env.NODE_ENV + '.config')
 };
 // end Roots
 
