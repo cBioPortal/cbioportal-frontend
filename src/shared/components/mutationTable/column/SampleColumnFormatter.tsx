@@ -4,7 +4,7 @@ import {Td} from 'reactable';
 import {IColumnFormatterData} from "../../enhancedReactTable/IColumnFormatter";
 import styles from "./sample.module.scss";
 import {MutationTableRowData} from "../IMutationTableProps";
-import {Mutation} from "../../../api/CBioPortalAPI";
+import {Mutation} from "../../../api/generated/CBioPortalAPI";
 
 /**
  * @author Selcuk Onur Sumer

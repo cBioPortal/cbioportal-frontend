@@ -2,7 +2,7 @@ import * as React from "react";
 import * as _ from 'lodash';
 import { Table, Tr, Td }  from 'reactableMSK';
 import Connector, { DatasetDownloads } from './Connector';
-import { CancerStudy }  from 'shared/api/CBioPortalAPI';
+import { CancerStudy }  from 'shared/api/generated/CBioPortalAPI';
 import Spinner from "react-spinkit";
 import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
 import TableHeaderControls from "shared/components/tableHeaderControls/TableHeaderControls";

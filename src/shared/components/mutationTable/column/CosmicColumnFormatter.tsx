@@ -4,8 +4,8 @@ import DefaultTooltip from 'shared/components/DefaultTooltip';
 import * as _ from 'lodash';
 import {IColumnFormatterData} from "../../enhancedReactTable/IColumnFormatter";
 import {MutationTableRowData} from "../IMutationTableProps";
-import {Mutation} from "../../../api/CBioPortalAPI";
-import {CosmicMutation} from "../../../api/CBioPortalAPIInternal";
+import {Mutation} from "../../../api/generated/CBioPortalAPI";
+import {CosmicMutation} from "../../../api/generated/CBioPortalAPIInternal";
 import CosmicMutationTable from "../../cosmic/CosmicMutationTable";
 import styles from "./cosmic.module.scss";
 

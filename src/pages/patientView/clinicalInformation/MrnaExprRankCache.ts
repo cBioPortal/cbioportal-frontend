@@ -1,6 +1,6 @@
 import LazyCache from 'shared/api/LazyCache';
 import * as _ from 'lodash';
-import {MrnaPercentile} from "../../../shared/api/CBioPortalAPIInternal";
+import {MrnaPercentile} from "../../../shared/api/generated/CBioPortalAPIInternal";
 import internalClient from "../../../shared/api/cbioportalInternalClientInstance";
 
 export default class MrnaExprRankCache extends LazyCache {
