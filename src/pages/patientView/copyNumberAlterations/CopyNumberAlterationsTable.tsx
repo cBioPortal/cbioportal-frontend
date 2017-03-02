@@ -3,7 +3,7 @@ import EnhancedReactTable from "../../../shared/components/enhancedReactTable/En
 import {
     IColumnDefMap
 } from "../../../shared/components/enhancedReactTable/IEnhancedReactTableProps";
-import {DiscreteCopyNumberData} from "../../../shared/api/CBioPortalAPI";
+import {DiscreteCopyNumberData} from "../../../shared/api/generated/CBioPortalAPI";
 import {IColumnFormatterData} from "../../../shared/components/enhancedReactTable/IColumnFormatter";
 import {ITableHeaderControlsProps} from "../../../shared/components/tableHeaderControls/TableHeaderControls";
 

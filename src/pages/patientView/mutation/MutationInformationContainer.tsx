@@ -8,7 +8,7 @@ import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
 import {MrnaRankData, default as MrnaExprColumnFormatter} from "./column/MrnaExprColumnFormatter";
 import AlleleCountColumnFormatter from "./column/AlleleCountColumnFormatter";
 import {IVariantCountData, default as CohortColumnFormatter} from "./column/CohortColumnFormatter";
-import { Mutation } from "../../../shared/api/CBioPortalAPI";
+import { Mutation } from "../../../shared/api/generated/CBioPortalAPI";
 import SampleManager from "../sampleManager";
 import {
     default as AnnotationColumnFormatter, IHotspotData, IMyCancerGenomeData

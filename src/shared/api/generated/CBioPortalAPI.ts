@@ -1,8 +1,4 @@
 import * as request from "superagent";
-import {
-    SuperAgentStatic
-}
-from "superagent";
 
 type CallbackHandler = (err: any, res ? : request.Response) => void;
 export type ClinicalData = {
@@ -94,7 +90,7 @@ export type ClinicalDataIdentifier = {
 
 };
 export type ClinicalEvent = {
-    'attributes': Array < ClinicalEventData > | ClinicalEventData
+    'attributes': Array < ClinicalEventData >
 
         'endNumberOfDaysSinceDiagnosis': number
 
@@ -258,9 +254,9 @@ export type Mutation = {
 
 };
 export type DiscreteCopyNumberFilter = {
-    'entrezGeneIds': Array < number > | number
+    'entrezGeneIds': Array < number >
 
-        'sampleIds': Array < string > | string
+        'sampleIds': Array < string >
 
 };
 export type ClinicalAttribute = {
@@ -459,7 +455,7 @@ export default class CBioPortalAPI {
         let queryParameters: any = {};
         let path = '/cancer-types/{cancerTypeId}';
 
-        path = path.replace('{cancerTypeId}', parameters['cancerTypeId']);
+        path = path.replace('{cancerTypeId}', parameters['cancerTypeId'] + '');
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -494,7 +490,7 @@ export default class CBioPortalAPI {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
 
-            path = path.replace('{cancerTypeId}', parameters['cancerTypeId']);
+            path = path.replace('{cancerTypeId}', parameters['cancerTypeId'] + '');
 
             if (parameters['cancerTypeId'] === undefined) {
                 reject(new Error('Missing required  parameter: cancerTypeId'));
@@ -617,7 +613,7 @@ export default class CBioPortalAPI {
         let queryParameters: any = {};
         let path = '/clinical-attributes/{clinicalAttributeId}';
 
-        path = path.replace('{clinicalAttributeId}', parameters['clinicalAttributeId']);
+        path = path.replace('{clinicalAttributeId}', parameters['clinicalAttributeId'] + '');
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -652,7 +648,7 @@ export default class CBioPortalAPI {
             headers['Accept'] = '*/*';
             headers['Content-Type'] = 'application/json';
 
-            path = path.replace('{clinicalAttributeId}', parameters['clinicalAttributeId']);
+            path = path.replace('{clinicalAttributeId}', parameters['clinicalAttributeId'] + '');
 
             if (parameters['clinicalAttributeId'] === undefined) {
                 reject(new Error('Missing required  parameter: clinicalAttributeId'));
@@ -676,11 +672,9 @@ export default class CBioPortalAPI {
     fetchClinicalDataUsingPOSTURL(parameters: {
         'attributeId' ? : string,
         'clinicalDataType' ? : "SAMPLE" | "PATIENT",
-        'identifiers': Array < ClinicalDataIdentifier > | ClinicalDataIdentifier
-
-        ,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        $queryParameters ? : any
+        'identifiers': Array < ClinicalDataIdentifier > ,
+            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/clinical-data/fetch';
@@ -718,11 +712,9 @@ export default class CBioPortalAPI {
     fetchClinicalDataUsingPOST(parameters: {
             'attributeId' ? : string,
             'clinicalDataType' ? : "SAMPLE" | "PATIENT",
-            'identifiers': Array < ClinicalDataIdentifier > | ClinicalDataIdentifier
-
-            ,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            $queryParameters ? : any,
+            'identifiers': Array < ClinicalDataIdentifier > ,
+                'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+                $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < ClinicalData >
         > {
@@ -774,9 +766,7 @@ export default class CBioPortalAPI {
         };
 
     fetchCopyNumberSegmentsUsingPOSTURL(parameters: {
-        'sampleIdentifiers': Array < SampleIdentifier > | SampleIdentifier
-
-        ,
+        'sampleIdentifiers': Array < SampleIdentifier > ,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         $queryParameters ? : any
     }): string {
@@ -805,9 +795,7 @@ export default class CBioPortalAPI {
      * @param {string} projection - Level of detail of the response
      */
     fetchCopyNumberSegmentsUsingPOST(parameters: {
-            'sampleIdentifiers': Array < SampleIdentifier > | SampleIdentifier
-
-            ,
+            'sampleIdentifiers': Array < SampleIdentifier > ,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             $queryParameters ? : any,
             $domain ? : string
@@ -971,11 +959,9 @@ export default class CBioPortalAPI {
 
     fetchGenesUsingPOSTURL(parameters: {
         'geneIdType' ? : "ENTREZ_GENE_ID" | "HUGO_GENE_SYMBOL",
-        'geneIds': Array < string > | string
-
-        ,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        $queryParameters ? : any
+        'geneIds': Array < string > ,
+            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/genes/fetch';
@@ -1007,11 +993,9 @@ export default class CBioPortalAPI {
      */
     fetchGenesUsingPOST(parameters: {
             'geneIdType' ? : "ENTREZ_GENE_ID" | "HUGO_GENE_SYMBOL",
-            'geneIds': Array < string > | string
-
-            ,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            $queryParameters ? : any,
+            'geneIds': Array < string > ,
+                'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+                $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < Gene >
         > {
@@ -1065,7 +1049,7 @@ export default class CBioPortalAPI {
         let queryParameters: any = {};
         let path = '/genes/{geneId}';
 
-        path = path.replace('{geneId}', parameters['geneId']);
+        path = path.replace('{geneId}', parameters['geneId'] + '');
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -1100,7 +1084,7 @@ export default class CBioPortalAPI {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
 
-            path = path.replace('{geneId}', parameters['geneId']);
+            path = path.replace('{geneId}', parameters['geneId'] + '');
 
             if (parameters['geneId'] === undefined) {
                 reject(new Error('Missing required  parameter: geneId'));
@@ -1128,7 +1112,7 @@ export default class CBioPortalAPI {
         let queryParameters: any = {};
         let path = '/genes/{geneId}/aliases';
 
-        path = path.replace('{geneId}', parameters['geneId']);
+        path = path.replace('{geneId}', parameters['geneId'] + '');
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -1164,7 +1148,7 @@ export default class CBioPortalAPI {
                 headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
-                path = path.replace('{geneId}', parameters['geneId']);
+                path = path.replace('{geneId}', parameters['geneId'] + '');
 
                 if (parameters['geneId'] === undefined) {
                     reject(new Error('Missing required  parameter: geneId'));
@@ -1394,7 +1378,7 @@ export default class CBioPortalAPI {
         let queryParameters: any = {};
         let path = '/genetic-profiles/{geneticProfileId}';
 
-        path = path.replace('{geneticProfileId}', parameters['geneticProfileId']);
+        path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -1429,7 +1413,7 @@ export default class CBioPortalAPI {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
 
-            path = path.replace('{geneticProfileId}', parameters['geneticProfileId']);
+            path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
 
             if (parameters['geneticProfileId'] === undefined) {
                 reject(new Error('Missing required  parameter: geneticProfileId'));
@@ -1460,7 +1444,7 @@ export default class CBioPortalAPI {
         let queryParameters: any = {};
         let path = '/genetic-profiles/{geneticProfileId}/discrete-copy-number';
 
-        path = path.replace('{geneticProfileId}', parameters['geneticProfileId']);
+        path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
         if (parameters['sampleId'] !== undefined) {
             queryParameters['sampleId'] = parameters['sampleId'];
         }
@@ -1513,7 +1497,7 @@ export default class CBioPortalAPI {
                 headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
-                path = path.replace('{geneticProfileId}', parameters['geneticProfileId']);
+                path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
 
                 if (parameters['geneticProfileId'] === undefined) {
                     reject(new Error('Missing required  parameter: geneticProfileId'));
@@ -1561,7 +1545,7 @@ export default class CBioPortalAPI {
         let queryParameters: any = {};
         let path = '/genetic-profiles/{geneticProfileId}/discrete-copy-number/fetch';
 
-        path = path.replace('{geneticProfileId}', parameters['geneticProfileId']);
+        path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
         if (parameters['discreteCopyNumberEventType'] !== undefined) {
             queryParameters['discreteCopyNumberEventType'] = parameters['discreteCopyNumberEventType'];
         }
@@ -1610,7 +1594,7 @@ export default class CBioPortalAPI {
                 headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
-                path = path.replace('{geneticProfileId}', parameters['geneticProfileId']);
+                path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
 
                 if (parameters['geneticProfileId'] === undefined) {
                     reject(new Error('Missing required  parameter: geneticProfileId'));
@@ -1658,7 +1642,7 @@ export default class CBioPortalAPI {
         let queryParameters: any = {};
         let path = '/genetic-profiles/{geneticProfileId}/genetic-data';
 
-        path = path.replace('{geneticProfileId}', parameters['geneticProfileId']);
+        path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
         if (parameters['projection'] !== undefined) {
             queryParameters['projection'] = parameters['projection'];
         }
@@ -1711,7 +1695,7 @@ export default class CBioPortalAPI {
                 headers['Accept'] = '*/*';
                 headers['Content-Type'] = 'application/json';
 
-                path = path.replace('{geneticProfileId}', parameters['geneticProfileId']);
+                path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
 
                 if (parameters['geneticProfileId'] === undefined) {
                     reject(new Error('Missing required  parameter: geneticProfileId'));
@@ -1757,7 +1741,7 @@ export default class CBioPortalAPI {
         let queryParameters: any = {};
         let path = '/genetic-profiles/{geneticProfileId}/mutations';
 
-        path = path.replace('{geneticProfileId}', parameters['geneticProfileId']);
+        path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
         if (parameters['sampleId'] !== undefined) {
             queryParameters['sampleId'] = parameters['sampleId'];
         }
@@ -1828,7 +1812,7 @@ export default class CBioPortalAPI {
                 headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
-                path = path.replace('{geneticProfileId}', parameters['geneticProfileId']);
+                path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
 
                 if (parameters['geneticProfileId'] === undefined) {
                     reject(new Error('Missing required  parameter: geneticProfileId'));
@@ -1880,9 +1864,7 @@ export default class CBioPortalAPI {
 
     fetchMutationsInGeneticProfileUsingPOSTURL(parameters: {
         'geneticProfileId': string,
-        'sampleIds': Array < string > | string
-
-        ,
+        'sampleIds': Array < string > ,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
@@ -1893,7 +1875,7 @@ export default class CBioPortalAPI {
         let queryParameters: any = {};
         let path = '/genetic-profiles/{geneticProfileId}/mutations/fetch';
 
-        path = path.replace('{geneticProfileId}', parameters['geneticProfileId']);
+        path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
 
         if (parameters['projection'] !== undefined) {
             queryParameters['projection'] = parameters['projection'];
@@ -1939,9 +1921,7 @@ export default class CBioPortalAPI {
      */
     fetchMutationsInGeneticProfileUsingPOST(parameters: {
             'geneticProfileId': string,
-            'sampleIds': Array < string > | string
-
-            ,
+            'sampleIds': Array < string > ,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
@@ -1963,7 +1943,7 @@ export default class CBioPortalAPI {
                 headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
-                path = path.replace('{geneticProfileId}', parameters['geneticProfileId']);
+                path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
 
                 if (parameters['geneticProfileId'] === undefined) {
                     reject(new Error('Missing required  parameter: geneticProfileId'));
@@ -2014,9 +1994,7 @@ export default class CBioPortalAPI {
         };
 
     fetchPatientsUsingPOSTURL(parameters: {
-        'patientIdentifiers': Array < PatientIdentifier > | PatientIdentifier
-
-        ,
+        'patientIdentifiers': Array < PatientIdentifier > ,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         $queryParameters ? : any
     }): string {
@@ -2045,9 +2023,7 @@ export default class CBioPortalAPI {
      * @param {string} projection - Level of detail of the response
      */
     fetchPatientsUsingPOST(parameters: {
-            'patientIdentifiers': Array < PatientIdentifier > | PatientIdentifier
-
-            ,
+            'patientIdentifiers': Array < PatientIdentifier > ,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             $queryParameters ? : any,
             $domain ? : string
@@ -2205,7 +2181,7 @@ export default class CBioPortalAPI {
         let queryParameters: any = {};
         let path = '/sample-lists/{sampleListId}';
 
-        path = path.replace('{sampleListId}', parameters['sampleListId']);
+        path = path.replace('{sampleListId}', parameters['sampleListId'] + '');
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -2240,7 +2216,7 @@ export default class CBioPortalAPI {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
 
-            path = path.replace('{sampleListId}', parameters['sampleListId']);
+            path = path.replace('{sampleListId}', parameters['sampleListId'] + '');
 
             if (parameters['sampleListId'] === undefined) {
                 reject(new Error('Missing required  parameter: sampleListId'));
@@ -2268,7 +2244,7 @@ export default class CBioPortalAPI {
         let queryParameters: any = {};
         let path = '/sample-lists/{sampleListId}/sample-ids';
 
-        path = path.replace('{sampleListId}', parameters['sampleListId']);
+        path = path.replace('{sampleListId}', parameters['sampleListId'] + '');
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -2304,7 +2280,7 @@ export default class CBioPortalAPI {
                 headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
-                path = path.replace('{sampleListId}', parameters['sampleListId']);
+                path = path.replace('{sampleListId}', parameters['sampleListId'] + '');
 
                 if (parameters['sampleListId'] === undefined) {
                     reject(new Error('Missing required  parameter: sampleListId'));
@@ -2326,9 +2302,7 @@ export default class CBioPortalAPI {
         };
 
     fetchSamplesUsingPOSTURL(parameters: {
-        'sampleIdentifiers': Array < SampleIdentifier > | SampleIdentifier
-
-        ,
+        'sampleIdentifiers': Array < SampleIdentifier > ,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         $queryParameters ? : any
     }): string {
@@ -2357,9 +2331,7 @@ export default class CBioPortalAPI {
      * @param {string} projection - Level of detail of the response
      */
     fetchSamplesUsingPOST(parameters: {
-            'sampleIdentifiers': Array < SampleIdentifier > | SampleIdentifier
-
-            ,
+            'sampleIdentifiers': Array < SampleIdentifier > ,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             $queryParameters ? : any,
             $domain ? : string
@@ -2517,7 +2489,7 @@ export default class CBioPortalAPI {
         let queryParameters: any = {};
         let path = '/studies/{studyId}';
 
-        path = path.replace('{studyId}', parameters['studyId']);
+        path = path.replace('{studyId}', parameters['studyId'] + '');
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -2552,7 +2524,7 @@ export default class CBioPortalAPI {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
 
-            path = path.replace('{studyId}', parameters['studyId']);
+            path = path.replace('{studyId}', parameters['studyId'] + '');
 
             if (parameters['studyId'] === undefined) {
                 reject(new Error('Missing required  parameter: studyId'));
@@ -2587,7 +2559,7 @@ export default class CBioPortalAPI {
         let queryParameters: any = {};
         let path = '/studies/{studyId}/clinical-data';
 
-        path = path.replace('{studyId}', parameters['studyId']);
+        path = path.replace('{studyId}', parameters['studyId'] + '');
         if (parameters['attributeId'] !== undefined) {
             queryParameters['attributeId'] = parameters['attributeId'];
         }
@@ -2664,7 +2636,7 @@ export default class CBioPortalAPI {
                 headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
-                path = path.replace('{studyId}', parameters['studyId']);
+                path = path.replace('{studyId}', parameters['studyId'] + '');
 
                 if (parameters['studyId'] === undefined) {
                     reject(new Error('Missing required  parameter: studyId'));
@@ -2725,7 +2697,7 @@ export default class CBioPortalAPI {
         let queryParameters: any = {};
         let path = '/studies/{studyId}/genetic-profiles';
 
-        path = path.replace('{studyId}', parameters['studyId']);
+        path = path.replace('{studyId}', parameters['studyId'] + '');
         if (parameters['projection'] !== undefined) {
             queryParameters['projection'] = parameters['projection'];
         }
@@ -2790,7 +2762,7 @@ export default class CBioPortalAPI {
                 headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
-                path = path.replace('{studyId}', parameters['studyId']);
+                path = path.replace('{studyId}', parameters['studyId'] + '');
 
                 if (parameters['studyId'] === undefined) {
                     reject(new Error('Missing required  parameter: studyId'));
@@ -2842,7 +2814,7 @@ export default class CBioPortalAPI {
         let queryParameters: any = {};
         let path = '/studies/{studyId}/patients';
 
-        path = path.replace('{studyId}', parameters['studyId']);
+        path = path.replace('{studyId}', parameters['studyId'] + '');
         if (parameters['projection'] !== undefined) {
             queryParameters['projection'] = parameters['projection'];
         }
@@ -2904,7 +2876,7 @@ export default class CBioPortalAPI {
                 headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
-                path = path.replace('{studyId}', parameters['studyId']);
+                path = path.replace('{studyId}', parameters['studyId'] + '');
 
                 if (parameters['studyId'] === undefined) {
                     reject(new Error('Missing required  parameter: studyId'));
@@ -2951,9 +2923,9 @@ export default class CBioPortalAPI {
         let queryParameters: any = {};
         let path = '/studies/{studyId}/patients/{patientId}';
 
-        path = path.replace('{studyId}', parameters['studyId']);
+        path = path.replace('{studyId}', parameters['studyId'] + '');
 
-        path = path.replace('{patientId}', parameters['patientId']);
+        path = path.replace('{patientId}', parameters['patientId'] + '');
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -2990,14 +2962,14 @@ export default class CBioPortalAPI {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
 
-            path = path.replace('{studyId}', parameters['studyId']);
+            path = path.replace('{studyId}', parameters['studyId'] + '');
 
             if (parameters['studyId'] === undefined) {
                 reject(new Error('Missing required  parameter: studyId'));
                 return;
             }
 
-            path = path.replace('{patientId}', parameters['patientId']);
+            path = path.replace('{patientId}', parameters['patientId'] + '');
 
             if (parameters['patientId'] === undefined) {
                 reject(new Error('Missing required  parameter: patientId'));
@@ -3032,9 +3004,9 @@ export default class CBioPortalAPI {
         let queryParameters: any = {};
         let path = '/studies/{studyId}/patients/{patientId}/clinical-data';
 
-        path = path.replace('{studyId}', parameters['studyId']);
+        path = path.replace('{studyId}', parameters['studyId'] + '');
 
-        path = path.replace('{patientId}', parameters['patientId']);
+        path = path.replace('{patientId}', parameters['patientId'] + '');
         if (parameters['attributeId'] !== undefined) {
             queryParameters['attributeId'] = parameters['attributeId'];
         }
@@ -3107,14 +3079,14 @@ export default class CBioPortalAPI {
                 headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
-                path = path.replace('{studyId}', parameters['studyId']);
+                path = path.replace('{studyId}', parameters['studyId'] + '');
 
                 if (parameters['studyId'] === undefined) {
                     reject(new Error('Missing required  parameter: studyId'));
                     return;
                 }
 
-                path = path.replace('{patientId}', parameters['patientId']);
+                path = path.replace('{patientId}', parameters['patientId'] + '');
 
                 if (parameters['patientId'] === undefined) {
                     reject(new Error('Missing required  parameter: patientId'));
@@ -3172,9 +3144,9 @@ export default class CBioPortalAPI {
         let queryParameters: any = {};
         let path = '/studies/{studyId}/patients/{patientId}/clinical-events';
 
-        path = path.replace('{studyId}', parameters['studyId']);
+        path = path.replace('{studyId}', parameters['studyId'] + '');
 
-        path = path.replace('{patientId}', parameters['patientId']);
+        path = path.replace('{patientId}', parameters['patientId'] + '');
         if (parameters['projection'] !== undefined) {
             queryParameters['projection'] = parameters['projection'];
         }
@@ -3241,14 +3213,14 @@ export default class CBioPortalAPI {
                 headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
-                path = path.replace('{studyId}', parameters['studyId']);
+                path = path.replace('{studyId}', parameters['studyId'] + '');
 
                 if (parameters['studyId'] === undefined) {
                     reject(new Error('Missing required  parameter: studyId'));
                     return;
                 }
 
-                path = path.replace('{patientId}', parameters['patientId']);
+                path = path.replace('{patientId}', parameters['patientId'] + '');
 
                 if (parameters['patientId'] === undefined) {
                     reject(new Error('Missing required  parameter: patientId'));
@@ -3301,9 +3273,9 @@ export default class CBioPortalAPI {
         let queryParameters: any = {};
         let path = '/studies/{studyId}/patients/{patientId}/genetic-data';
 
-        path = path.replace('{studyId}', parameters['studyId']);
+        path = path.replace('{studyId}', parameters['studyId'] + '');
 
-        path = path.replace('{patientId}', parameters['patientId']);
+        path = path.replace('{patientId}', parameters['patientId'] + '');
         if (parameters['geneticProfileId'] !== undefined) {
             queryParameters['geneticProfileId'] = parameters['geneticProfileId'];
         }
@@ -3364,14 +3336,14 @@ export default class CBioPortalAPI {
                 headers['Accept'] = '*/*';
                 headers['Content-Type'] = 'application/json';
 
-                path = path.replace('{studyId}', parameters['studyId']);
+                path = path.replace('{studyId}', parameters['studyId'] + '');
 
                 if (parameters['studyId'] === undefined) {
                     reject(new Error('Missing required  parameter: studyId'));
                     return;
                 }
 
-                path = path.replace('{patientId}', parameters['patientId']);
+                path = path.replace('{patientId}', parameters['patientId'] + '');
 
                 if (parameters['patientId'] === undefined) {
                     reject(new Error('Missing required  parameter: patientId'));
@@ -3426,9 +3398,9 @@ export default class CBioPortalAPI {
         let queryParameters: any = {};
         let path = '/studies/{studyId}/patients/{patientId}/samples';
 
-        path = path.replace('{studyId}', parameters['studyId']);
+        path = path.replace('{studyId}', parameters['studyId'] + '');
 
-        path = path.replace('{patientId}', parameters['patientId']);
+        path = path.replace('{patientId}', parameters['patientId'] + '');
         if (parameters['projection'] !== undefined) {
             queryParameters['projection'] = parameters['projection'];
         }
@@ -3495,14 +3467,14 @@ export default class CBioPortalAPI {
                 headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
-                path = path.replace('{studyId}', parameters['studyId']);
+                path = path.replace('{studyId}', parameters['studyId'] + '');
 
                 if (parameters['studyId'] === undefined) {
                     reject(new Error('Missing required  parameter: studyId'));
                     return;
                 }
 
-                path = path.replace('{patientId}', parameters['patientId']);
+                path = path.replace('{patientId}', parameters['patientId'] + '');
 
                 if (parameters['patientId'] === undefined) {
                     reject(new Error('Missing required  parameter: patientId'));
@@ -3555,7 +3527,7 @@ export default class CBioPortalAPI {
         let queryParameters: any = {};
         let path = '/studies/{studyId}/sample-lists';
 
-        path = path.replace('{studyId}', parameters['studyId']);
+        path = path.replace('{studyId}', parameters['studyId'] + '');
         if (parameters['projection'] !== undefined) {
             queryParameters['projection'] = parameters['projection'];
         }
@@ -3620,7 +3592,7 @@ export default class CBioPortalAPI {
                 headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
-                path = path.replace('{studyId}', parameters['studyId']);
+                path = path.replace('{studyId}', parameters['studyId'] + '');
 
                 if (parameters['studyId'] === undefined) {
                     reject(new Error('Missing required  parameter: studyId'));
@@ -3673,7 +3645,7 @@ export default class CBioPortalAPI {
         let queryParameters: any = {};
         let path = '/studies/{studyId}/samples';
 
-        path = path.replace('{studyId}', parameters['studyId']);
+        path = path.replace('{studyId}', parameters['studyId'] + '');
         if (parameters['projection'] !== undefined) {
             queryParameters['projection'] = parameters['projection'];
         }
@@ -3738,7 +3710,7 @@ export default class CBioPortalAPI {
                 headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
-                path = path.replace('{studyId}', parameters['studyId']);
+                path = path.replace('{studyId}', parameters['studyId'] + '');
 
                 if (parameters['studyId'] === undefined) {
                     reject(new Error('Missing required  parameter: studyId'));
@@ -3787,9 +3759,9 @@ export default class CBioPortalAPI {
         let queryParameters: any = {};
         let path = '/studies/{studyId}/samples/{sampleId}';
 
-        path = path.replace('{studyId}', parameters['studyId']);
+        path = path.replace('{studyId}', parameters['studyId'] + '');
 
-        path = path.replace('{sampleId}', parameters['sampleId']);
+        path = path.replace('{sampleId}', parameters['sampleId'] + '');
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -3826,14 +3798,14 @@ export default class CBioPortalAPI {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
 
-            path = path.replace('{studyId}', parameters['studyId']);
+            path = path.replace('{studyId}', parameters['studyId'] + '');
 
             if (parameters['studyId'] === undefined) {
                 reject(new Error('Missing required  parameter: studyId'));
                 return;
             }
 
-            path = path.replace('{sampleId}', parameters['sampleId']);
+            path = path.replace('{sampleId}', parameters['sampleId'] + '');
 
             if (parameters['sampleId'] === undefined) {
                 reject(new Error('Missing required  parameter: sampleId'));
@@ -3868,9 +3840,9 @@ export default class CBioPortalAPI {
         let queryParameters: any = {};
         let path = '/studies/{studyId}/samples/{sampleId}/clinical-data';
 
-        path = path.replace('{studyId}', parameters['studyId']);
+        path = path.replace('{studyId}', parameters['studyId'] + '');
 
-        path = path.replace('{sampleId}', parameters['sampleId']);
+        path = path.replace('{sampleId}', parameters['sampleId'] + '');
         if (parameters['attributeId'] !== undefined) {
             queryParameters['attributeId'] = parameters['attributeId'];
         }
@@ -3943,14 +3915,14 @@ export default class CBioPortalAPI {
                 headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
-                path = path.replace('{studyId}', parameters['studyId']);
+                path = path.replace('{studyId}', parameters['studyId'] + '');
 
                 if (parameters['studyId'] === undefined) {
                     reject(new Error('Missing required  parameter: studyId'));
                     return;
                 }
 
-                path = path.replace('{sampleId}', parameters['sampleId']);
+                path = path.replace('{sampleId}', parameters['sampleId'] + '');
 
                 if (parameters['sampleId'] === undefined) {
                     reject(new Error('Missing required  parameter: sampleId'));
@@ -4008,9 +3980,9 @@ export default class CBioPortalAPI {
         let queryParameters: any = {};
         let path = '/studies/{studyId}/samples/{sampleId}/copy-number-segments';
 
-        path = path.replace('{studyId}', parameters['studyId']);
+        path = path.replace('{studyId}', parameters['studyId'] + '');
 
-        path = path.replace('{sampleId}', parameters['sampleId']);
+        path = path.replace('{sampleId}', parameters['sampleId'] + '');
         if (parameters['projection'] !== undefined) {
             queryParameters['projection'] = parameters['projection'];
         }
@@ -4077,14 +4049,14 @@ export default class CBioPortalAPI {
                 headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
-                path = path.replace('{studyId}', parameters['studyId']);
+                path = path.replace('{studyId}', parameters['studyId'] + '');
 
                 if (parameters['studyId'] === undefined) {
                     reject(new Error('Missing required  parameter: studyId'));
                     return;
                 }
 
-                path = path.replace('{sampleId}', parameters['sampleId']);
+                path = path.replace('{sampleId}', parameters['sampleId'] + '');
 
                 if (parameters['sampleId'] === undefined) {
                     reject(new Error('Missing required  parameter: sampleId'));
@@ -4137,9 +4109,9 @@ export default class CBioPortalAPI {
         let queryParameters: any = {};
         let path = '/studies/{studyId}/samples/{sampleId}/genetic-data';
 
-        path = path.replace('{studyId}', parameters['studyId']);
+        path = path.replace('{studyId}', parameters['studyId'] + '');
 
-        path = path.replace('{sampleId}', parameters['sampleId']);
+        path = path.replace('{sampleId}', parameters['sampleId'] + '');
         if (parameters['geneticProfileId'] !== undefined) {
             queryParameters['geneticProfileId'] = parameters['geneticProfileId'];
         }
@@ -4200,14 +4172,14 @@ export default class CBioPortalAPI {
                 headers['Accept'] = '*/*';
                 headers['Content-Type'] = 'application/json';
 
-                path = path.replace('{studyId}', parameters['studyId']);
+                path = path.replace('{studyId}', parameters['studyId'] + '');
 
                 if (parameters['studyId'] === undefined) {
                     reject(new Error('Missing required  parameter: studyId'));
                     return;
                 }
 
-                path = path.replace('{sampleId}', parameters['sampleId']);
+                path = path.replace('{sampleId}', parameters['sampleId'] + '');
 
                 if (parameters['sampleId'] === undefined) {
                     reject(new Error('Missing required  parameter: sampleId'));
