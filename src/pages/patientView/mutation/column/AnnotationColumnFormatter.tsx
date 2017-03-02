@@ -5,7 +5,7 @@ import {IColumnFormatterData} from "../../../../shared/components/enhancedReactT
 import {MutationTableRowData} from "../../../../shared/components/mutationTable/IMutationTableProps";
 import CancerHotspots from "../../../../shared/components/annotation/CancerHotspots";
 import MyCancerGenome from "../../../../shared/components/annotation/MyCancerGenome";
-import {Mutation} from "../../../../shared/api/CBioPortalAPI";
+import {Mutation} from "../../../../shared/api/generated/CBioPortalAPI";
 
 export interface IMyCancerGenome {
     "hugoGeneSymbol": string;

@@ -1,6 +1,6 @@
 import * as React from 'react';
-import CBioPortalAPI from "../../shared/api/CBioPortalAPI";
-import {CancerStudy} from "../../shared/api/CBioPortalAPI";
+import CBioPortalAPI from "../../shared/api/generated/CBioPortalAPI";
+import {CancerStudy} from "../../shared/api/generated/CBioPortalAPI";
 
 interface IHomePageProps
 {

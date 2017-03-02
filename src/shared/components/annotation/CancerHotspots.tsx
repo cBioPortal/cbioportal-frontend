@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import DefaultTooltip from 'shared/components/DefaultTooltip';
-import {Mutation} from "../../api/CBioPortalAPI";
+import {Mutation} from "../../api/generated/CBioPortalAPI";
 import annotationStyles from "./styles/annotation.module.scss";
 import hotspotStyles from "./styles/cancerHotspots.module.scss";
 
