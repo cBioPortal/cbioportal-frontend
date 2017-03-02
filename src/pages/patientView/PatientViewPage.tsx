@@ -9,10 +9,10 @@ import exposeComponentRenderer from '../../shared/lib/exposeComponentRenderer';
 import GenomicOverview from './genomicOverview/GenomicOverview';
 import mockData from './mock/sampleData.json';
 import Connector, { ClinicalInformationData } from "./Connector";
-import {ClinicalData, SampleIdentifier, GeneticProfile, Sample} from "shared/api/CBioPortalAPI";
+import {ClinicalData, SampleIdentifier, GeneticProfile, Sample} from "shared/api/generated/CBioPortalAPI";
 import { ClinicalDataBySampleId } from "../../shared/api/api-types-extended";
 import { RequestStatus } from "../../shared/api/api-types-extended";
-import { default as CBioPortalAPI, Mutation }  from "../../shared/api/CBioPortalAPI";
+import { default as CBioPortalAPI, Mutation }  from "../../shared/api/generated/CBioPortalAPI";
 import FeatureTitle from '../../shared/components/featureTitle/FeatureTitle';
 import renderIf from 'render-if';
 import { If, Then, Else } from 'react-if';
@@ -21,11 +21,11 @@ import SampleManager from './sampleManager';
 import SelectCallback = ReactBootstrap.SelectCallback;
 import {
     default as CancerHotspotsAPI, HotspotMutation
-} from "../../shared/api/CancerHotspotsAPI";
+} from "../../shared/api/generated/CancerHotspotsAPI";
 import {
     MutSig, MrnaPercentile, default as CBioPortalAPIInternal,
     VariantCountIdentifier, VariantCount, CosmicMutation
-} from "../../shared/api/CBioPortalAPIInternal";
+} from "../../shared/api/generated/CBioPortalAPIInternal";
 import PatientHeader from './patientHeader/PatientHeader';
 import {TablePaginationControls} from "../../shared/components/tablePaginationControls/TablePaginationControls";
 import { PatientViewPageStore } from './clinicalInformation/PatientViewPageStore';

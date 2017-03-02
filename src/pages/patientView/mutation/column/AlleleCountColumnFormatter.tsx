@@ -2,7 +2,7 @@ import * as React from 'react';
 import {Td} from 'reactable';
 import {IColumnFormatterData} from "../../../../shared/components/enhancedReactTable/IColumnFormatter";
 import {MutationTableRowData} from "../../../../shared/components/mutationTable/IMutationTableProps";
-import {Mutation} from "../../../../shared/api/CBioPortalAPI";
+import {Mutation} from "../../../../shared/api/generated/CBioPortalAPI";
 
 /**
  * Designed to customize allele count column content for patient view page.

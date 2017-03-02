@@ -5,7 +5,7 @@ import {IColumnFormatterData} from "shared/components/enhancedReactTable/IColumn
 import 'rc-tooltip/assets/bootstrap_white.css';
 import styles from "./mutationAssessor.module.scss";
 import {MutationTableRowData} from "../IMutationTableProps";
-import {Mutation} from "shared/api/CBioPortalAPI";
+import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {compareNumberLists} from "shared/lib/SortUtils";
 
 type MA_CLASS_NAME = 'oma-high' | 'oma-medium' | 'oma-low' | 'oma-neutral' | 'oma-na';
