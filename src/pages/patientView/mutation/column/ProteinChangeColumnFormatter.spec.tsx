@@ -3,7 +3,7 @@ import styles from './style/proteinChange.module.scss';
 import {IColumnFormatterData} from "shared/components/enhancedReactTable/IColumnFormatter";
 import {MutationTableRowData} from "shared/components/mutationTable/IMutationTableProps";
 import {initMutation} from "test/MutationMockUtils";
-import {Mutation} from "shared/api/CBioPortalAPI";
+import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import React from 'react';
 import { assert } from 'chai';
 import {shallow, mount, ReactWrapper} from 'enzyme';

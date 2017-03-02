@@ -1,6 +1,6 @@
 import {IColumnFormatterData} from "shared/components/enhancedReactTable/IColumnFormatter";
 import {MutationTableRowData} from "../IMutationTableProps";
-import {Mutation} from "shared/api/CBioPortalAPI";
+import {Mutation} from "shared/api/generated/CBioPortalAPI";
 
 /**
  * @author Selcuk Onur Sumer

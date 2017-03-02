@@ -1,6 +1,6 @@
 import {IEnhancedReactTableProps} from "../enhancedReactTable/IEnhancedReactTableProps";
 import {ClinicalDataBySampleId} from "../../api/api-types-extended";
-import {Mutation} from "../../api/CBioPortalAPI";
+import {Mutation} from "../../api/generated/CBioPortalAPI";
 
 /**
  * @author Selcuk Onur Sumer

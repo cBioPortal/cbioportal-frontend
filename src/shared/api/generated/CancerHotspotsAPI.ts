@@ -61,12 +61,10 @@ export default class CancerHotspotsAPI {
     }
 
     fetchClustersPOSTURL(parameters: {
-        'clusterIds' ? : Array < string > | string
-
-        ,
-        'hugoSymbol' ? : string,
-        'residue' ? : string,
-        $queryParameters ? : any
+        'clusterIds' ? : Array < string > ,
+            'hugoSymbol' ? : string,
+            'residue' ? : string,
+            $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/api/clusters';
@@ -98,12 +96,10 @@ export default class CancerHotspotsAPI {
      * @param {string} residue - Residue, for example F595
      */
     fetchClustersPOST(parameters: {
-            'clusterIds' ? : Array < string > | string
-
-            ,
-            'hugoSymbol' ? : string,
-            'residue' ? : string,
-            $queryParameters ? : any,
+            'clusterIds' ? : Array < string > ,
+                'hugoSymbol' ? : string,
+                'residue' ? : string,
+                $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < Cluster >
         > {
@@ -146,9 +142,7 @@ export default class CancerHotspotsAPI {
         };
 
     fetchClustersByClusterIdGETURL(parameters: {
-        'clusterIds': Array < string > | string
-
-        ,
+        'clusterIds': Array < string > ,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -173,9 +167,7 @@ export default class CancerHotspotsAPI {
      * @param {array} clusterIds - Comma separated list of cluster ids, for example 1,2,3
      */
     fetchClustersByClusterIdGET(parameters: {
-            'clusterIds': Array < string > | string
-
-            ,
+            'clusterIds': Array < string > ,
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < Cluster >
@@ -354,10 +346,8 @@ export default class CancerHotspotsAPI {
         };
 
     fetch3dHotspotMutationsPOSTURL(parameters: {
-        'hugoSymbols' ? : Array < string > | string
-
-        ,
-        $queryParameters ? : any
+        'hugoSymbols' ? : Array < string > ,
+            $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/api/hotspots/3d';
@@ -382,10 +372,8 @@ export default class CancerHotspotsAPI {
      * @param {array} hugoSymbols - Comma separated list of hugo symbols. For example PTEN,BRAF,TP53
      */
     fetch3dHotspotMutationsPOST(parameters: {
-            'hugoSymbols' ? : Array < string > | string
-
-            ,
-            $queryParameters ? : any,
+            'hugoSymbols' ? : Array < string > ,
+                $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < HotspotMutation >
         > {
@@ -420,9 +408,7 @@ export default class CancerHotspotsAPI {
         };
 
     fetch3dHotspotMutationsByGenePOSTURL(parameters: {
-        'hugoSymbols': Array < string > | string
-
-        ,
+        'hugoSymbols': Array < string > ,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -445,9 +431,7 @@ export default class CancerHotspotsAPI {
      * @param {} hugoSymbols - List of hugo symbols. For example ["PTEN","BRAF","TP53"]
      */
     fetch3dHotspotMutationsByGenePOST(parameters: {
-            'hugoSymbols': Array < string > | string
-
-            ,
+            'hugoSymbols': Array < string > ,
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < HotspotMutation >
@@ -488,9 +472,7 @@ export default class CancerHotspotsAPI {
         };
 
     fetch3dHotspotMutationsByGeneGETURL(parameters: {
-        'hugoSymbols': Array < string > | string
-
-        ,
+        'hugoSymbols': Array < string > ,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -515,9 +497,7 @@ export default class CancerHotspotsAPI {
      * @param {array} hugoSymbols - Comma separated list of hugo symbols. For example PTEN,BRAF,TP53
      */
     fetch3dHotspotMutationsByGeneGET(parameters: {
-            'hugoSymbols': Array < string > | string
-
-            ,
+            'hugoSymbols': Array < string > ,
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < HotspotMutation >
@@ -556,9 +536,7 @@ export default class CancerHotspotsAPI {
         };
 
     fetch3dHotspotMutationsByGene_LegacyURL(parameters: {
-        'hugoSymbols': Array < string > | string
-
-        ,
+        'hugoSymbols': Array < string > ,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -583,9 +561,7 @@ export default class CancerHotspotsAPI {
      * @param {array} hugoSymbols - Comma separated list of hugo symbols. For example PTEN,BRAF,TP53
      */
     fetch3dHotspotMutationsByGene_Legacy(parameters: {
-            'hugoSymbols': Array < string > | string
-
-            ,
+            'hugoSymbols': Array < string > ,
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < HotspotMutation >
@@ -728,9 +704,7 @@ export default class CancerHotspotsAPI {
         };
 
     fetchSingleResidueHotspotMutationsByGenePOSTURL(parameters: {
-        'hugoSymbols': Array < string > | string
-
-        ,
+        'hugoSymbols': Array < string > ,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -753,9 +727,7 @@ export default class CancerHotspotsAPI {
      * @param {} hugoSymbols - List of hugo gene symbols. For example ["PTEN","BRAF","TP53"]
      */
     fetchSingleResidueHotspotMutationsByGenePOST(parameters: {
-            'hugoSymbols': Array < string > | string
-
-            ,
+            'hugoSymbols': Array < string > ,
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < HotspotMutation >
@@ -796,9 +768,7 @@ export default class CancerHotspotsAPI {
         };
 
     fetchSingleResidueHotspotMutationsByGeneGETURL(parameters: {
-        'hugoSymbols': Array < string > | string
-
-        ,
+        'hugoSymbols': Array < string > ,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -823,9 +793,7 @@ export default class CancerHotspotsAPI {
      * @param {array} hugoSymbols - Comma separated list of hugo gene symbols. For example PTEN,BRAF,TP53
      */
     fetchSingleResidueHotspotMutationsByGeneGET(parameters: {
-            'hugoSymbols': Array < string > | string
-
-            ,
+            'hugoSymbols': Array < string > ,
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < HotspotMutation >
@@ -864,9 +832,7 @@ export default class CancerHotspotsAPI {
         };
 
     fetchSingleResidueHotspotMutationsByTranscriptPOSTURL(parameters: {
-        'transcriptIds': Array < string > | string
-
-        ,
+        'transcriptIds': Array < string > ,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -889,9 +855,7 @@ export default class CancerHotspotsAPI {
      * @param {} transcriptIds - List of transcript IDs. For example ["ENST00000288602","ENST00000275493"]
      */
     fetchSingleResidueHotspotMutationsByTranscriptPOST(parameters: {
-            'transcriptIds': Array < string > | string
-
-            ,
+            'transcriptIds': Array < string > ,
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < HotspotMutation >
@@ -932,9 +896,7 @@ export default class CancerHotspotsAPI {
         };
 
     fetchSingleResidueHotspotMutationsByTranscriptGETURL(parameters: {
-        'transcriptIds': Array < string > | string
-
-        ,
+        'transcriptIds': Array < string > ,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -959,9 +921,7 @@ export default class CancerHotspotsAPI {
      * @param {array} transcriptIds - Comma separated list of transcript IDs. For example ENST00000288602,ENST00000275493
      */
     fetchSingleResidueHotspotMutationsByTranscriptGET(parameters: {
-            'transcriptIds': Array < string > | string
-
-            ,
+            'transcriptIds': Array < string > ,
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < HotspotMutation >
@@ -1155,10 +1115,8 @@ export default class CancerHotspotsAPI {
 
     fetchVariantsPOSTURL(parameters: {
         'hugoSymbol' ? : string,
-        'aminoAcidChanges' ? : Array < string > | string
-
-        ,
-        $queryParameters ? : any
+        'aminoAcidChanges' ? : Array < string > ,
+            $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/api/variants';
@@ -1185,10 +1143,8 @@ export default class CancerHotspotsAPI {
      */
     fetchVariantsPOST(parameters: {
             'hugoSymbol' ? : string,
-            'aminoAcidChanges' ? : Array < string > | string
-
-            ,
-            $queryParameters ? : any,
+            'aminoAcidChanges' ? : Array < string > ,
+                $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < TumorTypeComposition >
         > {
@@ -1228,9 +1184,7 @@ export default class CancerHotspotsAPI {
 
     fetchVariantsGETURL(parameters: {
         'hugoSymbol': string,
-        'aminoAcidChanges': Array < string > | string
-
-        ,
+        'aminoAcidChanges': Array < string > ,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -1259,9 +1213,7 @@ export default class CancerHotspotsAPI {
      */
     fetchVariantsGET(parameters: {
             'hugoSymbol': string,
-            'aminoAcidChanges': Array < string > | string
-
-            ,
+            'aminoAcidChanges': Array < string > ,
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < TumorTypeComposition >
