@@ -350,9 +350,6 @@ export class PatientViewPageStore
     }
 
     public set visibleMutations(val:Mutation[][]) {
-        /*if (_.isEqual(val, this._visibleMutations)) {
-            return;
-        }*/
         this._visibleMutations = val;
 
         this.populateCachesForVisibleMutations();

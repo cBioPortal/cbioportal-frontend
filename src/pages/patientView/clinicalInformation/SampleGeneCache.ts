@@ -2,16 +2,23 @@ import {observable} from "../../../../node_modules/mobx/lib/mobx";
 import Immutable from "seamless-immutable";
 import * as _ from "lodash";
 
-export type CacheData<T> = { status: "complete", data: T | null} | { status: "pending" };
+export type CacheData<T> = { status: "complete", data: T | null} | { status: "error" };
 export type Cache<T> = {
     [sampleId:string]: {
-        fetchedWithoutGeneArgument: "complete" | "pending" | false,
+        fetchedWithoutGeneArgument: "complete" | "error" | false,
         geneData: {[entrezGeneId: number]: CacheData<T> | null}
     }
 };
+type PendingCache = {
+    [sampleId:string]: {
+        fetchedWithoutGeneArgument: boolean
+        geneData: {[entrezGeneId: number]: boolean}
+    }
+}
+
 type CacheMerge<T> = {
     [sampleId:string]: {
-        fetchedWithoutGeneArgument?: "complete" | "pending" | false,
+        fetchedWithoutGeneArgument?: "complete" | "error" | false,
         geneData?: {[entrezGeneId: number]: CacheData<T> | null}
     }
 }
@@ -20,11 +27,13 @@ export type SampleToEntrezList = { [sampleId:string]:number[] };
 
 export default class SampleGeneCache<T extends { sampleId: string; entrezGeneId:number; }> {
     @observable.ref private _cache: Cache<T> & Immutable.ImmutableObject<Cache<T>>;
+    private _pending: PendingCache;
     private dependencies:any[];
 
     constructor(sampleIds:string[], ...dependencies:any[]) {
         this.dependencies = dependencies;
         this.initCache(sampleIds);
+        this._pending = {};
     }
 
     public get cache() {
@@ -54,10 +63,10 @@ export default class SampleGeneCache<T extends { sampleId: string; entrezGeneId:
         try {
             const data:T[] = await this.fetch(missing, ...this.dependencies);
             this.putData(missing, data);
-            return true;
         } catch (err) {
+            this.markError(missing);
+        } finally {
             this.unmarkPending(missing);
-            return false;
         }
     }
 
@@ -74,6 +83,23 @@ export default class SampleGeneCache<T extends { sampleId: string; entrezGeneId:
             };
         }
         this._cache = Immutable.from<Cache<T>>(_cache);
+    }
+
+    private markError(sampleToEntrezList:SampleToEntrezListOrNull) {
+        const cache = this._cache;
+        const toMerge:CacheMerge<T> = {};
+        for (const sample of Object.keys(sampleToEntrezList)) {
+            const entrezList = sampleToEntrezList[sample];
+            toMerge[sample] = { geneData: {} };
+            if (entrezList === null) {
+                toMerge[sample].fetchedWithoutGeneArgument = "error";
+            } else {
+                for (const entrez of entrezList) {
+                    toMerge[sample].geneData![entrez] = {status: "error"};
+                }
+            }
+        }
+        this.updateCache(toMerge);
     }
 
     private getMissing(sampleToEntrezList:SampleToEntrezListOrNull):SampleToEntrezListOrNull {
@@ -99,38 +125,29 @@ export default class SampleGeneCache<T extends { sampleId: string; entrezGeneId:
         return ret;
     }
 
-    private markEntries(sampleToEntrezList:SampleToEntrezListOrNull, status:"pending"|null) {
+    private markPendingStatus(sampleToEntrezList:SampleToEntrezListOrNull, status:boolean) {
         // Helper function for markPending and unmarkPending
-        const toMerge:CacheMerge<T> = {};
+        const pending = this._pending;
         for (const sampleId of Object.keys(sampleToEntrezList)) {
             const entrezList = sampleToEntrezList[sampleId];
-            toMerge[sampleId] = {};
+            pending[sampleId] = pending[sampleId] || {};
             if (entrezList === null) {
-                toMerge[sampleId].fetchedWithoutGeneArgument = (!status ? false : "pending");
+                pending[sampleId].fetchedWithoutGeneArgument = status;
             } else {
-                toMerge[sampleId].geneData = {};
+                pending[sampleId].geneData = pending[sampleId].geneData || {};
                 for (const entrezGene of entrezList) {
-                    toMerge[sampleId].geneData![entrezGene] = (!status ? null : {
-                        status:"pending"
-                    });
+                    pending[sampleId].geneData[entrezGene] = status;
                 }
             }
-        }
-        if (Object.keys(toMerge).length > 0) {
-            this._cache = this._cache.merge(toMerge, {deep:true}) as Cache<T> & Immutable.ImmutableObject<Cache<T>>;
         }
     }
 
     private markPending(sampleToEntrezList:SampleToEntrezListOrNull):void {
-        this.markEntries(sampleToEntrezList, "pending");
+        this.markPendingStatus(sampleToEntrezList, true);
     }
 
     private unmarkPending(sampleToEntrezList:SampleToEntrezListOrNull):void {
-        // When we set pending, it's like a mutex for fetching that data -
-        //  any queries that come in concurrently won't also query for that data.
-        //  So we can be assured that there's no pending requests for it
-        //  besides ours, and so we can clear pending here.
-        this.markEntries(sampleToEntrezList, null);
+        this.markPendingStatus(sampleToEntrezList, false);
     }
 
     private putData(query:SampleToEntrezListOrNull, fetchedData:T[]):void {
@@ -167,6 +184,10 @@ export default class SampleGeneCache<T extends { sampleId: string; entrezGeneId:
                 }
             }
         }
+        this.updateCache(toMerge);
+    }
+
+    private updateCache(toMerge:CacheMerge<T>) {
         if (Object.keys(toMerge).length > 0) {
             this._cache = this._cache.merge(toMerge, {deep:true}) as Cache<T> & Immutable.ImmutableObject<Cache<T>>;
         }

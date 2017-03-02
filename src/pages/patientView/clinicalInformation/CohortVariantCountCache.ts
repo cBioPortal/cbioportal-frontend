@@ -19,7 +19,6 @@ export type VariantCountCacheType = {
 };
 
 type PendingCacheType = {
-    numberOfSamples: boolean;
     mutationInGene: { [entrezGeneId: string]:boolean};
     keyword: { [kw:string]: boolean }
 };
@@ -40,7 +39,6 @@ export default class CohortVariantCountCache {
             keyword: {}
         });
         this._pending = {
-            numberOfSamples: false,
             mutationInGene: {},
             keyword: {}
         };
@@ -98,11 +96,17 @@ export default class CohortVariantCountCache {
         const pending = this._pending;
         const ret:EntrezToKeywordList = {};
         for (const entrez of Object.keys(entrezToKeywordList)) {
+            // for each gene
             const entrezGeneId = parseInt(entrez, 10);
+            // missing keywords are those for which we dont have data, and are not pending
             const missingKeywords = entrezToKeywordList[entrezGeneId].filter((kw:string)=>!cache.keyword[kw] && !pending.keyword[kw]);
+
             if (missingKeywords.length > 0) {
+                // if there are missing keywords, set up to query them
                 ret[entrezGeneId] = missingKeywords;
             } else {
+                // if no missing keywords, set up to query the gene without keywords (for # mutation in gene),
+                //  only if we don't have that data and its not pending
                 if (!cache.mutationInGene[entrezGeneId] && !pending.mutationInGene[entrezGeneId]) {
                     ret[entrezGeneId] = [];
                 }
@@ -140,11 +144,14 @@ export default class CohortVariantCountCache {
             toMerge.numberOfSamples = data[0].numberOfSamples;
         }
         for (const datum of data) {
+            // if we queried for this gene
             if (query.hasOwnProperty(datum.entrezGeneId)) {
+                // set # mutation in gene
                 toMerge.mutationInGene[datum.entrezGeneId] = {
                     status: "complete",
                     data: datum.numberOfSamplesWithMutationInGene
                 };
+                // if there's keyword data, set it
                 if (datum.keyword && query[datum.entrezGeneId].indexOf(datum.keyword) > -1) {
                     toMerge.keyword[datum.keyword] = {
                         status: "complete",
@@ -156,17 +163,35 @@ export default class CohortVariantCountCache {
         this.updateCache(toMerge);
     }
 
-    private markPendingStatus(entrezToKeywordList:EntrezToKeywordList, status:boolean) {
-        // Helper function for markPending and unmarkPending
+    private markError(entrezToKeywordList:EntrezToKeywordList) {
         const cache = this._cache;
-        const pending = this._pending;
-
+        const toMerge:VariantCountCacheMerge = { mutationInGene: {}, keyword: {}};
         for (const entrez of Object.keys(entrezToKeywordList)) {
             const entrezGeneId = parseInt(entrez, 10);
             const keywordList = entrezToKeywordList[entrezGeneId];
-            if (!cache.mutationInGene[entrezGeneId] || !status) {
-                pending.mutationInGene[entrezGeneId] = status;
+            // if we don't already have data, mark it as error
+            if (!cache.mutationInGene[entrezGeneId]) {
+                toMerge.mutationInGene[entrezGeneId] = {status:"error"};
             }
+            for (const keyword of keywordList) {
+                toMerge.keyword[keyword] = {status: "error"};
+            }
+        }
+        this.updateCache(toMerge);
+    }
+
+    private markPendingStatus(entrezToKeywordList:EntrezToKeywordList, status:boolean) {
+        // Helper function for markPending and unmarkPending
+        const pending = this._pending;
+
+        for (const entrez of Object.keys(entrezToKeywordList)) {
+            // for each gene
+            const entrezGeneId = parseInt(entrez, 10);
+            const keywordList = entrezToKeywordList[entrezGeneId];
+
+            // set pending
+            pending.mutationInGene[entrezGeneId] = status;
+
             for (const keyword of keywordList) {
                 pending.keyword[keyword] = status;
             }

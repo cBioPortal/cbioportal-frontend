@@ -37,6 +37,8 @@ export default class MrnaExprColumnFormatter {
             );
         } else if (exprData && exprData.status === "complete" && exprData.data === null) {
             return (<span>mRNA data is not available for this gene.</span>);
+        } else if (exprData && exprData.status === "error") {
+            return (<span>Error.</span>);
         } else {
             return (<span>Querying server for data.</span>);
         }
@@ -91,6 +93,13 @@ export default class MrnaExprColumnFormatter {
                     NA
                 </span>
             );
+        } else if (exprData && exprData.status === "error") {
+            return (<span
+                style={{color: "gray", fontSize:"xx-small", textAlign:"center"}}
+                alt="mRNA data is not available for this gene."
+            >
+                    ERROR
+                </span>);
         } else {
             return (
                 <span
