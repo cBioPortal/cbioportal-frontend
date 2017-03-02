@@ -53,7 +53,7 @@ export default class DataSetPageUnconnected extends React.Component<IDatasetPage
 
     componentDidMount() {
 
-        this.props.loadDatasetsInfo();
+        this.props.loadDatasetsInfo!();
 
     }
 
