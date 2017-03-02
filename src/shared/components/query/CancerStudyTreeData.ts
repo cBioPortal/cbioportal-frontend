@@ -1,6 +1,6 @@
 import {CancerStudy, TypeOfCancer as CancerType} from "../../api/generated/CBioPortalAPI";
 import * as _ from 'lodash';
-import {PriorityStudies} from "./QueryStore";
+import {PriorityStudies} from "config/IAppConfig";
 
 export const CANCER_TYPE_ROOT = 'tissue';
 

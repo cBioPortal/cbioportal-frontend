@@ -11,10 +11,7 @@ import oql_parser from "../../lib/oql/oql-parser";
 import {SyntaxError} from "../../lib/oql/oql-parser";
 import memoize from "../../lib/memoize";
 import debounceAsync from "../../lib/debounceAsync";
-
-export type PriorityStudies = {
-	[category:string]: string[]
-};
+import AppConfig from 'appConfig';
 
 export type GeneReplacement = {alias: string, genes: Gene[]};
 
@@ -168,21 +165,8 @@ export class QueryStore
 
 	@observable showMutSigPopup = false;
 	@observable showGisticPopup = false;
-	@observable.ref searchTextPresets:ReadonlyArray<string> = [
-		'tcga',
-		'tcga -provisional',
-		'tcga -moratorium',
-		'tcga OR icgc',
-		'-"cell line"',
-		'prostate mskcc',
-		'esophageal OR stomach',
-		'serous',
-		'breast',
-	];
-	@observable priorityStudies:PriorityStudies = {
-		'Shared institutional Data Sets': ['mskimpact', 'cellline_mskcc'],
-		'Priority Studies': ['blca_tcga_pub', 'coadread_tcga_pub', 'brca_tcga_pub2015'], // for demo
-	};
+	@observable.ref searchTextPresets:ReadonlyArray<string> = AppConfig.cancerStudySearchPresets;
+	@observable priorityStudies = AppConfig.priorityStudies;
 	@observable showSelectedStudiesOnly:boolean = false;
 	@observable.shallow selectedCancerTypeIds:string[] = [];
 	@observable maxTreeDepth:number = 3;
