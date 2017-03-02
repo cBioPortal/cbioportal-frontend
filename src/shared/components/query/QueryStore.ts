@@ -5,7 +5,7 @@ import {TypeOfCancer as CancerType, GeneticProfile, CancerStudy, SampleList, Gen
 import CancerStudyTreeData from "./CancerStudyTreeData";
 import StudyListLogic from "../StudyList/StudyListLogic";
 import {remoteData} from "../../api/remoteData";
-import {labelMobxPromises} from "mobxpromise";
+import {labelMobxPromises} from "../../api/MobxPromise";
 import internalClient from "../../api/cbioportalInternalClientInstance";
 import oql_parser from "../../lib/oql/oql-parser";
 import {SyntaxError} from "../../lib/oql/oql-parser";
