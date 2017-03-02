@@ -3,7 +3,8 @@ import Immutable from "seamless-immutable";
 import {VariantCount, VariantCountIdentifier} from "../../../shared/api/CBioPortalAPIInternal";
 import client from "../../../shared/api/cbioportalInternalClientInstance";
 
-export type VariantCountCacheDataType = { status: "complete", data:number | null} | { status:"pending" };
+export type VariantCountCacheDataType = { status: "complete", data:number | null}
+                                        | { status:"error" };
 
 export type VariantCountCacheMerge = {
     numberOfSamples?: number | null;
@@ -17,6 +18,12 @@ export type VariantCountCacheType = {
     keyword: { [kw:string]: VariantCountCacheDataType | null };
 };
 
+type PendingCacheType = {
+    numberOfSamples: boolean;
+    mutationInGene: { [entrezGeneId: string]:boolean};
+    keyword: { [kw:string]: boolean }
+};
+
 export type EntrezToKeywordList = {
     [entrezGeneId:number]:string[]
 };
@@ -24,12 +31,19 @@ export type EntrezToKeywordList = {
 export default class CohortVariantCountCache {
 
     @observable.ref private _cache:VariantCountCacheType & Immutable.ImmutableObject<VariantCountCacheType>;
+    private _pending:PendingCacheType;
+
     constructor(private mutationGeneticProfileId:string) {
         this._cache = Immutable.from<VariantCountCacheType>({
             numberOfSamples: null,
             mutationInGene: {},
             keyword: {}
         });
+        this._pending = {
+            numberOfSamples: false,
+            mutationInGene: {},
+            keyword: {}
+        };
     }
     public get cache() {
         return this._cache;
@@ -41,27 +55,11 @@ export default class CohortVariantCountCache {
         try {
             const data:VariantCount[] = await this.fetch(missing, this.mutationGeneticProfileId);
             this.putData(missing, data);
-            return true;
         } catch (err) {
+            this.markError(missing);
+        } finally {
             this.unmarkPending(missing);
-            return false;
         }
-    }
-
-    private pendingData() {
-        // For testing
-        const ret = [];
-        for (const entrez of Object.keys(this._cache.mutationInGene)) {
-            if (this._cache.mutationInGene[entrez] && this._cache.mutationInGene[entrez]!.status === "pending") {
-                ret.push(entrez);
-            }
-        }
-        for (const kw of Object.keys(this._cache.keyword)) {
-            if (this._cache.keyword[kw] && this._cache.keyword[kw]!.status === "pending") {
-                ret.push(kw);
-            }
-        }
-        return ret;
     }
 
     protected fetch(entrezToKeywordList:EntrezToKeywordList,
@@ -97,14 +95,15 @@ export default class CohortVariantCountCache {
 
     private getMissing(entrezToKeywordList:EntrezToKeywordList):EntrezToKeywordList {
         const cache = this._cache;
+        const pending = this._pending;
         const ret:EntrezToKeywordList = {};
         for (const entrez of Object.keys(entrezToKeywordList)) {
             const entrezGeneId = parseInt(entrez, 10);
-            const missingKeywords = entrezToKeywordList[entrezGeneId].filter((kw:string)=>!cache.keyword[kw]);
+            const missingKeywords = entrezToKeywordList[entrezGeneId].filter((kw:string)=>!cache.keyword[kw] && !pending.keyword[kw]);
             if (missingKeywords.length > 0) {
                 ret[entrezGeneId] = missingKeywords;
             } else {
-                if (!cache.mutationInGene[entrezGeneId]) {
+                if (!cache.mutationInGene[entrezGeneId] && !pending.mutationInGene[entrezGeneId]) {
                     ret[entrezGeneId] = [];
                 }
             }
@@ -122,7 +121,7 @@ export default class CohortVariantCountCache {
         for (const entrez of Object.keys(query)) {
             const keywords = query[parseInt(entrez,10)];
             const mutationInGene = cache.mutationInGene[entrez];
-            if (mutationInGene === null || mutationInGene.status === "pending") {
+            if (!mutationInGene) {
                 // only set this if we don't already have it
                 toMerge.mutationInGene[entrez] = {
                     status: "complete",
@@ -137,7 +136,7 @@ export default class CohortVariantCountCache {
             }
         }
         // Set data retrieved, that was also queried, overriding the default null set above if there is any
-        if (data.length > 0) {
+        if (data.length > 0 && cache.numberOfSamples === null) {
             toMerge.numberOfSamples = data[0].numberOfSamples;
         }
         for (const datum of data) {
@@ -157,32 +156,29 @@ export default class CohortVariantCountCache {
         this.updateCache(toMerge);
     }
 
-    private markEntries(entrezToKeywordList:EntrezToKeywordList, status:"pending"|null) {
+    private markPendingStatus(entrezToKeywordList:EntrezToKeywordList, status:boolean) {
         // Helper function for markPending and unmarkPending
-        const toMerge:VariantCountCacheMerge = {
-            mutationInGene: {},
-            keyword: {}
-        };
         const cache = this._cache;
+        const pending = this._pending;
+
         for (const entrez of Object.keys(entrezToKeywordList)) {
             const entrezGeneId = parseInt(entrez, 10);
             const keywordList = entrezToKeywordList[entrezGeneId];
-            if (!cache.mutationInGene[entrezGeneId]) {
-                toMerge.mutationInGene[entrezGeneId] = (status ? { status: "pending" } : null);
+            if (!cache.mutationInGene[entrezGeneId] || !status) {
+                pending.mutationInGene[entrezGeneId] = status;
             }
             for (const keyword of keywordList) {
-                toMerge.keyword[keyword] = (status ? { status: "pending" } : null);
+                pending.keyword[keyword] = status;
             }
         }
-        this.updateCache(toMerge);
     }
 
     private markPending(entrezToKeywordList:EntrezToKeywordList) {
-        this.markEntries(entrezToKeywordList, "pending");
+        this.markPendingStatus(entrezToKeywordList, true);
     }
 
     private unmarkPending(entrezToKeywordList:EntrezToKeywordList) {
-        this.markEntries(entrezToKeywordList, null);
+        this.markPendingStatus(entrezToKeywordList, false);
 
     }
 
