@@ -1,4 +1,4 @@
-import {CancerStudy, TypeOfCancer as CancerType} from "../../api/CBioPortalAPI";
+import {CancerStudy, TypeOfCancer as CancerType} from "../../api/generated/CBioPortalAPI";
 import * as _ from 'lodash';
 import {PriorityStudies} from "./QueryStore";
 

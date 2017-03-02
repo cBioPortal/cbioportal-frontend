@@ -1,4 +1,4 @@
-import {TypeOfCancer, CancerStudy, default as CBioPortalAPI} from "../../../api/CBioPortalAPI";
+import {TypeOfCancer, CancerStudy, default as CBioPortalAPI} from "../../../api/generated/CBioPortalAPI";
 import {Connector, IDispatch} from "../../../lib/ConnectorAPI";
 import {RootState} from "../../../../redux/rootReducer";
 import {IQueryContainerProps} from "./QueryContainer";

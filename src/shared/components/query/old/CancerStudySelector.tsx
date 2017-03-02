@@ -1,7 +1,7 @@
 import * as _ from "lodash";
 import * as React from "react";
 import Dictionary = _.Dictionary;
-import {TypeOfCancer as CancerType, CancerStudy} from "../../../api/CBioPortalAPI";
+import {TypeOfCancer as CancerType, CancerStudy} from "../../../api/generated/CBioPortalAPI";
 import {ITreeDescriptor, default as DescriptorTree} from "../../tree/DescriptorTree";
 import {BootstrapTable} from "react-bootstrap-table";
 import {TableHeaderColumn} from "react-bootstrap-table";

@@ -5,7 +5,7 @@ import * as styles_any from './styles.module.scss';
 import {action, ObservableMap, expr, toJS, computed, observable} from "mobx";
 import {observer} from "mobx-react";
 import EnhancedReactTable from "../enhancedReactTable/EnhancedReactTable";
-import {MutSig} from "../../api/CBioPortalAPIInternal";
+import {MutSig} from "../../api/generated/CBioPortalAPIInternal";
 import {IColumnFormatterData} from "../enhancedReactTable/IColumnFormatter";
 import {IColumnDefMap, IEnhancedReactTableProps} from "../enhancedReactTable/IEnhancedReactTableProps";
 import {ITableHeaderControlsProps} from "../tableHeaderControls/TableHeaderControls";

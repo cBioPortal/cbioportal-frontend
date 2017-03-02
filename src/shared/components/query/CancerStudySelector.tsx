@@ -1,7 +1,7 @@
 import * as _ from "lodash";
 import * as React from "react";
 import Dictionary = _.Dictionary;
-import {TypeOfCancer as CancerType, CancerStudy} from "../../api/CBioPortalAPI";
+import {TypeOfCancer as CancerType, CancerStudy} from "../../api/generated/CBioPortalAPI";
 import "react-bootstrap-table/css/react-bootstrap-table.css";
 import {FlexCol, FlexRow} from "../flexbox/FlexBox";
 import * as styles_any from './styles.module.scss';

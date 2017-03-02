@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {TypeOfCancer as CancerType, CancerStudy} from "../../api/CBioPortalAPI";
+import {TypeOfCancer as CancerType, CancerStudy} from "../../api/generated/CBioPortalAPI";
 import * as styles_any from './styles.module.scss';
 import classNames from "../../lib/classNames";
 import FontAwesome from "react-fontawesome";

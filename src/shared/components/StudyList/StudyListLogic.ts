@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import {CancerTreeNode} from "../query/CancerStudyTreeData";
 import {NodeMetadata} from "../query/CancerStudyTreeData";
-import {TypeOfCancer as CancerType, CancerStudy} from "../../api/CBioPortalAPI";
+import {TypeOfCancer as CancerType, CancerStudy} from "../../api/generated/CBioPortalAPI";
 import memoize from "../../lib/memoize";
 import {QueryStore} from "../query/QueryStore";
 import {computed, action} from "mobx";

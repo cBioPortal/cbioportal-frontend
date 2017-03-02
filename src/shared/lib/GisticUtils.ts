@@ -1,4 +1,4 @@
-import {Gistic} from "../api/CBioPortalAPIInternal";
+import {Gistic} from "../api/generated/CBioPortalAPIInternal";
 
 export function getGeneSymbols(gistic?: Gistic)
 {

@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as styles_any from './styles.module.scss';
 import {ObservableMap, expr, toJS, computed, observable} from "mobx";
 import {observer} from "mobx-react";
-import {Gistic} from "../../api/CBioPortalAPIInternal";
+import {Gistic} from "../../api/generated/CBioPortalAPIInternal";
 import EnhancedReactTable from "../enhancedReactTable/EnhancedReactTable";
 import {ITableHeaderControlsProps} from "../tableHeaderControls/TableHeaderControls";
 import {TableProps} from "reactable";

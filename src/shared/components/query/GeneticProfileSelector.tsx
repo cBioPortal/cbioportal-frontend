@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import * as React from 'react';
-import {GeneticProfile} from "../../api/CBioPortalAPI";
+import {GeneticProfile} from "../../api/generated/CBioPortalAPI";
 import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
 import FontAwesome from "react-fontawesome";
 import * as styles_any from './styles.module.scss';
