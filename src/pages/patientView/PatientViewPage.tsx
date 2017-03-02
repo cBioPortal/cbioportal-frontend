@@ -527,7 +527,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                         </Tab>
                     )}
-                    <Tab eventKey={4} id="test" title="Test">
+                    <Tab eventKey={5} id="test" title="Test" >
                         <div className="clearfix">
                             <NameTable
                                 columns={[
@@ -568,6 +568,14 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             />
                         </div>
                     </Tab>
+
+                    { (patientViewPageStore.hasTissueImageIFrameUrl.isComplete && patientViewPageStore.hasTissueImageIFrameUrl.result) &&
+                        (<Tab eventKey={4} id="tissueImageTab" title="Tissue Image">
+                            <iframe style={{width:'100%', height:700, border:'none'}}
+                                    src="http://cancer.digitalslidearchive.net/index_mskcc.php?slide_name=TCGA-CG-5721"></iframe>
+                        </Tab>)
+                    }
+
                 </Tabs>
 
 
