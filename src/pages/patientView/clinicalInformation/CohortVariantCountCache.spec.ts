@@ -260,7 +260,7 @@ describe('CohortVariantCountCache', () => {
         it("should respond to any error by clearing all pending markers and not loading any data", async()=>{
             const cache = new FailingCache("HELLO");
             assert.deepEqual(cache.cache, initialCache);
-            await cache.populate({});
+            await cache.populate({0:["kwA1", "kwA2"], 1:[]});
             assert.deepEqual(cache.cache, initialCache);
             return true;
         });

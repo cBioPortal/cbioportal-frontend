@@ -70,7 +70,7 @@ describe('MrnaExprColumnFormatter', () => {
             cache[datum.sampleId].geneData[datum.entrezGeneId] = {status: "complete", data: datum};
         }
 
-        cache["A"].geneData[2] = {status:"pending"};
+        cache["A"].geneData[2] = {status:"error"};
         cache["B"].geneData[3] = {status:"complete", data:null};
     });
 
@@ -131,7 +131,7 @@ describe('MrnaExprColumnFormatter', () => {
             } as Mutation;
             assert.deepEqual(TestableFormatter.getData([rowData], cache),
                 {
-                    status: "pending",
+                    status: "error",
                 });
             rowData = {
                 sampleId: "B",
@@ -168,9 +168,9 @@ describe('MrnaExprColumnFormatter', () => {
                     data: data[3]
             }) === 80);
         });
-        it("should return positive infinity if the data is pending or unavailable", ()=>{
+        it("should return positive infinity if the data is error or unavailable", ()=>{
             assert(TestableFormatter.getTdValue({
-                status: "pending"
+                status: "error"
             }) === Number.POSITIVE_INFINITY);
             assert(TestableFormatter.getTdValue(null) === Number.POSITIVE_INFINITY);
         });

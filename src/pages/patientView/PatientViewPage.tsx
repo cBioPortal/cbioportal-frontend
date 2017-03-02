@@ -446,6 +446,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                     mrnaExprRankData={ patientViewPageStore.mrnaExprRankCache.cache }
                                     mutSigData={this.state.mutSigData}
                                     variantCountData={ patientViewPageStore.cohortVariantCountCache.cache}
+                                    discreteCNAData={ patientViewPageStore.discreteCNACache.cache}
                                     sampleOrder={sampleManager.sampleOrder}
                                     sampleLabels={sampleManager.sampleLabels}
                                     sampleColors={sampleManager.sampleColors}
@@ -454,6 +455,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                     sampleManager={ sampleManager }
                                     onVisibleRowsChange={ (data:Mutation[][])=>{patientViewPageStore.visibleMutations = data;} }
                                     onSort={(columnName:string)=>{
+                                            console.log(columnName);
                                             if (columnName === "Cohort") {
                                                 patientViewPageStore.requestAllVariantCountData();
                                             } else if (columnName === "Copy #") {

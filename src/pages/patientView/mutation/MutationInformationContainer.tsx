@@ -19,6 +19,8 @@ import {
 } from "../../../shared/components/mutationTable/column/CosmicColumnFormatter";
 import {MrnaExprRankCacheType} from "../clinicalInformation/MrnaExprRankCache";
 import {VariantCountCacheType} from "../clinicalInformation/CohortVariantCountCache";
+import {DiscreteCNACacheType} from "../clinicalInformation/DiscreteCNACache";
+import DiscreteCNAColumnFormatter from "./column/DiscreteCNAColumnFormatter";
 
 
 export interface IMutationInformationContainerProps {
@@ -29,6 +31,7 @@ export interface IMutationInformationContainerProps {
     mrnaExprRankData?: MrnaExprRankCacheType;
     mutSigData?: MutSigData;
     variantCountData?: VariantCountCacheType;
+    discreteCNAData?:DiscreteCNACacheType;
     sampleOrder:string[];
     sampleColors:{ [s:string]: string};
     sampleLabels:{ [s:string]: string};
@@ -117,7 +120,7 @@ export default class MutationInformationContainer extends React.Component<IMutat
             copyNumber: {
                 name: "Copy #",
                 priority: 18.10,
-                sortable: true
+                sortable: true,
                 formatter: DiscreteCNAColumnFormatter.renderFunction,
                 columnProps: {
                     data: this.props.discreteCNAData

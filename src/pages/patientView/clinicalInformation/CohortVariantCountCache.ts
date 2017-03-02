@@ -1,4 +1,4 @@
-import {observable} from "../../../../node_modules/mobx/lib/mobx";
+import {observable, action} from "../../../../node_modules/mobx/lib/mobx";
 import Immutable from "seamless-immutable";
 import {VariantCount, VariantCountIdentifier} from "../../../shared/api/CBioPortalAPIInternal";
 import client from "../../../shared/api/cbioportalInternalClientInstance";
@@ -49,12 +49,17 @@ export default class CohortVariantCountCache {
 
     public async populate(entrezToKeywordList:EntrezToKeywordList) {
         const missing = this.getMissing(entrezToKeywordList);
+        if (Object.keys(missing).length === 0) {
+            return true;
+        }
         this.markPending(missing);
         try {
             const data:VariantCount[] = await this.fetch(missing, this.mutationGeneticProfileId);
             this.putData(missing, data);
+            return true;
         } catch (err) {
             this.markError(missing);
+            return false;
         } finally {
             this.unmarkPending(missing);
         }
@@ -207,7 +212,7 @@ export default class CohortVariantCountCache {
 
     }
 
-    private updateCache(toMerge:VariantCountCacheMerge) {
+    @action private updateCache(toMerge:VariantCountCacheMerge) {
         if (Object.keys(toMerge.mutationInGene).length > 0 ||
             Object.keys(toMerge.keyword).length ||
             toMerge.hasOwnProperty("numberOfSamples")) {

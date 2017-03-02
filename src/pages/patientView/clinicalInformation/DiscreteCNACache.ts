@@ -45,6 +45,7 @@ export default class DiscreteCNACache extends SampleGeneCache<DiscreteCopyNumber
                 }));
             return _.flatten(allData);
         } catch (err) {
+            console.log(err);
             throw err;
         }
     }

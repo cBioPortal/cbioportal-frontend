@@ -92,8 +92,11 @@ export class PatientViewPageStore
                     this.cohortVariantCountCache.populate(query);
                 }
             });
+
+        this.debouncedPopulateCachesForVisibleMutations = _.debounce(this.populateCachesForVisibleMutations, 400);
     }
 
+    private debouncedPopulateCachesForVisibleMutations:()=>void;
     private _visibleMutations:Mutation[][] = [];
 
     @observable private allDiscreteCNADataRequested = false;
@@ -352,7 +355,7 @@ export class PatientViewPageStore
     public set visibleMutations(val:Mutation[][]) {
         this._visibleMutations = val;
 
-        this.populateCachesForVisibleMutations();
+        this.debouncedPopulateCachesForVisibleMutations();
     }
 
     @action requestAllDiscreteCNAData() {

@@ -1,4 +1,4 @@
-import {observable} from "../../../../node_modules/mobx/lib/mobx";
+import {observable, action} from "../../../../node_modules/mobx/lib/mobx";
 import Immutable from "seamless-immutable";
 import * as _ from "lodash";
 
@@ -59,12 +59,17 @@ export default class SampleGeneCache<T extends { sampleId: string; entrezGeneId:
         // i.e. should it be SampleToEntrezList or SampleToEntrezListOrNull
         // See MrnaExprRankCache for an example
         const missing = this.getMissing(sampleToEntrezList);
+        if (Object.keys(missing).length === 0) {
+            return;
+        }
         this.markPending(missing);
         try {
             const data:T[] = await this.fetch(missing, ...this.dependencies);
             this.putData(missing, data);
+            return true;
         } catch (err) {
             this.markError(missing);
+            return false;
         } finally {
             this.unmarkPending(missing);
         }
@@ -104,21 +109,22 @@ export default class SampleGeneCache<T extends { sampleId: string; entrezGeneId:
 
     private getMissing(sampleToEntrezList:SampleToEntrezListOrNull):SampleToEntrezListOrNull {
         const ret:SampleToEntrezListOrNull = {};
+        const pending = this._pending;
+        const cache = this._cache;
         for (const sampleId of Object.keys(sampleToEntrezList)) {
             const entrezList = sampleToEntrezList[sampleId];
-            const subCache = this._cache[sampleId];
-            if (!subCache) {
-                ret[sampleId] = entrezList;
+            if (entrezList === null) {
+                if (!(cache[sampleId] && cache[sampleId].fetchedWithoutGeneArgument) &&
+                    !(pending[sampleId] && pending[sampleId].fetchedWithoutGeneArgument)) {
+                    ret[sampleId] = null;
+                }
             } else {
-                if (entrezList === null) {
-                    if (subCache.fetchedWithoutGeneArgument === false) {
-                        ret[sampleId] = null;
-                    }
-                } else {
-                    const missingEntrez = entrezList.filter((g:number) => !subCache.geneData[g]);
-                    if (missingEntrez.length > 0) {
-                        ret[sampleId] = missingEntrez;
-                    }
+                const missingEntrez = entrezList.filter((g:number)=>{
+                    return (!(cache[sampleId] && cache[sampleId].geneData[g]) &&
+                            !(pending[sampleId] && pending[sampleId].geneData[g]));
+                });
+                if (missingEntrez.length > 0) {
+                    ret[sampleId] = missingEntrez;
                 }
             }
         }
@@ -187,7 +193,7 @@ export default class SampleGeneCache<T extends { sampleId: string; entrezGeneId:
         this.updateCache(toMerge);
     }
 
-    private updateCache(toMerge:CacheMerge<T>) {
+    @action private updateCache(toMerge:CacheMerge<T>) {
         if (Object.keys(toMerge).length > 0) {
             this._cache = this._cache.merge(toMerge, {deep:true}) as Cache<T> & Immutable.ImmutableObject<Cache<T>>;
         }
