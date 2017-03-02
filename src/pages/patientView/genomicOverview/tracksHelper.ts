@@ -204,7 +204,7 @@ export function plotMuts(p: any, config: any,chmInfo: any,row: any, mutations: A
         var mutObj: Mutation = mutObjs[i];
         if (typeof mutObj.gene.chromosome !== 'undefined') {
             var chm = translateChm(mutObj.gene.chromosome);
-            if (chm != null||chm <= chmInfo.hg19.length) {
+            if (chm != null && chm <= chmInfo.hg19.length) {
                 var x = Math.round(chmInfo.loc2xpixil(chm, (mutObj.startPosition + mutObj.endPosition)/2, config));
                 var xBin = x - x%config.pixelsPerBinMut;
                 if (pixelMap[xBin] == null) pixelMap[xBin] = [];
