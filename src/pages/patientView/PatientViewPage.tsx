@@ -40,6 +40,7 @@ import {getSpans} from './clinicalInformation/lib/clinicalAttributesUtil.js';
 import CopyNumberAlterationsTable from "./copyNumberAlterations/CopyNumberAlterationsTable";
 import CopyNumberTableWrapper from "./copyNumberAlterations/CopyNumberTableWrapper";
 import {reaction} from "mobx";
+import AppConfig from 'appConfig';
 
 const patientViewPageStore = new PatientViewPageStore();
 
@@ -98,10 +99,10 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         this.handleSelect = this.handleSelect.bind(this);
 
-        this.tsClient = new CBioPortalAPI(`//${(window as any)['__API_ROOT__']}`);
-        this.tsInternalClient = new CBioPortalAPIInternal(`//${(window as any)['__API_ROOT__']}`);
-        this.hotspotsClient = new CancerHotspotsAPI(`//${(window as any)['__HOTSPOTS_API_ROOT__']}`);
-        this.hotspots3dClient = new CancerHotspotsAPI(`//${(window as any)['__3D_HOTSPOTS_API_ROOT__']}`);
+        this.tsClient = new CBioPortalAPI(`//${AppConfig.apiRoot}`);
+        this.tsInternalClient = new CBioPortalAPIInternal(`//${AppConfig.apiRoot}`);
+        this.hotspotsClient = new CancerHotspotsAPI(`//${AppConfig.hotspotsApiRoot}`);
+        this.hotspots3dClient = new CancerHotspotsAPI(`//${AppConfig.hotspots3DApiRoot}`);
 
         //TODO: this should be done by a module so that it can be reused on other pages
         const qs = queryString.parse((window as any).location.search);
