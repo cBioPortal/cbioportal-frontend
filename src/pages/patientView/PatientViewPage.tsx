@@ -456,6 +456,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                     onSort={(columnName:string)=>{
                                             if (columnName === "Cohort") {
                                                 patientViewPageStore.requestAllVariantCountData();
+                                            } else if (columnName === "Copy #") {
+                                                patientViewPageStore.requestAllDiscreteCNAData();
                                             }
                                         }}
                                 />
