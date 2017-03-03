@@ -94,7 +94,7 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
     private columnVisibilitySelector = (state:IEnhancedReactTableState) => state.columnVisibility;
 
     // visible columns depend on both column definitions and visibility
-    private visibleColsSelector = createSelector([this.columnsSelector, this.columnVisibilitySelector],
+    private visibleColsSelector = createSelector(this.columnsSelector, this.columnVisibilitySelector,
         (columns:IColumnDefMap, columnVisibility:IColumnVisibilityState) => this.resolveVisible(columns, columnVisibility));
 
     // sorted list of visible columns are required to calculate table header
@@ -105,11 +105,11 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
     private sortedColsSelector = createSelector(this.columnsSelector,
         (columns:IColumnDefMap)=>this.resolveOrder(columns));
 
-    private columnVisibilityArraySelector = createSelector([this.sortedColsSelector, this.columnVisibilitySelector],
+    private columnVisibilityArraySelector = createSelector(this.sortedColsSelector, this.columnVisibilitySelector,
          (sortedColumns:Array<IEnhancedReactTableColumnDef>, columnVisibility:IColumnVisibilityState) =>
              this.resolveColumnVisibility(this.colNameToId, sortedColumns, columnVisibility));
 
-    private downloadDataSelector = createSelector([this.sortedColsSelector, this.columnVisibilitySelector, this.rawDataSelector],
+    private downloadDataSelector = createSelector(this.sortedColsSelector, this.columnVisibilitySelector, this.rawDataSelector,
         (sortedCols:Array<IEnhancedReactTableColumnDef>, visibility:IColumnVisibilityState, rawData:Array<T>) =>
             this.generateDownloadData(sortedCols, visibility, rawData));
 
@@ -120,7 +120,7 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
     // no need to calculate column render values every time the visibility changes,
     // we only need to do it when the column definitions change
     // reactable is clever enough to not render the column if its header is missing
-    private rowsSelector = createSelector([this.sortedColsSelector, this.rawDataSelector],
+    private rowsSelector = createSelector(this.sortedColsSelector, this.rawDataSelector,
         (sortedCols:Array<IEnhancedReactTableColumnDef>, rawData:Array<T>) => this.generateRows(sortedCols, rawData));
 
     constructor(props:IEnhancedReactTableProps<T>)
