@@ -44,11 +44,14 @@ import {reaction} from "mobx";
 import AppConfig from 'appConfig';
 import SimpleTable from "../../shared/components/simpleTable/SimpleTable";
 import MSKTable from "../../shared/components/msktable/MSKTable";
+import Timeline from "./timeline/Timeline";
 
 class NameTable extends MSKTable<{first:string}> {
 }
 
 const patientViewPageStore = new PatientViewPageStore();
+
+(window as any).patientViewPageStore = patientViewPageStore;
 
 export interface IPatientViewPageProps {
     store?: RootState;
@@ -453,7 +456,22 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 }
 
                 <Tabs animation={false} activeKey={this.state.activeTabKey} id="patientViewPageTabs" onSelect={this.handleSelect as SelectCallback} className="mainTabs" unmountOnExit={true}>
+
                     <Tab eventKey={1} id="summaryTab" title="Summary">
+
+                        {
+                            (!!sampleManager && patientViewPageStore.clinicalEvents.isComplete) && (
+
+                                <div>
+                                    <FeatureTitle title="Clinical Timeline" isLoading={false} />
+
+                                    <Timeline store={patientViewPageStore} sampleManager={ sampleManager } />
+                                    <hr />
+                                </div>
+                            )
+
+
+                        }
 
                         <FeatureTitle title="Genomic Data" isLoading={ (patientViewPageStore.mutationData.isPending || patientViewPageStore.cnaSegments.isPending) } />
 
