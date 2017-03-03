@@ -165,7 +165,7 @@ export default class MutationTypeColumnFormatter
      * @param data  column formatter data
      * @returns {string}    mutation assessor text value
      */
-    public static getDisplayValue(data:IColumnFormatterData<MutationTableRowData>):string
+    public static getDisplayValue(data:Mutation[]):string
     {
         const entry:IMutationTypeFormat|undefined =
             MutationTypeColumnFormatter.getMapEntry(data);
@@ -180,7 +180,7 @@ export default class MutationTypeColumnFormatter
         }
     }
 
-    public static getTextValue(data:IColumnFormatterData<MutationTableRowData>):string
+    public static getTextValue(data:Mutation[]):string
     {
         let textValue:string = "";
         const dataValue = MutationTypeColumnFormatter.getData(data);
@@ -192,7 +192,7 @@ export default class MutationTypeColumnFormatter
         return textValue;
     }
 
-    public static getClassName(data:IColumnFormatterData<MutationTableRowData>):string
+    public static getClassName(data:Mutation[]):string
     {
         const value:IMutationTypeFormat|undefined =
             MutationTypeColumnFormatter.getMapEntry(data);
@@ -206,7 +206,7 @@ export default class MutationTypeColumnFormatter
         }
     }
 
-    public static getMapEntry(data:IColumnFormatterData<MutationTableRowData>)
+    public static getMapEntry(data:Mutation[])
     {
         const mutationType = MutationTypeColumnFormatter.getData(data);
 
@@ -218,27 +218,16 @@ export default class MutationTypeColumnFormatter
         }
     }
 
-    public static getData(data:IColumnFormatterData<MutationTableRowData>)
+    public static getData(data:Mutation[])
     {
-        let mutationType;
-
-        if (data.columnData)
-        {
-            mutationType = data.columnData;
+        if (data.length > 0) {
+            return data[0].mutationType;
+        } else {
+            return null;
         }
-        else if (data.rowData)
-        {
-            const mutations:Mutation[] = data.rowData;
-            mutationType = (mutations.length > 0 ? mutations[0].mutationType : null);
-        }
-        else {
-            mutationType = null;
-        }
-
-        return mutationType;
     }
 
-    public static renderFunction(data:IColumnFormatterData<MutationTableRowData>)
+    public static renderFunction(data:Mutation[])
     {
         // use text for all purposes (display, sort, filter)
         const text:string = MutationTypeColumnFormatter.getDisplayValue(data);
@@ -261,11 +250,7 @@ export default class MutationTypeColumnFormatter
             );
         }
 
-        return (
-            <Td key={data.name} column={data.name} value={text}>
-                {content}
-            </Td>
-        );
+        return content;
     }
 }
 
