@@ -27,7 +27,7 @@ import {
     VariantCountIdentifier, VariantCount, CosmicMutation
 } from "../../shared/api/generated/CBioPortalAPIInternal";
 import PatientHeader from './patientHeader/PatientHeader';
-import {TablePaginationControls} from "../../shared/components/tablePaginationControls/TablePaginationControls";
+import {PaginationControls} from "../../shared/components/paginationControls/PaginationControls";
 import { PatientViewPageStore } from './clinicalInformation/PatientViewPageStore';
 import ClinicalInformationPatientTable from "./clinicalInformation/ClinicalInformationPatientTable";
 import ClinicalInformationSamples from "./clinicalInformation/ClinicalInformationSamplesTable";
@@ -407,11 +407,12 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         if (this.patientIdsInCohort && this.patientIdsInCohort.length > 0) {
             const indexInCohort = this.patientIdsInCohort.indexOf(patientViewPageStore.patientId);
             cohortNav = (
-                <TablePaginationControls
+                <PaginationControls
+                    currentPage={indexInCohort + 1}
                     showItemsPerPageSelector={false}
                     showFirstPage={true}
                     showLastPage={true}
-                    textBetweenButtons={`${indexInCohort+1} of ${this.patientIdsInCohort.length} patients`}
+                    textBetweenButtons={` of ${this.patientIdsInCohort.length} patients`}
                     firstPageDisabled={indexInCohort === 0}
                     previousPageDisabled={indexInCohort === 0}
                     nextPageDisabled={indexInCohort === this.patientIdsInCohort.length-1}
@@ -420,6 +421,12 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     onPreviousPageClick={() => patientViewPageStore.setPatientId(this.patientIdsInCohort[indexInCohort-1]) }
                     onNextPageClick={() => patientViewPageStore.setPatientId(this.patientIdsInCohort[indexInCohort+1]) }
                     onLastPageClick={() => patientViewPageStore.setPatientId(this.patientIdsInCohort[this.patientIdsInCohort.length-1]) }
+                    onChangeCurrentPage={(newPage) => {
+                        if (newPage > 0 && newPage <= this.patientIdsInCohort.length) {
+                            patientViewPageStore.setPatientId(this.patientIdsInCohort[newPage - 1]);
+                        }
+                    }}
+                    pageNumberEditable={true}
                 />
             );
         }
