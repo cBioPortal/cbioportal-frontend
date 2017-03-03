@@ -5,15 +5,12 @@ import {IColumnDefMap} from "../../../shared/components/enhancedReactTable/IEnha
 import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter";
 import TumorColumnFormatter from "./column/TumorColumnFormatter";
 import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
-import {MrnaRankData, default as MrnaExprColumnFormatter} from "./column/MrnaExprColumnFormatter";
 import AlleleCountColumnFormatter from "./column/AlleleCountColumnFormatter";
-import {IVariantCountData, default as CohortColumnFormatter} from "./column/CohortColumnFormatter";
 import { Mutation } from "../../../shared/api/generated/CBioPortalAPI";
 import SampleManager from "../sampleManager";
 import {
     default as AnnotationColumnFormatter, IHotspotData, IMyCancerGenomeData, IOncoKbData
 } from "./column/AnnotationColumnFormatter";
-import { MutSigData } from "../PatientViewPage";
 import {
     default as CosmicColumnFormatter, ICosmicData
 } from "../../../shared/components/mutationTable/column/CosmicColumnFormatter";
@@ -24,9 +21,6 @@ export interface IMutationInformationContainerProps {
     hotspots?: IHotspotData;
     cosmicData?: ICosmicData;
     oncoKbData?: IOncoKbData;
-    mrnaExprRankData?: MrnaRankData;
-    mutSigData?: MutSigData;
-    variantCountData?: IVariantCountData;
     sampleOrder:string[];
     sampleColors:{ [s:string]: string};
     sampleLabels:{ [s:string]: string};
@@ -52,20 +46,20 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 name: "Sample",
                 visible: "excluded"
             },
-            gene: {
+            /*gene: {
                 name: "Gene",
                 description: "HUGO Symbol"
-            },
-            proteinChange: {
+            },*/
+            /*proteinChange: {
                 name: "Protein Change",
                 formatter: ProteinChangeColumnFormatter.renderFunction
-            },
+            },*/
 
-            chromosome: {
+            /*chromosome: {
                 name: "Chr",
                 visible: "hidden"
-            },
-            startPos: {
+            },*/
+            /*startPos: {
                 name: "Start",
                 visible: "hidden"
             },
@@ -80,11 +74,11 @@ export default class MutationInformationContainer extends React.Component<IMutat
             validationStatus: {
                 name: "Validation",
                 visible: "hidden"
-            },
-            mutationType: {
+            },*/
+            /*mutationType: {
                 name: "Type",
                 description: "Mutation Type"
-            },
+            },*/
             annotation: {
                 name: "Annotation",
                 formatter: AnnotationColumnFormatter.renderFunction,
@@ -100,12 +94,21 @@ export default class MutationInformationContainer extends React.Component<IMutat
                     enableHotspot: true
                 }
             },
-            copyNumber: {
+            /*copyNumber: {
                 name: "Copy #",
                 priority: 18.10,
                 sortable: false
-            },
-            cohort: {
+            },*/
+            /*mRnaExp: {
+                name: "mRNA Expr.",
+                priority: 18.20,
+                formatter: MrnaExprColumnFormatter.renderFunction,
+                sortable: false,
+                columnProps: {
+                    data: this.props.mrnaExprRankData
+                }
+            },*/
+            /*cohort: {
                 name: "Cohort",
                 description: "Mutation frequency in cohort",
                 priority: 18.30,
@@ -115,7 +118,7 @@ export default class MutationInformationContainer extends React.Component<IMutat
                     mutSigData: this.props.mutSigData,
                     variantCountData: this.props.variantCountData
                 }
-            },
+            },*/
             cosmic: {
                 name: "COSMIC",
                 description: "COSMIC occurrences",
@@ -141,7 +144,7 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 description: "Variant allele frequency in the normal sample",
                 visible: "hidden"
             },
-            normalRefCount: {
+            /*normalRefCount: {
                 name: "Ref Reads (N)",
                 formatter: AlleleCountColumnFormatter.renderFunction,
                 downloader: AlleleCountColumnFormatter.getTextValue,
@@ -180,8 +183,8 @@ export default class MutationInformationContainer extends React.Component<IMutat
                     sampleOrder: this.props.sampleOrder
                 },
                 visible: "hidden"
-            },
-            referenceAllele: {
+            },*/
+            /*referenceAllele: {
                 name: "Ref",
                 visible: "hidden"
             },
@@ -192,11 +195,11 @@ export default class MutationInformationContainer extends React.Component<IMutat
             center: {
                 name: "Center",
                 visible: "hidden"
-            },
-            mutationAssessor: {
+            },*/
+            /*mutationAssessor: {
                 name: "Mutation Assessor",
                 visible: "hidden"
-            }
+            }*/
         };
 
         // some columns are dependent on number of samples
@@ -214,16 +217,6 @@ export default class MutationInformationContainer extends React.Component<IMutat
                     sampleTumorType: this.props.sampleTumorType,
                     sampleCancerType: this.props.sampleCancerType,
                     sampleManager: this.props.sampleManager
-                }
-            };
-        } else {
-            columns['mRnaExp'] = {
-                name: "mRNA Expr.",
-                priority: 18.20,
-                formatter: MrnaExprColumnFormatter.renderFunction,
-                sortable: false,
-                columnProps: {
-                    data: this.props.mrnaExprRankData
                 }
             };
         }
