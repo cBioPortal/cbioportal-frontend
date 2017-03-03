@@ -42,7 +42,6 @@
     "@types/rc-tooltip": "^3.4.2",
     "@types/react": "15.0.4",
     "@types/react-bootstrap": "^0.0.43",
-    "@types/react-bootstrap-table": "^2.6.1",
     "@types/react-dom": "^0.14.21",
     "@types/react-redux": "^4.4.36",
     "@types/react-fontawesome": "^1.5.0",
