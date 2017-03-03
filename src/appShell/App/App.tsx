@@ -6,7 +6,7 @@ import { Provider } from 'react-redux';
 
 declare var __DEBUG__:boolean;
 
-interface IAppProps {
+export interface IAppProps {
     history: any,
     routes: RouteConfig,
     routerKey: number,
