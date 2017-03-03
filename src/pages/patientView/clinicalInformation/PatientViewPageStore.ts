@@ -37,7 +37,7 @@ export async function checkForTissueImage(patientId: string) : Promise<boolean> 
         return false;
     } else {
 
-        let resp = await request.get(AppConfig.tissueImageCheckUrl + patientId);
+        let resp = await request.get(`//${AppConfig.tissueImageCheckUrl}${patientId}`);
 
         let matches = resp.text.match(/<data total_count='([0-9]+)'>/);
 
