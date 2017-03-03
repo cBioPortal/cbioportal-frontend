@@ -3,12 +3,15 @@ import * as React from 'react';
 import {observable, computed, action} from "mobx";
 import {observer} from "mobx-react";
 import './styles.scss';
+import {PaginationControls} from "../paginationControls/PaginationControls";
+import DefaultTooltip from "../DefaultTooltip";
 
 export type Column<T> = {
     name: string;
     filter?:(data:T, filterString:string)=>boolean;
-    sort?:(a:T, b:T)=>number;
+    sort?:(a:T, b:T, ascending:boolean)=>number;
     render:(data:T)=>JSX.Element;
+    tooltip?:JSX.Element;
 };
 
 type MSKTableProps<T> = {
@@ -18,12 +21,20 @@ type MSKTableProps<T> = {
 
 class MSKTableStore<T> {
     @observable public filterString:string;
-    @observable public page:number;
+    @observable private _page:number;
     @observable public itemsPerPage:number;
     @observable public sortColumn:string;
     @observable public sortAscending:boolean;
     @observable public columns:Column<T>[];
     @observable.ref public data:T[];
+
+    @computed public get page() {
+        return this._page;
+    }
+    public set page(p:number) {
+        this._page = p;
+    }
+
     @computed get sortedFilteredData():T[] {
         let filtered:T[];
         if (this.filterString) {
@@ -42,10 +53,7 @@ class MSKTableStore<T> {
         }
         const column = this.columns.find((col:Column<T>)=>col.name === this.sortColumn);
         if (column && column.sort) {
-            let cmp = column.sort;
-            if (!this.sortAscending) {
-                cmp = (a:T, b:T)=>-1*column.sort!(a,b);
-            }
+            const cmp = (a:T, b:T) => column.sort!(a,b,this.sortAscending);
             return filtered.sort(cmp);
         } else {
             return filtered;
@@ -70,9 +78,18 @@ class MSKTableStore<T> {
             if (this.sortColumn === column.name) {
                 headerProps.className = (this.sortAscending ? "sort-asc" : "sort-des");
             }
+            const label = (<span>{column.name}</span>);
+            let thContents;
+            if (column.tooltip) {
+                thContents = (<DefaultTooltip placement="top" overlay={column.tooltip}>
+                    {label}
+                </DefaultTooltip>);
+            } else {
+                thContents = label;
+            }
             return (
                 <th {...headerProps}>
-                    <span>{column.name}</span>
+                    {thContents}
                 </th>
             );
         });
@@ -118,9 +135,19 @@ export default class MSKTable<T> extends React.Component<MSKTableProps<T>, {}> {
     }
 
     render() {
-        return (<SimpleTable
+        return (<div>
+            <PaginationControls
+                currentPage={this.store.page}
+                previousButtonContent={<span>Prev</span>}
+                nextButtonContent={<span>Next</span>}
+                textBetweenButtons={"Page "+this.store.page}
+                onPreviousPageClick={()=>{this.store.page -= 1}}
+                onNextPageClick={()=>{this.store.page += 1}}
+            />
+            <SimpleTable
                     headers={this.store.headers}
                     rows={this.store.rows}
-                />);
+                />
+        </div>);
     }
 }

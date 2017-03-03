@@ -1,85 +1,36 @@
-import LazyCache from 'shared/api/LazyCache';
+import {default as SampleGeneCache, SampleToEntrezList, Cache, CacheData} from './SampleGeneCache';
 import * as _ from 'lodash';
-import {MrnaPercentile} from "../../../shared/api/generated/CBioPortalAPIInternal";
 import internalClient from "../../../shared/api/cbioportalInternalClientInstance";
+import {MrnaPercentile} from "../../../shared/api/generated/CBioPortalAPIInternal";
 
-export default class MrnaExprRankCache extends LazyCache {
+export type MrnaExprRankCacheType = Cache<MrnaPercentile>;
+export type MrnaExprRankCacheDataType = CacheData<MrnaPercentile>;
+export default class MrnaExprRankCache extends SampleGeneCache<MrnaPercentile> {
 
-    protected populateCache(sampleToEntrezGeneIds:{ [sampleId:string]:Set<number> }, mrnaRankGeneticProfileId:string|null):Promise<boolean> {
-        const cache = this._cache;
-        return new Promise(resolve => {
-            // See which we need to fetch, and set "pending" for those data
-            const toQuery:{ [sampleId:string]:number[]} = {};
-            _.forEach(sampleToEntrezGeneIds, (entrezGeneIds:number[], sampleId:string) => {
-                cache[sampleId] = cache[sampleId] || {};
-                for (const entrezGeneId of entrezGeneIds) {
-                    if (!cache[sampleId].hasOwnProperty(entrezGeneId)) {
-                        toQuery[sampleId] = toQuery[sampleId] || [];
-                        toQuery[sampleId].push(entrezGeneId);
-                        cache[sampleId][entrezGeneId] = { status:"pending" };
-                    }
-                }
-            });
-            // Fetch that data
-            const mrnaPercentiles: MrnaPercentile[] = [];
-            const fetchAllMrnaPercentilesPromise = Promise.all(Object.keys(toQuery).map((sampleId:string) =>
-                new Promise((sampleResolve, sampleReject) => {
-                    const entrezGeneIds = toQuery[sampleId];
-                    if (mrnaRankGeneticProfileId === null) {
-                        sampleResolve();
-                    } else {
-                        const fetchMrnaPercentilesPromise = internalClient.fetchMrnaPercentileUsingPOST({
-                            geneticProfileId:mrnaRankGeneticProfileId,
-                            sampleId,
-                            entrezGeneIds
-                        });
-                        fetchMrnaPercentilesPromise.then((d) => {
-                            mrnaPercentiles.push(...d);
-                            sampleResolve();
-                        });
-                        fetchMrnaPercentilesPromise.catch(() => sampleReject());
-                    }
-                })
-            ));
-            fetchAllMrnaPercentilesPromise.then(() => {
-                const haveData:{ [sampleId:string]: { [entrezGeneId: string]:boolean}} = {};
-                for (const mrnaPercentile of mrnaPercentiles) {
-                    // Add data
-                    cache[mrnaPercentile.sampleId] || {};
-                    cache[mrnaPercentile.sampleId][mrnaPercentile.entrezGeneId] = {
-                        status: "available",
-                        percentile: mrnaPercentile.percentile,
-                        zScore: mrnaPercentile.zScore
-                    };
-                    // As we go through, keep track of which we have data for
-                    haveData[mrnaPercentile.sampleId] = haveData[mrnaPercentile.sampleId] || {};
-                    haveData[mrnaPercentile.sampleId][mrnaPercentile.entrezGeneId] = true;
-                }
-                // Go through and mark those we don't have data for as unavailable
-                for (const sampleId in toQuery) {
-                    if (toQuery.hasOwnProperty(sampleId)) {
-                        for (const entrezGeneId of toQuery[sampleId]) {
-                            if (!haveData[sampleId] || !haveData[sampleId][entrezGeneId]) {
-                                cache[sampleId][entrezGeneId] = { status: "not available" };
-                            }
-                        }
-                    }
-                }
+    constructor(sampleIds:string[], mrnaRankGeneticProfileId:string|null) {
+        super(sampleIds, mrnaRankGeneticProfileId);
+    }
 
-                resolve(mrnaPercentiles.length > 0);
-            });
-            fetchAllMrnaPercentilesPromise.catch(() => {
-                // Delete all the pending statuses for what we queried
-                for (const sampleId in toQuery) {
-                    if (toQuery.hasOwnProperty(sampleId)) {
-                        for (const entrezGeneId of toQuery[sampleId]) {
-                            delete cache[sampleId][entrezGeneId];
-                        }
-                    }
-                }
-                resolve(false);
-            });
-        });
+    public async populate(sampleToEntrezList:SampleToEntrezList) {
+        return super.populate(sampleToEntrezList);
+    }
+
+    protected async fetch(sampleToEntrezList:SampleToEntrezList, mrnaRankGeneticProfileId:string|null):Promise<MrnaPercentile[]> {
+        try {
+            const allMrnaPercentiles:MrnaPercentile[][] = await Promise.all(Object.keys(sampleToEntrezList).map((sampleId:string)=>
+                ( mrnaRankGeneticProfileId === null ?
+                    Promise.reject("No genetic profile id given.") :
+                    internalClient.fetchMrnaPercentileUsingPOST({
+                        geneticProfileId: mrnaRankGeneticProfileId,
+                        sampleId,
+                        entrezGeneIds: sampleToEntrezList[sampleId]
+                    })
+                ))
+            );
+            return _.flatten(allMrnaPercentiles);
+        } catch (err) {
+            throw err;
+        }
     }
 
 }
