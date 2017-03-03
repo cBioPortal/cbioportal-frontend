@@ -10,6 +10,7 @@ import {toJS, observable, action, computed, whyRun, expr} from "mobx";
 import queryStore from "../../shared/components/query/QueryStore";
 import LabeledCheckbox from "../../shared/components/labeledCheckbox/LabeledCheckbox";
 import ReactSelect from 'react-select';
+import 'react-select/dist/react-select.css';
 
 function getRootElement()
 {
