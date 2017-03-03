@@ -1,6 +1,7 @@
 import * as React from 'react';
 import * as styles_any from './styles.module.scss';
 import classNames from "../../lib/classNames";
+import ChangeEventHandler = React.ChangeEventHandler;
 
 const styles = styles_any as {
 	labeledCheckbox: string;
@@ -10,6 +11,7 @@ export interface ILabeledCheckboxProps
 {
 	checked?: boolean;
 	indeterminate?: boolean;
+	onChange?: ChangeEventHandler<HTMLInputElement>;
 	labelProps?: React.HTMLProps<HTMLLabelElement>;
 	inputProps?: React.HTMLProps<HTMLInputElement>;
 }
@@ -45,6 +47,7 @@ export default class LabeledCheckbox extends React.Component<ILabeledCheckboxPro
 				<input
 					type="checkbox"
 					checked={this.props.checked}
+					onChange={this.props.onChange}
 					{...this.props.inputProps}
 					ref={this.handleInputRef}
 				/>

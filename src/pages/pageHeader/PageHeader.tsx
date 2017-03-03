@@ -1,8 +1,8 @@
 import * as React from 'react';
 import './styles.scss';
-import {StateToggle} from "../../shared/components/ExperimentalControls";
 import devMode from "../../shared/lib/devMode";
 import {observer} from "mobx-react";
+import LabeledCheckbox from "../../shared/components/labeledCheckbox/LabeledCheckbox";
 
 interface IPageHeaderProps {
     router: any;
@@ -29,7 +29,9 @@ export default class PageHeader extends React.Component<IPageHeaderProps, void> 
                                 <input className="form-control" defaultValue={this.props.currentRoutePath} ref={(c) => { this.routeInput = c; }} />
                         </div>
                     </form>
-					<StateToggle label='Show work in progress' style={{color: 'white'}} target={devMode} name='enabled' defaultValue={devMode.enabled}/>
+                    <LabeledCheckbox checked={devMode.enabled} onChange={event => devMode.enabled = event.target.checked}>
+                        Show work in progress
+                    </LabeledCheckbox>
                 </div>
             </header>
         );

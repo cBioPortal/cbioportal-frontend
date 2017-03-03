@@ -1,6 +1,5 @@
 import * as React from 'react';
 import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
-import QueryContainerOld from "../../shared/components/query/old/QueryContainer";
 import QueryContainer from "../../shared/components/query/QueryContainer";
 import * as styles_any from './styles.module.scss';
 import {FlexCol, FlexRow} from "../../shared/components/flexbox/FlexBox";
@@ -9,7 +8,8 @@ import {observer} from "mobx-react";
 import DevTools from "mobx-react-devtools";
 import {toJS, observable, action, computed, whyRun, expr} from "mobx";
 import queryStore from "../../shared/components/query/QueryStore";
-import {Select, StateToggle} from "../../shared/components/ExperimentalControls";
+import LabeledCheckbox from "../../shared/components/labeledCheckbox/LabeledCheckbox";
+import ReactSelect from 'react-select';
 
 function getRootElement()
 {
@@ -41,32 +41,18 @@ export default class HomePage extends React.Component<IHomePageProps, IHomePageS
 
 	get store() { return queryStore; }
 
-	public componentDidMount() {
+	public componentDidMount()
+	{
 	  this.exposeComponentRenderersToParentScript();
 	}
 
-	exposeComponentRenderersToParentScript() {
+	exposeComponentRenderersToParentScript()
+	{
 		exposeComponentRenderer('renderQueryContainer', QueryContainer);
 	}
 
-	@observable selectorVersion:'new'|'old' = 'new';
-
 	public render()
 	{
-		let selectorVersionToggle = (
-			<a onClick={() => this.selectorVersion = this.selectorVersion == 'new' ? 'old' : 'new' }>
-				Switch to {this.selectorVersion == 'new' ? 'old' : 'new'} view
-			</a>
-		);
-
-		if (this.selectorVersion == 'old')
-			return (
-				<FlexCol className={styles.HomePage}>
-					<QueryContainerOld/>
-					{selectorVersionToggle}
-				</FlexCol>
-			);
-
 		return (
 			<FlexRow padded flex={1} className={styles.HomePage}>
 
@@ -75,25 +61,19 @@ export default class HomePage extends React.Component<IHomePageProps, IHomePageS
 				{!!(devMode.enabled) && (
 					<FlexCol padded overflow>
 						{/* demo controls */}
-						<FlexCol padded style={{border: '1px solid #ddd', borderRadius: 5, padding: 5}}>
-							<StateToggle label='Click tree node again to deselect' target={this.store} name='clickAgainToDeselectSingle' defaultValue={this.store.clickAgainToDeselectSingle}/>
-							<Select
-								label="Tree depth: "
-								selected={this.store.maxTreeDepth}
-								options={[
-									{label: "0"},
-									{label: "1"},
-									{label: "2"},
-									{label: "3"},
-									{label: "4"},
-									{label: "5"},
-									{label: "6"},
-									{label: "7"},
-									{label: "8"},
-									{label: "9"},
-								]}
-								onChange={option => this.store.maxTreeDepth = parseInt(option.label, 10)}
-							/>
+						<FlexCol padded overflow style={{border: '1px solid #ddd', borderRadius: 5, padding: 5}}>
+							<LabeledCheckbox checked={this.store.clickAgainToDeselectSingle} onChange={event => this.store.clickAgainToDeselectSingle = event.target.checked}>
+								Click tree node again to deselect
+							</LabeledCheckbox>
+							<FlexRow padded overflow>
+								<span>Tree depth:</span>
+								<ReactSelect
+
+									value={this.store.maxTreeDepth}
+									options={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => ({value: n, label: n}))}
+									onChange={(option:{value:number}) => this.store.maxTreeDepth = option.value}
+								/>
+							</FlexRow>
 							<span>Note: Use cmd+click to select/deselect multiple cancer types.</span>
 						</FlexCol>
 
@@ -101,8 +81,6 @@ export default class HomePage extends React.Component<IHomePageProps, IHomePageS
 						<pre>
 							{JSON.stringify(this.store.stateToSerialize, null, 4)}
 						</pre>
-
-						{/*devMode.enabled && selectorVersionToggle*/}
 
 					</FlexCol>
 				)}
