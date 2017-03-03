@@ -7,6 +7,7 @@ import {
 import {ClinicalInformationData} from "../Connector";
 import client from "../../../shared/api/cbioportalClientInstance";
 import {computed, observable, action, reaction, autorun} from "mobx";
+import {keepAlive} from "mobx-utils";
 import oncokbClient from "../../../shared/api/oncokbClientInstance";
 import {remoteData} from "../../../shared/api/remoteData";
 import {IOncoKbData} from "../mutation/column/AnnotationColumnFormatter";
@@ -14,9 +15,12 @@ import {generateQueryVariant, generateEvidenceQuery} from "../../../shared/lib/O
 import {IndicatorQueryResp} from "shared/api/generated/OncoKbAPI";
 import {labelMobxPromises} from "../../../shared/api/MobxPromise";
 import MrnaExprRankCache from './MrnaExprRankCache';
-import DebouncingCache from "./DebouncingCache";
 import request from 'superagent';
 import AppConfig from 'appConfig';
+import CohortVariantCountCache from "./CohortVariantCountCache";
+import {EntrezToKeywordList} from "./CohortVariantCountCache";
+import {SampleToEntrezListOrNull} from "./SampleGeneCache";
+import DiscreteCNACache from "./DiscreteCNACache";
 
 type PageMode = 'patient' | 'sample';
 
@@ -72,29 +76,10 @@ export class PatientViewPageStore
     {
         labelMobxPromises(this);
 
-        autorun(
-            ()=> {
-                if (!this.visibleRows || this.visibleRows.length === 0) {
-                    return;
-                }
-                const sampleToEntrezGeneIds:{ [sampleId:string]:Set<number> } = {};
-                for (const mutations of this.visibleRows) {
-                    if (mutations && mutations.length > 0) {
-                        sampleToEntrezGeneIds[mutations[0].sampleId] = sampleToEntrezGeneIds[mutations[0].sampleId] || new Set();
-                        sampleToEntrezGeneIds[mutations[0].sampleId].add(mutations[0].entrezGeneId);
-                    }
-                }
-                this.mrnaExprRankCache.populate(sampleToEntrezGeneIds);
-            });
-
-        this.setVisibleRows = this.setVisibleRows.bind(this);
-
-        this.nameCache = new DebouncingCache();
+        keepAlive(this, "variantCountCache");
+        keepAlive(this, "mrnaExprRankCache");
+        keepAlive(this, "discreteCNACache");
     }
-
-    @observable.ref private visibleRows:Mutation[][] = [];
-
-    public nameCache:DebouncingCache;
 
     @observable private _patientId = '';
     @computed get patientId():string {
@@ -314,7 +299,6 @@ export class PatientViewPageStore
             }
     }}, []);
 
-
     readonly oncoKbData = remoteData<IOncoKbData>({
         await: () => [
             this.mutationData,
@@ -378,6 +362,21 @@ export class PatientViewPageStore
         }
     }, {sampleToTumorMap: {}, indicatorMap: {}});
 
+    @computed get mergedMutationData():Mutation[][] {
+        let idToMutations:{[key:string]: Array<Mutation>} = {};
+        let mutationId:string;
+        let MutationId:(m:Mutation)=>string = (m:Mutation)=>{
+            return [m.gene.chromosome, m.startPosition, m.endPosition, m.referenceAllele, m.variantAllele].join("_");
+        }
+
+        for (const mutation of this.mutationData.result) {
+            mutationId = MutationId(mutation);
+            idToMutations[mutationId] = idToMutations[mutationId] || [];
+            idToMutations[mutationId].push(mutation);
+        }
+
+        return Object.keys(idToMutations).map(id => idToMutations[id]);
+    }
 
     @action("SetSampleId") setSampleId(newId: string) {
         if (newId)
@@ -392,11 +391,40 @@ export class PatientViewPageStore
     }
 
     @computed get mrnaExprRankCache() {
-        return new MrnaExprRankCache(this.mrnaRankGeneticProfileId.result);
+        return new MrnaExprRankCache(this.samples.result.map((s:Sample)=>s.sampleId),
+                                    this.mrnaRankGeneticProfileId.result);
     }
 
-    @action setVisibleRows(rows:Mutation[][]) {
-        this.visibleRows = rows || [];
+    @computed get variantCountCache() {
+        return new CohortVariantCountCache(this.mutationGeneticProfileId);
+    }
+
+    @computed get discreteCNACache() {
+        return new DiscreteCNACache(this.samples.result.map((s:Sample)=>s.sampleId),
+                                    this.geneticProfileIdDiscrete.result);
+    }
+
+    @action requestAllVariantCountData() {
+        const entrezToKeywordList:EntrezToKeywordList = {};
+        for (const mutations of this.mergedMutationData) {
+            if (mutations.length > 0) {
+                const entrez = mutations[0].entrezGeneId;
+                entrezToKeywordList[entrez] = entrezToKeywordList[entrez] || [];
+                const kw = mutations[0].keyword;
+                if (kw) {
+                    entrezToKeywordList[entrez].push(kw);
+                }
+            }
+        }
+        this.variantCountCache.populate(entrezToKeywordList);
+    }
+
+    @action requestAllDiscreteCNAData() {
+        const sampleToNull:SampleToEntrezListOrNull = {};
+        for (const sample of this.samples.result) {
+            sampleToNull[sample.sampleId] = null;
+        }
+        this.discreteCNACache.populate(sampleToNull);
     }
 
 }

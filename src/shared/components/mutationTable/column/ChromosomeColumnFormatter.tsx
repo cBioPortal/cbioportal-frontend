@@ -1,34 +1,24 @@
 import {IColumnFormatterData} from "shared/components/enhancedReactTable/IColumnFormatter";
 import GeneColumnFormatter from "./GeneColumnFormatter";
 import {MutationTableRowData} from "../IMutationTableProps";
+import {Mutation} from "../../../api/generated/CBioPortalAPI";
 
 /**
  * @author Selcuk Onur Sumer
  */
 export default class ChromosomeColumnFormatter
 {
-    public static getDataFromRow(rowData:MutationTableRowData|undefined)
+    public static getSortValue(data:Mutation[]):number
     {
-        const geneData = GeneColumnFormatter.getDataFromRow(rowData);
-
-        if (geneData) {
-            return geneData.chromosome;
-        }
-        else {
-            return null;
+        const chromosome = ChromosomeColumnFormatter.getData(data);
+        if (!chromosome) {
+            return Number.POSITIVE_INFINITY;
+        } else {
+            return ChromosomeColumnFormatter.extractSortValue(chromosome);
         }
     }
 
-    public static sortFunction(a:string, b:string):number
-    {
-        const aValue = ChromosomeColumnFormatter.extractSortValue(a);
-        const bValue = ChromosomeColumnFormatter.extractSortValue(b);
-
-        return aValue > bValue ? 1 : -1;
-    }
-
-    public static extractSortValue(chromosome:string)
-    {
+    public static extractSortValue(chromosome:string):number {
         const numerical:RegExp = /[0-9]+/g;
 
         const matched:RegExpMatchArray|null = chromosome.match(numerical);
@@ -51,17 +41,12 @@ export default class ChromosomeColumnFormatter
         return value;
     }
 
-    public static getData(data:IColumnFormatterData<MutationTableRowData>)
+    public static getData(data:Mutation[]):string|null
     {
-        let chromosome;
-
-        if (data.columnData) {
-            chromosome = data.columnData;
+        if (data.length > 0) {
+            return data[0].gene.chromosome
+        } else {
+            return null;
         }
-        else {
-            chromosome = ChromosomeColumnFormatter.getDataFromRow(data.rowData);
-        }
-
-        return chromosome;
     }
 }
