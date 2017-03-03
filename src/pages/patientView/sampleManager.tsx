@@ -112,28 +112,6 @@ class SampleManager {
 
         </DefaultTooltip>);
 
-           // <SampleInline
-           //              sample={sample}
-           //              sampleNumber={sampleNumberText}
-           //              showClinical={showClinical}
-           //          />
-
-        // return (
-        //     <OverlayTrigger
-        //         delayHide={100}
-        //         key={sampleNumberText}
-        //         trigger={['hover', 'focus']}
-        //         placement='bottom'
-        //         overlay={this.getPopoverSample(sample, sampleNumberText)}
-        //     >
-        //         <svg width="12" height="12">
-        //             <SampleInline
-        //                 sample={sample}
-        //                 sampleNumber={sampleNumberText}
-        //             />
-        //         </svg>
-        //     </OverlayTrigger>
-        // );
     }
 
     getPopoverSample(sample: ClinicalDataBySampleId, sampleNumber: number) {
