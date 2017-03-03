@@ -113,39 +113,23 @@ export default class MutSigGeneSelector extends React.Component<MutSigGeneSelect
 			},
 		};
 
-		let reactTableProps:TableProps = {
-			className: "table table-striped table-border-top",
-			hideFilterInput:true,
-			defaultSort: columns.qValue.name,
-		};
-
-		let headerControlsProps:ITableHeaderControlsProps = {
-		    // tableData?: Array<any>;
-		    // className?: string;
-		    // searchClassName?: string;
-		    // showSearch?: boolean;
-			showCopyAndDownload: false,
-		    // copyDownloadClassName?: string;
-		    showHideShowColumnButton: false,
-		    showPagination: true,
-		    // handleInput?: Function;
-		    // downloadDataGenerator?: Function;
-		    // downloadDataContainsHeader?: boolean;
-		    // downloadFilename?: string;
-		    // paginationProps?: ITablePaginationControlsProps;
-		    // columnVisibilityProps?: IColumnVisibilityControlsProps;
-		    // searchDelayMs?:number;
-		};
-
 		return (
 			<div className={styles.MutSigGeneSelector}>
 				<MutSigTable
 					itemsName="genes"
-					reactTableProps={reactTableProps}
 					initItemsPerPage={10}
-					headerControlsProps={headerControlsProps}
 					columns={columns}
 					rawData={this.props.data}
+					headerControlsProps={{
+						showCopyAndDownload: false,
+						showHideShowColumnButton: false,
+						showPagination: true,
+					}}
+					reactTableProps={{
+						className: "table table-striped table-border-top",
+						hideFilterInput:true,
+						defaultSort: columns.qValue.name,
+					}}
 				/>
 				<button className={styles.selectButton} onClick={() => this.props.onSelect(this.map_geneSymbol_selected)}>
 					Select

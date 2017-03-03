@@ -54,96 +54,84 @@ export default class GisticGeneSelector extends React.Component<GisticGeneSelect
 
 	map_geneSymbol_selected = observable.map<boolean>();
 
+	private columns:IColumnDefMap = {
+		'amp': {
+			priority: 1,
+			columnDataFunction: ({rowData: gistic}: IColumnFormatterData<Gistic>) => gistic && (gistic.amp ? 'Amp' : 'Del'),
+			name: "Amp Del",
+			sortable: true,
+			filterable: true,
+			header: (
+				<div className={classNames(styles.header, styles.amp, styles.del)}>
+					<span className={styles.amp}>Amp</span>
+					<span className={styles.del}>Del</span>
+				</div>
+			),
+			formatter: ({name, rowData: gistic, columnData: value}: IColumnFormatterData<Gistic>) => (
+				<Td key={name} column={name} value={value}>
+					{!!(gistic) && (
+						<div className={gistic.amp ? styles.amp : styles.del}/>
+					)}
+				</Td>
+			)
+		},
+		'chromosome': {
+			priority: 2,
+			dataField: 'chromosome',
+			name: "Chr",
+			sortable: true,
+			filterable: true
+		},
+		'cytoband': {
+			priority: 3,
+			dataField: 'cytoband',
+			name: "Cytoband",
+			sortable: sortByCytoband,
+			filterable: true,
+		},
+		'#': {
+			priority: 4,
+			columnDataFunction: ({rowData: gistic}: IColumnFormatterData<Gistic>) => getGeneSymbols(gistic).length,
+			name: "#",
+			sortable: true,
+			filterable: true,
+		},
+		'genes': {
+			priority: 5,
+			// this columnDataFunction allows quick searching by gene symbol
+			columnDataFunction: ({rowData: gistic}: IColumnFormatterData<Gistic>) => getGeneSymbols(gistic).join(' '),
+			name: "Genes",
+			sortable: (genes1:string, genes2:string) => {
+				// sort by length, then alphabetically
+				return genes1.length - genes2.length
+					|| +(genes1 > genes2) - +(genes1 < genes2);
+			},
+			filterable: true,
+			formatter: ({name, rowData: gistic, columnData: value}: IColumnFormatterData<Gistic>) => (
+				<Td key={name} column={name} value={value}>
+					<GisticGeneToggles
+						gistic={gistic}
+						map_geneSymbol_selected={this.map_geneSymbol_selected}
+					/>
+				</Td>
+			),
+		},
+		'qValue': {
+			priority: 6,
+			dataField: 'qValue',
+			name: "Q-Value",
+			sortable: true,
+			filterable: true,
+			formatter: ({name, rowData: gistic, columnData: value}: IColumnFormatterData<Gistic>) => (
+				<Td key={name} column={name} value={value}>
+					{toPrecision(value, 2, 0.1)}
+				</Td>
+			),
+		},
+	};
+
 	render()
 	{
-		let columns: IColumnDefMap = {
-			'amp': {
-				priority: 1,
-				columnDataFunction: ({rowData: gistic}: IColumnFormatterData<Gistic>) => gistic && (gistic.amp ? 'Amp' : 'Del'),
-				name: "Amp Del",
-				sortable: true,
-				filterable: true,
-				header: (
-					<div className={classNames(styles.header, styles.amp, styles.del)}>
-						<span className={styles.amp}>Amp</span>
-						<span className={styles.del}>Del</span>
-					</div>
-				),
-				formatter: ({name, rowData: gistic, columnData: value}: IColumnFormatterData<Gistic>) => (
-					<Td key={name} column={name} value={value}>
-						{!!(gistic) && (
-							<div className={gistic.amp ? styles.amp : styles.del}/>
-						)}
-					</Td>
-				)
-			},
-			'chromosome': {
-				priority: 2,
-				dataField: 'chromosome',
-				name: "Chr",
-				sortable: true,
-				filterable: true
-			},
-			'cytoband': {
-				priority: 3,
-				dataField: 'cytoband',
-				name: "Cytoband",
-				sortable: sortByCytoband,
-				filterable: true,
-			},
-			'#': {
-				priority: 4,
-				columnDataFunction: ({rowData: gistic}: IColumnFormatterData<Gistic>) => getGeneSymbols(gistic).length,
-				name: "#",
-				sortable: true,
-				filterable: true,
-			},
-			'genes': {
-				priority: 5,
-				// this columnDataFunction allows quick searching by gene symbol
-				columnDataFunction: ({rowData: gistic}: IColumnFormatterData<Gistic>) => getGeneSymbols(gistic).join(' '),
-				name: "Genes",
-				sortable: (genes1:string, genes2:string) => {
-					// sort by length, then alphabetically
-					return genes1.length - genes2.length
-						|| +(genes1 > genes2) - +(genes1 < genes2);
-				},
-				filterable: true,
-				formatter: ({name, rowData: gistic, columnData: value}: IColumnFormatterData<Gistic>) => (
-					<Td key={name} column={name} value={value}>
-						<GisticGeneToggles
-							gistic={gistic}
-							map_geneSymbol_selected={this.map_geneSymbol_selected}
-						/>
-					</Td>
-				),
-			},
-			'qValue': {
-				priority: 6,
-				dataField: 'qValue',
-				name: "Q-Value",
-				sortable: true,
-				filterable: true,
-				formatter: ({name, rowData: gistic, columnData: value}: IColumnFormatterData<Gistic>) => (
-					<Td key={name} column={name} value={value}>
-						{toPrecision(value, 2, 0.1)}
-					</Td>
-				),
-			},
-		};
-
-		let reactTableProps: TableProps = {
-			className: "table table-striped table-border-top",
-			hideFilterInput: true,
-			defaultSort: columns.qValue.name,
-		};
-
-		let headerControlsProps: ITableHeaderControlsProps = {
-			showCopyAndDownload: false,
-			showHideShowColumnButton: false,
-			showPagination: true,
-		};
-
 		return (
 			<div className={styles.GisticGeneSelector}>
 				<span>
@@ -156,11 +144,19 @@ export default class GisticGeneSelector extends React.Component<GisticGeneSelect
 				<GisticTable
 					className={styles.gisticTable}
 					itemsName="genes"
-					reactTableProps={reactTableProps}
 					initItemsPerPage={10}
-					headerControlsProps={headerControlsProps}
-					columns={columns}
+					columns={this.columns}
 					rawData={this.props.data}
+					headerControlsProps={{
+						showCopyAndDownload: false,
+						showHideShowColumnButton: false,
+						showPagination: true,
+					}}
+					reactTableProps={{
+						className: "table table-striped table-border-top",
+						hideFilterInput: true,
+						defaultSort: this.columns.qValue.name,
+					}}
 				/>
 				<button
 					className={styles.selectButton}

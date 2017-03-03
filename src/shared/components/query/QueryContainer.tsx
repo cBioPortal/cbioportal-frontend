@@ -50,7 +50,6 @@ export default class QueryContainer extends React.Component<{}, {}>
         if (error)
 			return <span className={styles.errorMessage}>{error.toString()}</span>;
 
-
         if (!this.store.cancerTypes.result.length || !this.store.cancerStudies.result.length)
             return <span>No data</span>;
 

@@ -35,9 +35,8 @@ export default class DataTypePrioritySelector extends React.Component<{}, {}>
 		);
 	}
 
-	DataTypePriorityRadio = observer((props: {label: string, state:QueryStore['dataTypePriority']}) =>
-	{
-		return (
+	DataTypePriorityRadio = observer(
+		(props: {label: string, state:QueryStore['dataTypePriority']}) => (
 			<label>
 				<input
 					type="radio"
@@ -49,6 +48,6 @@ export default class DataTypePrioritySelector extends React.Component<{}, {}>
 				/>
 				{props.label}
 			</label>
-		);
-	});
+		)
+	);
 }

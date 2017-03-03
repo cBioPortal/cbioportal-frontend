@@ -3,6 +3,7 @@ import queryStore from "./QueryStore";
 import * as styles_any from './styles.module.scss';
 import ReactSelect from 'react-select';
 import {observer} from "mobx-react";
+import {computed} from 'mobx';
 import {FlexCol} from "../flexbox/FlexBox";
 import {QueryStore} from "./QueryStore";
 
@@ -19,20 +20,26 @@ export default class SampleListSelector extends React.Component<{}, {}>
 		return queryStore;
 	}
 
+	@computed get sampleListOptions()
+	{
+		return [
+			...this.store.sampleLists.result.map(sampleList => {
+				return {
+					label: `${sampleList.name} (${sampleList.sampleCount})`,
+					value: sampleList.sampleListId
+				};
+			}),
+			{
+				label: 'User-defined Case List',
+				value: ''
+			}
+		];
+	}
+
 	render()
 	{
 		if (!this.store.singleSelectedStudyId)
 			return null;
-
-		let options = this.store.sampleLists.result.map(sampleList => {
-			return {
-				label: `${sampleList.name} (${sampleList.sampleCount})`,
-				value: sampleList.sampleListId
-			};
-		}).concat([{
-			label: 'User-defined Case List',
-			value: ''
-		}]);
 
 		const CaseIdsModeRadio = this.CaseIdsModeRadio;
 
@@ -42,7 +49,7 @@ export default class SampleListSelector extends React.Component<{}, {}>
 				<ReactSelect
 					className={styles.ReactSelect}
 					value={this.store.selectedSampleListId}
-					options={options}
+					options={this.sampleListOptions}
 					onChange={option => this.store.selectedSampleListId = option ? option.value : undefined}
 				/>
 				<a href={`/study?id=${this.store.singleSelectedStudyId}`}>To build your own case set, try out our enhanced Study View.</a>
@@ -55,9 +62,7 @@ export default class SampleListSelector extends React.Component<{}, {}>
 							rows={6}
 							cols={80}
 							value={this.store.caseIds}
-							onChange={event => {
-								this.store.caseIds = (event.target as HTMLTextAreaElement).value;
-							}}
+							onChange={event => this.store.caseIds = event.currentTarget.value}
 						/>
 						<CaseIdsModeRadio label='By sample ID' state='sample'/>
 						<CaseIdsModeRadio label='By patient ID' state='patient'/>
@@ -67,20 +72,20 @@ export default class SampleListSelector extends React.Component<{}, {}>
 		);
 	}
 
-	CaseIdsModeRadio = observer((props: {label: string, state:QueryStore['caseIdsMode']}) =>
-	{
-		return (
-			<label>
+	CaseIdsModeRadio = observer(
+		(props: {label: string, state:QueryStore['caseIdsMode']}) => (
+			<label
+			>
 				<input
 					type="radio"
 					checked={this.store.caseIdsMode == props.state}
 					onChange={event => {
-						if ((event.target as HTMLInputElement).checked)
+						if (event.currentTarget.checked)
 							this.store.caseIdsMode = props.state;
 					}}
 				/>
 				{props.label}
 			</label>
-		);
-	});
+		)
+	);
 }

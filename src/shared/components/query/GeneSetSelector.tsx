@@ -3,7 +3,7 @@ import queryStore from "./QueryStore";
 import * as styles_any from './styles.module.scss';
 import ReactSelect from 'react-select';
 import {observer} from "mobx-react";
-import {computed, expr} from 'mobx';
+import {computed} from 'mobx';
 import {FlexRow, FlexCol} from "../flexbox/FlexBox";
 import gene_lists from './gene_lists';
 import GeneSymbolValidator from "./GeneSymbolValidator";
@@ -28,7 +28,7 @@ export default class GeneSetSelector extends React.Component<{}, {}>
 
 	@computed get selectedGeneListOption()
 	{
-		let option = this.geneListOptions.find(option => option.value == this.store.geneQuery);
+		let option = this.geneListOptions.find(opt => opt.value == this.store.geneQuery);
 		return option ? option.value : '';
 	}
 
@@ -48,7 +48,6 @@ export default class GeneSetSelector extends React.Component<{}, {}>
 
 	render()
 	{
-
 		return (
 			<FlexCol padded overflow className={styles.GeneSetSelector}>
 				<h2>Enter Gene Set:</h2>
@@ -62,14 +61,14 @@ export default class GeneSetSelector extends React.Component<{}, {}>
 
 				<FlexRow padded>
 					<AsyncStatus promise={this.store.mutSigForSingleStudy}>
-						{!!expr(() => this.store.mutSigForSingleStudy.result.length) && (
+						{!!(this.store.mutSigForSingleStudy.result.length) && (
 							<button onClick={() => this.store.showMutSigPopup = true}>
 								Select from Recurrently Mutated Genes (MutSig)
 							</button>
 						)}
 					</AsyncStatus>
 					<AsyncStatus promise={this.store.gisticForSingleStudy}>
-						{!!expr(() => this.store.gisticForSingleStudy.result.length) && (
+						{!!(this.store.gisticForSingleStudy.result.length) && (
 							<button onClick={() => this.store.showGisticPopup = true}>
 								Select Genes from Recurrent CNAs (Gistic)
 							</button>
