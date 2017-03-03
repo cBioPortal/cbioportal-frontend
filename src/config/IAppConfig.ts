@@ -9,5 +9,5 @@ export interface IAppConfig {
 }
 
 export type PriorityStudies = {
-	[category:string]: string[]
+    [category:string]: string[]
 };
