@@ -114,6 +114,7 @@
     "react-clipboard.js": "^1.0.1",
     "react-collapse": "^2.3.3",
     "react-dom": "^15.4.2",
+    "react-draggable": "^2.2.3",
     "react-file-download": "^0.3.2",
     "react-fontawesome": "^1.5.0",
     "react-height": "^2.2.0",

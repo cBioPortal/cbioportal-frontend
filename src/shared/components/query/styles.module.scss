@@ -364,6 +364,7 @@ div.GisticGeneSelectorWindow {
     flex: 1;
 
     div.header.amp.del {
+      float: left;
       display: flex;
       flex-direction: column;
 
@@ -377,13 +378,17 @@ div.GisticGeneSelectorWindow {
 
     div.gisticTable {
       margin: 10px 0;
-      max-height: 525px;
+      max-height: 400px;
       overflow: auto;
       :global(.table) {
         margin: 0;
+        & > thead > tr > th {
+          font-size: 13px;
+        }
         & > tbody > tr > td {
           vertical-align: middle;
           padding: 3px 10px;
+          font-size: 12px;
 
           .amp {
             height: 1em;

@@ -8,6 +8,7 @@ div.PopupWindow {
   flex-direction: column;
 }
 div.titleBar {
+  cursor: move;
   padding: 4px;
   display: flex;
   align-items: center;

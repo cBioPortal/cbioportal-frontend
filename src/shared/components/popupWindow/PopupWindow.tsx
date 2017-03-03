@@ -2,6 +2,7 @@ import * as React from 'react';
 import * as styles_any from './styles.module.scss';
 import classNames from "../../lib/classNames";
 import FontAwesome from "react-fontawesome";
+import ReactDraggable from 'react-draggable';
 
 const styles = styles_any as {
 	PopupWindow: string,
@@ -34,19 +35,21 @@ export default class PopupWindow extends React.Component<IPopupWindowProps, IPop
 		let {className, windowTitle, onClickClose, ...props} = this.props;
 
 		return (
-			<div {...props} className={classNames(className, styles.PopupWindow)}>
-				<div className={styles.titleBar}>
-					<span className={styles.windowTitle}>
-						{windowTitle}
-					</span>
-					<div className={styles.closeButton} onClick={onClickClose}>
-						<FontAwesome className={styles.icon} name="times"/>
+			<ReactDraggable bounds="body" handle={'.' + styles.titleBar} cancel={'.' + styles.closeButton}>
+				<div {...props} className={classNames(className, styles.PopupWindow)}>
+					<div className={styles.titleBar}>
+						<span className={styles.windowTitle}>
+							{windowTitle}
+						</span>
+						<div className={styles.closeButton} onClick={onClickClose}>
+							<FontAwesome className={styles.icon} name="times"/>
+						</div>
+					</div>
+					<div className={styles.content}>
+						{this.props.children}
 					</div>
 				</div>
-				<div className={styles.content}>
-					{this.props.children}
-				</div>
-			</div>
+			</ReactDraggable>
 		);
 	}
 }
