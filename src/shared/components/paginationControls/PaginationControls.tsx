@@ -1,11 +1,13 @@
 import * as React from 'react';
-import {Button, ButtonGroup, FormGroup, FormControl, InputGroup} from 'react-bootstrap';
-import styles from "./tablePaginationControls.module.scss";
-import { If } from 'react-if';
+import {Button, ButtonGroup, FormGroup, FormControl} from 'react-bootstrap';
+import styles from "./paginationControls.module.scss";
+import { If, Then, Else } from 'react-if';
+import {observable} from "mobx";
+import {observer} from "mobx-react";
 
 const SHOW_ALL_PAGE_SIZE = -1;
 
-export interface ITablePaginationControlsProps {
+export interface IPaginationControlsProps {
     currentPage?:number;
     itemsPerPage?:number;
     itemsPerPageOptions?:number[];
@@ -18,22 +20,24 @@ export interface ITablePaginationControlsProps {
     showFirstPage?:boolean;
     showLastPage?:boolean;
     showItemsPerPageSelector?:boolean;
-    onChangeItemsPerPage?:(itemsPerPage:number)=>any;
-    onFirstPageClick?:()=>any;
-    onPreviousPageClick?:()=>any;
-    onNextPageClick?:()=>any;
-    onLastPageClick?:()=>any;
+    onChangeItemsPerPage?:(itemsPerPage:number)=>void;
+    onFirstPageClick?:()=>void;
+    onPreviousPageClick?:()=>void;
+    onNextPageClick?:()=>void;
+    onLastPageClick?:()=>void;
+    onChangeCurrentPage?:(newPage:number)=>void;
     className?:string;
     marginLeft?: number;
     firstPageDisabled?:boolean;
     previousPageDisabled?:boolean;
     nextPageDisabled?:boolean;
     lastPageDisabled?:boolean;
+    pageNumberEditable?:boolean;
 }
 
-export class TablePaginationControls extends React.Component<ITablePaginationControlsProps, {}> {
+@observer
+export class PaginationControls extends React.Component<IPaginationControlsProps, {}> {
     public static defaultProps = {
-        currentPage: 1,
         itemsPerPage: SHOW_ALL_PAGE_SIZE,
         itemsPerPageOptions: [10, 25, 50, 100],
         showAllOption: true,
@@ -45,24 +49,66 @@ export class TablePaginationControls extends React.Component<ITablePaginationCon
         showItemsPerPageSelector:true,
         showFirstPage:false,
         showLastPage:false,
-        onChangeItemsPerPage: ()=>0,
-        onFirstPageClick:()=>0,
-        onPreviousPageClick: ()=>0,
-        onNextPageClick: ()=>0,
-        onLastPageClick: ()=>0,
         className: "",
         marginLeft: 5,
         previousPageDisabled:false,
-        nextPageDisabled:false
+        nextPageDisabled:false,
+        pageNumberEditable: false
     };
 
-    constructor(props:ITablePaginationControlsProps) {
+    constructor(props:IPaginationControlsProps) {
         super(props);
         this.handleChangeItemsPerPage = this.handleChangeItemsPerPage.bind(this);
+        this.handleChangeCurrentPage = this.handleChangeCurrentPage.bind(this);
+        this.handleOnBlur = this.handleOnBlur.bind(this);
+    }
+
+    private pageNumberInput: HTMLSpanElement;
+
+    private jumpToPage() {
+
+        if (this.props.onChangeCurrentPage) {
+            this.props.onChangeCurrentPage(parseInt(this.pageNumberInput.innerText, 10));
+        }
+
+        this.pageNumberInput.innerText = (this.props.currentPage as number).toString();
     }
 
     handleChangeItemsPerPage(evt:React.FormEvent<HTMLSelectElement>) {
-        (this.props.onChangeItemsPerPage || (()=>0))(parseInt((evt.target as HTMLSelectElement).value,10));
+
+        if (this.props.onChangeItemsPerPage) {
+            this.props.onChangeItemsPerPage(parseInt((evt.target as HTMLSelectElement).value,10));
+        }
+    }
+
+    handleChangeCurrentPage(evt:React.KeyboardEvent<HTMLSpanElement>) {
+
+        const newKey = evt.key;
+
+        if (newKey === "Enter") {
+            evt.preventDefault();
+            evt.currentTarget.blur();
+            return;
+        }
+
+        if (evt.currentTarget.innerText.length === 3) {
+            evt.preventDefault();
+            return;
+        }
+
+        const regex = /^\d$/;
+        if(!regex.test(newKey)) {
+            evt.preventDefault();
+        }
+    }
+
+    handleOnBlur(evt:React.FocusEvent<HTMLSpanElement>) {
+
+        if (evt.currentTarget.innerText.length > 0) {
+            this.jumpToPage();
+        } else {
+            evt.currentTarget.innerText = (this.props.currentPage as number).toString();
+        }
     }
 
     render() {
@@ -82,9 +128,25 @@ export class TablePaginationControls extends React.Component<ITablePaginationCon
                     <Button key="prevPageBtn" disabled={!!this.props.previousPageDisabled} onClick={this.props.onPreviousPageClick}>
                         {this.props.previousButtonContent}
                     </Button>
-                    <Button key="textBetweenButtons" className={styles["auto-cursor"]} disabled={true}>
+
+                    <span
+                        key="textBetweenButtons"
+                        className={styles["default-cursor"] + " btn btn-default disabled"}
+                    >
+                        <If condition={this.props.pageNumberEditable}>
+                            <span
+                                ref={input => this.pageNumberInput = input}
+                                className={styles["page-number-input"]}
+                                contentEditable={true}
+                                onKeyPress={this.handleChangeCurrentPage as React.KeyboardEventHandler<any>}
+                                onBlur={this.handleOnBlur as React.FocusEventHandler<any>}
+                            >
+                                {this.props.currentPage}
+                            </span>
+                        </If>
                         {this.props.textBetweenButtons}
-                    </Button>
+                    </span>
+
                     <Button key="nextPageBtn" disabled={!!this.props.nextPageDisabled} onClick={this.props.onNextPageClick}>
                         {this.props.nextButtonContent}
                     </Button>
@@ -111,4 +173,4 @@ export class TablePaginationControls extends React.Component<ITablePaginationCon
     }
 }
 
-export default TablePaginationControls;
+export default PaginationControls;
