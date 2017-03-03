@@ -156,7 +156,7 @@ export class QueryStore
 
 	@observable caseIdsMode:'sample'|'patient' = 'sample';
 
-	@observable geneQuery = '9 99 CFD FD FF DD';
+	@observable geneQuery = '';
 
 
 	////////////////////////////////////////////////////////////////////////////////

@@ -30,7 +30,7 @@ export default class PageHeader extends React.Component<IPageHeaderProps, void> 
                         </div>
                     </form>
                     <LabeledCheckbox checked={devMode.enabled} onChange={event => devMode.enabled = event.target.checked}>
-                        Show work in progress
+                        Enable debug mode
                     </LabeledCheckbox>
                 </div>
             </header>

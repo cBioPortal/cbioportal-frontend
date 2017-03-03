@@ -69,10 +69,9 @@ export default class HomePage extends React.Component<IHomePageProps, IHomePageS
 							<FlexRow padded overflow>
 								<span>Tree depth:</span>
 								<ReactSelect
-
 									value={this.store.maxTreeDepth}
 									options={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(value => ({value, label: value + ''}))}
-									onChange={(option:{value:number}) => this.store.maxTreeDepth = option.value}
+									onChange={option => this.store.maxTreeDepth = option ? option.value : 0}
 								/>
 							</FlexRow>
 							<span>Note: Use cmd+click to select/deselect multiple cancer types.</span>

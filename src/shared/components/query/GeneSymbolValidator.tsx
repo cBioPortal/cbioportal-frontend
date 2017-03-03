@@ -112,7 +112,6 @@ export default class GeneSymbolValidator extends React.Component<{}, {}>
 			label: gene.hugoGeneSymbol,
 			value: gene.hugoGeneSymbol
 		}));
-		let onChange = (option:{value:string}) => this.store.replaceGene(alias, option.value);
 		return (
 			<div key={key} className={styles.suggestionBubble} title={title}>
 				<FontAwesome className={styles.icon} name='question'/>
@@ -122,7 +121,7 @@ export default class GeneSymbolValidator extends React.Component<{}, {}>
 					className={styles.ReactSelect}
 					placeholder='select a symbol'
 					options={options}
-					onChange={onChange}
+					onChange={option => option && this.store.replaceGene(alias, option.value)}
 					autosize
 				/>
 			</div>

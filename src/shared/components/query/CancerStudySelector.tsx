@@ -161,7 +161,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 		return (
 			<FlexCol overflow className={styles.CancerStudySelector}>
 				<FlexRow padded overflow className={styles.selectCancerStudyRow}>
-					<h2>Select Studies</h2>
+					<h2>Select Studies:</h2>
 					<span 
 						onClick={() => {
 							if (this.store.selectedStudyIds.length)
@@ -188,7 +188,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 							this.store.searchText = searchText;
 							this.store.selectedCancerTypeIds = [];
 						}}
-						onChange={(option:{value:string}) => {
+						onChange={option => {
 							this.store.searchText = option ? option.value || '' : '';
 							this.store.selectedCancerTypeIds = [];
 						}}

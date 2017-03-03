@@ -18,6 +18,16 @@
   }
 }
 
+.CancerStudySelector,
+.GeneticProfileSelector,
+.DataTypePrioritySelector,
+.SampleListSelector,
+.GeneSetSelector {
+  border: 1px solid rgb(170, 170, 170);
+  border-radius: 10px;
+  padding: 10px;
+}
+
 .CancerStudySelector {
   position: relative;
   overflow: hidden;
@@ -226,10 +236,6 @@
 }
 
 .GeneticProfileSelector {
-  border: 1px solid rgb(170, 170, 170);
-  border-radius: 10px;
-  padding: 10px;
-
   div.singleCheckbox,
   div.groupCheckbox {
     margin-left: 20px;
@@ -267,28 +273,17 @@
 }
 
 .DataTypePrioritySelector {
-  border: 1px solid rgb(170, 170, 170);
-  border-radius: 10px;
-  padding: 10px;
   h2 {
     flex-grow: 0;
   }
 }
 
 .SampleListSelector {
-  border: 1px solid rgb(170, 170, 170);
-  border-radius: 10px;
-  padding: 10px;
-
   .ReactSelect {
   }
 }
 
 .GeneSetSelector {
-  border: 1px solid rgb(170, 170, 170);
-  border-radius: 10px;
-  padding: 10px;
-
   .ReactSelect {
   }
 

@@ -121,7 +121,7 @@ export default class GisticGeneSelector extends React.Component<GisticGeneSelect
 			'qValue': {
 				priority: 6,
 				dataField: 'qValue',
-				name: "Q Value",
+				name: "Q-Value",
 				sortable: true,
 				filterable: true,
 				formatter: ({name, rowData: gistic, columnData: value}: IColumnFormatterData<Gistic>) => (
@@ -135,7 +135,7 @@ export default class GisticGeneSelector extends React.Component<GisticGeneSelect
 		let reactTableProps: TableProps = {
 			className: "table table-striped table-border-top",
 			hideFilterInput: true,
-			defaultSort: 'Q Value',
+			defaultSort: columns.qValue.name,
 		};
 
 		let headerControlsProps: ITableHeaderControlsProps = {

@@ -10,6 +10,7 @@ import {IColumnFormatterData} from "../enhancedReactTable/IColumnFormatter";
 import {IColumnDefMap, IEnhancedReactTableProps} from "../enhancedReactTable/IEnhancedReactTableProps";
 import {ITableHeaderControlsProps} from "../tableHeaderControls/TableHeaderControls";
 import {Table, Td, TableProps} from 'reactable';
+import {toPrecision} from "../../lib/FormatUtils";
 
 const styles = styles_any as {
 	MutSigGeneSelector: string,
@@ -58,25 +59,30 @@ export default class MutSigGeneSelector extends React.Component<MutSigGeneSelect
 	{
 		let columns:IColumnDefMap = {
 			'hugoGeneSymbol': {
+				priority: 1,
 				dataField: 'hugoGeneSymbol',
 				name: "Gene Symbol",
-				priority: 1,
 				sortable: true,
-				filterable: true
+				filterable: true,
 			},
 			'numberOfMutations': {
+				priority: 2,
 				dataField: 'numberOfMutations',
 				name: "Num Mutations",
-				priority: 2,
 				sortable: true,
-				filterable: true
+				filterable: true,
 			},
 			'qValue': {
+				priority: 3,
 				dataField: 'qValue',
 				name: "Q-Value",
-				priority: 3,
 				sortable: true,
-				filterable: true
+				filterable: true,
+				formatter: ({name, columnData: value}: IColumnFormatterData<MutSig>) => (
+					<Td key={name} column={name} value={value}>
+						{toPrecision(value, 2, 0.1)}
+					</Td>
+				),
 			},
 			'selected': {
 				name: "Selected",
@@ -103,13 +109,14 @@ export default class MutSigGeneSelector extends React.Component<MutSigGeneSelect
 					</Td>
 				),
 				sortable: false,
-				filterable: false
+				filterable: false,
 			},
 		};
 
 		let reactTableProps:TableProps = {
 			className: "table table-striped table-border-top",
-			hideFilterInput:true
+			hideFilterInput:true,
+			defaultSort: columns.qValue.name,
 		};
 
 		let headerControlsProps:ITableHeaderControlsProps = {

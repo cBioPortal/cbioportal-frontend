@@ -44,7 +44,7 @@ export default class GeneSetSelector extends React.Component<{}, {}>
 					className={styles.ReactSelect}
 					value={this.store.geneQuery}
 					options={options}
-					onChange={(option:{value:string}) => this.store.geneQuery = option.value}
+					onChange={option => this.store.geneQuery = option ? option.value : ''}
 				/>
 
 				<FlexRow padded>

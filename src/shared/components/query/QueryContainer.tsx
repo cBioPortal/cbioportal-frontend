@@ -11,7 +11,6 @@ import * as styles_any from './styles.module.scss';
 import GeneticProfileSelector from "./GeneticProfileSelector";
 import {observer} from "mobx-react";
 import queryStore from "./QueryStore";
-import devMode from "../../lib/devMode";
 import DataTypePrioritySelector from "./DataTypePrioritySelector";
 import GeneSetSelector from "./GeneSetSelector";
 import SampleListSelector from "./SampleListSelector";
@@ -59,23 +58,21 @@ export default class QueryContainer extends React.Component<{}, {}>
 			<FlexCol padded overflow className={styles.QueryContainer}>
 				<CancerStudySelector/>
 
-				{!!(devMode.enabled && this.store.singleSelectedStudyId) && (
+				{!!(this.store.singleSelectedStudyId) && (
 					<GeneticProfileSelector/>
 				)}
 
-				{!!(devMode.enabled && this.store.singleSelectedStudyId) && (
+				{!!(this.store.singleSelectedStudyId) && (
 					<SampleListSelector/>
 				)}
 
-				{!!(devMode.enabled && !this.store.singleSelectedStudyId) && (
+				{!!(!this.store.singleSelectedStudyId) && (
 					<DataTypePrioritySelector/>
 				)}
 
-				{!!(devMode.enabled) && (
-					<GeneSetSelector/>
-				)}
+				<GeneSetSelector/>
 
-				{!!(devMode.enabled && this.store.showMutSigPopup) && (
+				{!!(this.store.showMutSigPopup) && (
 					<PopupWindow
 						className={styles.MutSigGeneSelectorWindow}
 						windowTitle="Recurrently Mutated Genes"
@@ -92,7 +89,7 @@ export default class QueryContainer extends React.Component<{}, {}>
 					</PopupWindow>
 				)}
 
-				{!!(devMode.enabled && this.store.showGisticPopup) && (
+				{!!(this.store.showGisticPopup) && (
 					<PopupWindow
 						className={styles.GisticGeneSelectorWindow}
 						windowTitle="Recurrent Copy Number Alterations (Gistic)"
@@ -109,11 +106,9 @@ export default class QueryContainer extends React.Component<{}, {}>
 					</PopupWindow>
 				)}
 
-				{!!(devMode.enabled) && (
-					<button className={styles.SubmitButton}>
-						Submit
-					</button>
-				)}
+				<button className={styles.SubmitButton}>
+					Submit
+				</button>
 			</FlexCol>
         );
     }

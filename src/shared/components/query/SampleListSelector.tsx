@@ -43,7 +43,7 @@ export default class SampleListSelector extends React.Component<{}, {}>
 					className={styles.ReactSelect}
 					value={this.store.selectedSampleListId}
 					options={options}
-					onChange={(option:{value:string}) => this.store.selectedSampleListId = option.value}
+					onChange={option => this.store.selectedSampleListId = option ? option.value : undefined}
 				/>
 				<a href={`/study?id=${this.store.singleSelectedStudyId}`}>To build your own case set, try out our enhanced Study View.</a>
 
