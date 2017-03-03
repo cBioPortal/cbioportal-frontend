@@ -11,9 +11,3 @@ declare module 'redux-seamless-immutable';
 declare module 'render-if';
 declare module 'react-if';
 declare module 'webpack-raphael';
-
-// these types seem to be broken
-declare module 'react-router';
-declare module 'react-redux';
-declare module 'react-spinkit';
-declare module 'reselect';
