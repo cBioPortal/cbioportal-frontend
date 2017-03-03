@@ -3,6 +3,7 @@ import queryStore from "./QueryStore";
 import * as styles_any from './styles.module.scss';
 import ReactSelect from 'react-select';
 import {observer} from "mobx-react";
+import {computed, expr} from 'mobx';
 import {FlexRow, FlexCol} from "../flexbox/FlexBox";
 import gene_lists from './gene_lists';
 import GeneSymbolValidator from "./GeneSymbolValidator";
@@ -25,16 +26,28 @@ export default class GeneSetSelector extends React.Component<{}, {}>
 		return queryStore;
 	}
 
+	@computed get selectedGeneListOption()
+	{
+		let option = this.geneListOptions.find(option => option.value == this.store.geneQuery);
+		return option ? option.value : '';
+	}
+
+	@computed get geneListOptions()
+	{
+		return [
+			{
+				label: 'User-defined List',
+				value: ''
+			},
+			...gene_lists.map(item => ({
+				label: `${item.id} (${item.genes.length} genes)`,
+				value: item.genes.join(' ')
+			}))
+		];
+	}
+
 	render()
 	{
-		let options = gene_lists.map(item => ({
-			label: `${item.id} (${item.genes.length} genes)`,
-			value: item.genes.join(' ')
-		}));
-		options = [{
-			label: 'User-defined List',
-			value: ''
-		}].concat(options);
 
 		return (
 			<FlexCol padded overflow className={styles.GeneSetSelector}>
@@ -42,21 +55,21 @@ export default class GeneSetSelector extends React.Component<{}, {}>
 				<a href='/onco_query_lang_desc.jsp'>Advanced: Onco Query Language (OQL)</a>
 				<ReactSelect
 					className={styles.ReactSelect}
-					value={this.store.geneQuery}
-					options={options}
+					value={this.selectedGeneListOption}
+					options={this.geneListOptions}
 					onChange={option => this.store.geneQuery = option ? option.value : ''}
 				/>
 
 				<FlexRow padded>
 					<AsyncStatus promise={this.store.mutSigForSingleStudy}>
-						{!!(this.store.mutSigForSingleStudy.result.length) && (
+						{!!expr(() => this.store.mutSigForSingleStudy.result.length) && (
 							<button onClick={() => this.store.showMutSigPopup = true}>
 								Select from Recurrently Mutated Genes (MutSig)
 							</button>
 						)}
 					</AsyncStatus>
 					<AsyncStatus promise={this.store.gisticForSingleStudy}>
-						{!!(this.store.gisticForSingleStudy.result.length) && (
+						{!!expr(() => this.store.gisticForSingleStudy.result.length) && (
 							<button onClick={() => this.store.showGisticPopup = true}>
 								Select Genes from Recurrent CNAs (Gistic)
 							</button>
