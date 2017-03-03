@@ -1,6 +1,6 @@
 import React from 'react';
 import { assert } from 'chai';
-import { shallow, mount } from 'enzyme';
+import { shallow, mount, ReactWrapper } from 'enzyme';
 import sinon from 'sinon';
 import ClinicalInformationContainer from './ClinicalInformationContainer';
 import Spinner from 'react-spinkit';
@@ -10,10 +10,10 @@ import FixedDataTableExample from './ClinicalInformationSamplesTable';
 
 const ComponentUnderTest = ClinicalInformationContainer;
 
-const stubComponent = function (componentClass) {
-    let originalPropTypes;
+function stubComponent(componentClass:React.ComponentClass<any>) {
+    let originalPropTypes:React.ValidationMap<any> | undefined;
 
-    let renderStub;
+    let renderStub:sinon.SinonStub;
 
     beforeEach(() => {
         originalPropTypes = componentClass.propTypes;
@@ -37,7 +37,7 @@ const stubComponent = function (componentClass) {
 };
 
 describe('ClinicalInformationContainer', () => {
-    let comp, props, buildTabsStub;
+    let comp:ReactWrapper<any, any>, props, buildTabsStub;
 
     before(() => {
 
