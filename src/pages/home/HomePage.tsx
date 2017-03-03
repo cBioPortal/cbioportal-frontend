@@ -71,7 +71,7 @@ export default class HomePage extends React.Component<IHomePageProps, IHomePageS
 								<ReactSelect
 
 									value={this.store.maxTreeDepth}
-									options={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => ({value: n, label: n}))}
+									options={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(value => ({value, label: value + ''}))}
 									onChange={(option:{value:number}) => this.store.maxTreeDepth = option.value}
 								/>
 							</FlexRow>
