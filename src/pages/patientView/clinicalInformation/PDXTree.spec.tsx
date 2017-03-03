@@ -1,6 +1,6 @@
-import expect from 'expect';
+import { expect } from 'chai';
 import React from 'react';
-import { PDXTree, getTreeNodesFromClinicalData } from './PDXTree';
+//import { PDXTree, getTreeNodesFromClinicalData } from './PDXTree';
 
 // describe('Tree component', () => {
 //   it('should convert clinical data from cBioPortal to Tree input data', () => {
