@@ -15,6 +15,8 @@ import {IndicatorQueryResp} from "shared/api/generated/OncoKbAPI";
 import {labelMobxPromises} from "../../../shared/api/MobxPromise";
 import MrnaExprRankCache from './MrnaExprRankCache';
 import DebouncingCache from "./DebouncingCache";
+import request from 'superagent';
+import AppConfig from 'appConfig';
 
 type PageMode = 'patient' | 'sample';
 
@@ -27,6 +29,22 @@ export function groupByEntityId(clinicalDataArray: Array<ClinicalData>)
             id: k,
         })
     );
+}
+
+export async function checkForTissueImage(patientId: string) : Promise<boolean> {
+
+    if (/TCGA/.test(patientId) === false) {
+        return false;
+    } else {
+
+        let resp = await request.get(AppConfig.tissueImageCheckUrl + patientId);
+
+        let matches = resp.text.match(/<data total_count='([0-9]+)'>/);
+
+        // if the count is greater than 0, there is a slide for this patient
+        return ( (!!matches && parseInt(matches[1],10)) > 0 );
+    }
+
 }
 
 /*
@@ -75,6 +93,7 @@ export class PatientViewPageStore
     }
 
     @observable.ref private visibleRows:Mutation[][] = [];
+
     public nameCache:DebouncingCache;
 
     @observable private _patientId = '';
@@ -187,7 +206,6 @@ export class PatientViewPageStore
     },{});
 
     readonly geneticProfilesInStudy = remoteData(() => {
-        console.log("here",this.studyId);
         return client.getAllGeneticProfilesInStudyUsingGET({
             studyId: this.studyId
         })
@@ -251,6 +269,18 @@ export class PatientViewPageStore
         }
 
     });
+
+
+    readonly hasTissueImageIFrameUrl = remoteData({
+        await: () => [
+            this.derivedPatientId
+        ],
+        invoke: async () => {
+
+            return checkForTissueImage(this.patientId);
+
+        }
+    }, false);
 
     readonly mutationData = remoteData({
         await: () => [
