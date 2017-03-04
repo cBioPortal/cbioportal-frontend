@@ -3,13 +3,12 @@ import * as React from 'react';
 import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
 import * as styles_any from './styles.module.scss';
 import {action, ObservableMap, expr, toJS, computed, observable} from "mobx";
-import {observer} from "mobx-react";
+import {observer, Observer} from "mobx-react";
 import EnhancedReactTable from "../enhancedReactTable/EnhancedReactTable";
 import {MutSig} from "../../api/generated/CBioPortalAPIInternal";
 import {IColumnFormatterData} from "../enhancedReactTable/IColumnFormatter";
-import {IColumnDefMap, IEnhancedReactTableProps} from "../enhancedReactTable/IEnhancedReactTableProps";
-import {ITableHeaderControlsProps} from "../tableHeaderControls/TableHeaderControls";
-import {Table, Td, TableProps} from 'reactable';
+import {IColumnDefMap} from "../enhancedReactTable/IEnhancedReactTableProps";
+import {Td} from 'reactable';
 import {toPrecision} from "../../lib/FormatUtils";
 
 const styles = styles_any as {
@@ -55,70 +54,75 @@ export default class MutSigGeneSelector extends React.Component<MutSigGeneSelect
 			this.map_geneSymbol_selected.set(gene, selected);
 	}
 
-	render()
-	{
-		let columns:IColumnDefMap = {
-			'hugoGeneSymbol': {
-				priority: 1,
-				dataField: 'hugoGeneSymbol',
-				name: "Gene Symbol",
-				sortable: true,
-				filterable: true,
-			},
-			'numberOfMutations': {
-				priority: 2,
-				dataField: 'numberOfMutations',
-				name: "Num Mutations",
-				sortable: true,
-				filterable: true,
-			},
-			'qValue': {
-				priority: 3,
-				dataField: 'qValue',
-				name: "Q-Value",
-				sortable: true,
-				filterable: true,
-				formatter: ({name, columnData: value}: IColumnFormatterData<MutSig>) => (
-					<Td key={name} column={name} value={value}>
-						{toPrecision(value, 2, 0.1)}
-					</Td>
-				),
-			},
-			'selected': {
-				name: "Selected",
-				priority: 4,
-				header: (
-					<div className={styles.selectionColumnHeader}>
-						<span>All</span>
+	private columns:IColumnDefMap = {
+		'hugoGeneSymbol': {
+			priority: 1,
+			dataField: 'hugoGeneSymbol',
+			name: "Gene Symbol",
+			sortable: true,
+			filterable: true,
+		},
+		'numberOfMutations': {
+			priority: 2,
+			dataField: 'numberOfMutations',
+			name: "Num Mutations",
+			sortable: true,
+			filterable: true,
+		},
+		'qValue': {
+			priority: 3,
+			dataField: 'qValue',
+			name: "Q-Value",
+			sortable: true,
+			filterable: true,
+			formatter: ({name, columnData: value}: IColumnFormatterData<MutSig>) => (
+				<Td key={name} column={name} value={value}>
+					{toPrecision(value, 2, 0.1)}
+				</Td>
+			),
+		},
+		'selected': {
+			name: "Selected",
+			priority: 4,
+			sortable: false,
+			filterable: false,
+			header: (
+				<div className={styles.selectionColumnHeader}>
+					<span>All</span>
+					<Observer children={() => (
 						<LabeledCheckbox
 							checked={this.selectedGenes.length > 0}
 							indeterminate={this.selectedGenes.length > 0 && this.selectedGenes.length < this.allGenes.length}
-							inputProps={{
-								onChange: event => this.selectAll((event.target as HTMLInputElement).checked)
-							}}
+							onChange={event => this.selectAll(event.target.checked)}
 						/>
-					</div>
-				),
-				formatter: ({name, rowData: mutSig}:IColumnFormatterData<MutSig>) => (
-					<Td key={name} column={name}>
-						{!!(mutSig) && (
-							<div className={styles.selectionColumnCell}>
-								<ObservableMapCheckbox map={this.map_geneSymbol_selected} mapKey={mutSig.hugoGeneSymbol}/>
-							</div>
-						)}
-					</Td>
-				),
-				sortable: false,
-				filterable: false,
-			},
-		};
+					)}/>
+				</div>
+			),
+			formatter: ({name, rowData: mutSig}:IColumnFormatterData<MutSig>) => (
+				<Td key={name} column={name}>
+					{!!(mutSig) && (
+						<div className={styles.selectionColumnCell}>
+							<Observer children={() => (
+								<LabeledCheckbox
+									checked={!!this.map_geneSymbol_selected.get(mutSig.hugoGeneSymbol)}
+									onChange={event => this.map_geneSymbol_selected.set(mutSig.hugoGeneSymbol, event.target.checked)}
+								/>
+							)}/>
+						</div>
+					)}
+				</Td>
+			),
+		},
+	};
 
+	render()
+	{
 		return (
 			<div className={styles.MutSigGeneSelector}>
 				<MutSigTable
 					itemsName="genes"
 					initItemsPerPage={10}
-					columns={columns}
+					columns={this.columns}
 					rawData={this.props.data}
 					headerControlsProps={{
 						showCopyAndDownload: false,
@@ -128,31 +132,13 @@ export default class MutSigGeneSelector extends React.Component<MutSigGeneSelect
 					reactTableProps={{
 						className: "table table-striped table-border-top",
 						hideFilterInput:true,
-						defaultSort: columns.qValue.name,
+						defaultSort: this.columns.qValue.name,
 					}}
 				/>
 				<button className={styles.selectButton} onClick={() => this.props.onSelect(this.map_geneSymbol_selected)}>
 					Select
 				</button>
 			</div>
-		);
-	}
-}
-
-@observer
-class ObservableMapCheckbox extends React.Component<{map:ObservableMap<boolean>, mapKey:string, children?: React.ReactNode}, {}>
-{
-	render()
-	{
-		return (
-			<LabeledCheckbox
-				checked={!!this.props.map.get(this.props.mapKey)}
-				inputProps={{
-					onChange: event => this.props.map.set(this.props.mapKey, (event.target as HTMLInputElement).checked)
-				}}
-			>
-				{this.props.children}
-			</LabeledCheckbox>
 		);
 	}
 }

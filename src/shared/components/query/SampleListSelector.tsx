@@ -41,8 +41,6 @@ export default class SampleListSelector extends React.Component<{}, {}>
 		if (!this.store.singleSelectedStudyId)
 			return null;
 
-		const CaseIdsModeRadio = this.CaseIdsModeRadio;
-
 		return (
 			<div className={styles.SampleListSelector}>
 				<h2>Select Patient/Case Set:</h2>
@@ -64,8 +62,8 @@ export default class SampleListSelector extends React.Component<{}, {}>
 							value={this.store.caseIds}
 							onChange={event => this.store.caseIds = event.currentTarget.value}
 						/>
-						<CaseIdsModeRadio label='By sample ID' state='sample'/>
-						<CaseIdsModeRadio label='By patient ID' state='patient'/>
+						<this.CaseIdsModeRadio label='By sample ID' state='sample'/>
+						<this.CaseIdsModeRadio label='By patient ID' state='patient'/>
 					</FlexCol>
 				)}
 			</div>

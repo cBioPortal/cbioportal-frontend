@@ -24,13 +24,12 @@ export default class DataTypePrioritySelector extends React.Component<{}, {}>
 		if (this.store.singleSelectedStudyId)
 			return null;
 
-		const {DataTypePriorityRadio} = this;
 		return (
 			<FlexRow padded className={styles.DataTypePrioritySelector}>
 				<h2>Select Data Type Priority:</h2>
-				<DataTypePriorityRadio label='Mutation and CNA' state={{mutation: true, cna: true}}/>
-				<DataTypePriorityRadio label='Only Mutation' state={{mutation: true, cna: false}}/>
-				<DataTypePriorityRadio label='Only CNA' state={{mutation: false, cna: true}}/>
+				<this.DataTypePriorityRadio label='Mutation and CNA' state={{mutation: true, cna: true}}/>
+				<this.DataTypePriorityRadio label='Only Mutation' state={{mutation: true, cna: false}}/>
+				<this.DataTypePriorityRadio label='Only CNA' state={{mutation: false, cna: true}}/>
 			</FlexRow>
 		);
 	}
@@ -42,7 +41,7 @@ export default class DataTypePrioritySelector extends React.Component<{}, {}>
 					type="radio"
 					checked={_.isEqual(toJS(this.store.dataTypePriority), props.state)}
 					onChange={event => {
-						if ((event.target as HTMLInputElement).checked)
+						if (event.currentTarget.checked)
 							this.store.dataTypePriority = props.state;
 					}}
 				/>

@@ -1,11 +1,9 @@
 import * as React from 'react';
 import * as styles_any from './styles.module.scss';
 import {ObservableMap, expr, toJS, computed, observable} from "mobx";
-import {observer} from "mobx-react";
+import {observer, Observer} from "mobx-react";
 import {Gistic} from "../../api/generated/CBioPortalAPIInternal";
 import EnhancedReactTable from "../enhancedReactTable/EnhancedReactTable";
-import {ITableHeaderControlsProps} from "../tableHeaderControls/TableHeaderControls";
-import {TableProps} from "reactable";
 import {IColumnFormatterData} from "../enhancedReactTable/IColumnFormatter";
 import {Td} from "reactable";
 import classNames from "../../lib/classNames";
@@ -17,7 +15,7 @@ const styles = styles_any as {
 	GisticGeneSelector: string,
 	gisticTable: string,
 	GisticGeneToggles: string,
-	GeneToggle: string,
+	geneToggle: string,
 	selected: string,
 	notSelected: string,
 	simulateHovered: string,
@@ -32,9 +30,7 @@ const styles = styles_any as {
 
 const DEFAULT_NUM_GENES_SHOWN = 5;
 
-class GisticTable extends EnhancedReactTable<Gistic>
-{
-}
+class GisticTable extends EnhancedReactTable<Gistic> { }
 
 export interface GisticGeneSelectorProps
 {
@@ -136,7 +132,7 @@ export default class GisticGeneSelector extends React.Component<GisticGeneSelect
 			<div className={styles.GisticGeneSelector}>
 				<span>
 					{'Click on a gene to '}
-					<span className={classNames(styles.GeneToggle, styles.selected, styles.simulateHovered)}>
+					<span className={classNames(styles.geneToggle, styles.selected, styles.simulateHovered)}>
 						{'select'}
 					</span>
 					{' it.'}
@@ -177,11 +173,18 @@ class GisticGeneToggles extends React.Component<{gistic?: Gistic, map_geneSymbol
 	renderGeneToggles(genes: string[])
 	{
 		return genes.map(gene => (
-			<GeneToggle
-				key={gene}
-				map_geneSymbol_selected={this.props.map_geneSymbol_selected}
-				geneSymbol={gene}
-			/>
+			<Observer children={() => {
+				let selected = !!this.props.map_geneSymbol_selected.get(gene);
+				return (
+					<span
+						key={gene}
+						className={classNames(styles.geneToggle, selected ? styles.selected : styles.notSelected)}
+						onClick={event => this.props.map_geneSymbol_selected.set(gene, !selected)}
+					>
+						{gene}
+					</span>
+				);
+			}}/>
 		));
 	}
 
@@ -204,23 +207,6 @@ class GisticGeneToggles extends React.Component<{gistic?: Gistic, map_geneSymbol
 					{this.showAll && this.renderGeneToggles(moreGenes)}
 				</div>
 			</div>
-		);
-	}
-}
-
-@observer
-class GeneToggle extends React.Component<{map_geneSymbol_selected: ObservableMap<boolean>, geneSymbol: string}, {}>
-{
-	render()
-	{
-		let selected = !!this.props.map_geneSymbol_selected.get(this.props.geneSymbol);
-		return (
-			<span
-				className={classNames(styles.GeneToggle, selected ? styles.selected : styles.notSelected)}
-				onClick={event => this.props.map_geneSymbol_selected.set(this.props.geneSymbol, !selected)}
-			>
-				{this.props.geneSymbol}
-			</span>
 		);
 	}
 }
