@@ -6,7 +6,7 @@ import * as $ from 'jquery';
 
 describe('test',()=>{
 
-    let targetEl;
+    let targetEl:HTMLDivElement | null;
 
     before(()=>{
         targetEl = document.createElement('div');
@@ -19,7 +19,7 @@ describe('test',()=>{
 
     it ('exposeComponentRenderer puts a function on window object. calling the function renders the passed component', ()=>{
 
-        class testClass extends React.Component {
+        class testClass extends React.Component<any, any> {
 
             render(){
 
@@ -31,11 +31,11 @@ describe('test',()=>{
 
         exposeComponentRenderer("renderTestComponent",testClass,{});
 
-        assert.isTrue(_.isFunction(window.renderTestComponent));
+        assert.isTrue(_.isFunction((window as any).renderTestComponent));
 
-        window.renderTestComponent(targetEl);
+        (window as any).renderTestComponent(targetEl);
 
-        assert.equal(targetEl.innerText, 'foo');
+        assert.equal(targetEl!.innerText, 'foo');
 
     });
 
