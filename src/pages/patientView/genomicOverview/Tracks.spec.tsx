@@ -1,5 +1,5 @@
 import mockData from './mockData.js';
-import { React } from 'react';
+import * as React from 'react';
 import Tracks from './Tracks';
 import { shallow, mount } from 'enzyme';
 import { assert } from 'chai';
