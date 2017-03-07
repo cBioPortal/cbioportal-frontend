@@ -256,6 +256,21 @@ export class PatientViewPageStore
 
     },[]);
 
+    readonly clinicalEvents = remoteData({
+
+        await:() => [
+           this.patientViewData
+        ],
+        invoke: async () => {
+
+            return await client.getAllClinicalEventsOfPatientInStudyUsingGET({
+                studyId:this.studyId, patientId:this.patientId, projection:'DETAILED'
+            })
+
+        }
+
+    }, []);
+
     readonly geneticProfileIdDiscrete = remoteData({
 
         await: () => [
