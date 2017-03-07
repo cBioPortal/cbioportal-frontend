@@ -7,13 +7,12 @@ import {
 import {ClinicalInformationData} from "../Connector";
 import client from "../../../shared/api/cbioportalClientInstance";
 import {computed, observable, action, reaction, autorun} from "mobx";
-import {keepAlive} from "mobx-utils";
 import oncokbClient from "../../../shared/api/oncokbClientInstance";
 import {remoteData} from "../../../shared/api/remoteData";
 import {IOncoKbData} from "../mutation/column/AnnotationColumnFormatter";
 import {generateQueryVariant, generateEvidenceQuery} from "../../../shared/lib/OncoKbUtils";
 import {IndicatorQueryResp} from "shared/api/generated/OncoKbAPI";
-import {labelMobxPromises} from "../../../shared/api/MobxPromise";
+import {labelMobxPromises, cached} from "mobxpromise";
 import MrnaExprRankCache from './MrnaExprRankCache';
 import request from 'superagent';
 import AppConfig from 'appConfig';
@@ -75,10 +74,6 @@ export class PatientViewPageStore
     constructor()
     {
         labelMobxPromises(this);
-
-        keepAlive(this, "variantCountCache");
-        keepAlive(this, "mrnaExprRankCache");
-        keepAlive(this, "discreteCNACache");
     }
 
     @observable private _patientId = '';
@@ -390,16 +385,16 @@ export class PatientViewPageStore
         this._patientId = newId;
     }
 
-    @computed get mrnaExprRankCache() {
+    @cached get mrnaExprRankCache() {
         return new MrnaExprRankCache(this.samples.result.map((s:Sample)=>s.sampleId),
                                     this.mrnaRankGeneticProfileId.result);
     }
 
-    @computed get variantCountCache() {
+    @cached get variantCountCache() {
         return new CohortVariantCountCache(this.mutationGeneticProfileId);
     }
 
-    @computed get discreteCNACache() {
+    @cached get discreteCNACache() {
         return new DiscreteCNACache(this.samples.result.map((s:Sample)=>s.sampleId),
                                     this.geneticProfileIdDiscrete.result);
     }
