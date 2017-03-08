@@ -18,15 +18,24 @@ import {default as DefaultProteinChangeColumnFormatter} from "../../../shared/co
 import {Protocol} from "_debugger";
 import MutationTypeColumnFormatter from "../../../shared/components/mutationTable/column/MutationTypeColumnFormatter";
 import MutationAssessorColumnFormatter from "../../../shared/components/mutationTable/column/MutationAssessorColumnFormatter";
+import {
+    ICosmicData,
+    default as CosmicColumnFormatter
+} from "../../../shared/components/mutationTable/column/CosmicColumnFormatter";
+import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
+import TumorColumnFormatter from "./column/TumorColumnFormatter";
+import SampleColumnFormatter from "../../../shared/components/mutationTable/column/SampleColumnFormatter";
 
 export type PatientViewMutationTableProps = {
     sampleManager:SampleManager | null;
     store:PatientViewPageStore;
     mutSigData?:MutSigData;
+    cosmicData?:ICosmicData;
     columns:MutationTableColumn[];
 }
 
 export enum MutationTableColumn {
+    SAMPLE_ID,
     TUMORS,
     GENE,
     PROTEIN_CHANGE,
@@ -40,11 +49,6 @@ export enum MutationTableColumn {
     MUTATION_TYPE,
     CENTER,
     TUMOR_ALLELE_FREQ,
-    TUMOR_ALT_COUNT,
-    TUMOR_REF_COUNT,
-    NORMAL_ALLELE_FREQ,
-    NORMAL_ALT_COUNT,
-    NORMAL_REF_COUNT,
     MUTATION_ASSESSOR,
     ANNOTATION,
     COSMIC,
@@ -339,6 +343,51 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
             },
             filter:(d:Mutation[], filterString:string)=>{
                 return (MutationAssessorColumnFormatter.filterValue(d).indexOf(filterString) > -1);
+            }
+        };
+
+        this._columns[MutationTableColumn.COSMIC] = {
+            name: "COSMIC",
+            render: (d:Mutation[])=>CosmicColumnFormatter.renderFunction(d, this.props.cosmicData),
+            sort:(d1:Mutation[], d2:Mutation[], ascending:boolean)=>{
+                return numberSort(CosmicColumnFormatter.getSortValue(d1, this.props.cosmicData),
+                                CosmicColumnFormatter.getSortValue(d2, this.props.cosmicData),
+                                ascending);
+            },
+            tooltip: (<span>COSMIC occurrences</span>)
+        };
+
+        this._columns[MutationTableColumn.TUMOR_ALLELE_FREQ] = {
+            name: "Allele Freq",
+            render: (d:Mutation[])=>AlleleFreqColumnFormatter.renderFunction(d, this.props.sampleManager),
+            sort:(d1:Mutation[], d2:Mutation[], ascending:boolean)=>{
+                return numberListSort(AlleleFreqColumnFormatter.getSortValue(d1, this.props.sampleManager),
+                                AlleleFreqColumnFormatter.getSortValue(d2, this.props.sampleManager),
+                                ascending);
+            },
+            tooltip:(<span>Variant allele frequency in the tumor sample</span>)
+        };
+
+        this._columns[MutationTableColumn.TUMORS] = {
+            name: "Tumors",
+            render:(d:Mutation[])=>TumorColumnFormatter.renderFunction(d, this.props.sampleManager),
+            sort:(d1:Mutation[], d2:Mutation[], ascending:boolean)=>{
+                return numberListSort(TumorColumnFormatter.getSortValue(d1, this.props.sampleManager),
+                                        TumorColumnFormatter.getSortValue(d2, this.props.sampleManager),
+                                        ascending);
+            },
+        };
+
+        this._columns[MutationTableColumn.SAMPLE_ID] = {
+            name: "Sample",
+            render:(d:Mutation[])=>SampleColumnFormatter.renderFunction(d),
+            sort:(d1:Mutation[], d2:Mutation[], ascending:boolean)=>{
+                return stringSort(SampleColumnFormatter.getDisplayValue(d1),
+                                    SampleColumnFormatter.getDisplayValue(d2),
+                                    ascending);
+            },
+            filter:(d:Mutation[], filterString:string)=>{
+                return (SampleColumnFormatter.getDisplayValue(d).indexOf(filterString) > -1);
             }
         };
     }
