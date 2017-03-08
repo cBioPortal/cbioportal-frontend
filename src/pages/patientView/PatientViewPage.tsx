@@ -42,7 +42,8 @@ import CopyNumberAlterationsTable from "./copyNumberAlterations/CopyNumberAltera
 import CopyNumberTableWrapper from "./copyNumberAlterations/CopyNumberTableWrapper";
 import {reaction} from "mobx";
 import Timeline from "./timeline/Timeline";
-import {default as PatientViewMutationTable, MutationTableColumnType} from "./mutation/PatientViewMutationTable";
+import {default as PatientViewMutationTable, MutationTableColumnType } from "./mutation/PatientViewMutationTable";
+import PathologyReport from "./pathologyReport/PathologyReport";
 import {getCbioPortalApiUrl, getHotspotsApiUrl, getHotspots3DApiUrl} from "../../shared/api/urls";
 
 const patientViewPageStore = new PatientViewPageStore();
@@ -519,6 +520,12 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             />
                         </div>
                     </Tab>
+
+                    {  (patientViewPageStore.pathologyReport.isComplete && patientViewPageStore.pathologyReport.result.length > 0 ) &&
+                    (<Tab eventKey={8} id="summarTab" title="Pathology Report">
+                        <PathologyReport  pdfs={patientViewPageStore.pathologyReport.result} />
+                    </Tab>)
+                    }
 
                     { (patientViewPageStore.hasTissueImageIFrameUrl.isComplete && patientViewPageStore.hasTissueImageIFrameUrl.result) &&
                         (<Tab eventKey={4} id="tissueImageTab" title="Tissue Image">
