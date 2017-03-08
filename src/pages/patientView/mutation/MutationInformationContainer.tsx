@@ -80,7 +80,7 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 name: "Type",
                 description: "Mutation Type"
             },*/
-            annotation: {
+            /*annotation: {
                 name: "Annotation",
                 formatter: AnnotationColumnFormatter.renderFunction,
                 priority: 3.50,
@@ -95,7 +95,7 @@ export default class MutationInformationContainer extends React.Component<IMutat
                     enableMyCancerGenome: true,
                     enableHotspot: true
                 }
-            },
+            },*/
             /*copyNumber: {
                 name: "Copy #",
                 priority: 18.10,
