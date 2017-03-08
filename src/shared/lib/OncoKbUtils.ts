@@ -355,7 +355,7 @@ export function getTumorTypeFromEvidence(evidence:any) {
 export function generateOncogenicCitations(oncogenicRefs:any):number[]
 {
     return _.isArray(oncogenicRefs) ?
-        oncogenicRefs.map(function(article:any) {
+        _.map(oncogenicRefs, (article:any) => {
             return Number(article.pmid);
         }).sort() : [];
 }
@@ -363,7 +363,7 @@ export function generateOncogenicCitations(oncogenicRefs:any):number[]
 export function generateMutationEffectCitations(mutationEffectRefs:any):number[]
 {
     return _.isArray(mutationEffectRefs) ?
-        mutationEffectRefs.map(function(article:any) {
+        _.map(mutationEffectRefs, (article:any) => {
             return Number(article.pmid);
         }).sort() : [];
 }

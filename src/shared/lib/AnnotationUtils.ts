@@ -17,7 +17,7 @@ export function keywordToCosmic(cosmicMutations:CosmicMutation[]):ICosmicData
     const map: ICosmicData = {};
 
     // create a map for a faster lookup
-    cosmicMutations.forEach(function(cosmic:CosmicMutation) {
+    cosmicMutations.forEach((cosmic:CosmicMutation) => {
         if (!(cosmic.keyword in map)) {
             map[cosmic.keyword] = [];
         }
@@ -34,7 +34,7 @@ export function geneToMyCancerGenome(myCancerGenomes:IMyCancerGenome[]):IMyCance
     // value: IMyCancerGenome[]
     const map:IMyCancerGenomeData = {};
 
-    myCancerGenomes.forEach(function (myCancerGenome) {
+    myCancerGenomes.forEach((myCancerGenome:IMyCancerGenome) => {
         if (!(myCancerGenome.hugoGeneSymbol in map)) {
             map[myCancerGenome.hugoGeneSymbol] = [];
         }
