@@ -481,10 +481,13 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 sampleManager={sampleManager}
                                 store={patientViewPageStore}
                                 mutSigData={this.state.mutSigData}
+                                myCancerGenomeData={this.state.myCancerGenomeData}
+                                hotspots={this.state.hotspotsData}
                                 cosmicData={this.state.cosmicData}
                                 columns={[MutationTableColumn.COHORT,
                                 MutationTableColumn.MRNA_EXPR,
                                 MutationTableColumn.COPY_NUM,
+                                MutationTableColumn.ANNOTATION,
                                 MutationTableColumn.REF_READS_N,
                                 MutationTableColumn.VAR_READS_N,
                                 MutationTableColumn.REF_READS,

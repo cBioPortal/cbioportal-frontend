@@ -25,11 +25,14 @@ import {
 import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
 import TumorColumnFormatter from "./column/TumorColumnFormatter";
 import SampleColumnFormatter from "../../../shared/components/mutationTable/column/SampleColumnFormatter";
+import {default as AnnotationColumnFormatter, IMyCancerGenomeData, IHotspotData, IOncoKbData} from "./column/AnnotationColumnFormatter";
 
 export type PatientViewMutationTableProps = {
     sampleManager:SampleManager | null;
     store:PatientViewPageStore;
     mutSigData?:MutSigData;
+    myCancerGenomeData?: IMyCancerGenomeData;
+    hotspots?: IHotspotData;
     cosmicData?:ICosmicData;
     columns:MutationTableColumn[];
 }
@@ -422,6 +425,35 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
             },
             filter:(d:Mutation[], filterString:string)=>{
                 return (SampleColumnFormatter.getDisplayValue(d).indexOf(filterString) > -1);
+            }
+        };
+
+        this._columns[MutationTableColumn.ANNOTATION] = {
+            name: "Annotation",
+            render: (d:Mutation[]) => (AnnotationColumnFormatter.renderFunction(d, {
+                hotspots: this.props.hotspots,
+                myCancerGenomeData: this.props.myCancerGenomeData,
+                oncoKbData: this.props.store.oncoKbData.result,
+                pmidData: this.props.store.pmidData.result,
+                enableOncoKb: true,
+                enableMyCancerGenome: true,
+                enableHotspot: true
+            })),
+            // TODO might be better to implement this in AnnotationColumnFormatter
+            sort: (d1:Mutation[], d2:Mutation[], ascending:boolean) => {
+                const a1 = AnnotationColumnFormatter.getData(d1,
+                    this.props.hotspots,
+                    this.props.myCancerGenomeData,
+                    this.props.store.oncoKbData.result,
+                    this.props.store.pmidData.result);
+
+                const a2 = AnnotationColumnFormatter.getData(d2,
+                    this.props.hotspots,
+                    this.props.myCancerGenomeData,
+                    this.props.store.oncoKbData.result,
+                    this.props.store.pmidData.result);
+
+                return (ascending ? 1 : -1) * AnnotationColumnFormatter.sortFunction(a1, a2);
             }
         };
     }
