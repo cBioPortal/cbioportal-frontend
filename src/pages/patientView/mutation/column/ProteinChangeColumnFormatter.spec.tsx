@@ -26,21 +26,12 @@ describe('ProteinChangeColumnFormatter (customized for patient view)', () => {
     let somaticComponent:ReactWrapper<any, any>;
 
     before(() => {
-        let data:IColumnFormatterData<MutationTableRowData> = {
-            name:"Protein Change",
-            tableData,
-            rowData: [germlineMutation],
-            columnData: null
-        };
+        let data = [germlineMutation];
 
         // mount a single cell component (Td) for a germline mutation
         germlineComponent = mount(ProteinChangeColumnFormatter.renderFunction(data));
 
-        data = {
-            name:"Protein Change",
-            tableData,
-            rowData: [somaticMutation]
-        };
+        data = [somaticMutation];
 
         // mount a single cell component (Td) for a somatic mutation
         somaticComponent = mount(ProteinChangeColumnFormatter.renderFunction(data));
@@ -62,13 +53,6 @@ describe('ProteinChangeColumnFormatter (customized for patient view)', () => {
             'Germline mutation should have the additional germline indicator');
         assert.isFalse(somaticComponent.find(`.${styles.germline}`).exists(),
             'Somatic mutation should not have the additional germline indicator');
-    });
-
-    it('sets component cell value property', () => {
-        assert.equal(germlineComponent.prop("value"), "Q616K",
-            'Cell (Td) value property for germline mutation is correct');
-        assert.equal(somaticComponent.prop("value"), "Q616L",
-            'Cell (Td) value property for somatic mutation is correct');
     });
 
     after(() => {
