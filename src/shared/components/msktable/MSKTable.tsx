@@ -3,12 +3,13 @@ import * as React from 'react';
 import {observable, computed, action} from "mobx";
 import {observer} from "mobx-react";
 import './styles.scss';
-import {PaginationControls} from "../paginationControls/PaginationControls";
+import {SHOW_ALL_PAGE_SIZE as PAGINATION_SHOW_ALL, PaginationControls} from "../paginationControls/PaginationControls";
 import DefaultTooltip from "../DefaultTooltip";
+import {ButtonToolbar} from "react-bootstrap";
 
 export type Column<T> = {
     name: string;
-    filter?:(data:T, filterString:string)=>boolean;
+    filter?:(data:T, filterString:string, filterStringUpper?:string, filterStringLower?:string)=>boolean;
     sort?:(a:T, b:T, ascending:boolean)=>number;
     render:(data:T)=>JSX.Element;
     tooltip?:JSX.Element;
@@ -22,17 +23,44 @@ type MSKTableProps<T> = {
 class MSKTableStore<T> {
     @observable public filterString:string;
     @observable private _page:number;
-    @observable public itemsPerPage:number;
+    @observable private _itemsPerPage:number;
     @observable public sortColumn:string;
     @observable public sortAscending:boolean;
     @observable public columns:Column<T>[];
     @observable.ref public data:T[];
 
+    @computed public get itemsPerPage() {
+        return this._itemsPerPage;
+    }
+
+    public set itemsPerPage(i:number) {
+        this._itemsPerPage = i;
+        this.page = this.page; // trigger clamping in page setter
+    }
+
     @computed public get page() {
         return this._page;
     }
     public set page(p:number) {
-        this._page = p;
+        this._page = this.clampPage(p);
+    }
+
+    private clampPage(p:number) {
+        p = Math.max(p, 0);
+        p = Math.min(p, this.maxPage);
+        return p;
+    }
+
+    @computed get maxPage() {
+        return Math.floor(this.sortedFilteredData.length / this.itemsPerPage);
+    }
+
+    @computed get filterStringUpper() {
+        return this.filterString.toUpperCase();
+    }
+
+    @computed get filterStringLower() {
+        return this.filterString.toLowerCase();
     }
 
     @computed get sortedFilteredData():T[] {
@@ -41,7 +69,7 @@ class MSKTableStore<T> {
             filtered = this.data.filter((datum:T)=>{
                 let match = false;
                 for (const column of this.columns) {
-                    match = (column.filter && column.filter(datum, this.filterString)) || false;
+                    match = (column.filter && column.filter(datum, this.filterString, this.filterStringUpper, this.filterStringLower)) || false;
                     if (match) {
                         break;
                     }
@@ -60,7 +88,11 @@ class MSKTableStore<T> {
         }
     }
     @computed get visibleData():T[] {
-        return this.sortedFilteredData.slice(this.page*this.itemsPerPage, (this.page+1)*this.itemsPerPage);
+        if (this.itemsPerPage === PAGINATION_SHOW_ALL) {
+            return this.sortedFilteredData;
+        } else {
+            return this.sortedFilteredData.slice(this.page*this.itemsPerPage, (this.page+1)*this.itemsPerPage);
+        }
     }
 
     @computed get headers():JSX.Element[] {
@@ -115,7 +147,12 @@ class MSKTableStore<T> {
     }
 
     constructor() {
-        this.page = 0;
+        this.data = [];
+        this.columns = [];
+        this.filterString = "";
+        this.sortColumn = "";
+        this.sortAscending = true;
+        this._page = 0;
         this.itemsPerPage = 50;
     }
 }
@@ -123,11 +160,39 @@ class MSKTableStore<T> {
 @observer
 export default class MSKTable<T> extends React.Component<MSKTableProps<T>, {}> {
     private store:MSKTableStore<T>;
+    private handlers:{[fnName:string]:(...args:any[])=>void};
 
     constructor(props:MSKTableProps<T>) {
         super(props);
         this.store = new MSKTableStore<T>();
         this.store.setProps(props);
+
+        this.handlers = {
+            filterInput: (() => {
+                let searchTimeout:number|null = null;
+                return (evt:any)=>{
+                    if (searchTimeout !== null) {
+                        window.clearTimeout(searchTimeout);
+                        searchTimeout = null;
+                    }
+
+                    const filterValue = evt.currentTarget.value;
+
+                    searchTimeout = window.setTimeout(()=>{
+                        this.store.filterString = filterValue;
+                    }, 400);
+                };
+            })(),
+            changeItemsPerPage:(ipp:number)=>{
+                this.store.itemsPerPage=ipp;
+            },
+            incPage:()=>{
+                this.store.page += 1;
+            },
+            decPage:()=>{
+                this.store.page -= 1;
+            }
+        };
     }
 
     @action componentWillReceiveProps(nextProps:MSKTableProps<T>) {
@@ -135,15 +200,34 @@ export default class MSKTable<T> extends React.Component<MSKTableProps<T>, {}> {
     }
 
     render() {
+        let firstVisibleItemDisp;
+        let lastVisibleItemDisp;
+        if (this.store.rows.length === 0) {
+            firstVisibleItemDisp = 0;
+            lastVisibleItemDisp = 0;
+        } else {
+            firstVisibleItemDisp = (this.store.itemsPerPage === PAGINATION_SHOW_ALL ? 1 : (this.store.page*this.store.itemsPerPage) + 1);
+            lastVisibleItemDisp = (this.store.itemsPerPage === PAGINATION_SHOW_ALL ? this.store.rows.length : firstVisibleItemDisp + this.store.rows.length - 1);
+        }
+        const textBetweenButtons = `${firstVisibleItemDisp}-${lastVisibleItemDisp} of ${this.store.sortedFilteredData.length}`;
         return (<div>
-            <PaginationControls
-                currentPage={this.store.page}
-                previousButtonContent={<span>Prev</span>}
-                nextButtonContent={<span>Next</span>}
-                textBetweenButtons={"Page "+this.store.page}
-                onPreviousPageClick={()=>{this.store.page -= 1}}
-                onNextPageClick={()=>{this.store.page += 1}}
-            />
+            <ButtonToolbar>
+                <div className={`form-group has-feedback input-group-sm`} style={{ display:'inline-block', marginLeft:10  }}>
+                    <input type="text" onInput={this.handlers.filterInput} className="form-control tableSearchInput" style={{ width:200 }}  />
+                    <span className="fa fa-search form-control-feedback" aria-hidden="true"></span>
+                </div>
+                <PaginationControls
+                    className="pull-right"
+                    itemsPerPage={this.store.itemsPerPage}
+                    currentPage={this.store.page}
+                    onChangeItemsPerPage={this.handlers.changeItemsPerPage}
+                    onPreviousPageClick={this.handlers.decPage}
+                    onNextPageClick={this.handlers.incPage}
+                    textBetweenButtons={textBetweenButtons}
+                    previousPageDisabled={this.store.page === 0}
+                    nextPageDisabled={this.store.page === this.store.maxPage}
+                />
+            </ButtonToolbar>
             <SimpleTable
                     headers={this.store.headers}
                     rows={this.store.rows}
