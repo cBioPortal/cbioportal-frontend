@@ -60,32 +60,28 @@ describe('MutationTypeColumnFormatter', () => {
     let spliceComponent: ReactWrapper<any, any>;
 
     before(() => {
-        const data = {
-            name: "Mutation Type",
-            tableData,
-            rowData: [missenseVariant]
-        };
+        let data = [missenseVariant];
         msVarComponent = mount(MutationTypeColumnFormatter.renderFunction(data));
 
-        data.rowData = [missenseMutation];
+        data = [missenseMutation];
         msMutComponent = mount(MutationTypeColumnFormatter.renderFunction(data));
 
-        data.rowData = [stopgainSnv];
+        data = [stopgainSnv];
         stopgainSnvComponent = mount(MutationTypeColumnFormatter.renderFunction(data));
 
-        data.rowData = [nonFrameShiftDeletion];
+        data = [nonFrameShiftDeletion];
         nonFsDelComponent = mount(MutationTypeColumnFormatter.renderFunction(data));
 
-        data.rowData = [spliceSite];
+        data = [spliceSite];
         spliceComponent = mount(MutationTypeColumnFormatter.renderFunction(data));
 
-        data.rowData = [frameshiftDeletion];
+        data = [frameshiftDeletion];
         fsDelComponent = mount(MutationTypeColumnFormatter.renderFunction(data));
 
-        data.rowData = [unknownMutation];
+        data = [unknownMutation];
         unknownMutComponent = mount(MutationTypeColumnFormatter.renderFunction(data));
 
-        data.rowData = [otherMutation];
+        data = [otherMutation];
         otherMutComponent = mount(MutationTypeColumnFormatter.renderFunction(data));
     });
 
@@ -98,8 +94,6 @@ describe('MutationTypeColumnFormatter', () => {
             `Span has the correct class name for ${mutationType}`);
         assert.isTrue(component.find(`span.${styles[className]}`).text().indexOf(value) > -1,
             `Display value is correct for ${mutationType}`);
-        assert.equal(component.prop("value"), value,
-            `Cell (Td) value property is correct for ${mutationType}`);
     }
 
     it('renders component display value, class name, and cell value property', () => {

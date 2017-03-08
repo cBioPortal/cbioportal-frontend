@@ -33,7 +33,7 @@ import ClinicalInformationPatientTable from "./clinicalInformation/ClinicalInfor
 import ClinicalInformationSamples from "./clinicalInformation/ClinicalInformationSamplesTable";
 import {ICosmicData} from "../../shared/components/mutationTable/column/CosmicColumnFormatter";
 import {keywordToCosmic, geneToMyCancerGenome, geneAndProteinPosToHotspots} from 'shared/lib/AnnotationUtils';
-import {IVariantCountData} from "./mutation/column/CohortColumnFormatter";
+import {IVariantCountData, default as CohortColumnFormatter} from "./mutation/column/CohortColumnFormatter";
 import {observable} from "mobx";
 import {observer} from "mobx-react";
 import {IHotspotData, IMyCancerGenomeData, IMyCancerGenome, IOncoKbData} from "./mutation/column/AnnotationColumnFormatter";
@@ -42,12 +42,8 @@ import CopyNumberAlterationsTable from "./copyNumberAlterations/CopyNumberAltera
 import CopyNumberTableWrapper from "./copyNumberAlterations/CopyNumberTableWrapper";
 import {reaction} from "mobx";
 import AppConfig from 'appConfig';
-import SimpleTable from "../../shared/components/simpleTable/SimpleTable";
-import MSKTable from "../../shared/components/msktable/MSKTable";
 import Timeline from "./timeline/Timeline";
-
-class NameTable extends MSKTable<{first:string}> {
-}
+import {default as PatientViewMutationTable, MutationTableColumn} from "./mutation/PatientViewMutationTable";
 
 const patientViewPageStore = new PatientViewPageStore();
 
@@ -74,7 +70,6 @@ interface IPatientViewState {
     cosmicData?: ICosmicData;
     oncoKbData?: IOncoKbData;
     mutSigData?: MutSigData;
-    variantCountData?: IVariantCountData;
     activeTabKey: number;
 }
 
@@ -105,7 +100,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             hotspotsData: undefined,
             cosmicData: undefined,
             oncoKbData: undefined,
-            variantCountData: undefined,
+            mutSigData: undefined,
             activeTabKey:1
         };
 
@@ -222,64 +217,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         return this.tsInternalClient.getSignificantlyMutatedGenesUsingGET({studyId: patientViewPageStore.studyId});
     }
 
-    fetchVariantCountData(mutations:Mutation[]):Promise<IVariantCountData> {
-        return new Promise((resolve, reject) => {
-            const variantCountIdentifiers:VariantCountIdentifier[] = [];
-            const toQuery:{ [entrezGeneId:string]:{ [keyword:string]:boolean}} = {};
-            for (const mutation of mutations) {
-                let entrezGeneId = mutation.entrezGeneId;
-                let keyword = mutation.keyword;
-                toQuery[entrezGeneId] = toQuery[entrezGeneId] || {};
-                if (keyword) {
-                    toQuery[entrezGeneId][keyword] = true;
-                }
-            }
-            for (const entrezGeneId in toQuery) {
-                if (toQuery.hasOwnProperty(entrezGeneId)) {
-                    const entrezGeneIdInt = parseInt(entrezGeneId, 10);
-                    let keywords = Object.keys(toQuery[entrezGeneId]);
-                    if (keywords.length === 0) {
-                        variantCountIdentifiers.push({
-                            entrezGeneId: entrezGeneIdInt
-                        } as VariantCountIdentifier);
-                    } else {
-                        for (const keyword of keywords) {
-                            variantCountIdentifiers.push({
-                                entrezGeneId: entrezGeneIdInt,
-                                keyword: keyword
-                            });
-                        }
-                    }
-                }
-            }
-            const fetchPromise = this.tsInternalClient.fetchVariantCountsUsingPOST({
-                geneticProfileId: this.mutationGeneticProfileId,
-                variantCountIdentifiers
-            });
-            fetchPromise.then((variantCounts:VariantCount[]) => {
-                const ret:IVariantCountData = {};
-                if (variantCounts.length > 0) {
-                    ret.numberOfSamples = variantCounts[0].numberOfSamples;
-                    ret.geneData = {};
-                    for (const variantCount of variantCounts) {
-                        let entrezGeneId = variantCount.entrezGeneId;
-                        ret.geneData[entrezGeneId] = { numberOfSamplesWithKeyword: {} };
-                    }
-                    for (const variantCount of variantCounts) {
-                        let geneData = ret.geneData[variantCount.entrezGeneId];
-                        geneData.numberOfSamplesWithMutationInGene = variantCount.numberOfSamplesWithMutationInGene;
-                        if (typeof variantCount.keyword !== "undefined") {
-                            (geneData.numberOfSamplesWithKeyword as {[keyword:string]:number})
-                                [variantCount.keyword] = variantCount.numberOfSamplesWithKeyword;
-                        }
-                    }
-                }
-                resolve(ret);
-            });
-            fetchPromise.catch(() => reject());
-        });
-    }
-
 
     public componentDidMount() {
 
@@ -295,9 +232,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                     this.fetchHotspotsData(patientViewPageStore.mutationData.result).then((hotspotsData:IHotspotData) => {
                         this.setState(({ hotspotsData } as IPatientViewState));
-                    });
-                    this.fetchVariantCountData(patientViewPageStore.mutationData.result).then((variantCountData:IVariantCountData) => {
-                        this.setState(({ variantCountData } as IPatientViewState));
                     });
                     const hotspotDataPromise = this.fetchHotspotsData(patientViewPageStore.mutationData.result).then((hotspotsData:IHotspotData) =>
                         this.setState(({ hotspotsData } as IPatientViewState)));
@@ -321,7 +255,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     this.setState({
                         mutationData: undefined,
                         hotspotsData: undefined,
-                        variantCountData: undefined
                     } as IPatientViewState)
 
                 }
@@ -498,17 +431,13 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                     myCancerGenomeData={this.state.myCancerGenomeData}
                                     hotspots={this.state.hotspotsData}
                                     cosmicData={this.state.cosmicData}
-                                    mrnaExprRankData={ patientViewPageStore.mrnaExprRankCache.cache }
                                     oncoKbData={patientViewPageStore.oncoKbData.isComplete ? patientViewPageStore.oncoKbData.result : undefined}
-                                    mutSigData={this.state.mutSigData}
-                                    variantCountData={this.state.variantCountData}
                                     sampleOrder={sampleManager.sampleOrder}
                                     sampleLabels={sampleManager.sampleLabels}
                                     sampleColors={sampleManager.sampleColors}
                                     sampleTumorType={mockData.tumorType}
                                     sampleCancerType={mockData.cancerType}
                                     sampleManager={ sampleManager }
-                                    onVisibleRowsChange={ patientViewPageStore.setVisibleRows }
                                 />
                             )
                         }
@@ -547,42 +476,29 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     )}
                     <Tab eventKey={5} id="test" title="Test" >
                         <div className="clearfix">
-                            <NameTable
-                                columns={[
-                                    {
-                                        name:"First Name",
-                                        render:(d:any)=>(<span>{d.first}</span>),
-                                        //sort:(d1:any, d2:any)=>d1.text.localeCompare(d2.text)
-                                        },
-                                        {
-                                            name:"Last Name",
-                                        render:(d:any)=>{
-                                                const lastName = patientViewPageStore.nameCache.get(d.first);
-                                                if (typeof lastName === "undefined") {
-                                                    return (<span>Loading</span>);
-                                                } else if (lastName === null) {
-                                                    return (<span>N/A</span>);
-                                                } else {
-                                                    return (<span>{lastName}</span>);
-                                                }
-                                            },
-                                        sort:(d1:any, d2:any)=>{
-                                                const last1 = patientViewPageStore.nameCache.get(d1.first);
-                                                const last2 = patientViewPageStore.nameCache.get(d2.first);
-                                                if (last1 && last2) {
-                                                    return last1.localeCompare(last2);
-                                                } else {
-                                                    return 0;
-                                                }
-                                            }
-                                        },
-                                ]}
-                                data={[
-                                    {first:"ADAM"},
-                                    {first:"AARON"},
-                                    {first:"ONUR"},
-                                    {first:"NONAME"}
-                                ]}
+                            <PatientViewMutationTable
+                                sampleManager={sampleManager}
+                                store={patientViewPageStore}
+                                mutSigData={this.state.mutSigData}
+                                columns={[MutationTableColumn.COHORT,
+                                MutationTableColumn.MRNA_EXPR,
+                                MutationTableColumn.COPY_NUM,
+                                MutationTableColumn.REF_READS_N,
+                                MutationTableColumn.VAR_READS_N,
+                                MutationTableColumn.REF_READS,
+                                MutationTableColumn.VAR_READS,
+                                MutationTableColumn.START_POS,
+                                MutationTableColumn.END_POS,
+                                MutationTableColumn.REF_ALLELE,
+                                MutationTableColumn.VAR_ALLELE,
+                                MutationTableColumn.MUTATION_STATUS,
+                                MutationTableColumn.VALIDATION_STATUS,
+                                MutationTableColumn.CENTER,
+                                MutationTableColumn.GENE,
+                                MutationTableColumn.CHROMOSOME,
+                                MutationTableColumn.PROTEIN_CHANGE,
+                                MutationTableColumn.MUTATION_TYPE,
+                                MutationTableColumn.MUTATION_ASSESSOR]}
                             />
                         </div>
                     </Tab>
