@@ -1,27 +1,20 @@
 import * as React from 'react';
-import {Td} from 'reactable';
-import {IColumnFormatterData} from "../../../../shared/components/enhancedReactTable/IColumnFormatter";
 import DefaultTooltip from 'shared/components/DefaultTooltip';
-import {compareNumberLists} from '../../../../shared/lib/SortUtils';
 import 'rc-tooltip/assets/bootstrap_white.css';
-import {MutationTableRowData} from "../../../../shared/components/mutationTable/IMutationTableProps";
-
-export type MrnaRankDatum = {status:"available", percentile:number, zScore:number} |
-                            {status:"not available"} |
-                            {status:"pending"};
-
-export type MrnaRankData = { [sampleId:string]: {
-                                [entrezGeneId:string]: MrnaRankDatum
-                            }};
+import {
+    MrnaExprRankCacheDataType,
+    default as MrnaExprRankCache
+} from "../../clinicalInformation/MrnaExprRankCache";
+import {Mutation} from "../../../../shared/api/generated/CBioPortalAPI";
 
 export default class MrnaExprColumnFormatter {
 
-    private static getCircleX(data: IColumnFormatterData<MutationTableRowData>, percentile:number, circleLeft: number, circleRight:number) {
+    protected static getCircleX(percentile:number, circleLeft: number, circleRight:number) {
         const proportion = percentile/100;
         return circleLeft*(1-proportion) + circleRight*proportion;
     }
 
-    private static getCircleFill(percentile:number) {
+    protected static getCircleFill(percentile:number) {
         if (percentile < 25) {
             return "blue";
         } else if (percentile > 75) {
@@ -31,24 +24,25 @@ export default class MrnaExprColumnFormatter {
         }
     }
 
-    private static getTooltipContents(data:IColumnFormatterData<MutationTableRowData>, mrnaExprData: MrnaRankData) {
-        const exprData = MrnaExprColumnFormatter.getData(data, mrnaExprData);
-        if (exprData && exprData.status === "available") {
+    protected static getTooltipContents(cacheDatum:MrnaExprRankCacheDataType | null) {
+        if (cacheDatum && cacheDatum.status === "complete" && cacheDatum.data !== null) {
             return (
                 <div>
                     <span>mRNA level of the gene in this tumor</span><br/>
-                    <span><b>mRNA z-score: </b>{exprData.zScore}</span><br/>
-                    <span><b>Percentile: </b>{exprData.percentile}</span><br/>
+                    <span><b>mRNA z-score: </b>{cacheDatum.data.zScore}</span><br/>
+                    <span><b>Percentile: </b>{cacheDatum.data.percentile}</span><br/>
                 </div>
             );
-        } else if (exprData && exprData.status === "not available") {
+        } else if (cacheDatum && cacheDatum.status === "complete" && cacheDatum.data === null) {
             return (<span>mRNA data is not available for this gene.</span>);
+        } else if (cacheDatum && cacheDatum.status === "error") {
+            return (<span>Error retrieving data.</span>);
         } else {
             return (<span>Querying server for data.</span>);
         }
     }
 
-    private static getTdContents(data:IColumnFormatterData<MutationTableRowData>, mrnaExprData: MrnaRankData) {
+    private static getTdContents(cacheDatum:MrnaExprRankCacheDataType | null) {
         const barWidth = 30;
         const circleRadius = 3;
         const barXLeft = 0;
@@ -58,8 +52,7 @@ export default class MrnaExprColumnFormatter {
         const textWidth = 30;
         const textXLeft = circleXRight + circleRadius + 3;
         const width = textXLeft + textWidth;
-        const exprData = MrnaExprColumnFormatter.getData(data, mrnaExprData);
-        if (exprData && exprData.status === "available") {
+        if (cacheDatum && cacheDatum.status === "complete" && cacheDatum.data !== null) {
             return (<svg
                 width={width}
                 height={12}
@@ -70,7 +63,7 @@ export default class MrnaExprColumnFormatter {
                     textAnchor="start"
                     fontSize={10}
                 >
-                    {Math.round(exprData.percentile)+"%"}
+                    {Math.round(cacheDatum.data.percentile)+"%"}
                 </text>
                 <g>
                     <line
@@ -81,14 +74,14 @@ export default class MrnaExprColumnFormatter {
                         style={{stroke:"gray", strokeWidth:2}}
                     />
                     <circle
-                        cx={MrnaExprColumnFormatter.getCircleX(data, exprData.percentile, circleXLeft, circleXRight)}
+                        cx={MrnaExprColumnFormatter.getCircleX(cacheDatum.data.percentile, circleXLeft, circleXRight)}
                         cy={8}
                         r={circleRadius}
-                        fill={MrnaExprColumnFormatter.getCircleFill(exprData.percentile)}
+                        fill={MrnaExprColumnFormatter.getCircleFill(cacheDatum.data.percentile)}
                     />
                 </g>
             </svg>);
-        } else if (exprData && exprData.status === "not available") {
+        } else if (cacheDatum && cacheDatum.status === "complete" && cacheDatum.data === null) {
             return (
                 <span
                     style={{color: "gray", fontSize:"xx-small", textAlign:"center"}}
@@ -97,6 +90,13 @@ export default class MrnaExprColumnFormatter {
                     NA
                 </span>
             );
+        } else if (cacheDatum && cacheDatum.status === "error") {
+            return (<span
+                style={{color: "gray", fontSize:"xx-small", textAlign:"center"}}
+                alt="Error retrieving data."
+            >
+                    ERROR
+                </span>);
         } else {
             return (
                 <span
@@ -109,26 +109,23 @@ export default class MrnaExprColumnFormatter {
         }
     }
 
-    private static getData(data: IColumnFormatterData<MutationTableRowData>, mrnaExprData:MrnaRankData) {
-        if (!data.rowData || data.rowData.length === 0) {
+    protected static getData(data: Mutation[], cache:MrnaExprRankCache):MrnaExprRankCacheDataType | null {
+        if (data.length === 0) {
             return null;
         }
-        const sampleId = data.rowData[0].sampleId;
-        const entrezGeneId = data.rowData[0].entrezGeneId;
-        const ret = mrnaExprData && mrnaExprData[sampleId] && mrnaExprData[sampleId][entrezGeneId];
-        return ret || null;
+        const sampleId = data[0].sampleId;
+        const entrezGeneId = data[0].entrezGeneId;
+        return cache.get(sampleId, entrezGeneId);
     }
 
-    public static renderFunction(data: IColumnFormatterData<MutationTableRowData>, columnProps: any) {
-        const exprData = MrnaExprColumnFormatter.getData(data, columnProps.data);
-        return (<Td key={data.name} column={data.name} value={(exprData && exprData.status === "available") ? exprData.percentile : Number.POSITIVE_INFINITY}>
-            <DefaultTooltip
+    public static renderFunction(data: Mutation[], cache:MrnaExprRankCache) {
+        const cacheDatum = MrnaExprColumnFormatter.getData(data, cache);
+        return (<DefaultTooltip
                 placement="left"
-                overlay={MrnaExprColumnFormatter.getTooltipContents(data, columnProps.data as MrnaRankData)}
+                overlay={MrnaExprColumnFormatter.getTooltipContents(cacheDatum)}
                 arrowContent={<div className="rc-tooltip-arrow-inner"/>}
             >
-                {MrnaExprColumnFormatter.getTdContents(data, columnProps.data)}
-            </DefaultTooltip>
-        </Td>);
+                {MrnaExprColumnFormatter.getTdContents(cacheDatum)}
+            </DefaultTooltip>);
     }
 }

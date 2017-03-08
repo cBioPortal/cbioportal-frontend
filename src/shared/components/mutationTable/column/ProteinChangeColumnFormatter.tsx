@@ -17,6 +17,12 @@ export default class ProteinChangeColumnFormatter
         return aValue > bValue ? 1 : -1;
     }
 
+    public static getSortValue(d:Mutation[]):number {
+        return ProteinChangeColumnFormatter.extractSortValue(
+            ProteinChangeColumnFormatter.getTextValue(d)
+        );
+    }
+
     // this is to sort alphabetically
     // in case the protein position values are the same
     public static extractNonNumerical(matched:RegExpMatchArray):number[]
@@ -94,7 +100,7 @@ export default class ProteinChangeColumnFormatter
         }
     }
 
-    public static getTextValue(data:IColumnFormatterData<MutationTableRowData>):string
+    public static getTextValue(data:Mutation[]):string
     {
         let textValue:string = "";
         const dataValue = ProteinChangeColumnFormatter.getData(data);
@@ -106,42 +112,28 @@ export default class ProteinChangeColumnFormatter
         return textValue;
     }
 
-    public static getDisplayValue(data:IColumnFormatterData<MutationTableRowData>):string
+    public static getDisplayValue(data:Mutation[]):string
     {
         // same as text value
         return ProteinChangeColumnFormatter.getTextValue(data);
     }
 
-    public static getData(data:IColumnFormatterData<MutationTableRowData>)
+    public static getData(data:Mutation[])
     {
-        let value;
-
-        if (data.columnData) {
-            value = data.columnData;
+        if (data.length > 0) {
+            return data[0].proteinChange;
+        } else {
+            return null;
         }
-        else if (data.rowData) {
-            const mutations:Mutation[] = data.rowData;
-            value = (mutations.length > 0 ? mutations[0].proteinChange : null);
-        }
-        else {
-            value = null;
-        }
-
-        return value;
     }
 
-    public static renderFunction(data:IColumnFormatterData<MutationTableRowData>)
+    public static renderFunction(data:Mutation[])
     {
         // use text as display value
         const text:string = ProteinChangeColumnFormatter.getDisplayValue(data);
 
-        // use value as sort & filter value
-        const value:string = ProteinChangeColumnFormatter.getTextValue(data);
-
         return (
-            <Td key={data.name} column={data.name} value={value}>
                 <span>{text}</span>
-            </Td>
         );
     }
 }
