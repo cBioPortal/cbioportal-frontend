@@ -1,14 +1,11 @@
 import * as React from 'react';
 import * as _ from 'lodash';
+import $ from 'jquery';
 import {Tabs, Tab, default as ReactBootstrap} from 'react-bootstrap';
-import ClinicalInformationContainer from './clinicalInformation/ClinicalInformationContainer';
 import MutationInformationContainer from './mutation/MutationInformationContainer';
-import {RootState} from '../../redux/rootReducer';
-import Spinner from "react-spinkit";
 import exposeComponentRenderer from '../../shared/lib/exposeComponentRenderer';
 import GenomicOverview from './genomicOverview/GenomicOverview';
 import mockData from './mock/sampleData.json';
-import Connector, { ClinicalInformationData } from "./Connector";
 import {ClinicalData, SampleIdentifier, GeneticProfile, Sample} from "shared/api/generated/CBioPortalAPI";
 import { ClinicalDataBySampleId } from "../../shared/api/api-types-extended";
 import { RequestStatus } from "../../shared/api/api-types-extended";
@@ -51,7 +48,7 @@ const patientViewPageStore = new PatientViewPageStore();
 (window as any).patientViewPageStore = patientViewPageStore;
 
 export interface IPatientViewPageProps {
-    store?: RootState;
+    routing: any;
     samples?: ClinicalDataBySampleId[];
     loadClinicalInformationTableData?: () => Promise<any>;
     patient?: {
@@ -74,6 +71,7 @@ interface IPatientViewState {
     activeTabKey: number;
 }
 
+@inject('routing')
 @observer
 export default class PatientViewPage extends React.Component<IPatientViewPageProps, IPatientViewState> {
 
@@ -115,18 +113,40 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         //TODO: this should be done by a module so that it can be reused on other pages
         const qs = queryString.parse((window as any).location.search);
 
+        const reaction1 = reaction(
+            () => props.routing.query,
+            query => {
 
-        patientViewPageStore.studyId = qs['cancer_study_id'] + '';
+                if ('studyId' in query) {
+                    patientViewPageStore.studyId = query.studyId;
+                } else {
+                    alert("You must have a study Id");
+                }
 
-        // set mode based on qs present
-        if ('case_id' in qs) {
-            patientViewPageStore.setPatientId(qs['case_id'] as string);
-        } else if ('sample_id' in qs){
-            patientViewPageStore.setSampleId(qs['sample_id'] as string);
-        } else {
-            // error!
-        }
 
+                if ('caseId' in query) {
+                    patientViewPageStore.setPatientId(query.caseId as string);
+                } else if ('sampleId' in query)
+                {
+                    patientViewPageStore.setSampleId(query.sampleId as string);
+                }
+                else
+                {
+                    alert('You must have a patientId or a sampleId');
+                }
+            },
+            { fireImmediately:true }
+        );
+
+
+        // // set mode based on qs present
+        // if ('case_id' in qs) {
+        //     patientViewPageStore.setPatientId(qs['case_id'] as string);
+        // } else if ('sample_id' in qs){
+        //     patientViewPageStore.setSampleId(qs['sample_id'] as string);
+        // } else {
+        //     // error!
+        // }
 
 
         const qs_hash = queryString.parse((window as any).location.hash);
@@ -278,43 +298,34 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     }
 
-    private buildURL(caseId:string='', studyId:string='', cohort:string[]=[]) {
-        let url = window.location.origin + window.location.pathname;
-        let searchElements = [];
-        if (caseId.length > 0) {
-            searchElements.push(`case_id=${caseId}`);
-        }
-        if (studyId.length > 0) {
-            searchElements.push(`cancer_study_id=${studyId}`);
-        }
-        if (searchElements.length > 0) {
-            url += '?'+searchElements.join('&');
-        }
-
-        let hashElements = [];
-        if (cohort.length > 0) {
-            hashElements.push(`nav_case_ids=${cohort.join(',')}`);
-        }
-        if (hashElements.length > 0) {
-            url += '#'+hashElements.join('&');
-        }
-        return url;
+    private handleSelect(key: number, e: React.SyntheticEvent<any>): void {
+        this.setState(({activeTabKey: key} as IPatientViewState));
     }
 
-    private handleSelect(key: number, e:React.SyntheticEvent<any>): void {
-        this.setState(({ activeTabKey : key } as IPatientViewState));
+    private handleSampleClick(id: string) {
+
+        let newProps = _.clone(this.props.routing.query);
+
+        newProps.sampleId = id;
+        delete newProps.caseId;
+
+        let params = $.param(newProps);
+
+        this.props.routing.push( `/patient?${ params }` );
+
     }
 
-    private handleSampleClick(id: string){
-        patientViewPageStore.setSampleId(id);
-    }
+    private handlePatientClick(id: string) {
 
+        let newProps = _.clone(this.props.routing.query);
 
-    private getSampleIndent() {
-        return (<svg width='20' height='15' style={{marginRight: '5px'}}>
-            <line x1='10' y1='0' x2='10' y2='10' stroke='gray' stroke-width='2'></line>
-            <line x1='10' y1='10' x2='50' y2='10' stroke='gray' stroke-width='2'></line>
-        </svg>);
+        newProps.caseId = id;
+        delete newProps.sampleId;
+
+        let params = $.param(newProps);
+
+        this.props.routing.push( `/patient?${ params }` );
+
     }
 
     public render() {
@@ -380,16 +391,18 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 </If>
 
                 {  (patientViewPageStore.patientViewData.isComplete) && (
-                    <div className="clearfix" style={{padding:20, borderRadius:5, background: '#eee', marginBottom: 20}}>
+                    <div className="clearfix"
+                         style={{padding:20, borderRadius:5, background: '#eee', marginBottom: 20}}>
                         <PatientHeader
-                                       handlePatientClick={(id: string)=>patientViewPageStore.setPatientId(id)}
-                                       patient={patientViewPageStore.patientViewData.result!.patient!}/>
+                            handlePatientClick={(id: string)=>this.handlePatientClick(id)}
+                            patient={patientViewPageStore.patientViewData.result!.patient!}/>
                         {sampleHeader}
                     </div>
                     )
                 }
 
-                <Tabs animation={false} activeKey={this.state.activeTabKey} id="patientViewPageTabs" onSelect={this.handleSelect as SelectCallback} className="mainTabs" unmountOnExit={true}>
+                <Tabs animation={false} activeKey={this.state.activeTabKey} id="patientViewPageTabs"
+                      onSelect={this.handleSelect as SelectCallback} className="mainTabs" unmountOnExit={true}>
 
                     <Tab eventKey={1} id="summaryTab" title="Summary">
 

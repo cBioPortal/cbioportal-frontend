@@ -4,7 +4,6 @@ import {
     ClinicalData, SampleIdentifier,
     GeneticProfile, Sample, Mutation, DiscreteCopyNumberFilter
 } from "../../../shared/api/generated/CBioPortalAPI";
-import {ClinicalInformationData} from "../Connector";
 import client from "../../../shared/api/cbioportalClientInstance";
 import {computed, observable, action, reaction, autorun} from "mobx";
 import oncokbClient from "../../../shared/api/oncokbClientInstance";
@@ -23,10 +22,20 @@ import {getTissueImageCheckUrl} from "../../../shared/api/urls";
 
 type PageMode = 'patient' | 'sample';
 
-export function groupByEntityId(clinicalDataArray: Array<ClinicalData>) {
+export type ClinicalInformationData = {
+    patient?: {
+        id: string,
+        clinicalData: Array<ClinicalData>
+    },
+    samples?: Array<ClinicalDataBySampleId>,
+    nodes?: any[]//PDXNode[],
+};
+
+export function groupByEntityId(clinicalDataArray: Array<ClinicalData>)
+{
     return _.map(
         _.groupBy(clinicalDataArray, 'entityId'),
-        (v: ClinicalData[], k: string): ClinicalDataBySampleId => ({
+        (v:ClinicalData[], k:string):ClinicalDataBySampleId => ({
             clinicalData: v,
             id: k,
         })
