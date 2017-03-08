@@ -129,6 +129,10 @@ var config = {
                 test: /\.swf$/,
                 loader: `file-loader?name=${imgPath}`,
             },
+            {
+                test: /\.pdf$/,
+                loader: `url-loader?name=${imgPath}&limit=1`,
+            },
             // {
             //     test: /ClinicalInformationContainer/i,
             //     include: path.resolve(__dirname, 'src'),

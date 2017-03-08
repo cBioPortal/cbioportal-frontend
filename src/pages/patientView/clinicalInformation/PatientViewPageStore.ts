@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import { ClinicalDataBySampleId } from "../../../shared/api/api-types-extended";
+import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
 import {
     ClinicalData, SampleIdentifier,
     GeneticProfile, Sample, Mutation, DiscreteCopyNumberFilter
@@ -23,11 +23,10 @@ import {getTissueImageCheckUrl} from "../../../shared/api/urls";
 
 type PageMode = 'patient' | 'sample';
 
-export function groupByEntityId(clinicalDataArray: Array<ClinicalData>)
-{
+export function groupByEntityId(clinicalDataArray: Array<ClinicalData>) {
     return _.map(
         _.groupBy(clinicalDataArray, 'entityId'),
-        (v:ClinicalData[], k:string):ClinicalDataBySampleId => ({
+        (v: ClinicalData[], k: string): ClinicalDataBySampleId => ({
             clinicalData: v,
             id: k,
         })
@@ -46,6 +45,23 @@ export async function checkForTissueImage(patientId: string) : Promise<boolean> 
 
         // if the count is greater than 0, there is a slide for this patient
         return ( (!!matches && parseInt(matches[1],10)) > 0 );
+    }
+
+}
+
+export type PathologyReportPDF = {
+
+    name:string;
+    url:string;
+
+}
+
+export function handlePathologyReportCheckResponse(resp: any): PathologyReportPDF[]  {
+
+    if  (resp.total_count > 0) {
+        return _.map(resp.items , (item: any)=>( {url:item.url, name:item.name } ));
+    } else {
+        return [];
     }
 
 }
@@ -77,7 +93,7 @@ export class PatientViewPageStore
     }
 
     @observable private _patientId = '';
-    @computed get patientId():string {
+    @computed get patientId(): string {
         if (this._patientId)
             return this._patientId;
 
@@ -153,6 +169,20 @@ export class PatientViewPageStore
         })
     }, []);
 
+    readonly pathologyReport = remoteData({
+        await: () => [],
+        invoke: async() => {
+
+            let resp: any = await request.get(`//api.github.com/search/code?q=TCGA-DD-AACA+extension:pdf+in:path+repo:cBioPortal/datahub`);
+
+            const parsedResp: any = JSON.parse(resp.text);
+
+            return handlePathologyReportCheckResponse(parsedResp);
+
+        }
+
+    }, []);
+
     readonly clinicalDataForSamples = remoteData({
         await: () => [
             this.samples
@@ -198,8 +228,8 @@ export class PatientViewPageStore
         invoke: async () => {
             const regex1 = /^.+rna_seq.*_zscores$/; // We prefer profiles that look like this
             const regex2 = /^.*_zscores$/; // If none of the above are available, we'll look for ones like this
-            const preferredProfile:(GeneticProfile | undefined) = this.geneticProfilesInStudy.result.find(
-                (gp:GeneticProfile) => regex1.test(gp.geneticProfileId.toLowerCase()));
+            const preferredProfile: (GeneticProfile | undefined) = this.geneticProfilesInStudy.result.find(
+                (gp: GeneticProfile) => regex1.test(gp.geneticProfileId.toLowerCase()));
 
             if (preferredProfile) {
                 return preferredProfile.geneticProfileId;
