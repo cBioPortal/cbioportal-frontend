@@ -5,6 +5,7 @@ import React from 'react';
 import { assert } from 'chai';
 import {shallow, mount, ReactWrapper} from 'enzyme';
 import sinon from 'sinon';
+import {ICosmicData} from "./CosmicColumnFormatter";
 
 describe('CosmicColumnFormatter', () => {
 
@@ -76,38 +77,25 @@ describe('CosmicColumnFormatter', () => {
     let component273: ReactWrapper<any, any>;
     let component38: ReactWrapper<any, any>;
     let component666: ReactWrapper<any, any>;
+    let cosmicData:ICosmicData;
 
     before(() => {
-        const columnProps = {
-            cosmicData: keywordToCosmic(cosmicMutations)
-        };
+        cosmicData = keywordToCosmic(cosmicMutations);
 
-        let data = {
-            name: "Cosmic",
-            tableData,
-            rowData: [mutation273]
-        };
+        let data = [mutation273];
 
         // mount a single cell component (Td)
-        component273 = mount(CosmicColumnFormatter.renderFunction(data, columnProps));
+        component273 = mount(CosmicColumnFormatter.renderFunction(data, cosmicData));
 
-        data = {
-            name: "Cosmic",
-            tableData,
-            rowData: [mutation38]
-        };
+        data = [mutation38];
 
         // mount a single cell component (Td)
-        component38 = mount(CosmicColumnFormatter.renderFunction(data, columnProps));
+        component38 = mount(CosmicColumnFormatter.renderFunction(data, cosmicData));
 
-        data = {
-            name: "Cosmic",
-            tableData,
-            rowData: [mutation666]
-        };
+        data = [mutation666];
 
         // mount a single cell component (Td)
-        component666 = mount(CosmicColumnFormatter.renderFunction(data, columnProps));
+        component666 = mount(CosmicColumnFormatter.renderFunction(data, cosmicData));
     });
 
     it('generates component tooltip', () => {
@@ -127,12 +115,12 @@ describe('CosmicColumnFormatter', () => {
     });
 
     it('sets component cell value property', () => {
-        assert.equal(component273.prop("value"), (2 + 3 + 5),
-            'Cell (Td) value property for TP53 R273 missense mutation is correct');
-        assert.equal(component38.prop("value"), (7 + 11 + 13),
-            'Cell (Td) value property for PIK3CA R38 missense mutation is correct');
-        assert.isAtMost(component666.prop("value"), 0,
-            'Cell (Td) value property for DIABLO mutation should not be greater than zero');
+        assert.equal(CosmicColumnFormatter.getSortValue([mutation273], cosmicData), (2 + 3 + 5),
+            'Sort value for TP53 R273 missense mutation is correct');
+        assert.equal(CosmicColumnFormatter.getSortValue([mutation38], cosmicData), (7 + 11 + 13),
+            'Sort value value property for PIK3CA R38 missense mutation is correct');
+        assert.equal(CosmicColumnFormatter.getSortValue([mutation666], cosmicData), Number.POSITIVE_INFINITY,
+            'Sort value value property for DIABLO mutation should be infinity, no cosmic data');
     });
 
     after(() => {
