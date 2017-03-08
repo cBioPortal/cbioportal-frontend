@@ -17,11 +17,7 @@ describe('GeneColumnFormatter', () => {
     let component: ReactWrapper<any, any>;
 
     before(() => {
-        const data = {
-            name: "Gene",
-            tableData,
-            rowData: [mutation]
-        };
+        const data = [mutation];
 
         // mount a single cell component (Td)
         component = mount(GeneColumnFormatter.renderFunction(data));
@@ -30,11 +26,6 @@ describe('GeneColumnFormatter', () => {
     it('renders display value', () => {
         assert.isTrue(component.find(`span`).text().indexOf("DIABLO") > -1,
             'Gene symbol display value is correct');
-    });
-
-    it('sets component cell value property', () => {
-        assert.equal(component.prop("value"), "DIABLO",
-            'Cell (Td) value property is correct');
     });
 
     after(() => {
