@@ -1,6 +1,6 @@
 import OncoKbAPI from "./generated/OncoKbAPI";
-import AppConfig from 'appConfig';
+import {getOncoKbApiUrl} from "./urls";
 
-const client = new OncoKbAPI(`//${AppConfig.oncoKbApiRoot}`);
+const client = new OncoKbAPI(getOncoKbApiUrl());
 
 export default client;
