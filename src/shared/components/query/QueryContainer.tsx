@@ -119,10 +119,11 @@ export default class QueryContainer extends React.Component<{}, {}>
 				)}
 
 				<FlexRow padded className={styles.submitRow}>
-					<button className={styles.submit}>
+					<button className={styles.submit} onClick={() => this.store.submit()}>
 						Submit
 					</button>
 					{!!(this.store.forDownloadTab) && (
+						//<script src="https://gsui.genomespace.org/jsui/upload/gsuploadwindow.js" type="text/javascript"></script>
 						<button className={styles.genomeSpace}>
 							Send to GenomeSpace
 						</button>

@@ -32,7 +32,7 @@ export default class GeneSymbolValidator extends React.Component<{}, {}>
 
 	render()
 	{
-		if (!this.store.geneIds.length)
+		if (!this.store.oqlParserResult.length)
 			return null;
 
 		if (this.store.genes.isPending && this.store.genes.result.suggestions.length == 0)

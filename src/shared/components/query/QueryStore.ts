@@ -5,13 +5,14 @@ import {TypeOfCancer as CancerType, GeneticProfile, CancerStudy, SampleList, Gen
 import CancerStudyTreeData from "./CancerStudyTreeData";
 import StudyListLogic from "../StudyList/StudyListLogic";
 import {remoteData} from "../../api/remoteData";
-import {labelMobxPromises, cached} from "mobxpromise";
+import {labelMobxPromises, cached, debounceAsync} from "mobxpromise";
 import internalClient from "../../api/cbioportalInternalClientInstance";
 import oql_parser from "../../lib/oql/oql-parser";
 import {SyntaxError} from "../../lib/oql/oql-parser";
 import memoize from "memoize-weak-decorator";
-import debounceAsync from "../../lib/debounceAsync";
 import AppConfig from 'appConfig';
+import {getSubmitQueryUrl} from "../../api/urls";
+import {gsUploadByGet} from "../../api/genomespace/gsuploadwindow";
 
 export type GeneReplacement = {alias: string, genes: Gene[]};
 
@@ -347,6 +348,21 @@ export class QueryStore
 		return this.selectedStudies.reduce((sum:number, study:CancerStudy) => sum + study.allSampleCount, 0);
 	}
 
+	// DATA TYPE PRIORITY
+
+	@computed get dataTypePriorityCode():0|1|2
+	{
+		let {mutation, cna} = this.dataTypePriority;
+		if (mutation && cna)
+			return 0;
+		if (mutation)
+			return 1;
+		if (cna)
+			return 2;
+
+		return 0;
+	}
+
 	// GENETIC PROFILE
 
 	@computed get dict_geneticProfileId_geneticProfile():_.Dictionary<GeneticProfile | undefined>
@@ -413,6 +429,27 @@ export class QueryStore
 		}
 	}
 
+	// DOWNLOAD
+
+	private readonly dict_geneticAlterationType_filenameSuffix:{[K in GeneticProfile['geneticAlterationType']]?: string} = {
+		"MUTATION_EXTENDED": 'mutations',
+		"COPY_NUMBER_ALTERATION": 'cna',
+		"MRNA_EXPRESSION": 'mrna',
+		"METHYLATION": 'methylation',
+		"PROTEIN_LEVEL": 'rppa',
+	};
+
+	@computed get downloadDataFilename()
+	{
+		let study = this.singleSelectedStudyId && this.treeData.map_studyId_cancerStudy.get(this.singleSelectedStudyId);
+		let profile = this.dict_geneticProfileId_geneticProfile[this.selectedProfileIds[0] as string];
+
+		if (!this.forDownloadTab || !study || !profile)
+			return 'cbioportal-data.txt';
+
+		let suffix = this.dict_geneticAlterationType_filenameSuffix[profile.geneticAlterationType] || profile.geneticAlterationType.toLowerCase();
+		return `cbioportal-${study.studyId}-${suffix}.txt`;
+	}
 
 	////////////////////////////////////////////////////////////////////////////////
 	// ACTIONS
@@ -471,6 +508,24 @@ export class QueryStore
 		for (let geneSymbol of toRemove)
 			this.replaceGene(geneSymbol, '');
 		this.geneQuery = normalizeQuery([this.geneQuery, ...toAppend].join(' '));
+	}
+
+	@action submit()
+	{
+		// chooseAction()
+	}
+
+	@action uploadToGenomeSpace()
+	{
+		// if (!validDownloadDataForm(this))
+		// 	return;
+
+		gsUploadByGet({
+			url: getSubmitQueryUrl(this),
+			filename: this.downloadDataFilename,
+			successCallback: savePath => alert('outer Saved to GenomeSpace as ' + savePath),
+			errorCallback: savePath => alert('outer ERROR saving to GenomeSpace as ' + savePath),
+		});
 	}
 }
 
