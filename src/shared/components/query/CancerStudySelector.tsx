@@ -11,7 +11,8 @@ import StudyList from "../StudyList/StudyList";
 import {observer} from "mobx-react";
 import queryStore from "./QueryStore";
 import {action, toJS, computed} from "mobx";
-import memoize from "../../lib/memoize";
+import memoize from "memoize-weak-decorator";
+import AsyncStatus from "../asyncStatus/AsyncStatus";
 
 const styles = styles_any as {
 	CancerStudySelector: string,
@@ -20,6 +21,7 @@ const styles = styles_any as {
 	selected: string,
 	selectAll: string,
 	selectedCount: string,
+	noData: string,
 	selectionsExist: string,
 	cancerStudyName: string,
 	cancerStudySamples: string,
@@ -83,7 +85,6 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 	renderCancerTypeListItem = (cancerType:CancerType, arrayIndex:number) =>
 	{
 		let logic = this.store.studyListLogic;
-		let meta = logic.getMetadata(cancerType);
 		let numStudies = logic.getDescendantCancerStudies(cancerType).length;
 
 		if (!numStudies)
@@ -131,11 +132,9 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 				labelProps={{
 					onClick: (event:React.MouseEvent<HTMLLabelElement>) => event.stopPropagation()
 				}}
-				inputProps={{
-					onChange: event => {
-						let shownStudyIds = shownStudies.map(study => study.studyId);
-						this.handleStudiesCheckbox(event, shownStudyIds);
-					}
+				onChange={event => {
+					let shownStudyIds = shownStudies.map(study => study.studyId);
+					this.handleStudiesCheckbox(event, shownStudyIds);
 				}}
 			/>
 		);
@@ -162,16 +161,22 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 			<FlexCol overflow className={styles.CancerStudySelector}>
 				<FlexRow padded overflow className={styles.selectCancerStudyRow}>
 					<h2>Select Studies:</h2>
-					<span 
-						onClick={() => {
-							if (this.store.selectedStudyIds.length)
-								this.store.showSelectedStudiesOnly = !this.store.showSelectedStudiesOnly;
-						}}
-						className={selectedCountClass}
-					>
-						<b> {this.store.selectedStudyIds.length}</b> Studies Selected
-						(<b>{this.store.selectedStudies_totalSampleCount}</b> Samples)
-					</span>
+					<AsyncStatus promise={[this.store.cancerTypes, this.store.cancerStudies]}>
+						{!!(this.store.cancerTypes.result.length && this.store.cancerStudies.result.length) ? (
+							<span
+								onClick={() => {
+									if (this.store.selectedStudyIds.length)
+										this.store.showSelectedStudiesOnly = !this.store.showSelectedStudiesOnly;
+								}}
+								className={selectedCountClass}
+							>
+								<b>{this.store.selectedStudyIds.length}</b> Studies Selected
+								(<b>{this.store.selectedStudies_totalSampleCount}</b> Samples)
+							</span>
+						) : (
+				            <span className={styles.noData}>No data</span>
+						)}
+					</AsyncStatus>
 				</FlexRow>
 
 				<FlexRow overflow className={styles.cancerStudySelectorHeader}>

@@ -1,12 +1,9 @@
 import * as _ from "lodash";
 import * as React from "react";
-import * as ReactBootstrap from 'react-bootstrap';
 import Spinner from "react-spinkit";
 import Dictionary = _.Dictionary;
 import CancerStudySelector from "./CancerStudySelector";
 import {FlexRow, FlexCol} from "../flexbox/FlexBox";
-import Radio = ReactBootstrap.Radio;
-import Checkbox = ReactBootstrap.Checkbox;
 import * as styles_any from './styles.module.scss';
 import GeneticProfileSelector from "./GeneticProfileSelector";
 import {observer} from "mobx-react";
@@ -17,13 +14,19 @@ import SampleListSelector from "./SampleListSelector";
 import MutSigGeneSelector from "./MutSigGeneSelector";
 import GisticGeneSelector from "./GisticGeneSelector";
 import PopupWindow from "../popupWindow/PopupWindow";
+import AsyncStatus from "../asyncStatus/AsyncStatus";
+import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
 
 const styles = styles_any as {
-	QueryContainerParent: string,
 	QueryContainer: string,
+	queryContainerContent: string,
 	MutSigGeneSelectorWindow: string,
 	GisticGeneSelectorWindow: string,
-	SubmitButton: string,
+	downloadSubmitExplanation: string,
+	transposeDataMatrix: string,
+	submitRow: string,
+	submit: string,
+	genomeSpace: string,
 	errorMessage: string,
 };
 
@@ -37,9 +40,6 @@ export default class QueryContainer extends React.Component<{}, {}>
 
     render():JSX.Element
     {
-        if (this.store.cancerTypes.isPending || this.store.cancerStudies.isPending)
-            return <Spinner/>;
-
         let error = this.store.cancerTypes.error
         	|| this.store.cancerStudies.error
         	|| this.store.geneticProfiles.error
@@ -49,9 +49,6 @@ export default class QueryContainer extends React.Component<{}, {}>
         	|| this.store.genes.error;
         if (error)
 			return <span className={styles.errorMessage}>{error.toString()}</span>;
-
-        if (!this.store.cancerTypes.result.length || !this.store.cancerStudies.result.length)
-            return <span>No data</span>;
 
         return (
 			<FlexCol padded overflow className={styles.QueryContainer}>
@@ -105,9 +102,32 @@ export default class QueryContainer extends React.Component<{}, {}>
 					</PopupWindow>
 				)}
 
-				<button className={styles.SubmitButton}>
-					Submit
-				</button>
+				{!!(this.store.forDownloadTab) && (
+					<span className={styles.downloadSubmitExplanation}>
+						Clicking submit will generate a tab-delimited file containing your requested data.
+					</span>
+				)}
+
+				{!!(this.store.forDownloadTab) && (
+					<LabeledCheckbox
+						labelProps={{className: styles.transposeDataMatrix}}
+						checked={this.store.transposeDataMatrix}
+						onChange={event => this.store.transposeDataMatrix = event.currentTarget.checked}
+					>
+						Transpose data matrix
+					</LabeledCheckbox>
+				)}
+
+				<FlexRow padded className={styles.submitRow}>
+					<button className={styles.submit}>
+						Submit
+					</button>
+					{!!(this.store.forDownloadTab) && (
+						<button className={styles.genomeSpace}>
+							Send to GenomeSpace
+						</button>
+					)}
+				</FlexRow>
 			</FlexCol>
         );
     }

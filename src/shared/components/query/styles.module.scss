@@ -1,3 +1,14 @@
+.QueryAndDownloadTabs {
+  > :global(.tab-content) {
+  }
+
+  .QueryContainer {
+    border: 1px solid #ddd;
+    border-top: none;
+    padding: 10px;
+  }
+}
+
 .QueryContainer {
   width: 850px;
 
@@ -104,6 +115,7 @@
     }
   }
 
+  .noData,
   .selectedCount {
     font-size: 12px;
     line-height: 30px;
@@ -236,32 +248,27 @@
 }
 
 .GeneticProfileSelector {
-  div.singleCheckbox,
-  div.groupCheckbox {
+  .group {
+    display: flex;
+    flex-direction: column;
     margin-left: 20px;
-
-    label {
-      display: inline;
-      cursor: pointer;
-    }
-  }
-
-  div.radioGroup {
-    margin-left: 40px;
-
-    div.radioItem {
-      label {
-        cursor: pointer;
-
-        input {
-          margin-right: 6px;
-        }
-      }
-    }
   }
 
   div.zScore {
-    margin-left: 60px;
+    margin-left: 40px;
+  }
+
+  label {
+    display: inline;
+    cursor: pointer;
+
+    input[type='radio'],
+    input[type='checkbox'] {
+      margin-right: 6px;
+    }
+  }
+
+  span.infoIcon {
   }
 
   span.groupName {
@@ -291,11 +298,16 @@
   .ReactSelect {
   }
 
-  button {
+  .buttonRow {
+    button {
+      border: 1px solid #d3d3d3;
+      border-radius: 4px;
+      padding: .4em 1em;
+      margin: 3px;
+    }
   }
 
   textarea.geneSet {
-
     &.empty {
     }
     &.notEmpty {
@@ -485,15 +497,31 @@ div.GisticGeneSelectorWindow {
   }
 }
 
-button.SubmitButton {
-  font-weight: 400;
-  font-size: 18px;
-  width: 400px;
-  padding: 10px 16px;
-  background-color: #e6e6e6;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  &:hover {
-    border-color: #adadad;
+span.downloadSubmitExplanation {
+}
+
+label.transposeDataMatrix {
+  input[type='checkbox'] {
+    margin-right: 6px;
+  }
+}
+
+div.submitRow {
+  button.submit {
+    font-weight: 400;
+    font-size: 18px;
+    width: 235px;
+    padding: 10px 16px;
+    background-color: #e6e6e6;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    &:hover {
+      border-color: #adadad;
+    }
+  }
+
+  button.genomeSpace {
+    border: 1px solid #d3d3d3;
+    border-radius: 4px;
   }
 }

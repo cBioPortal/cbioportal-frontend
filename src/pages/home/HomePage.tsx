@@ -1,6 +1,5 @@
 import * as React from 'react';
 import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
-import QueryContainer from "../../shared/components/query/QueryContainer";
 import * as styles_any from './styles.module.scss';
 import {FlexCol, FlexRow} from "../../shared/components/flexbox/FlexBox";
 import devMode from "../../shared/lib/devMode";
@@ -11,6 +10,7 @@ import queryStore from "../../shared/components/query/QueryStore";
 import LabeledCheckbox from "../../shared/components/labeledCheckbox/LabeledCheckbox";
 import ReactSelect from 'react-select';
 import 'react-select/dist/react-select.css';
+import QueryAndDownloadTabs from "../../shared/components/query/QueryAndDownloadTabs";
 
 function getRootElement()
 {
@@ -49,7 +49,7 @@ export default class HomePage extends React.Component<IHomePageProps, IHomePageS
 
 	exposeComponentRenderersToParentScript()
 	{
-		exposeComponentRenderer('renderQueryContainer', QueryContainer);
+		exposeComponentRenderer('renderQueryContainer', QueryAndDownloadTabs);
 	}
 
 	public render()
@@ -57,7 +57,7 @@ export default class HomePage extends React.Component<IHomePageProps, IHomePageS
 		return (
 			<FlexRow padded flex={1} className={styles.HomePage}>
 
-				<QueryContainer/>
+				<QueryAndDownloadTabs/>
 
 				{!!(devMode.enabled) && (
 					<FlexCol padded overflow>

@@ -13,6 +13,7 @@ import AsyncStatus from "../asyncStatus/AsyncStatus";
 const styles = styles_any as {
 	GeneSetSelector: string,
 	ReactSelect: string,
+	buttonRow: string,
 	geneSet: string,
 	empty: string,
 	notEmpty: string,
@@ -59,7 +60,7 @@ export default class GeneSetSelector extends React.Component<{}, {}>
 					onChange={option => this.store.geneQuery = option ? option.value : ''}
 				/>
 
-				<FlexRow padded>
+				<FlexRow padded className={styles.buttonRow}>
 					<AsyncStatus promise={this.store.mutSigForSingleStudy}>
 						{!!(this.store.mutSigForSingleStudy.result.length) && (
 							<button onClick={() => this.store.showMutSigPopup = true}>

@@ -42,7 +42,7 @@ export default class SampleListSelector extends React.Component<{}, {}>
 			return null;
 
 		return (
-			<div className={styles.SampleListSelector}>
+			<FlexCol padded overflow className={styles.SampleListSelector}>
 				<h2>Select Patient/Case Set:</h2>
 				<ReactSelect
 					className={styles.ReactSelect}
@@ -66,7 +66,7 @@ export default class SampleListSelector extends React.Component<{}, {}>
 						<this.CaseIdsModeRadio label='By patient ID' state='patient'/>
 					</FlexCol>
 				)}
-			</div>
+			</FlexCol>
 		);
 	}
 

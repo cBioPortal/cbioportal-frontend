@@ -1,6 +1,6 @@
 import * as React from 'react';
 import Spinner from 'react-spinkit';
-import {MobxPromiseUnionType, MobxPromiseUnionTypeWithDefault} from "../../api/MobxPromise";
+import MobxPromise from "mobxpromise";
 import {observer} from "mobx-react";
 import FontAwesome from "react-fontawesome";
 import * as styles_any from './styles.module.scss';
@@ -16,16 +16,21 @@ const styles = styles_any as {
 
 interface IAsyncStatusProps extends React.HTMLProps<HTMLDivElement>
 {
-	promise: MobxPromiseUnionType<any> | MobxPromiseUnionTypeWithDefault<any>;
+	promise: MobxPromise<any> | Array<MobxPromise<any>>;
 }
 
 @observer
 export default class AsyncStatus extends React.Component<IAsyncStatusProps, {}>
 {
+	private readonly promise = new MobxPromise({
+		await: () => Array.isArray(this.props.promise) ? this.props.promise : [this.props.promise],
+		invoke: async () => null
+	});
+
 	render()
 	{
 		let {promise, children, className, ...divProps} = this.props;
-		switch (promise.status)
+		switch (this.promise.status)
 		{
 			case 'pending':
 				return (
@@ -37,7 +42,7 @@ export default class AsyncStatus extends React.Component<IAsyncStatusProps, {}>
 				return (
 					<div className={classNames(className, styles.error)} {...divProps}>
 						<FontAwesome className={styles.icon} name='exclamation-triangle'/>
-						<span className={styles.message}>{promise.error.toString()}</span>
+						<span className={styles.message}>{this.promise.error + ''}</span>
 					</div>
 				);
 			case 'complete':
@@ -47,6 +52,9 @@ export default class AsyncStatus extends React.Component<IAsyncStatusProps, {}>
 							{children}
 						</div>
 					);
+				return null;
+
+			default:
 				return null;
 		}
 	}

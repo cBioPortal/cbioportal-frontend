@@ -5,11 +5,11 @@ import {TypeOfCancer as CancerType, GeneticProfile, CancerStudy, SampleList, Gen
 import CancerStudyTreeData from "./CancerStudyTreeData";
 import StudyListLogic from "../StudyList/StudyListLogic";
 import {remoteData} from "../../api/remoteData";
-import {labelMobxPromises} from "../../api/MobxPromise";
+import {labelMobxPromises, cached} from "mobxpromise";
 import internalClient from "../../api/cbioportalInternalClientInstance";
 import oql_parser from "../../lib/oql/oql-parser";
 import {SyntaxError} from "../../lib/oql/oql-parser";
-import memoize from "../../lib/memoize";
+import memoize from "memoize-weak-decorator";
 import debounceAsync from "../../lib/debounceAsync";
 import AppConfig from 'appConfig';
 
@@ -56,6 +56,8 @@ export class QueryStore
 
 	@observable forDownloadTab:boolean = false;
 
+	@observable transposeDataMatrix = false;
+
 	@observable searchText:string = '';
 
 	@observable.ref selectedStudyIds:ReadonlyArray<string> = [];
@@ -66,26 +68,37 @@ export class QueryStore
 	@observable.ref private _selectedProfileIds?:ReadonlyArray<string> = undefined; // user selection
 	@computed get selectedProfileIds():ReadonlyArray<string>
 	{
-		if (this._selectedProfileIds !== undefined)
-			return this._selectedProfileIds;
+		let selectedIds;
 
-		// compute default selection
-		const altTypes:GeneticProfile['geneticAlterationType'][] = [
-			'MUTATION_EXTENDED',
-			'COPY_NUMBER_ALTERATION',
-		];
-		let ids = [];
-		for (let altType of altTypes)
+		if (this._selectedProfileIds !== undefined)
 		{
-			let profiles = this.getFilteredProfiles(altType);
-			if (profiles.length)
-				ids.push(profiles[0].geneticProfileId);
+			selectedIds = this._selectedProfileIds;
 		}
-		return ids;
-	}
-	set selectedProfileIds(value:ReadonlyArray<string>)
-	{
-		this._selectedProfileIds = value;
+		else
+		{
+			// compute default selection
+			const altTypes:GeneticProfile['geneticAlterationType'][] = [
+				'MUTATION_EXTENDED',
+				'COPY_NUMBER_ALTERATION',
+			];
+			selectedIds = [];
+			for (let altType of altTypes)
+			{
+				let profiles = this.getFilteredProfiles(altType);
+				if (profiles.length)
+					selectedIds.push(profiles[0].geneticProfileId);
+			}
+		}
+
+		// download tab only allows one selected profile
+		if (this.forDownloadTab)
+			return selectedIds.slice(0, 1);
+
+		// query tab only allows selecting profiles with showProfileInAnalysisTab=true
+		return selectedIds.filter(id => {
+			let profile = this.dict_geneticProfileId_geneticProfile[id];
+			return profile && profile.showProfileInAnalysisTab;
+		});
 	}
 
 	@observable zScoreThreshold:string = '2.0';
@@ -158,7 +171,6 @@ export class QueryStore
 
 	@observable geneQuery = '';
 
-
 	////////////////////////////////////////////////////////////////////////////////
 	// VISUAL OPTIONS
 	////////////////////////////////////////////////////////////////////////////////
@@ -169,8 +181,17 @@ export class QueryStore
 	@observable priorityStudies = AppConfig.priorityStudies;
 	@observable showSelectedStudiesOnly:boolean = false;
 	@observable.shallow selectedCancerTypeIds:string[] = [];
-	@observable maxTreeDepth:number = 3;
 	@observable clickAgainToDeselectSingle:boolean = true;
+
+	@observable private _maxTreeDepth:number = 3;
+	@computed get maxTreeDepth()
+	{
+		return this.forDownloadTab ? 1 : this._maxTreeDepth;
+	}
+	set maxTreeDepth(value)
+	{
+		this._maxTreeDepth = value;
+	}
 
 
 	////////////////////////////////////////////////////////////////////////////////
@@ -288,7 +309,7 @@ export class QueryStore
 
 	// CANCER STUDY
 
-	@computed get treeData()
+	@cached get treeData()
 	{
 		return new CancerStudyTreeData({
 			cancerTypes: this.cancerTypes.result,
@@ -297,7 +318,7 @@ export class QueryStore
 		});
 	}
 
-	@computed get studyListLogic()
+	@cached get studyListLogic()
 	{
 		// temporary hack - dependencies
 		// TODO review StudyListLogic code
@@ -415,6 +436,25 @@ export class QueryStore
 		else
 		{
 			this.selectedCancerTypeIds = [clickedCancerTypeId];
+		}
+	}
+
+	@action selectGeneticProfile(profile:GeneticProfile, checked:boolean)
+	{
+		let groupProfiles = this.getFilteredProfiles(profile.geneticAlterationType);
+		let groupProfileIds = groupProfiles.map(profile => profile.geneticProfileId);
+		if (this.forDownloadTab)
+		{
+			// download tab only allows a single selection
+			this._selectedProfileIds = [profile.geneticProfileId];
+		}
+		else
+		{
+			let difference = _.difference(this.selectedProfileIds, groupProfileIds);
+			if (checked)
+				this._selectedProfileIds = _.union(difference, [profile.geneticProfileId]);
+			else
+				this._selectedProfileIds = difference;
 		}
 	}
 
