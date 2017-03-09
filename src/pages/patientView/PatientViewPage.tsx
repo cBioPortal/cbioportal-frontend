@@ -41,9 +41,9 @@ import {getSpans} from './clinicalInformation/lib/clinicalAttributesUtil.js';
 import CopyNumberAlterationsTable from "./copyNumberAlterations/CopyNumberAlterationsTable";
 import CopyNumberTableWrapper from "./copyNumberAlterations/CopyNumberTableWrapper";
 import {reaction} from "mobx";
-import AppConfig from 'appConfig';
 import Timeline from "./timeline/Timeline";
 import {default as PatientViewMutationTable, MutationTableColumn} from "./mutation/PatientViewMutationTable";
+import {getCbioPortalApiUrl, getHotspotsApiUrl, getHotspots3DApiUrl} from "../../shared/api/urls";
 
 const patientViewPageStore = new PatientViewPageStore();
 
@@ -106,10 +106,10 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         this.handleSelect = this.handleSelect.bind(this);
 
-        this.tsClient = new CBioPortalAPI(`//${AppConfig.apiRoot}`);
-        this.tsInternalClient = new CBioPortalAPIInternal(`//${AppConfig.apiRoot}`);
-        this.hotspotsClient = new CancerHotspotsAPI(`//${AppConfig.hotspotsApiRoot}`);
-        this.hotspots3dClient = new CancerHotspotsAPI(`//${AppConfig.hotspots3DApiRoot}`);
+        this.tsClient = new CBioPortalAPI(getCbioPortalApiUrl());
+        this.tsInternalClient = new CBioPortalAPIInternal(getCbioPortalApiUrl());
+        this.hotspotsClient = new CancerHotspotsAPI(getHotspotsApiUrl());
+        this.hotspots3dClient = new CancerHotspotsAPI(getHotspots3DApiUrl());
 
         //TODO: this should be done by a module so that it can be reused on other pages
         const qs = queryString.parse((window as any).location.search);
