@@ -4,7 +4,7 @@ import CBioPortalAPI from "../../../shared/api/generated/CBioPortalAPI";
 import { ClinicalDataBySampleId } from "../../../shared/api/api-types-extended";
 import {ClinicalData} from "../../../shared/api/generated/CBioPortalAPI";
 import {ClinicalInformationData} from "../Connector";
-import AppConfig from 'appConfig';
+import {getCbioPortalApiUrl} from "../../../shared/api/urls";
 //import { getTreeNodesFromClinicalData, PDXNode } from './PDXTree';
 //import sampleQuery from 'shared/api/mock/Samples_query_patient_P04.json';
 
@@ -59,7 +59,7 @@ function transformClinicalInformationToStoreShape(patientId: string, studyId: st
     return rv;
 }
 
-const tsClient = new CBioPortalAPI(`//${AppConfig.apiRoot}`);
+const tsClient = new CBioPortalAPI(getCbioPortalApiUrl());
 
 export default async function getClinicalInformationData():Promise<ClinicalInformationData> {
     const qs = queryString.parse(location.search);

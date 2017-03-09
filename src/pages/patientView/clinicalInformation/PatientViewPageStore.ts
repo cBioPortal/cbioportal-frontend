@@ -15,11 +15,11 @@ import {IndicatorQueryResp} from "shared/api/generated/OncoKbAPI";
 import {labelMobxPromises, cached} from "mobxpromise";
 import MrnaExprRankCache from './MrnaExprRankCache';
 import request from 'superagent';
-import AppConfig from 'appConfig';
 import CohortVariantCountCache from "./CohortVariantCountCache";
 import {EntrezToKeywordList} from "./CohortVariantCountCache";
 import {SampleToEntrezListOrNull} from "./SampleGeneCache";
 import DiscreteCNACache from "./DiscreteCNACache";
+import {getTissueImageCheckUrl} from "../../../shared/api/urls";
 
 type PageMode = 'patient' | 'sample';
 
@@ -40,7 +40,7 @@ export async function checkForTissueImage(patientId: string) : Promise<boolean> 
         return false;
     } else {
 
-        let resp = await request.get(`//${AppConfig.tissueImageCheckUrl}${patientId}`);
+        let resp = await request.get(getTissueImageCheckUrl(patientId));
 
         let matches = resp.text.match(/<data total_count='([0-9]+)'>/);
 
