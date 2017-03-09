@@ -1,13 +1,13 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import {Dropdown, Checkbox} from 'react-bootstrap';
-import {IColumnVisibilityDef} from "../enhancedReactTable/IEnhancedReactTableProps";
+import {IColumnVisibilityDef} from "../msktable/MSKTable";
 
 export interface IColumnVisibilityControlsProps {
     className?: string;
     buttonText?: string | JSX.Element;
     columnVisibility?: IColumnVisibilityDef[];
-    onColumnToggled?: (columnId: String) => void;
+    onColumnToggled?: (columnId: string) => void;
 }
 
 /**

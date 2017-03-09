@@ -219,70 +219,81 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
         this._columns[MutationTableColumn.REF_READS_N] = {
             name: "Ref Reads (N)",
             render: (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, this.getSamples(), "normalRefCount"),
-            sort: (d1:Mutation[], d2:Mutation[], ascending:boolean)=>defaultSort(d1, d2, ascending, "normalRefCount", "number")
+            sort: (d1:Mutation[], d2:Mutation[], ascending:boolean)=>defaultSort(d1, d2, ascending, "normalRefCount", "number"),
+            visibility: "hidden"
         };
 
         this._columns[MutationTableColumn.VAR_READS_N] = {
             name: "Variant Reads (N)",
             render: (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, this.getSamples(), "normalAltCount"),
-            sort: (d1:Mutation[], d2:Mutation[], ascending:boolean)=>defaultSort(d1, d2, ascending, "normalAltCount", "number")
+            sort: (d1:Mutation[], d2:Mutation[], ascending:boolean)=>defaultSort(d1, d2, ascending, "normalAltCount", "number"),
+            visibility: "hidden"
         };
 
         this._columns[MutationTableColumn.REF_READS] = {
             name: "Ref Reads",
             render: (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, this.getSamples(), "tumorRefCount"),
-            sort: (d1:Mutation[], d2:Mutation[], ascending:boolean)=>defaultSort(d1, d2, ascending, "tumorRefCount", "number")
+            sort: (d1:Mutation[], d2:Mutation[], ascending:boolean)=>defaultSort(d1, d2, ascending, "tumorRefCount", "number"),
+            visibility: "hidden"
         };
 
         this._columns[MutationTableColumn.VAR_READS] = {
             name: "Variant Reads",
             render: (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, this.getSamples(), "tumorAltCount"),
-            sort: (d1:Mutation[], d2:Mutation[], ascending:boolean)=>defaultSort(d1, d2, ascending, "tumorAltCount", "number")
+            sort: (d1:Mutation[], d2:Mutation[], ascending:boolean)=>defaultSort(d1, d2, ascending, "tumorAltCount", "number"),
+            visibility: "hidden"
         };
 
         this._columns[MutationTableColumn.START_POS] = {
             name: "Start Pos",
             render: (d:Mutation[])=>getSpanForDataField(d, "startPosition"),
-            sort: (d1:Mutation[], d2:Mutation[], ascending:boolean)=>defaultSort(d1, d2, ascending, "startPosition", "number")
+            sort: (d1:Mutation[], d2:Mutation[], ascending:boolean)=>defaultSort(d1, d2, ascending, "startPosition", "number"),
+            visibility: "hidden"
         };
 
         this._columns[MutationTableColumn.END_POS] = {
             name: "End Pos",
             render: (d:Mutation[])=>getSpanForDataField(d, "endPosition"),
-            sort: (d1:Mutation[], d2:Mutation[], ascending:boolean)=>defaultSort(d1, d2, ascending, "endPosition", "number")
+            sort: (d1:Mutation[], d2:Mutation[], ascending:boolean)=>defaultSort(d1, d2, ascending, "endPosition", "number"),
+            visibility: "hidden"
         };
 
         this._columns[MutationTableColumn.REF_ALLELE] = {
             name: "Ref",
             render: (d:Mutation[])=>getSpanForDataField(d, "referenceAllele"),
-            sort: (d1:Mutation[], d2:Mutation[], ascending:boolean)=>defaultSort(d1, d2, ascending, "referenceAllele", "string")
+            sort: (d1:Mutation[], d2:Mutation[], ascending:boolean)=>defaultSort(d1, d2, ascending, "referenceAllele", "string"),
+            visibility: "hidden"
         };
 
         this._columns[MutationTableColumn.VAR_ALLELE] = {
             name: "Var",
             render: (d:Mutation[])=>getSpanForDataField(d, "variantAllele"),
-            sort: (d1:Mutation[], d2:Mutation[], ascending:boolean)=>defaultSort(d1, d2, ascending, "variantAllele", "string")
+            sort: (d1:Mutation[], d2:Mutation[], ascending:boolean)=>defaultSort(d1, d2, ascending, "variantAllele", "string"),
+            visibility: "hidden"
         };
 
         this._columns[MutationTableColumn.MUTATION_STATUS] = {
             name: "MS",
             render: (d:Mutation[])=>getSpanForDataField(d, "mutationStatus"),
             sort: (d1:Mutation[], d2:Mutation[], ascending:boolean)=>defaultSort(d1, d2, ascending, "mutationStatus", "string"),
-            filter: (d:Mutation[], filterString:string)=>defaultFilter(d, "mutationStatus", filterString)
+            filter: (d:Mutation[], filterString:string)=>defaultFilter(d, "mutationStatus", filterString),
+            visibility: "hidden"
         };
 
         this._columns[MutationTableColumn.VALIDATION_STATUS] = {
             name: "VS",
             render: (d:Mutation[])=>getSpanForDataField(d, "validationStatus"),
             sort: (d1:Mutation[], d2:Mutation[], ascending:boolean)=>defaultSort(d1, d2, ascending, "validationStatus", "string"),
-            filter: (d:Mutation[], filterString:string)=>defaultFilter(d, "validationStatus", filterString)
+            filter: (d:Mutation[], filterString:string)=>defaultFilter(d, "validationStatus", filterString),
+            visibility: "hidden"
         };
 
         this._columns[MutationTableColumn.CENTER] = {
             name: "Center",
             render: (d:Mutation[])=>getSpanForDataField(d, "center"),
             sort: (d1:Mutation[], d2:Mutation[], ascending:boolean)=>defaultSort(d1, d2, ascending, "center", "string"),
-            filter: (d:Mutation[], filterString:string)=>defaultFilter(d, "center", filterString)
+            filter: (d:Mutation[], filterString:string)=>defaultFilter(d, "center", filterString),
+            visibility: "hidden"
         };
 
         this._columns[MutationTableColumn.GENE] = {
@@ -304,7 +315,8 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
             },
             filter:(d:Mutation[], filterString:string)=>{
                 return ((ChromosomeColumnFormatter.getData(d)+'').indexOf(filterString) > -1);
-            }
+            },
+            visibility: "hidden"
         };
 
         this._columns[MutationTableColumn.PROTEIN_CHANGE] = {
@@ -343,7 +355,8 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
             },
             filter:(d:Mutation[], filterString:string)=>{
                 return (MutationAssessorColumnFormatter.filterValue(d).indexOf(filterString) > -1);
-            }
+            },
+            visibility: "hidden"
         };
 
         this._columns[MutationTableColumn.COSMIC] = {
