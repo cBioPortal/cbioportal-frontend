@@ -1,9 +1,5 @@
 export interface IAppConfig {
-    apiRoot: string;
-    hotspotsApiRoot: string;
-    hotspots3DApiRoot: string;
-    oncoKbApiRoot: string;
-    tissueImageCheckUrl: string;
+    host: string;
     cancerStudySearchPresets: string[];
     priorityStudies: PriorityStudies;
 }

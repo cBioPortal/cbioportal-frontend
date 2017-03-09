@@ -1,11 +1,7 @@
 import {IAppConfig} from "./IAppConfig";
 
 const config:IAppConfig = {
-    apiRoot: 'cbioportal-rc.herokuapp.com/api',
-    hotspotsApiRoot: 'cbioportal-rc.herokuapp.com/proxy/cancerhotspots.org',
-    hotspots3DApiRoot: 'cbioportal-rc.herokuapp.com/proxy/3dhotspots.org/3d',
-    oncoKbApiRoot: 'cbioportal-rc.herokuapp.com/proxy/oncokb.org/api/v1',
-    tissueImageCheckUrl: 'cbioportal-rc.herokuapp.com/proxy/cancer.digitalslidearchive.net/local_php/get_slide_list_from_db_groupid_not_needed.php?slide_name_filter=',
+    host: 'cbioportal-rc.herokuapp.com',
     cancerStudySearchPresets: [
         'tcga',
         'tcga -provisional',
