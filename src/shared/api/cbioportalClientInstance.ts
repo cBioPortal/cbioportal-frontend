@@ -1,5 +1,5 @@
 import CBioPortalAPI from "./generated/CBioPortalAPI";
-import AppConfig from 'appConfig';
+import {getCbioPortalApiUrl} from "./urls";
 
-const client = new CBioPortalAPI(`//${AppConfig.apiRoot}`);
+const client = new CBioPortalAPI(getCbioPortalApiUrl());
 export default client;
