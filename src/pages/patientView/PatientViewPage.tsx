@@ -480,6 +480,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 sampleManager={sampleManager}
                                 store={patientViewPageStore}
                                 mutSigData={this.state.mutSigData}
+                                cosmicData={this.state.cosmicData}
                                 columns={[MutationTableColumn.COHORT,
                                 MutationTableColumn.MRNA_EXPR,
                                 MutationTableColumn.COPY_NUM,
@@ -498,7 +499,11 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 MutationTableColumn.CHROMOSOME,
                                 MutationTableColumn.PROTEIN_CHANGE,
                                 MutationTableColumn.MUTATION_TYPE,
-                                MutationTableColumn.MUTATION_ASSESSOR]}
+                                MutationTableColumn.MUTATION_ASSESSOR,
+                                MutationTableColumn.COSMIC,
+                                MutationTableColumn.TUMOR_ALLELE_FREQ,
+                                MutationTableColumn.TUMORS,
+                                MutationTableColumn.SAMPLE_ID]}
                             />
                         </div>
                     </Tab>

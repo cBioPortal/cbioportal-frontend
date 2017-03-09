@@ -42,10 +42,10 @@ export default class MutationInformationContainer extends React.Component<IMutat
     buildColumns(){
 
         let columns:IColumnDefMap = {
-            sampleId: {
+            /*sampleId: {
                 name: "Sample",
                 visible: "excluded"
-            },
+            },*/
             /*gene: {
                 name: "Gene",
                 description: "HUGO Symbol"
@@ -119,7 +119,7 @@ export default class MutationInformationContainer extends React.Component<IMutat
                     variantCountData: this.props.variantCountData
                 }
             },*/
-            cosmic: {
+            /*cosmic: {
                 name: "COSMIC",
                 description: "COSMIC occurrences",
                 formatter: CosmicColumnFormatter.renderFunction,
@@ -128,8 +128,8 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 columnProps: {
                     cosmicData: this.props.cosmicData
                 }
-            },
-            tumorAlleleFreq: {
+            },*/
+            /*tumorAlleleFreq: {
                 name: "Allele Freq",
                 description: "Variant allele frequency in the tumor sample",
                 formatter: AlleleFreqColumnFormatter.renderFunction,
@@ -138,12 +138,12 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 columnProps: {
                     sampleManager: this.props.sampleManager
                 }
-            },
-            normalAlleleFreq : {
+            },*/
+           /*normalAlleleFreq : {
                 name: "Allele Freq (N)",
                 description: "Variant allele frequency in the normal sample",
                 visible: "hidden"
-            },
+            },*/
             /*normalRefCount: {
                 name: "Ref Reads (N)",
                 formatter: AlleleCountColumnFormatter.renderFunction,
@@ -203,7 +203,7 @@ export default class MutationInformationContainer extends React.Component<IMutat
         };
 
         // some columns are dependent on number of samples
-        if (this.props.sampleManager.samples.length > 1) {
+        /*if (this.props.sampleManager.samples.length > 1) {
             columns['tumors'] = {
                 name: "Tumors",
                 description: "Cases/Samples",
@@ -219,7 +219,7 @@ export default class MutationInformationContainer extends React.Component<IMutat
                     sampleManager: this.props.sampleManager
                 }
             };
-        }
+        }*/
 
         return columns;
 
