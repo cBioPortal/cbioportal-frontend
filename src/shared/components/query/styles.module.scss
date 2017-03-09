@@ -1,5 +1,8 @@
 .QueryAndDownloadTabs {
-  > :global(.tab-content) {
+
+  :global(ul.nav.nav-tabs li) {
+    font-size: 150%;
+    font-weight: bold;
   }
 
   .QueryContainer {
@@ -303,7 +306,6 @@
       border: 1px solid #d3d3d3;
       border-radius: 4px;
       padding: .4em 1em;
-      margin: 3px;
     }
   }
 

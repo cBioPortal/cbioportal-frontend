@@ -6,6 +6,7 @@ import FontAwesome from "react-fontawesome";
 import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
 import queryStore from "../query/QueryStore";
 import {observer} from "mobx-react";
+import {getStudySummaryUrl, getPubMedUrl} from "../../api/urls";
 
 const styles = {
 	...styles_any as {
@@ -175,9 +176,9 @@ export default class StudyList extends React.Component<{}, {}>
 	{
 		let links = [];
 		if (study.studyId)
-			links.push({icon: 'bar-chart', url: `/study?id=${study.studyId}#summary`});
+			links.push({icon: 'bar-chart', url: getStudySummaryUrl(study.studyId)});
 		if (study.pmid)
-			links.push({icon: 'book', url: `http://www.ncbi.nlm.nih.gov/pubmed/${study.pmid}`});
+			links.push({icon: 'book', url: getPubMedUrl(study.pmid)});
 		else 
 			links.push({icon: 'book', url: undefined });
 		return (

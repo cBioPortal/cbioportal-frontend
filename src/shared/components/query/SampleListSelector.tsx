@@ -6,6 +6,7 @@ import {observer} from "mobx-react";
 import {computed} from 'mobx';
 import {FlexCol} from "../flexbox/FlexBox";
 import {QueryStore} from "./QueryStore";
+import {getStudyViewUrl} from "../../api/urls";
 
 const styles = styles_any as {
 	SampleListSelector: string,
@@ -50,7 +51,7 @@ export default class SampleListSelector extends React.Component<{}, {}>
 					options={this.sampleListOptions}
 					onChange={option => this.store.selectedSampleListId = option ? option.value : undefined}
 				/>
-				<a href={`/study?id=${this.store.singleSelectedStudyId}`}>To build your own case set, try out our enhanced Study View.</a>
+				<a href={getStudyViewUrl(this.store.singleSelectedStudyId)}>To build your own case set, try out our enhanced Study View.</a>
 
 				{!!(!this.store.selectedSampleListId) && (
 					<FlexCol>

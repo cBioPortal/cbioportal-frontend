@@ -9,6 +9,7 @@ import gene_lists from './gene_lists';
 import GeneSymbolValidator from "./GeneSymbolValidator";
 import classNames from "../../lib/classNames";
 import AsyncStatus from "../asyncStatus/AsyncStatus";
+import {getOncoQueryDocUrl} from "../../api/urls";
 
 const styles = styles_any as {
 	GeneSetSelector: string,
@@ -52,7 +53,7 @@ export default class GeneSetSelector extends React.Component<{}, {}>
 		return (
 			<FlexCol padded overflow className={styles.GeneSetSelector}>
 				<h2>Enter Gene Set:</h2>
-				<a href='/onco_query_lang_desc.jsp'>Advanced: Onco Query Language (OQL)</a>
+				<a href={getOncoQueryDocUrl()}>Advanced: Onco Query Language (OQL)</a>
 				<ReactSelect
 					className={styles.ReactSelect}
 					value={this.selectedGeneListOption}
