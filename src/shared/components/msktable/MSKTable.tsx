@@ -4,6 +4,7 @@ import {observable, computed, action} from "mobx";
 import {observer} from "mobx-react";
 import './styles.scss';
 import {SHOW_ALL_PAGE_SIZE as PAGINATION_SHOW_ALL, PaginationControls} from "../paginationControls/PaginationControls";
+import {ColumnVisibilityControls} from "../columnVisibilityControls/ColumnVisibilityControls";
 import DefaultTooltip from "../DefaultTooltip";
 import {ButtonToolbar} from "react-bootstrap";
 
@@ -11,6 +12,7 @@ export type Column<T> = {
     name: string;
     filter?:(data:T, filterString:string, filterStringUpper?:string, filterStringLower?:string)=>boolean;
     sort?:(a:T, b:T, ascending:boolean)=>number;
+    visibility?:ColumnVisibility|ColumnVisibilityFunction;
     render:(data:T)=>JSX.Element;
     tooltip?:JSX.Element;
 };
@@ -20,6 +22,16 @@ type MSKTableProps<T> = {
     data:T[];
 };
 
+export type ColumnVisibility = "visible" | "hidden" | "excluded";
+
+export type ColumnVisibilityFunction = <T>(data:T) => ColumnVisibility;
+
+export interface IColumnVisibilityDef {
+    id: string;
+    name: string;
+    visibility: ColumnVisibility;
+}
+
 class MSKTableStore<T> {
     @observable public filterString:string;
     @observable private _page:number;
@@ -27,6 +39,7 @@ class MSKTableStore<T> {
     @observable public sortColumn:string;
     @observable public sortAscending:boolean;
     @observable public columns:Column<T>[];
+    @observable private _columnVisibility:IColumnVisibilityDef[];
     @observable.ref public data:T[];
 
     @computed public get itemsPerPage() {
@@ -63,6 +76,10 @@ class MSKTableStore<T> {
         return this.filterString.toLowerCase();
     }
 
+    @computed public get columnVisibility() {
+        return this._columnVisibility;
+    }
+
     @computed get sortedFilteredData():T[] {
         let filtered:T[];
         if (this.filterString) {
@@ -96,7 +113,7 @@ class MSKTableStore<T> {
     }
 
     @computed get headers():JSX.Element[] {
-        return this.columns.map((column:Column<T>)=>{
+        return this.columns.filter((column:Column<T>) => this.isVisible(column)).map((column:Column<T>)=>{
             const headerProps:{role?:"button",
                 className?:"sort-asc"|"sort-des",
                 onClick?:()=>void} = {};
@@ -128,7 +145,7 @@ class MSKTableStore<T> {
     }
     @computed get rows():JSX.Element[] {
         return this.visibleData.map((datum:T)=>{
-                const tds = this.columns.map((column:Column<T>)=>{
+                const tds = this.columns.filter((column:Column<T>) => this.isVisible(column)).map((column:Column<T>)=>{
                     return (<td key={column.name}>
                         {column.render(datum)}
                     </td>);
@@ -144,6 +161,56 @@ class MSKTableStore<T> {
     @action setProps(props:MSKTableProps<T>) {
         this.columns = props.columns;
         this.data = props.data;
+        this._columnVisibility = this.resolveColumnVisibility(props.columns, props.data);
+    }
+
+    @action public updateColumnVisibility(id:string, visibility:ColumnVisibility)
+    {
+        const colVis = this._columnVisibility.find((colVisDef) => id === colVisDef.id);
+
+        if (colVis) {
+            colVis.visibility = visibility;
+        }
+    }
+
+    isVisible(column:Column<T>): boolean
+    {
+        const visibility = this.columnVisibility.find((colVisDef) => colVisDef.name === column.name);
+        return visibility !== undefined && visibility.visibility === "visible";
+    }
+
+    resolveColumnVisibility(columns:Array<Column<T>>, data:T[]): IColumnVisibilityDef[]
+    {
+        const colVis:IColumnVisibilityDef[] = [];
+
+        columns.forEach((column:Column<T>) => {
+            // every column is visible by default unless otherwise marked as hidden or excluded
+            let visibility:ColumnVisibility = "visible";
+
+            if (column.visibility)
+            {
+                if (typeof column.visibility === 'function') {
+                    visibility = (column.visibility as ColumnVisibilityFunction)(data);
+                }
+                else {
+                    visibility = column.visibility as ColumnVisibility;
+                }
+            }
+
+            // do not include "excluded" columns in the state, they will always remain hidden
+            // ones set initially to "hidden" can be toggled visible later on.
+            if (visibility !== "excluded")
+            {
+                // we don't have column.id so using name as an id
+                colVis.push({
+                    id: column.name,
+                    name: column.name,
+                    visibility
+                });
+            }
+        });
+
+        return colVis;
     }
 
     constructor() {
@@ -193,6 +260,7 @@ export default class MSKTable<T> extends React.Component<MSKTableProps<T>, {}> {
                 this.store.page -= 1;
             }
         };
+        this.handleVisibilityToggle = this.handleVisibilityToggle.bind(this);
     }
 
     @action componentWillReceiveProps(nextProps:MSKTableProps<T>) {
@@ -227,11 +295,33 @@ export default class MSKTable<T> extends React.Component<MSKTableProps<T>, {}> {
                     previousPageDisabled={this.store.page === 0}
                     nextPageDisabled={this.store.page === this.store.maxPage}
                 />
+                <ColumnVisibilityControls
+                    className="pull-right"
+                    columnVisibility={this.store.columnVisibility}
+                    onColumnToggled={this.handleVisibilityToggle}
+                />
             </ButtonToolbar>
             <SimpleTable
-                    headers={this.store.headers}
-                    rows={this.store.rows}
-                />
+                headers={this.store.headers}
+                rows={this.store.rows}
+            />
         </div>);
+    }
+
+    private handleVisibilityToggle(columnId: string): void
+    {
+        const colVisDef:IColumnVisibilityDef|undefined = this.store.columnVisibility.find(
+            (column:IColumnVisibilityDef) => column.id === columnId);
+        let visibility:ColumnVisibility;
+
+        // toggle visibility
+        if (colVisDef !== undefined && colVisDef.visibility === "visible") {
+            visibility = "hidden";
+        }
+        else {
+            visibility = "visible";
+        }
+
+        this.store.updateColumnVisibility(columnId, visibility);
     }
 }
