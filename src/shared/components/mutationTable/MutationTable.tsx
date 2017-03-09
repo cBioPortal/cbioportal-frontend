@@ -22,14 +22,14 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
     public static get defaultColumns():IColumnDefMap
     {
         return {
-            sampleId: {
+            /*sampleId: {
                 name: "Sample",
                 priority: 1.00,
                 formatter: SampleColumnFormatter.renderFunction,
                 downloader: SampleColumnFormatter.getTextValue,
                 sortable: true,
                 filterable: true
-            },/*
+            },*//*
             gene: {
                 name: "Gene",
                 priority: 2.00,
