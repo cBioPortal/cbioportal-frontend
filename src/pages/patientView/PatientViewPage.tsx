@@ -42,7 +42,7 @@ import CopyNumberAlterationsTable from "./copyNumberAlterations/CopyNumberAltera
 import CopyNumberTableWrapper from "./copyNumberAlterations/CopyNumberTableWrapper";
 import {reaction} from "mobx";
 import Timeline from "./timeline/Timeline";
-import {default as PatientViewMutationTable, MutationTableColumn} from "./mutation/PatientViewMutationTable";
+import {default as PatientViewMutationTable, MutationTableColumnType} from "./mutation/PatientViewMutationTable";
 import {getCbioPortalApiUrl, getHotspotsApiUrl, getHotspots3DApiUrl} from "../../shared/api/urls";
 
 const patientViewPageStore = new PatientViewPageStore();
@@ -479,35 +479,43 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                         <div className="clearfix">
                             <PatientViewMutationTable
                                 sampleManager={sampleManager}
-                                store={patientViewPageStore}
+                                sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
+                                variantCountCache={patientViewPageStore.variantCountCache}
+                                discreteCNACache={patientViewPageStore.discreteCNACache}
+                                mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}
+                                mrnaExprRankGeneticProfileId={patientViewPageStore.mrnaRankGeneticProfileId.result || undefined}
+                                discreteCNAGeneticProfileId={patientViewPageStore.geneticProfileIdDiscrete.result}
+                                data={patientViewPageStore.mergedMutationData}
                                 mutSigData={this.state.mutSigData}
                                 myCancerGenomeData={this.state.myCancerGenomeData}
                                 hotspots={this.state.hotspotsData}
                                 cosmicData={this.state.cosmicData}
-                                columns={[MutationTableColumn.COHORT,
-                                MutationTableColumn.MRNA_EXPR,
-                                MutationTableColumn.COPY_NUM,
-                                MutationTableColumn.ANNOTATION,
-                                MutationTableColumn.REF_READS_N,
-                                MutationTableColumn.VAR_READS_N,
-                                MutationTableColumn.REF_READS,
-                                MutationTableColumn.VAR_READS,
-                                MutationTableColumn.START_POS,
-                                MutationTableColumn.END_POS,
-                                MutationTableColumn.REF_ALLELE,
-                                MutationTableColumn.VAR_ALLELE,
-                                MutationTableColumn.MUTATION_STATUS,
-                                MutationTableColumn.VALIDATION_STATUS,
-                                MutationTableColumn.CENTER,
-                                MutationTableColumn.GENE,
-                                MutationTableColumn.CHROMOSOME,
-                                MutationTableColumn.PROTEIN_CHANGE,
-                                MutationTableColumn.MUTATION_TYPE,
-                                MutationTableColumn.MUTATION_ASSESSOR,
-                                MutationTableColumn.COSMIC,
-                                MutationTableColumn.TUMOR_ALLELE_FREQ,
-                                MutationTableColumn.TUMORS,
-                                MutationTableColumn.SAMPLE_ID]}
+                                oncoKbData={patientViewPageStore.oncoKbData.result}
+                                pmidData={patientViewPageStore.pmidData.result}
+                                columns={[MutationTableColumnType.COHORT,
+                                MutationTableColumnType.MRNA_EXPR,
+                                MutationTableColumnType.COPY_NUM,
+                                MutationTableColumnType.ANNOTATION,
+                                MutationTableColumnType.REF_READS_N,
+                                MutationTableColumnType.VAR_READS_N,
+                                MutationTableColumnType.REF_READS,
+                                MutationTableColumnType.VAR_READS,
+                                MutationTableColumnType.START_POS,
+                                MutationTableColumnType.END_POS,
+                                MutationTableColumnType.REF_ALLELE,
+                                MutationTableColumnType.VAR_ALLELE,
+                                MutationTableColumnType.MUTATION_STATUS,
+                                MutationTableColumnType.VALIDATION_STATUS,
+                                MutationTableColumnType.CENTER,
+                                MutationTableColumnType.GENE,
+                                MutationTableColumnType.CHROMOSOME,
+                                MutationTableColumnType.PROTEIN_CHANGE,
+                                MutationTableColumnType.MUTATION_TYPE,
+                                MutationTableColumnType.MUTATION_ASSESSOR,
+                                MutationTableColumnType.COSMIC,
+                                MutationTableColumnType.TUMOR_ALLELE_FREQ,
+                                MutationTableColumnType.TUMORS,
+                                MutationTableColumnType.SAMPLE_ID]}
                             />
                         </div>
                     </Tab>
