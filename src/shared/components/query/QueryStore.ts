@@ -120,10 +120,10 @@ export class QueryStore
 		if (!studyId)
 			return undefined;
 
-		let mutSelect = this.isGeneticAlterationTypeSelected('MUTATION_EXTENDED');
-		let cnaSelect = this.isGeneticAlterationTypeSelected('COPY_NUMBER_ALTERATION');
-		let expSelect = this.isGeneticAlterationTypeSelected('MRNA_EXPRESSION');
-		let rppaSelect = this.isGeneticAlterationTypeSelected('PROTEIN_LEVEL');
+		let mutSelect = this.getSelectedProfileIdFromGeneticAlterationType('MUTATION_EXTENDED');
+		let cnaSelect = this.getSelectedProfileIdFromGeneticAlterationType('COPY_NUMBER_ALTERATION');
+		let expSelect = this.getSelectedProfileIdFromGeneticAlterationType('MRNA_EXPRESSION');
+		let rppaSelect = this.getSelectedProfileIdFromGeneticAlterationType('PROTEIN_LEVEL');
 		let sampleListId = studyId + "_all";
 
 		if (mutSelect && cnaSelect && !expSelect && !rppaSelect)
@@ -196,6 +196,7 @@ export class QueryStore
 	@observable showSelectedStudiesOnly:boolean = false;
 	@observable.shallow selectedCancerTypeIds:string[] = [];
 	@observable clickAgainToDeselectSingle:boolean = true;
+	@observable submitError = '';
 
 	@observable private _maxTreeDepth:number = 3;
 	@computed get maxTreeDepth()
@@ -398,12 +399,15 @@ export class QueryStore
 		return _.includes(this.selectedProfileIds, geneticProfileId);
 	}
 
-	isGeneticAlterationTypeSelected(geneticAlterationType:GeneticProfile['geneticAlterationType']):boolean
+	getSelectedProfileIdFromGeneticAlterationType(geneticAlterationType:GeneticProfile['geneticAlterationType']):string
 	{
-		return this.selectedProfileIds.some(profileId => {
+		for (let profileId of this.selectedProfileIds)
+		{
 			let profile = this.dict_geneticProfileId_geneticProfile[profileId];
-			return !!profile && profile.geneticAlterationType == geneticAlterationType;
-		});
+			if (profile && profile.geneticAlterationType == geneticAlterationType)
+				return profile.geneticProfileId;
+		}
+		return '';
 	}
 
 	// SAMPLE LIST
@@ -458,14 +462,22 @@ export class QueryStore
 
 	@computed get submitQueryUrl()
 	{
-		return '';
-		/*
+		let studyIds = this.selectedStudyIds;
+		if (!studyIds.length)
+			this.cancerStudies.result.map(study => study.studyId);
+
 		return getSubmitQueryUrl({
-			cancer_study_list: this.selectedStudyIds,
+			cancer_study_list: studyIds,
 			cancer_study_id: this.singleSelectedStudyId || 'all',
-			genetic_profile_ids_PROFILE_MUTATION_EXTENDED: '',
+			genetic_profile_ids_PROFILE_MUTATION_EXTENDED: this.getSelectedProfileIdFromGeneticAlterationType("MUTATION_EXTENDED"),
+			genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION: this.getSelectedProfileIdFromGeneticAlterationType("COPY_NUMBER_ALTERATION"),
+			genetic_profile_ids_PROFILE_MRNA_EXPRESSION: this.getSelectedProfileIdFromGeneticAlterationType("MRNA_EXPRESSION"),
+			genetic_profile_ids_PROFILE_METHYLATION: this.getSelectedProfileIdFromGeneticAlterationType("METHYLATION") || this.getSelectedProfileIdFromGeneticAlterationType("METHYLATION_BINARY"),
+			genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION: this.getSelectedProfileIdFromGeneticAlterationType("PROTEIN_LEVEL"),
+			Z_SCORE_THRESHOLD: this.zScoreThreshold,
+			RPPA_SCORE_THRESHOLD: this.rppaScoreThreshold,
 			data_priority: this.dataTypePriorityCode,
-			case_set_id: this.selectedSampleListId | '',
+			case_set_id: this.selectedSampleListId || '',
 			case_ids: this.caseIds,
 			patient_case_select: this.caseIdsMode,
 			gene_set_choice: 'user-defined-list',
@@ -474,7 +486,6 @@ export class QueryStore
 			tab_index: this.forDownloadTab ? 'tab_download' : 'tab_visualize',
 			Action: 'Submit',
 		});
-		*/
 	}
 
 	private readonly dict_geneticAlterationType_filenameSuffix:{[K in GeneticProfile['geneticAlterationType']]?: string} = {
@@ -482,6 +493,7 @@ export class QueryStore
 		"COPY_NUMBER_ALTERATION": 'cna',
 		"MRNA_EXPRESSION": 'mrna',
 		"METHYLATION": 'methylation',
+		"METHYLATION_BINARY": 'methylation',
 		"PROTEIN_LEVEL": 'rppa',
 	};
 
@@ -563,64 +575,30 @@ export class QueryStore
 			this.geneQueryErrorDisplayStatus = 'shouldFocus';
 			return;
 		}
-/*
+
 		let haveExpInQuery = this.oql.query.some(result => {
 			return (result.alterations || []).some(alt => alt.alteration_type === 'exp');
 		});
 
-		if (!this.selectedStudyIds.length)
+		if (this.singleSelectedStudyId)
 		{
-			// select all by default
-			$("#jstree").jstree(true).select_node(window.jstree_root_id);
-			selected_studies = $("#jstree").jstree(true).get_selected_leaves()
-		}
-		if (selected_studies.length > 1)
-		{
-			if (haveExpInQuery)
+			let expProfileSelected = this.selectedProfileIds.some(id => {
+				let profile = this.dict_geneticProfileId_geneticProfile[id];
+				return !!profile && profile.geneticAlterationType === 'MRNA_EXPRESSION';
+			});
+			if (haveExpInQuery && !expProfileSelected)
 			{
-				createAnError("Expression filtering in the gene list is not supported when doing cross cancer queries.", $('#gene_list'));
-				return false;
-			}
-			$("#main_form").find("#select_multiple_studies").val("");
-			if ($("#tab_index").val() == 'tab_download')
-			{
-				$("#main_form").get(0).setAttribute('action', 'index.do');
-			}
-			else
-			{
-				let dataPriority = $('#main_form').find('input[name=data_priority]:checked').val();
-				let newSearch = $('#main_form').serialize() + '&Action=Submit#crosscancer/overview/' + dataPriority + '/' + encodeURIComponent($('#gene_list').val()) + '/' + encodeURIComponent(selected_studies.join(","));
-				evt.preventDefault();
-				window.location = 'cross_cancer.do?' + newSearch;
-				//$("#main_form").get(0).setAttribute('action','cross_cancer.do');
-			}
-
-		}
-		else if (this.singleSelectedStudyId)
-		{
-			// index.do
-
-			$("#main_form").get(0).setAttribute('action', 'index.do');
-
-			if (haveExpInQuery)
-			{
-				let expCheckBox = $("." + PROFILE_MRNA_EXPRESSION);
-
-				if (expCheckBox.length > 0 && expCheckBox.prop('checked') == false)
-				{
-					createAnError("Expression specified in the list of genes, but not selected in the" +
-						" Genetic Profile Checkboxes.", $('#gene_list'));
-					evt.preventDefault();
-				}
-				else if (expCheckBox.length == 0)
-				{
-					createAnError("Expression specified in the list of genes, but not selected in the" +
-						" Genetic Profile Checkboxes.", $('#gene_list'));
-					evt.preventDefault();
-				}
+				this.submitError = "Expression specified in the list of genes, but not selected in the Genetic Profile Checkboxes.";
+				return;
 			}
 		}
-	*/
+		else if (haveExpInQuery)
+		{
+			this.submitError = "Expression filtering in the gene list is not supported when doing cross cancer queries.";
+			return;
+		}
+
+		window.location.href = this.submitQueryUrl;
 	}
 
 	@action uploadToGenomeSpace()
