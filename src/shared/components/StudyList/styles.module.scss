@@ -53,6 +53,7 @@
 
 
   ul.StudyList {
+    margin: 0;
     padding: 0 15px;
   }
 
@@ -159,6 +160,7 @@ ul.StudyList {
       label {
         font: normal normal 400 15px/18px 'Helvetica Neue', Helvetica, Arial, sans-serif;
         color: #1982b8;
+        margin: 0;
         padding: 5px 15px 5px 0;
       }
     }
@@ -167,6 +169,7 @@ ul.StudyList {
       label {
         font: normal normal 600 11px/18px 'Helvetica Neue', Helvetica, Arial, sans-serif;
         color: #444;
+        margin: 0;
         padding: 0px 15px 0px 0;
         text-transform: uppercase;
       }
@@ -194,7 +197,7 @@ li.Study {
 
   .StudyName {
     color: #444;
-    max-width: 415px;
+    max-width: 380px;
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
