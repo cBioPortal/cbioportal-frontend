@@ -283,12 +283,14 @@
 }
 
 .DataTypePrioritySelector {
+  align-items: flex-end;
+
   h2 {
     flex-grow: 0;
   }
 
   input[type="radio"] {
-      margin: 4px 6px 0 0;
+      margin: 0 6px 0 12px;
   }
 }
 
