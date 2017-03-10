@@ -5,7 +5,7 @@ import { If, Then, Else } from 'react-if';
 import {observable} from "mobx";
 import {observer} from "mobx-react";
 
-const SHOW_ALL_PAGE_SIZE = -1;
+export const SHOW_ALL_PAGE_SIZE = -1;
 
 export interface IPaginationControlsProps {
     currentPage?:number;
