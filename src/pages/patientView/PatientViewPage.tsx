@@ -431,7 +431,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                     myCancerGenomeData={this.state.myCancerGenomeData}
                                     hotspots={this.state.hotspotsData}
                                     cosmicData={this.state.cosmicData}
-                                    oncoKbData={patientViewPageStore.oncoKbData.isComplete ? patientViewPageStore.oncoKbData.result : undefined}
+                                    oncoKbData={patientViewPageStore.oncoKbData.result}
+                                    pmidData={patientViewPageStore.pmidData.result}
                                     sampleOrder={sampleManager.sampleOrder}
                                     sampleLabels={sampleManager.sampleLabels}
                                     sampleColors={sampleManager.sampleColors}
@@ -480,10 +481,13 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 sampleManager={sampleManager}
                                 store={patientViewPageStore}
                                 mutSigData={this.state.mutSigData}
+                                myCancerGenomeData={this.state.myCancerGenomeData}
+                                hotspots={this.state.hotspotsData}
                                 cosmicData={this.state.cosmicData}
                                 columns={[MutationTableColumn.COHORT,
                                 MutationTableColumn.MRNA_EXPR,
                                 MutationTableColumn.COPY_NUM,
+                                MutationTableColumn.ANNOTATION,
                                 MutationTableColumn.REF_READS_N,
                                 MutationTableColumn.VAR_READS_N,
                                 MutationTableColumn.REF_READS,
