@@ -191,7 +191,7 @@ export class PatientViewPageStore
         })
     }, []);
 
-    private readonly mrnaRankGeneticProfileId = remoteData({
+    public readonly mrnaRankGeneticProfileId = remoteData({
         await: () => [
             this.geneticProfilesInStudy
         ],
