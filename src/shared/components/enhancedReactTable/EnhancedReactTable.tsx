@@ -214,7 +214,7 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
                     showSearch={true}
                     columnVisibilityProps={{
                         className: "pull-right",
-                        columnVisibility,
+                        /*columnVisibility,*/
                         onColumnToggled: this.handleVisibilityToggle
                     }}
                     paginationProps={{
