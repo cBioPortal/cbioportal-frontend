@@ -9,6 +9,11 @@ import DefaultTooltip from 'shared/components/DefaultTooltip';
 import {cleanAndDerive} from './clinicalInformation/lib/clinicalAttributesUtil.js';
 import styles from './patientHeader/style/clinicalAttributes.scss';
 
+import {getSpans} from './clinicalInformation/lib/clinicalAttributesUtil.js';
+import { PatientViewPageStore } from './clinicalInformation/PatientViewPageStore';
+
+const patientViewPageStore = new PatientViewPageStore();
+
 // we need this to account for issue with rc-tooltip when dealing with large tooltip overlay content
 export function placeArrow(tooltipEl: any) {
     const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');
@@ -81,6 +86,10 @@ class SampleManager {
         this.samples.map((sample)=>this.getComponentForSample(sample.id));
     }
 
+    private handleSampleClick(id: string){
+      patientViewPageStore.setSampleId(id);
+  }
+
     getOverlayTriggerSample(sample: ClinicalDataBySampleId, sampleIndex: number, sampleColor: string, showClinical = false) {
 
         const sampleNumberText: number = sampleIndex+1;
@@ -90,6 +99,8 @@ class SampleManager {
         //     offset: [0, 20], // the offset sourceNode by 10px in x and 20px in y,
         //     targetOffset: ['0','0'], // the offset targetNode by 30% of targetNode width in x and 40% of targetNode height in y,
         // };
+        const clinicalDataLegacy: any = _.fromPairs(sample.clinicalData.map((x) => [x.clinicalAttributeId, x.value]));
+
 
 
         return (<DefaultTooltip
@@ -100,15 +111,20 @@ class SampleManager {
             destroyTooltipOnHide={false}
             onPopupAlign={placeArrow}
             >
-                <svg height="12" width="12">
+            <span>
+              <svg height="12" width="12">
                 <SampleInline
-                             sample={sample}
-                             sampleNumber={sampleNumberText}
-                             sampleColor={sampleColor}
-                             showClinical={showClinical}
-                         >
+                          sample={sample}
+                          sampleNumber={sampleNumberText}
+                          sampleColor={sampleColor}
+                          showClinical={showClinical}
+                          >
                 </SampleInline>
-                </svg>
+              </svg>
+              <a href="javascript:void(0)" onClick={()=>{ this.handleSampleClick(sample.id) }}>{sample.id}</a>
+              <span className='clinical-spans' dangerouslySetInnerHTML={{__html:getSpans(clinicalDataLegacy, 'lgg_ucsf_2014')}}></span>
+
+            </span>
 
         </DefaultTooltip>);
 
