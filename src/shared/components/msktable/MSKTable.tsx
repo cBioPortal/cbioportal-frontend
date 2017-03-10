@@ -4,6 +4,9 @@ import {observable, computed, action} from "mobx";
 import {observer} from "mobx-react";
 import './styles.scss';
 import {SHOW_ALL_PAGE_SIZE as PAGINATION_SHOW_ALL, PaginationControls} from "../paginationControls/PaginationControls";
+import {ColumnVisibilityControls, IColumnVisibilityDef} from "../columnVisibilityControls/ColumnVisibilityControls";
+import {CopyDownloadControls} from "../copyDownloadControls/CopyDownloadControls";
+import {serializeData} from "shared/lib/Serializer";
 import DefaultTooltip from "../DefaultTooltip";
 import {ButtonToolbar} from "react-bootstrap";
 
@@ -11,7 +14,9 @@ export type Column<T> = {
     name: string;
     filter?:(data:T, filterString:string, filterStringUpper?:string, filterStringLower?:string)=>boolean;
     sort?:(a:T, b:T, ascending:boolean)=>number;
+    visible?:boolean;
     render:(data:T)=>JSX.Element;
+    download?:(data:T)=>string;
     tooltip?:JSX.Element;
 };
 
@@ -27,6 +32,7 @@ class MSKTableStore<T> {
     @observable public sortColumn:string;
     @observable public sortAscending:boolean;
     @observable public columns:Column<T>[];
+    @observable private _columnVisibility:{[columnId: string]: boolean};
     @observable.ref public data:T[];
 
     @computed public get itemsPerPage() {
@@ -63,6 +69,39 @@ class MSKTableStore<T> {
         return this.filterString.toLowerCase();
     }
 
+    @computed public get columnVisibility() {
+        return this._columnVisibility;
+    }
+
+    @computed public get downloadData()
+    {
+        const tableDownloadData:string[][] = [];
+
+        // add header (including hidden columns)
+        tableDownloadData[0] = [];
+        this.columns.forEach((column:Column<T>) => {
+            tableDownloadData[0].push(column.name);
+        });
+
+        // add rows (including hidden columns)
+        this.data.forEach((rowData:T) => {
+            const rowDownloadData:string[] = [];
+
+            this.columns.forEach((column:Column<T>) => {
+                if (column.download) {
+                    rowDownloadData.push(column.download(rowData));
+                }
+                else {
+                    rowDownloadData.push("");
+                }
+            });
+
+            tableDownloadData.push(rowDownloadData);
+        });
+
+        return tableDownloadData;
+    }
+
     @computed get sortedFilteredData():T[] {
         let filtered:T[];
         if (this.filterString) {
@@ -96,7 +135,7 @@ class MSKTableStore<T> {
     }
 
     @computed get headers():JSX.Element[] {
-        return this.columns.map((column:Column<T>)=>{
+        return this.columns.filter((column:Column<T>) => this.isVisible(column)).map((column:Column<T>)=>{
             const headerProps:{role?:"button",
                 className?:"sort-asc"|"sort-des",
                 onClick?:()=>void} = {};
@@ -128,7 +167,7 @@ class MSKTableStore<T> {
     }
     @computed get rows():JSX.Element[] {
         return this.visibleData.map((datum:T)=>{
-                const tds = this.columns.map((column:Column<T>)=>{
+                const tds = this.columns.filter((column:Column<T>) => this.isVisible(column)).map((column:Column<T>)=>{
                     return (<td key={column.name}>
                         {column.render(datum)}
                     </td>);
@@ -144,6 +183,37 @@ class MSKTableStore<T> {
     @action setProps(props:MSKTableProps<T>) {
         this.columns = props.columns;
         this.data = props.data;
+        this._columnVisibility = this.resolveColumnVisibility(props.columns);
+    }
+
+    @action public updateColumnVisibility(id:string, visible:boolean)
+    {
+        if (this._columnVisibility[id] !== undefined) {
+            this._columnVisibility[id] = visible;
+        }
+    }
+
+    public isVisible(column:Column<T>): boolean
+    {
+        return this.columnVisibility[column.name] || false;
+    }
+
+    resolveColumnVisibility(columns:Array<Column<T>>): {[columnId: string]: boolean}
+    {
+        const colVis:{[columnId: string]: boolean} = {};
+
+        columns.forEach((column:Column<T>) => {
+            // every column is visible by default unless it is flagged otherwise
+            let visible:boolean = true;
+
+            if (column.visible !== undefined) {
+                visible = column.visible;
+            }
+
+            colVis[column.name] = visible;
+        });
+
+        return colVis;
     }
 
     constructor() {
@@ -161,6 +231,32 @@ class MSKTableStore<T> {
 export default class MSKTable<T> extends React.Component<MSKTableProps<T>, {}> {
     private store:MSKTableStore<T>;
     private handlers:{[fnName:string]:(...args:any[])=>void};
+
+    /**
+     * Generates column visibility definition array for ColumnVisibilityControls
+     * by using the columnVisibility value of the store.
+     *
+     * @returns {IColumnVisibilityDef[]}
+     */
+    @computed get colVisProp(): IColumnVisibilityDef[]
+    {
+        const colVisProp: IColumnVisibilityDef[] = [];
+
+        this.store.columns.forEach((column:Column<T>) => {
+            colVisProp.push({
+                id: column.name,
+                name: column.name,
+                visible: this.store.columnVisibility[column.name]
+            });
+        });
+
+        return colVisProp;
+    }
+
+    @computed get downloadData(): string
+    {
+        return serializeData(this.store.downloadData);
+    }
 
     constructor(props:MSKTableProps<T>) {
         super(props);
@@ -183,6 +279,13 @@ export default class MSKTable<T> extends React.Component<MSKTableProps<T>, {}> {
                     }, 400);
                 };
             })(),
+            visibilityToggle:(columnId: string):void => {
+                // ignore undefined columns
+                if (this.store.columnVisibility[columnId] !== undefined) {
+                    // toggle visibility
+                    this.store.updateColumnVisibility(columnId, !this.store.columnVisibility[columnId]);
+                }
+            },
             changeItemsPerPage:(ipp:number)=>{
                 this.store.itemsPerPage=ipp;
             },
@@ -227,11 +330,21 @@ export default class MSKTable<T> extends React.Component<MSKTableProps<T>, {}> {
                     previousPageDisabled={this.store.page === 0}
                     nextPageDisabled={this.store.page === this.store.maxPage}
                 />
+                <ColumnVisibilityControls
+                    className="pull-right"
+                    columnVisibility={this.colVisProp}
+                    onColumnToggled={this.handlers.visibilityToggle}
+                />
+                <CopyDownloadControls
+                    className="pull-right"
+                    downloadData={this.downloadData}
+                    downloadFilename="table.csv"
+                />
             </ButtonToolbar>
             <SimpleTable
-                    headers={this.store.headers}
-                    rows={this.store.rows}
-                />
+                headers={this.store.headers}
+                rows={this.store.rows}
+            />
         </div>);
     }
 }
