@@ -38,27 +38,36 @@ type SubmitQueryUrlParams = {
     genetic_profile_ids_PROFILE_METHYLATION: string,
     genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION: string,
     Z_SCORE_THRESHOLD: string,
-	RPPA_SCORE_THRESHOLD: string,
+    RPPA_SCORE_THRESHOLD: string,
     data_priority: '0'|'1'|'2',
     case_set_id: string,
     case_ids: string,
-    patient_case_select: 'sample' | 'patient',
+    patient_case_select: 'sample'|'patient',
     gene_set_choice: 'user-defined-list',
     gene_list: string,
     clinical_param_selection: '',
-    tab_index: 'tab_download' | 'tab_visualize',
+    tab_index: 'tab_download'|'tab_visualize',
     Action: 'Submit',
 };
 export function getSubmitQueryUrl(params:SubmitQueryUrlParams) {
+    if (!params.gene_list)
+        params = {...params, gene_list: ' '};
+
     if (params.cancer_study_list.length > 1)
         return cbioUrl(
             'crosscancer.do',
             {
+                ...params,
                 cancer_study_list: '',
                 cancer_study_id: 'all',
-                ...params
             },
-            `crosscancer/overview/${params.data_priority}/${encodeURIComponent(params.gene_list)}/${encodeURIComponent(params.cancer_study_list.join(','))}`
+            `crosscancer/overview/${
+                params.data_priority
+            }/${
+                encodeURIComponent(params.gene_list)
+            }/${
+                encodeURIComponent(params.cancer_study_list.join(','))
+            }`
         );
 
     return cbioUrl('index.do', params);
