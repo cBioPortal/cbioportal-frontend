@@ -9,8 +9,8 @@ import client from "../../../shared/api/cbioportalClientInstance";
 import {computed, observable, action, reaction, autorun} from "mobx";
 import oncokbClient from "../../../shared/api/oncokbClientInstance";
 import {remoteData} from "../../../shared/api/remoteData";
-import {IOncoKbData} from "../mutation/column/AnnotationColumnFormatter";
-import {generateQueryVariant, generateEvidenceQuery} from "../../../shared/lib/OncoKbUtils";
+import {IOncoKbData, IEvidence} from "../mutation/column/AnnotationColumnFormatter";
+import {generateQueryVariant, generateEvidenceQuery, processEvidence} from "shared/lib/OncoKbUtils";
 import {IndicatorQueryResp} from "shared/api/generated/OncoKbAPI";
 import {labelMobxPromises, cached} from "mobxpromise";
 import MrnaExprRankCache from './MrnaExprRankCache';
@@ -299,7 +299,7 @@ export class PatientViewPageStore
             this.mutationData,
             this.clinicalDataForSamples
         ],
-        invoke: () => {
+        invoke: async () => {
             // generate sample id to cancer type mapping
             const generateSampleToTumorMap = function(data:ClinicalData[]) {
                 const map:{[sampleId:string]: string} = {};
@@ -335,27 +335,99 @@ export class PatientViewPageStore
                     sampleIdToTumorType[mutation.sampleId]);
             }), "id");
 
-            return new Promise((resolve, reject) => {
-                const oncokbSearchPromise = oncokbClient.searchPostUsingPOST(
-                    {body: generateEvidenceQuery(queryVariants)});
+            const oncokbSearchPromise = oncokbClient.searchPostUsingPOST(
+                {body: generateEvidenceQuery(queryVariants)});
 
-                // TODO return type is not correct for the auto-generated API!
-                // generated return type is Array<IndicatorQueryResp>,
-                // but the actual return type is {meta: {} data: Array<IndicatorQueryResp>}
-                // that's why here we need to force data type to be any and get actual data by data.data
-                oncokbSearchPromise.then((data:any) => {
-                    const oncoKbData:IOncoKbData = {
-                        sampleToTumorMap: sampleIdToTumorType,
-                        indicatorMap: generateIdToIndicatorMap(data.data)
-                    };
+            const evidenceLookupPromise = oncokbClient.evidencesLookupPostUsingPOST(
+                {body: generateEvidenceQuery(queryVariants)});
 
-                    resolve(oncoKbData);
-                });
+            // TODO return type is not correct for the auto-generated API!
+            // generated return type is Array<IndicatorQueryResp>,
+            // but the actual return type is {meta: {} data: Array<IndicatorQueryResp>}
+            // that's why here we need to force data type to be any and get actual data by data.data
+            const [onkokbSearch, evidenceLookup] = await Promise.all([oncokbSearchPromise, evidenceLookupPromise]);
 
-                oncokbSearchPromise.catch(() => reject());
-            });
+            const oncoKbData:IOncoKbData = {
+                sampleToTumorMap: sampleIdToTumorType,
+                indicatorMap: generateIdToIndicatorMap((onkokbSearch as any).data),
+                evidenceMap: processEvidence((evidenceLookup as any).data)
+            };
+
+            return oncoKbData;
         }
-    }, {sampleToTumorMap: {}, indicatorMap: {}});
+    }, {sampleToTumorMap: {}, indicatorMap: {}, evidenceMap: {}});
+
+    readonly pmidData = remoteData({
+        await: () => [
+            this.oncoKbData
+        ],
+        invoke: async () => {
+            let refs:number[] = [];
+
+            _.each(this.oncoKbData.result.evidenceMap, (evidence:IEvidence) => {
+                if (evidence.mutationEffect &&
+                    evidence.mutationEffect.refs &&
+                    evidence.mutationEffect.refs.length > 0)
+                {
+                    refs = refs.concat(evidence.mutationEffect.refs.map((article:any) => {
+                        return Number(article.pmid);
+                    }));
+                }
+
+                if (evidence.oncogenicRefs &&
+                    evidence.oncogenicRefs.length > 0)
+                {
+                    refs = refs.concat(evidence.oncogenicRefs.map((article:any) => {
+                        return Number(article.pmid);
+                    }));
+                }
+
+                if (evidence.treatments &&
+                    _.isArray(evidence.treatments.sensitivity))
+                {
+                    evidence.treatments.sensitivity.forEach((item:any) => {
+                        if (_.isArray(item.articles))
+                        {
+                            refs = refs.concat(item.articles.map((article:any) => {
+                                return Number(article.pmid);
+                            }));
+                        }
+                    });
+                }
+
+                if (evidence.treatments &&
+                    _.isArray(evidence.treatments.resistance))
+                {
+                    evidence.treatments.resistance.forEach((item:any) => {
+                        if (_.isArray(item.articles))
+                        {
+                            refs = refs.concat(item.articles.map((article:any) => {
+                                return Number(article.pmid);
+                            }));
+                        }
+                    });
+                }
+            });
+
+            if (refs.length > 0)
+            {
+                // TODO move this into a properly cached API instance, move the URL into config file
+                return await new Promise((resolve, reject) => {
+                    $.post(
+                        'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&retmode=json',
+                        {id: refs.join(",")}
+                    ).then((data) => {
+                        resolve(data);
+                    }).fail((err) => {
+                        reject(err);
+                    });
+                });
+            }
+            else {
+                return {};
+            }
+        }
+    }, {});
 
     @computed get mergedMutationData():Mutation[][] {
         let idToMutations:{[key:string]: Array<Mutation>} = {};
