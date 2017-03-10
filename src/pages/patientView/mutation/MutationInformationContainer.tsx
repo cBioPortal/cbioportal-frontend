@@ -21,6 +21,7 @@ export interface IMutationInformationContainerProps {
     hotspots?: IHotspotData;
     cosmicData?: ICosmicData;
     oncoKbData?: IOncoKbData;
+    pmidData?: any;
     sampleOrder:string[];
     sampleColors:{ [s:string]: string};
     sampleLabels:{ [s:string]: string};
@@ -79,7 +80,7 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 name: "Type",
                 description: "Mutation Type"
             },*/
-            annotation: {
+            /*annotation: {
                 name: "Annotation",
                 formatter: AnnotationColumnFormatter.renderFunction,
                 priority: 3.50,
@@ -89,11 +90,12 @@ export default class MutationInformationContainer extends React.Component<IMutat
                     hotspots: this.props.hotspots,
                     myCancerGenomeData: this.props.myCancerGenomeData,
                     oncoKbData: this.props.oncoKbData,
+                    pmidData: this.props.pmidData,
                     enableOncoKb: true,
                     enableMyCancerGenome: true,
                     enableHotspot: true
                 }
-            },
+            },*/
             /*copyNumber: {
                 name: "Copy #",
                 priority: 18.10,
