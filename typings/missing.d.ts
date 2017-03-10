@@ -10,4 +10,5 @@ declare module 'reactableMSK';
 declare module 'redux-seamless-immutable';
 declare module 'render-if';
 declare module 'react-if';
+declare module 'react-collapse';
 declare module 'webpack-raphael';
