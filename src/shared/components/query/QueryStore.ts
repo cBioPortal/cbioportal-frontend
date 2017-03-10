@@ -419,7 +419,7 @@ export class QueryStore
 	{
 		try
 		{
-			let geneQuery = normalizeQuery(this.geneQuery);
+			let geneQuery = this.geneQuery;
 			return {
 				query: geneQuery && oql_parser.parse(geneQuery) || [],
 				error: undefined
@@ -563,14 +563,12 @@ export class QueryStore
 			this.geneQueryErrorDisplayStatus = 'shouldFocus';
 			return;
 		}
-
-	/*
-		let haveExpInQuery = this.oqlParserResult.some(result => {
-			return (result.alterations || []).some(alt => alt.constr_val === 'EXP');
+/*
+		let haveExpInQuery = this.oql.query.some(result => {
+			return (result.alterations || []).some(alt => alt.alteration_type === 'exp');
 		});
 
-		let selected_studies = $("#jstree").jstree(true).get_selected_leaves();
-		if (selected_studies.length === 0 && !window.changingTabs)
+		if (!this.selectedStudyIds.length)
 		{
 			// select all by default
 			$("#jstree").jstree(true).select_node(window.jstree_root_id);
@@ -598,9 +596,10 @@ export class QueryStore
 			}
 
 		}
-		else if (selected_studies.length === 1)
+		else if (this.singleSelectedStudyId)
 		{
-			$("#main_form").find("#select_single_study").val(selected_studies[0]);
+			// index.do
+
 			$("#main_form").get(0).setAttribute('action', 'index.do');
 
 			if (haveExpInQuery)

@@ -296,6 +296,7 @@
   }
 
   textarea.geneSet {
+    resize: vertical;
     &.empty {
     }
     &.notEmpty {
