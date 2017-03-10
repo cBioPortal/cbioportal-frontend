@@ -11,14 +11,37 @@ body {
 
 /* fix for legacy style isses. makes it bootstrap */
 #content .cbioportal-frontend {
-    h4 {
-     font-size:18px;
-     margin-top:10px;
-     margin-bottom:10px;
-      font-weight:500;
-      line-height:1.1;
-      color:$text-color;
+  h4 {
+    color: $text-color;
+    font-size: 18px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    font-weight: 500;
+    line-height: 1.1;
   }
+}
+
+  /* Buttons */
+.cbioportal-frontend {
+
+  .cta {
+    background: rgb(17, 116, 167);
+    border: 1px solid rgba(0,0,0,0.05);
+    border-radius: 2px;
+    color: rgba(255, 255, 255, 0.90);
+    display: block;
+    text-align: center;
+    font: normal normal 500 11px/19px 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    padding: 5px 10px;
+    box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.1);
+
+    &:hover {
+      cursor: pointer;
+      background: #1f688e;
+      color: #fff;
+    }
+  }
+  
 }
 
 .topBanner {
@@ -26,6 +49,7 @@ body {
   margin:0 auto;
 }
 
+/* Tables */
 th.reactable-header-sortable {
 
   &:focus {outline:0;}

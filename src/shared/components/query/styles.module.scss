@@ -99,23 +99,7 @@
   }
 
   .selectAll {
-    background: rgb(17, 116, 167);
-    border: 1px solid rgba(0,0,0,0.05);
-    border-radius: 2px;
-    display: block;
-    text-align: center;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.90);
-    font: normal normal 500 11px/19px 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    padding: 5px 10px;
-    box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.1);
-    min-width: 115px;
-
-    &:hover {
-      cursor: pointer;
-      background: #1f688e;
-      color: #fff;
-    }
   }
 
   .noData,
@@ -512,16 +496,10 @@ label.transposeDataMatrix {
 
 div.submitRow {
   button.submit {
-    font-weight: 400;
+    font-weight: 300;
     font-size: 18px;
-    width: 235px;
-    padding: 10px 16px;
-    background-color: #e6e6e6;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    &:hover {
-      border-color: #adadad;
-    }
+    width: 100%;
+    padding: 10px 0;
   }
 
   button.genomeSpace {

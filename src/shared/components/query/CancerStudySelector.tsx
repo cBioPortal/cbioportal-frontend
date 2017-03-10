@@ -19,8 +19,8 @@ const styles = styles_any as {
 	cancerStudySelectorHeader: string,
 	selectable: string,
 	selected: string,
-	selectAll: string,
 	selectedCount: string,
+	selectAll: string,
 	noData: string,
 	selectionsExist: string,
 	cancerStudyName: string,
@@ -199,7 +199,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 						}}
 					/>
 
-					<span className={styles.selectAll} onClick={() => logic.hack_handleSelectAll(!allSelected)}>
+					<span className={classNames('cta', styles.selectAll)} onClick={() => logic.hack_handleSelectAll(!allSelected)}>
 						{allSelected ? "Deselect All" : "Select All"}
 					</span>
 				</FlexRow>

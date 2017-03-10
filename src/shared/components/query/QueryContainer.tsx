@@ -5,6 +5,7 @@ import Dictionary = _.Dictionary;
 import CancerStudySelector from "./CancerStudySelector";
 import {FlexRow, FlexCol} from "../flexbox/FlexBox";
 import * as styles_any from './styles.module.scss';
+import classNames from "../../lib/classNames";
 import GeneticProfileSelector from "./GeneticProfileSelector";
 import {observer} from "mobx-react";
 import queryStore from "./QueryStore";
@@ -119,7 +120,7 @@ export default class QueryContainer extends React.Component<{}, {}>
 				)}
 
 				<FlexRow padded className={styles.submitRow}>
-					<button className={styles.submit} onClick={() => this.store.submit()}>
+					<button className={classNames('cta', styles.submit)} onClick={() => this.store.submit()}>
 						Submit
 					</button>
 					{!!(this.store.forDownloadTab) && (
