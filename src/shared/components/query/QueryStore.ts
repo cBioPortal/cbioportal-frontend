@@ -13,6 +13,8 @@ import memoize from "memoize-weak-decorator";
 import AppConfig from 'appConfig';
 import {getSubmitQueryUrl} from "../../api/urls";
 import {gsUploadByGet} from "../../api/genomespace/gsuploadwindow";
+import {OQLQuery} from "../../lib/oql/oql-parser";
+import {SingleGeneQuery} from "../../lib/oql/oql-parser";
 
 export type GeneReplacement = {alias: string, genes: Gene[]};
 
@@ -170,12 +172,23 @@ export class QueryStore
 
 	@observable caseIdsMode:'sample'|'patient' = 'sample';
 
-	@observable geneQuery = '';
+	@observable _geneQuery = '';
+	get geneQuery()
+	{
+		return this._geneQuery;
+	}
+	set geneQuery(value:string)
+	{
+		// clear error when gene query is modified
+		this.geneQueryErrorDisplayStatus = 'unfocused';
+		this._geneQuery = value;
+	}
 
 	////////////////////////////////////////////////////////////////////////////////
 	// VISUAL OPTIONS
 	////////////////////////////////////////////////////////////////////////////////
 
+	@observable geneQueryErrorDisplayStatus:'unfocused'|'shouldFocus'|'focused' = 'unfocused';
 	@observable showMutSigPopup = false;
 	@observable showGisticPopup = false;
 	@observable.ref searchTextPresets:ReadonlyArray<string> = AppConfig.cancerStudySearchPresets;
@@ -350,17 +363,17 @@ export class QueryStore
 
 	// DATA TYPE PRIORITY
 
-	@computed get dataTypePriorityCode():0|1|2
+	@computed get dataTypePriorityCode():'0'|'1'|'2'
 	{
 		let {mutation, cna} = this.dataTypePriority;
 		if (mutation && cna)
-			return 0;
+			return '0';
 		if (mutation)
-			return 1;
+			return '1';
 		if (cna)
-			return 2;
+			return '2';
 
-		return 0;
+		return '0';
 	}
 
 	// GENETIC PROFILE
@@ -402,18 +415,30 @@ export class QueryStore
 
 	// GENES
 
-	@computed get oqlParserResult():{gene?: string, error?: SyntaxError}[]
+	@computed get oql()
 	{
 		try
 		{
 			let geneQuery = normalizeQuery(this.geneQuery);
-			if (!geneQuery)
-				return [];
-			return oql_parser.parse(geneQuery) || [];
+			return {
+				query: geneQuery && oql_parser.parse(geneQuery) || [],
+				error: undefined
+			};
 		}
-		catch (e)
+		catch ({offset})
 		{
-			return [{error: e as SyntaxError}];
+			let near, start, end;
+			if (offset === this.geneQuery.length)
+				[near, start, end] = ['after', offset - 1, offset];
+			else if (offset === 0)
+				[near, start, end] = ['before', offset, offset + 1];
+			else
+				[near, start, end] = ['at', offset, offset + 1];
+			let message = `OQL syntax error ${near} selected character; please fix and submit again.`;
+			return {
+				query: [] as OQLQuery,
+				error: {start, end, message}
+			};
 		}
 	}
 
@@ -421,7 +446,7 @@ export class QueryStore
 	{
 		try
 		{
-			return this.oqlParserResult.map(line => line.gene).filter(gene => gene && gene !== 'DATATYPES') as string[];
+			return this.oql.query.map(line => line.gene).filter(gene => gene && gene !== 'DATATYPES') as string[];
 		}
 		catch (e)
 		{
@@ -429,7 +454,28 @@ export class QueryStore
 		}
 	}
 
-	// DOWNLOAD
+	// SUBMIT
+
+	@computed get submitQueryUrl()
+	{
+		return '';
+		/*
+		return getSubmitQueryUrl({
+			cancer_study_list: this.selectedStudyIds,
+			cancer_study_id: this.singleSelectedStudyId || 'all',
+			genetic_profile_ids_PROFILE_MUTATION_EXTENDED: '',
+			data_priority: this.dataTypePriorityCode,
+			case_set_id: this.selectedSampleListId | '',
+			case_ids: this.caseIds,
+			patient_case_select: this.caseIdsMode,
+			gene_set_choice: 'user-defined-list',
+			gene_list: this.geneQuery,
+			clinical_param_selection: '',
+			tab_index: this.forDownloadTab ? 'tab_download' : 'tab_visualize',
+			Action: 'Submit',
+		});
+		*/
+	}
 
 	private readonly dict_geneticAlterationType_filenameSuffix:{[K in GeneticProfile['geneticAlterationType']]?: string} = {
 		"MUTATION_EXTENDED": 'mutations',
@@ -512,7 +558,70 @@ export class QueryStore
 
 	@action submit()
 	{
-		// chooseAction()
+		if (this.oql.error)
+		{
+			this.geneQueryErrorDisplayStatus = 'shouldFocus';
+			return;
+		}
+
+	/*
+		let haveExpInQuery = this.oqlParserResult.some(result => {
+			return (result.alterations || []).some(alt => alt.constr_val === 'EXP');
+		});
+
+		let selected_studies = $("#jstree").jstree(true).get_selected_leaves();
+		if (selected_studies.length === 0 && !window.changingTabs)
+		{
+			// select all by default
+			$("#jstree").jstree(true).select_node(window.jstree_root_id);
+			selected_studies = $("#jstree").jstree(true).get_selected_leaves()
+		}
+		if (selected_studies.length > 1)
+		{
+			if (haveExpInQuery)
+			{
+				createAnError("Expression filtering in the gene list is not supported when doing cross cancer queries.", $('#gene_list'));
+				return false;
+			}
+			$("#main_form").find("#select_multiple_studies").val("");
+			if ($("#tab_index").val() == 'tab_download')
+			{
+				$("#main_form").get(0).setAttribute('action', 'index.do');
+			}
+			else
+			{
+				let dataPriority = $('#main_form').find('input[name=data_priority]:checked').val();
+				let newSearch = $('#main_form').serialize() + '&Action=Submit#crosscancer/overview/' + dataPriority + '/' + encodeURIComponent($('#gene_list').val()) + '/' + encodeURIComponent(selected_studies.join(","));
+				evt.preventDefault();
+				window.location = 'cross_cancer.do?' + newSearch;
+				//$("#main_form").get(0).setAttribute('action','cross_cancer.do');
+			}
+
+		}
+		else if (selected_studies.length === 1)
+		{
+			$("#main_form").find("#select_single_study").val(selected_studies[0]);
+			$("#main_form").get(0).setAttribute('action', 'index.do');
+
+			if (haveExpInQuery)
+			{
+				let expCheckBox = $("." + PROFILE_MRNA_EXPRESSION);
+
+				if (expCheckBox.length > 0 && expCheckBox.prop('checked') == false)
+				{
+					createAnError("Expression specified in the list of genes, but not selected in the" +
+						" Genetic Profile Checkboxes.", $('#gene_list'));
+					evt.preventDefault();
+				}
+				else if (expCheckBox.length == 0)
+				{
+					createAnError("Expression specified in the list of genes, but not selected in the" +
+						" Genetic Profile Checkboxes.", $('#gene_list'));
+					evt.preventDefault();
+				}
+			}
+		}
+	*/
 	}
 
 	@action uploadToGenomeSpace()
@@ -521,7 +630,7 @@ export class QueryStore
 		// 	return;
 
 		gsUploadByGet({
-			url: getSubmitQueryUrl(this),
+			url: this.submitQueryUrl,
 			filename: this.downloadDataFilename,
 			successCallback: savePath => alert('outer Saved to GenomeSpace as ' + savePath),
 			errorCallback: savePath => alert('outer ERROR saving to GenomeSpace as ' + savePath),

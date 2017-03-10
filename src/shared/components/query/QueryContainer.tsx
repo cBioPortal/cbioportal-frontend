@@ -7,6 +7,7 @@ import {FlexRow, FlexCol} from "../flexbox/FlexBox";
 import * as styles_any from './styles.module.scss';
 import classNames from "../../lib/classNames";
 import GeneticProfileSelector from "./GeneticProfileSelector";
+import {observable, computed, action} from 'mobx';
 import {observer} from "mobx-react";
 import queryStore from "./QueryStore";
 import DataTypePrioritySelector from "./DataTypePrioritySelector";

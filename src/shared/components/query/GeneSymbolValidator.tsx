@@ -32,7 +32,20 @@ export default class GeneSymbolValidator extends React.Component<{}, {}>
 
 	render()
 	{
-		if (!this.store.oqlParserResult.length)
+		if (this.store.oql.error)
+			return (
+				<div className={styles.GeneSymbolValidator}>
+					<span className={styles.errorMessage}>
+						{`Cannot validate gene symbols because of invalid OQL. ${
+							this.store.geneQueryErrorDisplayStatus === 'unfocused'
+							? "Please click 'Submit' to see location of error."
+							: this.store.oql.error.message
+						}`}
+					</span>
+				</div>
+			);
+
+		if (!this.store.oql.query.length)
 			return null;
 
 		if (this.store.genes.isPending && this.store.genes.result.suggestions.length == 0)
@@ -44,17 +57,6 @@ export default class GeneSymbolValidator extends React.Component<{}, {}>
 					<Spinner/>
 				</div>
 			);
-
-		for (let result of this.store.oqlParserResult)
-			if (result.error)
-				return (
-					<div className={styles.GeneSymbolValidator}>
-						<span className={styles.errorMessage}>
-							Cannot validate gene symbols because of invalid OQL.
-							Please click 'Submit' to see location of error.
-						</span>
-					</div>
-				);
 
 		if (this.store.genes.result.suggestions.length)
 			return (

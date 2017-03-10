@@ -73,8 +73,7 @@ export default class SampleListSelector extends React.Component<{}, {}>
 
 	CaseIdsModeRadio = observer(
 		(props: {label: string, state:QueryStore['caseIdsMode']}) => (
-			<label
-			>
+			<label>
 				<input
 					type="radio"
 					checked={this.store.caseIdsMode == props.state}

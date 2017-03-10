@@ -10,6 +10,7 @@ import GeneSymbolValidator from "./GeneSymbolValidator";
 import classNames from "../../lib/classNames";
 import AsyncStatus from "../asyncStatus/AsyncStatus";
 import {getOncoQueryDocUrl} from "../../api/urls";
+import {QueryStore} from "./QueryStore";
 
 const styles = styles_any as {
 	GeneSetSelector: string,
@@ -20,8 +21,12 @@ const styles = styles_any as {
 	notEmpty: string,
 };
 
+export interface GeneSetSelectorProps
+{
+}
+
 @observer
-export default class GeneSetSelector extends React.Component<{}, {}>
+export default class GeneSetSelector extends React.Component<GeneSetSelectorProps, {}>
 {
 	get store()
 	{
@@ -46,6 +51,20 @@ export default class GeneSetSelector extends React.Component<{}, {}>
 				value: item.genes.join(' ')
 			}))
 		];
+	}
+
+	@computed get textAreaRef()
+	{
+		if (this.store.geneQueryErrorDisplayStatus === 'shouldFocus')
+			return (textArea:HTMLTextAreaElement) => {
+				let {error} = this.store.oql;
+				if (textArea && error)
+				{
+					textArea.focus();
+					textArea.setSelectionRange(error.start, error.end);
+					this.store.geneQueryErrorDisplayStatus = 'focused';
+				}
+			};
 	}
 
 	render()
@@ -79,15 +98,14 @@ export default class GeneSetSelector extends React.Component<{}, {}>
 				</FlexRow>
 
 				<textarea
+					ref={this.textAreaRef}
 					className={classNames(styles.geneSet, this.store.geneQuery ? styles.notEmpty : styles.empty)}
 					rows={5}
 					cols={80}
 					placeholder="Enter HUGO Gene Symbols or Gene Aliases"
 					title="Enter HUGO Gene Symbols or Gene Aliases"
 					value={this.store.geneQuery}
-					onChange={event => {
-						this.store.geneQuery = (event.target as HTMLTextAreaElement).value;
-					}}
+					onChange={event => this.store.geneQuery = event.currentTarget.value}
 				/>
 
 				<GeneSymbolValidator/>
