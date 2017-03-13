@@ -24,6 +24,8 @@ if (window) {
 
 const routingStore = new RouterStore();
 
+window.routingStore = routingStore;
+
 const stores = {
     // Key can be whatever you want
     routing: routingStore,
@@ -35,7 +37,7 @@ extendObservable(routingStore, {
     query: computed(function() {
         // var route = new RT(stores.routing.location.pathname);
             var queryString = {};
-            stores.routing.location.search.replace(
+            decodeURIComponent(stores.routing.location.search).replace(
                     new RegExp("([^?=&]+)(=([^&]*))?", "g"),
                     function($0, $1, $2, $3) { queryString[$1] = $3;}
             )

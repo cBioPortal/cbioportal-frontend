@@ -124,6 +124,8 @@ export class PatientViewPageStore
         return `${this.studyId}_mutations`;
     }
 
+    @observable patientIdsInCohort: string[] = [];
+
     readonly derivedPatientId = remoteData<string>({
         await: () => [this.samples],
         invoke: async () => {

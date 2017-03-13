@@ -32,7 +32,7 @@ import {ICosmicData} from "../../shared/components/mutationTable/column/CosmicCo
 import {keywordToCosmic, geneToMyCancerGenome, geneAndProteinPosToHotspots} from 'shared/lib/AnnotationUtils';
 import {IVariantCountData, default as CohortColumnFormatter} from "./mutation/column/CohortColumnFormatter";
 import {observable} from "mobx";
-import {observer} from "mobx-react";
+import {observer, inject } from "mobx-react";
 import {IHotspotData, IMyCancerGenomeData, IMyCancerGenome, IOncoKbData} from "./mutation/column/AnnotationColumnFormatter";
 import {getSpans} from './clinicalInformation/lib/clinicalAttributesUtil.js';
 import CopyNumberAlterationsTable from "./copyNumberAlterations/CopyNumberAlterationsTable";
@@ -90,7 +90,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     private patientIdsInCohort:string[];
 
-    constructor() {
+    constructor(props: IPatientViewPageProps) {
 
         super();
 
@@ -134,6 +134,9 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 {
                     alert('You must have a patientId or a sampleId');
                 }
+
+                patientViewPageStore.patientIdsInCohort = ('navCaseIds' in query ? (query.navCaseIds as string).split(",") : []);
+
             },
             { fireImmediately:true }
         );
@@ -148,9 +151,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         //     // error!
         // }
 
-
-        const qs_hash = queryString.parse((window as any).location.hash);
-        this.patientIdsInCohort = (!!qs_hash['nav_case_ids'] ? (qs_hash['nav_case_ids'] as string).split(",") : []);
 
         this.mutationGeneticProfileId = `${patientViewPageStore.studyId}_mutations`;
 
@@ -322,7 +322,14 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         newProps.caseId = id;
         delete newProps.sampleId;
 
-        let params = $.param(newProps);
+        const paramArray: string[] = [];
+
+        // _.each(newProps, (val: string, key: string)=>paramArray.push(`${key}=${val}`));
+        //
+        // console.log(paramArray.join('&'));
+
+        // note that $.param is going to encode the URI
+        const params = $.param(newProps);
 
         this.props.routing.push( `/patient?${ params }` );
 
@@ -352,26 +359,26 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             });
         }
 
-        if (this.patientIdsInCohort && this.patientIdsInCohort.length > 0) {
-            const indexInCohort = this.patientIdsInCohort.indexOf(patientViewPageStore.patientId);
+        if (patientViewPageStore.patientIdsInCohort && patientViewPageStore.patientIdsInCohort.length > 0) {
+            const indexInCohort = patientViewPageStore.patientIdsInCohort.indexOf(patientViewPageStore.patientId);
             cohortNav = (
                 <PaginationControls
                     currentPage={indexInCohort + 1}
                     showItemsPerPageSelector={false}
                     showFirstPage={true}
                     showLastPage={true}
-                    textBetweenButtons={` of ${this.patientIdsInCohort.length} patients`}
+                    textBetweenButtons={` of ${patientViewPageStore.patientIdsInCohort.length} patients`}
                     firstPageDisabled={indexInCohort === 0}
                     previousPageDisabled={indexInCohort === 0}
-                    nextPageDisabled={indexInCohort === this.patientIdsInCohort.length-1}
-                    lastPageDisabled={indexInCohort === this.patientIdsInCohort.length-1}
-                    onFirstPageClick={() => patientViewPageStore.setPatientId(this.patientIdsInCohort[0]) }
-                    onPreviousPageClick={() => patientViewPageStore.setPatientId(this.patientIdsInCohort[indexInCohort-1]) }
-                    onNextPageClick={() => patientViewPageStore.setPatientId(this.patientIdsInCohort[indexInCohort+1]) }
-                    onLastPageClick={() => patientViewPageStore.setPatientId(this.patientIdsInCohort[this.patientIdsInCohort.length-1]) }
+                    nextPageDisabled={indexInCohort === patientViewPageStore.patientIdsInCohort.length-1}
+                    lastPageDisabled={indexInCohort === patientViewPageStore.patientIdsInCohort.length-1}
+                    onFirstPageClick={() => this.handlePatientClick(patientViewPageStore.patientIdsInCohort[0]) }
+                    onPreviousPageClick={() => this.handlePatientClick(patientViewPageStore.patientIdsInCohort[indexInCohort-1]) }
+                    onNextPageClick={() => this.handlePatientClick(patientViewPageStore.patientIdsInCohort[indexInCohort+1]) }
+                    onLastPageClick={() => this.handlePatientClick(patientViewPageStore.patientIdsInCohort[patientViewPageStore.patientIdsInCohort.length-1]) }
                     onChangeCurrentPage={(newPage) => {
-                        if (newPage > 0 && newPage <= this.patientIdsInCohort.length) {
-                            patientViewPageStore.setPatientId(this.patientIdsInCohort[newPage - 1]);
+                        if (newPage > 0 && newPage <= patientViewPageStore.patientIdsInCohort.length) {
+                            this.handlePatientClick(patientViewPageStore.patientIdsInCohort[newPage - 1]);
                         }
                     }}
                     pageNumberEditable={true}
