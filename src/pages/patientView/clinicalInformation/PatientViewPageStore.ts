@@ -170,10 +170,10 @@ export class PatientViewPageStore
     }, []);
 
     readonly pathologyReport = remoteData({
-        await: () => [],
+        await: () => [this.derivedPatientId],
         invoke: async() => {
 
-            let resp: any = await request.get(`//api.github.com/search/code?q=TCGA-DD-AACA+extension:pdf+in:path+repo:cBioPortal/datahub`);
+            let resp: any = await request.get(`//api.github.com/search/code?q=${this.patientId}+extension:pdf+in:path+repo:cBioPortal/datahub`);
 
             const parsedResp: any = JSON.parse(resp.text);
 

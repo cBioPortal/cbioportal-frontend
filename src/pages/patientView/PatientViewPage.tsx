@@ -391,7 +391,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                 <Tabs animation={false} activeKey={this.state.activeTabKey} id="patientViewPageTabs" onSelect={this.handleSelect as SelectCallback} className="mainTabs" unmountOnExit={true}>
 
-                    <Tab eventKey={1} id="summaryTab" title="Summary">
+                    <Tab eventKey={12} id="summaryTab" title="Summary">
 
                         {
                             (!!sampleManager && patientViewPageStore.clinicalEvents.isComplete) && (
@@ -505,7 +505,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
 
                     {  (patientViewPageStore.pathologyReport.isComplete && patientViewPageStore.pathologyReport.result.length > 0 ) &&
-                    (<Tab eventKey={8} id="summarTab" title="Pathology Report">
+                    (<Tab eventKey={1} id="summarTab" title="Pathology Report">
                         <PathologyReport  pdfs={patientViewPageStore.pathologyReport.result} />
                     </Tab>)
                     }
