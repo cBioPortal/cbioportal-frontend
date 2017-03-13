@@ -9,7 +9,7 @@ export interface ICopyDownloadControlsProps {
     className?: string;
     showCopy?: boolean;
     showDownload?: boolean;
-    downloadData?: string;
+    downloadData?: ()=>string;
     downloadFilename?: string;
 }
 
@@ -97,7 +97,7 @@ export class CopyDownloadControls extends React.Component<ICopyDownloadControlsP
 
     public getText()
     {
-        return this.props.downloadData || "";
+        return (this.props.downloadData && this.props.downloadData()) || "";
     }
 
     public handleDownload()
