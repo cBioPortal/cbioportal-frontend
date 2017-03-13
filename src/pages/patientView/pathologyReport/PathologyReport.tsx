@@ -1,5 +1,4 @@
 import * as React from 'react';
-import PDFObject from 'pdfobject';
 import {PathologyReportPDF} from "../clinicalInformation/PatientViewPageStore";
 import { If, Then, Else } from 'react-if';
 import * as _ from 'lodash';
@@ -20,9 +19,17 @@ export default class PathologyReport extends React.Component<IPathologyReportPro
 
         super();
 
-        this.state = { pdfUrl: props.pdfs[0].url }
+        console.log(props.pdfs);
+
+        this.state = { pdfUrl: this.buildPDFUrl(props.pdfs[0].name) }
 
         this.handleSelection = this.handleSelection.bind(this);
+
+    }
+
+    buildPDFUrl(name: string):string {
+
+        return `https://drive.google.com/viewerng/viewer?url=https://github.com/cBioPortal/datahub/raw/master/tcga/pathology_reports/${name}?pid=explorer&efh=false&a=v&chrome=false&embedded=true`;
 
     }
 
@@ -30,33 +37,21 @@ export default class PathologyReport extends React.Component<IPathologyReportPro
         return nextProps === this.props;
     }
 
-    componentDidMount(){
-        this.embedPDF(this.state.pdfUrl);
-    }
-
-    componentDidUpdate(){
-        this.embedPDF(this.state.pdfUrl);
-    }
-
-    embedPDF(url: string){
-        PDFObject.embed(require("./report.pdf"), this.pdfEmbed);
-    }
-
     handleSelection(){
-        this.setState({ pdfUrl:this.pdfSelectList.options[this.pdfSelectList.selectedIndex].value });
+        this.setState({ pdfUrl:this.buildPDFUrl(this.pdfSelectList.options[this.pdfSelectList.selectedIndex].value) });
     }
 
     render(){
 
         return (<div>
 
-            <If condition={this.props.pdfs.length > 0}>
+            <If condition={this.props.pdfs.length > 1}>
                 <select ref={(el)=>this.pdfSelectList = el} style={{ marginBottom:15 }} onChange={ this.handleSelection }>{  _.map(this.props.pdfs, (pdf: PathologyReportPDF)=>
-                    <option value={pdf.url}>{pdf.name}</option>)    }
+                    <option value={pdf.name}>{pdf.name}</option>)    }
                 </select>
             </If>
 
-            <div style={{height:1000}} ref={(div)=>this.pdfEmbed = div} className="pathologyReportPdfHolder"></div>
+            <iframe style={{ height:1100, width: '100%'}} src={this.state.pdfUrl}></iframe>
 
         </div>)
 
