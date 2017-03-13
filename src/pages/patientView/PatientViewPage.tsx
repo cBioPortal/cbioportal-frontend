@@ -414,7 +414,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     <Tab eventKey={1} id="summaryTab" title="Summary">
 
                         {
-                            (!!sampleManager && patientViewPageStore.clinicalEvents.isComplete) && (
+                            (!!sampleManager && patientViewPageStore.clinicalEvents.isComplete && patientViewPageStore.clinicalEvents.result.length > 0) && (
 
                                 <div>
                                     <FeatureTitle title="Clinical Timeline" isLoading={false} />
