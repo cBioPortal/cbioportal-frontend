@@ -1,6 +1,5 @@
 import * as React from 'react';
 import './styles.scss';
-import Router = ReactRouter.Router;
 
 interface IPageHeaderProps {
     router: any;
@@ -11,7 +10,7 @@ export default class PageHeader extends React.Component<IPageHeaderProps, void> 
 
     routeInput: HTMLInputElement;
 
-    handleSubmit(e:React.FormEvent) {
+    handleSubmit(e:React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
         this.props.router.push(this.routeInput.value);
     }

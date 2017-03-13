@@ -1,102 +1,61 @@
-import * as React from "react";
-import * as $ from 'jquery';
+import * as React from 'react';
 import * as _ from 'lodash';
-import queryString from "query-string";
-import { GenomicOverviewConfig, createRaphaelCanvas, getChmInfo, plotChromosomes, plotCnSegs } from './genomicOverviewHelper';
-import {CopyNumberSegment} from "../../../shared/api/CBioPortalAPI";
+import Tracks from './Tracks';
+import {ThumbnailExpandVAFPlot} from '../vafPlot/ThumbnailExpandVAFPlot';
+import {Mutation} from "../../../shared/api/generated/CBioPortalAPI";
+import SampleManager from "../sampleManager";
+import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
 
-type LegacyCopyNumberSegment = {
-    sample: string,
-    value: number,
-} & Pick<CopyNumberSegment, 'chr' | 'end' | 'start' | 'numProbes'>;
+interface IGenomicOverviewProps {
+    mutations: Mutation[];
+    cnaSegments: any;
+    sampleOrder: {[s:string]:number};
+    sampleLabels: {[s:string]:string};
+    sampleColors: {[s:string]:string};
+    sampleManager: SampleManager;
+}
+export default class GenomicOverview extends React.Component<IGenomicOverviewProps, {vafPlotData:{[s:string]:number[]}}> {
 
-type GenomicOverviewConfig = {
-    nRows: number,
-    canvasWidth: number,
-    wideLeftText: number,
-    wideRightText: number,
-    GenomeWidth: number,
-    pixelsPerBinMut: number,
-    rowHeight: number,
-    rowMargin: number,
-    ticHeight: number,
-    cnTh: number[],
-    cnLengthTh: number,
-    getCnColor: (cnValue:number) => string,
-    canvasHeight: () => number,
-    yRow: (row:number) => number,
-    xRightText: () => number,
-};
-
-type ChmInfo = {
-    hg19: number[],
-    total: number,
-    perc: number[],
-    loc2perc: (chm:number,loc:number)=>number,
-    loc2xpixil: (chm:number,loc:number,goConfig:GenomicOverviewConfig)=>number,
-    perc2loc: (xPerc:number,startChm:number)=>[number,number],
-    xpixil2loc: (goConfig:GenomicOverviewConfig,x:number,startChm:number)=>[number,number],
-    middle: (chm:number, goConfig:GenomicOverviewConfig)=>number,
-    chmName: (chm:number)=>string,
-};
-
-export default class GenomicOverview extends React.Component<{}, {}> {
-
-    constructor(){
-
-        super();
-
+    constructor(props:IGenomicOverviewProps) {
+        super(props);
+        const vafPlotData = this.computeVAFPlotData(props.mutations);
+        this.state = {
+            vafPlotData,
+        };
     }
-
-    fetchData():Promise<LegacyCopyNumberSegment[]> {
-
-        const qs = queryString.parse(location.search);
-        var p = Promise.resolve(
-            //$.get("http://www.cbioportal.org/api-legacy/copynumbersegments?cancerStudyId=" + qs.cancer_study_id + "&chromosome=17&sampleIds=P04_Pri")
-            $.get("http://www.cbioportal.org/api-legacy/copynumbersegments?cancerStudyId=ov_tcga_pub&chromosome=17&sampleIds=TCGA-24-2035-01")
-        );
-        return p;
-
-    }
-
-    componentDidMount() {
-
-        this.fetchData().then( apiResult => {
-
-            // transform API result
-            let raphaelData: any = {};
-
-            let sampleId = _.uniq(_.map(apiResult, 'sample'))[0] as string;
-
-            raphaelData[sampleId] = [];
-            _.each(apiResult, function(_dataObj) {
-                raphaelData[sampleId].push([
-                    _dataObj.sample,
-                    _dataObj.chr,
-                    _dataObj.end,
-                    _dataObj.start,
-                    _dataObj.numProbes,
-                    _dataObj.value
-                ]);
-            });
-
-            // render cna segment bar chart
-            var config = GenomicOverviewConfig(1, 1000) as GenomicOverviewConfig;
-            var paper:RaphaelPaper = createRaphaelCanvas('cna_segment_bar_chart_div', config);
-            var chmInfo = getChmInfo() as ChmInfo;
-            plotChromosomes(paper,config,chmInfo);
-            plotCnSegs(paper, config, chmInfo, 0, raphaelData[sampleId], 1, 3, 2, 5, sampleId);
-
-        });
-
-    }
-
 
     public render() {
+
+        const labels = _.reduce(this.props.sampleManager.samples, (result: any, sample: ClinicalDataBySampleId, i: number)=>{
+            result[sample.id] = i + 1;
+            return result;
+        }, {});
+
         return (
-            <div className="genomicOverViewContainer" style={{ backgroundColor: '#F0FFFF'}}>
-                <div id="cna_segment_bar_chart_div"></div>
+            <div style={{ display:'flex', alignItems:'center'  }}>
+                <Tracks mutations={this.props.mutations} sampleManager={this.props.sampleManager} cnaSegments={this.props.cnaSegments} />
+                <ThumbnailExpandVAFPlot
+                    data={this.state.vafPlotData}
+                    order={this.props.sampleManager.sampleIndex}
+                    colors={this.props.sampleColors}
+                    labels={labels}
+                    overlayPlacement="right"
+                />
             </div>
         );
     }
+
+    private computeVAFPlotData(mutations:Mutation[]):{[s:string]:number[]} {
+        const ret:{[s:string]:number[]} = {};
+        let sampleId;
+        let freq;
+        for (let mutation of mutations) {
+            sampleId = mutation.sampleId;
+            freq = mutation.tumorAltCount / (mutation.tumorRefCount + mutation.tumorAltCount);
+            ret[sampleId] = ret[sampleId] || [];
+            ret[sampleId].push(freq);
+        }
+        return ret;
+    }
+
 }

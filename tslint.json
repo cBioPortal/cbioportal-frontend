@@ -5,10 +5,7 @@
     ],
     "rules": {
         "class-name": true,
-        "comment-format": [
-            true,
-            "check-space"
-        ],
+        "comment-format": false,
         "curly": false,
         "indent": [
             true,
@@ -16,6 +13,7 @@
         ],
         "jsx-no-multiline-js": false,
         "member-access": false,
+        "member-ordering": false,
         "no-consecutive-blank-lines":false,
         "no-duplicate-variable": true,
         "no-eval": true,
@@ -59,15 +57,6 @@
             "ban-keywords"
         ],
         "max-line-length": [false],
-        "whitespace": [
-            true,
-            {
-                "check-branch": true,
-                "check-decl": true,
-                "check-operator": true,
-                "check-separator": true,
-                "check-type": true
-            }
-        ]
+        "whitespace": [false]
     }
 }
