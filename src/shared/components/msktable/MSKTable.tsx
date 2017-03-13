@@ -253,7 +253,7 @@ export default class MSKTable<T> extends React.Component<MSKTableProps<T>, {}> {
         return colVisProp;
     }
 
-    @computed get downloadData(): string
+    public getDownloadData(): string
     {
         return serializeData(this.store.downloadData);
     }
@@ -296,6 +296,7 @@ export default class MSKTable<T> extends React.Component<MSKTableProps<T>, {}> {
                 this.store.page -= 1;
             }
         };
+        this.getDownloadData = this.getDownloadData.bind(this);
     }
 
     @action componentWillReceiveProps(nextProps:MSKTableProps<T>) {
@@ -337,7 +338,7 @@ export default class MSKTable<T> extends React.Component<MSKTableProps<T>, {}> {
                 />
                 <CopyDownloadControls
                     className="pull-right"
-                    downloadData={this.downloadData}
+                    downloadData={this.getDownloadData}
                     downloadFilename="table.csv"
                 />
             </ButtonToolbar>
