@@ -42,7 +42,8 @@ import CopyNumberAlterationsTable from "./copyNumberAlterations/CopyNumberAltera
 import CopyNumberTableWrapper from "./copyNumberAlterations/CopyNumberTableWrapper";
 import {reaction} from "mobx";
 import Timeline from "./timeline/Timeline";
-import {default as PatientViewMutationTable, MutationTableColumnType} from "./mutation/PatientViewMutationTable";
+import {default as PatientViewMutationTable, MutationTableColumnType } from "./mutation/PatientViewMutationTable";
+import PathologyReport from "./pathologyReport/PathologyReport";
 import {getCbioPortalApiUrl, getHotspotsApiUrl, getHotspots3DApiUrl} from "../../shared/api/urls";
 
 const patientViewPageStore = new PatientViewPageStore();
@@ -426,19 +427,45 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                         <FeatureTitle title="Mutations" isLoading={ !this.state.mutationData } />
                         {
                             (this.state.mutationData && !!sampleManager) && (
-                                <MutationInformationContainer
-                                    mutations={this.state.mutationData}
+                                <PatientViewMutationTable
+                                    sampleManager={sampleManager}
+                                    sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
+                                    variantCountCache={patientViewPageStore.variantCountCache}
+                                    discreteCNACache={patientViewPageStore.discreteCNACache}
+                                    mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}
+                                    mrnaExprRankGeneticProfileId={patientViewPageStore.mrnaRankGeneticProfileId.result || undefined}
+                                    discreteCNAGeneticProfileId={patientViewPageStore.geneticProfileIdDiscrete.result}
+                                    data={patientViewPageStore.mergedMutationData}
+                                    mutSigData={this.state.mutSigData}
                                     myCancerGenomeData={this.state.myCancerGenomeData}
                                     hotspots={this.state.hotspotsData}
                                     cosmicData={this.state.cosmicData}
                                     oncoKbData={patientViewPageStore.oncoKbData.result}
                                     pmidData={patientViewPageStore.pmidData.result}
-                                    sampleOrder={sampleManager.sampleOrder}
-                                    sampleLabels={sampleManager.sampleLabels}
-                                    sampleColors={sampleManager.sampleColors}
-                                    sampleTumorType={mockData.tumorType}
-                                    sampleCancerType={mockData.cancerType}
-                                    sampleManager={ sampleManager }
+                                    columns={[MutationTableColumnType.COHORT,
+                                MutationTableColumnType.MRNA_EXPR,
+                                MutationTableColumnType.COPY_NUM,
+                                MutationTableColumnType.ANNOTATION,
+                                MutationTableColumnType.REF_READS_N,
+                                MutationTableColumnType.VAR_READS_N,
+                                MutationTableColumnType.REF_READS,
+                                MutationTableColumnType.VAR_READS,
+                                MutationTableColumnType.START_POS,
+                                MutationTableColumnType.END_POS,
+                                MutationTableColumnType.REF_ALLELE,
+                                MutationTableColumnType.VAR_ALLELE,
+                                MutationTableColumnType.MUTATION_STATUS,
+                                MutationTableColumnType.VALIDATION_STATUS,
+                                MutationTableColumnType.CENTER,
+                                MutationTableColumnType.GENE,
+                                MutationTableColumnType.CHROMOSOME,
+                                MutationTableColumnType.PROTEIN_CHANGE,
+                                MutationTableColumnType.MUTATION_TYPE,
+                                MutationTableColumnType.MUTATION_ASSESSOR,
+                                MutationTableColumnType.COSMIC,
+                                MutationTableColumnType.TUMOR_ALLELE_FREQ,
+                                MutationTableColumnType.TUMORS,
+                                MutationTableColumnType.SAMPLE_ID]}
                                 />
                             )
                         }
@@ -475,50 +502,13 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                         </Tab>
                     )}
-                    <Tab eventKey={5} id="test" title="Test" >
-                        <div className="clearfix">
-                            <PatientViewMutationTable
-                                sampleManager={sampleManager}
-                                sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
-                                variantCountCache={patientViewPageStore.variantCountCache}
-                                discreteCNACache={patientViewPageStore.discreteCNACache}
-                                mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}
-                                mrnaExprRankGeneticProfileId={patientViewPageStore.mrnaRankGeneticProfileId.result || undefined}
-                                discreteCNAGeneticProfileId={patientViewPageStore.geneticProfileIdDiscrete.result}
-                                data={patientViewPageStore.mergedMutationData}
-                                mutSigData={this.state.mutSigData}
-                                myCancerGenomeData={this.state.myCancerGenomeData}
-                                hotspots={this.state.hotspotsData}
-                                cosmicData={this.state.cosmicData}
-                                oncoKbData={patientViewPageStore.oncoKbData.result}
-                                pmidData={patientViewPageStore.pmidData.result}
-                                columns={[MutationTableColumnType.COHORT,
-                                MutationTableColumnType.MRNA_EXPR,
-                                MutationTableColumnType.COPY_NUM,
-                                MutationTableColumnType.ANNOTATION,
-                                MutationTableColumnType.REF_READS_N,
-                                MutationTableColumnType.VAR_READS_N,
-                                MutationTableColumnType.REF_READS,
-                                MutationTableColumnType.VAR_READS,
-                                MutationTableColumnType.START_POS,
-                                MutationTableColumnType.END_POS,
-                                MutationTableColumnType.REF_ALLELE,
-                                MutationTableColumnType.VAR_ALLELE,
-                                MutationTableColumnType.MUTATION_STATUS,
-                                MutationTableColumnType.VALIDATION_STATUS,
-                                MutationTableColumnType.CENTER,
-                                MutationTableColumnType.GENE,
-                                MutationTableColumnType.CHROMOSOME,
-                                MutationTableColumnType.PROTEIN_CHANGE,
-                                MutationTableColumnType.MUTATION_TYPE,
-                                MutationTableColumnType.MUTATION_ASSESSOR,
-                                MutationTableColumnType.COSMIC,
-                                MutationTableColumnType.TUMOR_ALLELE_FREQ,
-                                MutationTableColumnType.TUMORS,
-                                MutationTableColumnType.SAMPLE_ID]}
-                            />
-                        </div>
-                    </Tab>
+
+
+                    {  (patientViewPageStore.pathologyReport.isComplete && patientViewPageStore.pathologyReport.result.length > 0 ) &&
+                    (<Tab eventKey={8} id="summarTab" title="Pathology Report">
+                        <PathologyReport  pdfs={patientViewPageStore.pathologyReport.result} />
+                    </Tab>)
+                    }
 
                     { (patientViewPageStore.hasTissueImageIFrameUrl.isComplete && patientViewPageStore.hasTissueImageIFrameUrl.result) &&
                         (<Tab eventKey={4} id="tissueImageTab" title="Tissue Image">
