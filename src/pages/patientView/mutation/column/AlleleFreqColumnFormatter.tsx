@@ -91,6 +91,9 @@ export default class AlleleFreqColumnFormatter {
             return map;
         }, {});
         return sampleManager.getSampleIdsInOrder().map(sampleId=>sampleToMutation[sampleId]).map(mutation=>{
+            if (!mutation) {
+                return null;
+            }
             const altReads = mutation.tumorAltCount;
             const refReads = mutation.tumorRefCount;
             if ((altReads < 0) || (refReads < 0)) {
