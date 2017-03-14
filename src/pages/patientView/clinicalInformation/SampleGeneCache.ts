@@ -1,6 +1,7 @@
 import {observable, action} from "mobx";
 import Immutable from "seamless-immutable";
 import * as _ from "lodash";
+import accumulatingDebounce from "../../../shared/lib/accumulatingDebounce";
 
 export type CacheData<T> = { status: "complete", data: T | null} | { status: "error", data:null};
 export type Cache<T> = {
@@ -24,21 +25,35 @@ type CacheMerge<T> = {
 }
 export type SampleToEntrezListOrNull = { [sampleId:string]:number[]|null };
 export type SampleToEntrezList = { [sampleId:string]:number[] };
-type SampleToEntrezSet = { [sampleId:string]:Set<number> };
+type SampleToEntrezSet = { [sampleId:string]:{[entrez:string]:true} };
 
 export default class SampleGeneCache<T extends { sampleId: string; entrezGeneId:number; }> {
     @observable.ref private _cache: Cache<T> & Immutable.ImmutableObject<Cache<T>>;
     private _pending: PendingCache;
     private dependencies:any[];
 
-    private toFetch:SampleToEntrezSet;
-    private fetchTimeout:number;
+    private debouncedPopulate:(sampleId:string, entrezGeneId:number)=>void;
+
 
     constructor(sampleIds:string[], ...dependencies:any[]) {
         this.dependencies = dependencies;
         this.initCache(sampleIds);
         this._pending = {};
-        this.toFetch = {};
+
+        this.debouncedPopulate = accumulatingDebounce<SampleToEntrezSet, string|number>(
+            (toFetch:SampleToEntrezSet)=>{
+                const sampleToEntrezList:SampleToEntrezList = {};
+                for (const sample of Object.keys(toFetch)) {
+                    sampleToEntrezList[sample] = Object.keys(toFetch[sample]).map(x=>parseInt(x,10));
+                }
+                this.populate(sampleToEntrezList);
+            },
+            (acc:SampleToEntrezSet, sampleId:string, entrezGeneId:number)=>{
+                acc[sampleId] = acc[sampleId] || new Set<number>();
+                acc[sampleId][entrezGeneId] = true;
+                return acc;
+            },
+            ()=>{return {};}, 0);
     }
 
     public get cache() {
@@ -77,22 +92,6 @@ export default class SampleGeneCache<T extends { sampleId: string; entrezGeneId:
         } else {
             return cacheDatum;
         }
-    }
-
-    private debouncedPopulate(sampleId:string, entrezGeneId:number) {
-        clearTimeout(this.fetchTimeout);
-
-        this.toFetch[sampleId] = this.toFetch[sampleId] || new Set<number>();
-        this.toFetch[sampleId].add(entrezGeneId);
-
-        this.fetchTimeout = window.setTimeout(()=>{
-            const sampleToEntrezList:SampleToEntrezList = {};
-            for (const sample of Object.keys(this.toFetch)) {
-                sampleToEntrezList[sample] = Array.from(this.toFetch[sample]);
-            }
-            this.toFetch = {};
-            this.populate(sampleToEntrezList);
-        }, 100);
     }
 
     protected async populate(sampleToEntrezList: SampleToEntrezListOrNull) {

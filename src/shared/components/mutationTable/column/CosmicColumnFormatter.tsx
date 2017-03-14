@@ -61,7 +61,7 @@ export default class CosmicColumnFormatter
         }
     }
 
-    public static getSortValue(data:Mutation[], cosmicData?:ICosmicData) {
+    public static getSortValue(data:Mutation[], cosmicData?:ICosmicData):number {
         const cosmic:CosmicMutation[]|null = CosmicColumnFormatter.getData(data, cosmicData);
         let value:number = Number.POSITIVE_INFINITY;
 
