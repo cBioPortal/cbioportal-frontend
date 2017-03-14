@@ -6,7 +6,6 @@ import 'rc-tooltip/assets/bootstrap_white.css';
 import styles from "./mutationAssessor.module.scss";
 import {MutationTableRowData} from "../IMutationTableProps";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
-import {compareNumberLists} from "shared/lib/SortUtils";
 
 type MA_CLASS_NAME = 'oma-high' | 'oma-medium' | 'oma-low' | 'oma-neutral' | 'oma-na';
 
@@ -36,13 +35,20 @@ export default class MutationAssessorColumnFormatter
         };
     }
 
-    public static getSortValue(d:Mutation[]):(number|undefined)[]
+    public static getSortValue(d:Mutation[]):(number|null)[]
     {
-        const score = MutationAssessorColumnFormatter.getData(d).score;
+        // If data is missing, it returns undefined. For the way the table works, we map this to null.
+        let score:number|undefined = MutationAssessorColumnFormatter.getData(d).score;
+        let returnScore:number|null;
+        if (score === undefined) {
+            returnScore = null;
+        } else {
+            returnScore = score;
+        }
         const format = MutationAssessorColumnFormatter.getMapEntry(d);
         const priority = format ? format.priority : -1;
 
-        return [priority, score];
+        return [priority, returnScore];
     }
 
     public static filterValue(data:Mutation[]):string
