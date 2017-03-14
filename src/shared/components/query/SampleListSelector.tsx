@@ -1,11 +1,10 @@
 import * as React from 'react';
-import queryStore from "./QueryStore";
 import * as styles_any from './styles.module.scss';
 import ReactSelect from 'react-select';
 import {observer} from "mobx-react";
 import {computed} from 'mobx';
 import {FlexCol} from "../flexbox/FlexBox";
-import {QueryStore} from "./QueryStore";
+import {QueryStore, QueryStoreComponent} from "./QueryStore";
 import {getStudyViewUrl} from "../../api/urls";
 
 const styles = styles_any as {
@@ -14,13 +13,8 @@ const styles = styles_any as {
 };
 
 @observer
-export default class SampleListSelector extends React.Component<{}, {}>
+export default class SampleListSelector extends QueryStoreComponent<{}, {}>
 {
-	get store()
-	{
-		return queryStore;
-	}
-
 	@computed get sampleListOptions()
 	{
 		return [

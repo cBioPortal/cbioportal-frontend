@@ -16,3 +16,4 @@ declare module 'expect';
 declare module 'expect-jsx';
 declare module 'parameter-validator';
 declare module 'better-react-spinkit';
+declare module 'recompose/withContext';

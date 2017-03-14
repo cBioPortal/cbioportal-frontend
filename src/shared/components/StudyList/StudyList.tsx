@@ -4,9 +4,9 @@ import * as styles_any from './styles.module.scss';
 import classNames from "../../lib/classNames";
 import FontAwesome from "react-fontawesome";
 import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
-import queryStore from "../query/QueryStore";
 import {observer} from "mobx-react";
 import {getStudySummaryUrl, getPubMedUrl} from "../../api/urls";
+import {QueryStoreComponent} from "../query/QueryStore";
 
 const styles = {
 	...styles_any as {
@@ -35,10 +35,9 @@ const styles = {
 };
 
 @observer
-export default class StudyList extends React.Component<{}, {}>
+export default class StudyList extends QueryStoreComponent<{}, {}>
 {
-	get store() { return queryStore; }
-	get logic() { return queryStore.studyListLogic; }
+	get logic() { return this.store.studyListLogic; }
 
 	render()
 	{

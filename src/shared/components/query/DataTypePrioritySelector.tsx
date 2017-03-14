@@ -1,8 +1,7 @@
 import * as _ from 'lodash';
 import * as React from 'react';
-import queryStore from "./QueryStore";
 import * as styles_any from './styles.module.scss';
-import {QueryStore} from "./QueryStore";
+import {QueryStore, QueryStoreComponent} from "./QueryStore";
 import {toJS} from "mobx";
 import {observer} from "mobx-react";
 import {FlexRow} from "../flexbox/FlexBox";
@@ -12,13 +11,8 @@ const styles = styles_any as {
 };
 
 @observer
-export default class DataTypePrioritySelector extends React.Component<{}, {}>
+export default class DataTypePrioritySelector extends QueryStoreComponent<{}, {}>
 {
-	get store()
-	{
-		return queryStore;
-	}
-
 	render()
 	{
 		if (this.store.singleSelectedStudyId)

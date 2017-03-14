@@ -9,7 +9,6 @@ import classNames from "../../lib/classNames";
 import GeneticProfileSelector from "./GeneticProfileSelector";
 import {observable, computed, action} from 'mobx';
 import {observer} from "mobx-react";
-import queryStore from "./QueryStore";
 import DataTypePrioritySelector from "./DataTypePrioritySelector";
 import GeneSetSelector from "./GeneSetSelector";
 import SampleListSelector from "./SampleListSelector";
@@ -18,6 +17,8 @@ import GisticGeneSelector from "./GisticGeneSelector";
 import PopupWindow from "../popupWindow/PopupWindow";
 import AsyncStatus from "../asyncStatus/AsyncStatus";
 import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
+import {QueryStore} from "./QueryStore";
+import {providesStoreContext} from "../../lib/ContextUtils";
 
 const styles = styles_any as {
 	QueryContainer: string,
@@ -32,12 +33,18 @@ const styles = styles_any as {
 	errorMessage: string,
 };
 
+interface QueryContainerProps
+{
+	store:QueryStore;
+}
+
+@providesStoreContext(QueryStore)
 @observer
-export default class QueryContainer extends React.Component<{}, {}>
+export default class QueryContainer extends React.Component<QueryContainerProps, {}>
 {
 	get store()
 	{
-		return queryStore;
+		return this.props.store;
 	}
 
     render():JSX.Element

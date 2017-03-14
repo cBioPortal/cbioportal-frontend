@@ -1,15 +1,14 @@
 import * as _ from 'lodash';
 import * as React from 'react';
 import {GeneticProfile} from "../../api/generated/CBioPortalAPI";
-import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
 import FontAwesome from "react-fontawesome";
 import * as styles_any from './styles.module.scss';
-import queryStore from "./QueryStore";
 import {action} from 'mobx';
 import {observer} from "mobx-react";
 import AsyncStatus from "../asyncStatus/AsyncStatus";
 import classNames from "../../lib/classNames";
 import {FlexCol} from "../flexbox/FlexBox";
+import {QueryStoreComponent} from "./QueryStore";
 
 const styles = styles_any as {
 	GeneticProfileSelector: string,
@@ -24,13 +23,8 @@ const styles = styles_any as {
 };
 
 @observer
-export default class GeneticProfileSelector extends React.Component<{}, {}>
+export default class GeneticProfileSelector extends QueryStoreComponent<{}, {}>
 {
-	get store()
-	{
-		return queryStore;
-	}
-
 	render()
 	{
 		if (!this.store.singleSelectedStudyId)

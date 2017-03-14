@@ -9,10 +9,10 @@ import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
 import ReactSelect from 'react-select';
 import StudyList from "../StudyList/StudyList";
 import {observer} from "mobx-react";
-import queryStore from "./QueryStore";
 import {action, toJS, computed} from "mobx";
 import memoize from "memoize-weak-decorator";
 import AsyncStatus from "../asyncStatus/AsyncStatus";
+import {QueryStoreComponent} from "./QueryStore";
 
 const styles = styles_any as {
 	CancerStudySelector: string,
@@ -46,14 +46,12 @@ export type ICancerStudySelectorProps = {
 };
 
 @observer
-export default class CancerStudySelector extends React.Component<ICancerStudySelectorProps, void>
+export default class CancerStudySelector extends QueryStoreComponent<ICancerStudySelectorProps, void>
 {
 	constructor(props: ICancerStudySelectorProps)
 	{
 		super(props);
 	}
-
-	get store() { return queryStore; }
 
 	@memoize
 	getCancerTypeListClickHandler<T>(node:CancerType)

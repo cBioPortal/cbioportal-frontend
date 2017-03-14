@@ -14,7 +14,7 @@ import AppConfig from 'appConfig';
 import {getSubmitQueryUrl} from "../../api/urls";
 import {gsUploadByGet} from "../../api/genomespace/gsuploadwindow";
 import {OQLQuery} from "../../lib/oql/oql-parser";
-import {SingleGeneQuery} from "../../lib/oql/oql-parser";
+import {ComponentGetsStoreContext} from "../../lib/ContextUtils";
 
 export type GeneReplacement = {alias: string, genes: Gene[]};
 
@@ -28,6 +28,32 @@ function normalizeQuery(geneQuery:string)
 	return geneQuery.replace(/^\s+|\s+$/g, '').replace(/ +/g, ' ').toUpperCase();
 }
 
+export type QueryParams = Pick<
+	QueryStore,
+	'searchText' |
+	'selectedStudyIds' |
+	'dataTypePriority' |
+	'selectedProfileIds' |
+	'zScoreThreshold' |
+	'rppaScoreThreshold' |
+	'selectedSampleListId' |
+	'caseIds' |
+	'caseIdsMode' |
+	'geneQuery'
+>;
+export const QueryParamsKeys:(keyof QueryParams)[] = [
+	'searchText',
+	'selectedStudyIds',
+	'dataTypePriority',
+	'selectedProfileIds',
+	'zScoreThreshold',
+	'rppaScoreThreshold',
+	'selectedSampleListId',
+	'caseIds',
+	'caseIdsMode',
+	'geneQuery',
+];
+
 // mobx observable
 export class QueryStore
 {
@@ -36,21 +62,18 @@ export class QueryStore
 		labelMobxPromises(this);
 	}
 
+	copyFrom(other:QueryParams)
+	{
+		// download tab does not appear anywhere except home page
+		this.forDownloadTab = false;
+
+		for (let key of QueryParamsKeys)
+			this[key] = other[key];
+	}
+
 	@computed get stateToSerialize()
 	{
-		let keys:Array<keyof this> = [
-			'searchText',
-			'selectedStudyIds',
-			'dataTypePriority',
-			'selectedProfileIds',
-			'zScoreThreshold',
-			'rppaScoreThreshold',
-			'selectedSampleListId',
-			'caseIds',
-			'caseIdsMode',
-			'geneQuery',
-		];
-		return _.pick(this, keys);
+		return _.pick(this, QueryParamsKeys);
 	}
 
 	////////////////////////////////////////////////////////////////////////////////
@@ -102,6 +125,10 @@ export class QueryStore
 			let profile = this.dict_geneticProfileId_geneticProfile[id];
 			return profile && profile.showProfileInAnalysisTab;
 		});
+	}
+	set selectedProfileIds(value)
+	{
+		this._selectedProfileIds = value;
 	}
 
 	@observable zScoreThreshold:string = '2.0';
@@ -615,5 +642,4 @@ export class QueryStore
 	}
 }
 
-const queryStore = (window as any).queryStore = new QueryStore();
-export default queryStore;
+export const QueryStoreComponent = ComponentGetsStoreContext(QueryStore);

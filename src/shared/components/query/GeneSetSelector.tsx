@@ -1,5 +1,4 @@
 import * as React from 'react';
-import queryStore from "./QueryStore";
 import * as styles_any from './styles.module.scss';
 import ReactSelect from 'react-select';
 import {observer} from "mobx-react";
@@ -10,7 +9,7 @@ import GeneSymbolValidator from "./GeneSymbolValidator";
 import classNames from "../../lib/classNames";
 import AsyncStatus from "../asyncStatus/AsyncStatus";
 import {getOncoQueryDocUrl} from "../../api/urls";
-import {QueryStore} from "./QueryStore";
+import {QueryStoreComponent} from "./QueryStore";
 
 const styles = styles_any as {
 	GeneSetSelector: string,
@@ -26,13 +25,8 @@ export interface GeneSetSelectorProps
 }
 
 @observer
-export default class GeneSetSelector extends React.Component<GeneSetSelectorProps, {}>
+export default class GeneSetSelector extends QueryStoreComponent<GeneSetSelectorProps, {}>
 {
-	get store()
-	{
-		return queryStore;
-	}
-
 	@computed get selectedGeneListOption()
 	{
 		let option = this.geneListOptions.find(opt => opt.value == this.store.geneQuery);

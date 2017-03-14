@@ -1,12 +1,11 @@
 import * as React from 'react';
-import queryStore from "./QueryStore";
 import * as styles_any from './styles.module.scss';
 import {observer} from "mobx-react";
 import Spinner from "react-spinkit";
 import FontAwesome from "react-fontawesome";
 import ReactSelect from 'react-select';
 import AsyncStatus from "../asyncStatus/AsyncStatus";
-import {GeneReplacement} from "./QueryStore";
+import {GeneReplacement, QueryStoreComponent} from "./QueryStore";
 
 const styles = styles_any as {
 	GeneSymbolValidator: string,
@@ -23,13 +22,8 @@ const styles = styles_any as {
 };
 
 @observer
-export default class GeneSymbolValidator extends React.Component<{}, {}>
+export default class GeneSymbolValidator extends QueryStoreComponent<{}, {}>
 {
-	get store()
-	{
-		return queryStore;
-	}
-
 	render()
 	{
 		if (this.store.oql.error)

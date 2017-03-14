@@ -6,11 +6,11 @@ import devMode from "../../shared/lib/devMode";
 import {observer} from "mobx-react";
 import DevTools from "mobx-react-devtools";
 import {toJS, observable, action, computed, whyRun, expr} from "mobx";
-import queryStore from "../../shared/components/query/QueryStore";
 import LabeledCheckbox from "../../shared/components/labeledCheckbox/LabeledCheckbox";
 import ReactSelect from 'react-select';
 import 'react-select/dist/react-select.css';
 import QueryAndDownloadTabs from "../../shared/components/query/QueryAndDownloadTabs";
+import {QueryStore} from "../../shared/components/query/QueryStore";
 
 function getRootElement()
 {
@@ -40,11 +40,11 @@ export default class HomePage extends React.Component<IHomePageProps, IHomePageS
 		super(props);
 	}
 
-	get store() { return queryStore; }
+	store = new QueryStore();
 
 	public componentDidMount()
 	{
-	  this.exposeComponentRenderersToParentScript();
+		this.exposeComponentRenderersToParentScript();
 	}
 
 	exposeComponentRenderersToParentScript()
@@ -57,7 +57,7 @@ export default class HomePage extends React.Component<IHomePageProps, IHomePageS
 		return (
 			<FlexRow padded flex={1} className={styles.HomePage}>
 
-				<QueryAndDownloadTabs/>
+				<QueryAndDownloadTabs store={this.store}/>
 
 				{!!(devMode.enabled) && (
 					<FlexCol padded overflow>
