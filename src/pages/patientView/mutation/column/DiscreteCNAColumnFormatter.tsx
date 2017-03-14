@@ -53,7 +53,7 @@ export default class DiscreteCNAColumnFormatter {
         return discreteCNACache.get(sampleId, entrezGeneId);
     }
 
-    protected static getTdValue(cacheDatum:DiscreteCNACacheDataType | null) {
+    protected static getTdValue(cacheDatum:DiscreteCNACacheDataType | null):number|null {
         if (cacheDatum !== null && cacheDatum.status === "complete" && cacheDatum.data !== null) {
             return cacheDatum.data.alteration;
         } else {

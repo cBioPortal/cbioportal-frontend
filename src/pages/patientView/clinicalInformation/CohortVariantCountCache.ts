@@ -2,6 +2,7 @@ import {observable, action} from "mobx";
 import Immutable from "seamless-immutable";
 import client from "../../../shared/api/cbioportalInternalClientInstance";
 import {VariantCount, VariantCountIdentifier} from "../../../shared/api/generated/CBioPortalAPIInternal";
+import accumulatingDebounce from "../../../shared/lib/accumulatingDebounce";
 
 export type VariantCountCacheDataType = { status: "complete", data:number | null}
                                         | { status:"error", data:null};
@@ -45,15 +46,15 @@ export type EntrezToKeywordList = {
 };
 
 type EntrezToKeywordSet = {
-    [entrezGeneId:number]:Set<string>;
+    [entrezGeneId:number]:{[keyword:string]:true};
 };
 
 export default class CohortVariantCountCache {
 
     @observable.ref private _cache:VariantCountCacheType & Immutable.ImmutableObject<VariantCountCacheType>;
     private _pending:PendingCacheType;
-    private toFetch:EntrezToKeywordSet;
-    private fetchTimeout:number;
+
+    private debouncedPopulate:(entrezGeneId:number, keyword:string|null)=>void;
 
     constructor(private mutationGeneticProfileId:string) {
         this._cache = Immutable.from<VariantCountCacheType>({
@@ -65,7 +66,25 @@ export default class CohortVariantCountCache {
             mutationInGene: {},
             keyword: {}
         };
-        this.toFetch = {};
+
+        this.debouncedPopulate = accumulatingDebounce<EntrezToKeywordSet, number|string|null>(
+            (toFetch:EntrezToKeywordSet)=>{
+                const entrezToKeywordList:EntrezToKeywordList = {};
+                for (const entrez of Object.keys(toFetch)) {
+                    const entrezGeneId = parseInt(entrez, 10);
+                    entrezToKeywordList[entrezGeneId] = Object.keys(toFetch[entrezGeneId]);
+                }
+                this.populate(entrezToKeywordList);
+            },
+            (acc:EntrezToKeywordSet, entrezGeneId:number, keyword:string|null)=>{
+                acc[entrezGeneId] = acc[entrezGeneId] || new Set<string>();
+                if (keyword) {
+                    acc[entrezGeneId][keyword] = true;
+                }
+                return acc;
+            },
+            ()=>{return {};}, 0);
+
     }
     public get cache() {
         return this._cache;
@@ -115,25 +134,6 @@ export default class CohortVariantCountCache {
             ret = null;
         }
         return ret;
-    }
-
-    private debouncedPopulate(entrezGeneId:number, keyword:string|null) {
-        clearTimeout(this.fetchTimeout);
-
-        this.toFetch[entrezGeneId] = this.toFetch[entrezGeneId] || new Set<string>();
-        if (keyword) {
-            this.toFetch[entrezGeneId].add(keyword);
-        }
-
-        this.fetchTimeout = window.setTimeout(()=>{
-            const entrezToKeywordList:EntrezToKeywordList = {};
-            for (const entrez of Object.keys(this.toFetch)) {
-                const entrezGeneId = parseInt(entrez, 10);
-                entrezToKeywordList[entrezGeneId] = Array.from(this.toFetch[entrezGeneId]);
-            }
-            this.toFetch = {};
-            this.populate(entrezToKeywordList);
-        }, 100);
     }
 
     public async populate(entrezToKeywordList:EntrezToKeywordList) {
