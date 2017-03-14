@@ -419,7 +419,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                 <Tabs animation={false} activeKey={this.state.activeTabKey} id="patientViewPageTabs" onSelect={this.handleSelect as SelectCallback} className="mainTabs" unmountOnExit={true}>
 
-                    <Tab eventKey={1} id="summaryTab" title="Summary">
+                    <Tab eventKey={12} id="summaryTab" title="Summary">
 
                         {
                             (!!sampleManager && patientViewPageStore.clinicalEvents.isComplete) && (
@@ -475,7 +475,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             )
                         }
                     </Tab>
-                    <Tab eventKey={2} id="discreteCNAData" title="Copy Number Alterations">
+                    <Tab eventKey={1} id="discreteCNAData" title="Copy Number Alterations">
 
                         <CopyNumberTableWrapper store={patientViewPageStore} />
 
