@@ -74,7 +74,7 @@ export default class GeneticProfileSelector extends QueryStoreComponent<{}, {}>
 				<FontAwesome className={styles.infoIcon} name='question-circle' {...{title: profile.description}}/>
 			)}
 		</label>
-	);
+	)
 
 	renderGroup(geneticAlterationType:GeneticProfile['geneticAlterationType'], groupLabel:string)
 	{

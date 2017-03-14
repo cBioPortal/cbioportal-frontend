@@ -89,25 +89,29 @@ export default class MutSigGeneSelector extends React.Component<MutSigGeneSelect
 			header: (
 				<div className={styles.selectionColumnHeader}>
 					<span>All</span>
-					<Observer children={() => (
-						<LabeledCheckbox
-							checked={this.selectedGenes.length > 0}
-							indeterminate={this.selectedGenes.length > 0 && this.selectedGenes.length < this.allGenes.length}
-							onChange={event => this.selectAll(event.target.checked)}
-						/>
-					)}/>
+					<Observer>
+						{() => (
+							<LabeledCheckbox
+								checked={this.selectedGenes.length > 0}
+								indeterminate={this.selectedGenes.length > 0 && this.selectedGenes.length < this.allGenes.length}
+								onChange={event => this.selectAll(event.target.checked)}
+							/>
+						)}
+					</Observer>
 				</div>
 			),
 			formatter: ({name, rowData: mutSig}:IColumnFormatterData<MutSig>) => (
 				<Td key={name} column={name}>
 					{!!(mutSig) && (
 						<div className={styles.selectionColumnCell}>
-							<Observer children={() => (
-								<LabeledCheckbox
-									checked={!!this.map_geneSymbol_selected.get(mutSig.hugoGeneSymbol)}
-									onChange={event => this.map_geneSymbol_selected.set(mutSig.hugoGeneSymbol, event.target.checked)}
-								/>
-							)}/>
+							<Observer>
+								{() => (
+									<LabeledCheckbox
+										checked={!!this.map_geneSymbol_selected.get(mutSig.hugoGeneSymbol)}
+										onChange={event => this.map_geneSymbol_selected.set(mutSig.hugoGeneSymbol, event.target.checked)}
+									/>
+								)}
+							</Observer>
 						</div>
 					)}
 				</Td>

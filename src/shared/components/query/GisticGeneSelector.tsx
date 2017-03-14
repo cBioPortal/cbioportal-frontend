@@ -173,18 +173,20 @@ class GisticGeneToggles extends React.Component<{gistic?: Gistic, map_geneSymbol
 	renderGeneToggles(genes: string[])
 	{
 		return genes.map(gene => (
-			<Observer children={() => {
-				let selected = !!this.props.map_geneSymbol_selected.get(gene);
-				return (
-					<span
-						key={gene}
-						className={classNames(styles.geneToggle, selected ? styles.selected : styles.notSelected)}
-						onClick={event => this.props.map_geneSymbol_selected.set(gene, !selected)}
-					>
-						{gene}
-					</span>
-				);
-			}}/>
+			<Observer>
+				{() => {
+					let selected = !!this.props.map_geneSymbol_selected.get(gene);
+					return (
+						<span
+							key={gene}
+							className={classNames(styles.geneToggle, selected ? styles.selected : styles.notSelected)}
+							onClick={event => this.props.map_geneSymbol_selected.set(gene, !selected)}
+						>
+							{gene}
+						</span>
+					);
+				}}
+			</Observer>
 		));
 	}
 

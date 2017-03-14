@@ -17,7 +17,7 @@ function createValidator<Store>(storeClass:new(..._:any[])=>Store)
 		if (object[key] instanceof storeClass)
 			return null;
 		return new Error(`Expecting ${componentName} to receive {store: ${storeClass.name}} from context`);
-	}
+	};
 }
 
 /**
@@ -44,5 +44,5 @@ export function ComponentGetsStoreContext<Store>(storeClass:new(..._:any[])=>Sto
 		{
 			return this.context.store;
 		}
-	}
+	};
 }
