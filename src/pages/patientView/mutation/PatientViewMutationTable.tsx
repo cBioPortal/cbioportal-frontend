@@ -114,9 +114,11 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
     @observable private _columns:{[columnEnum:number]:MutationTableColumn};
 
     constructor(props:PatientViewMutationTableProps) {
+
         super(props);
         this._columns = {};
         this.generateColumns();
+
     }
 
     private getSamples():string[] {
