@@ -144,6 +144,7 @@ class MSKTableStore<T> {
                 headerProps.onClick = ()=>{
                     this.sortAscending = (this.sortColumn === column.name ? !this.sortAscending : true);
                     this.sortColumn = column.name;
+                    this.page = 0;
                 };
             }
             if (this.sortColumn === column.name) {
