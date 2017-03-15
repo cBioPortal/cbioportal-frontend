@@ -2,7 +2,7 @@ import {IAppConfig} from "./IAppConfig";
 
 const config:IAppConfig = {
     //host: 'cbioportal-rc.herokuapp.com',
-    genomespaceEnabled: true,
+    genomespaceEnabled: false,
     cancerStudySearchPresets: [
         'tcga',
         'tcga -provisional',

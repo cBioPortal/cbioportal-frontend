@@ -19,6 +19,7 @@ import AsyncStatus from "../asyncStatus/AsyncStatus";
 import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
 import {QueryStore} from "./QueryStore";
 import {providesStoreContext} from "../../lib/ContextUtils";
+import AppConfig from "appConfig";
 
 const styles = styles_any as {
 	QueryContainer: string,
@@ -131,7 +132,7 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
 					<button className={classNames('cta', styles.submit)} onClick={() => this.store.submit()}>
 						Submit
 					</button>
-					{!!(this.store.forDownloadTab) && (
+					{!!(this.store.forDownloadTab && AppConfig.genomespaceEnabled) && (
 						<button className={styles.genomeSpace} onClick={() => this.store.sendToGenomeSpace()}>
 							Send to GenomeSpace
 						</button>
