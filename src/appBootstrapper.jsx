@@ -1,40 +1,39 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import App from 'appShell/App/App';
-import { hashHistory, createMemoryHistory } from 'react-router';
-import { configureStore } from './redux/configureStore';
+import { Provider } from 'mobx-react';
+import { hashHistory, Router } from 'react-router';
+import { RouterStore, syncHistoryWithStore  } from 'mobx-react-router';
+import ExtendedRoutingStore from './shared/lib/ExtendedRouterStore';
+import { computed, extendObservable } from 'mobx';
 import makeRoutes from './routes';
 import lodash from 'lodash';
 
 // make sure lodash doesn't overwrite (or set) global underscore
 lodash.noConflict();
 
-const defaultRoute = window.defaultRoute || "/home";
+const routingStore = new ExtendedRoutingStore();
 
-const memoryHistory = createMemoryHistory(defaultRoute);
+window.routingStore = routingStore;
 
-// expose router so it can be manipulated in console
-if (window) {
-    window.reactRouter = memoryHistory;
-}
+const stores = {
+    // Key can be whatever you want
+    routing: routingStore,
+    // ...other stores
+};
 
-const initialState = {};
-const { store, actions, history } = configureStore({ initialState, historyType: memoryHistory });
+const history = syncHistoryWithStore(hashHistory, routingStore);
 
-let render = (routerKey = null) => {
-
-    const routes = makeRoutes(store);
+let render = () => {
 
     const rootNode = document.getElementById("reactRoot");
 
     ReactDOM.render(
-    <App
-      store={store}
-      actions={actions}
-      routes={routes}
-      history={history}
-      routerKey={routerKey}
-    />, rootNode);
+        <Provider {...stores}>
+            <Router
+                history={history} routes={makeRoutes()} >
+            </Router>
+        </Provider>
+    , rootNode);
 
 
 };
