@@ -132,8 +132,7 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
 						Submit
 					</button>
 					{!!(this.store.forDownloadTab) && (
-						//<script src="https://gsui.genomespace.org/jsui/upload/gsuploadwindow.js" type="text/javascript"></script>
-						<button className={styles.genomeSpace}>
+						<button className={styles.genomeSpace} onClick={() => this.store.sendToGenomeSpace()}>
 							Send to GenomeSpace
 						</button>
 					)}

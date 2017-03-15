@@ -9,10 +9,14 @@ const styles = styles_any as {
 	QueryAndDownloadTabs: string,
 };
 
+const DOWNLOAD = 'download';
+const QUERY = 'query';
+
 interface IQueryAndDownloadTabsProps
 {
 	store:QueryStore;
 }
+
 
 @observer
 export default class QueryAndDownloadTabs extends React.Component<IQueryAndDownloadTabsProps, {}>
@@ -24,7 +28,7 @@ export default class QueryAndDownloadTabs extends React.Component<IQueryAndDownl
 
 	onSelectTab = (eventKey:string) =>
 	{
-		this.store.forDownloadTab = eventKey === 'download';
+		this.store.forDownloadTab = eventKey === DOWNLOAD;
 	}
 
 	render()
@@ -34,7 +38,7 @@ export default class QueryAndDownloadTabs extends React.Component<IQueryAndDownl
 				<Tabs
 					id='QueryAndDownloadTabs'
 					animation={false}
-					activeKey={this.store.forDownloadTab ? 'download' : 'query'}
+					activeKey={this.store.forDownloadTab ? DOWNLOAD : QUERY}
 					onSelect={this.onSelectTab as ReactBootstrap.SelectCallback}
 				>
 					<Tab eventKey='query' title="Query"/>

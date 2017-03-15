@@ -16,12 +16,14 @@ export function gsUploadByGet(config:{url:string, filename?:string, successCallb
         filenameParam = "&fileName=" + config.filename;
     }
 
-    let newWin:Window & any = window.open(gsUploadUrl + dest + filenameParam, "GenomeSpace Upload", "height=340px,width=550px");
+    let newWin = window.open(gsUploadUrl + dest + filenameParam, "GenomeSpace Upload", "height=340px,width=550px");
+    if (!newWin)
+        return alert('GenomeSpace popup was blocked by the browser');
     newWin.focus();
 
-    if (config['successCallback'] != null) newWin.setCallbackOnGSUploadComplete = config['successCallback'];
+    if (config['successCallback'] != null) (newWin as any).setCallbackOnGSUploadComplete = config['successCallback'];
 
-    if (config['errorCallback'] != null) newWin.setCallbackOnGSUploadError = config['errorCallback'];
+    if (config['errorCallback'] != null) (newWin as any).setCallbackOnGSUploadError = config['errorCallback'];
 }
 
 export function gsLocationByGet(config:{successCallback:Callback, errorCallback?:Callback}){
@@ -29,7 +31,7 @@ export function gsLocationByGet(config:{successCallback:Callback, errorCallback?
 
     let gsUploadUrl = jsuiRoot +"/upload/loadUrlToGenomespace.html?getLocation=true";
 
-    let newWin:Window & any = window.open(gsUploadUrl, "GenomeSpace Upload", "height=360px,width=600px");
+    let newWin = window.open(gsUploadUrl, "GenomeSpace Upload", "height=360px,width=600px");
 
     let successCallback = config['successCallback'];
     window.addEventListener( "message",
@@ -40,18 +42,18 @@ export function gsLocationByGet(config:{successCallback:Callback, errorCallback?
 
     newWin.focus();
 
-    if (config['errorCallback'] != null) newWin.setCallbackOnGSUploadError = config['errorCallback'];
+    if (config['errorCallback'] != null) (newWin as any).setCallbackOnGSUploadError = config['errorCallback'];
 }
 
 export function gsSelectFileByGet(config:{successCallback:Callback, errorCallback?:Callback}){
     // expect an object with url, filename (optional), successCallback, errorCallback (optional)
     let gsUploadUrl = jsuiRoot +"/upload/loadUrlToGenomespace.html?getFile=true";
-    let newWin:Window & any = window.open(gsUploadUrl , "GenomeSpace Upload", "height=340px,width=550px");
+    let newWin = window.open(gsUploadUrl , "GenomeSpace Upload", "height=340px,width=550px");
     newWin.focus();
 
-    newWin.setCallbackOnGSLocationComplete = config['successCallback'];
+    (newWin as any).setCallbackOnGSLocationComplete = config['successCallback'];
 
-    if (config['errorCallback'] != null) newWin.setCallbackOnGSUploadError = config['errorCallback'];
+    if (config['errorCallback'] != null) (newWin as any).setCallbackOnGSUploadError = config['errorCallback'];
 }
 
 export async function gsUploadByPost(formData:any){

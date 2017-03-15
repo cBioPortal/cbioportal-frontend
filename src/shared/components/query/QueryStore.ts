@@ -628,7 +628,7 @@ export class QueryStore
 		window.location.href = this.submitQueryUrl;
 	}
 
-	@action uploadToGenomeSpace()
+	@action sendToGenomeSpace()
 	{
 		// if (!validDownloadDataForm(this))
 		// 	return;
