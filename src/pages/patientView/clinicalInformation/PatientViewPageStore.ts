@@ -4,7 +4,6 @@ import {
     ClinicalData, SampleIdentifier,
     GeneticProfile, Sample, Mutation, DiscreteCopyNumberFilter, DiscreteCopyNumberData
 } from "../../../shared/api/generated/CBioPortalAPI";
-import {ClinicalInformationData} from "../Connector";
 import client from "../../../shared/api/cbioportalClientInstance";
 import internalClient from "../../../shared/api/cbioportalInternalClientInstance";
 import {CopyNumberCount, CopyNumberCountIdentifier} from "shared/api/generated/CBioPortalAPIInternal";
@@ -25,10 +24,20 @@ import {getTissueImageCheckUrl} from "../../../shared/api/urls";
 
 type PageMode = 'patient' | 'sample';
 
-export function groupByEntityId(clinicalDataArray: Array<ClinicalData>) {
+export type ClinicalInformationData = {
+    patient?: {
+        id: string,
+        clinicalData: Array<ClinicalData>
+    },
+    samples?: Array<ClinicalDataBySampleId>,
+    nodes?: any[]//PDXNode[],
+};
+
+export function groupByEntityId(clinicalDataArray: Array<ClinicalData>)
+{
     return _.map(
         _.groupBy(clinicalDataArray, 'entityId'),
-        (v: ClinicalData[], k: string): ClinicalDataBySampleId => ({
+        (v:ClinicalData[], k:string):ClinicalDataBySampleId => ({
             clinicalData: v,
             id: k,
         })
@@ -94,6 +103,8 @@ export class PatientViewPageStore
         labelMobxPromises(this);
     }
 
+    @observable public activeTabId = '';
+
     @observable private _patientId = '';
     @computed get patientId(): string {
         if (this._patientId)
@@ -116,6 +127,8 @@ export class PatientViewPageStore
     @computed get mutationGeneticProfileId() {
         return `${this.studyId}_mutations`;
     }
+
+    @observable patientIdsInCohort: string[] = [];
 
     readonly derivedPatientId = remoteData<string>({
         await: () => [this.samples],
@@ -548,6 +561,10 @@ export class PatientViewPageStore
             sampleToNull[sample.sampleId] = null;
         }
         this.discreteCNACache.populate(sampleToNull);
+    }
+
+    @action setActiveTabId(id:string) {
+        this.activeTabId = id;
     }
 
 }

@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import CBioPortalAPI from "../../../shared/api/generated/CBioPortalAPI";
 import { ClinicalDataBySampleId } from "../../../shared/api/api-types-extended";
 import {ClinicalData} from "../../../shared/api/generated/CBioPortalAPI";
-import {ClinicalInformationData} from "../Connector";
+import {ClinicalInformationData} from "./PatientViewPageStore";
 import {getCbioPortalApiUrl} from "../../../shared/api/urls";
 //import { getTreeNodesFromClinicalData, PDXNode } from './PDXTree';
 //import sampleQuery from 'shared/api/mock/Samples_query_patient_P04.json';
