@@ -7,6 +7,7 @@ import MSKTable from "../../../shared/components/msktable/MSKTable";
 import {DiscreteCopyNumberData} from "../../../shared/api/generated/CBioPortalAPI";
 import {Column} from "../../../shared/components/msktable/MSKTable";
 import * as _ from 'lodash';
+import MrnaExprColumnFormatter from "../mutation/column/MrnaExprColumnFormatter";
 
 
 class CNATableComponent extends MSKTable<DiscreteCopyNumberData> {
@@ -39,6 +40,14 @@ export default class CopyNumberTableWrapper extends React.Component<{ store:Pati
             sort: (d1:DiscreteCopyNumberData, d2:DiscreteCopyNumberData, ascending:boolean)=>0,
             visible: true,
             order: 60
+        });
+
+        columns.push({
+            name: "mRNA Expr.",
+            render: (d:DiscreteCopyNumberData)=>(this.props.store.mrnaExprRankCache
+                                ? MrnaExprColumnFormatter.cnaRenderFunction(d, this.props.store.mrnaExprRankCache)
+                                : (<span></span>)),
+            order: 70
         });
 
         let orderedColumns = _.sortBy(columns, (c:CNATableColumn)=>c.order);
