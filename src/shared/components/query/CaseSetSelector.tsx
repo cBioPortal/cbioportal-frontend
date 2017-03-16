@@ -8,14 +8,16 @@ import {QueryStore, QueryStoreComponent} from "./QueryStore";
 import {getStudyViewUrl} from "../../api/urls";
 
 const styles = styles_any as {
-	SampleListSelector: string,
+	CaseSetSelector: string,
 	ReactSelect: string,
 };
 
+const CUSTOM_CASE_LIST_ID = '';
+
 @observer
-export default class SampleListSelector extends QueryStoreComponent<{}, {}>
+export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 {
-	@computed get sampleListOptions()
+	@computed get caseSetOptions()
 	{
 		return [
 			...this.store.sampleLists.result.map(sampleList => {
@@ -26,7 +28,7 @@ export default class SampleListSelector extends QueryStoreComponent<{}, {}>
 			}),
 			{
 				label: 'User-defined Case List',
-				value: ''
+				value: CUSTOM_CASE_LIST_ID
 			}
 		];
 	}
@@ -37,18 +39,22 @@ export default class SampleListSelector extends QueryStoreComponent<{}, {}>
 			return null;
 
 		return (
-			<FlexCol padded overflow className={styles.SampleListSelector}>
+			<FlexCol padded overflow className={styles.CaseSetSelector}>
 				<h2>Select Patient/Case Set:</h2>
 				<ReactSelect
 					className={styles.ReactSelect}
 					value={this.store.selectedSampleListId}
-					options={this.sampleListOptions}
-					onChange={option => this.store.selectedSampleListId = option ? option.value : undefined}
+					options={this.caseSetOptions}
+					clearable={this.store.selectedSampleListId != this.store.defaultSelectedSampleListId}
+					onChange={option => {
+						let value = option ? option.value : undefined;
+						this.store.selectedSampleListId = value === CUSTOM_CASE_LIST_ID ? '' : value;
+					}}
 				/>
 				<a href={getStudyViewUrl(this.store.singleSelectedStudyId)}>To build your own case set, try out our enhanced Study View.</a>
 
 				{!!(!this.store.selectedSampleListId) && (
-					<FlexCol>
+					<FlexCol padded>
 						<span>Enter case IDs below:</span>
 						<textarea
 							title="Enter case IDs"

@@ -100,17 +100,17 @@ export default class StudyList extends QueryStoreComponent<{}, {}>
 				<li className={liClassName}>
 					<LabeledCheckbox
 						{...this.logic.getCheckboxProps(cancerType)}
-						inputProps={{
-							onChange: event => this.logic.onCheck(cancerType, (event.target as HTMLInputElement).checked)
-						}}
+						onChange={event => this.logic.onCheck(cancerType, (event.target as HTMLInputElement).checked)}
 					>
 						{indentArrow} 
 						<span className={styles.CancerTypeName}>
 							{cancerType.name}
 						</span>
-						<span className={styles.SelectAll}>
-							Select All
-						</span>
+						{!!(!this.store.forDownloadTab) && (
+							<span className={styles.SelectAll}>
+								Select All
+							</span>
+						)}
 					</LabeledCheckbox>
 				</li>
 			);
@@ -151,9 +151,7 @@ export default class StudyList extends QueryStoreComponent<{}, {}>
 		return (
 			<LabeledCheckbox
 				{...this.logic.getCheckboxProps(study)}
-				inputProps={{
-					onChange: event => this.logic.onCheck(study, (event.target as HTMLInputElement).checked)
-				}}
+				onChange={event => this.logic.onCheck(study, (event.target as HTMLInputElement).checked)}
 			>
 				<span className={styles.StudyName} title={study.name}>
 					{study.name}

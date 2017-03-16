@@ -183,7 +183,6 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 						value={this.store.searchText}
 						autofocus={true}
 						options={searchTextOptions.map(str => ({label: str, value: str}))}
-						promptTextCreator={(label:string) => `Search for "${label}"`}
 						placeholder='Search...'
 						noResultsText={false}
 						onCloseResetsInput={false}
@@ -196,10 +195,11 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 							this.store.selectedCancerTypeIds = [];
 						}}
 					/>
-
-					<span className={classNames('cta', styles.selectAll)} onClick={() => logic.hack_handleSelectAll(!allSelected)}>
-						{allSelected ? "Deselect All" : "Select All"}
-					</span>
+					{!!(!this.store.forDownloadTab) && (
+						<span className={classNames('cta', styles.selectAll)} onClick={() => logic.hack_handleSelectAll(!allSelected)}>
+							{allSelected ? "Deselect All" : "Select All"}
+						</span>
+					)}
 				</FlexRow>
 
 				<FlexRow className={styles.cancerStudySelectorBody}>

@@ -172,54 +172,7 @@ export class QueryStore
 	{
 		if (this._selectedSampleListId !== undefined)
 			return this._selectedSampleListId;
-
-		// compute default selection
-		let studyId = this.singleSelectedStudyId;
-		if (!studyId)
-			return undefined;
-
-		let mutSelect = this.getSelectedProfileIdFromGeneticAlterationType('MUTATION_EXTENDED');
-		let cnaSelect = this.getSelectedProfileIdFromGeneticAlterationType('COPY_NUMBER_ALTERATION');
-		let expSelect = this.getSelectedProfileIdFromGeneticAlterationType('MRNA_EXPRESSION');
-		let rppaSelect = this.getSelectedProfileIdFromGeneticAlterationType('PROTEIN_LEVEL');
-		let sampleListId = studyId + "_all";
-
-		if (mutSelect && cnaSelect && !expSelect && !rppaSelect)
-			sampleListId = studyId + "_cnaseq";
-		else if (mutSelect && !cnaSelect && !expSelect && !rppaSelect)
-			sampleListId = studyId + "_sequenced";
-		else if (!mutSelect && cnaSelect && !expSelect && !rppaSelect)
-			sampleListId = studyId + "_acgh";
-		else if (!mutSelect && !cnaSelect && expSelect && !rppaSelect)
-		{
-			if (this.isProfileSelected(studyId + '_mrna_median_Zscores'))
-				sampleListId = studyId + "_mrna";
-			else if (this.isProfileSelected(studyId + '_rna_seq_mrna_median_Zscores'))
-				sampleListId = studyId + "_rna_seq_mrna";
-			else if (this.isProfileSelected(studyId + '_rna_seq_v2_mrna_median_Zscores'))
-				sampleListId = studyId + "_rna_seq_v2_mrna";
-		}
-		else if ((mutSelect || cnaSelect) && expSelect && !rppaSelect)
-			sampleListId = studyId + "_3way_complete";
-		else if (!mutSelect && !cnaSelect && !expSelect && rppaSelect)
-			sampleListId = studyId + "_rppa";
-
-		// BEGIN HACK if not found
-		if (!this.dict_sampleListId_sampleList[sampleListId])
-		{
-			if (sampleListId === studyId + '_cnaseq')
-				sampleListId = studyId + '_cna_seq';
-			else if (sampleListId === studyId + "_3way_complete")
-				sampleListId = studyId + "_complete";
-
-		}
-		// END HACK
-
-		// if still not found
-		if (!this.dict_sampleListId_sampleList[sampleListId])
-			sampleListId = studyId + '_all';
-
-		return sampleListId;
+		return this.defaultSelectedSampleListId;
 	}
 	set selectedSampleListId(value)
 	{
@@ -228,7 +181,15 @@ export class QueryStore
 
 	@observable caseIds = '';
 
-	@observable caseIdsMode:'sample'|'patient' = 'sample';
+	@observable _caseIdsMode:'sample'|'patient' = 'sample';
+	@computed get caseIdsMode()
+	{
+		return this.selectedSampleListId ? 'sample' : this._caseIdsMode;
+	}
+	set caseIdsMode(value)
+	{
+		this._caseIdsMode = value;
+	}
 
 	@observable _geneQuery = '';
 	get geneQuery()
@@ -284,7 +245,12 @@ export class QueryStore
 			});
 		},
 		default: [],
-		reaction: () => this._selectedProfileIds = undefined
+		reaction: () => {
+			if (this._isFromUrlParams.selectedProfileIds)
+				this._isFromUrlParams.selectedProfileIds = false;
+			else
+				this._selectedProfileIds = undefined;
+		}
 	});
 
 	readonly sampleLists = remoteData({
@@ -298,7 +264,12 @@ export class QueryStore
 			return _.sortBy(sampleLists, sampleList => sampleList.name);
 		},
 		default: [],
-		reaction: () => this._selectedSampleListId = undefined
+		reaction: () => {
+			if (this._isFromUrlParams.selectedSampleListId)
+				this._isFromUrlParams.selectedSampleListId = false;
+			else
+				this._selectedSampleListId = undefined;
+		}
 	});
 
 	readonly mutSigForSingleStudy = remoteData({
@@ -486,6 +457,55 @@ export class QueryStore
 
 	// SAMPLE LIST
 
+	@computed get defaultSelectedSampleListId()
+	{
+		let studyId = this.singleSelectedStudyId;
+		if (!studyId)
+			return undefined;
+
+		let mutSelect = this.getSelectedProfileIdFromGeneticAlterationType('MUTATION_EXTENDED');
+		let cnaSelect = this.getSelectedProfileIdFromGeneticAlterationType('COPY_NUMBER_ALTERATION');
+		let expSelect = this.getSelectedProfileIdFromGeneticAlterationType('MRNA_EXPRESSION');
+		let rppaSelect = this.getSelectedProfileIdFromGeneticAlterationType('PROTEIN_LEVEL');
+		let sampleListId = studyId + "_all";
+
+		if (mutSelect && cnaSelect && !expSelect && !rppaSelect)
+			sampleListId = studyId + "_cnaseq";
+		else if (mutSelect && !cnaSelect && !expSelect && !rppaSelect)
+			sampleListId = studyId + "_sequenced";
+		else if (!mutSelect && cnaSelect && !expSelect && !rppaSelect)
+			sampleListId = studyId + "_acgh";
+		else if (!mutSelect && !cnaSelect && expSelect && !rppaSelect)
+		{
+			if (this.isProfileSelected(studyId + '_mrna_median_Zscores'))
+				sampleListId = studyId + "_mrna";
+			else if (this.isProfileSelected(studyId + '_rna_seq_mrna_median_Zscores'))
+				sampleListId = studyId + "_rna_seq_mrna";
+			else if (this.isProfileSelected(studyId + '_rna_seq_v2_mrna_median_Zscores'))
+				sampleListId = studyId + "_rna_seq_v2_mrna";
+		}
+		else if ((mutSelect || cnaSelect) && expSelect && !rppaSelect)
+			sampleListId = studyId + "_3way_complete";
+		else if (!mutSelect && !cnaSelect && !expSelect && rppaSelect)
+			sampleListId = studyId + "_rppa";
+
+		// BEGIN HACK if not found
+		if (!this.dict_sampleListId_sampleList[sampleListId])
+		{
+			if (sampleListId === studyId + '_cnaseq')
+				sampleListId = studyId + '_cna_seq';
+			else if (sampleListId === studyId + "_3way_complete")
+				sampleListId = studyId + "_complete";
+		}
+		// END HACK
+
+		// if still not found
+		if (!this.dict_sampleListId_sampleList[sampleListId])
+			sampleListId = studyId + '_all';
+
+		return sampleListId;
+	}
+
 	@computed get dict_sampleListId_sampleList():_.Dictionary<SampleList | undefined>
 	{
 		return _.keyBy(this.sampleLists.result, sampleList => sampleList.sampleListId);
@@ -608,8 +628,15 @@ export class QueryStore
 	// ACTIONS
 	////////////////////////////////////////////////////////////////////////////////
 
-	@action
-	setParamsFromUrl(url:string)
+	/**
+	 * This is used to prevent selections from being cleared automatically when new data is downloaded.
+	 */
+	private readonly _isFromUrlParams = {
+		selectedProfileIds: false,
+		selectedSampleListId: false,
+	};
+
+	@action setParamsFromUrl(url:string)
 	{
 		let parsed = urlParse(url, true);
 		let params = parsed.query as Partial<CancerStudyQueryUrlParams>;
@@ -639,6 +666,8 @@ export class QueryStore
 		this.caseIdsMode = params.patient_case_select || 'sample';
 		this.geneQuery = normalizeQuery(hashParams.gene_list || params.gene_list || '');
 		this.forDownloadTab = params.tab_index === 'tab_download';
+		this._isFromUrlParams.selectedProfileIds = true;
+		this._isFromUrlParams.selectedSampleListId = true;
 	}
 
 	@action selectCancerType(cancerType:CancerType, multiSelect?:boolean)

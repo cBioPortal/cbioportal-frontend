@@ -35,7 +35,7 @@
 .CancerStudySelector,
 .GeneticProfileSelector,
 .DataTypePrioritySelector,
-.SampleListSelector,
+.CaseSetSelector,
 .GeneSetSelector {
   border: 1px solid rgb(170, 170, 170);
   border-radius: 10px;
@@ -275,12 +275,15 @@
   }
 
   input[type="radio"] {
-      margin: 0 6px 0 12px;
+    margin: 0 6px 0 12px;
   }
 }
 
-.SampleListSelector {
+.CaseSetSelector {
   .ReactSelect {
+  }
+  input[type="radio"] {
+    margin-right: 6px;
   }
 }
 

@@ -11,7 +11,6 @@ import {observable, computed, action} from 'mobx';
 import {observer} from "mobx-react";
 import DataTypePrioritySelector from "./DataTypePrioritySelector";
 import GeneSetSelector from "./GeneSetSelector";
-import SampleListSelector from "./SampleListSelector";
 import MutSigGeneSelector from "./MutSigGeneSelector";
 import GisticGeneSelector from "./GisticGeneSelector";
 import PopupWindow from "../popupWindow/PopupWindow";
@@ -20,6 +19,7 @@ import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
 import {QueryStore} from "./QueryStore";
 import {providesStoreContext} from "../../lib/ContextUtils";
 import AppConfig from "appConfig";
+import CaseSetSelector from "./CaseSetSelector";
 
 const styles = styles_any as {
 	QueryContainer: string,
@@ -69,7 +69,7 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
 				)}
 
 				{!!(this.store.singleSelectedStudyId) && (
-					<SampleListSelector/>
+					<CaseSetSelector/>
 				)}
 
 				{!!(!this.store.singleSelectedStudyId) && (
