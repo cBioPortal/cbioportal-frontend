@@ -40,7 +40,7 @@ export default class HomePage extends React.Component<IHomePageProps, IHomePageS
 		super(props);
 	}
 
-	store = new QueryStore();
+	store = new QueryStore(window.location.href);
 
 	public componentDidMount()
 	{

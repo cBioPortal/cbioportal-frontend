@@ -6,7 +6,7 @@ declare module 'build-url'
 		hash?: string,
 		queryParams?: QueryParams
 	}
-	function buildUrl(base:string|null, params:Params):string;
-	function buildUrl(params:Params):string;
+	export function buildUrl(base:string|null, params:Params):string;
+	export function buildUrl(params:Params):string;
 	export default buildUrl;
 }

@@ -161,6 +161,7 @@
     "underscore": "^1.8.3",
     "url": "^0.11.0",
     "url-loader": "^0.5.7",
+    "url-parse": "^1.1.8",
     "webpack": "^1.14.0",
     "webpack-fail-plugin": "^1.0.5",
     "webpack-raphael": "^2.1.4"

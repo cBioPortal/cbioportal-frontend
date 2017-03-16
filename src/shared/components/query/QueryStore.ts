@@ -8,13 +8,33 @@ import {remoteData} from "../../api/remoteData";
 import {labelMobxPromises, cached, debounceAsync} from "mobxpromise";
 import internalClient from "../../api/cbioportalInternalClientInstance";
 import oql_parser from "../../lib/oql/oql-parser";
-import {SyntaxError} from "../../lib/oql/oql-parser";
 import memoize from "memoize-weak-decorator";
 import AppConfig from 'appConfig';
-import {getSubmitQueryUrl} from "../../api/urls";
-import {gsUploadByGet} from "../../api/genomespace/gsuploadwindow";
+import {gsUploadByGet} from "../../api/gsuploadwindow";
 import {OQLQuery} from "../../lib/oql/oql-parser";
 import {ComponentGetsStoreContext} from "../../lib/ContextUtils";
+import urlParse from 'url-parse';
+import {buildCBioPortalUrl, BuildUrlParams} from "../../api/urls";
+import {buildUrl} from "build-url";
+
+type CancerStudyQueryUrlParams = {
+	cancer_study_id: string,
+	genetic_profile_ids_PROFILE_MUTATION_EXTENDED: string,
+	genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION: string,
+	genetic_profile_ids_PROFILE_MRNA_EXPRESSION: string,
+	genetic_profile_ids_PROFILE_METHYLATION: string,
+	genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION: string,
+	Z_SCORE_THRESHOLD: string,
+	RPPA_SCORE_THRESHOLD: string,
+	data_priority: '0'|'1'|'2',
+	case_set_id: string,
+	case_ids: string,
+	patient_case_select: 'sample'|'patient',
+	gene_list: string,
+	tab_index: 'tab_download'|'tab_visualize',
+	transpose_matrix?: 'on',
+	Action: 'Submit',
+};
 
 export type GeneReplacement = {alias: string, genes: Gene[]};
 
@@ -25,10 +45,10 @@ function isInteger(str:string)
 
 function normalizeQuery(geneQuery:string)
 {
-	return geneQuery.replace(/^\s+|\s+$/g, '').replace(/ +/g, ' ').toUpperCase();
+	return geneQuery.replace(/^\s+|\s+$/g, '').replace(/[ \+]+/g, ' ').toUpperCase();
 }
 
-export type QueryParams = Pick<
+export type CancerStudyQueryParams = Pick<
 	QueryStore,
 	'searchText' |
 	'selectedStudyIds' |
@@ -41,7 +61,7 @@ export type QueryParams = Pick<
 	'caseIdsMode' |
 	'geneQuery'
 >;
-export const QueryParamsKeys:(keyof QueryParams)[] = [
+export const QueryParamsKeys:(keyof CancerStudyQueryParams)[] = [
 	'searchText',
 	'selectedStudyIds',
 	'dataTypePriority',
@@ -57,12 +77,14 @@ export const QueryParamsKeys:(keyof QueryParams)[] = [
 // mobx observable
 export class QueryStore
 {
-	constructor()
+	constructor(urlWithInitialParams?:string)
 	{
 		labelMobxPromises(this);
+		if (urlWithInitialParams)
+			this.setParamsFromUrl(urlWithInitialParams);
 	}
 
-	copyFrom(other:QueryParams)
+	copyFrom(other:CancerStudyQueryParams)
 	{
 		// download tab does not appear anywhere except home page
 		this.forDownloadTab = false;
@@ -86,7 +108,16 @@ export class QueryStore
 
 	@observable searchText:string = '';
 
-	@observable.ref selectedStudyIds:ReadonlyArray<string> = [];
+	@observable.ref private _selectedStudyIds:ReadonlyArray<string> = [];
+	@computed get selectedStudyIds()
+	{
+		let ids = this._selectedStudyIds;
+		return this.forDownloadTab ? ids.slice(-1) : ids;
+	}
+	set selectedStudyIds(ids)
+	{
+		this._selectedStudyIds = this.forDownloadTab ? ids.slice(-1) : ids;
+	}
 
 	@observable dataTypePriority = {mutation: true, cna: true};
 
@@ -403,6 +434,22 @@ export class QueryStore
 
 		return '0';
 	}
+	set dataTypePriorityCode(code:'0'|'1'|'2')
+	{
+		switch (code)
+		{
+			default:
+			case '0':
+				this.dataTypePriority = {mutation: true, cna: true};
+				break;
+			case '1':
+				this.dataTypePriority = {mutation: true, cna: false};
+				break;
+			case '2':
+				this.dataTypePriority = {mutation: false, cna: true};
+				break;
+		}
+	}
 
 	// GENETIC PROFILE
 
@@ -487,34 +534,6 @@ export class QueryStore
 
 	// SUBMIT
 
-	@computed get submitQueryUrl()
-	{
-		let studyIds = this.selectedStudyIds;
-		if (!studyIds.length)
-			this.cancerStudies.result.map(study => study.studyId);
-
-		return getSubmitQueryUrl({
-			cancer_study_list: studyIds,
-			cancer_study_id: this.singleSelectedStudyId || 'all',
-			genetic_profile_ids_PROFILE_MUTATION_EXTENDED: this.getSelectedProfileIdFromGeneticAlterationType("MUTATION_EXTENDED"),
-			genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION: this.getSelectedProfileIdFromGeneticAlterationType("COPY_NUMBER_ALTERATION"),
-			genetic_profile_ids_PROFILE_MRNA_EXPRESSION: this.getSelectedProfileIdFromGeneticAlterationType("MRNA_EXPRESSION"),
-			genetic_profile_ids_PROFILE_METHYLATION: this.getSelectedProfileIdFromGeneticAlterationType("METHYLATION") || this.getSelectedProfileIdFromGeneticAlterationType("METHYLATION_BINARY"),
-			genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION: this.getSelectedProfileIdFromGeneticAlterationType("PROTEIN_LEVEL"),
-			Z_SCORE_THRESHOLD: this.zScoreThreshold,
-			RPPA_SCORE_THRESHOLD: this.rppaScoreThreshold,
-			data_priority: this.dataTypePriorityCode,
-			case_set_id: this.selectedSampleListId || '',
-			case_ids: this.caseIds,
-			patient_case_select: this.caseIdsMode,
-			gene_set_choice: 'user-defined-list',
-			gene_list: this.geneQuery,
-			clinical_param_selection: '',
-			tab_index: this.forDownloadTab ? 'tab_download' : 'tab_visualize',
-			Action: 'Submit',
-		});
-	}
-
 	private readonly dict_geneticAlterationType_filenameSuffix:{[K in GeneticProfile['geneticAlterationType']]?: string} = {
 		"MUTATION_EXTENDED": 'mutations',
 		"COPY_NUMBER_ALTERATION": 'cna',
@@ -536,9 +555,91 @@ export class QueryStore
 		return `cbioportal-${study.studyId}-${suffix}.txt`;
 	}
 
+	@computed get urlParams():BuildUrlParams
+	{
+		let params: CancerStudyQueryUrlParams = {
+			cancer_study_id: this.singleSelectedStudyId || 'all',
+			genetic_profile_ids_PROFILE_MUTATION_EXTENDED: this.getSelectedProfileIdFromGeneticAlterationType("MUTATION_EXTENDED"),
+			genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION: this.getSelectedProfileIdFromGeneticAlterationType("COPY_NUMBER_ALTERATION"),
+			genetic_profile_ids_PROFILE_MRNA_EXPRESSION: this.getSelectedProfileIdFromGeneticAlterationType("MRNA_EXPRESSION"),
+			genetic_profile_ids_PROFILE_METHYLATION: this.getSelectedProfileIdFromGeneticAlterationType("METHYLATION") || this.getSelectedProfileIdFromGeneticAlterationType("METHYLATION_BINARY"),
+			genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION: this.getSelectedProfileIdFromGeneticAlterationType("PROTEIN_LEVEL"),
+			Z_SCORE_THRESHOLD: this.zScoreThreshold,
+			RPPA_SCORE_THRESHOLD: this.rppaScoreThreshold,
+			data_priority: this.dataTypePriorityCode,
+			case_set_id: this.selectedSampleListId || '',
+			case_ids: this.caseIds,
+			patient_case_select: this.caseIdsMode,
+			gene_list: this.geneQuery || ' ', // empty string won't work
+			tab_index: this.forDownloadTab ? 'tab_download' : 'tab_visualize',
+			transpose_matrix: this.transposeDataMatrix ? 'on' : undefined,
+			Action: 'Submit',
+		};
+
+		// The server will always transpose if transpose_matrix is present,
+		// so we must delete it from the params if we do not want to transpose.
+		if (!params.transpose_matrix)
+			delete params.transpose_matrix;
+
+		if (this.selectedStudyIds.length != 1)
+		{
+			let studyIds = this.selectedStudyIds;
+			if (!studyIds.length)
+				studyIds = this.cancerStudies.result.map(study => study.studyId);
+			return {
+				path: 'cross_cancer.do',
+				queryParams: params,
+				hash: (
+					`crosscancer/overview/${
+						params.data_priority
+					}/${
+						encodeURIComponent(params.gene_list)
+					}/${
+						encodeURIComponent(studyIds.join(','))
+					}`
+				),
+			};
+		}
+
+		return {path: 'index.do', queryParams: params};
+	}
+
 	////////////////////////////////////////////////////////////////////////////////
 	// ACTIONS
 	////////////////////////////////////////////////////////////////////////////////
+
+	@action
+	setParamsFromUrl(url:string)
+	{
+		let parsed = urlParse(url, true);
+		let params = parsed.query as Partial<CancerStudyQueryUrlParams>;
+		let hashParams;
+		{
+			let [/*crosscancer*/, /*overview*/, data_priority, gene_list, cancer_study_list] = parsed.hash.split('/');
+			hashParams = {
+				data_priority: data_priority as typeof params.data_priority,
+				gene_list: gene_list && decodeURIComponent(gene_list),
+				cancer_study_list: cancer_study_list && decodeURIComponent(cancer_study_list).split(','),
+			};
+		}
+
+		this.selectedStudyIds = hashParams.cancer_study_list || (params.cancer_study_id ? [params.cancer_study_id] : []);
+		this.selectedProfileIds = [
+			params.genetic_profile_ids_PROFILE_MUTATION_EXTENDED,
+			params.genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION,
+			params.genetic_profile_ids_PROFILE_MRNA_EXPRESSION,
+			params.genetic_profile_ids_PROFILE_METHYLATION,
+			params.genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION,
+		].filter(id => id) as string[];
+		this.zScoreThreshold = params.Z_SCORE_THRESHOLD || '2.0';
+		this.rppaScoreThreshold = params.RPPA_SCORE_THRESHOLD || '2.0';
+		this.dataTypePriorityCode = hashParams.data_priority || params.data_priority || '0';
+		this.selectedSampleListId = params.case_set_id;
+		this.caseIds = params.case_ids || '';
+		this.caseIdsMode = params.patient_case_select || 'sample';
+		this.geneQuery = normalizeQuery(hashParams.gene_list || params.gene_list || '');
+		this.forDownloadTab = params.tab_index === 'tab_download';
+	}
 
 	@action selectCancerType(cancerType:CancerType, multiSelect?:boolean)
 	{
@@ -625,7 +726,11 @@ export class QueryStore
 			return;
 		}
 
-		window.location.href = this.submitQueryUrl;
+		let historyUrl = buildUrl(window.location.href.split('?')[0], {...this.urlParams, path: undefined});
+		let newUrl = buildCBioPortalUrl(this.urlParams);
+		if (historyUrl != newUrl)
+			window.history.pushState(null, window.document.title, historyUrl);
+		window.location.href = newUrl;
 	}
 
 	@action sendToGenomeSpace()
@@ -634,10 +739,10 @@ export class QueryStore
 		// 	return;
 
 		gsUploadByGet({
-			url: this.submitQueryUrl,
+			url: buildCBioPortalUrl(this.urlParams),
 			filename: this.downloadDataFilename,
-			successCallback: savePath => alert('outer Saved to GenomeSpace as ' + savePath),
-			errorCallback: savePath => alert('outer ERROR saving to GenomeSpace as ' + savePath),
+			successCallback: savePath => alert('Saved to GenomeSpace as ' + savePath),
+			errorCallback: savePath => alert('ERROR saving to GenomeSpace as ' + savePath),
 		});
 	}
 }

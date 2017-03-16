@@ -186,20 +186,11 @@ export default class StudyListLogic
 		let clickedStudyIds:string[];
 		let meta = this.getMetadata(node);
 
-		if (this.store.forDownloadTab)
-		{
-			// on download tab, we can only select one study
-			if (!meta.isCancerType)
-				this.store.selectedStudyIds = [(node as CancerStudy).studyId];
-		}
+		if (meta.isCancerType)
+			clickedStudyIds = this.getDescendantCancerStudies(node).map(study => study.studyId);
 		else
-		{
-			if (meta.isCancerType)
-				clickedStudyIds = this.getDescendantCancerStudies(node).map(study => study.studyId);
-			else
-				clickedStudyIds = [(node as CancerStudy).studyId];
-			this.handleCheckboxStudyIds(clickedStudyIds, checked);
-		}
+			clickedStudyIds = [(node as CancerStudy).studyId];
+		this.handleCheckboxStudyIds(clickedStudyIds, checked);
 	}
 
 	private handleCheckboxStudyIds(clickedStudyIds:string[], checked:boolean)
