@@ -307,9 +307,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         this.setState(({ activeTabKey : key } as IPatientViewState));
     }
 
-    private handleSampleClick(id: string){
-        patientViewPageStore.setSampleId(id);
-    }
 
 
     private getSampleIndent() {
@@ -330,13 +327,10 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             sampleManager = new SampleManager(patientData.samples!);
 
             sampleHeader = _.map(sampleManager!.samples,(sample: ClinicalDataBySampleId) => {
-                const clinicalDataLegacy: any = _.fromPairs(sample.clinicalData.map((x) => [x.clinicalAttributeId, x.value]));
                 return (
                     <span style={{paddingRight: '10px'}}>
                         {  sampleManager!.getComponentForSample(sample.id, true) }
                         {'\u00A0'}
-                        <a href="javascript:void(0)" onClick={()=>{ this.handleSampleClick(sample.id) }}>{sample.id}</a>
-                        <span className='clinical-spans' dangerouslySetInnerHTML={{__html:getSpans(clinicalDataLegacy, 'lgg_ucsf_2014')}}></span>
                     </span>
 
                 )
