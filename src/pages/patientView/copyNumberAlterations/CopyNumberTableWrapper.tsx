@@ -15,6 +15,22 @@ class CNATableComponent extends MSKTable<DiscreteCopyNumberData> {
 
 type CNATableColumn = Column<DiscreteCopyNumberData>&{order:number};
 
+export enum AlterationTypes {
+    'DeepDel' = -2,
+    'AMP'= 2
+};
+
+export function renderAlterationTypes(value: number) {
+    switch(value) {
+        case AlterationTypes.DeepDel:
+            return <span style={{color:'#FF0000'}}>{AlterationTypes[AlterationTypes.DeepDel]}</span>;
+        case AlterationTypes.AMP:
+            return <span style={{color:'#0000FF'}}>{AlterationTypes[AlterationTypes.AMP]}</span>;
+        default:
+            return <span></span>;
+    }
+};
+
 
 @observer
 export default class CopyNumberTableWrapper extends React.Component<{ store:PatientViewPageStore }, {}> {
@@ -30,6 +46,15 @@ export default class CopyNumberTableWrapper extends React.Component<{ store:Pati
             sort: (d1:DiscreteCopyNumberData, d2:DiscreteCopyNumberData, ascending:boolean)=>0,
             visible: true,
             order: 50
+        });
+
+        columns.push({
+            name: "CNA",
+            render: (d:DiscreteCopyNumberData)=><span>{renderAlterationTypes(d.alteration)}</span>,
+            download: (d:DiscreteCopyNumberData)=>(AlterationTypes[d.alteration]),
+            sort: (d1:DiscreteCopyNumberData, d2:DiscreteCopyNumberData, ascending:boolean)=>0,
+            visible: true,
+            order: 60
         });
 
         columns.push({
