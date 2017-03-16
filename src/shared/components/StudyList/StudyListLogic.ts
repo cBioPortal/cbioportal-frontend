@@ -187,10 +187,17 @@ export default class StudyListLogic
 		let meta = this.getMetadata(node);
 
 		if (meta.isCancerType)
-			clickedStudyIds = this.getDescendantCancerStudies(node).map(study => study.studyId);
+		{
+			if (!this.store.forDownloadTab)
+				clickedStudyIds = this.getDescendantCancerStudies(node).map(study => study.studyId);
+		}
 		else
+		{
 			clickedStudyIds = [(node as CancerStudy).studyId];
-		this.handleCheckboxStudyIds(clickedStudyIds, checked);
+		}
+
+		if (clickedStudyIds)
+			this.handleCheckboxStudyIds(clickedStudyIds, checked);
 	}
 
 	private handleCheckboxStudyIds(clickedStudyIds:string[], checked:boolean)
