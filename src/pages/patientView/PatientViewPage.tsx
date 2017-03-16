@@ -1,6 +1,7 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import {Tabs, Tab, default as ReactBootstrap} from 'react-bootstrap';
+import {Transition} from 'react-overlays';
 import ClinicalInformationContainer from './clinicalInformation/ClinicalInformationContainer';
 import MutationInformationContainer from './mutation/MutationInformationContainer';
 import {RootState} from '../../redux/rootReducer';
@@ -45,6 +46,8 @@ import Timeline from "./timeline/Timeline";
 import {default as PatientViewMutationTable, MutationTableColumnType } from "./mutation/PatientViewMutationTable";
 import PathologyReport from "./pathologyReport/PathologyReport";
 import {getCbioPortalApiUrl, getHotspotsApiUrl, getHotspots3DApiUrl} from "../../shared/api/urls";
+
+import "./styles.scss";
 
 const patientViewPageStore = new PatientViewPageStore();
 
@@ -389,137 +392,141 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     )
                 }
 
-                <Tabs animation={false} activeKey={this.state.activeTabKey} id="patientViewPageTabs" onSelect={this.handleSelect as SelectCallback} className="mainTabs" unmountOnExit={true}>
+                <Transition in={patientViewPageStore.patientViewData.isComplete}
+                            className="transition-fade-40"
+                            enteredClassName="opacity-1"
+                            enteringClassName="opacity-1"
+                >
+                    <Tabs animation={false} activeKey={this.state.activeTabKey} id="patientViewPageTabs" onSelect={this.handleSelect as SelectCallback} className="mainTabs" unmountOnExit={true}>
 
-                    <Tab eventKey={1} id="summaryTab" title="Summary">
+                        <Tab eventKey={1} id="summaryTab" title="Summary">
 
-                        {
-                            (!!sampleManager && patientViewPageStore.clinicalEvents.isComplete) && (
+                            {
+                                (!!sampleManager && patientViewPageStore.clinicalEvents.isComplete) && (
 
-                                <div>
-                                    <FeatureTitle title="Clinical Timeline" isLoading={false} />
+                                    <div>
+                                        <FeatureTitle title="Clinical Timeline" isLoading={false} />
 
-                                    <Timeline store={patientViewPageStore} sampleManager={ sampleManager } />
-                                    <hr />
-                                </div>
-                            )
-
-
-                        }
-
-                        <FeatureTitle title="Genomic Data" isLoading={ (patientViewPageStore.mutationData.isPending || patientViewPageStore.cnaSegments.isPending) } />
-
-                        {
-                            (patientViewPageStore.mutationData.isComplete && patientViewPageStore.cnaSegments.isComplete && sampleManager) && (
-                                <GenomicOverview
-                                    mutations={patientViewPageStore.mutationData.result}
-                                    cnaSegments={patientViewPageStore.cnaSegments.result}
-                                    sampleOrder={sampleManager.sampleIndex}
-                                    sampleLabels={sampleManager.sampleLabels}
-                                    sampleColors={sampleManager.sampleColors}
-                                    sampleManager={sampleManager}
-                                />
-                            )
-                        }
-
-                        <hr />
-
-                        <FeatureTitle title="Mutations" isLoading={ !this.state.mutationData } />
-                        {
-                            (this.state.mutationData && !!sampleManager) && (
-                                <PatientViewMutationTable
-                                    sampleManager={sampleManager}
-                                    sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
-                                    variantCountCache={patientViewPageStore.variantCountCache}
-                                    discreteCNACache={patientViewPageStore.discreteCNACache}
-                                    mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}
-                                    mrnaExprRankGeneticProfileId={patientViewPageStore.mrnaRankGeneticProfileId.result || undefined}
-                                    discreteCNAGeneticProfileId={patientViewPageStore.geneticProfileIdDiscrete.result}
-                                    data={patientViewPageStore.mergedMutationData}
-                                    mutSigData={this.state.mutSigData}
-                                    myCancerGenomeData={this.state.myCancerGenomeData}
-                                    hotspots={this.state.hotspotsData}
-                                    cosmicData={this.state.cosmicData}
-                                    oncoKbData={patientViewPageStore.oncoKbData.result}
-                                    pmidData={patientViewPageStore.pmidData.result}
-                                    columns={[MutationTableColumnType.COHORT,
-                                MutationTableColumnType.MRNA_EXPR,
-                                MutationTableColumnType.COPY_NUM,
-                                MutationTableColumnType.ANNOTATION,
-                                MutationTableColumnType.REF_READS_N,
-                                MutationTableColumnType.VAR_READS_N,
-                                MutationTableColumnType.REF_READS,
-                                MutationTableColumnType.VAR_READS,
-                                MutationTableColumnType.START_POS,
-                                MutationTableColumnType.END_POS,
-                                MutationTableColumnType.REF_ALLELE,
-                                MutationTableColumnType.VAR_ALLELE,
-                                MutationTableColumnType.MUTATION_STATUS,
-                                MutationTableColumnType.VALIDATION_STATUS,
-                                MutationTableColumnType.CENTER,
-                                MutationTableColumnType.GENE,
-                                MutationTableColumnType.CHROMOSOME,
-                                MutationTableColumnType.PROTEIN_CHANGE,
-                                MutationTableColumnType.MUTATION_TYPE,
-                                MutationTableColumnType.MUTATION_ASSESSOR,
-                                MutationTableColumnType.COSMIC,
-                                MutationTableColumnType.TUMOR_ALLELE_FREQ,
-                                MutationTableColumnType.TUMORS,
-                                MutationTableColumnType.SAMPLE_ID]}
-                                />
-                            )
-                        }
-                    </Tab>
-                    <Tab eventKey={2} id="discreteCNAData" title="Copy Number Alterations">
-
-                        <CopyNumberTableWrapper store={patientViewPageStore} />
-
-                    </Tab>
-                    {(patientViewPageStore.pageMode === 'patient') && (
-                        <Tab eventKey={3} id="clinicalDataTab" title="Clinical Data">
-
-                            <div className="clearfix">
-                                <FeatureTitle title="Patient" isLoading={ patientViewPageStore.clinicalDataPatient.isPending } className="pull-left" />
-                                { (patientViewPageStore.clinicalDataPatient.isComplete) && (
-                                    <ClinicalInformationPatientTable showTitleBar={true}
-                                                                     data={patientViewPageStore.clinicalDataPatient.result} />
-
+                                        <Timeline store={patientViewPageStore} sampleManager={ sampleManager } />
+                                        <hr />
+                                    </div>
                                 )
-                                }
-                            </div>
 
-                            <br />
 
-                            <div className="clearfix">
-                                <FeatureTitle title="Samples" isLoading={ patientViewPageStore.clinicalDataGroupedBySample.isPending } className="pull-left" />
-                                {  (patientViewPageStore.clinicalDataGroupedBySample.isComplete) && (
-                                    <ClinicalInformationSamples
-                                        samples={patientViewPageStore.clinicalDataGroupedBySample.result!}/>
+                            }
+
+                            <FeatureTitle title="Genomic Data" isLoading={ (patientViewPageStore.mutationData.isPending || patientViewPageStore.cnaSegments.isPending) } />
+
+                            {
+                                (patientViewPageStore.mutationData.isComplete && patientViewPageStore.cnaSegments.isComplete && sampleManager) && (
+                                    <GenomicOverview
+                                        mutations={patientViewPageStore.mutationData.result}
+                                        cnaSegments={patientViewPageStore.cnaSegments.result}
+                                        sampleOrder={sampleManager.sampleIndex}
+                                        sampleLabels={sampleManager.sampleLabels}
+                                        sampleColors={sampleManager.sampleColors}
+                                        sampleManager={sampleManager}
+                                    />
                                 )
-                                }
-                            </div>
+                            }
 
+                            <hr />
+
+                            <FeatureTitle title="Mutations" isLoading={ !this.state.mutationData } />
+                            {
+                                (this.state.mutationData && !!sampleManager) && (
+                                    <PatientViewMutationTable
+                                        sampleManager={sampleManager}
+                                        sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
+                                        variantCountCache={patientViewPageStore.variantCountCache}
+                                        discreteCNACache={patientViewPageStore.discreteCNACache}
+                                        mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}
+                                        mrnaExprRankGeneticProfileId={patientViewPageStore.mrnaRankGeneticProfileId.result || undefined}
+                                        discreteCNAGeneticProfileId={patientViewPageStore.geneticProfileIdDiscrete.result}
+                                        data={patientViewPageStore.mergedMutationData}
+                                        mutSigData={this.state.mutSigData}
+                                        myCancerGenomeData={this.state.myCancerGenomeData}
+                                        hotspots={this.state.hotspotsData}
+                                        cosmicData={this.state.cosmicData}
+                                        oncoKbData={patientViewPageStore.oncoKbData.result}
+                                        pmidData={patientViewPageStore.pmidData.result}
+                                        columns={[MutationTableColumnType.COHORT,
+                                    MutationTableColumnType.MRNA_EXPR,
+                                    MutationTableColumnType.COPY_NUM,
+                                    MutationTableColumnType.ANNOTATION,
+                                    MutationTableColumnType.REF_READS_N,
+                                    MutationTableColumnType.VAR_READS_N,
+                                    MutationTableColumnType.REF_READS,
+                                    MutationTableColumnType.VAR_READS,
+                                    MutationTableColumnType.START_POS,
+                                    MutationTableColumnType.END_POS,
+                                    MutationTableColumnType.REF_ALLELE,
+                                    MutationTableColumnType.VAR_ALLELE,
+                                    MutationTableColumnType.MUTATION_STATUS,
+                                    MutationTableColumnType.VALIDATION_STATUS,
+                                    MutationTableColumnType.CENTER,
+                                    MutationTableColumnType.GENE,
+                                    MutationTableColumnType.CHROMOSOME,
+                                    MutationTableColumnType.PROTEIN_CHANGE,
+                                    MutationTableColumnType.MUTATION_TYPE,
+                                    MutationTableColumnType.MUTATION_ASSESSOR,
+                                    MutationTableColumnType.COSMIC,
+                                    MutationTableColumnType.TUMOR_ALLELE_FREQ,
+                                    MutationTableColumnType.TUMORS,
+                                    MutationTableColumnType.SAMPLE_ID]}
+                                    />
+                                )
+                            }
+                        </Tab>
+                        <Tab eventKey={2} id="discreteCNAData" title="Copy Number Alterations">
+
+                            <CopyNumberTableWrapper store={patientViewPageStore} />
 
                         </Tab>
-                    )}
+                        {(patientViewPageStore.pageMode === 'patient') && (
+                            <Tab eventKey={3} id="clinicalDataTab" title="Clinical Data">
+
+                                <div className="clearfix">
+                                    <FeatureTitle title="Patient" isLoading={ patientViewPageStore.clinicalDataPatient.isPending } className="pull-left" />
+                                    { (patientViewPageStore.clinicalDataPatient.isComplete) && (
+                                        <ClinicalInformationPatientTable showTitleBar={true}
+                                                                         data={patientViewPageStore.clinicalDataPatient.result} />
+
+                                    )
+                                    }
+                                </div>
+
+                                <br />
+
+                                <div className="clearfix">
+                                    <FeatureTitle title="Samples" isLoading={ patientViewPageStore.clinicalDataGroupedBySample.isPending } className="pull-left" />
+                                    {  (patientViewPageStore.clinicalDataGroupedBySample.isComplete) && (
+                                        <ClinicalInformationSamples
+                                            samples={patientViewPageStore.clinicalDataGroupedBySample.result!}/>
+                                    )
+                                    }
+                                </div>
 
 
-                    {  (patientViewPageStore.pathologyReport.isComplete && patientViewPageStore.pathologyReport.result.length > 0 ) &&
-                    (<Tab eventKey={8} id="summarTab" title="Pathology Report">
-                        <PathologyReport  pdfs={patientViewPageStore.pathologyReport.result} />
-                    </Tab>)
-                    }
+                            </Tab>
+                        )}
 
-                    { (patientViewPageStore.hasTissueImageIFrameUrl.isComplete && patientViewPageStore.hasTissueImageIFrameUrl.result) &&
-                        (<Tab eventKey={4} id="tissueImageTab" title="Tissue Image">
-                            <iframe style={{width:'100%', height:700, border:'none'}}
-                                    src="http://cancer.digitalslidearchive.net/index_mskcc.php?slide_name=TCGA-CG-5721"></iframe>
+
+                        {  (patientViewPageStore.pathologyReport.isComplete && patientViewPageStore.pathologyReport.result.length > 0 ) &&
+                        (<Tab eventKey={8} id="summarTab" title="Pathology Report">
+                            <PathologyReport  pdfs={patientViewPageStore.pathologyReport.result} />
                         </Tab>)
-                    }
+                        }
 
-                </Tabs>
+                        { (patientViewPageStore.hasTissueImageIFrameUrl.isComplete && patientViewPageStore.hasTissueImageIFrameUrl.result) &&
+                            (<Tab eventKey={4} id="tissueImageTab" title="Tissue Image">
+                                <iframe style={{width:'100%', height:700, border:'none'}}
+                                        src="http://cancer.digitalslidearchive.net/index_mskcc.php?slide_name=TCGA-CG-5721"></iframe>
+                            </Tab>)
+                        }
 
-
+                    </Tabs>
+                </Transition>
             </div>
         );
     }
