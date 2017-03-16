@@ -17,7 +17,6 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
 
         return (
             <div className={styles.patientHeader}>
-                <i className="fa fa-female fa-2 genderIcon hidden" aria-hidden="true"></i>
                 {this.props.patient && this.getOverlayTriggerPatient(this.props.patient)}
             </div>
         );
