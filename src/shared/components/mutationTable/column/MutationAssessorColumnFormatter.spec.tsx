@@ -1,14 +1,12 @@
 import MutationAssessorColumnFormatter from './MutationAssessorColumnFormatter';
 import styles from "./mutationAssessor.module.scss";
 import {initMutation} from "test/MutationMockUtils";
-import {IColumnFormatterData} from "shared/components/enhancedReactTable/IColumnFormatter";
-import {MutationTableRowData} from "../IMutationTableProps";
 import React from 'react';
 import { assert } from 'chai';
 import {shallow, mount, ReactWrapper} from 'enzyme';
 import sinon from 'sinon';
 import {Mutation} from "../../../api/generated/CBioPortalAPI";
-import {numberListSort} from "../../../../pages/patientView/mutation/PatientViewMutationTable";
+import {numberListSort} from "shared/lib/SortUtils";
 
 describe('MutationAssessorColumnFormatter', () => {
     const mutations = [
