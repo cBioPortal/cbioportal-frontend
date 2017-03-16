@@ -46,6 +46,8 @@ import {default as PatientViewMutationTable, MutationTableColumnType } from "./m
 import PathologyReport from "./pathologyReport/PathologyReport";
 import {getCbioPortalApiUrl, getHotspotsApiUrl, getHotspots3DApiUrl} from "../../shared/api/urls";
 
+import './styles.scss';
+
 const patientViewPageStore = new PatientViewPageStore();
 
 (window as any).patientViewPageStore = patientViewPageStore;
@@ -380,7 +382,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 </If>
 
                 {  (patientViewPageStore.patientViewData.isComplete) && (
-                    <div className="clearfix" style={{padding:20, borderRadius:5, background: '#eee', marginBottom: 20}}>
+                    <div className="patientPageHeader clearfix">
+                        <i className="fa fa-user-circle-o patientIcon" aria-hidden="true"></i>
                         <PatientHeader
                                        handlePatientClick={(id: string)=>patientViewPageStore.setPatientId(id)}
                                        patient={patientViewPageStore.patientViewData.result!.patient!}/>
