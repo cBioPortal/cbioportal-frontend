@@ -8,9 +8,25 @@
 
   .patientIcon {
     position:absolute;
-    top:13px;
+    top:17px;
     left:20px;
-    font-size:54px;
+    font-size:60px;
   }
+
+  .patientSamples {
+    margin-top:8px;
+
+    .patientSample {
+      display:inline-block;
+      background-color:#ddd;
+      padding:2px 5px;
+      margin-left:10px;
+      border-radius:3px;
+      margin-bottom:5px;
+    }
+
+  }
+
+
 
 }
