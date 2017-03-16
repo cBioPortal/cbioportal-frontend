@@ -332,12 +332,12 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             sampleHeader = _.map(sampleManager!.samples,(sample: ClinicalDataBySampleId) => {
                 const clinicalDataLegacy: any = _.fromPairs(sample.clinicalData.map((x) => [x.clinicalAttributeId, x.value]));
                 return (
-                    <span style={{paddingRight: '10px'}}>
+                    <div className="patientSample">
                         {  sampleManager!.getComponentForSample(sample.id, true) }
                         {'\u00A0'}
                         <a href="javascript:void(0)" onClick={()=>{ this.handleSampleClick(sample.id) }}>{sample.id}</a>
                         <span className='clinical-spans' dangerouslySetInnerHTML={{__html:getSpans(clinicalDataLegacy, 'lgg_ucsf_2014')}}></span>
-                    </span>
+                    </div>
 
                 )
             });
@@ -387,7 +387,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                         <PatientHeader
                                        handlePatientClick={(id: string)=>patientViewPageStore.setPatientId(id)}
                                        patient={patientViewPageStore.patientViewData.result!.patient!}/>
-                        {sampleHeader}
+                        <div className="patientSamples">Samples: {sampleHeader}</div>
                     </div>
                     )
                 }
