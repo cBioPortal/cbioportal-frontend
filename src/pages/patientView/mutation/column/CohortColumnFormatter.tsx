@@ -7,6 +7,7 @@ import {
     VariantCountOutput,
     default as CohortVariantCountCache
 } from "../../clinicalInformation/CohortVariantCountCache";
+import FrequencyBar from "shared/components/cohort/FrequencyBar";
 
 export interface IVariantCountData {
     numberOfSamples?:number;
@@ -14,7 +15,7 @@ export interface IVariantCountData {
         numberOfSamplesWithMutationInGene?:number,
         numberOfSamplesWithKeyword?:{ [keyword:string]:number }
     }};
-};
+}
 
 type AugVariantCountOutput = (VariantCountOutput & {hugoGeneSymbol:string});
 
@@ -67,7 +68,7 @@ export default class CohortColumnFormatter {
         return thisData.qValue;
     }
 
-    private static getCohortFrequencyContents(variantCount:AugVariantCountOutput | null) {
+    private static makeCohortFrequencyViz(variantCount:AugVariantCountOutput | null) {
 
         if (variantCount === null) {
             return (
@@ -95,31 +96,20 @@ export default class CohortColumnFormatter {
                 </span>
             );
         } else {
-            const geneProportion = variantCount.data.mutationInGene / variantCount.data.numberOfSamples;
-            const keywordProportion = variantCount.data.keyword ? (variantCount.data.mutationInKeyword! / variantCount.data.numberOfSamples) : null;
-            const barWidth = 30;
-            const barHeight = 8;
+            const counts = [variantCount.data.mutationInGene];
 
-            return (<svg width="70" height="12">
-                <text x="36" y="9.5" textAnchor="start" fontSize="10">{(100*geneProportion).toFixed(1) + "%"}</text>
-                <rect y="2" width={barWidth} height={barHeight} fill="#ccc"/>
-                <rect y="2" width={geneProportion*barWidth} height={barHeight} fill="lightgreen"/>
-                {(keywordProportion !== null) &&
-                (<rect y="2" width={keywordProportion*barWidth} height={barHeight} fill="green"/>)}
-            </svg>);
+            if (variantCount.data.keyword) {
+                counts.push(variantCount.data.mutationInKeyword!);
+            }
+
+            return (
+                <FrequencyBar
+                    counts={counts}
+                    totalCount={variantCount.data.numberOfSamples}
+                    tooltip={CohortColumnFormatter.getCohortFrequencyTooltip(variantCount)}
+                />
+            );
         }
-    }
-
-    private static makeCohortFrequencyViz(variantCount:AugVariantCountOutput | null) {
-        return (
-            <DefaultTooltip
-                placement="left"
-                overlay={CohortColumnFormatter.getCohortFrequencyTooltip(variantCount)}
-                arrowContent={<div className="rc-tooltip-arrow-inner"/>}
-            >
-                {CohortColumnFormatter.getCohortFrequencyContents(variantCount)}
-            </DefaultTooltip>
-        );
     }
 
     private static makeMutSigIcon(qValue:number) {
