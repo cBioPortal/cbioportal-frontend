@@ -535,6 +535,8 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
         return (<MutationTableComponent
                     columns={this.columns}
                     data={this.props.data}
+                    initialSortColumn="Annotation"
+                    initialSortDirection="desc"
                 />);
     }
 

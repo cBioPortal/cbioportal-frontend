@@ -23,6 +23,8 @@ export type Column<T> = {
 type MSKTableProps<T> = {
     columns:Column<T>[];
     data:T[];
+    initialSortColumn?: string;
+    initialSortDirection?: 'asc'|'desc';
 };
 
 class MSKTableStore<T> {
@@ -184,6 +186,7 @@ class MSKTableStore<T> {
         this.columns = props.columns;
         this.data = props.data;
         this._columnVisibility = this.resolveColumnVisibility(props.columns);
+        this.initialSort(props.initialSortColumn, props.initialSortDirection);
     }
 
     @action public updateColumnVisibility(id:string, visible:boolean)
@@ -196,6 +199,17 @@ class MSKTableStore<T> {
     public isVisible(column:Column<T>): boolean
     {
         return this.columnVisibility[column.name] || false;
+    }
+
+    initialSort(initialSortColumn?:string, initialSortDirection?:string)
+    {
+        if (initialSortColumn !== undefined) {
+            this.sortColumn = initialSortColumn;
+
+            if (initialSortDirection !== undefined) {
+                this.sortAscending = initialSortDirection === 'asc';
+            }
+        }
     }
 
     resolveColumnVisibility(columns:Array<Column<T>>): {[columnId: string]: boolean}
