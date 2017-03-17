@@ -81,9 +81,6 @@ type MutationTableColumn = Column<Mutation[]>&{order:number};
 class MutationTableComponent extends MSKTable<Mutation[]> {
 }
 
-type maybeNumber = number|null|undefined;
-type maybeString = string|null|undefined;
-
 function getSpanForDataField(data:Mutation[], dataField:string) {
     let contents = getTextForDataField(data, dataField);
     return (<span>{contents}</span>);
@@ -95,84 +92,6 @@ function getTextForDataField(data:Mutation[], dataField:string) {
         text = (data[0] as any)[dataField];
     }
     return text;
-}
-
-function isFiniteNumber(val:number|null|undefined) {
-    return !(typeof val === "undefined" || val === null || !isFinite(val));
-}
-
-function isString(val:string|null|undefined) {
-    return !(typeof val === "undefined" || val === null);
-}
-
-function listSort<T>(sortValue1:T[], sortValue2:T[], ascending:boolean, cmp:(a:T,b:T, ascending:boolean)=>number):number {
-    if (sortValue1.length === sortValue2.length) {
-        let ret = 0;
-        for (let i=0; i<sortValue1.length; i++) {
-            ret = cmp(sortValue1[i], sortValue2[i], ascending);
-            if (ret !== 0) {
-                break;
-            }
-        }
-        return ret;
-    } else if (sortValue1.length < sortValue2.length) {
-        return (ascending ? 1 : -1);
-    } else {
-        return (ascending ? -1 : 1);
-    }
-}
-
-export function numberListSort(sortValue1:maybeNumber[], sortValue2:maybeNumber[], ascending:boolean):number {
-    return listSort<maybeNumber>(sortValue1, sortValue2, ascending, numberSort);
-}
-
-function stringListSort(sortValue1:maybeString[], sortValue2:maybeString[], ascending:boolean):number {
-    return listSort<maybeString>(sortValue1, sortValue2, ascending, stringSort);
-}
-
-function numberSort(sortValue1:number|null|undefined, sortValue2:number|null|undefined, ascending:boolean):number {
-    if (isFiniteNumber(sortValue1) && isFiniteNumber(sortValue2)) {
-        sortValue1 = sortValue1 as number;
-        sortValue2 = sortValue2 as number;
-        if (sortValue1 === sortValue2) {
-            return 0;
-        } else if (sortValue1 < sortValue2) {
-            return ascending ? -1 : 1;
-        } else {
-            return ascending ? 1 : -1;
-        }
-    } else if (!isFiniteNumber(sortValue1)) {
-        return 1;
-    } else if (!isFiniteNumber(sortValue2)) {
-        return -1;
-    } else {
-        return 0;
-    }
-}
-
-function stringSort(sortValue1:string|null|undefined, sortValue2:string|null|undefined, ascending:boolean):number {
-    if (isString(sortValue1) && isString(sortValue2)) {
-        sortValue1 = sortValue1 as string;
-        sortValue2 = sortValue2 as string;
-        return (ascending ? 1 : -1)*sortValue1.localeCompare(sortValue2);
-    } else if (!isString(sortValue1)) {
-        return 1;
-    } else if (!isString(sortValue2)) {
-        return -1;
-    } else {
-        return 0;
-    }
-}
-
-
-function defaultSort(d1:Mutation[], d2:Mutation[], ascending:boolean, dataField:string, dataType:"number"|"string"):number {
-    const d1Vals = d1.map(d=>(d as any)[dataField]);
-    const d2Vals = d2.map(d=>(d as any)[dataField]);
-    if (dataType === "number") {
-        return numberListSort(d1Vals, d2Vals, ascending);
-    } else {
-        return stringListSort(d1Vals, d2Vals, ascending);
-    }
 }
 
 function defaultFilter(data:Mutation[], dataField:string, filterString:string):boolean {
@@ -211,11 +130,10 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
             render:(d:Mutation[])=>(this.props.discreteCNACache
                                         ? DiscreteCNAColumnFormatter.renderFunction(d, this.props.discreteCNACache)
                                         : (<span></span>)),
-            sort:(d1:Mutation[], d2:Mutation[], ascending:boolean)=>{
-                if (this.props.discreteCNACache) {
-                    const sortValue1 = DiscreteCNAColumnFormatter.getSortValue(d1, this.props.discreteCNACache);
-                    const sortValue2 = DiscreteCNAColumnFormatter.getSortValue(d2, this.props.discreteCNACache);
-                    return numberSort(sortValue1, sortValue2, ascending);
+            sortBy: (d:Mutation[]):number|null=>{
+                const cache = this.props.discreteCNACache;
+                if (cache) {
+                    return DiscreteCNAColumnFormatter.getSortValue(d, cache);
                 } else {
                     return 0;
                 }
@@ -241,11 +159,10 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
             render:(d:Mutation[])=>(this.props.variantCountCache
                                         ? CohortColumnFormatter.renderFunction(d, this.props.mutSigData, this.props.variantCountCache)
                                         : (<span></span>)),
-            sort:(d1:Mutation[], d2:Mutation[], ascending:boolean)=>{
-                if (this.props.variantCountCache) {
-                    const sortValue1 = CohortColumnFormatter.getSortValue(d1, this.props.variantCountCache);
-                    const sortValue2 = CohortColumnFormatter.getSortValue(d2, this.props.variantCountCache);
-                    return numberSort(sortValue1, sortValue2, ascending);
+            sortBy:(d:Mutation[])=>{
+                const cache = this.props.variantCountCache;
+                if (cache) {
+                    return CohortColumnFormatter.getSortValue(d, cache);
                 } else {
                     return 0;
                 }
@@ -258,7 +175,7 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
             name: "Ref Reads (N)",
             render: (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, this.getSamples(), "normalRefCount"),
             download: (d:Mutation[])=>AlleleCountColumnFormatter.getTextValue(d, this.getSamples(), "normalRefCount"),
-            sort: (d1:Mutation[], d2:Mutation[], ascending:boolean)=>defaultSort(d1, d2, ascending, "normalRefCount", "number"),
+            sortBy:(d:Mutation[])=>d.map(m=>m.normalRefCount),
             visible: false,
             order: 180
         };
@@ -267,7 +184,7 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
             name: "Variant Reads (N)",
             render: (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, this.getSamples(), "normalAltCount"),
             download: (d:Mutation[])=>AlleleCountColumnFormatter.getTextValue(d, this.getSamples(), "normalAltCount"),
-            sort: (d1:Mutation[], d2:Mutation[], ascending:boolean)=>defaultSort(d1, d2, ascending, "normalAltCount", "number"),
+            sortBy:(d:Mutation[])=>d.map(m=>m.normalAltCount),
             visible: false,
             order: 170
         };
@@ -276,7 +193,7 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
             name: "Ref Reads",
             render: (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, this.getSamples(), "tumorRefCount"),
             download: (d:Mutation[])=>AlleleCountColumnFormatter.getTextValue(d, this.getSamples(), "tumorRefCount"),
-            sort: (d1:Mutation[], d2:Mutation[], ascending:boolean)=>defaultSort(d1, d2, ascending, "tumorRefCount", "number"),
+            sortBy:(d:Mutation[])=>d.map(m=>m.tumorRefCount),
             visible: false,
             order: 150
         };
@@ -285,7 +202,7 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
             name: "Variant Reads",
             render: (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, this.getSamples(), "tumorAltCount"),
             download: (d:Mutation[])=>AlleleCountColumnFormatter.getTextValue(d, this.getSamples(), "tumorAltCount"),
-            sort: (d1:Mutation[], d2:Mutation[], ascending:boolean)=>defaultSort(d1, d2, ascending, "tumorAltCount", "number"),
+            sortBy:(d:Mutation[])=>d.map(m=>m.tumorAltCount),
             visible: false,
             order: 140
         };
@@ -294,7 +211,7 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
             name: "Start Pos",
             render: (d:Mutation[])=>getSpanForDataField(d, "startPosition"),
             download: (d:Mutation[])=>getTextForDataField(d, "startPosition"),
-            sort: (d1:Mutation[], d2:Mutation[], ascending:boolean)=>defaultSort(d1, d2, ascending, "startPosition", "number"),
+            sortBy:(d:Mutation[])=>d.map(m=>m.startPosition),
             visible: false,
             order: 50
         };
@@ -303,7 +220,7 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
             name: "End Pos",
             render: (d:Mutation[])=>getSpanForDataField(d, "endPosition"),
             download: (d:Mutation[])=>getTextForDataField(d, "endPosition"),
-            sort: (d1:Mutation[], d2:Mutation[], ascending:boolean)=>defaultSort(d1, d2, ascending, "endPosition", "number"),
+            sortBy:(d:Mutation[])=>d.map(m=>m.endPosition),
             visible: false,
             order: 60
         };
@@ -312,7 +229,7 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
             name: "Ref",
             render: (d:Mutation[])=>getSpanForDataField(d, "referenceAllele"),
             download: (d:Mutation[])=>getTextForDataField(d, "referenceAllele"),
-            sort: (d1:Mutation[], d2:Mutation[], ascending:boolean)=>defaultSort(d1, d2, ascending, "referenceAllele", "string"),
+            sortBy:(d:Mutation[])=>d.map(m=>m.referenceAllele),
             visible: false,
             order: 70
         };
@@ -321,7 +238,7 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
             name: "Var",
             render: (d:Mutation[])=>getSpanForDataField(d, "variantAllele"),
             download: (d:Mutation[])=>getTextForDataField(d, "variantAllele"),
-            sort: (d1:Mutation[], d2:Mutation[], ascending:boolean)=>defaultSort(d1, d2, ascending, "variantAllele", "string"),
+            sortBy:(d:Mutation[])=>d.map(m=>m.variantAllele),
             visible: false,
             order: 80
         };
@@ -330,7 +247,7 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
             name: "MS",
             render: (d:Mutation[])=>getSpanForDataField(d, "mutationStatus"),
             download: (d:Mutation[])=>getTextForDataField(d, "mutationStatus"),
-            sort: (d1:Mutation[], d2:Mutation[], ascending:boolean)=>defaultSort(d1, d2, ascending, "mutationStatus", "string"),
+            sortBy:(d:Mutation[])=>d.map(m=>m.mutationStatus),
             filter: (d:Mutation[], filterString:string)=>defaultFilter(d, "mutationStatus", filterString),
             visible: false,
             order: 90
@@ -340,7 +257,7 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
             name: "VS",
             render: (d:Mutation[])=>getSpanForDataField(d, "validationStatus"),
             download: (d:Mutation[])=>getTextForDataField(d, "validationStatus"),
-            sort: (d1:Mutation[], d2:Mutation[], ascending:boolean)=>defaultSort(d1, d2, ascending, "validationStatus", "string"),
+            sortBy:(d:Mutation[])=>d.map(m=>m.validationStatus),
             filter: (d:Mutation[], filterString:string)=>defaultFilter(d, "validationStatus", filterString),
             visible: false,
             order: 100
@@ -350,7 +267,7 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
             name: "Center",
             render: (d:Mutation[])=>getSpanForDataField(d, "center"),
             download: (d:Mutation[])=>getTextForDataField(d, "center"),
-            sort: (d1:Mutation[], d2:Mutation[], ascending:boolean)=>defaultSort(d1, d2, ascending, "center", "string"),
+            sortBy:(d:Mutation[])=>d.map(m=>m.center),
             filter: (d:Mutation[], filterString:string)=>defaultFilter(d, "center", filterString),
             visible: false,
             order: 120
@@ -360,9 +277,7 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
             name: "Gene",
             render: (d:Mutation[])=>GeneColumnFormatter.renderFunction(d),
             download: (d:Mutation[])=>GeneColumnFormatter.getTextValue(d),
-            sort:(d1:Mutation[], d2:Mutation[], ascending:boolean)=>{
-                return stringSort(GeneColumnFormatter.getSortValue(d1), GeneColumnFormatter.getSortValue(d2), ascending);
-            },
+            sortBy:(d:Mutation[])=>GeneColumnFormatter.getSortValue(d),
             filter:(d:Mutation[], filterString:string)=>(GeneColumnFormatter.getTextValue(d).indexOf(filterString) > -1),
             order: 20
         };
@@ -371,11 +286,7 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
             name: "Chromosome",
             render: (d:Mutation[])=>(<span>{ChromosomeColumnFormatter.getData(d)}</span>),
             download: (d:Mutation[])=>(ChromosomeColumnFormatter.getData(d) || ""),
-            sort:(d1:Mutation[], d2:Mutation[], ascending:boolean)=>{
-                return numberSort(ChromosomeColumnFormatter.getSortValue(d1),
-                    ChromosomeColumnFormatter.getSortValue(d2),
-                    ascending);
-            },
+            sortBy:(d:Mutation[])=>ChromosomeColumnFormatter.getSortValue(d),
             filter:(d:Mutation[], filterString:string)=>{
                 return ((ChromosomeColumnFormatter.getData(d)+'').indexOf(filterString) > -1);
             },
@@ -387,11 +298,7 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
             name: "Protein Change",
             render: ProteinChangeColumnFormatter.renderFunction,
             download: DefaultProteinChangeColumnFormatter.getTextValue,
-            sort: (d1:Mutation[], d2:Mutation[], ascending:boolean)=>{
-                return numberSort(DefaultProteinChangeColumnFormatter.getSortValue(d1),
-                                DefaultProteinChangeColumnFormatter.getSortValue(d2),
-                                ascending);
-            },
+            sortBy:(d:Mutation[])=>DefaultProteinChangeColumnFormatter.getSortValue(d),
             filter: (d:Mutation[], filterString:string)=>{
                 return (DefaultProteinChangeColumnFormatter.getTextValue(d).indexOf(filterString) > -1);
             },
@@ -402,11 +309,7 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
             name: "Mutation Type",
             render:MutationTypeColumnFormatter.renderFunction,
             download:MutationTypeColumnFormatter.getTextValue,
-            sort:(d1:Mutation[], d2:Mutation[], ascending:boolean)=>{
-                return stringSort(MutationTypeColumnFormatter.getDisplayValue(d1),
-                                    MutationTypeColumnFormatter.getDisplayValue(d2),
-                                    ascending);
-            },
+            sortBy:(d:Mutation[])=>MutationTypeColumnFormatter.getDisplayValue(d),
             filter:(d:Mutation[], filterString:string)=>{
                 return (MutationTypeColumnFormatter.getDisplayValue(d).indexOf(filterString) > -1);
             },
@@ -417,11 +320,7 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
             name: "Mutation Assessor",
             render:MutationAssessorColumnFormatter.renderFunction,
             download:MutationAssessorColumnFormatter.getTextValue,
-            sort:(d1:Mutation[], d2:Mutation[], ascending:boolean)=>{
-                return numberListSort(MutationAssessorColumnFormatter.getSortValue(d1),
-                                    MutationAssessorColumnFormatter.getSortValue(d2),
-                                    ascending);
-            },
+            sortBy:(d:Mutation[])=>MutationAssessorColumnFormatter.getSortValue(d),
             filter:(d:Mutation[], filterString:string)=>{
                 return (MutationAssessorColumnFormatter.filterValue(d).indexOf(filterString) > -1);
             },
@@ -432,11 +331,7 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
         this._columns[MutationTableColumnType.COSMIC] = {
             name: "COSMIC",
             render: (d:Mutation[])=>CosmicColumnFormatter.renderFunction(d, this.props.cosmicData),
-            sort:(d1:Mutation[], d2:Mutation[], ascending:boolean)=>{
-                return numberSort(CosmicColumnFormatter.getSortValue(d1, this.props.cosmicData),
-                                CosmicColumnFormatter.getSortValue(d2, this.props.cosmicData),
-                                ascending);
-            },
+            sortBy:(d:Mutation[])=>CosmicColumnFormatter.getSortValue(d, this.props.cosmicData),
             tooltip: (<span>COSMIC occurrences</span>),
             order: 184
         };
@@ -444,11 +339,7 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
         this._columns[MutationTableColumnType.TUMOR_ALLELE_FREQ] = {
             name: "Allele Freq",
             render: (d:Mutation[])=>AlleleFreqColumnFormatter.renderFunction(d, this.props.sampleManager),
-            sort:(d1:Mutation[], d2:Mutation[], ascending:boolean)=>{
-                return numberListSort(AlleleFreqColumnFormatter.getSortValue(d1, this.props.sampleManager),
-                                AlleleFreqColumnFormatter.getSortValue(d2, this.props.sampleManager),
-                                ascending);
-            },
+            sortBy:(d:Mutation[])=>AlleleFreqColumnFormatter.getSortValue(d, this.props.sampleManager),
             tooltip:(<span>Variant allele frequency in the tumor sample</span>),
             order: 130
         };
@@ -456,22 +347,14 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
         this._columns[MutationTableColumnType.TUMORS] = {
             name: "Tumors",
             render:(d:Mutation[])=>TumorColumnFormatter.renderFunction(d, this.props.sampleManager),
-            sort:(d1:Mutation[], d2:Mutation[], ascending:boolean)=>{
-                return numberListSort(TumorColumnFormatter.getSortValue(d1, this.props.sampleManager),
-                                        TumorColumnFormatter.getSortValue(d2, this.props.sampleManager),
-                                        ascending);
-            },
+            sortBy:(d:Mutation[])=>TumorColumnFormatter.getSortValue(d, this.props.sampleManager),
             order: 5
         };
 
         this._columns[MutationTableColumnType.SAMPLE_ID] = {
             name: "Sample",
             render:(d:Mutation[])=>SampleColumnFormatter.renderFunction(d),
-            sort:(d1:Mutation[], d2:Mutation[], ascending:boolean)=>{
-                return stringSort(SampleColumnFormatter.getDisplayValue(d1),
-                                    SampleColumnFormatter.getDisplayValue(d2),
-                                    ascending);
-            },
+            sortBy:(d:Mutation[])=>SampleColumnFormatter.getDisplayValue(d),
             filter:(d:Mutation[], filterString:string)=>{
                 return (SampleColumnFormatter.getDisplayValue(d).indexOf(filterString) > -1);
             },
@@ -489,21 +372,9 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
                 enableMyCancerGenome: true,
                 enableHotspot: true
             })),
-            // TODO might be better to implement this in AnnotationColumnFormatter
-            sort: (d1:Mutation[], d2:Mutation[], ascending:boolean) => {
-                const a1 = AnnotationColumnFormatter.getData(d1,
-                    this.props.hotspots,
-                    this.props.myCancerGenomeData,
-                    this.props.oncoKbData,
-                    this.props.pmidData);
-
-                const a2 = AnnotationColumnFormatter.getData(d2,
-                    this.props.hotspots,
-                    this.props.myCancerGenomeData,
-                    this.props.oncoKbData,
-                    this.props.pmidData);
-
-                return (ascending ? 1 : -1) * AnnotationColumnFormatter.sortFunction(a1, a2);
+            sortBy:(d:Mutation[])=>{
+                return AnnotationColumnFormatter.sortValue(d,
+                    this.props.hotspots, this.props.myCancerGenomeData, this.props.oncoKbData, this.props.pmidData);
             },
             order: 35
         };
@@ -530,7 +401,6 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
     }
 
     render() {
-
 
         return (<MutationTableComponent
                     columns={this.columns}

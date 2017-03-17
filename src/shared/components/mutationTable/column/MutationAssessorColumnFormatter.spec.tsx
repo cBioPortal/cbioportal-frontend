@@ -8,7 +8,7 @@ import { assert } from 'chai';
 import {shallow, mount, ReactWrapper} from 'enzyme';
 import sinon from 'sinon';
 import {Mutation} from "../../../api/generated/CBioPortalAPI";
-import {numberListSort} from "../../../../pages/patientView/mutation/PatientViewMutationTable";
+import {mskTableSort} from "../../msktable/MSKTable";
 
 describe('MutationAssessorColumnFormatter', () => {
     const mutations = [
@@ -68,14 +68,12 @@ describe('MutationAssessorColumnFormatter', () => {
 
     const components: Array<ReactWrapper<any, any>> = [];
     const tooltips: Array<ReactWrapper<any, any>> = [];
-    const formatterData: Array<Mutation[]> = [];
 
     before(() => {
         // prepare the data and component arrays for test
         mutations.forEach((mutation) => {
             const data = [mutation];
 
-            formatterData.push(data);
             components.push(mount(MutationAssessorColumnFormatter.renderFunction(data)));
             tooltips.push(mount(MutationAssessorColumnFormatter.getTooltipContent(data)));
         });
@@ -141,18 +139,19 @@ describe('MutationAssessorColumnFormatter', () => {
             `PDB link should not exist for impact score Unknown(null)`);
     });
 
+    let sortedMutations = mskTableSort<Mutation>(mutations, m=>MutationAssessorColumnFormatter.getSortValue([m]), true);
     it('properly sorts by Mutation Assessor column', () => {
-        assert.isAbove(numberListSort(MutationAssessorColumnFormatter.getSortValue(formatterData[0]), MutationAssessorColumnFormatter.getSortValue(formatterData[2]), true), 0,
+        assert.isAbove(sortedMutations.indexOf(mutations[0]), sortedMutations.indexOf(mutations[2]),
             "H(3.5) should rank higher than M(null)");
-        assert.isBelow(numberListSort(MutationAssessorColumnFormatter.getSortValue(formatterData[0]), MutationAssessorColumnFormatter.getSortValue(formatterData[1]), true), 0,
+        assert.isBelow(sortedMutations.indexOf(mutations[0]), sortedMutations.indexOf(mutations[1]),
             "H(3.5) should rank lower than H(3.8)");
-        assert.isAbove(numberListSort(MutationAssessorColumnFormatter.getSortValue(formatterData[1]), MutationAssessorColumnFormatter.getSortValue(formatterData[3]), true), 0,
+        assert.isAbove(sortedMutations.indexOf(mutations[1]), sortedMutations.indexOf(mutations[3]),
             "H(3.8) should rank higher than M(2.2)");
-        assert.isAbove(numberListSort(MutationAssessorColumnFormatter.getSortValue(formatterData[2]), MutationAssessorColumnFormatter.getSortValue(formatterData[3]), true), 0,
+        assert.isAbove(sortedMutations.indexOf(mutations[2]), sortedMutations.indexOf(mutations[3]),
             "M(null) should rank higher than M(2.2)");
-        assert.isAbove(numberListSort(MutationAssessorColumnFormatter.getSortValue(formatterData[2]), MutationAssessorColumnFormatter.getSortValue(formatterData[4]), true), 0,
+        assert.isAbove(sortedMutations.indexOf(mutations[2]), sortedMutations.indexOf(mutations[4]),
             "M(null) should rank higher than L(0.7)");
-        assert.isAbove(numberListSort(MutationAssessorColumnFormatter.getSortValue(formatterData[4]), MutationAssessorColumnFormatter.getSortValue(formatterData[5]), true), 0,
+        assert.isAbove(sortedMutations.indexOf(mutations[4]), sortedMutations.indexOf(mutations[5]),
             "L(0.7) should rank higher than Unknown(null)");
     });
 

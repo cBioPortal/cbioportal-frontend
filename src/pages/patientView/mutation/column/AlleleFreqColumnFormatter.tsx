@@ -3,7 +3,6 @@ import {If, Else, Then } from 'react-if';
 import {Td} from 'reactable';
 import {IColumnFormatterData} from "../../../../shared/components/enhancedReactTable/IColumnFormatter";
 import DefaultTooltip from "shared/components/DefaultTooltip";
-import {compareNumberLists} from '../../../../shared/lib/SortUtils';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {MutationTableRowData} from "../../../../shared/components/mutationTable/IMutationTableProps";
 import {Mutation} from "../../../../shared/api/generated/CBioPortalAPI";
