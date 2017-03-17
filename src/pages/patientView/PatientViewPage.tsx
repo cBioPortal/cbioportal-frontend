@@ -501,7 +501,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 return (
                     <span style={{paddingRight: '10px'}}>
                         {  sampleManager!.getComponentForSample(sample.id, true) }
-                        {'\u00A0' + sample.id}
+                        <a href='#'>{'\u00A0' + sample.id}</a>
                         <span className='clinical-spans' dangerouslySetInnerHTML={{__html:getSpans(clinicalDataLegacy, 'lgg_ucsf_2014')}}></span>
                     </span>
 
@@ -547,7 +547,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             <div>
 
                 <If condition={sampleHeader}>
-                    <div style={{padding:20, borderRadius:5, background: '#eee', marginBottom: 20}}>
+                    <div style={{padding:20, color:'#428bca', borderRadius:5, background: '#eee', marginBottom: 20}}>
                         <PatientHeader patient={this.props.patient} />
                         {this.getSampleIndent()}{sampleHeader}
                     </div>

@@ -17,6 +17,15 @@ export function placeArrow(tooltipEl: any) {
 }
 
 
+// sort samples based on id and clinical data
+export function sortSamples(samples: Array<ClinicalDataBySampleId>) {
+    return _.sortBy(samples, function(sample) {
+        return sample.id;
+    });
+}
+
+
+
 class SampleManager {
 
     sampleIndex: { [s:string]:number };
@@ -31,8 +40,9 @@ class SampleManager {
         this.sampleLabels = {};
         this.clinicalDataLegacyCleanAndDerived = {};
         this.sampleColors = {};
+        this.samples = sortSamples(samples);
 
-        samples.forEach((sample, i) => {
+        this.samples.forEach((sample, i) => {
            this.sampleIndex[sample.id] = i;
            this.sampleLabels[sample.id] = String(i+1);
 
