@@ -37,12 +37,13 @@
   }
 }
 
-.CancerStudySelector,
 .GeneticProfileSelector,
 .DataTypePrioritySelector,
 .CaseSetSelector,
 .GeneSetSelector {
   padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 2px;
 }
 
 .CancerStudySelector {
@@ -138,6 +139,8 @@
 
   div.cancerStudySelectorBody {
     border: 1px solid #ddd;
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 2px;
     flex: 1;
   }
 
@@ -252,7 +255,14 @@
 
 
   div.zScore {
-    margin-left: 40px;
+    margin: 0px 0 10px 20px;
+
+    input[type='text'] {
+      border: 1px solid #ddd;
+      border-radius: 2px;
+      margin: 0 5px;
+      padding: 2px 5px;
+    }
   }
 
   label {
@@ -261,7 +271,7 @@
 
     input[type='radio'],
     input[type='checkbox'] {
-      margin-right: 6px;
+      margin-right: 8px;
     }
   }
 
@@ -347,7 +357,7 @@
     color: #fff;
     display: flex;
     align-items: center;
-    margin: 2px;
+    margin: 2px 2px 2px 0;
     padding: 5px 10px;
     border-radius: 2px;
     span.icon {
