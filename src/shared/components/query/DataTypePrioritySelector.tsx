@@ -4,10 +4,11 @@ import * as styles_any from './styles.module.scss';
 import {QueryStore, QueryStoreComponent} from "./QueryStore";
 import {toJS} from "mobx";
 import {observer} from "mobx-react";
-import {FlexRow} from "../flexbox/FlexBox";
+import {FlexRow, FlexCol} from "../flexbox/FlexBox";
 
 const styles = styles_any as {
-	DataTypePrioritySelector: string
+	DataTypePrioritySelector: string,
+	DataTypePriorityLabel: string,
 };
 
 @observer
@@ -19,18 +20,20 @@ export default class DataTypePrioritySelector extends QueryStoreComponent<{}, {}
 			return null;
 
 		return (
-			<FlexRow padded className={styles.DataTypePrioritySelector}>
+			<FlexCol padded className={styles.DataTypePrioritySelector}>
 				<h2>Select Data Type Priority:</h2>
-				<this.DataTypePriorityRadio label='Mutation and CNA' state={{mutation: true, cna: true}}/>
-				<this.DataTypePriorityRadio label='Only Mutation' state={{mutation: true, cna: false}}/>
-				<this.DataTypePriorityRadio label='Only CNA' state={{mutation: false, cna: true}}/>
-			</FlexRow>
+				<FlexRow>
+					<this.DataTypePriorityRadio label='Mutation and CNA' state={{mutation: true, cna: true}}/>
+					<this.DataTypePriorityRadio label='Only Mutation' state={{mutation: true, cna: false}}/>
+					<this.DataTypePriorityRadio label='Only CNA' state={{mutation: false, cna: true}}/>
+				</FlexRow>
+			</FlexCol>
 		);
 	}
 
 	DataTypePriorityRadio = observer(
 		(props: {label: string, state:QueryStore['dataTypePriority']}) => (
-			<label>
+			<label className={styles.DataTypePriorityLabel}>
 				<input
 					type="radio"
 					checked={_.isEqual(toJS(this.store.dataTypePriority), props.state)}
