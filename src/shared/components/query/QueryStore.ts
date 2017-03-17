@@ -587,7 +587,7 @@ export class QueryStore
 			Z_SCORE_THRESHOLD: this.zScoreThreshold,
 			RPPA_SCORE_THRESHOLD: this.rppaScoreThreshold,
 			data_priority: this.dataTypePriorityCode,
-			case_set_id: this.selectedSampleListId || '',
+			case_set_id: this.selectedSampleListId || '-1', // empty string won't work
 			case_ids: this.caseIds,
 			patient_case_select: this.caseIdsMode,
 			gene_list: this.geneQuery || ' ', // empty string won't work
@@ -642,11 +642,11 @@ export class QueryStore
 		let params = parsed.query as Partial<CancerStudyQueryUrlParams>;
 		let hashParams;
 		{
-			let [/*crosscancer*/, /*overview*/, data_priority, gene_list, cancer_study_list] = parsed.hash.split('/');
+			let [/*#crosscancer*/, tab, priority, genes, study_list] = parsed.hash.split('/');
 			hashParams = {
-				data_priority: data_priority as typeof params.data_priority,
-				gene_list: gene_list && decodeURIComponent(gene_list),
-				cancer_study_list: cancer_study_list && decodeURIComponent(cancer_study_list).split(','),
+				data_priority: priority as typeof params.data_priority,
+				gene_list: genes && decodeURIComponent(genes),
+				cancer_study_list: study_list && decodeURIComponent(study_list).split(','),
 			};
 		}
 
