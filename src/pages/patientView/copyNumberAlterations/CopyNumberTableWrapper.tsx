@@ -8,7 +8,7 @@ import {Column} from "shared/components/msktable/MSKTable";
 import * as _ from 'lodash';
 import MrnaExprColumnFormatter from "../mutation/column/MrnaExprColumnFormatter";
 import CohortColumnFormatter from "./column/CohortColumnFormatter";
-import {numberSort} from "shared/lib/SortUtils";
+import CnaColumnFormatter from "./column/CnaColumnFormatter";
 
 
 class CNATableComponent extends MSKTable<DiscreteCopyNumberData> {
@@ -16,22 +16,6 @@ class CNATableComponent extends MSKTable<DiscreteCopyNumberData> {
 }
 
 type CNATableColumn = Column<DiscreteCopyNumberData>&{order:number};
-
-export enum AlterationTypes {
-    'DeepDel' = -2,
-    'AMP'= 2
-};
-
-export function renderAlterationTypes(value: number) {
-    switch(value) {
-        case AlterationTypes.DeepDel:
-            return <span style={{color:'#FF0000'}}>{AlterationTypes[AlterationTypes.DeepDel]}</span>;
-        case AlterationTypes.AMP:
-            return <span style={{color:'#0000FF'}}>{AlterationTypes[AlterationTypes.AMP]}</span>;
-        default:
-            return <span></span>;
-    }
-};
 
 
 @observer
@@ -44,16 +28,16 @@ export default class CopyNumberTableWrapper extends React.Component<{ store:Pati
             name: "Gene",
             render: (d:DiscreteCopyNumberData)=><span>{d.gene.hugoGeneSymbol}</span>,
             download: (d:DiscreteCopyNumberData)=>d.gene.hugoGeneSymbol,
-            sort: (d1:DiscreteCopyNumberData, d2:DiscreteCopyNumberData, ascending:boolean)=>0,
+            sortBy: (d:DiscreteCopyNumberData)=>d.gene.hugoGeneSymbol,
             visible: true,
             order: 50
         });
 
         columns.push({
             name: "CNA",
-            render: (d:DiscreteCopyNumberData)=><span>{renderAlterationTypes(d.alteration)}</span>,
-            download: (d:DiscreteCopyNumberData)=>(AlterationTypes[d.alteration]),
-            sort: (d1:DiscreteCopyNumberData, d2:DiscreteCopyNumberData, ascending:boolean)=>0,
+            render: CnaColumnFormatter.renderFunction,
+            download: CnaColumnFormatter.download,
+            sortBy: CnaColumnFormatter.sortValue,
             visible: true,
             order: 60
         });
@@ -62,7 +46,7 @@ export default class CopyNumberTableWrapper extends React.Component<{ store:Pati
             name: "Cytoband",
             render: (d:DiscreteCopyNumberData)=><span>{d.gene.cytoband}</span>,
             download: (d:DiscreteCopyNumberData)=>d.gene.cytoband,
-            sort: (d1:DiscreteCopyNumberData, d2:DiscreteCopyNumberData, ascending:boolean)=>0,
+            sortBy: (d:DiscreteCopyNumberData)=>d.gene.cytoband,
             visible: true,
             order: 60
         });
@@ -72,11 +56,9 @@ export default class CopyNumberTableWrapper extends React.Component<{ store:Pati
             render:(d:DiscreteCopyNumberData)=>(this.props.store.copyNumberCountData.result
                 ? CohortColumnFormatter.renderFunction(d, this.props.store.copyNumberCountData.result)
                 : (<span></span>)),
-            sort:(d1:DiscreteCopyNumberData, d2:DiscreteCopyNumberData, ascending:boolean)=>{
+            sortBy:(d:DiscreteCopyNumberData) => {
                 if (this.props.store.copyNumberCountData.result) {
-                    const sortValue1 = CohortColumnFormatter.getSortValue(d1, this.props.store.copyNumberCountData.result);
-                    const sortValue2 = CohortColumnFormatter.getSortValue(d2, this.props.store.copyNumberCountData.result);
-                    return numberSort(sortValue1, sortValue2, ascending);
+                    return CohortColumnFormatter.getSortValue(d, this.props.store.copyNumberCountData.result);
                 } else {
                     return 0;
                 }
@@ -84,6 +66,7 @@ export default class CopyNumberTableWrapper extends React.Component<{ store:Pati
             tooltip: (<span>Alteration frequency in cohort</span>),
             order: 80
         });
+
         columns.push({
             name: "mRNA Expr.",
             render: (d:DiscreteCopyNumberData)=>(this.props.store.mrnaExprRankCache
