@@ -315,7 +315,7 @@
     border: 1px solid #ddd;
     border-radius: 2px;
     padding: 10px 15px;
-    
+
     &.empty {
     }
     &.notEmpty {
@@ -341,19 +341,21 @@
   }
   div.validBubble,
   div.invalidBubble {
+    color: #fff;
     display: flex;
     align-items: center;
     margin: 2px;
-    padding: 4px;
-    background-color: white;
-    border: 1px solid #aaaaaa;
-    border-radius: 4px;
+    padding: 5px 10px;
+    border-radius: 2px;
     span.icon {
-      color: #484848;
+      color: #fff;
     }
   }
   div.invalidBubble {
-    font-weight: bold;
+    background: $redError;
+  }
+  div.validBubble {
+    background: $greenSuccess;
   }
   div.suggestionBubble {
     color: $darkBrown;
