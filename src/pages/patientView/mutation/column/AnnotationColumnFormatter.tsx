@@ -9,7 +9,7 @@ import OncoKB from "shared/components/annotation/OncoKB";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {IndicatorQueryResp, EvidenceQueryRes} from "shared/api/generated/OncoKbAPI";
 import {generateQueryVariantId} from "shared/lib/OncoKbUtils";
-import {compareNestedNumberLists} from "shared/lib/SortUtils";
+import * as _ from "lodash";
 
 export interface IMyCancerGenome {
     hugoGeneSymbol: string;
@@ -172,21 +172,17 @@ export default class AnnotationColumnFormatter
         });
     }
 
-    public static sortFunction(a:IAnnotation, b:IAnnotation):number
-    {
-        const aValue = [
-            OncoKB.sortValue(a.oncoKbIndicator),
-            MyCancerGenome.sortValue(a.myCancerGenomeLinks),
-            CancerHotspots.sortValue(a.isHotspot, a.is3dHotspot)
-        ];
-
-        const bValue = [
-            OncoKB.sortValue(b.oncoKbIndicator),
-            MyCancerGenome.sortValue(b.myCancerGenomeLinks),
-            CancerHotspots.sortValue(b.isHotspot, b.is3dHotspot)
-        ];
-
-        return compareNestedNumberLists(aValue, bValue);
+    public static sortValue(data:Mutation[],
+                            hotspotsData?:IHotspotData,
+                            myCancerGenomeData?:IMyCancerGenomeData,
+                            oncoKbData?:IOncoKbData,
+                            pmidData?:any):number[] {
+        const annotationData:IAnnotation = AnnotationColumnFormatter.getData(data, hotspotsData, myCancerGenomeData, oncoKbData, pmidData);
+        return _.flatten([
+            OncoKB.sortValue(annotationData.oncoKbIndicator),
+            MyCancerGenome.sortValue(annotationData.myCancerGenomeLinks),
+            CancerHotspots.sortValue(annotationData.isHotspot, annotationData.is3dHotspot)
+        ]);
     }
 
     public static renderFunction(data:Mutation[], columnProps:IAnnotationColumnProps)

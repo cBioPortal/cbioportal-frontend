@@ -9,12 +9,13 @@ import {CopyDownloadControls} from "../copyDownloadControls/CopyDownloadControls
 import {serializeData} from "shared/lib/Serializer";
 import DefaultTooltip from "../DefaultTooltip";
 import {ButtonToolbar} from "react-bootstrap";
+import * as _ from "lodash";
 
 export type Column<T> = {
     name: string;
     filter?:(data:T, filterString:string, filterStringUpper?:string, filterStringLower?:string)=>boolean;
-    sort?:(a:T, b:T, ascending:boolean)=>number;
     visible?:boolean;
+    sortBy?:((data:T)=>(number|null)) | ((data:T)=>(string|null)) | ((data:T)=>(number|null)[]) | ((data:T)=>(string|null)[]);
     render:(data:T)=>JSX.Element;
     download?:(data:T)=>string;
     tooltip?:JSX.Element;
@@ -27,13 +28,43 @@ type MSKTableProps<T> = {
     initialSortDirection?: 'asc'|'desc';
 };
 
+export function mskTableSort<T>(data:T[], metric:(d:T)=>any, ascending:boolean = true):T[] {
+    // Separating this for testing, so that classes can test their comparators
+    //  against how the table will sort.
+    const modifiedMetric = (d: T) => {
+        // modify it so that it enforces null values always come at end
+        let metricValue = metric(d);
+        if (_.isArray(metricValue)) {
+            metricValue = (metricValue as any[]).map((x: any) => {
+                if (x === null) {
+                    if (ascending) {
+                        return Number.POSITIVE_INFINITY;
+                    } else {
+                        return Number.NEGATIVE_INFINITY;
+                    }
+                } else {
+                    return x;
+                }
+            });
+        } else if (metricValue === null) {
+            if (ascending) {
+                return Number.POSITIVE_INFINITY;
+            } else {
+                return Number.NEGATIVE_INFINITY;
+            }
+        }
+        return metricValue;
+    };
+    return _.orderBy(data, modifiedMetric, (ascending ? "asc" : "desc"));
+}
+
 class MSKTableStore<T> {
     @observable public filterString:string;
     @observable private _page:number;
     @observable private _itemsPerPage:number;
     @observable public sortColumn:string;
     @observable public sortAscending:boolean;
-    @observable public columns:Column<T>[];
+    @observable.ref public columns:Column<T>[];
     @observable private _columnVisibility:{[columnId: string]: boolean};
     @observable.ref public data:T[];
 
@@ -104,10 +135,23 @@ class MSKTableStore<T> {
         return tableDownloadData;
     }
 
+    @computed get sortColumnObject():Column<T>|undefined {
+        return this.columns.find((col:Column<T>)=>this.isVisible(col) && (col.name === this.sortColumn));
+    }
+
+    @computed get sortedData():T[] {
+        let ret = this.data;
+        const column = this.sortColumnObject;
+        if (column && column.sortBy) {
+            ret = mskTableSort(ret, column.sortBy, this.sortAscending);
+        }
+        return ret;
+    }
+
     @computed get sortedFilteredData():T[] {
-        let filtered:T[];
+        let filtered:T[] = this.sortedData;
         if (this.filterString) {
-            filtered = this.data.filter((datum:T)=>{
+            filtered = filtered.filter((datum:T)=>{
                 let match = false;
                 for (const column of this.columns) {
                     match = (column.filter && column.filter(datum, this.filterString, this.filterStringUpper, this.filterStringLower)) || false;
@@ -117,16 +161,8 @@ class MSKTableStore<T> {
                 }
                 return match;
             });
-        } else {
-            filtered = this.data.slice(); // force mobx to recognize change
         }
-        const column = this.columns.find((col:Column<T>)=>col.name === this.sortColumn);
-        if (column && column.sort) {
-            const cmp = (a:T, b:T) => column.sort!(a,b,this.sortAscending);
-            return filtered.sort(cmp);
-        } else {
-            return filtered;
-        }
+        return filtered;
     }
     @computed get visibleData():T[] {
         if (this.itemsPerPage === PAGINATION_SHOW_ALL) {
@@ -141,7 +177,7 @@ class MSKTableStore<T> {
             const headerProps:{role?:"button",
                 className?:"sort-asc"|"sort-des",
                 onClick?:()=>void} = {};
-            if (column.sort) {
+            if (column.sortBy) {
                 headerProps.role = "button";
                 headerProps.onClick = ()=>{
                     this.sortAscending = (this.sortColumn === column.name ? !this.sortAscending : true);
