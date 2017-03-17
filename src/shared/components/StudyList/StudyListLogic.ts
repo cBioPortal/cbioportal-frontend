@@ -183,7 +183,7 @@ export default class StudyListLogic
 
 	@action onCheck(node:CancerTreeNode, checked:boolean): void
 	{
-		let clickedStudyIds:string[];
+		let clickedStudyIds;
 		let meta = this.getMetadata(node);
 
 		if (meta.isCancerType)
