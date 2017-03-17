@@ -297,14 +297,25 @@
 
   .buttonRow {
     button {
-      border: 1px solid #d3d3d3;
-      border-radius: 4px;
+      background: linear-gradient(to bottom, rgba(252,252,252,1) 50%, rgba(245,245,245,1) 100%);
+      border: 1px solid #ddd;
+      border-radius: 2px;
+      box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.5);
+      color: $darkBrown;
       padding: .4em 1em;
+
+      &:hover {
+        color: #333;
+      }
     }
   }
 
   textarea.geneSet {
     resize: vertical;
+    border: 1px solid #ddd;
+    border-radius: 2px;
+    padding: 10px 15px;
+    
     &.empty {
     }
     &.notEmpty {
@@ -345,17 +356,18 @@
     font-weight: bold;
   }
   div.suggestionBubble {
+    color: $darkBrown;
     cursor: pointer;
     display: flex;
     align-items: center;
     margin: 2px;
     padding: 4px;
-    background-color: #e6e6e6;
-    border: 1px solid #d3d3d3;
+    background-color: $cream;
+    border: 1px solid $darkCream;
     border-radius: 4px;
     &:hover {
-      background-color: #dadada;
-      border-color: #999999;
+      background-color: $darkCream;
+      border-color: $darkestCream;
     }
     span.icon {
       color: #888888;
@@ -460,29 +472,34 @@ div.GisticGeneSelectorWindow {
     }
 
     span.geneToggle {
-      padding: 3px;
+      background: rgba(0,0,0,0);
+      line-height: 16px !important;
+      margin: 0 3px 0 0;
+      padding: 3px 5px;
+      -webkit-transition: background 0.2s ease-in-out;
+      -o-transition: background 0.2s ease-in-out;
+      transition: background 0.2s ease-in-out;
 
       &:not(.simulateHovered) {
         cursor: pointer;
       }
       &:hover,
       &.simulateHovered {
-        padding: 1px;
-        border: 2px solid #1974b8;
-        border-radius: 5px;
+        background: #dee9f1;
+        border-radius: 3px;
       }
       &.selected {
-        font-weight: bold;
+        font-weight: 600;
       }
       &.notSelected {
-        font-weight: normal;
+        font-weight: 400;
       }
     }
 
     a.showMoreLess {
       cursor: pointer;
       padding: 3px;
-      color: blue;
+      color: #337ab7;
       &:hover {
         text-decoration: underline;
       }
@@ -512,7 +529,7 @@ div.submitRow {
   }
 
   button.genomeSpace {
-    border: 1px solid #d3d3d3;
-    border-radius: 4px;
+    border: 1px solid $darkestCream;
+    border-radius: 2px;
   }
 }

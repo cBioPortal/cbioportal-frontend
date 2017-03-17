@@ -155,7 +155,7 @@ export default class GisticGeneSelector extends React.Component<GisticGeneSelect
 					}}
 				/>
 				<button
-					className={styles.selectButton}
+					className={classNames('cta', styles.selectButton)}
 					onClick={() => this.props.onSelect(this.map_geneSymbol_selected)}
 				>
 					Select
