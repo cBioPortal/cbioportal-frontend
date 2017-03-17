@@ -2,10 +2,12 @@ import * as _ from 'lodash';
 import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
 import {
     ClinicalData, SampleIdentifier,
-    GeneticProfile, Sample, Mutation, DiscreteCopyNumberFilter
+    GeneticProfile, Sample, Mutation, DiscreteCopyNumberFilter, DiscreteCopyNumberData
 } from "../../../shared/api/generated/CBioPortalAPI";
 import {ClinicalInformationData} from "../Connector";
 import client from "../../../shared/api/cbioportalClientInstance";
+import internalClient from "../../../shared/api/cbioportalInternalClientInstance";
+import {CopyNumberCount, CopyNumberCountIdentifier} from "shared/api/generated/CBioPortalAPIInternal";
 import {computed, observable, action, reaction, autorun} from "mobx";
 import oncokbClient from "../../../shared/api/oncokbClientInstance";
 import {remoteData} from "../../../shared/api/remoteData";
@@ -458,6 +460,30 @@ export class PatientViewPageStore
             }
         }
     }, {});
+
+    readonly copyNumberCountData = remoteData<CopyNumberCount[]>({
+        await: () => [
+            this.discreteCNAData
+        ],
+        invoke: async () => {
+            const copyNumberCountIdentifiers:CopyNumberCountIdentifier[] =
+                this.discreteCNAData.result.map((cnData: DiscreteCopyNumberData) => {
+                    return {
+                        alteration: cnData.alteration,
+                        entrezGeneId: cnData.entrezGeneId
+                    };
+                });
+
+            if (this.geneticProfileIdDiscrete.result) {
+                return await internalClient.fetchCopyNumberCountsUsingPOST({
+                    geneticProfileId: this.geneticProfileIdDiscrete.result,
+                    copyNumberCountIdentifiers
+                });
+            } else {
+                return [];
+            }
+        }
+    });
 
     @computed get mergedMutationData():Mutation[][] {
         let idToMutations:{[key:string]: Array<Mutation>} = {};
