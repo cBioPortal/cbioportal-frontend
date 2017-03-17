@@ -5,7 +5,7 @@ import {
     MrnaExprRankCacheDataType,
     default as MrnaExprRankCache
 } from "../../clinicalInformation/MrnaExprRankCache";
-import {Mutation} from "../../../../shared/api/generated/CBioPortalAPI";
+import {Mutation, DiscreteCopyNumberData} from "../../../../shared/api/generated/CBioPortalAPI";
 
 export default class MrnaExprColumnFormatter {
 
@@ -117,15 +117,28 @@ export default class MrnaExprColumnFormatter {
         const entrezGeneId = data[0].entrezGeneId;
         return cache.get(sampleId, entrezGeneId);
     }
+    protected static getDataFromCNA(data: DiscreteCopyNumberData, cache:MrnaExprRankCache):MrnaExprRankCacheDataType | null {
+        const sampleId = data.sampleId;
+        const entrezGeneId = data.entrezGeneId;
+        return cache.get(sampleId, entrezGeneId);
+    }
 
+    private static renderFromCacheDatum(cacheDatum:MrnaExprRankCacheDataType|null) {
+        return (<DefaultTooltip
+            placement="left"
+            overlay={MrnaExprColumnFormatter.getTooltipContents(cacheDatum)}
+            arrowContent={<div className="rc-tooltip-arrow-inner"/>}
+        >
+            {MrnaExprColumnFormatter.getTdContents(cacheDatum)}
+        </DefaultTooltip>);
+    }
     public static renderFunction(data: Mutation[], cache:MrnaExprRankCache) {
         const cacheDatum = MrnaExprColumnFormatter.getData(data, cache);
-        return (<DefaultTooltip
-                placement="left"
-                overlay={MrnaExprColumnFormatter.getTooltipContents(cacheDatum)}
-                arrowContent={<div className="rc-tooltip-arrow-inner"/>}
-            >
-                {MrnaExprColumnFormatter.getTdContents(cacheDatum)}
-            </DefaultTooltip>);
+        return MrnaExprColumnFormatter.renderFromCacheDatum(cacheDatum);
+    }
+
+    public static cnaRenderFunction(data: DiscreteCopyNumberData, cache:MrnaExprRankCache) {
+        const cacheDatum = MrnaExprColumnFormatter.getDataFromCNA(data, cache);
+        return MrnaExprColumnFormatter.renderFromCacheDatum(cacheDatum);
     }
 }

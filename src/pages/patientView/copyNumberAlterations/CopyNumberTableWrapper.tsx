@@ -1,23 +1,91 @@
 import * as React from 'react';
-import FeatureTitle from "../../../shared/components/featureTitle/FeatureTitle";
+import FeatureTitle from "shared/components/featureTitle/FeatureTitle";
 import {PatientViewPageStore} from "../clinicalInformation/PatientViewPageStore";
-import CopyNumberAlterationsTable from "./CopyNumberAlterationsTable";
 import {observer} from "mobx-react";
+import MSKTable from "shared/components/msktable/MSKTable";
+import {DiscreteCopyNumberData} from "shared/api/generated/CBioPortalAPI";
+import {Column} from "shared/components/msktable/MSKTable";
+import * as _ from 'lodash';
+import MrnaExprColumnFormatter from "../mutation/column/MrnaExprColumnFormatter";
+import CohortColumnFormatter from "./column/CohortColumnFormatter";
+import CnaColumnFormatter from "./column/CnaColumnFormatter";
+
+
+class CNATableComponent extends MSKTable<DiscreteCopyNumberData> {
+
+}
+
+type CNATableColumn = Column<DiscreteCopyNumberData>&{order:number};
+
 
 @observer
 export default class CopyNumberTableWrapper extends React.Component<{ store:PatientViewPageStore }, {}> {
 
-    render(){
+    render() {
+        const columns: CNATableColumn[] = [];
+
+        columns.push({
+            name: "Gene",
+            render: (d:DiscreteCopyNumberData)=><span>{d.gene.hugoGeneSymbol}</span>,
+            download: (d:DiscreteCopyNumberData)=>d.gene.hugoGeneSymbol,
+            sortBy: (d:DiscreteCopyNumberData)=>d.gene.hugoGeneSymbol,
+            visible: true,
+            order: 50
+        });
+
+        columns.push({
+            name: "CNA",
+            render: CnaColumnFormatter.renderFunction,
+            download: CnaColumnFormatter.download,
+            sortBy: CnaColumnFormatter.sortValue,
+            visible: true,
+            order: 60
+        });
+
+        columns.push({
+            name: "Cytoband",
+            render: (d:DiscreteCopyNumberData)=><span>{d.gene.cytoband}</span>,
+            download: (d:DiscreteCopyNumberData)=>d.gene.cytoband,
+            sortBy: (d:DiscreteCopyNumberData)=>d.gene.cytoband,
+            visible: true,
+            order: 60
+        });
+
+        columns.push({
+            name:"Cohort",
+            render:(d:DiscreteCopyNumberData)=>(this.props.store.copyNumberCountData.result
+                ? CohortColumnFormatter.renderFunction(d, this.props.store.copyNumberCountData.result)
+                : (<span></span>)),
+            sortBy:(d:DiscreteCopyNumberData) => {
+                if (this.props.store.copyNumberCountData.result) {
+                    return CohortColumnFormatter.getSortValue(d, this.props.store.copyNumberCountData.result);
+                } else {
+                    return 0;
+                }
+            },
+            tooltip: (<span>Alteration frequency in cohort</span>),
+            order: 80
+        });
+
+        columns.push({
+            name: "mRNA Expr.",
+            render: (d:DiscreteCopyNumberData)=>(this.props.store.mrnaExprRankCache
+                                ? MrnaExprColumnFormatter.cnaRenderFunction(d, this.props.store.mrnaExprRankCache)
+                                : (<span></span>)),
+            order: 70
+        });
+
+        const orderedColumns = _.sortBy(columns, (c:CNATableColumn)=>c.order);
 
         return (
             <div>
+                <FeatureTitle
+                    title="Copy Number Alterations"
+                    isHidden={this.props.store.geneticProfileIdDiscrete.isComplete && this.props.store.geneticProfileIdDiscrete.result === undefined}
+                    isLoading={this.props.store.discreteCNAData.isPending}
+                />
 
-                <FeatureTitle title="Copy Number Alterations"
-                              isHidden={ this.props.store.geneticProfileIdDiscrete.isComplete && this.props.store.geneticProfileIdDiscrete.result === undefined }
-                              isLoading={ this.props.store.discreteCNAData.isPending } />
-
-
-                {
+            {
                 (this.props.store.geneticProfileIdDiscrete.isComplete && this.props.store.geneticProfileIdDiscrete.result === undefined) && (
                     <div className="alert alert-info" role="alert">Copy Number Alterations are not available.</div>
                 )
@@ -28,14 +96,12 @@ export default class CopyNumberTableWrapper extends React.Component<{ store:Pati
                     && this.props.store.geneticProfileIdDiscrete.result
                     && this.props.store.discreteCNAData.isComplete
                 ) && (
-                    <CopyNumberAlterationsTable rawData={this.props.store.discreteCNAData.result} />
+                    <CNATableComponent columns={orderedColumns} data={this.props.store.discreteCNAData.result} />
                 )
             }
             </div>
-        )
-
+        );
     }
-
 }
 
 
