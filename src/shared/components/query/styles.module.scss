@@ -240,8 +240,13 @@
   .group {
     display: flex;
     flex-direction: column;
-    margin-left: 20px;
+
+    div.group {
+      margin-left: 20px;
+    }
   }
+
+
 
   div.zScore {
     margin-left: 40px;
