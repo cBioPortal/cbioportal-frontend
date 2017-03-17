@@ -125,13 +125,13 @@ export class PaginationControls extends React.Component<IPaginationControlsProps
                             {this.props.firstButtonContent}
                         </Button>
                     </If>
-                    <Button key="prevPageBtn" disabled={!!this.props.previousPageDisabled} onClick={this.props.onPreviousPageClick}>
+                    <Button className="prevPageBtn" key="prevPageBtn" disabled={!!this.props.previousPageDisabled} onClick={this.props.onPreviousPageClick}>
                         {this.props.previousButtonContent}
                     </Button>
 
                     <span
                         key="textBetweenButtons"
-                        className={styles["default-cursor"] + " btn btn-default disabled"}
+                        className={styles["default-cursor"] + " btn btn-default disabled textBetweenButtons"}
                     >
                         <If condition={this.props.pageNumberEditable}>
                             <span
@@ -147,7 +147,7 @@ export class PaginationControls extends React.Component<IPaginationControlsProps
                         {this.props.textBetweenButtons}
                     </span>
 
-                    <Button key="nextPageBtn" disabled={!!this.props.nextPageDisabled} onClick={this.props.onNextPageClick}>
+                    <Button className="nextPageBtn" key="nextPageBtn" disabled={!!this.props.nextPageDisabled} onClick={this.props.onNextPageClick}>
                         {this.props.nextButtonContent}
                     </Button>
                     <If condition={!!this.props.showLastPage}>
@@ -160,6 +160,7 @@ export class PaginationControls extends React.Component<IPaginationControlsProps
                 <If condition={!!this.props.showItemsPerPageSelector}>
                     <FormGroup bsSize="sm" className={styles["form-select"]}>
                         <FormControl
+                            className="itemsPerPageSelector"
                             componentClass="select"
                             value={this.props.itemsPerPage}
                             onChange={this.handleChangeItemsPerPage as React.FormEventHandler<any>}
