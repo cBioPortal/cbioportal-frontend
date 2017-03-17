@@ -31,11 +31,19 @@ describe("PatientViewMutationTable", ()=>{
         assert(!hasColumn(getTable(["sampleA", "sampleB"], "mrnaId"), "mRNA Expr."), "More than one sample");
 
         assert(!hasColumn(getTable(["sampleA", "sampleB"]), "mRNA Expr."),
-            "No expression profile and more than one sample");
+            "No expression profile and more than one sample");//
     });
 
     it("shows mrna expr column if theres an expression profile and exactly one sample", ()=>{
         assert(hasColumn(getTable(["sampleA"], "mrnaId"), "mRNA Expr."));
+    });
+
+    it.only("shows copy number column if there's only one sample", ()=>{
+        assert(hasColumn(getTable(["sampleA"], "Copy #"), "mRNA Expr."));
+    });
+
+    it.only("hides copy number column if there's more than one column", ()=>{
+        assert.isFalse(hasColumn(getTable(["sampleA","sampleB"], "Copy #"), "mRNA Expr."));
     });
 
     it("hides the tumors column if theres less than two samples", ()=>{
