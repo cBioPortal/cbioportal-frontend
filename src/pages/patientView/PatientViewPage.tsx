@@ -306,29 +306,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     }
 
-    private buildURL(caseId:string='', studyId:string='', cohort:string[]=[]) {
-        let url = window.location.origin + window.location.pathname;
-        let searchElements = [];
-        if (caseId.length > 0) {
-            searchElements.push(`case_id=${caseId}`);
-        }
-        if (studyId.length > 0) {
-            searchElements.push(`cancer_study_id=${studyId}`);
-        }
-        if (searchElements.length > 0) {
-            url += '?'+searchElements.join('&');
-        }
-
-        let hashElements = [];
-        if (cohort.length > 0) {
-            hashElements.push(`nav_case_ids=${cohort.join(',')}`);
-        }
-        if (hashElements.length > 0) {
-            url += '#'+hashElements.join('&');
-        }
-        return url;
-    }
-
     private handleSelect(key: number, e:React.SyntheticEvent<any>): void {
         this.setState(({ activeTabKey : key } as IPatientViewState));
     }
@@ -409,10 +386,18 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 {  (patientViewPageStore.patientViewData.isComplete) && (
                     <div className="patientPageHeader clearfix">
                         <i className="fa fa-user-circle-o patientIcon" aria-hidden="true"></i>
-                        <PatientHeader
-                                       handlePatientClick={(id: string)=>patientViewPageStore.setPatientId(id)}
-                                       patient={patientViewPageStore.patientViewData.result!.patient!}/>
-                        <div className="patientSamples">Samples: {sampleHeader}</div>
+                        <table>
+                            <tr>
+                                <td>Patient:</td>
+                                <td><PatientHeader
+                                    handlePatientClick={(id: string)=>patientViewPageStore.setPatientId(id)}
+                                    patient={patientViewPageStore.patientViewData.result!.patient!}/></td>
+                            </tr>
+                            <tr>
+                                <td>Samples:</td>
+                                <td><div className="patientSamples">{sampleHeader}</div></td>
+                            </tr>
+                        </table>
                     </div>
                     )
                 }
