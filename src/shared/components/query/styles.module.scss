@@ -9,6 +9,11 @@
     border: 1px solid #ddd;
     border-top: none;
     padding: 10px;
+
+    :global(.Select-control) {
+      border: 1px solid #ddd !important;
+      border-radius: 2px !important;
+    }
   }
 }
 
@@ -37,8 +42,6 @@
 .DataTypePrioritySelector,
 .CaseSetSelector,
 .GeneSetSelector {
-  // border: 1px solid rgb(170, 170, 170);
-  // border-radius: 10px;
   padding: 10px;
 }
 
