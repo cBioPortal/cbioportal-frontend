@@ -94,6 +94,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     private patientIdsInCohort:string[];
 
+    private mutationTableColumns:MutationTableColumnType[];
+
     constructor() {
 
         super();
@@ -136,6 +138,30 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         this.mutationGeneticProfileId = `${patientViewPageStore.studyId}_mutations`;
 
+        this.mutationTableColumns = [MutationTableColumnType.COHORT,
+            MutationTableColumnType.MRNA_EXPR,
+            MutationTableColumnType.COPY_NUM,
+            MutationTableColumnType.ANNOTATION,
+            MutationTableColumnType.REF_READS_N,
+            MutationTableColumnType.VAR_READS_N,
+            MutationTableColumnType.REF_READS,
+            MutationTableColumnType.VAR_READS,
+            MutationTableColumnType.START_POS,
+            MutationTableColumnType.END_POS,
+            MutationTableColumnType.REF_ALLELE,
+            MutationTableColumnType.VAR_ALLELE,
+            MutationTableColumnType.MUTATION_STATUS,
+            MutationTableColumnType.VALIDATION_STATUS,
+            MutationTableColumnType.CENTER,
+            MutationTableColumnType.GENE,
+            MutationTableColumnType.CHROMOSOME,
+            MutationTableColumnType.PROTEIN_CHANGE,
+            MutationTableColumnType.MUTATION_TYPE,
+            MutationTableColumnType.MUTATION_ASSESSOR,
+            MutationTableColumnType.COSMIC,
+            MutationTableColumnType.TUMOR_ALLELE_FREQ,
+            MutationTableColumnType.TUMORS,
+            MutationTableColumnType.SAMPLE_ID];
     }
 
     fetchMyCancerGenomeData():Promise<IMyCancerGenomeData> {
@@ -369,7 +395,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 />
             );
         }
-
         return (
             <div>
 
@@ -445,30 +470,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                     cosmicData={this.state.cosmicData}
                                     oncoKbData={patientViewPageStore.oncoKbData.result}
                                     pmidData={patientViewPageStore.pmidData.result}
-                                    columns={[MutationTableColumnType.COHORT,
-                                MutationTableColumnType.MRNA_EXPR,
-                                MutationTableColumnType.COPY_NUM,
-                                MutationTableColumnType.ANNOTATION,
-                                MutationTableColumnType.REF_READS_N,
-                                MutationTableColumnType.VAR_READS_N,
-                                MutationTableColumnType.REF_READS,
-                                MutationTableColumnType.VAR_READS,
-                                MutationTableColumnType.START_POS,
-                                MutationTableColumnType.END_POS,
-                                MutationTableColumnType.REF_ALLELE,
-                                MutationTableColumnType.VAR_ALLELE,
-                                MutationTableColumnType.MUTATION_STATUS,
-                                MutationTableColumnType.VALIDATION_STATUS,
-                                MutationTableColumnType.CENTER,
-                                MutationTableColumnType.GENE,
-                                MutationTableColumnType.CHROMOSOME,
-                                MutationTableColumnType.PROTEIN_CHANGE,
-                                MutationTableColumnType.MUTATION_TYPE,
-                                MutationTableColumnType.MUTATION_ASSESSOR,
-                                MutationTableColumnType.COSMIC,
-                                MutationTableColumnType.TUMOR_ALLELE_FREQ,
-                                MutationTableColumnType.TUMORS,
-                                MutationTableColumnType.SAMPLE_ID]}
+                                    columns={this.mutationTableColumns}
                                 />
                             )
                         }
