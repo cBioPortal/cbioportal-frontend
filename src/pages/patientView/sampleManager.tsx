@@ -8,6 +8,7 @@ import {Sample} from "../../shared/api/generated/CBioPortalAPI";
 import DefaultTooltip from 'shared/components/DefaultTooltip';
 import {cleanAndDerive} from './clinicalInformation/lib/clinicalAttributesUtil.js';
 import styles from './patientHeader/style/clinicalAttributes.scss';
+import naturalSort from 'natural-sort';
 
 // we need this to account for issue with rc-tooltip when dealing with large tooltip overlay content
 export function placeArrow(tooltipEl: any) {
@@ -15,6 +16,23 @@ export function placeArrow(tooltipEl: any) {
     const targetEl = this.getRootDomNode();  // eslint-disable-line no-invalid-this
     arrowEl.style.left = '10px';
 }
+
+
+// sort samples based event, clinical data and id
+export function sortSamples(samples: Array<ClinicalDataBySampleId>,
+                            clinicalDataLegacyCleanAndDerived: { [s:string]:any }) {
+    // sort by
+    // 1. based on sample collection data (timeline event) (unimplemented)
+    // 2. if all cases have derived normalized case types, put primary first (unimplemented)
+    // 3. natural sort of sample ids
+    let sortedSampleIDs: string[] = [];
+    sortedSampleIDs = sortedSampleIDs.concat(samples.map((sample) => sample.id)).sort(naturalSort).reverse();
+
+    return _.sortBy(samples, function(sample) {
+        return sortedSampleIDs.indexOf(sample.id);
+    });
+}
+
 
 
 class SampleManager {
@@ -33,9 +51,6 @@ class SampleManager {
         this.sampleColors = {};
 
         samples.forEach((sample, i) => {
-           this.sampleIndex[sample.id] = i;
-           this.sampleLabels[sample.id] = String(i+1);
-
            // add legacy clinical data
            this.clinicalDataLegacyCleanAndDerived[sample.id] = cleanAndDerive(
                _.fromPairs(sample.clinicalData.map((x) => [x.clinicalAttributeId, x.value]))
@@ -53,10 +68,15 @@ class SampleManager {
            }
 
            this.sampleColors[sample.id] = color;
-       });
+        });
 
-       // order
-       this.sampleOrder = _.sortBy(Object.keys(this.sampleIndex), (k) => this.sampleIndex[k]);
+        this.samples = sortSamples(samples, this.clinicalDataLegacyCleanAndDerived);
+        this.samples.forEach((sample, i) => {
+            this.sampleIndex[sample.id] = i;
+            this.sampleLabels[sample.id] = String(i+1);
+        });
+        // order as array of sample ids (used further downstream)
+        this.sampleOrder = _.sortBy(Object.keys(this.sampleIndex), (k) => this.sampleIndex[k]);
     }
 
     getComponentForSample(sampleId: string, showClinical = false) {
