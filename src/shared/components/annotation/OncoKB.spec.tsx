@@ -1,10 +1,11 @@
-import {compareNumberLists} from 'shared/lib/SortUtils';
 import {initQueryIndicator} from "test/OncoKbMockUtils";
 import OncoKB from './OncoKB';
 import React from 'react';
 import { assert } from 'chai';
 import { shallow, mount } from 'enzyme';
 import sinon from 'sinon';
+import {mskTableSort} from "../msktable/MSKTable";
+import {IndicatorQueryResp} from "../../api/generated/OncoKbAPI";
 
 describe('OncoKB', () => {
     before(() => {
@@ -21,44 +22,52 @@ describe('OncoKB', () => {
             oncogenic: 'Oncogenic'
         });
 
-        assert.equal(
-            compareNumberLists(OncoKB.sortValue(queryA), OncoKB.sortValue(queryB)),
-            0,
+        let array:IndicatorQueryResp[] = [queryA, queryB];
+
+        let sortedArray:IndicatorQueryResp[];
+
+        assert.deepEqual(
+            OncoKB.sortValue(queryA), OncoKB.sortValue(queryB),
             'Equal Oncogenicity');
 
         queryA.oncogenic = 'Oncogenic';
         queryB.oncogenic = 'Inconclusive';
+        array = [queryB, queryA];
+        sortedArray = mskTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
         assert.isAbove(
-            compareNumberLists(OncoKB.sortValue(queryA), OncoKB.sortValue(queryB)),
-            0,
+            sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'Oncogenicity test 2');
 
         queryA.oncogenic = 'Oncogenic';
         queryB.oncogenic = 'Unknown';
+        array = [queryB, queryA];
+        sortedArray = mskTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
         assert.isAbove(
-            compareNumberLists(OncoKB.sortValue(queryA), OncoKB.sortValue(queryB)),
-            0,
+            sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'Oncogenicity test 3');
 
         queryA.oncogenic = 'Oncogenic';
         queryB.oncogenic = 'Likely Neutral';
+        array = [queryB, queryA];
+        sortedArray = mskTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
         assert.isAbove(
-            compareNumberLists(OncoKB.sortValue(queryA), OncoKB.sortValue(queryB)),
-            0,
+            sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'Oncogenicity test 4');
 
         queryA.oncogenic = 'Inconclusive';
         queryB.oncogenic = 'Unknown';
+        array = [queryB, queryA];
+        sortedArray = mskTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
         assert.isAbove(
-            compareNumberLists(OncoKB.sortValue(queryA), OncoKB.sortValue(queryB)),
-            0,
+            sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'Oncogenicity test 5');
 
         queryA.oncogenic = 'Likely Neutral';
         queryB.oncogenic = 'Inconclusive';
+        array = [queryB, queryA];
+        sortedArray = mskTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
         assert.isAbove(
-            compareNumberLists(OncoKB.sortValue(queryA), OncoKB.sortValue(queryB)),
-            0,
+            sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'Oncogenicity test 6');
 
         queryA = initQueryIndicator({
@@ -69,9 +78,10 @@ describe('OncoKB', () => {
             oncogenic: 'Unknown',
             vus: false
         });
+        array = [queryB, queryA];
+        sortedArray = mskTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
         assert.isAbove(
-            compareNumberLists(OncoKB.sortValue(queryA), OncoKB.sortValue(queryB)),
-            0,
+            sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'A is VUS, which should have higher score.');
 
         queryA = initQueryIndicator({
@@ -82,9 +92,10 @@ describe('OncoKB', () => {
             oncogenic: 'Oncogenic',
             highestSensitiveLevel: 'LEVEL_2A'
         });
+        array = [queryB, queryA];
+        sortedArray = mskTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
         assert.isAbove(
-            compareNumberLists(OncoKB.sortValue(queryA), OncoKB.sortValue(queryB)),
-            0,
+            sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'A(LEVEL_1) should be higher than B(LEVEL_2A)');
 
         queryA = initQueryIndicator({
@@ -95,9 +106,10 @@ describe('OncoKB', () => {
             oncogenic: 'Oncogenic',
             highestResistanceLevel: 'LEVEL_R2'
         });
+        array = [queryB, queryA];
+        sortedArray = mskTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
         assert.isAbove(
-            compareNumberLists(OncoKB.sortValue(queryA), OncoKB.sortValue(queryB)),
-            0,
+            sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'A(LEVEL_R1) should be higher than B(LEVEL_R2)');
 
         queryA = initQueryIndicator({
@@ -110,9 +122,10 @@ describe('OncoKB', () => {
             highestSensitiveLevel: '',
             highestResistanceLevel: 'LEVEL_R1'
         });
+        array = [queryB, queryA];
+        sortedArray = mskTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
         assert.isAbove(
-            compareNumberLists(OncoKB.sortValue(queryA), OncoKB.sortValue(queryB)),
-            0,
+            sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'A(LEVEL_2A) should be higher than B(LEVEL_R1)');
 
         queryA = initQueryIndicator({
@@ -122,9 +135,10 @@ describe('OncoKB', () => {
             oncogenic: 'Unknown',
             highestSensitiveLevel: 'LEVEL_2A'
         });
+        array = [queryB, queryA];
+        sortedArray = mskTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
         assert.isAbove(
-            compareNumberLists(OncoKB.sortValue(queryA), OncoKB.sortValue(queryB)),
-            0,
+            sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'The score for Oncogenic variant(A) should always higher than other categories(B) even B has treatments.');
 
         queryA = initQueryIndicator({
@@ -133,9 +147,10 @@ describe('OncoKB', () => {
         queryB = initQueryIndicator({
             variantExist: false
         });
+        array = [queryB, queryA];
+        sortedArray = mskTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
         assert.isAbove(
-            compareNumberLists(OncoKB.sortValue(queryA), OncoKB.sortValue(queryB)),
-            0,
+            sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'variantExist test 1');
 
         queryA = initQueryIndicator({
@@ -145,9 +160,10 @@ describe('OncoKB', () => {
             variantExist: false,
             highestSensitiveLevel: 'LEVEL_2A'
         });
+        array = [queryB, queryA];
+        sortedArray = mskTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
         assert.isAbove(
-            compareNumberLists(OncoKB.sortValue(queryA), OncoKB.sortValue(queryB)),
-            0,
+            sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'variantExist test 2');
     });
 
