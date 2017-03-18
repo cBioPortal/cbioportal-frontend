@@ -410,6 +410,17 @@ div.MutSigGeneSelectorWindow {
   div.MutSigGeneSelector {
     margin: 10px;
     flex: 1;
+    :global(.table) {
+      margin: 0;
+      & > thead > tr > th {
+        font-size: 13px;
+      }
+      & > tbody > tr > td {
+        vertical-align: middle;
+        padding: 6px 10px;
+        font-size: 12px;
+      }
+    }
     div.selectionColumnHeader,
     div.selectionColumnCell {
       display: flex;
