@@ -179,6 +179,9 @@ export default class StudyListLogic
 			selectedStudyIds = _.difference(selectedStudyIds, clickedStudyIds);
 
 		this.store.selectedStudyIds = selectedStudyIds;
+
+		if (!this.store.selectedStudyIds.length)
+			this.store.showSelectedStudiesOnly = false;
 	}
 
 	@action onCheck(node:CancerTreeNode, checked:boolean): void

@@ -9,6 +9,7 @@ import AsyncStatus from "../asyncStatus/AsyncStatus";
 import classNames from "../../lib/classNames";
 import {FlexCol} from "../flexbox/FlexBox";
 import {QueryStoreComponent} from "./QueryStore";
+import DefaultTooltip from "../DefaultTooltip";
 
 const styles = styles_any as {
 	GeneticProfileSelector: string,
@@ -20,6 +21,7 @@ const styles = styles_any as {
 	zScore: string,
 	groupName: string,
 	profileName: string,
+	tooltip: string,
 };
 
 @observer
@@ -71,7 +73,13 @@ export default class GeneticProfileSelector extends QueryStoreComponent<{}, {}>
 				{label}
 			</span>
 			{!isGroupToggle && (
-				<FontAwesome className={styles.infoIcon} name='question-circle' {...{title: profile.description}}/>
+				<DefaultTooltip
+					mouseEnterDelay={0}
+					placement="right"
+					overlay={<div className={styles.tooltip}>{profile.description}</div>}
+				>
+					<FontAwesome className={styles.infoIcon} name='question-circle'/>
+				</DefaultTooltip>
 			)}
 		</label>
 	)

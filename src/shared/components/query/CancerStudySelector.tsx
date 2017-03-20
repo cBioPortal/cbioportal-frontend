@@ -90,16 +90,14 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 
 		let selected = _.includes(this.store.selectedCancerTypeIds, cancerType.cancerTypeId);
 		let highlighted = this.store.studyListLogic.isHighlighted(cancerType);
-		let liClassName = classNames(
-			styles.cancerTypeListItem,
-			styles.selectable,
-			{
-				[styles.selected]: selected,
-				[styles.matchingNodeText]: !!this.store.searchText && highlighted,
-				[styles.nonMatchingNodeText]: !!this.store.searchText && !highlighted,
-				[styles.containsSelectedStudies]: this.store.studyListLogic.cancerTypeContainsSelectedStudies(cancerType),
-			},
-		);
+		let liClassName = classNames({
+			[styles.cancerTypeListItem]: true,
+			[styles.selectable]: true,
+			[styles.selected]: selected,
+			[styles.matchingNodeText]: !!this.store.searchText && highlighted,
+			[styles.nonMatchingNodeText]: !!this.store.searchText && !highlighted,
+			[styles.containsSelectedStudies]: this.store.studyListLogic.cancerTypeContainsSelectedStudies(cancerType),
+		});
 
 		return (
 			<li
@@ -145,15 +143,12 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 			searchTextOptions = [this.store.searchText].concat(searchTextOptions as string[]);
 
 		let logic = this.store.studyListLogic;
-		let allSelectedCheckboxProps = logic.getCheckboxProps(logic.rootCancerType);
-		let allSelected = allSelectedCheckboxProps.checked && !allSelectedCheckboxProps.indeterminate;
+		let selectAllCheckboxProps = logic.getCheckboxProps(logic.rootCancerType);
 
-		let selectedCountClass = classNames(
-			styles.selectedCount,
-			{
-				[styles.selectionsExist]: (this.store.selectedStudyIds.length > 0)
-			},
-		);
+		let selectedCountClass = classNames({
+			[styles.selectedCount]: true,
+			[styles.selectionsExist]: this.store.selectedStudyIds.length > 0
+		});
 
 		return (
 			<FlexCol overflow className={styles.CancerStudySelector}>
@@ -168,8 +163,8 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 								}}
 								className={selectedCountClass}
 							>
-								<b>{this.store.selectedStudyIds.length}</b> Studies Selected
-								(<b>{this.store.selectedStudies_totalSampleCount}</b> Samples)
+								<b>{this.store.selectedStudyIds.length}</b> studies selected
+								(<b>{this.store.selectedStudies_totalSampleCount}</b> samples)
 							</span>
 						) : (
 				            <span className={styles.noData}>No data</span>
@@ -196,8 +191,8 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 						}}
 					/>
 					{!!(!this.store.forDownloadTab) && (
-						<span className={classNames('cta', styles.selectAll)} onClick={() => logic.hack_handleSelectAll(!allSelected)}>
-							{allSelected ? "Deselect All" : "Select All"}
+						<span className={classNames('cta', styles.selectAll)} onClick={() => logic.hack_handleSelectAll(!selectAllCheckboxProps.checked)}>
+							{selectAllCheckboxProps.checked ? "Deselect all" : "Select all"}
 						</span>
 					)}
 				</FlexRow>

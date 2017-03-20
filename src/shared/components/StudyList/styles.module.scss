@@ -50,15 +50,13 @@
        -o-animation: fadein 0.25s; /* Opera < 12.1 */
           animation: fadein 0.25s;
 
-
-
   ul.StudyList {
     margin: 0;
     padding: 0 15px;
   }
 
   h4 {
-    margin: 15px;
+    margin: 15px 15px 0 15px;
     padding: 0 5px 5px 5px;
     font-weight: 400;
     line-height: 26px;
@@ -81,6 +79,19 @@
     float: right;
     display: inline-block;
 
+    &:hover {
+      cursor: pointer;
+    }
+  }
+
+  .deselectAll {
+    float: right;
+    margin-right: 20px;
+    font-size: 12px;
+    line-height: 30px;
+    text-align: right;
+    color: #337ab7;
+    text-decoration: underline;
     &:hover {
       cursor: pointer;
     }
@@ -206,7 +217,6 @@ li.Study {
 
   .StudySamples {
     text-align: right;
-    margin-right: 5px;
     display: inline-block;
   }
 
@@ -216,25 +226,27 @@ li.Study {
 
     .StudyLinks {
       display: inline-block;
-      width: 40px;
+      width: 57px;
 
-      > span {
+      span.icon {
         color: #ccc;
-        margin: 0 0 0 2px;
+        text-align: center;
+        margin: 0 0 0 4px;
         min-width: 15px;
-        display: inline-block;
       }
 
-      a {
-        color: #1982b8;
-        text-align: center;
+      span.iconWithTooltip {
+        color: #555;
+      }
 
-        span:global(.fa) {
-          margin: 0 5px 0 0;
-          min-width: 15px;
-        }
+      a > span.icon {
+        color: #1982b8;
       }
     }
 
   }
+}
+
+.tooltip {
+  max-width: 300px;
 }

@@ -1,6 +1,6 @@
 declare module 'react-select'
 {
-	export type ReactSelectOption<T> = {label: string, value: T};
+	export type ReactSelectOption<T> = {label: React.ReactChild, value: T};
 
 	export interface MenuRendererProps<T>
 	{

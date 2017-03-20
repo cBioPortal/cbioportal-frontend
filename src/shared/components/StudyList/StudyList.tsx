@@ -7,6 +7,7 @@ import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
 import {observer} from "mobx-react";
 import {getStudySummaryUrl, getPubMedUrl} from "../../api/urls";
 import {QueryStoreComponent} from "../query/QueryStore";
+import DefaultTooltip from "../DefaultTooltip";
 
 const styles = {
 	...styles_any as {
@@ -23,12 +24,16 @@ const styles = {
 		StudySamples: string,
 		StudyLinks: string,
 
+		icon: string,
+		iconWithTooltip: string,
+		tooltip: string,
+
 		disabled: string,
 		enabled: string,
 		indentArrow: string,
 
-
 		closeSelected: string,
+		deselectAll: string,
 		highlighted: string,
 	},
 	Level: (level:number) => styles_any[`Level${level}`]
@@ -55,12 +60,15 @@ export default class StudyList extends QueryStoreComponent<{}, {}>
 				<h4>
 						Selected Studies 
 						<span 
-							onClick={() => this.store.showSelectedStudiesOnly = !this.store.showSelectedStudiesOnly}
 							className={styles.closeSelected}
+							onClick={() => this.store.showSelectedStudiesOnly = !this.store.showSelectedStudiesOnly}
 						>
 							Return to Study Selector
 						</span>
 				</h4>
+				<span className={styles.deselectAll} onClick={() => this.logic.hack_handleSelectAll(false)}>
+					Deselect all
+				</span>
 				<ul className={styles.StudyList}>
 					{this.renderCancerType(this.logic.rootCancerType)}
 				</ul>
@@ -153,7 +161,7 @@ export default class StudyList extends QueryStoreComponent<{}, {}>
 				{...this.logic.getCheckboxProps(study)}
 				onChange={event => this.logic.onCheck(study, (event.target as HTMLInputElement).checked)}
 			>
-				<span className={styles.StudyName} title={study.name}>
+				<span className={styles.StudyName}>
 					{study.name}
 				</span>
 			</LabeledCheckbox>
@@ -171,24 +179,62 @@ export default class StudyList extends QueryStoreComponent<{}, {}>
 
 	renderStudyLinks = (study:CancerStudy) =>
 	{
-		let links = [];
-		if (study.studyId)
-			links.push({icon: 'bar-chart', url: getStudySummaryUrl(study.studyId)});
-		if (study.pmid)
-			links.push({icon: 'book', url: getPubMedUrl(study.pmid)});
-		else 
-			links.push({icon: 'book', url: undefined });
+		let links = [
+			{
+				icon: 'info-circle',
+				url: undefined,
+				tooltip: study.description
+			},
+			{
+				icon: 'bar-chart',
+				url: study.studyId && getStudySummaryUrl(study.studyId),
+				tooltip: study.studyId && "Summary"
+			},
+			{
+				icon: 'book',
+				url: study.pmid && getPubMedUrl(study.pmid),
+				tooltip: study.pmid && "PubMed"
+			},
+		];
 		return (
 			<span className={styles.StudyLinks}>
-				{links.map((link, i) => (
-					(link.url) ? (
-						<a key={i} href={link.url}>
-							<FontAwesome name={link.icon}/>
-						</a>
-					) : (
-						<FontAwesome key={i} name={link.icon}/>
-					)
-				))}
+				{links.map((link, i) => {
+					let content = (
+						<FontAwesome
+							key={i}
+							name={link.icon}
+							className={classNames({
+								[styles.icon]: true,
+								[styles.iconWithTooltip]: !!link.tooltip,
+							})}
+						/>
+					);
+
+					if (link.url)
+						content = (
+							<a key={i} href={link.url}>
+								{content}
+							</a>
+						);
+
+					if (link.tooltip)
+					{
+						let overlay = (
+							<div className={styles.tooltip} dangerouslySetInnerHTML={{__html: link.tooltip}}/>
+						);
+						content = (
+							<DefaultTooltip
+								key={i}
+								mouseEnterDelay={0}
+								placement="top"
+								overlay={overlay}
+								children={content}
+							/>
+						);
+					}
+
+					return content;
+				})}
 			</span>
 		);
 	}

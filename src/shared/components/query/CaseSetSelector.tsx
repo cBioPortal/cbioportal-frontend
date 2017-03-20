@@ -6,10 +6,12 @@ import {computed} from 'mobx';
 import {FlexCol} from "../flexbox/FlexBox";
 import {QueryStore, QueryStoreComponent} from "./QueryStore";
 import {getStudyViewUrl} from "../../api/urls";
+import DefaultTooltip from "../DefaultTooltip";
 
 const styles = styles_any as {
 	CaseSetSelector: string,
 	ReactSelect: string,
+	tooltip: string,
 };
 
 const CUSTOM_CASE_LIST_ID = '';
@@ -22,12 +24,28 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 		return [
 			...this.store.sampleLists.result.map(sampleList => {
 				return {
-					label: `${sampleList.name} (${sampleList.sampleCount})`,
+					label: (
+						<DefaultTooltip
+							placement="right"
+							mouseEnterDelay={0}
+							overlay={<div className={styles.tooltip}>{sampleList.description}</div>}
+						>
+							<span>{`${sampleList.name} (${sampleList.sampleCount})`}</span>
+						</DefaultTooltip>
+					),
 					value: sampleList.sampleListId
 				};
 			}),
 			{
-				label: 'User-defined Case List',
+				label: (
+					<DefaultTooltip
+						placement="right"
+						mouseEnterDelay={0}
+						overlay={<div className={styles.tooltip}>Specify your own case list</div>}
+					>
+						<span>User-defined Case List</span>
+					</DefaultTooltip>
+				),
 				value: CUSTOM_CASE_LIST_ID
 			}
 		];

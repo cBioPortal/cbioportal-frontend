@@ -276,6 +276,7 @@
   }
 
   span.infoIcon {
+    color: #555;
   }
 
   span.groupName {
@@ -500,7 +501,6 @@ div.GisticGeneSelectorWindow {
     span.geneToggle {
       background: rgba(0,0,0,0);
       line-height: 16px !important;
-      margin: 0 3px 0 0;
       padding: 3px 5px;
       -webkit-transition: background 0.2s ease-in-out;
       -o-transition: background 0.2s ease-in-out;
@@ -558,4 +558,8 @@ div.submitRow {
     border: 1px solid $darkestCream;
     border-radius: 2px;
   }
+}
+
+.tooltip {
+  max-width: 300px;
 }
