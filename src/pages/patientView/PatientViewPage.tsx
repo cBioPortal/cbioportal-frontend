@@ -8,14 +8,13 @@ import Spinner from "react-spinkit";
 import exposeComponentRenderer from '../../shared/lib/exposeComponentRenderer';
 import GenomicOverview from './genomicOverview/GenomicOverview';
 import mockData from './mock/sampleData.json';
-import Connector, { ClinicalInformationData } from "./Connector";
+import Connector, {ClinicalInformationData} from "./Connector";
 import {ClinicalData, SampleIdentifier, GeneticProfile, Sample} from "shared/api/generated/CBioPortalAPI";
-import { ClinicalDataBySampleId } from "../../shared/api/api-types-extended";
-import { RequestStatus } from "../../shared/api/api-types-extended";
-import { default as CBioPortalAPI, Mutation }  from "../../shared/api/generated/CBioPortalAPI";
+import {ClinicalDataBySampleId} from "../../shared/api/api-types-extended";
+import {RequestStatus} from "../../shared/api/api-types-extended";
+import {default as CBioPortalAPI, Mutation}  from "../../shared/api/generated/CBioPortalAPI";
 import FeatureTitle from '../../shared/components/featureTitle/FeatureTitle';
-import renderIf from 'render-if';
-import { If, Then, Else } from 'react-if';
+import {If, Then, Else} from 'react-if';
 import queryString from "query-string";
 import SampleManager from './sampleManager';
 import SelectCallback = ReactBootstrap.SelectCallback;
@@ -28,7 +27,7 @@ import {
 } from "../../shared/api/generated/CBioPortalAPIInternal";
 import PatientHeader from './patientHeader/PatientHeader';
 import {PaginationControls} from "../../shared/components/paginationControls/PaginationControls";
-import { PatientViewPageStore } from './clinicalInformation/PatientViewPageStore';
+import {PatientViewPageStore} from './clinicalInformation/PatientViewPageStore';
 import ClinicalInformationPatientTable from "./clinicalInformation/ClinicalInformationPatientTable";
 import ClinicalInformationSamples from "./clinicalInformation/ClinicalInformationSamplesTable";
 import {ICosmicData} from "../../shared/components/mutationTable/column/CosmicColumnFormatter";
@@ -36,13 +35,18 @@ import {keywordToCosmic, geneToMyCancerGenome, geneAndProteinPosToHotspots} from
 import {IVariantCountData, default as CohortColumnFormatter} from "./mutation/column/CohortColumnFormatter";
 import {observable} from "mobx";
 import {observer} from "mobx-react";
-import {IHotspotData, IMyCancerGenomeData, IMyCancerGenome, IOncoKbData} from "./mutation/column/AnnotationColumnFormatter";
+import {
+    IHotspotData,
+    IMyCancerGenomeData,
+    IMyCancerGenome,
+    IOncoKbData
+} from "./mutation/column/AnnotationColumnFormatter";
 import {getSpans} from './clinicalInformation/lib/clinicalAttributesUtil.js';
 import CopyNumberAlterationsTable from "./copyNumberAlterations/CopyNumberAlterationsTable";
 import CopyNumberTableWrapper from "./copyNumberAlterations/CopyNumberTableWrapper";
 import {reaction} from "mobx";
 import Timeline from "./timeline/Timeline";
-import {default as PatientViewMutationTable, MutationTableColumnType } from "./mutation/PatientViewMutationTable";
+import {default as PatientViewMutationTable, MutationTableColumnType} from "./mutation/PatientViewMutationTable";
 import PathologyReport from "./pathologyReport/PathologyReport";
 import {getCbioPortalApiUrl, getHotspotsApiUrl, getHotspots3DApiUrl} from "../../shared/api/urls";
 
@@ -63,8 +67,8 @@ export interface IPatientViewPageProps {
     clinicalDataStatus?: RequestStatus;
 }
 
-export type MrnaRankData = { [sampleId:string]: { [entrezGeneId:string]: {percentile:number, zScore:number}}};
-export type MutSigData = { [entrezGeneId:string]:{ qValue:number } }
+export type MrnaRankData = {[sampleId: string]: {[entrezGeneId: string]: {percentile: number, zScore: number}}};
+export type MutSigData = {[entrezGeneId: string]: {qValue: number}}
 
 interface IPatientViewState {
     mutationData: any;
@@ -79,22 +83,22 @@ interface IPatientViewState {
 @observer
 export default class PatientViewPage extends React.Component<IPatientViewPageProps, IPatientViewState> {
 
-    private studyId:string;
+    private studyId: string;
 
-    private patientId:string;
+    private patientId: string;
 
-    private mutationGeneticProfileId:string;
+    private mutationGeneticProfileId: string;
 
-    private tsClient:CBioPortalAPI;
+    private tsClient: CBioPortalAPI;
 
-    private hotspotsClient:CancerHotspotsAPI;
-    private hotspots3dClient:CancerHotspotsAPI;
+    private hotspotsClient: CancerHotspotsAPI;
+    private hotspots3dClient: CancerHotspotsAPI;
 
-    private tsInternalClient:CBioPortalAPIInternal;
+    private tsInternalClient: CBioPortalAPIInternal;
 
-    private patientIdsInCohort:string[];
+    private patientIdsInCohort: string[];
 
-    private mutationTableColumns:MutationTableColumnType[];
+    private mutationTableColumns: MutationTableColumnType[];
 
     constructor() {
 
@@ -106,7 +110,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             cosmicData: undefined,
             oncoKbData: undefined,
             mutSigData: undefined,
-            activeTabKey:1
+            activeTabKey: 1
         };
 
         this.handleSelect = this.handleSelect.bind(this);
@@ -125,12 +129,11 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         // set mode based on qs present
         if ('case_id' in qs) {
             patientViewPageStore.setPatientId(qs['case_id'] as string);
-        } else if ('sample_id' in qs){
+        } else if ('sample_id' in qs) {
             patientViewPageStore.setSampleId(qs['sample_id'] as string);
         } else {
             // error!
         }
-
 
 
         const qs_hash = queryString.parse((window as any).location.hash);
@@ -164,17 +167,17 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             MutationTableColumnType.SAMPLE_ID];
     }
 
-    fetchMyCancerGenomeData():Promise<IMyCancerGenomeData> {
+    fetchMyCancerGenomeData(): Promise<IMyCancerGenomeData> {
         return new Promise((resolve, reject) => {
-            const data:IMyCancerGenome[] = require('../../../resources/mycancergenome.json');
+            const data: IMyCancerGenome[] = require('../../../resources/mycancergenome.json');
             resolve(geneToMyCancerGenome(data));
         });
     }
 
-    fetchHotspotsData(mutations:Mutation[]):Promise<IHotspotData> {
+    fetchHotspotsData(mutations: Mutation[]): Promise<IHotspotData> {
         // do not retreive all available hotspots from the service,
         // only retrieve hotspots for the current genes on the page
-        const queryGenes:string[] = _.uniq(_.map(mutations, function(mutation:Mutation) {
+        const queryGenes: string[] = _.uniq(_.map(mutations, function (mutation: Mutation) {
             if (mutation && mutation.gene) {
                 return mutation.gene.hugoGeneSymbol;
             }
@@ -213,12 +216,14 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         });
     }
 
-    fetchCosmicData(mutations:Mutation[]):Promise<ICosmicData> {
-        const queryKeywords:string[] = _.uniq(_.map(mutations, (mutation:Mutation) => mutation.keyword));
+    fetchCosmicData(mutations: Mutation[]): Promise<ICosmicData> {
+        const queryKeywords: string[] = _.uniq(_.map(mutations, (mutation: Mutation) => mutation.keyword));
 
         return new Promise((resolve, reject) => {
             const promise = this.tsInternalClient.fetchCosmicCountsUsingPOST({
-                keywords: _.filter(queryKeywords, (query) => {return query != null;})
+                keywords: _.filter(queryKeywords, (query) => {
+                    return query != null;
+                })
             });
 
             promise.then((data) => {
@@ -229,20 +234,26 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     fetchCnaSegmentData(_sampleIds: string[]) {
 
-        const ids: SampleIdentifier[] = _sampleIds.map((id: string) => { return { sampleId:id, studyId: patientViewPageStore.studyId }; });
+        const ids: SampleIdentifier[] = _sampleIds.map((id: string) => {
+            return {sampleId: id, studyId: patientViewPageStore.studyId};
+        });
 
-        return this.tsClient.fetchCopyNumberSegmentsUsingPOST({sampleIdentifiers:ids, projection: 'DETAILED'});
+        return this.tsClient.fetchCopyNumberSegmentsUsingPOST({sampleIdentifiers: ids, projection: 'DETAILED'});
 
     }
 
     fetchMutationData(_sampleIds: string[]) {
 
-        let mutationDataPromise = this.tsClient.fetchMutationsInGeneticProfileUsingPOST({geneticProfileId: this.mutationGeneticProfileId, sampleIds: _sampleIds, projection: "DETAILED"});
+        let mutationDataPromise = this.tsClient.fetchMutationsInGeneticProfileUsingPOST({
+            geneticProfileId: this.mutationGeneticProfileId,
+            sampleIds: _sampleIds,
+            projection: "DETAILED"
+        });
         return mutationDataPromise;
 
     }
 
-    fetchMutSigData():Promise<MutSig[]> {
+    fetchMutSigData(): Promise<MutSig[]> {
         return this.tsInternalClient.getSignificantlyMutatedGenesUsingGET({studyId: patientViewPageStore.studyId});
     }
 
@@ -250,34 +261,38 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     public componentDidMount() {
 
         const reaction1 = reaction(
-            () => { return patientViewPageStore.mutationData.isComplete },
-            (isComplete:Boolean) => {
+            () => {
+                return patientViewPageStore.mutationData.isComplete
+            },
+            (isComplete: Boolean) => {
                 if (isComplete) {
-                    let sampleIds: string[] = patientViewPageStore.samples.result.map((sample:Sample) => sample.sampleId);  //this.props.samples.map((item: ClinicalDataBySampleId)=>item.id);
+                    let sampleIds: string[] = patientViewPageStore.samples.result.map((sample: Sample) => sample.sampleId);  //this.props.samples.map((item: ClinicalDataBySampleId)=>item.id);
 
                     this.fetchMyCancerGenomeData().then((_result) => {
                         this.setState(({myCancerGenomeData: _result} as IPatientViewState));
                     });
 
-                    this.fetchHotspotsData(patientViewPageStore.mutationData.result).then((hotspotsData:IHotspotData) => {
-                        this.setState(({ hotspotsData } as IPatientViewState));
+                    this.fetchHotspotsData(patientViewPageStore.mutationData.result).then((hotspotsData: IHotspotData) => {
+                        this.setState(({hotspotsData} as IPatientViewState));
                     });
-                    const hotspotDataPromise = this.fetchHotspotsData(patientViewPageStore.mutationData.result).then((hotspotsData:IHotspotData) =>
-                        this.setState(({ hotspotsData } as IPatientViewState)));
-                    hotspotDataPromise.catch(()=>{});
+                    const hotspotDataPromise = this.fetchHotspotsData(patientViewPageStore.mutationData.result).then((hotspotsData: IHotspotData) =>
+                        this.setState(({hotspotsData} as IPatientViewState)));
+                    hotspotDataPromise.catch(() => {
+                    });
 
-                    const cosmicDataPromise = this.fetchCosmicData(patientViewPageStore.mutationData.result).then((cosmicData:ICosmicData) =>
-                        this.setState(({ cosmicData } as IPatientViewState)));
-                    cosmicDataPromise.catch(()=>{});
+                    const cosmicDataPromise = this.fetchCosmicData(patientViewPageStore.mutationData.result).then((cosmicData: ICosmicData) =>
+                        this.setState(({cosmicData} as IPatientViewState)));
+                    cosmicDataPromise.catch(() => {
+                    });
 
-                    this.setState(({ mutationData : patientViewPageStore.mutationData.result } as IPatientViewState));
+                    this.setState(({mutationData: patientViewPageStore.mutationData.result} as IPatientViewState));
 
                     this.fetchMutSigData().then((_result) => {
-                        const data = _result.reduce((map:MutSigData, next:MutSig) => {
-                            map[next.entrezGeneId] = { qValue: next.qValue };
+                        const data = _result.reduce((map: MutSigData, next: MutSig) => {
+                            map[next.entrezGeneId] = {qValue: next.qValue};
                             return map;
                         }, {});
-                        this.setState(({ mutSigData: data } as IPatientViewState));
+                        this.setState(({mutSigData: data} as IPatientViewState));
                     });
                 } else {
 
@@ -306,11 +321,11 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     }
 
-    private handleSelect(key: number, e:React.SyntheticEvent<any>): void {
-        this.setState(({ activeTabKey : key } as IPatientViewState));
+    private handleSelect(key: number, e: React.SyntheticEvent<any>): void {
+        this.setState(({activeTabKey: key} as IPatientViewState));
     }
 
-    private handleSampleClick(id: string){
+    private handleSampleClick(id: string) {
         patientViewPageStore.setSampleId(id);
     }
 
@@ -332,14 +347,15 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             let patientData = patientViewPageStore.patientViewData.result!;
             sampleManager = new SampleManager(patientData.samples!);
 
-            sampleHeader = _.map(sampleManager!.samples,(sample: ClinicalDataBySampleId) => {
+            sampleHeader = _.map(sampleManager!.samples, (sample: ClinicalDataBySampleId) => {
                 const clinicalDataLegacy: any = _.fromPairs(sample.clinicalData.map((x) => [x.clinicalAttributeId, x.value]));
                 return (
                     <div className="patientSample">
                         {  sampleManager!.getComponentForSample(sample.id, true) }
                         {'\u00A0'}
                         <a href="javascript:void(0)" onClick={()=>{ this.handleSampleClick(sample.id) }}>{sample.id}</a>
-                        <span className='clinical-spans' dangerouslySetInnerHTML={{__html:getSpans(clinicalDataLegacy, 'lgg_ucsf_2014')}}></span>
+                        <span className='clinical-spans'
+                              dangerouslySetInnerHTML={{__html:getSpans(clinicalDataLegacy, 'lgg_ucsf_2014')}}></span>
                     </div>
 
                 )
@@ -395,120 +411,134 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             </tr>
                             <tr>
                                 <td>Samples:</td>
-                                <td><div className="patientSamples">{sampleHeader}</div></td>
+                                <td>
+                                    <div className="patientSamples">{sampleHeader}</div>
+                                </td>
                             </tr>
                         </table>
                     </div>
-                    )
+                )
                 }
+                <If condition={patientViewPageStore.patientViewData.isComplete}>
+                    <Then>
+                        <Tabs animation={false} activeKey={this.state.activeTabKey} id="patientViewPageTabs"
+                              onSelect={this.handleSelect as SelectCallback} className="mainTabs" unmountOnExit={true}>
 
-                <Tabs animation={false} activeKey={this.state.activeTabKey} id="patientViewPageTabs" onSelect={this.handleSelect as SelectCallback} className="mainTabs" unmountOnExit={true}>
+                            <Tab eventKey={12} id="summaryTab" title="Summary">
 
-                    <Tab eventKey={12} id="summaryTab" title="Summary">
+                                {
+                                    (!!sampleManager && patientViewPageStore.clinicalEvents.isComplete) && (
 
-                        {
-                            (!!sampleManager && patientViewPageStore.clinicalEvents.isComplete) && (
+                                        <div>
+                                            <FeatureTitle title="Clinical Timeline" isLoading={false}/>
 
-                                <div>
-                                    <FeatureTitle title="Clinical Timeline" isLoading={false} />
-
-                                    <Timeline store={patientViewPageStore} sampleManager={ sampleManager } />
-                                    <hr />
-                                </div>
-                            )
+                                            <Timeline store={patientViewPageStore} sampleManager={ sampleManager }/>
+                                            <hr />
+                                        </div>
+                                    )
 
 
-                        }
-
-                        <FeatureTitle title="Genomic Data" isLoading={ (patientViewPageStore.mutationData.isPending || patientViewPageStore.cnaSegments.isPending) } />
-
-                        {
-                            (patientViewPageStore.mutationData.isComplete && patientViewPageStore.cnaSegments.isComplete && sampleManager) && (
-                                <GenomicOverview
-                                    mutations={patientViewPageStore.mutationData.result}
-                                    cnaSegments={patientViewPageStore.cnaSegments.result}
-                                    sampleOrder={sampleManager.sampleIndex}
-                                    sampleLabels={sampleManager.sampleLabels}
-                                    sampleColors={sampleManager.sampleColors}
-                                    sampleManager={sampleManager}
-                                />
-                            )
-                        }
-
-                        <hr />
-
-                        <FeatureTitle title="Mutations" isLoading={ !this.state.mutationData } />
-                        {
-                            (this.state.mutationData && !!sampleManager) && (
-                                <PatientViewMutationTable
-                                    sampleManager={sampleManager}
-                                    sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
-                                    variantCountCache={patientViewPageStore.variantCountCache}
-                                    discreteCNACache={patientViewPageStore.discreteCNACache}
-                                    mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}
-                                    mrnaExprRankGeneticProfileId={patientViewPageStore.mrnaRankGeneticProfileId.result || undefined}
-                                    discreteCNAGeneticProfileId={patientViewPageStore.geneticProfileIdDiscrete.result}
-                                    data={patientViewPageStore.mergedMutationData}
-                                    mutSigData={this.state.mutSigData}
-                                    myCancerGenomeData={this.state.myCancerGenomeData}
-                                    hotspots={this.state.hotspotsData}
-                                    cosmicData={this.state.cosmicData}
-                                    oncoKbData={patientViewPageStore.oncoKbData.result}
-                                    pmidData={patientViewPageStore.pmidData.result}
-                                    columns={this.mutationTableColumns}
-                                />
-                            )
-                        }
-                    </Tab>
-                    <Tab eventKey={1} id="discreteCNAData" title="Copy Number Alterations">
-
-                        <CopyNumberTableWrapper store={patientViewPageStore} />
-
-                    </Tab>
-                    {(patientViewPageStore.pageMode === 'patient') && (
-                        <Tab eventKey={3} id="clinicalDataTab" title="Clinical Data">
-
-                            <div className="clearfix">
-                                <FeatureTitle title="Patient" isLoading={ patientViewPageStore.clinicalDataPatient.isPending } className="pull-left" />
-                                { (patientViewPageStore.clinicalDataPatient.isComplete) && (
-                                    <ClinicalInformationPatientTable showTitleBar={true}
-                                                                     data={patientViewPageStore.clinicalDataPatient.result} />
-
-                                )
                                 }
-                            </div>
 
-                            <br />
+                                <FeatureTitle title="Genomic Data"
+                                              isLoading={ (patientViewPageStore.mutationData.isPending || patientViewPageStore.cnaSegments.isPending) }/>
 
-                            <div className="clearfix">
-                                <FeatureTitle title="Samples" isLoading={ patientViewPageStore.clinicalDataGroupedBySample.isPending } className="pull-left" />
-                                {  (patientViewPageStore.clinicalDataGroupedBySample.isComplete) && (
-                                    <ClinicalInformationSamples
-                                        samples={patientViewPageStore.clinicalDataGroupedBySample.result!}/>
-                                )
+                                {
+                                    (patientViewPageStore.mutationData.isComplete && patientViewPageStore.cnaSegments.isComplete && sampleManager) && (
+                                        <GenomicOverview
+                                            mutations={patientViewPageStore.mutationData.result}
+                                            cnaSegments={patientViewPageStore.cnaSegments.result}
+                                            sampleOrder={sampleManager.sampleIndex}
+                                            sampleLabels={sampleManager.sampleLabels}
+                                            sampleColors={sampleManager.sampleColors}
+                                            sampleManager={sampleManager}
+                                        />
+                                    )
                                 }
-                            </div>
+
+                                <hr />
+
+                                <FeatureTitle title="Mutations" isLoading={ !this.state.mutationData }/>
+                                {
+                                    (this.state.mutationData && !!sampleManager) && (
+                                        <PatientViewMutationTable
+                                            sampleManager={sampleManager}
+                                            sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
+                                            variantCountCache={patientViewPageStore.variantCountCache}
+                                            discreteCNACache={patientViewPageStore.discreteCNACache}
+                                            mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}
+                                            mrnaExprRankGeneticProfileId={patientViewPageStore.mrnaRankGeneticProfileId.result || undefined}
+                                            discreteCNAGeneticProfileId={patientViewPageStore.geneticProfileIdDiscrete.result}
+                                            data={patientViewPageStore.mergedMutationData}
+                                            mutSigData={this.state.mutSigData}
+                                            myCancerGenomeData={this.state.myCancerGenomeData}
+                                            hotspots={this.state.hotspotsData}
+                                            cosmicData={this.state.cosmicData}
+                                            oncoKbData={patientViewPageStore.oncoKbData.result}
+                                            pmidData={patientViewPageStore.pmidData.result}
+                                            columns={this.mutationTableColumns}
+                                        />
+                                    )
+                                }
+                            </Tab>
+                            <Tab eventKey={1} id="discreteCNAData" title="Copy Number Alterations">
+
+                                <CopyNumberTableWrapper store={patientViewPageStore}/>
+
+                            </Tab>
+                            {(patientViewPageStore.pageMode === 'patient') && (
+                                <Tab eventKey={3} id="clinicalDataTab" title="Clinical Data">
+
+                                    <div className="clearfix">
+                                        <FeatureTitle title="Patient"
+                                                      isLoading={ patientViewPageStore.clinicalDataPatient.isPending }
+                                                      className="pull-left"/>
+                                        { (patientViewPageStore.clinicalDataPatient.isComplete) && (
+                                            <ClinicalInformationPatientTable showTitleBar={true}
+                                                                             data={patientViewPageStore.clinicalDataPatient.result}/>
+
+                                        )
+                                        }
+                                    </div>
+
+                                    <br />
+
+                                    <div className="clearfix">
+                                        <FeatureTitle title="Samples"
+                                                      isLoading={ patientViewPageStore.clinicalDataGroupedBySample.isPending }
+                                                      className="pull-left"/>
+                                        {  (patientViewPageStore.clinicalDataGroupedBySample.isComplete) && (
+                                            <ClinicalInformationSamples
+                                                samples={patientViewPageStore.clinicalDataGroupedBySample.result!}/>
+                                        )
+                                        }
+                                    </div>
 
 
-                        </Tab>
-                    )}
+                                </Tab>
+                            )}
 
 
-                    {  (patientViewPageStore.pathologyReport.isComplete && patientViewPageStore.pathologyReport.result.length > 0 ) &&
-                    (<Tab eventKey={8} id="summarTab" title="Pathology Report">
-                        <PathologyReport  pdfs={patientViewPageStore.pathologyReport.result} />
-                    </Tab>)
-                    }
+                            {  (patientViewPageStore.pathologyReport.isComplete && patientViewPageStore.pathologyReport.result.length > 0 ) &&
+                            (<Tab eventKey={8} id="summarTab" title="Pathology Report">
+                                <PathologyReport pdfs={patientViewPageStore.pathologyReport.result}/>
+                            </Tab>)
+                            }
 
-                    { (patientViewPageStore.hasTissueImageIFrameUrl.isComplete && patientViewPageStore.hasTissueImageIFrameUrl.result) &&
-                        (<Tab eventKey={4} id="tissueImageTab" title="Tissue Image">
-                            <iframe style={{width:'100%', height:700, border:'none'}}
-                                    src="http://cancer.digitalslidearchive.net/index_mskcc.php?slide_name=TCGA-CG-5721"></iframe>
-                        </Tab>)
-                    }
+                            { (patientViewPageStore.hasTissueImageIFrameUrl.isComplete && patientViewPageStore.hasTissueImageIFrameUrl.result) &&
+                            (<Tab eventKey={4} id="tissueImageTab" title="Tissue Image">
+                                <iframe style={{width:'100%', height:700, border:'none'}}
+                                        src="http://cancer.digitalslidearchive.net/index_mskcc.php?slide_name=TCGA-CG-5721"></iframe>
+                            </Tab>)
+                            }
 
-                </Tabs>
+                        </Tabs>
+                    </Then>
+                    <Else>
+                        <Spinner style={{textAlign:'center'}} spinnerName="three-bounce" noFadeIn/>
+                    </Else>
 
+                </If>
 
             </div>
         );
