@@ -84,6 +84,10 @@ export default class StudyListLogic
 			if (!this.shouldConsiderNode(node))
 				return false;
 
+			// hack - shouldConsiderNode() call above does all the required filtering
+			if (this.store.showSelectedStudiesOnly)
+				return true;
+
 			// if no search text is entered, include all nodes
 			if (!this.store.searchText)
 				return true;
