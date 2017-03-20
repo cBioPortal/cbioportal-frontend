@@ -10,6 +10,7 @@ import {serializeData} from "shared/lib/Serializer";
 import DefaultTooltip from "../DefaultTooltip";
 import {ButtonToolbar} from "react-bootstrap";
 import * as _ from "lodash";
+import { If } from 'react-if';
 
 export type Column<T> = {
     name: string;
@@ -75,6 +76,10 @@ class MSKTableStore<T> {
     public set itemsPerPage(i:number) {
         this._itemsPerPage = i;
         this.page = this.page; // trigger clamping in page setter
+    }
+
+    @computed get showingAllRows(): Boolean {
+        return this.sortedFilteredData.length <= this.itemsPerPage || this.itemsPerPage === -1
     }
 
     @computed public get page() {
@@ -354,6 +359,21 @@ export default class MSKTable<T> extends React.Component<MSKTableProps<T>, {}> {
         this.store.setProps(nextProps);
     }
 
+    buildPaginationControls(className:string | undefined, style: {[k:string]:string | number}, textBetweenButtons:string ): JSX.Element {
+        return <PaginationControls
+            className={className}
+            itemsPerPage={this.store.itemsPerPage}
+            currentPage={this.store.page}
+            onChangeItemsPerPage={this.handlers.changeItemsPerPage}
+            onPreviousPageClick={this.handlers.decPage}
+            onNextPageClick={this.handlers.incPage}
+            textBetweenButtons={textBetweenButtons}
+            previousPageDisabled={this.store.page === 0}
+            style={style}
+            nextPageDisabled={this.store.page === this.store.maxPage}
+        />
+    }
+
     render() {
         let firstVisibleItemDisp;
         let lastVisibleItemDisp;
@@ -366,22 +386,12 @@ export default class MSKTable<T> extends React.Component<MSKTableProps<T>, {}> {
         }
         const textBetweenButtons = `${firstVisibleItemDisp}-${lastVisibleItemDisp} of ${this.store.sortedFilteredData.length}`;
         return (<div>
-            <ButtonToolbar>
-                <div className={`form-group has-feedback input-group-sm`} style={{ display:'inline-block', marginLeft:10  }}>
+            <ButtonToolbar style={{marginLeft:0}}>
+                <div className={`form-group has-feedback input-group-sm`} style={{ display:'inline-block' }}>
                     <input type="text" onInput={this.handlers.filterInput} className="form-control tableSearchInput" style={{ width:200 }}  />
                     <span className="fa fa-search form-control-feedback" aria-hidden="true"></span>
                 </div>
-                <PaginationControls
-                    className="pull-right"
-                    itemsPerPage={this.store.itemsPerPage}
-                    currentPage={this.store.page}
-                    onChangeItemsPerPage={this.handlers.changeItemsPerPage}
-                    onPreviousPageClick={this.handlers.decPage}
-                    onNextPageClick={this.handlers.incPage}
-                    textBetweenButtons={textBetweenButtons}
-                    previousPageDisabled={this.store.page === 0}
-                    nextPageDisabled={this.store.page === this.store.maxPage}
-                />
+                { this.buildPaginationControls('pull-right', {marginLeft:5}, textBetweenButtons) }
                 <ColumnVisibilityControls
                     className="pull-right"
                     columnVisibility={this.colVisProp}
@@ -397,6 +407,13 @@ export default class MSKTable<T> extends React.Component<MSKTableProps<T>, {}> {
                 headers={this.store.headers}
                 rows={this.store.rows}
             />
+
+            <If condition={this.store.showingAllRows === false}>
+            <ButtonToolbar style={{marginLeft:0}} className='text-center'>
+                { this.buildPaginationControls(undefined, {display:'inline-block'}, textBetweenButtons) }
+            </ButtonToolbar>
+            </If>
+
         </div>);
     }
 }
