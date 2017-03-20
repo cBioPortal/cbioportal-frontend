@@ -6,7 +6,7 @@ import MutationInformationContainer from './mutation/MutationInformationContaine
 import exposeComponentRenderer from '../../shared/lib/exposeComponentRenderer';
 import GenomicOverview from './genomicOverview/GenomicOverview';
 import mockData from './mock/sampleData.json';
-import {ClinicalData, SampleIdentifier, GeneticProfile, Sample} from "shared/api/generated/CBioPortalAPI";
+import {ClinicalData, SampleIdentifier, GeneticProfile, Sample, CancerStudy} from "shared/api/generated/CBioPortalAPI";
 import { ClinicalDataBySampleId } from "../../shared/api/api-types-extended";
 import { RequestStatus } from "../../shared/api/api-types-extended";
 import { default as CBioPortalAPI, Mutation }  from "../../shared/api/generated/CBioPortalAPI";
@@ -362,6 +362,11 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         let sampleManager: SampleManager | null = null;
         let sampleHeader: (JSX.Element | undefined)[] | null = null;
         let cohortNav: JSX.Element | null = null;
+        let studyName: string | null = null;
+
+        if (patientViewPageStore.studyMetaData.isComplete) {
+            studyName = (patientViewPageStore.studyMetaData.result as CancerStudy).name;
+        }
 
         if (patientViewPageStore.patientViewData.isComplete) {
             let patientData = patientViewPageStore.patientViewData.result!;
@@ -380,6 +385,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                 )
             });
+
+
         }
 
         if (patientViewPageStore.patientIdsInCohort && patientViewPageStore.patientIdsInCohort.length > 0) {
@@ -412,13 +419,18 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         return (
             <div>
 
-                <If condition={(cohortNav != null)}>
-                    <div className="clearfix">
-                        <div className="pull-right" style={{marginBottom:20}}>
-                            {cohortNav}
+                <div className="studyMetaBar">
+                    <If condition={(cohortNav != null)}>
+                        <div>
+                            <div>
+                                {cohortNav}
+                            </div>
                         </div>
-                    </div>
-                </If>
+                    </If>
+
+                    <div>{ studyName }</div>
+                </div>
+
 
                 {  (patientViewPageStore.patientViewData.isComplete) && (
                     <div className="patientPageHeader clearfix">
