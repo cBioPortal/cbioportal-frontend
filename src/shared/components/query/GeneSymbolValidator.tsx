@@ -42,6 +42,9 @@ export default class GeneSymbolValidator extends QueryStoreComponent<{}, {}>
 		if (!this.store.oql.query.length)
 			return null;
 
+		if (this.store.genes.isError)
+			return <AsyncStatus promise={this.store.genes}/>;
+
 		if (this.store.genes.isPending && this.store.genes.result.suggestions.length == 0)
 			return (
 				<div className={styles.GeneSymbolValidator}>

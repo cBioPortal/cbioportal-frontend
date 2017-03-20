@@ -18,12 +18,12 @@ import CaseSetSelector from "./CaseSetSelector";
 const styles = styles_any as {
 	QueryContainer: string,
 	queryContainerContent: string,
+	errorMessage: string,
 	downloadSubmitExplanation: string,
 	transposeDataMatrix: string,
 	submitRow: string,
 	submit: string,
 	genomeSpace: string,
-	errorMessage: string,
 };
 
 interface QueryContainerProps
@@ -42,16 +42,6 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
 
     render():JSX.Element
     {
-        let error = this.store.cancerTypes.error
-        	|| this.store.cancerStudies.error
-        	|| this.store.geneticProfiles.error
-        	|| this.store.sampleLists.error
-        	|| this.store.mutSigForSingleStudy.error
-        	|| this.store.gisticForSingleStudy.error
-        	|| this.store.genes.error;
-        if (error)
-			return <span className={styles.errorMessage}>{error.toString()}</span>;
-
         return (
 			<FlexCol padded overflow className={styles.QueryContainer}>
 				<CancerStudySelector/>
@@ -84,6 +74,12 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
 					>
 						Transpose data matrix
 					</LabeledCheckbox>
+				)}
+
+				{!!(this.store.submitError) && (
+					<span className={styles.errorMessage}>
+						{this.store.submitError}
+					</span>
 				)}
 
 				<FlexRow padded className={styles.submitRow}>

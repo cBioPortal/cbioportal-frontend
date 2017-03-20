@@ -214,7 +214,6 @@ export class QueryStore
 	@observable showSelectedStudiesOnly:boolean = false;
 	@observable.shallow selectedCancerTypeIds:string[] = [];
 	@observable clickAgainToDeselectSingle:boolean = true;
-	@observable submitError = '';
 
 	@observable private _maxTreeDepth:number = 3;
 	@computed get maxTreeDepth()
@@ -576,6 +575,30 @@ export class QueryStore
 
 	// SUBMIT
 
+	@computed get submitError()
+	{
+		let haveExpInQuery = this.oql.query.some(result => {
+			return (result.alterations || []).some(alt => alt.alteration_type === 'exp');
+		});
+
+		if (!this.selectedStudyIds.length)
+			return "Please select one or more cancer studies.";
+
+		if (this.singleSelectedStudyId)
+		{
+			let expProfileSelected = this.selectedProfileIds.some(id => {
+				let profile = this.dict_geneticProfileId_geneticProfile[id];
+				return !!profile && profile.geneticAlterationType === 'MRNA_EXPRESSION';
+			});
+			if (haveExpInQuery && !expProfileSelected)
+				return "Expression specified in the list of genes, but not selected in the Genetic Profile Checkboxes.";
+		}
+		else if (haveExpInQuery)
+		{
+			return "Expression filtering in the gene list is not supported when doing cross cancer queries.";
+		}
+	}
+
 	private readonly dict_geneticAlterationType_filenameSuffix:{[K in GeneticProfile['geneticAlterationType']]?: string} = {
 		"MUTATION_EXTENDED": 'mutations',
 		"COPY_NUMBER_ALTERATION": 'cna',
@@ -755,27 +778,8 @@ export class QueryStore
 			return;
 		}
 
-		let haveExpInQuery = this.oql.query.some(result => {
-			return (result.alterations || []).some(alt => alt.alteration_type === 'exp');
-		});
-
-		if (this.singleSelectedStudyId)
-		{
-			let expProfileSelected = this.selectedProfileIds.some(id => {
-				let profile = this.dict_geneticProfileId_geneticProfile[id];
-				return !!profile && profile.geneticAlterationType === 'MRNA_EXPRESSION';
-			});
-			if (haveExpInQuery && !expProfileSelected)
-			{
-				this.submitError = "Expression specified in the list of genes, but not selected in the Genetic Profile Checkboxes.";
-				return;
-			}
-		}
-		else if (haveExpInQuery)
-		{
-			this.submitError = "Expression filtering in the gene list is not supported when doing cross cancer queries.";
+		if (this.submitError)
 			return;
-		}
 
 		let urlParams = await this.getUrlParams();
 		let historyUrl = URL.format({...urlParams, pathname: window.location.href.split('?')[0]});

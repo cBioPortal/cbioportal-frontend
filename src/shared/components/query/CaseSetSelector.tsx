@@ -7,6 +7,7 @@ import {FlexCol} from "../flexbox/FlexBox";
 import {QueryStore, QueryStoreComponent} from "./QueryStore";
 import {getStudyViewUrl} from "../../api/urls";
 import DefaultTooltip from "../DefaultTooltip";
+import AsyncStatus from "../asyncStatus/AsyncStatus";
 
 const styles = styles_any as {
 	CaseSetSelector: string,
@@ -59,16 +60,18 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 		return (
 			<FlexCol padded overflow className={styles.CaseSetSelector}>
 				<h2>Select Patient/Case Set:</h2>
-				<ReactSelect
-					className={styles.ReactSelect}
-					value={this.store.selectedSampleListId}
-					options={this.caseSetOptions}
-					clearable={this.store.selectedSampleListId != this.store.defaultSelectedSampleListId}
-					onChange={option => {
-						let value = option ? option.value : undefined;
-						this.store.selectedSampleListId = value === CUSTOM_CASE_LIST_ID ? '' : value;
-					}}
-				/>
+				<AsyncStatus promise={this.store.sampleLists}>
+					<ReactSelect
+						className={styles.ReactSelect}
+						value={this.store.selectedSampleListId}
+						options={this.caseSetOptions}
+						clearable={this.store.selectedSampleListId != this.store.defaultSelectedSampleListId}
+						onChange={option => {
+							let value = option ? option.value : undefined;
+							this.store.selectedSampleListId = value === CUSTOM_CASE_LIST_ID ? '' : value;
+						}}
+					/>
+				</AsyncStatus>
 				<a href={getStudyViewUrl(this.store.singleSelectedStudyId)}>To build your own case set, try out our enhanced Study View.</a>
 
 				{!!(!this.store.selectedSampleListId) && (
