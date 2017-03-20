@@ -217,6 +217,10 @@ export class PatientViewPageStore
         invoke: async () => groupByEntityId(this.clinicalDataForSamples.result)
     }, []);
 
+    readonly studyMetaData = remoteData({
+        invoke: async () => client.getStudyUsingGET({ studyId:this.studyId })
+    },{});
+
     readonly patientViewData = remoteData({
         await: () => [
             this.clinicalDataPatient,
