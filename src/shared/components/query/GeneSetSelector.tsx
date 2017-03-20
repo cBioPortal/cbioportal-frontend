@@ -1,5 +1,6 @@
 import * as React from 'react';
 import * as styles_any from './styles.module.scss';
+import {Modal} from 'react-bootstrap';
 import ReactSelect from 'react-select';
 import {observer} from "mobx-react";
 import {computed} from 'mobx';
@@ -10,9 +11,13 @@ import classNames from "../../lib/classNames";
 import AsyncStatus from "../asyncStatus/AsyncStatus";
 import {getOncoQueryDocUrl} from "../../api/urls";
 import {QueryStoreComponent} from "./QueryStore";
+import MutSigGeneSelector from "./MutSigGeneSelector";
+import GisticGeneSelector from "./GisticGeneSelector";
 
 const styles = styles_any as {
 	GeneSetSelector: string,
+	MutSigGeneSelectorWindow: string,
+	GisticGeneSelectorWindow: string,
 	ReactSelect: string,
 	buttonRow: string,
 	geneSet: string,
@@ -103,6 +108,46 @@ export default class GeneSetSelector extends QueryStoreComponent<GeneSetSelector
 				/>
 
 				<GeneSymbolValidator/>
+
+				<Modal
+					className={styles.MutSigGeneSelectorWindow}
+					show={this.store.showMutSigPopup}
+					onHide={() => this.store.showMutSigPopup = false}
+				>
+					<Modal.Header closeButton>
+						<Modal.Title>Recently Mutated Genes</Modal.Title>
+					</Modal.Header>
+					<Modal.Body>
+						<MutSigGeneSelector
+							initialSelection={this.store.geneIds}
+							data={this.store.mutSigForSingleStudy.result}
+							onSelect={map_geneSymbol_selected => {
+								this.store.applyGeneSelection(map_geneSymbol_selected);
+								this.store.showMutSigPopup = false;
+							}}
+						/>
+					</Modal.Body>
+				</Modal>
+
+				<Modal
+					className={styles.GisticGeneSelectorWindow}
+					show={this.store.showGisticPopup}
+					onHide={() => this.store.showGisticPopup = false}
+				>
+					<Modal.Header closeButton>
+						<Modal.Title>Recurrent Copy Number Alterations (Gistic)</Modal.Title>
+					</Modal.Header>
+					<Modal.Body>
+						<GisticGeneSelector
+							initialSelection={this.store.geneIds}
+							data={this.store.gisticForSingleStudy.result}
+							onSelect={map_geneSymbol_selected => {
+								this.store.applyGeneSelection(map_geneSymbol_selected);
+								this.store.showGisticPopup = false;
+							}}
+						/>
+					</Modal.Body>
+				</Modal>
 			</FlexCol>
 		);
 	}

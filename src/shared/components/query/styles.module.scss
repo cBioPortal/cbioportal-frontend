@@ -406,11 +406,16 @@
 }
 
 div.MutSigGeneSelectorWindow {
-  width: 650px;
+  div:global(.modal-dialog) {
+    width: 650px;
+  }
 
   div.MutSigGeneSelector {
     margin: 10px;
     flex: 1;
+    display: flex;
+    flex-direction: column;
+
     :global(.table) {
       margin: 0;
       & > thead > tr > th {
@@ -436,17 +441,21 @@ div.MutSigGeneSelectorWindow {
       }
     }
     button.selectButton {
-      float: right;
+      align-self: flex-end;
     }
   }
 }
 
 div.GisticGeneSelectorWindow {
-  width: 800px;
+  div:global(.modal-dialog) {
+    width: 800px;
+  }
 
   div.GisticGeneSelector {
     margin: 10px;
     flex: 1;
+    display: flex;
+    flex-direction: column;
 
     div.header.amp.del {
       float: left;
@@ -463,7 +472,6 @@ div.GisticGeneSelectorWindow {
 
     div.gisticTable {
       margin: 10px 0;
-      max-height: 400px;
       overflow: auto;
       :global(.table) {
         margin: 0;
@@ -532,7 +540,7 @@ div.GisticGeneSelectorWindow {
     }
 
     button.selectButton {
-      float: right;
+      align-self: flex-end;
     }
   }
 }

@@ -1,7 +1,5 @@
 import * as _ from "lodash";
 import * as React from "react";
-import Spinner from "react-spinkit";
-import Dictionary = _.Dictionary;
 import CancerStudySelector from "./CancerStudySelector";
 import {FlexRow, FlexCol} from "../flexbox/FlexBox";
 import * as styles_any from './styles.module.scss';
@@ -11,10 +9,6 @@ import {observable, computed, action} from 'mobx';
 import {observer} from "mobx-react";
 import DataTypePrioritySelector from "./DataTypePrioritySelector";
 import GeneSetSelector from "./GeneSetSelector";
-import MutSigGeneSelector from "./MutSigGeneSelector";
-import GisticGeneSelector from "./GisticGeneSelector";
-import PopupWindow from "../popupWindow/PopupWindow";
-import AsyncStatus from "../asyncStatus/AsyncStatus";
 import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
 import {QueryStore} from "./QueryStore";
 import {providesStoreContext} from "../../lib/ContextUtils";
@@ -24,8 +18,6 @@ import CaseSetSelector from "./CaseSetSelector";
 const styles = styles_any as {
 	QueryContainer: string,
 	queryContainerContent: string,
-	MutSigGeneSelectorWindow: string,
-	GisticGeneSelectorWindow: string,
 	downloadSubmitExplanation: string,
 	transposeDataMatrix: string,
 	submitRow: string,
@@ -77,40 +69,6 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
 				)}
 
 				<GeneSetSelector/>
-
-				{!!(this.store.showMutSigPopup) && (
-					<PopupWindow
-						className={styles.MutSigGeneSelectorWindow}
-						windowTitle="Recurrently Mutated Genes"
-						onClickClose={() => this.store.showMutSigPopup = false}
-					>
-						<MutSigGeneSelector
-							initialSelection={this.store.geneIds}
-							data={this.store.mutSigForSingleStudy.result}
-							onSelect={map_geneSymbol_selected => {
-								this.store.applyGeneSelection(map_geneSymbol_selected);
-								this.store.showMutSigPopup = false;
-							}}
-						/>
-					</PopupWindow>
-				)}
-
-				{!!(this.store.showGisticPopup) && (
-					<PopupWindow
-						className={styles.GisticGeneSelectorWindow}
-						windowTitle="Recurrent Copy Number Alterations (Gistic)"
-						onClickClose={() => this.store.showGisticPopup = false}
-					>
-						<GisticGeneSelector
-							initialSelection={this.store.geneIds}
-							data={this.store.gisticForSingleStudy.result}
-							onSelect={map_geneSymbol_selected => {
-								this.store.applyGeneSelection(map_geneSymbol_selected);
-								this.store.showGisticPopup = false;
-							}}
-						/>
-					</PopupWindow>
-				)}
 
 				{!!(this.store.forDownloadTab) && (
 					<span className={styles.downloadSubmitExplanation}>
