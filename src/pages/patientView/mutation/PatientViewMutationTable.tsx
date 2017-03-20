@@ -114,9 +114,11 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
     @observable private _columns:{[columnEnum:number]:MutationTableColumn};
 
     constructor(props:PatientViewMutationTableProps) {
+
         super(props);
         this._columns = {};
         this.generateColumns();
+
     }
 
     private getSamples():string[] {
@@ -384,7 +386,7 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
         let orderedColumns = _.sortBy(this.props.columns, (c:MutationTableColumnType)=>this._columns[c].order);
         return orderedColumns.reduce((columns:Column<Mutation[]>[], next:MutationTableColumnType)=>{
             let shouldAdd = true;
-            if (next === MutationTableColumnType.MRNA_EXPR &&
+            if ((next === MutationTableColumnType.MRNA_EXPR || next === MutationTableColumnType.COPY_NUM) &&
                 (!this.props.mrnaExprRankGeneticProfileId
                 || this.getSamples().length > 1)) {
                 shouldAdd = false;
