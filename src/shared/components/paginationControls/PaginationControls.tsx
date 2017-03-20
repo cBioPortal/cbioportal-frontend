@@ -50,7 +50,7 @@ export class PaginationControls extends React.Component<IPaginationControlsProps
         showFirstPage:false,
         showLastPage:false,
         className: "",
-        marginLeft: 5,
+        marginLeft: 0,
         previousPageDisabled:false,
         nextPageDisabled:false,
         pageNumberEditable: false
