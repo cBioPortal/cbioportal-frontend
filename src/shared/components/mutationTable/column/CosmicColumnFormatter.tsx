@@ -4,8 +4,8 @@ import DefaultTooltip from 'shared/components/DefaultTooltip';
 import * as _ from 'lodash';
 import {IColumnFormatterData} from "../../enhancedReactTable/IColumnFormatter";
 import {MutationTableRowData} from "../IMutationTableProps";
-import {Mutation} from "../../../api/CBioPortalAPI";
-import {CosmicMutation} from "../../../api/CBioPortalAPIInternal";
+import {Mutation} from "../../../api/generated/CBioPortalAPI";
+import {CosmicMutation} from "../../../api/generated/CBioPortalAPIInternal";
 import CosmicMutationTable from "../../cosmic/CosmicMutationTable";
 import styles from "./cosmic.module.scss";
 
@@ -23,21 +23,7 @@ export function placeArrow(tooltipEl: any) {
  */
 export default class CosmicColumnFormatter
 {
-    public static getData(data:IColumnFormatterData<MutationTableRowData>, cosmicData?:ICosmicData)
-    {
-        let cosmic;
-
-        if (data.columnData) {
-            cosmic = data.columnData;
-        }
-        else {
-            cosmic = CosmicColumnFormatter.getDataFromRow(data.rowData, cosmicData);
-        }
-
-        return cosmic;
-    }
-
-    public static getDataFromRow(rowData:MutationTableRowData|undefined, cosmicData?:ICosmicData)
+    public static getData(rowData:Mutation[]|undefined, cosmicData?:ICosmicData)
     {
         let value: CosmicMutation[] | null = null;
 
@@ -75,9 +61,28 @@ export default class CosmicColumnFormatter
         }
     }
 
-    public static renderFunction(data:IColumnFormatterData<MutationTableRowData>, columnProps:any)
+    public static getSortValue(data:Mutation[], cosmicData?:ICosmicData):number {
+        const cosmic:CosmicMutation[]|null = CosmicColumnFormatter.getData(data, cosmicData);
+        let value:number = Number.POSITIVE_INFINITY;
+
+        // calculate sum of the all counts
+        if (cosmic)
+        {
+            if (cosmic.length > 0) {
+                value = _.reduce(_.map(cosmic, "count"), (sum:number, count:number) => {
+                    return sum + count;
+                }, 0);
+            } else {
+                value = 0;
+            }
+        }
+
+        return value;
+    }
+
+    public static renderFunction(data:Mutation[], cosmicData?:ICosmicData)
     {
-        const cosmic:CosmicMutation[]|null = CosmicColumnFormatter.getData(data, columnProps.cosmicData);
+        const cosmic:CosmicMutation[]|null = CosmicColumnFormatter.getData(data, cosmicData);
 
         let value:number = -1;
         let display:string = "";
@@ -126,10 +131,6 @@ export default class CosmicColumnFormatter
         }
 
         // TODO if(!columnProps.cosmicData) -> loader image
-        return (
-            <Td key={data.name} column={data.name} value={value}>
-                {content}
-            </Td>
-        );
+        return content;
     }
 }

@@ -1,6 +1,6 @@
 import * as React  from 'react';
 import * as _ from 'lodash';
-import {CosmicMutation} from "../../api/CBioPortalAPIInternal";
+import {CosmicMutation} from "../../api/generated/CBioPortalAPIInternal";
 import EnhancedReactTable from "../enhancedReactTable/EnhancedReactTable";
 import {IEnhancedReactTableProps} from "../enhancedReactTable/IEnhancedReactTableProps";
 import ProteinChangeColumnFormatter from "../mutationTable/column/ProteinChangeColumnFormatter";

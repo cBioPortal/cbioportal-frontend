@@ -4,7 +4,7 @@ import TableHeaderControls from "./TableHeaderControls";
 import sinon from 'sinon';
 import {mount, shallow, ReactWrapper} from 'enzyme';
 import {ColumnVisibilityControls} from "../columnVisibilityControls/ColumnVisibilityControls";
-import {TablePaginationControls} from "../tablePaginationControls/TablePaginationControls";
+import {PaginationControls} from "../paginationControls/PaginationControls";
 import {ITableHeaderControlsProps} from "./TableHeaderControls";
 
 
@@ -60,7 +60,7 @@ describe('TableHeaderControls', () => {
             showSearch:false
         });
         assert.equal( wrapper.find(ColumnVisibilityControls).length,  0 );
-        assert.equal( wrapper.find(TablePaginationControls).length, 0 );
+        assert.equal( wrapper.find(PaginationControls).length, 0 );
         assert.equal( wrapper.find(`.${copyClassName}`).length, 0 );
         assert.equal( wrapper.find(`.${searchClassName}`).length, 0 );
 
@@ -72,7 +72,7 @@ describe('TableHeaderControls', () => {
         }).update();
 
         assert.equal( wrapper.find(ColumnVisibilityControls).length,  1 );
-        assert.equal( wrapper.find(TablePaginationControls).length, 1 );
+        assert.equal( wrapper.find(PaginationControls).length, 1 );
         assert.equal( wrapper.find(`.${copyClassName}`).length, 1 );
         assert.equal( wrapper.find(`.${searchClassName}`).length, 1 );
 

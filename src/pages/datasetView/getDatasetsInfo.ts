@@ -1,7 +1,7 @@
-import * as _ from 'lodash';
-import CBioPortalAPI, { CancerStudy }  from 'shared/api/CBioPortalAPI';
+import CBioPortalAPI, { CancerStudy }  from 'shared/api/generated/CBioPortalAPI';
+import {getCbioPortalApiUrl} from "../../shared/api/urls";
 
-const tsClient = new CBioPortalAPI(`//${(window as any)['__API_ROOT__']}`);
+const tsClient = new CBioPortalAPI(getCbioPortalApiUrl());
 
 export default function getDatasetsInfo(): Promise<CancerStudy[]> {
 
