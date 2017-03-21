@@ -1,4 +1,4 @@
-import CohortColumnFormatter from './CohortColumnFormatter';
+import {default as CohortColumnFormatter, IGisticData} from './CohortColumnFormatter';
 import {DiscreteCopyNumberData} from "shared/api/generated/CBioPortalAPI";
 import {CopyNumberCount} from "shared/api/generated/CBioPortalAPIInternal";
 import React from 'react';
@@ -56,6 +56,28 @@ describe('CohortColumnFormatter', () => {
         }
     ];
 
+    const gisticData:IGisticData = {
+        0: [
+            {
+                amp: false,
+                qValue: 0.00023,
+                peakGeneCount: 5
+            }
+        ],
+        1: [
+            {
+                amp: false,
+                qValue: 0.00666,
+                peakGeneCount: 8
+            },
+            {
+                amp: true,
+                qValue: 0.00045,
+                peakGeneCount: 4
+            }
+        ]
+    };
+
     const tooltips: Array<ReactWrapper<any, any>> = [];
 
     before(() => {
@@ -71,6 +93,30 @@ describe('CohortColumnFormatter', () => {
     it('calculates the sort value correctly', () => {
         assert.equal(CohortColumnFormatter.getSortValue(copyNumberData[0], copyNumberCountData), 61);
         assert.equal(CohortColumnFormatter.getSortValue(copyNumberData[1], copyNumberCountData), 1);
+    });
+
+    it('picks the correct gistic summary', () => {
+        let summary = CohortColumnFormatter.getGisticValue(copyNumberData[0], gisticData);
+
+        let qValue = summary === null ? null : summary.qValue;
+        let amp = summary === null ? null : summary.amp;
+        let count = summary === null ? null : summary.peakGeneCount;
+
+        assert.isFalse(summary === null, "Gistic summary should exist");
+        assert.isFalse(amp, "Gistic summary should be the one marked as not amplified for a deleted CNA");
+        assert.equal(qValue, 0.00023);
+        assert.equal(count, 5);
+
+        summary = CohortColumnFormatter.getGisticValue(copyNumberData[1], gisticData);
+
+        qValue = summary === null ? null : summary.qValue;
+        amp = summary === null ? null : summary.amp;
+        count = summary === null ? null : summary.peakGeneCount;
+
+        assert.isFalse(summary === null, "Gistic summary should exist");
+        assert.isTrue(amp, "Gistic summary should be the one marked as amplified for an amplified CNA");
+        assert.equal(qValue, 0.00045);
+        assert.equal(count, 4);
     });
 
     after(() => {
