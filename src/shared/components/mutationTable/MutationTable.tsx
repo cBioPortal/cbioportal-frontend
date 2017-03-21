@@ -22,14 +22,14 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
     public static get defaultColumns():IColumnDefMap
     {
         return {
-            sampleId: {
+            /*sampleId: {
                 name: "Sample",
                 priority: 1.00,
                 formatter: SampleColumnFormatter.renderFunction,
                 downloader: SampleColumnFormatter.getTextValue,
                 sortable: true,
                 filterable: true
-            },
+            },*//*
             gene: {
                 name: "Gene",
                 priority: 2.00,
@@ -37,23 +37,23 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
                 downloader: GeneColumnFormatter.getTextValue,
                 sortable: true,
                 filterable: true
-            },
-            proteinChange: {
+            },*/
+            /*proteinChange: {
                 name: "Protein Change",
                 priority: 3.00,
                 formatter: ProteinChangeColumnFormatter.renderFunction,
                 downloader: ProteinChangeColumnFormatter.getTextValue,
                 sortable: ProteinChangeColumnFormatter.sortFunction,
                 filterable: true
-            },
+            },*//*
             chromosome: {
                 name: "Chromosome",
                 priority: 4.00,
                 columnDataFunction: ChromosomeColumnFormatter.getData,
                 sortable: ChromosomeColumnFormatter.sortFunction,
                 filterable: true
-            },
-            startPos: {
+            },*/
+            /*startPos: {
                 name: "Start Pos",
                 priority: 5.00,
                 dataField: "startPosition",
@@ -94,27 +94,27 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
                 dataField: "validationStatus",
                 sortable: true,
                 filterable: true
-            },
-            mutationType: {
+            },*/
+            /*mutationType: {
                 name: "Mutation Type",
                 priority: 11.00,
                 formatter: MutationTypeColumnFormatter.renderFunction,
                 downloader: MutationTypeColumnFormatter.getTextValue,
                 sortable: true,
                 filterable: true
-            },
+            },*//*
             center: {
                 name: "Center",
                 priority: 12.00,
                 dataField: "center",
                 sortable: true,
                 filterable: true
-            },
-            tumorAlleleFreq: {
+            },*/
+            /*tumorAlleleFreq: {
                 name: "Allele Freq (T)",
                 priority: 13.00,
                 sortable: true
-            },
+            },*//*
             tumorAltCount: {
                 name: "Alt Count (T)",
                 priority: 14.00,
@@ -126,12 +126,12 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
                 priority: 15.00,
                 dataField: "tumorRefCount",
                 sortable: true
-            },
-            normalAlleleFreq : {
+            },*/
+            /*normalAlleleFreq : {
                 name: "Allele Freq (N)",
                 priority: 16.00,
                 sortable: true
-            },
+            },*//*
             normalAltCount: {
                 name: "Alt Count (N)",
                 priority: 17.00,
@@ -143,15 +143,15 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
                 priority: 18.00,
                 dataField: "normalRefCount",
                 sortable: true
-            },
-            mutationAssessor: {
+            },*/
+            /*mutationAssessor: {
                 name: "Mutation Assessor",
                 priority: 19.00,
                 formatter: MutationAssessorColumnFormatter.renderFunction,
                 downloader: MutationAssessorColumnFormatter.getDisplayValue,
                 sortable: MutationAssessorColumnFormatter.sortFunction,
                 filterable: true
-            }
+            }*/
         };
     };
 
@@ -180,6 +180,7 @@ export default class MutationTable extends React.Component<IMutationTableProps, 
                     headerControlsProps={headerControlsProps}
                     columns={columns}
                     rawData={rawData}
+                    onVisibleRowsChange={this.props.onVisibleRowsChange}
                 />
             </div>
         );

@@ -1,13 +1,18 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import {Dropdown, Checkbox} from 'react-bootstrap';
-import {IColumnVisibilityDef} from "../enhancedReactTable/IEnhancedReactTableProps";
+
+export interface IColumnVisibilityDef {
+    id: string;
+    name: string;
+    visible: boolean;
+}
 
 export interface IColumnVisibilityControlsProps {
     className?: string;
     buttonText?: string | JSX.Element;
     columnVisibility?: IColumnVisibilityDef[];
-    onColumnToggled?: (columnId: String) => void;
+    onColumnToggled?: (columnId: string) => void;
 }
 
 /**
@@ -44,7 +49,7 @@ export class ColumnVisibilityControls extends React.Component<IColumnVisibilityC
                                         <Checkbox
                                             data-id={visibility.id}
                                             onChange={this.handleSelect as React.FormEventHandler<any>}
-                                            checked={visibility.visibility === "visible"}
+                                            checked={visibility.visible}
                                             inline
                                         >
                                                 {visibility.name}

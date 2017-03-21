@@ -1,6 +1,5 @@
 {
     "compilerOptions": {
-        "rootDir": "./src/",
         "outDir": "./tsDist/",
         "sourceMap": true,
         "noImplicitAny": true,
@@ -10,10 +9,17 @@
         "jsx": "preserve",
         "allowJs": true,
         "experimentalDecorators": true,
-        "allowSyntheticDefaultImports": true
+        "allowSyntheticDefaultImports": true,
+        "moduleResolution": "node",
+        "baseUrl": ".",
+        "paths": {
+            "*": [
+                "src/*"
+            ]
+        }
     },
     "include": [
-        "./typings/missing.d.ts",
+        "./typings/**/*",
         "./src/**/*"
     ],
     "compileOnSave": false
