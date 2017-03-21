@@ -4,12 +4,9 @@ import { PropTypes as T} from 'react';
 import { Router, RouteConfig } from 'react-router';
 import { Provider } from 'react-redux';
 
-type TODO = any;
-type RouteConfig = TODO;
-
 declare var __DEBUG__:boolean;
 
-interface IAppProps {
+export interface IAppProps {
     history: any,
     routes: RouteConfig,
     routerKey: number,

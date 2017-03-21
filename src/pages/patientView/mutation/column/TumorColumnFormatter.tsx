@@ -1,44 +1,59 @@
 import * as React from 'react';
 import {Td} from 'reactable';
 import {IColumnFormatterData} from "../../../../shared/components/enhancedReactTable/IColumnFormatter";
-import {compareNumberLists} from '../../../../shared/lib/SortUtils';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {MutationTableRowData} from "../../../../shared/components/mutationTable/IMutationTableProps";
-import {Mutation} from "../../../../shared/api/CBioPortalAPI";
+import {Mutation} from "../../../../shared/api/generated/CBioPortalAPI";
+import SampleManager from "../../sampleManager";
 
 
 export default class TumorColumnFormatter {
 
-    public static renderFunction(data:IColumnFormatterData<MutationTableRowData>, columnProps:any) {
+    public static renderFunction(data:Mutation[], sampleManager:SampleManager|null) {
 
-        const samples = TumorColumnFormatter.getSampleIds(data);
+        if (!sampleManager) {
+            return (<span></span>);
+        }
 
-        const presentSamples = samples.reduce((map:{[s:string]:boolean}, sampleId:string) => {map[sampleId] = true; return map;}, {});
+        const presentSamples = TumorColumnFormatter.getPresentSamples(data);
 
-        let tdValue = columnProps.sampleManager.samples.map((sample: any) => {
+        let tdValue = sampleManager.samples.map((sample: any) => {
                 return (
                     <li className={(sample.id in presentSamples) ? '' : 'invisible'}>
                         {
-                        columnProps.sampleManager.getComponentForSample(sample.id, false)
+                        sampleManager.getComponentForSample(sample.id, false)
                         }
                     </li>
                 );
         });
 
         return (
-            <Td column={data.name}>
                 <div style={{position:'relative'}}>
                     <ul  style={{marginBottom:0}} className="list-inline list-unstyled">{ tdValue }</ul>
                 </div>
-            </Td>
         );
     };
 
-    public static sortFunction(a:number[], b:number[]):number {
-        return compareNumberLists(a, b);
+    public static getSortValue(d:Mutation[], sampleManager:SampleManager|null) {
+        if (!sampleManager) {
+            return [];
+        } else {
+            const presentSamples = TumorColumnFormatter.getPresentSamples(d);
+            const ret = [];
+            // First, we sort by the number of present samples
+            ret.push(Object.keys(presentSamples).length);
+            // Then, we sort by the particular ones present
+            for (const sampleId of sampleManager.getSampleIdsInOrder()) {
+                ret.push(+(!!presentSamples[sampleId]))
+            }
+            return ret;
+        }
     }
 
-    private static getSampleIds(data:IColumnFormatterData<MutationTableRowData>) {
-        return (data.rowData || []).map((x:Mutation) => x.sampleId);
+    private static getPresentSamples(data:Mutation[]) {
+        return data.reduce((map:{[s:string]:boolean}, next:Mutation)=>{
+            map[next.sampleId] = true;
+            return map;
+        }, {});
     }
 }

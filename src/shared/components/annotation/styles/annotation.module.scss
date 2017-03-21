@@ -1,12 +1,12 @@
 .annotation-item {
+  width: 22px;
+  height: 24px;
   float: left;
+  line-height: 24px;
   display: inline-block;
-  margin-right:5px;
+}
 
-  img {
-    height:14px;
-    width:14px;
-  }
-
+.annotation-item img {
+  margin: 6px 0 2px 6px;
 }
 

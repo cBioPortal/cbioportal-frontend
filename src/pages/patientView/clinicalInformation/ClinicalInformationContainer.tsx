@@ -2,7 +2,7 @@ import ClinicalInformationPatientTable from "./ClinicalInformationPatientTable";
 import ClinicalInformationSamples from "./ClinicalInformationSamplesTable";
 import * as React from "react";
 import Spinner from "react-spinkit";
-import { ClinicalData } from "shared/api/CBioPortalAPI";
+import { ClinicalData } from "shared/api/generated/CBioPortalAPI";
 import { ClinicalDataBySampleId } from "../../../shared/api/api-types-extended";
 import { RequestStatus } from "../../../shared/api/api-types-extended";
 
