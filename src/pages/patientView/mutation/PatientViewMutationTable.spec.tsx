@@ -38,12 +38,12 @@ describe("PatientViewMutationTable", ()=>{
         assert(hasColumn(getTable(["sampleA"], "mrnaId"), "mRNA Expr."));
     });
 
-    it.only("shows copy number column if there's only one sample", ()=>{
-        assert(hasColumn(getTable(["sampleA"], "Copy #"), "mRNA Expr."));
+    it("shows copy number column if there's only one sample", ()=>{
+        assert(hasColumn(getTable(["sampleA"], undefined, "cnaId"), "Copy #"));
     });
 
-    it.only("hides copy number column if there's more than one column", ()=>{
-        assert.isFalse(hasColumn(getTable(["sampleA","sampleB"], "Copy #"), "mRNA Expr."));
+    it("hides copy number column if there's more than one sample", ()=>{
+        assert.isFalse(hasColumn(getTable(["sampleA","sampleB"], undefined, "cnaId"), "Copy #"));
     });
 
     it("hides the tumors column if theres less than two samples", ()=>{
