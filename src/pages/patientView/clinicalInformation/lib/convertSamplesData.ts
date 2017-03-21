@@ -1,4 +1,4 @@
-import {ClinicalData, ClinicalAttribute, Sample} from '../../../../shared/api/CBioPortalAPI';
+import {ClinicalData, ClinicalAttribute, Sample} from '../../../../shared/api/generated/CBioPortalAPI';
 import { ClinicalDataBySampleId } from "../../../../shared/api/api-types-extended";
 
 export interface IColumn {

@@ -1,5 +1,5 @@
 import * as React from "react";
-import {ClinicalData} from "../../../shared/api/CBioPortalAPI";
+import {ClinicalData} from "../../../shared/api/generated/CBioPortalAPI";
 import {Table as DataTable} from "reactableMSK";
 import TableHeaderControls from "shared/components/tableHeaderControls/TableHeaderControls";
 
@@ -25,7 +25,6 @@ export default class ClinicalInformationPatientTable extends React.Component<ICl
                 {
                     this.props.showTitleBar
                     ?   <div>
-                            <h4 className="pull-left">Patient</h4>
                             <TableHeaderControls className="pull-right" tableData={tableData} />
                         </div>
                     :   null

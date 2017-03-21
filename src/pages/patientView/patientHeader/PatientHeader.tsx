@@ -3,26 +3,27 @@ import {fromPairs} from 'lodash';
 import {OverlayTrigger, Popover} from 'react-bootstrap';
 
 import ClinicalInformationPatientTable from '../clinicalInformation/ClinicalInformationPatientTable';
-import {ClinicalInformationData} from "../Connector";
 import {getSpans} from '../clinicalInformation/lib/clinicalAttributesUtil.js';
 
 import styles from './styles.module.scss';
+import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
 
-export type IPatientHeaderProps = Partial<Pick<ClinicalInformationData, 'clinicalDataStatus' | 'patient' | 'samples'>>;
-
+export type IPatientHeaderProps = {
+    patient:any;
+    handlePatientClick:any;
+}
 export default class PatientHeader extends React.Component<IPatientHeaderProps, {}> {
     public render() {
 
         return (
             <div className={styles.patientHeader}>
-                <i className="fa fa-female fa-2 genderIcon hidden" aria-hidden="true"></i>
                 {this.props.patient && this.getOverlayTriggerPatient(this.props.patient)}
             </div>
         );
 
     }
 
-    private getPopoverPatient(patient: ClinicalInformationData['patient']) {
+    private getPopoverPatient(patient: any) {
         return patient && (
             <Popover key={patient.id} id={'popover-sample-' + patient.id}>
                 <ClinicalInformationPatientTable showTitleBar={false} data={patient.clinicalData} />
@@ -30,7 +31,7 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
         );
     }
 
-    private getOverlayTriggerPatient(patient: ClinicalInformationData['patient']) {
+    private getOverlayTriggerPatient(patient: any) {
         return patient && (
             <OverlayTrigger
                 delayHide={100}
@@ -40,9 +41,9 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
                 overlay={this.getPopoverPatient(patient)}
             >
                 <span>
-                    {patient.id}
+                    <a href="javascript:void(0)" onClick={()=>this.props.handlePatientClick(patient.id)}>{patient.id}</a>
                     <span className='clinical-spans' id='patient-attributes' dangerouslySetInnerHTML={{__html:
-                        getSpans(fromPairs(patient.clinicalData.map((x) => [x.clinicalAttributeId, x.value])), 'lgg_ucsf_2014')}}>
+                        getSpans(fromPairs(patient.clinicalData.map((x: any) => [x.clinicalAttributeId, x.value])), 'lgg_ucsf_2014')}}>
                     </span>
                 </span>
             </OverlayTrigger>

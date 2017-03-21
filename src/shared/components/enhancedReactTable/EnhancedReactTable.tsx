@@ -7,7 +7,7 @@ import TableHeaderControls from "shared/components/tableHeaderControls/TableHead
 import {
     IEnhancedReactTableProps, IColumnDefMap, IEnhancedReactTableColumnDef, IColumnVisibilityState,
     IEnhancedReactTableState, IColumnVisibilityDef, IColumnSort, IColumnFilter
-} from "IEnhancedReactTableProps";
+} from "./IEnhancedReactTableProps";
 import {
     IColumnFormatterData, IColumnSortFunction, IColumnFilterFunction, IColumnVisibilityFunction, ColumnVisibility
 } from "./IColumnFormatter";
@@ -94,7 +94,7 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
     private columnVisibilitySelector = (state:IEnhancedReactTableState) => state.columnVisibility;
 
     // visible columns depend on both column definitions and visibility
-    private visibleColsSelector = createSelector([this.columnsSelector, this.columnVisibilitySelector],
+    private visibleColsSelector = createSelector(this.columnsSelector, this.columnVisibilitySelector,
         (columns:IColumnDefMap, columnVisibility:IColumnVisibilityState) => this.resolveVisible(columns, columnVisibility));
 
     // sorted list of visible columns are required to calculate table header
@@ -105,11 +105,11 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
     private sortedColsSelector = createSelector(this.columnsSelector,
         (columns:IColumnDefMap)=>this.resolveOrder(columns));
 
-    private columnVisibilityArraySelector = createSelector([this.sortedColsSelector, this.columnVisibilitySelector],
+    private columnVisibilityArraySelector = createSelector(this.sortedColsSelector, this.columnVisibilitySelector,
          (sortedColumns:Array<IEnhancedReactTableColumnDef>, columnVisibility:IColumnVisibilityState) =>
              this.resolveColumnVisibility(this.colNameToId, sortedColumns, columnVisibility));
 
-    private downloadDataSelector = createSelector([this.sortedColsSelector, this.columnVisibilitySelector, this.rawDataSelector],
+    private downloadDataSelector = createSelector(this.sortedColsSelector, this.columnVisibilitySelector, this.rawDataSelector,
         (sortedCols:Array<IEnhancedReactTableColumnDef>, visibility:IColumnVisibilityState, rawData:Array<T>) =>
             this.generateDownloadData(sortedCols, visibility, rawData));
 
@@ -120,7 +120,7 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
     // no need to calculate column render values every time the visibility changes,
     // we only need to do it when the column definitions change
     // reactable is clever enough to not render the column if its header is missing
-    private rowsSelector = createSelector([this.sortedColsSelector, this.rawDataSelector],
+    private rowsSelector = createSelector(this.sortedColsSelector, this.rawDataSelector,
         (sortedCols:Array<IEnhancedReactTableColumnDef>, rawData:Array<T>) => this.generateRows(sortedCols, rawData));
 
     constructor(props:IEnhancedReactTableProps<T>)
@@ -152,10 +152,23 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
             }
         };
 
+        const sendVisibleRows = (tableRenderResult:JSX.Element) => {
+            const tbodyElt = tableRenderResult.props.children.find((x:JSX.Element) => (x.type === "tbody"));
+            const visibleRows = tbodyElt.props.children || [];
+            if (this.props.onVisibleRowsChange)
+                this.props.onVisibleRowsChange(visibleRows.map((r:JSX.Element) => r.props.rowData));
+        };
+
         const Table_applyFilter = Table.prototype.applyFilter;
         Table.prototype.applyFilter = function(){
             const result = Table_applyFilter.apply(this, arguments);
             setFilteredDataLength(result.length);
+            return result;
+        };
+        const Table_render = Table.prototype.render;
+        Table.prototype.render = function() {
+            const result = Table_render.apply(this, arguments);
+            sendVisibleRows(result);
             return result;
         };
         //
@@ -171,6 +184,7 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
 
     public render() {
         let {
+            className,
             reactTableProps,
             headerControlsProps
         } = this.props;
@@ -185,17 +199,11 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
         // table rows: an array of Tr components
         const rows = this.rowsSelector(this.state, this.props);
 
-        let firstItemShownIndex:number;
-        if (this.filteredDataLength === 0) {
-            firstItemShownIndex = 0;
-        } else {
-            firstItemShownIndex = (this.state.itemsPerPage === -1 ? 0 : this.state.itemsPerPage*this.state.currentPage) + 1;
-        }
-        const lastItemShownIndex:number = (this.state.itemsPerPage === -1 ? this.filteredDataLength : Math.min(this.filteredDataLength, firstItemShownIndex + this.state.itemsPerPage - 1));
+        const {firstIndex, numIndexes} = this.rowIndexesOnPage();
 
 
         return(
-            <div>
+            <div className={className}>
                 <TableHeaderControls
                     showCopyAndDownload={true}
                     showHideShowColumnButton={true}
@@ -206,7 +214,7 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
                     showSearch={true}
                     columnVisibilityProps={{
                         className: "pull-right",
-                        columnVisibility: columnVisibility,
+                        /*columnVisibility,*/
                         onColumnToggled: this.handleVisibilityToggle
                     }}
                     paginationProps={{
@@ -216,7 +224,7 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
                         onChangeItemsPerPage: this.handleChangeItemsPerPage,
                         onPreviousPageClick: this.handlePreviousPageClick,
                         onNextPageClick: this.handleNextPageClick,
-                        textBetweenButtons: `${firstItemShownIndex}-${lastItemShownIndex} of ${this.filteredDataLength}`,
+                        textBetweenButtons: `${this.filteredDataLength ? (firstIndex+1) : 0}-${firstIndex+numIndexes} of ${this.filteredDataLength}`,
                         previousPageDisabled: (this.state.currentPage === 0),
                         nextPageDisabled: (this.state.currentPage >= this.numPages()-1)
                     }}
@@ -256,6 +264,19 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
                 currentPage: Math.max(0, Math.min(this.state.currentPage, this.numPages() - 1))
             } as IEnhancedReactTableState);
         }
+    }
+
+    private rowIndexesOnPage() {
+        let firstIndex:number;
+        let numIndexes:number;
+        if (this.state.itemsPerPage === -1) {
+            firstIndex = 0;
+            numIndexes = this.filteredDataLength;
+        } else {
+            firstIndex = this.state.itemsPerPage * this.state.currentPage;
+            numIndexes = Math.min(this.filteredDataLength - firstIndex, this.state.itemsPerPage);
+        }
+        return {firstIndex, numIndexes};
     }
 
     private numPages(itemsPerPage?:number) {
@@ -338,7 +359,7 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
 
         _.each(columns, function(columnDef:IEnhancedReactTableColumnDef) {
             // basic content (with no tooltip)
-            let headerContent = (
+            let headerContent = columnDef.header || (
                 <span>
                     {columnDef.name}
                 </span>
@@ -455,7 +476,7 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
             const cols = this.generateColumns(columns, tableData, rowData);
 
             rows.push(
-                <Tr key={index}>
+                <Tr key={index} rowData={rowData}>
                     {cols}
                 </Tr>
             );
@@ -578,7 +599,7 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
 
     private handleChangeItemsPerPage(itemsPerPage:number) {
         this.setState({
-            itemsPerPage: itemsPerPage,
+            itemsPerPage,
             currentPage: Math.min(this.state.currentPage, this.numPages(itemsPerPage)-1)
         } as IEnhancedReactTableState);
     }

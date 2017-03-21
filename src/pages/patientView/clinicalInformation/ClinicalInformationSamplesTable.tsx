@@ -18,7 +18,6 @@ export default class ClinicalInformationSamplesTable extends React.Component<ICl
         return (
             <div>
                 <div>
-                    <h4 className="pull-left">Samples</h4>
                     <TableHeaderControls className="pull-right" tableData={tableData} />
                 </div>
                 <DataTable className="table table-striped table-border-top" data={tableData} >

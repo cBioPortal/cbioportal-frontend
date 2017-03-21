@@ -1,17 +1,27 @@
 import * as React from 'react';
 import {Td} from 'reactable';
 import {If} from 'react-if';
-import {IColumnFormatterData} from "../../../../shared/components/enhancedReactTable/IColumnFormatter";
-import {MutationTableRowData} from "../../../../shared/components/mutationTable/IMutationTableProps";
-import CancerHotspots from "../../../../shared/components/annotation/CancerHotspots";
-import MyCancerGenome from "../../../../shared/components/annotation/MyCancerGenome";
-import {Mutation} from "../../../../shared/api/CBioPortalAPI";
+import {IColumnFormatterData} from "shared/components/enhancedReactTable/IColumnFormatter";
+import {MutationTableRowData} from "shared/components/mutationTable/IMutationTableProps";
+import CancerHotspots from "shared/components/annotation/CancerHotspots";
+import MyCancerGenome from "shared/components/annotation/MyCancerGenome";
+import OncoKB from "shared/components/annotation/OncoKB";
+import {Mutation} from "shared/api/generated/CBioPortalAPI";
+import {IndicatorQueryResp, EvidenceQueryRes} from "shared/api/generated/OncoKbAPI";
+import {generateQueryVariantId} from "shared/lib/OncoKbUtils";
+import * as _ from "lodash";
 
 export interface IMyCancerGenome {
-    "hugoGeneSymbol": string;
-    "alteration": string;
-    "cancerType": string;
-    "linkHTML": string;
+    hugoGeneSymbol: string;
+    alteration: string;
+    cancerType: string;
+    linkHTML: string;
+}
+
+export interface IOncoKbData {
+    indicatorMap: {[id:string]: IndicatorQueryResp};
+    evidenceMap: {[id:string]: IEvidence};
+    sampleToTumorMap: {[sampleId:string]: string};
 }
 
 export interface IHotspotData {
@@ -23,10 +33,47 @@ export interface IMyCancerGenomeData {
     [hugoSymbol:string]: IMyCancerGenome[];
 }
 
+export interface IAnnotationColumnProps {
+    enableOncoKb: boolean;
+    enableMyCancerGenome: boolean;
+    enableHotspot: boolean;
+    hotspots?: IHotspotData;
+    myCancerGenomeData?: IMyCancerGenomeData;
+    oncoKbData?: IOncoKbData;
+    pmidData?: any;
+}
+
+export interface IEvidence {
+    id: string;
+    gene: any;
+    alteration: any[];
+    prevalence: any[];
+    progImp: any[];
+    treatments: {
+        sensitivity: any[];
+        resistance: any[];
+    }; //separated by level type
+    trials: any[];
+    oncogenic: string;
+    oncogenicRefs: string[];
+    mutationEffect: any;
+    summary: string;
+    drugs: {
+        sensitivity: {
+            current: any[];
+            inOtherTumor: any[];
+        },
+        resistance: any[];
+    };
+}
+
 export interface IAnnotation {
     isHotspot: boolean;
     is3dHotspot: boolean;
     myCancerGenomeLinks: string[];
+    oncoKbIndicator?: IndicatorQueryResp;
+    oncoKbEvidence?: IEvidence;
+    pmids?: any;
 }
 
 /**
@@ -34,33 +81,24 @@ export interface IAnnotation {
  */
 export default class AnnotationColumnFormatter
 {
-    public static getData(data:IColumnFormatterData<MutationTableRowData>,
+    public static getData(rowData:Mutation[]|undefined,
                           hotspotsData?:IHotspotData,
-                          myCancerGenomeData?:IMyCancerGenomeData)
+                          myCancerGenomeData?:IMyCancerGenomeData,
+                          oncoKbData?:IOncoKbData,
+                          pmidData?:any)
     {
-        let annotation;
-
-        if (data.columnData) {
-            annotation = data.columnData;
-        }
-        else {
-            annotation = AnnotationColumnFormatter.getDataFromRow(data.rowData, hotspotsData, myCancerGenomeData);
-        }
-
-        return annotation;
-    }
-
-    public static getDataFromRow(rowData:MutationTableRowData|undefined,
-                                 hotspotsData?:IHotspotData,
-                                 myCancerGenomeData?:IMyCancerGenomeData)
-    {
-        let value: any;
+        let value: IAnnotation;
 
         if (rowData) {
             const mutations:Mutation[] = rowData;
             const mutation = mutations[0];
 
             value = {
+                oncoKbIndicator: oncoKbData ?
+                    AnnotationColumnFormatter.getIndicatorData(mutation, oncoKbData) : undefined,
+                oncoKbEvidence: oncoKbData ?
+                    AnnotationColumnFormatter.getEvidenceData(mutation, oncoKbData) : undefined,
+                pmids: pmidData || {},
                 myCancerGenomeLinks: myCancerGenomeData ?
                     AnnotationColumnFormatter.getMyCancerGenomeLinks(mutation, myCancerGenomeData) : [],
                 isHotspot: hotspotsData ?
@@ -70,10 +108,34 @@ export default class AnnotationColumnFormatter
             };
         }
         else {
-            value = null;
+            value = {
+                myCancerGenomeLinks: [],
+                isHotspot: false,
+                is3dHotspot: false
+            };
         }
 
         return value;
+    }
+
+    public static getIndicatorData(mutation:Mutation, oncoKbData:IOncoKbData):IndicatorQueryResp
+    {
+        const id = generateQueryVariantId(mutation.gene.hugoGeneSymbol,
+            mutation.mutationType,
+            mutation.proteinChange,
+            oncoKbData.sampleToTumorMap[mutation.sampleId]);
+
+        return oncoKbData.indicatorMap[id];
+    }
+
+    public static getEvidenceData(mutation:Mutation, oncoKbData:IOncoKbData):IEvidence
+    {
+        const id = generateQueryVariantId(mutation.gene.hugoGeneSymbol,
+            mutation.mutationType,
+            mutation.proteinChange,
+            oncoKbData.sampleToTumorMap[mutation.sampleId]);
+
+        return oncoKbData.evidenceMap[id];
     }
 
     public static getMyCancerGenomeLinks(mutation:Mutation, myCancerGenomeData: IMyCancerGenomeData):string[] {
@@ -110,73 +172,47 @@ export default class AnnotationColumnFormatter
         });
     }
 
-    public static sortFunction(a:IAnnotation, b:IAnnotation):number
-    {
-        // TODO add oncoKb value to the beginning of the array when it is ready!
-        const aValue:number[] = [
-            MyCancerGenome.sortValue(a.myCancerGenomeLinks),
-            CancerHotspots.sortValue(a.isHotspot, a.is3dHotspot)
-        ];
-        const bValue:number[] = [
-            MyCancerGenome.sortValue(b.myCancerGenomeLinks),
-            CancerHotspots.sortValue(b.isHotspot, b.is3dHotspot)
-        ];
-
-        let diff = 0;
-
-        // compare aValue[0] with bValue[0], if equal compare aValue[1] with bValue[1], and so on...
-        for (let i = 0; i < aValue.length; i++)
-        {
-            diff = aValue[i] - bValue[i];
-
-            // once the tie is broken, we are done
-            if (diff !== 0) {
-                break;
-            }
-        }
-
-        return diff;
+    public static sortValue(data:Mutation[],
+                            hotspotsData?:IHotspotData,
+                            myCancerGenomeData?:IMyCancerGenomeData,
+                            oncoKbData?:IOncoKbData,
+                            pmidData?:any):number[] {
+        const annotationData:IAnnotation = AnnotationColumnFormatter.getData(data, hotspotsData, myCancerGenomeData, oncoKbData, pmidData);
+        return _.flatten([
+            OncoKB.sortValue(annotationData.oncoKbIndicator),
+            MyCancerGenome.sortValue(annotationData.myCancerGenomeLinks),
+            CancerHotspots.sortValue(annotationData.isHotspot, annotationData.is3dHotspot)
+        ]);
     }
 
-    public static renderFunction(data:IColumnFormatterData<MutationTableRowData>, columnProps:any)
+    public static renderFunction(data:Mutation[], columnProps:IAnnotationColumnProps)
     {
-        const annotation:IAnnotation = AnnotationColumnFormatter.getDataFromRow(
-            data.rowData, columnProps.hotspots, columnProps.myCancerGenomeData);
+        const annotation:IAnnotation = AnnotationColumnFormatter.getData(
+            data, columnProps.hotspots, columnProps.myCancerGenomeData, columnProps.oncoKbData, columnProps.pmidData);
 
         // TODO if certain data (hotspots, mycancergenome, etc.) is not yet available (i.e. status==fetching),
         // show a loader image!
         return (
-            <Td key={data.name} column={data.name} value={annotation}>
-                <span>
-                    <If condition={columnProps.enableOncoKb || false}>
-                        {/* TODO <OncoKB></OncoKB>*/}
-                    </If>
-                    <If condition={columnProps.enableMyCancerGenome || false}>
-                        <MyCancerGenome
-                            linksHTML={annotation.myCancerGenomeLinks}
-                        />
-                    </If>
-                    <If condition={columnProps.enableHotspot || false}>
-                        <CancerHotspots
-                            isHotspot={annotation.isHotspot}
-                            is3dHotspot={annotation.is3dHotspot}
-                        />
-                    </If>
-                </span>
-            </Td>
+            <span>
+                <If condition={columnProps.enableOncoKb || false}>
+                    <OncoKB
+                        indicator={annotation.oncoKbIndicator}
+                        evidence={annotation.oncoKbEvidence}
+                        pmids={annotation.pmids}
+                    />
+                </If>
+                <If condition={columnProps.enableMyCancerGenome || false}>
+                    <MyCancerGenome
+                        linksHTML={annotation.myCancerGenomeLinks}
+                    />
+                </If>
+                <If condition={columnProps.enableHotspot || false}>
+                    <CancerHotspots
+                        isHotspot={annotation.isHotspot}
+                        is3dHotspot={annotation.is3dHotspot}
+                    />
+                </If>
+            </span>
         );
     }
-
-    // TODO move this to OncoKB component!
-    public static oncoKbContent()
-    {
-        // return (
-        //     <span className={`${styles["annotation-item"]} oncokb oncokb_alteration oncogenic`}>
-        //         <img className='oncokb oncogenic' width="14" height="14" src="images/ajax-loader.gif" alt='loading' />
-        //     </span>
-        // )
-
-        return null;
-    }
-
 }

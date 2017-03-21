@@ -1,6 +1,8 @@
 import * as React from 'react';
-import CBioPortalAPI from "../../shared/api/CBioPortalAPI";
-import {CancerStudy} from "../../shared/api/CBioPortalAPI";
+import CBioPortalAPI from "../../shared/api/generated/CBioPortalAPI";
+import {CancerStudy} from "../../shared/api/generated/CBioPortalAPI";
+import AppConfig from 'appConfig';
+import {getCbioPortalApiUrl} from "../../shared/api/urls";
 
 interface IHomePageProps
 {
@@ -19,7 +21,7 @@ export default class HomePage extends React.Component<IHomePageProps, IHomePageS
         this.state = {};
     }
 
-    client = new CBioPortalAPI(`//${(window as any)['__API_ROOT__']}`);
+    client = new CBioPortalAPI(getCbioPortalApiUrl());
 
     componentDidMount()
     {

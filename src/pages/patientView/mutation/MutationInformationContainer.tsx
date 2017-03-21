@@ -5,34 +5,30 @@ import {IColumnDefMap} from "../../../shared/components/enhancedReactTable/IEnha
 import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter";
 import TumorColumnFormatter from "./column/TumorColumnFormatter";
 import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
-import MrnaExprColumnFormatter from "./column/MrnaExprColumnFormatter";
 import AlleleCountColumnFormatter from "./column/AlleleCountColumnFormatter";
-import {IVariantCountData, default as CohortColumnFormatter} from "./column/CohortColumnFormatter";
-import { Mutation } from "../../../shared/api/CBioPortalAPI";
+import { Mutation } from "../../../shared/api/generated/CBioPortalAPI";
 import SampleManager from "../sampleManager";
 import {
-    default as AnnotationColumnFormatter, IHotspotData, IMyCancerGenomeData
+    default as AnnotationColumnFormatter, IHotspotData, IMyCancerGenomeData, IOncoKbData
 } from "./column/AnnotationColumnFormatter";
-import { MutSigData, MrnaRankData } from "../PatientViewPage";
 import {
     default as CosmicColumnFormatter, ICosmicData
 } from "../../../shared/components/mutationTable/column/CosmicColumnFormatter";
 
-
 export interface IMutationInformationContainerProps {
     mutations: Array<Mutation>;
-    myCancerGenomeData?: IMyCancerGenomeData
+    myCancerGenomeData?: IMyCancerGenomeData;
     hotspots?: IHotspotData;
     cosmicData?: ICosmicData;
-    mrnaExprRankData?: MrnaRankData;
-    mutSigData?: MutSigData;
-    variantCountData?: IVariantCountData;
+    oncoKbData?: IOncoKbData;
+    pmidData?: any;
     sampleOrder:string[];
     sampleColors:{ [s:string]: string};
     sampleLabels:{ [s:string]: string};
     sampleTumorType:{ [s:string]: string};
     sampleCancerType:{ [s:string]: string};
     sampleManager:SampleManager;
+    onVisibleRowsChange?:(data:Mutation[][]) => void;
 };
 
 export default class MutationInformationContainer extends React.Component<IMutationInformationContainerProps, {}>
@@ -44,40 +40,27 @@ export default class MutationInformationContainer extends React.Component<IMutat
         super(props);
     }
 
-    public render() {
+    buildColumns(){
+
         let columns:IColumnDefMap = {
-            sampleId: {
+            /*sampleId: {
                 name: "Sample",
                 visible: "excluded"
-            },
-            gene: {
+            },*/
+            /*gene: {
                 name: "Gene",
                 description: "HUGO Symbol"
-            },
-            proteinChange: {
+            },*/
+            /*proteinChange: {
                 name: "Protein Change",
                 formatter: ProteinChangeColumnFormatter.renderFunction
-            },
-            tumors: {
-                name: "Tumors",
-                description: "Cases/Samples",
-                priority: 0.50,
-                formatter: TumorColumnFormatter.renderFunction,
-                sortable: TumorColumnFormatter.sortFunction,
-                filterable: false,
-                columnProps: {
-                    sampleColors: this.props.sampleColors,
-                    sampleLabels: this.props.sampleLabels,
-                    sampleTumorType: this.props.sampleTumorType,
-                    sampleCancerType: this.props.sampleCancerType,
-                    sampleManager:this.props.sampleManager
-                }
-            },
-            chromosome: {
+            },*/
+
+            /*chromosome: {
                 name: "Chr",
                 visible: "hidden"
-            },
-            startPos: {
+            },*/
+            /*startPos: {
                 name: "Start",
                 visible: "hidden"
             },
@@ -92,12 +75,12 @@ export default class MutationInformationContainer extends React.Component<IMutat
             validationStatus: {
                 name: "Validation",
                 visible: "hidden"
-            },
-            mutationType: {
+            },*/
+            /*mutationType: {
                 name: "Type",
                 description: "Mutation Type"
-            },
-            annotation: {
+            },*/
+            /*annotation: {
                 name: "Annotation",
                 formatter: AnnotationColumnFormatter.renderFunction,
                 priority: 3.50,
@@ -106,25 +89,28 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 columnProps: {
                     hotspots: this.props.hotspots,
                     myCancerGenomeData: this.props.myCancerGenomeData,
+                    oncoKbData: this.props.oncoKbData,
+                    pmidData: this.props.pmidData,
+                    enableOncoKb: true,
                     enableMyCancerGenome: true,
                     enableHotspot: true
                 }
-            },
-            copyNumber: {
+            },*/
+            /*copyNumber: {
                 name: "Copy #",
                 priority: 18.10,
                 sortable: false
-            },
-            mRnaExp: {
+            },*/
+            /*mRnaExp: {
                 name: "mRNA Expr.",
                 priority: 18.20,
                 formatter: MrnaExprColumnFormatter.renderFunction,
-                sortable: true,
+                sortable: false,
                 columnProps: {
                     data: this.props.mrnaExprRankData
                 }
-            },
-            cohort: {
+            },*/
+            /*cohort: {
                 name: "Cohort",
                 description: "Mutation frequency in cohort",
                 priority: 18.30,
@@ -134,8 +120,8 @@ export default class MutationInformationContainer extends React.Component<IMutat
                     mutSigData: this.props.mutSigData,
                     variantCountData: this.props.variantCountData
                 }
-            },
-            cosmic: {
+            },*/
+            /*cosmic: {
                 name: "COSMIC",
                 description: "COSMIC occurrences",
                 formatter: CosmicColumnFormatter.renderFunction,
@@ -144,8 +130,8 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 columnProps: {
                     cosmicData: this.props.cosmicData
                 }
-            },
-            tumorAlleleFreq: {
+            },*/
+            /*tumorAlleleFreq: {
                 name: "Allele Freq",
                 description: "Variant allele frequency in the tumor sample",
                 formatter: AlleleFreqColumnFormatter.renderFunction,
@@ -154,13 +140,13 @@ export default class MutationInformationContainer extends React.Component<IMutat
                 columnProps: {
                     sampleManager: this.props.sampleManager
                 }
-            },
-            normalAlleleFreq : {
+            },*/
+           /*normalAlleleFreq : {
                 name: "Allele Freq (N)",
                 description: "Variant allele frequency in the normal sample",
                 visible: "hidden"
-            },
-            normalRefCount: {
+            },*/
+            /*normalRefCount: {
                 name: "Ref Reads (N)",
                 formatter: AlleleCountColumnFormatter.renderFunction,
                 downloader: AlleleCountColumnFormatter.getTextValue,
@@ -199,8 +185,8 @@ export default class MutationInformationContainer extends React.Component<IMutat
                     sampleOrder: this.props.sampleOrder
                 },
                 visible: "hidden"
-            },
-            referenceAllele: {
+            },*/
+            /*referenceAllele: {
                 name: "Ref",
                 visible: "hidden"
             },
@@ -211,16 +197,42 @@ export default class MutationInformationContainer extends React.Component<IMutat
             center: {
                 name: "Center",
                 visible: "hidden"
-            },
-            mutationAssessor: {
+            },*/
+            /*mutationAssessor: {
                 name: "Mutation Assessor",
                 visible: "hidden"
-            }
+            }*/
         };
+
+        // some columns are dependent on number of samples
+        /*if (this.props.sampleManager.samples.length > 1) {
+            columns['tumors'] = {
+                name: "Tumors",
+                description: "Cases/Samples",
+                priority: 0.50,
+                formatter: TumorColumnFormatter.renderFunction,
+                sortable: TumorColumnFormatter.sortFunction,
+                filterable: false,
+                columnProps: {
+                    sampleColors: this.props.sampleColors,
+                    sampleLabels: this.props.sampleLabels,
+                    sampleTumorType: this.props.sampleTumorType,
+                    sampleCancerType: this.props.sampleCancerType,
+                    sampleManager: this.props.sampleManager
+                }
+            };
+        }*/
+
+        return columns;
+
+    }
+
+    public render() {
 
         return (
             <div>
-                <MutationTable rawData={this.mergedMutationsSelector(this.state, this.props)} columns={columns} />
+                <MutationTable rawData={this.mergedMutationsSelector(this.state, this.props)} columns={this.buildColumns()}
+                                onVisibleRowsChange={this.props.onVisibleRowsChange} />
             </div>
         );
     }

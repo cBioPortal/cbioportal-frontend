@@ -1,11 +1,11 @@
 import * as React from 'react';
 import DefaultTooltip from 'shared/components/DefaultTooltip';
 import {Td} from 'reactable';
-import {IColumnFormatterData} from "../../enhancedReactTable/IColumnFormatter";
+import {IColumnFormatterData} from "shared/components/enhancedReactTable/IColumnFormatter";
 import 'rc-tooltip/assets/bootstrap_white.css';
 import styles from "./mutationAssessor.module.scss";
 import {MutationTableRowData} from "../IMutationTableProps";
-import {Mutation} from "../../../api/CBioPortalAPI";
+import {Mutation} from "shared/api/generated/CBioPortalAPI";
 
 type MA_CLASS_NAME = 'oma-high' | 'oma-medium' | 'oma-low' | 'oma-neutral' | 'oma-na';
 
@@ -35,36 +35,23 @@ export default class MutationAssessorColumnFormatter
         };
     }
 
-    public static sortFunction(a:IColumnFormatterData<MutationTableRowData>, b:IColumnFormatterData<MutationTableRowData>):number
+    public static getSortValue(d:Mutation[]):(number|null)[]
     {
-        const NA:string = MutationAssessorColumnFormatter.MA_SCORE_MAP["na"].label;
-
-        const aScore:number = MutationAssessorColumnFormatter.getData(a).score;
-        const bScore:number = MutationAssessorColumnFormatter.getData(b).score;
-
-        const aFormat:IMutationAssessorFormat|undefined = MutationAssessorColumnFormatter.getMapEntry(a);
-        const bFormat:IMutationAssessorFormat|undefined = MutationAssessorColumnFormatter.getMapEntry(b);
-
-        const aPriority:number = aFormat ? aFormat.priority : -1;
-        const bPriority:number = bFormat ? bFormat.priority : -1;
-
-        const hasNa = (aFormat && aFormat.label === NA) || (bFormat && bFormat.label === NA);
-
-        // use actual score values to compare (if exist)
-        // score for NA values are zero, but negative scores are also valid,
-        // so comparing scores when there is an NA value is not always accurate!
-        if (aScore && bScore && !hasNa)
-        {
-            return aScore > bScore ? 1 : -1;
+        // If data is missing, it returns undefined. For the way the table works, we map this to null.
+        let score:number|undefined = MutationAssessorColumnFormatter.getData(d).score;
+        let returnScore:number|null;
+        if (score === undefined) {
+            returnScore = null;
+        } else {
+            returnScore = score;
         }
-        // if no score available sort by impact priority
-        else
-        {
-            return aPriority > bPriority ? 1 : -1;
-        }
+        const format = MutationAssessorColumnFormatter.getMapEntry(d);
+        const priority = format ? format.priority : -1;
+
+        return [priority, returnScore];
     }
 
-    public static filterValue(data:IColumnFormatterData<MutationTableRowData>):string
+    public static filterValue(data:Mutation[]):string
     {
         return MutationAssessorColumnFormatter.getDisplayValue(data);
     }
@@ -75,7 +62,7 @@ export default class MutationAssessorColumnFormatter
      * @param data  column formatter data
      * @returns {string}    mutation assessor text value
      */
-    public static getDisplayValue(data:IColumnFormatterData<MutationTableRowData>):string
+    public static getDisplayValue(data:Mutation[]):string
     {
         const entry:IMutationAssessorFormat|undefined =
             MutationAssessorColumnFormatter.getMapEntry(data);
@@ -90,7 +77,7 @@ export default class MutationAssessorColumnFormatter
         }
     }
 
-    public static getTextValue(data:IColumnFormatterData<MutationTableRowData>):string
+    public static getTextValue(data:Mutation[]):string
     {
         const maData = MutationAssessorColumnFormatter.getData(data);
 
@@ -103,7 +90,7 @@ export default class MutationAssessorColumnFormatter
         }
     }
 
-    public static getScoreClassName(data:IColumnFormatterData<MutationTableRowData>):string
+    public static getScoreClassName(data:Mutation[]):string
     {
         const value:IMutationAssessorFormat|undefined =
             MutationAssessorColumnFormatter.getMapEntry(data);
@@ -116,7 +103,7 @@ export default class MutationAssessorColumnFormatter
         }
     }
 
-    public static getMaClassName(data:IColumnFormatterData<MutationTableRowData>):string
+    public static getMaClassName(data:Mutation[]):string
     {
         const value:IMutationAssessorFormat|undefined =
             MutationAssessorColumnFormatter.getMapEntry(data);
@@ -129,7 +116,7 @@ export default class MutationAssessorColumnFormatter
         }
     }
 
-    public static getMapEntry(data:IColumnFormatterData<MutationTableRowData>)
+    public static getMapEntry(data:Mutation[])
     {
         const maData = MutationAssessorColumnFormatter.getData(data);
 
@@ -141,38 +128,31 @@ export default class MutationAssessorColumnFormatter
         }
     }
 
-    public static getData(data:IColumnFormatterData<MutationTableRowData>)
+    public static getData(data:Mutation[])
     {
         let maData;
 
-        if (data.columnData)
-        {
-            maData = data.columnData;
+        if (data.length > 0) {
+            maData = {
+                impact: data[0].functionalImpactScore,
+                score: data[0].fisValue,
+                pdb: data[0].linkPdb,
+                msa: data[0].linkMsa,
+                xVar: data[0].linkXvar
+            };
+        } else {
+            maData = {
+                impact: undefined,
+                score: undefined,
+                pdb: undefined,
+                msa: undefined,
+                xVar: undefined
+            };
         }
-        else if (data.rowData)
-        {
-            const mutations:Mutation[] = data.rowData;
-
-            if (mutations.length > 0) {
-                maData = {
-                    impact: mutations[0].functionalImpactScore,
-                    score: mutations[0].fisValue,
-                    pdb: mutations[0].linkPdb,
-                    msa: mutations[0].linkMsa,
-                    xVar: mutations[0].linkXvar
-                };
-            } else {
-                maData = {};
-            }
-        }
-        else {
-            maData = {};
-        }
-
         return maData;
     }
 
-    public static getTooltipContent(data:IColumnFormatterData<MutationTableRowData>)
+    public static getTooltipContent(data:Mutation[])
     {
         const maData = MutationAssessorColumnFormatter.getData(data);
         let xVar:any = "";
@@ -247,7 +227,7 @@ export default class MutationAssessorColumnFormatter
     }
 
     // This is mostly to make the legacy MA links work
-    public static maLink(link:string)
+    public static maLink(link:string|undefined)
     {
         let url = null;
 
@@ -270,7 +250,7 @@ export default class MutationAssessorColumnFormatter
         return url;
     }
 
-    public static renderFunction(data:IColumnFormatterData<MutationTableRowData>)
+    public static renderFunction(data:Mutation[])
     {
         const NA:string = MutationAssessorColumnFormatter.MA_SCORE_MAP["na"].label;
 
@@ -296,15 +276,6 @@ export default class MutationAssessorColumnFormatter
             );
         }
 
-        // this is required to have a proper filtering when we pass a complex object as Td.value
-        data.toString = function() {
-            return MutationAssessorColumnFormatter.filterValue(data);
-        };
-
-        return (
-            <Td key={data.name} column={data.name} value={data}>
-                {content}
-            </Td>
-        );
+        return content;
     }
 }

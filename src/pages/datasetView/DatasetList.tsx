@@ -1,8 +1,7 @@
 import * as React from "react";
 import * as _ from 'lodash';
 import { Table, Tr, Td }  from 'reactableMSK';
-import Connector, { DatasetDownloads } from './Connector';
-import { CancerStudy }  from 'shared/api/CBioPortalAPI';
+import { CancerStudy }  from 'shared/api/generated/CBioPortalAPI';
 import Spinner from "react-spinkit";
 import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
 import TableHeaderControls from "shared/components/tableHeaderControls/TableHeaderControls";
@@ -43,7 +42,6 @@ class ReferenceCell extends React.Component<{ study:CancerStudy },{}> {
 
 }
 
-@Connector.decorator
 export default class DataSetPageUnconnected extends React.Component<IDatasetPageUnconnectedProps, { filter: string; }> {
 
     constructor(){
@@ -53,7 +51,7 @@ export default class DataSetPageUnconnected extends React.Component<IDatasetPage
 
     componentDidMount() {
 
-        this.props.loadDatasetsInfo();
+        this.props.loadDatasetsInfo!();
 
     }
 
