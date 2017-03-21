@@ -29,7 +29,7 @@ import {default as AnnotationColumnFormatter, IMyCancerGenomeData, IHotspotData,
 import DiscreteCNACache from "../clinicalInformation/DiscreteCNACache";
 import MrnaExprRankCache from "../clinicalInformation/MrnaExprRankCache";
 import CohortVariantCountCache from "../clinicalInformation/CohortVariantCountCache";
-import _ from "lodash";
+import * as _ from "lodash";
 
 export type PatientViewMutationTableProps = {
     sampleManager:SampleManager | null;
@@ -386,13 +386,13 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
         let orderedColumns = _.sortBy(this.props.columns, (c:MutationTableColumnType)=>this._columns[c].order);
         return orderedColumns.reduce((columns:Column<Mutation[]>[], next:MutationTableColumnType)=>{
             let shouldAdd = true;
-            if ((next === MutationTableColumnType.MRNA_EXPR || next === MutationTableColumnType.COPY_NUM) &&
+            if (next === MutationTableColumnType.MRNA_EXPR &&
                 (!this.props.mrnaExprRankGeneticProfileId
                 || this.getSamples().length > 1)) {
                 shouldAdd = false;
             } else if (next === MutationTableColumnType.TUMORS && this.getSamples().length < 2) {
                 shouldAdd = false;
-            } else if (next === MutationTableColumnType.COPY_NUM && !this.props.discreteCNAGeneticProfileId) {
+            } else if (next === MutationTableColumnType.COPY_NUM && (!this.props.discreteCNAGeneticProfileId || this.getSamples().length > 1)) {
                 shouldAdd = false;
             }
             if (shouldAdd) {
