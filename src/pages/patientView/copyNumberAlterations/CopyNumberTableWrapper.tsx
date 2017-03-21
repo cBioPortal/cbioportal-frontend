@@ -9,6 +9,7 @@ import * as _ from 'lodash';
 import MrnaExprColumnFormatter from "../mutation/column/MrnaExprColumnFormatter";
 import CohortColumnFormatter from "./column/CohortColumnFormatter";
 import CnaColumnFormatter from "./column/CnaColumnFormatter";
+import AnnotationColumnFormatter from "./column/AnnotationColumnFormatter";
 
 
 class CNATableComponent extends MSKTable<DiscreteCopyNumberData> {
@@ -30,7 +31,7 @@ export default class CopyNumberTableWrapper extends React.Component<{ store:Pati
             download: (d:DiscreteCopyNumberData)=>d.gene.hugoGeneSymbol,
             sortBy: (d:DiscreteCopyNumberData)=>d.gene.hugoGeneSymbol,
             visible: true,
-            order: 50
+            order: 30
         });
 
         columns.push({
@@ -39,7 +40,23 @@ export default class CopyNumberTableWrapper extends React.Component<{ store:Pati
             download: CnaColumnFormatter.download,
             sortBy: CnaColumnFormatter.sortValue,
             visible: true,
-            order: 60
+            order: 40
+        });
+
+        columns.push({
+            name: "Annotation",
+            render: (d:DiscreteCopyNumberData) => (AnnotationColumnFormatter.renderFunction(d, {
+                oncoKbData: this.props.store.cnaOncoKbData.result,
+                pmidData: this.props.store.pmidData.result,
+                enableOncoKb: true,
+                enableMyCancerGenome: false,
+                enableHotspot: false
+            })),
+            sortBy:(d:DiscreteCopyNumberData)=>{
+                return AnnotationColumnFormatter.sortValue(d,
+                    this.props.store.cnaOncoKbData.result, this.props.store.pmidData.result);
+            },
+            order: 50
         });
 
         columns.push({
