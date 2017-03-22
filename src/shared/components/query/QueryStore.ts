@@ -19,7 +19,6 @@ import {ComponentGetsStoreContext} from "../../lib/ContextUtils";
 import URL from 'url';
 import {buildCBioPortalUrl, BuildUrlParams} from "../../api/urls";
 import {SyntaxError} from "../../lib/oql/oql-parser";
-import MobxPromise from 'mobxpromise';
 
 type CancerStudyQueryUrlParams = {
 	cancer_study_id: string,
@@ -249,7 +248,7 @@ export class QueryStore
 			});
 		},
 		default: [],
-		reaction: () => {
+		onResult: () => {
 			if (this._isFromUrlParams.selectedProfileIds)
 				this._isFromUrlParams.selectedProfileIds = false;
 			else
@@ -268,7 +267,7 @@ export class QueryStore
 			return _.sortBy(sampleLists, sampleList => sampleList.name);
 		},
 		default: [],
-		reaction: () => {
+		onResult: () => {
 			if (this._isFromUrlParams.selectedSampleListId)
 				this._isFromUrlParams.selectedSampleListId = false;
 			else
@@ -360,7 +359,7 @@ export class QueryStore
 			);
 	}
 
-	readonly asyncCustomCaseSet = new MobxPromise({
+	readonly asyncCustomCaseSet = remoteData({
 		invoke: async () => {
 			if (this.selectedSampleListId !== CUSTOM_CASE_LIST_ID || !this.singleSelectedStudyId)
 				return [];
@@ -699,7 +698,7 @@ export class QueryStore
 		return `cbioportal-${study.studyId}-${suffix}.txt`;
 	}
 
-	readonly asyncUrlParams = new MobxPromise({
+	readonly asyncUrlParams = remoteData({
 		await: () => [this.asyncCustomCaseSet],
 		invoke: async () => {
 			let params: CancerStudyQueryUrlParams = {
