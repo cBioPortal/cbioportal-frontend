@@ -218,9 +218,12 @@ export default class StudyListLogic
 		this.store.selectedStudyIds = selectedStudyIds;
 	}
 }
-
 /*
-function parse_search_query(query:string)
+type SearchClause = (
+	{type: 'not', data: string} |
+	{type: 'and', data: string[]}
+);
+function parse_search_query(query:string):SearchClause[]
 {
 	// First eliminate trailing whitespace and reduce every whitespace
 	//	to a single space.
@@ -270,7 +273,7 @@ function parse_search_query(query:string)
 		}
 	}
 	// Now get the conjunctive clauses, and the negative clauses
-	let clauses = [];
+	let clauses:SearchClause[] = [];
 	currInd = 0;
 	let nextOr, nextDash;
 	while (currInd < phrases.length)
@@ -319,19 +322,21 @@ function parse_search_query(query:string)
 	}
 	return clauses;
 }
-type Clause = {type: 'and' | 'not', data: string[]}
 
 function matchPhrase(phrase:string, node)
 {
 	phrase = phrase.toLowerCase();
-	return !!((node.li_attr && node.li_attr.name && node.li_attr.name.toLowerCase().indexOf(phrase) > -1)
-	|| (node.li_attr && node.li_attr.description && node.li_attr.description.toLowerCase().indexOf(phrase) > -1)
-	|| (node.li_attr && node.li_attr.search_terms && node.li_attr.search_terms.toLowerCase().indexOf(phrase) > -1));
+	return !!(
+		(item && item.name && item.name.toLowerCase().indexOf(phrase) > -1)
+		|| (item && item.description && item.description.toLowerCase().indexOf(phrase) > -1)
+		|| (item && item.search_terms && item.search_terms.toLowerCase().indexOf(phrase) > -1)
+	);
 }
+
 function perform_search_single(parsed_query, node)
 {
 	// in: a jstree node
-	// text to search is node.text and node.li_attr.description and node.li_attr.search_terms
+	// text to search is node.text and item.description and item.search_terms
 	// return true iff the query, considering quotation marks, 'and' and 'or' logic, matches
 	let match = false;
 	let hasPositiveClauseType = false;

@@ -456,7 +456,7 @@ export class QueryStore
 
 	@computed get selectedStudies()
 	{
-		return this.selectedStudyIds.map(id => this.treeData.map_studyId_cancerStudy.get(id));
+		return this.selectedStudyIds.map(id => this.treeData.map_studyId_cancerStudy.get(id)).filter(_.identity);
 	}
 
 	@computed get selectedStudies_totalSampleCount()
@@ -767,12 +767,28 @@ export class QueryStore
 		let params = urlParts.query as Partial<CancerStudyQueryUrlParams>;
 		let hashParams;
 		{
-			let [/*#crosscancer*/, tab, priority, genes, study_list] = (urlParts.hash || '').split('/');
-			hashParams = {
-				data_priority: priority as typeof params.data_priority,
-				gene_list: genes && decodeURIComponent(genes),
-				cancer_study_list: study_list && decodeURIComponent(study_list).split(','),
-			};
+			// hack to contend with #/home#/crosscancer/...
+			let hash = urlParts.hash || '';
+			hash = hash.substr(hash.indexOf('crosscancer/'));
+
+			let [crosscancer, tab, priority, genes, study_list] = hash.split('/');
+			if (crosscancer === 'crosscancer')
+			{
+				hashParams = {
+					data_priority: priority as typeof params.data_priority,
+					gene_list: genes && decodeURIComponent(genes),
+					cancer_study_list: study_list && decodeURIComponent(study_list).split(','),
+				};
+			}
+			else
+			{
+				// unexpected hash format
+				hashParams = {
+					data_priority: undefined,
+					gene_list: undefined,
+					cancer_study_list: undefined,
+				};
+			}
 		}
 		let profileIds = [
 			params.genetic_profile_ids_PROFILE_MUTATION_EXTENDED,
@@ -783,7 +799,7 @@ export class QueryStore
 		];
 
 		this.selectedStudyIds = hashParams.cancer_study_list || (params.cancer_study_id ? [params.cancer_study_id] : []);
-		this._selectedProfileIds = profileIds.every(id => id === undefined) ? undefined : profileIds.filter(id => id) as string[];
+		this._selectedProfileIds = profileIds.every(id => id === undefined) ? undefined : profileIds.filter(_.identity) as string[];
 		this.zScoreThreshold = params.Z_SCORE_THRESHOLD || '2.0';
 		this.rppaScoreThreshold = params.RPPA_SCORE_THRESHOLD || '2.0';
 		this.dataTypePriorityCode = hashParams.data_priority || params.data_priority || '0';
@@ -863,10 +879,19 @@ export class QueryStore
 			return;
 
 		let urlParams = this.asyncUrlParams.result;
+
+		//TODO this is currently broken because of mobx-react-router
+		// this is supposed to allow you to go back in the browser history to
+		// return to the query page and restore the QueryStore state from the URL.
 		let historyUrl = URL.format({...urlParams, pathname: window.location.href.split('?')[0]});
+
+		// TODO remove this temporary HACK to make back button work
+		historyUrl = historyUrl.split('#crosscancer').join('#/home#crosscancer');
+
 		let newUrl = buildCBioPortalUrl(urlParams);
 		if (historyUrl != newUrl)
 			window.history.pushState(null, window.document.title, historyUrl);
+
 		window.location.href = newUrl;
 	}
 
