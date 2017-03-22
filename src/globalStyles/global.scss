@@ -35,10 +35,14 @@ body {
     padding: 5px 10px;
     box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.1);
 
-    &:hover {
+    &:hover:not(:disabled) {
       cursor: pointer;
       background: #1f688e;
       color: #fff;
+    }
+    &:disabled {
+      cursor: default;
+      color: #BBB;
     }
   }
   

@@ -14,6 +14,7 @@ import {QueryStore} from "./QueryStore";
 import {providesStoreContext} from "../../lib/ContextUtils";
 import AppConfig from "appConfig";
 import CaseSetSelector from "./CaseSetSelector";
+import AsyncStatus from "../asyncStatus/AsyncStatus";
 
 const styles = styles_any as {
 	QueryContainer: string,
@@ -83,11 +84,11 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
 				)}
 
 				<FlexRow padded className={styles.submitRow}>
-					<button className={classNames('cta', styles.submit)} onClick={() => this.store.submit()}>
+					<button disabled={!this.store.submitEnabled} className={classNames('cta', styles.submit)} onClick={() => this.store.submit()}>
 						Submit
 					</button>
 					{!!(this.store.forDownloadTab && AppConfig.genomespaceEnabled) && (
-						<button className={styles.genomeSpace} onClick={() => this.store.sendToGenomeSpace()}>
+						<button disabled={!this.store.submitEnabled} className={styles.genomeSpace} onClick={() => this.store.sendToGenomeSpace()}>
 							Send to GenomeSpace
 						</button>
 					)}

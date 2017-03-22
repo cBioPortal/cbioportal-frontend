@@ -17,6 +17,7 @@ const styles = styles_any as {
 interface IAsyncStatusProps extends React.HTMLProps<HTMLDivElement>
 {
 	promise: MobxPromise<any> | Array<MobxPromise<any>>;
+	showLastError?: boolean;
 }
 
 @observer
@@ -29,8 +30,11 @@ export default class AsyncStatus extends React.Component<IAsyncStatusProps, {}>
 
 	render()
 	{
-		let {promise, children, className, ...divProps} = this.props;
-		switch (this.promise.status)
+		let {promise, children, className, showLastError, ...divProps} = this.props;
+		let {status, error} = this.promise;
+		if (showLastError && error)
+			status = 'error';
+		switch (status)
 		{
 			case 'pending':
 				return (

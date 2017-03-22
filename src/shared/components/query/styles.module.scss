@@ -300,6 +300,14 @@
 .CaseSetSelector {
   .ReactSelect {
   }
+  textarea {
+    resize: vertical;
+  }
+  .radioRow {
+    :global(.spinner) {
+      float: right;
+    }
+  }
   input[type="radio"] {
     margin-right: 6px;
   }

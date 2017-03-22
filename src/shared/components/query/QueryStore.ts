@@ -1,7 +1,10 @@
 import * as _ from 'lodash';
 import client from "../../api/cbioportalClientInstance";
 import {ObservableMap, toJS, observable, reaction, action, computed, whyRun, expr} from "mobx";
-import {TypeOfCancer as CancerType, GeneticProfile, CancerStudy, SampleList, Gene} from "../../api/generated/CBioPortalAPI";
+import {
+	TypeOfCancer as CancerType, GeneticProfile, CancerStudy, SampleList, Gene,
+	Sample, SampleIdentifier
+} from "../../api/generated/CBioPortalAPI";
 import CancerStudyTreeData from "./CancerStudyTreeData";
 import StudyListLogic from "../StudyList/StudyListLogic";
 import {remoteData} from "../../api/remoteData";
@@ -16,6 +19,7 @@ import {ComponentGetsStoreContext} from "../../lib/ContextUtils";
 import URL from 'url';
 import {buildCBioPortalUrl, BuildUrlParams} from "../../api/urls";
 import {SyntaxError} from "../../lib/oql/oql-parser";
+import MobxPromise from 'mobxpromise';
 
 type CancerStudyQueryUrlParams = {
 	cancer_study_id: string,
@@ -36,6 +40,8 @@ type CancerStudyQueryUrlParams = {
 };
 
 export type GeneReplacement = {alias: string, genes: Gene[]};
+
+export const CUSTOM_CASE_LIST_ID = '';
 
 function isInteger(str:string)
 {
@@ -183,7 +189,7 @@ export class QueryStore
 	@observable _caseIdsMode:'sample'|'patient' = 'sample';
 	@computed get caseIdsMode()
 	{
-		return this.selectedSampleListId ? 'sample' : this._caseIdsMode;
+		return this.selectedSampleListId === CUSTOM_CASE_LIST_ID ? this._caseIdsMode : 'sample';
 	}
 	set caseIdsMode(value)
 	{
@@ -347,20 +353,73 @@ export class QueryStore
 	@memoize
 	getSamplesForStudyAndPatient(studyId:string, patientId:string)
 	{
-		return client.getAllSamplesOfPatientInStudyUsingGET({studyId, patientId});
+		return client.getAllSamplesOfPatientInStudyUsingGET({studyId, patientId})
+			.then(
+				samples => ({studyId, patientId, samples, error: undefined}),
+				error => ({studyId, patientId, samples: [] as Sample[], error})
+			);
 	}
 
-	async getSampleIdsFromCustomCaseSet()
-	{
-		const studyId = this.singleSelectedStudyId;
-		if (!studyId)
-			return [];
-		const caseIds = this.caseIds.match(/\b\S+\b/g) || [];
-		if (this.caseIdsMode === 'sample')
-			return caseIds;
-		const samplesPromises = caseIds.map(patientId => this.getSamplesForStudyAndPatient(studyId, patientId));
-		return _.flatten(await Promise.all(samplesPromises)).map(sample => sample.sampleId);
-	}
+	readonly asyncCustomCaseSet = new MobxPromise({
+		invoke: async () => {
+			if (this.selectedSampleListId !== CUSTOM_CASE_LIST_ID || !this.singleSelectedStudyId)
+				return [];
+			return this.invokeCustomCaseSetLater({
+				singleSelectedStudyId: this.singleSelectedStudyId,
+				caseIds: this.caseIds,
+				caseIdsMode: this.caseIdsMode,
+			})
+		},
+		default: []
+	});
+
+	private invokeCustomCaseSetLater = debounceAsync(
+		async (params:Pick<this, 'singleSelectedStudyId' | 'caseIds' | 'caseIdsMode'>) => {
+			const studyId = params.singleSelectedStudyId as string || '';
+			const caseIds = params.caseIds.match(/\b\S+\b/g) || [];
+			const sampleIds:string[] = [];
+			const invalidIds:string[] = [];
+			if (!studyId)
+				return [];
+			if (params.caseIdsMode === 'sample')
+			{
+				if (caseIds.length)
+				{
+					const sampleIdentifiers = caseIds.map(sampleId => ({studyId, sampleId}));
+					for (const sample of await client.fetchSamplesUsingPOST({sampleIdentifiers, projection: "ID"}))
+						sampleIds.push(sample.sampleId);
+				}
+				invalidIds.push(..._.difference(caseIds, sampleIds));
+			}
+			else
+			{
+				// convert patient IDs to sample IDs
+				const samplesPromises = caseIds.map(patientId => this.getSamplesForStudyAndPatient(studyId, patientId));
+				for (const {studyId, patientId, samples, error} of await Promise.all(samplesPromises))
+				{
+					if (error || !samples.length)
+						invalidIds.push(patientId);
+					else
+						sampleIds.push(...samples.map(sample => sample.sampleId));
+				}
+			}
+
+			if (invalidIds.length)
+				throw new Error(
+					`Invalid ${
+						params.caseIdsMode
+					}${
+						invalidIds.length > 1 ? 's' : ''
+					} for the selected cancer study: ${
+						invalidIds.join(' ')
+					}`
+				);
+
+			return sampleIds;
+		},
+		500
+	);
+
 
 	////////////////////////////////////////////////////////////////////////////////
 	// DERIVED DATA
@@ -575,6 +634,15 @@ export class QueryStore
 
 	// SUBMIT
 
+	@computed get submitEnabled()
+	{
+		return (
+			!this.submitError &&
+			!this.genes.result.suggestions.length &&
+			this.asyncUrlParams.isComplete
+		);
+	}
+
 	@computed get submitError()
 	{
 		let haveExpInQuery = this.oql.query.some(result => {
@@ -586,17 +654,28 @@ export class QueryStore
 
 		if (this.singleSelectedStudyId)
 		{
-			let expProfileSelected = this.selectedProfileIds.some(id => {
-				let profile = this.dict_geneticProfileId_geneticProfile[id];
-				return !!profile && profile.geneticAlterationType === 'MRNA_EXPRESSION';
-			});
+			if (!this.selectedProfileIds.length)
+				return "Please select one or more genetic profiles.";
+
+			let expProfileSelected = this.getSelectedProfileIdFromGeneticAlterationType('MRNA_EXPRESSION');
 			if (haveExpInQuery && !expProfileSelected)
 				return "Expression specified in the list of genes, but not selected in the Genetic Profile Checkboxes.";
+
+			if (this.selectedSampleListId === CUSTOM_CASE_LIST_ID)
+			{
+				if (this.asyncCustomCaseSet.isComplete && !this.asyncCustomCaseSet.result.length)
+					return "Please enter at least one ID in your custom case set.";
+				if (this.asyncCustomCaseSet.error)
+					return "Error in custom case set.";
+			}
 		}
 		else if (haveExpInQuery)
 		{
 			return "Expression filtering in the gene list is not supported when doing cross cancer queries.";
 		}
+
+		if (!this.oql.query.length)
+			return "Please enter one or more gene symbols.";
 	}
 
 	private readonly dict_geneticAlterationType_filenameSuffix:{[K in GeneticProfile['geneticAlterationType']]?: string} = {
@@ -620,54 +699,56 @@ export class QueryStore
 		return `cbioportal-${study.studyId}-${suffix}.txt`;
 	}
 
-	async getUrlParams()
-	{
-		let params: CancerStudyQueryUrlParams = {
-			cancer_study_id: this.singleSelectedStudyId || 'all',
-			genetic_profile_ids_PROFILE_MUTATION_EXTENDED: this.getSelectedProfileIdFromGeneticAlterationType("MUTATION_EXTENDED"),
-			genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION: this.getSelectedProfileIdFromGeneticAlterationType("COPY_NUMBER_ALTERATION"),
-			genetic_profile_ids_PROFILE_MRNA_EXPRESSION: this.getSelectedProfileIdFromGeneticAlterationType("MRNA_EXPRESSION"),
-			genetic_profile_ids_PROFILE_METHYLATION: this.getSelectedProfileIdFromGeneticAlterationType("METHYLATION") || this.getSelectedProfileIdFromGeneticAlterationType("METHYLATION_BINARY"),
-			genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION: this.getSelectedProfileIdFromGeneticAlterationType("PROTEIN_LEVEL"),
-			Z_SCORE_THRESHOLD: this.zScoreThreshold,
-			RPPA_SCORE_THRESHOLD: this.rppaScoreThreshold,
-			data_priority: this.dataTypePriorityCode,
-			case_set_id: this.selectedSampleListId || '-1', // empty string won't work
-			case_ids: (await this.getSampleIdsFromCustomCaseSet()).join('\r\n'),
-			gene_list: this.geneQuery || ' ', // empty string won't work
-			tab_index: this.forDownloadTab ? 'tab_download' : 'tab_visualize' as any,
-			transpose_matrix: this.transposeDataMatrix ? 'on' : undefined,
-			Action: 'Submit',
-		};
-
-		// Remove params with no value, because they may cause problems.
-		// For example, the server will always transpose if transpose_matrix is present, no matter the value.
-		for (let key in params)
-			if (!(params as any)[key])
-				delete (params as any)[key];
-
-		if (this.selectedStudyIds.length != 1)
-		{
-			let studyIds = this.selectedStudyIds;
-			if (!studyIds.length)
-				studyIds = this.cancerStudies.result.map(study => study.studyId);
-			return {
-				pathname: 'cross_cancer.do',
-				query: params,
-				hash: (
-					`crosscancer/overview/${
-						params.data_priority
-					}/${
-						encodeURIComponent(params.gene_list)
-					}/${
-						encodeURIComponent(studyIds.join(','))
-					}`
-				),
+	readonly asyncUrlParams = new MobxPromise({
+		await: () => [this.asyncCustomCaseSet],
+		invoke: async () => {
+			let params: CancerStudyQueryUrlParams = {
+				cancer_study_id: this.singleSelectedStudyId || 'all',
+				genetic_profile_ids_PROFILE_MUTATION_EXTENDED: this.getSelectedProfileIdFromGeneticAlterationType("MUTATION_EXTENDED"),
+				genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION: this.getSelectedProfileIdFromGeneticAlterationType("COPY_NUMBER_ALTERATION"),
+				genetic_profile_ids_PROFILE_MRNA_EXPRESSION: this.getSelectedProfileIdFromGeneticAlterationType("MRNA_EXPRESSION"),
+				genetic_profile_ids_PROFILE_METHYLATION: this.getSelectedProfileIdFromGeneticAlterationType("METHYLATION") || this.getSelectedProfileIdFromGeneticAlterationType("METHYLATION_BINARY"),
+				genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION: this.getSelectedProfileIdFromGeneticAlterationType("PROTEIN_LEVEL"),
+				Z_SCORE_THRESHOLD: this.zScoreThreshold,
+				RPPA_SCORE_THRESHOLD: this.rppaScoreThreshold,
+				data_priority: this.dataTypePriorityCode,
+				case_set_id: this.selectedSampleListId || '-1', // empty string won't work
+				case_ids: this.asyncCustomCaseSet.result.join('\r\n'),
+				gene_list: this.geneQuery || ' ', // empty string won't work
+				tab_index: this.forDownloadTab ? 'tab_download' : 'tab_visualize' as any,
+				transpose_matrix: this.transposeDataMatrix ? 'on' : undefined,
+				Action: 'Submit',
 			};
-		}
 
-		return {pathname: 'index.do', query: params};
-	}
+			// Remove params with no value, because they may cause problems.
+			// For example, the server will always transpose if transpose_matrix is present, no matter the value.
+			for (let key in params)
+				if (!(params as any)[key])
+					delete (params as any)[key];
+
+			if (this.selectedStudyIds.length != 1)
+			{
+				let studyIds = this.selectedStudyIds;
+				if (!studyIds.length)
+					studyIds = this.cancerStudies.result.map(study => study.studyId);
+				return {
+					pathname: 'cross_cancer.do',
+					query: params,
+					hash: (
+						`crosscancer/overview/${
+							params.data_priority
+						}/${
+							encodeURIComponent(params.gene_list)
+						}/${
+							encodeURIComponent(studyIds.join(','))
+						}`
+					),
+				};
+			}
+
+			return {pathname: 'index.do', query: params};
+		}
+	});
 
 	////////////////////////////////////////////////////////////////////////////////
 	// ACTIONS
@@ -694,15 +775,16 @@ export class QueryStore
 				cancer_study_list: study_list && decodeURIComponent(study_list).split(','),
 			};
 		}
-
-		this.selectedStudyIds = hashParams.cancer_study_list || (params.cancer_study_id ? [params.cancer_study_id] : []);
-		this.selectedProfileIds = [
+		let profileIds = [
 			params.genetic_profile_ids_PROFILE_MUTATION_EXTENDED,
 			params.genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION,
 			params.genetic_profile_ids_PROFILE_MRNA_EXPRESSION,
 			params.genetic_profile_ids_PROFILE_METHYLATION,
 			params.genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION,
-		].filter(id => id) as string[];
+		];
+
+		this.selectedStudyIds = hashParams.cancer_study_list || (params.cancer_study_id ? [params.cancer_study_id] : []);
+		this._selectedProfileIds = profileIds.every(id => id === undefined) ? undefined : profileIds.filter(id => id) as string[];
 		this.zScoreThreshold = params.Z_SCORE_THRESHOLD || '2.0';
 		this.rppaScoreThreshold = params.RPPA_SCORE_THRESHOLD || '2.0';
 		this.dataTypePriorityCode = hashParams.data_priority || params.data_priority || '0';
@@ -770,7 +852,7 @@ export class QueryStore
 		this.geneQuery = normalizeQuery([this.geneQuery, ...toAppend].join(' '));
 	}
 
-	@action async submit()
+	@action submit()
 	{
 		if (this.oql.error)
 		{
@@ -778,10 +860,10 @@ export class QueryStore
 			return;
 		}
 
-		if (this.submitError)
+		if (!this.submitEnabled || !this.asyncUrlParams.isComplete)
 			return;
 
-		let urlParams = await this.getUrlParams();
+		let urlParams = this.asyncUrlParams.result;
 		let historyUrl = URL.format({...urlParams, pathname: window.location.href.split('?')[0]});
 		let newUrl = buildCBioPortalUrl(urlParams);
 		if (historyUrl != newUrl)
@@ -789,13 +871,13 @@ export class QueryStore
 		window.location.href = newUrl;
 	}
 
-	@action async sendToGenomeSpace()
+	@action sendToGenomeSpace()
 	{
-		// if (!validDownloadDataForm(this))
-		// 	return;
+		if (!this.submitEnabled || !this.asyncUrlParams.isComplete)
+			return;
 
 		gsUploadByGet({
-			url: buildCBioPortalUrl(await this.getUrlParams()),
+			url: buildCBioPortalUrl(this.asyncUrlParams.result),
 			filename: this.downloadDataFilename,
 			successCallback: savePath => alert('Saved to GenomeSpace as ' + savePath),
 			errorCallback: savePath => alert('ERROR saving to GenomeSpace as ' + savePath),

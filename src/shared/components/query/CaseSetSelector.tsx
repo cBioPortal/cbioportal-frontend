@@ -3,19 +3,19 @@ import * as styles_any from './styles.module.scss';
 import ReactSelect from 'react-select';
 import {observer} from "mobx-react";
 import {computed} from 'mobx';
-import {FlexCol} from "../flexbox/FlexBox";
-import {QueryStore, QueryStoreComponent} from "./QueryStore";
+import {FlexCol, FlexRow} from "../flexbox/FlexBox";
+import {QueryStore, QueryStoreComponent, CUSTOM_CASE_LIST_ID} from "./QueryStore";
 import {getStudyViewUrl} from "../../api/urls";
 import DefaultTooltip from "../DefaultTooltip";
 import AsyncStatus from "../asyncStatus/AsyncStatus";
+import Spinner from "react-spinkit";
 
 const styles = styles_any as {
 	CaseSetSelector: string,
 	ReactSelect: string,
 	tooltip: string,
+	radioRow: string,
 };
-
-const CUSTOM_CASE_LIST_ID = '';
 
 @observer
 export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
@@ -66,15 +66,12 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 						value={this.store.selectedSampleListId}
 						options={this.caseSetOptions}
 						clearable={this.store.selectedSampleListId != this.store.defaultSelectedSampleListId}
-						onChange={option => {
-							let value = option ? option.value : undefined;
-							this.store.selectedSampleListId = value === CUSTOM_CASE_LIST_ID ? '' : value;
-						}}
+						onChange={option => this.store.selectedSampleListId = option ? option.value : undefined}
 					/>
 				</AsyncStatus>
 				<a href={getStudyViewUrl(this.store.singleSelectedStudyId)}>To build your own case set, try out our enhanced Study View.</a>
 
-				{!!(!this.store.selectedSampleListId) && (
+				{!!(this.store.selectedSampleListId === CUSTOM_CASE_LIST_ID) && (
 					<FlexCol padded>
 						<span>Enter case IDs below:</span>
 						<textarea
@@ -84,8 +81,18 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 							value={this.store.caseIds}
 							onChange={event => this.store.caseIds = event.currentTarget.value}
 						/>
-						<this.CaseIdsModeRadio label='By sample ID' state='sample'/>
-						<this.CaseIdsModeRadio label='By patient ID' state='patient'/>
+						<div className={styles.radioRow}>
+							{!!(this.store.asyncCustomCaseSet.isPending) && (
+								<Spinner/>
+							)}
+							<FlexCol padded>
+								<this.CaseIdsModeRadio label='By sample ID' state='sample'/>
+								<this.CaseIdsModeRadio label='By patient ID' state='patient'/>
+							</FlexCol>
+						</div>
+						{!!(this.store.asyncCustomCaseSet.error) && (
+							<AsyncStatus showLastError promise={this.store.asyncCustomCaseSet}/>
+						)}
 					</FlexCol>
 				)}
 			</FlexCol>
