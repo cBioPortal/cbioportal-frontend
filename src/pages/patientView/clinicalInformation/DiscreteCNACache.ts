@@ -39,7 +39,8 @@ export default class DiscreteCNACache extends SampleGeneCache<DiscreteCopyNumber
                         return client.fetchDiscreteCopyNumbersInGeneticProfileUsingPOST({
                             projection: "DETAILED",
                             geneticProfileId: geneticProfileIdDiscrete,
-                            discreteCopyNumberFilter: filter
+                            discreteCopyNumberFilter: filter,
+                            discreteCopyNumberEventType: "ALL"
                         })
                     }
                 }));
