@@ -6,6 +6,11 @@
     <script>
         window.devContext = true;
         window.defaultRoute = "/patient";
+        // TODO: this is patient view link injected through JSP, connecting to
+        // another system (DARWIN) at MSKCC. This prolly be a service further
+        // down the line.
+        // Uncomment to test
+        // window.darwinAccessUrl = "https://en.wikipedia.org/wiki/Charles_Darwin";
 
         // Set default API in case none is specified in .env
 //        __API_ROOT__ = 'cbioportal-rc.herokuapp.com/api';
