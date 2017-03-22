@@ -51,24 +51,24 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
     render(){
         if (this.props.children) {
 
-            let children: any[] = (this.props.children as any[]);
+            let children = (this.props.children as React.ReactElement<IMSKTabProps>[]);
 
             let hasActive: boolean = false;
             let defaultTab: string;
 
-            const arr: any = _.reduce(React.Children.toArray(children), (memo: any, child: any) => {
+            const arr = _.reduce(React.Children.toArray(children), (memo: React.ReactElement<IMSKTabProps>[], child:React.ReactElement<IMSKTabProps>) => {
                 if (child.props.id === this.props.activeTabId) {
                     hasActive = true;
                     this.shownTabs.push(child.props.id);
-                    const newChild = React.cloneElement(child, {
+                    const newChild: React.ReactElement<IMSKTabProps> = React.cloneElement(child, {
                         hidden: false,
                         shown: true
-                    });
+                    } as Partial<IMSKTabProps>);
                     memo.push(newChild);
                 } else if (_.includes(this.shownTabs, child.props.id)) {
                     const newChild = React.cloneElement(child, {
                         hidden: true
-                    });
+                    } as Partial<IMSKTabProps>);
                     memo.push(newChild);
                 }
                 return memo;
@@ -79,14 +79,14 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
                 this.shownTabs.push(children[0].props.id);
                 arr[0] = React.cloneElement(children[0], {
                     hidden: false,
-                });
+                } as Partial<IMSKTabProps>);
                 defaultTab = children[0].props.id;
             }
 
             return <div id={(this.props.id) ? this.props.id : ''}
                         className={ classnames(this.props.className) }>
                 <ul className="nav nav-tabs">{
-                    React.Children.map(children, (tab: any) => {
+                    React.Children.map(children, (tab: React.ReactElement<IMSKTabProps>) => {
                         if (!tab) return;
                         let activeClass = (this.props.activeTabId === tab.props.id || defaultTab === tab.props.id) ? 'active' : '';
                         return <li style={{ cursor:'pointer' }} className={activeClass}>
