@@ -7,7 +7,7 @@ import {computed} from 'mobx';
 import {FlexRow, FlexCol} from "../flexbox/FlexBox";
 import gene_lists from './gene_lists';
 import GeneSymbolValidator from "./GeneSymbolValidator";
-import classNames from "../../lib/classNames";
+import classNames from 'classnames';
 import AsyncStatus from "../asyncStatus/AsyncStatus";
 import {getOncoQueryDocUrl} from "../../api/urls";
 import {QueryStoreComponent} from "./QueryStore";

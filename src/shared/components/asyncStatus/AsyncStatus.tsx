@@ -4,7 +4,7 @@ import MobxPromise from "mobxpromise";
 import {observer} from "mobx-react";
 import FontAwesome from "react-fontawesome";
 import * as styles_any from './styles.module.scss';
-import classNames from "../../lib/classNames";
+import classNames from 'classnames';
 
 const styles = styles_any as {
 	pending: string,

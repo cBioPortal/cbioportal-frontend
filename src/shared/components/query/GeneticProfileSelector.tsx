@@ -6,7 +6,7 @@ import * as styles_any from './styles.module.scss';
 import {action} from 'mobx';
 import {observer} from "mobx-react";
 import AsyncStatus from "../asyncStatus/AsyncStatus";
-import classNames from "../../lib/classNames";
+import classNames from 'classnames';
 import {FlexCol} from "../flexbox/FlexBox";
 import {QueryStoreComponent} from "./QueryStore";
 import DefaultTooltip from "../DefaultTooltip";

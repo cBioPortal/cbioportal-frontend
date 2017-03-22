@@ -6,7 +6,7 @@ import {Gistic} from "../../api/generated/CBioPortalAPIInternal";
 import EnhancedReactTable from "../enhancedReactTable/EnhancedReactTable";
 import {IColumnFormatterData} from "../enhancedReactTable/IColumnFormatter";
 import {Td} from "reactable";
-import classNames from "../../lib/classNames";
+import classNames from 'classnames';
 import {IColumnDefMap} from "../enhancedReactTable/IEnhancedReactTableProps";
 import {toPrecision} from "../../lib/FormatUtils";
 import {getGeneSymbols, sortByCytoband} from "../../lib/GisticUtils";

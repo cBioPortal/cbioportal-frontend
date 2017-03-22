@@ -9,7 +9,7 @@
 
 import * as React from "react";
 import styles from './styles.module.scss';
-import classNames from "shared/lib/classNames";
+import classNames from 'classnames';
 
 export interface IFlexBoxProps <T> extends React.HTMLProps<T>
 {

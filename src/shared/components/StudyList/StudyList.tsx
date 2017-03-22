@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {TypeOfCancer as CancerType, CancerStudy} from "../../api/generated/CBioPortalAPI";
 import * as styles_any from './styles.module.scss';
-import classNames from "../../lib/classNames";
+import classNames from 'classnames';
 import FontAwesome from "react-fontawesome";
 import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
 import {observer} from "mobx-react";

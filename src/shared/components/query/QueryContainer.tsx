@@ -3,7 +3,7 @@ import * as React from "react";
 import CancerStudySelector from "./CancerStudySelector";
 import {FlexRow, FlexCol} from "../flexbox/FlexBox";
 import * as styles_any from './styles.module.scss';
-import classNames from "../../lib/classNames";
+import classNames from 'classnames';
 import GeneticProfileSelector from "./GeneticProfileSelector";
 import {observable, computed, action} from 'mobx';
 import {observer} from "mobx-react";

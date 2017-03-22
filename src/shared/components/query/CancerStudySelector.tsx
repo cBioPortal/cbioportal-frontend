@@ -4,7 +4,7 @@ import Dictionary = _.Dictionary;
 import {TypeOfCancer as CancerType, CancerStudy} from "../../api/generated/CBioPortalAPI";
 import {FlexCol, FlexRow} from "../flexbox/FlexBox";
 import * as styles_any from './styles.module.scss';
-import classNames from "../../lib/classNames";
+import classNames from 'classnames';
 import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
 import ReactSelect from 'react-select';
 import StudyList from "../StudyList/StudyList";
