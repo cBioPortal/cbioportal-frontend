@@ -117,7 +117,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         const qs = queryString.parse((window as any).location.search);
 
         const reaction1 = reaction(
-            () => props.routing.query,
+            () => props.routing.location.query,
             query => {
 
                 if ('studyId' in query) {
@@ -339,21 +339,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     private handlePatientClick(id: string) {
 
-        let newProps = _.clone(this.props.routing.query);
-
-        newProps.caseId = id;
-        delete newProps.sampleId;
-
-        const paramArray: string[] = [];
-
-        // _.each(newProps, (val: string, key: string)=>paramArray.push(`${key}=${val}`));
-        //
-        // console.log(paramArray.join('&'));
-
-        // note that $.param is going to encode the URI
-        const params = $.param(newProps);
-
-        this.props.routing.push( `/patient?${ params }` );
+        this.props.routing.updateRoute({ caseId: id, sampleId: undefined });
 
     }
 
@@ -436,7 +422,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             <tr>
                                 <td>Patient:</td>
                                 <td><PatientHeader
-                                    handlePatientClick={(id: string)=>patientViewPageStore.setPatientId(id)}
+                                    handlePatientClick={(id: string)=>this.handlePatientClick(id)}
                                     patient={patientViewPageStore.patientViewData.result!.patient!}/></td>
                             </tr>
                             <tr>
@@ -451,7 +437,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 }
                 <If condition={patientViewPageStore.patientViewData.isComplete}>
                 <Then>
-                <MSKTabs id="patientViewPageTabs" activeTabId={this.props.routing.query.tab}  onTabClick={(id:string)=>this.handleTabChange(id)} className="mainTabs">
+                <MSKTabs id="patientViewPageTabs" activeTabId={this.props.routing.location.query.tab}  onTabClick={(id:string)=>this.handleTabChange(id)} className="mainTabs">
 
                         <MSKTab key={0} id="summaryTab" linkText="Summary">
 
