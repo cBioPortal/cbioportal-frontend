@@ -53,14 +53,15 @@ export default class CopyNumberTableWrapper extends React.Component<{ store:Pati
             name: "Annotation",
             render: (d:DiscreteCopyNumberData) => (AnnotationColumnFormatter.renderFunction(d, {
                 oncoKbData: this.props.store.cnaOncoKbData.result,
-                pmidData: this.props.store.pmidData.result,
+                oncoKbEvidenceCache: this.props.store.oncoKbEvidenceCache,
+                pmidCache: this.props.store.pmidCache,
                 enableOncoKb: true,
                 enableMyCancerGenome: false,
                 enableHotspot: false
             })),
             sortBy:(d:DiscreteCopyNumberData)=>{
                 return AnnotationColumnFormatter.sortValue(d,
-                    this.props.store.cnaOncoKbData.result, this.props.store.pmidData.result);
+                    this.props.store.cnaOncoKbData.result);
             },
             order: 50
         });
