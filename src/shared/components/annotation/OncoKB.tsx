@@ -1,23 +1,23 @@
 import * as React from 'react';
 import {Modal} from 'react-bootstrap';
+import {observer} from "mobx-react";
 import DefaultTooltip from 'shared/components/DefaultTooltip';
 import annotationStyles from "./styles/annotation.module.scss";
 import oncogenicIconStyles from "./styles/oncogenicIcon.module.scss";
-import {IndicatorQueryResp} from "shared/api/generated/OncoKbAPI";
+import {IndicatorQueryResp, Query} from "shared/api/generated/OncoKbAPI";
 import {
     oncogenicImageClassNames, calcOncogenicScore, calcSensitivityLevelScore, calcResistanceLevelScore,
-    generateTreatments, generateOncogenicCitations, generateMutationEffectCitations
 } from "shared/lib/OncoKbUtils";
-import OncoKbCard from "./OncoKbCard";
+import {observable} from "mobx";
+import OncoKbEvidenceCache from "pages/patientView/OncoKbEvidenceCache";
+import OncoKbTooltip from "./OncoKbTooltip";
+import OncokbPmidCache from "pages/patientView/PmidCache";
 
 export interface IOncoKbProps {
     indicator?: IndicatorQueryResp;
-    evidence?: any;
-    pmids?: any;
-}
-
-export interface IOncoKbState {
-    showFeedback: boolean;
+    evidenceCache?: OncoKbEvidenceCache;
+    evidenceQuery?: Query;
+    pmidCache?: OncokbPmidCache;
 }
 
 export function placeArrow(tooltipEl: any) {
@@ -25,11 +25,27 @@ export function placeArrow(tooltipEl: any) {
     arrowEl.style.left = '10px';
 }
 
+// TODO duplicate code: replace this with the actual PlaceHolder component when ready
+export function placeHolder(text:string)
+{
+    return (
+        <span
+            style={{color: "gray", fontSize:"xx-small", textAlign:"center"}}
+            alt="Querying server for data."
+        >
+            {text}
+        </span>
+    );
+}
+
 /**
  * @author Selcuk Onur Sumer
  */
-export default class OncoKB extends React.Component<IOncoKbProps, IOncoKbState>
+@observer
+export default class OncoKB extends React.Component<IOncoKbProps, {}>
 {
+    @observable showFeedback:boolean = false;
+
     public static sortValue(indicator:IndicatorQueryResp|undefined):number[]
     {
         if (!indicator) {
@@ -50,12 +66,10 @@ export default class OncoKB extends React.Component<IOncoKbProps, IOncoKbState>
     constructor(props: IOncoKbProps)
     {
         super(props);
-        this.state = {
-            showFeedback: false
-        };
 
         this.handleFeedbackOpen = this.handleFeedbackOpen.bind(this);
         this.handleFeedbackClose = this.handleFeedbackClose.bind(this);
+        this.tooltipContent = this.tooltipContent.bind(this);
     }
 
     public render()
@@ -64,45 +78,32 @@ export default class OncoKB extends React.Component<IOncoKbProps, IOncoKbState>
             <span/>
         );
 
-        if (this.props.indicator && this.props.evidence)
+        if (this.props.indicator)
         {
-            const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
-            // TODO get tooltip content from another API call!
-            const tooltipContent = (
-                <OncoKbCard
-                    title={`${this.props.indicator.query.hugoSymbol} ${this.props.indicator.query.alteration} in ${this.props.indicator.query.tumorType}`}
-                    gene={this.props.indicator.geneExist ? this.props.indicator.query.hugoSymbol : ''}
-                    oncogenicity={this.props.indicator.oncogenic}
-                    oncogenicityPmids={generateOncogenicCitations(this.props.evidence.oncogenicRefs)}
-                    mutationEffect={this.props.evidence.mutationEffect.knownEffect}
-                    mutationEffectPmids={generateMutationEffectCitations(this.props.evidence.mutationEffect.refs)}
-                    geneSummary={this.props.indicator.geneSummary}
-                    variantSummary={this.props.indicator.variantSummary}
-                    tumorTypeSummary={this.props.indicator.tumorTypeSummary}
-                    biologicalSummary={this.props.evidence.mutationEffect.description}
-                    treatments={generateTreatments(this.props.evidence.treatments)}
-                    pmids={this.props.pmids}
-                    handleFeedbackOpen={this.handleFeedbackOpen}
-                />
+            oncoKbContent = (
+                <span className={`${annotationStyles["annotation-item"]}`}>
+                    <i className={`${oncogenicIconStyles['oncogenic-icon-image']} ${this.oncogenicImageClassNames(this.props.indicator)}`} />
+                </span>
             );
 
-            if (this.state.showFeedback)
+            if (this.showFeedback)
             {
                 oncoKbContent = this.feedbackModal(this.props.indicator);
             }
-            else
+            else if (this.props.evidenceCache && this.props.evidenceQuery)
             {
+                const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
+
                 oncoKbContent = (
                     <DefaultTooltip
-                        overlay={tooltipContent}
-                        placement="topLeft"
+                        overlay={this.tooltipContent}
+                        placement="bottomLeft"
                         trigger={['hover', 'focus']}
                         arrowContent={arrowContent}
                         onPopupAlign={placeArrow}
+                        destroyTooltipOnHide={false}
                     >
-                        <span className={`${annotationStyles["annotation-item"]}`}>
-                            <i className={`${oncogenicIconStyles['oncogenic-icon-image']} ${this.oncogenicImageClassNames(this.props.indicator)}`} />
-                        </span>
+                        {oncoKbContent}
                     </DefaultTooltip>
                 );
             }
@@ -120,7 +121,7 @@ export default class OncoKB extends React.Component<IOncoKbProps, IOncoKbState>
         const uriParam = `entry.1083850662=${encodeURIComponent(window.location.href)}`;
 
         return (
-            <Modal show={this.state.showFeedback} onHide={this.handleFeedbackClose}>
+            <Modal show={this.showFeedback} onHide={this.handleFeedbackClose}>
                 <Modal.Header closeButton>
                     <Modal.Title>OncoKB Annotation Feedback</Modal.Title>
                 </Modal.Header>
@@ -131,19 +132,32 @@ export default class OncoKB extends React.Component<IOncoKbProps, IOncoKbState>
                         marginHeight={0}
                         marginWidth={0}
                     >
-                        Loading...
+                        {placeHolder('LOADING')}
                     </iframe>
                 </Modal.Body>
             </Modal>
         );
     }
 
+    private tooltipContent(): JSX.Element
+    {
+        return (
+            <OncoKbTooltip
+                indicator={this.props.indicator}
+                evidenceCache={this.props.evidenceCache}
+                evidenceQuery={this.props.evidenceQuery}
+                pmidCache={this.props.pmidCache}
+                handleFeedbackOpen={this.handleFeedbackOpen}
+            />
+        );
+    }
+
     private handleFeedbackOpen(): void {
-        this.setState(({showFeedback : true} as IOncoKbState));
+        this.showFeedback = true;
     }
 
     private handleFeedbackClose(): void {
-        this.setState(({showFeedback : false} as IOncoKbState));
+        this.showFeedback = false;
     }
 
     public oncogenicImageClassNames(indicator:IndicatorQueryResp):string
