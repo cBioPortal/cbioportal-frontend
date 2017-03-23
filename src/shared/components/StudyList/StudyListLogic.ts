@@ -73,7 +73,7 @@ export default class StudyListLogic
 
 	// returns true if the node or any related nodes match
 	nodeFilter = memoize({
-		getAdditionalArgs: () => [this.store.treeData, this.store.maxTreeDepth, this.store.searchText],
+		getAdditionalArgs: () => [this.store.treeData, this.store.maxTreeDepth, this.store.searchText, this.store.showSelectedStudiesOnly],
 		fixedArgsLength: 1,
 		function: (node:CancerTreeNode):boolean =>
 		{
@@ -86,7 +86,7 @@ export default class StudyListLogic
 
 			// hack - shouldConsiderNode() call above does all the required filtering
 			if (this.store.showSelectedStudiesOnly)
-				return true;
+				return !meta.isPriorityCategory;
 
 			// if no search text is entered, include all nodes
 			if (!this.store.searchText)

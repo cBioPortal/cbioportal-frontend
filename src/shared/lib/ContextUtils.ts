@@ -1,21 +1,16 @@
 import * as React from 'react';
 import withContext from 'recompose/withContext';
 
-interface ComponentClassWithState<P, S> {
-    new (props?: P, context?: any): React.Component<P, S>;
-    propTypes?: React.ValidationMap<P>;
-    contextTypes?: React.ValidationMap<any>;
-    childContextTypes?: React.ValidationMap<any>;
-    defaultProps?: P;
-    displayName?: string;
-}
-
-function createValidator<Store>(storeClass:new(..._:any[])=>Store)
+/**
+ * Creates a function which validates that a property of an object is an instance of a specific class.
+ * For use with <code>React.Component.contextTypes</code>.
+ */
+function createValidator<O>(classDef:new(...args:any[])=>any):React.Validator<O>
 {
 	return function validator<T>(object: T, key: keyof T, componentName: string):Error|null {
-		if (object[key] instanceof storeClass)
+		if (object[key] instanceof classDef)
 			return null;
-		return new Error(`Expecting ${componentName} to receive {${JSON.stringify(key)}: ${storeClass.name}} from context`);
+		return new Error(`Expecting ${componentName} to receive {${JSON.stringify(key)}: ${classDef.name}} from context`);
 	};
 }
 

@@ -20,6 +20,7 @@ import URL from 'url';
 import {buildCBioPortalUrl, BuildUrlParams} from "../../api/urls";
 import {SyntaxError} from "../../lib/oql/oql-parser";
 
+// URL Params interface for communicating between legacy pages
 type CancerStudyQueryUrlParams = {
 	cancer_study_id: string,
 	genetic_profile_ids_PROFILE_MUTATION_EXTENDED: string,
@@ -623,7 +624,7 @@ export class QueryStore
 	{
 		try
 		{
-			return this.oql.query.map(line => line.gene).filter(gene => gene && gene !== 'DATATYPES') as string[];
+			return this.oql.query.map(line => line.gene).filter(gene => gene && gene !== 'DATATYPES');
 		}
 		catch (e)
 		{
@@ -637,6 +638,7 @@ export class QueryStore
 	{
 		return (
 			!this.submitError &&
+			this.genes.isComplete &&
 			!this.genes.result.suggestions.length &&
 			this.asyncUrlParams.isComplete
 		);

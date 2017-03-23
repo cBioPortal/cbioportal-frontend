@@ -7,6 +7,7 @@ export const CANCER_TYPE_ROOT = 'tissue';
 export type CancerTreeNode = CancerType|CancerStudy;
 export type NodeMetadata = {
 	isCancerType:boolean,
+	isPriorityCategory:boolean,
 	childCancerTypes:CancerType[],
 	childStudies:CancerStudy[],
 	descendantStudies:CancerStudy[],
@@ -75,6 +76,7 @@ export default class CancerStudyTreeData
 
 				this.map_node_meta.set(node, {
 					isCancerType: nodes == cancerTypes,
+					isPriorityCategory: false,
 					childCancerTypes: [],
 					childStudies: [],
 					descendantStudies: [],
@@ -89,6 +91,7 @@ export default class CancerStudyTreeData
 		for (let category of priorityCategories)
 		{
 			meta = this.map_node_meta.get(category) as NodeMetadata;
+			meta.isPriorityCategory = true;
 			for (let studyId of priorityStudies[category.cancerTypeId])
 			{
 				let study = this.map_studyId_cancerStudy.get(studyId);
