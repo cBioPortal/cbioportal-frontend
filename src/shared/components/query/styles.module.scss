@@ -34,7 +34,7 @@
   }
 
   .errorMessage {
-    color: maroon;
+    color: $redError;
     font-weight: bold;
   }
 }
@@ -359,6 +359,7 @@
     margin-right: 4px;
     width: 16px;
     height: 16px;
+    line-height: 17px;
   }
   span.pendingMessage,
   span.errorMessage {
@@ -374,6 +375,7 @@
     border-radius: 2px;
     span.icon {
       color: #fff;
+      line-height: 17px;
     }
   }
   div.invalidBubble {
@@ -383,21 +385,20 @@
     background: $greenSuccess;
   }
   div.suggestionBubble {
-    color: $darkBrown;
+    color: rgba(0, 0, 0, 0.5);
     cursor: pointer;
     display: flex;
     align-items: center;
     margin: 2px;
-    padding: 4px;
-    background-color: $cream;
-    border: 1px solid $darkCream;
-    border-radius: 4px;
+    padding: 5px 10px;
+    background-color: $lightGrey;
+    border-radius: 2px;
     &:hover {
-      background-color: $darkCream;
-      border-color: $darkestCream;
+      background-color: $mediumGrey;
     }
     span.icon {
-      color: #888888;
+      color: $darkGrey;
+      line-height: 17px;
     }
     span.noChoiceLabel {
       font-weight: normal;

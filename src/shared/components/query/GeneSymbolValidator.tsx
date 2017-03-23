@@ -59,7 +59,7 @@ export default class GeneSymbolValidator extends QueryStoreComponent<{}, {}>
 			return (
 				<div className={styles.GeneSymbolValidator}>
 					<div className={styles.invalidBubble} title="Please edit the gene symbols.">
-						<FontAwesome className={styles.icon} name='exclamation'/>
+						<FontAwesome className={styles.icon} name='exclamation-circle'/>
 						<span>Invalid gene symbols.</span>
 					</div>
 
