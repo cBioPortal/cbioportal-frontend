@@ -362,10 +362,12 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         let sampleManager: SampleManager | null = null;
         let sampleHeader: (JSX.Element | undefined)[] | null = null;
         let cohortNav: JSX.Element | null = null;
-        let studyName: string | null = null;
+        let studyName: JSX.Element | null = null;
 
         if (patientViewPageStore.studyMetaData.isComplete) {
-            studyName = (patientViewPageStore.studyMetaData.result as CancerStudy).name;
+            // TODO: figure out why result is not properly typed by client
+            let study: CancerStudy = (patientViewPageStore.studyMetaData.result as CancerStudy);
+            studyName = <a href={`/beta/study.do?cancer_study_id=${study.studyId}`}>{study.name}</a>;
         }
 
         if (patientViewPageStore.patientViewData.isComplete) {
@@ -420,13 +422,15 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             <div>
 
                 <div className="studyMetaBar">
+                    <div>
                     <If condition={(cohortNav != null)}>
-                        <div>
+
                             <div>
                                 {cohortNav}
                             </div>
-                        </div>
+
                     </If>
+                    </div>
 
                     <div>{ studyName }</div>
                 </div>

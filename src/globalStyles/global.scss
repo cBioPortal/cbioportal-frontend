@@ -1,4 +1,9 @@
 
+/* locks scroll bar on to prevent horizontal jump when content render */
+body {
+  overflow-y:scroll;
+}
+
 /* fix for legacy style isses. makes it bootstrap */
 #content .cbioportal-frontend {
     h4 {

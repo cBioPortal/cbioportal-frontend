@@ -7,6 +7,7 @@ import ExtendedRoutingStore from './shared/lib/ExtendedRouterStore';
 import { computed, extendObservable } from 'mobx';
 import makeRoutes from './routes';
 import lodash from 'lodash';
+import $ from 'jquery';
 
 // make sure lodash doesn't overwrite (or set) global underscore
 lodash.noConflict();
@@ -45,4 +46,4 @@ if (__DEBUG__ && module.hot) {
     module.hot.accept('./routes', () => render());
 }
 
-render();
+$(document).ready(()=>render());
