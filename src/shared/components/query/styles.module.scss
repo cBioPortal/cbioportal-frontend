@@ -52,7 +52,7 @@
   position: relative;
   overflow: hidden;
   user-select: none;
-  height: 400px;
+  height: 305px;
 
   label {
     display: flex;
@@ -296,6 +296,7 @@
 }
 
 .DataTypePriorityLabel {
+  line-height: 2;
   margin: 0 10px 0 0;
 }
 
