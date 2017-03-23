@@ -132,7 +132,7 @@ export function buildTimeline(params, caseIds, patientInfo, clinicalDataMap, cas
         }
     }
 
-    var width = 900;
+    var width = 1245;
     window.pvTimeline = clinicalTimelineExports.clinicalTimeline()
         .width(width)
         .data(timeData)

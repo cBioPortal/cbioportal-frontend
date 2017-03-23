@@ -23,7 +23,7 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
         // --- construct params ---
         let uniqCnasampleIds = _.uniq(_.map(this.props.cnaSegments, 'sampleId'));
         let uniqMutSampleIds = _.uniq(_.map(this.props.mutations, 'sampleId'));
-        var config = tracksHelper.GenomicOverviewConfig(uniqCnasampleIds.length + uniqMutSampleIds.length, 1000);
+        var config = tracksHelper.GenomicOverviewConfig(uniqCnasampleIds.length + uniqMutSampleIds.length, 1145);
         // --- end of params ---
 
         // --- raphael config ---
