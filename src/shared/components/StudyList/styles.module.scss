@@ -159,8 +159,8 @@ ul.StudyList {
         border-bottom: 1px solid rgb(232, 241, 248);
         color: #333;
         display: block;
-        font: normal normal 500 17px/18px 'Helvetica Neue', Helvetica, Arial, sans-serif;
-        padding: 10px 5px 5px 5px;
+        font: normal normal 500 15px/15px 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        padding: 10px 5px 3px 5px;
         margin: 20px 10px 5px 10px;
       }
     }
@@ -169,7 +169,7 @@ ul.StudyList {
       padding-top: 0px;
 
       label {
-        font: normal normal 400 15px/18px 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        font: normal normal 400 14px/18px 'Helvetica Neue', Helvetica, Arial, sans-serif;
         color: #1982b8;
         margin: 0;
         padding: 5px 15px 5px 0;
@@ -204,7 +204,7 @@ li.Study {
   }
 
   input[type="checkbox"] {
-    margin: 4px 6px 0 0;
+    margin: 1px 6px 0 0;
   }
 
   .StudyName {

@@ -1,7 +1,7 @@
 .QueryAndDownloadTabs {
 
   :global(ul.nav.nav-tabs li) {
-    font-size: 150%;
+    font-size: 110%;
     font-weight: bold;
   }
 
@@ -9,6 +9,8 @@
     border: 1px solid #ddd;
     border-top: none;
     padding: 10px;
+    font-size: 85%;
+    line-height: normal;
 
     :global(.Select-control) {
       border: 1px solid #ddd !important;
@@ -168,12 +170,12 @@
       list-style-type: none;
       display: flex;
       flex-direction: row;
-      font-size: 13px;
+      align-items: center;
       font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
       color: #043852;
       border-bottom: 1px solid rgb(222, 233, 241);
       border-top: 1px solid rgb(243, 248, 251);
-      padding: 10px;
+      padding: 8px 10px;
 
       span {
         &.cancerTypeListItemLabel {
