@@ -1,8 +1,30 @@
 .QueryAndDownloadTabs {
 
   :global(ul.nav.nav-tabs li) {
-    font-size: 110%;
-    font-weight: bold;
+    font-size: 85%;
+    font-weight: 500;
+    text-transform: uppercase;
+  }
+
+  :global(ul.nav.nav-tabs li.active a) {
+    border-top: 2px solid #1982b8;
+    color: #333;
+    font-weight: 500;
+  }
+
+  :global(ul.nav.nav-tabs li a) {
+    border-top: 2px solid #fff;
+    border-top-left-radius: 2px;
+    border-top-right-radius: 2px;
+    color: $darkGrey;
+    min-width: 150px;
+    font-weight: 400;
+    text-align: center;
+    transition: all 0.2s ease-in-out;
+  }  
+
+  :global(ul.nav.nav-tabs li:not(.active) a:hover) {
+    border-top: 2px solid #eee;
   }
 
   .QueryContainer {
