@@ -129,6 +129,8 @@
 
   .selectAll {
     text-transform: uppercase;
+    min-width: 105px;
+    text-align: center;
   }
 
   .noData,
@@ -344,15 +346,15 @@
 
   .buttonRow {
     button {
-      background: linear-gradient(to bottom, rgba(252,252,252,1) 50%, rgba(245,245,245,1) 100%);
-      border: 1px solid #ddd;
+      background: linear-gradient(to bottom, #f3f3f3 50%, #eaeaea 100%);
+      border: 0;
+      border-bottom: 1px solid rgba(0,0,0,0.1);
       border-radius: 2px;
-      box-shadow: inset 1px 1px 0px rgba(255, 255, 255, 0.5);
-      color: $darkBrown;
-      padding: .4em 1em;
+      color: #333;
+      padding: 8px 15px;
 
       &:hover {
-        color: #333;
+        background: linear-gradient(to bottom, #eaeaea 50%, #f3f3f3 100%);
       }
     }
   }
