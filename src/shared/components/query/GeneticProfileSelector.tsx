@@ -3,13 +3,12 @@ import * as React from 'react';
 import {GeneticProfile} from "../../api/generated/CBioPortalAPI";
 import FontAwesome from "react-fontawesome";
 import * as styles_any from './styles.module.scss';
-import {action} from 'mobx';
 import {observer} from "mobx-react";
-import AsyncStatus from "../asyncStatus/AsyncStatus";
 import classNames from 'classnames';
 import {FlexCol} from "../flexbox/FlexBox";
 import {QueryStoreComponent} from "./QueryStore";
 import DefaultTooltip from "../DefaultTooltip";
+import SectionHeader from "../sectionHeader/SectionHeader";
 
 const styles = styles_any as {
 	GeneticProfileSelector: string,
@@ -34,18 +33,20 @@ export default class GeneticProfileSelector extends QueryStoreComponent<{}, {}>
 
 		return (
 			<FlexCol padded className={styles.GeneticProfileSelector}>
-				<h2>Select Genomic Profiles:</h2>
-				<AsyncStatus className={styles.group} promise={this.store.geneticProfiles}>
+				<SectionHeader promises={[this.store.geneticProfiles]}>
+					Select Genomic Profiles:
+				</SectionHeader>
+				<div className={styles.group}>
 					{this.renderGroup("MUTATION_EXTENDED", "Mutation")}
 					{this.renderGroup("COPY_NUMBER_ALTERATION", "Copy Number")}
 					{this.renderGroup("MRNA_EXPRESSION", "mRNA Expression")}
 					{this.renderGroup("METHYLATION", "DNA Methylation")}
 					{this.renderGroup("METHYLATION_BINARY", "DNA Methylation")}
 					{this.renderGroup("PROTEIN_LEVEL", "Protein/phosphoprotein level")}
-					{!!(!this.store.geneticProfiles.result.length) && (
+					{!!(this.store.geneticProfiles.isComplete && !this.store.geneticProfiles.result.length) && (
 						<strong>No Genomic Profiles available for this Cancer Study</strong>
 					)}
-				</AsyncStatus>
+				</div>
 			</FlexCol>
 		);
 	}

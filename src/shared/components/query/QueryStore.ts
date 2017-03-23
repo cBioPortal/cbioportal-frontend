@@ -20,7 +20,7 @@ import URL from 'url';
 import {buildCBioPortalUrl, BuildUrlParams} from "../../api/urls";
 import {SyntaxError} from "../../lib/oql/oql-parser";
 
-// URL Params interface for communicating between legacy pages
+// interface for communicating
 type CancerStudyQueryUrlParams = {
 	cancer_study_id: string,
 	genetic_profile_ids_PROFILE_MUTATION_EXTENDED: string,

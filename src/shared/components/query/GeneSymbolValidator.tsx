@@ -1,7 +1,6 @@
 import * as React from 'react';
 import * as styles_any from './styles.module.scss';
 import {observer} from "mobx-react";
-import Spinner from "react-spinkit";
 import FontAwesome from "react-fontawesome";
 import ReactSelect from 'react-select';
 import AsyncStatus from "../asyncStatus/AsyncStatus";
@@ -43,7 +42,13 @@ export default class GeneSymbolValidator extends QueryStoreComponent<{}, {}>
 			return null;
 
 		if (this.store.genes.isError)
-			return <AsyncStatus promise={this.store.genes}/>;
+			return (
+				<div className={styles.GeneSymbolValidator}>
+					<span className={styles.pendingMessage}>
+						Unable to validate gene symbols.
+					</span>
+				</div>
+			);
 
 		if (this.store.genes.isPending && this.store.genes.result.suggestions.length == 0)
 			return (
@@ -51,7 +56,6 @@ export default class GeneSymbolValidator extends QueryStoreComponent<{}, {}>
 					<span className={styles.pendingMessage}>
 						Validating gene symbols...
 					</span>
-					<Spinner/>
 				</div>
 			);
 
@@ -64,7 +68,6 @@ export default class GeneSymbolValidator extends QueryStoreComponent<{}, {}>
 					</div>
 
 					{this.store.genes.result.suggestions.map(this.renderSuggestion, this)}
-					<AsyncStatus promise={this.store.genes}/>
 				</div>
 			);
 

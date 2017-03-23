@@ -8,11 +8,11 @@ import {FlexRow, FlexCol} from "../flexbox/FlexBox";
 import gene_lists from './gene_lists';
 import GeneSymbolValidator from "./GeneSymbolValidator";
 import classNames from 'classnames';
-import AsyncStatus from "../asyncStatus/AsyncStatus";
 import {getOncoQueryDocUrl} from "../../api/urls";
 import {QueryStoreComponent} from "./QueryStore";
 import MutSigGeneSelector from "./MutSigGeneSelector";
 import GisticGeneSelector from "./GisticGeneSelector";
+import SectionHeader from "../sectionHeader/SectionHeader";
 
 const styles = styles_any as {
 	GeneSetSelector: string,
@@ -23,6 +23,7 @@ const styles = styles_any as {
 	geneSet: string,
 	empty: string,
 	notEmpty: string,
+	sectionSpinner: string,
 };
 
 export interface GeneSetSelectorProps
@@ -70,7 +71,10 @@ export default class GeneSetSelector extends QueryStoreComponent<GeneSetSelector
 	{
 		return (
 			<FlexCol padded overflow className={styles.GeneSetSelector}>
-				<h2>Enter Gene Set:</h2>
+				<SectionHeader promises={[this.store.mutSigForSingleStudy, this.store.gisticForSingleStudy, this.store.genes]}>
+					Enter Gene Set:
+				</SectionHeader>
+
 				<a href={getOncoQueryDocUrl()}>Advanced: Onco Query Language (OQL)</a>
 				<ReactSelect
 					className={styles.ReactSelect}
@@ -80,20 +84,16 @@ export default class GeneSetSelector extends QueryStoreComponent<GeneSetSelector
 				/>
 
 				<FlexRow padded className={styles.buttonRow}>
-					<AsyncStatus promise={this.store.mutSigForSingleStudy}>
-						{!!(this.store.mutSigForSingleStudy.result.length) && (
-							<button onClick={() => this.store.showMutSigPopup = true}>
-								Select from Recurrently Mutated Genes (MutSig)
-							</button>
-						)}
-					</AsyncStatus>
-					<AsyncStatus promise={this.store.gisticForSingleStudy}>
-						{!!(this.store.gisticForSingleStudy.result.length) && (
-							<button onClick={() => this.store.showGisticPopup = true}>
-								Select Genes from Recurrent CNAs (Gistic)
-							</button>
-						)}
-					</AsyncStatus>
+					{!!(this.store.mutSigForSingleStudy.result.length) && (
+						<button onClick={() => this.store.showMutSigPopup = true}>
+							Select from Recurrently Mutated Genes (MutSig)
+						</button>
+					)}
+					{!!(this.store.gisticForSingleStudy.result.length) && (
+						<button onClick={() => this.store.showGisticPopup = true}>
+							Select Genes from Recurrent CNAs (Gistic)
+						</button>
+					)}
 				</FlexRow>
 
 				<textarea

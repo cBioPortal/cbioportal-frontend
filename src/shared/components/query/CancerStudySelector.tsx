@@ -9,10 +9,9 @@ import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
 import ReactSelect from 'react-select';
 import StudyList from "../StudyList/StudyList";
 import {observer} from "mobx-react";
-import {action, toJS, computed} from "mobx";
 import memoize from "memoize-weak-decorator";
-import AsyncStatus from "../asyncStatus/AsyncStatus";
 import {QueryStoreComponent} from "./QueryStore";
+import SectionHeader from "../sectionHeader/SectionHeader";
 
 const styles = styles_any as {
 	CancerStudySelector: string,
@@ -152,25 +151,21 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 
 		return (
 			<FlexCol overflow className={styles.CancerStudySelector}>
-				<FlexRow padded overflow className={styles.selectCancerStudyRow}>
-					<h2>Select Studies:</h2>
-					<AsyncStatus promise={[this.store.cancerTypes, this.store.cancerStudies]}>
-						{!!(this.store.cancerTypes.result.length && this.store.cancerStudies.result.length) ? (
-							<span
-								onClick={() => {
-									if (this.store.selectedStudyIds.length)
-										this.store.showSelectedStudiesOnly = !this.store.showSelectedStudiesOnly;
-								}}
-								className={selectedCountClass}
-							>
-								<b>{this.store.selectedStudyIds.length}</b> studies selected
-								(<b>{this.store.selectedStudies_totalSampleCount}</b> samples)
-							</span>
-						) : (
-				            <span className={styles.noData}>No data</span>
-						)}
-					</AsyncStatus>
-				</FlexRow>
+				<SectionHeader promises={[this.store.cancerTypes, this.store.cancerStudies]}>
+					Select Studies:
+					{!!(!this.store.cancerTypes.isPending && !this.store.cancerStudies.isPending) && (
+						<span
+							className={selectedCountClass}
+							onClick={() => {
+								if (this.store.selectedStudyIds.length)
+									this.store.showSelectedStudiesOnly = !this.store.showSelectedStudiesOnly;
+							}}
+						>
+							<b>{this.store.selectedStudyIds.length}</b> studies selected
+							(<b>{this.store.selectedStudies_totalSampleCount}</b> samples)
+						</span>
+					)}
+				</SectionHeader>
 
 				<FlexRow overflow className={styles.cancerStudySelectorHeader}>
 					<ReactSelect

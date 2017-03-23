@@ -89,7 +89,7 @@
     background-color: #1982b8;
     border-bottom: 1px solid rgb(17, 116, 167);
     padding: 10px;
-    margin: 0;
+    margin: 8px 0 0 0;
     display: flex;
     justify-content: space-between;
 
@@ -135,8 +135,8 @@
 
   .noData,
   .selectedCount {
+    float: right;
     font-size: 12px;
-    line-height: 30px;
     text-align: right;
     margin: 0 10px;
 
@@ -269,7 +269,7 @@
 }
 
 .GeneticProfileSelector {
-  .group {
+  div.group {
     display: flex;
     flex-direction: column;
 
@@ -277,8 +277,6 @@
       margin-left: 20px;
     }
   }
-
-
 
   div.zScore {
     margin: 0px 0 10px 20px;

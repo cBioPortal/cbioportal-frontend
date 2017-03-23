@@ -1,0 +1,32 @@
+div.SectionHeader {
+  :global(.spinner) {
+    float: right;
+    height: 0;
+    overflow: visible;
+  }
+
+  h2 {
+    font: normal normal 700 16px/22px 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    flex-grow: 2;
+    margin: 0;
+  }
+
+  .error {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 5px;
+    border-radius: 4px;
+    border: 1px solid #cd0a0a;
+    background: #fef1ec;
+    color: #cd0a0a;
+
+    .icon {
+      margin-right: 5px;
+    }
+
+    .message {
+    }
+  }
+}

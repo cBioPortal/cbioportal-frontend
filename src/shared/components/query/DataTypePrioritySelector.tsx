@@ -5,6 +5,7 @@ import {QueryStore, QueryStoreComponent} from "./QueryStore";
 import {toJS} from "mobx";
 import {observer} from "mobx-react";
 import {FlexRow, FlexCol} from "../flexbox/FlexBox";
+import SectionHeader from "../sectionHeader/SectionHeader";
 
 const styles = styles_any as {
 	DataTypePrioritySelector: string,
@@ -21,7 +22,7 @@ export default class DataTypePrioritySelector extends QueryStoreComponent<{}, {}
 
 		return (
 			<FlexCol padded className={styles.DataTypePrioritySelector}>
-				<h2>Select Data Type Priority:</h2>
+				<SectionHeader>Select Data Type Priority:</SectionHeader>
 				<FlexRow>
 					<this.DataTypePriorityRadio label='Mutation and CNA' state={{mutation: true, cna: true}}/>
 					<this.DataTypePriorityRadio label='Only Mutation' state={{mutation: true, cna: false}}/>

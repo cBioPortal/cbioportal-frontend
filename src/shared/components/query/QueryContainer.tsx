@@ -14,7 +14,6 @@ import {QueryStore} from "./QueryStore";
 import {providesStoreContext} from "../../lib/ContextUtils";
 import AppConfig from "appConfig";
 import CaseSetSelector from "./CaseSetSelector";
-import AsyncStatus from "../asyncStatus/AsyncStatus";
 
 const styles = styles_any as {
 	QueryContainer: string,
