@@ -8,21 +8,27 @@ export enum AlterationTypes {
 
 export default class CnaColumnFormatter
 {
-    public static renderAlterationTypes(value: number)
-    {
-        switch(value) {
-            case AlterationTypes.DeepDel:
-                return <span style={{color:'#FF0000'}}>{AlterationTypes[AlterationTypes.DeepDel]}</span>;
-            case AlterationTypes.AMP:
-                return <span style={{color:'#0000FF'}}>{AlterationTypes[AlterationTypes.AMP]}</span>;
-            default:
-                return <span/>;
-        }
+    public static displayText(d:DiscreteCopyNumberData) {
+        return AlterationTypes[d.alteration];
     }
 
     public static renderFunction(d:DiscreteCopyNumberData)
     {
-        return <span>{CnaColumnFormatter.renderAlterationTypes(d.alteration)}</span>;
+        let color = null;
+        let value = d.alteration;
+        switch(value) {
+            case -2:
+                color = '#FF0000';
+                break;
+            case 2:
+                color = '#0000FF';
+                break;
+        }
+        if (!color) {
+            return (<span/>);
+        } else {
+            return (<span style={{color}}>{CnaColumnFormatter.displayText(d)}</span>);
+        }
     }
 
     public static download(d:DiscreteCopyNumberData)
