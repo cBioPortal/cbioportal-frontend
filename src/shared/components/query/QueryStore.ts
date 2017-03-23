@@ -639,7 +639,6 @@ export class QueryStore
 		return (
 			!this.submitError &&
 			this.genes.isComplete &&
-			!this.genes.result.suggestions.length &&
 			this.asyncUrlParams.isComplete
 		);
 	}
@@ -677,6 +676,9 @@ export class QueryStore
 
 		if (!this.oql.query.length)
 			return "Please enter one or more gene symbols.";
+
+		if (this.genes.result.suggestions.length)
+			return "Please edit the gene symbols.";
 	}
 
 	private readonly dict_geneticAlterationType_filenameSuffix:{[K in GeneticProfile['geneticAlterationType']]?: string} = {
