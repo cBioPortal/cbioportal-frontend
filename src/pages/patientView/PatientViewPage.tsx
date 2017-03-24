@@ -419,19 +419,12 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         }
 
         return (
-            <div>
+            <div className="patientViewPage">
 
                 <div className="studyMetaBar">
                     <div>
-                    <If condition={(cohortNav != null)}>
-
-                            <div>
-                                {cohortNav}
-                            </div>
-
-                    </If>
+                        <If condition={(cohortNav != null)}>{cohortNav}</If>
                     </div>
-
                     <div>{ studyName }</div>
                 </div>
 
