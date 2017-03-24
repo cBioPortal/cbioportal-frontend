@@ -3,6 +3,7 @@ import React from 'react';
 import { assert } from 'chai';
 import { shallow, mount } from 'enzyme';
 import sinon from 'sinon';
+import {DiscreteCopyNumberData} from "../../../../shared/api/generated/CBioPortalAPI";
 
 describe('CnaColumnFormatter', () => {
 
@@ -16,11 +17,11 @@ describe('CnaColumnFormatter', () => {
 
     it('CNA column renderer shows correct text based on alteration value', () => {
 
-        let output = mount(CnaColumnFormatter.renderAlterationTypes(-2));
+        let output = mount(CnaColumnFormatter.renderFunction({alteration:-2} as DiscreteCopyNumberData));
 
         assert.equal(output.text(), 'DeepDel');
 
-        output = mount(CnaColumnFormatter.renderAlterationTypes(2));
+        output = mount(CnaColumnFormatter.renderFunction({alteration:2} as DiscreteCopyNumberData));
 
         assert.equal(output.text(), 'AMP');
 
