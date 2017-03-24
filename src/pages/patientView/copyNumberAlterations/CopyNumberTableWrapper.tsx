@@ -27,6 +27,9 @@ export default class CopyNumberTableWrapper extends React.Component<{ store:Pati
         columns.push({
             name: "Gene",
             render: (d:DiscreteCopyNumberData)=><span>{d.gene.hugoGeneSymbol}</span>,
+            filter: (d:DiscreteCopyNumberData, filterString:string, filterStringUpper:string)=>{
+                return d.gene.hugoGeneSymbol.indexOf(filterStringUpper) > -1;
+            },
             download: (d:DiscreteCopyNumberData)=>d.gene.hugoGeneSymbol,
             sortBy: (d:DiscreteCopyNumberData)=>d.gene.hugoGeneSymbol,
             visible: true,
@@ -36,6 +39,9 @@ export default class CopyNumberTableWrapper extends React.Component<{ store:Pati
         columns.push({
             name: "CNA",
             render: CnaColumnFormatter.renderFunction,
+            filter: (d:DiscreteCopyNumberData, filterString:string, filterStringUpper:string)=>{
+                return CnaColumnFormatter.displayText(d).toUpperCase().indexOf(filterStringUpper) > -1;
+            },
             download: CnaColumnFormatter.download,
             sortBy: CnaColumnFormatter.sortValue,
             visible: true,
