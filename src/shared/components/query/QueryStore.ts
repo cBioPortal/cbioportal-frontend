@@ -6,7 +6,6 @@ import {
 	Sample, SampleIdentifier
 } from "../../api/generated/CBioPortalAPI";
 import CancerStudyTreeData from "./CancerStudyTreeData";
-import StudyListLogic from "../StudyList/StudyListLogic";
 import {remoteData} from "../../api/remoteData";
 import {labelMobxPromises, cached, debounceAsync} from "mobxpromise";
 import internalClient from "../../api/cbioportalInternalClientInstance";
@@ -19,6 +18,7 @@ import {ComponentGetsStoreContext} from "../../lib/ContextUtils";
 import URL from 'url';
 import {buildCBioPortalUrl, BuildUrlParams} from "../../api/urls";
 import {SyntaxError} from "../../lib/oql/oql-parser";
+import StudyListLogic from "./StudyListLogic";
 
 // interface for communicating
 type CancerStudyQueryUrlParams = {
@@ -436,18 +436,11 @@ export class QueryStore
 		});
 	}
 
-	@cached get studyListLogic()
-	{
-		// temporary hack - dependencies
-		// TODO review StudyListLogic code
-		this.treeData;
-		this.maxTreeDepth;
-		this.searchText;
-		this.selectedCancerTypeIds;
-		this.selectedStudyIds;
-		this.showSelectedStudiesOnly;
+	readonly studyListLogic = new StudyListLogic(this);
 
-		return new StudyListLogic(this);
+	@computed get selectedCancerTypes()
+	{
+		return this.selectedCancerTypeIds.map(id => this.treeData.map_cancerTypeId_cancerType.get(id) as CancerType).filter(_.identity);
 	}
 
 	@computed get singleSelectedStudyId()
@@ -457,7 +450,7 @@ export class QueryStore
 
 	@computed get selectedStudies()
 	{
-		return this.selectedStudyIds.map(id => this.treeData.map_studyId_cancerStudy.get(id)).filter(_.identity);
+		return this.selectedStudyIds.map(id => this.treeData.map_studyId_cancerStudy.get(id) as CancerStudy).filter(_.identity);
 	}
 
 	@computed get selectedStudies_totalSampleCount()

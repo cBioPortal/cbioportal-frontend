@@ -7,11 +7,12 @@ import * as styles_any from './styles.module.scss';
 import classNames from 'classnames';
 import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
 import ReactSelect from 'react-select';
-import StudyList from "../StudyList/StudyList";
+import StudyList from "./studyList/StudyList";
 import {observer} from "mobx-react";
 import memoize from "memoize-weak-decorator";
 import {QueryStoreComponent} from "./QueryStore";
 import SectionHeader from "../sectionHeader/SectionHeader";
+import StudyListLogic from "./StudyListLogic";
 
 const styles = styles_any as {
 	CancerStudySelector: string,
@@ -40,9 +41,10 @@ const styles = styles_any as {
 	cancerStudyListContainer: string,
 };
 
-export type ICancerStudySelectorProps = {
+export interface ICancerStudySelectorProps
+{
 	style?: React.CSSProperties;
-};
+}
 
 @observer
 export default class CancerStudySelector extends QueryStoreComponent<ICancerStudySelectorProps, void>
@@ -51,6 +53,8 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 	{
 		super(props);
 	}
+
+	get logic() { return this.store.studyListLogic; }
 
 	@memoize
 	getCancerTypeListClickHandler<T>(node:CancerType)
@@ -68,8 +72,7 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 
 	renderCancerTypeList()
 	{
-		let logic = this.store.studyListLogic;
-		let rootMeta = logic.getMetadata(logic.store.treeData.rootCancerType);
+		let rootMeta = this.logic.getMetadata(this.store.treeData.rootCancerType);
 		let listItems = rootMeta && rootMeta.childCancerTypes.map(this.renderCancerTypeListItem);
 
 		return (
@@ -81,21 +84,20 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 
 	renderCancerTypeListItem = (cancerType:CancerType, arrayIndex:number) =>
 	{
-		let logic = this.store.studyListLogic;
-		let numStudies = logic.getDescendantCancerStudies(cancerType).length;
+		let numStudies = this.logic.cancerTypeListView.getDescendantCancerStudies(cancerType).length;
 
 		if (!numStudies)
 			return null;
 
 		let selected = _.includes(this.store.selectedCancerTypeIds, cancerType.cancerTypeId);
-		let highlighted = this.store.studyListLogic.isHighlighted(cancerType);
+		let highlighted = this.logic.isHighlighted(cancerType);
 		let liClassName = classNames({
 			[styles.cancerTypeListItem]: true,
 			[styles.selectable]: true,
 			[styles.selected]: selected,
 			[styles.matchingNodeText]: !!this.store.searchText && highlighted,
 			[styles.nonMatchingNodeText]: !!this.store.searchText && !highlighted,
-			[styles.containsSelectedStudies]: this.store.studyListLogic.cancerTypeContainsSelectedStudies(cancerType),
+			[styles.containsSelectedStudies]: this.logic.cancerTypeContainsSelectedStudies(cancerType),
 		});
 
 		return (
@@ -141,8 +143,7 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 		if (this.store.searchText && searchTextOptions.indexOf(this.store.searchText) < 0)
 			searchTextOptions = [this.store.searchText].concat(searchTextOptions as string[]);
 
-		let logic = this.store.studyListLogic;
-		let selectAllCheckboxProps = logic.getCheckboxProps(logic.rootCancerType);
+		let selectAllCheckboxProps = this.logic.mainView.getCheckboxProps(this.store.treeData.rootCancerType);
 
 		let selectedCountClass = classNames({
 			[styles.selectedCount]: true,
@@ -186,7 +187,7 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 						}}
 					/>
 					{!!(!this.store.forDownloadTab) && (
-						<span className={classNames('cta', styles.selectAll)} onClick={() => logic.hack_handleSelectAll(!selectAllCheckboxProps.checked)}>
+						<span className={classNames('cta', styles.selectAll)} onClick={() => this.logic.mainView.hack_handleSelectAll(!selectAllCheckboxProps.checked)}>
 							{selectAllCheckboxProps.checked ? "Deselect all" : "Select all"}
 						</span>
 					)}
@@ -198,6 +199,10 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 					</div>
 					<div className={styles.cancerStudyListContainer}>
 						<StudyList/>
+						{!!(this.store.showSelectedStudiesOnly) && (
+							/* HACK - should use Modal dialog instead */
+							<StudyList showSelectedStudiesOnly/>
+						)}
 					</div>
 				</FlexRow>
 			</FlexCol>
