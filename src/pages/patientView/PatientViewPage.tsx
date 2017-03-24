@@ -507,10 +507,12 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                     />
                                 )
                             }
-                        </MSKTab>
-                        <MSKTab id="discreteCNAData" linkText="Copy Number Alterations">
+
+                            <hr />
+
                             <CopyNumberTableWrapper store={patientViewPageStore} />
                         </MSKTab>
+
                         {(patientViewPageStore.pageMode === 'patient') && (
                         <MSKTab key={2} id="clinicalDataTab" linkText="Clinical Data">
 
