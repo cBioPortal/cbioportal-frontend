@@ -44,6 +44,15 @@
 .QueryContainer {
   width: 850px;
 
+  div:global(.Select) {
+    div:global(.Select-value) > span:global(.Select-value-label),
+    span:global(.Select-value-label) > span,
+    div:global(.Select-option) > span {
+      display: inline-block;
+      width: 100%;
+    }
+  }
+
   label {
     margin-bottom: 0;
     font-weight: normal;
@@ -254,8 +263,8 @@
     min-width: 200px;
     height: 28px;
 
-    .Select-control {
-      .Select-input {
+    :global(.Select-control) {
+      :global(.Select-input) {
         height: 28px;
       }
     }
@@ -317,10 +326,13 @@
 }
 
 .CaseSetSelector {
-  .ReactSelect {
+  div:global(.Select) {
+    width: 555px;
   }
   textarea {
+    width: 555px;
     resize: vertical;
+    padding: 5px;
   }
   .radioRow {
     :global(.spinner) {
@@ -333,7 +345,8 @@
 }
 
 .GeneSetSelector {
-  .ReactSelect {
+  div:global(.Select) {
+    width: 555px;
   }
 
   .buttonRow {
@@ -352,10 +365,11 @@
   }
 
   textarea.geneSet {
+    width: 555px;
     resize: vertical;
     border: 1px solid #ddd;
     border-radius: 2px;
-    padding: 10px 15px;
+    padding: 5px;
 
     &.empty {
     }
@@ -425,7 +439,7 @@
     span.multiChoiceLabel {
       font-weight: normal;
     }
-    .ReactSelect {
+    div:global(.Select) {
       width: 140px;
       margin-left: 4px;
       float: left;

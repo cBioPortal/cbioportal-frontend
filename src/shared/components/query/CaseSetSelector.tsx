@@ -11,7 +11,6 @@ import SectionHeader from "../sectionHeader/SectionHeader";
 
 const styles = styles_any as {
 	CaseSetSelector: string,
-	ReactSelect: string,
 	tooltip: string,
 	radioRow: string,
 };
@@ -62,7 +61,6 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 					Select Patient/Case Set:
 				</SectionHeader>
 				<ReactSelect
-					className={styles.ReactSelect}
 					value={this.store.selectedSampleListId}
 					options={this.caseSetOptions}
 					clearable={this.store.selectedSampleListId != this.store.defaultSelectedSampleListId}

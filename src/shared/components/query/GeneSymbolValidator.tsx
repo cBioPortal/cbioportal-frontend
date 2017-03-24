@@ -3,7 +3,6 @@ import * as styles_any from './styles.module.scss';
 import {observer} from "mobx-react";
 import FontAwesome from "react-fontawesome";
 import ReactSelect from 'react-select';
-import AsyncStatus from "../asyncStatus/AsyncStatus";
 import {GeneReplacement, QueryStoreComponent} from "./QueryStore";
 
 const styles = styles_any as {
@@ -17,7 +16,6 @@ const styles = styles_any as {
 	noChoiceLabel: string,
 	singleChoiceLabel: string,
 	multiChoiceLabel: string,
-	ReactSelect: string,
 };
 
 @observer
@@ -120,7 +118,6 @@ export default class GeneSymbolValidator extends QueryStoreComponent<{}, {}>
 				<span className={styles.multiChoiceLabel}>{alias}</span>
 				<span>{': '}</span>
 				<ReactSelect
-					className={styles.ReactSelect}
 					placeholder='select a symbol'
 					options={options}
 					onChange={option => option && this.store.replaceGene(alias, option.value)}

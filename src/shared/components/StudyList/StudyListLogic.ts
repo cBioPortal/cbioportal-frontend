@@ -218,7 +218,7 @@ export default class StudyListLogic
 		this.store.selectedStudyIds = selectedStudyIds;
 	}
 }
-/*
+
 type SearchClause = (
 	{type: 'not', data: string} |
 	{type: 'and', data: string[]}
@@ -323,17 +323,17 @@ function parse_search_query(query:string):SearchClause[]
 	return clauses;
 }
 
-function matchPhrase(phrase:string, node)
+function matchPhrase(phrase:string, study:CancerStudy)
 {
 	phrase = phrase.toLowerCase();
 	return !!(
-		(item && item.name && item.name.toLowerCase().indexOf(phrase) > -1)
-		|| (item && item.description && item.description.toLowerCase().indexOf(phrase) > -1)
-		|| (item && item.search_terms && item.search_terms.toLowerCase().indexOf(phrase) > -1)
+		(study && study.name && study.name.toLowerCase().indexOf(phrase) > -1)
+		|| (study && study.description && study.description.toLowerCase().indexOf(phrase) > -1)
+		//|| (study && study.search_terms && study.search_terms.toLowerCase().indexOf(phrase) > -1)
 	);
 }
 
-function perform_search_single(parsed_query, node)
+function perform_search_single(parsed_query:SearchClause[], study:CancerStudy)
 {
 	// in: a jstree node
 	// text to search is node.text and item.description and item.search_terms
@@ -359,7 +359,7 @@ function perform_search_single(parsed_query, node)
 	{
 		if (clause.type === 'not')
 		{
-			if (matchPhrase(clause.data, node))
+			if (matchPhrase(clause.data, study))
 			{
 				match = false;
 				forced = true;
@@ -372,11 +372,10 @@ function perform_search_single(parsed_query, node)
 			let clauseMatch = true;
 			for (let phrase of clause.data)
 			{
-				clauseMatch = clauseMatch && matchPhrase(phrase, node);
+				clauseMatch = clauseMatch && matchPhrase(phrase, study);
 			}
 			match = match || clauseMatch;
 		}
 	}
 	return {result: match, forced: forced};
-};
-*/
+}

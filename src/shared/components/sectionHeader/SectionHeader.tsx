@@ -2,15 +2,15 @@ import * as React from 'react';
 import Spinner from 'react-spinkit';
 import MobxPromise from "mobxpromise";
 import {observer} from "mobx-react";
-import FontAwesome from "react-fontawesome";
 import * as styles_any from './styles.module.scss';
 import classNames from 'classnames';
+import ErrorBox from "../errorBox/ErrorBox";
 
 const styles = styles_any as {
 	SectionHeader: string,
 	error: string,
-	icon: string,
 	message: string,
+	icon: string,
 };
 
 interface ISectionHeaderProps extends React.HTMLProps<HTMLDivElement>
@@ -30,11 +30,10 @@ export default class SectionHeader extends React.Component<ISectionHeaderProps, 
 					<Spinner/>
 				)}
 				<h2>{children}</h2>
-				{promises && promises.filter(promise => promise.error).map(promise => (
-					<div className={classNames(className, styles.error)} {...divProps}>
-						<FontAwesome className={styles.icon} name='exclamation-triangle'/>
-						<span className={styles.message}>{promise.error + ''}</span>
-					</div>
+				{promises && promises.map(promise => (
+					!!(promise.error) && (
+						<ErrorBox className={styles.error} error={promise.error}/>
+					)
 				))}
 			</div>
 		);

@@ -13,20 +13,5 @@ div.SectionHeader {
 
   .error {
     margin-top: 8px;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    padding: 5px;
-    border-radius: 4px;
-    border: 1px solid #cd0a0a;
-    background: #fef1ec;
-    color: #cd0a0a;
-
-    .icon {
-      margin-right: 5px;
-    }
-
-    .message {
-    }
   }
 }

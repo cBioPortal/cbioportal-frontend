@@ -18,7 +18,6 @@ const styles = styles_any as {
 	GeneSetSelector: string,
 	MutSigGeneSelectorWindow: string,
 	GisticGeneSelectorWindow: string,
-	ReactSelect: string,
 	buttonRow: string,
 	geneSet: string,
 	empty: string,
@@ -77,24 +76,25 @@ export default class GeneSetSelector extends QueryStoreComponent<GeneSetSelector
 
 				<a href={getOncoQueryDocUrl()}>Advanced: Onco Query Language (OQL)</a>
 				<ReactSelect
-					className={styles.ReactSelect}
 					value={this.selectedGeneListOption}
 					options={this.geneListOptions}
 					onChange={option => this.store.geneQuery = option ? option.value : ''}
 				/>
 
-				<FlexRow padded className={styles.buttonRow}>
-					{!!(this.store.mutSigForSingleStudy.result.length) && (
-						<button onClick={() => this.store.showMutSigPopup = true}>
-							Select from Recurrently Mutated Genes (MutSig)
-						</button>
-					)}
-					{!!(this.store.gisticForSingleStudy.result.length) && (
-						<button onClick={() => this.store.showGisticPopup = true}>
-							Select Genes from Recurrent CNAs (Gistic)
-						</button>
-					)}
-				</FlexRow>
+				{!!(this.store.mutSigForSingleStudy.result.length || this.store.gisticForSingleStudy.result.length) && (
+					<FlexRow padded className={styles.buttonRow}>
+						{!!(this.store.mutSigForSingleStudy.result.length) && (
+							<button onClick={() => this.store.showMutSigPopup = true}>
+								Select from Recurrently Mutated Genes (MutSig)
+							</button>
+						)}
+						{!!(this.store.gisticForSingleStudy.result.length) && (
+							<button onClick={() => this.store.showGisticPopup = true}>
+								Select Genes from Recurrent CNAs (Gistic)
+							</button>
+						)}
+					</FlexRow>
+				)}
 
 				<textarea
 					ref={this.textAreaRef}
