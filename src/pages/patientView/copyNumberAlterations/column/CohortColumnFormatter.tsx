@@ -53,13 +53,13 @@ export default class CohortColumnFormatter
         );
     }
 
-    public static getSortValue(data:DiscreteCopyNumberData, copyNumberCountData:CopyNumberCount[]):number {
+    public static getSortValue(data:DiscreteCopyNumberData, copyNumberCountData:CopyNumberCount[]):number|null {
         const copyNumberCount = CohortColumnFormatter.getCopyNumberCount(data, copyNumberCountData);
 
         if (copyNumberCount) {
             return copyNumberCount.numberOfSamplesWithAlterationInGene;
         } else {
-            return Number.POSITIVE_INFINITY;
+            return null;
         }
     }
 
