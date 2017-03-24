@@ -119,8 +119,8 @@ describe('CosmicColumnFormatter', () => {
             'Sort value for TP53 R273 missense mutation is correct');
         assert.equal(CosmicColumnFormatter.getSortValue([mutation38], cosmicData), (7 + 11 + 13),
             'Sort value value property for PIK3CA R38 missense mutation is correct');
-        assert.equal(CosmicColumnFormatter.getSortValue([mutation666], cosmicData), Number.POSITIVE_INFINITY,
-            'Sort value value property for DIABLO mutation should be infinity, no cosmic data');
+        assert.equal(CosmicColumnFormatter.getSortValue([mutation666], cosmicData), null,
+            'Sort value value property for DIABLO mutation should be null, no cosmic data');
     });
 
     after(() => {
