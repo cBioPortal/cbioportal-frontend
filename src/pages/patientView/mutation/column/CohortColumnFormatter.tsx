@@ -33,12 +33,12 @@ export default class CohortColumnFormatter {
         );
     };
 
-    public static getSortValue(data:Mutation[], variantCountCache:CohortVariantCountCache):number {
+    public static getSortValue(data:Mutation[], variantCountCache:CohortVariantCountCache):number|null {
         const variantCountData = CohortColumnFormatter.getVariantCountData(data, variantCountCache);
         if (variantCountData && variantCountData.data) {
             return variantCountData.data.mutationInGene;
         } else {
-            return Number.POSITIVE_INFINITY;
+            return null;
         }
     }
 
@@ -57,7 +57,7 @@ export default class CohortColumnFormatter {
         }
     }
 
-    private static getMutSigQValue(data:Mutation[], mutSigData:MutSigData|undefined) {
+    private static getMutSigQValue(data:Mutation[], mutSigData:MutSigData|undefined):number|null {
         if (!mutSigData || data.length === 0) {
             return null;
         }

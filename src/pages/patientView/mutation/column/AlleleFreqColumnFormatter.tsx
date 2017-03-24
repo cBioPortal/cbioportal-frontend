@@ -81,7 +81,7 @@ export default class AlleleFreqColumnFormatter {
 
     public static getSortValue(d:Mutation[], sampleManager:SampleManager|null) {
         if (!sampleManager) {
-            return [Number.POSITIVE_INFINITY];
+            return [null];
         }
 
         // frequencies in sample order
