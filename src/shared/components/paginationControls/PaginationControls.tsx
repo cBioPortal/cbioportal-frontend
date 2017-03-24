@@ -27,7 +27,7 @@ export interface IPaginationControlsProps {
     onLastPageClick?:()=>void;
     onChangeCurrentPage?:(newPage:number)=>void;
     className?:string;
-    marginLeft?: number;
+    style?:{ [k: string]: string | number },
     firstPageDisabled?:boolean;
     previousPageDisabled?:boolean;
     nextPageDisabled?:boolean;
@@ -50,7 +50,7 @@ export class PaginationControls extends React.Component<IPaginationControlsProps
         showFirstPage:false,
         showLastPage:false,
         className: "",
-        marginLeft: 0,
+        style:{},
         previousPageDisabled:false,
         nextPageDisabled:false,
         pageNumberEditable: false
@@ -118,7 +118,7 @@ export class PaginationControls extends React.Component<IPaginationControlsProps
         }
 
         return (
-            <div className={this.props.className} style={{marginLeft: this.props.marginLeft}}>
+            <div className={this.props.className} style={this.props.style}>
                 <ButtonGroup bsSize="sm">
                     <If condition={!!this.props.showFirstPage}>
                         <Button key="firstPageBtn" disabled={!!this.props.firstPageDisabled} onClick={this.props.onFirstPageClick}>
