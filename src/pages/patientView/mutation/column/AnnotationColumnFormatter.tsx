@@ -1,13 +1,10 @@
 import * as React from 'react';
-import {Td} from 'reactable';
 import {If} from 'react-if';
-import {IColumnFormatterData} from "shared/components/enhancedReactTable/IColumnFormatter";
-import {MutationTableRowData} from "shared/components/mutationTable/IMutationTableProps";
 import CancerHotspots from "shared/components/annotation/CancerHotspots";
 import MyCancerGenome from "shared/components/annotation/MyCancerGenome";
 import OncoKB from "shared/components/annotation/OncoKB";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
-import {IndicatorQueryResp, EvidenceQueryRes} from "shared/api/generated/OncoKbAPI";
+import {IndicatorQueryResp} from "shared/api/generated/OncoKbAPI";
 import {generateQueryVariantId} from "shared/lib/OncoKbUtils";
 import * as _ from "lodash";
 
@@ -121,9 +118,9 @@ export default class AnnotationColumnFormatter
     public static getIndicatorData(mutation:Mutation, oncoKbData:IOncoKbData):IndicatorQueryResp
     {
         const id = generateQueryVariantId(mutation.gene.hugoGeneSymbol,
-            mutation.mutationType,
+            oncoKbData.sampleToTumorMap[mutation.sampleId],
             mutation.proteinChange,
-            oncoKbData.sampleToTumorMap[mutation.sampleId]);
+            mutation.mutationType);
 
         return oncoKbData.indicatorMap[id];
     }
@@ -131,9 +128,9 @@ export default class AnnotationColumnFormatter
     public static getEvidenceData(mutation:Mutation, oncoKbData:IOncoKbData):IEvidence
     {
         const id = generateQueryVariantId(mutation.gene.hugoGeneSymbol,
-            mutation.mutationType,
+            oncoKbData.sampleToTumorMap[mutation.sampleId],
             mutation.proteinChange,
-            oncoKbData.sampleToTumorMap[mutation.sampleId]);
+            mutation.mutationType);
 
         return oncoKbData.evidenceMap[id];
     }
@@ -190,6 +187,11 @@ export default class AnnotationColumnFormatter
         const annotation:IAnnotation = AnnotationColumnFormatter.getData(
             data, columnProps.hotspots, columnProps.myCancerGenomeData, columnProps.oncoKbData, columnProps.pmidData);
 
+        return AnnotationColumnFormatter.mainContent(annotation, columnProps);
+    }
+
+    public static mainContent(annotation:IAnnotation, columnProps:IAnnotationColumnProps)
+    {
         // TODO if certain data (hotspots, mycancergenome, etc.) is not yet available (i.e. status==fetching),
         // show a loader image!
         return (
