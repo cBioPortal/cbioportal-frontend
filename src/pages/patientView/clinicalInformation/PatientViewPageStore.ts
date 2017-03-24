@@ -27,6 +27,7 @@ import {SampleToEntrezListOrNull} from "./SampleGeneCache";
 import DiscreteCNACache from "./DiscreteCNACache";
 import {getTissueImageCheckUrl} from "../../../shared/api/urls";
 import {getAlterationString} from "shared/lib/CopyNumberUtils";
+import CopyNumberCountCache from "./CopyNumberCountCache";
 
 type PageMode = 'patient' | 'sample';
 
@@ -597,27 +598,9 @@ export class PatientViewPageStore
                                     this.geneticProfileIdDiscrete.result);
     }
 
-    @action requestAllVariantCountData() {
-        const entrezToKeywordList:EntrezToKeywordList = {};
-        for (const mutations of this.mergedMutationData) {
-            if (mutations.length > 0) {
-                const entrez = mutations[0].entrezGeneId;
-                entrezToKeywordList[entrez] = entrezToKeywordList[entrez] || [];
-                const kw = mutations[0].keyword;
-                if (kw) {
-                    entrezToKeywordList[entrez].push(kw);
-                }
-            }
-        }
-        this.variantCountCache.populate(entrezToKeywordList);
-    }
-
-    @action requestAllDiscreteCNAData() {
-        const sampleToNull:SampleToEntrezListOrNull = {};
-        for (const sample of this.samples.result) {
-            sampleToNull[sample.sampleId] = null;
-        }
-        this.discreteCNACache.populate(sampleToNull);
+    @cached get copyNumberCountCache() {
+        return new CopyNumberCountCache(this.samples.result.map((s:Sample)=>s.sampleId),
+            this.geneticProfileIdDiscrete.result);
     }
 
     @action setActiveTabId(id:string) {

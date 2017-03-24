@@ -13,14 +13,17 @@ export interface IGisticSummary {
 export interface IGisticData {
     [entrezGeneId:string]: IGisticSummary[];
 }
+import CopyNumberCountCache from "../../clinicalInformation/CopyNumberCountCache";
+import {CacheData} from "../../clinicalInformation/SampleGeneCache";
+import DefaultTooltip from "../../../../shared/components/DefaultTooltip";
 
 export default class CohortColumnFormatter
 {
     public static renderFunction(data:DiscreteCopyNumberData,
-                                 copyNumberCountData:CopyNumberCount[],
+                                 copyNumberCountCache:CopyNumberCountCache,
                                  gisticData:IGisticData)
     {
-        const copyNumberCount = CohortColumnFormatter.getCopyNumberCount(data, copyNumberCountData);
+        const copyNumberCount = CohortColumnFormatter.getCopyNumberCount(data, copyNumberCountCache);
         const freqViz = CohortColumnFormatter.makeCohortFrequencyViz(data, copyNumberCount);
         const gisticValue = CohortColumnFormatter.getGisticValue(data, gisticData);
         let gisticIcon:JSX.Element|null = null;
@@ -46,23 +49,63 @@ export default class CohortColumnFormatter
         );
     }
 
-    public static makeCohortFrequencyViz(data:DiscreteCopyNumberData, copyNumberCount?:CopyNumberCount) {
+    public static makeCohortFrequencyViz(data:DiscreteCopyNumberData, cacheDatum:CacheData<CopyNumberCount> | null) {
 
-        if (copyNumberCount !== undefined) {
-            const counts = [copyNumberCount.numberOfSamplesWithAlterationInGene];
-            const colors = data.alteration > 0 ? ["red"] : ["blue"];
+        if (cacheDatum !== null) {
+            const copyNumberCount = cacheDatum.data;
+            if (cacheDatum.status === "complete" && copyNumberCount) {
+                const counts = [copyNumberCount.numberOfSamplesWithAlterationInGene];
+                const colors = data.alteration > 0 ? ["red"] : ["blue"];
 
+                return (
+                    <FrequencyBar
+                        counts={counts}
+                        freqColors={colors}
+                        totalCount={copyNumberCount.numberOfSamples}
+                        tooltip={CohortColumnFormatter.tooltipContent(data, copyNumberCount)}
+                    />
+                );
+            } else if (cacheDatum.status === "complete") {
+                return (
+                    <DefaultTooltip
+                        placement="left"
+                        overlay={(<span>Data not available for this gene and alteration.</span>)}
+                    >
+                        <span
+                            style={{color: "gray", fontSize:"xx-small", textAlign:"center"}}
+                            alt="Data not available."
+                        >
+                            NA
+                        </span>
+                    </DefaultTooltip>);
+            } else {
+                return (
+                    <DefaultTooltip
+                        placement="left"
+                        overlay={(<span>Error retrieving data.</span>)}
+                        >
+                        <span
+                            style={{color: "gray", fontSize:"xx-small", textAlign:"center"}}
+                            alt="Error retrieving data."
+                        >
+                        ERROR
+                        </span>
+                    </DefaultTooltip>);
+            }
+        } else {
             return (
-                <FrequencyBar
-                    counts={counts}
-                    freqColors={colors}
-                    totalCount={copyNumberCount.numberOfSamples}
-                    tooltip={CohortColumnFormatter.tooltipContent(data, copyNumberCount)}
-                />
+                <DefaultTooltip
+                    placement="left"
+                    overlay={(<span>Querying server for data.</span>)}
+                    >
+                    <span
+                        style={{color: "gray", fontSize:"xx-small", textAlign:"center"}}
+                        alt="Querying server for data."
+                    >
+                        LOADING
+                    </span>
+                </DefaultTooltip>
             );
-        }
-        else {
-            return null;
         }
     }
 
@@ -81,24 +124,19 @@ export default class CohortColumnFormatter
         );
     }
 
-    public static getSortValue(data:DiscreteCopyNumberData, copyNumberCountData:CopyNumberCount[]):number|null {
-        const copyNumberCount = CohortColumnFormatter.getCopyNumberCount(data, copyNumberCountData);
+    public static getSortValue(data:DiscreteCopyNumberData, copyNumberCountCache:CopyNumberCountCache):number|null {
+        const copyNumberCount = CohortColumnFormatter.getCopyNumberCount(data, copyNumberCountCache);
 
-        if (copyNumberCount) {
-            return copyNumberCount.numberOfSamplesWithAlterationInGene;
+        if (copyNumberCount && copyNumberCount.data) {
+            return copyNumberCount.data.numberOfSamplesWithAlterationInGene;
         } else {
             return null;
         }
     }
 
-    public static getCopyNumberCount(data:DiscreteCopyNumberData, copyNumberCountData:CopyNumberCount[])
+    private static getCopyNumberCount(data:DiscreteCopyNumberData, copyNumberCountCache:CopyNumberCountCache):CacheData<CopyNumberCount> | null
     {
-        return copyNumberCountData.find((copyNumberCount: CopyNumberCount) => {
-            return (
-                copyNumberCount.entrezGeneId === data.entrezGeneId &&
-                copyNumberCount.alteration === data.alteration
-            );
-        });
+        return copyNumberCountCache.get(data.entrezGeneId, data.alteration);
     }
 
     public static getGisticValue(data:DiscreteCopyNumberData, gisticData:IGisticData): IGisticSummary|null

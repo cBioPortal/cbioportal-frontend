@@ -5,6 +5,8 @@ import React from 'react';
 import { assert } from 'chai';
 import {shallow, mount, ReactWrapper} from 'enzyme';
 import sinon from 'sinon';
+import CopyNumberCountCache from "../../clinicalInformation/CopyNumberCountCache";
+import {CacheData} from "../../clinicalInformation/SampleGeneCache";
 
 describe('CohortColumnFormatter', () => {
 
@@ -77,6 +79,21 @@ describe('CohortColumnFormatter', () => {
             }
         ]
     };
+    const fakeCache:CopyNumberCountCache = {
+        get:(entrez:number, alteration:number):CacheData<CopyNumberCount>|null=>{
+            let cnc:CopyNumberCount|undefined = copyNumberCountData.find(x=>{
+                return x.entrezGeneId === entrez && x.alteration === alteration;
+            });
+            if (cnc) {
+                return {
+                    status:"complete",
+                    data: cnc
+                };
+            } else {
+                return null;
+            }
+        }
+    } as CopyNumberCountCache;
 
     const tooltips: Array<ReactWrapper<any, any>> = [];
 
@@ -91,8 +108,8 @@ describe('CohortColumnFormatter', () => {
     });
 
     it('calculates the sort value correctly', () => {
-        assert.equal(CohortColumnFormatter.getSortValue(copyNumberData[0], copyNumberCountData), 61);
-        assert.equal(CohortColumnFormatter.getSortValue(copyNumberData[1], copyNumberCountData), 1);
+        assert.equal(CohortColumnFormatter.getSortValue(copyNumberData[0], fakeCache), 61);
+        assert.equal(CohortColumnFormatter.getSortValue(copyNumberData[1], fakeCache), 1);
     });
 
     it('picks the correct gistic summary', () => {
