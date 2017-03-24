@@ -1,5 +1,5 @@
-import {Query, EvidenceQueries, EvidenceQueryRes, Evidence} from "shared/api/generated/OncoKbAPI";
 import * as _ from 'lodash';
+import {Query, EvidenceQueries, EvidenceQueryRes, Evidence, IndicatorQueryResp} from "shared/api/generated/OncoKbAPI";
 
 /**
  * @author Selcuk Onur Sumer
@@ -80,6 +80,21 @@ const LEVELS = {
     all: ['4', 'R3', '3B', '3A', 'R2', '2B', '2A', 'R1', '1', '0']
 };
 
+export enum AlterationTypes {
+    Mutation = 0
+}
+
+export function generateIdToIndicatorMap(data:IndicatorQueryResp[]): {[queryId:string]: IndicatorQueryResp}
+{
+    const map:{[queryId:string]: IndicatorQueryResp} = {};
+
+    _.each(data, function(indicator) {
+        map[indicator.query.id] = indicator;
+    });
+
+    return map;
+}
+
 export function generateEvidenceQuery(queryVariants:Query[]): EvidenceQueries
 {
     return {
@@ -92,31 +107,42 @@ export function generateEvidenceQuery(queryVariants:Query[]): EvidenceQueries
 }
 
 export function generateQueryVariant(hugoSymbol:string,
-                                     mutationType:string,
-                                     proteinChange:string,
-                                     proteinPosStart:number,
-                                     proteinPosEnd:number,
-                                     tumorType:string): Query
+                                     tumorType:string,
+                                     alteration?:string,
+                                     mutationType?:string,
+                                     proteinPosStart?:number,
+                                     proteinPosEnd?:number,
+                                     alterationType?:string): Query
 {
     return {
-        id: generateQueryVariantId(hugoSymbol, mutationType, proteinChange, tumorType),
+        id: generateQueryVariantId(hugoSymbol, tumorType, alteration, mutationType),
         hugoSymbol,
         tumorType,
-        alterationType: "MUTATION",
+        alterationType: alterationType || AlterationTypes[AlterationTypes.Mutation],
         entrezGeneId: 0,
-        alteration: proteinChange,
-        consequence: convertConsequence(mutationType),
-        proteinStart: proteinPosStart,
-        proteinEnd: proteinPosEnd,
+        alteration: alteration || "",
+        consequence: convertConsequence(mutationType || ""),
+        proteinStart: proteinPosStart === undefined ? -1 : proteinPosStart,
+        proteinEnd: proteinPosEnd === undefined ? -1 : proteinPosEnd,
     };
 }
 
 export function generateQueryVariantId(hugoSymbol:string,
-                                       mutationType:string,
-                                       proteinChange:string,
-                                       tumorType:string): string
+                                       tumorType:string,
+                                       alteration?:string,
+                                       mutationType?:string): string
 {
-    return `${hugoSymbol}_${proteinChange}_${tumorType}_${mutationType}`;
+    let id = `${hugoSymbol}_${tumorType}`;
+
+    if (alteration) {
+        id = `${id}_${alteration}`;
+    }
+
+    if (mutationType) {
+        id = `${id}_${mutationType}`;
+    }
+
+    return id;
 }
 
 export function normalizeLevel(level:string):string|null
