@@ -366,7 +366,11 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         if (patientViewPageStore.patientViewData.isComplete) {
             let patientData = patientViewPageStore.patientViewData.result!;
-            sampleManager = new SampleManager(patientData.samples!);
+            if (patientViewPageStore.clinicalEvents.isComplete && patientViewPageStore.clinicalEvents.result.length > 0) {
+                sampleManager = new SampleManager(patientData.samples!, patientViewPageStore.clinicalEvents.result);
+            } else {
+                sampleManager = new SampleManager(patientData.samples!);
+            }
 
             sampleHeader = _.map(sampleManager!.samples, (sample: ClinicalDataBySampleId) => {
                 const clinicalDataLegacy: any = _.fromPairs(sample.clinicalData.map((x) => [x.clinicalAttributeId, x.value]));
