@@ -59,7 +59,19 @@ export default class CosmicMutationTable extends React.Component<ICosmicTablePro
                 name: "Protein Change",
                 priority: 2.00,
                 dataField: "proteinChange",
-                sortable: ProteinChangeColumnFormatter.sortFunction,
+                sortable: (a:string, b:string)=>{
+                    const aValue = ProteinChangeColumnFormatter.extractSortValue(a);
+                    const bValue = ProteinChangeColumnFormatter.extractSortValue(b);
+                    if (aValue === bValue) {
+                        return 0;
+                    } else if (aValue === null) {
+                        return 1;
+                    } else if (bValue === null) {
+                        return -1;
+                    } else {
+                        return aValue > bValue ? 1 : -1;
+                    }
+                },
                 filterable: true
             },
             occurrence: {

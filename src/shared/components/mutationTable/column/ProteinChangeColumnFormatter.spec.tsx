@@ -11,13 +11,23 @@ describe('ProteinChangeColumnFormatter', () => {
     const d = "K754I";
 
     it('properly extracts sort value from a protein change string value', () => {
-        assert.isAbove(ProteinChangeColumnFormatter.extractSortValue(b),
-                       ProteinChangeColumnFormatter.extractSortValue(a));
+        let valA:number|null = ProteinChangeColumnFormatter.extractSortValue(a);
+        let valB:number|null = ProteinChangeColumnFormatter.extractSortValue(b);
+        let valC:number|null = ProteinChangeColumnFormatter.extractSortValue(c);
+        let valD:number|null = ProteinChangeColumnFormatter.extractSortValue(d);
 
-        assert.isAbove(ProteinChangeColumnFormatter.extractSortValue(d),
-                       ProteinChangeColumnFormatter.extractSortValue(c));
+        assert.isNotNull(valA);
+        assert.isNotNull(valB);
+        assert.isNotNull(valC);
+        assert.isNotNull(valD);
 
-        assert.isAbove(ProteinChangeColumnFormatter.extractSortValue(c),
-                       ProteinChangeColumnFormatter.extractSortValue(b));
+        assert.isAbove(valB as number,
+                       valA as number);
+
+        assert.isAbove(valD as number,
+                       valC as number);
+
+        assert.isAbove(valC as number,
+                       valB as number);
     });
 });
