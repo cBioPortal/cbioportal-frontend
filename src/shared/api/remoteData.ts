@@ -1,6 +1,16 @@
 import * as seamlessImmutable from 'seamless-immutable';
 import {MobxPromiseImpl, MobxPromise, MobxPromiseFactory, MobxPromiseInputUnion, hasObservers} from 'mobxpromise';
 
+type errorHandler = (error:Error)=>void;
+
+let errorHandlers: errorHandler[] = [];
+
+export function addErrorHandler(handler: errorHandler) {
+
+    errorHandlers.push(handler);
+
+}
+
 /**
  * Constructs a MobxPromise which will call seamlessImmutable.from() on the result and the default value.
  */
@@ -18,7 +28,9 @@ export const remoteData:MobxPromiseFactory = function<R>(input:MobxPromiseInputU
             }
             else if (!hasObservers(mobxPromise, 'error'))
             {
-                console.log(`Unhandled ${error}`);
+                errorHandlers.forEach(handler=>{
+                    handler(error);
+                })
             }
         },
     });
