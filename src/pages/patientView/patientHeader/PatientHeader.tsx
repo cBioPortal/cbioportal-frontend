@@ -6,7 +6,6 @@ import ClinicalInformationPatientTable from '../clinicalInformation/ClinicalInfo
 import {getSpans} from '../clinicalInformation/lib/clinicalAttributesUtil.js';
 
 import styles from './styles.module.scss';
-import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
 
 export type IPatientHeaderProps = {
     patient:any;
@@ -18,9 +17,24 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
         return (
             <div className={styles.patientHeader}>
                 {this.props.patient && this.getOverlayTriggerPatient(this.props.patient)}
+                {this.getDarwinAccessUrl()}
             </div>
         );
 
+    }
+
+    private getDarwinAccessUrl() {
+        // use JSP injected Darwin URL window.darwinAccessUrl
+        // TODO: use internal API service instead, once this exists
+        let darwinAccessUrl: string | null | undefined = ((window as any).darwinAccessUrl);
+
+        if (darwinAccessUrl !== undefined && darwinAccessUrl !== null && darwinAccessUrl !== '') {
+            // add link to darwin
+            let darwinImgSrc = require("./images/darwin_logo.png");
+            return (<a target='_blank' href={darwinAccessUrl}><img style={{paddingLeft:'5px'}} src={darwinImgSrc} /></a>);
+        } else {
+            return null;
+        }
     }
 
     private getPopoverPatient(patient: any) {
