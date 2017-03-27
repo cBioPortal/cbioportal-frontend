@@ -272,6 +272,8 @@ export type ClinicalAttribute = {
 
         'priority': string
 
+        'studyId': string
+
 };
 export type SampleList = {
     'category': string
@@ -512,18 +514,15 @@ export default class CBioPortalAPI {
     };
 
     getAllClinicalAttributesUsingGETURL(parameters: {
-        'studyId' ? : string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
+        'sortBy' ? : "clinicalAttributeId" | "displayName" | "description" | "datatype" | "patientAttribute" | "priority" | "studyId",
+        'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/clinical-attributes';
-        if (parameters['studyId'] !== undefined) {
-            queryParameters['studyId'] = parameters['studyId'];
-        }
-
         if (parameters['projection'] !== undefined) {
             queryParameters['projection'] = parameters['projection'];
         }
@@ -534,6 +533,14 @@ export default class CBioPortalAPI {
 
         if (parameters['pageNumber'] !== undefined) {
             queryParameters['pageNumber'] = parameters['pageNumber'];
+        }
+
+        if (parameters['sortBy'] !== undefined) {
+            queryParameters['sortBy'] = parameters['sortBy'];
+        }
+
+        if (parameters['direction'] !== undefined) {
+            queryParameters['direction'] = parameters['direction'];
         }
 
         if (parameters.$queryParameters) {
@@ -547,19 +554,21 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Get all clinical attributes
+     * Get all clinical attributes in a study
      * @method
      * @name CBioPortalAPI#getAllClinicalAttributesUsingGET
-     * @param {string} studyId - studyId
-     * @param {string} projection - projection
-     * @param {integer} pageSize - pageSize
-     * @param {integer} pageNumber - pageNumber
+     * @param {string} projection - Level of detail of the response
+     * @param {integer} pageSize - Page size of the result list
+     * @param {integer} pageNumber - Page number of the result list
+     * @param {string} sortBy - Name of the property that the result list is sorted by
+     * @param {string} direction - Direction of the sort
      */
     getAllClinicalAttributesUsingGET(parameters: {
-            'studyId' ? : string,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
+            'sortBy' ? : "clinicalAttributeId" | "displayName" | "description" | "datatype" | "patientAttribute" | "priority" | "studyId",
+            'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < ClinicalAttribute >
@@ -573,12 +582,8 @@ export default class CBioPortalAPI {
             let headers: any = {};
             let form: any = {};
             return new Promise(function(resolve, reject) {
-                headers['Accept'] = '*/*';
+                headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
-
-                if (parameters['studyId'] !== undefined) {
-                    queryParameters['studyId'] = parameters['studyId'];
-                }
 
                 if (parameters['projection'] !== undefined) {
                     queryParameters['projection'] = parameters['projection'];
@@ -590,6 +595,14 @@ export default class CBioPortalAPI {
 
                 if (parameters['pageNumber'] !== undefined) {
                     queryParameters['pageNumber'] = parameters['pageNumber'];
+                }
+
+                if (parameters['sortBy'] !== undefined) {
+                    queryParameters['sortBy'] = parameters['sortBy'];
+                }
+
+                if (parameters['direction'] !== undefined) {
+                    queryParameters['direction'] = parameters['direction'];
                 }
 
                 if (parameters.$queryParameters) {
@@ -605,69 +618,6 @@ export default class CBioPortalAPI {
                 return response.body;
             });
         };
-
-    getClinicalAttributeUsingGETURL(parameters: {
-        'clinicalAttributeId': string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/clinical-attributes/{clinicalAttributeId}';
-
-        path = path.replace('{clinicalAttributeId}', parameters['clinicalAttributeId'] + '');
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Get a clinical attribute
-     * @method
-     * @name CBioPortalAPI#getClinicalAttributeUsingGET
-     * @param {string} clinicalAttributeId - clinicalAttributeId
-     */
-    getClinicalAttributeUsingGET(parameters: {
-        'clinicalAttributeId': string,
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < ClinicalAttribute > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/clinical-attributes/{clinicalAttributeId}';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = '*/*';
-            headers['Content-Type'] = 'application/json';
-
-            path = path.replace('{clinicalAttributeId}', parameters['clinicalAttributeId'] + '');
-
-            if (parameters['clinicalAttributeId'] === undefined) {
-                reject(new Error('Missing required  parameter: clinicalAttributeId'));
-                return;
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        }).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
 
     fetchClinicalDataUsingPOSTURL(parameters: {
         'attributeId' ? : string,
@@ -2072,7 +2022,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "sampleListId" | "category" | "cancerStudyId" | "name" | "description",
+        'sortBy' ? : "sampleListId" | "category" | "studyId" | "name" | "description",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -2122,7 +2072,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "sampleListId" | "category" | "cancerStudyId" | "name" | "description",
+            'sortBy' ? : "sampleListId" | "category" | "studyId" | "name" | "description",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
                 $domain ? : string
@@ -2380,7 +2330,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "cancerStudyId" | "cancerTypeId" | "name" | "shortName" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
+        'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "shortName" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -2430,7 +2380,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "cancerStudyId" | "cancerTypeId" | "name" | "shortName" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
+            'sortBy' ? : "studyId" | "cancerTypeId" | "name" | "shortName" | "description" | "publicStudy" | "pmid" | "citation" | "groups" | "status" | "importDate",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
                 $domain ? : string
@@ -2528,6 +2478,199 @@ export default class CBioPortalAPI {
 
             if (parameters['studyId'] === undefined) {
                 reject(new Error('Missing required  parameter: studyId'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        }).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+
+    getAllClinicalAttributesInStudyUsingGETURL(parameters: {
+        'studyId': string,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'pageSize' ? : number,
+        'pageNumber' ? : number,
+        'sortBy' ? : "clinicalAttributeId" | "displayName" | "description" | "datatype" | "patientAttribute" | "priority" | "studyId",
+        'direction' ? : "ASC" | "DESC",
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/studies/{studyId}/clinical-attributes';
+
+        path = path.replace('{studyId}', parameters['studyId'] + '');
+        if (parameters['projection'] !== undefined) {
+            queryParameters['projection'] = parameters['projection'];
+        }
+
+        if (parameters['pageSize'] !== undefined) {
+            queryParameters['pageSize'] = parameters['pageSize'];
+        }
+
+        if (parameters['pageNumber'] !== undefined) {
+            queryParameters['pageNumber'] = parameters['pageNumber'];
+        }
+
+        if (parameters['sortBy'] !== undefined) {
+            queryParameters['sortBy'] = parameters['sortBy'];
+        }
+
+        if (parameters['direction'] !== undefined) {
+            queryParameters['direction'] = parameters['direction'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get all clinical attributes in a study
+     * @method
+     * @name CBioPortalAPI#getAllClinicalAttributesInStudyUsingGET
+     * @param {string} studyId - Study ID e.g. acc_tcga
+     * @param {string} projection - Level of detail of the response
+     * @param {integer} pageSize - Page size of the result list
+     * @param {integer} pageNumber - Page number of the result list
+     * @param {string} sortBy - Name of the property that the result list is sorted by
+     * @param {string} direction - Direction of the sort
+     */
+    getAllClinicalAttributesInStudyUsingGET(parameters: {
+            'studyId': string,
+            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'pageSize' ? : number,
+            'pageNumber' ? : number,
+            'sortBy' ? : "clinicalAttributeId" | "displayName" | "description" | "datatype" | "patientAttribute" | "priority" | "studyId",
+            'direction' ? : "ASC" | "DESC",
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < ClinicalAttribute >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/studies/{studyId}/clinical-attributes';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                path = path.replace('{studyId}', parameters['studyId'] + '');
+
+                if (parameters['studyId'] === undefined) {
+                    reject(new Error('Missing required  parameter: studyId'));
+                    return;
+                }
+
+                if (parameters['projection'] !== undefined) {
+                    queryParameters['projection'] = parameters['projection'];
+                }
+
+                if (parameters['pageSize'] !== undefined) {
+                    queryParameters['pageSize'] = parameters['pageSize'];
+                }
+
+                if (parameters['pageNumber'] !== undefined) {
+                    queryParameters['pageNumber'] = parameters['pageNumber'];
+                }
+
+                if (parameters['sortBy'] !== undefined) {
+                    queryParameters['sortBy'] = parameters['sortBy'];
+                }
+
+                if (parameters['direction'] !== undefined) {
+                    queryParameters['direction'] = parameters['direction'];
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    getClinicalAttributeInStudyUsingGETURL(parameters: {
+        'studyId': string,
+        'clinicalAttributeId': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/studies/{studyId}/clinical-attributes/{clinicalAttributeId}';
+
+        path = path.replace('{studyId}', parameters['studyId'] + '');
+
+        path = path.replace('{clinicalAttributeId}', parameters['clinicalAttributeId'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get all clinical attributes in a study
+     * @method
+     * @name CBioPortalAPI#getClinicalAttributeInStudyUsingGET
+     * @param {string} studyId - Study ID e.g. acc_tcga
+     * @param {string} clinicalAttributeId - Clinical Attribute ID e.g. CANCER_TYPE
+     */
+    getClinicalAttributeInStudyUsingGET(parameters: {
+        'studyId': string,
+        'clinicalAttributeId': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < ClinicalAttribute > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/studies/{studyId}/clinical-attributes/{clinicalAttributeId}';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            path = path.replace('{studyId}', parameters['studyId'] + '');
+
+            if (parameters['studyId'] === undefined) {
+                reject(new Error('Missing required  parameter: studyId'));
+                return;
+            }
+
+            path = path.replace('{clinicalAttributeId}', parameters['clinicalAttributeId'] + '');
+
+            if (parameters['clinicalAttributeId'] === undefined) {
+                reject(new Error('Missing required  parameter: clinicalAttributeId'));
                 return;
             }
 
@@ -3520,7 +3663,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "sampleListId" | "category" | "cancerStudyId" | "name" | "description",
+        'sortBy' ? : "sampleListId" | "category" | "studyId" | "name" | "description",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -3574,7 +3717,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "sampleListId" | "category" | "cancerStudyId" | "name" | "description",
+            'sortBy' ? : "sampleListId" | "category" | "studyId" | "name" | "description",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
             $domain ? : string

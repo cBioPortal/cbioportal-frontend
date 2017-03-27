@@ -16,6 +16,7 @@ import queryString from "query-string";
 import SampleManager from './sampleManager';
 import SelectCallback = ReactBootstrap.SelectCallback;
 import Spinner from 'react-spinkit';
+import { Modal } from 'react-bootstrap';
 import {
     default as CancerHotspotsAPI, HotspotMutation
 } from "../../shared/api/generated/CancerHotspotsAPI";
@@ -40,6 +41,8 @@ import {default as PatientViewMutationTable, MutationTableColumnType} from "./mu
 import PathologyReport from "./pathologyReport/PathologyReport";
 import {getCbioPortalApiUrl, getHotspotsApiUrl, getHotspots3DApiUrl} from "../../shared/api/urls";
 import { MSKTabs, MSKTab } from "../../shared/components/MSKTabs/MSKTabs";
+import validateParameters from '../../shared/lib/validateParameters';
+
 
 import './styles.scss';
 
@@ -116,25 +119,26 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             () => props.routing.location.query,
             query => {
 
-                if ('studyId' in query) {
-                    patientViewPageStore.studyId = query.studyId;
+                const validationResult = validateParameters(query, [ 'studyId', ['sampleId', 'caseId']]);
+
+                if (validationResult.isValid) {
+
+                    patientViewPageStore.urlValidationError = null;
+
+                    if ('studyId' in query) {
+                        patientViewPageStore.studyId = query.studyId;
+                    }
+                    if ('caseId' in query) {
+                        patientViewPageStore.setPatientId(query.caseId as string);
+                    } else if ('sampleId' in query)
+                    {
+                        patientViewPageStore.setSampleId(query.sampleId as string);
+                    }
+                    patientViewPageStore.patientIdsInCohort = ('navCaseIds' in query ? (query.navCaseIds as string).split(",") : []);
+
                 } else {
-                    alert("You must have a study Id");
+                    patientViewPageStore.urlValidationError = validationResult.message;
                 }
-
-
-                if ('caseId' in query) {
-                    patientViewPageStore.setPatientId(query.caseId as string);
-                } else if ('sampleId' in query)
-                {
-                    patientViewPageStore.setSampleId(query.sampleId as string);
-                }
-                else
-                {
-                    alert('You must have a patientId or a sampleId');
-                }
-
-                patientViewPageStore.patientIdsInCohort = ('navCaseIds' in query ? (query.navCaseIds as string).split(",") : []);
 
             },
             { fireImmediately:true }
@@ -342,8 +346,22 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         let cohortNav: JSX.Element | null = null;
         let studyName: JSX.Element | null = null;
 
+        if (patientViewPageStore.urlValidationError) {
+            return (
+                <div className="alert alert-danger urlError" role="alert">
+                    <i className="fa fa-warning" aria-hidden="true"></i>
+                    <h3>The URL is invalid</h3>
+                    <ul>
+                        { patientViewPageStore.urlValidationError
+                            .split(".").map((message:string)=>(message.length > 0) ? <li>{message}</li> : null)
+                        }
+                    </ul>
+                </div>
+            )
+        }
+
         if (patientViewPageStore.studyMetaData.isComplete) {
-            let study: CancerStudy = patientViewPageStore.studyMetaData.result;
+            let study = patientViewPageStore.studyMetaData.result;
             studyName = <a href={`/study.do?cancer_study_id=${study.studyId}`}>{study.name}</a>;
         }
 
@@ -402,7 +420,21 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         return (
             <div className="patientViewPage">
 
+                <Modal show={(patientViewPageStore.ajaxErrors.length > 0)} onHide={()=>{ patientViewPageStore.clearErrors() }}>
+                    <Modal.Header closeButton>
+                        <Modal.Title>Sorry, something went wrong!</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <p>Troubleshooting:</p>
+                        <ul>
+                            <li>Check that your URL parameters are valid.</li>
+                            <li>Make sure you are connected to the internet.</li>
+                        </ul>
+                    </Modal.Body>
+                </Modal>
+
                 <div className="topBanner">
+
                 <div className="studyMetaBar">
                     <div>
                         <If condition={(cohortNav != null)}>{cohortNav}</If>

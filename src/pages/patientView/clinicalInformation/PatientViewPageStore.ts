@@ -11,7 +11,7 @@ import {
 } from "shared/api/generated/CBioPortalAPIInternal";
 import {computed, observable, action, reaction, autorun} from "mobx";
 import oncokbClient from "../../../shared/api/oncokbClientInstance";
-import {remoteData} from "../../../shared/api/remoteData";
+import {remoteData, addErrorHandler } from "../../../shared/api/remoteData";
 import {IOncoKbData, IEvidence} from "../mutation/column/AnnotationColumnFormatter";
 import {IGisticData} from "../copyNumberAlterations/column/CohortColumnFormatter";
 import {
@@ -148,6 +148,11 @@ export class PatientViewPageStore
     constructor()
     {
         labelMobxPromises(this);
+
+        addErrorHandler((error)=>{
+           this.ajaxErrors.push(error);
+        });
+
     }
 
     @observable public activeTabId = '';
@@ -159,6 +164,10 @@ export class PatientViewPageStore
 
         return this.derivedPatientId.result;
     }
+
+    @observable public urlValidationError : string | null = null;
+
+    @observable ajaxErrors: Error[] = [];
 
     @observable studyId = '';
 
@@ -241,6 +250,9 @@ export class PatientViewPageStore
 
             return handlePathologyReportCheckResponse(parsedResp);
 
+        },
+        onError: (err: Error)=>{
+            // fail silently
         }
 
     }, []);
@@ -258,8 +270,10 @@ export class PatientViewPageStore
 
             return fileContent.length > 0;
 
+        },
+        onError:()=>{
+            // fail silently
         }
-
     }, false);
 
 
@@ -419,6 +433,9 @@ export class PatientViewPageStore
 
             return checkForTissueImage(this.patientId);
 
+        },
+        onError:()=>{
+            // fail silently
         }
     }, false);
 
@@ -641,6 +658,10 @@ export class PatientViewPageStore
 
     @action setActiveTabId(id:string) {
         this.activeTabId = id;
+    }
+
+    @action clearErrors() {
+        this.ajaxErrors = [];
     }
 
 }
