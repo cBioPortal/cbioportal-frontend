@@ -6,11 +6,14 @@ import {
 } from "../../../shared/api/generated/CBioPortalAPI";
 import client from "../../../shared/api/cbioportalClientInstance";
 import internalClient from "../../../shared/api/cbioportalInternalClientInstance";
-import {CopyNumberCount, CopyNumberCountIdentifier} from "shared/api/generated/CBioPortalAPIInternal";
+import {
+    CopyNumberCount, CopyNumberCountIdentifier, Gistic, GisticToGene
+} from "shared/api/generated/CBioPortalAPIInternal";
 import {computed, observable, action, reaction, autorun} from "mobx";
 import oncokbClient from "../../../shared/api/oncokbClientInstance";
 import {remoteData} from "../../../shared/api/remoteData";
 import {IOncoKbData, IEvidence} from "../mutation/column/AnnotationColumnFormatter";
+import {IGisticData} from "../copyNumberAlterations/column/CohortColumnFormatter";
 import {
     generateIdToIndicatorMap, generateQueryVariant, generateEvidenceQuery, processEvidence
 } from "shared/lib/OncoKbUtils";
@@ -329,6 +332,36 @@ export class PatientViewPageStore
 
     },[]);
 
+    readonly gisticData = remoteData<IGisticData>({
+        invoke: async () => {
+            if (this.studyId)
+            {
+                const gisticData = await internalClient.getSignificantCopyNumberRegionsUsingGET({studyId: this.studyId});
+
+                // generate a map of <entrezGeneId, IGisticSummary[]> pairs
+                return gisticData.reduce((map:IGisticData, gistic:Gistic) => {
+                    gistic.genes.forEach((gene:GisticToGene) => {
+                        if (map[gene.entrezGeneId] === undefined) {
+                            map[gene.entrezGeneId] = [];
+                        }
+
+                        // we may have more than one entry for a gene, so using array
+                        map[gene.entrezGeneId].push({
+                            amp: gistic.amp,
+                            qValue: gistic.qValue,
+                            peakGeneCount: gistic.genes.length
+                        });
+                    });
+
+                    return map;
+                }, {});
+            }
+            else {
+                return {};
+            }
+        }
+    }, {});
+
     readonly clinicalEvents = remoteData({
 
         await:() => [
@@ -520,7 +553,7 @@ export class PatientViewPageStore
                 return [];
             }
         }
-    });
+    }, []);
 
     @computed get mergedMutationData():Mutation[][] {
         let idToMutations:{[key:string]: Array<Mutation>} = {};
