@@ -4,7 +4,7 @@ import DefaultTooltip from "../DefaultTooltip";
 export interface ILetterIconProps
 {
     text: string;
-    tooltip?: JSX.Element;
+    tooltip?: JSX.Element|(() => JSX.Element);
     stroke?: string;
     circleFill?: string;
     fontSize?: number;
