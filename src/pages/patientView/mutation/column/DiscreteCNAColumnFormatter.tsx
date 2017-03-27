@@ -57,7 +57,7 @@ export default class DiscreteCNAColumnFormatter {
         if (cacheDatum !== null && cacheDatum.status === "complete" && cacheDatum.data !== null) {
             return cacheDatum.data.alteration;
         } else {
-            return Number.POSITIVE_INFINITY;
+            return null;
         }
     }
 

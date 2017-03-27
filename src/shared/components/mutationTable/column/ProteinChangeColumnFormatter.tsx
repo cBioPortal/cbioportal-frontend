@@ -9,15 +9,7 @@ import {Mutation} from "shared/api/generated/CBioPortalAPI";
  */
 export default class ProteinChangeColumnFormatter
 {
-    public static sortFunction(a:string, b:string):number
-    {
-        const aValue = ProteinChangeColumnFormatter.extractSortValue(a);
-        const bValue = ProteinChangeColumnFormatter.extractSortValue(b);
-
-        return aValue > bValue ? 1 : -1;
-    }
-
-    public static getSortValue(d:Mutation[]):number {
+    public static getSortValue(d:Mutation[]):number|null {
         return ProteinChangeColumnFormatter.extractSortValue(
             ProteinChangeColumnFormatter.getTextValue(d)
         );
@@ -54,7 +46,7 @@ export default class ProteinChangeColumnFormatter
      * @param proteinChange
      * @returns {number} sort value
      */
-    public static extractSortValue(proteinChange:string):number
+    public static extractSortValue(proteinChange:string):number|null
     {
         // let matched = proteinChange.match(/.*[A-Z]([0-9]+)[^0-9]+/);
         const alleleAndPosition:RegExp = /[A-Za-z][0-9]+./g;
@@ -96,7 +88,7 @@ export default class ProteinChangeColumnFormatter
         else
         {
             // no match at all: do not sort
-            return -Infinity;
+            return null;
         }
     }
 
