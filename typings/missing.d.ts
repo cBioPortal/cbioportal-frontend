@@ -16,3 +16,4 @@ declare module 'javascript-natural-sort';
 declare module 'mobx-react-router';
 declare module 'expect';
 declare module 'expect-jsx';
+declare module 'parameter-validator';
