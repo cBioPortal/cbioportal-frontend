@@ -409,6 +409,7 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
                     data={this.props.data}
                     initialSortColumn="Annotation"
                     initialSortDirection="desc"
+                    initialItemsPerPage={25}
                 />);
     }
 
