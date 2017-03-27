@@ -79,9 +79,17 @@ type SortMetric<T> = ((d:T)=>number|null) | ((d:T)=>(number|null)[]) | ((d:T)=>s
 export function mskTableSort<T>(data:T[], metric:SortMetric<T>, ascending:boolean = true):T[] {
     // Separating this for testing, so that classes can test their comparators
     //  against how the table will sort.
-    const dataAndValue = data.map(d=>{
-        return {data:d, sortBy:([] as any[]).concat(metric(d))};
-    });
+    const dataAndValue:{data:T, sortBy:any[]}[] = [];
+
+    for (let i=0; i<data.length; i++) {
+        // Have to do this loop instead of using data.map because we need dataAndValue to be mutable,
+        //  and Immutable.js makes .map return another immutable structure;
+        const d = data[i];
+        dataAndValue.push({
+            data:d,
+            sortBy:([] as any[]).concat(metric(d)) // ensure it's wrapped in an array, even if metric is number or string
+        });
+    };
     dataAndValue.sort((a,b)=>{
         return compareLists(a.sortBy, b.sortBy, ascending);
     });
