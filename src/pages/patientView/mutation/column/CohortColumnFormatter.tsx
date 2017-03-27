@@ -113,10 +113,12 @@ export default class CohortColumnFormatter {
     }
 
     private static makeMutSigIcon(qValue:number) {
+        const tooltipCallback = () => CohortColumnFormatter.getMutSigTooltip(qValue);
+
         return (
             <Icon
                 text="M"
-                tooltip={CohortColumnFormatter.getMutSigTooltip(qValue)}
+                tooltip={tooltipCallback}
             />
         );
     }

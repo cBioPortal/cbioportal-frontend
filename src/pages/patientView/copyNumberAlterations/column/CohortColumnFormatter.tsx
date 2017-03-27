@@ -23,12 +23,20 @@ export default class CohortColumnFormatter
         const copyNumberCount = CohortColumnFormatter.getCopyNumberCount(data, copyNumberCountData);
         const freqViz = CohortColumnFormatter.makeCohortFrequencyViz(data, copyNumberCount);
         const gisticValue = CohortColumnFormatter.getGisticValue(data, gisticData);
-        const gisticIcon = gisticValue === null ? null : (
-            <Icon
-                text="G"
-                tooltip={CohortColumnFormatter.getGisticTooltip(gisticValue.qValue, gisticValue.peakGeneCount)}
-            />
-        );
+        let gisticIcon:JSX.Element|null = null;
+
+        if (gisticValue !== null)
+        {
+            const tooltipCallback = () => CohortColumnFormatter.getGisticTooltip(
+                gisticValue.qValue, gisticValue.peakGeneCount);
+
+            gisticIcon = (
+                <Icon
+                    text="G"
+                    tooltip={tooltipCallback}
+                />
+            );
+        }
 
         return (
             <div>
