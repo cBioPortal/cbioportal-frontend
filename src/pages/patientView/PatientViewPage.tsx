@@ -359,9 +359,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         let studyName: JSX.Element | null = null;
 
         if (patientViewPageStore.studyMetaData.isComplete) {
-            // TODO: figure out why result is not properly typed by client
-            let study: CancerStudy = (patientViewPageStore.studyMetaData.result as CancerStudy);
-            studyName = <a href={`/beta/study.do?cancer_study_id=${study.studyId}`}>{study.name}</a>;
+            let study: CancerStudy = patientViewPageStore.studyMetaData.result;
+            studyName = <a href={`/study.do?cancer_study_id=${study.studyId}`}>{study.name}</a>;
         }
 
         if (patientViewPageStore.patientViewData.isComplete) {
