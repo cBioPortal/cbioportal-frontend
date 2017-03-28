@@ -1,14 +1,13 @@
 import * as React from 'react';
-import {OverlayTrigger, Popover} from 'react-bootstrap';
 import * as _ from 'lodash';
 import SampleInline from './patientHeader/SampleInline';
 import {ClinicalDataBySampleId} from "../../shared/api/api-types-extended";
 import ClinicalInformationPatientTable from "./clinicalInformation/ClinicalInformationPatientTable";
-import {Sample} from "../../shared/api/generated/CBioPortalAPI";
 import DefaultTooltip from 'shared/components/DefaultTooltip';
 import {cleanAndDerive} from './clinicalInformation/lib/clinicalAttributesUtil.js';
 import styles from './patientHeader/style/clinicalAttributes.scss';
-import naturalSort from 'natural-sort';
+import naturalSort from 'javascript-natural-sort';
+import {ClinicalEvent, ClinicalEventData} from "../../shared/api/generated/CBioPortalAPI";
 
 // we need this to account for issue with rc-tooltip when dealing with large tooltip overlay content
 export function placeArrow(tooltipEl: any) {
@@ -18,21 +17,71 @@ export function placeArrow(tooltipEl: any) {
 }
 
 
-// sort samples based event, clinical data and id
+// sort samples based on event, clinical data and id
+// 1. based on sample collection data (timeline event)
+// 2. if all cases have derived normalized case types, put primary first
+// 3. natural sort of sample ids
 export function sortSamples(samples: Array<ClinicalDataBySampleId>,
-                            clinicalDataLegacyCleanAndDerived: { [s:string]:any }) {
-    // sort by
-    // 1. based on sample collection data (timeline event) (unimplemented)
-    // 2. if all cases have derived normalized case types, put primary first (unimplemented)
-    // 3. natural sort of sample ids
-    let sortedSampleIDs: string[] = [];
-    sortedSampleIDs = sortedSampleIDs.concat(samples.map((sample) => sample.id)).sort(naturalSort).reverse();
+                            clinicalDataLegacyCleanAndDerived: { [s:string]:any },
+                            events?: any) {
+    // natural sort (use contrived concatenation, to avoid complaints about
+    // immutable types)
+    let naturalSortedSampleIDs: string[] = [];
+    naturalSortedSampleIDs = naturalSortedSampleIDs.concat(samples.map((sample) => sample.id)).sort(naturalSort);
 
-    return _.sortBy(samples, function(sample) {
-        return sortedSampleIDs.indexOf(sample.id);
+    // based on sample collection data (timeline event)
+    let collectionDayMap: {[s:string]:number} = {};
+    if (events) {
+        let specimenEvents = events.filter((e: ClinicalEvent) => (e.eventType === 'SPECIMEN'));
+
+        collectionDayMap = specimenEvents.reduce((map:{[s:string]:number}, specimenEvent: ClinicalEvent) => {
+            let sampleAttr = _.find(specimenEvent.attributes, (attr: ClinicalEventData) => {
+                // TODO: This is legacy support for old timeline data that does not use SAMPLE_ID, but one of the specrefnum
+                return (attr.key === "SAMPLE_ID" || attr.key === "SpecimenReferenceNumber" || attr.key === "SPECIMEN_REFERENCE_NUMBER") &&
+                    (naturalSortedSampleIDs.indexOf(attr.value) !== -1);
+            });
+            if (sampleAttr) {
+                map[sampleAttr.value] = specimenEvent.startNumberOfDaysSinceDiagnosis;
+            }
+            return map;
+        }, {});
+    }
+
+    // create new object array, to allow sorting of samples by multiple fields
+    type sampleOrderT = {
+        id: string;
+        // fields to sort by
+        eventOrdering?: number;
+        sampleTypeIndex: number;
+        naturalSortIndex: number;
+    };
+    // put primaries first (could be extended with more if necessary)
+    let sampleTypeOrdering: string[] = ['Primary'];
+    let sampleOrder: sampleOrderT[] = [];
+    
+    for (let i: number = 0; i < samples.length; i++) {
+        let id = samples[i].id;
+        // 1. based on sample collection data (timeline event)
+        let eventOrdering = collectionDayMap[id];
+
+        // 2. if cases have derived normalized case types, put primary first
+        let sampleTypeIndex = sampleTypeOrdering.indexOf(clinicalDataLegacyCleanAndDerived[id].DERIVED_NORMALIZED_CASE_TYPE);
+        if (sampleTypeIndex === -1) {
+            sampleTypeIndex = sampleTypeOrdering.length;
+        }
+
+        // 3. natural sort of sample ids
+        let naturalSortIndex = naturalSortedSampleIDs.indexOf(id);
+
+        sampleOrder = sampleOrder.concat({id, sampleTypeIndex, naturalSortIndex, eventOrdering});
+    }
+
+    sampleOrder = _.orderBy(sampleOrder, ['eventOrdering', 'sampleTypeIndex', 'naturalSortIndex'], ['asc','asc','asc']);
+    let sampleOrderMap = _.fromPairs(sampleOrder.map((so, i) => [so.id, i]));
+    return _.sortBy(samples, (sample) => {
+        return sampleOrderMap[sample.id];
     });
 }
-
 
 
 class SampleManager {
@@ -43,7 +92,7 @@ class SampleManager {
     clinicalDataLegacyCleanAndDerived: { [s:string]:any };
     sampleColors: { [s:string]:string };
 
-    constructor(public samples: Array<ClinicalDataBySampleId>) {
+    constructor(public samples: Array<ClinicalDataBySampleId>, events?: any) {
 
         this.sampleIndex = {};
         this.sampleLabels = {};
@@ -70,7 +119,7 @@ class SampleManager {
            this.sampleColors[sample.id] = color;
         });
 
-        this.samples = sortSamples(samples, this.clinicalDataLegacyCleanAndDerived);
+        this.samples = sortSamples(samples, this.clinicalDataLegacyCleanAndDerived, events);
         this.samples.forEach((sample, i) => {
             this.sampleIndex[sample.id] = i;
             this.sampleLabels[sample.id] = String(i+1);
