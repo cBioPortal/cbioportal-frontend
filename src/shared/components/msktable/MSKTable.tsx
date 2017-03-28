@@ -27,6 +27,7 @@ type MSKTableProps<T> = {
     data:T[];
     initialSortColumn?: string;
     initialSortDirection?: 'asc'|'desc';
+    initialItemsPerPage?:number;
 };
 
 function compareValues<U extends number|string>(a:U|null, b:U|null, asc:boolean):number {
@@ -311,7 +312,7 @@ class MSKTableStore<T> {
         this.sortColumn = mskTableProps.initialSortColumn || "";
         this.sortAscending = (mskTableProps.initialSortDirection !== "desc"); // default ascending
         this._page = 0;
-        this.itemsPerPage = 50;
+        this.itemsPerPage = mskTableProps.initialItemsPerPage || 50;
     }
 }
 
