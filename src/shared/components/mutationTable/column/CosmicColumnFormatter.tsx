@@ -61,9 +61,9 @@ export default class CosmicColumnFormatter
         }
     }
 
-    public static getSortValue(data:Mutation[], cosmicData?:ICosmicData):number {
+    public static getSortValue(data:Mutation[], cosmicData?:ICosmicData):number|null {
         const cosmic:CosmicMutation[]|null = CosmicColumnFormatter.getData(data, cosmicData);
-        let value:number = Number.POSITIVE_INFINITY;
+        let value:number|null = null;
 
         // calculate sum of the all counts
         if (cosmic)
