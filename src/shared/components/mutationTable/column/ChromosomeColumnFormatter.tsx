@@ -8,11 +8,11 @@ import {Mutation} from "../../../api/generated/CBioPortalAPI";
  */
 export default class ChromosomeColumnFormatter
 {
-    public static getSortValue(data:Mutation[]):number
+    public static getSortValue(data:Mutation[]):number|null
     {
         const chromosome = ChromosomeColumnFormatter.getData(data);
         if (!chromosome) {
-            return Number.POSITIVE_INFINITY;
+            return null;
         } else {
             return ChromosomeColumnFormatter.extractSortValue(chromosome);
         }

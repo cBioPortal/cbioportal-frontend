@@ -20,8 +20,7 @@ import {
     default as CancerHotspotsAPI, HotspotMutation
 } from "../../shared/api/generated/CancerHotspotsAPI";
 import {
-    MutSig, MrnaPercentile, default as CBioPortalAPIInternal,
-    VariantCountIdentifier, VariantCount, CosmicMutation
+    MutSig, default as CBioPortalAPIInternal
 } from "../../shared/api/generated/CBioPortalAPIInternal";
 import PatientHeader from './patientHeader/PatientHeader';
 import {PaginationControls} from "../../shared/components/paginationControls/PaginationControls";
@@ -30,12 +29,10 @@ import ClinicalInformationPatientTable from "./clinicalInformation/ClinicalInfor
 import ClinicalInformationSamples from "./clinicalInformation/ClinicalInformationSamplesTable";
 import {ICosmicData} from "../../shared/components/mutationTable/column/CosmicColumnFormatter";
 import {keywordToCosmic, geneToMyCancerGenome, geneAndProteinPosToHotspots} from 'shared/lib/AnnotationUtils';
-import {IVariantCountData, default as CohortColumnFormatter} from "./mutation/column/CohortColumnFormatter";
 import {observable} from "mobx";
 import {observer, inject } from "mobx-react";
 import {IHotspotData, IMyCancerGenomeData, IMyCancerGenome, IOncoKbData} from "./mutation/column/AnnotationColumnFormatter";
 import {getSpans} from './clinicalInformation/lib/clinicalAttributesUtil.js';
-import CopyNumberAlterationsTable from "./copyNumberAlterations/CopyNumberAlterationsTable";
 import CopyNumberTableWrapper from "./copyNumberAlterations/CopyNumberTableWrapper";
 import {reaction} from "mobx";
 import Timeline from "./timeline/Timeline";
@@ -276,9 +273,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                         this.setState(({myCancerGenomeData: _result} as IPatientViewState));
                     });
 
-                    this.fetchHotspotsData(patientViewPageStore.mutationData.result).then((hotspotsData: IHotspotData) => {
-                        this.setState(({hotspotsData} as IPatientViewState));
-                    });
                     const hotspotDataPromise = this.fetchHotspotsData(patientViewPageStore.mutationData.result).then((hotspotsData: IHotspotData) =>
                         this.setState(({hotspotsData} as IPatientViewState)));
                     hotspotDataPromise.catch(() => {
@@ -365,9 +359,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         let studyName: JSX.Element | null = null;
 
         if (patientViewPageStore.studyMetaData.isComplete) {
-            // TODO: figure out why result is not properly typed by client
-            let study: CancerStudy = (patientViewPageStore.studyMetaData.result as CancerStudy);
-            studyName = <a href={`/beta/study.do?cancer_study_id=${study.studyId}`}>{study.name}</a>;
+            let study: CancerStudy = patientViewPageStore.studyMetaData.result;
+            studyName = <a href={`/study.do?cancer_study_id=${study.studyId}`}>{study.name}</a>;
         }
 
         if (patientViewPageStore.patientViewData.isComplete) {
