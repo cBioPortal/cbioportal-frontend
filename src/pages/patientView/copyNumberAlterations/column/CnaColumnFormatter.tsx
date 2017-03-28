@@ -18,10 +18,10 @@ export default class CnaColumnFormatter
         let value = d.alteration;
         switch(value) {
             case -2:
-                color = '#FF0000';
+                color = '#0000FF';
                 break;
             case 2:
-                color = '#0000FF';
+                color = '#FF0000';
                 break;
         }
         if (!color) {
