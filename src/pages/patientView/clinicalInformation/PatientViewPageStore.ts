@@ -151,6 +151,7 @@ export class PatientViewPageStore
     }
 
     @observable public activeTabId = '';
+    @observable public error = false;
 
     @observable private _patientId = '';
     @computed get patientId(): string {
@@ -256,7 +257,8 @@ export class PatientViewPageStore
                 studyId: this.studyId
             })),
             projection: 'DETAILED',
-        })
+        }),
+        onError: (e) => this.error = true
     }, []);
 
     readonly clinicalDataGroupedBySample = remoteData({
@@ -373,7 +375,8 @@ export class PatientViewPageStore
                 studyId:this.studyId, patientId:this.patientId, projection:'DETAILED'
             })
 
-        }
+        },
+        onError: (e) => this.error = true
 
     }, []);
 

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import $ from 'jquery';
-import {Tabs, Tab, default as ReactBootstrap} from 'react-bootstrap';
+import {Tabs, Tab, Alert, default as ReactBootstrap} from 'react-bootstrap';
 import MutationInformationContainer from './mutation/MutationInformationContainer';
 import exposeComponentRenderer from '../../shared/lib/exposeComponentRenderer';
 import GenomicOverview from './genomicOverview/GenomicOverview';
@@ -116,7 +116,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         const reaction1 = reaction(
             () => props.routing.query,
             query => {
-
+                patientViewPageStore.error = false
                 if ('studyId' in query) {
                     patientViewPageStore.studyId = query.studyId;
                 } else {
@@ -352,7 +352,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     }
 
     public render() {
-
         let sampleManager: SampleManager | null = null;
         let sampleHeader: (JSX.Element | undefined)[] | null = null;
         let cohortNav: JSX.Element | null = null;
@@ -411,153 +410,159 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             );
         }
 
-        return (
-            <div className="patientViewPage">
+        if(patientViewPageStore.error) {
+            return <Alert bsStyle="danger">
+                        <div>No patient with patient id:{patientViewPageStore.patientId} and study id: {patientViewPageStore.studyId} found</div>
+                    </Alert>
+        } else {
+            return (
+                <div className="patientViewPage">
 
-                <div className="studyMetaBar">
-                    <div>
-                        <If condition={(cohortNav != null)}>{cohortNav}</If>
+                    <div className="studyMetaBar">
+                        <div>
+                            <If condition={(cohortNav != null)}>{cohortNav}</If>
+                        </div>
+                        <div>{ studyName }</div>
                     </div>
-                    <div>{ studyName }</div>
-                </div>
 
 
-                {  (patientViewPageStore.patientViewData.isComplete) && (
-                    <div className="patientPageHeader clearfix">
-                        <i className="fa fa-user-circle-o patientIcon" aria-hidden="true"></i>
-                        <table>
-                            <tr>
-                                <td>Patient:</td>
-                                <td><PatientHeader
-                                    handlePatientClick={(id: string)=>patientViewPageStore.setPatientId(id)}
-                                    patient={patientViewPageStore.patientViewData.result!.patient!}/></td>
-                            </tr>
-                            <tr>
-                                <td>Samples:</td>
-                                <td>
-                                    <div className="patientSamples">{sampleHeader}</div>
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-                )
-                }
-                <If condition={patientViewPageStore.patientViewData.isComplete}>
-                <Then>
-                <MSKTabs id="patientViewPageTabs" activeTabId={this.props.routing.query.tab}  onTabClick={(id:string)=>this.handleTabChange(id)} className="mainTabs">
+                    {  (patientViewPageStore.patientViewData.isComplete) && (
+                        <div className="patientPageHeader clearfix">
+                            <i className="fa fa-user-circle-o patientIcon" aria-hidden="true"></i>
+                            <table>
+                                <tr>
+                                    <td>Patient:</td>
+                                    <td><PatientHeader
+                                        handlePatientClick={(id: string)=>patientViewPageStore.setPatientId(id)}
+                                        patient={patientViewPageStore.patientViewData.result!.patient!}/></td>
+                                </tr>
+                                <tr>
+                                    <td>Samples:</td>
+                                    <td>
+                                        <div className="patientSamples">{sampleHeader}</div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    )
+                    }
+                    <If condition={patientViewPageStore.patientViewData.isComplete}>
+                    <Then>
+                    <MSKTabs id="patientViewPageTabs" activeTabId={this.props.routing.query.tab}  onTabClick={(id:string)=>this.handleTabChange(id)} className="mainTabs">
 
-                        <MSKTab key={0} id="summaryTab" linkText="Summary">
+                            <MSKTab key={0} id="summaryTab" linkText="Summary">
 
-                            {
-                                (!!sampleManager && patientViewPageStore.clinicalEvents.isComplete && patientViewPageStore.clinicalEvents.result.length > 0) && (
+                                {
+                                    (!!sampleManager && patientViewPageStore.clinicalEvents.isComplete && patientViewPageStore.clinicalEvents.result.length > 0) && (
 
-                                    <div>
-                                        <FeatureTitle title="Clinical Timeline" isLoading={false} />
+                                        <div>
+                                            <FeatureTitle title="Clinical Timeline" isLoading={false} />
 
-                                        <Timeline store={patientViewPageStore} sampleManager={ sampleManager } />
-                                        <hr />
-                                    </div>
-                                )
+                                            <Timeline store={patientViewPageStore} sampleManager={ sampleManager } />
+                                            <hr />
+                                        </div>
+                                    )
 
-                            }
-
-                            <FeatureTitle title="Genomic Data" isLoading={ (patientViewPageStore.mutationData.isPending || patientViewPageStore.cnaSegments.isPending) } />
-
-                            {
-                                (patientViewPageStore.mutationData.isComplete && patientViewPageStore.cnaSegments.isComplete && sampleManager) && (
-                                    <GenomicOverview
-                                        mutations={patientViewPageStore.mutationData.result}
-                                        cnaSegments={patientViewPageStore.cnaSegments.result}
-                                        sampleOrder={sampleManager.sampleIndex}
-                                        sampleLabels={sampleManager.sampleLabels}
-                                        sampleColors={sampleManager.sampleColors}
-                                        sampleManager={sampleManager}
-                                    />
-                                )
-                            }
-
-                            <hr />
-
-                            <FeatureTitle title="Mutations" isLoading={ !this.state.mutationData }/>
-                            {
-                                (this.state.mutationData && !!sampleManager) && (
-                                    <PatientViewMutationTable
-                                        sampleManager={sampleManager}
-                                        sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
-                                        variantCountCache={patientViewPageStore.variantCountCache}
-                                        discreteCNACache={patientViewPageStore.discreteCNACache}
-                                        mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}
-                                        mrnaExprRankGeneticProfileId={patientViewPageStore.mrnaRankGeneticProfileId.result || undefined}
-                                        discreteCNAGeneticProfileId={patientViewPageStore.geneticProfileIdDiscrete.result}
-                                        data={patientViewPageStore.mergedMutationData}
-                                        mutSigData={this.state.mutSigData}
-                                        myCancerGenomeData={this.state.myCancerGenomeData}
-                                        hotspots={this.state.hotspotsData}
-                                        cosmicData={this.state.cosmicData}
-                                        oncoKbData={patientViewPageStore.oncoKbData.result}
-                                        pmidData={patientViewPageStore.pmidData.result}
-                                        columns={this.mutationTableColumns}
-                                    />
-                                )
-                            }
-                        </MSKTab>
-                        <MSKTab id="discreteCNAData" linkText="Copy Number Alterations">
-                            <CopyNumberTableWrapper store={patientViewPageStore} />
-                        </MSKTab>
-                        {(patientViewPageStore.pageMode === 'patient') && (
-                        <MSKTab key={2} id="clinicalDataTab" linkText="Clinical Data">
-
-                                    <div className="clearfix">
-                                        <FeatureTitle title="Patient"
-                                                      isLoading={ patientViewPageStore.clinicalDataPatient.isPending }
-                                                      className="pull-left"/>
-                                        { (patientViewPageStore.clinicalDataPatient.isComplete) && (
-                                            <ClinicalInformationPatientTable showTitleBar={true}
-                                                                             data={patientViewPageStore.clinicalDataPatient.result}/>
-
-                                        )
-                                        }
-                                    </div>
-
-                            <br />
-
-                            <div className="clearfix">
-                                <FeatureTitle title="Samples" isLoading={ patientViewPageStore.clinicalDataGroupedBySample.isPending } className="pull-left" />
-                                {  (patientViewPageStore.clinicalDataGroupedBySample.isComplete) && (
-                                    <ClinicalInformationSamples
-                                        samples={patientViewPageStore.clinicalDataGroupedBySample.result!}/>
-                                )
                                 }
-                            </div>
+
+                                <FeatureTitle title="Genomic Data" isLoading={ (patientViewPageStore.mutationData.isPending || patientViewPageStore.cnaSegments.isPending) } />
+
+                                {
+                                    (patientViewPageStore.mutationData.isComplete && patientViewPageStore.cnaSegments.isComplete && sampleManager) && (
+                                        <GenomicOverview
+                                            mutations={patientViewPageStore.mutationData.result}
+                                            cnaSegments={patientViewPageStore.cnaSegments.result}
+                                            sampleOrder={sampleManager.sampleIndex}
+                                            sampleLabels={sampleManager.sampleLabels}
+                                            sampleColors={sampleManager.sampleColors}
+                                            sampleManager={sampleManager}
+                                        />
+                                    )
+                                }
+
+                                <hr />
+
+                                <FeatureTitle title="Mutations" isLoading={ !this.state.mutationData }/>
+                                {
+                                    (this.state.mutationData && !!sampleManager) && (
+                                        <PatientViewMutationTable
+                                            sampleManager={sampleManager}
+                                            sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
+                                            variantCountCache={patientViewPageStore.variantCountCache}
+                                            discreteCNACache={patientViewPageStore.discreteCNACache}
+                                            mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}
+                                            mrnaExprRankGeneticProfileId={patientViewPageStore.mrnaRankGeneticProfileId.result || undefined}
+                                            discreteCNAGeneticProfileId={patientViewPageStore.geneticProfileIdDiscrete.result}
+                                            data={patientViewPageStore.mergedMutationData}
+                                            mutSigData={this.state.mutSigData}
+                                            myCancerGenomeData={this.state.myCancerGenomeData}
+                                            hotspots={this.state.hotspotsData}
+                                            cosmicData={this.state.cosmicData}
+                                            oncoKbData={patientViewPageStore.oncoKbData.result}
+                                            pmidData={patientViewPageStore.pmidData.result}
+                                            columns={this.mutationTableColumns}
+                                        />
+                                    )
+                                }
+                            </MSKTab>
+                            <MSKTab id="discreteCNAData" linkText="Copy Number Alterations">
+                                <CopyNumberTableWrapper store={patientViewPageStore} />
+                            </MSKTab>
+                            {(patientViewPageStore.pageMode === 'patient') && (
+                            <MSKTab key={2} id="clinicalDataTab" linkText="Clinical Data">
+
+                                        <div className="clearfix">
+                                            <FeatureTitle title="Patient"
+                                                        isLoading={ patientViewPageStore.clinicalDataPatient.isPending }
+                                                        className="pull-left"/>
+                                            { (patientViewPageStore.clinicalDataPatient.isComplete) && (
+                                                <ClinicalInformationPatientTable showTitleBar={true}
+                                                                                data={patientViewPageStore.clinicalDataPatient.result}/>
+
+                                            )
+                                            }
+                                        </div>
+
+                                <br />
+
+                                <div className="clearfix">
+                                    <FeatureTitle title="Samples" isLoading={ patientViewPageStore.clinicalDataGroupedBySample.isPending } className="pull-left" />
+                                    {  (patientViewPageStore.clinicalDataGroupedBySample.isComplete) && (
+                                        <ClinicalInformationSamples
+                                            samples={patientViewPageStore.clinicalDataGroupedBySample.result!}/>
+                                    )
+                                    }
+                                </div>
 
 
-                        </MSKTab>
-                    )}
+                            </MSKTab>
+                        )}
 
 
-                    {  (patientViewPageStore.pathologyReport.isComplete && patientViewPageStore.pathologyReport.result.length > 0 ) &&
-                    (<MSKTab key={3} id="pathologyReportTab" linkText="Pathology Report">
-                        <PathologyReport pdfs={patientViewPageStore.pathologyReport.result} />
-                    </MSKTab>)
-                    }
-
-                    { (patientViewPageStore.hasTissueImageIFrameUrl.isComplete && patientViewPageStore.hasTissueImageIFrameUrl.result) &&
-                        (<MSKTab key={4} id="tissueImageTab" linkText="Tissue Image">
-                            <iframe style={{width:'100%', height:700, border:'none'}}
-                                    src="http://cancer.digitalslidearchive.net/index_mskcc.php?slide_name=TCGA-CG-5721"></iframe>
+                        {  (patientViewPageStore.pathologyReport.isComplete && patientViewPageStore.pathologyReport.result.length > 0 ) &&
+                        (<MSKTab key={3} id="pathologyReportTab" linkText="Pathology Report">
+                            <PathologyReport pdfs={patientViewPageStore.pathologyReport.result} />
                         </MSKTab>)
-                    }
+                        }
 
-                    </MSKTabs>
+                        { (patientViewPageStore.hasTissueImageIFrameUrl.isComplete && patientViewPageStore.hasTissueImageIFrameUrl.result) &&
+                            (<MSKTab key={4} id="tissueImageTab" linkText="Tissue Image">
+                                <iframe style={{width:'100%', height:700, border:'none'}}
+                                        src="http://cancer.digitalslidearchive.net/index_mskcc.php?slide_name=TCGA-CG-5721"></iframe>
+                            </MSKTab>)
+                        }
 
-                    </Then>
-                    <Else>
-                        <Spinner style={{textAlign:'center'}} spinnerName="three-bounce" noFadeIn/>
-                    </Else>
+                        </MSKTabs>
 
-                </If>
+                        </Then>
+                        <Else>
+                            <Spinner style={{textAlign:'center'}} spinnerName="three-bounce" noFadeIn/>
+                        </Else>
 
-            </div>
-        );
+                    </If>
+
+                </div>
+            );
+        }
     }
 }
