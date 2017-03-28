@@ -543,10 +543,18 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     </MSKTab>)
                     }
 
+
+                    {  (patientViewPageStore.MDAndersonHeatMapAvailable.isComplete && patientViewPageStore.MDAndersonHeatMapAvailable.result ) &&
+                    (<MSKTab key={4} id="heatMapReportTab" linkText="Heatmap">
+                        <iframe style={{width:'100%', height:700, border:'none'}}
+                                src={ `//bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?participant=${patientViewPageStore.patientId}` }></iframe>
+                    </MSKTab>)
+                    }
+
                     { (patientViewPageStore.hasTissueImageIFrameUrl.isComplete && patientViewPageStore.hasTissueImageIFrameUrl.result) &&
-                        (<MSKTab key={4} id="tissueImageTab" linkText="Tissue Image">
+                        (<MSKTab key={5} id="tissueImageTab" linkText="Tissue Image">
                             <iframe style={{width:'100%', height:700, border:'none'}}
-                                    src="http://cancer.digitalslidearchive.net/index_mskcc.php?slide_name=TCGA-CG-5721"></iframe>
+                                    src={ `http://cancer.digitalslidearchive.net/index_mskcc.php?slide_name=${patientViewPageStore.patientId}` }></iframe>
                         </MSKTab>)
                     }
 

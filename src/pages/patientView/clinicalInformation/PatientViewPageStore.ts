@@ -245,6 +245,25 @@ export class PatientViewPageStore
 
     }, []);
 
+    readonly MDAndersonHeatMapAvailable = remoteData({
+        await: () => [this.derivedPatientId],
+        invoke: async() => {
+
+            let resp: any = await request.get(`//bioinformatics.mdanderson.org/dyce?app=chmdb&command=participant2maps&participant=${this.patientId}`);
+
+            const parsedResp: any = JSON.parse(resp.text);
+
+            // filecontent array is serialized :(
+            const fileContent: string[] = JSON.parse(parsedResp.fileContent);
+
+            return fileContent.length > 0;
+
+        }
+
+    }, false);
+
+
+    //
     readonly clinicalDataForSamples = remoteData({
         await: () => [
             this.samples
