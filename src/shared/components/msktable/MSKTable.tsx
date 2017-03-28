@@ -27,36 +27,74 @@ type MSKTableProps<T> = {
     data:T[];
     initialSortColumn?: string;
     initialSortDirection?: 'asc'|'desc';
+    initialItemsPerPage?:number;
 };
 
-export function mskTableSort<T>(data:T[], metric:(d:T)=>any, ascending:boolean = true):T[] {
-    // Separating this for testing, so that classes can test their comparators
-    //  against how the table will sort.
-    const modifiedMetric = (d: T) => {
-        // modify it so that it enforces null values always come at end
-        let metricValue = metric(d);
-        if (_.isArray(metricValue)) {
-            metricValue = (metricValue as any[]).map((x: any) => {
-                if (x === null) {
-                    if (ascending) {
-                        return Number.POSITIVE_INFINITY;
-                    } else {
-                        return Number.NEGATIVE_INFINITY;
-                    }
+function compareValues<U extends number|string>(a:U|null, b:U|null, asc:boolean):number {
+    let ret:number = 0;
+    if (a !== b) {
+        if (a === null) {
+            // a sorted to end
+            ret = 1;
+        } else if (b === null) {
+            // b sorted to end
+            ret = -1;
+        } else {
+            // neither are null
+            if (typeof a === "number") {
+                // sort numbers
+                if (a < b) {
+                    ret = (asc ? -1 : 1);
                 } else {
-                    return x;
+                    // we know a !== b here so this case is a > b
+                    ret = (asc ? 1 : -1);
                 }
-            });
-        } else if (metricValue === null) {
-            if (ascending) {
-                return Number.POSITIVE_INFINITY;
-            } else {
-                return Number.NEGATIVE_INFINITY;
+            } else if (typeof a === "string") {
+                // sort strings
+                ret = (asc ? 1 : -1)*((a as string).localeCompare(b as string));
             }
         }
-        return metricValue;
+    }
+    return ret;
+}
+function compareLists<U extends number|string>(a:(U|null)[], b:(U|null)[], asc:boolean):number {
+    let ret = 0;
+    const loopLength = Math.min(a.length, b.length);
+    for (let i=0; i<loopLength; i++) {
+        ret = compareValues(a[i], b[i], asc);
+        if (ret !== 0) {
+            break;
+        }
+    }
+    if (ret === 0) {
+        if (a.length < b.length) {
+            ret = (asc ? -1 : 1);
+        } else if (a.length > b.length) {
+            ret = (asc ? 1 : -1);
+        }
+    }
+    return ret;
+}
+
+type SortMetric<T> = ((d:T)=>number|null) | ((d:T)=>(number|null)[]) | ((d:T)=>string|null) | ((d:T)=>(string|null)[]);
+export function mskTableSort<T>(data:T[], metric:SortMetric<T>, ascending:boolean = true):T[] {
+    // Separating this for testing, so that classes can test their comparators
+    //  against how the table will sort.
+    const dataAndValue:{data:T, sortBy:any[]}[] = [];
+
+    for (let i=0; i<data.length; i++) {
+        // Have to do this loop instead of using data.map because we need dataAndValue to be mutable,
+        //  and Immutable.js makes .map return another immutable structure;
+        const d = data[i];
+        dataAndValue.push({
+            data:d,
+            sortBy:([] as any[]).concat(metric(d)) // ensure it's wrapped in an array, even if metric is number or string
+        });
     };
-    return _.orderBy(data, modifiedMetric, (ascending ? "asc" : "desc"));
+    dataAndValue.sort((a,b)=>{
+        return compareLists(a.sortBy, b.sortBy, ascending);
+    });
+    return dataAndValue.map(x=>x.data);
 }
 
 class MSKTableStore<T> {
@@ -96,7 +134,11 @@ class MSKTableStore<T> {
     }
 
     @computed get maxPage() {
-        return Math.floor(this.sortedFilteredData.length / this.itemsPerPage);
+        if (this.itemsPerPage === PAGINATION_SHOW_ALL) {
+            return 0;
+        } else {
+            return Math.floor(this.sortedFilteredData.length / this.itemsPerPage);
+        }
     }
 
     @computed get filterStringUpper() {
@@ -158,7 +200,7 @@ class MSKTableStore<T> {
         if (this.filterString) {
             filtered = filtered.filter((datum:T)=>{
                 let match = false;
-                for (const column of this.columns) {
+                for (const column of this.visibleColumns) {
                     match = (column.filter && column.filter(datum, this.filterString, this.filterStringUpper, this.filterStringLower)) || false;
                     if (match) {
                         break;
@@ -178,7 +220,7 @@ class MSKTableStore<T> {
     }
 
     @computed get headers():JSX.Element[] {
-        return this.columns.filter((column:Column<T>) => this.isVisible(column)).map((column:Column<T>)=>{
+        return this.visibleColumns.map((column:Column<T>)=>{
             const headerProps:{role?:"button",
                 className?:"sort-asc"|"sort-des",
                 onClick?:()=>void} = {};
@@ -209,9 +251,13 @@ class MSKTableStore<T> {
             );
         });
     }
-    @computed get rows():JSX.Element[] {
+
+    @computed get visibleColumns():Column<T>[] {
+        return this.columns.filter(column=>this.isVisible(column));
+    }
+    public get rows():JSX.Element[] {
         return this.visibleData.map((datum:T)=>{
-                const tds = this.columns.filter((column:Column<T>) => this.isVisible(column)).map((column:Column<T>)=>{
+                const tds = this.visibleColumns.map((column:Column<T>)=>{
                     return (<td key={column.name}>
                         {column.render(datum)}
                     </td>);
@@ -228,7 +274,6 @@ class MSKTableStore<T> {
         this.columns = props.columns;
         this.data = props.data;
         this._columnVisibility = this.resolveColumnVisibility(props.columns);
-        this.initialSort(props.initialSortColumn, props.initialSortDirection);
     }
 
     @action public updateColumnVisibility(id:string, visible:boolean)
@@ -241,17 +286,6 @@ class MSKTableStore<T> {
     public isVisible(column:Column<T>): boolean
     {
         return this.columnVisibility[column.name] || false;
-    }
-
-    initialSort(initialSortColumn?:string, initialSortDirection?:string)
-    {
-        if (initialSortColumn !== undefined) {
-            this.sortColumn = initialSortColumn;
-
-            if (initialSortDirection !== undefined) {
-                this.sortAscending = initialSortDirection === 'asc';
-            }
-        }
     }
 
     resolveColumnVisibility(columns:Array<Column<T>>): {[columnId: string]: boolean}
@@ -272,14 +306,13 @@ class MSKTableStore<T> {
         return colVis;
     }
 
-    constructor() {
-        this.data = [];
-        this.columns = [];
+    constructor(mskTableProps:MSKTableProps<T>) {
+        this.setProps(mskTableProps);
         this.filterString = "";
-        this.sortColumn = "";
-        this.sortAscending = true;
+        this.sortColumn = mskTableProps.initialSortColumn || "";
+        this.sortAscending = (mskTableProps.initialSortDirection !== "desc"); // default ascending
         this._page = 0;
-        this.itemsPerPage = 50;
+        this.itemsPerPage = mskTableProps.initialItemsPerPage || 50;
     }
 }
 
@@ -316,8 +349,7 @@ export default class MSKTable<T> extends React.Component<MSKTableProps<T>, {}> {
 
     constructor(props:MSKTableProps<T>) {
         super(props);
-        this.store = new MSKTableStore<T>();
-        this.store.setProps(props);
+        this.store = new MSKTableStore<T>(props);
 
         this.handlers = {
             filterInput: (() => {
@@ -329,7 +361,6 @@ export default class MSKTable<T> extends React.Component<MSKTableProps<T>, {}> {
                     }
 
                     const filterValue = evt.currentTarget.value;
-
                     searchTimeout = window.setTimeout(()=>{
                         this.store.filterString = filterValue;
                     }, 400);
@@ -391,7 +422,7 @@ export default class MSKTable<T> extends React.Component<MSKTableProps<T>, {}> {
                     <input type="text" onInput={this.handlers.filterInput} className="form-control tableSearchInput" style={{ width:200 }}  />
                     <span className="fa fa-search form-control-feedback" aria-hidden="true"></span>
                 </div>
-                { this.buildPaginationControls('pull-right', {marginLeft:5}, textBetweenButtons) }
+                { this.buildPaginationControls('pull-right topPagination', {marginLeft:5}, textBetweenButtons) }
                 <ColumnVisibilityControls
                     className="pull-right"
                     columnVisibility={this.colVisProp}
@@ -410,7 +441,7 @@ export default class MSKTable<T> extends React.Component<MSKTableProps<T>, {}> {
 
             <If condition={this.store.showingAllRows === false}>
             <ButtonToolbar style={{marginLeft:0}} className='text-center'>
-                { this.buildPaginationControls(undefined, {display:'inline-block'}, textBetweenButtons) }
+                { this.buildPaginationControls('bottomPagination', {display:'inline-block'}, textBetweenButtons) }
             </ButtonToolbar>
             </If>
 

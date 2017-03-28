@@ -1,5 +1,4 @@
 import * as React from 'react';
-import DefaultTooltip from 'shared/components/DefaultTooltip';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {MutSigData} from "../../PatientViewPage";
 import {Mutation} from "../../../../shared/api/generated/CBioPortalAPI";
@@ -8,6 +7,7 @@ import {
     default as CohortVariantCountCache
 } from "../../clinicalInformation/CohortVariantCountCache";
 import FrequencyBar from "shared/components/cohort/FrequencyBar";
+import Icon from "shared/components/cohort/LetterIcon";
 
 export interface IVariantCountData {
     numberOfSamples?:number;
@@ -33,12 +33,12 @@ export default class CohortColumnFormatter {
         );
     };
 
-    public static getSortValue(data:Mutation[], variantCountCache:CohortVariantCountCache):number {
+    public static getSortValue(data:Mutation[], variantCountCache:CohortVariantCountCache):number|null {
         const variantCountData = CohortColumnFormatter.getVariantCountData(data, variantCountCache);
         if (variantCountData && variantCountData.data) {
             return variantCountData.data.mutationInGene;
         } else {
-            return Number.POSITIVE_INFINITY;
+            return null;
         }
     }
 
@@ -57,7 +57,7 @@ export default class CohortColumnFormatter {
         }
     }
 
-    private static getMutSigQValue(data:Mutation[], mutSigData:MutSigData|undefined) {
+    private static getMutSigQValue(data:Mutation[], mutSigData:MutSigData|undefined):number|null {
         if (!mutSigData || data.length === 0) {
             return null;
         }
@@ -113,25 +113,21 @@ export default class CohortColumnFormatter {
     }
 
     private static makeMutSigIcon(qValue:number) {
-        return (<DefaultTooltip
-            placement="right"
-            overlay={CohortColumnFormatter.getMutSigTooltip(qValue)}
-            arrowContent={<div className="rc-tooltip-arrow-inner"/>}
-        >
-            <svg width="12" height="12">
-                <circle r="5" cx="6" cy="6" stroke="#55C" fill="none"/>
-                <text x="3" y="8.5" fontSize="7" fill="#66C">
-                    M
-                </text>
-            </svg>
-        </DefaultTooltip>);
+        const tooltipCallback = () => CohortColumnFormatter.getMutSigTooltip(qValue);
+
+        return (
+            <Icon
+                text="M"
+                tooltip={tooltipCallback}
+            />
+        );
     }
 
     private static getBoldPercentage(proportion:number) {
         return (
-            <span style={{fontWeight:'bold'}}>
+            <b>
                 {(100*proportion).toFixed(1) + "%"}
-            </span>
+            </b>
         );
     }
 
@@ -161,7 +157,7 @@ export default class CohortColumnFormatter {
 
     private static getMutSigTooltip(qValue:number) {
         return (<div>
-            <span style={{fontWeight:'bold'}}>MutSig</span><br/>
+            <b>MutSig</b><br/>
             <span> Q-value: {(qValue || 0).toExponential(3)}</span>
         </div>);
     }
