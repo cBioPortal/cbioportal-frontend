@@ -353,15 +353,6 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
             order: 5
         };
 
-        this._columns[MutationTableColumnType.SAMPLE_ID] = {
-            name: "Sample",
-            render:(d:Mutation[])=>SampleColumnFormatter.renderFunction(d),
-            sortBy:(d:Mutation[])=>SampleColumnFormatter.getDisplayValue(d),
-            filter:(d:Mutation[], filterString:string, filterStringUpper:string) =>
-                SampleColumnFormatter.getDisplayValue(d).toUpperCase().indexOf(filterStringUpper) > -1,
-            order: 10
-        };
-
         this._columns[MutationTableColumnType.ANNOTATION] = {
             name: "Annotation",
             render: (d:Mutation[]) => (AnnotationColumnFormatter.renderFunction(d, {
