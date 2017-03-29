@@ -94,12 +94,12 @@ function getTextForDataField(data:Mutation[], dataField:string) {
     return text;
 }
 
-function defaultFilter(data:Mutation[], dataField:string, filterString:string):boolean {
+function defaultFilter(data:Mutation[], dataField:string, filterStringUpper:string):boolean {
     if (data.length > 0) {
         return data.reduce((match:boolean, next:Mutation)=>{
             const val = (next as any)[dataField];
             if (val) {
-                return match || ((val.indexOf(filterString) > -1));
+                return match || ((val.toUpperCase().indexOf(filterStringUpper) > -1));
             } else {
                 return match;
             }
@@ -250,7 +250,8 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
             render: (d:Mutation[])=>getSpanForDataField(d, "mutationStatus"),
             download: (d:Mutation[])=>getTextForDataField(d, "mutationStatus"),
             sortBy:(d:Mutation[])=>d.map(m=>m.mutationStatus),
-            filter: (d:Mutation[], filterString:string)=>defaultFilter(d, "mutationStatus", filterString),
+            filter: (d:Mutation[], filterString:string, filterStringUpper:string) =>
+                defaultFilter(d, "mutationStatus", filterStringUpper),
             visible: false,
             order: 90
         };
@@ -260,7 +261,8 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
             render: (d:Mutation[])=>getSpanForDataField(d, "validationStatus"),
             download: (d:Mutation[])=>getTextForDataField(d, "validationStatus"),
             sortBy:(d:Mutation[])=>d.map(m=>m.validationStatus),
-            filter: (d:Mutation[], filterString:string)=>defaultFilter(d, "validationStatus", filterString),
+            filter: (d:Mutation[], filterString:string, filterStringUpper:string) =>
+                defaultFilter(d, "validationStatus", filterStringUpper),
             visible: false,
             order: 100
         };
@@ -270,7 +272,8 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
             render: (d:Mutation[])=>getSpanForDataField(d, "center"),
             download: (d:Mutation[])=>getTextForDataField(d, "center"),
             sortBy:(d:Mutation[])=>d.map(m=>m.center),
-            filter: (d:Mutation[], filterString:string)=>defaultFilter(d, "center", filterString),
+            filter: (d:Mutation[], filterString:string, filterStringUpper:string) =>
+                defaultFilter(d, "center", filterStringUpper),
             visible: false,
             order: 120
         };
@@ -280,7 +283,8 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
             render: (d:Mutation[])=>GeneColumnFormatter.renderFunction(d),
             download: (d:Mutation[])=>GeneColumnFormatter.getTextValue(d),
             sortBy:(d:Mutation[])=>GeneColumnFormatter.getSortValue(d),
-            filter:(d:Mutation[], filterString:string)=>(GeneColumnFormatter.getTextValue(d).indexOf(filterString) > -1),
+            filter:(d:Mutation[], filterString:string, filterStringUpper:string) =>
+                GeneColumnFormatter.getTextValue(d).toUpperCase().indexOf(filterStringUpper) > -1,
             order: 20
         };
 
@@ -289,9 +293,8 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
             render: (d:Mutation[])=>(<span>{ChromosomeColumnFormatter.getData(d)}</span>),
             download: (d:Mutation[])=>(ChromosomeColumnFormatter.getData(d) || ""),
             sortBy:(d:Mutation[])=>ChromosomeColumnFormatter.getSortValue(d),
-            filter:(d:Mutation[], filterString:string)=>{
-                return ((ChromosomeColumnFormatter.getData(d)+'').indexOf(filterString) > -1);
-            },
+            filter:(d:Mutation[], filterString:string, filterStringUpper:string) =>
+                (ChromosomeColumnFormatter.getData(d)+'').toUpperCase().indexOf(filterStringUpper) > -1,
             visible: false,
             order: 40
         };
@@ -301,9 +304,8 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
             render: ProteinChangeColumnFormatter.renderFunction,
             download: DefaultProteinChangeColumnFormatter.getTextValue,
             sortBy:(d:Mutation[])=>DefaultProteinChangeColumnFormatter.getSortValue(d),
-            filter: (d:Mutation[], filterString:string)=>{
-                return (DefaultProteinChangeColumnFormatter.getTextValue(d).indexOf(filterString) > -1);
-            },
+            filter: (d:Mutation[], filterString:string, filterStringUpper:string) =>
+                DefaultProteinChangeColumnFormatter.getTextValue(d).toUpperCase().indexOf(filterStringUpper) > -1,
             order: 30
         };
 
@@ -312,9 +314,8 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
             render:MutationTypeColumnFormatter.renderFunction,
             download:MutationTypeColumnFormatter.getTextValue,
             sortBy:(d:Mutation[])=>MutationTypeColumnFormatter.getDisplayValue(d),
-            filter:(d:Mutation[], filterString:string)=>{
-                return (MutationTypeColumnFormatter.getDisplayValue(d).indexOf(filterString) > -1);
-            },
+            filter:(d:Mutation[], filterString:string, filterStringUpper:string) =>
+                MutationTypeColumnFormatter.getDisplayValue(d).toUpperCase().indexOf(filterStringUpper) > -1,
             order: 110
         };
 
@@ -323,9 +324,8 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
             render:MutationAssessorColumnFormatter.renderFunction,
             download:MutationAssessorColumnFormatter.getTextValue,
             sortBy:(d:Mutation[])=>MutationAssessorColumnFormatter.getSortValue(d),
-            filter:(d:Mutation[], filterString:string)=>{
-                return (MutationAssessorColumnFormatter.filterValue(d).indexOf(filterString) > -1);
-            },
+            filter:(d:Mutation[], filterString:string, filterStringUpper:string) =>
+                MutationAssessorColumnFormatter.filterValue(d).toUpperCase().indexOf(filterStringUpper) > -1,
             visible: false,
             order: 190
         };
@@ -357,9 +357,8 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
             name: "Sample",
             render:(d:Mutation[])=>SampleColumnFormatter.renderFunction(d),
             sortBy:(d:Mutation[])=>SampleColumnFormatter.getDisplayValue(d),
-            filter:(d:Mutation[], filterString:string)=>{
-                return (SampleColumnFormatter.getDisplayValue(d).indexOf(filterString) > -1);
-            },
+            filter:(d:Mutation[], filterString:string, filterStringUpper:string) =>
+                SampleColumnFormatter.getDisplayValue(d).toUpperCase().indexOf(filterStringUpper) > -1,
             order: 10
         };
 
