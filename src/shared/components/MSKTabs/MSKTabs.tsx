@@ -10,6 +10,7 @@ interface IMSKTabProps {
     id:string;
     linkText:string;
     activeId?:string;
+    className?:string;
 }
 
 export class MSKTab extends React.Component<IMSKTabProps,{}> {
@@ -19,7 +20,7 @@ export class MSKTab extends React.Component<IMSKTabProps,{}> {
     }
 
     render(){
-        return <div className={classnames({ 'msk-tab':true, 'hidden':(this.props.hidden === true)  })}>{this.props.children}</div>
+        return <div className={classnames({ 'msk-tab':true, 'hidden':(this.props.hidden === true)  }, this.props.className )}>{this.props.children}</div>
     }
 
 }
