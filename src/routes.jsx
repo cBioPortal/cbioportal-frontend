@@ -1,5 +1,5 @@
 import React from 'react';
-import { Route } from 'react-router';
+import { Route, Redirect, IndexRedirect } from 'react-router';
 
 import Container from 'appShell/App/Container';
 
@@ -34,8 +34,10 @@ function lazyLoadComponent(loader) {
 
 export const makeRoutes = () => (
         <Route path="/" component={Container}>
-            <Route path="home" getComponent={lazyLoadComponent(HomePage)} />
+            <Route path="/home" getComponent={lazyLoadComponent(HomePage)} />
             <Route path="/patient" getComponent={lazyLoadComponent(PatientViewPage)} />
+            <Redirect from="*" to="/patient" />
+            <IndexRedirect to="/patient" />
         </Route>
 );
 
