@@ -165,8 +165,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             MutationTableColumnType.MUTATION_ASSESSOR,
             MutationTableColumnType.COSMIC,
             MutationTableColumnType.TUMOR_ALLELE_FREQ,
-            MutationTableColumnType.TUMORS,
-            MutationTableColumnType.SAMPLE_ID];
+            MutationTableColumnType.TUMORS];
     }
 
     fetchMyCancerGenomeData():Promise<IMyCancerGenomeData> {
