@@ -123,4 +123,26 @@ describe('accumulatingDebounce', ()=>{
         clock.tick(90);
         assert.isTrue(done);
     });
+
+    it("does not execute if cancelled", ()=>{
+        let done = sinon.spy((x:number)=>{});
+        let deb = accumulatingDebounce(done, (x:number)=>0, ()=>{return 0;}, 0);
+        deb();
+        clock.tick(20);
+        assert.isTrue(done.calledOnce, "if not cancelled, it executes");
+        assert.isFalse(deb.isPending(), "call is not pending after an execution");
+
+        deb();
+        assert.isTrue(deb.isPending(), "call is pending");
+        deb();
+        deb();
+        deb();
+        assert.isTrue(deb.isPending(), "call is still pending");
+        assert.isTrue(done.calledOnce, "final function not called again");
+        deb.cancel();
+        assert.isFalse(deb.isPending(), "call not pending after being cancelled");
+        clock.tick(500);
+        assert.isFalse(deb.isPending(), "call still not pending 500 ms later");
+        assert.isTrue(done.calledOnce, "final function was never called again");
+    });
 });
