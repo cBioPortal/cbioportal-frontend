@@ -8,13 +8,12 @@ import { computed, extendObservable } from 'mobx';
 import makeRoutes from './routes';
 import lodash from 'lodash';
 import $ from 'jquery';
+import queryString from 'query-string'
 
 // make sure lodash doesn't overwrite (or set) global underscore
 lodash.noConflict();
 
 const routingStore = new ExtendedRoutingStore();
-
-window.routingStore = routingStore;
 
 const stores = {
     // Key can be whatever you want
@@ -23,6 +22,32 @@ const stores = {
 };
 
 const history = syncHistoryWithStore(hashHistory, routingStore);
+
+
+const qs = queryString.parse((window).location.search);
+
+const newParams = {};
+if ('cancer_study_id' in qs) {
+    newParams['studyId'] = qs.cancer_study_id;
+}
+if ('case_id' in qs) {
+    newParams['caseId'] = qs.case_id;
+}
+
+if ('sample_id' in qs) {
+    newParams['sampleId'] = qs.sample_id;
+}
+
+const navCaseIdsMatch = routingStore.location.pathname.match(/(nav_case_ids)=(.*)$/);
+if (navCaseIdsMatch && navCaseIdsMatch.length > 2) {
+    newParams['navCaseIds'] = navCaseIdsMatch[2];
+}
+
+routingStore.updateRoute(newParams);
+
+
+window.routingStore = routingStore;
+
 
 let render = () => {
 
