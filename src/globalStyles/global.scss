@@ -2,6 +2,7 @@
 /* locks scroll bar on to prevent horizontal jump when content render */
 body {
   overflow-y:scroll;
+  background:#f5f5f5 !important;
 }
 
 /* fix for legacy style isses. makes it bootstrap */
@@ -14,6 +15,11 @@ body {
       line-height:1.1;
       color:$text-color;
   }
+}
+
+.topBanner {
+  width:$portalWidth;
+  margin:0 auto;
 }
 
 th.reactable-header-sortable {
@@ -52,11 +58,35 @@ th.reactable-header-sort-asc:after {
   opacity:1 !important;
 }
 
-.mainTabs > .tab-content {
-  padding-top:20px;
-  hr {
-    margin-top:40px;
-    margin-bottom:40px;
+.mainTabs {
+
+  > .nav {
+    width:$portalWidth;
+    margin:0 auto;
   }
+
+  > .tab-content {
+    padding:20px 0 100px 0;
+    background:#fff;
+    border-top:1px solid #ddd;
+    border-bottom:1px solid #ddd;
+    margin-top:-1px;
+
+    hr {
+      margin-top:40px;
+      margin-bottom:40px;
+    }
+
+    > .msk-tab {
+      width:$portalWidth;
+      margin: 0 auto;
+    }
+
+  }
+
+  background:#f5f5f5;
+
 }
+
+
 

@@ -51,7 +51,7 @@ export default class PathologyReport extends React.Component<IPathologyReportPro
                 </select>
             </If>
 
-            <iframe style={{ height:1100, width: '100%'}} src={this.state.pdfUrl}></iframe>
+            <iframe style={{ height:1100, width: '100%', border:'none'}} src={this.state.pdfUrl}></iframe>
 
         </div>)
 
