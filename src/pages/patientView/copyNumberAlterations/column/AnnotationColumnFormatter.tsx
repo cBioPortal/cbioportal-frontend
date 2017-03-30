@@ -4,8 +4,8 @@ import {
     IOncoKbData, IAnnotation, IAnnotationColumnProps, IEvidence, default as DefaultAnnotationColumnFormatter
 } from "../../mutation/column/AnnotationColumnFormatter";
 import OncoKB from "shared/components/annotation/OncoKB";
-import {generateQueryVariantId} from "shared/lib/OncoKbUtils";
-import {IndicatorQueryResp} from "shared/api/generated/OncoKbAPI";
+import {generateQueryVariantId, generateQueryVariant} from "shared/lib/OncoKbUtils";
+import {IndicatorQueryResp, Query} from "shared/api/generated/OncoKbAPI";
 import {getAlterationString} from "shared/lib/CopyNumberUtils";
 
 /**
@@ -14,8 +14,7 @@ import {getAlterationString} from "shared/lib/CopyNumberUtils";
 export default class AnnotationColumnFormatter
 {
     public static getData(copyNumberData:DiscreteCopyNumberData|undefined,
-                          oncoKbData?:IOncoKbData,
-                          pmidData?:any)
+                          oncoKbData?:IOncoKbData)
     {
         let value: IAnnotation;
 
@@ -23,9 +22,6 @@ export default class AnnotationColumnFormatter
             value = {
                 oncoKbIndicator: oncoKbData ?
                     AnnotationColumnFormatter.getIndicatorData(copyNumberData, oncoKbData) : undefined,
-                oncoKbEvidence: oncoKbData ?
-                    AnnotationColumnFormatter.getEvidenceData(copyNumberData, oncoKbData) : undefined,
-                pmids: pmidData || {},
                 myCancerGenomeLinks: [],
                 isHotspot: false,
                 is3dHotspot: false
@@ -51,28 +47,34 @@ export default class AnnotationColumnFormatter
         return oncoKbData.indicatorMap[id];
     }
 
-    public static getEvidenceData(copyNumberData:DiscreteCopyNumberData, oncoKbData:IOncoKbData):IEvidence
+    public static getEvidenceQuery(copyNumberData:DiscreteCopyNumberData, oncoKbData:IOncoKbData): Query
     {
-        const id = generateQueryVariantId(copyNumberData.gene.hugoGeneSymbol,
+        return generateQueryVariant(copyNumberData.gene.hugoGeneSymbol,
             oncoKbData.sampleToTumorMap[copyNumberData.sampleId],
             getAlterationString(copyNumberData.alteration));
-
-        return oncoKbData.evidenceMap[id];
     }
 
     public static sortValue(data:DiscreteCopyNumberData,
-                            oncoKbData?:IOncoKbData,
-                            pmidData?:any):number[] {
-        const annotationData:IAnnotation = AnnotationColumnFormatter.getData(data, oncoKbData, pmidData);
+                            oncoKbData?:IOncoKbData):number[] {
+        const annotationData:IAnnotation = AnnotationColumnFormatter.getData(data, oncoKbData);
 
         return OncoKB.sortValue(annotationData.oncoKbIndicator);
     }
 
     public static renderFunction(data:DiscreteCopyNumberData, columnProps:IAnnotationColumnProps)
     {
-        const annotation:IAnnotation = AnnotationColumnFormatter.getData(
-            data, columnProps.oncoKbData, columnProps.pmidData);
+        const annotation:IAnnotation = AnnotationColumnFormatter.getData(data, columnProps.oncoKbData);
 
-        return DefaultAnnotationColumnFormatter.mainContent(annotation, columnProps);
+        let evidenceQuery:Query|undefined;
+
+        if (columnProps.oncoKbData) {
+            evidenceQuery = this.getEvidenceQuery(data, columnProps.oncoKbData);
+        }
+
+        return DefaultAnnotationColumnFormatter.mainContent(annotation,
+            columnProps,
+            columnProps.oncoKbEvidenceCache,
+            evidenceQuery,
+            columnProps.pmidCache);
     }
 }
