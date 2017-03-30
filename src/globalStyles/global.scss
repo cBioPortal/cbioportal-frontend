@@ -5,6 +5,10 @@ body {
   background:#f5f5f5 !important;
 }
 
+.cbioportal-frontend .btn-default {
+  background-image: linear-gradient(to bottom,#fff 0,#eee 100%);
+}
+
 /* fix for legacy style isses. makes it bootstrap */
 #content .cbioportal-frontend {
     h4 {
