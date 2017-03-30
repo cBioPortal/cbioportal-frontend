@@ -121,7 +121,11 @@ export default class CopyNumberTableWrapper extends React.Component<{ store:Pati
                     && this.props.store.geneticProfileIdDiscrete.result
                     && this.props.store.discreteCNAData.isComplete
                 ) && (
-                    <CNATableComponent columns={orderedColumns} data={this.props.store.discreteCNAData.result} />
+                    <CNATableComponent
+                        columns={orderedColumns}
+                        data={this.props.store.discreteCNAData.result}
+                        initialItemsPerPage={25}
+                    />
                 )
             }
             </div>
