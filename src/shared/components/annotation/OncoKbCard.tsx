@@ -282,25 +282,25 @@ export default class OncoKbCard extends React.Component<IOncoKbCardProps, IOncoK
                                     </div>
                                     <If condition={this.state.activeTab === "oncogenicity"}>
                                         <div className="col s12 oncogenicity">
-                                            <div className="summary">
-                                                <div>
+                                            <div className="summary" style={{padding:'10px 0'}}>
+                                                <p>
                                                     {this.props.geneSummary}
-                                                </div>
-                                                <div style={{marginTop: "6px"}}>
+                                                </p>
+                                                <p>
                                                     {
                                                         this.insertLink(this.props.variantSummary, {
                                                             keyword: 'Chang et al. 2016',
                                                             link: 'https://www.ncbi.nlm.nih.gov/pubmed/26619011'
                                                         })
                                                     }
-                                                </div>
-                                                <div style={{marginTop: "6px"}}>
+                                                </p>
+                                                <p>
                                                     {this.props.tumorTypeSummary}
-                                                </div>
+                                                </p>
                                             </div>
                                             <If condition={this.props.treatments.length > 0}>
                                                 <div>
-                                                    <table className="bordered treatments table">
+                                                    <table className="table" style={{marginTop:6}}>
                                                         <thead>
                                                             <tr>
                                                                 <th key="level" scope="col">Level</th>
@@ -365,10 +365,10 @@ export default class OncoKbCard extends React.Component<IOncoKbCardProps, IOncoK
                                     <div className="collapsible-header" onClick={this.handleLevelCollapse}>Levels
                                         <span className="secondary-content">
                                             <If condition={this.state.levelsCollapsed}>
-                                                <i className="fa fa-chevron-up"/>
+                                                <i className="fa fa-chevron-down"/>
                                             </If>
                                             <If condition={!this.state.levelsCollapsed}>
-                                                <i className="fa fa-chevron-down"/>
+                                                <i className="fa fa-chevron-up"/>
                                             </If>
                                         </span>
                                     </div>
@@ -392,8 +392,8 @@ export default class OncoKbCard extends React.Component<IOncoKbCardProps, IOncoK
                             <img src={require("./images/oncokb.png")} className="oncokb-logo" alt="OncoKB"/>
                         </a>
                         <span className="pull-right feedback">
-                            <button className="btn btn-default btn-xs oncokb-card-feedback-btn" onClick={this.props.handleFeedbackOpen}>
-                                <i>Feedback</i>
+                            <button className="btn btn-default btn-sm" onClick={this.props.handleFeedbackOpen}>
+                                Feedback
                             </button>
                         </span>
                     </div>
