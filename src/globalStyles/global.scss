@@ -63,6 +63,12 @@ th.reactable-header-sort-asc:after {
   > .nav {
     width:$portalWidth;
     margin:0 auto;
+
+    .active a {
+      border-top:3px solid $brand-primary !important;
+      padding-top:8px;
+    }
+
   }
 
   > .tab-content {
