@@ -8,11 +8,15 @@ export type DiscreteCNACacheDataType = CacheData<DiscreteCopyNumberData>;
 export default class DiscreteCNACache extends SampleGeneCache<DiscreteCopyNumberData> {
 
     constructor(sampleIds:string[], geneticProfileIdDiscrete:string|undefined) {
-        super(sampleIds, geneticProfileIdDiscrete);
+        super(sampleIds, (d:DiscreteCopyNumberData)=>[d.sampleId, d.entrezGeneId], geneticProfileIdDiscrete);
     }
 
     public async populate(sampleToEntrezListOrNull: SampleToEntrezListOrNull) {
         return super.populate(sampleToEntrezListOrNull);
+    }
+
+    public get(sampleId:string, entrezGeneId:number):DiscreteCNACacheDataType | null {
+        return this.getData(sampleId, entrezGeneId);
     }
 
     protected async fetch(sampleToEntrezListOrNull:SampleToEntrezListOrNull,

@@ -27,7 +27,7 @@ export type SampleToEntrezListOrNull = { [sampleId:string]:number[]|null };
 export type SampleToEntrezList = { [sampleId:string]:number[] };
 type SampleToEntrezSet = { [sampleId:string]:{[entrez:string]:true} };
 
-export default class SampleGeneCache<T extends { sampleId: string; entrezGeneId:number; }> {
+export default class SampleGeneCache<T> {
     @observable.ref private _cache: Cache<T> & Immutable.ImmutableObject<Cache<T>>;
     private _pending: PendingCache;
     private dependencies:any[];
@@ -35,7 +35,7 @@ export default class SampleGeneCache<T extends { sampleId: string; entrezGeneId:
     private debouncedPopulate:(sampleId:string, entrezGeneId:number)=>void;
 
 
-    constructor(sampleIds:string[], ...dependencies:any[]) {
+    constructor(sampleIds:string[], private getIds:(d:T)=>[string,number], ...dependencies:any[]) {
         this.dependencies = dependencies;
         this.initCache(sampleIds);
         this._pending = {};
@@ -74,7 +74,7 @@ export default class SampleGeneCache<T extends { sampleId: string; entrezGeneId:
         return ret;
     }
 
-    public get(sampleId:string, entrezGeneId:number):CacheData<T> | null {
+    protected getData(sampleId:string, entrezGeneId:number):CacheData<T> | null {
         const cacheDatum = this._cache[sampleId] && this._cache[sampleId].geneData[entrezGeneId];
         if (!cacheDatum) {
             if (this._cache[sampleId] && this._cache[sampleId].fetchedWithoutGeneArgument === "complete") {
@@ -199,8 +199,9 @@ export default class SampleGeneCache<T extends { sampleId: string; entrezGeneId:
     private putData(query:SampleToEntrezListOrNull, fetchedData:T[]):void {
         const dataMap:{ [sampleId:string]: { [entrezGeneId:number]: T } } = {};
         for (const fetchedDatum of fetchedData) {
-            dataMap[fetchedDatum.sampleId] = dataMap[fetchedDatum.sampleId] || {};
-            dataMap[fetchedDatum.sampleId][fetchedDatum.entrezGeneId] = fetchedDatum;
+            const ids = this.getIds(fetchedDatum);
+            dataMap[ids[0]] = dataMap[ids[0]] || {};
+            dataMap[ids[0]][ids[1]] = fetchedDatum;
         }
         const toMerge:CacheMerge<T> = {};
         for (const sampleId of Object.keys(query)) {

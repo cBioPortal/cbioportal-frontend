@@ -76,14 +76,14 @@ export default class CopyNumberTableWrapper extends React.Component<{ store:Pati
 
         columns.push({
             name:"Cohort",
-            render:(d:DiscreteCopyNumberData)=>(this.props.store.copyNumberCountData.result
+            render:(d:DiscreteCopyNumberData)=>(this.props.store.copyNumberCountCache
                 ? CohortColumnFormatter.renderFunction(d,
-                    this.props.store.copyNumberCountData.result,
+                    this.props.store.copyNumberCountCache,
                     this.props.store.gisticData.result)
                 : (<span></span>)),
             sortBy:(d:DiscreteCopyNumberData) => {
-                if (this.props.store.copyNumberCountData.result) {
-                    return CohortColumnFormatter.getSortValue(d, this.props.store.copyNumberCountData.result);
+                if (this.props.store.copyNumberCountCache) {
+                    return CohortColumnFormatter.getSortValue(d, this.props.store.copyNumberCountCache);
                 } else {
                     return 0;
                 }

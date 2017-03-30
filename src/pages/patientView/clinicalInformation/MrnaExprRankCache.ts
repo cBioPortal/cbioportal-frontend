@@ -8,11 +8,15 @@ export type MrnaExprRankCacheDataType = CacheData<MrnaPercentile>;
 export default class MrnaExprRankCache extends SampleGeneCache<MrnaPercentile> {
 
     constructor(sampleIds:string[], mrnaRankGeneticProfileId:string|null) {
-        super(sampleIds, mrnaRankGeneticProfileId);
+        super(sampleIds, (d:MrnaPercentile)=>[d.sampleId, d.entrezGeneId], mrnaRankGeneticProfileId);
     }
 
     public async populate(sampleToEntrezList:SampleToEntrezList) {
         return super.populate(sampleToEntrezList);
+    }
+
+    public get(sampleId:string, entrezGeneId:number):MrnaExprRankCacheDataType | null {
+        return this.getData(sampleId, entrezGeneId);
     }
 
     protected async fetch(sampleToEntrezList:SampleToEntrezList, mrnaRankGeneticProfileId:string|null):Promise<MrnaPercentile[]> {
