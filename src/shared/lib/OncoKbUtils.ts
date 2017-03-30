@@ -142,7 +142,58 @@ export function generateQueryVariantId(hugoSymbol:string,
         id = `${id}_${mutationType}`;
     }
 
-    return id;
+    return id.trim().replace(/\s/g, "_");
+}
+
+// TODO evidence:IEvidence
+export function extractPmids(evidence:any)
+{
+    let refs:number[] = [];
+
+    if (evidence.mutationEffect &&
+        evidence.mutationEffect.refs &&
+        evidence.mutationEffect.refs.length > 0)
+    {
+        refs = refs.concat(evidence.mutationEffect.refs.map((article:any) => {
+            return Number(article.pmid);
+        }));
+    }
+
+    if (evidence.oncogenicRefs &&
+        evidence.oncogenicRefs.length > 0)
+    {
+        refs = refs.concat(evidence.oncogenicRefs.map((article:any) => {
+            return Number(article.pmid);
+        }));
+    }
+
+    if (evidence.treatments &&
+        _.isArray(evidence.treatments.sensitivity))
+    {
+        evidence.treatments.sensitivity.forEach((item:any) => {
+            if (_.isArray(item.articles))
+            {
+                refs = refs.concat(item.articles.map((article:any) => {
+                    return Number(article.pmid);
+                }));
+            }
+        });
+    }
+
+    if (evidence.treatments &&
+        _.isArray(evidence.treatments.resistance))
+    {
+        evidence.treatments.resistance.forEach((item:any) => {
+            if (_.isArray(item.articles))
+            {
+                refs = refs.concat(item.articles.map((article:any) => {
+                    return Number(article.pmid);
+                }));
+            }
+        });
+    }
+
+    return refs;
 }
 
 export function normalizeLevel(level:string):string|null
