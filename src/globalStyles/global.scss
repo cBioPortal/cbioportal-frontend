@@ -82,6 +82,10 @@ th.reactable-header-sort-asc:after {
     border-bottom:1px solid #ddd;
     margin-top:-1px;
 
+    h4 {
+      color:$brand-primary;
+    }
+
     hr {
       margin-top:40px;
       margin-bottom:40px;
