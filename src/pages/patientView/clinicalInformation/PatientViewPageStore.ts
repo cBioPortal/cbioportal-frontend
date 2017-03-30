@@ -27,6 +27,8 @@ import {SampleToEntrezListOrNull} from "./SampleGeneCache";
 import DiscreteCNACache from "./DiscreteCNACache";
 import {getTissueImageCheckUrl} from "../../../shared/api/urls";
 import {getAlterationString} from "shared/lib/CopyNumberUtils";
+import OncoKbEvidenceCache from "../OncoKbEvidenceCache";
+import PmidCache from "../PmidCache";
 
 type PageMode = 'patient' | 'sample';
 
@@ -102,33 +104,9 @@ function transformClinicalInformationToStoreShape(patientId: string, studyId: st
     return rv;
 }
 
-/**
- * Generates <sample id, cancer type> mapping
- *
- * @param data  array of ClinicalData
- * @returns {{[sampleId: string]: string}}
- */
-export function generateSampleToTumorMap(data:ClinicalData[])
-{
-    const map:{[sampleId:string]: string} = {};
-
-    _.each(data, function(clinicalData) {
-        if (clinicalData.clinicalAttributeId === "CANCER_TYPE") {
-            map[clinicalData.entityId] = clinicalData.value;
-        }
-    });
-
-    return map;
-}
-
 export async function fetchOncoKbData(sampleIdToTumorType:{[sampleId:string]: string}, queryVariants: Query[]) {
-    const oncokbSearchPromise = oncokbClient.searchPostUsingPOST(
+    const onkokbSearch = await oncokbClient.searchPostUsingPOST(
         {body: generateEvidenceQuery(queryVariants)});
-
-    const evidenceLookupPromise = oncokbClient.evidencesLookupPostUsingPOST(
-        {body: generateEvidenceQuery(queryVariants)});
-
-    const [onkokbSearch, evidenceLookup] = await Promise.all([oncokbSearchPromise, evidenceLookupPromise]);
 
     // TODO return type is not correct for the auto-generated API!
     // generated return type is Array<IndicatorQueryResp>,
@@ -136,8 +114,7 @@ export async function fetchOncoKbData(sampleIdToTumorType:{[sampleId:string]: st
     // that's why here we need to force data type to be any and get actual data by data.data
     const oncoKbData:IOncoKbData = {
         sampleToTumorMap: sampleIdToTumorType,
-        indicatorMap: generateIdToIndicatorMap((onkokbSearch as any).data),
-        evidenceMap: processEvidence((evidenceLookup as any).data)
+        indicatorMap: generateIdToIndicatorMap((onkokbSearch as any).data)
     };
 
     return oncoKbData;
@@ -462,20 +439,18 @@ export class PatientViewPageStore
             this.clinicalDataForSamples
         ],
         invoke: async () => {
-            const sampleIdToTumorType = generateSampleToTumorMap(this.clinicalDataForSamples.result);
-
-            const queryVariants = _.uniqBy(_.map(this.mutationData.result, function(mutation:Mutation) {
+            const queryVariants = _.uniqBy(_.map(this.mutationData.result, (mutation:Mutation) => {
                 return generateQueryVariant(mutation.gene.hugoGeneSymbol,
-                    sampleIdToTumorType[mutation.sampleId],
+                    this.sampleIdToTumorType[mutation.sampleId],
                     mutation.proteinChange,
                     mutation.mutationType,
                     mutation.proteinPosStart,
                     mutation.proteinPosEnd);
             }), "id");
 
-            return fetchOncoKbData(sampleIdToTumorType, queryVariants);
+            return fetchOncoKbData(this.sampleIdToTumorType, queryVariants);
         }
-    }, {sampleToTumorMap: {}, indicatorMap: {}, evidenceMap: {}});
+    }, {sampleToTumorMap: {}, indicatorMap: {}});
 
     readonly cnaOncoKbData = remoteData<IOncoKbData>({
         await: () => [
@@ -483,89 +458,15 @@ export class PatientViewPageStore
             this.clinicalDataForSamples
         ],
         invoke: async () => {
-            const sampleIdToTumorType = generateSampleToTumorMap(this.clinicalDataForSamples.result);
-
-            const queryVariants = _.uniqBy(_.map(this.discreteCNAData.result, function(copyNumberData:DiscreteCopyNumberData) {
+            const queryVariants = _.uniqBy(_.map(this.discreteCNAData.result, (copyNumberData:DiscreteCopyNumberData) => {
                 return generateQueryVariant(copyNumberData.gene.hugoGeneSymbol,
-                    sampleIdToTumorType[copyNumberData.sampleId],
+                    this.sampleIdToTumorType[copyNumberData.sampleId],
                     getAlterationString(copyNumberData.alteration));
             }), "id");
 
-            return fetchOncoKbData(sampleIdToTumorType, queryVariants);
+            return fetchOncoKbData(this.sampleIdToTumorType, queryVariants);
         }
-    }, {sampleToTumorMap: {}, indicatorMap: {}, evidenceMap: {}});
-
-    readonly pmidData = remoteData({
-        await: () => [
-            this.oncoKbData
-        ],
-        invoke: async () => {
-            let refs:number[] = [];
-
-            _.each(this.oncoKbData.result.evidenceMap, (evidence:IEvidence) => {
-                if (evidence.mutationEffect &&
-                    evidence.mutationEffect.refs &&
-                    evidence.mutationEffect.refs.length > 0)
-                {
-                    refs = refs.concat(evidence.mutationEffect.refs.map((article:any) => {
-                        return Number(article.pmid);
-                    }));
-                }
-
-                if (evidence.oncogenicRefs &&
-                    evidence.oncogenicRefs.length > 0)
-                {
-                    refs = refs.concat(evidence.oncogenicRefs.map((article:any) => {
-                        return Number(article.pmid);
-                    }));
-                }
-
-                if (evidence.treatments &&
-                    _.isArray(evidence.treatments.sensitivity))
-                {
-                    evidence.treatments.sensitivity.forEach((item:any) => {
-                        if (_.isArray(item.articles))
-                        {
-                            refs = refs.concat(item.articles.map((article:any) => {
-                                return Number(article.pmid);
-                            }));
-                        }
-                    });
-                }
-
-                if (evidence.treatments &&
-                    _.isArray(evidence.treatments.resistance))
-                {
-                    evidence.treatments.resistance.forEach((item:any) => {
-                        if (_.isArray(item.articles))
-                        {
-                            refs = refs.concat(item.articles.map((article:any) => {
-                                return Number(article.pmid);
-                            }));
-                        }
-                    });
-                }
-            });
-
-            if (refs.length > 0)
-            {
-                // TODO move this into a properly cached API instance, move the URL into config file
-                return await new Promise((resolve, reject) => {
-                    $.post(
-                        'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&retmode=json',
-                        {id: refs.join(",")}
-                    ).then((data) => {
-                        resolve(data);
-                    }).fail((err) => {
-                        reject(err);
-                    });
-                });
-            }
-            else {
-                return {};
-            }
-        }
-    }, {});
+    }, {sampleToTumorMap: {}, indicatorMap: {}});
 
     readonly copyNumberCountData = remoteData<CopyNumberCount[]>({
         await: () => [
@@ -607,6 +508,22 @@ export class PatientViewPageStore
         return Object.keys(idToMutations).map(id => idToMutations[id]);
     }
 
+    @computed get sampleIdToTumorType(): {[sampleId:string]: string}
+    {
+        const map:{[sampleId:string]: string} = {};
+
+        if (this.clinicalDataForSamples.result)
+        {
+            _.each(this.clinicalDataForSamples.result, function(clinicalData) {
+                if (clinicalData.clinicalAttributeId === "CANCER_TYPE") {
+                    map[clinicalData.entityId] = clinicalData.value;
+                }
+            });
+        }
+
+        return map;
+    }
+
     @action("SetSampleId") setSampleId(newId: string) {
         if (newId)
             this._patientId = '';
@@ -631,6 +548,16 @@ export class PatientViewPageStore
     @cached get discreteCNACache() {
         return new DiscreteCNACache(this.samples.result.map((s:Sample)=>s.sampleId),
                                     this.geneticProfileIdDiscrete.result);
+    }
+
+    @cached get oncoKbEvidenceCache()
+    {
+        return new OncoKbEvidenceCache();
+    }
+
+    @cached get pmidCache()
+    {
+        return new PmidCache();
     }
 
     @action requestAllVariantCountData() {

@@ -1,11 +1,13 @@
 import * as React from 'react';
 import {If} from 'react-if';
+import OncoKbEvidenceCache from "pages/patientView/OncoKbEvidenceCache";
+import OncokbPmidCache from "pages/patientView/PmidCache";
 import CancerHotspots from "shared/components/annotation/CancerHotspots";
 import MyCancerGenome from "shared/components/annotation/MyCancerGenome";
 import OncoKB from "shared/components/annotation/OncoKB";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
-import {IndicatorQueryResp} from "shared/api/generated/OncoKbAPI";
-import {generateQueryVariantId} from "shared/lib/OncoKbUtils";
+import {IndicatorQueryResp, Query} from "shared/api/generated/OncoKbAPI";
+import {generateQueryVariantId, generateQueryVariant} from "shared/lib/OncoKbUtils";
 import * as _ from "lodash";
 
 export interface IMyCancerGenome {
@@ -17,7 +19,6 @@ export interface IMyCancerGenome {
 
 export interface IOncoKbData {
     indicatorMap: {[id:string]: IndicatorQueryResp};
-    evidenceMap: {[id:string]: IEvidence};
     sampleToTumorMap: {[sampleId:string]: string};
 }
 
@@ -37,7 +38,8 @@ export interface IAnnotationColumnProps {
     hotspots?: IHotspotData;
     myCancerGenomeData?: IMyCancerGenomeData;
     oncoKbData?: IOncoKbData;
-    pmidData?: any;
+    oncoKbEvidenceCache?: OncoKbEvidenceCache;
+    pmidCache?: OncokbPmidCache;
 }
 
 export interface IEvidence {
@@ -69,8 +71,6 @@ export interface IAnnotation {
     is3dHotspot: boolean;
     myCancerGenomeLinks: string[];
     oncoKbIndicator?: IndicatorQueryResp;
-    oncoKbEvidence?: IEvidence;
-    pmids?: any;
 }
 
 /**
@@ -81,21 +81,16 @@ export default class AnnotationColumnFormatter
     public static getData(rowData:Mutation[]|undefined,
                           hotspotsData?:IHotspotData,
                           myCancerGenomeData?:IMyCancerGenomeData,
-                          oncoKbData?:IOncoKbData,
-                          pmidData?:any)
+                          oncoKbData?:IOncoKbData)
     {
         let value: IAnnotation;
 
         if (rowData) {
-            const mutations:Mutation[] = rowData;
-            const mutation = mutations[0];
+            const mutation = rowData[0];
 
             value = {
                 oncoKbIndicator: oncoKbData ?
                     AnnotationColumnFormatter.getIndicatorData(mutation, oncoKbData) : undefined,
-                oncoKbEvidence: oncoKbData ?
-                    AnnotationColumnFormatter.getEvidenceData(mutation, oncoKbData) : undefined,
-                pmids: pmidData || {},
                 myCancerGenomeLinks: myCancerGenomeData ?
                     AnnotationColumnFormatter.getMyCancerGenomeLinks(mutation, myCancerGenomeData) : [],
                 isHotspot: hotspotsData ?
@@ -125,14 +120,15 @@ export default class AnnotationColumnFormatter
         return oncoKbData.indicatorMap[id];
     }
 
-    public static getEvidenceData(mutation:Mutation, oncoKbData:IOncoKbData):IEvidence
+    public static getEvidenceQuery(mutation:Mutation, oncoKbData:IOncoKbData): Query
     {
-        const id = generateQueryVariantId(mutation.gene.hugoGeneSymbol,
+        return generateQueryVariant(mutation.gene.hugoGeneSymbol,
             oncoKbData.sampleToTumorMap[mutation.sampleId],
             mutation.proteinChange,
-            mutation.mutationType);
-
-        return oncoKbData.evidenceMap[id];
+            mutation.mutationType,
+            mutation.proteinPosStart,
+            mutation.proteinPosEnd
+        );
     }
 
     public static getMyCancerGenomeLinks(mutation:Mutation, myCancerGenomeData: IMyCancerGenomeData):string[] {
@@ -172,9 +168,10 @@ export default class AnnotationColumnFormatter
     public static sortValue(data:Mutation[],
                             hotspotsData?:IHotspotData,
                             myCancerGenomeData?:IMyCancerGenomeData,
-                            oncoKbData?:IOncoKbData,
-                            pmidData?:any):number[] {
-        const annotationData:IAnnotation = AnnotationColumnFormatter.getData(data, hotspotsData, myCancerGenomeData, oncoKbData, pmidData);
+                            oncoKbData?:IOncoKbData):number[] {
+        const annotationData:IAnnotation = AnnotationColumnFormatter.getData(
+            data, hotspotsData, myCancerGenomeData, oncoKbData);
+
         return _.flatten([
             OncoKB.sortValue(annotationData.oncoKbIndicator),
             MyCancerGenome.sortValue(annotationData.myCancerGenomeLinks),
@@ -185,22 +182,37 @@ export default class AnnotationColumnFormatter
     public static renderFunction(data:Mutation[], columnProps:IAnnotationColumnProps)
     {
         const annotation:IAnnotation = AnnotationColumnFormatter.getData(
-            data, columnProps.hotspots, columnProps.myCancerGenomeData, columnProps.oncoKbData, columnProps.pmidData);
+            data, columnProps.hotspots,
+            columnProps.myCancerGenomeData,
+            columnProps.oncoKbData);
 
-        return AnnotationColumnFormatter.mainContent(annotation, columnProps);
+        let evidenceQuery:Query|undefined;
+
+        if (columnProps.oncoKbData) {
+            evidenceQuery = this.getEvidenceQuery(data[0], columnProps.oncoKbData);
+        }
+
+        return AnnotationColumnFormatter.mainContent(annotation,
+            columnProps,
+            columnProps.oncoKbEvidenceCache,
+            evidenceQuery,
+            columnProps.pmidCache);
     }
 
-    public static mainContent(annotation:IAnnotation, columnProps:IAnnotationColumnProps)
+    public static mainContent(annotation:IAnnotation,
+                              columnProps:IAnnotationColumnProps,
+                              evidenceCache?: OncoKbEvidenceCache,
+                              evidenceQuery?: Query,
+                              pmidCache?:OncokbPmidCache)
     {
-        // TODO if certain data (hotspots, mycancergenome, etc.) is not yet available (i.e. status==fetching),
-        // show a loader image!
         return (
             <span>
                 <If condition={columnProps.enableOncoKb || false}>
                     <OncoKB
                         indicator={annotation.oncoKbIndicator}
-                        evidence={annotation.oncoKbEvidence}
-                        pmids={annotation.pmids}
+                        evidenceCache={evidenceCache}
+                        evidenceQuery={evidenceQuery}
+                        pmidCache={pmidCache}
                     />
                 </If>
                 <If condition={columnProps.enableMyCancerGenome || false}>
