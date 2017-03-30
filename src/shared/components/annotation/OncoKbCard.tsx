@@ -4,6 +4,7 @@ import Collapse from 'react-collapse';
 import {If, Then, Else} from 'react-if';
 import DefaultTooltip from 'shared/components/DefaultTooltip';
 import {mergeAlterations} from 'shared/lib/OncoKbUtils';
+import {ICache} from "shared/lib/SimpleCache";
 // TODO these need to be defined as modules, and class names used in this component need to be updated
 import "./styles/oncoKbCard.scss";
 import "./styles/oncoKbCard.custom.scss";
@@ -20,7 +21,7 @@ export interface IOncoKbCardProps {
     tumorTypeSummary: string;
     biologicalSummary: string;
     treatments: any[];
-    pmids: any;
+    pmidData: ICache<any>;
     handleFeedbackOpen?: React.EventHandler<any>;
 }
 
@@ -70,31 +71,27 @@ export default class OncoKbCard extends React.Component<IOncoKbCardProps, IOncoK
                         variant:string|string[],
                         treatment:string,
                         cancerType: string,
-                        pmidData: any,
+                        pmidData: ICache<any>,
                         pmids:number[],
                         abstracts:any[])
     {
         const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
 
-        const levelTooltipContent = (
+        const levelTooltipContent = () => (
             <div style={{maxWidth: "200px"}}>
                 {levelDes}
             </div>
         );
 
-        let treatmentTooltipContent = <span/>;
-
-        if (abstracts.length > 0 || pmids.length > 0)
-        {
-            treatmentTooltipContent = (
+        const treatmentTooltipContent = (abstracts.length > 0 || pmids.length > 0) ?
+            () => (
                 <div style={{maxWidth: "400px", maxHeight: "200px", overflowY: "auto"}}>
                     <ul className="list-group" style={{marginBottom: 0}}>
                         {this.abstractList(abstracts)}
-                        {this.pmidList(pmids, pmidData.result)}
+                        {this.pmidList(pmids, pmidData)}
                     </ul>
                 </div>
-            );
-        }
+            ) : <span/>;
 
         // qtip-content="{{levelDes}}" position-my="top center" position-at="bottom center"
         // qtip-treatment-index={treatmentIndex} position-my="top right" position-at="bottom left"
@@ -139,29 +136,26 @@ export default class OncoKbCard extends React.Component<IOncoKbCardProps, IOncoK
         );
     }
 
-    public pmidList(pmids:number[], articlesData:any)
+    public pmidList(pmids:number[], pmidData:ICache<any>)
     {
         const list:JSX.Element[] = [];
 
-        if (articlesData &&
-            _.isArray(articlesData.uids) &&
-            articlesData.uids.length > 0)
-        {
-            pmids.forEach((uid:number) => {
-                const articleContent = articlesData[uid];
+        pmids.forEach((uid:number) => {
+            const cacheData = pmidData[uid.toString()];
+            const articleContent = cacheData ? cacheData.data : null;
 
-                if (articleContent)
-                {
-                    list.push(
-                        this.pmidItem(articleContent.title,
-                            (_.isArray(articleContent.authors) && articleContent.authors.length > 0) ? (articleContent.authors[0].name + ' et al.') : 'Unknown',
-                            articleContent.source,
-                            (new Date(articleContent.pubdate)).getFullYear().toString(),
-                            articleContent.uid)
-                    );
-                }
-            });
-        }
+            if (articleContent)
+            {
+                list.push(
+                    this.pmidItem(articleContent.title,
+                        (_.isArray(articleContent.authors) && articleContent.authors.length > 0) ? (articleContent.authors[0].name + ' et al.') : 'Unknown',
+                        articleContent.source,
+                        (new Date(articleContent.pubdate)).getFullYear().toString(),
+                        articleContent.uid)
+                );
+            }
+        });
+
 
         return list;
     }
@@ -222,7 +216,7 @@ export default class OncoKbCard extends React.Component<IOncoKbCardProps, IOncoK
         return rows;
     }
 
-    public generateTreatmentRows(treatments:any[], levelDes:{[level:string]: JSX.Element}, pmidData:any):JSX.Element[]
+    public generateTreatmentRows(treatments:any[], levelDes:{[level:string]: JSX.Element}, pmidData:ICache<any>):JSX.Element[]
     {
         const rows:JSX.Element[] = [];
 
@@ -314,7 +308,7 @@ export default class OncoKbCard extends React.Component<IOncoKbCardProps, IOncoK
                                                             {
                                                                 this.generateTreatmentRows(this.props.treatments,
                                                                     OncoKbCard.LEVEL_DESC,
-                                                                    this.props.pmids)
+                                                                    this.props.pmidData)
                                                             }
                                                         </tbody>
                                                     </table>
@@ -324,7 +318,7 @@ export default class OncoKbCard extends React.Component<IOncoKbCardProps, IOncoK
                                     </If>
                                     <If condition={this.state.activeTab === "mutationEffect"}>
                                         <div className="col s12 tab-pane mutation-effect">
-                                            <If condition={this.props.biologicalSummary && this.props.biologicalSummary.length > 0}>
+                                            <If condition={this.props.biologicalSummary !== undefined && this.props.biologicalSummary.length > 0}>
                                                 <Then>
                                                     <div>
                                                         {this.props.biologicalSummary}
@@ -338,7 +332,7 @@ export default class OncoKbCard extends React.Component<IOncoKbCardProps, IOncoK
                                                                     {
                                                                         this.pmidList(
                                                                             this.props.mutationEffectPmids,
-                                                                            this.props.pmids.result
+                                                                            this.props.pmidData
                                                                         )
                                                                     }
                                                                 </ul>

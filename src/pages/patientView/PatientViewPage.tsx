@@ -509,6 +509,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         variantCountCache={patientViewPageStore.variantCountCache}
                                         discreteCNACache={patientViewPageStore.discreteCNACache}
                                         mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}
+                                        oncoKbEvidenceCache={patientViewPageStore.oncoKbEvidenceCache}
+                                        pmidCache={patientViewPageStore.pmidCache}
                                         mrnaExprRankGeneticProfileId={patientViewPageStore.mrnaRankGeneticProfileId.result || undefined}
                                         discreteCNAGeneticProfileId={patientViewPageStore.geneticProfileIdDiscrete.result}
                                         data={patientViewPageStore.mergedMutationData}
@@ -517,7 +519,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         hotspots={this.state.hotspotsData}
                                         cosmicData={this.state.cosmicData}
                                         oncoKbData={patientViewPageStore.oncoKbData.result}
-                                        pmidData={patientViewPageStore.pmidData.result}
                                         columns={this.mutationTableColumns}
                                     />
                                 )

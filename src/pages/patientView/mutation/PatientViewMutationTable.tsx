@@ -30,6 +30,8 @@ import DiscreteCNACache from "../clinicalInformation/DiscreteCNACache";
 import MrnaExprRankCache from "../clinicalInformation/MrnaExprRankCache";
 import CohortVariantCountCache from "../clinicalInformation/CohortVariantCountCache";
 import * as _ from "lodash";
+import OncoKbEvidenceCache from "../OncoKbEvidenceCache";
+import PmidCache from "../PmidCache";
 
 export type PatientViewMutationTableProps = {
     sampleManager:SampleManager | null;
@@ -37,12 +39,13 @@ export type PatientViewMutationTableProps = {
     discreteCNACache?:DiscreteCNACache;
     mrnaExprRankCache?:MrnaExprRankCache;
     variantCountCache?:CohortVariantCountCache;
+    oncoKbEvidenceCache?:OncoKbEvidenceCache;
+    pmidCache?:PmidCache
     mutSigData?:MutSigData;
     myCancerGenomeData?: IMyCancerGenomeData;
     hotspots?: IHotspotData;
     cosmicData?:ICosmicData;
     oncoKbData?:IOncoKbData;
-    pmidData?:any;
     mrnaExprRankGeneticProfileId?:string;
     discreteCNAGeneticProfileId?:string;
     columns:MutationTableColumnType[];
@@ -359,14 +362,17 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
                 hotspots: this.props.hotspots,
                 myCancerGenomeData: this.props.myCancerGenomeData,
                 oncoKbData: this.props.oncoKbData,
-                pmidData: this.props.pmidData,
+                oncoKbEvidenceCache: this.props.oncoKbEvidenceCache,
+                pmidCache: this.props.pmidCache,
                 enableOncoKb: true,
                 enableMyCancerGenome: true,
                 enableHotspot: true
             })),
             sortBy:(d:Mutation[])=>{
                 return AnnotationColumnFormatter.sortValue(d,
-                    this.props.hotspots, this.props.myCancerGenomeData, this.props.oncoKbData, this.props.pmidData);
+                    this.props.hotspots,
+                    this.props.myCancerGenomeData,
+                    this.props.oncoKbData);
             },
             order: 35
         };
