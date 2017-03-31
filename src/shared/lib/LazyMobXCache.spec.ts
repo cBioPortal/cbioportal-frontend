@@ -100,7 +100,7 @@ describe("LazyMobXCache", ()=>{
         });
     });
 
-    describe.only("#get",()=>{
+    describe("#get",()=>{
         it("passes static dependencies into fetch correctly", ()=>{
             useFakeClock(clock=>{
                 cache.get({
