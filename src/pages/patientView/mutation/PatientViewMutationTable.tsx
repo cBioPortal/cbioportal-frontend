@@ -27,19 +27,19 @@ import SampleColumnFormatter from "../../../shared/components/mutationTable/colu
 import {default as AnnotationColumnFormatter, IMyCancerGenomeData, IHotspotData, IOncoKbData} from "./column/AnnotationColumnFormatter";
 import DiscreteCNACache from "../clinicalInformation/DiscreteCNACache";
 import MrnaExprRankCache from "../clinicalInformation/MrnaExprRankCache";
-import CohortVariantCountCache from "../clinicalInformation/CohortVariantCountCache";
 import * as _ from "lodash";
 import OncoKbEvidenceCache from "../OncoKbEvidenceCache";
 import PmidCache from "../PmidCache";
+import VariantCountCache from "../clinicalInformation/VariantCountCache";
 
 export type PatientViewMutationTableProps = {
     sampleManager:SampleManager | null;
     sampleIds?:string[];
     discreteCNACache?:DiscreteCNACache;
     mrnaExprRankCache?:MrnaExprRankCache;
-    variantCountCache?:CohortVariantCountCache;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
     pmidCache?:PmidCache
+    variantCountCache?:VariantCountCache;
     mutSigData?:MutSigData;
     myCancerGenomeData?: IMyCancerGenomeData;
     hotspots?: IHotspotData;
