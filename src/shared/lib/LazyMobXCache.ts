@@ -137,11 +137,7 @@ export default class LazyMobXCache<Data, Query> {
 
     private putData(queries:Query[], data:Data[]) {
         const toMerge:Cache<Data> = {};
-        const queryKeyHasData:{[queryKey:string]:boolean} = {};
-
-        for (const query of queries) {
-            queryKeyHasData[this.queryToKey(query)] = false;
-        }
+        const keyHasData:{[key:string]:boolean} = {};
 
         for (const datum of data) {
             const datumKey = this.dataToKey(datum);
@@ -149,11 +145,14 @@ export default class LazyMobXCache<Data, Query> {
                 status: "complete",
                 data: datum
             };
-            queryKeyHasData[datumKey] = true;
+            keyHasData[datumKey] = true;
         }
 
-        for (const queryKey of Object.keys(queryKeyHasData)) {
-            if (!queryKeyHasData[queryKey]) {
+        for (const query of queries) {
+            const queryKey = this.queryToKey(query);
+            if (!keyHasData[queryKey]) {
+                // if a query was made, but no corresponding data is given, it's assumed there is
+                //  no data for this query, so we put the following object corresponding to that knowledge.
                 toMerge[queryKey] = {
                     status: "complete",
                     data: null
