@@ -1,5 +1,4 @@
 export interface IAppConfig {
-    host: string;
     cancerStudySearchPresets: string[];
     priorityStudies: PriorityStudies;
 }
