@@ -1,7 +1,7 @@
 import {IAppConfig} from "./IAppConfig";
 
 const config:IAppConfig = {
-    host: 'cbioportal-rc.herokuapp.com',
+    //host: 'cbioportal-rc.herokuapp.com',
     cancerStudySearchPresets: [
         'tcga',
         'tcga -provisional',
