@@ -1,16 +1,12 @@
 import * as request from "superagent";
 
 type CallbackHandler = (err: any, res ? : request.Response) => void;
-export type ApiErrorResp = {
-    'meta': Meta
+export type Drug = {
+    'atcCodes': Array < string >
 
-};
-export type Meta = {
-    'code': number
+        'drugName': string
 
-        'errorMessage': string
-
-        'errorType': string
+        'synonyms': Array < string >
 
 };
 export type User = {
@@ -21,6 +17,24 @@ export type User = {
         'name': string
 
         'role': string
+
+};
+export type EvidenceQueryRes = {
+    'alleles': Array < Alteration >
+
+        'alterations': Array < Alteration >
+
+        'evidences': Array < Evidence >
+
+        'gene': Gene
+
+        'id': string
+
+        'levelOfEvidences': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" >
+
+        'oncoTreeTypes': Array < TumorType >
+
+        'query': Query
 
 };
 export type Query = {
@@ -41,8 +55,6 @@ export type Query = {
         'proteinStart': number
 
         'tumorType': string
-
-        'type': string
 
 };
 export type Article = {
@@ -107,6 +119,12 @@ export type Alteration = {
         'variantResidues': string
 
 };
+export type MainType = {
+    'id': number
+
+        'name': string
+
+};
 export type AnnotatedVariant = {
     'gene': string
 
@@ -121,6 +139,14 @@ export type AnnotatedVariant = {
         'variant': string
 
 };
+export type VariantConsequence = {
+    'description': string
+
+        'isGenerallyTruncating': boolean
+
+        'term': string
+
+};
 export type History = {
     'dateTime': string
 
@@ -131,6 +157,44 @@ export type History = {
         'operationType': string
 
         'user': User
+
+};
+export type IndicatorQueryTreatment = {
+    'abstracts': Array < ArticleAbstract >
+
+        'approvedIndications': Array < string >
+
+        'drugs': Array < Drug >
+
+        'fdaApproved': boolean
+
+        'level': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3"
+
+        'pmids': Array < string >
+
+};
+export type ResponseEntity = {
+    'body': {}
+
+    'statusCode': "100" | "101" | "102" | "103" | "200" | "201" | "202" | "203" | "204" | "205" | "206" | "207" | "208" | "226" | "300" | "301" | "302" | "303" | "304" | "305" | "307" | "308" | "400" | "401" | "402" | "403" | "404" | "405" | "406" | "407" | "408" | "409" | "410" | "411" | "412" | "413" | "414" | "415" | "416" | "417" | "418" | "419" | "420" | "421" | "422" | "423" | "424" | "426" | "428" | "429" | "431" | "500" | "501" | "502" | "503" | "504" | "505" | "506" | "507" | "508" | "509" | "510" | "511"
+
+};
+export type Treatment = {
+    'approvedIndications': Array < string >
+
+        'drugs': Array < Drug >
+
+};
+export type EvidenceQueries = {
+    'evidenceTypes': string
+
+        'highestLevelOnly': boolean
+
+        'levels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" >
+
+        'queries': Array < Query >
+
+        'source': string
 
 };
 export type Gene = {
@@ -199,6 +263,34 @@ export type GeneEvidence = {
         'shortDesc': string
 
         'status': string
+
+};
+export type ClinicalTrial = {
+    'cdrId': string
+
+        'countries': Array < string >
+
+        'diseaseCondition': string
+
+        'drugs': Array < Drug >
+
+        'eligibilityCriteria': string
+
+        'inUSA': boolean
+
+        'lastChangedDate': string
+
+        'nctId': string
+
+        'open': boolean
+
+        'phase': string
+
+        'purpose': string
+
+        'recruitingStatus': string
+
+        'title': string
 
 };
 export type Evidence = {
@@ -287,124 +379,6 @@ export type ActionableGene = {
         'variant': string
 
 };
-export type ArticleAbstract = {
-    'abstract': string
-
-        'link': string
-
-};
-export type Drug = {
-    'atcCodes': Array < string >
-
-        'drugName': string
-
-        'synonyms': Array < string >
-
-};
-export type EvidenceQueryRes = {
-    'alleles': Array < Alteration >
-
-        'alterations': Array < Alteration >
-
-        'evidences': Array < Evidence >
-
-        'gene': Gene
-
-        'id': string
-
-        'levelOfEvidences': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" >
-
-        'oncoTreeTypes': Array < TumorType >
-
-        'query': Query
-
-};
-export type MainType = {
-    'id': number
-
-        'name': string
-
-};
-export type VariantConsequence = {
-    'description': string
-
-        'isGenerallyTruncating': boolean
-
-        'term': string
-
-};
-export type IndicatorQueryTreatment = {
-    'abstracts': Array < ArticleAbstract >
-
-        'approvedIndications': Array < string >
-
-        'drugs': Array < Drug >
-
-        'fdaApproved': boolean
-
-        'level': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3"
-
-        'pmids': Array < string >
-
-};
-export type Treatment = {
-    'approvedIndications': Array < string >
-
-        'drugs': Array < Drug >
-
-};
-export type EvidenceQueries = {
-    'evidenceTypes': string
-
-        'highestLevelOnly': boolean
-
-        'levels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" >
-
-        'queries': Array < Query >
-
-        'source': string
-
-};
-export type ClinicalTrial = {
-    'cdrId': string
-
-        'countries': Array < string >
-
-        'diseaseCondition': string
-
-        'drugs': Array < Drug >
-
-        'eligibilityCriteria': string
-
-        'inUSA': boolean
-
-        'lastChangedDate': string
-
-        'nctId': string
-
-        'open': boolean
-
-        'phase': string
-
-        'purpose': string
-
-        'recruitingStatus': string
-
-        'title': string
-
-};
-export type ApiObjectResp = {
-    'data': {}
-
-    'meta': Meta
-
-};
-export type ApiListResp = {
-    'data': Array < {} >
-
-        'meta': Meta
-
-};
 export type Link = {
     'href': string
 
@@ -413,10 +387,15 @@ export type Link = {
         'rel': string
 
 };
+export type ArticleAbstract = {
+    'abstract': string
+
+        'link': string
+
+};
 
 /**
- * Every response is contained by an envelope. The meta key is used to communicate extra information about the response to the developer. 
-In order to expose the data structure, we return object model in the Swagger response class directly instead of envelope structure. So you may not be able to reproduce data structure through swagger.json directly.
+ * OncoKB, a comprehensive and curated precision oncology knowledge base, offers oncologists detailed, evidence-based information about individual somatic mutations and structural alterations present in patient tumors with the goal of supporting optimal treatment decisions.
  * @class OncoKbAPI
  * @param {(string)} [domainOrOptions] - The project domain.
  */
@@ -695,13 +674,13 @@ export default class OncoKbAPI {
      * Search evidences. Multi-queries are supported.
      * @method
      * @name OncoKbAPI#evidencesLookupGetUsingGET
-     * @param {integer} entrezGeneId - The entrez gene ID. Use comma to seperate multi-queries.
-     * @param {string} hugoSymbol - The gene symbol used in Human Genome Organisation. Use comma to seperate multi-queries.
-     * @param {string} variant - Variant name. Use comma to seperate multi-queries.
-     * @param {string} tumorType - Tumor type name. OncoTree code is supported. Use comma to seperate multi-queries.
-     * @param {string} consequence - Consequence. Use comma to seperate multi-queries. Possible value: feature_truncation, frameshift_variant, inframe_deletion, inframe_insertion, initiator_codon_variant, missense_variant, splice_region_variant, stop_gained, synonymous_variant
-     * @param {string} proteinStart - Protein Start. Use comma to seperate multi-queries.
-     * @param {string} proteinEnd - Protein End. Use comma to seperate multi-queries.
+     * @param {integer} entrezGeneId - The entrez gene ID.
+     * @param {string} hugoSymbol - The gene symbol used in Human Genome Organisation.
+     * @param {string} variant - Variant name.
+     * @param {string} tumorType - Tumor type name. OncoTree code is supported.
+     * @param {string} consequence - Consequence. Possible value: feature_truncation, frameshift_variant, inframe_deletion, inframe_insertion, initiator_codon_variant, missense_variant, splice_region_variant, stop_gained, synonymous_variant
+     * @param {string} proteinStart - Protein Start.
+     * @param {string} proteinEnd - Protein End.
      * @param {string} source - Tumor type source. OncoTree tumor types are the default setting. We may have customized version, like Quest.
      * @param {boolean} highestLevelOnly - Only show highest level evidences
      * @param {string} levelOfEvidence - Separate by comma. LEVEL_1, LEVEL_2A, LEVEL_2B, LEVEL_3A, LEVEL_3B, LEVEL_4, LEVEL_R1, LEVEL_R2, LEVEL_R3
@@ -912,6 +891,7 @@ export default class OncoKbAPI {
     genesLookupGetUsingGETURL(parameters: {
         'hugoSymbol' ? : string,
         'entrezGeneId' ? : number,
+        'query' ? : string,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -922,6 +902,10 @@ export default class OncoKbAPI {
 
         if (parameters['entrezGeneId'] !== undefined) {
             queryParameters['entrezGeneId'] = parameters['entrezGeneId'];
+        }
+
+        if (parameters['query'] !== undefined) {
+            queryParameters['query'] = parameters['query'];
         }
 
         if (parameters.$queryParameters) {
@@ -938,12 +922,14 @@ export default class OncoKbAPI {
      * Search gene.
      * @method
      * @name OncoKbAPI#genesLookupGetUsingGET
-     * @param {string} hugoSymbol - The gene symbol used in Human Genome Organisation.
-     * @param {integer} entrezGeneId - The entrez gene ID.
+     * @param {string} hugoSymbol - The gene symbol used in Human Genome Organisation. (Deprecated, use query instead)
+     * @param {integer} entrezGeneId - The entrez gene ID. (Deprecated, use query instead)
+     * @param {string} query - The search query, it could be hugoSymbol or entrezGeneId.
      */
     genesLookupGetUsingGET(parameters: {
             'hugoSymbol' ? : string,
             'entrezGeneId' ? : number,
+            'query' ? : string,
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < Gene >
@@ -966,6 +952,10 @@ export default class OncoKbAPI {
 
                 if (parameters['entrezGeneId'] !== undefined) {
                     queryParameters['entrezGeneId'] = parameters['entrezGeneId'];
+                }
+
+                if (parameters['query'] !== undefined) {
+                    queryParameters['query'] = parameters['query'];
                 }
 
                 if (parameters.$queryParameters) {
@@ -1207,7 +1197,7 @@ export default class OncoKbAPI {
     levelsGetUsingGET(parameters: {
         $queryParameters ? : any,
             $domain ? : string
-    }): Promise < ApiObjectResp > {
+    }): Promise < {} > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
@@ -1258,7 +1248,7 @@ export default class OncoKbAPI {
     levelsResistenceGetUsingGET(parameters: {
         $queryParameters ? : any,
             $domain ? : string
-    }): Promise < ApiObjectResp > {
+    }): Promise < {} > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
@@ -1309,7 +1299,7 @@ export default class OncoKbAPI {
     levelsSensitiveGetUsingGET(parameters: {
         $queryParameters ? : any,
             $domain ? : string
-    }): Promise < ApiObjectResp > {
+    }): Promise < {} > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
@@ -1348,7 +1338,6 @@ export default class OncoKbAPI {
         'source' ? : string,
         'levels' ? : string,
         'highestLevelOnly' ? : boolean,
-        'queryType' ? : string,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -1397,10 +1386,6 @@ export default class OncoKbAPI {
             queryParameters['highestLevelOnly'] = parameters['highestLevelOnly'];
         }
 
-        if (parameters['queryType'] !== undefined) {
-            queryParameters['queryType'] = parameters['queryType'];
-        }
-
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                 var parameter = parameters.$queryParameters[parameterName];
@@ -1426,7 +1411,6 @@ export default class OncoKbAPI {
      * @param {string} source - Tumor type source. OncoTree tumor types are the default setting. We may have customized version, like Quest.
      * @param {string} levels - Level of evidences.
      * @param {boolean} highestLevelOnly - Only show treatments of highest level
-     * @param {string} queryType - Query type. There maybe slight differences between different query types. Currently support web or regular.
      */
     searchGetUsingGET(parameters: {
         'id' ? : string,
@@ -1440,7 +1424,6 @@ export default class OncoKbAPI {
         'source' ? : string,
         'levels' ? : string,
         'highestLevelOnly' ? : boolean,
-        'queryType' ? : string,
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < IndicatorQueryResp > {
@@ -1498,10 +1481,6 @@ export default class OncoKbAPI {
 
             if (parameters['highestLevelOnly'] !== undefined) {
                 queryParameters['highestLevelOnly'] = parameters['highestLevelOnly'];
-            }
-
-            if (parameters['queryType'] !== undefined) {
-                queryParameters['queryType'] = parameters['queryType'];
             }
 
             if (parameters.$queryParameters) {
