@@ -23,6 +23,15 @@
     -moz-transform: translate(0px,20px); /* Firefox */
 }
 
+#timeline circle {
+  cursor: pointer;
+}
+
+#timeline g text {
+  cursor:pointer;
+}
+
+
 .coloredDiv {
     height:20px; width:20px; float:left;
 }
