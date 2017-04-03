@@ -190,7 +190,7 @@ const defines =
 
 config.plugins = [
     new webpack.DefinePlugin(defines),
-    new ExtractTextPlugin('reactapp/styles.css'),
+    new ExtractTextPlugin('reactapp/styles.css',{ allChunks:true }),
     new webpack.ProvidePlugin({
         $: "jquery",
         jQuery: "jquery"
@@ -208,22 +208,24 @@ config.module.loaders.push(
     }
 );
 
-// css modules for any scss matching test
-config.module.loaders.push(
-    {
-        test: /\.module\.scss$/,
-        loaders: [
-            'style',
-            'css?modules&importLoaders=2&localIdentName=[name]__[local]__[hash:base64:5]' +
-            '!sass' +
-            '!sass-resources'
-        ]
-    }
-);
 
 if (isDev || isTest) {
 
     config.devtool = 'source-map';
+
+
+    // css modules for any scss matching test
+    config.module.loaders.push(
+        {
+            test: /\.module\.scss$/,
+            loaders: [
+                'style',
+                'css?modules&importLoaders=2&localIdentName=[name]__[local]__[hash:base64:5]' +
+                '!sass' +
+                '!sass-resources'
+            ]
+        }
+    );
 
     // IN DEV WE WANT TO LOAD CSS AND SCSS BUT NOT USE EXTRACT TEXT PLUGIN
     // STYLES WILL BE IN JS BUNDLE AND APPENDED TO DOM IN <STYLE> TAGS
@@ -256,15 +258,39 @@ if (isDev || isTest) {
 
     config.devtool = 'cheap-module-source-map',
 
+    // css modules for any scss matching test
     config.module.loaders.push(
         {
-            'test': /\.css$|.scss$/,
+            test: /\.module\.scss$/,
+            loader: ExtractTextPlugin.extract(
+                'style',
+                'css?modules&importLoaders=2&localIdentName=[name]__[local]__[hash:base64:5]' +
+                '!sass' +
+                '!sass-resources'
+            )
+        }
+    );
+
+    config.module.loaders.push(
+        {
+            'test': /\.scss$/,
             'exclude':/\.module\.scss/,
             'loader': ExtractTextPlugin.extract(
                 'style',
                 'css?' +
                 '!sass' +
                 '!sass-resources'
+            )
+
+        }
+    );
+
+    config.module.loaders.push(
+        {
+            'test': /\.css/,
+            'loader': ExtractTextPlugin.extract(
+                'style',
+                'css?'
             )
 
         }
