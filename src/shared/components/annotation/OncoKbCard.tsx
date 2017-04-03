@@ -321,7 +321,9 @@ export default class OncoKbCard extends React.Component<IOncoKbCardProps, IOncoK
                                             <If condition={this.props.biologicalSummary !== undefined && this.props.biologicalSummary.length > 0}>
                                                 <Then>
                                                     <div>
-                                                        {this.props.biologicalSummary}
+                                                        {
+                                                            this.summaryWithRefs(this.props.biologicalSummary, 'tooltip')
+                                                        }
                                                     </div>
                                                 </Then>
                                                 <Else>
@@ -437,6 +439,123 @@ export default class OncoKbCard extends React.Component<IOncoKbCardProps, IOncoK
             content.push(comp);
             content.push(parts[i]);
         }
+
+        return content;
+    }
+
+    public refComponent(str:string, componentType:'tooltip'|'linkout')
+    {
+        const parts = str.split(/pmid|nct/i);
+
+        if (parts.length < 2) {
+            return null;
+        }
+
+        const ids = parts[1].match(/[0-9]+/g);
+
+        if (!ids) {
+            return null;
+        }
+
+        let baseUrl:string|undefined;
+        let prefix:string|undefined;
+
+        if (str.toLowerCase().indexOf("pmid") >= 0) {
+            baseUrl = "http://www.ncbi.nlm.nih.gov/pubmed/";
+            prefix = "PMID: ";
+        }
+        else if (str.toLowerCase().indexOf("nct") >= 0) {
+            baseUrl = "http://www.ncbi.nlm.nih.gov/pubmed/";
+            prefix = "NCT";
+        }
+
+        let link:JSX.Element|undefined;
+
+        if (baseUrl && prefix) {
+            link = (
+                <a
+                    target="_blank"
+                    href={`${baseUrl}${ids.join(",")}`}
+                >
+                    {`${prefix}${ids.join(",")}`}
+                </a>
+            );
+        }
+
+        if (componentType === 'tooltip')
+        {
+            const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
+
+            const tooltipContent = () => (
+                <div style={{maxWidth: "400px", maxHeight: "200px", overflowY: "auto"}}>
+                    <ul className="list-group" style={{marginBottom: 0}}>
+                        {this.pmidList(ids.map((id:string) => parseInt(id)), this.props.pmidData)}
+                    </ul>
+                </div>
+            );
+
+            return (
+                <span>
+                    {parts[0]}
+                    <DefaultTooltip
+                        overlay={tooltipContent}
+                        placement="right"
+                        trigger={['hover', 'focus']}
+                        arrowContent={arrowContent}
+                    >
+                        <i className="fa fa-book" style={{color: "black"}}/>
+                    </DefaultTooltip>
+                    {`)`}
+                </span>
+            );
+        }
+        else if (link)
+        {
+            return (
+                <span>
+                    {parts[0]}
+                    {link}
+                    {`)`}
+                </span>
+            );
+        }
+        else {
+            return null;
+        }
+    }
+
+    public summaryWithRefs(str:string|undefined, type:'tooltip'|'linkout')
+    {
+        if (!str) {
+            return str;
+        }
+
+        const content:Array<string|JSX.Element> = [];
+
+        // example delimiters:
+        //     (PMID: 11900253)
+        //     (PMID: 11753428, 16007150, 21467160)
+        //     (cBioPortal, MSKCC, May 2015, PMID: 24718888)
+        //     (NCT1234567)
+        const regex = /(\(.*?[PMID|NCT].*?\))/i;
+
+        // split the string with delimiters included
+        const parts = str.split(regex);
+
+        parts.forEach((part:string) => {
+            // if delimiter convert to a JSX component
+            if(part.match(regex))
+            {
+                let component:JSX.Element|null = this.refComponent(part, type);
+
+                if (component) {
+                    content.push(component);
+                }
+            }
+            else {
+                content.push(part);
+            }
+        });
 
         return content;
     }
