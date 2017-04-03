@@ -56,6 +56,8 @@ export type Query = {
 
         'tumorType': string
 
+        'type': string
+
 };
 export type Article = {
     'abstract': string
@@ -836,6 +838,69 @@ export default class OncoKbAPI {
             });
         };
 
+    evidencesUUIDGetUsingGETURL(parameters: {
+        'uuid': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/evidences/{uuid}';
+
+        path = path.replace('{uuid}', parameters['uuid'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get specific evidence.
+     * @method
+     * @name OncoKbAPI#evidencesUUIDGetUsingGET
+     * @param {string} uuid - Unique identifier.
+     */
+    evidencesUUIDGetUsingGET(parameters: {
+        'uuid': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < Evidence > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/evidences/{uuid}';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            path = path.replace('{uuid}', parameters['uuid'] + '');
+
+            if (parameters['uuid'] === undefined) {
+                reject(new Error('Missing required  parameter: uuid'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        }).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+
     genesGetUsingGETURL(parameters: {
         $queryParameters ? : any
     }): string {
@@ -1338,6 +1403,7 @@ export default class OncoKbAPI {
         'source' ? : string,
         'levels' ? : string,
         'highestLevelOnly' ? : boolean,
+        'queryType' ? : string,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -1386,6 +1452,10 @@ export default class OncoKbAPI {
             queryParameters['highestLevelOnly'] = parameters['highestLevelOnly'];
         }
 
+        if (parameters['queryType'] !== undefined) {
+            queryParameters['queryType'] = parameters['queryType'];
+        }
+
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                 var parameter = parameters.$queryParameters[parameterName];
@@ -1411,6 +1481,7 @@ export default class OncoKbAPI {
      * @param {string} source - Tumor type source. OncoTree tumor types are the default setting. We may have customized version, like Quest.
      * @param {string} levels - Level of evidences.
      * @param {boolean} highestLevelOnly - Only show treatments of highest level
+     * @param {string} queryType - Query type. There maybe slight differences between different query types. Currently support web or regular.
      */
     searchGetUsingGET(parameters: {
         'id' ? : string,
@@ -1424,6 +1495,7 @@ export default class OncoKbAPI {
         'source' ? : string,
         'levels' ? : string,
         'highestLevelOnly' ? : boolean,
+        'queryType' ? : string,
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < IndicatorQueryResp > {
@@ -1481,6 +1553,10 @@ export default class OncoKbAPI {
 
             if (parameters['highestLevelOnly'] !== undefined) {
                 queryParameters['highestLevelOnly'] = parameters['highestLevelOnly'];
+            }
+
+            if (parameters['queryType'] !== undefined) {
+                queryParameters['queryType'] = parameters['queryType'];
             }
 
             if (parameters.$queryParameters) {
