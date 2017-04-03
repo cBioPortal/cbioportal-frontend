@@ -43,8 +43,7 @@ import {getCbioPortalApiUrl, getHotspotsApiUrl, getHotspots3DApiUrl} from "../..
 import { MSKTabs, MSKTab } from "../../shared/components/MSKTabs/MSKTabs";
 import validateParameters from '../../shared/lib/validateParameters';
 
-
-import './styles.scss';
+import './patient.scss';
 
 const patientViewPageStore = new PatientViewPageStore();
 
