@@ -4,8 +4,6 @@
   "bootstrapVersion": 3,
   "styleLoaders": ["style", "css", "sass"],
 
-  "appStyles":"./src/globalStyles/global.scss",
-
   "styles": true,
 
   "env": {
