@@ -32,3 +32,8 @@ export function getOncoKbApiUrl() {
 export function getTissueImageCheckUrl(filter:string) {
     return `//${getHost()}/proxy/cancer.digitalslidearchive.net/local_php/get_slide_list_from_db_groupid_not_needed.php?slide_name_filter=${filter}`;
 }
+
+// Comma separated list of sample ids and the case id
+export function getDarwinUrl(sampleIds:string, caseId:string) {
+    return `//${getHost()}/checkDarwinAccess.do?sample_id=${sampleIds}&case_id=${caseId}`;
+}
