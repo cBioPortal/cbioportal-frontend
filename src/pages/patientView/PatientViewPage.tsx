@@ -67,7 +67,6 @@ interface IPatientViewState {
     mutationData: any;
     myCancerGenomeData?: IMyCancerGenomeData;
     hotspotsData?: IHotspotData;
-    cosmicData?: ICosmicData;
     oncoKbData?: IOncoKbData;
     mutSigData?: MutSigData;
     activeTabKey: number;
@@ -101,7 +100,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         this.state = {
             mutationData: undefined,
             hotspotsData: undefined,
-            cosmicData: undefined,
             oncoKbData: undefined,
             mutSigData: undefined,
             activeTabKey:1
@@ -278,13 +276,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                         this.setState(({hotspotsData} as IPatientViewState)));
                     hotspotDataPromise.catch(() => {
                     });
-
-                    const cosmicDataPromise = this.fetchCosmicData(patientViewPageStore.mutationData.result).then((cosmicData: ICosmicData) =>
-                        this.setState(({cosmicData} as IPatientViewState)));
-                    cosmicDataPromise.catch(() => {
-                    });
-
-                    this.setState(({mutationData: patientViewPageStore.mutationData.result} as IPatientViewState));
 
                     this.fetchMutSigData().then((_result) => {
                         const data = _result.reduce((map:MutSigData, next:MutSig) => {
@@ -499,9 +490,9 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                             <hr />
 
-                            <FeatureTitle title="Mutations" isLoading={ !this.state.mutationData }/>
+                            <FeatureTitle title="Mutations" isLoading={ patientViewPageStore.mutationData.isPending }/>
                             {
-                                (this.state.mutationData && !!sampleManager) && (
+                                (patientViewPageStore.mutationData.isComplete && !!sampleManager) && (
                                     <PatientViewMutationTable
                                         sampleManager={sampleManager}
                                         sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
@@ -516,7 +507,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         mutSigData={this.state.mutSigData}
                                         myCancerGenomeData={this.state.myCancerGenomeData}
                                         hotspots={this.state.hotspotsData}
-                                        cosmicData={this.state.cosmicData}
+                                        cosmicData={patientViewPageStore.cosmicData.result}
                                         oncoKbData={patientViewPageStore.oncoKbData.result}
                                         columns={this.mutationTableColumns}
                                     />
