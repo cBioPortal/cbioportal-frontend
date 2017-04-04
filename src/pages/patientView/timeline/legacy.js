@@ -55,7 +55,7 @@ function plotCaseLabelsInTimeline(caseIds, clinicalDataMap, caseMetaData) {
     }
 }
 
-export function buildTimeline(params, caseIds, patientInfo, clinicalDataMap, caseMetaData, data) {
+export function buildTimeline(params, caseIds, patientInfo, clinicalDataMap, caseMetaData, data, width) {
 
     if (data.length === 0) return;
 
@@ -132,7 +132,6 @@ export function buildTimeline(params, caseIds, patientInfo, clinicalDataMap, cas
         }
     }
 
-    var width = 1245;
     window.pvTimeline = clinicalTimelineExports.clinicalTimeline()
         .width(width)
         .data(timeData)
