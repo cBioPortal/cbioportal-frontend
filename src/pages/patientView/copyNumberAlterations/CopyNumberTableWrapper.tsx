@@ -124,6 +124,8 @@ export default class CopyNumberTableWrapper extends React.Component<{ store:Pati
                     <CNATableComponent
                         columns={orderedColumns}
                         data={this.props.store.discreteCNAData.result}
+                        initialSortColumn="Annotation"
+                        initialSortDirection="desc"
                         initialItemsPerPage={25}
                     />
                 )
