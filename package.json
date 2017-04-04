@@ -11,7 +11,7 @@
     "build:size": "npm run clean && npm run buildDLL:prod && cross-env NODE_ENV=production webpack --json > stats.json",
     "buildBootstrap": "sass --style :compressed src/globalStyles/bootstrap-entry.scss src/globalStyles/prefixed-bootstrap.min.css",
     "heroku-postbuild": "npm run build && npm install http-server -g",
-    "updateAPI": "npm run fetchAPI && npm run buildAPI",
+    "updateAPI": "npm run fetchAPI && npm run buildAPI && npm run updateHotspotsAPI && npm run updateOncoKbAPI",
     "fetchAPI": "curl http://cbioportal-rc.herokuapp.com/api/v2/api-docs > src/shared/api/generated/CBioPortalAPI-docs.json && curl http://cbioportal-rc.herokuapp.com/api/v2/api-docs?group=internal > src/shared/api/generated/CBioPortalAPIInternal-docs.json",
     "buildAPI": "node scripts/generate-api.js src/shared/api/generated CBioPortalAPI CBioPortalAPIInternal",
     "updateHotspotsAPI": "npm run fetchHotspotsAPI && npm run buildHotspotsAPI",
