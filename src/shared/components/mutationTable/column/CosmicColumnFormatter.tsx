@@ -77,6 +77,12 @@ export default class CosmicColumnFormatter
             }
         }
 
+        // we don't want zero to be a valid value for sorting
+        // return null instead to exclude it from sorting
+        if (value === 0) {
+            value = null;
+        }
+
         return value;
     }
 
