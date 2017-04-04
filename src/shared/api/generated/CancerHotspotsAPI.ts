@@ -2,7 +2,9 @@ import * as request from "superagent";
 
 type CallbackHandler = (err: any, res ? : request.Response) => void;
 export type HotspotMutation = any;
+export type Map« string, int» = {};
 export type IntegerRange = any;
+export type Map« string, double» = {};
 export type TumorTypeComposition = any;
 export type Cluster = any;
 
@@ -345,6 +347,68 @@ export default class CancerHotspotsAPI {
             });
         };
 
+    fetch3dHotspotMutationsPOST_1URL(parameters: {
+        'hugoSymbols' ? : Array < string > ,
+            $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/api/hotspots/3d';
+        if (parameters['hugoSymbols'] !== undefined) {
+            queryParameters['hugoSymbols'] = parameters['hugoSymbols'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * get all 3D hotspot mutations
+     * @method
+     * @name CancerHotspotsAPI#fetch3dHotspotMutationsPOST_1
+     * @param {array} hugoSymbols - Comma separated list of hugo symbols. For example PTEN,BRAF,TP53
+     */
+    fetch3dHotspotMutationsPOST_1(parameters: {
+            'hugoSymbols' ? : Array < string > ,
+                $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < HotspotMutation >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/api/hotspots/3d';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                if (parameters['hugoSymbols'] !== undefined) {
+                    queryParameters['hugoSymbols'] = parameters['hugoSymbols'];
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
     fetch3dHotspotMutationsPOSTURL(parameters: {
         'hugoSymbols' ? : Array < string > ,
             $queryParameters ? : any
@@ -518,6 +582,134 @@ export default class CancerHotspotsAPI {
 
                 if (parameters['hugoSymbols'] === undefined) {
                     reject(new Error('Missing required  parameter: hugoSymbols'));
+                    return;
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    fetch3dHotspotMutationsByTranscriptPOSTURL(parameters: {
+        'transcriptIds': Array < string > ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/api/hotspots/3d/byTranscript';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * get 3D hotspot mutations by transcript id
+     * @method
+     * @name CancerHotspotsAPI#fetch3dHotspotMutationsByTranscriptPOST
+     * @param {} transcriptIds - List of transcript IDs. For example ["ENST00000288602","ENST00000275493"]
+     */
+    fetch3dHotspotMutationsByTranscriptPOST(parameters: {
+            'transcriptIds': Array < string > ,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < HotspotMutation >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/api/hotspots/3d/byTranscript';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                if (parameters['transcriptIds'] !== undefined) {
+                    body = parameters['transcriptIds'];
+                }
+
+                if (parameters['transcriptIds'] === undefined) {
+                    reject(new Error('Missing required  parameter: transcriptIds'));
+                    return;
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    fetch3dHotspotMutationsByTranscriptGETURL(parameters: {
+        'transcriptIds': Array < string > ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/api/hotspots/3d/byTranscript/{transcriptIds}';
+
+        path = path.replace('{transcriptIds}', parameters['transcriptIds'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * get 3D hotspot mutations by transcript id
+     * @method
+     * @name CancerHotspotsAPI#fetch3dHotspotMutationsByTranscriptGET
+     * @param {array} transcriptIds - Comma separated list of transcript IDs. For example ENST00000288602,ENST00000275493
+     */
+    fetch3dHotspotMutationsByTranscriptGET(parameters: {
+            'transcriptIds': Array < string > ,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < HotspotMutation >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/api/hotspots/3d/byTranscript/{transcriptIds}';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                path = path.replace('{transcriptIds}', parameters['transcriptIds'] + '');
+
+                if (parameters['transcriptIds'] === undefined) {
+                    reject(new Error('Missing required  parameter: transcriptIds'));
                     return;
                 }
 
@@ -772,7 +964,7 @@ export default class CancerHotspotsAPI {
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/api/hotspots/single/byGene/{transcriptIds}';
+        let path = '/api/hotspots/single/byGene/{hugoSymbols}';
 
         path = path.replace('{hugoSymbols}', parameters['hugoSymbols'] + '');
 
@@ -801,7 +993,7 @@ export default class CancerHotspotsAPI {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
             const request = this.request;
-            let path = '/api/hotspots/single/byGene/{transcriptIds}';
+            let path = '/api/hotspots/single/byGene/{hugoSymbols}';
             let body: any;
             let queryParameters: any = {};
             let headers: any = {};
