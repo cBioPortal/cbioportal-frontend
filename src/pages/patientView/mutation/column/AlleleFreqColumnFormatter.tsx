@@ -51,28 +51,43 @@ export default class AlleleFreqColumnFormatter {
         const freqs = sampleOrder.map((sampleId:string) => (sampleToElements[sampleId] && sampleToElements[sampleId].freq) || undefined);
         const bars = elementsInSampleOrder.map((elements:any)=>elements.bar);
 
-        let ret;
-        if (sampleManager.samples.length === 1) {
-            ret = (<span>{ (!isNaN(freqs[0]) ? Math.round(100*freqs[0])/100 : '') }</span>);
-        } else if (tooltipLines.length > 0) {
-            const overlay = (<span>{tooltipLines}</span>);
-            ret = (<DefaultTooltip
-                placement="left"
-                overlay={overlay}
-                arrowContent={<div className="rc-tooltip-arrow-inner"/>}
-            >
+        let content:JSX.Element = <span />;
 
+        // single sample: just show the number
+        if (sampleManager.samples.length === 1) {
+            content = <span>{ (!isNaN(freqs[0]) ? Math.round(100*freqs[0])/100 : '') }</span>;
+        }
+        // multiple samples: show a graphical component
+        // (if no tooltip info available do not update content)
+        else if (tooltipLines.length > 0) {
+            content = (
                 <svg
                     width={AlleleFreqColumnFormatter.getSVGWidth(sampleOrder.length)}
                     height={AlleleFreqColumnFormatter.maxBarHeight}
                 >
                     {bars}
                 </svg>
-            </DefaultTooltip>);
-        } else {
-            ret = (<span></span>);
+            );
         }
-        return ret;
+
+        // as long as we have tooltip lines, show tooltip in either cases (single or multiple)
+        if (tooltipLines.length > 0)
+        {
+            const overlay = () => <span>{tooltipLines}</span>;
+
+            content = (
+                <DefaultTooltip
+                    placement="left"
+                    overlay={overlay}
+                    arrowContent={<div className="rc-tooltip-arrow-inner"/>}
+                    destroyTooltipOnHide={true}
+                >
+                    {content}
+                </DefaultTooltip>
+            );
+        }
+
+        return content;
     }
 
     public static getSVGWidth(numSamples:number) {
