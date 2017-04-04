@@ -6,6 +6,7 @@ import ClinicalInformationPatientTable from '../clinicalInformation/ClinicalInfo
 import {getSpans} from '../clinicalInformation/lib/clinicalAttributesUtil.js';
 
 import styles from './styles.module.scss';
+import DefaultTooltip from "../../../shared/components/DefaultTooltip";
 
 export type IPatientHeaderProps = {
     patient:any;
@@ -39,28 +40,30 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
 
     private getPopoverPatient(patient: any) {
         return patient && (
-            <Popover key={patient.id} id={'popover-sample-' + patient.id}>
+            <div key={patient.id} style={{ maxHeight:400, overflow:'auto' }}>
+                <h5>{ patient.id }</h5>
                 <ClinicalInformationPatientTable showTitleBar={false} data={patient.clinicalData} />
-            </Popover>
+            </div>
         );
     }
 
     private getOverlayTriggerPatient(patient: any) {
-        return patient && (
-            <OverlayTrigger
-                delayHide={100}
-                key={patient.id}
-                trigger={['hover', 'focus']}
+        return patient &&
+        (
+            <DefaultTooltip
                 placement='bottom'
+                trigger={['hover', 'focus']}
                 overlay={this.getPopoverPatient(patient)}
+                arrowContent={<div className="rc-tooltip-arrow-inner" />}
+                destroyTooltipOnHide={true}
             >
-                <span>
+                 <span>
                     <a href="javascript:void(0)" onClick={()=>this.props.handlePatientClick(patient.id)}>{patient.id}</a>
                     <span className='clinical-spans' id='patient-attributes' dangerouslySetInnerHTML={{__html:
                         getSpans(fromPairs(patient.clinicalData.map((x: any) => [x.clinicalAttributeId, x.value])), 'lgg_ucsf_2014')}}>
                     </span>
                 </span>
-            </OverlayTrigger>
+            </DefaultTooltip>
         );
     }
 }
