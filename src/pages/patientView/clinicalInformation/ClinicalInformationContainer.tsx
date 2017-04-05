@@ -2,7 +2,9 @@ import ClinicalInformationPatientTable from "./ClinicalInformationPatientTable";
 import ClinicalInformationSamples from "./ClinicalInformationSamplesTable";
 import * as React from "react";
 import Spinner from "react-spinkit";
+import { Alert } from 'react-bootstrap'
 import Connector, {ClinicalInformationData} from "./Connector";
+import queryString from 'query-string';
 
 type TODO = any;
 
@@ -12,6 +14,12 @@ export type IClinicalInformationContainerProps = {
     setTab?: (activeTab:number) => void;
     store?: any;
 } & PartialPick<ClinicalInformationData, 'status' | 'patient' | 'samples'>;
+
+const qs = queryString.parse(location.search);
+
+const studyId: string = qs.cancer_study_id;
+const patientId: string = qs.case_id;
+
 
 @Connector.decorator
 export default class ClinicalInformationContainer extends React.Component<IClinicalInformationContainerProps, {}> {
@@ -31,6 +39,13 @@ export default class ClinicalInformationContainer extends React.Component<IClini
 
             case 'error':
                 return <div>There was a loading error. Please try refreshing your browser.</div>;
+
+            case 'not found':
+                return (
+                      <Alert bsStyle="danger">
+                        <div>No patient found with case id "{patientId}" and study id "{studyId}" </div>
+                      </Alert>
+                )
 
             default:
                 return <div />;

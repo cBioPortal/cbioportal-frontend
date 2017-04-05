@@ -15,11 +15,12 @@ export type ActionTypes = (
     {type: typeof FETCH, status: 'fetching'}
     | {type: typeof FETCH, status: 'error', error: Error}
     | {type: typeof FETCH, status: 'success', payload: ClinicalInformationData}
+    | {type: typeof FETCH, status: 'not found', error: Error}
     | {type: typeof SET_TAB, activeTab: number }
 );
 
 export type ClinicalInformationData = {
-    status?: 'fetching' | 'complete' | 'error',
+    status?: 'fetching' | 'complete' | 'error' | 'not found',
     activeTab?: number,
     patient?: {
         id: string,
@@ -46,7 +47,14 @@ export default new class ClinicalInformationConnector extends Connector<RootStat
                         payload: data,
                     });
                 }
-            );
+            ).catch((err) => {
+                dispatch({
+                    type: FETCH,
+                    status: 'not found',
+                    error: err
+                })
+            }) 
+            ; // catch here this is calling getClinicalInformationData then dispatch
 
             dispatch({
                 type: FETCH,
@@ -65,7 +73,7 @@ export default new class ClinicalInformationConnector extends Connector<RootStat
     }
 
     reducer(state:ClinicalInformationData, action:ActionTypes) {
-        switch (action.type) {
+        switch (action.type) {            
             case FETCH: {
                 switch (action.status) {
                     case 'fetching':
@@ -81,6 +89,9 @@ export default new class ClinicalInformationConnector extends Connector<RootStat
 
                     case 'error':
                         return this.mergeState(state, {'status': 'error'});
+
+                    case 'not found':
+                        return this.mergeState(state, {'status': 'not found'});
 
                     default:
                         return state;
