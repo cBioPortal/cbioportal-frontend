@@ -2,9 +2,7 @@ import * as request from "superagent";
 
 type CallbackHandler = (err: any, res ? : request.Response) => void;
 export type HotspotMutation = any;
-export type Map« string, int» = {};
 export type IntegerRange = any;
-export type Map« string, double» = {};
 export type TumorTypeComposition = any;
 export type Cluster = any;
 

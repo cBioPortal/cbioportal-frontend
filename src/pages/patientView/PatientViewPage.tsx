@@ -352,7 +352,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         if (patientViewPageStore.studyMetaData.isComplete) {
             let study = patientViewPageStore.studyMetaData.result;
-            studyName = <a href={`/study.do?cancer_study_id=${study.studyId}`}>{study.name}</a>;
+            studyName = <a href={`study.do?cancer_study_id=${study.studyId}`}>{study.name}</a>;
         }
 
         if (patientViewPageStore.patientViewData.isComplete) {
