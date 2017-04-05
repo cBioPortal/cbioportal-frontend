@@ -1,12 +1,9 @@
 import * as React from 'react';
-import {Td} from 'reactable';
-import {IColumnFormatterData} from "shared/components/enhancedReactTable/IColumnFormatter";
 import {
     default as DefaultProteinChangeColumnFormatter
 } from "shared/components/mutationTable/column/ProteinChangeColumnFormatter";
 import MutationStatusColumnFormatter from "shared/components/mutationTable/column/MutationStatusColumnFormatter";
 import styles from './style/proteinChange.module.scss';
-import {MutationTableRowData} from "shared/components/mutationTable/IMutationTableProps";
 import {Mutation} from "../../../../shared/api/generated/CBioPortalAPI";
 
 /**
@@ -24,7 +21,7 @@ export default class ProteinChangeColumnFormatter
         // use value as sort & filter value
         const value:string = DefaultProteinChangeColumnFormatter.getTextValue(data);
 
-        const mutationStatus:string|null = MutationStatusColumnFormatter.getDataFromRow(data);
+        const mutationStatus:string|null = MutationStatusColumnFormatter.getData(data);
 
         let content = <span className={styles.proteinChange}>{text}</span>;
 
