@@ -90,6 +90,7 @@ export default class CopyNumberTableWrapper extends React.Component<{ store:Pati
                 }
             },
             tooltip: (<span>Alteration frequency in cohort</span>),
+            firstSortDirection: "desc",
             order: 80
         });
 
