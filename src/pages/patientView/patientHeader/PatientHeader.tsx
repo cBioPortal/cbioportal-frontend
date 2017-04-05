@@ -11,6 +11,7 @@ import DefaultTooltip from "../../../shared/components/DefaultTooltip";
 export type IPatientHeaderProps = {
     patient:any;
     handlePatientClick:any;
+    darwinUrl?: string;
 }
 export default class PatientHeader extends React.Component<IPatientHeaderProps, {}> {
     public render() {
@@ -18,21 +19,19 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
         return (
             <div className={styles.patientHeader}>
                 {this.props.patient && this.getOverlayTriggerPatient(this.props.patient)}
-                {this.getDarwinAccessUrl()}
+                {this.getDarwinUrl(this.props.darwinUrl)}
             </div>
         );
 
     }
 
-    private getDarwinAccessUrl() {
+    private getDarwinUrl(darwinUrl: string | null | undefined) {
         // use JSP injected Darwin URL window.darwinAccessUrl
         // TODO: use internal API service instead, once this exists
-        let darwinAccessUrl: string | null | undefined = ((window as any).darwinAccessUrl);
-
-        if (darwinAccessUrl !== undefined && darwinAccessUrl !== null && darwinAccessUrl !== '') {
+        if (darwinUrl !== undefined && darwinUrl !== null && darwinUrl !== '') {
             // add link to darwin
             let darwinImgSrc = require("./images/darwin_logo.png");
-            return (<a target='_blank' href={darwinAccessUrl}><img style={{paddingLeft:'5px'}} src={darwinImgSrc} /></a>);
+            return (<a target='_blank' href={darwinUrl}><img style={{paddingLeft:'5px'}} src={darwinImgSrc} /></a>);
         } else {
             return null;
         }

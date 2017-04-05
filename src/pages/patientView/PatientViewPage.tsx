@@ -441,7 +441,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 <td>Patient:</td>
                                 <td><PatientHeader
                                     handlePatientClick={(id: string)=>this.handlePatientClick(id)}
-                                    patient={patientViewPageStore.patientViewData.result.patient}/></td>
+                                    patient={patientViewPageStore.patientViewData.result.patient}
+                                    darwinUrl={patientViewPageStore.darwinUrl.result}/></td>
                             </tr>
                             <tr>
                                 <td>Samples:</td>
