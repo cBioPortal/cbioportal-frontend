@@ -12,6 +12,7 @@ import {ButtonToolbar} from "react-bootstrap";
 import * as _ from "lodash";
 import { If } from 'react-if';
 
+type SortDirection = 'asc' | 'desc';
 export type Column<T> = {
     name: string;
     filter?:(data:T, filterString:string, filterStringUpper?:string, filterStringLower?:string)=>boolean;
@@ -20,13 +21,14 @@ export type Column<T> = {
     render:(data:T)=>JSX.Element;
     download?:(data:T)=>string;
     tooltip?:JSX.Element;
+    firstSortDirection?:SortDirection;
 };
 
 type MSKTableProps<T> = {
     columns:Column<T>[];
     data:T[];
     initialSortColumn?: string;
-    initialSortDirection?: 'asc'|'desc';
+    initialSortDirection?:SortDirection;
     initialItemsPerPage?:number;
 };
 
@@ -219,6 +221,17 @@ class MSKTableStore<T> {
         }
     }
 
+    private getNextSortAscending(clickedColumn:Column<T>) {
+        if (this.sortColumn === clickedColumn.name) {
+            // if current sort column is clicked column, simply toggle
+            return !this.sortAscending;
+        } else {
+            // otherwise, use columns initial sort direction, or default ascending
+            const sortDirection:SortDirection = clickedColumn.firstSortDirection || "asc";
+            return (sortDirection === "asc");
+        }
+    }
+
     @computed get headers():JSX.Element[] {
         return this.visibleColumns.map((column:Column<T>)=>{
             const headerProps:{role?:"button",
@@ -227,7 +240,7 @@ class MSKTableStore<T> {
             if (column.sortBy) {
                 headerProps.role = "button";
                 headerProps.onClick = ()=>{
-                    this.sortAscending = (this.sortColumn === column.name ? !this.sortAscending : true);
+                    this.sortAscending = this.getNextSortAscending(column);
                     this.sortColumn = column.name;
                     this.page = 0;
                 };
