@@ -1,28 +1,8 @@
 import * as request from "superagent";
 
 type CallbackHandler = (err: any, res ? : request.Response) => void;
-export type Drug = {
-    'atcCodes': Array < string > | string
-
-        'drugName': string
-
-        'synonyms': Array < string > | string
-
-};
 export type ApiErrorResp = {
     'meta': Meta
-
-};
-export type OncoTreeType = {
-    'cancerType': string
-
-        'code': string
-
-        'level': string
-
-        'subtype': string
-
-        'tissue': string
 
 };
 export type Meta = {
@@ -33,22 +13,14 @@ export type Meta = {
         'errorType': string
 
 };
-export type EvidenceQueryRes = {
-    'alleles': Array < Alteration > | Alteration
+export type User = {
+    'email': string
 
-        'alterations': Array < Alteration > | Alteration
+        'id': number
 
-        'evidences': Array < Evidence > | Evidence
+        'name': string
 
-        'gene': Gene
-
-        'id': string
-
-        'levelOfEvidences': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" > | "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3"
-
-        'oncoTreeTypes': Array < OncoTreeType > | OncoTreeType
-
-        'query': Query
+        'role': string
 
 };
 export type Query = {
@@ -69,6 +41,8 @@ export type Query = {
         'proteinStart': number
 
         'tumorType': string
+
+        'type': string
 
 };
 export type Article = {
@@ -106,7 +80,11 @@ export type NccnGuideline = {
 
         'disease': string
 
+        'empty': boolean
+
         'pages': string
+
+        'therapy': string
 
         'version': string
 
@@ -143,44 +121,16 @@ export type AnnotatedVariant = {
         'variant': string
 
 };
-export type VariantConsequence = {
-    'description': string
+export type History = {
+    'dateTime': string
 
-        'isGenerallyTruncating': boolean
+        'newValue': TumorType
 
-        'term': string
+        'oldValue': TumorType
 
-};
-export type IndicatorQueryTreatment = {
-    'abstracts': Array < ArticleAbstract > | ArticleAbstract
+        'operationType': string
 
-        'approvedIndications': Array < string > | string
-
-        'drugs': Array < Drug > | Drug
-
-        'fdaApproved': boolean
-
-        'level': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3"
-
-        'pmids': Array < string > | string
-
-};
-export type Treatment = {
-    'approvedIndications': Array < string > | string
-
-        'drugs': Array < Drug > | Drug
-
-};
-export type EvidenceQueries = {
-    'evidenceTypes': string
-
-        'highestLevelOnly': boolean
-
-        'levels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" > | "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3"
-
-        'queries': Array < Query > | Query
-
-        'source': string
+        'user': User
 
 };
 export type Gene = {
@@ -190,7 +140,7 @@ export type Gene = {
 
         'entrezGeneId': number
 
-        'geneAliases': Array < string > | string
+        'geneAliases': Array < string >
 
         'hugoSymbol': string
 
@@ -201,8 +151,38 @@ export type Gene = {
         'tsg': boolean
 
 };
+export type TumorType = {
+    'NCI': string
+
+        'UMLS': string
+
+        'children': {}
+
+        'code': string
+
+        'color': string
+
+        'deprecated': boolean
+
+        'history': Array < History >
+
+        'id': number
+
+        'level': "PRIMARY" | "Secondary" | "Tertiary" | "Quaternary" | "Quinternary"
+
+        'links': Array < Link >
+
+        'mainType': MainType
+
+        'name': string
+
+        'parent': string
+
+        'tissue': string
+
+};
 export type GeneEvidence = {
-    'articles': Array < Article > | Article
+    'articles': Array < Article >
 
         'desc': string
 
@@ -221,50 +201,16 @@ export type GeneEvidence = {
         'status': string
 
 };
-export type ClinicalTrial = {
-    'cdrId': string
-
-        'countries': Array < string > | string
-
-        'diseaseCondition': string
-
-        'drugs': Array < Drug > | Drug
-
-        'eligibilityCriteria': string
-
-        'inUSA': boolean
-
-        'lastChangedDate': string
-
-        'nctId': string
-
-        'open': boolean
-
-        'phase': string
-
-        'purpose': string
-
-        'recruitingStatus': string
-
-        'title': string
-
-};
-export type ApiObjectResp = {
-    'data': {}
-
-    'meta': Meta
-
-};
 export type Evidence = {
     'additionalInfo': string
 
-        'alterations': Array < Alteration > | Alteration
+        'alterations': Array < Alteration >
 
-        'articles': Array < Article > | Article
+        'articles': Array < Article >
 
         'cancerType': string
 
-        'clinicalTrials': Array < ClinicalTrial > | ClinicalTrial
+        'clinicalTrials': Array < ClinicalTrial >
 
         'description': string
 
@@ -278,19 +224,15 @@ export type Evidence = {
 
         'levelOfEvidence': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3"
 
-        'nccnGuidelines': Array < NccnGuideline > | NccnGuideline
+        'nccnGuidelines': Array < NccnGuideline >
 
-        'oncoTreeType': OncoTreeType
+        'oncoTreeType': TumorType
+
+        'propagation': string
 
         'subtype': string
 
-        'treatments': Array < Treatment > | Treatment
-
-};
-export type ApiListResp = {
-    'data': Array < {} > | {}
-
-        'meta': Meta
+        'treatments': Array < Treatment >
 
 };
 export type IndicatorQueryResp = {
@@ -312,13 +254,13 @@ export type IndicatorQueryResp = {
 
         'oncogenic': string
 
-        'otherSignificantResistanceLevels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" > | "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3"
+        'otherSignificantResistanceLevels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" >
 
-        'otherSignificantSensitiveLevels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" > | "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3"
+        'otherSignificantSensitiveLevels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" >
 
         'query': Query
 
-        'treatments': Array < IndicatorQueryTreatment > | IndicatorQueryTreatment
+        'treatments': Array < IndicatorQueryTreatment >
 
         'tumorTypeSummary': string
 
@@ -349,6 +291,126 @@ export type ArticleAbstract = {
     'abstract': string
 
         'link': string
+
+};
+export type Drug = {
+    'atcCodes': Array < string >
+
+        'drugName': string
+
+        'synonyms': Array < string >
+
+};
+export type EvidenceQueryRes = {
+    'alleles': Array < Alteration >
+
+        'alterations': Array < Alteration >
+
+        'evidences': Array < Evidence >
+
+        'gene': Gene
+
+        'id': string
+
+        'levelOfEvidences': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" >
+
+        'oncoTreeTypes': Array < TumorType >
+
+        'query': Query
+
+};
+export type MainType = {
+    'id': number
+
+        'name': string
+
+};
+export type VariantConsequence = {
+    'description': string
+
+        'isGenerallyTruncating': boolean
+
+        'term': string
+
+};
+export type IndicatorQueryTreatment = {
+    'abstracts': Array < ArticleAbstract >
+
+        'approvedIndications': Array < string >
+
+        'drugs': Array < Drug >
+
+        'fdaApproved': boolean
+
+        'level': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3"
+
+        'pmids': Array < string >
+
+};
+export type Treatment = {
+    'approvedIndications': Array < string >
+
+        'drugs': Array < Drug >
+
+};
+export type EvidenceQueries = {
+    'evidenceTypes': string
+
+        'highestLevelOnly': boolean
+
+        'levels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" >
+
+        'queries': Array < Query >
+
+        'source': string
+
+};
+export type ClinicalTrial = {
+    'cdrId': string
+
+        'countries': Array < string >
+
+        'diseaseCondition': string
+
+        'drugs': Array < Drug >
+
+        'eligibilityCriteria': string
+
+        'inUSA': boolean
+
+        'lastChangedDate': string
+
+        'nctId': string
+
+        'open': boolean
+
+        'phase': string
+
+        'purpose': string
+
+        'recruitingStatus': string
+
+        'title': string
+
+};
+export type ApiObjectResp = {
+    'data': {}
+
+    'meta': Meta
+
+};
+export type ApiListResp = {
+    'data': Array < {} >
+
+        'meta': Meta
+
+};
+export type Link = {
+    'href': string
+
+        'method': string
+
+        'rel': string
 
 };
 
@@ -1286,6 +1348,7 @@ export default class OncoKbAPI {
         'source' ? : string,
         'levels' ? : string,
         'highestLevelOnly' ? : boolean,
+        'queryType' ? : string,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -1334,6 +1397,10 @@ export default class OncoKbAPI {
             queryParameters['highestLevelOnly'] = parameters['highestLevelOnly'];
         }
 
+        if (parameters['queryType'] !== undefined) {
+            queryParameters['queryType'] = parameters['queryType'];
+        }
+
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                 var parameter = parameters.$queryParameters[parameterName];
@@ -1359,6 +1426,7 @@ export default class OncoKbAPI {
      * @param {string} source - Tumor type source. OncoTree tumor types are the default setting. We may have customized version, like Quest.
      * @param {string} levels - Level of evidences.
      * @param {boolean} highestLevelOnly - Only show treatments of highest level
+     * @param {string} queryType - Query type. There maybe slight differences between different query types. Currently support web or regular.
      */
     searchGetUsingGET(parameters: {
         'id' ? : string,
@@ -1372,6 +1440,7 @@ export default class OncoKbAPI {
         'source' ? : string,
         'levels' ? : string,
         'highestLevelOnly' ? : boolean,
+        'queryType' ? : string,
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < IndicatorQueryResp > {
@@ -1429,6 +1498,10 @@ export default class OncoKbAPI {
 
             if (parameters['highestLevelOnly'] !== undefined) {
                 queryParameters['highestLevelOnly'] = parameters['highestLevelOnly'];
+            }
+
+            if (parameters['queryType'] !== undefined) {
+                queryParameters['queryType'] = parameters['queryType'];
             }
 
             if (parameters.$queryParameters) {
