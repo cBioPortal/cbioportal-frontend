@@ -1,7 +1,17 @@
 # cbioportal-frontend
-[![Build Status](https://travis-ci.org/cBioPortal/cbioportal-frontend.svg?branch=master)](https://travis-ci.org/cBioPortal/cbioportal-frontend)
+## Live demo
+Development: http://cbioportal-frontend-demo.herokuapp.com/#/patient?studyId=prad_fhcrc&caseId=00-090
+Master: http://cbioportal-frontend.herokuapp.com/?cancer_study_id=lgg_ucsf_2014&case_id=P04
+## Test status & Code Quality
+| Branch | master | integration |
+| --- | --- | --- |
+| Status | [![Build Status](https://travis-ci.org/cBioPortal/cbioportal-frontend.svg?branch=master)](https://travis-ci.org/cBioPortal/cbioportal-frontend) | [![Build Status](https://travis-ci.org/cBioPortal/cbioportal-frontend.svg?branch=integration)](https://travis-ci.org/cBioPortal/cbioportal-frontend)
+
 [![codecov](https://codecov.io/gh/cbioportal/cbioportal-frontend/branch/master/graph/badge.svg)](https://codecov.io/gh/cbioportal/cbioportal-frontend)
+
 [![Code Climate](https://codeclimate.com/github/cBioPortal/cbioportal-frontend/badges/gpa.svg)](https://codeclimate.com/github/cBioPortal/cbioportal-frontend)
+
+## Deployment
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
 
 This is the new React frontend for cBioPortal, currently under development.
