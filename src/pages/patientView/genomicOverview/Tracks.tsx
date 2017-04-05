@@ -10,6 +10,7 @@ interface TracksPropTypes {
     mutations:Array<Mutation>;
     cnaSegments:Array<CopyNumberSeg>;
     sampleManager:SampleManager;
+    width:number;
 }
 
 export default class Tracks extends React.Component<TracksPropTypes, {}> {
@@ -23,7 +24,7 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
         // --- construct params ---
         let uniqCnasampleIds = _.uniq(_.map(this.props.cnaSegments, 'sampleId'));
         let uniqMutSampleIds = _.uniq(_.map(this.props.mutations, 'sampleId'));
-        var config = tracksHelper.GenomicOverviewConfig(uniqCnasampleIds.length + uniqMutSampleIds.length, 1145);
+        var config = tracksHelper.GenomicOverviewConfig(uniqCnasampleIds.length + uniqMutSampleIds.length, this.props.width);
         // --- end of params ---
 
         // --- raphael config ---

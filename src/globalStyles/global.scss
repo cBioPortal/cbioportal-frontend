@@ -22,7 +22,7 @@ body {
 }
 
 .topBanner {
-  width:$portalWidth;
+  @extend .portalWidth;
   margin:0 auto;
 }
 
@@ -65,7 +65,7 @@ th.reactable-header-sort-asc:after {
 .mainTabs {
 
   > .nav {
-    width:$portalWidth;
+    @extend .portalWidth;
     margin:0 auto;
 
     .active a {
@@ -92,7 +92,7 @@ th.reactable-header-sort-asc:after {
     }
 
     > .msk-tab {
-      width:$portalWidth;
+      @extend .portalWidth;
       margin: 0 auto;
     }
 

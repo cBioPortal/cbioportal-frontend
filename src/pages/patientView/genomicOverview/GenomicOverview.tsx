@@ -1,5 +1,6 @@
 import * as React from 'react';
 import * as _ from 'lodash';
+import $ from 'jquery';
 import Tracks from './Tracks';
 import {ThumbnailExpandVAFPlot} from '../vafPlot/ThumbnailExpandVAFPlot';
 import {Mutation} from "../../../shared/api/generated/CBioPortalAPI";
@@ -14,17 +15,37 @@ interface IGenomicOverviewProps {
     sampleColors: {[s:string]:string};
     sampleManager: SampleManager;
 }
-export default class GenomicOverview extends React.Component<IGenomicOverviewProps, {vafPlotData:{[s:string]:number[]}}> {
+
+export type MutationFrequencies = number[];
+
+export type MutationFrequenciesBySample = { [sampleId:string]: MutationFrequencies  }
+
+export default class GenomicOverview extends React.Component<IGenomicOverviewProps, { frequencies:MutationFrequenciesBySample }> {
+
+    shouldComponentUpdate(){
+        return false;
+    }
 
     constructor(props:IGenomicOverviewProps) {
         super(props);
-        const vafPlotData = this.computeVAFPlotData(props.mutations);
+        const frequencies = this.computeMutationFrequencyBySample(props.mutations);
         this.state = {
-            vafPlotData,
+            frequencies
         };
+
+    }
+
+    componentDidMount(){
+
+        var debouncedResize =  _.debounce(()=>this.forceUpdate(),500);
+
+        $(window).resize(debouncedResize);
+
     }
 
     public render() {
+
+        const width = $('.tab-content').width()-140;
 
         const labels = _.reduce(this.props.sampleManager.samples, (result: any, sample: ClinicalDataBySampleId, i: number)=>{
             result[sample.id] = i + 1;
@@ -33,9 +54,9 @@ export default class GenomicOverview extends React.Component<IGenomicOverviewPro
 
         return (
             <div style={{ display:'flex', alignItems:'center'  }}>
-                <Tracks mutations={this.props.mutations} sampleManager={this.props.sampleManager} cnaSegments={this.props.cnaSegments} />
+                <Tracks mutations={this.props.mutations} key={Math.random()} sampleManager={this.props.sampleManager} width={width} cnaSegments={this.props.cnaSegments} />
                 <ThumbnailExpandVAFPlot
-                    data={this.state.vafPlotData}
+                    data={this.state.frequencies}
                     order={this.props.sampleManager.sampleIndex}
                     colors={this.props.sampleColors}
                     labels={labels}
@@ -45,7 +66,7 @@ export default class GenomicOverview extends React.Component<IGenomicOverviewPro
         );
     }
 
-    private computeVAFPlotData(mutations:Mutation[]):{[s:string]:number[]} {
+    private computeMutationFrequencyBySample(mutations:Mutation[]):{[sampleId:string]:MutationFrequencies} {
         const ret:{[s:string]:number[]} = {};
         let sampleId;
         let freq;
