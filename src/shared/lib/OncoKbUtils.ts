@@ -11,6 +11,7 @@ const ONCOGENIC_CLASS_NAMES:{[oncogenic:string]: string} = {
     'Likely Neutral': 'likely-neutral',
     'Unknown': 'unknown-oncogenic',
     'Inconclusive': 'unknown-oncogenic',
+    'Predicted Oncogenic': 'oncogenic',
     'Likely Oncogenic': 'oncogenic',
     'Oncogenic': 'oncogenic',
 };
@@ -19,8 +20,9 @@ const ONCOGENIC_CLASS_NAMES:{[oncogenic:string]: string} = {
 // (used for sorting purposes)
 const ONCOGENIC_SCORE:{[oncogenic:string]: number} = {
     'Unknown': 1,
-    'Inconclusive': 2,
+    'Inconclusive': 1,
     'Likely Neutral': 3,
+    'Predicted Oncogenic': 5,
     'Likely Oncogenic': 5,
     'Oncogenic': 5
 };
@@ -33,8 +35,7 @@ const SENSITIVITY_LEVEL_SCORE:{[level:string]: number} = {
     '3A': 3,
     '2B': 4,
     '2A': 5,
-    '1': 6,
-    '0': 7
+    '1': 6
 };
 
 // resistance level <-> score
@@ -251,7 +252,7 @@ export function calcOncogenicScore(oncogenic:string, isVus:boolean)
 {
     let score:number = ONCOGENIC_SCORE[oncogenic] || 0;
 
-    if (isVus) {
+    if (isVus && score === 0) {
         score += 0.5;
     }
 
