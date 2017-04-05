@@ -1,6 +1,5 @@
 import * as React from 'react';
 import 'rc-tooltip/assets/bootstrap_white.css';
-import {MutSigData} from "../../PatientViewPage";
 import {Mutation} from "../../../../shared/api/generated/CBioPortalAPI";
 import {
     VariantCountOutput,
@@ -8,6 +7,7 @@ import {
 } from "../../clinicalInformation/CohortVariantCountCache";
 import FrequencyBar from "shared/components/cohort/FrequencyBar";
 import Icon from "shared/components/cohort/LetterIcon";
+import {MutSigData} from "../../clinicalInformation/PatientViewPageStore";
 
 export interface IVariantCountData {
     numberOfSamples?:number;
