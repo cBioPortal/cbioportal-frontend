@@ -25,7 +25,7 @@ import CohortVariantCountCache from "./CohortVariantCountCache";
 import {EntrezToKeywordList} from "./CohortVariantCountCache";
 import {SampleToEntrezListOrNull} from "./SampleGeneCache";
 import DiscreteCNACache from "./DiscreteCNACache";
-import {getTissueImageCheckUrl} from "../../../shared/api/urls";
+import {getTissueImageCheckUrl, getDarwinUrl} from "../../../shared/api/urls";
 import {getAlterationString} from "shared/lib/CopyNumberUtils";
 import OncoKbEvidenceCache from "../OncoKbEvidenceCache";
 import PmidCache from "../PmidCache";
@@ -423,6 +423,25 @@ export class PatientViewPageStore {
             return profile ? profile.geneticProfileId : undefined;
         }
 
+    });
+
+    readonly darwinUrl = remoteData({
+        await: () => [
+            this.derivedPatientId
+        ],
+        invoke: async() => {
+            let enableDarwin: boolean | null | undefined = ((window as any).enableDarwin);
+
+            if (enableDarwin === true) {
+                let resp = await request.get(getDarwinUrl(this.samples.result.map((sample: Sample) => sample.sampleId).join(','), this.patientId));
+                return resp.text;
+            } else {
+                return '';
+            }
+        },
+        onError: () => {
+            // fail silently
+        }
     });
 
 
