@@ -1,7 +1,4 @@
-import {IColumnFormatterData} from "shared/components/enhancedReactTable/IColumnFormatter";
-import GeneColumnFormatter from "./GeneColumnFormatter";
-import {MutationTableRowData} from "../IMutationTableProps";
-import {Mutation} from "../../../api/generated/CBioPortalAPI";
+import {Mutation} from "shared/api/generated/CBioPortalAPI";
 
 /**
  * @author Selcuk Onur Sumer

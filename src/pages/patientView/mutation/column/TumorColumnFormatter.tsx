@@ -1,8 +1,5 @@
 import * as React from 'react';
-import {Td} from 'reactable';
-import {IColumnFormatterData} from "../../../../shared/components/enhancedReactTable/IColumnFormatter";
 import 'rc-tooltip/assets/bootstrap_white.css';
-import {MutationTableRowData} from "../../../../shared/components/mutationTable/IMutationTableProps";
 import {Mutation} from "../../../../shared/api/generated/CBioPortalAPI";
 import SampleManager from "../../sampleManager";
 
