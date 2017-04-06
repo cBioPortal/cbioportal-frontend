@@ -284,7 +284,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                     <div>
                                         <FeatureTitle title="Clinical Timeline" isLoading={false} />
 
-                                        <Timeline store={patientViewPageStore} sampleManager={ sampleManager } />
+                                        <Timeline store={patientViewPageStore} getWidth={ ()=>$(window).width()-40 } sampleManager={ sampleManager } />
                                         <hr />
                                     </div>
                                 )
@@ -302,6 +302,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         sampleLabels={sampleManager.sampleLabels}
                                         sampleColors={sampleManager.sampleColors}
                                         sampleManager={sampleManager}
+                                        getWidth={()=>$(window).width()-140}
                                     />
                                 )
                             }
