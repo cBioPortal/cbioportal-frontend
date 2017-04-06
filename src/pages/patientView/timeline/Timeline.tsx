@@ -15,7 +15,8 @@ import {ClinicalEvent, ClinicalEventData} from "../../../shared/api/generated/CB
 
 interface ITimelineProps {
     sampleManager:SampleManager;
-    store:PatientViewPageStore
+    store:PatientViewPageStore;
+    getWidth:() => number;
 }
 
 export default class Timeline extends React.Component<ITimelineProps, {}> {
@@ -75,7 +76,7 @@ export default class Timeline extends React.Component<ITimelineProps, {}> {
             }
         });
 
-        buildTimeline(params, caseIds, patientInfo, clinicalDataMap, caseMetaData, timelineData, $('.tab-content').width()-40);
+        buildTimeline(params, caseIds, patientInfo, clinicalDataMap, caseMetaData, timelineData, this.props.getWidth());
 
 
     }
