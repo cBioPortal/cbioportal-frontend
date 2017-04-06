@@ -6,13 +6,19 @@ import {
 } from "../../../shared/api/generated/CBioPortalAPI";
 import client from "../../../shared/api/cbioportalClientInstance";
 import internalClient from "../../../shared/api/cbioportalInternalClientInstance";
+import hotspot3DClient from '../../../shared/api/3DhotspotClientInstance';
+import hotspotClient from '../../../shared/api/hotspotClientInstance';
 import {
-    CopyNumberCount, CopyNumberCountIdentifier, Gistic, GisticToGene, CosmicMutation, default as CBioPortalAPIInternal
+    CopyNumberCount, CopyNumberCountIdentifier, Gistic, GisticToGene, CosmicMutation, default as CBioPortalAPIInternal,
+    MutSig
 } from "shared/api/generated/CBioPortalAPIInternal";
 import {computed, observable, action, reaction, autorun} from "mobx";
 import oncokbClient from "../../../shared/api/oncokbClientInstance";
 import {remoteData, addErrorHandler} from "../../../shared/api/remoteData";
-import {IOncoKbData, IEvidence} from "../mutation/column/AnnotationColumnFormatter";
+import {
+    IOncoKbData, IEvidence, IHotspotData, IMyCancerGenome,
+    IMyCancerGenomeData
+} from "../mutation/column/AnnotationColumnFormatter";
 import {IGisticData} from "../copyNumberAlterations/column/CohortColumnFormatter";
 import {
     generateIdToIndicatorMap, generateQueryVariant, generateEvidenceQuery, processEvidence
@@ -29,7 +35,7 @@ import {getTissueImageCheckUrl, getDarwinUrl} from "../../../shared/api/urls";
 import {getAlterationString} from "shared/lib/CopyNumberUtils";
 import OncoKbEvidenceCache from "../OncoKbEvidenceCache";
 import PmidCache from "../PmidCache";
-import {keywordToCosmic} from "../../../shared/lib/AnnotationUtils";
+import {keywordToCosmic, geneAndProteinPosToHotspots, geneToMyCancerGenome} from "../../../shared/lib/AnnotationUtils";
 import {ICosmicData} from "../../../shared/components/mutationTable/column/CosmicColumnFormatter";
 
 type PageMode = 'patient' | 'sample';
@@ -42,6 +48,8 @@ export type ClinicalInformationData = {
     samples?: Array<ClinicalDataBySampleId>,
     nodes?: any[]//PDXNode[],
 };
+
+export type MutSigData = { [entrezGeneId:string]:{ qValue:number } }
 
 export function groupByEntityId(clinicalDataArray: Array<ClinicalData>) {
     return _.map(
@@ -165,6 +173,11 @@ export class PatientViewPageStore {
 
     @observable patientIdsInCohort: string[] = [];
 
+    get myCancerGenomeData() : IMyCancerGenomeData {
+        const data:IMyCancerGenome[] = require('../../../../resources/mycancergenome.json');
+        return geneToMyCancerGenome(data);
+    }
+
     readonly derivedPatientId = remoteData<string>({
         await: () => [this.samples],
         invoke: async() => {
@@ -258,6 +271,64 @@ export class PatientViewPageStore {
         ],
         invoke: () => this.cosmicDataInvoke()
     });
+
+    readonly mutSigData = remoteData({
+        invoke: async () => {
+            const mutSigdata = await internalClient.getSignificantlyMutatedGenesUsingGET({studyId: this.studyId});
+            const byEntrezGeneId: MutSigData = mutSigdata.reduce((map:MutSigData, next:MutSig) => {
+                map[next.entrezGeneId] = { qValue: next.qValue };
+                return map;
+            }, {});
+            return byEntrezGeneId;
+        }
+    });
+
+
+    readonly hotspotData = remoteData({
+        await: ()=> [
+            this.mutationData
+        ],
+        invoke: () => {
+            const queryGenes:string[] = _.uniq(_.map(this.mutationData.result, function(mutation:Mutation) {
+                if (mutation && mutation.gene) {
+                    return mutation.gene.hugoGeneSymbol;
+                }
+                else {
+                    return "";
+                }
+            }));
+            const promiseSingle = new Promise((resolve, reject) => {
+                const promise = hotspotClient.fetchSingleResidueHotspotMutationsByGenePOST({
+                    hugoSymbols: queryGenes
+                });
+
+                promise.then((data) => {
+                    resolve(geneAndProteinPosToHotspots(data));
+                });
+            });
+            const promiseClustered = new Promise((resolve, reject) => {
+                const promise = hotspot3DClient.fetch3dHotspotMutationsByGenePOST({
+                    hugoSymbols: queryGenes
+                });
+
+                promise.then((data) => {
+                    resolve(geneAndProteinPosToHotspots(data));
+                });
+            });
+            let result: Promise<IHotspotData> = new Promise((resolve, reject) => {
+                Promise.all([promiseSingle, promiseClustered]).then((values) => {
+                    resolve({
+                        single: values[0],
+                        clustered: values[1]
+                    });
+                });
+            });
+            return result;
+
+        }
+
+    });
+
 
     readonly MDAndersonHeatMapAvailable = remoteData({
         await: () => [this.derivedPatientId],

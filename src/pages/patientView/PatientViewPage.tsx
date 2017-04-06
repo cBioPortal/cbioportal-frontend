@@ -1,45 +1,29 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import $ from 'jquery';
-import {Tabs, Tab, default as ReactBootstrap} from 'react-bootstrap';
-import MutationInformationContainer from './mutation/MutationInformationContainer';
-import exposeComponentRenderer from '../../shared/lib/exposeComponentRenderer';
+import { default as ReactBootstrap} from 'react-bootstrap';
 import GenomicOverview from './genomicOverview/GenomicOverview';
-import mockData from './mock/sampleData.json';
-import {ClinicalData, SampleIdentifier, GeneticProfile, Sample, CancerStudy} from "shared/api/generated/CBioPortalAPI";
+import { ClinicalData } from "shared/api/generated/CBioPortalAPI";
 import { ClinicalDataBySampleId } from "../../shared/api/api-types-extended";
 import { RequestStatus } from "../../shared/api/api-types-extended";
-import { default as CBioPortalAPI, Mutation }  from "../../shared/api/generated/CBioPortalAPI";
 import FeatureTitle from '../../shared/components/featureTitle/FeatureTitle';
 import {If, Then, Else} from 'react-if';
-import queryString from "query-string";
 import SampleManager from './sampleManager';
 import SelectCallback = ReactBootstrap.SelectCallback;
 import Spinner from 'react-spinkit';
 import { Modal } from 'react-bootstrap';
-import {
-    default as CancerHotspotsAPI, HotspotMutation
-} from "../../shared/api/generated/CancerHotspotsAPI";
-import {
-    MutSig, default as CBioPortalAPIInternal
-} from "../../shared/api/generated/CBioPortalAPIInternal";
 import PatientHeader from './patientHeader/PatientHeader';
 import {PaginationControls} from "../../shared/components/paginationControls/PaginationControls";
 import { PatientViewPageStore } from './clinicalInformation/PatientViewPageStore';
 import ClinicalInformationPatientTable from "./clinicalInformation/ClinicalInformationPatientTable";
 import ClinicalInformationSamples from "./clinicalInformation/ClinicalInformationSamplesTable";
-import {ICosmicData} from "../../shared/components/mutationTable/column/CosmicColumnFormatter";
-import {keywordToCosmic, geneToMyCancerGenome, geneAndProteinPosToHotspots} from 'shared/lib/AnnotationUtils';
-import {observable} from "mobx";
 import {observer, inject } from "mobx-react";
-import {IHotspotData, IMyCancerGenomeData, IMyCancerGenome, IOncoKbData} from "./mutation/column/AnnotationColumnFormatter";
 import {getSpans} from './clinicalInformation/lib/clinicalAttributesUtil.js';
 import CopyNumberTableWrapper from "./copyNumberAlterations/CopyNumberTableWrapper";
 import {reaction} from "mobx";
 import Timeline from "./timeline/Timeline";
 import {default as PatientViewMutationTable, MutationTableColumnType} from "./mutation/PatientViewMutationTable";
 import PathologyReport from "./pathologyReport/PathologyReport";
-import {getCbioPortalApiUrl, getHotspotsApiUrl, getHotspots3DApiUrl} from "../../shared/api/urls";
 import { MSKTabs, MSKTab } from "../../shared/components/MSKTabs/MSKTabs";
 import validateParameters from '../../shared/lib/validateParameters';
 
@@ -60,55 +44,15 @@ export interface IPatientViewPageProps {
     clinicalDataStatus?: RequestStatus;
 }
 
-export type MrnaRankData = { [sampleId:string]: { [entrezGeneId:string]: {percentile:number, zScore:number}}};
-export type MutSigData = { [entrezGeneId:string]:{ qValue:number } }
-
-interface IPatientViewState {
-    mutationData: any;
-    myCancerGenomeData?: IMyCancerGenomeData;
-    hotspotsData?: IHotspotData;
-    oncoKbData?: IOncoKbData;
-    mutSigData?: MutSigData;
-    activeTabKey: number;
-}
-
 @inject('routing')
 @observer
-export default class PatientViewPage extends React.Component<IPatientViewPageProps, IPatientViewState> {
-
-    private studyId:string;
-
-    private patientId:string;
-
-    private mutationGeneticProfileId:string;
-
-    private tsClient:CBioPortalAPI;
-
-    private hotspotsClient:CancerHotspotsAPI;
-    private hotspots3dClient:CancerHotspotsAPI;
-
-    private tsInternalClient:CBioPortalAPIInternal;
-
-    private patientIdsInCohort:string[];
+export default class PatientViewPage extends React.Component<IPatientViewPageProps, {}> {
 
     private mutationTableColumns: MutationTableColumnType[];
 
     constructor(props: IPatientViewPageProps) {
 
         super();
-
-        this.state = {
-            mutationData: undefined,
-            hotspotsData: undefined,
-            oncoKbData: undefined,
-            mutSigData: undefined,
-            activeTabKey:1
-        };
-
-        this.tsClient = new CBioPortalAPI(getCbioPortalApiUrl());
-        this.tsInternalClient = new CBioPortalAPIInternal(getCbioPortalApiUrl());
-        this.hotspotsClient = new CancerHotspotsAPI(getHotspotsApiUrl());
-        this.hotspots3dClient = new CancerHotspotsAPI(getHotspots3DApiUrl());
 
         //TODO: this should be done by a module so that it can be reused on other pages
 
@@ -141,9 +85,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             { fireImmediately:true }
         );
 
-
-        this.mutationGeneticProfileId = `${patientViewPageStore.studyId}_mutations`;
-
         this.mutationTableColumns = [MutationTableColumnType.COHORT,
             MutationTableColumnType.MRNA_EXPR,
             MutationTableColumnType.COPY_NUM,
@@ -169,131 +110,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             MutationTableColumnType.TUMORS];
     }
 
-    fetchMyCancerGenomeData():Promise<IMyCancerGenomeData> {
-        return new Promise((resolve, reject) => {
-            const data:IMyCancerGenome[] = require('../../../resources/mycancergenome.json');
-            resolve(geneToMyCancerGenome(data));
-        });
-    }
-
-    fetchHotspotsData(mutations:Mutation[]):Promise<IHotspotData> {
-        // do not retreive all available hotspots from the service,
-        // only retrieve hotspots for the current genes on the page
-        const queryGenes:string[] = _.uniq(_.map(mutations, function(mutation:Mutation) {
-            if (mutation && mutation.gene) {
-                return mutation.gene.hugoGeneSymbol;
-            }
-            else {
-                return "";
-            }
-        }));
-
-        const promiseSingle = new Promise((resolve, reject) => {
-            const promise = this.hotspotsClient.fetchSingleResidueHotspotMutationsByGenePOST({
-                hugoSymbols: queryGenes
-            });
-
-            promise.then((data) => {
-                resolve(geneAndProteinPosToHotspots(data));
-            });
-        });
-
-        const promiseClustered = new Promise((resolve, reject) => {
-            const promise = this.hotspots3dClient.fetch3dHotspotMutationsByGenePOST({
-                hugoSymbols: queryGenes
-            });
-
-            promise.then((data) => {
-                resolve(geneAndProteinPosToHotspots(data));
-            });
-        });
-
-        return new Promise((resolve, reject) => {
-            Promise.all([promiseSingle, promiseClustered]).then((values) => {
-                resolve({
-                    single: values[0],
-                    clustered: values[1]
-                });
-            });
-        });
-    }
-
-    fetchCosmicData(mutations:Mutation[]):Promise<ICosmicData> {
-        const queryKeywords:string[] = _.uniq(_.map(mutations, (mutation:Mutation) => mutation.keyword));
-
-        return new Promise((resolve, reject) => {
-            const promise = this.tsInternalClient.fetchCosmicCountsUsingPOST({
-                keywords: _.filter(queryKeywords, (query) => {return query != null;})
-            });
-
-            promise.then((data) => {
-                resolve(keywordToCosmic(data));
-            });
-        });
-    }
-
-    fetchCnaSegmentData(_sampleIds: string[]) {
-
-        const ids: SampleIdentifier[] = _sampleIds.map((id: string) => {
-            return {sampleId: id, studyId: patientViewPageStore.studyId};
-        });
-
-        return this.tsClient.fetchCopyNumberSegmentsUsingPOST({sampleIdentifiers:ids, projection: 'DETAILED'});
-
-    }
-
-    fetchMutationData(_sampleIds: string[]) {
-
-        let mutationDataPromise = this.tsClient.fetchMutationsInGeneticProfileUsingPOST({
-            geneticProfileId: this.mutationGeneticProfileId,
-            sampleIds: _sampleIds,
-            projection: "DETAILED"
-        });
-        return mutationDataPromise;
-
-    }
-
-    fetchMutSigData(): Promise<MutSig[]> {
-        return this.tsInternalClient.getSignificantlyMutatedGenesUsingGET({studyId: patientViewPageStore.studyId});
-    }
-
-
     public componentDidMount() {
-
-        const reaction1 = reaction(
-            () => {
-                return patientViewPageStore.mutationData.isComplete
-            },
-            (isComplete: Boolean) => {
-                if (isComplete) {
-                    let sampleIds: string[] = patientViewPageStore.samples.result.map((sample: Sample) => sample.sampleId);  //this.props.samples.map((item: ClinicalDataBySampleId)=>item.id);
-
-                    this.fetchMyCancerGenomeData().then((_result) => {
-                        this.setState(({myCancerGenomeData: _result} as IPatientViewState));
-                    });
-
-                    const hotspotDataPromise = this.fetchHotspotsData(patientViewPageStore.mutationData.result).then((hotspotsData: IHotspotData) =>
-                        this.setState(({hotspotsData} as IPatientViewState)));
-                    hotspotDataPromise.catch(() => {
-                    });
-
-                    this.fetchMutSigData().then((_result) => {
-                        const data = _result.reduce((map:MutSigData, next:MutSig) => {
-                            map[next.entrezGeneId] = { qValue: next.qValue };
-                            return map;
-                        }, {});
-                        this.setState(({mutSigData: data} as IPatientViewState));
-                    });
-                } else {
-
-                    this.setState({
-                        mutationData: undefined,
-                        hotspotsData: undefined,
-                    } as IPatientViewState)
-
-                }
-            }
-        );
 
         this.exposeComponentRenderersToParentScript();
 
@@ -505,9 +322,9 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         mrnaExprRankGeneticProfileId={patientViewPageStore.mrnaRankGeneticProfileId.result || undefined}
                                         discreteCNAGeneticProfileId={patientViewPageStore.geneticProfileIdDiscrete.result}
                                         data={patientViewPageStore.mergedMutationData}
-                                        mutSigData={this.state.mutSigData}
-                                        myCancerGenomeData={this.state.myCancerGenomeData}
-                                        hotspots={this.state.hotspotsData}
+                                        mutSigData={patientViewPageStore.mutSigData.result}
+                                        myCancerGenomeData={patientViewPageStore.myCancerGenomeData}
+                                        hotspots={patientViewPageStore.hotspotData.result}
                                         cosmicData={patientViewPageStore.cosmicData.result}
                                         oncoKbData={patientViewPageStore.oncoKbData.result}
                                         columns={this.mutationTableColumns}
