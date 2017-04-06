@@ -125,6 +125,7 @@ export function generateQueryVariant(hugoSymbol:string,
         consequence: convertConsequence(mutationType || ""),
         proteinStart: proteinPosStart === undefined ? -1 : proteinPosStart,
         proteinEnd: proteinPosEnd === undefined ? -1 : proteinPosEnd,
+        type:""
     };
 }
 
