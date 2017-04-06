@@ -21,7 +21,7 @@ export type Column<T> = {
     render:(data:T)=>JSX.Element;
     download?:(data:T)=>string;
     tooltip?:JSX.Element;
-    firstSortDirection?:SortDirection;
+    defaultSortDirection?:SortDirection;
 };
 
 type MSKTableProps<T> = {
@@ -227,7 +227,7 @@ class MSKTableStore<T> {
             return !this.sortAscending;
         } else {
             // otherwise, use columns initial sort direction, or default ascending
-            const sortDirection:SortDirection = clickedColumn.firstSortDirection || "asc";
+            const sortDirection:SortDirection = clickedColumn.defaultSortDirection || "asc";
             return (sortDirection === "asc");
         }
     }
