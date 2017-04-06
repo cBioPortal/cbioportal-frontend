@@ -24,7 +24,8 @@ export function emptyQueryIndicator(): IndicatorQueryResp
             id: "",
             proteinEnd: -1,
             proteinStart: -1,
-            tumorType: ""
+            tumorType: "",
+            type:""
         },
         treatments: [],
         tumorTypeSummary: "",
