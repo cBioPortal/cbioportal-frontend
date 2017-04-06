@@ -20,7 +20,7 @@ export default class OncoKbEvidenceCache extends SimpleCache<IEvidence, Query[]>
                 {body: generateEvidenceQuery(queryVariants)}
             );
 
-            const evidenceMap = processEvidence((evidenceLookup as any).data);
+            const evidenceMap = processEvidence(evidenceLookup);
 
             for (const id in evidenceMap) {
                 if (evidenceMap.hasOwnProperty(id))
