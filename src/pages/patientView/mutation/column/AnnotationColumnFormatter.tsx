@@ -1,5 +1,6 @@
 import * as React from 'react';
 import {If} from 'react-if';
+import * as _ from "lodash";
 import OncoKbEvidenceCache from "pages/patientView/OncoKbEvidenceCache";
 import OncokbPmidCache from "pages/patientView/PmidCache";
 import CancerHotspots from "shared/components/annotation/CancerHotspots";
@@ -7,8 +8,10 @@ import MyCancerGenome from "shared/components/annotation/MyCancerGenome";
 import OncoKB from "shared/components/annotation/OncoKB";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {IndicatorQueryResp, Query} from "shared/api/generated/OncoKbAPI";
+import {HotspotMutation} from "shared/api/generated/CancerHotspotsAPI";
 import {generateQueryVariantId, generateQueryVariant} from "shared/lib/OncoKbUtils";
-import * as _ from "lodash";
+import {isHotspot, is3dHotspot} from "shared/lib/AnnotationUtils";
+import HotspotSet from "shared/lib/HotspotSet";
 
 export interface IMyCancerGenome {
     hugoGeneSymbol: string;
@@ -22,9 +25,20 @@ export interface IOncoKbData {
     sampleToTumorMap: {[sampleId:string]: string};
 }
 
+export interface IHotspotIndex {
+    [gene:string]: {
+        [hotspotType:string]: IHotspotLookup
+    }
+}
+
+export interface IHotspotLookup {
+    hotspotMutations: HotspotMutation[],
+    hotspotSet: HotspotSet;
+}
+
 export interface IHotspotData {
-    single: {[s:string]: boolean};
-    clustered: {[s:string]: boolean};
+    single: IHotspotIndex,
+    clustered: IHotspotIndex
 }
 
 export interface IMyCancerGenomeData {
@@ -94,9 +108,9 @@ export default class AnnotationColumnFormatter
                 myCancerGenomeLinks: myCancerGenomeData ?
                     AnnotationColumnFormatter.getMyCancerGenomeLinks(mutation, myCancerGenomeData) : [],
                 isHotspot: hotspotsData ?
-                    CancerHotspots.isHotspot(mutation, hotspotsData.single) : false,
+                    isHotspot(mutation, hotspotsData.single) : false,
                 is3dHotspot: hotspotsData ?
-                    CancerHotspots.isHotspot(mutation, hotspotsData.clustered) : false
+                    is3dHotspot(mutation, hotspotsData.clustered) : false
             };
         }
         else {

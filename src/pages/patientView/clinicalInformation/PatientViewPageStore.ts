@@ -33,7 +33,7 @@ import {getTissueImageCheckUrl, getDarwinUrl} from "../../../shared/api/urls";
 import {getAlterationString} from "shared/lib/CopyNumberUtils";
 import OncoKbEvidenceCache from "../OncoKbEvidenceCache";
 import PmidCache from "../PmidCache";
-import {keywordToCosmic, geneAndProteinPosToHotspots, geneToMyCancerGenome} from "../../../shared/lib/AnnotationUtils";
+import {keywordToCosmic, indexHotspots, geneToMyCancerGenome} from "shared/lib/AnnotationUtils";
 import {ICosmicData} from "../../../shared/components/mutationTable/column/CosmicColumnFormatter";
 import VariantCountCache from "./VariantCountCache";
 
@@ -287,7 +287,7 @@ export class PatientViewPageStore {
         await: ()=> [
             this.mutationData
         ],
-        invoke: () => {
+        invoke: async () => {
             const queryGenes:string[] = _.uniq(_.map(this.mutationData.result, function(mutation:Mutation) {
                 if (mutation && mutation.gene) {
                     return mutation.gene.hugoGeneSymbol;
@@ -296,36 +296,24 @@ export class PatientViewPageStore {
                     return "";
                 }
             }));
-            const promiseSingle = new Promise((resolve, reject) => {
-                const promise = hotspotClient.fetchSingleResidueHotspotMutationsByGenePOST({
+
+            const [dataSingle, data3d] = await Promise.all([
+                hotspotClient.fetchSingleResidueHotspotMutationsByGenePOST({
                     hugoSymbols: queryGenes
-                });
-
-                promise.then((data) => {
-                    resolve(geneAndProteinPosToHotspots(data));
-                });
-            });
-            const promiseClustered = new Promise((resolve, reject) => {
-                const promise = hotspot3DClient.fetch3dHotspotMutationsByGenePOST({
+                }),
+                hotspot3DClient.fetch3dHotspotMutationsByGenePOST({
                     hugoSymbols: queryGenes
-                });
+                })
+            ]);
 
-                promise.then((data) => {
-                    resolve(geneAndProteinPosToHotspots(data));
-                });
-            });
-            let result: Promise<IHotspotData> = new Promise((resolve, reject) => {
-                Promise.all([promiseSingle, promiseClustered]).then((values) => {
-                    resolve({
-                        single: values[0],
-                        clustered: values[1]
-                    });
-                });
-            });
-            return result;
-
+            return {
+                single: dataSingle,
+                clustered: data3d
+            };
+        },
+        onError: () => {
+            // fail silently
         }
-
     });
 
 
@@ -613,6 +601,21 @@ export class PatientViewPageStore {
             }
         }
     }, []);
+
+    @computed get indexedHotspotData(): IHotspotData|undefined
+    {
+        const data = this.hotspotData.result;
+
+        if (data) {
+            return {
+                single: indexHotspots(data.single),
+                clustered: indexHotspots(data.clustered)
+            }
+        }
+        else {
+            return undefined;
+        }
+    }
 
     @computed get mergedMutationData(): Mutation[][] {
         let idToMutations: {[key: string]: Array<Mutation>} = {};
