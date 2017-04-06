@@ -114,7 +114,7 @@ export async function fetchOncoKbData(sampleIdToTumorType: {[sampleId: string]: 
     // that's why here we need to force data type to be any and get actual data by data.data
     const oncoKbData: IOncoKbData = {
         sampleToTumorMap: sampleIdToTumorType,
-        indicatorMap: generateIdToIndicatorMap((onkokbSearch as any).data)
+        indicatorMap: generateIdToIndicatorMap(onkokbSearch)
     };
 
     return oncoKbData;
