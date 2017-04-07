@@ -172,6 +172,7 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
                 }
             },
             tooltip: (<span>Mutation frequency in cohort</span>),
+            defaultSortDirection: "desc",
             order: 183
         };
 
@@ -337,6 +338,7 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
             render: (d:Mutation[])=>CosmicColumnFormatter.renderFunction(d, this.props.cosmicData),
             sortBy:(d:Mutation[])=>CosmicColumnFormatter.getSortValue(d, this.props.cosmicData),
             tooltip: (<span>COSMIC occurrences</span>),
+            defaultSortDirection: "desc",
             order: 184
         };
 
