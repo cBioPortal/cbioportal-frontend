@@ -27,8 +27,6 @@ import {Query} from "shared/api/generated/OncoKbAPI";
 import {labelMobxPromises, cached} from "mobxpromise";
 import MrnaExprRankCache from './MrnaExprRankCache';
 import request from 'superagent';
-import CohortVariantCountCache from "./CohortVariantCountCache";
-import {EntrezToKeywordList} from "./CohortVariantCountCache";
 import {SampleToEntrezListOrNull} from "./SampleGeneCache";
 import DiscreteCNACache from "./DiscreteCNACache";
 import {getTissueImageCheckUrl, getDarwinUrl} from "../../../shared/api/urls";
@@ -37,6 +35,7 @@ import OncoKbEvidenceCache from "../OncoKbEvidenceCache";
 import PmidCache from "../PmidCache";
 import {keywordToCosmic, geneAndProteinPosToHotspots, geneToMyCancerGenome} from "../../../shared/lib/AnnotationUtils";
 import {ICosmicData} from "../../../shared/components/mutationTable/column/CosmicColumnFormatter";
+import VariantCountCache from "./VariantCountCache";
 
 type PageMode = 'patient' | 'sample';
 
@@ -658,17 +657,15 @@ export class PatientViewPageStore {
     }
 
     @cached get mrnaExprRankCache() {
-        return new MrnaExprRankCache(this.samples.result.map((s: Sample) => s.sampleId),
-            this.mrnaRankGeneticProfileId.result);
+        return new MrnaExprRankCache(this.mrnaRankGeneticProfileId.result);
     }
 
     @cached get variantCountCache() {
-        return new CohortVariantCountCache(this.mutationGeneticProfileId);
+        return new VariantCountCache(this.mutationGeneticProfileId);
     }
 
     @cached get discreteCNACache() {
-        return new DiscreteCNACache(this.samples.result.map((s: Sample) => s.sampleId),
-            this.geneticProfileIdDiscrete.result);
+        return new DiscreteCNACache(this.geneticProfileIdDiscrete.result);
     }
 
     @cached get oncoKbEvidenceCache() {
@@ -677,29 +674,6 @@ export class PatientViewPageStore {
 
     @cached get pmidCache() {
         return new PmidCache();
-    }
-
-    @action requestAllVariantCountData() {
-        const entrezToKeywordList: EntrezToKeywordList = {};
-        for (const mutations of this.mergedMutationData) {
-            if (mutations.length > 0) {
-                const entrez = mutations[0].entrezGeneId;
-                entrezToKeywordList[entrez] = entrezToKeywordList[entrez] || [];
-                const kw = mutations[0].keyword;
-                if (kw) {
-                    entrezToKeywordList[entrez].push(kw);
-                }
-            }
-        }
-        this.variantCountCache.populate(entrezToKeywordList);
-    }
-
-    @action requestAllDiscreteCNAData() {
-        const sampleToNull: SampleToEntrezListOrNull = {};
-        for (const sample of this.samples.result) {
-            sampleToNull[sample.sampleId] = null;
-        }
-        this.discreteCNACache.populate(sampleToNull);
     }
 
     @action setActiveTabId(id: string) {

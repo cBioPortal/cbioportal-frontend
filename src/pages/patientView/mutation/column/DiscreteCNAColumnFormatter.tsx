@@ -50,7 +50,7 @@ export default class DiscreteCNAColumnFormatter {
         }
         const sampleId = data[0].sampleId;
         const entrezGeneId = data[0].entrezGeneId;
-        return discreteCNACache.get(sampleId, entrezGeneId);
+        return discreteCNACache.get({sampleId, entrezGeneId});
     }
 
     protected static getTdValue(cacheDatum:DiscreteCNACacheDataType | null):number|null {

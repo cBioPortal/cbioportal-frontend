@@ -115,12 +115,12 @@ export default class MrnaExprColumnFormatter {
         }
         const sampleId = data[0].sampleId;
         const entrezGeneId = data[0].entrezGeneId;
-        return cache.get(sampleId, entrezGeneId);
+        return cache.get({sampleId, entrezGeneId});
     }
     protected static getDataFromCNA(data: DiscreteCopyNumberData, cache:MrnaExprRankCache):MrnaExprRankCacheDataType | null {
         const sampleId = data.sampleId;
         const entrezGeneId = data.entrezGeneId;
-        return cache.get(sampleId, entrezGeneId);
+        return cache.get({sampleId, entrezGeneId});
     }
 
     private static renderFromCacheDatum(cacheDatum:MrnaExprRankCacheDataType|null) {
