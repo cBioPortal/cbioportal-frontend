@@ -1,6 +1,7 @@
 export type AccumulatingDebouncedFunction<ArgsType> = {
     (...next:ArgsType[]):void;
     isPending:()=>boolean;
+    cancel: ()=>void;
 };
 export default function accumulatingDebounce<AccumulatorType, ArgsType>(
                             fn:(acc:AccumulatorType)=>void,
@@ -43,7 +44,13 @@ export default function accumulatingDebounce<AccumulatorType, ArgsType>(
             shouldExecuteFn = false;
         }
     }, {
-        isPending: ()=>(timeout !== null)
+        isPending: ()=>(timeout !== null),
+        cancel: ()=>{
+            if (timeout !== null) {
+                window.clearTimeout(timeout);
+            }
+            reset();
+        }
     });
 
     return ret;
