@@ -1,10 +1,7 @@
 .patientPageHeader {
 
   position:relative;
-  padding:20px 20px 20px 94px;
-  border-radius:5px;
-  background: #eee;
-  margin-bottom: 20px;
+  padding-left:45px;
 
   td {
     vertical-align:top;
@@ -12,12 +9,22 @@
     padding-bottom:4px;
   }
 
+  .studyMetaBar {
+    position:absolute;
+    top:0;
+    right:0;
+    text-align:right;
+
+    .cohortNav {
+      margin-top:3px;
+    }
+
+  }
 
   .patientIcon {
     position:absolute;
-    top:17px;
-    left:20px;
-    font-size:66px;
+    left:0;
+    font-size:40px;
   }
 
   .patientSamples {
@@ -35,9 +42,7 @@
 
 }
 
-.studyMetaBar {
-  display:flex;
-  align-items:center;
-  justify-content: space-between;
-  margin-bottom:20px;
+.vafPlot {
+  position:relative;
+  top:-10px;
 }
