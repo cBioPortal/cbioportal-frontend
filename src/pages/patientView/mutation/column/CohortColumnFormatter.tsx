@@ -1,27 +1,18 @@
 import * as React from 'react';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {Mutation} from "../../../../shared/api/generated/CBioPortalAPI";
-import {
-    VariantCountOutput,
-    default as CohortVariantCountCache
-} from "../../clinicalInformation/CohortVariantCountCache";
+import VariantCountCache from "../../clinicalInformation/VariantCountCache";
 import FrequencyBar from "shared/components/cohort/FrequencyBar";
 import Icon from "shared/components/cohort/LetterIcon";
 import {MutSigData} from "../../clinicalInformation/PatientViewPageStore";
+import {VariantCount} from "../../../../shared/api/generated/CBioPortalAPIInternal";
+import {CacheData} from "../../../../shared/lib/LazyMobXCache";
 
-export interface IVariantCountData {
-    numberOfSamples?:number;
-    geneData?:{ [entrezGeneId:string]: {
-        numberOfSamplesWithMutationInGene?:number,
-        numberOfSamplesWithKeyword?:{ [keyword:string]:number }
-    }};
-}
-
-type AugVariantCountOutput = (VariantCountOutput & {hugoGeneSymbol:string});
+type AugVariantCountOutput = (CacheData<VariantCount> & {hugoGeneSymbol:string});
 
 export default class CohortColumnFormatter {
 
-    public static renderFunction(data:Mutation[], mutSigData:MutSigData | undefined, variantCountCache:CohortVariantCountCache) {
+    public static renderFunction(data:Mutation[], mutSigData:MutSigData | undefined, variantCountCache:VariantCountCache) {
         const mutSigQValue:number|null = CohortColumnFormatter.getMutSigQValue(data, mutSigData);
         const variantCountData = CohortColumnFormatter.getVariantCountData(data, variantCountCache);
         const freqViz = CohortColumnFormatter.makeCohortFrequencyViz(variantCountData);
@@ -33,23 +24,23 @@ export default class CohortColumnFormatter {
         );
     };
 
-    public static getSortValue(data:Mutation[], variantCountCache:CohortVariantCountCache):number|null {
+    public static getSortValue(data:Mutation[], variantCountCache:VariantCountCache):number|null {
         const variantCountData = CohortColumnFormatter.getVariantCountData(data, variantCountCache);
         if (variantCountData && variantCountData.data) {
-            return variantCountData.data.mutationInGene;
+            return variantCountData.data.numberOfSamplesWithMutationInGene;
         } else {
             return null;
         }
     }
 
-    private static getVariantCountData(data:Mutation[], cache:CohortVariantCountCache):AugVariantCountOutput | null {
+    private static getVariantCountData(data:Mutation[], cache:VariantCountCache):AugVariantCountOutput | null {
         if (data.length === 0) {
             return null;
         }
         const entrezGeneId = data[0].entrezGeneId;
         const keyword = data[0].keyword;
 
-        let cacheDatum = cache.get(entrezGeneId, keyword);
+        let cacheDatum = cache.get({entrezGeneId, keyword});
         if (cacheDatum) {
             return {hugoGeneSymbol:data[0].gene.hugoGeneSymbol, ...cacheDatum};
         } else {
@@ -96,10 +87,10 @@ export default class CohortColumnFormatter {
                 </span>
             );
         } else {
-            const counts = [variantCount.data.mutationInGene];
+            const counts = [variantCount.data.numberOfSamplesWithMutationInGene];
 
             if (variantCount.data.keyword) {
-                counts.push(variantCount.data.mutationInKeyword!);
+                counts.push(variantCount.data.numberOfSamplesWithKeyword!);
             }
 
             return (
@@ -141,12 +132,12 @@ export default class CohortColumnFormatter {
             return (<span>Count data is not available for this gene.</span>);
         } else {
             return (<div>
-            <span>{variantCount.data.mutationInGene} samples
-            ({CohortColumnFormatter.getBoldPercentage(variantCount.data.mutationInGene / variantCount.data.numberOfSamples)})
+            <span>{variantCount.data.numberOfSamplesWithMutationInGene} samples
+            ({CohortColumnFormatter.getBoldPercentage(variantCount.data.numberOfSamplesWithMutationInGene / variantCount.data.numberOfSamples)})
             in this study have mutated {variantCount.hugoGeneSymbol}
                 {(typeof variantCount.data.keyword !== "undefined") && (
                     <span>
-                        , out of which {variantCount.data.mutationInKeyword} ({CohortColumnFormatter.getBoldPercentage(variantCount.data.mutationInKeyword! / variantCount.data.numberOfSamples)}) have {variantCount.data.keyword} mutations
+                        , out of which {variantCount.data.numberOfSamplesWithKeyword} ({CohortColumnFormatter.getBoldPercentage(variantCount.data.numberOfSamplesWithKeyword! / variantCount.data.numberOfSamples)}) have {variantCount.data.keyword} mutations
                     </span>
                 )}
                 .
