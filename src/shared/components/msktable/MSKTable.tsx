@@ -3,13 +3,16 @@ import * as React from 'react';
 import {observable, computed, action} from "mobx";
 import {observer} from "mobx-react";
 import './styles.scss';
-import {SHOW_ALL_PAGE_SIZE as PAGINATION_SHOW_ALL, PaginationControls} from "../paginationControls/PaginationControls";
-import {ColumnVisibilityControls, IColumnVisibilityDef} from "../columnVisibilityControls/ColumnVisibilityControls";
-import {CopyDownloadControls} from "../copyDownloadControls/CopyDownloadControls";
+import {
+    SHOW_ALL_PAGE_SIZE as PAGINATION_SHOW_ALL, PaginationControls, IPaginationControlsProps
+} from "../paginationControls/PaginationControls";
+import {
+    ColumnVisibilityControls, IColumnVisibilityDef, IColumnVisibilityControlsProps
+} from "../columnVisibilityControls/ColumnVisibilityControls";
+import {CopyDownloadControls, ICopyDownloadControlsProps} from "../copyDownloadControls/CopyDownloadControls";
 import {serializeData} from "shared/lib/Serializer";
 import DefaultTooltip from "../DefaultTooltip";
 import {ButtonToolbar} from "react-bootstrap";
-import * as _ from "lodash";
 import { If } from 'react-if';
 
 type SortDirection = 'asc' | 'desc';
@@ -30,6 +33,13 @@ type MSKTableProps<T> = {
     initialSortColumn?: string;
     initialSortDirection?:SortDirection;
     initialItemsPerPage?:number;
+    showFilter?:boolean;
+    showCopyDownload?:boolean;
+    copyDownloadProps?:ICopyDownloadControlsProps;
+    showPagination?:boolean;
+    paginationProps?:IPaginationControlsProps;
+    showColumnVisibility?:boolean;
+    columnVisibilityProps?:IColumnVisibilityControlsProps;
 };
 
 function compareValues<U extends number|string>(a:U|null, b:U|null, asc:boolean):number {
@@ -334,6 +344,13 @@ export default class MSKTable<T> extends React.Component<MSKTableProps<T>, {}> {
     private store:MSKTableStore<T>;
     private handlers:{[fnName:string]:(...args:any[])=>void};
 
+    public static defaultProps = {
+        showFilter: true,
+        showCopyDownload: true,
+        showPagination: true,
+        showColumnVisibility: true
+    };
+
     /**
      * Generates column visibility definition array for ColumnVisibilityControls
      * by using the columnVisibility value of the store.
@@ -415,6 +432,7 @@ export default class MSKTable<T> extends React.Component<MSKTableProps<T>, {}> {
             previousPageDisabled={this.store.page === 0}
             style={style}
             nextPageDisabled={this.store.page === this.store.maxPage}
+            {...this.props.paginationProps}
         />
     }
 
@@ -431,28 +449,38 @@ export default class MSKTable<T> extends React.Component<MSKTableProps<T>, {}> {
         const textBetweenButtons = `${firstVisibleItemDisp}-${lastVisibleItemDisp} of ${this.store.sortedFilteredData.length}`;
         return (<div>
             <ButtonToolbar style={{marginLeft:0}}>
-                <div className={`form-group has-feedback input-group-sm`} style={{ display:'inline-block' }}>
-                    <input type="text" onInput={this.handlers.filterInput} className="form-control tableSearchInput" style={{ width:200 }}  />
-                    <span className="fa fa-search form-control-feedback" aria-hidden="true"></span>
-                </div>
-                { this.buildPaginationControls('pull-right topPagination', {marginLeft:5}, textBetweenButtons) }
-                <ColumnVisibilityControls
-                    className="pull-right"
-                    columnVisibility={this.colVisProp}
-                    onColumnToggled={this.handlers.visibilityToggle}
-                />
-                <CopyDownloadControls
-                    className="pull-right"
-                    downloadData={this.getDownloadData}
-                    downloadFilename="table.csv"
-                />
+                <If condition={this.props.showFilter === true}>
+                    <div className={`form-group has-feedback input-group-sm`} style={{ display:'inline-block' }}>
+                        <input type="text" onInput={this.handlers.filterInput} className="form-control tableSearchInput" style={{ width:200 }}  />
+                        <span className="fa fa-search form-control-feedback" aria-hidden="true"></span>
+                    </div>
+                </If>
+                <If condition={this.props.showPagination === true}>
+                    { this.buildPaginationControls('pull-right topPagination', {marginLeft:5}, textBetweenButtons) }
+                </If>
+                <If condition={this.props.showColumnVisibility === true}>
+                    <ColumnVisibilityControls
+                        className="pull-right"
+                        columnVisibility={this.colVisProp}
+                        onColumnToggled={this.handlers.visibilityToggle}
+                        {...this.props.columnVisibilityProps}
+                    />
+                </If>
+                <If condition={this.props.showCopyDownload === true}>
+                    <CopyDownloadControls
+                        className="pull-right"
+                        downloadData={this.getDownloadData}
+                        downloadFilename="table.csv"
+                        {...this.props.copyDownloadProps}
+                    />
+                </If>
             </ButtonToolbar>
             <SimpleTable
                 headers={this.store.headers}
                 rows={this.store.rows}
             />
 
-            <If condition={this.store.showingAllRows === false}>
+            <If condition={this.store.showingAllRows === false && this.props.showPagination === true}>
             <ButtonToolbar style={{marginLeft:0}} className='text-center'>
                 { this.buildPaginationControls('bottomPagination', {display:'inline-block'}, textBetweenButtons) }
             </ButtonToolbar>
