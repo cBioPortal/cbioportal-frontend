@@ -1,4 +1,5 @@
 import * as React from 'react';
+import * as ReactDOM from 'react-dom';
 import * as _ from 'lodash';
 import $ from 'jquery';
 import Tracks from './Tracks';
@@ -14,6 +15,7 @@ interface IGenomicOverviewProps {
     sampleLabels: {[s:string]:string};
     sampleColors: {[s:string]:string};
     sampleManager: SampleManager;
+    getWidth: ()=>number;
 }
 
 export type MutationFrequencies = number[];
@@ -45,8 +47,6 @@ export default class GenomicOverview extends React.Component<IGenomicOverviewPro
 
     public render() {
 
-        const width = $('.tab-content').width()-140;
-
         const labels = _.reduce(this.props.sampleManager.samples, (result: any, sample: ClinicalDataBySampleId, i: number)=>{
             result[sample.id] = i + 1;
             return result;
@@ -54,7 +54,7 @@ export default class GenomicOverview extends React.Component<IGenomicOverviewPro
 
         return (
             <div style={{ display:'flex', alignItems:'center'  }}>
-                <Tracks mutations={this.props.mutations} key={Math.random()} sampleManager={this.props.sampleManager} width={width} cnaSegments={this.props.cnaSegments} />
+                <Tracks mutations={this.props.mutations} key={Math.random()} sampleManager={this.props.sampleManager} width={this.props.getWidth()} cnaSegments={this.props.cnaSegments} />
                 <ThumbnailExpandVAFPlot
                     data={this.state.frequencies}
                     order={this.props.sampleManager.sampleIndex}
