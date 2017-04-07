@@ -20,7 +20,7 @@ import ClinicalInformationSamples from "./clinicalInformation/ClinicalInformatio
 import {observer, inject } from "mobx-react";
 import {getSpans} from './clinicalInformation/lib/clinicalAttributesUtil.js';
 import CopyNumberTableWrapper from "./copyNumberAlterations/CopyNumberTableWrapper";
-import {reaction} from "mobx";
+import {reaction, computed} from "mobx";
 import Timeline from "./timeline/Timeline";
 import {default as PatientViewMutationTable, MutationTableColumnType} from "./mutation/PatientViewMutationTable";
 import PathologyReport from "./pathologyReport/PathologyReport";
@@ -32,6 +32,14 @@ import './patient.scss';
 const patientViewPageStore = new PatientViewPageStore();
 
 (window as any).patientViewPageStore = patientViewPageStore;
+
+const TabId = {
+    SUMMARY: "summaryTab",
+    CLINICAL_DATA: "clinicalDataTab",
+    PATHOLOGY_REPORT: "pathologyReportTab",
+    HEATMAP_REPORT: "heatMapReportTab",
+    TISSUE_IMAGE: "tissueImageTab"
+};
 
 export interface IPatientViewPageProps {
     routing: any;
@@ -144,6 +152,28 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         this.props.routing.updateRoute({ caseId: id, sampleId: undefined });
 
+    }
+
+    @computed private get activeTabId():string {
+        return this.props.routing.location.query.tab;
+    }
+
+    @computed private get activeTabExistenceIsPending() {
+        let ret = false;
+        switch (this.activeTabId) {
+            case TabId.PATHOLOGY_REPORT:
+                ret = patientViewPageStore.pathologyReport.isPending;
+                break;
+            case TabId.HEATMAP_REPORT:
+                ret = patientViewPageStore.MDAndersonHeatMapAvailable.isPending;
+                break;
+            case TabId.TISSUE_IMAGE:
+                ret = patientViewPageStore.hasTissueImageIFrameUrl.isPending;
+                break;
+            default:
+                break;
+        }
+        return ret;
     }
 
     public render() {
@@ -272,11 +302,11 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 )
                 }
                 </div>
-                <If condition={patientViewPageStore.patientViewData.isComplete}>
+                <If condition={patientViewPageStore.patientViewData.isComplete && !this.activeTabExistenceIsPending}>
                 <Then>
-                <MSKTabs id="patientViewPageTabs" activeTabId={this.props.routing.location.query.tab}  onTabClick={(id:string)=>this.handleTabChange(id)} className="mainTabs">
+                <MSKTabs id="patientViewPageTabs" activeTabId={this.activeTabId}  onTabClick={(id:string)=>this.handleTabChange(id)} className="mainTabs">
 
-                        <MSKTab key={0} id="summaryTab" linkText="Summary">
+                        <MSKTab key={0} id={TabId.SUMMARY} linkText="Summary">
 
                             {
                                 (!!sampleManager && patientViewPageStore.clinicalEvents.isComplete && patientViewPageStore.clinicalEvents.result.length > 0) && (
@@ -338,7 +368,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                         </MSKTab>
 
                         {(patientViewPageStore.pageMode === 'patient') && (
-                        <MSKTab key={2} id="clinicalDataTab" linkText="Clinical Data">
+                        <MSKTab key={2} id={TabId.CLINICAL_DATA} linkText="Clinical Data">
 
                                     <div className="clearfix">
                                         <FeatureTitle title="Patient"
@@ -369,21 +399,21 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
 
                     {  (patientViewPageStore.pathologyReport.isComplete && patientViewPageStore.pathologyReport.result.length > 0 ) &&
-                    (<MSKTab key={3} id="pathologyReportTab" linkText="Pathology Report">
+                    (<MSKTab key={3} id={TabId.PATHOLOGY_REPORT} linkText="Pathology Report">
                         <PathologyReport pdfs={patientViewPageStore.pathologyReport.result} />
                     </MSKTab>)
                     }
 
 
                     {  (patientViewPageStore.MDAndersonHeatMapAvailable.isComplete && patientViewPageStore.MDAndersonHeatMapAvailable.result ) &&
-                    (<MSKTab key={4} id="heatMapReportTab" linkText="Heatmap">
+                    (<MSKTab key={4} id={TabId.HEATMAP_REPORT} linkText="Heatmap">
                         <iframe style={{width:'100%', height:700, border:'none'}}
                                 src={ `//bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?participant=${patientViewPageStore.patientId}` }></iframe>
                     </MSKTab>)
                     }
 
                     { (patientViewPageStore.hasTissueImageIFrameUrl.isComplete && patientViewPageStore.hasTissueImageIFrameUrl.result) &&
-                        (<MSKTab key={5} id="tissueImageTab" linkText="Tissue Image">
+                        (<MSKTab key={5} id={TabId.TISSUE_IMAGE} linkText="Tissue Image">
                             <iframe style={{width:'100%', height:700, border:'none'}}
                                     src={ `http://cancer.digitalslidearchive.net/index_mskcc.php?slide_name=${patientViewPageStore.patientId}` }></iframe>
                         </MSKTab>)
