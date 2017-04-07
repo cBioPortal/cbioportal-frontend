@@ -143,14 +143,16 @@ describe('MSKTable', ()=>{
         sortBy: (d:any)=>d.num,
         render:(d:any)=>(<span>{d.num}</span>),
         download:(d:any)=>d.num+'',
-        tooltip:(<span>Number of the data.</span>)
+        tooltip:(<span>Number of the data.</span>),
+        defaultSortDirection: "desc"
     },{
         name: "String",
         filter: (d:any,s:string)=>(d.str && d.str.indexOf(s) > -1),
         sortBy: (d:any)=>d.str,
         render:(d:any)=>(<span>{d.str}</span>),
         download:(d:any)=>d.str+'',
-        tooltip:(<span>String of the data</span>)
+        tooltip:(<span>String of the data</span>),
+        defaultSortDirection: "desc"
     },{
         name: "Number List",
         render:(d:any)=>(<span>BLAH</span>),
@@ -289,7 +291,10 @@ describe('MSKTable', ()=>{
             assert.equal(stringHeader.text(), "String", "we're dealing with the string header");
             assert.isFalse(stringHeader.hasClass("sort-asc") || stringHeader.hasClass("sort-des"), "string header doesnt have any sort classes to start");
             stringHeader.simulate('click');
-            assert.isTrue(stringHeader.hasClass("sort-asc") && !stringHeader.hasClass("sort-des"), "string header now starts with ascending sort");
+            assert.isTrue(stringHeader.hasClass("sort-des") && !stringHeader.hasClass("sort-asc"), "string header starts with descending sort, its defaultSortDirection");
+            assert.isFalse(nameHeader.hasClass("sort-asc") || nameHeader.hasClass("sort-des"), "name header no longer has any sort classes");
+            stringHeader.simulate('click');
+            assert.isTrue(stringHeader.hasClass("sort-asc") && !stringHeader.hasClass("sort-des"), "string header toggles to ascending sort");
             assert.isFalse(nameHeader.hasClass("sort-asc") || nameHeader.hasClass("sort-des"), "name header no longer has any sort classes");
             stringHeader.simulate('click');
             assert.isTrue(stringHeader.hasClass("sort-des") && !stringHeader.hasClass("sort-asc"), "string header toggles to descending sort");
@@ -478,6 +483,8 @@ describe('MSKTable', ()=>{
 
             let header = table.find(SimpleTable).find('th').at(1);
             assert.equal(header.text(), "Number", "we're dealing with the number header");
+            header.simulate('click');
+            assert.isTrue(header.hasClass("sort-des"), "Number column starts with descending, its defaultSortDirection");
             header.simulate('click');
             assert.isTrue(header.hasClass("sort-asc"), "we're dealing with ascending sort");
             rows = getVisibleRows(table);
