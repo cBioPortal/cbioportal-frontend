@@ -65,6 +65,9 @@ export default class CosmicMutationTable extends React.Component<ICosmicTablePro
             initialItemsPerPage,
         } = this.props;
 
+        const showPagination = data.length >
+            (this.props.initialItemsPerPage || CosmicMutationTable.defaultProps.initialItemsPerPage);
+
         return (
             <div>
                 <CosmicTable
@@ -73,6 +76,10 @@ export default class CosmicMutationTable extends React.Component<ICosmicTablePro
                     initialSortColumn={initialSortColumn}
                     initialSortDirection={initialSortDirection}
                     initialItemsPerPage={initialItemsPerPage}
+                    showCopyDownload={false}
+                    showColumnVisibility={false}
+                    showFilter={false}
+                    showPagination={showPagination}
                 />
             </div>
         );
