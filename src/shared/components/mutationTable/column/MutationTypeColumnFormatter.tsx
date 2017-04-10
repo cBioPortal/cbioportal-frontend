@@ -1,9 +1,6 @@
 import * as React from 'react';
 import DefaultTooltip from 'shared/components/DefaultTooltip';
-import {Td} from 'reactable';
-import {IColumnFormatterData} from "../../enhancedReactTable/IColumnFormatter";
 import styles from "./mutationType.module.scss";
-import {MutationTableRowData} from "../IMutationTableProps";
 import {Mutation} from "../../../api/generated/CBioPortalAPI";
 
 interface IMutationTypeFormat {
