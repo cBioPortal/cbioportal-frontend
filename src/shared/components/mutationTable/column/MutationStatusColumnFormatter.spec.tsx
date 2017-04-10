@@ -10,11 +10,7 @@ describe('MutationStatusColumnFormatter', () => {
         mutationStatus: "Germline"
     });
 
-    const data = {
-        name: "Mutation Status",
-        tableData: [[mutation]],
-        rowData: [mutation]
-    };
+    const data = [mutation];
 
     before(() => {
 
