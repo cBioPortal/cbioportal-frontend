@@ -1,8 +1,6 @@
 import MutationAssessorColumnFormatter from './MutationAssessorColumnFormatter';
 import styles from "./mutationAssessor.module.scss";
 import {initMutation} from "test/MutationMockUtils";
-import {IColumnFormatterData} from "shared/components/enhancedReactTable/IColumnFormatter";
-import {MutationTableRowData} from "../IMutationTableProps";
 import React from 'react';
 import { assert } from 'chai';
 import {shallow, mount, ReactWrapper} from 'enzyme';
