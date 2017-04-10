@@ -1,10 +1,7 @@
 import * as React from 'react';
 import DefaultTooltip from 'shared/components/DefaultTooltip';
-import {Td} from 'reactable';
-import {IColumnFormatterData} from "shared/components/enhancedReactTable/IColumnFormatter";
 import 'rc-tooltip/assets/bootstrap_white.css';
 import styles from "./mutationAssessor.module.scss";
-import {MutationTableRowData} from "../IMutationTableProps";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 
 type MA_CLASS_NAME = 'oma-high' | 'oma-medium' | 'oma-low' | 'oma-neutral' | 'oma-na';

@@ -1,5 +1,3 @@
-import {IColumnFormatterData} from "shared/components/enhancedReactTable/IColumnFormatter";
-import {MutationTableRowData} from "../IMutationTableProps";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 
 /**
@@ -7,32 +5,17 @@ import {Mutation} from "shared/api/generated/CBioPortalAPI";
  */
 export default class MutationStatusColumnFormatter
 {
-    public static getDataFromRow(rowData:MutationTableRowData|undefined)
+    public static getData(data:Mutation[])
     {
         let value;
 
-        if (rowData) {
-            const mutations:Mutation[] = rowData;
-            value = mutations[0].mutationStatus;
+        if (data.length > 0) {
+            value = data[0].mutationStatus;
         }
         else {
             value = null;
         }
 
         return value;
-    }
-
-    public static getData(data:IColumnFormatterData<MutationTableRowData>)
-    {
-        let mutationStatus;
-
-        if (data.columnData) {
-            mutationStatus = data.columnData;
-        }
-        else {
-            mutationStatus = MutationStatusColumnFormatter.getDataFromRow(data.rowData);
-        }
-
-        return mutationStatus;
     }
 }

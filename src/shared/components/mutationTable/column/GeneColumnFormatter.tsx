@@ -1,7 +1,4 @@
 import * as React from 'react';
-import {Td} from 'reactable';
-import {IColumnFormatterData} from "shared/components/enhancedReactTable/IColumnFormatter";
-import {MutationTableRowData} from "../IMutationTableProps";
 import {Mutation, Gene} from "shared/api/generated/CBioPortalAPI";
 
 /**

@@ -1,9 +1,6 @@
 import * as React from 'react';
-import {Td} from 'reactable';
 import DefaultTooltip from 'shared/components/DefaultTooltip';
 import * as _ from 'lodash';
-import {IColumnFormatterData} from "../../enhancedReactTable/IColumnFormatter";
-import {MutationTableRowData} from "../IMutationTableProps";
 import {Mutation} from "../../../api/generated/CBioPortalAPI";
 import {CosmicMutation} from "../../../api/generated/CBioPortalAPIInternal";
 import CosmicMutationTable from "../../cosmic/CosmicMutationTable";
@@ -105,7 +102,7 @@ export default class CosmicColumnFormatter
             overlay = (
                 <span className={styles["cosmic-table"]}>
                     <b>{value}</b> occurrences of <b>{cosmic[0].keyword}</b> mutations in COSMIC
-                    <CosmicMutationTable rawData={cosmic}/>
+                    <CosmicMutationTable data={cosmic}/>
                 </span>
             );
 
