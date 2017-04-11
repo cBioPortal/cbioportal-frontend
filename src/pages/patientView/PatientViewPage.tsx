@@ -327,7 +327,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         data={patientViewPageStore.mergedMutationData}
                                         mutSigData={patientViewPageStore.mutSigData.result}
                                         myCancerGenomeData={patientViewPageStore.myCancerGenomeData}
-                                        hotspots={patientViewPageStore.hotspotData.result}
+                                        hotspots={patientViewPageStore.indexedHotspotData}
                                         cosmicData={patientViewPageStore.cosmicData.result}
                                         oncoKbData={patientViewPageStore.oncoKbData.result}
                                         columns={this.mutationTableColumns}
