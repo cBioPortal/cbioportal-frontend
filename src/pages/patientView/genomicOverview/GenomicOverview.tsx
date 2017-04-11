@@ -53,7 +53,7 @@ export default class GenomicOverview extends React.Component<IGenomicOverviewPro
         }, {});
 
         return (
-            <div style={{ display:'flex', alignItems:'center'  }}>
+            <div style={{ display:'flex' }}>
                 <Tracks mutations={this.props.mutations} key={Math.random()} sampleManager={this.props.sampleManager} width={this.props.getWidth()} cnaSegments={this.props.cnaSegments} />
                 <ThumbnailExpandVAFPlot
                     data={this.state.frequencies}
@@ -61,6 +61,7 @@ export default class GenomicOverview extends React.Component<IGenomicOverviewPro
                     colors={this.props.sampleColors}
                     labels={labels}
                     overlayPlacement="right"
+                    cssClass="vafPlot"
                 />
             </div>
         );
