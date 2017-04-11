@@ -304,7 +304,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         sampleLabels={sampleManager.sampleLabels}
                                         sampleColors={sampleManager.sampleColors}
                                         sampleManager={sampleManager}
-                                        getWidth={()=>$(window).width()-140}
+                                        getContainerWidth={()=>$(window).width()}
                                     />
                                 )
                             }
