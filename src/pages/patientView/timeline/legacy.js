@@ -101,7 +101,7 @@ export function buildTimeline(params, caseIds, patientInfo, clinicalDataMap, cas
         var prefix = prefixes[i];
         if (patientInfo[prefix + "OS_STATUS"] === "DECEASED" &&
             prefix + "OS_MONTHS" in patientInfo) {
-            var days = parseInt(parseInt(patientInfo[prefix + "OS_MONTHS"]) * 30.4);
+            var days = Math.round(parseFloat(patientInfo[prefix + "OS_MONTHS"]) * 30.4);
             var timePoint = {
                 "starting_time": days,
                 "ending_time": days,
@@ -166,6 +166,7 @@ export function buildTimeline(params, caseIds, patientInfo, clinicalDataMap, cas
     window.pvTimeline =
         window.pvTimeline
             .splitByClinicalAttributes("Treatment", ["SUBTYPE", "AGENT"])
+            .splitByClinicalAttributes("Treatment", ["TREATMENT_TYPE", "AGENT"])
             .collapseAll()
             .toggleTrackCollapse("Specimen")
             .enableTrackTooltips(false)
