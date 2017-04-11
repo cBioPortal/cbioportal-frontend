@@ -113,6 +113,10 @@ function derive(clinicalData) {
                     caseTypeNormalized = 'Recurrence';
                 } else if (caseTypeLower.indexOf('progr') >= 0) {
                     caseTypeNormalized = 'Progressed';
+                } else if (caseTypeLower.indexOf('xeno') >= 0) {
+                    caseTypeNormalized = 'Xenograft';
+                } else if (caseTypeLower.indexOf('cfdna') >= 0) {
+                    caseTypeNormalized = 'cfDNA';
                 } else if (caseTypeLower.indexOf('prim') >= 0 ||
                                     caseTypeLower.indexOf('prim') >= 0) {
                     caseTypeNormalized = 'Primary';
@@ -126,7 +130,7 @@ function derive(clinicalData) {
         return caseTypeNormalized;
     }
 
-    const caseTypeNormalized = normalizedCaseType(clinicalData, ['SAMPLE_TYPE', 'TUMOR_TISSUE_SITE', 'TUMOR_TYPE']);
+    const caseTypeNormalized = normalizedCaseType(clinicalData, ['SAMPLE_CLASS', 'SAMPLE_TYPE', 'TUMOR_TISSUE_SITE', 'TUMOR_TYPE']);
     if (caseTypeNormalized !== null) {
         let loc;
 
