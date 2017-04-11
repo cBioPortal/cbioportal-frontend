@@ -34,6 +34,7 @@ import {IHotspotData} from "shared/model/CancerHotspots";
 import {IMutSigData} from "shared/model/MutSig";
 import {ClinicalInformationData} from "shared/model/ClinicalInformation";
 import VariantCountCache from "./VariantCountCache";
+import CopyNumberCountCache from "./CopyNumberCountCache";
 
 type PageMode = 'patient' | 'sample';
 
@@ -581,30 +582,6 @@ export class PatientViewPageStore {
         }
     }, {sampleToTumorMap: {}, indicatorMap: {}});
 
-    readonly copyNumberCountData = remoteData<CopyNumberCount[]>({
-        await: () => [
-            this.discreteCNAData
-        ],
-        invoke: async() => {
-            const copyNumberCountIdentifiers: CopyNumberCountIdentifier[] =
-                this.discreteCNAData.result.map((cnData: DiscreteCopyNumberData) => {
-                    return {
-                        alteration: cnData.alteration,
-                        entrezGeneId: cnData.entrezGeneId
-                    };
-                });
-
-            if (this.geneticProfileIdDiscrete.result) {
-                return await internalClient.fetchCopyNumberCountsUsingPOST({
-                    geneticProfileId: this.geneticProfileIdDiscrete.result,
-                    copyNumberCountIdentifiers
-                });
-            } else {
-                return [];
-            }
-        }
-    }, []);
-
     @computed get indexedHotspotData(): IHotspotData|undefined
     {
         const data = this.hotspotData.result;
@@ -680,6 +657,10 @@ export class PatientViewPageStore {
 
     @cached get pmidCache() {
         return new PmidCache();
+    }
+
+    @cached get copyNumberCountCache() {
+        return new CopyNumberCountCache(this.geneticProfileIdDiscrete.result);
     }
 
     @action setActiveTabId(id: string) {

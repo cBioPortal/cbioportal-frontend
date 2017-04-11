@@ -10,7 +10,7 @@ function getKey<T extends { entrezGeneId:number, keyword?:string}>(obj:T):string
     }
 }
 
-async function fetch(queries:VariantCountIdentifier[], mutationGeneticProfileId:string) {
+function fetch(queries:VariantCountIdentifier[], mutationGeneticProfileId:string):Promise<VariantCount[]> {
     if (queries.length > 0) {
         return client.fetchVariantCountsUsingPOST({
             geneticProfileId: mutationGeneticProfileId,
