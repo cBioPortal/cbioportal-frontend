@@ -35,19 +35,6 @@ export default class CancerHotspots extends React.Component<ICancerHotspotsProps
         return score;
     }
 
-    public static isHotspot(mutation:Mutation, map:{[key:string]: boolean}):boolean
-    {
-        let key:string = mutation.gene.hugoGeneSymbol + "_" + mutation.proteinPosStart;
-
-        if (mutation.proteinPosEnd &&
-            (mutation.proteinPosEnd !== mutation.proteinPosStart))
-        {
-            key = key + "_" + mutation.proteinPosEnd;
-        }
-
-        return map[key] || false;
-    }
-
     public static hotspotInfo(isHotspot:boolean, is3dHotspot:boolean)
     {
         return (
