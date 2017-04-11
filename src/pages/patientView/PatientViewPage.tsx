@@ -220,6 +220,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                         }
                     }}
                     pageNumberEditable={true}
+                    className="cohortNav"
                 />
             );
         }
@@ -242,17 +243,18 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                 <div className="topBanner">
 
-                <div className="studyMetaBar">
+                <div className="studyMetaBar hidden">
                     <div>
-                        <If condition={(cohortNav != null)}>{cohortNav}</If>
+
                     </div>
-                    <div>{ studyName }</div>
+                    <div></div>
                 </div>
 
 
                 {  (patientViewPageStore.patientViewData.isComplete) && (
                     <div className="patientPageHeader clearfix">
                         <i className="fa fa-user-circle-o patientIcon" aria-hidden="true"></i>
+                        <div className="studyMetaBar">{ studyName } <If condition={(cohortNav != null)}>{cohortNav}</If></div>
                         <table>
                             <tr>
                                 <td>Patient:</td>
