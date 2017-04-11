@@ -1,12 +1,16 @@
 $sample-color-primary: black;
 $sample-color-recurrence: orange;
 $sample-color-metastasis: red;
+$sample-color-cfdna: blue;
+$sample-color-xenograft: pink;
 
 /* shared style and JS code variables */
 :export {
     sampleColorPrimary: $sample-color-primary;
     sampleColorRecurrence: $sample-color-recurrence;
     sampleColorMetastasis: $sample-color-metastasis;
+    sampleColorCfdna: $sample-color-cfdna;
+    sampleColorXenograft: $sample-color-xenograft;
 }
 
 /* Do not display clinical attributes on default */
@@ -37,7 +41,8 @@ $sample-color-metastasis: red;
     .clinical-attribute[attr-id="ERG_FUSION_ACGH"],
     .clinical-attribute[attr-id="SERUM_PSA"],
     .clinical-attribute[attr-id="DRIVER_MUTATIONS"],
-    .clinical-attribute[attr-id="SAMPLE_CLASS"],
+    .clinical-attribute[attr-id="MOUSE_STRAIN"],
+    .clinical-attribute[attr-id="BREAST_CANCER_RECEPTOR_STATUS"],
     .clinical-attribute[attr-id="DERIVED_NORMALIZED_CASE_TYPE"],
     .clinical-attribute[attr-id="DERIVED_SAMPLE_LOCATION"] {
         display: inline;
@@ -46,7 +51,7 @@ $sample-color-metastasis: red;
     /* Show comma before clinical attributes */
     .clinical-attribute:before {
         content: ", ";
-        color: #428bca;
+        color: #000;
     }
     /* Order patient+sample clinical attributes */
     .clinical-attribute[attr-id="PATIENT_DISPLAY_NAME"],
@@ -69,7 +74,6 @@ $sample-color-metastasis: red;
     .clinical-attribute[attr-id="DERIVED_SAMPLE_LOCATION"]:before,
     .clinical-attribute[attr-id="SAMPLE_DISPLAY_NAME"]:before {
         content: "\00a0(";
-        color: #428bca;
     }
     /* attributes with a closing parenthesis */
     .clinical-attribute[attr-id="CANCER_TYPE_DETAILED"]:after,
