@@ -46,8 +46,9 @@ function clean(clinicalData) {
             switch (key) {
                 case 'OS_MONTHS':
                 case 'DFS_MONTHS':
+                case 'AGE':
                     if ($.isNumeric(value)) {
-                        value = Math.round(value);
+                        value = Math.floor(value);
                     }
                     cleanClinicalData[key] = value;
                     break;
