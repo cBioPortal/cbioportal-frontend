@@ -114,6 +114,10 @@ class SampleManager {
                color = styles.sampleColorRecurrence;
            } else if (this.clinicalDataLegacyCleanAndDerived[sample.id].DERIVED_NORMALIZED_CASE_TYPE === 'Metastasis') {
                color = styles.sampleColorMetastasis;
+           } else if (this.clinicalDataLegacyCleanAndDerived[sample.id].DERIVED_NORMALIZED_CASE_TYPE === 'cfDNA') {
+               color = styles.sampleColorCfdna;
+           } else if (this.clinicalDataLegacyCleanAndDerived[sample.id].DERIVED_NORMALIZED_CASE_TYPE === 'Xenograft') {
+               color = styles.sampleColorXenograft;
            }
 
            this.sampleColors[sample.id] = color;
