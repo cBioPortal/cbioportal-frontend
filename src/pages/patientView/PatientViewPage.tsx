@@ -371,26 +371,29 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     )}
 
 
-                    {  (patientViewPageStore.pathologyReport.isComplete && patientViewPageStore.pathologyReport.result.length > 0 ) &&
-                    (<MSKTab key={3} id="pathologyReportTab" linkText="Pathology Report">
+                    <MSKTab key={3} id="pathologyReportTab" linkText="Pathology Report"
+                            hide={(patientViewPageStore.pathologyReport.isComplete && patientViewPageStore.pathologyReport.result.length === 0)}
+                            loading={patientViewPageStore.pathologyReport.isPending}
+                    >
                         <PathologyReport pdfs={patientViewPageStore.pathologyReport.result} />
-                    </MSKTab>)
-                    }
+                    </MSKTab>
 
 
-                    {  (patientViewPageStore.MDAndersonHeatMapAvailable.isComplete && patientViewPageStore.MDAndersonHeatMapAvailable.result ) &&
-                    (<MSKTab key={4} id="heatMapReportTab" linkText="Heatmap">
+                    <MSKTab key={4} id="heatMapReportTab" linkText="Heatmap"
+                             hide={(patientViewPageStore.MDAndersonHeatMapAvailable.isComplete && !patientViewPageStore.MDAndersonHeatMapAvailable.result)}
+                            loading={patientViewPageStore.MDAndersonHeatMapAvailable.isPending}
+                    >
                         <iframe style={{width:'100%', height:700, border:'none'}}
                                 src={ `//bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?participant=${patientViewPageStore.patientId}` }></iframe>
-                    </MSKTab>)
-                    }
+                    </MSKTab>
 
-                    { (patientViewPageStore.hasTissueImageIFrameUrl.isComplete && patientViewPageStore.hasTissueImageIFrameUrl.result) &&
-                        (<MSKTab key={5} id="tissueImageTab" linkText="Tissue Image">
-                            <iframe style={{width:'100%', height:700, border:'none'}}
-                                    src={ `http://cancer.digitalslidearchive.net/index_mskcc.php?slide_name=${patientViewPageStore.patientId}` }></iframe>
-                        </MSKTab>)
-                    }
+                    <MSKTab key={5} id="tissueImageTab" linkText="Tissue Image"
+                            hide={(patientViewPageStore.hasTissueImageIFrameUrl.isComplete && !patientViewPageStore.hasTissueImageIFrameUrl.result)}
+                            loading={patientViewPageStore.hasTissueImageIFrameUrl.isPending}
+                    >
+                        <iframe style={{width:'100%', height:700, border:'none'}}
+                                src={ `http://cancer.digitalslidearchive.net/index_mskcc.php?slide_name=${patientViewPageStore.patientId}` }></iframe>
+                    </MSKTab>
 
                     </MSKTabs>
 
