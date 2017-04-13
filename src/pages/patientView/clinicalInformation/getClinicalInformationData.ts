@@ -1,4 +1,4 @@
-import * as queryString from "query-string";
+import URL from 'url';
 import * as _ from 'lodash';
 import CBioPortalAPI from "../../../shared/api/generated/CBioPortalAPI";
 import { ClinicalDataBySampleId } from "../../../shared/api/api-types-extended";
@@ -62,7 +62,7 @@ function transformClinicalInformationToStoreShape(patientId: string, studyId: st
 const tsClient = new CBioPortalAPI(getCbioPortalApiUrl());
 
 export default async function getClinicalInformationData():Promise<ClinicalInformationData> {
-    const qs = queryString.parse(location.search);
+    const qs = URL.parse(location.href, true).query;
 
     const studyId = qs['cancer_study_id'] + '';
     const patientId = qs['case_id'] + '';
