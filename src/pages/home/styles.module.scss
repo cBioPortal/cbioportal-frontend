@@ -1,13 +1,3 @@
-// Setting HTML & BODY height to 100% allows fitting the page content to the size of the browser
-// rather than using fixed heights and forcing the user to scroll.
-html.rootHtml {
-  height: 100%;
-
-  body,:global(#reactRoot),:global(#reactRoot)>div,:global(#reactRoot)>div>div,:global(#reactRoot)>div>div>div {
-    height: 100%;
-  }
-}
-
-HomePage {
-  height: 100%;
+.HomePage {
+  padding: 10px;
 }
