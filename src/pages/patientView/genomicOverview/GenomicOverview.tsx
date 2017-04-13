@@ -2,6 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as _ from 'lodash';
 import $ from 'jquery';
+import {If, Then, Else} from 'react-if';
 import Tracks from './Tracks';
 import {ThumbnailExpandVAFPlot} from '../vafPlot/ThumbnailExpandVAFPlot';
 import {Mutation} from "../../../shared/api/generated/CBioPortalAPI";
@@ -15,7 +16,7 @@ interface IGenomicOverviewProps {
     sampleLabels: {[s:string]:string};
     sampleColors: {[s:string]:string};
     sampleManager: SampleManager;
-    getWidth: ()=>number;
+    getContainerWidth: ()=>number;
 }
 
 export type MutationFrequencies = number[];
@@ -45,6 +46,7 @@ export default class GenomicOverview extends React.Component<IGenomicOverviewPro
 
     }
 
+
     public render() {
 
         const labels = _.reduce(this.props.sampleManager.samples, (result: any, sample: ClinicalDataBySampleId, i: number)=>{
@@ -54,17 +56,32 @@ export default class GenomicOverview extends React.Component<IGenomicOverviewPro
 
         return (
             <div style={{ display:'flex' }}>
-                <Tracks mutations={this.props.mutations} key={Math.random()} sampleManager={this.props.sampleManager} width={this.props.getWidth()} cnaSegments={this.props.cnaSegments} />
-                <ThumbnailExpandVAFPlot
-                    data={this.state.frequencies}
-                    order={this.props.sampleManager.sampleIndex}
-                    colors={this.props.sampleColors}
-                    labels={labels}
-                    overlayPlacement="right"
-                    cssClass="vafPlot"
+                <Tracks mutations={this.props.mutations}
+                        key={Math.random() /* Force remounting on every render */}
+                        sampleManager={this.props.sampleManager}
+                        width={this.getTracksWidth()}
+                        cnaSegments={this.props.cnaSegments}
                 />
+                <If condition={this.shouldShowVAFPlot()}>
+                    <ThumbnailExpandVAFPlot
+                        data={this.state.frequencies}
+                        order={this.props.sampleManager.sampleIndex}
+                        colors={this.props.sampleColors}
+                        labels={labels}
+                        overlayPlacement="right"
+                        cssClass="vafPlot"
+                    />
+                </If>
             </div>
         );
+    }
+
+    private shouldShowVAFPlot():boolean {
+        return this.props.mutations.length > 0;
+    }
+
+    private getTracksWidth():number {
+        return this.props.getContainerWidth() - (this.shouldShowVAFPlot() ? 140 : 40);
     }
 
     private computeMutationFrequencyBySample(mutations:Mutation[]):{[sampleId:string]:MutationFrequencies} {
