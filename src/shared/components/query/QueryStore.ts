@@ -633,7 +633,7 @@ export class QueryStore
 			!this.submitError &&
 			this.genes.isComplete &&
 			this.asyncUrlParams.isComplete
-		);
+		) || !!this.oql.error; // to make "Please click 'Submit' to see location of error." possible
 	}
 
 	@computed get submitError()
