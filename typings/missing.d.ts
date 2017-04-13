@@ -3,7 +3,6 @@ declare module '*.scss';
 declare module '*.json';
 
 // these packages are missing typings
-declare module 'rc-tooltip';
 declare module 'react-file-download';
 declare module 'react-zeroclipboard';
 declare module 'reactableMSK';
