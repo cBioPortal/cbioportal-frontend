@@ -585,7 +585,7 @@ export class QueryStore
 		try
 		{
 			return {
-				query: this.geneQuery && oql_parser.parse(this.geneQuery) || [],
+				query: this.geneQuery && oql_parser.parse(this.geneQuery.toUpperCase()) || [],
 				error: undefined
 			};
 		}
