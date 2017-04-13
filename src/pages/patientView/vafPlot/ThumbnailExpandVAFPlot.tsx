@@ -3,13 +3,14 @@ import DefaultTooltip from 'shared/components/DefaultTooltip';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {VAFPlot, IVAFPlotProps} from './VAFPlot';
 import {MutationFrequenciesBySample} from "../genomicOverview/GenomicOverview";
+import Tooltip from "rc-tooltip";
 
 export type IThumbnailExpandVAFPlotProps = {
     data: MutationFrequenciesBySample;
     order?: { [s:string]:number };
     colors?: { [s: string]:string };
     labels?: { [s:string]:string };
-    overlayPlacement?: string;
+    overlayPlacement?: Tooltip.Placement;
     cssClass?: string;
 };
 
