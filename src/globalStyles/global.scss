@@ -22,32 +22,29 @@ body {
 }
 
   /* Buttons */
-.cbioportal-frontend {
 
-  .cta { // "Call To Action"
-    background: linear-gradient(to bottom, #1f8cc5 50%, #1982b8 100%);
-    border: 0;
-    border-bottom: 1px solid rgba(0,0,0,0.2);
-    border-radius: 2px;
-    color: rgba(255, 255, 255, 1);
-    display: block;
-    text-align: center;
-    font: normal normal 500 11px/19px 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    padding: 5px 10px;
+.cta { // "Call To Action"
+  background: linear-gradient(to bottom, #1f8cc5 50%, #1982b8 100%);
+  border: 0;
+  border-bottom: 1px solid rgba(0,0,0,0.2);
+  border-radius: 2px;
+  color: rgba(255, 255, 255, 1);
+  display: block;
+  text-align: center;
+  font: normal normal 500 11px/19px 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  padding: 5px 10px;
 
-    &:hover:not(:disabled) {
-      cursor: pointer;
-      background: linear-gradient(to bottom, #1982b8 50%, #1f8cc5 100%);
-      color: #fff;
-    }
-    &:disabled {
-      cursor: default;
-      background: $lightGrey;
-      border-bottom: 0;
-      color: $darkGrey;
-    }
+  &:hover:not(:disabled) {
+    cursor: pointer;
+    background: linear-gradient(to bottom, #1982b8 50%, #1f8cc5 100%);
+    color: #fff;
   }
-  
+  &:disabled {
+    cursor: default;
+    background: $lightGrey;
+    border-bottom: 0;
+    color: $darkGrey;
+  }
 }
 
 .topBanner {
