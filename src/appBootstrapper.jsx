@@ -8,7 +8,7 @@ import { computed, extendObservable } from 'mobx';
 import makeRoutes from './routes';
 import lodash from 'lodash';
 import $ from 'jquery';
-import queryString from 'query-string'
+import URL from 'url';
 
 // make sure lodash doesn't overwrite (or set) global underscore
 lodash.noConflict();
@@ -24,7 +24,7 @@ const stores = {
 const history = syncHistoryWithStore(hashHistory, routingStore);
 
 
-const qs = queryString.parse((window).location.search);
+const qs = URL.parse(window.location.href, true).query;
 
 const newParams = {};
 if ('cancer_study_id' in qs) {
