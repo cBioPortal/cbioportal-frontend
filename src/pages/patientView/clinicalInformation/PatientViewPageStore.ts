@@ -491,7 +491,7 @@ export class PatientViewPageStore {
             let enableDarwin: boolean | null | undefined = ((window as any).enableDarwin);
 
             if (enableDarwin === true) {
-                let resp = await request.get(getDarwinUrl(this.samples.result.map((sample: Sample) => sample.sampleId).join(','), this.patientId));
+                let resp = await request.get(getDarwinUrl(this.samples.result.map((sample: Sample) => sample.sampleId), this.patientId));
                 return resp.text;
             } else {
                 return '';
