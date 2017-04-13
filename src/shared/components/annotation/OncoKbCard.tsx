@@ -37,6 +37,13 @@ export default class OncoKbCard extends React.Component<IOncoKbCardProps, IOncoK
         return ['1', '2A', '2B', '3A', '3B', '4', 'R1'];
     }
 
+    public static get LEVEL_ICON_STYLE()
+    {
+        return {
+            backgroundImage: `url(${require('./images/levels_colors_v2_09302016.png')})`
+        };
+    }
+
     public static get LEVEL_DESC(): {[level:string]: JSX.Element}
     {
         return {
@@ -104,7 +111,10 @@ export default class OncoKbCard extends React.Component<IOncoKbCardProps, IOncoK
                         trigger={['hover', 'focus']}
                         arrowContent={arrowContent}
                     >
-                        <i className={`level-icon level-${level}`}/>
+                        <i
+                            className={`level-icon level-${level}`}
+                            style={OncoKbCard.LEVEL_ICON_STYLE}
+                        />
                     </DefaultTooltip>
                 </td>
                 <td key="alterations">{mergeAlterations(variant)}</td>
@@ -130,7 +140,10 @@ export default class OncoKbCard extends React.Component<IOncoKbCardProps, IOncoK
     {
         return (
             <li key={level}>
-                <i className={`level-icon level-${level}`}/>
+                <i
+                    className={`level-icon level-${level}`}
+                    style={OncoKbCard.LEVEL_ICON_STYLE}
+                />
                 {levelDes}
             </li>
         );

@@ -46,6 +46,13 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
 {
     @observable showFeedback:boolean = false;
 
+    public static get ONCOGENIC_ICON_STYLE()
+    {
+        return {
+            backgroundImage: `url(${require('./images/oncogenic_v2_09302016.png')})`
+        };
+    }
+
     public static sortValue(indicator:IndicatorQueryResp|undefined):number[]
     {
         if (!indicator) {
@@ -82,7 +89,10 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
         {
             oncoKbContent = (
                 <span className={`${annotationStyles["annotation-item"]}`}>
-                    <i className={`${oncogenicIconStyles['oncogenic-icon-image']} ${this.oncogenicImageClassNames(this.props.indicator)}`} />
+                    <i
+                        className={`${oncogenicIconStyles['oncogenic-icon-image']} ${this.oncogenicImageClassNames(this.props.indicator)}`}
+                        style={OncoKB.ONCOGENIC_ICON_STYLE}
+                    />
                 </span>
             );
 
