@@ -33,6 +33,8 @@ type MSKTableProps<T> = {
     initialSortColumn?: string;
     initialSortDirection?:SortDirection;
     initialItemsPerPage?:number;
+    itemsLabel?:string;
+    itemsLabelPlural?:string;
     showFilter?:boolean;
     showCopyDownload?:boolean;
     copyDownloadProps?:ICopyDownloadControlsProps;
@@ -113,6 +115,8 @@ class MSKTableStore<T> {
     @observable public filterString:string;
     @observable private _page:number;
     @observable private _itemsPerPage:number;
+    @observable private _itemsLabel:string|undefined;
+    @observable private _itemsLabelPlural:string|undefined;
     @observable public sortColumn:string;
     @observable public sortAscending:boolean;
     @observable.ref public columns:Column<T>[];
@@ -278,6 +282,60 @@ class MSKTableStore<T> {
     @computed get visibleColumns():Column<T>[] {
         return this.columns.filter(column=>this.isVisible(column));
     }
+
+    @computed get colVisProp(): IColumnVisibilityDef[]
+    {
+        const colVisProp: IColumnVisibilityDef[] = [];
+
+        this.columns.forEach((column:Column<T>) => {
+            colVisProp.push({
+                id: column.name,
+                name: column.name,
+                visible: this.columnVisibility[column.name]
+            });
+        });
+
+        return colVisProp;
+    }
+
+    @computed get paginationStatusText(): string
+    {
+        let firstVisibleItemDisp;
+        let lastVisibleItemDisp;
+        let itemsLabel:string = "";
+
+        if (this.rows.length === 0) {
+            firstVisibleItemDisp = 0;
+            lastVisibleItemDisp = 0;
+        } else {
+            firstVisibleItemDisp = (
+                this.itemsPerPage === PAGINATION_SHOW_ALL ?
+                    1 : (this.page * this.itemsPerPage) + 1
+            );
+
+            lastVisibleItemDisp = (
+                this.itemsPerPage === PAGINATION_SHOW_ALL ?
+                    this.rows.length : firstVisibleItemDisp + this.rows.length - 1
+            );
+        }
+
+        if (this._itemsLabel) {
+            // use itemsLabel for plural in case no itemsLabelPlural provided
+            if (!this._itemsLabelPlural || this.sortedFilteredData.length === 1) {
+                itemsLabel = this._itemsLabel;
+            }
+            else {
+                itemsLabel = this._itemsLabelPlural;
+            }
+
+            // we need to prepend the space here instead of within the actual return value
+            // to avoid unnecessary white-space at the end of the string
+            itemsLabel = ` ${itemsLabel}`;
+        }
+
+        return `${firstVisibleItemDisp}-${lastVisibleItemDisp} of ${this.sortedFilteredData.length}${itemsLabel}`;
+    }
+
     public get rows():JSX.Element[] {
         return this.visibleData.map((datum:T)=>{
                 const tds = this.visibleColumns.map((column:Column<T>)=>{
@@ -296,6 +354,8 @@ class MSKTableStore<T> {
     @action setProps(props:MSKTableProps<T>) {
         this.columns = props.columns;
         this.data = props.data;
+        this._itemsLabel = props.itemsLabel;
+        this._itemsLabelPlural = props.itemsLabelPlural;
         this._columnVisibility = this.resolveColumnVisibility(props.columns);
     }
 
@@ -350,27 +410,6 @@ export default class MSKTable<T> extends React.Component<MSKTableProps<T>, {}> {
         showPagination: true,
         showColumnVisibility: true
     };
-
-    /**
-     * Generates column visibility definition array for ColumnVisibilityControls
-     * by using the columnVisibility value of the store.
-     *
-     * @returns {IColumnVisibilityDef[]}
-     */
-    @computed get colVisProp(): IColumnVisibilityDef[]
-    {
-        const colVisProp: IColumnVisibilityDef[] = [];
-
-        this.store.columns.forEach((column:Column<T>) => {
-            colVisProp.push({
-                id: column.name,
-                name: column.name,
-                visible: this.store.columnVisibility[column.name]
-            });
-        });
-
-        return colVisProp;
-    }
 
     public getDownloadData(): string
     {
@@ -437,31 +476,21 @@ export default class MSKTable<T> extends React.Component<MSKTableProps<T>, {}> {
     }
 
     render() {
-        let firstVisibleItemDisp;
-        let lastVisibleItemDisp;
-        if (this.store.rows.length === 0) {
-            firstVisibleItemDisp = 0;
-            lastVisibleItemDisp = 0;
-        } else {
-            firstVisibleItemDisp = (this.store.itemsPerPage === PAGINATION_SHOW_ALL ? 1 : (this.store.page*this.store.itemsPerPage) + 1);
-            lastVisibleItemDisp = (this.store.itemsPerPage === PAGINATION_SHOW_ALL ? this.store.rows.length : firstVisibleItemDisp + this.store.rows.length - 1);
-        }
-        const textBetweenButtons = `${firstVisibleItemDisp}-${lastVisibleItemDisp} of ${this.store.sortedFilteredData.length}`;
         return (<div>
-            <ButtonToolbar style={{marginLeft:0}}>
+            <ButtonToolbar style={{marginLeft:0}} className="tableMainToolbar">
                 <If condition={this.props.showFilter === true}>
-                    <div className={`form-group has-feedback input-group-sm`} style={{ display:'inline-block' }}>
+                    <div className={`pull-right form-group has-feedback input-group-sm`} style={{ display:'inline-block', marginLeft: 5}}>
                         <input type="text" onInput={this.handlers.filterInput} className="form-control tableSearchInput" style={{ width:200 }}  />
                         <span className="fa fa-search form-control-feedback" aria-hidden="true"></span>
                     </div>
                 </If>
                 <If condition={this.props.showPagination === true}>
-                    { this.buildPaginationControls('pull-right topPagination', {marginLeft:5}, textBetweenButtons) }
+                    { this.buildPaginationControls('pull-left topPagination', {}, this.store.paginationStatusText) }
                 </If>
                 <If condition={this.props.showColumnVisibility === true}>
                     <ColumnVisibilityControls
                         className="pull-right"
-                        columnVisibility={this.colVisProp}
+                        columnVisibility={this.store.colVisProp}
                         onColumnToggled={this.handlers.visibilityToggle}
                         {...this.props.columnVisibilityProps}
                     />
@@ -479,12 +508,6 @@ export default class MSKTable<T> extends React.Component<MSKTableProps<T>, {}> {
                 headers={this.store.headers}
                 rows={this.store.rows}
             />
-
-            <If condition={this.store.showingAllRows === false && this.props.showPagination === true}>
-            <ButtonToolbar style={{marginLeft:0}} className='text-center'>
-                { this.buildPaginationControls('bottomPagination', {display:'inline-block'}, textBetweenButtons) }
-            </ButtonToolbar>
-            </If>
 
         </div>);
     }
