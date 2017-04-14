@@ -324,6 +324,10 @@
     padding: 5px;
   }
   .radioRow {
+    div {
+      padding: 0 0 0 2px;
+    }
+    
     :global(.spinner) {
       float: right;
     }
@@ -385,7 +389,7 @@
     font-size: small;
   }
   div.validBubble,
-  div.invalidBubble {
+  div.invalidBubble, {
     color: #fff;
     display: flex;
     align-items: center;

@@ -1,15 +1,15 @@
 .error {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  padding: 5px;
-  border-radius: 4px;
-  border: 1px solid #cd0a0a;
-  background: #fef1ec;
-  color: #cd0a0a;
+  color: #fff;
+  display: inline-block;
+  margin: 2px 2px 2px 0;
+  padding: 5px 10px;
+  border-radius: 2px;
+  background: $redError;
 
-  .icon {
-    margin-right: 5px;
+  span.icon {
+    color: #fff;
+    line-height: 17px;
+    margin: 0 5px 0 0;
   }
 
   .message {
