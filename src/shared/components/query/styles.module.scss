@@ -14,7 +14,8 @@
   }
 
   :global(ul.nav.nav-tabs li a) {
-    border-top: 2px solid #fff;
+    background: $lightGrey;
+    border-top: 2px solid #eee;
     border-top-left-radius: 2px;
     border-top-right-radius: 2px;
     color: $darkGrey;
@@ -25,7 +26,7 @@
   }  
 
   :global(ul.nav.nav-tabs li:not(.active) a:hover) {
-    border-top: 2px solid #eee;
+    color: #333;
   }
 
   .QueryContainer {
@@ -83,7 +84,7 @@
   overflow: hidden;
   user-select: none;
   height: 305px;
-  padding: 0px;
+  padding: 10px 0 0 0;
 
   label {
     display: flex;
@@ -94,43 +95,28 @@
     cursor: pointer;
   }
 
+  h2 {
+    padding: 0 0 0 10px;
+  }
+
   .cancerStudySelectorHeader {
+    border-bottom: 1px solid $mediumGrey;
+    height: 50px !important;
     padding: 10px;
-    margin: 8px 0 0 0;
     display: flex;
     justify-content: space-between;
 
-    :global(.Select-control),
-    :global(.Select-control:hover) {
-      background: rgba(0, 0, 0, 0.1) !important;
-      border: 0px !important;
-      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px rgba(255, 255, 255, 0.1) !important;
-      border-radius: 2px !important;
-      color: rgba(255, 255, 255, 0.85) !important;
-      height: 30px !important;
-      font-weight: 300;
-
-      :global(.Select-input) {
-        height: 30px;
-        font-weight: 300;
-      }
+    :global(.Select-control) {
+      height: 28px;
     }
 
-    :global(.Select-placeholder),
-    :global(.Select-clear-zone),
-    :global(.has-value.Select--single) > :global(.Select-control .Select-value .Select-value-label),
-    :global(.has-value.is-pseudo-focused.Select--single) > :global(.Select-control .Select-value .Select-value-label) {
-      color: rgba(255, 255, 255, 0.85) !important;
-      font-weight: 300;
+    :global(.Select-input) {
+      height: 38px;
     }
 
     :global(.Select-placeholder),
     :global(.Select--single) > :global(.Select-control .Select-value) {
-      line-height: 30px !important;
-    }
-
-    :global(.Select-arrow) {
-      border-color: rgba(255, 255, 255, 0.85) transparent transparent !important;
+      line-height: 28px !important;
     }
   }
 
@@ -263,7 +249,7 @@
   }
 
   .searchTextInput {
-    min-width: 200px;
+    min-width: 220px;
     height: 28px;
 
     :global(.Select-control) {
