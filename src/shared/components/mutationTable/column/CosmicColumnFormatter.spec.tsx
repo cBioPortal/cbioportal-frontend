@@ -1,11 +1,11 @@
 import CosmicColumnFormatter from './CosmicColumnFormatter';
+import {ICosmicData} from "shared/model/Cosmic";
 import {keywordToCosmic} from 'shared/lib/AnnotationUtils';
 import {initMutation} from "test/MutationMockUtils";
 import React from 'react';
 import { assert } from 'chai';
 import {shallow, mount, ReactWrapper} from 'enzyme';
 import sinon from 'sinon';
-import {ICosmicData} from "./CosmicColumnFormatter";
 
 describe('CosmicColumnFormatter', () => {
 

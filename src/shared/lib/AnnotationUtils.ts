@@ -1,11 +1,10 @@
 import * as _ from 'lodash';
 import {CosmicMutation} from "shared/api/generated/CBioPortalAPIInternal";
-import {ICosmicData} from "shared/components/mutationTable/column/CosmicColumnFormatter";
-import {
-    IMyCancerGenome, IMyCancerGenomeData, IHotspotIndex, IHotspotLookup
-} from "pages/patientView/mutation/column/AnnotationColumnFormatter";
-import {HotspotMutation} from "../api/generated/CancerHotspotsAPI";
-import {Mutation} from "../api/generated/CBioPortalAPI";
+import {HotspotMutation} from "shared/api/generated/CancerHotspotsAPI";
+import {ICosmicData} from "shared/model/Cosmic";
+import {IMyCancerGenome, IMyCancerGenomeData} from "shared/model/MyCancerGenome";
+import {IHotspotIndex, IHotspotLookup} from "shared/model/CancerHotspots";
+import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import HotspotSet from "./HotspotSet";
 
 /**
