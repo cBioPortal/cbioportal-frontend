@@ -1,8 +1,7 @@
 import * as _ from 'lodash';
 import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
 import {
-    ClinicalData, SampleIdentifier,
-    GeneticProfile, Sample, Mutation, DiscreteCopyNumberFilter, DiscreteCopyNumberData
+    ClinicalData, GeneticProfile, Sample, Mutation, DiscreteCopyNumberFilter, DiscreteCopyNumberData
 } from "../../../shared/api/generated/CBioPortalAPI";
 import client from "../../../shared/api/cbioportalClientInstance";
 import internalClient from "../../../shared/api/cbioportalInternalClientInstance";
@@ -12,43 +11,31 @@ import {
     CopyNumberCount, CopyNumberCountIdentifier, Gistic, GisticToGene, CosmicMutation, default as CBioPortalAPIInternal,
     MutSig
 } from "shared/api/generated/CBioPortalAPIInternal";
-import {computed, observable, action, reaction, autorun} from "mobx";
+import {computed, observable, action} from "mobx";
 import oncokbClient from "../../../shared/api/oncokbClientInstance";
 import {remoteData, addErrorHandler} from "../../../shared/api/remoteData";
+import {IGisticData} from "shared/model/Gistic";
 import {
-    IOncoKbData, IEvidence, IHotspotData, IMyCancerGenome,
-    IMyCancerGenomeData
-} from "../mutation/column/AnnotationColumnFormatter";
-import {IGisticData} from "../copyNumberAlterations/column/CohortColumnFormatter";
-import {
-    generateIdToIndicatorMap, generateQueryVariant, generateEvidenceQuery, processEvidence
+    generateIdToIndicatorMap, generateQueryVariant, generateEvidenceQuery
 } from "shared/lib/OncoKbUtils";
 import {Query} from "shared/api/generated/OncoKbAPI";
 import {labelMobxPromises, cached} from "mobxpromise";
 import MrnaExprRankCache from './MrnaExprRankCache';
 import request from 'superagent';
-import {SampleToEntrezListOrNull} from "./SampleGeneCache";
 import DiscreteCNACache from "./DiscreteCNACache";
 import {getTissueImageCheckUrl, getDarwinUrl} from "../../../shared/api/urls";
 import {getAlterationString} from "shared/lib/CopyNumberUtils";
 import OncoKbEvidenceCache from "../OncoKbEvidenceCache";
 import PmidCache from "../PmidCache";
 import {keywordToCosmic, indexHotspots, geneToMyCancerGenome} from "shared/lib/AnnotationUtils";
-import {ICosmicData} from "../../../shared/components/mutationTable/column/CosmicColumnFormatter";
+import {IOncoKbData} from "shared/model/OncoKB";
+import {IMyCancerGenomeData, IMyCancerGenome} from "shared/model/MyCancerGenome";
+import {IHotspotData} from "shared/model/CancerHotspots";
+import {IMutSigData} from "shared/model/MutSig";
+import {ClinicalInformationData} from "shared/model/ClinicalInformation";
 import VariantCountCache from "./VariantCountCache";
 
 type PageMode = 'patient' | 'sample';
-
-export type ClinicalInformationData = {
-    patient?: {
-        id: string,
-        clinicalData: Array<ClinicalData>
-    },
-    samples?: Array<ClinicalDataBySampleId>,
-    nodes?: any[]//PDXNode[],
-};
-
-export type MutSigData = { [entrezGeneId:string]:{ qValue:number } }
 
 export function groupByEntityId(clinicalDataArray: Array<ClinicalData>) {
     return _.map(
@@ -115,10 +102,6 @@ export async function fetchOncoKbData(sampleIdToTumorType: {[sampleId: string]: 
     const onkokbSearch = await oncokbClient.searchPostUsingPOST(
         {body: generateEvidenceQuery(queryVariants)});
 
-    // TODO return type is not correct for the auto-generated API!
-    // generated return type is Array<IndicatorQueryResp>,
-    // but the actual return type is {meta: {} data: Array<IndicatorQueryResp>}
-    // that's why here we need to force data type to be any and get actual data by data.data
     const oncoKbData: IOncoKbData = {
         sampleToTumorMap: sampleIdToTumorType,
         indicatorMap: generateIdToIndicatorMap(onkokbSearch)
@@ -274,7 +257,7 @@ export class PatientViewPageStore {
     readonly mutSigData = remoteData({
         invoke: async () => {
             const mutSigdata = await internalClient.getSignificantlyMutatedGenesUsingGET({studyId: this.studyId});
-            const byEntrezGeneId: MutSigData = mutSigdata.reduce((map:MutSigData, next:MutSig) => {
+            const byEntrezGeneId: IMutSigData = mutSigdata.reduce((map:IMutSigData, next:MutSig) => {
                 map[next.entrezGeneId] = { qValue: next.qValue };
                 return map;
             }, {});

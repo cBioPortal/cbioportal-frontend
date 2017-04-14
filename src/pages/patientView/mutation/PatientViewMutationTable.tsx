@@ -2,8 +2,6 @@ import * as React from "react";
 import {observer} from "mobx-react";
 import {observable, computed} from "mobx";
 import SampleManager from "../sampleManager";
-import PatientHeader from "../patientHeader/PatientHeader";
-import {PatientViewPageStore, MutSigData} from "../clinicalInformation/PatientViewPageStore";
 import {default as MSKTable, Column} from "../../../shared/components/msktable/MSKTable";
 import {Mutation} from "../../../shared/api/generated/CBioPortalAPI";
 import DiscreteCNAColumnFormatter from "./column/DiscreteCNAColumnFormatter";
@@ -17,14 +15,15 @@ import {default as DefaultProteinChangeColumnFormatter} from "../../../shared/co
 import {Protocol} from "_debugger";
 import MutationTypeColumnFormatter from "../../../shared/components/mutationTable/column/MutationTypeColumnFormatter";
 import MutationAssessorColumnFormatter from "../../../shared/components/mutationTable/column/MutationAssessorColumnFormatter";
-import {
-    ICosmicData,
-    default as CosmicColumnFormatter
-} from "../../../shared/components/mutationTable/column/CosmicColumnFormatter";
+import CosmicColumnFormatter from "shared/components/mutationTable/column/CosmicColumnFormatter";
+import {ICosmicData} from "shared/model/Cosmic";
 import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
 import TumorColumnFormatter from "./column/TumorColumnFormatter";
-import SampleColumnFormatter from "../../../shared/components/mutationTable/column/SampleColumnFormatter";
-import {default as AnnotationColumnFormatter, IMyCancerGenomeData, IHotspotData, IOncoKbData} from "./column/AnnotationColumnFormatter";
+import AnnotationColumnFormatter from "./column/AnnotationColumnFormatter";
+import {IMyCancerGenomeData} from "shared/model/MyCancerGenome";
+import {IHotspotData} from "shared/model/CancerHotspots";
+import {IOncoKbData} from "shared/model/OncoKB";
+import {IMutSigData} from "shared/model/MutSig";
 import DiscreteCNACache from "../clinicalInformation/DiscreteCNACache";
 import MrnaExprRankCache from "../clinicalInformation/MrnaExprRankCache";
 import * as _ from "lodash";
@@ -40,7 +39,7 @@ export type PatientViewMutationTableProps = {
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
     pmidCache?:PmidCache
     variantCountCache?:VariantCountCache;
-    mutSigData?:MutSigData;
+    mutSigData?:IMutSigData;
     myCancerGenomeData?: IMyCancerGenomeData;
     hotspots?: IHotspotData;
     cosmicData?:ICosmicData;
