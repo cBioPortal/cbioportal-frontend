@@ -88,8 +88,8 @@ th.reactable-header-sort-asc:after {
     }
 
     hr {
-      margin-top:10px;
-      margin-bottom:15px;
+      margin-top:5px;
+      margin-bottom:5px;
     }
 
     > .msk-tab {
@@ -122,9 +122,10 @@ th.reactable-header-sort-asc:after {
 }
 
 .table tbody tr td {
-  padding:6px 10px !important;
+  padding:3px 10px !important;
   border-top:none;
 }
 
-
-
+.table {
+  margin-bottom: 5px;
+}

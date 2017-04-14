@@ -284,16 +284,12 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 (!!sampleManager && patientViewPageStore.clinicalEvents.isComplete && patientViewPageStore.clinicalEvents.result.length > 0) && (
 
                                     <div>
-                                        <FeatureTitle title="Clinical Timeline" isLoading={false} />
-
                                         <Timeline store={patientViewPageStore} getWidth={ ()=>$(window).width()-40 } sampleManager={ sampleManager } />
                                         <hr />
                                     </div>
                                 )
 
                             }
-
-                            <FeatureTitle title="Genomic Overview" isLoading={ (patientViewPageStore.mutationData.isPending || patientViewPageStore.cnaSegments.isPending) } />
 
                             {
                                 (patientViewPageStore.mutationData.isComplete && patientViewPageStore.cnaSegments.isComplete && sampleManager) && (
@@ -311,7 +307,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                             <hr />
 
-                            <FeatureTitle title="Mutations" isLoading={ patientViewPageStore.mutationData.isPending }/>
                             {
                                 (patientViewPageStore.mutationData.isComplete && !!sampleManager) && (
                                     <PatientViewMutationTable
