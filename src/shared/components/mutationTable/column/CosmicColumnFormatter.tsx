@@ -1,14 +1,11 @@
 import * as React from 'react';
 import DefaultTooltip from 'shared/components/DefaultTooltip';
 import * as _ from 'lodash';
-import {Mutation} from "../../../api/generated/CBioPortalAPI";
-import {CosmicMutation} from "../../../api/generated/CBioPortalAPIInternal";
-import CosmicMutationTable from "../../cosmic/CosmicMutationTable";
+import {Mutation} from "shared/api/generated/CBioPortalAPI";
+import {CosmicMutation} from "shared/api/generated/CBioPortalAPIInternal";
+import CosmicMutationTable from "shared/components/cosmic/CosmicMutationTable";
 import styles from "./cosmic.module.scss";
-
-export interface ICosmicData {
-    [keyword:string]: CosmicMutation[];
-}
+import {ICosmicData} from "shared/model/Cosmic";
 
 export function placeArrow(tooltipEl: any) {
     const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');

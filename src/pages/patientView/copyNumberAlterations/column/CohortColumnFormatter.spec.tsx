@@ -1,4 +1,5 @@
-import {default as CohortColumnFormatter, IGisticData} from './CohortColumnFormatter';
+import CohortColumnFormatter from './CohortColumnFormatter';
+import {IGisticData} from "shared/model/Gistic";
 import {DiscreteCopyNumberData} from "shared/api/generated/CBioPortalAPI";
 import {CopyNumberCount} from "shared/api/generated/CBioPortalAPIInternal";
 import React from 'react';
