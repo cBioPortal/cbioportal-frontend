@@ -4,7 +4,7 @@ import {Mutation} from "../../../../shared/api/generated/CBioPortalAPI";
 import VariantCountCache from "../../clinicalInformation/VariantCountCache";
 import FrequencyBar from "shared/components/cohort/FrequencyBar";
 import Icon from "shared/components/cohort/LetterIcon";
-import {MutSigData} from "../../clinicalInformation/PatientViewPageStore";
+import {IMutSigData as MutSigData} from "shared/model/MutSig";
 import {VariantCount} from "../../../../shared/api/generated/CBioPortalAPIInternal";
 import {CacheData} from "../../../../shared/lib/LazyMobXCache";
 

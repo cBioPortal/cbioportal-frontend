@@ -5,7 +5,7 @@ import OncoKbEvidenceCache from "pages/patientView/OncoKbEvidenceCache";
 import OncokbPmidCache from "pages/patientView/PmidCache";
 import {ICacheData, ICache} from "shared/lib/SimpleCache";
 import {IndicatorQueryResp, Query} from "shared/api/generated/OncoKbAPI";
-import {IEvidence} from "pages/patientView/mutation/column/AnnotationColumnFormatter";
+import {IEvidence} from "shared/model/OncoKB";
 import {
     generateTreatments, generateOncogenicCitations, generateMutationEffectCitations, extractPmids
 } from "shared/lib/OncoKbUtils";
