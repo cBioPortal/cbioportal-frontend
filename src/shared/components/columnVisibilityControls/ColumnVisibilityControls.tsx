@@ -23,7 +23,7 @@ export class ColumnVisibilityControls extends React.Component<IColumnVisibilityC
 {
     public static defaultProps:IColumnVisibilityControlsProps = {
         className: "",
-        buttonText: "Show/Hide Columns"
+        buttonText: "Columns"
     };
 
     constructor()
