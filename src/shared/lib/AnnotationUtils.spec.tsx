@@ -1,4 +1,4 @@
-import {IHotspotIndex} from "pages/patientView/mutation/column/AnnotationColumnFormatter";
+import {IHotspotIndex} from "shared/model/CancerHotspots";
 import {isHotspot, indexHotspots, is3dHotspot} from './AnnotationUtils';
 import {initMutation} from "test/MutationMockUtils";
 import React from 'react';

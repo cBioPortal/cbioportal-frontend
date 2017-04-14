@@ -3,16 +3,7 @@ import {DiscreteCopyNumberData} from "shared/api/generated/CBioPortalAPI";
 import {CopyNumberCount} from "shared/api/generated/CBioPortalAPIInternal";
 import FrequencyBar from "shared/components/cohort/FrequencyBar";
 import Icon from "shared/components/cohort/LetterIcon";
-
-export interface IGisticSummary {
-    amp: boolean;
-    qValue:number;
-    peakGeneCount:number;
-}
-
-export interface IGisticData {
-    [entrezGeneId:string]: IGisticSummary[];
-}
+import {IGisticData, IGisticSummary} from "shared/model/Gistic";
 
 export default class CohortColumnFormatter
 {
