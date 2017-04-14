@@ -6,44 +6,13 @@ import OncokbPmidCache from "pages/patientView/PmidCache";
 import CancerHotspots from "shared/components/annotation/CancerHotspots";
 import MyCancerGenome from "shared/components/annotation/MyCancerGenome";
 import OncoKB from "shared/components/annotation/OncoKB";
+import {IOncoKbData} from "shared/model/OncoKB";
+import {IMyCancerGenomeData, IMyCancerGenome} from "shared/model/MyCancerGenome";
+import {IHotspotData} from "shared/model/CancerHotspots";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {IndicatorQueryResp, Query} from "shared/api/generated/OncoKbAPI";
-import {HotspotMutation} from "shared/api/generated/CancerHotspotsAPI";
 import {generateQueryVariantId, generateQueryVariant} from "shared/lib/OncoKbUtils";
 import {isHotspot, is3dHotspot} from "shared/lib/AnnotationUtils";
-import HotspotSet from "shared/lib/HotspotSet";
-
-export interface IMyCancerGenome {
-    hugoGeneSymbol: string;
-    alteration: string;
-    cancerType: string;
-    linkHTML: string;
-}
-
-export interface IOncoKbData {
-    indicatorMap: {[id:string]: IndicatorQueryResp};
-    sampleToTumorMap: {[sampleId:string]: string};
-}
-
-export interface IHotspotIndex {
-    [gene:string]: {
-        [hotspotType:string]: IHotspotLookup
-    }
-}
-
-export interface IHotspotLookup {
-    hotspotMutations: HotspotMutation[],
-    hotspotSet: HotspotSet;
-}
-
-export interface IHotspotData {
-    single: IHotspotIndex,
-    clustered: IHotspotIndex
-}
-
-export interface IMyCancerGenomeData {
-    [hugoSymbol:string]: IMyCancerGenome[];
-}
 
 export interface IAnnotationColumnProps {
     enableOncoKb: boolean;
@@ -54,30 +23,6 @@ export interface IAnnotationColumnProps {
     oncoKbData?: IOncoKbData;
     oncoKbEvidenceCache?: OncoKbEvidenceCache;
     pmidCache?: OncokbPmidCache;
-}
-
-export interface IEvidence {
-    id: string;
-    gene: any;
-    alteration: any[];
-    prevalence: any[];
-    progImp: any[];
-    treatments: {
-        sensitivity: any[];
-        resistance: any[];
-    }; //separated by level type
-    trials: any[];
-    oncogenic: string;
-    oncogenicRefs: string[];
-    mutationEffect: any;
-    summary: string;
-    drugs: {
-        sensitivity: {
-            current: any[];
-            inOtherTumor: any[];
-        },
-        resistance: any[];
-    };
 }
 
 export interface IAnnotation {
