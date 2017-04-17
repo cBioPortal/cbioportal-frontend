@@ -1,12 +1,11 @@
 import * as React from 'react';
 import 'rc-tooltip/assets/bootstrap_white.css';
-import {Mutation} from "../../../../shared/api/generated/CBioPortalAPI";
 import SampleManager from "../../sampleManager";
 
 
 export default class TumorColumnFormatter {
 
-    public static renderFunction(data:Mutation[], sampleManager:SampleManager|null) {
+    public static renderFunction<T extends {sampleId:string}>(data:T[], sampleManager:SampleManager|null) {
 
         if (!sampleManager) {
             return (<span></span>);
@@ -31,7 +30,7 @@ export default class TumorColumnFormatter {
         );
     };
 
-    public static getSortValue(d:Mutation[], sampleManager:SampleManager|null) {
+    public static getSortValue<T extends {sampleId:string}>(d:T[], sampleManager:SampleManager|null) {
         if (!sampleManager) {
             return [];
         } else {
@@ -47,8 +46,8 @@ export default class TumorColumnFormatter {
         }
     }
 
-    private static getPresentSamples(data:Mutation[]) {
-        return data.reduce((map:{[s:string]:boolean}, next:Mutation)=>{
+    private static getPresentSamples<T extends {sampleId:string}>(data:T[]) {
+        return data.reduce((map:{[s:string]:boolean}, next:T)=>{
             map[next.sampleId] = true;
             return map;
         }, {});

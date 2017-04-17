@@ -20,7 +20,7 @@ import ClinicalInformationSamples from "./clinicalInformation/ClinicalInformatio
 import {observer, inject } from "mobx-react";
 import {getSpans} from './clinicalInformation/lib/clinicalAttributesUtil.js';
 import CopyNumberTableWrapper from "./copyNumberAlterations/CopyNumberTableWrapper";
-import {reaction} from "mobx";
+import {reaction, computed} from "mobx";
 import Timeline from "./timeline/Timeline";
 import {default as PatientViewMutationTable, MutationTableColumnType} from "./mutation/PatientViewMutationTable";
 import PathologyReport from "./pathologyReport/PathologyReport";
@@ -144,6 +144,20 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         this.props.routing.updateRoute({ caseId: id, sampleId: undefined });
 
+    }
+
+    @computed get cnaTableStatus() {
+        if (patientViewPageStore.geneticProfileIdDiscrete.isComplete) {
+            if (patientViewPageStore.geneticProfileIdDiscrete.result === undefined) {
+                return "unavailable";
+            } else if (patientViewPageStore.discreteCNAData.isComplete) {
+                return "available";
+            } else {
+                return "loading";
+            }
+        } else {
+            return "loading";
+        }
     }
 
     public render() {
@@ -332,7 +346,18 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                             <hr />
 
-                            <CopyNumberTableWrapper store={patientViewPageStore} />
+                            <CopyNumberTableWrapper
+                                sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
+                                sampleManager={sampleManager}
+                                cnaOncoKbData={patientViewPageStore.cnaOncoKbData.result}
+                                oncoKbEvidenceCache={patientViewPageStore.oncoKbEvidenceCache}
+                                pmidCache={patientViewPageStore.pmidCache}
+                                data={patientViewPageStore.mergedDiscreteCNAData}
+                                copyNumberCountData={patientViewPageStore.copyNumberCountData.result}
+                                mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}
+                                gisticData={patientViewPageStore.gisticData.result}
+                                status={this.cnaTableStatus}
+                            />
                         </MSKTab>
 
                         {(patientViewPageStore.pageMode === 'patient') && (
