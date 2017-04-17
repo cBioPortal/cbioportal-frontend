@@ -159,13 +159,19 @@ export function is3dHotspot(mutation:Mutation, index:IHotspotIndex):boolean
 {
     let isHotspot = false;
 
-    const geneSymbol = mutation.gene && mutation.gene.hugoGeneSymbol;
-    const geneIndex = index[geneSymbol];
+    const mutationType = mutation.mutationType && mutation.mutationType.toLowerCase();
 
-    if (geneIndex) {
-        _.values(geneIndex).forEach((lookup: IHotspotLookup) => {
-            isHotspot = checkHotspot(mutation, lookup.hotspotSet);
-        });
+    if (mutationType &&
+        mutationType.indexOf("missense") > -1)
+    {
+        const geneSymbol = mutation.gene && mutation.gene.hugoGeneSymbol;
+        const geneIndex = index[geneSymbol];
+
+        if (geneIndex) {
+            _.values(geneIndex).forEach((lookup: IHotspotLookup) => {
+                isHotspot = checkHotspot(mutation, lookup.hotspotSet);
+            });
+        }
     }
 
     return isHotspot;
