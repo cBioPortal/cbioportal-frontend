@@ -44,6 +44,16 @@ describe('AnnotationUtils', () => {
         proteinPosStart: 101,
         proteinPosEnd: 101,
         proteinChange: "R101N",
+        mutationType: "missense"
+    });
+
+    const notHotspotMutation = initMutation({
+        gene: {
+            hugoGeneSymbol: "SMURF1"
+        },
+        proteinPosStart: 101,
+        proteinPosEnd: 101,
+        proteinChange: "R101F",
         mutationType: "non_sense"
     });
 
@@ -97,8 +107,14 @@ describe('AnnotationUtils', () => {
         assert.isTrue(isHotspot(hotspotMutation3, hotspotIndex),
             "PIK3CA R38H should be a hotspot mutation.");
 
+        assert.isFalse(isHotspot(notHotspotMutation, hotspotIndex),
+            "SMURF1 R101F should not be a hotspot mutation.");
+
         assert.isFalse(isHotspot(hotspot3dMutation, hotspotIndex),
             "SMURF1 R101N should not be a hotspot mutation.");
+
+        assert.isFalse(isHotspot(notHotspotMutation, hotspotIndex),
+            "SMURF1 R101F should not be a 3d hotspot mutation.");
 
         assert.isTrue(is3dHotspot(hotspot3dMutation, hotspot3dIndex),
             "SMURF1 R101N should be a 3d hotspot mutation.");
