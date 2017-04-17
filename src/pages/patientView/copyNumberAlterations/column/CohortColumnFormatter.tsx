@@ -7,7 +7,7 @@ import {IGisticData, IGisticSummary} from "shared/model/Gistic";
 
 export default class CohortColumnFormatter
 {
-    public static renderFunction(data:DiscreteCopyNumberData,
+    public static renderFunction(data:DiscreteCopyNumberData[],
                                  copyNumberCountData:CopyNumberCount[],
                                  gisticData:IGisticData)
     {
@@ -37,11 +37,11 @@ export default class CohortColumnFormatter
         );
     }
 
-    public static makeCohortFrequencyViz(data:DiscreteCopyNumberData, copyNumberCount?:CopyNumberCount) {
+    public static makeCohortFrequencyViz(data:DiscreteCopyNumberData[], copyNumberCount?:CopyNumberCount) {
 
         if (copyNumberCount !== undefined) {
             const counts = [copyNumberCount.numberOfSamplesWithAlterationInGene];
-            const colors = data.alteration > 0 ? ["red"] : ["blue"];
+            const colors = data[0].alteration > 0 ? ["red"] : ["blue"];
 
             return (
                 <FrequencyBar
@@ -57,13 +57,13 @@ export default class CohortColumnFormatter
         }
     }
 
-    public static tooltipContent(data:DiscreteCopyNumberData, copyNumberCount:CopyNumberCount)
+    public static tooltipContent(data:DiscreteCopyNumberData[], copyNumberCount:CopyNumberCount)
     {
         const count = copyNumberCount.numberOfSamplesWithAlterationInGene;
         const percent = 100 * (copyNumberCount.numberOfSamplesWithAlterationInGene / copyNumberCount.numberOfSamples);
         const boldPercentage = <b>{`${percent.toFixed(1)}%`}</b>;
-        const gene = data.gene.hugoGeneSymbol;
-        const cna = data.alteration === -2 ? "deleted" : "amplified";
+        const gene = data[0].gene.hugoGeneSymbol;
+        const cna = data[0].alteration === -2 ? "deleted" : "amplified";
         const samples = count === 1 ? "sample" : "samples";
         const have = count === 1 ? "has" : "have";
 
@@ -72,7 +72,7 @@ export default class CohortColumnFormatter
         );
     }
 
-    public static getSortValue(data:DiscreteCopyNumberData, copyNumberCountData:CopyNumberCount[]):number|null {
+    public static getSortValue(data:DiscreteCopyNumberData[], copyNumberCountData:CopyNumberCount[]):number|null {
         const copyNumberCount = CohortColumnFormatter.getCopyNumberCount(data, copyNumberCountData);
 
         if (copyNumberCount) {
@@ -82,29 +82,32 @@ export default class CohortColumnFormatter
         }
     }
 
-    public static getCopyNumberCount(data:DiscreteCopyNumberData, copyNumberCountData:CopyNumberCount[])
+    public static getCopyNumberCount(data:DiscreteCopyNumberData[], copyNumberCountData:CopyNumberCount[])
     {
+        const targetEntrez = data[0].entrezGeneId;
+        const targetAlteration = data[0].alteration;
         return copyNumberCountData.find((copyNumberCount: CopyNumberCount) => {
             return (
-                copyNumberCount.entrezGeneId === data.entrezGeneId &&
-                copyNumberCount.alteration === data.alteration
+                copyNumberCount.entrezGeneId === targetEntrez &&
+                copyNumberCount.alteration === targetAlteration
             );
         });
     }
 
-    public static getGisticValue(data:DiscreteCopyNumberData, gisticData:IGisticData): IGisticSummary|null
+    public static getGisticValue(data:DiscreteCopyNumberData[], gisticData:IGisticData): IGisticSummary|null
     {
-        const gistic = gisticData[data.entrezGeneId];
+        const gistic = gisticData[data[0].entrezGeneId];
         let summary:IGisticSummary|undefined;
 
         if (gistic)
         {
             // here we are assuming that we have at most 2 values in the GisticSummary array:
             // one for amp === true, and one for amp === false
+            const targetAmp = (data[0].alteration === 2);
             summary = gistic.find((gs:IGisticSummary) => {
                 // alteration === 2 => amplified
                 // otherwise => not amplified (deleted)
-                return gs.amp === (data.alteration === 2);
+                return gs.amp === targetAmp;
             });
         }
 

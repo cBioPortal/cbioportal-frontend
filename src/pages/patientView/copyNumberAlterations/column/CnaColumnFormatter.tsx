@@ -8,14 +8,14 @@ export enum AlterationTypes {
 
 export default class CnaColumnFormatter
 {
-    public static displayText(d:DiscreteCopyNumberData) {
-        return AlterationTypes[d.alteration];
+    public static displayText(d:DiscreteCopyNumberData[]) {
+        return AlterationTypes[d[0].alteration];
     }
 
-    public static renderFunction(d:DiscreteCopyNumberData)
+    public static renderFunction(d:DiscreteCopyNumberData[])
     {
         let color = null;
-        let value = d.alteration;
+        let value = d[0].alteration;
         switch(value) {
             case -2:
                 color = '#0000FF';
@@ -31,14 +31,14 @@ export default class CnaColumnFormatter
         }
     }
 
-    public static download(d:DiscreteCopyNumberData)
+    public static download(d:DiscreteCopyNumberData[])
     {
-        return AlterationTypes[d.alteration];
+        return AlterationTypes[d[0].alteration];
     }
 
-    public static sortValue(d:DiscreteCopyNumberData)
+    public static sortValue(d:DiscreteCopyNumberData[])
     {
-        return d.alteration;
+        return d[0].alteration;
     }
 }
 
