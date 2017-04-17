@@ -330,9 +330,15 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 )
                             }
 
+                            {
+                                (patientViewPageStore.mutationData.isComplete && !!sampleManager) && (
+                                    <CopyNumberTableWrapper sampleManager={sampleManager} store={patientViewPageStore} />
+                                )
+                            }
+
                             <hr />
 
-                            <CopyNumberTableWrapper store={patientViewPageStore} />
+
                         </MSKTab>
 
                         {(patientViewPageStore.pageMode === 'patient') && (
