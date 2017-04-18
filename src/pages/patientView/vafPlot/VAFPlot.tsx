@@ -2,8 +2,12 @@ import * as React from 'react';
 import $ from 'jquery';
 import {AlleleFreqPlotMulti} from './legacyVAFCode.js';
 
+export type MutationFrequencies = number[];
+
+export type MutationFrequenciesBySample = { [sampleId:string]: MutationFrequencies  }
+
 export type IVAFPlotProps = {
-    data?: { [s: string]:number[] };
+    data?: MutationFrequenciesBySample;
     order?: { [s:string]:number };
     colors?: { [s: string]:string };
     labels?: { [s:string]:string };

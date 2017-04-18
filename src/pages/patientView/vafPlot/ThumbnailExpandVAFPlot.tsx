@@ -1,8 +1,7 @@
 import * as React from 'react';
 import DefaultTooltip from 'shared/components/DefaultTooltip';
 import 'rc-tooltip/assets/bootstrap_white.css';
-import {VAFPlot, IVAFPlotProps} from './VAFPlot';
-import {MutationFrequenciesBySample} from "../genomicOverview/GenomicOverview";
+import {VAFPlot, IVAFPlotProps, MutationFrequenciesBySample} from './VAFPlot';
 import Tooltip from "rc-tooltip";
 
 export type IThumbnailExpandVAFPlotProps = {
