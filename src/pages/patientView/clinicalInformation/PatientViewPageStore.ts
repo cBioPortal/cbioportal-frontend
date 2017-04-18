@@ -408,6 +408,19 @@ export class PatientViewPageStore {
 
     }, []);
 
+    @computed get mergedDiscreteCNAData():DiscreteCopyNumberData[][] {
+        let idToCNAs: {[key: string]: Array<DiscreteCopyNumberData>} = {};
+        let cnaId: string;
+
+        for (const d of this.discreteCNAData.result) {
+            cnaId = `${d.entrezGeneId}_${d.alteration}`;
+            idToCNAs[cnaId] = idToCNAs[cnaId] || [];
+            idToCNAs[cnaId].push(d);
+        }
+
+        return Object.keys(idToCNAs).map(id => idToCNAs[id]);
+    }
+
     readonly gisticData = remoteData<IGisticData>({
         invoke: async() => {
             if (this.studyId) {

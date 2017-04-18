@@ -14,7 +14,7 @@ import {getAlterationString} from "shared/lib/CopyNumberUtils";
  */
 export default class AnnotationColumnFormatter
 {
-    public static getData(copyNumberData:DiscreteCopyNumberData|undefined,
+    public static getData(copyNumberData:DiscreteCopyNumberData[]|undefined,
                           oncoKbData?:IOncoKbData)
     {
         let value: IAnnotation;
@@ -39,30 +39,30 @@ export default class AnnotationColumnFormatter
         return value;
     }
 
-    public static getIndicatorData(copyNumberData:DiscreteCopyNumberData, oncoKbData:IOncoKbData):IndicatorQueryResp
+    public static getIndicatorData(copyNumberData:DiscreteCopyNumberData[], oncoKbData:IOncoKbData):IndicatorQueryResp
     {
-        const id = generateQueryVariantId(copyNumberData.gene.hugoGeneSymbol,
-            oncoKbData.sampleToTumorMap[copyNumberData.sampleId],
-            getAlterationString(copyNumberData.alteration));
+        const id = generateQueryVariantId(copyNumberData[0].gene.hugoGeneSymbol,
+            oncoKbData.sampleToTumorMap[copyNumberData[0].sampleId],
+            getAlterationString(copyNumberData[0].alteration));
 
         return oncoKbData.indicatorMap[id];
     }
 
-    public static getEvidenceQuery(copyNumberData:DiscreteCopyNumberData, oncoKbData:IOncoKbData): Query
+    public static getEvidenceQuery(copyNumberData:DiscreteCopyNumberData[], oncoKbData:IOncoKbData): Query
     {
-        return generateQueryVariant(copyNumberData.gene.hugoGeneSymbol,
-            oncoKbData.sampleToTumorMap[copyNumberData.sampleId],
-            getAlterationString(copyNumberData.alteration));
+        return generateQueryVariant(copyNumberData[0].gene.hugoGeneSymbol,
+            oncoKbData.sampleToTumorMap[copyNumberData[0].sampleId],
+            getAlterationString(copyNumberData[0].alteration));
     }
 
-    public static sortValue(data:DiscreteCopyNumberData,
+    public static sortValue(data:DiscreteCopyNumberData[],
                             oncoKbData?:IOncoKbData):number[] {
         const annotationData:IAnnotation = AnnotationColumnFormatter.getData(data, oncoKbData);
 
         return OncoKB.sortValue(annotationData.oncoKbIndicator);
     }
 
-    public static renderFunction(data:DiscreteCopyNumberData, columnProps:IAnnotationColumnProps)
+    public static renderFunction(data:DiscreteCopyNumberData[], columnProps:IAnnotationColumnProps)
     {
         const annotation:IAnnotation = AnnotationColumnFormatter.getData(data, columnProps.oncoKbData);
 

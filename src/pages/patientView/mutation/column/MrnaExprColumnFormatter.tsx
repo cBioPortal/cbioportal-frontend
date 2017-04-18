@@ -117,9 +117,9 @@ export default class MrnaExprColumnFormatter {
         const entrezGeneId = data[0].entrezGeneId;
         return cache.get({sampleId, entrezGeneId});
     }
-    protected static getDataFromCNA(data: DiscreteCopyNumberData, cache:MrnaExprRankCache):MrnaExprRankCacheDataType | null {
-        const sampleId = data.sampleId;
-        const entrezGeneId = data.entrezGeneId;
+    protected static getDataFromCNA(data: DiscreteCopyNumberData[], cache:MrnaExprRankCache):MrnaExprRankCacheDataType | null {
+        const sampleId = data[0].sampleId;
+        const entrezGeneId = data[0].entrezGeneId;
         return cache.get({sampleId, entrezGeneId});
     }
 
@@ -137,7 +137,7 @@ export default class MrnaExprColumnFormatter {
         return MrnaExprColumnFormatter.renderFromCacheDatum(cacheDatum);
     }
 
-    public static cnaRenderFunction(data: DiscreteCopyNumberData, cache:MrnaExprRankCache) {
+    public static cnaRenderFunction(data: DiscreteCopyNumberData[], cache:MrnaExprRankCache) {
         const cacheDatum = MrnaExprColumnFormatter.getDataFromCNA(data, cache);
         return MrnaExprColumnFormatter.renderFromCacheDatum(cacheDatum);
     }
