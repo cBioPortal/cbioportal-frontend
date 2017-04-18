@@ -951,6 +951,18 @@ describe('MSKTable', ()=>{
                 "3,-1,zijxcpo,,3HELLO123456,,\r\n"+
                 "4,90,zkzxc,,4HELLO123456,,\r\n");
         });
+
+        it("gives data back in sorted order according to initially selected sort column and direction", ()=>{
+            let table = mount(<Table columns={columns} data={data} initialSortColumn="Number" initialSortDirection="asc"/>);
+
+            assert.deepEqual((table.instance() as MSKTable<any>).getDownloadData(),
+                "Name,Number,String,Number List,Initially invisible column,Initially invisible column with no download,String without filter function\r\n"+
+                "3,-1,zijxcpo,,3HELLO123456,,\r\n"+
+                "0,0,asdfj,,0HELLO123456,,\r\n"+
+                "1,6,kdfjpo,,1HELLO123456,,\r\n"+
+                "4,90,zkzxc,,4HELLO123456,,\r\n" +
+                "2,null,null,,2HELLO123456,,\r\n");
+        });
     });
     describe('pagination', ()=>{
         it("starts with 50 items per page", ()=>{

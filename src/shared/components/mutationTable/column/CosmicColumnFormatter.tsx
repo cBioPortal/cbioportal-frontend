@@ -80,6 +80,17 @@ export default class CosmicColumnFormatter
         return value;
     }
 
+    public static getDownloadValue(data:Mutation[], cosmicData?:ICosmicData):string {
+        let value = CosmicColumnFormatter.getSortValue(data, cosmicData);
+
+        if (value) {
+            return `${value}`;
+        }
+        else {
+            return "";
+        }
+    }
+
     public static renderFunction(data:Mutation[], cosmicData?:ICosmicData)
     {
         const cosmic:CosmicMutation[]|null = CosmicColumnFormatter.getData(data, cosmicData);
