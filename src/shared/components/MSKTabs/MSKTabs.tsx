@@ -25,7 +25,7 @@ export class MSKTab extends React.Component<IMSKTabProps,{}> {
     render(){
         return (
             <div
-                className={classnames({ 'msk-tab':true, 'hidden':!!this.props.inactive  }, this.props.className )}
+                className={classnames({ 'msk-tab':true, 'hiddenByPosition':!!this.props.inactive  }, this.props.className )}
             >
                 {this.props.children}
             </div>
