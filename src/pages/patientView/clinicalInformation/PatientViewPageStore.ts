@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
 import {
-    ClinicalData, GeneticProfile, Sample, Mutation, DiscreteCopyNumberFilter, DiscreteCopyNumberData
+    ClinicalData, GeneticProfile, Sample, Mutation, DiscreteCopyNumberFilter, DiscreteCopyNumberData, MutationFilter
 } from "../../../shared/api/generated/CBioPortalAPI";
 import client from "../../../shared/api/cbioportalClientInstance";
 import internalClient from "../../../shared/api/cbioportalInternalClientInstance";
@@ -509,7 +509,9 @@ export class PatientViewPageStore {
             if (geneticProfileId) {
                 return await client.fetchMutationsInGeneticProfileUsingPOST({
                     geneticProfileId: geneticProfileId,
-                    sampleIds: this.samples.result.map((sample: Sample) => sample.sampleId),
+                    mutationFilter: {
+                        sampleIds: this.samples.result.map((sample: Sample) => sample.sampleId)
+                    } as MutationFilter,
                     projection: "DETAILED"
                 });
             } else {
