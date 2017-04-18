@@ -82,8 +82,8 @@ describe('CohortColumnFormatter', () => {
     const tooltips: Array<ReactWrapper<any, any>> = [];
 
     before(() => {
-        tooltips.push(mount(CohortColumnFormatter.tooltipContent(copyNumberData[0], copyNumberCountData[0])));
-        tooltips.push(mount(CohortColumnFormatter.tooltipContent(copyNumberData[1], copyNumberCountData[1])));
+        tooltips.push(mount(CohortColumnFormatter.tooltipContent([copyNumberData[0]], copyNumberCountData[0])));
+        tooltips.push(mount(CohortColumnFormatter.tooltipContent([copyNumberData[1]], copyNumberCountData[1])));
     });
 
     it('generates the tooltip text properly', () => {
@@ -92,12 +92,12 @@ describe('CohortColumnFormatter', () => {
     });
 
     it('calculates the sort value correctly', () => {
-        assert.equal(CohortColumnFormatter.getSortValue(copyNumberData[0], copyNumberCountData), 61);
-        assert.equal(CohortColumnFormatter.getSortValue(copyNumberData[1], copyNumberCountData), 1);
+        assert.equal(CohortColumnFormatter.getSortValue([copyNumberData[0]], copyNumberCountData), 61);
+        assert.equal(CohortColumnFormatter.getSortValue([copyNumberData[1]], copyNumberCountData), 1);
     });
 
     it('picks the correct gistic summary', () => {
-        let summary = CohortColumnFormatter.getGisticValue(copyNumberData[0], gisticData);
+        let summary = CohortColumnFormatter.getGisticValue([copyNumberData[0]], gisticData);
 
         let qValue = summary === null ? null : summary.qValue;
         let amp = summary === null ? null : summary.amp;
@@ -108,7 +108,7 @@ describe('CohortColumnFormatter', () => {
         assert.equal(qValue, 0.00023);
         assert.equal(count, 5);
 
-        summary = CohortColumnFormatter.getGisticValue(copyNumberData[1], gisticData);
+        summary = CohortColumnFormatter.getGisticValue([copyNumberData[1]], gisticData);
 
         qValue = summary === null ? null : summary.qValue;
         amp = summary === null ? null : summary.amp;
