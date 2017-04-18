@@ -44,10 +44,10 @@ describe('MSKTabs', () => {
         assert.equal(tabs.find('.msk-tab').length, 1);
         tabs.setProps({ activeTabId:"two" });
         assert.equal(tabs.find('.msk-tab').length, 2);
-        assert.isTrue(tabs.find(MSKTab).at(0).hasClass('hidden'));
+        assert.isTrue(tabs.find(MSKTab).at(0).hasClass('hiddenByPosition'));
         tabs.setProps({ activeTabId:"one" });
-        assert.isTrue(tabs.find(MSKTab).at(1).hasClass('hidden'));
-        assert.isFalse(tabs.find(MSKTab).at(0).hasClass('hidden'));
+        assert.isTrue(tabs.find(MSKTab).at(1).hasClass('hiddenByPosition'));
+        assert.isFalse(tabs.find(MSKTab).at(0).hasClass('hiddenByPosition'));
     });
 
     it('does not display tabs that have hide={true}', ()=>{
