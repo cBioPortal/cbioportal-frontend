@@ -404,6 +404,11 @@ export class PatientViewPageStore {
                 return [];
             }
 
+        },
+        onResult: (result:DiscreteCopyNumberData[])=>{
+            // We want to take advantage of this loaded data, and not redownload the same data
+            //  for users of the cache
+            this.discreteCNACache.addData(result);
         }
 
     }, []);
