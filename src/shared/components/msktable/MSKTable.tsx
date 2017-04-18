@@ -94,7 +94,7 @@ type SortMetric<T> = ((d:T)=>number|null) | ((d:T)=>(number|null)[]) | ((d:T)=>s
 export function mskTableSort<T>(data:T[], metric:SortMetric<T>, ascending:boolean = true):T[] {
     // Separating this for testing, so that classes can test their comparators
     //  against how the table will sort.
-    const dataAndValue:{data:T, sortBy:any[]}[] = [];
+    const dataAndValue:{data:T, initialPosition:number, sortBy:any[]}[] = [];
 
     for (let i=0; i<data.length; i++) {
         // Have to do this loop instead of using data.map because we need dataAndValue to be mutable,
@@ -102,11 +102,24 @@ export function mskTableSort<T>(data:T[], metric:SortMetric<T>, ascending:boolea
         const d = data[i];
         dataAndValue.push({
             data:d,
+            initialPosition: i, // for stable sorting
             sortBy:([] as any[]).concat(metric(d)) // ensure it's wrapped in an array, even if metric is number or string
         });
     };
+    let cmp:number, initialPositionA:number, initialPositionB:number;
     dataAndValue.sort((a,b)=>{
-        return compareLists(a.sortBy, b.sortBy, ascending);
+         cmp = compareLists(a.sortBy, b.sortBy, ascending);
+         if (cmp === 0) {
+             // stable sort
+             initialPositionA = a.initialPosition;
+             initialPositionB = b.initialPosition;
+             if (initialPositionA < initialPositionB) {
+                 cmp = -1;
+             } else {
+                 cmp = 1;
+             }
+         }
+         return cmp;
     });
     return dataAndValue.map(x=>x.data);
 }

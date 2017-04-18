@@ -233,6 +233,47 @@ describe('MSKTable', ()=>{
             assert.deepEqual(mskTableSort([datum0], d=>(d as any).name, true), [datum0], "singleton sort is singleton");
             assert.deepEqual(mskTableSort([datum1], d=>(d as any).name, false), [datum1], "singleton sort is singleton");
         });
+        it("is a stable sort", ()=>{
+            let d0 = {
+                stringVal: "A",
+                numVal: 0,
+                stringListVal: ["A"],
+                numListVal: [0]
+            };
+            let d1 = {
+                stringVal: "B",
+                numVal: 1,
+                stringListVal: ["B"],
+                numListVal: [1]
+            };
+            let d2 = {
+                stringVal: "B",
+                numVal: 1,
+                stringListVal: ["B"],
+                numListVal: [1]
+            };
+            let d3 = {
+                stringVal: "C",
+                numVal: 2,
+                stringListVal: ["C"],
+                numListVal: [2]
+            };
+            assert.deepEqual(mskTableSort([d0, d1, d2, d3], d=>d.stringVal, true), [d0, d1, d2, d3], "string: same order, ascending");
+            assert.deepEqual(mskTableSort([d0, d1, d2, d3], d=>d.stringVal, false), [d3, d1, d2, d0], "string: same order, descending");
+            assert.deepEqual(mskTableSort([d0, d2, d1, d3], d=>d.stringVal, true), [d0, d2, d1, d3], "string: reversed order, ascending");
+
+            assert.deepEqual(mskTableSort([d0, d1, d2, d3], d=>d.numVal, true), [d0, d1, d2, d3], "number: same order, ascending");
+            assert.deepEqual(mskTableSort([d0, d1, d2, d3], d=>d.numVal, false), [d3, d1, d2, d0], "number: same order, descending");
+            assert.deepEqual(mskTableSort([d0, d2, d1, d3], d=>d.numVal, true), [d0, d2, d1, d3], "number: reversed order, ascending");
+
+            assert.deepEqual(mskTableSort([d0, d1, d2, d3], d=>d.stringListVal, true), [d0, d1, d2, d3], "string list: same order, ascending");
+            assert.deepEqual(mskTableSort([d0, d1, d2, d3], d=>d.stringListVal, false), [d3, d1, d2, d0], "string list: same order, descending");
+            assert.deepEqual(mskTableSort([d0, d2, d1, d3], d=>d.stringListVal, true), [d0, d2, d1, d3], "string list: reversed order, ascending");
+
+            assert.deepEqual(mskTableSort([d0, d1, d2, d3], d=>d.numListVal, true), [d0, d1, d2, d3], "number list: same order, ascending");
+            assert.deepEqual(mskTableSort([d0, d1, d2, d3], d=>d.numListVal, false), [d3, d1, d2, d0], "number list: same order, descending");
+            assert.deepEqual(mskTableSort([d0, d2, d1, d3], d=>d.numListVal, true), [d0, d2, d1, d3], "number list: reversed order, ascending");
+        });
     });
     describe('headers', ()=>{
         it("shows headers for all the given visible columns, including the cases of one and zero columns", ()=>{
