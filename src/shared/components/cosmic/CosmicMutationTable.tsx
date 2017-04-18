@@ -14,7 +14,7 @@ export interface ICosmicTableProps
     initialItemsPerPage?: number;
 }
 
-// EnhancedReactTable is a generic component which requires data type argument
+// MSKTable is a generic component which requires data type argument
 class CosmicTable extends MSKTable<CosmicMutation> {}
 
 /**
@@ -28,7 +28,16 @@ export default class CosmicMutationTable extends React.Component<ICosmicTablePro
             {
                 name: "COSMIC ID",
                 order: 1.00,
-                render: (d:CosmicMutation) => (<span>{d.cosmicMutationId}</span>),
+                render: (d:CosmicMutation) => (
+                    <span>
+                        <a
+                            href={`http://cancer.sanger.ac.uk/cosmic/mutation/overview?id=${d.cosmicMutationId}`}
+                            target="_blank"
+                        >
+                            {d.cosmicMutationId}
+                        </a>
+                    </span>
+                ),
                 sortBy: (d:CosmicMutation) => d.cosmicMutationId
             },
             {
@@ -44,7 +53,7 @@ export default class CosmicMutationTable extends React.Component<ICosmicTablePro
                 sortBy: (d:CosmicMutation) => d.count
             }
         ],
-        initialSortColumn: "Occurence",
+        initialSortColumn: "Occurrence",
         initialSortDirection: "desc",
         initialItemsPerPage: 10
     };
