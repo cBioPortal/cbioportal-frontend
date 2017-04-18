@@ -129,3 +129,9 @@ th.reactable-header-sort-asc:after {
 .table {
   margin-bottom: 5px;
 }
+
+.hiddenByPosition {
+  position: absolute;
+  top: -9999px;
+  left: -9999px;
+}
