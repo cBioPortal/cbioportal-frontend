@@ -28,7 +28,7 @@ async function fetch(queries:SampleAndGene[], geneticProfileIdDiscrete:string|un
                         filter = {
                             sampleIds: [sampleId],
                             entrezGeneIds: entrezList
-                        };
+                        } as DiscreteCopyNumberFilter;
                     }
                     return client.fetchDiscreteCopyNumbersInGeneticProfileUsingPOST({
                         projection: "DETAILED",
