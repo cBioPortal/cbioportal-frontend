@@ -20,9 +20,9 @@ export interface IOncoKbProps {
     pmidCache?: OncokbPmidCache;
 }
 
-export function placeArrow(tooltipEl: any) {
+export function hideArrow(tooltipEl: any) {
     const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');
-    arrowEl.style.left = '10px';
+    arrowEl.style.display = 'none';
 }
 
 // TODO duplicate code: replace this with the actual PlaceHolder component when ready
@@ -45,6 +45,7 @@ export function placeHolder(text:string)
 export default class OncoKB extends React.Component<IOncoKbProps, {}>
 {
     @observable showFeedback:boolean = false;
+    @observable tooltipDataLoadComplete:boolean = false;
 
     public static get ONCOGENIC_ICON_STYLE()
     {
@@ -76,6 +77,7 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
 
         this.handleFeedbackOpen = this.handleFeedbackOpen.bind(this);
         this.handleFeedbackClose = this.handleFeedbackClose.bind(this);
+        this.handleLoadComplete = this.handleLoadComplete.bind(this);
         this.tooltipContent = this.tooltipContent.bind(this);
     }
 
@@ -100,17 +102,17 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
             {
                 oncoKbContent = this.feedbackModal(this.props.indicator);
             }
-            else if (this.props.evidenceCache && this.props.evidenceQuery)
+            else if (this.tooltipDataLoadComplete || this.props.evidenceCache && this.props.evidenceQuery)
             {
                 const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
 
                 oncoKbContent = (
                     <DefaultTooltip
                         overlay={this.tooltipContent}
-                        placement="bottomLeft"
+                        placement="right"
                         trigger={['hover', 'focus']}
                         arrowContent={arrowContent}
-                        onPopupAlign={placeArrow}
+                        onPopupAlign={hideArrow}
                         destroyTooltipOnHide={false}
                     >
                         {oncoKbContent}
@@ -158,8 +160,18 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
                 evidenceQuery={this.props.evidenceQuery}
                 pmidCache={this.props.pmidCache}
                 handleFeedbackOpen={this.handleFeedbackOpen}
+                onLoadComplete={this.handleLoadComplete}
             />
         );
+    }
+
+    // purpose of this callback is to trigger re-instantiation
+    // of the tooltip upon full load of the tooltip data
+    private handleLoadComplete(): void {
+        // update only once to avoid unnecessary re-rendering
+        if (!this.tooltipDataLoadComplete) {
+            this.tooltipDataLoadComplete = true;
+        }
     }
 
     private handleFeedbackOpen(): void {
