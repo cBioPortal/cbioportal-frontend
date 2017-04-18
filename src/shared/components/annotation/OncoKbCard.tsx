@@ -272,7 +272,7 @@ export default class OncoKbCard extends React.Component<IOncoKbCardProps, IOncoK
                                                     onClick={this.handleOncogenicityTabSelect}
                                                 >
                                                     <span className="title">clinical implications</span>
-                                                    <span className="title-content">{this.props.oncogenicity}</span>
+                                                    <span className="title-content">{this.props.oncogenicity || "Unknown"}</span>
                                                 </a>
                                             </li>
                                             <li key="mutationEffect" className="tab col s6 enable-hover">
@@ -281,7 +281,7 @@ export default class OncoKbCard extends React.Component<IOncoKbCardProps, IOncoK
                                                     onClick={this.handleMutationEffectTabSelect}
                                                 >
                                                     <span className="title">Biological Effect</span>
-                                                    <span className="title-content">{this.props.mutationEffect}</span>
+                                                    <span className="title-content">{this.props.mutationEffect || "Unknown"}</span>
                                                 </a>
                                             </li>
                                             <div className="indicator"/>
