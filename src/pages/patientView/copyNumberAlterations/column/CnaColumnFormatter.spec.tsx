@@ -17,11 +17,11 @@ describe('CnaColumnFormatter', () => {
 
     it('CNA column renderer shows correct text based on alteration value', () => {
 
-        let output = mount(CnaColumnFormatter.renderFunction({alteration:-2} as DiscreteCopyNumberData));
+        let output = mount(CnaColumnFormatter.renderFunction([{alteration:-2} as DiscreteCopyNumberData]));
 
         assert.equal(output.text(), 'DeepDel');
 
-        output = mount(CnaColumnFormatter.renderFunction({alteration:2} as DiscreteCopyNumberData));
+        output = mount(CnaColumnFormatter.renderFunction([{alteration:2} as DiscreteCopyNumberData]));
 
         assert.equal(output.text(), 'AMP');
 
