@@ -356,6 +356,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 copyNumberCountData={patientViewPageStore.copyNumberCountData.result}
                                 mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}
                                 gisticData={patientViewPageStore.gisticData.result}
+                                mrnaExprRankGeneticProfileId={patientViewPageStore.mrnaRankGeneticProfileId.result || undefined}
                                 status={this.cnaTableStatus}
                             />
                         </MSKTab>
