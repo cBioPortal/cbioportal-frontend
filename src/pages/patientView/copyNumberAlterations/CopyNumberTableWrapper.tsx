@@ -10,29 +10,60 @@ import MrnaExprColumnFormatter from "../mutation/column/MrnaExprColumnFormatter"
 import CohortColumnFormatter from "./column/CohortColumnFormatter";
 import CnaColumnFormatter from "./column/CnaColumnFormatter";
 import AnnotationColumnFormatter from "./column/AnnotationColumnFormatter";
+import TumorColumnFormatter from "../mutation/column/TumorColumnFormatter";
+import SampleManager from "../sampleManager";
+import {IOncoKbData} from "../../../shared/model/OncoKB";
+import OncoKbEvidenceCache from "../OncoKbEvidenceCache";
+import PmidCache from "../PmidCache";
+import {CopyNumberCount} from "../../../shared/api/generated/CBioPortalAPIInternal";
+import MrnaExprRankCache from "../clinicalInformation/MrnaExprRankCache";
+import {IGisticData} from "../../../shared/model/Gistic";
 
 
-class CNATableComponent extends MSKTable<DiscreteCopyNumberData> {
+class CNATableComponent extends MSKTable<DiscreteCopyNumberData[]> {
 
 }
 
-type CNATableColumn = Column<DiscreteCopyNumberData>&{order:number};
+type CNATableColumn = Column<DiscreteCopyNumberData[]>&{order:number};
+
+type ICopyNumberTableWrapperProps = {
+    sampleIds:string[];
+    sampleManager:SampleManager|null;
+    cnaOncoKbData?:IOncoKbData;
+    oncoKbEvidenceCache?:OncoKbEvidenceCache;
+    pmidCache?:PmidCache;
+    data:DiscreteCopyNumberData[][];
+    copyNumberCountData?:CopyNumberCount[];
+    mrnaExprRankCache?:MrnaExprRankCache;
+    gisticData:IGisticData;
+    status:"loading"|"available"|"unavailable";
+};
 
 
 @observer
-export default class CopyNumberTableWrapper extends React.Component<{ store:PatientViewPageStore }, {}> {
+export default class CopyNumberTableWrapper extends React.Component<ICopyNumberTableWrapperProps, {}> {
 
     render() {
         const columns: CNATableColumn[] = [];
+        const numSamples = this.props.sampleIds.length;
+
+        if (numSamples >= 2) {
+            columns.push({
+                name: "Tumors",
+                render:(d:DiscreteCopyNumberData[])=>TumorColumnFormatter.renderFunction(d, this.props.sampleManager),
+                sortBy:(d:DiscreteCopyNumberData[])=>TumorColumnFormatter.getSortValue(d, this.props.sampleManager),
+                order: 20
+            });
+        }
 
         columns.push({
             name: "Gene",
-            render: (d:DiscreteCopyNumberData)=><span>{d.gene.hugoGeneSymbol}</span>,
-            filter: (d:DiscreteCopyNumberData, filterString:string, filterStringUpper:string)=>{
-                return d.gene.hugoGeneSymbol.indexOf(filterStringUpper) > -1;
+            render: (d:DiscreteCopyNumberData[])=><span>{d[0].gene.hugoGeneSymbol}</span>,
+            filter: (d:DiscreteCopyNumberData[], filterString:string, filterStringUpper:string)=>{
+                return d[0].gene.hugoGeneSymbol.indexOf(filterStringUpper) > -1;
             },
-            download: (d:DiscreteCopyNumberData)=>d.gene.hugoGeneSymbol,
-            sortBy: (d:DiscreteCopyNumberData)=>d.gene.hugoGeneSymbol,
+            download: (d:DiscreteCopyNumberData[])=>d[0].gene.hugoGeneSymbol,
+            sortBy: (d:DiscreteCopyNumberData[])=>d[0].gene.hugoGeneSymbol,
             visible: true,
             order: 30
         });
@@ -40,7 +71,7 @@ export default class CopyNumberTableWrapper extends React.Component<{ store:Pati
         columns.push({
             name: "CNA",
             render: CnaColumnFormatter.renderFunction,
-            filter: (d:DiscreteCopyNumberData, filterString:string, filterStringUpper:string)=>{
+            filter: (d:DiscreteCopyNumberData[], filterString:string, filterStringUpper:string)=>{
                 return CnaColumnFormatter.displayText(d).toUpperCase().indexOf(filterStringUpper) > -1;
             },
             download: CnaColumnFormatter.download,
@@ -51,40 +82,40 @@ export default class CopyNumberTableWrapper extends React.Component<{ store:Pati
 
         columns.push({
             name: "Annotation",
-            render: (d:DiscreteCopyNumberData) => (AnnotationColumnFormatter.renderFunction(d, {
-                oncoKbData: this.props.store.cnaOncoKbData.result,
-                oncoKbEvidenceCache: this.props.store.oncoKbEvidenceCache,
-                pmidCache: this.props.store.pmidCache,
+            render: (d:DiscreteCopyNumberData[]) => (AnnotationColumnFormatter.renderFunction(d, {
+                oncoKbData: this.props.cnaOncoKbData,
+                oncoKbEvidenceCache: this.props.oncoKbEvidenceCache,
+                pmidCache: this.props.pmidCache,
                 enableOncoKb: true,
                 enableMyCancerGenome: false,
                 enableHotspot: false
             })),
-            sortBy:(d:DiscreteCopyNumberData)=>{
+            sortBy:(d:DiscreteCopyNumberData[])=>{
                 return AnnotationColumnFormatter.sortValue(d,
-                    this.props.store.cnaOncoKbData.result);
+                    this.props.cnaOncoKbData);
             },
             order: 50
         });
 
         columns.push({
             name: "Cytoband",
-            render: (d:DiscreteCopyNumberData)=><span>{d.gene.cytoband}</span>,
-            download: (d:DiscreteCopyNumberData)=>d.gene.cytoband,
-            sortBy: (d:DiscreteCopyNumberData)=>d.gene.cytoband,
+            render: (d:DiscreteCopyNumberData[])=><span>{d[0].gene.cytoband}</span>,
+            download: (d:DiscreteCopyNumberData[])=>d[0].gene.cytoband,
+            sortBy: (d:DiscreteCopyNumberData[])=>d[0].gene.cytoband,
             visible: true,
             order: 60
         });
 
         columns.push({
             name:"Cohort",
-            render:(d:DiscreteCopyNumberData)=>(this.props.store.copyNumberCountData.result
+            render:(d:DiscreteCopyNumberData[])=>(this.props.copyNumberCountData
                 ? CohortColumnFormatter.renderFunction(d,
-                    this.props.store.copyNumberCountData.result,
-                    this.props.store.gisticData.result)
+                    this.props.copyNumberCountData,
+                    this.props.gisticData)
                 : (<span></span>)),
-            sortBy:(d:DiscreteCopyNumberData) => {
-                if (this.props.store.copyNumberCountData.result) {
-                    return CohortColumnFormatter.getSortValue(d, this.props.store.copyNumberCountData.result);
+            sortBy:(d:DiscreteCopyNumberData[]) => {
+                if (this.props.copyNumberCountData) {
+                    return CohortColumnFormatter.getSortValue(d, this.props.copyNumberCountData);
                 } else {
                     return 0;
                 }
@@ -94,32 +125,31 @@ export default class CopyNumberTableWrapper extends React.Component<{ store:Pati
             order: 80
         });
 
-        columns.push({
-            name: "mRNA Expr.",
-            render: (d:DiscreteCopyNumberData)=>(this.props.store.mrnaExprRankCache
-                                ? MrnaExprColumnFormatter.cnaRenderFunction(d, this.props.store.mrnaExprRankCache)
-                                : (<span></span>)),
-            order: 70
-        });
+        if (numSamples === 1) {
+            columns.push({
+                name: "mRNA Expr.",
+                render: (d:DiscreteCopyNumberData[])=>(this.props.mrnaExprRankCache
+                                    ? MrnaExprColumnFormatter.cnaRenderFunction(d, this.props.mrnaExprRankCache)
+                                    : (<span></span>)),
+                order: 70
+            });
+        }
 
         const orderedColumns = _.sortBy(columns, (c:CNATableColumn)=>c.order);
 
         return (
             <div>
             {
-                (this.props.store.geneticProfileIdDiscrete.isComplete && this.props.store.geneticProfileIdDiscrete.result === undefined) && (
+                (this.props.status === "unavailable") && (
                     <div className="alert alert-info" role="alert">Copy Number Alterations are not available.</div>
                 )
             }
 
             {
-                (this.props.store.geneticProfileIdDiscrete.isComplete
-                    && this.props.store.geneticProfileIdDiscrete.result
-                    && this.props.store.discreteCNAData.isComplete
-                ) && (
+                (this.props.status === "available") && (
                     <CNATableComponent
                         columns={orderedColumns}
-                        data={this.props.store.discreteCNAData.result}
+                        data={this.props.data}
                         initialSortColumn="Annotation"
                         initialSortDirection="desc"
                         initialItemsPerPage={10}
