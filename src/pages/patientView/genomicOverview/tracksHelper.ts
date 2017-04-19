@@ -181,7 +181,7 @@ export function plotCnSegs(p: any,config: any,chmInfo: any,row: any, segs: Array
         //addToolTip(c.node, caseMetaData.tooltip[caseId],false,{my:'middle left',at:'middle right', viewport: $(window)}); //TODO: needed for patient view
         //addToolTip(t.node, caseMetaData.tooltip[caseId],false,{my:'middle left',at:'middle right', viewport: $(window)}); //TODO: needed for patient view
         //addToolTip(c.node, "",false,{my:'middle left',at:'middle right', viewport: $(window)});
-        addToolTip(t.node, "",false,{my:'middle left',at:'middle right', viewport: $(window)});
+        //addToolTip(t.node, "",false,{my:'middle left',at:'middle right', viewport: $(window)});
     } else {
         p.text(0,yRow+config.rowHeight/2,'CNA').attr({'text-anchor': 'start'});
     }
