@@ -82,7 +82,7 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
     public render()
     {
         let oncoKbContent:JSX.Element = (
-            <span/>
+            <span className={`${annotationStyles["annotation-item"]}`} />
         );
 
         if (this.props.indicator)
