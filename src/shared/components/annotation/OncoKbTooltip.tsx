@@ -17,6 +17,7 @@ export interface IOncoKbTooltipProps {
     evidenceQuery?: Query;
     pmidCache?: OncokbPmidCache;
     handleFeedbackOpen?: () => void;
+    onLoadComplete?: () => void;
 }
 
 /**
@@ -98,5 +99,16 @@ export default class OncoKbTooltip extends React.Component<IOncoKbTooltipProps, 
         }
 
         return tooltipContent;
+    }
+
+    public componentDidUpdate()
+    {
+        if (this.evidenceCacheData &&
+            this.evidenceCacheData.status === 'complete' &&
+            this.evidenceCacheData.data &&
+            this.props.onLoadComplete)
+        {
+            this.props.onLoadComplete();
+        }
     }
 }
