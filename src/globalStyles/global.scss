@@ -135,3 +135,15 @@ th.reactable-header-sort-asc:after {
   top: -9999px;
   left: -9999px;
 }
+
+// corrects for a problem with build of react-bootstrap (unicode corrupted when build on linux  machines)
+.modal-header .close {
+
+  &::before {
+    content: "✖";
+  }
+
+  span {
+    display:none;
+  }
+}
