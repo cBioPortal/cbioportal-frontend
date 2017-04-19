@@ -6,6 +6,7 @@ import {
     default as DiscreteCNACache
 } from "../../clinicalInformation/DiscreteCNACache";
 import {Mutation} from "../../../../shared/api/generated/CBioPortalAPI";
+import {default as TableCellStatusIndicator, TableCellStatus} from "../../../../shared/components/TableCellStatus";
 
 export default class DiscreteCNAColumnFormatter {
 
@@ -62,6 +63,7 @@ export default class DiscreteCNAColumnFormatter {
     }
 
     protected static getTdContents(cacheDatum:DiscreteCNACacheDataType | null) {
+        let status:TableCellStatus | null = null;
         if (cacheDatum !== null && cacheDatum.status === "complete" && cacheDatum.data !== null) {
             const alteration = cacheDatum.data.alteration;
             if (alteration === 2) {
@@ -86,27 +88,18 @@ export default class DiscreteCNAColumnFormatter {
                 </span>);
             }
         } else if (cacheDatum && cacheDatum.status === "complete" && cacheDatum.data === null) {
-            return (<span
-                style={{color: "gray", fontSize:"xx-small", textAlign:"center"}}
-                alt="CNA data is not available for this gene."
-            >
-                    NA
-                </span>);
+            status=TableCellStatus.NA;
         } else if (cacheDatum && cacheDatum.status === "error") {
-            return (<span
-                style={{color: "gray", fontSize:"xx-small", textAlign:"center"}}
-                alt="Error retrieving data."
-            >
-                    ERROR
-                </span>);
+            status=TableCellStatus.ERROR;
         } else {
+            status=TableCellStatus.NA;
+        }
+        if (status !== null) {
             return (
-                <span
-                    style={{color: "gray", fontSize:"xx-small", textAlign:"center"}}
-                    alt="Querying server for data."
-                >
-                    LOADING
-                </span>
+                <TableCellStatusIndicator
+                    status={status}
+                    naAlt="CNA data is not available for this gene."
+                />
             );
         }
     }
