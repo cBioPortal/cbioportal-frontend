@@ -110,6 +110,7 @@ export default class OncoKbCard extends React.Component<IOncoKbCardProps, IOncoK
                         placement="left"
                         trigger={['hover', 'focus']}
                         arrowContent={arrowContent}
+                        destroyTooltipOnHide={true}
                     >
                         <i
                             className={`level-icon level-${level}`}
@@ -127,6 +128,7 @@ export default class OncoKbCard extends React.Component<IOncoKbCardProps, IOncoK
                             placement="right"
                             trigger={['hover', 'focus']}
                             arrowContent={arrowContent}
+                            destroyTooltipOnHide={true}
                         >
                             <i className="fa fa-book"/>
                         </DefaultTooltip>
@@ -515,6 +517,7 @@ export default class OncoKbCard extends React.Component<IOncoKbCardProps, IOncoK
                         placement="right"
                         trigger={['hover', 'focus']}
                         arrowContent={arrowContent}
+                        destroyTooltipOnHide={true}
                     >
                         <i className="fa fa-book" style={{color: "black"}}/>
                     </DefaultTooltip>
