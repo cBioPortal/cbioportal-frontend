@@ -6,6 +6,7 @@ import {
     default as MrnaExprRankCache
 } from "../../clinicalInformation/MrnaExprRankCache";
 import {Mutation, DiscreteCopyNumberData} from "../../../../shared/api/generated/CBioPortalAPI";
+import {default as TableCellStatusIndicator, TableCellStatus} from "../../../../shared/components/TableCellStatus";
 
 export default class MrnaExprColumnFormatter {
 
@@ -43,6 +44,7 @@ export default class MrnaExprColumnFormatter {
     }
 
     private static getTdContents(cacheDatum:MrnaExprRankCacheDataType | null) {
+        let status:TableCellStatus | null = null;
         const barWidth = 30;
         const circleRadius = 3;
         const barXLeft = 0;
@@ -82,29 +84,18 @@ export default class MrnaExprColumnFormatter {
                 </g>
             </svg>);
         } else if (cacheDatum && cacheDatum.status === "complete" && cacheDatum.data === null) {
-            return (
-                <span
-                    style={{color: "gray", fontSize:"xx-small", textAlign:"center"}}
-                    alt="mRNA data is not available for this gene."
-                >
-                    NA
-                </span>
-            );
+            status=TableCellStatus.NA;
         } else if (cacheDatum && cacheDatum.status === "error") {
-            return (<span
-                style={{color: "gray", fontSize:"xx-small", textAlign:"center"}}
-                alt="Error retrieving data."
-            >
-                    ERROR
-                </span>);
+            status=TableCellStatus.ERROR;
         } else {
+            status=TableCellStatus.LOADING;
+        }
+        if (status !== null) {
             return (
-                <span
-                    style={{color: "gray", fontSize:"xx-small", textAlign:"center"}}
-                    alt="Querying server for data."
-                >
-                    LOADING
-                </span>
+                <TableCellStatusIndicator
+                    status={status}
+                    naAlt="mRNA data is not available for this gene."
+                />
             );
         }
     }
