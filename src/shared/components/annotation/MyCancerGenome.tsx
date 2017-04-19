@@ -27,7 +27,7 @@ export default class MyCancerGenome extends React.Component<IMyCancerGenomeProps
     {
         const links:any[] = [];
 
-        _.each(linksHTML, function(link:string, index:number) {
+        _.each(linksHTML, (link:string, index:number) => {
             // TODO we need to dangerously insert HTML since the data is formatted as an html link...
             links.push(
                 <li key={index} dangerouslySetInnerHTML={{__html: link}} />
@@ -54,7 +54,7 @@ export default class MyCancerGenome extends React.Component<IMyCancerGenomeProps
     public render()
     {
         let myCancerGenomeContent:JSX.Element = (
-            <span/>
+            <span className={`${annotationStyles["annotation-item"]}`} />
         );
 
         if (this.props.linksHTML.length > 0)
