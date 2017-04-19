@@ -27,6 +27,9 @@ describe('SimpleTable', () => {
     it('renders no result message when rows is empty array', ()=>{
         table.setProps({rows:[]})
         assert.isTrue( table.containsMatchingElement(<td colSpan={1}>There are no results.</td>));
+
+        table.setProps({rows:[], noRowsText:"Hello there!!!!"})
+        assert.isTrue( table.containsMatchingElement(<td colSpan={1}>Hello there!!!!</td>));
     });
 
 });
