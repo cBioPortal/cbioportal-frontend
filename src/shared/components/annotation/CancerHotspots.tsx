@@ -1,7 +1,5 @@
 import * as React from 'react';
-import * as _ from 'lodash';
 import DefaultTooltip from 'shared/components/DefaultTooltip';
-import {Mutation} from "../../api/generated/CBioPortalAPI";
 import annotationStyles from "./styles/annotation.module.scss";
 import hotspotStyles from "./styles/cancerHotspots.module.scss";
 
@@ -122,7 +120,7 @@ export default class CancerHotspots extends React.Component<ICancerHotspotsProps
         const {isHotspot, is3dHotspot} = this.props;
 
         let hotspotContent = (
-            <span/>
+            <span className={`${annotationStyles["annotation-item"]}`} />
         );
 
         if (isHotspot || is3dHotspot)
