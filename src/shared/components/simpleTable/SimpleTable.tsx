@@ -5,6 +5,7 @@ import { If, Then,  Else } from 'react-if';
 type SimpleTableProps = {
     headers:JSX.Element[];
     rows:JSX.Element[];
+    noRowsText?:string;
 };
 
 export default class SimpleTable extends React.Component<SimpleTableProps, {}>
@@ -16,7 +17,7 @@ export default class SimpleTable extends React.Component<SimpleTableProps, {}>
         const rows = this.props.rows.length > 0 ? this.props.rows :
             [<tr>
                 <td style={{textAlign:'center'}} colSpan={this.props.headers.length}>
-                    There are no results.
+                    {this.props.noRowsText || "There are no results."}
                 </td>
             </tr>];
 
