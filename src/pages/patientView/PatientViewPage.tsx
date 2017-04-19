@@ -183,7 +183,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         if (patientViewPageStore.studyMetaData.isComplete) {
             let study = patientViewPageStore.studyMetaData.result;
-            studyName = <a href={`study.do?cancer_study_id=${study.studyId}`}>{study.name}</a>;
+            studyName = <a href={`study.do?cancer_study_id=${study.studyId}`} className="studyMetaBar_studyName">{study.name}</a>;
         }
 
         if (patientViewPageStore.patientViewData.isComplete) {
@@ -257,18 +257,10 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                 <div className="topBanner">
 
-                <div className="studyMetaBar hidden">
-                    <div>
-
-                    </div>
-                    <div></div>
-                </div>
-
-
                 {  (patientViewPageStore.patientViewData.isComplete) && (
-                    <div className="patientPageHeader clearfix">
+                    <div className="patientPageHeader">
                         <i className="fa fa-user-circle-o patientIcon" aria-hidden="true"></i>
-                        <div className="studyMetaBar">{ studyName } <If condition={(cohortNav != null)}>{cohortNav}</If></div>
+                        <div className="patientDataTable">
                         <table>
                             <tr>
                                 <td>Patient:</td>
@@ -284,6 +276,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 </td>
                             </tr>
                         </table>
+                        </div>
+                        <div className="studyMetaBar">{ studyName } <If condition={(cohortNav != null)}>{cohortNav}</If></div>
                     </div>
                 )
                 }
