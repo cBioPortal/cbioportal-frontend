@@ -578,6 +578,9 @@ export class PatientViewPageStore {
             }), "id");
 
             return fetchOncoKbData(this.sampleIdToTumorType, queryVariants);
+        },
+        onError:()=>{
+            // fail silently TODO: figure out why queryVariants is empty
         }
     }, {sampleToTumorMap: {}, indicatorMap: {}});
 
