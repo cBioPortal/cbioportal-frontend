@@ -2,14 +2,33 @@ import {initQueryIndicator} from "test/OncoKbMockUtils";
 import OncoKB from './OncoKB';
 import React from 'react';
 import { assert } from 'chai';
-import { shallow, mount } from 'enzyme';
+import {shallow, mount, ReactWrapper} from 'enzyme';
 import sinon from 'sinon';
 import {mskTableSort} from "../msktable/MSKTable";
-import {IndicatorQueryResp} from "../../api/generated/OncoKbAPI";
+import {IndicatorQueryResp} from "shared/api/generated/OncoKbAPI";
 
 describe('OncoKB', () => {
-    before(() => {
+    const props = {
+        indicator: undefined
+    };
 
+    let component: ReactWrapper<any, any>;
+
+    before(() => {
+        component = mount(<OncoKB {...props}/>);
+    });
+
+    it('displays a load spinner when there is no indicator data', () => {
+        const spinner = component.find("Circle");
+
+        assert.isTrue(spinner.exists(),
+            "Spinner component should exist");
+
+        assert.equal(spinner.prop("size"), 18,
+            "Spinner size should be equal to 18");
+
+        assert.equal(spinner.prop("color"), "#aaa",
+            "Spinner color should be #aaa");
     });
 
     it('properly calculates OncoKB sort values', () => {
