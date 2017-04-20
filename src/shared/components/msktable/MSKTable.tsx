@@ -193,7 +193,7 @@ class MSKTableStore<T> {
         });
 
         // add rows (including hidden columns)
-        this.data.forEach((rowData:T) => {
+        this.sortedData.forEach((rowData:T) => {
             const rowDownloadData:string[] = [];
 
             this.columns.forEach((column:Column<T>) => {

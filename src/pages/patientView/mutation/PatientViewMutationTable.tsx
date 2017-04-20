@@ -335,7 +335,8 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
         this._columns[MutationTableColumnType.COSMIC] = {
             name: "COSMIC",
             render: (d:Mutation[])=>CosmicColumnFormatter.renderFunction(d, this.props.cosmicData),
-            sortBy:(d:Mutation[])=>CosmicColumnFormatter.getSortValue(d, this.props.cosmicData),
+            sortBy: (d:Mutation[])=>CosmicColumnFormatter.getSortValue(d, this.props.cosmicData),
+            download: (d:Mutation[])=>CosmicColumnFormatter.getDownloadValue(d, this.props.cosmicData),
             tooltip: (<span>COSMIC occurrences</span>),
             defaultSortDirection: "desc",
             order: 184
