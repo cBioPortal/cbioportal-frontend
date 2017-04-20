@@ -61,6 +61,7 @@
     "babel-preset-react-hmre": "^1.1.1",
     "babel-preset-stage-0": "^6.22.0",
     "babel-register": "^6.22.0",
+    "better-react-spinkit": "^2.0.0-6",
     "bootstrap": "^3.3.7",
     "bootstrap-loader": "^1.2.0-beta.1",
     "bootstrap-sass": "^3.3.7",
