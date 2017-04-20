@@ -58,7 +58,7 @@ export default class StudyListLogic
 			map_node_filter.set(node, filter);
 
 			// include ancestors of matching studies
-			if (!meta.isCancerType)
+			if (filter && !meta.isCancerType)
 				for (let cancerTypes of [meta.ancestors, meta.priorityCategories])
 					for (let cancerType of cancerTypes)
 						map_node_filter.set(cancerType, true);
@@ -201,19 +201,8 @@ export class FilteredCancerTreeView
 
 	getDescendantCancerStudies(node:CancerTreeNode):CancerStudy[]
 	{
-		if (node === this.store.treeData.rootCancerType)
-			return this.hack_getAllStudies();
-
 		let meta = this.getMetadata(node);
 		return meta.descendantStudies.filter(this.nodeFilter);
-	}
-
-	hack_getAllStudies()
-	{
-		return _.union(...(
-			this.getChildCancerTypes(this.store.treeData.rootCancerType)
-				.map(cancerType => this.getDescendantCancerStudies(cancerType))
-		));
 	}
 
 	getCheckboxProps(node: CancerTreeNode): {checked: boolean, indeterminate?: boolean}
@@ -266,20 +255,5 @@ export class FilteredCancerTreeView
 			selectedStudyIds = _.difference(selectedStudyIds, clickedStudyIds);
 
 		this.store.selectedStudyIds = selectedStudyIds;
-	}
-
-	@action hack_handleSelectAll(checked:boolean)
-	{
-		let selectedStudyIds = this.store.selectedStudyIds;
-		let clickedStudyIds = this.hack_getAllStudies().map(study => study.studyId);
-		if (checked)
-			selectedStudyIds = _.union(selectedStudyIds, clickedStudyIds);
-		else
-			selectedStudyIds = _.difference(selectedStudyIds, clickedStudyIds);
-
-		this.store.selectedStudyIds = selectedStudyIds;
-
-		if (!this.store.selectedStudyIds.length)
-			this.store.showSelectedStudiesOnly = false;
 	}
 }

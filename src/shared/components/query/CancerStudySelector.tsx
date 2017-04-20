@@ -72,12 +72,10 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 
 	renderCancerTypeList()
 	{
-		let rootMeta = this.logic.getMetadata(this.store.treeData.rootCancerType);
-		let listItems = rootMeta && rootMeta.childCancerTypes.map(this.renderCancerTypeListItem);
-
+		let cancerTypes = this.logic.cancerTypeListView.getChildCancerTypes(this.store.treeData.rootCancerType);
 		return (
 			<ul className={styles.cancerTypeList}>
-				{listItems}
+				{cancerTypes.map(this.renderCancerTypeListItem)}
 			</ul>
 		);
 	}
@@ -85,10 +83,6 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 	renderCancerTypeListItem = (cancerType:CancerType, arrayIndex:number) =>
 	{
 		let numStudies = this.logic.cancerTypeListView.getDescendantCancerStudies(cancerType).length;
-
-		if (!numStudies)
-			return null;
-
 		let selected = _.includes(this.store.selectedCancerTypeIds, cancerType.cancerTypeId);
 		let highlighted = this.logic.isHighlighted(cancerType);
 		let liClassName = classNames({
@@ -187,7 +181,7 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 						}}
 					/>
 					{!!(!this.store.forDownloadTab) && (
-						<span className={classNames('cta', styles.selectAll)} onClick={() => this.logic.mainView.hack_handleSelectAll(!selectAllCheckboxProps.checked)}>
+						<span className={classNames('cta', styles.selectAll)} onClick={() => this.logic.mainView.onCheck(this.store.treeData.rootCancerType, !selectAllCheckboxProps.checked)}>
 							{selectAllCheckboxProps.checked ? "Deselect all" : "Select all"}
 						</span>
 					)}

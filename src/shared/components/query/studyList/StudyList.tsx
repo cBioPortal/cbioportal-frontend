@@ -76,12 +76,18 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, void
 						Selected Studies 
 						<span 
 							className={styles.closeSelected}
-							onClick={() => this.store.showSelectedStudiesOnly = !this.store.showSelectedStudiesOnly}
+							onClick={() => this.store.showSelectedStudiesOnly = false}
 						>
 							Return to Study Selector
 						</span>
 				</h4>
-				<span className={styles.deselectAll} onClick={() => this.view.hack_handleSelectAll(false)}>
+				<span
+					className={styles.deselectAll}
+					onClick={() => {
+						this.view.onCheck(this.store.treeData.rootCancerType, false);
+						this.store.showSelectedStudiesOnly = false;
+					}}
+				>
 					Deselect all
 				</span>
 				<ul className={styles.StudyList}>
@@ -93,12 +99,6 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, void
 
 	renderCancerType = (cancerType:CancerType, arrayIndex:number = 0):JSX.Element | null =>
 	{
-		// BEGIN TEMP HACK
-		let descendantStudies = this.view.getDescendantCancerStudies(cancerType);
-		if (!descendantStudies.length)
-			return null;
-		// END TEMP HACK
-
 		let currentLevel = this.logic.getDepth(cancerType);
 		let childCancerTypes = this.view.getChildCancerTypes(cancerType);
 		let childStudies = this.view.getChildCancerStudies(cancerType);
