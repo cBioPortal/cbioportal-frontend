@@ -18,6 +18,7 @@ import PmidCache from "../PmidCache";
 import {CopyNumberCount} from "../../../shared/api/generated/CBioPortalAPIInternal";
 import MrnaExprRankCache from "../clinicalInformation/MrnaExprRankCache";
 import {IGisticData} from "../../../shared/model/Gistic";
+import CopyNumberCountCache from "../clinicalInformation/CopyNumberCountCache";
 
 
 class CNATableComponent extends MSKTable<DiscreteCopyNumberData[]> {
@@ -33,7 +34,7 @@ type ICopyNumberTableWrapperProps = {
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
     pmidCache?:PmidCache;
     data:DiscreteCopyNumberData[][];
-    copyNumberCountData?:CopyNumberCount[];
+    copyNumberCountCache?:CopyNumberCountCache;
     mrnaExprRankCache?:MrnaExprRankCache;
     gisticData:IGisticData;
     mrnaExprRankGeneticProfileId?:string;
@@ -109,14 +110,14 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
 
         columns.push({
             name:"Cohort",
-            render:(d:DiscreteCopyNumberData[])=>(this.props.copyNumberCountData
+            render:(d:DiscreteCopyNumberData[])=>(this.props.copyNumberCountCache
                 ? CohortColumnFormatter.renderFunction(d,
-                    this.props.copyNumberCountData,
+                    this.props.copyNumberCountCache,
                     this.props.gisticData)
                 : (<span></span>)),
             sortBy:(d:DiscreteCopyNumberData[]) => {
-                if (this.props.copyNumberCountData) {
-                    return CohortColumnFormatter.getSortValue(d, this.props.copyNumberCountData);
+                if (this.props.copyNumberCountCache) {
+                    return CohortColumnFormatter.getSortValue(d, this.props.copyNumberCountCache);
                 } else {
                     return 0;
                 }

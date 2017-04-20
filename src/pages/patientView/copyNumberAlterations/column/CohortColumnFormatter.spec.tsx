@@ -1,11 +1,13 @@
 import CohortColumnFormatter from './CohortColumnFormatter';
 import {IGisticData} from "shared/model/Gistic";
 import {DiscreteCopyNumberData} from "shared/api/generated/CBioPortalAPI";
-import {CopyNumberCount} from "shared/api/generated/CBioPortalAPIInternal";
+import {CopyNumberCount, CopyNumberCountIdentifier} from "shared/api/generated/CBioPortalAPIInternal";
 import React from 'react';
 import { assert } from 'chai';
 import {shallow, mount, ReactWrapper} from 'enzyme';
 import sinon from 'sinon';
+import CopyNumberCountCache from "../../clinicalInformation/CopyNumberCountCache";
+import {CacheData} from "../../clinicalInformation/SampleGeneCache";
 
 describe('CohortColumnFormatter', () => {
 
@@ -78,12 +80,27 @@ describe('CohortColumnFormatter', () => {
             }
         ]
     };
+    const fakeCache:CopyNumberCountCache = new CopyNumberCountCache("");
 
     const tooltips: Array<ReactWrapper<any, any>> = [];
 
     before(() => {
         tooltips.push(mount(CohortColumnFormatter.tooltipContent([copyNumberData[0]], copyNumberCountData[0])));
         tooltips.push(mount(CohortColumnFormatter.tooltipContent([copyNumberData[1]], copyNumberCountData[1])));
+
+        sinon.stub(fakeCache, 'get', (query:CopyNumberCountIdentifier):CacheData<CopyNumberCount>|null=>{
+            let cnc:CopyNumberCount|undefined = copyNumberCountData.find(x=>{
+                return x.entrezGeneId === query.entrezGeneId && x.alteration === query.alteration;
+            });
+            if (cnc) {
+                return {
+                    status:"complete",
+                    data: cnc
+                };
+            } else {
+                return null;
+            }
+        });
     });
 
     it('generates the tooltip text properly', () => {
@@ -92,8 +109,8 @@ describe('CohortColumnFormatter', () => {
     });
 
     it('calculates the sort value correctly', () => {
-        assert.equal(CohortColumnFormatter.getSortValue([copyNumberData[0]], copyNumberCountData), 61);
-        assert.equal(CohortColumnFormatter.getSortValue([copyNumberData[1]], copyNumberCountData), 1);
+        assert.equal(CohortColumnFormatter.getSortValue([copyNumberData[0]], fakeCache), 61);
+        assert.equal(CohortColumnFormatter.getSortValue([copyNumberData[1]], fakeCache), 1);
     });
 
     it('picks the correct gistic summary', () => {
