@@ -38,6 +38,11 @@ import CopyNumberCountCache from "./CopyNumberCountCache";
 
 type PageMode = 'patient' | 'sample';
 
+const ONCOKB_DEFAULT: IOncoKbData = {
+    sampleToTumorMap : {},
+    indicatorMap : {}
+}
+
 export function groupByEntityId(clinicalDataArray: Array<ClinicalData>) {
     return _.map(
         _.groupBy(clinicalDataArray, 'entityId'),
@@ -543,7 +548,7 @@ export class PatientViewPageStore {
     async oncoKbDataInvoke(){
 
         if (this.mutationData.result.length === 0) {
-            return {sampleToTumorMap: {}, indicatorMap: {}};
+            return ONCOKB_DEFAULT;
         }
 
         const queryVariants = _.uniqBy(_.map(this.mutationData.result, (mutation: Mutation) => {
@@ -564,7 +569,7 @@ export class PatientViewPageStore {
             this.clinicalDataForSamples
         ],
         invoke: async() => this.oncoKbDataInvoke()
-    }, {sampleToTumorMap: {}, indicatorMap: {}});
+    }, ONCOKB_DEFAULT);
 
     readonly cnaOncoKbData = remoteData<IOncoKbData>({
         await: () => [
@@ -572,18 +577,42 @@ export class PatientViewPageStore {
             this.clinicalDataForSamples
         ],
         invoke: async() => {
-            const queryVariants = _.uniqBy(_.map(this.discreteCNAData.result, (copyNumberData: DiscreteCopyNumberData) => {
-                return generateQueryVariant(copyNumberData.gene.hugoGeneSymbol,
-                    this.sampleIdToTumorType[copyNumberData.sampleId],
-                    getAlterationString(copyNumberData.alteration));
-            }), "id");
-
-            return fetchOncoKbData(this.sampleIdToTumorType, queryVariants);
-        },
-        onError:()=>{
-            // fail silently TODO: figure out why queryVariants is empty
+            if (this.discreteCNAData.result.length > 0) {
+                const queryVariants = _.uniqBy(_.map(this.discreteCNAData.result, (copyNumberData: DiscreteCopyNumberData) => {
+                    return generateQueryVariant(copyNumberData.gene.hugoGeneSymbol,
+                        this.sampleIdToTumorType[copyNumberData.sampleId],
+                        getAlterationString(copyNumberData.alteration));
+                }), "id");
+                return fetchOncoKbData(this.sampleIdToTumorType, queryVariants);
+            } else {
+                return ONCOKB_DEFAULT;
+            }
         }
-    }, {sampleToTumorMap: {}, indicatorMap: {}});
+    }, ONCOKB_DEFAULT);
+
+    readonly copyNumberCountData = remoteData<CopyNumberCount[]>({
+        await: () => [
+            this.discreteCNAData
+        ],
+        invoke: async() => {
+            const copyNumberCountIdentifiers: CopyNumberCountIdentifier[] =
+                this.discreteCNAData.result.map((cnData: DiscreteCopyNumberData) => {
+                    return {
+                        alteration: cnData.alteration,
+                        entrezGeneId: cnData.entrezGeneId
+                    };
+                });
+
+            if (this.geneticProfileIdDiscrete.result && copyNumberCountIdentifiers.length > 0) {
+                return await internalClient.fetchCopyNumberCountsUsingPOST({
+                    geneticProfileId: this.geneticProfileIdDiscrete.result,
+                    copyNumberCountIdentifiers
+                });
+            } else {
+                return [];
+            }
+        }
+    }, []);
 
     @computed get indexedHotspotData(): IHotspotData|undefined
     {
