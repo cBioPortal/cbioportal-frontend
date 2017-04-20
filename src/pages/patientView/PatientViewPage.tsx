@@ -28,6 +28,7 @@ import { MSKTabs, MSKTab } from "../../shared/components/MSKTabs/MSKTabs";
 import validateParameters from '../../shared/lib/validateParameters';
 
 import './patient.scss';
+import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIndicator";
 
 const patientViewPageStore = new PatientViewPageStore();
 
@@ -288,6 +289,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                         <MSKTab key={0} id="summaryTab" linkText="Summary">
 
+                            <LoadingIndicator isLoading={patientViewPageStore.clinicalEvents.isPending} />
+
                             {
                                 (!!sampleManager && patientViewPageStore.clinicalEvents.isComplete && patientViewPageStore.clinicalEvents.result.length > 0) && (
 
@@ -298,6 +301,10 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 )
 
                             }
+
+                            <LoadingIndicator
+                                    isLoading={patientViewPageStore.mutationData.isPending || patientViewPageStore.cnaSegments.isPending}
+                            />
 
                             {
                                 (patientViewPageStore.mutationData.isComplete && patientViewPageStore.cnaSegments.isComplete && sampleManager) && (
@@ -314,6 +321,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             }
 
                             <hr />
+
+                            <LoadingIndicator isLoading={patientViewPageStore.mutationData.isPending} />
 
                             {
                                 (patientViewPageStore.mutationData.isComplete && !!sampleManager) && (
@@ -339,6 +348,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             }
 
                             <hr />
+
+                            <LoadingIndicator isLoading={(this.cnaTableStatus === 'loading')} />
 
                             <CopyNumberTableWrapper
                                 sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
