@@ -6,6 +6,7 @@ import * as _ from 'lodash';
 export type IPathologyReportProps = {
 
     pdfs:PathologyReportPDF[];
+    iframeStyle?:{[styleProp:string]:any};
 
 }
 
@@ -51,7 +52,7 @@ export default class PathologyReport extends React.Component<IPathologyReportPro
                 </select>
             </If>
 
-            <iframe style={{ height:1100, width: '100%', border:'none'}} src={this.state.pdfUrl}></iframe>
+            <iframe style={{ height:1100, width: '100%', border:'none', ...(this.props.iframeStyle || {})}} src={this.state.pdfUrl}></iframe>
 
         </div>)
 
