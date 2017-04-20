@@ -307,20 +307,23 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             />
 
                             {
-                                (patientViewPageStore.mutationData.isComplete && patientViewPageStore.cnaSegments.isComplete && sampleManager) && (
-                                    <GenomicOverview
-                                        mergedMutations={patientViewPageStore.mergedMutationData}
-                                        cnaSegments={patientViewPageStore.cnaSegments.result}
-                                        sampleOrder={sampleManager.sampleIndex}
-                                        sampleLabels={sampleManager.sampleLabels}
-                                        sampleColors={sampleManager.sampleColors}
-                                        sampleManager={sampleManager}
-                                        getContainerWidth={()=>$(window).width()}
-                                    />
+                                (patientViewPageStore.mutationData.isComplete && patientViewPageStore.cnaSegments.isComplete && sampleManager)
+                                && ( patientViewPageStore.mutationData.result.length > 0 || patientViewPageStore.cnaSegments.result.length > 0)
+                                && (
+                                    <div>
+                                        <GenomicOverview
+                                            mergedMutations={patientViewPageStore.mergedMutationData}
+                                            cnaSegments={patientViewPageStore.cnaSegments.result}
+                                            sampleOrder={sampleManager.sampleIndex}
+                                            sampleLabels={sampleManager.sampleLabels}
+                                            sampleColors={sampleManager.sampleColors}
+                                            sampleManager={sampleManager}
+                                            getContainerWidth={()=>$(window).width()}
+                                        />
+                                        <hr />
+                                    </div>
                                 )
                             }
-
-                            <hr />
 
                             <LoadingIndicator isLoading={patientViewPageStore.mutationData.isPending} />
 
