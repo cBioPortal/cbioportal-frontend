@@ -1,5 +1,5 @@
 import React from 'react';
-import SampleLabelSVG from '../SampleLabel';
+import SampleLabelSVG from '../../../shared/components/sampleLabel/SampleLabel';
 
 export default class PDXTree extends React.Component {
 

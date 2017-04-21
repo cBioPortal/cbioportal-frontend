@@ -1,26 +1,30 @@
 [
     {
-        "stableId": "P04_Pri",
         "sampleType": "Primary Solid Tumor",
-        "typeOfCancerId": "difg",
-        "patientId": "P04"
+        "sampleId": "P04_Pri",
+        "patientId": "P04",
+        "cancerTypeId": "difg",
+        "studyId": "lgg_ucsf_2014"
     },
     {
-        "stableId": "P04_Rec1",
         "sampleType": "Primary Solid Tumor",
-        "typeOfCancerId": "difg",
-        "patientId": "P04"
+        "sampleId": "P04_Rec1",
+        "patientId": "P04",
+        "cancerTypeId": "difg",
+        "studyId": "lgg_ucsf_2014"
     },
     {
-        "stableId": "P04_Rec2",
         "sampleType": "Primary Solid Tumor",
-        "typeOfCancerId": "difg",
-        "patientId": "P04"
+        "sampleId": "P04_Rec2",
+        "patientId": "P04",
+        "cancerTypeId": "difg",
+        "studyId": "lgg_ucsf_2014"
     },
     {
-        "stableId": "P04_Rec3",
         "sampleType": "Primary Solid Tumor",
-        "typeOfCancerId": "difg",
-        "patientId": "P04"
+        "sampleId": "P04_Rec3",
+        "patientId": "P04",
+        "cancerTypeId": "difg",
+        "studyId": "lgg_ucsf_2014"
     }
 ]

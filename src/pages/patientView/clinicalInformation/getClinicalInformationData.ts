@@ -1,18 +1,13 @@
-import queryString from "query-string";
+import * as queryString from "query-string";
 import * as _ from 'lodash';
-import CBioPortalAPI from "shared/api/CBioPortalAPI";
+import CBioPortalAPI from "../../../shared/api/CBioPortalAPI";
+import { ClinicalDataBySampleId } from "../../../shared/api/api-types-extended";
 import {ClinicalData} from "../../../shared/api/CBioPortalAPI";
-import {ClinicalInformationData} from "./Connector";
+import {ClinicalInformationData} from "../Connector";
 //import { getTreeNodesFromClinicalData, PDXNode } from './PDXTree';
 //import sampleQuery from 'shared/api/mock/Samples_query_patient_P04.json';
 
-export type ClinicalDataBySampleId = {
-    id: string;
-    clinicalData: Array<ClinicalData>;
-};
-
-
-export function groupByEntityId(clinicalDataArray: Array<ClinicalData>){
+export function groupByEntityId(clinicalDataArray: Array<ClinicalData>) {
 
     return _.map(
         _.groupBy(clinicalDataArray, 'entityId'),
@@ -68,8 +63,8 @@ const tsClient = new CBioPortalAPI(`//${(window as any)['__API_ROOT__']}`);
 export default async function getClinicalInformationData():Promise<ClinicalInformationData> {
     const qs = queryString.parse(location.search);
 
-    const studyId: string = qs.cancer_study_id;
-    const patientId: string = qs.case_id;
+    const studyId = qs['cancer_study_id'] + '';
+    const patientId = qs['case_id'] + '';
 
     if (!studyId || !patientId)
         throw new Error("cancer_study_id and case_id are required page query parameters");

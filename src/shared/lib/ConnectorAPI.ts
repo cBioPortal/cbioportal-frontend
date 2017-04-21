@@ -1,9 +1,11 @@
 import * as SeamlessImmutable from 'seamless-immutable';
-import { connect } from 'react-redux';
+import {connect} from 'react-redux';
 import * as React from 'react';
-import MapDispatchToPropsObject = ReactRedux.MapDispatchToPropsObject;
-import ActionCreator = ReactRedux.ActionCreator;
-import Action = Redux.Action;
+import {Action} from "../../../node_modules/redux/index";
+
+interface ActionCreator<A> {
+  (...args: any[]): A;
+}
 
 export type IDispatch<A> = (action:A)=>void;
 export type IActionCreator<A> = ActionCreator<A | ((dispatch:IDispatch<A>) => void)>;

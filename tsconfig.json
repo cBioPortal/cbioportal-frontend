@@ -9,10 +9,10 @@
         "target": "es6",
         "jsx": "preserve",
         "allowJs": true,
-        "experimentalDecorators": true
+        "experimentalDecorators": true,
+        "allowSyntheticDefaultImports": true
     },
     "include": [
-        "./typings/index.d.ts",
         "./typings/missing.d.ts",
         "./src/**/*"
     ],

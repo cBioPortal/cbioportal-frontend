@@ -8,6 +8,7 @@ import styles from './style/patientTable.module.scss';
 export interface IClinicalInformationPatientTableProps {
     data?: Array<ClinicalData>;
     showTitleBar?: Boolean;
+    cssClass?:String;
 }
 
 export default class ClinicalInformationPatientTable extends React.Component<IClinicalInformationPatientTableProps, {}> {
@@ -29,7 +30,7 @@ export default class ClinicalInformationPatientTable extends React.Component<ICl
                         </div>
                     :   null
                 }
-                <DataTable className={ `table table-striped ${styles.patientTable}` } columns={[{ key:'attribute', label:'Attribute'},{ key:'value', label:'Value'}]} data={tableData} />
+                <DataTable className={ `table table-striped table-border-top ${styles.patientTable} ${this.props.cssClass || ''}` } columns={[{ key:'attribute', label:'Attribute'},{ key:'value', label:'Value'}]} data={tableData} />
             </div>
         );
     }

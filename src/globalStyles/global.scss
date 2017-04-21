@@ -29,7 +29,7 @@ th.reactable-header-sort-asc:after {
   padding-bottom: 5px;
 }
 
-.reactable-column-header {
+.table-border-top .reactable-column-header {
 
   th {
     border-top:1px dashed #ddd !important;
@@ -39,4 +39,14 @@ th.reactable-header-sort-asc:after {
 
 #content {
   margin-top:8px;
+}
+
+/* override for rc-tooltip */
+
+.rc-tooltip {
+  opacity:1 !important;
+}
+
+.mainTabs > .tab-content {
+  padding-top:20px;
 }
