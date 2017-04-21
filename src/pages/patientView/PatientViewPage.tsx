@@ -404,7 +404,10 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             hide={(patientViewPageStore.pathologyReport.isComplete && patientViewPageStore.pathologyReport.result.length === 0)}
                             loading={patientViewPageStore.pathologyReport.isPending}
                     >
-                        <PathologyReport pdfs={patientViewPageStore.pathologyReport.result} />
+                        <div style={{position:"relative"}}>
+                            <Spinner style={{textAlign:'center'}} spinnerName="three-bounce" noFadeIn/> {/*Put it underneath so it gets covered by loaded element*/}
+                            <PathologyReport iframeStyle={{position:"absolute", top:0}} pdfs={patientViewPageStore.pathologyReport.result} />
+                        </div>
                     </MSKTab>
 
 
@@ -412,16 +415,23 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                              hide={(patientViewPageStore.MDAndersonHeatMapAvailable.isComplete && !patientViewPageStore.MDAndersonHeatMapAvailable.result)}
                             loading={patientViewPageStore.MDAndersonHeatMapAvailable.isPending}
                     >
-                        <iframe style={{width:'100%', height:700, border:'none'}}
-                                src={ `//bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?participant=${patientViewPageStore.patientId}` }></iframe>
+                        <div style={{position:"relative"}}>
+                            <Spinner style={{textAlign:'center'}} spinnerName="three-bounce" noFadeIn/> {/*Put it underneath so it gets covered by loaded element*/}
+                            <iframe style={{position:"absolute", top:0, width:'100%', height:700, border:'none'}}
+                                    src={ `//bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?participant=${patientViewPageStore.patientId}` }></iframe>
+                        </div>
                     </MSKTab>
 
                     <MSKTab key={5} id="tissueImageTab" linkText="Tissue Image"
-                            hide={(patientViewPageStore.hasTissueImageIFrameUrl.isComplete && !patientViewPageStore.hasTissueImageIFrameUrl.result)}
+                            hide={/https/.test(window.location.protocol) // can't show this iframe if we're on https:
+                                    || (patientViewPageStore.hasTissueImageIFrameUrl.isComplete && !patientViewPageStore.hasTissueImageIFrameUrl.result)}
                             loading={patientViewPageStore.hasTissueImageIFrameUrl.isPending}
                     >
-                        <iframe style={{width:'100%', height:700, border:'none'}}
-                                src={ `http://cancer.digitalslidearchive.net/index_mskcc.php?slide_name=${patientViewPageStore.patientId}` }></iframe>
+                        <div style={{position: "relative"}}>
+                            <Spinner style={{textAlign:'center'}} spinnerName="three-bounce" noFadeIn/> {/*Put it underneath so it gets covered by loaded element*/}
+                            <iframe style={{position:"absolute", top:0, width:'100%', height:700, border:'none'}}
+                                    src={ `http://cancer.digitalslidearchive.net/index_mskcc.php?slide_name=${patientViewPageStore.patientId}` }></iframe>
+                        </div>
                     </MSKTab>
 
                     </MSKTabs>
