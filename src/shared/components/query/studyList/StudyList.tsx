@@ -5,11 +5,12 @@ import classNames from 'classnames';
 import FontAwesome from "react-fontawesome";
 import LabeledCheckbox from "../../labeledCheckbox/LabeledCheckbox";
 import {observer} from "mobx-react";
+import {computed} from "mobx";
 import {getStudySummaryUrl, getPubMedUrl} from "../../../api/urls";
 import {QueryStoreComponent} from "../QueryStore";
 import DefaultTooltip from "../../DefaultTooltip";
-import StudyListLogic from "../StudyListLogic";
-import {cached} from 'mobxpromise';
+import StudyListLogic, {FilteredCancerTreeView} from "../StudyListLogic";
+import {CancerTreeNode} from "../CancerStudyTreeData";
 
 const styles = {
 	...styles_any as {
@@ -121,11 +122,8 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, void
 
 			heading = (
 				<li className={liClassName}>
-					<LabeledCheckbox
-						{...this.view.getCheckboxProps(cancerType)}
-						onChange={event => this.view.onCheck(cancerType, (event.target as HTMLInputElement).checked)}
-					>
-						{indentArrow} 
+					<CancerTreeCheckbox view={this.view} node={cancerType}>
+						{indentArrow}
 						<span className={styles.CancerTypeName}>
 							{cancerType.name}
 						</span>
@@ -134,7 +132,7 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, void
 								Select All
 							</span>
 						)}
-					</LabeledCheckbox>
+					</CancerTreeCheckbox>
 				</li>
 			);
 		}
@@ -172,14 +170,11 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, void
 	renderStudyName = (study:CancerStudy) =>
 	{
 		return (
-			<LabeledCheckbox
-				{...this.view.getCheckboxProps(study)}
-				onChange={event => this.view.onCheck(study, (event.target as HTMLInputElement).checked)}
-			>
+			<CancerTreeCheckbox view={this.view} node={study}>
 				<span className={styles.StudyName}>
 					{study.name}
 				</span>
-			</LabeledCheckbox>
+			</CancerTreeCheckbox>
 		);
 	}
 
@@ -251,6 +246,33 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, void
 					return content;
 				})}
 			</span>
+		);
+	}
+}
+
+export interface ICancerTreeCheckboxProps
+{
+	view: FilteredCancerTreeView;
+	node: CancerTreeNode;
+}
+
+@observer
+export class CancerTreeCheckbox extends QueryStoreComponent<ICancerTreeCheckboxProps, void>
+{
+	@computed.struct get checkboxProps()
+	{
+		return this.props.view.getCheckboxProps(this.props.node);
+	}
+
+	render()
+	{
+		return (
+			<LabeledCheckbox
+				{...this.checkboxProps}
+				onChange={event => this.props.view.onCheck(this.props.node, (event.target as HTMLInputElement).checked)}
+			>
+				{this.props.children}
+			</LabeledCheckbox>
 		);
 	}
 }
