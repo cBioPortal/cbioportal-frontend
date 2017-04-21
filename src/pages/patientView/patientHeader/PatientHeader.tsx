@@ -4,26 +4,26 @@ import Spinner from 'react-spinkit';
 
 import ClinicalInformationPatientTable from '../clinicalInformation/ClinicalInformationPatientTable';
 import SampleInline from './SampleInline';
-import {ClinicalInformationData} from "../clinicalInformation/Connector";
-import {ClinicalDataBySampleId} from "../clinicalInformation/getClinicalInformationData";
+import {ClinicalInformationData} from "../Connector";
+import { ClinicalDataBySampleId } from "../../../shared/api/api-types-extended";
 
-export type IPatientHeaderProps = PartialPick<ClinicalInformationData, 'status' | 'patient' | 'samples'>;
+import styles from './styles.module.scss';
+
+export type IPatientHeaderProps = PartialPick<ClinicalInformationData, 'clinicalDataStatus' | 'patient' | 'samples'>;
 
 export default class PatientHeader extends React.Component<IPatientHeaderProps, {}> {
     public render() {
-        switch (this.props.status) {
-            case 'fetching':
-                return <div><Spinner spinnerName='three-bounce' /></div>;
 
-            case 'complete':
-                return this.drawHeader();
+        return (
+            <div className={styles.patientHeader}>
+                <div>
+                    <i className="fa fa-female fa-2 genderIcon hidden" aria-hidden="true"></i>
+                    {this.props.patient && this.getOverlayTriggerPatient(this.props.patient)}
+                </div>
+                {this.props.samples && this.props.samples.map((s, n) => this.getOverlayTriggerSample(s, n))}
+            </div>
+        );
 
-            case 'error':
-                return <div>There was an error.</div>;
-
-            default:
-                return <div />;
-        }
     }
 
     private getPopoverSample(sample: ClinicalDataBySampleId, sampleNumber: number) {
@@ -74,17 +74,4 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
         );
     }
 
-    private drawHeader() {
-        if (this.props.patient && this.props.samples && this.props.samples.length > 0) {
-            return (
-                <div>
-                    {this.getOverlayTriggerPatient(this.props.patient)}<br />
-                    {this.props.samples.map((s, n) => this.getOverlayTriggerSample(s, n))}
-                </div>
-            );
-        }
-        else {
-            return <div>There was an error.</div>;
-        }
-    }
 }

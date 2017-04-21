@@ -1,16 +1,20 @@
 import * as React  from 'react';
-import { Button, ButtonGroup } from 'react-bootstrap';
+import { Button, ButtonGroup, Dropdown, ButtonToolbar, Checkbox } from 'react-bootstrap';
 import ReactZeroClipboard from 'react-zeroclipboard';
 import fileDownload from 'react-file-download';
 import * as _ from 'lodash';
-import renderif from 'render-if';
+import { IColumnVisibilityDef } from "../enhancedReactTable/IEnhancedReactTableProps";
+import { If } from 'react-if';
 
 export interface ITableExportButtonsProps {
     tableData?: Array<any>;
     className?: string;
     showSearch?: boolean;
     showCopyAndDownload?: boolean;
+    showHideShowColumnButton?: boolean;
     handleInput?: Function;
+    columnVisibility?:Array<IColumnVisibilityDef>;
+    onColumnToggled?: (columnId: String) => void;
 }
 
 function serializeTableData(tableData: Array<any>) {
@@ -45,6 +49,7 @@ export default class TableExportButtons extends React.Component<ITableExportButt
         super();
 
         this.handleInput = this.handleInput.bind(this);
+        this.handleSelect = this.handleSelect.bind(this);
 
     }
 
@@ -62,27 +67,71 @@ export default class TableExportButtons extends React.Component<ITableExportButt
 
     }
 
+    handleSelect(evt: React.UIEvent) {
+
+        let id = (evt.currentTarget as any).getAttribute("data-id");
+
+        if (this.props.onColumnToggled) {
+            this.props.onColumnToggled(id);
+        }
+
+    }
+
     public render() {
 
         return (
             <div className={ (this.props.className || '') + '' }>
 
-                { renderif(this.props.showSearch) (
-                <div className="form-group has-feedback input-group-sm" style={{ display:'inline-block'  }}>
-                    <input type="text" onInput={this.handleInput} className="form-control" style={{ width:200 }}  />
-                        <span className="fa fa-search form-control-feedback" aria-hidden="true"></span>
-                </div>
-                )}
 
-                { renderif(this.props.showCopyAndDownload) (
-                <ButtonGroup style={{ marginLeft:10 }}>
-                    <ReactZeroClipboard swfPath={require('react-zeroclipboard/assets/ZeroClipboard.swf')} getText={ this.getText }>
-                        <Button className="btn-sm">Copy</Button>
-                    </ReactZeroClipboard>
 
-                    <Button className="btn-sm" onClick={ this.downloadData }>Download CSV</Button>
-                </ButtonGroup>
-                )}
+                <ButtonToolbar>
+                    <If condition={this.props.showHideShowColumnButton}>
+                        <Dropdown id="dropdown-custom-1">
+                            <Dropdown.Toggle rootCloseEvent="click" className="btn-sm">
+                                Show/Hide Columns
+                            </Dropdown.Toggle>
+                            <Dropdown.Menu bsRole="menu" style={{ paddingLeft:10, overflow:'auto', maxHeight:300, whiteSpace:'nowrap' }}>
+                                <ul className="list-unstyled">
+                                {
+                                    this.props.columnVisibility &&
+                                    _.map(this.props.columnVisibility, (visibility: IColumnVisibilityDef) => {
+                                        return (
+                                            <li key={visibility.id}>
+                                                <Checkbox data-id={visibility.id} onChange={this.handleSelect} checked={visibility.visibility === "visible"} inline>{visibility.name}</Checkbox>
+                                            </li>
+                                        );
+                                    })
+                                }
+                                </ul>
+                            </Dropdown.Menu>
+
+                        </Dropdown>
+                    </If>
+
+                    <If condition={ this.props.showCopyAndDownload}>
+                        <ButtonGroup style={{ marginLeft:10 }}>
+                            <ReactZeroClipboard swfPath={require('react-zeroclipboard/assets/ZeroClipboard.swf')} getText={ this.getText }>
+                                <Button className="btn-sm">Copy</Button>
+                            </ReactZeroClipboard>
+
+                            <Button className="btn-sm" onClick={ this.downloadData }>Download CSV</Button>
+                        </ButtonGroup>
+                    </If>
+
+                    <If condition={this.props.showSearch}>
+                        <div className="form-group has-feedback input-group-sm" style={{ display:'inline-block', marginLeft:10  }}>
+                            <input type="text" onInput={this.handleInput} className="form-control" style={{ width:200 }}  />
+                            <span className="fa fa-search form-control-feedback" aria-hidden="true"></span>
+                        </div>
+                    </If>
+
+                </ButtonToolbar>
+
+
+
+
+
+
             </div>
         );
     }
