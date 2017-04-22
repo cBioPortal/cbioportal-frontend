@@ -48,7 +48,7 @@ var config = {
     'output': {
         path: './dist/',
         filename: 'reactapp/[name].app.js',
-        chunkFilename: 'reactapp/[name].chunk.js',
+        chunkFilename: 'reactapp/[name].[chunkhash].chunk.js',
         cssFilename: 'reactapp/app.css',
         hash: false,
         publicPath: '',
@@ -184,7 +184,11 @@ const defines =
 
 config.plugins = [
     new webpack.DefinePlugin(defines),
-    new ExtractTextPlugin('reactapp/styles.css')
+    new ExtractTextPlugin('reactapp/styles.css'),
+    new webpack.ProvidePlugin({
+        $: "jquery",
+        jQuery: "jquery"
+    })
 ].concat(config.plugins);
 // END ENV variables
 
