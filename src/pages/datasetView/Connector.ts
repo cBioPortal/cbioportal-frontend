@@ -18,11 +18,11 @@ export type ActionTypes = (
 
 export default new class DatasetConnector extends Connector<RootState, DatasetDownloads, ActionTypes, IDatasetPageUnconnectedProps>
 {
-
     initialState:DatasetDownloads = {
         status: 'fetching'
     };
 
+    actions = {};
     mapDispatchToProps = {
         loadDatasetsInfo: () => (dispatch:IDispatch<ActionTypes>) => {
 

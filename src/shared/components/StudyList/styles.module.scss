@@ -1,0 +1,147 @@
+.selectAllStudies {
+  color: #1982b8;
+  font: normal normal 600 10px/18px 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  margin: 0 0 0 10px;
+  text-transform: uppercase;
+}
+
+ul.StudyList {
+  padding: 0 0 0 15px;
+
+  &.Level0, &.Level1, &.Level3, &.Level4 {
+    padding-left: 0px;
+  }
+
+  &.Level1 li:last-of-type, &.Level2 li:last-of-type, &.Level3 li:last-of-type {
+    margin-bottom: 10px;
+  }
+
+  &.Level0 {
+    padding: 5px;
+    max-height: 400px;
+    overflow: auto;
+
+    > li.CancerType, > li.Study {
+      margin-left: 0px;
+    }
+  }
+
+  &.Level1 {
+    > li.Study {
+      margin-left: 15px;
+    }
+  }
+
+  li.CancerType {
+    list-style-type: none;
+    margin-bottom: 0px !important;
+
+    input {
+      display: none;
+    }
+
+    .indentArrow {
+      color: #999;
+      line-height: 18px;
+      margin-right: 5px;
+    }
+
+    .SelectAll {
+      opacity: 0;
+      font: normal normal 500 10px/18px 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      color: #999;
+      text-transform: uppercase;
+      margin: 0 10px;
+      transition: opacity .1s ease-in-out;
+      -moz-transition: opacity .1s ease-in-out;
+      -webkit-transition: opacity .1s ease-in-out;
+    }
+
+    &:hover {
+      .SelectAll {
+        opacity: 1;
+      }
+    }
+
+    &.Level1 {
+      label {      
+        font: normal normal 500 17px/18px 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        color: #333;
+        border-bottom: 1px solid rgb(232, 241, 248);
+        padding: 10px 5px 5px 5px;
+        margin: 20px 10px 5px 10px;
+      }
+    }
+
+    &.Level2 {
+      padding-top: 0px;
+
+      label {
+        font: normal normal 400 15px/18px 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        color: #1982b8;
+        padding: 5px 15px 5px 0;
+      }
+    }
+
+    &.Level3 {
+      label {
+        font: normal normal 600 11px/18px 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        color: #444;
+        padding: 0px 15px 0px 0;
+        text-transform: uppercase;
+      }
+    }
+  }
+
+  li.Study {
+    list-style-type: none;
+    padding: 2px 0;
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    align-items: flex-start;
+
+    .StudyName {
+      color: #444;
+      max-width: 435px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .StudySamples {
+      text-align: right;
+      margin-right: 5px;
+      display: inline-block;
+    }
+
+    .StudyMeta {
+      color: #999;
+      font-size: 12px;
+
+      .StudyLinks {
+        display: inline-block;
+        width: 40px;
+
+        > span {
+          color: #ccc;
+          margin: 0 0 0 2px;
+          min-width: 15px;
+          display: inline-block;
+        }
+
+        a {
+          color: #1982b8;
+          text-align: center;
+
+          span:global(.fa) {
+            margin: 0 5px 0 0;
+            min-width: 15px;
+          }
+        }
+      }
+
+    }
+  }
+}
+

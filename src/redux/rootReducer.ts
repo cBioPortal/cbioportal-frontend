@@ -8,19 +8,22 @@ import {DatasetDownloads} from "../pages/datasetView/Connector";
 import {Connector} from "../shared/lib/ConnectorAPI";
 import {Reducer} from "redux";
 import Action = Redux.Action;
+import {default as old_query, QueryData} from "../shared/components/query/old/QueryConnector";
 
 //import customRoutingReducer from './customRouterReducer';
 
 // Require your modules here
 const modules:{[name:string]:Connector<any, any, any, any>} = {
     clinicalInformation,
-    datasetDownloads
+    datasetDownloads,
+    old_query,
 };
 
 // Add state nodes corresponding to your modules here
 export type RootState = {
-    datasetDownloads:DatasetDownloads
+    datasetDownloads:DatasetDownloads,
     clinicalInformation:ClinicalInformationData,
+    old_query: QueryData,
 }
 
 export const actions = {};

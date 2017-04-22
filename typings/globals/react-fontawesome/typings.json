@@ -1,0 +1,8 @@
+{
+  "resolution": "main",
+  "tree": {
+    "src": "https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/6ad4abd29dc4be75d805580c3e1a01eb46048d9e/react-fontawesome/react-fontawesome.d.ts",
+    "raw": "registry:dt/react-fontawesome#1.1.0+20160829152611",
+    "typings": "https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/6ad4abd29dc4be75d805580c3e1a01eb46048d9e/react-fontawesome/react-fontawesome.d.ts"
+  }
+}

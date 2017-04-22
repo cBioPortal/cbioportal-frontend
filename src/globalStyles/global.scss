@@ -40,3 +40,33 @@ th.reactable-header-sort-asc:after {
 #content {
   margin-top:8px;
 }
+
+
+.Select-control, .Select-control:hover {
+  background: rgba(0, 0, 0, 0.1) !important;
+  border: 0px !important;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px rgba(255, 255, 255, 0.1) !important;
+  border-radius: 2px !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  height: 30px !important;
+  font-weight: 300;
+
+  .Select-input {
+    height: 30px;
+    font-weight: 300;
+  }
+}
+
+.Select-placeholder, .Select-clear-zone,
+.has-value.Select--single > .Select-control .Select-value .Select-value-label, .has-value.is-pseudo-focused.Select--single > .Select-control .Select-value .Select-value-label {
+  color: rgba(255, 255, 255, 0.85) !important;
+  font-weight: 300;
+}
+
+.Select-placeholder, .Select--single > .Select-control .Select-value {
+  line-height: 30px !important;
+}
+
+.Select-arrow {
+  border-color: rgba(255, 255, 255, 0.85) transparent transparent !important;
+}
