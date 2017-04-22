@@ -11,7 +11,7 @@ export type IClinicalInformationContainerProps = {
     loadClinicalInformationTableData?: () => void;
     setTab?: (activeTab:number) => void;
     store?: any;
-} & PartialPick<ClinicalInformationData, 'status' | 'patient' | 'samples'>;
+} & Partial<Pick<ClinicalInformationData, 'status' | 'patient' | 'samples'>>;
 
 @Connector.decorator
 export default class ClinicalInformationContainer extends React.Component<IClinicalInformationContainerProps, {}> {

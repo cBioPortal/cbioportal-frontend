@@ -7,7 +7,7 @@ import SampleInline from './SampleInline';
 import {ClinicalInformationData} from "../clinicalInformation/Connector";
 import {ClinicalDataBySampleId} from "../clinicalInformation/getClinicalInformationData";
 
-export type IPatientHeaderProps = PartialPick<ClinicalInformationData, 'status' | 'patient' | 'samples'>;
+export type IPatientHeaderProps = Partial<Pick<ClinicalInformationData, 'status' | 'patient' | 'samples'>>;
 
 export default class PatientHeader extends React.Component<IPatientHeaderProps, {}> {
     public render() {

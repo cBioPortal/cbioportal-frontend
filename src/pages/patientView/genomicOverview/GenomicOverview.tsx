@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as $ from 'jquery';
 import * as _ from 'lodash';
-import queryString from "query-string";
+import * as queryString from "query-string";
 import { GenomicOverviewConfig, createRaphaelCanvas, getChmInfo, plotChromosomes, plotCnSegs } from './genomicOverviewHelper';
 import {CopyNumberSegment} from "../../../shared/api/CBioPortalAPI";
 

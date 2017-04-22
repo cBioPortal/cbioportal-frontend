@@ -6,8 +6,11 @@ import {ClinicalInformationData} from "../pages/patientView/clinicalInformation/
 import datasetDownloads from 'pages/datasetView/Connector';
 import {DatasetDownloads} from "../pages/datasetView/Connector";
 import {Connector} from "../shared/lib/ConnectorAPI";
-import {Reducer} from "redux";
-import Action = Redux.Action;
+
+interface Action {
+  type: any;
+}
+type Reducer<S> = <A extends Action>(state: S, action: A) => S;
 
 //import customRoutingReducer from './customRouterReducer';
 
