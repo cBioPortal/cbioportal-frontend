@@ -1,21 +1,40 @@
 import * as React from "react";
-import {SampleLabelHTML} from "../SampleLabel";
-import {ClinicalDataBySampleId} from "../clinicalInformation/getClinicalInformationData";
+import {SampleLabelHTML} from "../../../shared/components/sampleLabel/SampleLabel";
+import { ClinicalDataBySampleId } from "../../../shared/api/api-types-extended";
+import {fromPairs} from 'lodash';
+import {getSpans} from '../clinicalInformation/lib/clinicalAttributesUtil.js';
+
 
 interface ISampleInlineProps {
     sample: ClinicalDataBySampleId;
     sampleNumber: number;
+    sampleColor: string;
+    showClinical: boolean;
 }
 
 export default class SampleInline extends React.Component<ISampleInlineProps, {}> {
     public render() {
-        const { sample, sampleNumber } = this.props;
+        const { sample, sampleNumber, sampleColor, showClinical } = this.props;
+
 
         return (
-            <span style={{paddingRight: '10px'}}>
-                <SampleLabelHTML color={'black'} label={(sampleNumber).toString()} />
-                {' ' + sample.id}
-            </span>
+            <SampleLabelHTML color={sampleColor} label={(sampleNumber).toString()} />
         );
+
+        // if (showClinical) {
+        //     const clinicalDataLegacy: any = fromPairs(sample.clinicalData.map((x) => [x.clinicalAttributeId, x.value]));
+        //
+        //     return (
+        //         <span style={{paddingRight: '10px'}}>
+        //             <SampleLabelHTML color={sampleColor} label={(sampleNumber).toString()} />
+        //             {' ' + sample.id}
+        //             <span className='clinical-spans' dangerouslySetInnerHTML={{__html:
+        //                 getSpans(clinicalDataLegacy, 'lgg_ucsf_2014')}}>
+        //             </span>
+        //         </span>
+        //     );
+        // } else {
+        //
+        // }
     }
 }

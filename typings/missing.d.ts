@@ -1,10 +1,15 @@
+// allow these file patterns to be imported
 declare module '*.scss';
 declare module '*.json';
-declare module 'query-string';
+
+// these packages are missing typings
+declare module 'rc-tooltip';
 declare module 'react-file-download';
 declare module 'react-zeroclipboard';
 declare module 'reactableMSK';
 declare module 'redux-seamless-immutable';
-declare module 'webpack-raphael';
 declare module 'render-if';
-declare type PartialPick<T, K extends keyof T> = Partial<Pick<T, K>>;
+declare module 'react-if';
+declare module 'react-collapse';
+declare module 'webpack-raphael';
+declare module 'mobx-react-router';

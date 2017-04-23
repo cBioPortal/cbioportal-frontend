@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 
-export default function(name: string, Comp: typeof React.Component, props = {}) {
+export default function(name: string, Comp: React.ComponentClass<any>, props:any = {}) {
 
     const win = (window as any);
 

@@ -1,40 +1,29 @@
 import * as React from 'react';
+import {fromPairs} from 'lodash';
 import {OverlayTrigger, Popover} from 'react-bootstrap';
-import Spinner from 'react-spinkit';
 
 import ClinicalInformationPatientTable from '../clinicalInformation/ClinicalInformationPatientTable';
-import SampleInline from './SampleInline';
-import {ClinicalInformationData} from "../clinicalInformation/Connector";
-import {ClinicalDataBySampleId} from "../clinicalInformation/getClinicalInformationData";
+import {getSpans} from '../clinicalInformation/lib/clinicalAttributesUtil.js';
 
-export type IPatientHeaderProps = PartialPick<ClinicalInformationData, 'status' | 'patient' | 'samples'>;
+import styles from './styles.module.scss';
+import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
 
+export type IPatientHeaderProps = {
+    patient:any;
+    handlePatientClick:any;
+}
 export default class PatientHeader extends React.Component<IPatientHeaderProps, {}> {
     public render() {
-        switch (this.props.status) {
-            case 'fetching':
-                return <div><Spinner spinnerName='three-bounce' /></div>;
 
-            case 'complete':
-                return this.drawHeader();
-
-            case 'error':
-                return <div>There was an error.</div>;
-
-            default:
-                return <div />;
-        }
-    }
-
-    private getPopoverSample(sample: ClinicalDataBySampleId, sampleNumber: number) {
         return (
-            <Popover key={sampleNumber} id={'popover-sample-' + sampleNumber}>
-                <ClinicalInformationPatientTable showTitleBar={false} data={sample.clinicalData} />
-            </Popover>
+            <div className={styles.patientHeader}>
+                {this.props.patient && this.getOverlayTriggerPatient(this.props.patient)}
+            </div>
         );
+
     }
 
-    private getPopoverPatient(patient: ClinicalInformationData['patient']) {
+    private getPopoverPatient(patient: any) {
         return patient && (
             <Popover key={patient.id} id={'popover-sample-' + patient.id}>
                 <ClinicalInformationPatientTable showTitleBar={false} data={patient.clinicalData} />
@@ -42,7 +31,7 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
         );
     }
 
-    private getOverlayTriggerPatient(patient: ClinicalInformationData['patient']) {
+    private getOverlayTriggerPatient(patient: any) {
         return patient && (
             <OverlayTrigger
                 delayHide={100}
@@ -52,39 +41,12 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
                 overlay={this.getPopoverPatient(patient)}
             >
                 <span>
-                    {patient.id}
+                    <a href="javascript:void(0)" onClick={()=>this.props.handlePatientClick(patient.id)}>{patient.id}</a>
+                    <span className='clinical-spans' id='patient-attributes' dangerouslySetInnerHTML={{__html:
+                        getSpans(fromPairs(patient.clinicalData.map((x: any) => [x.clinicalAttributeId, x.value])), 'lgg_ucsf_2014')}}>
+                    </span>
                 </span>
             </OverlayTrigger>
         );
-    }
-
-    private getOverlayTriggerSample(sample: ClinicalDataBySampleId, sampleNumber: number) {
-        return (
-            <OverlayTrigger
-                delayHide={100}
-                key={sampleNumber}
-                trigger={['hover', 'focus']}
-                placement='bottom'
-                overlay={this.getPopoverSample(sample, sampleNumber + 1)}
-            >
-                <span>
-                    <SampleInline sample={sample} sampleNumber={sampleNumber + 1} />
-                </span>
-            </OverlayTrigger>
-        );
-    }
-
-    private drawHeader() {
-        if (this.props.patient && this.props.samples && this.props.samples.length > 0) {
-            return (
-                <div>
-                    {this.getOverlayTriggerPatient(this.props.patient)}<br />
-                    {this.props.samples.map((s, n) => this.getOverlayTriggerSample(s, n))}
-                </div>
-            );
-        }
-        else {
-            return <div>There was an error.</div>;
-        }
     }
 }

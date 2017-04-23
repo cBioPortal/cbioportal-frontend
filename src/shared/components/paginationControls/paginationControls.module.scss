@@ -1,0 +1,17 @@
+.default-cursor {
+    cursor: default !important;
+    height: 30px;
+}
+
+.form-select {
+    display: inline-block;
+    margin-left: 5px;
+}
+
+.page-number-input {
+    cursor: auto !important;
+    border: 1px inset;
+    height: 18px;
+    padding: 0 5px 0 5px;
+    display: inline-block;
+}

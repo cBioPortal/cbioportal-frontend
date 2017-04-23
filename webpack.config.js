@@ -48,7 +48,7 @@ var config = {
     'output': {
         path: './dist/',
         filename: 'reactapp/[name].app.js',
-        chunkFilename: 'reactapp/[name].chunk.js',
+        chunkFilename: 'reactapp/[name].[chunkhash].chunk.js',
         cssFilename: 'reactapp/app.css',
         hash: false,
         publicPath: '',
@@ -64,6 +64,8 @@ var config = {
             '.tsx',
         ]
     },
+
+
 
     plugins: [
         new HtmlWebpackPlugin({cache: false, template: 'my-index.ejs'}),
@@ -127,6 +129,10 @@ var config = {
                 test: /\.swf$/,
                 loader: `file-loader?name=${imgPath}`,
             },
+            {
+                test: /\.pdf$/,
+                loader: `url-loader?name=${imgPath}&limit=1`,
+            },
             // {
             //     test: /ClinicalInformationContainer/i,
             //     include: path.resolve(__dirname, 'src'),
@@ -184,7 +190,11 @@ const defines =
 
 config.plugins = [
     new webpack.DefinePlugin(defines),
-    new ExtractTextPlugin('reactapp/styles.css')
+    new ExtractTextPlugin('reactapp/styles.css'),
+    new webpack.ProvidePlugin({
+        $: "jquery",
+        jQuery: "jquery"
+    })
 ].concat(config.plugins);
 // END ENV variables
 
@@ -296,7 +306,8 @@ config.resolve.alias = {
     styles: join(src, 'styles'),
     reducers: join(src, 'redux/modules'),
     pages: join(src, 'pages'),
-    shared: join(src,'shared')
+    shared: join(src,'shared'),
+    appConfig: path.join(__dirname + '/src', 'config', process.env.NODE_ENV + '.config')
 };
 // end Roots
 
