@@ -31,13 +31,15 @@ function lazyLoadComponent(loader) {
     };
 };
 
+var defaultRoute = window.defaultRoute || '/home';
+
 
 export const makeRoutes = () => (
         <Route path="/" component={Container}>
             <Route path="/home" getComponent={lazyLoadComponent(HomePage)} />
             <Route path="/patient" getComponent={lazyLoadComponent(PatientViewPage)} />
-            <Redirect from="*" to="/patient" />
-            <IndexRedirect to="/patient" />
+            <Redirect from="*" to={defaultRoute} />
+            <IndexRedirect to={defaultRoute} />
         </Route>
 );
 
