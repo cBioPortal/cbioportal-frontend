@@ -36,52 +36,9 @@
 
 
 .SelectedStudyList {
-  position: absolute;
-  background-color: #fff;
-  border: 1px solid #ccc;
-  top: 0px;
-  left: 0px;
-  width: 100%;
-  height: 400px;
-  overflow: auto;
-  -webkit-animation: fadein 0.25s; /* Safari, Chrome and Opera > 12.1 */
-     -moz-animation: fadein 0.25s; /* Firefox < 16 */
-      -ms-animation: fadein 0.25s; /* Internet Explorer */
-       -o-animation: fadein 0.25s; /* Opera < 12.1 */
-          animation: fadein 0.25s;
-
   ul.StudyList {
     margin: 0;
     padding: 0 15px;
-  }
-
-  h4 {
-    margin: 15px 15px 0 15px;
-    padding: 0 5px 5px 5px;
-    font-weight: 400;
-    line-height: 26px;
-    border-bottom: 1px solid rgba(143, 189, 212, 0.42);
-  }
-
-  &:before {
-    content: '\f0d8';
-    color: #e8f1f8;
-    font-family: 'FontAwesome';
-    position: absolute;
-    top: -12px;
-    right: 15px;
-  }
-
-  .closeSelected {
-    color: #337ab7;
-    font-size: 14px;
-    font-weight: 500;
-    float: right;
-    display: inline-block;
-
-    &:hover {
-      cursor: pointer;
-    }
   }
 
   .deselectAll {

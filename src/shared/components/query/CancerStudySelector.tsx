@@ -12,8 +12,10 @@ import {expr} from 'mobx';
 import memoize from "memoize-weak-decorator";
 import {QueryStoreComponent} from "./QueryStore";
 import SectionHeader from "../sectionHeader/SectionHeader";
+import {Modal} from 'react-bootstrap';
 
 const styles = styles_any as {
+	SelectedStudiesWindow: string,
 	CancerStudySelector: string,
 	cancerStudySelectorHeader: string,
 	selectable: string,
@@ -187,12 +189,21 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 					</div>
 					<div className={styles.cancerStudyListContainer}>
 						<StudyList/>
-						{!!(this.store.showSelectedStudiesOnly) && (
-							/* HACK - should use Modal dialog instead */
-							<StudyList showSelectedStudiesOnly/>
-						)}
 					</div>
 				</FlexRow>
+
+				<Modal
+					className={styles.SelectedStudiesWindow}
+					show={this.store.showSelectedStudiesOnly}
+					onHide={() => this.store.showSelectedStudiesOnly = false}
+				>
+					<Modal.Header closeButton>
+						<Modal.Title>Selected Studies</Modal.Title>
+					</Modal.Header>
+					<Modal.Body>
+						<StudyList showSelectedStudiesOnly/>
+					</Modal.Body>
+				</Modal>
 			</FlexCol>
 		);
 	}

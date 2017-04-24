@@ -79,6 +79,12 @@
   box-shadow: 0 0 1px #e9e9e9;
 }
 
+div.SelectedStudiesWindow {
+  div:global(.modal-dialog) {
+    width: 850px;
+  }
+}
+
 .CancerStudySelector {
   position: relative;
   overflow: hidden;
@@ -389,7 +395,7 @@
     font-size: small;
   }
   div.validBubble,
-  div.invalidBubble, {
+  div.invalidBubble {
     color: #fff;
     display: flex;
     align-items: center;

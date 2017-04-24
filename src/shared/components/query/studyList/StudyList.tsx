@@ -50,52 +50,52 @@ export interface IStudyListProps
 @observer
 export default class StudyList extends QueryStoreComponent<IStudyListProps, void>
 {
+	private _view:FilteredCancerTreeView;
+
+	get view()
+	{
+		return this._view || (
+			this.props.showSelectedStudiesOnly
+			? this.logic.selectedStudiesView
+			: this.logic.mainView
+		);
+	}
+
 	get logic() { return this.store.studyListLogic; }
 
 	get rootCancerType() { return this.store.treeData.rootCancerType; }
 
-	get view()
+	componentDidMount()
 	{
-		return this.props.showSelectedStudiesOnly
-			? this.logic.selectedStudiesView
-			: this.logic.mainView;
+		// when rendering selected studies view,
+		// cache the view object so studies do not disappear immediately when deselected.
+		if (this.props.showSelectedStudiesOnly)
+			this._view = this.view;
 	}
 
 	render()
 	{
-		if (this.props.showSelectedStudiesOnly)
-			return this.renderSelectedStudies();
-		else
-			return this.renderCancerType(this.rootCancerType);
-	}
+		let studyList = this.renderCancerType(this.rootCancerType);
 
-	renderSelectedStudies = () =>
-	{
-		return (
-			<div className={styles.SelectedStudyList}>
-				<h4>
-						Selected Studies 
-						<span 
-							className={styles.closeSelected}
-							onClick={() => this.store.showSelectedStudiesOnly = false}
-						>
-							Return to Study Selector
-						</span>
-				</h4>
-				<span
-					className={styles.deselectAll}
-					onClick={() => {
-						this.view.onCheck(this.store.treeData.rootCancerType, false);
-						this.store.showSelectedStudiesOnly = false;
-					}}
-				>
-					Deselect all
-				</span>
-				<ul className={styles.StudyList}>
-					{this.renderCancerType(this.rootCancerType)}
-				</ul>
-			</div>
-		);
+		if (this.props.showSelectedStudiesOnly)
+		{
+			return (
+				<div className={styles.SelectedStudyList}>
+					<span
+						className={styles.deselectAll}
+						onClick={() => {
+							this.view.onCheck(this.store.treeData.rootCancerType, false);
+							this.store.showSelectedStudiesOnly = false;
+						}}
+					>
+						Deselect all
+					</span>
+					{studyList}
+				</div>
+			);
+		}
+
+		return studyList;
 	}
 
 	renderCancerType = (cancerType:CancerType, arrayIndex:number = 0):JSX.Element | null =>

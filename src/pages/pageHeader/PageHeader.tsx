@@ -1,15 +1,11 @@
 import * as React from 'react';
 import './styles.scss';
-import devMode from "../../shared/lib/devMode";
-import {observer} from "mobx-react";
-import LabeledCheckbox from "../../shared/components/labeledCheckbox/LabeledCheckbox";
 
 interface IPageHeaderProps {
     router: any;
     currentRoutePath: string;
 }
 
-@observer
 export default class PageHeader extends React.Component<IPageHeaderProps, void> {
 
     routeInput: HTMLInputElement;
@@ -29,9 +25,6 @@ export default class PageHeader extends React.Component<IPageHeaderProps, void> 
                                 <input className="form-control" defaultValue={this.props.currentRoutePath} ref={(c) => { this.routeInput = c; }} />
                         </div>
                     </form>
-                    <LabeledCheckbox checked={devMode.enabled} onChange={event => devMode.enabled = event.target.checked}>
-                        Enable debug mode
-                    </LabeledCheckbox>
                 </div>
             </header>
         );
