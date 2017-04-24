@@ -1,5 +1,5 @@
 import * as React from 'react';
-import Spinner from "react-spinkit";
+import {ThreeBounce} from 'better-react-spinkit';
 import { If, Else } from 'react-if';
 
 export interface IFeatureTitleProps {
@@ -17,7 +17,7 @@ export default class FeatureTitle extends React.Component<IFeatureTitleProps, {}
 
                 <Else><h4 className={this.props.className || ''}>{this.props.title}
                     <If condition={this.props.isLoading}>
-                        <Spinner spinnerName="three-bounce" style={{ display:'inline-block', marginLeft:10 }} noFadeIn={true}  />
+                        <ThreeBounce style={{ display:'inline-block', marginLeft:10 }} />
                     </If>
                 </h4></Else>
             </If>
