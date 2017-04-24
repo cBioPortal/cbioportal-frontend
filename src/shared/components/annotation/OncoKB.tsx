@@ -1,6 +1,7 @@
 import * as React from 'react';
 import {Modal} from 'react-bootstrap';
 import {observer} from "mobx-react";
+import {Circle} from "better-react-spinkit";
 import DefaultTooltip from 'shared/components/DefaultTooltip';
 import annotationStyles from "./styles/annotation.module.scss";
 import oncogenicIconStyles from "./styles/oncogenicIcon.module.scss";
@@ -100,7 +101,12 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
 
             if (this.showFeedback)
             {
-                oncoKbContent = this.feedbackModal(this.props.indicator);
+                oncoKbContent = (
+                    <span>
+                        {oncoKbContent}
+                        {this.feedbackModal(this.props.indicator)}
+                    </span>
+                );
             }
             else if (this.tooltipDataLoadComplete || this.props.evidenceCache && this.props.evidenceQuery)
             {
@@ -120,8 +126,24 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
                 );
             }
         }
+        else
+        {
+            // Here we assume that every OncoKB component is eventually updated with a valid
+            // IndicatorQueryResp property.
+            //
+            // Ideally we should distinguish "Loading", "NA" and "Error" states. This requires implementing
+            // an OncoKbIndicator cache...
+            oncoKbContent = this.loaderIcon();
+        }
 
         return oncoKbContent;
+    }
+
+    public loaderIcon()
+    {
+        return (
+            <Circle size={18} scaleEnd={0.5} scaleStart={0.2} color="#aaa" className="pull-left"/>
+        );
     }
 
     public feedbackModal(indicator:IndicatorQueryResp)
