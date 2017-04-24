@@ -7,6 +7,7 @@ import Icon from "shared/components/cohort/LetterIcon";
 import {IMutSigData as MutSigData} from "shared/model/MutSig";
 import {VariantCount} from "../../../../shared/api/generated/CBioPortalAPIInternal";
 import {CacheData} from "../../../../shared/lib/LazyMobXCache";
+import {default as TableCellStatusIndicator, TableCellStatus} from "../../../../shared/components/TableCellStatus";
 
 type AugVariantCountOutput = (CacheData<VariantCount> & {hugoGeneSymbol:string});
 
@@ -61,31 +62,13 @@ export default class CohortColumnFormatter {
 
     private static makeCohortFrequencyViz(variantCount:AugVariantCountOutput | null) {
 
+        let status:TableCellStatus | null = null;
         if (variantCount === null) {
-            return (
-                <span
-                    style={{color: "gray", fontSize:"xx-small", textAlign:"center"}}
-                    alt="Querying server for data."
-                >
-                    LOADING
-                </span>
-            );
+            status = TableCellStatus.LOADING;
         } else if (variantCount.status === "error") {
-            return (<span
-                style={{color: "gray", fontSize:"xx-small", textAlign:"center"}}
-                alt="Error retrieving data."
-            >
-                    ERROR
-                </span>);
+            status = TableCellStatus.ERROR;
         } else if (variantCount.data === null) {
-            return (
-                <span
-                    style={{color: "gray", fontSize:"xx-small", textAlign:"center"}}
-                    alt="mRNA data is not available for this gene."
-                >
-                    NA
-                </span>
-            );
+            status = TableCellStatus.NA;
         } else {
             const counts = [variantCount.data.numberOfSamplesWithMutationInGene];
 
@@ -98,6 +81,13 @@ export default class CohortColumnFormatter {
                     counts={counts}
                     totalCount={variantCount.data.numberOfSamples}
                     tooltip={CohortColumnFormatter.getCohortFrequencyTooltip(variantCount)}
+                />
+            );
+        }
+        if (status !== null) {
+            return (
+                <TableCellStatusIndicator
+                    status={status}
                 />
             );
         }
