@@ -13,6 +13,7 @@ import {observable} from "mobx";
 import OncoKbEvidenceCache from "pages/patientView/OncoKbEvidenceCache";
 import OncoKbTooltip from "./OncoKbTooltip";
 import OncokbPmidCache from "pages/patientView/PmidCache";
+import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
 
 export interface IOncoKbProps {
     indicator?: IndicatorQueryResp;
@@ -24,19 +25,6 @@ export interface IOncoKbProps {
 export function hideArrow(tooltipEl: any) {
     const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');
     arrowEl.style.display = 'none';
-}
-
-// TODO duplicate code: replace this with the actual PlaceHolder component when ready
-export function placeHolder(text:string)
-{
-    return (
-        <span
-            style={{color: "gray", fontSize:"xx-small", textAlign:"center"}}
-            alt="Querying server for data."
-        >
-            {text}
-        </span>
-    );
 }
 
 /**
@@ -166,7 +154,7 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
                         marginHeight={0}
                         marginWidth={0}
                     >
-                        {placeHolder('LOADING')}
+                        <TableCellStatusIndicator status={TableCellStatus.LOADING} />
                     </iframe>
                 </Modal.Body>
             </Modal>

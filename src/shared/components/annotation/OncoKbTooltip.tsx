@@ -9,7 +9,7 @@ import {IEvidence} from "shared/model/OncoKB";
 import {
     generateTreatments, generateOncogenicCitations, generateMutationEffectCitations, extractPmids
 } from "shared/lib/OncoKbUtils";
-import {placeHolder} from "./OncoKB";
+import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
 
 export interface IOncoKbTooltipProps {
     indicator?: IndicatorQueryResp;
@@ -92,10 +92,10 @@ export default class OncoKbTooltip extends React.Component<IOncoKbTooltipProps, 
             );
         }
         else if (cacheData.status === 'pending') {
-            tooltipContent = placeHolder('LOADING');
+            tooltipContent = <TableCellStatusIndicator status={TableCellStatus.LOADING} />;
         }
         else if (cacheData.status === 'error') {
-            tooltipContent = placeHolder('ERROR');
+            tooltipContent = <TableCellStatusIndicator status={TableCellStatus.ERROR} />;
         }
 
         return tooltipContent;
