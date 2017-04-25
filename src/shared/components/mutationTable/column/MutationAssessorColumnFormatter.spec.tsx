@@ -6,7 +6,7 @@ import { assert } from 'chai';
 import {shallow, mount, ReactWrapper} from 'enzyme';
 import sinon from 'sinon';
 import {Mutation} from "../../../api/generated/CBioPortalAPI";
-import {mskTableSort} from "../../msktable/MSKTable";
+import {lazyMobXTableSort} from "../../lazyMobXTable/LazyMobXTable";
 
 describe('MutationAssessorColumnFormatter', () => {
     const mutations = [
@@ -137,7 +137,7 @@ describe('MutationAssessorColumnFormatter', () => {
             `PDB link should not exist for impact score Unknown(null)`);
     });
 
-    let sortedMutations = mskTableSort<Mutation>(mutations, m=>MutationAssessorColumnFormatter.getSortValue([m]), true);
+    let sortedMutations = lazyMobXTableSort<Mutation>(mutations, m=>MutationAssessorColumnFormatter.getSortValue([m]), true);
     it('properly sorts by Mutation Assessor column', () => {
         assert.isAbove(sortedMutations.indexOf(mutations[0]), sortedMutations.indexOf(mutations[2]),
             "H(3.5) should rank higher than M(null)");
