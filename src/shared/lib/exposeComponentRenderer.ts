@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 
-export default function(name: string, Comp: React.ComponentClass<any>, props:any = {}) {
+export default function(name: string, Comp: React.ComponentClass<any> | React.StatelessComponent<any>, props:any = {}) {
 
     const win = (window as any);
 
@@ -9,7 +9,7 @@ export default function(name: string, Comp: React.ComponentClass<any>, props:any
         win[name] = (mountNode: HTMLElement): void => {
 
             let el = React.createElement(
-                Comp,
+                Comp as any,
                 props
             );
 

@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import {Provider} from 'mobx-react';
-import {hashHistory, Router} from 'react-router';
-import {RouterStore, syncHistoryWithStore} from 'mobx-react-router';
+import { Provider } from 'mobx-react';
+import { hashHistory, createMemoryHistory, Router } from 'react-router';
+import { RouterStore, syncHistoryWithStore  } from 'mobx-react-router';
 import ExtendedRoutingStore from './shared/lib/ExtendedRouterStore';
 import {computed, extendObservable} from 'mobx';
 import makeRoutes from './routes';
@@ -28,6 +28,10 @@ if (/cbioportal\.mskcc\.org|www.cbioportal\.org/.test(window.location.hostname) 
 _.noConflict();
 
 const routingStore = new ExtendedRoutingStore();
+
+//sometimes we need to use memory history where there would be a conflict with
+//existing use of url hashfragment
+const history = (window.historyType === 'memory') ? createMemoryHistory() : hashHistory;
 
 const history = syncHistoryWithStore(hashHistory, routingStore);
 
@@ -87,6 +91,29 @@ superagent.Request.prototype.end = function (callback) {
     });
 };
 
+
+const qs = URL.parse(window.location.href, true).query;
+
+const newParams = {};
+if ('cancer_study_id' in qs) {
+    newParams['studyId'] = qs.cancer_study_id;
+}
+if ('case_id' in qs) {
+    newParams['caseId'] = qs.case_id;
+}
+
+if ('sample_id' in qs) {
+    newParams['sampleId'] = qs.sample_id;
+}
+
+const navCaseIdsMatch = routingStore.location.pathname.match(/(nav_case_ids)=(.*)$/);
+if (navCaseIdsMatch && navCaseIdsMatch.length > 2) {
+    newParams['navCaseIds'] = navCaseIdsMatch[2];
+}
+
+routingStore.updateRoute(newParams);
+
+
 window.routingStore = routingStore;
 
 
@@ -97,10 +124,10 @@ let render = () => {
     ReactDOM.render(
         <Provider {...stores}>
             <Router
-                history={history} routes={makeRoutes()}>
+                history={syncedHistory} routes={makeRoutes()} >
             </Router>
         </Provider>
-        , rootNode);
+    , rootNode);
 
 
 };
