@@ -4,9 +4,9 @@ import 'rc-tooltip/assets/bootstrap_white.css';
 import {
     MrnaExprRankCacheDataType,
     default as MrnaExprRankCache
-} from "../../clinicalInformation/MrnaExprRankCache";
-import {Mutation, DiscreteCopyNumberData} from "../../../../shared/api/generated/CBioPortalAPI";
-import {default as TableCellStatusIndicator, TableCellStatus} from "../../../../shared/components/TableCellStatus";
+} from "shared/cache/MrnaExprRankCache";
+import {Mutation, DiscreteCopyNumberData} from "shared/api/generated/CBioPortalAPI";
+import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
 
 export default class MrnaExprColumnFormatter {
 

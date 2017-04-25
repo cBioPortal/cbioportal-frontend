@@ -1,8 +1,8 @@
-import {default as SampleGeneCache, SampleAndGene} from "../../../shared/lib/SampleGeneCache";
-import {CacheData} from "../../../shared/lib/LazyMobXCache";
 import * as _ from 'lodash';
-import client from "../../../shared/api/cbioportalClientInstance";
-import {DiscreteCopyNumberData, DiscreteCopyNumberFilter} from "../../../shared/api/generated/CBioPortalAPI";
+import {default as SampleGeneCache, SampleAndGene} from "shared/lib/SampleGeneCache";
+import {CacheData} from "shared/lib/LazyMobXCache";
+import client from "shared/api/cbioportalClientInstance";
+import {DiscreteCopyNumberData, DiscreteCopyNumberFilter} from "shared/api/generated/CBioPortalAPI";
 
 export type DiscreteCNACacheDataType = CacheData<DiscreteCopyNumberData>;
 
