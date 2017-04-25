@@ -15,6 +15,7 @@ const QUERY = 'query';
 interface IQueryAndDownloadTabsProps
 {
 	store:QueryStore;
+	onSubmit?:()=>void;
 }
 
 
@@ -44,7 +45,7 @@ export default class QueryAndDownloadTabs extends React.Component<IQueryAndDownl
 					<Tab eventKey='query' title="Query"/>
 					<Tab eventKey='download' title="Download Data"/>
 				</Tabs>
-				<QueryContainer store={this.props.store}/>
+				<QueryContainer onSubmit={this.props.onSubmit} store={this.props.store}/>
 			</div>
 		);
 	}
