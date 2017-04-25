@@ -3,7 +3,12 @@ import {observer} from "mobx-react";
 import {computed} from "mobx";
 import MutationTable from "shared/components/mutationTable/MutationTable";
 import {IMutationTableProps} from "shared/components/mutationTable/MutationTable";
+import LazyLoadedTableCell from "shared/lib/LazyLoadedTableCell";
 import {MutationTableColumnType} from "shared/components/mutationTable/MutationTable";
+import CancerTypeCache from "../../../shared/cache/CancerTypeCache";
+import MutationCountCache from "../../../shared/cache/MutationCountCache";
+import {Mutation, ClinicalData, MutationCount} from "../../../shared/api/generated/CBioPortalAPI";
+import {Column} from "../../../shared/components/lazyMobXTable/LazyMobXTable";
 
 export interface IResultsViewMutationTableProps extends IMutationTableProps {
     // TODO add results view specific props
@@ -40,7 +45,9 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
             MutationTableColumnType.MUTATION_ASSESSOR,
             MutationTableColumnType.COSMIC,
             MutationTableColumnType.TUMOR_ALLELE_FREQ,
-            MutationTableColumnType.NORMAL_ALLELE_FREQ
+            MutationTableColumnType.NORMAL_ALLELE_FREQ,
+            MutationTableColumnType.CANCER_TYPE,
+            MutationTableColumnType.NUM_MUTATIONS
         ]
     };
 
@@ -53,6 +60,7 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
 
         // order columns
         this._columns[MutationTableColumnType.SAMPLE_ID].order = 10;
+        this._columns[MutationTableColumnType.CANCER_TYPE].order = 15;
         this._columns[MutationTableColumnType.PROTEIN_CHANGE].order = 20;
         this._columns[MutationTableColumnType.ANNOTATION].order = 30;
         this._columns[MutationTableColumnType.MUTATION_TYPE].order = 40;
@@ -73,7 +81,14 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
         this._columns[MutationTableColumnType.REF_READS].order = 190;
         this._columns[MutationTableColumnType.VAR_READS_N].order = 200;
         this._columns[MutationTableColumnType.REF_READS_N].order = 210;
-    }
+        this._columns[MutationTableColumnType.NUM_MUTATIONS].order = 220;
 
-    // TODO override @computed protected get columns():Column<Mutation[]>[] (to conditionally exclude certain columns)
+        // exclude
+        this._columns[MutationTableColumnType.CANCER_TYPE].shouldExclude = ()=>{
+            return !this.props.cancerTypeCache;
+        };
+        this._columns[MutationTableColumnType.NUM_MUTATIONS].shouldExclude = ()=>{
+            return !this.props.mutationCountCache;
+        };
+    }
 }
