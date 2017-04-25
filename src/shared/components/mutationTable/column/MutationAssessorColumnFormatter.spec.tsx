@@ -5,8 +5,8 @@ import React from 'react';
 import { assert } from 'chai';
 import {shallow, mount, ReactWrapper} from 'enzyme';
 import sinon from 'sinon';
-import {Mutation} from "../../../api/generated/CBioPortalAPI";
-import {lazyMobXTableSort} from "../../lazyMobXTable/LazyMobXTable";
+import {Mutation} from "shared/api/generated/CBioPortalAPI";
+import {lazyMobXTableSort} from "shared/components/lazyMobXTable/LazyMobXTable";
 
 describe('MutationAssessorColumnFormatter', () => {
     const mutations = [

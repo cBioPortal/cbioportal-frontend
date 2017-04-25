@@ -22,7 +22,7 @@ import {getSpanElements} from './clinicalInformation/lib/clinicalAttributesUtil.
 import CopyNumberTableWrapper from "./copyNumberAlterations/CopyNumberTableWrapper";
 import {reaction, computed} from "mobx";
 import Timeline from "./timeline/Timeline";
-import {default as PatientViewMutationTable, MutationTableColumnType} from "./mutation/PatientViewMutationTable";
+import {default as PatientViewMutationTable} from "./mutation/PatientViewMutationTable";
 import PathologyReport from "./pathologyReport/PathologyReport";
 import { MSKTabs, MSKTab } from "../../shared/components/MSKTabs/MSKTabs";
 import validateParameters from '../../shared/lib/validateParameters';
@@ -48,8 +48,6 @@ export interface IPatientViewPageProps {
 @inject('routing')
 @observer
 export default class PatientViewPage extends React.Component<IPatientViewPageProps, {}> {
-
-    private mutationTableColumns: MutationTableColumnType[];
 
     constructor(props: IPatientViewPageProps) {
 
@@ -85,30 +83,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             },
             { fireImmediately:true }
         );
-
-        this.mutationTableColumns = [MutationTableColumnType.COHORT,
-            MutationTableColumnType.MRNA_EXPR,
-            MutationTableColumnType.COPY_NUM,
-            MutationTableColumnType.ANNOTATION,
-            MutationTableColumnType.REF_READS_N,
-            MutationTableColumnType.VAR_READS_N,
-            MutationTableColumnType.REF_READS,
-            MutationTableColumnType.VAR_READS,
-            MutationTableColumnType.START_POS,
-            MutationTableColumnType.END_POS,
-            MutationTableColumnType.REF_ALLELE,
-            MutationTableColumnType.VAR_ALLELE,
-            MutationTableColumnType.MUTATION_STATUS,
-            MutationTableColumnType.VALIDATION_STATUS,
-            MutationTableColumnType.CENTER,
-            MutationTableColumnType.GENE,
-            MutationTableColumnType.CHROMOSOME,
-            MutationTableColumnType.PROTEIN_CHANGE,
-            MutationTableColumnType.MUTATION_TYPE,
-            MutationTableColumnType.MUTATION_ASSESSOR,
-            MutationTableColumnType.COSMIC,
-            MutationTableColumnType.TUMOR_ALLELE_FREQ,
-            MutationTableColumnType.TUMORS];
     }
 
     public componentDidMount() {
@@ -346,7 +320,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         hotspots={patientViewPageStore.indexedHotspotData}
                                         cosmicData={patientViewPageStore.cosmicData.result}
                                         oncoKbData={patientViewPageStore.oncoKbData.result}
-                                        columns={this.mutationTableColumns}
                                     />
                                 )
                             }

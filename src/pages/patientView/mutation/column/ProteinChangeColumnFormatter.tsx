@@ -3,8 +3,8 @@ import {
     default as DefaultProteinChangeColumnFormatter
 } from "shared/components/mutationTable/column/ProteinChangeColumnFormatter";
 import MutationStatusColumnFormatter from "shared/components/mutationTable/column/MutationStatusColumnFormatter";
+import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import styles from './style/proteinChange.module.scss';
-import {Mutation} from "../../../../shared/api/generated/CBioPortalAPI";
 
 /**
  * Designed to customize protein change column content for patient view page.
@@ -17,9 +17,6 @@ export default class ProteinChangeColumnFormatter
     {
         // use text as display value
         const text:string = DefaultProteinChangeColumnFormatter.getDisplayValue(data);
-
-        // use value as sort & filter value
-        const value:string = DefaultProteinChangeColumnFormatter.getTextValue(data);
 
         const mutationStatus:string|null = MutationStatusColumnFormatter.getData(data);
 
