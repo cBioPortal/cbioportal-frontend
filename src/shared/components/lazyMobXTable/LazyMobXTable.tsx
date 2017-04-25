@@ -27,7 +27,7 @@ export type Column<T> = {
     defaultSortDirection?:SortDirection;
 };
 
-type MSKTableProps<T> = {
+type LazyMobXTableProps<T> = {
     columns:Column<T>[];
     data:T[];
     initialSortColumn?: string;
@@ -91,7 +91,7 @@ function compareLists<U extends number|string>(a:(U|null)[], b:(U|null)[], asc:b
 }
 
 type SortMetric<T> = ((d:T)=>number|null) | ((d:T)=>(number|null)[]) | ((d:T)=>string|null) | ((d:T)=>(string|null)[]);
-export function mskTableSort<T>(data:T[], metric:SortMetric<T>, ascending:boolean = true):T[] {
+export function lazyMobXTableSort<T>(data:T[], metric:SortMetric<T>, ascending:boolean = true):T[] {
     // Separating this for testing, so that classes can test their comparators
     //  against how the table will sort.
     const dataAndValue:{data:T, initialPosition:number, sortBy:any[]}[] = [];
@@ -124,7 +124,7 @@ export function mskTableSort<T>(data:T[], metric:SortMetric<T>, ascending:boolea
     return dataAndValue.map(x=>x.data);
 }
 
-class MSKTableStore<T> {
+class LazyMobXTableStore<T> {
     @observable public filterString:string;
     @observable private _page:number;
     @observable private _itemsPerPage:number;
@@ -145,7 +145,7 @@ class MSKTableStore<T> {
         this.page = this.page; // trigger clamping in page setter
     }
 
-    @computed get showingAllRows(): Boolean {
+    @computed get showingAllRows(): boolean {
         return this.sortedFilteredData.length <= this.itemsPerPage || this.itemsPerPage === -1
     }
 
@@ -219,7 +219,7 @@ class MSKTableStore<T> {
         let ret = this.data;
         const column = this.sortColumnObject;
         if (column && column.sortBy) {
-            ret = mskTableSort(ret, column.sortBy, this.sortAscending);
+            ret = lazyMobXTableSort(ret, column.sortBy, this.sortAscending);
         }
         return ret;
     }
@@ -351,20 +351,20 @@ class MSKTableStore<T> {
 
     public get rows():JSX.Element[] {
         return this.visibleData.map((datum:T)=>{
-                const tds = this.visibleColumns.map((column:Column<T>)=>{
-                    return (<td key={column.name}>
-                        {column.render(datum)}
-                    </td>);
-                });
-                return (
-                    <tr>
-                        {tds}
-                    </tr>
-                );
+            const tds = this.visibleColumns.map((column:Column<T>)=>{
+                return (<td key={column.name}>
+                    {column.render(datum)}
+                </td>);
             });
+            return (
+                <tr>
+                    {tds}
+                </tr>
+            );
+        });
     }
 
-    @action setProps(props:MSKTableProps<T>) {
+    @action setProps(props:LazyMobXTableProps<T>) {
         this.columns = props.columns;
         this.data = props.data;
         this._itemsLabel = props.itemsLabel;
@@ -402,19 +402,19 @@ class MSKTableStore<T> {
         return colVis;
     }
 
-    constructor(mskTableProps:MSKTableProps<T>) {
-        this.setProps(mskTableProps);
+    constructor(lazyMobXTableProps:LazyMobXTableProps<T>) {
+        this.setProps(lazyMobXTableProps);
         this.filterString = "";
-        this.sortColumn = mskTableProps.initialSortColumn || "";
-        this.sortAscending = (mskTableProps.initialSortDirection !== "desc"); // default ascending
+        this.sortColumn = lazyMobXTableProps.initialSortColumn || "";
+        this.sortAscending = (lazyMobXTableProps.initialSortDirection !== "desc"); // default ascending
         this._page = 0;
-        this.itemsPerPage = mskTableProps.initialItemsPerPage || 50;
+        this.itemsPerPage = lazyMobXTableProps.initialItemsPerPage || 50;
     }
 }
 
 @observer
-export default class MSKTable<T> extends React.Component<MSKTableProps<T>, {}> {
-    private store:MSKTableStore<T>;
+export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps<T>, {}> {
+    private store:LazyMobXTableStore<T>;
     private handlers:{[fnName:string]:(...args:any[])=>void};
 
     public static defaultProps = {
@@ -429,9 +429,9 @@ export default class MSKTable<T> extends React.Component<MSKTableProps<T>, {}> {
         return serializeData(this.store.downloadData);
     }
 
-    constructor(props:MSKTableProps<T>) {
+    constructor(props:LazyMobXTableProps<T>) {
         super(props);
-        this.store = new MSKTableStore<T>(props);
+        this.store = new LazyMobXTableStore<T>(props);
 
         this.handlers = {
             filterInput: (() => {
@@ -468,7 +468,7 @@ export default class MSKTable<T> extends React.Component<MSKTableProps<T>, {}> {
         this.getDownloadData = this.getDownloadData.bind(this);
     }
 
-    @action componentWillReceiveProps(nextProps:MSKTableProps<T>) {
+    @action componentWillReceiveProps(nextProps:LazyMobXTableProps<T>) {
         this.store.setProps(nextProps);
     }
 
@@ -489,39 +489,41 @@ export default class MSKTable<T> extends React.Component<MSKTableProps<T>, {}> {
     }
 
     render() {
-        return (<div>
-            <ButtonToolbar style={{marginLeft:0}} className="tableMainToolbar">
-                <If condition={this.props.showFilter === true}>
-                    <div className={`pull-right form-group has-feedback input-group-sm`} style={{ display:'inline-block', marginLeft: 5}}>
-                        <input type="text" onInput={this.handlers.filterInput} className="form-control tableSearchInput" style={{ width:200 }}  />
-                        <span className="fa fa-search form-control-feedback" aria-hidden="true"></span>
-                    </div>
-                </If>
-                <If condition={this.props.showPagination === true}>
-                    { this.buildPaginationControls('pull-left topPagination', {}, this.store.paginationStatusText) }
-                </If>
-                <If condition={this.props.showColumnVisibility === true}>
-                    <ColumnVisibilityControls
-                        className="pull-right"
-                        columnVisibility={this.store.colVisProp}
-                        onColumnToggled={this.handlers.visibilityToggle}
-                        {...this.props.columnVisibilityProps}
-                    />
-                </If>
-                <If condition={this.props.showCopyDownload === true}>
-                    <CopyDownloadControls
-                        className="pull-right"
-                        downloadData={this.getDownloadData}
-                        downloadFilename="table.csv"
-                        {...this.props.copyDownloadProps}
-                    />
-                </If>
-            </ButtonToolbar>
-            <SimpleTable
-                headers={this.store.headers}
-                rows={this.store.rows}
-            />
+        return (
+            <div>
+                <ButtonToolbar style={{marginLeft:0}} className="tableMainToolbar">
+                    <If condition={this.props.showFilter === true}>
+                        <div className={`pull-right form-group has-feedback input-group-sm`} style={{ display:'inline-block', marginLeft: 5}}>
+                            <input type="text" onInput={this.handlers.filterInput} className="form-control tableSearchInput" style={{ width:200 }}  />
+                            <span className="fa fa-search form-control-feedback" aria-hidden="true"></span>
+                        </div>
+                    </If>
+                    <If condition={this.props.showPagination === true}>
+                        { this.buildPaginationControls('pull-left topPagination', {}, this.store.paginationStatusText) }
+                    </If>
+                    <If condition={this.props.showColumnVisibility === true}>
+                        <ColumnVisibilityControls
+                            className="pull-right"
+                            columnVisibility={this.store.colVisProp}
+                            onColumnToggled={this.handlers.visibilityToggle}
+                            {...this.props.columnVisibilityProps}
+                        />
+                    </If>
+                    <If condition={this.props.showCopyDownload === true}>
+                        <CopyDownloadControls
+                            className="pull-right"
+                            downloadData={this.getDownloadData}
+                            downloadFilename="table.csv"
+                            {...this.props.copyDownloadProps}
+                        />
+                    </If>
+                </ButtonToolbar>
+                <SimpleTable
+                    headers={this.store.headers}
+                    rows={this.store.rows}
+                />
 
-        </div>);
+            </div>
+        );
     }
 }

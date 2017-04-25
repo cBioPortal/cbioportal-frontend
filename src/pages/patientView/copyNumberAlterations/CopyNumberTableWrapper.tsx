@@ -2,9 +2,9 @@ import * as React from 'react';
 import FeatureTitle from "shared/components/featureTitle/FeatureTitle";
 import {PatientViewPageStore} from "../clinicalInformation/PatientViewPageStore";
 import {observer} from "mobx-react";
-import MSKTable from "shared/components/msktable/MSKTable";
+import LazyMobXTable from "shared/components/lazyMobXTable/LazyMobXTable";
 import {DiscreteCopyNumberData} from "shared/api/generated/CBioPortalAPI";
-import {Column} from "shared/components/msktable/MSKTable";
+import {Column} from "shared/components/lazyMobXTable/LazyMobXTable";
 import * as _ from 'lodash';
 import MrnaExprColumnFormatter from "../mutation/column/MrnaExprColumnFormatter";
 import CohortColumnFormatter from "./column/CohortColumnFormatter";
@@ -21,7 +21,7 @@ import {IGisticData} from "../../../shared/model/Gistic";
 import CopyNumberCountCache from "../clinicalInformation/CopyNumberCountCache";
 
 
-class CNATableComponent extends MSKTable<DiscreteCopyNumberData[]> {
+class CNATableComponent extends LazyMobXTable<DiscreteCopyNumberData[]> {
 
 }
 
@@ -114,7 +114,7 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
                 ? CohortColumnFormatter.renderFunction(d,
                     this.props.copyNumberCountCache,
                     this.props.gisticData)
-                : (<span></span>)),
+                : (<span/>)),
             sortBy:(d:DiscreteCopyNumberData[]) => {
                 if (this.props.copyNumberCountCache) {
                     return CohortColumnFormatter.getSortValue(d, this.props.copyNumberCountCache);
@@ -132,13 +132,12 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
                 name: "mRNA Expr.",
                 render: (d:DiscreteCopyNumberData[])=>(this.props.mrnaExprRankCache
                                     ? MrnaExprColumnFormatter.cnaRenderFunction(d, this.props.mrnaExprRankCache)
-                                    : (<span></span>)),
+                                    : (<span/>)),
                 order: 70
             });
         }
 
         const orderedColumns = _.sortBy(columns, (c:CNATableColumn)=>c.order);
-
         return (
             <div>
             {

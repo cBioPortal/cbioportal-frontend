@@ -4,8 +4,8 @@ import React from 'react';
 import { assert } from 'chai';
 import {shallow, mount, ReactWrapper} from 'enzyme';
 import sinon from 'sinon';
-import {mskTableSort} from "../msktable/MSKTable";
-import {IndicatorQueryResp} from "shared/api/generated/OncoKbAPI";
+import {lazyMobXTableSort} from "../lazyMobXTable/LazyMobXTable";
+import {IndicatorQueryResp} from "../../api/generated/OncoKbAPI";
 
 describe('OncoKB', () => {
     const props = {
@@ -52,7 +52,7 @@ describe('OncoKB', () => {
         queryA.oncogenic = 'Oncogenic';
         queryB.oncogenic = 'Inconclusive';
         array = [queryB, queryA];
-        sortedArray = mskTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
         assert.isAbove(
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'Oncogenicity test 2');
@@ -60,7 +60,7 @@ describe('OncoKB', () => {
         queryA.oncogenic = 'Oncogenic';
         queryB.oncogenic = 'Unknown';
         array = [queryB, queryA];
-        sortedArray = mskTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
         assert.isAbove(
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'Oncogenicity test 3');
@@ -68,7 +68,7 @@ describe('OncoKB', () => {
         queryA.oncogenic = 'Oncogenic';
         queryB.oncogenic = 'Likely Neutral';
         array = [queryB, queryA];
-        sortedArray = mskTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
         assert.isAbove(
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'Oncogenicity test 4');
@@ -76,7 +76,7 @@ describe('OncoKB', () => {
         queryA.oncogenic = 'Inconclusive';
         queryB.oncogenic = 'Unknown';
         array = [queryB, queryA];
-        sortedArray = mskTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
         assert.isAbove(
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'Oncogenicity test 5');
@@ -84,7 +84,7 @@ describe('OncoKB', () => {
         queryA.oncogenic = 'Likely Neutral';
         queryB.oncogenic = 'Inconclusive';
         array = [queryB, queryA];
-        sortedArray = mskTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
         assert.isAbove(
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'Oncogenicity test 6');
@@ -98,7 +98,7 @@ describe('OncoKB', () => {
             vus: false
         });
         array = [queryB, queryA];
-        sortedArray = mskTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
         assert.isAbove(
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'A is VUS, which should have higher score.');
@@ -112,7 +112,7 @@ describe('OncoKB', () => {
             highestSensitiveLevel: 'LEVEL_2A'
         });
         array = [queryB, queryA];
-        sortedArray = mskTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
         assert.isAbove(
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'A(LEVEL_1) should be higher than B(LEVEL_2A)');
@@ -126,7 +126,7 @@ describe('OncoKB', () => {
             highestResistanceLevel: 'LEVEL_R2'
         });
         array = [queryB, queryA];
-        sortedArray = mskTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
         assert.isAbove(
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'A(LEVEL_R1) should be higher than B(LEVEL_R2)');
@@ -142,7 +142,7 @@ describe('OncoKB', () => {
             highestResistanceLevel: 'LEVEL_R1'
         });
         array = [queryB, queryA];
-        sortedArray = mskTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
         assert.isAbove(
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'A(LEVEL_2A) should be higher than B(LEVEL_R1)');
@@ -155,7 +155,7 @@ describe('OncoKB', () => {
             highestSensitiveLevel: 'LEVEL_2A'
         });
         array = [queryB, queryA];
-        sortedArray = mskTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
         assert.isAbove(
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'The score for Oncogenic variant(A) should always higher than other categories(B) even B has treatments.');
@@ -167,7 +167,7 @@ describe('OncoKB', () => {
             variantExist: false
         });
         array = [queryB, queryA];
-        sortedArray = mskTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
         assert.isAbove(
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'variantExist test 1');
@@ -180,7 +180,7 @@ describe('OncoKB', () => {
             highestSensitiveLevel: 'LEVEL_2A'
         });
         array = [queryB, queryA];
-        sortedArray = mskTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
         assert.isAbove(
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'variantExist test 2');
