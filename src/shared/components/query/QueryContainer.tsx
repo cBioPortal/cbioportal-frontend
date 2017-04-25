@@ -29,15 +29,31 @@ const styles = styles_any as {
 interface QueryContainerProps
 {
 	store:QueryStore;
+	onSubmit?:()=>void;
 }
 
 @providesStoreContext(QueryStore)
 @observer
 export default class QueryContainer extends React.Component<QueryContainerProps, {}>
 {
+	constructor(){
+
+		super();
+
+		this.handleSubmit = this.handleSubmit.bind(this);
+
+	}
+
 	get store()
 	{
 		return this.props.store;
+	}
+
+	handleSubmit(){
+		this.store.submit();
+		if (this.props.onSubmit) {
+			this.props.onSubmit();
+		}
 	}
 
     render():JSX.Element
@@ -83,11 +99,11 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
 				)}
 
 				<FlexRow padded className={styles.submitRow}>
-					<button disabled={!this.store.submitEnabled} className={classNames('cta', styles.submit)} onClick={() => this.store.submit()}>
+					<button disabled={!this.store.submitEnabled} className={classNames('cta', styles.submit)} onClick={() => this.handleSubmit()}>
 						Submit
 					</button>
 					{!!(this.store.forDownloadTab && AppConfig.genomespaceEnabled) && (
-						<button disabled={!this.store.submitEnabled} className={styles.genomeSpace} onClick={() => this.store.sendToGenomeSpace()}>
+						<button disabled={!this.store.submitEnabled} className={styles.genomeSpace} onClick={ ()=>this.store.sendToGenomeSpace() }>
 							Send to GenomeSpace
 						</button>
 					)}

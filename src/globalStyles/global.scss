@@ -21,6 +21,10 @@ body {
   }
 }
 
+div {
+  text-align:left;
+}
+
   /* Buttons */
 
 .cta { // "Call To Action"
@@ -174,3 +178,20 @@ th.reactable-header-sort-asc:after {
     display:none;
   }
 }
+
+.contentWrapper {
+  display:flex;
+  justify-content:space-between;
+
+  .mainContent {
+    flex-grow:1;
+    padding:10px;
+  }
+
+  .rightBar {
+      width:315px;
+      border-left:1px dashed #ccc;
+  }
+
+}
+
