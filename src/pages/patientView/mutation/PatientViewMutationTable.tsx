@@ -97,29 +97,16 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         this._columns[MutationTableColumnType.COHORT].order = 183;
         this._columns[MutationTableColumnType.COSMIC].order = 184;
         this._columns[MutationTableColumnType.MUTATION_ASSESSOR].order = 190;
-    }
 
-    @computed protected get columns():Column<Mutation[]>[] {
-        return this.orderedColumns.reduce((columns:Column<Mutation[]>[], next:MutationTableColumnType)=>{
-            let column = this._columns[next];
-            let shouldAdd = true;
-
-            if (next === MutationTableColumnType.MRNA_EXPR &&
-                (!this.props.mrnaExprRankGeneticProfileId
-                || this.getSamples().length > 1)) {
-                shouldAdd = false;
-            } else if (next === MutationTableColumnType.TUMORS && this.getSamples().length < 2) {
-                shouldAdd = false;
-            } else if (next === MutationTableColumnType.COPY_NUM && (!this.props.discreteCNAGeneticProfileId || this.getSamples().length > 1)) {
-                shouldAdd = false;
-            }
-
-            // actual column definition may be missing for a specific enum
-            if (column && shouldAdd) {
-                columns.push(this._columns[next]);
-            }
-
-            return columns;
-        }, []);
+        // exclusions
+        this._columns[MutationTableColumnType.MRNA_EXPR].shouldExclude = ()=>{
+            return (!this.props.mrnaExprRankGeneticProfileId) || (this.getSamples().length > 1);
+        };
+        this._columns[MutationTableColumnType.TUMORS].shouldExclude = ()=>{
+            return this.getSamples().length < 2;
+        };
+        this._columns[MutationTableColumnType.COPY_NUM].shouldExclude = ()=>{
+            return (!this.props.discreteCNAGeneticProfileId) || (this.getSamples().length > 1);
+        };
     }
 }
