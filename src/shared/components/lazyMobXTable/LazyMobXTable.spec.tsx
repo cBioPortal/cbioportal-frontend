@@ -2,7 +2,7 @@ import React from 'react';
 import {assert} from 'chai';
 import {shallow, mount, ReactWrapper} from 'enzyme';
 import sinon from 'sinon';
-import {mskTableSort, default as MSKTable, Column} from "./MSKTable";
+import {lazyMobXTableSort, default as LazyMobXTable, Column} from "./LazyMobXTable";
 import SimpleTable from "../simpleTable/SimpleTable";
 import DefaultTooltip from "../DefaultTooltip";
 import expect from 'expect';
@@ -15,7 +15,7 @@ import {ColumnVisibilityControls} from "../columnVisibilityControls/ColumnVisibi
 
 expect.extend(expectJSX);
 
-class Table extends MSKTable<any> {
+class Table extends LazyMobXTable<any> {
 }
 
 function getVisibleColumnHeaders(tableWrapper:ReactWrapper<any, any>):string[] {
@@ -86,7 +86,7 @@ function clickColumnVisibilityCheckbox(table:ReactWrapper<any, any>, columnName:
     return !!checkbox.props().checked;
 }
 
-describe('MSKTable', ()=>{
+describe('LazyMobXTable', ()=>{
     let simpleColumns:Column<{id:string}>[];
     let simpleData:{id:string}[];
     let datum0 = {
@@ -192,46 +192,46 @@ describe('MSKTable', ()=>{
         clock.uninstall();
     });
 
-    describe('mskTableSort', ()=>{
+    describe('lazyMobXTableSort', ()=>{
         it("does not sort in place", ()=>{
-            sortedList = mskTableSort(data, d=>d.num, true);
+            sortedList = lazyMobXTableSort(data, d=>d.num, true);
             assert.deepEqual(data.map(d=>d.name), ["0","1","2","3","4"], "original list is unchanged..");
             assert.notDeepEqual(sortedList.map(d=>d.name), ["0","1","2","3","4"], "..even though sorted list is diff order");
-            sortedList = mskTableSort(data, d=>d.num, false);
+            sortedList = lazyMobXTableSort(data, d=>d.num, false);
             assert.deepEqual(data.map(d=>d.name), ["0","1","2","3","4"], "original list is unchanged..");
             assert.notDeepEqual(sortedList.map(d=>d.name), ["0","1","2","3","4"], "..even though sorted list is diff order");
         });
         it("sorts number|null values properly", ()=>{
-            sortedList = mskTableSort(data, d=>d.num, true);
+            sortedList = lazyMobXTableSort(data, d=>d.num, true);
             assert.deepEqual(sortedList.map(d=>d.name), ["3","0","1","4","2"], "sorts ascending properly");
-            sortedList = mskTableSort(data, d=>d.num, false);
+            sortedList = lazyMobXTableSort(data, d=>d.num, false);
             assert.deepEqual(sortedList.map(d=>d.name), ["4","1","0","3","2"], "sorts descending properly");
         });
         it("sorts (number|null)[] values properly", ()=>{
-            sortedList = mskTableSort(data, d=>d.numList, true);
+            sortedList = lazyMobXTableSort(data, d=>d.numList, true);
             assert.deepEqual(sortedList.map(d=>d.name), ["2","0","1","4","3"], "sorts ascending properly");
-            sortedList = mskTableSort(data, d=>d.numList, false);
+            sortedList = lazyMobXTableSort(data, d=>d.numList, false);
             assert.deepEqual(sortedList.map(d=>d.name), ["1","0","2","3","4"], "sorts descending properly");
         });
         it("sorts string|null values properly", ()=>{
-            sortedList = mskTableSort(data, d=>d.str, true);
+            sortedList = lazyMobXTableSort(data, d=>d.str, true);
             assert.deepEqual(sortedList.map(d=>d.name), ["0","1","3","4","2"], "sorts ascending properly");
-            sortedList = mskTableSort(data, d=>d.str, false);
+            sortedList = lazyMobXTableSort(data, d=>d.str, false);
             assert.deepEqual(sortedList.map(d=>d.name), ["4","3","1","0","2"], "sorts descending properly");
         });
         it("sorts (string|null)[] values properly", ()=>{
-            sortedList = mskTableSort(data, d=>d.strList, true);
+            sortedList = lazyMobXTableSort(data, d=>d.strList, true);
             assert.deepEqual(sortedList.map(d=>d.name), ["3","0","4","1","2"], "sorts ascending properly");
-            sortedList = mskTableSort(data, d=>d.strList, false);
+            sortedList = lazyMobXTableSort(data, d=>d.strList, false);
             assert.deepEqual(sortedList.map(d=>d.name), ["1","4","3","0","2"], "sorts descending properly");
         });
         it("sorts empty list properly", ()=>{
-            assert.deepEqual(mskTableSort([], d=>(d as any).name, true), [], "empty sort is empty");
-            assert.deepEqual(mskTableSort([], d=>(d as any).name, false), [], "empty sort is empty");
+            assert.deepEqual(lazyMobXTableSort([], d=>(d as any).name, true), [], "empty sort is empty");
+            assert.deepEqual(lazyMobXTableSort([], d=>(d as any).name, false), [], "empty sort is empty");
         });
         it("sorts singleton list properly", ()=>{
-            assert.deepEqual(mskTableSort([datum0], d=>(d as any).name, true), [datum0], "singleton sort is singleton");
-            assert.deepEqual(mskTableSort([datum1], d=>(d as any).name, false), [datum1], "singleton sort is singleton");
+            assert.deepEqual(lazyMobXTableSort([datum0], d=>(d as any).name, true), [datum0], "singleton sort is singleton");
+            assert.deepEqual(lazyMobXTableSort([datum1], d=>(d as any).name, false), [datum1], "singleton sort is singleton");
         });
         it("is a stable sort", ()=>{
             let d0 = {
@@ -258,21 +258,21 @@ describe('MSKTable', ()=>{
                 stringListVal: ["C"],
                 numListVal: [2]
             };
-            assert.deepEqual(mskTableSort([d0, d1, d2, d3], d=>d.stringVal, true), [d0, d1, d2, d3], "string: same order, ascending");
-            assert.deepEqual(mskTableSort([d0, d1, d2, d3], d=>d.stringVal, false), [d3, d1, d2, d0], "string: same order, descending");
-            assert.deepEqual(mskTableSort([d0, d2, d1, d3], d=>d.stringVal, true), [d0, d2, d1, d3], "string: reversed order, ascending");
+            assert.deepEqual(lazyMobXTableSort([d0, d1, d2, d3], d=>d.stringVal, true), [d0, d1, d2, d3], "string: same order, ascending");
+            assert.deepEqual(lazyMobXTableSort([d0, d1, d2, d3], d=>d.stringVal, false), [d3, d1, d2, d0], "string: same order, descending");
+            assert.deepEqual(lazyMobXTableSort([d0, d2, d1, d3], d=>d.stringVal, true), [d0, d2, d1, d3], "string: reversed order, ascending");
 
-            assert.deepEqual(mskTableSort([d0, d1, d2, d3], d=>d.numVal, true), [d0, d1, d2, d3], "number: same order, ascending");
-            assert.deepEqual(mskTableSort([d0, d1, d2, d3], d=>d.numVal, false), [d3, d1, d2, d0], "number: same order, descending");
-            assert.deepEqual(mskTableSort([d0, d2, d1, d3], d=>d.numVal, true), [d0, d2, d1, d3], "number: reversed order, ascending");
+            assert.deepEqual(lazyMobXTableSort([d0, d1, d2, d3], d=>d.numVal, true), [d0, d1, d2, d3], "number: same order, ascending");
+            assert.deepEqual(lazyMobXTableSort([d0, d1, d2, d3], d=>d.numVal, false), [d3, d1, d2, d0], "number: same order, descending");
+            assert.deepEqual(lazyMobXTableSort([d0, d2, d1, d3], d=>d.numVal, true), [d0, d2, d1, d3], "number: reversed order, ascending");
 
-            assert.deepEqual(mskTableSort([d0, d1, d2, d3], d=>d.stringListVal, true), [d0, d1, d2, d3], "string list: same order, ascending");
-            assert.deepEqual(mskTableSort([d0, d1, d2, d3], d=>d.stringListVal, false), [d3, d1, d2, d0], "string list: same order, descending");
-            assert.deepEqual(mskTableSort([d0, d2, d1, d3], d=>d.stringListVal, true), [d0, d2, d1, d3], "string list: reversed order, ascending");
+            assert.deepEqual(lazyMobXTableSort([d0, d1, d2, d3], d=>d.stringListVal, true), [d0, d1, d2, d3], "string list: same order, ascending");
+            assert.deepEqual(lazyMobXTableSort([d0, d1, d2, d3], d=>d.stringListVal, false), [d3, d1, d2, d0], "string list: same order, descending");
+            assert.deepEqual(lazyMobXTableSort([d0, d2, d1, d3], d=>d.stringListVal, true), [d0, d2, d1, d3], "string list: reversed order, ascending");
 
-            assert.deepEqual(mskTableSort([d0, d1, d2, d3], d=>d.numListVal, true), [d0, d1, d2, d3], "number list: same order, ascending");
-            assert.deepEqual(mskTableSort([d0, d1, d2, d3], d=>d.numListVal, false), [d3, d1, d2, d0], "number list: same order, descending");
-            assert.deepEqual(mskTableSort([d0, d2, d1, d3], d=>d.numListVal, true), [d0, d2, d1, d3], "number list: reversed order, ascending");
+            assert.deepEqual(lazyMobXTableSort([d0, d1, d2, d3], d=>d.numListVal, true), [d0, d1, d2, d3], "number list: same order, ascending");
+            assert.deepEqual(lazyMobXTableSort([d0, d1, d2, d3], d=>d.numListVal, false), [d3, d1, d2, d0], "number list: same order, descending");
+            assert.deepEqual(lazyMobXTableSort([d0, d2, d1, d3], d=>d.numListVal, true), [d0, d2, d1, d3], "number list: reversed order, ascending");
         });
     });
     describe('headers', ()=>{
@@ -932,18 +932,18 @@ describe('MSKTable', ()=>{
     describe('downloading data', ()=>{
         it("gives just the column names when theres no data in the table", ()=>{
             let table = mount(<Table columns={columns} data={[]}/>);
-            assert.deepEqual((table.instance() as MSKTable<any>).getDownloadData(),
+            assert.deepEqual((table.instance() as LazyMobXTable<any>).getDownloadData(),
                 "Name,Number,String,Number List,Initially invisible column,Initially invisible column with no download,String without filter function\r\n");
         });
         it("gives one row of data when theres one row. data given for every column, including hidden, and without download def'n. if no data, gives empty string for that cell.", ()=>{
             let table = mount(<Table columns={columns} data={[data[0]]}/>);
-            assert.deepEqual((table.instance() as MSKTable<any>).getDownloadData(),
+            assert.deepEqual((table.instance() as LazyMobXTable<any>).getDownloadData(),
                 "Name,Number,String,Number List,Initially invisible column,Initially invisible column with no download,String without filter function\r\n"+
                 "0,0,asdfj,,0HELLO123456,,\r\n");
         });
         it("gives data for all rows. data given for every column, including hidden, and without download def'n. if no data, gives empty string for that cell", ()=>{
             let table = mount(<Table columns={columns} data={data}/>)
-            assert.deepEqual((table.instance() as MSKTable<any>).getDownloadData(),
+            assert.deepEqual((table.instance() as LazyMobXTable<any>).getDownloadData(),
                 "Name,Number,String,Number List,Initially invisible column,Initially invisible column with no download,String without filter function\r\n"+
                 "0,0,asdfj,,0HELLO123456,,\r\n"+
                 "1,6,kdfjpo,,1HELLO123456,,\r\n"+
@@ -955,7 +955,7 @@ describe('MSKTable', ()=>{
         it("gives data back in sorted order according to initially selected sort column and direction", ()=>{
             let table = mount(<Table columns={columns} data={data} initialSortColumn="Number" initialSortDirection="asc"/>);
 
-            assert.deepEqual((table.instance() as MSKTable<any>).getDownloadData(),
+            assert.deepEqual((table.instance() as LazyMobXTable<any>).getDownloadData(),
                 "Name,Number,String,Number List,Initially invisible column,Initially invisible column with no download,String without filter function\r\n"+
                 "3,-1,zijxcpo,,3HELLO123456,,\r\n"+
                 "0,0,asdfj,,0HELLO123456,,\r\n"+
