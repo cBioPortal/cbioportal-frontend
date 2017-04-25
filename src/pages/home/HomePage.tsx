@@ -10,6 +10,7 @@ import ReactSelect from 'react-select';
 import 'react-select/dist/react-select.css';
 import QueryAndDownloadTabs from "../../shared/components/query/QueryAndDownloadTabs";
 import {QueryStore} from "../../shared/components/query/QueryStore";
+import QueryModal from "./QueryModal";
 
 function getRootElement()
 {
@@ -21,6 +22,7 @@ function getRootElement()
 
 const styles = styles_any as {
 	HomePage: string,
+    queryModal:string
 };
 
 interface IHomePageProps
@@ -48,15 +50,19 @@ export default class HomePage extends React.Component<IHomePageProps, IHomePageS
 
 	exposeComponentRenderersToParentScript()
 	{
-		exposeComponentRenderer('renderQueryContainer', QueryAndDownloadTabs);
+		exposeComponentRenderer('renderQuerySelectorInModal', this.getModalWrappedComponent.bind(this));
+
+        exposeComponentRenderer('renderQuerySelector', ()=>{ return <QueryAndDownloadTabs store={this.store} />  });
+	}
+
+	getModalWrappedComponent(){
+		return (
+            <QueryModal store={this.store} styles={styles} />
+        )
 	}
 
 	public render()
 	{
-		return (
-			<FlexRow padded flex={1} className={styles.HomePage}>
-				<QueryAndDownloadTabs store={this.store}/>
-			</FlexRow>
-		);
+		return null;
 	}
 }

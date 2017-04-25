@@ -1,5 +1,10 @@
 .QueryAndDownloadTabs {
 
+  :global(ul.nav) {
+    margin-top:0 !important;
+    margin-bottom:0 !important;
+  }
+
   :global(ul.nav.nav-tabs li) {
     font-size: 85%;
     font-weight: 500;
@@ -45,7 +50,6 @@
 }
 
 .QueryContainer {
-  width: 850px;
 
   div:global(.Select) {
     div:global(.Select-value) > span:global(.Select-value-label),
