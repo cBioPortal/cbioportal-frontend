@@ -1,7 +1,7 @@
 import * as React from 'react';
 import DefaultTooltip from 'shared/components/DefaultTooltip';
+import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import styles from "./sample.module.scss";
-import {Mutation} from "../../../api/generated/CBioPortalAPI";
 
 /**
  * @author Selcuk Onur Sumer

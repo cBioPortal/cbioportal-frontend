@@ -1,8 +1,8 @@
 import * as React from 'react';
 import {If} from 'react-if';
 import * as _ from "lodash";
-import OncoKbEvidenceCache from "pages/patientView/OncoKbEvidenceCache";
-import OncokbPmidCache from "pages/patientView/PmidCache";
+import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
+import OncokbPmidCache from "shared/cache/PmidCache";
 import CancerHotspots from "shared/components/annotation/CancerHotspots";
 import MyCancerGenome from "shared/components/annotation/MyCancerGenome";
 import OncoKB from "shared/components/annotation/OncoKB";

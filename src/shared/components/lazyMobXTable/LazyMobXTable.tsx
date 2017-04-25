@@ -17,7 +17,7 @@ import { If } from 'react-if';
 import {SortMetric} from "../../lib/ISortMetric";
 import {IMobXApplicationDataStore} from "../../lib/IMobXApplicationDataStore";
 
-type SortDirection = 'asc' | 'desc';
+export type SortDirection = 'asc' | 'desc';
 
 export type Column<T> = {
     name: string;

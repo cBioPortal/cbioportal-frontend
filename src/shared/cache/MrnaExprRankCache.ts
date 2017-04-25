@@ -1,8 +1,8 @@
-import {default as SampleGeneCache, SampleAndGene} from '../../../shared/lib/SampleGeneCache';
 import * as _ from 'lodash';
-import internalClient from "../../../shared/api/cbioportalInternalClientInstance";
-import {MrnaPercentile} from "../../../shared/api/generated/CBioPortalAPIInternal";
-import {CacheData} from "../../../shared/lib/LazyMobXCache";
+import {default as SampleGeneCache, SampleAndGene} from 'shared/lib/SampleGeneCache';
+import internalClient from "shared/api/cbioportalInternalClientInstance";
+import {MrnaPercentile} from "shared/api/generated/CBioPortalAPIInternal";
+import {CacheData} from "shared/lib/LazyMobXCache";
 
 export type MrnaExprRankCacheDataType = CacheData<MrnaPercentile>;
 

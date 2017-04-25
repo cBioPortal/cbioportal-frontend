@@ -1,7 +1,8 @@
 import React from 'react';
 import {ReactWrapper, mount} from "enzyme";
 import { assert } from 'chai';
-import {default as PatientViewMutationTable, MutationTableColumnType} from "./PatientViewMutationTable"
+import {default as PatientViewMutationTable} from "./PatientViewMutationTable"
+import {MutationTableColumnType} from "shared/components/mutationTable/MutationTable";
 
 function hasColumn(tableWrapper:ReactWrapper<any, any>, columnName:string):boolean {
     const columns:string[] = [];
