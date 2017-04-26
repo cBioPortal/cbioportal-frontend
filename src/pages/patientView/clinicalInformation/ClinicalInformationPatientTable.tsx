@@ -36,6 +36,7 @@ export default class ClinicalInformationPatientTable extends React.Component<ICl
                         { name:'Value', render: (data)=><span>{data.value}</span>}]}
                   showPagination={false}
                   showColumnVisibility={false}
+                  className={styles.patientTable}
             />
         );
     }

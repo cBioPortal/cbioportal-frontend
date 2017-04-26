@@ -14,8 +14,11 @@ import {serializeData} from "shared/lib/Serializer";
 import DefaultTooltip from "../DefaultTooltip";
 import {ButtonToolbar} from "react-bootstrap";
 import { If } from 'react-if';
+import {SortMetric} from "../../lib/ISortMetric";
+import {IMobXApplicationDataStore} from "../../lib/IMobXApplicationDataStore";
 
 type SortDirection = 'asc' | 'desc';
+
 export type Column<T> = {
     name: string;
     filter?:(data:T, filterString:string, filterStringUpper?:string, filterStringLower?:string)=>boolean;
@@ -29,7 +32,9 @@ export type Column<T> = {
 
 type LazyMobXTableProps<T> = {
     columns:Column<T>[];
-    data:T[];
+    className?: string;
+    data?:T[];
+    dataStore?:IMobXApplicationDataStore<T>;
     initialSortColumn?: string;
     initialSortDirection?:SortDirection;
     initialItemsPerPage?:number;
@@ -90,7 +95,6 @@ function compareLists<U extends number|string>(a:(U|null)[], b:(U|null)[], asc:b
     return ret;
 }
 
-type SortMetric<T> = ((d:T)=>number|null) | ((d:T)=>(number|null)[]) | ((d:T)=>string|null) | ((d:T)=>(string|null)[]);
 export function lazyMobXTableSort<T>(data:T[], metric:SortMetric<T>, ascending:boolean = true):T[] {
     // Separating this for testing, so that classes can test their comparators
     //  against how the table will sort.
@@ -124,6 +128,38 @@ export function lazyMobXTableSort<T>(data:T[], metric:SortMetric<T>, ascending:b
     return dataAndValue.map(x=>x.data);
 }
 
+export class LazyMobXTableDataStore<T> implements IMobXApplicationDataStore<T> {
+    @observable.ref private data:T[];
+    @observable private dataFilter:(d:T)=>boolean;
+
+    @observable public sortMetric:SortMetric<T>;
+    @observable public sortAscending:boolean;
+    @observable public highlight:(d:T)=>boolean;
+
+    @computed get allData() {
+        return this.data;
+    }
+    @computed get sortedData() {
+        return lazyMobXTableSort(this.allData, this.sortMetric, this.sortAscending);
+    }
+    @computed get sortedFilteredData() {
+        return this.sortedData.filter(this.dataFilter);
+    }
+
+    public setFilter(dataFilter:(d:T)=>boolean) {
+        this.dataFilter = dataFilter;
+    }
+
+
+    constructor(data:T[]) {
+        this.data = data;
+        this.highlight = ()=>false;
+        this.dataFilter = ()=>true;
+        this.sortMetric = ()=>0;
+        this.sortAscending = true;
+    }
+}
+
 class LazyMobXTableStore<T> {
     @observable public filterString:string;
     @observable private _page:number;
@@ -134,7 +170,7 @@ class LazyMobXTableStore<T> {
     @observable public sortAscending:boolean;
     @observable.ref public columns:Column<T>[];
     @observable private _columnVisibility:{[columnId: string]: boolean};
-    @observable.ref public data:T[];
+    @observable private dataStore:IMobXApplicationDataStore<T>;
 
     @computed public get itemsPerPage() {
         return this._itemsPerPage;
@@ -146,7 +182,7 @@ class LazyMobXTableStore<T> {
     }
 
     @computed get showingAllRows(): boolean {
-        return this.sortedFilteredData.length <= this.itemsPerPage || this.itemsPerPage === -1
+        return this.dataStore.sortedFilteredData.length <= this.itemsPerPage || this.itemsPerPage === -1
     }
 
     @computed public get page() {
@@ -166,7 +202,7 @@ class LazyMobXTableStore<T> {
         if (this.itemsPerPage === PAGINATION_SHOW_ALL) {
             return 0;
         } else {
-            return Math.floor(this.sortedFilteredData.length / this.itemsPerPage);
+            return Math.floor(this.dataStore.sortedFilteredData.length / this.itemsPerPage);
         }
     }
 
@@ -193,7 +229,7 @@ class LazyMobXTableStore<T> {
         });
 
         // add rows (including hidden columns)
-        this.sortedData.forEach((rowData:T) => {
+        this.dataStore.sortedData.forEach((rowData:T) => {
             const rowDownloadData:string[] = [];
 
             this.columns.forEach((column:Column<T>) => {
@@ -215,36 +251,11 @@ class LazyMobXTableStore<T> {
         return this.columns.find((col:Column<T>)=>this.isVisible(col) && (col.name === this.sortColumn));
     }
 
-    @computed get sortedData():T[] {
-        let ret = this.data;
-        const column = this.sortColumnObject;
-        if (column && column.sortBy) {
-            ret = lazyMobXTableSort(ret, column.sortBy, this.sortAscending);
-        }
-        return ret;
-    }
-
-    @computed get sortedFilteredData():T[] {
-        let filtered:T[] = this.sortedData;
-        if (this.filterString) {
-            filtered = filtered.filter((datum:T)=>{
-                let match = false;
-                for (const column of this.visibleColumns) {
-                    match = (column.filter && column.filter(datum, this.filterString, this.filterStringUpper, this.filterStringLower)) || false;
-                    if (match) {
-                        break;
-                    }
-                }
-                return match;
-            });
-        }
-        return filtered;
-    }
     @computed get visibleData():T[] {
         if (this.itemsPerPage === PAGINATION_SHOW_ALL) {
-            return this.sortedFilteredData;
+            return this.dataStore.sortedFilteredData;
         } else {
-            return this.sortedFilteredData.slice(this.page*this.itemsPerPage, (this.page+1)*this.itemsPerPage);
+            return this.dataStore.sortedFilteredData.slice(this.page*this.itemsPerPage, (this.page+1)*this.itemsPerPage);
         }
     }
 
@@ -259,6 +270,15 @@ class LazyMobXTableStore<T> {
         }
     }
 
+    @computed get sortMetric():SortMetric<T> {
+        const sortColumnObject = this.sortColumnObject;
+        if (sortColumnObject && sortColumnObject.sortBy) {
+            return sortColumnObject.sortBy;
+        } else {
+            return ()=>0;
+        }
+    }
+
     @computed get headers():JSX.Element[] {
         return this.visibleColumns.map((column:Column<T>)=>{
             const headerProps:{role?:"button",
@@ -268,7 +288,11 @@ class LazyMobXTableStore<T> {
                 headerProps.role = "button";
                 headerProps.onClick = ()=>{
                     this.sortAscending = this.getNextSortAscending(column);
+                    this.dataStore.sortAscending = this.sortAscending;
+
                     this.sortColumn = column.name;
+                    this.dataStore.sortMetric = this.sortMetric;
+
                     this.page = 0;
                 };
             }
@@ -334,7 +358,7 @@ class LazyMobXTableStore<T> {
 
         if (this._itemsLabel) {
             // use itemsLabel for plural in case no itemsLabelPlural provided
-            if (!this._itemsLabelPlural || this.sortedFilteredData.length === 1) {
+            if (!this._itemsLabelPlural || this.dataStore.sortedFilteredData.length === 1) {
                 itemsLabel = this._itemsLabel;
             }
             else {
@@ -346,30 +370,59 @@ class LazyMobXTableStore<T> {
             itemsLabel = ` ${itemsLabel}`;
         }
 
-        return `${firstVisibleItemDisp}-${lastVisibleItemDisp} of ${this.sortedFilteredData.length}${itemsLabel}`;
+        return `${firstVisibleItemDisp}-${lastVisibleItemDisp} of ${this.dataStore.sortedFilteredData.length}${itemsLabel}`;
     }
 
     public get rows():JSX.Element[] {
         return this.visibleData.map((datum:T)=>{
-            const tds = this.visibleColumns.map((column:Column<T>)=>{
-                return (<td key={column.name}>
-                    {column.render(datum)}
-                </td>);
-            });
-            return (
-                <tr>
-                    {tds}
-                </tr>
-            );
+                const tds = this.visibleColumns.map((column:Column<T>)=>{
+                    return (<td key={column.name}>
+                        {column.render(datum)}
+                    </td>);
+                });
+                const rowProps:any = {};
+                if (this.dataStore.highlight(datum)) {
+                    rowProps.className = "highlight";
+                }
+                return (
+                    <tr {...rowProps}>
+                        {tds}
+                    </tr>
+                );
+        });
+    }
+
+    @action setFilterString(str:string) {
+        this.filterString = str;
+        this.page = 0;
+        this.dataStore.setFilter((d:T)=>{
+            let match = false;
+            for (const column of this.visibleColumns) {
+                match = (column.filter && column.filter(d, this.filterString, this.filterStringUpper, this.filterStringLower)) || false;
+                if (match) {
+                    break;
+                }
+            }
+            return match;
         });
     }
 
     @action setProps(props:LazyMobXTableProps<T>) {
         this.columns = props.columns;
-        this.data = props.data;
         this._itemsLabel = props.itemsLabel;
         this._itemsLabelPlural = props.itemsLabelPlural;
         this._columnVisibility = this.resolveColumnVisibility(props.columns);
+
+        if (props.dataStore) {
+            // if dataStore passed in, inherit its current state
+            this.dataStore = props.dataStore;
+            this.sortAscending = this.dataStore.sortAscending;
+        } else {
+            // else, initialize it to the tables state
+            this.dataStore = new LazyMobXTableDataStore<T>(props.data || []);
+            this.dataStore.sortAscending = this.sortAscending;
+            this.dataStore.sortMetric = this.sortMetric;
+        }
     }
 
     @action public updateColumnVisibility(id:string, visible:boolean)
@@ -403,10 +456,11 @@ class LazyMobXTableStore<T> {
     }
 
     constructor(lazyMobXTableProps:LazyMobXTableProps<T>) {
-        this.setProps(lazyMobXTableProps);
         this.filterString = "";
         this.sortColumn = lazyMobXTableProps.initialSortColumn || "";
         this.sortAscending = (lazyMobXTableProps.initialSortDirection !== "desc"); // default ascending
+        this.setProps(lazyMobXTableProps);
+
         this._page = 0;
         this.itemsPerPage = lazyMobXTableProps.initialItemsPerPage || 50;
     }
@@ -444,7 +498,7 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
 
                     const filterValue = evt.currentTarget.value;
                     searchTimeout = window.setTimeout(()=>{
-                        this.store.filterString = filterValue;
+                        this.store.setFilterString(filterValue);
                     }, 400);
                 };
             })(),
@@ -521,6 +575,7 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
                 <SimpleTable
                     headers={this.store.headers}
                     rows={this.store.rows}
+                    className={this.props.className}
                 />
 
             </div>

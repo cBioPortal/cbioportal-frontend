@@ -2,7 +2,7 @@ import React from 'react';
 import {assert} from 'chai';
 import {shallow, mount, ReactWrapper} from 'enzyme';
 import sinon from 'sinon';
-import {lazyMobXTableSort, default as LazyMobXTable, Column} from "./LazyMobXTable";
+import {lazyMobXTableSort, default as LazyMobXTable, Column, LazyMobXTableDataStore} from "./LazyMobXTable";
 import SimpleTable from "../simpleTable/SimpleTable";
 import DefaultTooltip from "../DefaultTooltip";
 import expect from 'expect';
@@ -68,6 +68,10 @@ function getCurrentPage(table:ReactWrapper<any, any>):number|undefined {
 
 function getVisibleRows(table:ReactWrapper<any, any>) {
     return table.find(SimpleTable).props().rows;
+}
+
+function getSimpleTableRows(table:ReactWrapper<any, any>) {
+    return table.find(SimpleTable).find("tbody").find("tr");
 }
 
 function getNumVisibleRows(table:ReactWrapper<any, any>):number {
@@ -787,6 +791,17 @@ describe('LazyMobXTable', ()=>{
             table.setProps({data:[]});
             rows = getVisibleRows(table);
             assert.equal(rows.length, 0);
+        });
+        it("highlights rows properly, according to highlight function in data store", ()=>{
+            const store:LazyMobXTableDataStore<any> = new LazyMobXTableDataStore(data);
+            store.highlight = (d:any)=>(d.numList[1] === null);
+            let table = mount(<Table columns={columns} dataStore={store}/>);
+            let rows = getSimpleTableRows(table);
+            assert.isFalse(rows.at(0).hasClass("highlight"), "row 0 not highlighted");
+            assert.isTrue(rows.at(1).hasClass("highlight"), "row 1 highlighted");
+            assert.isFalse(rows.at(2).hasClass("highlight"), "row 2 not highlighted");
+            assert.isTrue(rows.at(3).hasClass("highlight"), "row 3 highlighted");
+            assert.isTrue(rows.at(4).hasClass("highlight"), "row 4 highlighted");
         });
     });
     describe('column visibility', ()=>{
