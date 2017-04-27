@@ -1,14 +1,16 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Provider } from 'mobx-react';
-import { hashHistory, Router } from 'react-router';
-import { RouterStore, syncHistoryWithStore  } from 'mobx-react-router';
+import {Provider} from 'mobx-react';
+import {hashHistory, Router} from 'react-router';
+import {RouterStore, syncHistoryWithStore} from 'mobx-react-router';
 import ExtendedRoutingStore from './shared/lib/ExtendedRouterStore';
-import { computed, extendObservable } from 'mobx';
+import {computed, extendObservable} from 'mobx';
 import makeRoutes from './routes';
 import lodash from 'lodash';
 import $ from 'jquery';
 import URL from 'url';
+import * as superagent from 'superagent';
+import { getHost } from './shared/api/urls';
 
 // make sure lodash doesn't overwrite (or set) global underscore
 lodash.noConflict();
@@ -19,6 +21,27 @@ const stores = {
     // Key can be whatever you want
     routing: routingStore,
     // ...other stores
+};
+
+const end = superagent.Request.prototype.end;
+
+let redirecting = false;
+
+superagent.Request.prototype.end = function (callback) {
+    return end.call(this, (error, response) => {
+        if (redirecting) {
+            return;
+        }
+        if (response.statusCode === 401) {
+            var storageKey = `redirect${Math.floor(Math.random() * 1000000000000)}`
+            localStorage.setItem(storageKey, window.location.hash);
+            const loginUrl = `${getHost()}/?spring-security-redirect=${window.location.pathname}${window.location.search}${encodeURIComponent('#/restore?key=' + storageKey)}`;
+            redirecting = true;
+            window.location.href = loginUrl;
+        } else {
+            callback(error, response);
+        }
+    });
 };
 
 const history = syncHistoryWithStore(hashHistory, routingStore);
@@ -56,10 +79,10 @@ let render = () => {
     ReactDOM.render(
         <Provider {...stores}>
             <Router
-                history={history} routes={makeRoutes()} >
+                history={history} routes={makeRoutes()}>
             </Router>
         </Provider>
-    , rootNode);
+        , rootNode);
 
 
 };
@@ -71,4 +94,4 @@ if (__DEBUG__ && module.hot) {
     module.hot.accept('./routes', () => render());
 }
 
-$(document).ready(()=>render());
+$(document).ready(() => render());
