@@ -3,7 +3,7 @@ import {fromPairs} from 'lodash';
 import {OverlayTrigger, Popover} from 'react-bootstrap';
 
 import ClinicalInformationPatientTable from '../clinicalInformation/ClinicalInformationPatientTable';
-import {getSpans} from '../clinicalInformation/lib/clinicalAttributesUtil.js';
+import {getSpanElements} from '../clinicalInformation/lib/clinicalAttributesUtil.js';
 
 import styles from './styles.module.scss';
 import DefaultTooltip from "../../../shared/components/DefaultTooltip";
@@ -56,11 +56,9 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
                 arrowContent={<div className="rc-tooltip-arrow-inner" />}
                 destroyTooltipOnHide={true}
             >
-                 <span>
+                <span className='clinical-spans' id='patient-attributes'>
                     <a href="javascript:void(0)" onClick={()=>this.props.handlePatientClick(patient.id)}>{patient.id}</a>
-                    <span className='clinical-spans' id='patient-attributes' dangerouslySetInnerHTML={{__html:
-                        getSpans(fromPairs(patient.clinicalData.map((x: any) => [x.clinicalAttributeId, x.value])), 'lgg_ucsf_2014')}}>
-                    </span>
+                    {getSpanElements(fromPairs(patient.clinicalData.map((x: any) => [x.clinicalAttributeId, x.value])), 'lgg_ucsf_2014')}
                 </span>
             </DefaultTooltip>
         );
