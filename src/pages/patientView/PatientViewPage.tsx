@@ -54,7 +54,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         super();
 
         //TODO: this should be done by a module so that it can be reused on other pages
-
         const reaction1 = reaction(
             () => props.routing.location.query,
             query => {
