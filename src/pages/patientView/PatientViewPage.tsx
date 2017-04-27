@@ -18,7 +18,7 @@ import { PatientViewPageStore } from './clinicalInformation/PatientViewPageStore
 import ClinicalInformationPatientTable from "./clinicalInformation/ClinicalInformationPatientTable";
 import ClinicalInformationSamples from "./clinicalInformation/ClinicalInformationSamplesTable";
 import {observer, inject } from "mobx-react";
-import {getSpans} from './clinicalInformation/lib/clinicalAttributesUtil.js';
+import {getSpanElements} from './clinicalInformation/lib/clinicalAttributesUtil.js';
 import CopyNumberTableWrapper from "./copyNumberAlterations/CopyNumberTableWrapper";
 import {reaction, computed} from "mobx";
 import Timeline from "./timeline/Timeline";
@@ -199,11 +199,12 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 const clinicalDataLegacy: any = _.fromPairs(sample.clinicalData.map((x) => [x.clinicalAttributeId, x.value]));
                 return (
                     <div className="patientSample">
-                        {  sampleManager!.getComponentForSample(sample.id, true) }
-                        {'\u00A0'}
-                        <a href="javascript:void(0)" onClick={()=>{ this.handleSampleClick(sample.id) }}>{sample.id}</a>
-                        <span className='clinical-spans'
-                              dangerouslySetInnerHTML={{__html:getSpans(clinicalDataLegacy, 'lgg_ucsf_2014')}}></span>
+                        <span className='clinical-spans'>
+                            {  sampleManager!.getComponentForSample(sample.id, true) }
+                            {'\u00A0'}
+                            <a href="javascript:void(0)" onClick={()=>{ this.handleSampleClick(sample.id) }}>{sample.id}</a>
+                            {getSpanElements(clinicalDataLegacy, 'lgg_ucsf_2014')}
+                        </span>
                     </div>
 
                 )
