@@ -1,5 +1,6 @@
 import * as $ from 'jquery';
 import _ from 'underscore';
+import * as React from 'react';
 
 /**
  * Functions for dealing with clinical attributes.
@@ -167,18 +168,14 @@ function cleanAndDerive(clinicalData) {
  * @param {object} clinicalData     - key/value pairs of clinical data
  * @param {string} cancerStudyId    - short name of cancer study
  */
-function getSpans(clinicalData, cancerStudyId) {
-    let spans = '';
+function getSpanElements(clinicalData, cancerStudyId) {
+    let spans = [];
     const clinicalAttributesCleanDerived = cleanAndDerive(clinicalData);
 
-    const keys = Object.keys(clinicalAttributesCleanDerived);
-    for (let i = 0; i < keys.length; i += 1) {
-        const key = keys[i];
-        const value = clinicalAttributesCleanDerived[key];
-        spans += `<span class="clinical-attribute" attr-id="${key}" attr-value="${value}" study="${cancerStudyId}">${value}</span>`;
-    }
-
-    return spans;
+    return Object.keys(clinicalAttributesCleanDerived).map((key) => {
+        let value = clinicalAttributesCleanDerived[key];
+        return <span is class="clinical-attribute" attr-id={key} attr-value={value} study={cancerStudyId}>{value}</span>
+    });
 }
 
 /*
@@ -201,4 +198,4 @@ function addFirstOrderClass() {
     });
 }
 
-export { cleanAndDerive, getSpans, addFirstOrderClass };
+export { cleanAndDerive, getSpanElements, addFirstOrderClass };
