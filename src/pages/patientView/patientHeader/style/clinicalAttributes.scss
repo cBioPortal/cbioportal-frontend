@@ -16,6 +16,7 @@ $sample-color-xenograft: pink;
 /* Do not display clinical attributes on default */
 .clinical-spans {
     display: inline-flex;
+    flex-wrap: wrap;
 
     .clinical-attribute {
         display: none;
