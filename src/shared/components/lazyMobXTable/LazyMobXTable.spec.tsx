@@ -2,7 +2,7 @@ import React from 'react';
 import {assert} from 'chai';
 import {shallow, mount, ReactWrapper} from 'enzyme';
 import sinon from 'sinon';
-import {lazyMobXTableSort, default as LazyMobXTable, Column, LazyMobXTableDataStore} from "./LazyMobXTable";
+import {lazyMobXTableSort, default as LazyMobXTable, Column} from "./LazyMobXTable";
 import SimpleTable from "../simpleTable/SimpleTable";
 import DefaultTooltip from "../DefaultTooltip";
 import expect from 'expect';
@@ -12,6 +12,8 @@ import {Clock} from "lolex";
 import {PaginationControls} from "../paginationControls/PaginationControls";
 import {Button, FormControl, Checkbox} from 'react-bootstrap';
 import {ColumnVisibilityControls} from "../columnVisibilityControls/ColumnVisibilityControls";
+import {SimpleMobXApplicationDataStore} from "../../lib/IMobXApplicationDataStore";
+import cloneJSXWithoutKeyAndRef from "shared/lib/cloneJSXWithoutKeyAndRef";
 
 expect.extend(expectJSX);
 
@@ -67,7 +69,7 @@ function getCurrentPage(table:ReactWrapper<any, any>):number|undefined {
 }
 
 function getVisibleRows(table:ReactWrapper<any, any>) {
-    return table.find(SimpleTable).props().rows;
+    return table.find(SimpleTable).props().rows.map(cloneJSXWithoutKeyAndRef);
 }
 
 function getSimpleTableRows(table:ReactWrapper<any, any>) {
@@ -793,7 +795,7 @@ describe('LazyMobXTable', ()=>{
             assert.equal(rows.length, 0);
         });
         it("highlights rows properly, according to highlight function in data store", ()=>{
-            const store:LazyMobXTableDataStore<any> = new LazyMobXTableDataStore(data);
+            const store:SimpleMobXApplicationDataStore<any> = new SimpleMobXApplicationDataStore(data);
             store.highlight = (d:any)=>(d.numList[1] === null);
             let table = mount(<Table columns={columns} dataStore={store}/>);
             let rows = getSimpleTableRows(table);

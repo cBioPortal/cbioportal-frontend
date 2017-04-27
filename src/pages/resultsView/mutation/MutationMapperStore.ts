@@ -4,7 +4,7 @@ import {
 import client from "shared/api/cbioportalClientInstance";
 import {computed, observable} from "mobx";
 import {remoteData} from "shared/api/remoteData";
-import {labelMobxPromises, MobxPromise} from "mobxpromise";
+import {labelMobxPromises, MobxPromise, cached} from "mobxpromise";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {IHotspotData} from "shared/model/CancerHotspots";
 import {
@@ -12,6 +12,7 @@ import {
     fetchMutationData, generateSampleIdToTumorTypeMap, generateDataQueryFilter,
     ONCOKB_DEFAULT
 } from "shared/lib/StoreUtils";
+import {IMobXApplicationDataStore, SimpleMobXApplicationDataStore} from "../../../shared/lib/IMobXApplicationDataStore";
 
 export class MutationMapperStore {
 
@@ -114,5 +115,9 @@ export class MutationMapperStore {
 
     @computed get sampleIdToTumorType(): {[sampleId: string]: string} {
         return generateSampleIdToTumorTypeMap(this.clinicalDataForSamples);
+    }
+
+    @cached get dataStore():IMobXApplicationDataStore<Mutation[]> {
+        return new SimpleMobXApplicationDataStore<Mutation[]>(this.processedMutationData);
     }
 }

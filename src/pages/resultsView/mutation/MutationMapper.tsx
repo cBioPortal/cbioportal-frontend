@@ -9,6 +9,7 @@ import MutationCountCache from "shared/cache/MutationCountCache";
 import {IMyCancerGenomeData} from "shared/model/MyCancerGenome";
 import {MutationMapperStore} from "./MutationMapperStore";
 import ResultsViewMutationTable from "./ResultsViewMutationTable";
+import LollipopMutationPlotWrapper from "../../../shared/components/lollipopMutationPlot/LollipopMutationPlot";
 
 export interface IMutationMapperProps {
     store: MutationMapperStore;
@@ -32,23 +33,30 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
     public render() {
         return (
             <div>
-                <LoadingIndicator isLoading={this.props.store.mutationData.isPending} />
+                <LoadingIndicator isLoading={this.props.store.mutationData.isPending || this.props.store.gene.isPending} />
                 {
-                    (this.props.store.mutationData.isComplete) && (
-                        <ResultsViewMutationTable
-                            studyId={this.props.studyId}
-                            studyToCancerType={this.props.studyToCancerType}
-                            discreteCNACache={this.props.discreteCNACache}
-                            oncoKbEvidenceCache={this.props.oncoKbEvidenceCache}
-                            pmidCache={this.props.pmidCache}
-                            cancerTypeCache={this.props.cancerTypeCache}
-                            mutationCountCache={this.props.mutationCountCache}
-                            data={this.props.store.processedMutationData}
-                            myCancerGenomeData={this.props.myCancerGenomeData}
-                            hotspots={this.props.store.indexedHotspotData}
-                            cosmicData={this.props.store.cosmicData.result}
-                            oncoKbData={this.props.store.oncoKbData.result}
-                        />
+                    (this.props.store.mutationData.isComplete && this.props.store.gene.result) && (
+                        <div>
+                            <LollipopMutationPlotWrapper
+                                dataStore={this.props.store.dataStore}
+                                entrezGeneId={this.props.store.gene.result.entrezGeneId}
+                                hugoGeneSymbol={this.props.store.gene.result.hugoGeneSymbol}
+                            />
+                            <ResultsViewMutationTable
+                                studyId={this.props.studyId}
+                                studyToCancerType={this.props.studyToCancerType}
+                                discreteCNACache={this.props.discreteCNACache}
+                                oncoKbEvidenceCache={this.props.oncoKbEvidenceCache}
+                                pmidCache={this.props.pmidCache}
+                                cancerTypeCache={this.props.cancerTypeCache}
+                                mutationCountCache={this.props.mutationCountCache}
+                                dataStore={this.props.store.dataStore}
+                                myCancerGenomeData={this.props.myCancerGenomeData}
+                                hotspots={this.props.store.indexedHotspotData}
+                                cosmicData={this.props.store.cosmicData.result}
+                                oncoKbData={this.props.store.oncoKbData.result}
+                            />
+                    </div>
                     )
                 }
             </div>
