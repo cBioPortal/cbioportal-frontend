@@ -34,6 +34,7 @@ import MutationCountColumnFormatter from "./column/MutationCountColumnFormatter"
 import LazyLoadedTableCell from "shared/lib/LazyLoadedTableCell";
 import {CacheData} from "../../lib/LazyMobXCache";
 import CancerTypeColumnFormatter from "./column/CancerTypeColumnFormatter";
+import {IMobXApplicationDataStore} from "../../lib/IMobXApplicationDataStore";
 
 export interface IMutationTableProps {
     studyId?:string;
@@ -53,7 +54,8 @@ export interface IMutationTableProps {
     mrnaExprRankGeneticProfileId?:string;
     discreteCNAGeneticProfileId?:string;
     columns?:MutationTableColumnType[];
-    data:Mutation[][];
+    data?:Mutation[][];
+    dataStore?:IMobXApplicationDataStore<Mutation[]>;
     initialItemsPerPage?:number;
     itemsLabel?:string;
     itemsLabelPlural?:string;
@@ -434,6 +436,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             <MutationTableComponent
                 columns={this.columns}
                 data={this.props.data}
+                dataStore={this.props.dataStore}
                 initialItemsPerPage={this.props.initialItemsPerPage}
                 initialSortColumn={this.props.initialSortColumn}
                 initialSortDirection={this.props.initialSortDirection}
