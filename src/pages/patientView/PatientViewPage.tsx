@@ -10,7 +10,7 @@ import FeatureTitle from '../../shared/components/featureTitle/FeatureTitle';
 import {If, Then, Else} from 'react-if';
 import SampleManager from './sampleManager';
 import SelectCallback = ReactBootstrap.SelectCallback;
-import Spinner from 'react-spinkit';
+import {ThreeBounce} from 'better-react-spinkit';
 import { Modal } from 'react-bootstrap';
 import PatientHeader from './patientHeader/PatientHeader';
 import {PaginationControls} from "../../shared/components/paginationControls/PaginationControls";
@@ -406,7 +406,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             loading={patientViewPageStore.pathologyReport.isPending}
                     >
                         <div style={{position:"relative"}}>
-                            <Spinner style={{textAlign:'center'}} spinnerName="three-bounce" noFadeIn/> {/*Put it underneath so it gets covered by loaded element*/}
+                            <ThreeBounce className="center-block text-center" /> {/*Put it underneath so it gets covered by loaded element*/}
                             <PathologyReport iframeStyle={{position:"absolute", top:0}} pdfs={patientViewPageStore.pathologyReport.result} />
                         </div>
                     </MSKTab>
@@ -417,7 +417,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             loading={patientViewPageStore.MDAndersonHeatMapAvailable.isPending}
                     >
                         <div style={{position:"relative"}}>
-                            <Spinner style={{textAlign:'center'}} spinnerName="three-bounce" noFadeIn/> {/*Put it underneath so it gets covered by loaded element*/}
+                            <ThreeBounce className="center-block text-center" /> {/*Put it underneath so it gets covered by loaded element*/}
                             <iframe style={{position:"absolute", top:0, width:'100%', height:700, border:'none'}}
                                     src={ `//bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?participant=${patientViewPageStore.patientId}` }></iframe>
                         </div>
@@ -429,7 +429,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             loading={patientViewPageStore.hasTissueImageIFrameUrl.isPending}
                     >
                         <div style={{position: "relative"}}>
-                            <Spinner style={{textAlign:'center'}} spinnerName="three-bounce" noFadeIn/> {/*Put it underneath so it gets covered by loaded element*/}
+                            <ThreeBounce className="center-block text-center" /> {/*Put it underneath so it gets covered by loaded element*/}
                             <iframe style={{position:"absolute", top:0, width:'100%', height:700, border:'none'}}
                                     src={ `http://cancer.digitalslidearchive.net/index_mskcc.php?slide_name=${patientViewPageStore.patientId}` }></iframe>
                         </div>
@@ -439,7 +439,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                     </Then>
                     <Else>
-                        <Spinner style={{textAlign:'center'}} spinnerName="three-bounce" noFadeIn/>
+                        <ThreeBounce size={20} className="center-block text-center" />
                     </Else>
 
                 </If>

@@ -4,7 +4,7 @@ import classnames from 'classnames';
 import ReactChild = React.ReactChild;
 import ReactNode = React.ReactNode;
 import ReactChildren = React.ReactChildren;
-import Spinner from "react-spinkit";
+import {ThreeBounce} from 'better-react-spinkit';
 
 interface IMSKTabProps {
     inactive?:boolean;
@@ -58,7 +58,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
             return React.cloneElement(
                 tab,
                 { inactive } as Partial<IMSKTabProps>,
-                (<Spinner style={{textAlign:'center'}} spinnerName="three-bounce" noFadeIn/>)
+                (<ThreeBounce className="center-block text-center" />)
             );
         } else {
             return React.cloneElement(
