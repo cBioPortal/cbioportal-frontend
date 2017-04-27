@@ -2,7 +2,7 @@ import * as React from "react";
 import * as _ from 'lodash';
 import { Table, Tr, Td }  from 'reactableMSK';
 import { CancerStudy }  from 'shared/api/generated/CBioPortalAPI';
-import Spinner from "react-spinkit";
+import {ThreeBounce} from 'better-react-spinkit';
 import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
 import TableHeaderControls from "shared/components/tableHeaderControls/TableHeaderControls";
 
@@ -111,7 +111,7 @@ export default class DataSetPageUnconnected extends React.Component<IDatasetPage
                     </div>);
 
         } else {
-            return <div><Spinner spinnerName="three-bounce" /></div>;
+            return <div><ThreeBounce /></div>;
         }
     }
 }
