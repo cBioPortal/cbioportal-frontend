@@ -1,7 +1,7 @@
 import SimpleTable from "../simpleTable/SimpleTable";
 import * as React from 'react';
 import {observable, computed, action} from "mobx";
-import {observer} from "mobx-react";
+import {observer, Observer} from "mobx-react";
 import './styles.scss';
 import {
     SHOW_ALL_PAGE_SIZE as PAGINATION_SHOW_ALL, PaginationControls, IPaginationControlsProps
@@ -15,7 +15,7 @@ import DefaultTooltip from "../DefaultTooltip";
 import {ButtonToolbar} from "react-bootstrap";
 import { If } from 'react-if';
 import {SortMetric} from "../../lib/ISortMetric";
-import {IMobXApplicationDataStore} from "../../lib/IMobXApplicationDataStore";
+import {IMobXApplicationDataStore, SimpleMobXApplicationDataStore} from "../../lib/IMobXApplicationDataStore";
 
 export type SortDirection = 'asc' | 'desc';
 
@@ -126,48 +126,6 @@ export function lazyMobXTableSort<T>(data:T[], metric:SortMetric<T>, ascending:b
          return cmp;
     });
     return dataAndValue.map(x=>x.data);
-}
-
-export class LazyMobXTableDataStore<T> implements IMobXApplicationDataStore<T> {
-    @observable.ref private data:T[];
-    @observable private dataFilter:(d:T)=>boolean;
-    @observable private dataSelector:(d:T)=>boolean;
-
-    @observable public sortMetric:SortMetric<T>;
-    @observable public sortAscending:boolean;
-    @observable public highlight:(d:T)=>boolean;
-
-    @computed get allData() {
-        return this.data;
-    }
-    @computed get sortedData() {
-        return lazyMobXTableSort(this.allData, this.sortMetric, this.sortAscending);
-    }
-    @computed get sortedFilteredData() {
-        return this.sortedData.filter(this.dataFilter);
-    }
-
-    @computed get sortedFilteredSelectedData() {
-        return this.sortedFilteredData.filter(this.dataSelector);
-    }
-
-    @action public setFilter(dataFilter:(d:T)=>boolean) {
-        this.dataFilter = dataFilter;
-    }
-
-    @action public setSelector(selector:(d:T)=>boolean) {
-        this.dataSelector = selector;
-    }
-
-
-    constructor(data:T[]) {
-        this.data = data;
-        this.highlight = ()=>false;
-        this.dataSelector = ()=>false;
-        this.dataFilter = ()=>true;
-        this.sortMetric = ()=>0;
-        this.sortAscending = true;
-    }
 }
 
 class LazyMobXTableStore<T> {
@@ -391,23 +349,32 @@ class LazyMobXTableStore<T> {
         return `${firstVisibleItemDisp}-${lastVisibleItemDisp} of ${this.displayData.length}${itemsLabel}`;
     }
 
-    public get rows():JSX.Element[] {
+    @computed get tds():JSX.Element[][] {
         return this.visibleData.map((datum:T)=>{
-                const tds = this.visibleColumns.map((column:Column<T>)=>{
-                    return (<td key={column.name}>
-                        {column.render(datum)}
-                    </td>);
-                });
-                const rowProps:any = {};
-                if (this.dataStore.highlight(datum)) {
-                    rowProps.className = "highlight";
-                }
-                return (
-                    <tr {...rowProps}>
-                        {tds}
-                    </tr>
-                );
+            const _tds:JSX.Element[] = this.visibleColumns.map((column:Column<T>)=>{
+                return (<td key={column.name}>
+                    {column.render(datum)}
+                </td>);
+            });
+            return _tds;
         });
+    }
+
+    @computed get rows():JSX.Element[] {
+        // We separate this so that highlighting isn't such a costly operation
+        const ret = [];
+        for (let i=0; i<this.visibleData.length; i++) {
+            const rowProps:any = {};
+            if (this.dataStore.highlight(this.visibleData[i])) {
+                rowProps.className = "highlight";
+            }
+            ret.push(
+                <tr key={i} {...rowProps}>
+                    {this.tds[i]}
+                </tr>
+            );
+        }
+        return ret;
     }
 
     @action setFilterString(str:string) {
@@ -437,7 +404,7 @@ class LazyMobXTableStore<T> {
             this.sortAscending = this.dataStore.sortAscending;
         } else {
             // else, initialize it to the tables state
-            this.dataStore = new LazyMobXTableDataStore<T>(props.data || []);
+            this.dataStore = new SimpleMobXApplicationDataStore<T>(props.data || []);
             this.dataStore.sortAscending = this.sortAscending;
             this.dataStore.sortMetric = this.sortMetric;
         }
@@ -538,64 +505,85 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
             }
         };
         this.getDownloadData = this.getDownloadData.bind(this);
+        this.getToolbar = this.getToolbar.bind(this);
+        this.getTable = this.getTable.bind(this);
+        this.getPaginationControls = this.getPaginationControls.bind(this);
     }
 
     @action componentWillReceiveProps(nextProps:LazyMobXTableProps<T>) {
         this.store.setProps(nextProps);
     }
 
-    buildPaginationControls(className:string | undefined, style: {[k:string]:string | number}, textBetweenButtons:string ): JSX.Element {
-        return <PaginationControls
-            className={className}
-            itemsPerPage={this.store.itemsPerPage}
-            currentPage={this.store.page}
-            onChangeItemsPerPage={this.handlers.changeItemsPerPage}
-            onPreviousPageClick={this.handlers.decPage}
-            onNextPageClick={this.handlers.incPage}
-            textBetweenButtons={textBetweenButtons}
-            previousPageDisabled={this.store.page === 0}
-            style={style}
-            nextPageDisabled={this.store.page === this.store.maxPage}
-            {...this.props.paginationProps}
-        />
+    private getPaginationControls() {
+        if (this.props.showPagination) {
+            return (
+                <PaginationControls
+                    className="pull-left topPagination"
+                    itemsPerPage={this.store.itemsPerPage}
+                    currentPage={this.store.page}
+                    onChangeItemsPerPage={this.handlers.changeItemsPerPage}
+                    onPreviousPageClick={this.handlers.decPage}
+                    onNextPageClick={this.handlers.incPage}
+                    textBetweenButtons={this.store.paginationStatusText}
+                    previousPageDisabled={this.store.page === 0}
+                    nextPageDisabled={this.store.page === this.store.maxPage}
+                    {...this.props.paginationProps}
+                />
+            );
+        } else {
+            return null;
+        }
+    }
+
+    private getToolbar() {
+        return (
+            <ButtonToolbar style={{marginLeft:0}} className="tableMainToolbar">
+                { this.props.showFilter ? (
+                    <div className={`pull-right form-group has-feedback input-group-sm`} style={{ display:'inline-block', marginLeft: 5}}>
+                        <input type="text" onInput={this.handlers.filterInput} className="form-control tableSearchInput" style={{ width:200 }}  />
+                        <span className="fa fa-search form-control-feedback" aria-hidden="true"></span>
+                    </div>
+                ) : ""}
+                <Observer>
+                    { this.getPaginationControls }
+                </Observer>
+                {this.props.showColumnVisibility ? (
+                    <ColumnVisibilityControls
+                        className="pull-right"
+                        columnVisibility={this.store.colVisProp}
+                        onColumnToggled={this.handlers.visibilityToggle}
+                        {...this.props.columnVisibilityProps}
+                    />) : ""}
+                {this.props.showCopyDownload ? (
+                    <CopyDownloadControls
+                        className="pull-right"
+                        downloadData={this.getDownloadData}
+                        downloadFilename="table.csv"
+                        {...this.props.copyDownloadProps}
+                    />) : ""}
+            </ButtonToolbar>
+        );
+    }
+
+    private getTable() {
+        return (
+            <SimpleTable
+                headers={this.store.headers}
+                rows={this.store.rows}
+                className={this.props.className}
+            />
+        );
     }
 
     render() {
         return (
             <div>
-                <ButtonToolbar style={{marginLeft:0}} className="tableMainToolbar">
-                    <If condition={this.props.showFilter === true}>
-                        <div className={`pull-right form-group has-feedback input-group-sm`} style={{ display:'inline-block', marginLeft: 5}}>
-                            <input type="text" onInput={this.handlers.filterInput} className="form-control tableSearchInput" style={{ width:200 }}  />
-                            <span className="fa fa-search form-control-feedback" aria-hidden="true"></span>
-                        </div>
-                    </If>
-                    <If condition={this.props.showPagination === true}>
-                        { this.buildPaginationControls('pull-left topPagination', {}, this.store.paginationStatusText) }
-                    </If>
-                    <If condition={this.props.showColumnVisibility === true}>
-                        <ColumnVisibilityControls
-                            className="pull-right"
-                            columnVisibility={this.store.colVisProp}
-                            onColumnToggled={this.handlers.visibilityToggle}
-                            {...this.props.columnVisibilityProps}
-                        />
-                    </If>
-                    <If condition={this.props.showCopyDownload === true}>
-                        <CopyDownloadControls
-                            className="pull-right"
-                            downloadData={this.getDownloadData}
-                            downloadFilename="table.csv"
-                            {...this.props.copyDownloadProps}
-                        />
-                    </If>
-                </ButtonToolbar>
-                <SimpleTable
-                    headers={this.store.headers}
-                    rows={this.store.rows}
-                    className={this.props.className}
-                />
-
+                <Observer>
+                    {this.getToolbar}
+                </Observer>
+                <Observer>
+                    {this.getTable}
+                </Observer>
             </div>
         );
     }
