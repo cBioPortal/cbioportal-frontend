@@ -1,10 +1,10 @@
 import * as React from 'react';
 import {CosmicMutation} from "shared/api/generated/CBioPortalAPIInternal";
 import ProteinChangeColumnFormatter from "../mutationTable/column/ProteinChangeColumnFormatter";
-import {Column, default as MSKTable} from "../msktable/MSKTable";
+import {Column, default as LazyMobXTable} from "../lazyMobXTable/LazyMobXTable";
 
 // TODO interface ICosmicTableProps extends IMSKTableProps<CosmicMutation>
-// To avoid duplication, it would be nice here to have an extendable interface for MSKTableProps
+// To avoid duplication, it would be nice here to have an extendable interface for LazyMobXTableProps
 export interface ICosmicTableProps
 {
     data: CosmicMutation[];
@@ -14,8 +14,8 @@ export interface ICosmicTableProps
     initialItemsPerPage?: number;
 }
 
-// MSKTable is a generic component which requires data type argument
-class CosmicTable extends MSKTable<CosmicMutation> {}
+// LazyMobXTable is a generic component which requires data type argument
+class CosmicTable extends LazyMobXTable<CosmicMutation> {}
 
 /**
  * @author Selcuk Onur Sumer

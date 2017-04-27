@@ -2,7 +2,7 @@ import * as React from "react";
 import {observer} from "mobx-react";
 import {observable, computed} from "mobx";
 import SampleManager from "../sampleManager";
-import {default as MSKTable, Column} from "../../../shared/components/msktable/MSKTable";
+import {default as LazyMobXTable, Column} from "../../../shared/components/lazyMobXTable/LazyMobXTable";
 import {Mutation} from "../../../shared/api/generated/CBioPortalAPI";
 import DiscreteCNAColumnFormatter from "./column/DiscreteCNAColumnFormatter";
 import MrnaExprColumnFormatter from "./column/MrnaExprColumnFormatter";
@@ -79,7 +79,7 @@ export enum MutationTableColumnType {
 
 type MutationTableColumn = Column<Mutation[]>&{order:number};
 
-class MutationTableComponent extends MSKTable<Mutation[]> {
+class MutationTableComponent extends LazyMobXTable<Mutation[]> {
 }
 
 function getSpanForDataField(data:Mutation[], dataField:string) {
@@ -401,7 +401,8 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
 
     render() {
 
-        return (<MutationTableComponent
+        return (
+            <MutationTableComponent
                     columns={this.columns}
                     data={this.props.data}
                     initialSortColumn="Annotation"
@@ -409,7 +410,8 @@ export default class PatientViewMutationTable extends React.Component<PatientVie
                     initialItemsPerPage={10}
                     itemsLabel="Mutation"
                     itemsLabelPlural="Mutations"
-                />);
+            />
+        );
     }
 
 }
