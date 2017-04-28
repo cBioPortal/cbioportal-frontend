@@ -16,3 +16,8 @@ export interface IHotspotData {
     single: IHotspotIndex,
     clustered: IHotspotIndex
 }
+
+export interface ICancerHotspotData {
+    single: HotspotMutation[],
+    clustered: HotspotMutation[]
+}
