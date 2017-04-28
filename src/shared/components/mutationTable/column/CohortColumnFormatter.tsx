@@ -1,13 +1,13 @@
 import * as React from 'react';
 import 'rc-tooltip/assets/bootstrap_white.css';
-import {Mutation} from "../../../../shared/api/generated/CBioPortalAPI";
-import VariantCountCache from "../../clinicalInformation/VariantCountCache";
+import {Mutation} from "shared/api/generated/CBioPortalAPI";
+import VariantCountCache from "shared/cache/VariantCountCache";
 import FrequencyBar from "shared/components/cohort/FrequencyBar";
 import Icon from "shared/components/cohort/LetterIcon";
 import {IMutSigData as MutSigData} from "shared/model/MutSig";
-import {VariantCount} from "../../../../shared/api/generated/CBioPortalAPIInternal";
-import {CacheData} from "../../../../shared/lib/LazyMobXCache";
-import {default as TableCellStatusIndicator, TableCellStatus} from "../../../../shared/components/TableCellStatus";
+import {VariantCount} from "shared/api/generated/CBioPortalAPIInternal";
+import {CacheData} from "shared/lib/LazyMobXCache";
+import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
 
 type AugVariantCountOutput = (CacheData<VariantCount> & {hugoGeneSymbol:string});
 
