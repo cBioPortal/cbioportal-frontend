@@ -1,8 +1,8 @@
 import * as React from 'react';
 import OncoKbCard from "./OncoKbCard";
 import {observer} from "mobx-react";
-import OncoKbEvidenceCache from "pages/patientView/OncoKbEvidenceCache";
-import OncokbPmidCache from "pages/patientView/PmidCache";
+import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
+import OncokbPmidCache from "shared/cache/PmidCache";
 import {ICacheData, ICache} from "shared/lib/SimpleCache";
 import {IndicatorQueryResp, Query} from "shared/api/generated/OncoKbAPI";
 import {IEvidence} from "shared/model/OncoKB";
