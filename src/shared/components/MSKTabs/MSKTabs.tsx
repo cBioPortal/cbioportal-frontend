@@ -58,7 +58,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
             return React.cloneElement(
                 tab,
                 { inactive } as Partial<IMSKTabProps>,
-                (<ThreeBounce className="center-block text-center" />)
+                (<ThreeBounce className="default-spinner center-block text-center" />)
             );
         } else {
             return React.cloneElement(
