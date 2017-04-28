@@ -75,7 +75,7 @@ describe('MSKTabs', () => {
         const tab2 = tabs2.find(MSKTab).at(0);
         span = tab2.find("span").at(0);
         assert.notEqual(span.text(), "One", "the span with the content 'One' does not exist for a loading tab");
-        assert(tab2.find(ThreeBounce).at(0).exists(), "a loading tab contains a spinner element");
+        assert(tab2.find(".default-spinner").at(0).exists(), "a loading tab contains a spinner element");
         assert.deepEqual(tabText(tabs2), ["One", "Two"], "both tabs visible");
 
         tabs2.setProps({ activeTabId: "two" });
