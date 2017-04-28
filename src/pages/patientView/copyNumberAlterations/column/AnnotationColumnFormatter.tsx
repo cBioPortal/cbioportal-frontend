@@ -2,7 +2,7 @@ import * as React from 'react';
 import {DiscreteCopyNumberData} from "shared/api/generated/CBioPortalAPI";
 import {
     IAnnotation, IAnnotationColumnProps, default as DefaultAnnotationColumnFormatter
-} from "../../mutation/column/AnnotationColumnFormatter";
+} from "shared/components/mutationTable/column/AnnotationColumnFormatter";
 import {IOncoKbData} from "shared/model/OncoKB";
 import OncoKB from "shared/components/annotation/OncoKB";
 import {generateQueryVariantId, generateQueryVariant} from "shared/lib/OncoKbUtils";

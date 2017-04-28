@@ -20,20 +20,20 @@ import {
 } from "shared/lib/OncoKbUtils";
 import {Query} from "shared/api/generated/OncoKbAPI";
 import {labelMobxPromises, cached} from "mobxpromise";
-import MrnaExprRankCache from './MrnaExprRankCache';
+import MrnaExprRankCache from 'shared/cache/MrnaExprRankCache';
 import request from 'superagent';
-import DiscreteCNACache from "./DiscreteCNACache";
+import DiscreteCNACache from "shared/cache/DiscreteCNACache";
 import {getTissueImageCheckUrl, getDarwinUrl} from "../../../shared/api/urls";
 import {getAlterationString} from "shared/lib/CopyNumberUtils";
-import OncoKbEvidenceCache from "../OncoKbEvidenceCache";
-import PmidCache from "../PmidCache";
+import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
+import PmidCache from "shared/cache/PmidCache";
 import {keywordToCosmic, indexHotspots, geneToMyCancerGenome} from "shared/lib/AnnotationUtils";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {IMyCancerGenomeData, IMyCancerGenome} from "shared/model/MyCancerGenome";
 import {IHotspotData} from "shared/model/CancerHotspots";
 import {IMutSigData} from "shared/model/MutSig";
 import {ClinicalInformationData} from "shared/model/ClinicalInformation";
-import VariantCountCache from "./VariantCountCache";
+import VariantCountCache from "shared/cache/VariantCountCache";
 import CopyNumberCountCache from "./CopyNumberCountCache";
 
 type PageMode = 'patient' | 'sample';

@@ -10,9 +10,9 @@ import {
     oncogenicImageClassNames, calcOncogenicScore, calcSensitivityLevelScore, calcResistanceLevelScore,
 } from "shared/lib/OncoKbUtils";
 import {observable} from "mobx";
-import OncoKbEvidenceCache from "pages/patientView/OncoKbEvidenceCache";
+import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import OncoKbTooltip from "./OncoKbTooltip";
-import OncokbPmidCache from "pages/patientView/PmidCache";
+import OncokbPmidCache from "shared/cache/PmidCache";
 import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
 
 export interface IOncoKbProps {
