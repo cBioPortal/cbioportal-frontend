@@ -4,9 +4,9 @@ import 'rc-tooltip/assets/bootstrap_white.css';
 import {
     DiscreteCNACacheDataType,
     default as DiscreteCNACache
-} from "../../clinicalInformation/DiscreteCNACache";
-import {Mutation} from "../../../../shared/api/generated/CBioPortalAPI";
-import {default as TableCellStatusIndicator, TableCellStatus} from "../../../../shared/components/TableCellStatus";
+} from "shared/cache/DiscreteCNACache";
+import {Mutation} from "shared/api/generated/CBioPortalAPI";
+import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
 
 export default class DiscreteCNAColumnFormatter {
 

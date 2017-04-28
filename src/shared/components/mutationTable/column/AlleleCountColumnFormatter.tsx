@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {Mutation} from "../../../../shared/api/generated/CBioPortalAPI";
+import {Mutation} from "shared/api/generated/CBioPortalAPI";
 
 /**
  * Designed to customize allele count column content for patient view page.
