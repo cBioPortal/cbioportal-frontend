@@ -10,6 +10,7 @@ import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
 import TumorColumnFormatter from "./column/TumorColumnFormatter";
 import {Column} from "shared/components/lazyMobXTable/LazyMobXTable";
 import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter";
+import {GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "../../../shared/constants";
 
 export interface IPatientViewMutationTableProps extends IMutationTableProps {
     sampleManager:SampleManager | null;
@@ -102,11 +103,22 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         this._columns[MutationTableColumnType.MRNA_EXPR].shouldExclude = ()=>{
             return (!this.props.mrnaExprRankGeneticProfileId) || (this.getSamples().length > 1);
         };
+        // only hide tumor column if there is one sample and no uncalled
+        // mutations (there is no information added in that case by the sample
+        // label)
         this._columns[MutationTableColumnType.TUMORS].shouldExclude = ()=>{
-            return this.getSamples().length < 2;
+            return this.getSamples().length < 2 && !this.hasUncalledMutations;
         };
         this._columns[MutationTableColumnType.COPY_NUM].shouldExclude = ()=>{
             return (!this.props.discreteCNAGeneticProfileId) || (this.getSamples().length > 1);
         };
+    }
+
+    @computed private get hasUncalledMutations():boolean {
+        return this.props.data.some((row:Mutation[]) => {
+            return row.some((m:Mutation) => {
+                return Boolean(m.geneticProfileId && m.geneticProfileId.endsWith(GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX));
+            });
+        });
     }
 }
