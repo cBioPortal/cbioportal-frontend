@@ -1,22 +1,37 @@
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
 import DatasetList from './DatasetList';
-import DisablePage from 'shared/components/PageDecorator/PageDecorator';
+import {observer} from 'mobx-react';
+import client from "shared/api/cbioportalClientInstance";
+import {remoteData, addErrorHandler} from "shared/api/remoteData";
+import { CancerStudy } from 'shared/api/generated/CBioPortalAPI';
 
-@DisablePage
-export default class DatasetPage extends React.Component<{ store: any }, {}> {
+export class DatasetPageStore {
 
-    public componentWillMount() {
+    readonly data = remoteData({
+        invoke: () => {
+            return client.getAllStudiesUsingGET({projection: "DETAILED"});
 
-        exposeComponentRenderer('renderDatasetList',DatasetList, { store: this.props.store });
+        }
+    });
+}
 
+@observer
+export default class DatasetPage extends React.Component<{}, {}> {
+
+    private store:DatasetPageStore;
+
+    constructor() {
+        super();
+        this.store = new DatasetPageStore();
     }
 
     public render() {
-
-        return (
-            <DatasetList />
-        );
+        if (this.store.data.isComplete) {
+            return (
+                <DatasetList datasets={this.store.data.result}/>
+            );
+        } else {
+            return null;
+        }
     }
 }
