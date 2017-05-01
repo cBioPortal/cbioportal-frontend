@@ -130,6 +130,7 @@ export function lazyMobXTableSort<T>(data:T[], metric:SortMetric<T>, ascending:b
 export class LazyMobXTableDataStore<T> implements IMobXApplicationDataStore<T> {
     @observable.ref private data:T[];
     @observable private dataFilter:(d:T)=>boolean;
+    @observable private dataSelector:(d:T)=>boolean;
 
     @observable public sortMetric:SortMetric<T>;
     @observable public sortAscending:boolean;
@@ -145,14 +146,23 @@ export class LazyMobXTableDataStore<T> implements IMobXApplicationDataStore<T> {
         return this.sortedData.filter(this.dataFilter);
     }
 
-    public setFilter(dataFilter:(d:T)=>boolean) {
+    @computed get sortedFilteredSelectedData() {
+        return this.sortedFilteredData.filter(this.dataSelector);
+    }
+
+    @action public setFilter(dataFilter:(d:T)=>boolean) {
         this.dataFilter = dataFilter;
+    }
+
+    @action public setSelector(selector:(d:T)=>boolean) {
+        this.dataSelector = selector;
     }
 
 
     constructor(data:T[]) {
         this.data = data;
         this.highlight = ()=>false;
+        this.dataSelector = ()=>false;
         this.dataFilter = ()=>true;
         this.sortMetric = ()=>0;
         this.sortAscending = true;
@@ -180,8 +190,16 @@ class LazyMobXTableStore<T> {
         this.page = this.page; // trigger clamping in page setter
     }
 
+    @computed get displayData():T[] {
+        if (this.dataStore.sortedFilteredSelectedData.length > 0) {
+            return this.dataStore.sortedFilteredSelectedData;
+        } else {
+            return this.dataStore.sortedFilteredData;
+        }
+    }
+
     @computed get showingAllRows(): boolean {
-        return this.dataStore.sortedFilteredData.length <= this.itemsPerPage || this.itemsPerPage === -1
+        return this.displayData.length <= this.itemsPerPage || this.itemsPerPage === -1
     }
 
     @computed public get page() {
@@ -201,7 +219,7 @@ class LazyMobXTableStore<T> {
         if (this.itemsPerPage === PAGINATION_SHOW_ALL) {
             return 0;
         } else {
-            return Math.floor(this.dataStore.sortedFilteredData.length / this.itemsPerPage);
+            return Math.floor(this.displayData.length / this.itemsPerPage);
         }
     }
 
@@ -252,9 +270,9 @@ class LazyMobXTableStore<T> {
 
     @computed get visibleData():T[] {
         if (this.itemsPerPage === PAGINATION_SHOW_ALL) {
-            return this.dataStore.sortedFilteredData;
+            return this.displayData;
         } else {
-            return this.dataStore.sortedFilteredData.slice(this.page*this.itemsPerPage, (this.page+1)*this.itemsPerPage);
+            return this.displayData.slice(this.page*this.itemsPerPage, (this.page+1)*this.itemsPerPage);
         }
     }
 
@@ -357,7 +375,7 @@ class LazyMobXTableStore<T> {
 
         if (this._itemsLabel) {
             // use itemsLabel for plural in case no itemsLabelPlural provided
-            if (!this._itemsLabelPlural || this.dataStore.sortedFilteredData.length === 1) {
+            if (!this._itemsLabelPlural || this.displayData.length === 1) {
                 itemsLabel = this._itemsLabel;
             }
             else {
@@ -369,7 +387,7 @@ class LazyMobXTableStore<T> {
             itemsLabel = ` ${itemsLabel}`;
         }
 
-        return `${firstVisibleItemDisp}-${lastVisibleItemDisp} of ${this.dataStore.sortedFilteredData.length}${itemsLabel}`;
+        return `${firstVisibleItemDisp}-${lastVisibleItemDisp} of ${this.displayData.length}${itemsLabel}`;
     }
 
     public get rows():JSX.Element[] {
