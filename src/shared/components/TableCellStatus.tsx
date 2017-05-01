@@ -1,4 +1,5 @@
 import * as React from 'react';
+import DefaultTooltip from "./DefaultTooltip";
 
 export enum TableCellStatus {
     LOADING, ERROR, NA
@@ -31,12 +32,13 @@ export default class TableCellStatusIndicator extends React.Component<TableCellS
                 break;
         }
         return (
-            <span
-                style={{color: "gray", fontSize:"xx-small", textAlign:"center"}}
-                alt={alt}
-            >
-                {text}
-            </span>
+            <DefaultTooltip placement="left" overlay={<span>{alt}</span>}>
+                <span
+                    style={{color: "gray", fontSize:"xx-small", textAlign:"center"}}
+                >
+                    {text}
+                </span>
+            </DefaultTooltip>
         );
     }
 }
