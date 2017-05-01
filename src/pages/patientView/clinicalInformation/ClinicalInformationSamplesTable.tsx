@@ -2,14 +2,14 @@ import * as React from "react";
 import { ClinicalDataBySampleId } from "../../../shared/api/api-types-extended";
 import convertSamplesData, {IConvertedSamplesData} from "./lib/convertSamplesData";
 import {SampleLabelHTML} from "../../../shared/components/sampleLabel/SampleLabel";
-import {Table as DataTable, Thead, Th} from "reactable";
 import LazyMobXTable from "shared/components/lazyMobXTable/LazyMobXTable";
 import TableHeaderControls from "shared/components/tableHeaderControls/TableHeaderControls";
 import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
 
+import styles from './style/sampleTable.module.scss';
 
 interface IClinicalInformationSamplesTableProps {
-    samples?: Array<ClinicalDataBySampleId>;
+    samples?: ClinicalDataBySampleId[];
 }
 
 export interface ISampleRow {
@@ -25,28 +25,13 @@ export default class ClinicalInformationSamplesTable extends React.Component<ICl
     public render() {
         const sampleInvertedData = convertSamplesData(this.props.samples);
         const tableData = this.prepareData(sampleInvertedData);
-        const headerCells = this.buildHeaderCells(sampleInvertedData);
-        const columns = headerCells.map((cell) => (
-            {name: cell.props.children,
-             render: (data:ISampleRow)=><span>{data[cell.props.column]}</span>}
+        const columns = [{id: 'attribute'}, ...sampleInvertedData.columns].map((col) =>  (
+            {
+                name: col.id,
+                render: (data:ISampleRow)=><span>{data[col.id]}</span>
+            }
         ));
-        return <SampleTableComponent columns={columns} data={tableData} showPagination={false} showColumnVisibility={false}/>;
-    }
-
-    public buildHeaderCells(sampleInvertedData: IConvertedSamplesData) {
-
-        const headerCells: Array<JSX.Element> = sampleInvertedData.columns.map((col, i) => {
-            return (
-                <Th column={col.id} key={i}>
-                    {' ' + col.id}
-                </Th>
-            );
-        });
-
-        // add the row title at beg of array
-        headerCells.unshift(<Th key={-1} column="attribute">Attribute</Th>);
-
-        return headerCells;
+        return <SampleTableComponent columns={columns} data={tableData} className={styles.sampleTable} showPagination={false} showColumnVisibility={false}/>;
     }
 
     public prepareData(sampleInvertedData: IConvertedSamplesData) {
