@@ -1,6 +1,5 @@
 import * as React from "react";
 import {ClinicalData} from "../../../shared/api/generated/CBioPortalAPI";
-import {Table as DataTable} from "reactableMSK";
 import LazyMobXTable from "shared/components/lazyMobXTable/LazyMobXTable";
 import TableHeaderControls from "shared/components/tableHeaderControls/TableHeaderControls";
 
@@ -36,6 +35,7 @@ export default class ClinicalInformationPatientTable extends React.Component<ICl
                         { name:'Value', render: (data)=><span>{data.value}</span>}]}
                   showPagination={false}
                   showColumnVisibility={false}
+                  className={styles.patientTable}
             />
         );
     }
