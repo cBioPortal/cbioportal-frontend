@@ -35,6 +35,8 @@ import {IMutSigData} from "shared/model/MutSig";
 import {ClinicalInformationData} from "shared/model/ClinicalInformation";
 import VariantCountCache from "shared/cache/VariantCountCache";
 import CopyNumberCountCache from "./CopyNumberCountCache";
+import CancerTypeCache from "shared/cache/CancerTypeCache";
+import MutationCountCache from "shared/cache/MutationCountCache";
 
 type PageMode = 'patient' | 'sample';
 
@@ -693,6 +695,14 @@ export class PatientViewPageStore {
 
     @cached get copyNumberCountCache() {
         return new CopyNumberCountCache(this.geneticProfileIdDiscrete.result);
+    }
+
+    @cached get cancerTypeCache() {
+        return new CancerTypeCache(this.studyId);
+    }
+
+    @cached get mutationCountCache() {
+        return new MutationCountCache(this.mutationGeneticProfileId);
     }
 
     @action setActiveTabId(id: string) {

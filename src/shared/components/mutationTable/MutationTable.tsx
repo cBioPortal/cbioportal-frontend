@@ -3,7 +3,7 @@ import {observer} from "mobx-react";
 import {observable, computed} from "mobx";
 import * as _ from "lodash";
 import {default as LazyMobXTable, Column, SortDirection} from "shared/components/lazyMobXTable/LazyMobXTable";
-import {Mutation} from "shared/api/generated/CBioPortalAPI";
+import {Mutation, ClinicalData, MutationCount} from "shared/api/generated/CBioPortalAPI";
 import SampleColumnFormatter from "./column/SampleColumnFormatter";
 import TumorAlleleFreqColumnFormatter from "./column/TumorAlleleFreqColumnFormatter";
 import NormalAlleleFreqColumnFormatter from "./column/NormalAlleleFreqColumnFormatter";
@@ -28,14 +28,20 @@ import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import MrnaExprRankCache from "shared/cache/MrnaExprRankCache";
 import VariantCountCache from "shared/cache/VariantCountCache";
 import PmidCache from "shared/cache/PmidCache";
+import CancerTypeCache from "../../cache/CancerTypeCache";
+import MutationCountCache from "../../cache/MutationCountCache";
+import LazyLoadedTableCell from "shared/lib/LazyLoadedTableCell";
 
 export interface IMutationTableProps {
+    studyId?:string;
     sampleIds?:string[];
     discreteCNACache?:DiscreteCNACache;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
     mrnaExprRankCache?:MrnaExprRankCache;
     variantCountCache?:VariantCountCache;
     pmidCache?:PmidCache
+    cancerTypeCache?:CancerTypeCache;
+    mutationCountCache?:MutationCountCache;
     mutSigData?:IMutSigData;
     myCancerGenomeData?: IMyCancerGenomeData;
     hotspots?: IHotspotData;
@@ -77,10 +83,12 @@ export enum MutationTableColumnType {
     REF_READS_N,
     VAR_READS_N,
     REF_READS,
-    VAR_READS
+    VAR_READS,
+    CANCER_TYPE,
+    NUM_MUTATIONS
 }
 
-type MutationTableColumn = Column<Mutation[]>&{order?:number};
+type MutationTableColumn = Column<Mutation[]>&{order?:number, shouldExclude?:()=>boolean};
 
 export class MutationTableComponent extends LazyMobXTable<Mutation[]> {
 }
@@ -382,6 +390,49 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                     this.props.oncoKbData);
             }
         };
+
+        this._columns[MutationTableColumnType.CANCER_TYPE] = {
+            name: "Cancer Type",
+            render: LazyLoadedTableCell(
+                (d:Mutation[])=>{
+                    const cancerTypeCache:CancerTypeCache|undefined = this.props.cancerTypeCache;
+                    const studyId:string|undefined = this.props.studyId;
+                    if (cancerTypeCache && studyId) {
+                        return cancerTypeCache.get({
+                            entityId:d[0].sampleId,
+                            studyId: studyId
+                        });
+                    } else {
+                        return {
+                            status: "error",
+                            data: null
+                        };
+                    }
+                },
+                (t:ClinicalData)=>(<span>{t.value}</span>),
+                "Cancer type not available for this sample."
+            ),
+            tooltip:(<span>Cancer Type</span>),
+        };
+        this._columns[MutationTableColumnType.NUM_MUTATIONS] = {
+            name: "# Mut in Sample",
+            render: LazyLoadedTableCell(
+                (d:Mutation[])=>{
+                    const mutationCountCache:MutationCountCache|undefined = this.props.mutationCountCache;
+                    if (mutationCountCache) {
+                        return mutationCountCache.get(d[0].sampleId);
+                    } else {
+                        return {
+                            status: "error",
+                            data: null
+                        };
+                    }
+                },
+                (t:MutationCount)=>(<span>{t.mutationCount}</span>),
+                "Mutation count not available for this sample."
+            ),
+            tooltip:(<span>Total number of nonsynonymous mutations in the sample</span>),
+        };
     }
 
     @computed protected get orderedColumns(): MutationTableColumnType[] {
@@ -402,8 +453,9 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
         return this.orderedColumns.reduce((columns:Column<Mutation[]>[], next:MutationTableColumnType) => {
             let column = this._columns[next];
 
-            // actual column definition may be missing for a specific enum
-            if (column) {
+
+            if (column && // actual column definition may be missing for a specific enum
+                (!column.shouldExclude || !column.shouldExclude())) {
                 columns.push(column);
             }
 
