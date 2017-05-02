@@ -8,9 +8,9 @@ export function restoreRouteAfterRedirect(injected: { routing:ExtendedRouterStor
         restoreRoute = restoreRoute.replace(/^#/, '');
         window.localStorage.removeItem(key);
         injected.routing.push(restoreRoute);
-        return null;
     } else {
         injected.routing.push('/');
     }
+    return null;
 
 }
