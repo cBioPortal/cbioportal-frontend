@@ -1,6 +1,7 @@
 import * as React from 'react';
 import './styles.scss';
 import { If, Then,  Else } from 'react-if';
+import classNames from 'classnames';
 
 interface ISimpleTableProps {
     headers:JSX.Element[];
@@ -9,13 +10,10 @@ interface ISimpleTableProps {
     className?:string;
 };
 
-export default class SimpleTable extends React.Component<ISimpleTableProps, {}>
-{
-
+export default class SimpleTable extends React.Component<ISimpleTableProps, {}> {
 
     public render() {
         const {headers, rows, className, noRowsText} = this.props;
-
         const tableRows = rows.length > 0 ? rows :
             [<tr>
                 <td style={{textAlign:'center'}} colSpan={headers.length}>
@@ -24,7 +22,7 @@ export default class SimpleTable extends React.Component<ISimpleTableProps, {}>
             </tr>];
 
         return (
-            <table className={`table table-striped table-border-top${className ? ' ' + className : ''}`}>
+            <table className={classNames('table table-striped table-border-top', className)}>
                 <thead>
                     <tr>{headers}</tr>
                 </thead>
@@ -34,4 +32,4 @@ export default class SimpleTable extends React.Component<ISimpleTableProps, {}>
             </table>
         );
     }
-}
+};
