@@ -76,24 +76,30 @@ export default class SampleColumnFormatter
         }
     }
 
-    public static renderFunction(data:Mutation[])
+    public static renderFunction(data:Mutation[], studyId?: string)
     {
         const sampleId:string = SampleColumnFormatter.getTextValue(data);
         const text:string = SampleColumnFormatter.getDisplayValue(data);
         const toolTip:string = SampleColumnFormatter.getTooltipValue(sampleId);
-        const linkToPatientView:string = "#"; // TODO generate or get it from somewhere else
 
-        let content = (
-            <a href={linkToPatientView} target='_blank'>
-                <span className={styles['text-no-wrap']}>{text}</span>
-            </a>
-        );
+        let content = <span className={styles['text-no-wrap']}>{text}</span>;
 
-        const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
+        if (studyId)
+        {
+            const linkToPatientView:string = `#/patient?sampleId=${sampleId}&studyId=${studyId}`;
+
+            content = (
+                <a href={linkToPatientView} target='_blank'>
+                    {content}
+                </a>
+            );
+        }
 
         // update content with tooltip if tooltip has a valid value
         if (toolTip.length > 0)
         {
+            const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
+
             content = (
                 <DefaultTooltip overlay={<span>{toolTip}</span>} placement="rightTop" arrowContent={arrowContent}>
                     {content}
