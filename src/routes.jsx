@@ -1,7 +1,8 @@
 import React from 'react';
 import { Route, Redirect, IndexRedirect } from 'react-router';
-
+import { inject } from 'mobx-react';
 import Container from 'appShell/App/Container';
+import { restoreRouteAfterRedirect } from './shared/lib/redirectHelpers';
 
 /* HOW TO ADD A NEW ROUTE
 * 1. Import the "page" component using the bundle-loader directives as seen in imports below
@@ -33,15 +34,18 @@ function lazyLoadComponent(loader) {
 
 var defaultRoute = window.defaultRoute || '/home';
 
+var restoreRoute = inject("routing")(restoreRouteAfterRedirect);
 
-export const makeRoutes = () => (
-        <Route path="/" component={Container}>
-            <Route path="/home" getComponent={lazyLoadComponent(HomePage)} />
-            <Route path="/patient" getComponent={lazyLoadComponent(PatientViewPage)} />
-            <Redirect from="*" to={defaultRoute} />
-            <IndexRedirect to={defaultRoute} />
-        </Route>
-);
+export const makeRoutes = (routing) => {
+
+    return (<Route path="/" component={Container}>
+        <Route path="/home" getComponent={lazyLoadComponent(HomePage)}/>
+        <Route path="/patient" getComponent={lazyLoadComponent(PatientViewPage)}/>
+        <Route path="/restore" component={restoreRoute}/>
+        <Redirect from="*" to={defaultRoute}/>
+        <IndexRedirect to={defaultRoute}/>
+    </Route>)
+};
 
 
 export default makeRoutes;
