@@ -31,6 +31,7 @@ export type Column<T> = {
 };
 
 type LazyMobXTableProps<T> = {
+    className?:string;
     columns:Column<T>[];
     data?:T[];
     dataStore?:IMobXApplicationDataStore<T>;
@@ -592,6 +593,7 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
                 <SimpleTable
                     headers={this.store.headers}
                     rows={this.store.rows}
+                    className={this.props.className}
                 />
 
             </div>
