@@ -262,7 +262,7 @@ export class PatientViewPageStore {
     }, []);
 
     async cosmicDataInvoke() {
-        if (this.mutationData.result.length === 0 && this.mutationData.result.length === 0) {
+        if (this.mutationData.result.length === 0 && this.uncalledMutationData.result.length === 0) {
             return undefined;
         }
 
