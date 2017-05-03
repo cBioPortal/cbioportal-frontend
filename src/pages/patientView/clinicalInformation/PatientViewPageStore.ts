@@ -158,13 +158,30 @@ export class PatientViewPageStore {
         return this._sampleId ? 'sample' : 'patient';
     }
 
-    @computed get mutationGeneticProfileId() {
-        return `${this.studyId}${GENETIC_PROFILE_MUTATIONS_SUFFIX}`;
-    }
+    readonly mutationGeneticProfileId = remoteData({
+        await: () => [
+            this.geneticProfilesInStudy
+        ],
+        invoke: async() => {
+            const profile = this.geneticProfilesInStudy.result.find((p: GeneticProfile) => {
+                return p.geneticProfileId === `${this.studyId}${GENETIC_PROFILE_MUTATIONS_SUFFIX}`;
+            });
+            return profile ? profile.geneticProfileId : undefined;
+        }
+    });
 
-    @computed get uncalledMutationGeneticProfileId() {
-        return `${this.studyId}${GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX}`;
-    }
+    readonly uncalledMutationGeneticProfileId = remoteData({
+        await: () => [
+            this.geneticProfilesInStudy
+        ],
+        invoke: async() => {
+            const profile = this.geneticProfilesInStudy.result.find((p: GeneticProfile) => {
+                return p.geneticProfileId === `${this.studyId}${GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX}`;
+            });
+            return profile ? profile.geneticProfileId : undefined;
+        }
+
+    });
 
     @observable patientIdsInCohort: string[] = [];
 
@@ -492,8 +509,8 @@ export class PatientViewPageStore {
             this.geneticProfilesInStudy
         ],
         invoke: async() => {
-            const profile = this.geneticProfilesInStudy.result.find((profile: GeneticProfile) => {
-                return profile.datatype === 'DISCRETE';
+            const profile = this.geneticProfilesInStudy.result.find((p: GeneticProfile) => {
+                return p.datatype === 'DISCRETE';
             });
             return profile ? profile.geneticProfileId : undefined;
         }
@@ -536,10 +553,11 @@ export class PatientViewPageStore {
 
     readonly uncalledMutationData = remoteData({
         await: () => [
-            this.samples
+            this.samples,
+            this.uncalledMutationGeneticProfileId
         ],
         invoke: async() => {
-            const geneticProfileId = this.uncalledMutationGeneticProfileId;
+            const geneticProfileId = this.uncalledMutationGeneticProfileId.result;
             if (geneticProfileId) {
                 return await client.fetchMutationsInGeneticProfileUsingPOST({
                     geneticProfileId,
@@ -556,10 +574,11 @@ export class PatientViewPageStore {
 
     readonly mutationData = remoteData({
         await: () => [
-            this.samples
+            this.samples,
+            this.mutationGeneticProfileId
         ],
         invoke: async() => {
-            const geneticProfileId = this.mutationGeneticProfileId;
+            const geneticProfileId = this.mutationGeneticProfileId.result;
             if (geneticProfileId) {
                 return await client.fetchMutationsInGeneticProfileUsingPOST({
                     geneticProfileId,
@@ -731,7 +750,7 @@ export class PatientViewPageStore {
     }
 
     @cached get variantCountCache() {
-        return new VariantCountCache(this.mutationGeneticProfileId);
+        return new VariantCountCache(this.mutationGeneticProfileId.result);
     }
 
     @cached get discreteCNACache() {
@@ -755,7 +774,7 @@ export class PatientViewPageStore {
     }
 
     @cached get mutationCountCache() {
-        return new MutationCountCache(this.mutationGeneticProfileId);
+        return new MutationCountCache(this.mutationGeneticProfileId.result);
     }
 
     @action setActiveTabId(id: string) {
