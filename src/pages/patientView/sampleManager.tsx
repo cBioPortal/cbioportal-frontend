@@ -132,13 +132,13 @@ class SampleManager {
         this.sampleOrder = _.sortBy(Object.keys(this.sampleIndex), (k) => this.sampleIndex[k]);
     }
 
-    getComponentForSample(sampleId: string, showClinical = false) {
+    getComponentForSample(sampleId: string, fillOpacity: number = 1) {
 
         let sample = _.find(this.samples, (s: ClinicalDataBySampleId)=> {
             return s.id === sampleId;
         });
 
-        return sample && this.getOverlayTriggerSample(sample, this.sampleIndex[sample.id], this.sampleColors[sample.id], showClinical);
+        return sample && this.getOverlayTriggerSample(sample, this.sampleIndex[sample.id], this.sampleColors[sample.id], fillOpacity=fillOpacity);
 
     }
 
@@ -154,7 +154,7 @@ class SampleManager {
         this.samples.map((sample)=>this.getComponentForSample(sample.id));
     }
 
-    getOverlayTriggerSample(sample: ClinicalDataBySampleId, sampleIndex: number, sampleColor: string, showClinical = false) {
+    getOverlayTriggerSample(sample: ClinicalDataBySampleId, sampleIndex: number, sampleColor: string, fillOpacity: number = 1) {
 
         const sampleNumberText: number = sampleIndex+1;
 
@@ -171,7 +171,7 @@ class SampleManager {
                              sample={sample}
                              sampleNumber={sampleNumberText}
                              sampleColor={sampleColor}
-                             showClinical={showClinical}
+                             fillOpacity={fillOpacity}
                          >
                 </SampleInline>
                 </svg>
