@@ -10,8 +10,10 @@ function getKey<T extends { entrezGeneId:number, keyword?:string}>(obj:T):string
     }
 }
 
-function fetch(queries:VariantCountIdentifier[], mutationGeneticProfileId:string):Promise<VariantCount[]> {
-    if (queries.length > 0) {
+function fetch(queries:VariantCountIdentifier[], mutationGeneticProfileId:string|undefined):Promise<VariantCount[]> {
+    if (!mutationGeneticProfileId) {
+        return Promise.reject("No mutation genetic profile id given");
+    } else if (queries.length > 0) {
         return client.fetchVariantCountsUsingPOST({
             geneticProfileId: mutationGeneticProfileId,
             variantCountIdentifiers: queries
@@ -22,7 +24,7 @@ function fetch(queries:VariantCountIdentifier[], mutationGeneticProfileId:string
 }
 
 export default class VariantCountCache extends LazyMobXCache<VariantCount, VariantCountIdentifier> {
-    constructor(mutationGeneticProfileId:string) {
+    constructor(mutationGeneticProfileId:string|undefined) {
         super(getKey, getKey,
             fetch, mutationGeneticProfileId);
     }
