@@ -6,9 +6,9 @@ import {Mutation} from "../api/generated/CBioPortalAPI";
 
 describe('StoreUtils', () => {
 
-    let mutationData: MobxPromise<Mutation[]>
+    let mutationData: MobxPromise<Mutation[]>;
 
-    before(()=>{
+    before(() => {
         mutationData =  {
             result: [],
             status: 'complete' as 'complete',
@@ -19,24 +19,24 @@ describe('StoreUtils', () => {
         };
     });
 
-    after(()=>{
+    after(() => {
 
     });
 
     it('won\'t fetch cosmic data if there are no mutations', () => {
         const fetchStub = sinon.stub();
-        let internalClient = {
+        const internalClient = {
             fetchCosmicCountsUsingPOST: fetchStub
         };
 
-        fetchCosmicData(mutationData, internalClient as any).then((data: any) => {
+        fetchCosmicData(mutationData, undefined, internalClient as any).then((data: any) => {
             assert.isUndefined(data);
             assert.isFalse(fetchStub.called);
         });
     });
 
     it('won\'t fetch onkokb data if there are no mutations', () => {
-        fetchOncoKbData(mutationData, {}).then((data: any)=>{
+        fetchOncoKbData({}, mutationData).then((data: any) => {
             assert.deepEqual(data, {sampleToTumorMap: {}, indicatorMap: {}});
         });
     });

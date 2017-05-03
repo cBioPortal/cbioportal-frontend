@@ -1,15 +1,16 @@
 import * as React from "react";
+import {computed} from "mobx";
 import {observer} from "mobx-react";
-import MutationTable from "shared/components/mutationTable/MutationTable";
-import {IMutationTableProps} from "shared/components/mutationTable/MutationTable";
+import {
+    IMutationTableProps, MutationTableColumnType, default as MutationTable
+} from "shared/components/mutationTable/MutationTable";
 import SampleManager from "../sampleManager";
-import {MutationTableColumnType} from "shared/components/mutationTable/MutationTable";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import AlleleCountColumnFormatter from "shared/components/mutationTable/column/AlleleCountColumnFormatter";
 import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
 import TumorColumnFormatter from "./column/TumorColumnFormatter";
 import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter";
-import {GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "../../../shared/constants";
+import {GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
 
 export interface IPatientViewMutationTableProps extends IMutationTableProps {
     sampleManager:SampleManager | null;
@@ -84,29 +85,25 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
 
         // customization for allele count columns
 
-        this._columns[MutationTableColumnType.REF_READS_N] = {
-            ...this._columns[MutationTableColumnType.REF_READS_N],
-            render: (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, this.getSamples(), "normalRefCount"),
-            download: (d:Mutation[])=>AlleleCountColumnFormatter.getTextValue(d, this.getSamples(), "normalRefCount")
-        };
+        this._columns[MutationTableColumnType.REF_READS_N].render =
+            (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, this.getSamples(), "normalRefCount");
+        this._columns[MutationTableColumnType.REF_READS_N].download =
+            (d:Mutation[])=>AlleleCountColumnFormatter.getTextValue(d, this.getSamples(), "normalRefCount");
 
-        this._columns[MutationTableColumnType.VAR_READS_N] = {
-            ...this._columns[MutationTableColumnType.VAR_READS_N],
-            render: (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, this.getSamples(), "normalAltCount"),
-            download: (d:Mutation[])=>AlleleCountColumnFormatter.getTextValue(d, this.getSamples(), "normalAltCount")
-        };
+        this._columns[MutationTableColumnType.VAR_READS_N].render =
+            (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, this.getSamples(), "normalAltCount");
+        this._columns[MutationTableColumnType.VAR_READS_N].download =
+            (d:Mutation[])=>AlleleCountColumnFormatter.getTextValue(d, this.getSamples(), "normalAltCount");
 
-        this._columns[MutationTableColumnType.REF_READS] = {
-            ...this._columns[MutationTableColumnType.REF_READS],
-            render: (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, this.getSamples(), "tumorRefCount"),
-            download: (d:Mutation[])=>AlleleCountColumnFormatter.getTextValue(d, this.getSamples(), "tumorRefCount")
-        };
+        this._columns[MutationTableColumnType.REF_READS].render =
+            (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, this.getSamples(), "tumorRefCount");
+        this._columns[MutationTableColumnType.REF_READS].download =
+            (d:Mutation[])=>AlleleCountColumnFormatter.getTextValue(d, this.getSamples(), "tumorRefCount");
 
-        this._columns[MutationTableColumnType.VAR_READS] = {
-            ...this._columns[MutationTableColumnType.VAR_READS],
-            render: (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, this.getSamples(), "tumorAltCount"),
-            download: (d:Mutation[])=>AlleleCountColumnFormatter.getTextValue(d, this.getSamples(), "tumorAltCount")
-        };
+        this._columns[MutationTableColumnType.VAR_READS].render =
+            (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, this.getSamples(), "tumorAltCount");
+        this._columns[MutationTableColumnType.VAR_READS].download =
+            (d:Mutation[])=>AlleleCountColumnFormatter.getTextValue(d, this.getSamples(), "tumorAltCount");
 
 
         // order columns
