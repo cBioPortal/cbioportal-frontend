@@ -33,6 +33,7 @@ import {IMyCancerGenomeData, IMyCancerGenome} from "shared/model/MyCancerGenome"
 import {IHotspotData} from "shared/model/CancerHotspots";
 import {IMutSigData} from "shared/model/MutSig";
 import {ClinicalInformationData} from "shared/model/ClinicalInformation";
+import {GENETIC_PROFILE_MUTATIONS_SUFFIX, GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
 import VariantCountCache from "shared/cache/VariantCountCache";
 import CopyNumberCountCache from "./CopyNumberCountCache";
 import CancerTypeCache from "shared/cache/CancerTypeCache";
@@ -43,7 +44,7 @@ type PageMode = 'patient' | 'sample';
 const ONCOKB_DEFAULT: IOncoKbData = {
     sampleToTumorMap : {},
     indicatorMap : {}
-}
+};
 
 export function groupByEntityId(clinicalDataArray: Array<ClinicalData>) {
     return _.map(
@@ -158,7 +159,11 @@ export class PatientViewPageStore {
     }
 
     @computed get mutationGeneticProfileId() {
-        return `${this.studyId}_mutations`;
+        return `${this.studyId}${GENETIC_PROFILE_MUTATIONS_SUFFIX}`;
+    }
+
+    @computed get uncalledMutationGeneticProfileId() {
+        return `${this.studyId}${GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX}`;
     }
 
     @observable patientIdsInCohort: string[] = [];
@@ -240,11 +245,11 @@ export class PatientViewPageStore {
     }, []);
 
     async cosmicDataInvoke() {
-        if (this.mutationData.result.length === 0) {
+        if (this.mutationData.result.length === 0 && this.mutationData.result.length === 0) {
             return undefined;
         }
 
-        const queryKeywords: string[] = _.uniq(_.map(this.mutationData.result, (mutation: Mutation) => mutation.keyword));
+        const queryKeywords: string[] = _.uniq(_.map(this.mutationData.result.concat(this.uncalledMutationData.result), (mutation: Mutation) => mutation.keyword));
 
         const cosmicData: CosmicMutation[] = await this.internalClient.fetchCosmicCountsUsingPOST({
             keywords: _.filter(queryKeywords, (query) => {
@@ -257,7 +262,8 @@ export class PatientViewPageStore {
 
     readonly cosmicData = remoteData({
         await: () => [
-            this.mutationData
+            this.mutationData,
+            this.uncalledMutationData
         ],
         invoke: () => this.cosmicDataInvoke()
     });
@@ -276,10 +282,12 @@ export class PatientViewPageStore {
 
     readonly hotspotData = remoteData({
         await: ()=> [
-            this.mutationData
+            this.mutationData,
+            this.uncalledMutationData,
         ],
         invoke: async () => {
-            const queryGenes:string[] = _.uniq(_.map(this.mutationData.result, function(mutation:Mutation) {
+            const queryGenes:string[] = _.uniq(_.map(this.mutationData.result.concat(this.uncalledMutationData.result),
+                                                     function(mutation:Mutation) {
                 if (mutation && mutation.gene) {
                     return mutation.gene.hugoGeneSymbol;
                 }
@@ -526,6 +534,26 @@ export class PatientViewPageStore {
         }
     }, false);
 
+    readonly uncalledMutationData = remoteData({
+        await: () => [
+            this.samples
+        ],
+        invoke: async() => {
+            const geneticProfileId = this.uncalledMutationGeneticProfileId;
+            if (geneticProfileId) {
+                return await client.fetchMutationsInGeneticProfileUsingPOST({
+                    geneticProfileId,
+                    mutationFilter: {
+                        sampleIds: this.samples.result.map((sample: Sample) => sample.sampleId)
+                    } as MutationFilter,
+                    projection: "DETAILED"
+                });
+            } else {
+                return [];
+            }
+        }
+    }, []);
+
     readonly mutationData = remoteData({
         await: () => [
             this.samples
@@ -534,7 +562,7 @@ export class PatientViewPageStore {
             const geneticProfileId = this.mutationGeneticProfileId;
             if (geneticProfileId) {
                 return await client.fetchMutationsInGeneticProfileUsingPOST({
-                    geneticProfileId: geneticProfileId,
+                    geneticProfileId,
                     mutationFilter: {
                         sampleIds: this.samples.result.map((sample: Sample) => sample.sampleId)
                     } as MutationFilter,
@@ -549,11 +577,11 @@ export class PatientViewPageStore {
 
     async oncoKbDataInvoke(){
 
-        if (this.mutationData.result.length === 0) {
+        if (this.mutationData.result.length === 0 && this.uncalledMutationData.result.length === 0) {
             return ONCOKB_DEFAULT;
         }
 
-        const queryVariants = _.uniqBy(_.map(this.mutationData.result, (mutation: Mutation) => {
+        const queryVariants = _.uniqBy(_.map(this.mutationData.result.concat(this.uncalledMutationData.result), (mutation: Mutation) => {
             return generateQueryVariant(mutation.gene.hugoGeneSymbol,
                 this.sampleIdToTumorType[mutation.sampleId],
                 mutation.proteinChange,
@@ -568,6 +596,7 @@ export class PatientViewPageStore {
     readonly oncoKbData = remoteData<IOncoKbData>({
         await: () => [
             this.mutationData,
+            this.uncalledMutationData,
             this.clinicalDataForSamples
         ],
         invoke: async() => this.oncoKbDataInvoke()
@@ -636,7 +665,7 @@ export class PatientViewPageStore {
         let mutationId: string;
         let MutationId: (m: Mutation) => string = (m: Mutation) => {
             return [m.gene.chromosome, m.startPosition, m.endPosition, m.referenceAllele, m.variantAllele].join("_");
-        }
+        };
 
         for (const mutation of this.mutationData.result) {
             mutationId = MutationId(mutation);
@@ -646,6 +675,30 @@ export class PatientViewPageStore {
 
         return Object.keys(idToMutations).map(id => idToMutations[id]);
     }
+
+    static getMutationId(m: any): string {
+        return [m.gene.chromosome, m.startPosition, m.endPosition, m.referenceAllele, m.variantAllele].join("_");
+    }
+
+    @computed get mergedMutationDataIncludingUncalled(): Mutation[][] {
+        let idToMutations: {[key: string]: Array<Mutation>} = {};
+        let mutationId: string;
+
+        for (const mutation of this.mutationData.result) {
+            mutationId = PatientViewPageStore.getMutationId(mutation);
+            idToMutations[mutationId] = idToMutations[mutationId] || [];
+            idToMutations[mutationId].push(mutation);
+        }
+
+        for (const mutation of this.uncalledMutationData.result) {
+            mutationId = PatientViewPageStore.getMutationId(mutation);
+            idToMutations[mutationId] = idToMutations[mutationId] || [];
+            idToMutations[mutationId].push(mutation);
+        }
+
+        return Object.keys(idToMutations).map(id => idToMutations[id]);
+    }
+
 
     @computed get sampleIdToTumorType(): {[sampleId: string]: string} {
         const map: {[sampleId: string]: string} = {};
