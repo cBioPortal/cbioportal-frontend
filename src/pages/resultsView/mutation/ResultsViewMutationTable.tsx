@@ -1,17 +1,11 @@
 import * as React from "react";
 import {observer} from "mobx-react";
-import {computed} from "mobx";
-import MutationTable from "shared/components/mutationTable/MutationTable";
-import {IMutationTableProps} from "shared/components/mutationTable/MutationTable";
-import LazyLoadedTableCell from "shared/lib/LazyLoadedTableCell";
-import {MutationTableColumnType} from "shared/components/mutationTable/MutationTable";
-import CancerTypeCache from "../../../shared/cache/CancerTypeCache";
-import MutationCountCache from "../../../shared/cache/MutationCountCache";
-import {Mutation, ClinicalData, MutationCount} from "../../../shared/api/generated/CBioPortalAPI";
-import {Column} from "../../../shared/components/lazyMobXTable/LazyMobXTable";
+import {
+    IMutationTableProps, MutationTableColumnType, default as MutationTable
+} from "shared/components/mutationTable/MutationTable";
 
 export interface IResultsViewMutationTableProps extends IMutationTableProps {
-    // TODO add results view specific props
+    // add results view specific props here if needed
 }
 
 @observer

@@ -15,7 +15,8 @@ import DiscreteCNACache from "shared/cache/DiscreteCNACache";
 import {
     indexHotspotData, fetchHotspotsData, mergeMutations, ONCOKB_DEFAULT,
     fetchCosmicData, fetchOncoKbData, findGeneticProfileIdDiscrete, fetchMyCancerGenomeData, fetchMutationData,
-    fetchDiscreteCNAData, generateSampleIdToTumorTypeMap
+    fetchDiscreteCNAData, generateSampleIdToTumorTypeMap, findMutationGeneticProfileId, mergeDiscreteCNAData,
+    fetchSamples, fetchClinicalData
 } from "shared/lib/StoreUtils";
 
 export class ResultsViewPageStore {
@@ -37,9 +38,12 @@ export class ResultsViewPageStore {
     @observable hugoGeneSymbols: string[]|null = null;
     @observable sampleList: string[]|null = null;
 
-    @computed get mutationGeneticProfileId() {
-        return `${this.studyId}_mutations`;
-    }
+    readonly mutationGeneticProfileId = remoteData({
+        await: () => [
+            this.geneticProfilesInStudy
+        ],
+        invoke: async() => findMutationGeneticProfileId(this.geneticProfilesInStudy, this.studyId)
+    });
 
     @computed get myCancerGenomeData() {
         return fetchMyCancerGenomeData();
@@ -84,37 +88,14 @@ export class ResultsViewPageStore {
         await: () => [
             this.sampleIds
         ],
-        invoke: () => client.fetchClinicalDataUsingPOST({
-            clinicalDataType: 'SAMPLE',
-            identifiers: this.sampleIds.result.map((sampleId: string) => ({
-                entityId: sampleId,
-                studyId: this.studyId
-            })),
-            projection: 'DETAILED',
-        })
+        invoke: () => fetchClinicalData(this.studyId, this.sampleIds.result)
     }, []);
 
     readonly samples = remoteData({
         await: () => [
             this.sampleIds
         ],
-        invoke: async() => {
-            if (this.sampleIds.result &&
-                this.sampleIds.result.length > 0 &&
-                this.studyId)
-            {
-                const sampleIdentifiers = this.sampleIds.result.map(
-                    (sampleId: string) => ({sampleId: sampleId, studyId: this.studyId})
-                );
-
-                return await client.fetchSamplesUsingPOST({
-                    sampleIdentifiers,
-                    projection: "DETAILED"
-                });
-            }
-
-            return [];
-        }
+        invoke: async() => fetchSamples(this.sampleIds, this.studyId)
     }, []);
 
     readonly genes = remoteData(async() => {
@@ -136,12 +117,12 @@ export class ResultsViewPageStore {
             this.genes
         ],
         invoke: async() => {
-            let mutationFilter = {
+            const mutationFilter = {
                 ...this.apiDataFilter,
                 entrezGeneIds: this.genes.result.map((gene: Gene) => gene.entrezGeneId)
             } as MutationFilter;
 
-            return fetchMutationData(mutationFilter, this.mutationGeneticProfileId);
+            return fetchMutationData(mutationFilter, this.mutationGeneticProfileId.result);
         }
     }, []);
 
@@ -149,7 +130,7 @@ export class ResultsViewPageStore {
         await: () => [
             this.mutationData
         ],
-        invoke: async() => fetchOncoKbData(this.mutationData, this.sampleIdToTumorType)
+        invoke: async() => fetchOncoKbData(this.sampleIdToTumorType, this.mutationData)
     }, ONCOKB_DEFAULT);
 
     readonly geneticProfilesInStudy = remoteData(() => {
@@ -169,6 +150,7 @@ export class ResultsViewPageStore {
 
     readonly discreteCNAData = remoteData({
         await: () => [
+            this.geneticProfileIdDiscrete,
             this.sampleIds
         ],
         invoke: async() => {
@@ -203,8 +185,14 @@ export class ResultsViewPageStore {
         return filter;
     }
 
+    @computed get mergedDiscreteCNAData():DiscreteCopyNumberData[][] {
+        return mergeDiscreteCNAData(this.discreteCNAData);
+    }
+
     @computed get mergedMutationData(): Mutation[][] {
-        return mergeMutations(this.mutationData);
+        // TODO do not perform any merge for now, just convert Mutation[] to Mutation[][]
+        //return mergeMutations(this.mutationData);
+        return (this.mutationData.result || []).map((mutation:Mutation) => [mutation]);
     }
 
     @computed get indexedHotspotData(): IHotspotData|undefined
@@ -233,7 +221,7 @@ export class ResultsViewPageStore {
     }
 
     @cached get mutationCountCache() {
-        return new MutationCountCache(this.mutationGeneticProfileId);
+        return new MutationCountCache(this.mutationGeneticProfileId.result);
     }
 
     @action clearErrors() {
