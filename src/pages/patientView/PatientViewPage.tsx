@@ -173,7 +173,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 return (
                     <div className="patientSample">
                         <span className='clinical-spans'>
-                            {  sampleManager!.getComponentForSample(sample.id, true) }
+                            {  sampleManager!.getComponentForSample(sample.id) }
                             {'\u00A0'}
                             <a href="javascript:void(0)" onClick={()=>{ this.handleSampleClick(sample.id) }}>{sample.id}</a>
                             {getSpanElements(clinicalDataLegacy, 'lgg_ucsf_2014')}
@@ -299,10 +299,10 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 )
                             }
 
-                            <LoadingIndicator isLoading={patientViewPageStore.mutationData.isPending} />
+                            <LoadingIndicator isLoading={patientViewPageStore.mutationData.isPending && patientViewPageStore.uncalledMutationData.isPending} />
 
                             {
-                                (patientViewPageStore.mutationData.isComplete && !!sampleManager) && (
+                                (patientViewPageStore.mutationData.isComplete && patientViewPageStore.uncalledMutationData.isComplete && !!sampleManager) && (
                                     <PatientViewMutationTable
                                         sampleManager={sampleManager}
                                         sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
@@ -313,7 +313,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         pmidCache={patientViewPageStore.pmidCache}
                                         mrnaExprRankGeneticProfileId={patientViewPageStore.mrnaRankGeneticProfileId.result || undefined}
                                         discreteCNAGeneticProfileId={patientViewPageStore.geneticProfileIdDiscrete.result}
-                                        data={patientViewPageStore.mergedMutationData}
+                                        data={patientViewPageStore.mergedMutationDataIncludingUncalled}
                                         mutSigData={patientViewPageStore.mutSigData.result}
                                         myCancerGenomeData={patientViewPageStore.myCancerGenomeData}
                                         hotspots={patientViewPageStore.indexedHotspotData}
