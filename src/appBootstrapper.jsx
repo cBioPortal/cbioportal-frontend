@@ -6,16 +6,18 @@ import {RouterStore, syncHistoryWithStore} from 'mobx-react-router';
 import ExtendedRoutingStore from './shared/lib/ExtendedRouterStore';
 import {computed, extendObservable} from 'mobx';
 import makeRoutes from './routes';
-import lodash from 'lodash';
+import * as _ from 'lodash';
 import $ from 'jquery';
 import URL from 'url';
 import * as superagent from 'superagent';
 import { getHost } from './shared/api/urls';
 
 // make sure lodash doesn't overwrite (or set) global underscore
-lodash.noConflict();
+_.noConflict();
 
 const routingStore = new ExtendedRoutingStore();
+
+const history = syncHistoryWithStore(hashHistory, routingStore);
 
 const stores = {
     // Key can be whatever you want
@@ -27,37 +29,18 @@ const end = superagent.Request.prototype.end;
 
 let redirecting = false;
 
-superagent.Request.prototype.end = function (callback) {
-    return end.call(this, (error, response) => {
-        if (redirecting) {
-            return;
-        }
-        if (response.statusCode === 401) {
-            var storageKey = `redirect${Math.floor(Math.random() * 1000000000000)}`
-            localStorage.setItem(storageKey, window.location.hash);
-            const loginUrl = `//${getHost()}/?spring-security-redirect=${window.location.pathname}${window.location.search}${encodeURIComponent('#/restore?key=' + storageKey)}`;
-            redirecting = true;
-            window.location.href = loginUrl;
-        } else {
-            callback(error, response);
-        }
-    });
-};
-
-const history = syncHistoryWithStore(hashHistory, routingStore);
-
-
 const qs = URL.parse(window.location.href, true).query;
 
 const newParams = {};
-if ('cancer_study_id' in qs) {
+
+if ('cancer_study_id' in qs && _.isUndefined(routingStore.location.query.studyId)) {
     newParams['studyId'] = qs.cancer_study_id;
 }
-if ('case_id' in qs) {
+if ('case_id' in qs && _.isUndefined(routingStore.location.query.caseId)) {
     newParams['caseId'] = qs.case_id;
 }
 
-if ('sample_id' in qs) {
+if ('sample_id' in qs && _.isUndefined(routingStore.location.query.sampleId)) {
     newParams['sampleId'] = qs.sample_id;
 }
 
@@ -68,6 +51,22 @@ if (navCaseIdsMatch && navCaseIdsMatch.length > 2) {
 
 routingStore.updateRoute(newParams);
 
+superagent.Request.prototype.end = function (callback) {
+    return end.call(this, (error, response) => {
+        if (redirecting) {
+            return;
+        }
+        if (response.statusCode === 401) {
+            var storageKey = `redirect${Math.floor(Math.random() * 1000000000000)}`
+            localStorage.setItem(storageKey, window.location.hash);
+            const loginUrl = `//${getHost()}/?spring-security-redirect=${encodeURIComponent(window.location.pathname)}${encodeURIComponent(window.location.search)}${encodeURIComponent('#/restore?key=' + storageKey)}`;
+            redirecting = true;
+            window.location.href = loginUrl;
+        } else {
+            callback(error, response);
+        }
+    });
+};
 
 window.routingStore = routingStore;
 
