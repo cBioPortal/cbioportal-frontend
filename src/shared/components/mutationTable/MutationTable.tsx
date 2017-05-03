@@ -30,6 +30,7 @@ import VariantCountCache from "shared/cache/VariantCountCache";
 import PmidCache from "shared/cache/PmidCache";
 import CancerTypeCache from "../../cache/CancerTypeCache";
 import MutationCountCache from "../../cache/MutationCountCache";
+import MutationCountColumnFormatter from "./column/MutationCountColumnFormatter";
 import LazyLoadedTableCell from "shared/lib/LazyLoadedTableCell";
 
 export interface IMutationTableProps {
@@ -402,26 +403,32 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 (t:ClinicalData)=>(<span>{t.value}</span>),
                 "Cancer type not available for this sample."
             ),
+            sortBy:(d:Mutation[])=>{
+                const cancerTypeCache:CancerTypeCache|undefined = this.props.cancerTypeCache;
+                const studyId:string|undefined = this.props.studyId;
+                let ret;
+                if (cancerTypeCache && studyId) {
+                    const cacheDatum = cancerTypeCache.get({
+                        entityId:d[0].sampleId,
+                        studyId: studyId
+                    });
+                    if (cacheDatum && cacheDatum.data) {
+                        ret = cacheDatum.data.value;
+                    } else {
+                        ret = null;
+                    }
+                } else {
+                    ret = null;
+                }
+                return ret;
+            },
             tooltip:(<span>Cancer Type</span>),
         };
         this._columns[MutationTableColumnType.NUM_MUTATIONS] = {
             name: "# Mut in Sample",
-            render: LazyLoadedTableCell(
-                (d:Mutation[])=>{
-                    const mutationCountCache:MutationCountCache|undefined = this.props.mutationCountCache;
-                    if (mutationCountCache) {
-                        return mutationCountCache.get(d[0].sampleId);
-                    } else {
-                        return {
-                            status: "error",
-                            data: null
-                        };
-                    }
-                },
-                (t:MutationCount)=>(<span>{t.mutationCount}</span>),
-                "Mutation count not available for this sample."
-            ),
-            tooltip:(<span>Total number of nonsynonymous mutations in the sample</span>),
+            render: MutationCountColumnFormatter.makeRenderFunction(this),
+            sortBy: (d:Mutation[]) => MutationCountColumnFormatter.sortBy(d, this.props.mutationCountCache),
+            tooltip:(<span>Total number of nonsynonymous mutations in the sample</span>)
         };
     }
 
