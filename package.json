@@ -223,7 +223,7 @@
     "request": "^2.79.0",
     "sinon": "^1.17.7",
     "swagger-js-codegen": "https://github.com/cBioPortal/swagger-js-codegen.git#1b768600496db2415f956f6c4d8593bbb6e95297",
-    "tslint": "^4.4.2",
+    "tslint": "^5.2.0",
     "tslint-react": "^2.3.0",
     "webpack-dev-server": "^1.16.2",
     "yargs": "^6.6.0"
