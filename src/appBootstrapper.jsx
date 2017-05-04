@@ -12,6 +12,18 @@ import URL from 'url';
 import * as superagent from 'superagent';
 import { getHost } from './shared/api/urls';
 
+import 'script-loader!raven-js/dist/raven.js';
+
+if (/cbioportal\.mskcc\.org|www.cbioportal\.org/.test(window.location.hostname) || window.localStorage.getItem('sentry') === 'true') {
+    Raven.config('https://c93645c81c964dd284436dffd1c89551@sentry.io/164574', {
+        tags:{
+          fullUrl:window.location.href
+        },
+        release:window.appVersion || '',
+        serverName: window.location.hostname
+    }).install();
+}
+
 // make sure lodash doesn't overwrite (or set) global underscore
 _.noConflict();
 
@@ -53,6 +65,13 @@ routingStore.updateRoute(newParams);
 
 superagent.Request.prototype.end = function (callback) {
     return end.call(this, (error, response) => {
+
+        if (error) {
+            Raven.captureException(response.error,{
+                tags: { network:true }
+            });
+        }
+
         if (redirecting) {
             return;
         }
