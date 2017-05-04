@@ -266,15 +266,24 @@ export class PatientViewPageStore {
             return undefined;
         }
 
-        const queryKeywords: string[] = _.uniq(_.map(this.mutationData.result.concat(this.uncalledMutationData.result), (mutation: Mutation) => mutation.keyword));
+        // we have to check and see if keyword property is present
+        // it is NOT present sometimes
+        const queryKeywords: string[] =
+            _.chain(this.mutationData.result.concat(this.uncalledMutationData.result))
+                .filter((mutation: Mutation) => mutation.hasOwnProperty('keyword'))
+                .map((mutation: Mutation)=>mutation.keyword)
+                .uniq().value();
 
-        const cosmicData: CosmicMutation[] = await this.internalClient.fetchCosmicCountsUsingPOST({
-            keywords: _.filter(queryKeywords, (query) => {
-                return query != null;
-            })
-        });
-
-        return keywordToCosmic(cosmicData);
+        if (queryKeywords.length > 0) {
+            const cosmicData: CosmicMutation[] = await this.internalClient.fetchCosmicCountsUsingPOST({
+                keywords: _.filter(queryKeywords, (query) => {
+                    return query != null;
+                })
+            });
+            return keywordToCosmic(cosmicData);
+        } else {
+            return undefined;
+        }
     }
 
     readonly cosmicData = remoteData({
