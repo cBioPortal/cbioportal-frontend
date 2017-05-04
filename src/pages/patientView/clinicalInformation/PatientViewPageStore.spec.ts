@@ -10,7 +10,7 @@ import sinon from 'sinon';
 // //import AppConfig from 'appConfig';
 // import request from 'superagent';
 
-describe('ClinicalInformationSamplesTable', () => {
+describe('PatientViewPageStore', () => {
 
     let store: PatientViewPageStore;
 
@@ -35,23 +35,7 @@ describe('ClinicalInformationSamplesTable', () => {
         assert.deepEqual(result,[]);
     });
 
-    it('won\'t fetch cosmic data if there are no mutations', ()=>{
 
-        const fetchStub = sinon.stub();
-
-        let mockInstance = {
-            mutationData: { result:[] },
-            internalClient: {
-                fetchCosmicCountsUsingPOST: fetchStub
-            }
-        };
-
-        store.cosmicDataInvoke.apply(mockInstance).then((data: any)=>{
-           assert.isUndefined(data);
-           assert.isFalse(fetchStub.called);
-        });
-
-    });
 
     it('won\'t fetch onkokb data if there are no mutations', ()=>{
 
@@ -66,5 +50,75 @@ describe('ClinicalInformationSamplesTable', () => {
         });
 
     });
+
+
+    describe('cosmicCountInvoke', ()=>{
+
+        it('won\'t fetch cosmic data if there are no mutations', (done)=>{
+
+            const fetchStub = sinon.stub();
+
+            let mockInstance = {
+                mutationData: { result:[] },
+                uncalledMutationData: { result:[] },
+                internalClient: {
+                    fetchCosmicCountsUsingPOST: fetchStub
+                }
+            };
+
+            store.cosmicDataInvoke.apply(mockInstance).then(function(data: any){
+                assert.isUndefined(data);
+                assert.isFalse(fetchStub.called);
+                done();
+            });
+
+        });
+
+        it('won\'t fetch cosmic data if there ARE mutations, but none with keywords', (done)=>{
+
+            const fetchStub = sinon.stub();
+
+            let mockInstance = {
+                mutationData: { result:[{},{}] },
+                uncalledMutationData: { result:[] },
+                internalClient: {
+                    fetchCosmicCountsUsingPOST: fetchStub
+                }
+            };
+
+            store.cosmicDataInvoke.apply(mockInstance).then(function(data: any){
+                assert.isUndefined(data);
+                assert.isFalse(fetchStub.called);
+                done();
+            });
+
+        });
+
+        it('will fetch cosmic data if there mutations with keywords', (done)=>{
+
+            const fetchStub = sinon.stub();
+            fetchStub.returns(Promise.resolve([]));
+
+            let mockInstance = {
+                mutationData: { result:[{keyword:"one"}] },
+                uncalledMutationData: { result:[] },
+                internalClient: {
+                    fetchCosmicCountsUsingPOST: fetchStub
+                }
+            };
+
+            store.cosmicDataInvoke.apply(mockInstance).then(function(data: any){
+                //assert.isUndefined(data);
+                assert.isTrue(fetchStub.called);
+                done();
+            });
+
+        });
+
+
+    })
+
+
+
 
 });
