@@ -42,7 +42,7 @@ export class ResultsViewPageStore {
         await: () => [
             this.geneticProfilesInStudy
         ],
-        invoke: async() => findMutationGeneticProfileId(this.geneticProfilesInStudy, this.studyId)
+        invoke: async () => findMutationGeneticProfileId(this.geneticProfilesInStudy, this.studyId)
     });
 
     @computed get myCancerGenomeData() {
@@ -69,7 +69,7 @@ export class ResultsViewPageStore {
         }
     });
 
-    readonly sampleIds = remoteData(async() => {
+    readonly sampleIds = remoteData(async () => {
         // first priority: user provided custom sample list
         if (this.sampleList) {
             return this.sampleList;
@@ -95,10 +95,10 @@ export class ResultsViewPageStore {
         await: () => [
             this.sampleIds
         ],
-        invoke: async() => fetchSamples(this.sampleIds, this.studyId)
+        invoke: async () => fetchSamples(this.sampleIds, this.studyId)
     }, []);
 
-    readonly genes = remoteData(async() => {
+    readonly genes = remoteData(async () => {
         if (this.hugoGeneSymbols) {
             return await client.fetchGenesUsingPOST({
                 // an observable array (hugoGeneSymbols) is incompatible with an API call,
@@ -116,7 +116,7 @@ export class ResultsViewPageStore {
             this.sampleIds,
             this.genes
         ],
-        invoke: async() => {
+        invoke: async () => {
             const mutationFilter = {
                 ...this.apiDataFilter,
                 entrezGeneIds: this.genes.result.map((gene: Gene) => gene.entrezGeneId)
@@ -130,20 +130,20 @@ export class ResultsViewPageStore {
         await: () => [
             this.mutationData
         ],
-        invoke: async() => fetchOncoKbData(this.sampleIdToTumorType, this.mutationData)
+        invoke: async () => fetchOncoKbData(this.sampleIdToTumorType, this.mutationData)
     }, ONCOKB_DEFAULT);
 
     readonly geneticProfilesInStudy = remoteData(() => {
         return client.getAllGeneticProfilesInStudyUsingGET({
             studyId: this.studyId
-        })
+        });
     }, []);
 
     readonly geneticProfileIdDiscrete = remoteData({
         await: () => [
             this.geneticProfilesInStudy
         ],
-        invoke: async() => {
+        invoke: async () => {
             return findGeneticProfileIdDiscrete(this.geneticProfilesInStudy);
         }
     });
@@ -153,11 +153,11 @@ export class ResultsViewPageStore {
             this.geneticProfileIdDiscrete,
             this.sampleIds
         ],
-        invoke: async() => {
+        invoke: async () => {
             const filter = this.apiDataFilter as DiscreteCopyNumberFilter;
             return fetchDiscreteCNAData(filter, this.geneticProfileIdDiscrete);
         },
-        onResult: (result:DiscreteCopyNumberData[])=>{
+        onResult: (result:DiscreteCopyNumberData[]) => {
             // We want to take advantage of this loaded data, and not redownload the same data
             //  for users of the cache
             this.discreteCNACache.addData(result);
