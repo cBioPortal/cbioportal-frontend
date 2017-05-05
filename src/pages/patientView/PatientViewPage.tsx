@@ -11,7 +11,6 @@ import {If, Then, Else} from 'react-if';
 import SampleManager from './sampleManager';
 import SelectCallback = ReactBootstrap.SelectCallback;
 import {ThreeBounce} from 'better-react-spinkit';
-import { Modal } from 'react-bootstrap';
 import PatientHeader from './patientHeader/PatientHeader';
 import {PaginationControls} from "../../shared/components/paginationControls/PaginationControls";
 import { PatientViewPageStore } from './clinicalInformation/PatientViewPageStore';
@@ -26,10 +25,11 @@ import {default as PatientViewMutationTable} from "./mutation/PatientViewMutatio
 import PathologyReport from "./pathologyReport/PathologyReport";
 import { MSKTabs, MSKTab } from "../../shared/components/MSKTabs/MSKTabs";
 import validateParameters from '../../shared/lib/validateParameters';
+import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
+import ValidationAlert from "shared/components/ValidationAlert";
+import AjaxErrorModal from "shared/components/AjaxErrorModal";
 
 import './patient.scss';
-import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIndicator";
-import ValidationAlert from "shared/components/ValidationAlert";
 
 const patientViewPageStore = new PatientViewPageStore();
 
@@ -208,18 +208,10 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         return (
             <div className="patientViewPage">
 
-                <Modal show={(patientViewPageStore.ajaxErrors.length > 0)} onHide={()=>{ patientViewPageStore.clearErrors() }}>
-                    <Modal.Header closeButton>
-                        <Modal.Title>Sorry, something went wrong!</Modal.Title>
-                    </Modal.Header>
-                    <Modal.Body>
-                        <p>Troubleshooting:</p>
-                        <ul>
-                            <li>Check that your URL parameters are valid.</li>
-                            <li>Make sure you are connected to the internet.</li>
-                        </ul>
-                    </Modal.Body>
-                </Modal>
+                <AjaxErrorModal
+                    show={(patientViewPageStore.ajaxErrors.length > 0)}
+                    onHide={()=>{ patientViewPageStore.clearErrors() }}
+                />
 
                 <div className="topBanner">
 
