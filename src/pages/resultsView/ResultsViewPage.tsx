@@ -2,10 +2,10 @@ import * as React from 'react';
 import {observer, inject } from "mobx-react";
 import {reaction, computed} from "mobx";
 import validateParameters from 'shared/lib/validateParameters';
-import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import ValidationAlert from "shared/components/ValidationAlert";
-import ResultsViewMutationTable from "./mutation/ResultsViewMutationTable";
+import AjaxErrorModal from "shared/components/AjaxErrorModal";
 import {ResultsViewPageStore} from "./ResultsViewPageStore";
+import Mutations from "./mutation/Mutations";
 
 const resultsViewPageStore = new ResultsViewPageStore();
 
@@ -64,25 +64,16 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
         return (
             <div className="resultsViewPage">
-                <LoadingIndicator isLoading={resultsViewPageStore.mutationData.isPending} />
+                <AjaxErrorModal
+                    show={(resultsViewPageStore.ajaxErrors.length > 0)}
+                    onHide={()=>{ resultsViewPageStore.clearErrors() }}
+                />
 
-                {
-                    (resultsViewPageStore.mutationData.isComplete) && (
-                        <ResultsViewMutationTable
-                            studyId={resultsViewPageStore.studyId}
-                            discreteCNACache={resultsViewPageStore.discreteCNACache}
-                            oncoKbEvidenceCache={resultsViewPageStore.oncoKbEvidenceCache}
-                            pmidCache={resultsViewPageStore.pmidCache}
-                            cancerTypeCache={resultsViewPageStore.cancerTypeCache}
-                            mutationCountCache={resultsViewPageStore.mutationCountCache}
-                            data={resultsViewPageStore.mergedMutationData}
-                            myCancerGenomeData={resultsViewPageStore.myCancerGenomeData}
-                            hotspots={resultsViewPageStore.indexedHotspotData}
-                            cosmicData={resultsViewPageStore.cosmicData.result}
-                            oncoKbData={resultsViewPageStore.oncoKbData.result}
-                        />
-                    )
-                }
+                <Mutations
+                    genes={resultsViewPageStore.hugoGeneSymbols || []}
+                    store={resultsViewPageStore}
+                    routing={this.props.routing}
+                />
             </div>
         );
     }

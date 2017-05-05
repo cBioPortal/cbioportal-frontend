@@ -16,8 +16,9 @@ import {
     indexHotspotData, fetchHotspotsData, mergeMutations, ONCOKB_DEFAULT,
     fetchCosmicData, fetchOncoKbData, findGeneticProfileIdDiscrete, fetchMyCancerGenomeData, fetchMutationData,
     fetchDiscreteCNAData, generateSampleIdToTumorTypeMap, findMutationGeneticProfileId, mergeDiscreteCNAData,
-    fetchSamples, fetchClinicalData
+    fetchSamples, fetchClinicalData, generateDataQueryFilter
 } from "shared/lib/StoreUtils";
+import {MutationMapperStore} from "./mutation/MutationMapperStore";
 
 export class ResultsViewPageStore {
 
@@ -49,25 +50,28 @@ export class ResultsViewPageStore {
         return fetchMyCancerGenomeData();
     }
 
-    readonly cosmicData = remoteData({
-        await: () => [
-            this.mutationData
-        ],
-        invoke: () => fetchCosmicData(this.mutationData)
-    });
+    protected mutationMapperStores: {[hugoGeneSymbol: string]: MutationMapperStore} = {};
 
-
-    readonly hotspotData = remoteData({
-        await: ()=> [
-            this.mutationData
-        ],
-        invoke: async () => {
-            return fetchHotspotsData(this.mutationData);
-        },
-        onError: () => {
-            // fail silently
+    public getMutationMapperStore(hugoGeneSymbol:string): MutationMapperStore|undefined
+    {
+        if (this.mutationMapperStores[hugoGeneSymbol]) {
+            return this.mutationMapperStores[hugoGeneSymbol];
         }
-    });
+        else if (!this.hugoGeneSymbols || !this.hugoGeneSymbols.find((gene:string) => gene === hugoGeneSymbol)) {
+            return undefined;
+        }
+        else {
+            const store = new MutationMapperStore(hugoGeneSymbol,
+                this.mutationGeneticProfileId,
+                this.sampleIds,
+                this.clinicalDataForSamples,
+                this.sampleListId);
+
+            this.mutationMapperStores[hugoGeneSymbol] = store;
+
+            return store;
+        }
+    }
 
     readonly sampleIds = remoteData(async () => {
         // first priority: user provided custom sample list
@@ -98,41 +102,6 @@ export class ResultsViewPageStore {
         invoke: async () => fetchSamples(this.sampleIds, this.studyId)
     }, []);
 
-    readonly genes = remoteData(async () => {
-        if (this.hugoGeneSymbols) {
-            return await client.fetchGenesUsingPOST({
-                // an observable array (hugoGeneSymbols) is incompatible with an API call,
-                // we need to convert it to a regular array before the request
-                geneIds: this.hugoGeneSymbols.slice(0),
-                geneIdType: "HUGO_GENE_SYMBOL"
-            });
-        }
-
-        return [];
-    }, []);
-
-    readonly mutationData = remoteData({
-        await: () => [
-            this.sampleIds,
-            this.genes
-        ],
-        invoke: async () => {
-            const mutationFilter = {
-                ...this.apiDataFilter,
-                entrezGeneIds: this.genes.result.map((gene: Gene) => gene.entrezGeneId)
-            } as MutationFilter;
-
-            return fetchMutationData(mutationFilter, this.mutationGeneticProfileId.result);
-        }
-    }, []);
-
-    readonly oncoKbData = remoteData<IOncoKbData>({
-        await: () => [
-            this.mutationData
-        ],
-        invoke: async () => fetchOncoKbData(this.sampleIdToTumorType, this.mutationData)
-    }, ONCOKB_DEFAULT);
-
     readonly geneticProfilesInStudy = remoteData(() => {
         return client.getAllGeneticProfilesInStudyUsingGET({
             studyId: this.studyId
@@ -154,7 +123,7 @@ export class ResultsViewPageStore {
             this.sampleIds
         ],
         invoke: async () => {
-            const filter = this.apiDataFilter as DiscreteCopyNumberFilter;
+            const filter = this.dataQueryFilter as DiscreteCopyNumberFilter;
             return fetchDiscreteCNAData(filter, this.geneticProfileIdDiscrete);
         },
         onResult: (result:DiscreteCopyNumberData[]) => {
@@ -165,43 +134,12 @@ export class ResultsViewPageStore {
 
     }, []);
 
-    @computed get apiDataFilter() {
-        let filter: {
-            sampleIds?: string[],
-            sampleListId?: string
-        } = {};
-
-        if (this.sampleListId) {
-            filter = {
-                sampleListId: this.sampleListId
-            };
-        }
-        else if (this.sampleIds.result) {
-            filter = {
-                sampleIds: this.sampleIds.result
-            };
-        }
-
-        return filter;
+    @computed get dataQueryFilter() {
+        return generateDataQueryFilter(this.sampleListId, this.sampleIds.result);
     }
 
     @computed get mergedDiscreteCNAData():DiscreteCopyNumberData[][] {
         return mergeDiscreteCNAData(this.discreteCNAData);
-    }
-
-    @computed get mergedMutationData(): Mutation[][] {
-        // TODO do not perform any merge for now, just convert Mutation[] to Mutation[][]
-        //return mergeMutations(this.mutationData);
-        return (this.mutationData.result || []).map((mutation:Mutation) => [mutation]);
-    }
-
-    @computed get indexedHotspotData(): IHotspotData|undefined
-    {
-        return indexHotspotData(this.hotspotData);
-    }
-
-    @computed get sampleIdToTumorType(): {[sampleId: string]: string} {
-        return generateSampleIdToTumorTypeMap(this.clinicalDataForSamples);
     }
 
     @cached get oncoKbEvidenceCache() {
