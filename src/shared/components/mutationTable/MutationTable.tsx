@@ -34,7 +34,6 @@ import LazyLoadedTableCell from "shared/lib/LazyLoadedTableCell";
 
 export interface IMutationTableProps {
     studyId?:string;
-    sampleIds?:string[];
     discreteCNACache?:DiscreteCNACache;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
     mrnaExprRankCache?:MrnaExprRankCache;
@@ -140,15 +139,6 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
         this.generateColumns();
     }
 
-    protected getSamples():string[] {
-        if (this.props.sampleIds) {
-            return this.props.sampleIds as string[];
-        }
-        else {
-            return [];
-        }
-    }
-
     protected generateColumns() {
         this._columns = {};
 
@@ -223,32 +213,32 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
 
         this._columns[MutationTableColumnType.REF_READS_N] = {
             name: "Ref Reads (N)",
-            render: (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, this.getSamples(), "normalRefCount"),
-            download: (d:Mutation[])=>AlleleCountColumnFormatter.getTextValue(d, this.getSamples(), "normalRefCount"),
+            render: (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, [d[0].sampleId], "normalRefCount"),
+            download: (d:Mutation[])=>AlleleCountColumnFormatter.getTextValue(d, [d[0].sampleId], "normalRefCount"),
             sortBy:(d:Mutation[])=>d.map(m=>m.normalRefCount),
             visible: false
         };
 
         this._columns[MutationTableColumnType.VAR_READS_N] = {
             name: "Variant Reads (N)",
-            render: (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, this.getSamples(), "normalAltCount"),
-            download: (d:Mutation[])=>AlleleCountColumnFormatter.getTextValue(d, this.getSamples(), "normalAltCount"),
+            render: (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, [d[0].sampleId], "normalAltCount"),
+            download: (d:Mutation[])=>AlleleCountColumnFormatter.getTextValue(d, [d[0].sampleId], "normalAltCount"),
             sortBy:(d:Mutation[])=>d.map(m=>m.normalAltCount),
             visible: false
         };
 
         this._columns[MutationTableColumnType.REF_READS] = {
             name: "Ref Reads",
-            render: (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, this.getSamples(), "tumorRefCount"),
-            download: (d:Mutation[])=>AlleleCountColumnFormatter.getTextValue(d, this.getSamples(), "tumorRefCount"),
+            render: (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, [d[0].sampleId], "tumorRefCount"),
+            download: (d:Mutation[])=>AlleleCountColumnFormatter.getTextValue(d, [d[0].sampleId], "tumorRefCount"),
             sortBy:(d:Mutation[])=>d.map(m=>m.tumorRefCount),
             visible: false
         };
 
         this._columns[MutationTableColumnType.VAR_READS] = {
             name: "Variant Reads",
-            render: (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, this.getSamples(), "tumorAltCount"),
-            download: (d:Mutation[])=>AlleleCountColumnFormatter.getTextValue(d, this.getSamples(), "tumorAltCount"),
+            render: (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, [d[0].sampleId], "tumorAltCount"),
+            download: (d:Mutation[])=>AlleleCountColumnFormatter.getTextValue(d, [d[0].sampleId], "tumorAltCount"),
             sortBy:(d:Mutation[])=>d.map(m=>m.tumorAltCount),
             visible: false
         };

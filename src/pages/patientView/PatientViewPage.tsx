@@ -29,6 +29,7 @@ import validateParameters from '../../shared/lib/validateParameters';
 
 import './patient.scss';
 import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIndicator";
+import ValidationAlert from "shared/components/ValidationAlert";
 
 const patientViewPageStore = new PatientViewPageStore();
 
@@ -142,17 +143,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         let studyName: JSX.Element | null = null;
 
         if (patientViewPageStore.urlValidationError) {
-            return (
-                <div className="alert alert-danger urlError" role="alert">
-                    <i className="fa fa-warning" aria-hidden="true"></i>
-                    <h3>The URL is invalid</h3>
-                    <ul>
-                        { patientViewPageStore.urlValidationError
-                            .split(".").map((message:string)=>(message.length > 0) ? <li>{message}</li> : null)
-                        }
-                    </ul>
-                </div>
-            )
+            return <ValidationAlert urlValidationError={patientViewPageStore.urlValidationError} />;
         }
 
         if (patientViewPageStore.studyMetaData.isComplete) {
