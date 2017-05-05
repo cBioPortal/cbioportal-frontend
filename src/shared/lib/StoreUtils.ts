@@ -39,6 +39,11 @@ export const HOTSPOTS_DEFAULT = {
 
 export type MutationIdGenerator = (mutation:Mutation) => string;
 
+export interface IDataQueryFilter {
+    sampleIds?: string[];
+    sampleListId?: string;
+}
+
 export async function fetchMutationData(mutationFilter:MutationFilter,
                                         geneticProfileId?:string,
                                         client:CBioPortalAPI = defaultClient)
@@ -257,11 +262,12 @@ export function fetchMyCancerGenomeData(): IMyCancerGenomeData
 
 export async function fetchOncoKbData(sampleIdToTumorType:{[sampleId: string]: string},
                                       mutationData:MobxPromise<Mutation[]>,
-                                      uncalledMutationData?:MobxPromise<Mutation[]>)
+                                      uncalledMutationData?:MobxPromise<Mutation[]>,
+                                      client: OncoKbAPI = oncokbClient)
 {
     const mutationDataResult = concatMutationData(mutationData, uncalledMutationData);
 
-    if (mutationDataResult.length === 0) {
+    if (mutationDataResult.length === 0 || _.isEmpty(sampleIdToTumorType)) {
         return ONCOKB_DEFAULT;
     }
 
@@ -274,7 +280,7 @@ export async function fetchOncoKbData(sampleIdToTumorType:{[sampleId: string]: s
             mutation.proteinPosEnd);
     }), "id");
 
-    return queryOncoKbData(queryVariants, sampleIdToTumorType);
+    return queryOncoKbData(queryVariants, sampleIdToTumorType, client);
 }
 
 export async function fetchCnaOncoKbData(sampleIdToTumorType:{[sampleId: string]: string},
@@ -506,4 +512,22 @@ export function concatMutationData(mutationData?:MobxPromise<Mutation[]>,
 
 export function generateMutationIdByEvent(m: Mutation): string {
     return [m.gene.chromosome, m.startPosition, m.endPosition, m.referenceAllele, m.variantAllele].join("_");
+}
+
+export function generateDataQueryFilter(sampleListId: string|null, sampleIds?: string[]): IDataQueryFilter
+{
+    let filter: IDataQueryFilter = {};
+
+    if (sampleListId) {
+        filter = {
+            sampleListId
+        };
+    }
+    else if (sampleIds) {
+        filter = {
+            sampleIds
+        };
+    }
+
+    return filter;
 }
