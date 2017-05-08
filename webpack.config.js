@@ -25,9 +25,6 @@ const isTest = NODE_ENV === 'test';
 const devHost = process.env.HOST || 'localhost';
 const devPort = process.env.PORT || 3000;
 
-const setPublicPath = process.env.SET_PUBLIC_PATH !== 'false';
-const publicPath = (isDev && setPublicPath) ? `//${devHost}:${devPort}/` : '';
-
 const root = resolve(__dirname);
 const src = join(root, 'src');
 const modules = join(root, 'node_modules');
@@ -48,10 +45,10 @@ var config = {
     'output': {
         path: './dist/',
         filename: 'reactapp/[name].app.js',
-        chunkFilename: 'reactapp/[name].chunk.js',
+        chunkFilename: 'reactapp/[name].[chunkhash].chunk.js',
         cssFilename: 'reactapp/app.css',
         hash: false,
-        publicPath: '',
+        publicPath: '/',
     },
 
     'resolve': {
@@ -64,6 +61,8 @@ var config = {
             '.tsx',
         ]
     },
+
+
 
     plugins: [
         new HtmlWebpackPlugin({cache: false, template: 'my-index.ejs'}),
@@ -127,6 +126,10 @@ var config = {
                 test: /\.swf$/,
                 loader: `file-loader?name=${imgPath}`,
             },
+            {
+                test: /\.pdf$/,
+                loader: `url-loader?name=${imgPath}&limit=1`,
+            },
             // {
             //     test: /ClinicalInformationContainer/i,
             //     include: path.resolve(__dirname, 'src'),
@@ -184,7 +187,11 @@ const defines =
 
 config.plugins = [
     new webpack.DefinePlugin(defines),
-    new ExtractTextPlugin('reactapp/styles.css')
+    new ExtractTextPlugin('reactapp/styles.css',{ allChunks:true }),
+    new webpack.ProvidePlugin({
+        $: "jquery",
+        jQuery: "jquery"
+    })
 ].concat(config.plugins);
 // END ENV variables
 
@@ -198,22 +205,24 @@ config.module.loaders.push(
     }
 );
 
-// css modules for any scss matching test
-config.module.loaders.push(
-    {
-        test: /\.module\.scss$/,
-        loaders: [
-            'style',
-            'css?modules&importLoaders=2&localIdentName=[name]__[local]__[hash:base64:5]' +
-            '!sass' +
-            '!sass-resources'
-        ]
-    }
-);
 
 if (isDev || isTest) {
 
     config.devtool = 'source-map';
+
+
+    // css modules for any scss matching test
+    config.module.loaders.push(
+        {
+            test: /\.module\.scss$/,
+            loaders: [
+                'style',
+                'css?modules&importLoaders=2&localIdentName=[name]__[local]__[hash:base64:5]' +
+                '!sass' +
+                '!sass-resources'
+            ]
+        }
+    );
 
     // IN DEV WE WANT TO LOAD CSS AND SCSS BUT NOT USE EXTRACT TEXT PLUGIN
     // STYLES WILL BE IN JS BUNDLE AND APPENDED TO DOM IN <STYLE> TAGS
@@ -238,23 +247,48 @@ if (isDev || isTest) {
 
     // force hot module reloader to hit absolute path so it can load
     // from dev server
-    config.output.publicPath = 'http://localhost:3000/';
+    config.output.publicPath = '//localhost:3000/';
 
 
 } else {
 
 
     config.devtool = 'cheap-module-source-map',
+    config.output.publicPath = '';
+
+    // css modules for any scss matching test
+    config.module.loaders.push(
+        {
+            test: /\.module\.scss$/,
+            loader: ExtractTextPlugin.extract(
+                'style',
+                'css?modules&importLoaders=2&localIdentName=[name]__[local]__[hash:base64:5]' +
+                '!sass' +
+                '!sass-resources'
+            )
+        }
+    );
 
     config.module.loaders.push(
         {
-            'test': /\.css$|.scss$/,
+            'test': /\.scss$/,
             'exclude':/\.module\.scss/,
             'loader': ExtractTextPlugin.extract(
                 'style',
                 'css?' +
                 '!sass' +
                 '!sass-resources'
+            )
+
+        }
+    );
+
+    config.module.loaders.push(
+        {
+            'test': /\.css/,
+            'loader': ExtractTextPlugin.extract(
+                'style',
+                'css?'
             )
 
         }
@@ -296,7 +330,8 @@ config.resolve.alias = {
     styles: join(src, 'styles'),
     reducers: join(src, 'redux/modules'),
     pages: join(src, 'pages'),
-    shared: join(src,'shared')
+    shared: join(src,'shared'),
+    appConfig: path.join(__dirname + '/src', 'config', process.env.NODE_ENV + '.config')
 };
 // end Roots
 

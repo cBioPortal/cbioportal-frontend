@@ -8,7 +8,7 @@ let config = {
     entry: {
         // create two library bundles, one with jQuery and
         // another with Angular and related libraries
-        common: ['jquery', 'react', 'react-dom', 'react-redux', 'react-bootstrap', 'seamless-immutable', 'lodash']
+        common: ['jquery','imports?jquery=jquery!jquery-migrate', 'react', 'react-dom', 'react-redux', 'react-bootstrap', 'seamless-immutable', 'lodash', 'mobx', 'mobx-react', 'mobx-react-devtools', 'mobx-utils', 'd3', 'datatables.net', 'webpack-raphael']
     },
 
     output: {

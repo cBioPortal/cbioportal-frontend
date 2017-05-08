@@ -1,0 +1,18 @@
+th {
+  border-top:1px dashed #ddd !important;
+  padding-left: 10px;
+  padding-bottom: 5px;
+  background-color: rgb(255,255,255); // solid background
+}
+
+tbody>tr:nth-of-type(odd).highlight {
+  background-color: #E0E000 !important;
+}
+
+tbody>tr:nth-of-type(even) { // solid background - hard coded hack, react-bootstrap .table-striped makes ODD # rows grey
+  background-color: rgb(255,255,255);
+}
+
+tbody>tr:nth-of-type(even).highlight {
+  background-color: #E9E900;
+}
