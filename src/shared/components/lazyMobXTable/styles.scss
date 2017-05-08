@@ -1,0 +1,19 @@
+th.sort-des:after {
+  content: ' \25BC';
+}
+
+th.sort-asc:after {
+  content: ' \25B2';
+}
+
+.topPagination {
+  .textBetweenButtons {
+    opacity: 1.00 !important;
+  }
+}
+
+.tableMainToolbar {
+  .form-group {
+    margin-bottom: 5px;
+  }
+}

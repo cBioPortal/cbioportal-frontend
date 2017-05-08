@@ -1,3 +1,9 @@
 //e.g. $mutationColor:#990000; will then be usable in any local scss file or css module
 
 $mutationColor:blue;
+
+.portalWidth{
+  padding-left:20px;
+  padding-right:20px;
+  min-width:800px;
+}
