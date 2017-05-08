@@ -12,13 +12,21 @@ addons:
 before_install:
   - if [[ `npm -v` != 3* ]]; then npm i -g npm@3; fi
 install:
-  - sudo apt-get install npm
   - npm config set registry http://registry.npmjs.org/
   - npm install
   # install codecov.io
   - npm install codecov.io
 script:
   - echo 'API_ROOT=http://cbioportal-rc.herokuapp.com/api' > .env
+  # make sure json is in sync on master and rc branch (since these are branches
+  # about to be deployed)
+  - |
+      if [ "${TRAVIS_BRANCH}" == "master" ] || [[ "${TRAVIS_BRANCH}" =~ ^rc.* ]]; then
+        (npm run fetchAPI && git diff --quiet src/shared/api/generated/CBioPortalAPI-docs.json) || (echo 'src/shared/api/generated/CBioPortalAPI-docs.json out of sync' && exit 1);
+        (git diff --quiet src/shared/api/generated/CBioPortalAPIInternal-docs.json) || (echo 'src/shared/api/generated/CBioPortalAPIInternal-docs.json out of sync' && exit 1);
+        (npm run fetchHotspotsAPI && git diff --quiet src/shared/api/generated/CancerHotspotsAPI-docs.json) || (echo 'src/shared/api/generated/CancerHotspotsAPI-docs.json out of sync' && exit 1);
+        (npm run fetchOncoKbAPI && git diff --quiet src/shared/api/generated/OncoKbAPI-docs.json) || (echo 'src/shared/api/generated/OncoKbAPI-docs.json out of sync' && exit 1);
+      fi
   # Run build
   - npm run build
   # Run test
@@ -30,7 +38,7 @@ script:
       }
 after_success:
  # upload coverage data to codecov.io
- - cat coverage/*/lcov.info | codecov
+ - cat test/fixtures/outputs/lcov.info | codecov
 cache:
   directories:
     - node_modules

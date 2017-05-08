@@ -1,7 +1,8 @@
 import React from 'react';
-import { Route } from 'react-router';
-
+import { Route, Redirect, IndexRedirect } from 'react-router';
+import { inject } from 'mobx-react';
 import Container from 'appShell/App/Container';
+import { restoreRouteAfterRedirect } from './shared/lib/redirectHelpers';
 
 /* HOW TO ADD A NEW ROUTE
 * 1. Import the "page" component using the bundle-loader directives as seen in imports below
@@ -15,7 +16,7 @@ import Container from 'appShell/App/Container';
 // see article http://henleyedition.com/implicit-code-splitting-with-react-router-and-webpack/
 import PatientViewPage from 'bundle?lazy!babel!./pages/patientView/PatientViewPage';
 import HomePage from 'bundle?lazy!babel!./pages/home/HomePage';
-import DatasetPage from 'bundle?lazy!babel!./pages/datasetView/DatasetPage';
+//import DatasetPage from 'bundle?lazy!babel!./pages/datasetView/DatasetPage';
 // accepts bundle-loader's deferred loader function and defers execution of route's render
 // until chunk is loaded
 function lazyLoadComponent(loader) {
@@ -31,14 +32,20 @@ function lazyLoadComponent(loader) {
     };
 };
 
+var defaultRoute = window.defaultRoute || '/home';
 
-export const makeRoutes = () => (
-        <Route path="/" component={Container}>
-            <Route path="home" getComponent={lazyLoadComponent(HomePage)} />
-            <Route path="patient" getComponent={lazyLoadComponent(PatientViewPage)} />
-            <Route path="datasets" getComponent={lazyLoadComponent(DatasetPage)} />
-        </Route>
-);
+var restoreRoute = inject("routing")(restoreRouteAfterRedirect);
+
+export const makeRoutes = (routing) => {
+
+    return (<Route path="/" component={Container}>
+        <Route path="/home" getComponent={lazyLoadComponent(HomePage)}/>
+        <Route path="/patient" getComponent={lazyLoadComponent(PatientViewPage)}/>
+        <Route path="/restore" component={restoreRoute}/>
+        <Redirect from="*" to={defaultRoute}/>
+        <IndexRedirect to={defaultRoute}/>
+    </Route>)
+};
 
 
 export default makeRoutes;
