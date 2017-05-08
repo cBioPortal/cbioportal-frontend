@@ -12,3 +12,5 @@ tsDist/
 dist/
 common-dist/
 .sass-cache
+frontend-cbioportal.iml
+test/

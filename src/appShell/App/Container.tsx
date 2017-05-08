@@ -3,7 +3,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import PageHeader from '../../pages/pageHeader/PageHeader';
 
-import '../../globalStyles/global.scss';
+import '../../globalStyles/prefixed-global.scss';
 
 interface IContainerProps {
     location: Location;

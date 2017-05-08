@@ -1,36 +1,44 @@
 import * as React from "react";
-import {ClinicalData} from "../../../shared/api/CBioPortalAPI";
-import {Table as DataTable} from "reactableMSK";
+import {ClinicalData} from "../../../shared/api/generated/CBioPortalAPI";
+import LazyMobXTable from "shared/components/lazyMobXTable/LazyMobXTable";
 import TableHeaderControls from "shared/components/tableHeaderControls/TableHeaderControls";
 
 import styles from './style/patientTable.module.scss';
+import {MSKTab} from "../../../shared/components/MSKTabs/MSKTabs";
 
 export interface IClinicalInformationPatientTableProps {
-    data?: Array<ClinicalData>;
-    showTitleBar?: Boolean;
+    data: ClinicalData[];
+    showTitleBar?: boolean;
+    cssClass?:string;
 }
+
+class PatientTable extends LazyMobXTable<IPatientRow> {}
+
+interface IPatientRow {
+    attribute: string;
+    value: string;
+};
 
 export default class ClinicalInformationPatientTable extends React.Component<IClinicalInformationPatientTableProps, {}> {
 
     public render() {
 
-        let tableData = this.props.data && this.props.data.map((el: ClinicalData) => ({
+        const tableData = this.props.data && this.props.data.map((el: ClinicalData) => ({
             attribute: el.clinicalAttribute.displayName || '',
             value: el.value
         }));
 
         return (
-            <div>
-                {
-                    this.props.showTitleBar
-                    ?   <div>
-                            <h4 className="pull-left">Patient</h4>
-                            <TableHeaderControls className="pull-right" tableData={tableData} />
-                        </div>
-                    :   null
-                }
-                <DataTable className={ `table table-striped ${styles.patientTable}` } columns={[{ key:'attribute', label:'Attribute'},{ key:'value', label:'Value'}]} data={tableData} />
-            </div>
+            <PatientTable
+                  data={tableData}
+                  columns={[{ name:'Attribute', render:(data)=><span>{data.attribute}</span>},
+                        { name:'Value', render: (data)=><span>{data.value}</span>}]}
+                  showPagination={false}
+                  showColumnVisibility={false}
+                  className={styles.patientTable}
+            />
         );
     }
 }
+
+
