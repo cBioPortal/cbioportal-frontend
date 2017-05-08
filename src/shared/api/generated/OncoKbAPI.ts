@@ -118,6 +118,8 @@ export type Alteration = {
 
         'refResidues': string
 
+        'uniqueId': string
+
         'variantResidues': string
 
 };
@@ -602,6 +604,69 @@ export default class OncoKbAPI {
             });
         };
 
+    evidencesUUIDsGetUsingPOSTURL(parameters: {
+        'uuids': Array < string > ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/evidences';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get specific evidences.
+     * @method
+     * @name OncoKbAPI#evidencesUUIDsGetUsingPOST
+     * @param {} uuids - Unique identifier list.
+     */
+    evidencesUUIDsGetUsingPOST(parameters: {
+        'uuids': Array < string > ,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < Evidence > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/evidences';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['uuids'] !== undefined) {
+                body = parameters['uuids'];
+            }
+
+            if (parameters['uuids'] === undefined) {
+                reject(new Error('Missing required  parameter: uuids'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        }).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+
     evidencesLookupGetUsingGETURL(parameters: {
         'entrezGeneId' ? : number,
         'hugoSymbol' ? : string,
@@ -680,7 +745,7 @@ export default class OncoKbAPI {
      * @param {string} hugoSymbol - The gene symbol used in Human Genome Organisation.
      * @param {string} variant - Variant name.
      * @param {string} tumorType - Tumor type name. OncoTree code is supported.
-     * @param {string} consequence - Consequence. Possible value: feature_truncation, frameshift_variant, inframe_deletion, inframe_insertion, initiator_codon_variant, missense_variant, splice_region_variant, stop_gained, synonymous_variant
+     * @param {string} consequence - Consequence. Possible value: feature_truncation, frameshift_variant, inframe_deletion, inframe_insertion, start_lost, missense_variant, splice_region_variant, stop_gained, synonymous_variant
      * @param {string} proteinStart - Protein Start.
      * @param {string} proteinEnd - Protein End.
      * @param {string} source - Tumor type source. OncoTree tumor types are the default setting. We may have customized version, like Quest.
