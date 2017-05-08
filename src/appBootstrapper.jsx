@@ -12,6 +12,14 @@ import URL from 'url';
 import * as superagent from 'superagent';
 import { getHost } from './shared/api/urls';
 
+if (!window.hasOwnProperty("$")) {
+    window.$ = $;
+}
+
+if (!window.hasOwnProperty("jQuery")) {
+    window.jQuery = $;
+}
+
 import 'script-loader!raven-js/dist/raven.js';
 
 if (/cbioportal\.mskcc\.org|www.cbioportal\.org/.test(window.location.hostname) || window.localStorage.getItem('sentry') === 'true') {
