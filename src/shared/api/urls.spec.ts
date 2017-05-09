@@ -22,4 +22,12 @@ describe('url library', () => {
         assert.equal(getOncoKbApiUrl(), 'http:proxy/www.test.com/hello');
     });
 
+    it('transforms oncokb url configuration url to proxied url: removes protocol and trailing slash', ()=>{
+        (global as any).window.oncoKBApiUrl = null;
+        // note that this is WRONG (http: should be followed by double shlash)
+        // but this is due to testing env and url builder library
+        // this works correctly in browser env
+        assert.isUndefined(getOncoKbApiUrl());
+    });
+
 });
