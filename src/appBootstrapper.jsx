@@ -12,6 +12,14 @@ import URL from 'url';
 import * as superagent from 'superagent';
 import { getHost } from './shared/api/urls';
 
+if (!window.hasOwnProperty("$")) {
+    window.$ = $;
+}
+
+if (!window.hasOwnProperty("jQuery")) {
+    window.jQuery = $;
+}
+
 import 'script-loader!raven-js/dist/raven.js';
 
 if (/cbioportal\.mskcc\.org|www.cbioportal\.org/.test(window.location.hostname) || window.localStorage.getItem('sentry') === 'true') {
@@ -67,7 +75,8 @@ superagent.Request.prototype.end = function (callback) {
     return end.call(this, (error, response) => {
 
         if (error) {
-            Raven.captureException(response.error,{
+
+            Raven.captureException(((response && response.error) || error),{
                 tags: { network:true }
             });
         }
@@ -75,7 +84,7 @@ superagent.Request.prototype.end = function (callback) {
         if (redirecting) {
             return;
         }
-        if (response.statusCode === 401) {
+        if (response && response.statusCode === 401) {
             var storageKey = `redirect${Math.floor(Math.random() * 1000000000000)}`
             localStorage.setItem(storageKey, window.location.hash);
             const loginUrl = `//${getHost()}/?spring-security-redirect=${encodeURIComponent(window.location.pathname)}${encodeURIComponent(window.location.search)}${encodeURIComponent('#/restore?key=' + storageKey)}`;
