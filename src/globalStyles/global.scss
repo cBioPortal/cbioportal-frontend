@@ -182,16 +182,61 @@ th.reactable-header-sort-asc:after {
 .contentWrapper {
   display:flex;
   justify-content:space-between;
+  background:#fff;
+  min-height:500px;
 
-  .mainContent {
-    flex-grow:1;
-    padding:10px;
+  h1 {
+    font-size:22px;
   }
 
-  .rightBar {
-      width:315px;
-      border-left:1px dashed #ccc;
+  h3 {
+    color:#cfd9ea;
+  }
+
+  #mainColumn {
+    flex:1;
+    padding: $gutterWidth;
+  }
+
+  #rightColumn {
+    background:#F1F6FE;
+    padding:$gutterWidth 0;
+    font-size:12px;
+    flex:0 0 345px;
+
+    .rightBarSection {
+      h3 {
+        border-bottom:1px solid #cfd9ea;
+        margin: 0 0 8px 0;
+        padding-bottom:5px;
+        font-size:18px;
+      }
+      padding: 0 $gutterWidth $gutterWidth $gutterWidth;
+    }
+
+    .exampleQueries {
+      ul {
+        margin:0 0 0 15px;
+        padding:0;
+
+        li {
+          color:#cfd9ea;
+          text-indent:-3px;
+        }
+
+      }
+    }
+
   }
 
 }
 
+.fixedWidth .contentWidth {
+  width:1200px;
+  margin:0 auto;
+  display:flex;
+
+  #mainColumn {
+    padding-left:0;
+  }
+}
