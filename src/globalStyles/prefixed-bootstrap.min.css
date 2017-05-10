@@ -4269,7 +4269,5 @@
 @media print {
   .cbioportal-frontend .hidden-print {
     display: none !important; } }
-.cbioportal-frontend h1 {
-  color: red; }
 
 /*# sourceMappingURL=prefixed-bootstrap.min.css.map */

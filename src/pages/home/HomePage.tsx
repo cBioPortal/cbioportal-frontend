@@ -14,6 +14,7 @@ import QueryModal from "./QueryModal";
 import BarGraph from "shared/components/barGraph/BarGraph";
 import client from '../../shared/api/cbioportalClientInstance';
 import {remoteData} from "../../shared/api/remoteData";
+import RightBar from "../../shared/components/rightbar/RightBar";
 
 
 export class HomePageStore {
@@ -67,7 +68,11 @@ export default class HomePage extends React.Component<IHomePageProps, IHomePageS
         exposeComponentRenderer('renderQuerySelectorInModal', this.getModalWrappedComponent.bind(this));
 
         exposeComponentRenderer('renderQuerySelector', ()=>{ return <QueryAndDownloadTabs store={this.store} />  });
-    }
+
+        exposeComponentRenderer('renderRightBar', ()=>{
+        	return <RightBar />
+		});
+	}
 
     getModalWrappedComponent(){
         return (
@@ -77,6 +82,6 @@ export default class HomePage extends React.Component<IHomePageProps, IHomePageS
 
     public render()
     {
-        return null;
+        return (<div style={{width:350}}><RightBar/></div>);
     }
 }
