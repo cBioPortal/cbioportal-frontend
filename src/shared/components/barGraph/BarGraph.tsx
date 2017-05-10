@@ -51,7 +51,7 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
         }
     }
 
-     condenseCancerTypes(x:ICancerTypeStudy, y:ICancerTypeStudy[], shortName:string) {
+    condenseCancerTypes(x:ICancerTypeStudy, y:ICancerTypeStudy[], shortName:string) {
         const studies = [..._.flattenDeep(_.map(y, 'studies')), ...x.studies]
         return {
             caseCount: y.reduce((a, b) => a + b.caseCount, x.caseCount),
@@ -121,19 +121,21 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
             'thyroid');
 
         const cancerTypeStudiesArray =  Object.keys(cancerTypeStudiesObj).map((cancerType) => (
-                { type: cancerType,
-                    ...cancerTypeStudiesObj[cancerType] }
-            ))
+            { type: cancerType,
+                ...cancerTypeStudiesObj[cancerType] }
+        ))
             .sort((a, b) => b.caseCount - a.caseCount)
             .slice(0, 20);
 
         Highcharts.chart('high-charts-data-sets', {
 
-            chart: {type: 'bar'},
+            chart: {type: 'bar', backgroundColor:'' },
+
+            exporting: { enabled:false },
 
             colors:['#4485f3','#ba362e','#ff970a','#069720'],
 
-            title: {text: 'Cases by Primary Site'},
+            title: {text: ''},
 
             xAxis: {categories: cancerTypeStudiesArray.slice(0, 20).map((cancer) => (cancer.shortName))},
 
