@@ -610,7 +610,7 @@ export class PatientViewPageStore {
         }
 
         const queryVariants = _.uniqBy(_.map(this.mutationData.result.concat(this.uncalledMutationData.result), (mutation: Mutation) => {
-            return generateQueryVariant(mutation.gene.hugoGeneSymbol,
+            return generateQueryVariant(mutation.gene.entrezGeneId,
                 this.sampleIdToTumorType[mutation.sampleId],
                 mutation.proteinChange,
                 mutation.mutationType,
@@ -638,7 +638,7 @@ export class PatientViewPageStore {
         invoke: async() => {
             if (this.discreteCNAData.result.length > 0) {
                 const queryVariants = _.uniqBy(_.map(this.discreteCNAData.result, (copyNumberData: DiscreteCopyNumberData) => {
-                    return generateQueryVariant(copyNumberData.gene.hugoGeneSymbol,
+                    return generateQueryVariant(copyNumberData.gene.entrezGeneId,
                         this.sampleIdToTumorType[copyNumberData.sampleId],
                         getAlterationString(copyNumberData.alteration));
                 }), "id");

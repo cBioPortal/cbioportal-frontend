@@ -71,7 +71,7 @@ export default class AnnotationColumnFormatter
 
     public static getIndicatorData(mutation:Mutation, oncoKbData:IOncoKbData):IndicatorQueryResp
     {
-        const id = generateQueryVariantId(mutation.gene.hugoGeneSymbol,
+        const id = generateQueryVariantId(mutation.gene.entrezGeneId,
             oncoKbData.sampleToTumorMap[mutation.sampleId],
             mutation.proteinChange,
             mutation.mutationType);
@@ -81,7 +81,7 @@ export default class AnnotationColumnFormatter
 
     public static getEvidenceQuery(mutation:Mutation, oncoKbData:IOncoKbData): Query
     {
-        return generateQueryVariant(mutation.gene.hugoGeneSymbol,
+        return generateQueryVariant(mutation.gene.entrezGeneId,
             oncoKbData.sampleToTumorMap[mutation.sampleId],
             mutation.proteinChange,
             mutation.mutationType,

@@ -41,7 +41,7 @@ export default class AnnotationColumnFormatter
 
     public static getIndicatorData(copyNumberData:DiscreteCopyNumberData[], oncoKbData:IOncoKbData):IndicatorQueryResp
     {
-        const id = generateQueryVariantId(copyNumberData[0].gene.hugoGeneSymbol,
+        const id = generateQueryVariantId(copyNumberData[0].gene.entrezGeneId,
             oncoKbData.sampleToTumorMap[copyNumberData[0].sampleId],
             getAlterationString(copyNumberData[0].alteration));
 
@@ -50,7 +50,7 @@ export default class AnnotationColumnFormatter
 
     public static getEvidenceQuery(copyNumberData:DiscreteCopyNumberData[], oncoKbData:IOncoKbData): Query
     {
-        return generateQueryVariant(copyNumberData[0].gene.hugoGeneSymbol,
+        return generateQueryVariant(copyNumberData[0].gene.entrezGeneId,
             oncoKbData.sampleToTumorMap[copyNumberData[0].sampleId],
             getAlterationString(copyNumberData[0].alteration));
     }
