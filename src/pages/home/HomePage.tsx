@@ -11,17 +11,29 @@ import 'react-select/dist/react-select.css';
 import QueryAndDownloadTabs from "../../shared/components/query/QueryAndDownloadTabs";
 import {QueryStore} from "../../shared/components/query/QueryStore";
 import QueryModal from "./QueryModal";
+import BarGraph from "shared/components/barGraph/BarGraph";
+
+
+export class HomePageStore {
+
+    readonly data = remoteData({
+        invoke: () => {
+            return client.getAllStudiesUsingGET({projection: "DETAILED"});
+
+        }
+    });
+}
 
 function getRootElement()
 {
-	for (let node of document.childNodes)
-		if (node instanceof HTMLElement)
-			return node;
-	throw new Error("No HTMLElement found");
+    for (let node of document.childNodes)
+        if (node instanceof HTMLElement)
+            return node;
+    throw new Error("No HTMLElement found");
 }
 
 const styles = styles_any as {
-	HomePage: string,
+    HomePage: string,
     queryModal:string
 };
 
@@ -36,33 +48,33 @@ interface IHomePageState
 @observer
 export default class HomePage extends React.Component<IHomePageProps, IHomePageState>
 {
-	constructor(props:IHomePageProps)
-	{
-		super(props);
-	}
+    constructor(props:IHomePageProps)
+    {
+        super(props);
+    }
 
-	store = new QueryStore(window.location.href);
+    store = new QueryStore(window.location.href);
 
-	public componentDidMount()
-	{
-		this.exposeComponentRenderersToParentScript();
-	}
+    public componentDidMount()
+    {
+        this.exposeComponentRenderersToParentScript();
+    }
 
-	exposeComponentRenderersToParentScript()
-	{
-		exposeComponentRenderer('renderQuerySelectorInModal', this.getModalWrappedComponent.bind(this));
+    exposeComponentRenderersToParentScript()
+    {
+        exposeComponentRenderer('renderQuerySelectorInModal', this.getModalWrappedComponent.bind(this));
 
         exposeComponentRenderer('renderQuerySelector', ()=>{ return <QueryAndDownloadTabs store={this.store} />  });
-	}
+    }
 
-	getModalWrappedComponent(){
-		return (
+    getModalWrappedComponent(){
+        return (
             <QueryModal store={this.store} styles={styles} />
         )
-	}
+    }
 
-	public render()
-	{
-		return null;
-	}
+    public render()
+    {
+        return null;
+    }
 }
