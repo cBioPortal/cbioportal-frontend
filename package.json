@@ -34,6 +34,7 @@
     "@types/chai": "^3.4.34",
     "@types/classnames": "0.0.32",
     "@types/enzyme": "^2.7.4",
+    "@types/highcharts": "^4.2.54",
     "@types/jquery": "^2.0.39",
     "@types/lodash": "^4.14.53",
     "@types/lolex": "^1.5.31",
