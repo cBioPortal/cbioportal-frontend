@@ -33,14 +33,14 @@ const routingStore = new ExtendedRoutingStore();
 //existing use of url hashfragment
 const history = (window.historyType === 'memory') ? createMemoryHistory() : hashHistory;
 
-const history = syncHistoryWithStore(hashHistory, routingStore);
+const syncedHistory = syncHistoryWithStore(hashHistory, routingStore);
 
 const stores = {
     // Key can be whatever you want
     routing: routingStore,
     // ...other stores
 };
-
+//
 const end = superagent.Request.prototype.end;
 
 let redirecting = false;
@@ -90,29 +90,6 @@ superagent.Request.prototype.end = function (callback) {
         }
     });
 };
-
-
-const qs = URL.parse(window.location.href, true).query;
-
-const newParams = {};
-if ('cancer_study_id' in qs) {
-    newParams['studyId'] = qs.cancer_study_id;
-}
-if ('case_id' in qs) {
-    newParams['caseId'] = qs.case_id;
-}
-
-if ('sample_id' in qs) {
-    newParams['sampleId'] = qs.sample_id;
-}
-
-const navCaseIdsMatch = routingStore.location.pathname.match(/(nav_case_ids)=(.*)$/);
-if (navCaseIdsMatch && navCaseIdsMatch.length > 2) {
-    newParams['navCaseIds'] = navCaseIdsMatch[2];
-}
-
-routingStore.updateRoute(newParams);
-
 
 window.routingStore = routingStore;
 
