@@ -12,6 +12,8 @@ import QueryAndDownloadTabs from "../../shared/components/query/QueryAndDownload
 import {QueryStore} from "../../shared/components/query/QueryStore";
 import QueryModal from "./QueryModal";
 import BarGraph from "shared/components/barGraph/BarGraph";
+import client from '../../shared/api/cbioportalClientInstance';
+import {remoteData} from "../../shared/api/remoteData";
 
 
 export class HomePageStore {
