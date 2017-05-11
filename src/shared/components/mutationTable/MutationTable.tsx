@@ -32,9 +32,12 @@ import CancerTypeCache from "../../cache/CancerTypeCache";
 import MutationCountCache from "../../cache/MutationCountCache";
 import MutationCountColumnFormatter from "./column/MutationCountColumnFormatter";
 import LazyLoadedTableCell from "shared/lib/LazyLoadedTableCell";
+import {CacheData} from "../../lib/LazyMobXCache";
+import CancerTypeColumnFormatter from "./column/CancerTypeColumnFormatter";
 
 export interface IMutationTableProps {
     studyId?:string;
+    studyToCancerType?:{[studyId:string]:string};
     discreteCNACache?:DiscreteCNACache;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
     mrnaExprRankCache?:MrnaExprRankCache;
@@ -384,46 +387,11 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
 
         this._columns[MutationTableColumnType.CANCER_TYPE] = {
             name: "Cancer Type",
-            render: LazyLoadedTableCell(
-                (d:Mutation[])=>{
-                    const cancerTypeCache:CancerTypeCache|undefined = this.props.cancerTypeCache;
-                    const studyId:string|undefined = this.props.studyId;
-                    if (cancerTypeCache && studyId) {
-                        return cancerTypeCache.get({
-                            entityId:d[0].sampleId,
-                            studyId: studyId
-                        });
-                    } else {
-                        return {
-                            status: "error",
-                            data: null
-                        };
-                    }
-                },
-                (t:ClinicalData)=>(<span>{t.value}</span>),
-                "Cancer type not available for this sample."
-            ),
-            sortBy:(d:Mutation[])=>{
-                const cancerTypeCache:CancerTypeCache|undefined = this.props.cancerTypeCache;
-                const studyId:string|undefined = this.props.studyId;
-                let ret;
-                if (cancerTypeCache && studyId) {
-                    const cacheDatum = cancerTypeCache.get({
-                        entityId:d[0].sampleId,
-                        studyId: studyId
-                    });
-                    if (cacheDatum && cacheDatum.data) {
-                        ret = cacheDatum.data.value;
-                    } else {
-                        ret = null;
-                    }
-                } else {
-                    ret = null;
-                }
-                return ret;
-            },
+            render:CancerTypeColumnFormatter.makeRenderFunction(this),
+            sortBy:(d:Mutation[])=>CancerTypeColumnFormatter.sortBy(d, this.props.studyId, this.props.cancerTypeCache),
             tooltip:(<span>Cancer Type</span>),
         };
+
         this._columns[MutationTableColumnType.NUM_MUTATIONS] = {
             name: "# Mut in Sample",
             render: MutationCountColumnFormatter.makeRenderFunction(this),

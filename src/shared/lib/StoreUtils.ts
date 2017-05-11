@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import {
     GeneticProfile, Mutation, MutationFilter, default as CBioPortalAPI, DiscreteCopyNumberData,
-    DiscreteCopyNumberFilter, ClinicalData, Sample
+    DiscreteCopyNumberFilter, ClinicalData, Sample, CancerStudy
 } from "shared/api/generated/CBioPortalAPI";
 import defaultClient from "shared/api/cbioportalClientInstance";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
@@ -530,4 +530,11 @@ export function generateDataQueryFilter(sampleListId: string|null, sampleIds?: s
     }
 
     return filter;
+}
+
+export function makeStudyToCancerTypeMap(studies:CancerStudy[]) {
+    return studies.reduce((map:{[studyId:string]:string}, next:CancerStudy)=>{
+        map[next.studyId] = next.cancerType.name;
+        return map;
+    }, {});
 }
