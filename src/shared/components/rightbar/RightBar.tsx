@@ -39,7 +39,7 @@ export default class RightBar extends React.Component<{}, {}> {
                 </div>
 
                 <div className="rightBarSection">
-                    <h3>Cases by Primary Site</h3>
+                    <h3>Cancer Studies</h3>
                     {
                         (this.studyStore.data.isComplete) && (
                             <BarGraph data={ this.studyStore.data.result }/>
@@ -85,7 +85,7 @@ export default class RightBar extends React.Component<{}, {}> {
                     <p>Please cite <a href="http://www.ncbi.nlm.nih.gov/pubmed/23550210">Gao et al. <i>Sci. Signal.</i> 2013</a> &amp;  <a href="http://cancerdiscovery.aacrjournals.org/content/2/5/401.abstract"> Cerami et al. <i>Cancer Discov.</i> 2012</a> when publishing results based on cBioPortal.</p>
                 </div>
 
-                <div className="rightBarSection">
+                <div className="rightBarSection" style={{minHeight: '300px'}}>
                     <h3>Testimonials</h3>
                     <Testimonials/>
                 </div>
