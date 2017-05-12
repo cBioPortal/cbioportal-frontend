@@ -3,6 +3,7 @@ import * as _ from 'lodash';
 import {ThreeBounce} from 'better-react-spinkit';
 import { CancerStudy } from 'shared/api/generated/CBioPortalAPI';
 import * as Highcharts from 'highcharts';
+import './barGraph.scss';
 
 import HCE from 'highcharts/modules/exporting';
 HCE(Highcharts);
@@ -28,27 +29,22 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
         super();
     }
 
-    getShortName(shortName:string) {
-        switch(shortName) {
-            case 'Ovarian':
-                return 'Ovary';
-            case 'Cervical':
-                return 'Cervix';
-            case 'Colorectal':
-                return 'Colon';
-            case 'Uterine':
-                return 'Uterus';
-            case 'Melanoma':
-                return 'Skin';
-            case 'CCLE':
-                return 'Mixed';
-            case 'Thymoma(TCGA)':
-                return 'Thymus';
-            case 'Uveal':
-                return 'Eye';
-            default:
-                return shortName;
-        }
+    shouldComponentUpdate() {
+        return false;
+    }
+
+    getShortName(cancerStudiesObj:ICounterObj) {
+        const aliases:{[id:string]:string} = {
+            'Ovarian': 'Ovary', 'Cervical': 'Cervix', 'Uterine': 'Uterus',
+            'Melanoma': 'Skin', 'CCLE':'Mixed', 'Thymoma(TCGA)': 'Thymus', 'Uveal': 'Eye'
+        };
+        return _.mapValues(cancerStudiesObj, (cancerStudy) => {
+            const shortName = cancerStudy.shortName.split(" ")[0];
+            return {
+                ...cancerStudy,
+                shortName: aliases[shortName] ? aliases[shortName] : shortName
+            };
+        });
     }
 
     condenseCancerTypes(x:ICancerTypeStudy, y:ICancerTypeStudy[], shortName:string) {
@@ -58,10 +54,6 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
             shortName,
             studies
         };
-    }
-
-    shouldComponentUpdate() {
-        return false;
     }
 
     lightenDarkenColor(col:string, amt:number) {
@@ -85,8 +77,8 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
         return "#" + (g | (b << 8) | (r << 16)).toString(16);
     }
 
-    componentDidMount() {
-        let cancerTypeStudiesObj = _.reduce(this.props.data, (counterObj:ICounterObj, study) => {
+    reduceDataArray(data:CancerStudy[]) {
+        return _.reduce(data, (counterObj:ICounterObj, study) => {
             const { cancerTypeId, allSampleCount, shortName } = study;
             if (counterObj[cancerTypeId]) {
                 counterObj[cancerTypeId].caseCount += allSampleCount;
@@ -94,12 +86,19 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
             } else {
                 counterObj[cancerTypeId] = {
                     caseCount: allSampleCount,
-                    shortName: this.getShortName(shortName.split(" ")[0]),
+                    shortName,
                     studies: [study]
                 };
             }
             return counterObj;
         }, {} as any);
+    }
+
+    componentDidMount() {
+
+        let cancerTypeStudiesObj = this.reduceDataArray(this.props.data);
+
+        cancerTypeStudiesObj = this.getShortName(cancerTypeStudiesObj);
 
         const {luad, lusc, sclc, nsclc, plmeso, paac, paad, panet, esca, escc,
             hnsc, acyc, head_neck, thpa, thyroid, mnet, nbl, acc, difg, gbm, mbl,
@@ -118,7 +117,7 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
         cancerTypeStudiesObj = _.omit(cancerTypeStudiesObj, 'lusc', 'sclc', 'nsclc', 'plmeso',
             'paad', 'panet', 'escc', 'acyc', 'head_neck', 'gbm', 'mbl', 'aml',
             'all', 'soft_tissue', 'es', 'mm', 'prcc', 'chrcc', 'nbl', 'acc', 'nccrcc',
-            'thyroid');
+            'thyroid', 'mixed');
 
         const cancerTypeStudiesArray =  Object.keys(cancerTypeStudiesObj).map((cancerType) => (
             { type: cancerType,
@@ -133,30 +132,31 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
 
             exporting: { enabled:false },
 
-            colors:['#4485f3','#ba362e','#ff970a','#069720'],
-
             title: {text: ''},
 
-            xAxis: {categories: cancerTypeStudiesArray.slice(0, 20).map((cancer) => (cancer.shortName))},
+            xAxis: {categories: cancerTypeStudiesArray.slice(0, 20).map((cancer) => (cancer.shortName)),
+                    labels: {style: {fontSize: '10px'}}},
 
             yAxis: {
                 allowDecimals: false,
                 min: 0,
+                // max: 6000,
                 title: {text: ''}
             },
 
             legend: {enabled: false},
 
             tooltip: {
+                useHTML: true,
                 backgroundColor: '#ffffff',
                 formatter: function() {
                     return `
-                            <div>
+                            <div style="font-size:11px;">
                                 ${this.x}: ${this.point.stackTotal} cases
                                 <br/> 
-                                <span style="font-size:12px; color:${this.point.color}">${this.series.name}: </span>
-                                <br/>
-                                <span style="font-size:12px; color:${this.point.color}">${this.point.y} cases</span>
+                                <span style="width: 200px !important; font-size:12px; color:${this.point.color}; overflow:auto; white-space:normal !important;" >
+                                    ${this.series.name}: <b>${this.point.y} cases</b>
+                                </span>
                             </div>
                           `;
                 }
@@ -181,6 +181,7 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
                     const colors = ['1E36BF', '128C47', 'BF2231', '7D1FBF', 'BF7D15'];
                     const color = this.lightenDarkenColor(colors[i%5], (max-j)/max * 120);
                     return {
+                        borderColor: '#F1F6FE',
                         name,
                         studyId,
                         data: i === 0 ? [{y: allSampleCount, color}] : [...Array(i).fill(0),{y: allSampleCount, color}]
