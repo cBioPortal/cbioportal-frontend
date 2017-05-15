@@ -1,9 +1,9 @@
 import * as React from 'react';
 import {observer} from "mobx-react";
-import {observable} from "mobx";
 import {
-    IStructureVisualizerProps, default as StructureVisualizerWrapper, IResidueSpec
-} from "./StructureVisualizerWrapper";
+    IStructureVisualizerProps, IResidueSpec
+} from "./StructureVisualizer";
+import StructureVisualizer3D from "./StructureVisualizer3D";
 
 export interface IStructureViewerProps extends IStructureVisualizerProps {
     pdbId: string;
@@ -14,9 +14,9 @@ export interface IStructureViewerProps extends IStructureVisualizerProps {
 @observer
 export default class StructureViewer extends React.Component<IStructureViewerProps, {}>
 {
-    private _3dMolDiv:HTMLDivElement|undefined;
+    private _3dMolDiv: HTMLDivElement|undefined;
     private _pdbId: string;
-    private wrapper:StructureVisualizerWrapper;
+    private wrapper: StructureVisualizer3D;
 
     public constructor() {
         super();
@@ -29,14 +29,14 @@ export default class StructureViewer extends React.Component<IStructureViewerPro
         return (
             <div
                 ref={this.divHandler}
-                style={{height: "300px"}}
+                style={{height: 300}}
             />
         );
     }
 
     public componentDidMount() {
         if (this._3dMolDiv) {
-            this.wrapper = new StructureVisualizerWrapper(this._3dMolDiv, this.props);
+            this.wrapper = new StructureVisualizer3D(this._3dMolDiv, this.props);
             this.wrapper.init(this.props.pdbId, this.props.chainId, this.props.residues);
             this._pdbId = this.props.pdbId;
         }
