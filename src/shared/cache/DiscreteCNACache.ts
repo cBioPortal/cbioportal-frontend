@@ -8,36 +8,48 @@ export type DiscreteCNACacheDataType = CacheData<DiscreteCopyNumberData>;
 
 async function fetch(queries:SampleAndGene[], geneticProfileIdDiscrete:string|undefined):Promise<DiscreteCopyNumberData[]> {
     try {
-        const sampleToEntrezList:{[sampleId:string]:number[]} = {};
-        for (const query of queries) {
-            sampleToEntrezList[query.sampleId] = sampleToEntrezList[query.sampleId] || [];
-            sampleToEntrezList[query.sampleId].push(query.entrezGeneId);
+        const uniqueSamples = _.uniq(queries.map(q=>q.sampleId));
+        const uniqueGenes = _.uniq(queries.map(q=>q.entrezGeneId));
+        let filters:DiscreteCopyNumberFilter[];
+        if (uniqueSamples.length < uniqueGenes.length) {
+            // Make one query per sample, since there are fewer samples than genes
+            const sampleToEntrezList:{[sampleId:string]:number[]} = {};
+            for (const query of queries) {
+                sampleToEntrezList[query.sampleId] = sampleToEntrezList[query.sampleId] || [];
+                sampleToEntrezList[query.sampleId].push(query.entrezGeneId);
+            }
+            filters = Object.keys(sampleToEntrezList).map(sample=>{
+                return {
+                    sampleIds: [sample],
+                    entrezGeneIds: sampleToEntrezList[sample]
+                } as DiscreteCopyNumberFilter;
+            });
+        } else {
+            // Make one query per gene
+            const entrezToSampleList:{[entrez:string]:string[]} = {};
+            for (const query of queries) {
+                entrezToSampleList[query.entrezGeneId] = entrezToSampleList[query.entrezGeneId] || [];
+                entrezToSampleList[query.entrezGeneId].push(query.sampleId);
+            }
+            filters = Object.keys(entrezToSampleList).map(entrez=>{
+                return {
+                    sampleIds: entrezToSampleList[entrez],
+                    entrezGeneIds: [parseInt(entrez, 10)]
+                } as DiscreteCopyNumberFilter;
+            });
         }
-        const allData:DiscreteCopyNumberData[][] = await Promise.all(Object.keys(sampleToEntrezList).map(
-            (sampleId:string)=> {
-                if (typeof geneticProfileIdDiscrete === "undefined") {
-                    return Promise.reject("No genetic profile id given.");
-                } else {
-                    const entrezList = sampleToEntrezList[sampleId];
-                    let filter:DiscreteCopyNumberFilter;
-                    if (entrezList === null) {
-                        filter = {
-                            sampleIds: [sampleId]
-                        } as DiscreteCopyNumberFilter;
-                    } else {
-                        filter = {
-                            sampleIds: [sampleId],
-                            entrezGeneIds: entrezList
-                        } as DiscreteCopyNumberFilter;
-                    }
-                    return client.fetchDiscreteCopyNumbersInGeneticProfileUsingPOST({
-                        projection: "DETAILED",
-                        geneticProfileId: geneticProfileIdDiscrete,
-                        discreteCopyNumberFilter: filter,
-                        discreteCopyNumberEventType: "ALL"
-                    })
-                }
-            }));
+        const allData:DiscreteCopyNumberData[][] = await Promise.all(filters.map(filter=>{
+            if (typeof geneticProfileIdDiscrete === "undefined") {
+                return Promise.reject("No genetic profile id given.");
+            } else {
+                return client.fetchDiscreteCopyNumbersInGeneticProfileUsingPOST({
+                    projection: "DETAILED",
+                    geneticProfileId: geneticProfileIdDiscrete,
+                    discreteCopyNumberFilter: filter,
+                    discreteCopyNumberEventType: "ALL"
+                });
+            }
+        }));
         return _.flatten(allData);
     } catch (err) {
         throw err;
