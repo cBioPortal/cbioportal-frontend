@@ -1,8 +1,10 @@
+@import './variables.scss';
 
 /* locks scroll bar on to prevent horizontal jump when content render */
 body {
   overflow-y:scroll;
   background:#f5f5f5 !important;
+  text-align:left;
 }
 
 .btn-default {
@@ -179,46 +181,81 @@ th.reactable-header-sort-asc:after {
   }
 }
 
+header {
+  padding-left:$gutterWidth;
+  padding-right:$gutterWidth;
+}
+
+#mainColumn {
+  padding: $gutterWidth 0;
+}
 
 .fixedWidth {
   #mainColumn {
     flex:1;
-    padding: $gutterWidth;
+    padding-left:0;
+    padding-right:0;
     line-height:26px;
+  }
 
+  .contentWrapper {
+    display:flex;
+    justify-content:space-between;
+    background:#f5f5f5;
+  }
+
+  header {
+    padding-left:0;
+    padding-right:0;
+  }
+
+  &.twoColumn {
+    .contentWidth {
+      padding-right:0;
+    }
   }
 
 }
 
-.contentWrapper {
-  display:flex;
-  justify-content:space-between;
-  min-height:500px;
+.twoColumn #mainColumn {
+  padding-right:$gutterWidth;
+}
 
-  &.fixedWidth {
-    background:#fff;
-  }
+
+.contentWrapper {
+
+  min-height:500px;
 
   h1 {
     font-size:22px;
     margin-top:0;
+    color:#777;
+    padding-left:6px;
+    border-left:2px solid #C0BFC0;
+  }
+
+  h2 {
+    color:#777;
+    font-size:20px;
   }
 
   h3 {
     color:$brand-primary;
-    font-size:19px;
+    font-size:18px;
   }
 
 
   #rightColumn {
-    background:#F1F6FE;
+    background:#e8f1f8;
     padding:$gutterWidth 0;
     font-size:12px;
-    flex:0 0 345px;
+    flex:0 0 325px;
+    border-right:1px solid $borderColor;
+    border-left:1px solid $borderColor;
 
     .rightBarSection {
       h3 {
-        border-bottom:1px solid #cfd9ea;
+        border-bottom:1px solid #ddd;
         margin: 0 0 8px 0;
         padding-bottom:5px;
       }
@@ -242,10 +279,17 @@ th.reactable-header-sort-asc:after {
 
 }
 
-.fixedWidth .contentWidth {
+.fixedWidth .contentWrapper .contentWidth {
   width:1222px;
+}
+
+.fixedWidth .contentWidth {
+  max-width:1222px;
+  min-width:840px;
   margin:0 auto;
   display:flex;
+  padding-left:20px;
+  padding-right:20px;
 
   #mainColumn {
     padding-left:0;
