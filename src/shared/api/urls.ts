@@ -43,6 +43,9 @@ export function getHotspots3DApiUrl() {
 export function getOncoKbApiUrl() {
     return cbioUrl('proxy/oncokb.org/api/v1');
 }
+export function getPdbAnnotationApiUrl() {
+    return 'https://cbioportal.mskcc.org/pdb-annotation';
+}
 export function getTissueImageCheckUrl(filter:string) {
     return cbioUrl('proxy/cancer.digitalslidearchive.net/local_php/get_slide_list_from_db_groupid_not_needed.php', {
         slide_name_filter: filter
