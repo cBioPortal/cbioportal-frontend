@@ -44,18 +44,16 @@ export default class OncoKbTooltip extends React.Component<IOncoKbTooltipProps, 
 
     public get pmidData():ICache<any>
     {
-        let pmidData: ICache<any> = {};
-
         if (this.props.pmidCache && this.evidenceCacheData)
         {
             const refs = extractPmids(this.evidenceCacheData.data);
 
-            if (refs.length > 0) {
-                pmidData = this.props.pmidCache.getData(refs.map((ref:number) => ref.toString()), refs);
+            for (const ref of refs) {
+                this.props.pmidCache.get(ref);
             }
         }
 
-        return pmidData;
+        return (this.props.pmidCache && this.props.pmidCache.cache) || {};
     }
 
     public render()
