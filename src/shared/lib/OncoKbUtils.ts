@@ -107,7 +107,7 @@ export function generateEvidenceQuery(queryVariants:Query[]): EvidenceQueries
     };
 }
 
-export function generateQueryVariant(hugoSymbol:string,
+export function generateQueryVariant(entrezGeneId:number,
                                      tumorType:string,
                                      alteration?:string,
                                      mutationType?:string,
@@ -116,11 +116,11 @@ export function generateQueryVariant(hugoSymbol:string,
                                      alterationType?:string): Query
 {
     return {
-        id: generateQueryVariantId(hugoSymbol, tumorType, alteration, mutationType),
-        hugoSymbol,
+        id: generateQueryVariantId(entrezGeneId, tumorType, alteration, mutationType),
+        hugoSymbol: '',
         tumorType,
         alterationType: alterationType || AlterationTypes[AlterationTypes.Mutation],
-        entrezGeneId: 0,
+        entrezGeneId: entrezGeneId,
         alteration: alteration || "",
         consequence: convertConsequence(mutationType || ""),
         proteinStart: proteinPosStart === undefined ? -1 : proteinPosStart,
@@ -129,12 +129,12 @@ export function generateQueryVariant(hugoSymbol:string,
     };
 }
 
-export function generateQueryVariantId(hugoSymbol:string,
+export function generateQueryVariantId(entrezGeneId:number,
                                        tumorType:string,
                                        alteration?:string,
                                        mutationType?:string): string
 {
-    let id = `${hugoSymbol}_${tumorType}`;
+    let id = `${entrezGeneId}_${tumorType}`;
 
     if (alteration) {
         id = `${id}_${alteration}`;
