@@ -29,6 +29,8 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
         super();
     }
 
+    chartTarget:HTMLElement;
+
     shouldComponentUpdate() {
         return false;
     }
@@ -126,7 +128,7 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
             .sort((a, b) => b.caseCount - a.caseCount)
             .slice(0, 20);
 
-        Highcharts.chart('high-charts-data-sets', {
+        Highcharts.chart(this.chartTarget, {
 
             chart: {type: 'bar', backgroundColor:'' },
 
@@ -193,14 +195,7 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
     }
 
     render() {
-        if (this.props.data) {
-            return <div id='high-charts-data-sets'/>;
-        } else {
-            return (
-                <div>
-                    <ThreeBounce />
-                </div>
-            );
-        }
+        return <div ref={el => this.chartTarget = el} />;
     }
+
 };
