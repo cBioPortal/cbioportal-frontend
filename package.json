@@ -128,7 +128,7 @@
     "react-renderif": "^1.0.2",
     "react-router": "^3.0.2",
     "react-router-redux": "^4.0.7",
-    "react-select": "^1.0.0-rc.3",
+    "react-select": "^1.0.0-rc.4",
     "react-spinkit": "^1.1.0",
     "react-tooltip": "^3.2.2",
     "react-transition-group": "^1.1.3",
