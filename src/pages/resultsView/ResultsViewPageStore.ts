@@ -12,6 +12,7 @@ import {IHotspotData} from "shared/model/CancerHotspots";
 import CancerTypeCache from "shared/cache/CancerTypeCache";
 import MutationCountCache from "shared/cache/MutationCountCache";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
+import PdbHeaderCache from "shared/cache/PdbHeaderCache";
 import {
     indexHotspotData, fetchHotspotsData, mergeMutations, ONCOKB_DEFAULT,
     fetchCosmicData, fetchOncoKbData, findGeneticProfileIdDiscrete, fetchMyCancerGenomeData, fetchMutationData,
@@ -168,6 +169,10 @@ export class ResultsViewPageStore {
 
     @cached get mutationCountCache() {
         return new MutationCountCache(this.mutationGeneticProfileId.result);
+    }
+
+    @cached get pdbHeaderCache() {
+        return new PdbHeaderCache();
     }
 
     @action clearErrors() {

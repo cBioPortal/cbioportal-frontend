@@ -20,6 +20,9 @@
     "updateOncoKbAPI": "npm run fetchOncoKbAPI && npm run buildOncoKbAPI",
     "fetchOncoKbAPI": "curl http://oncokb.org/api/v1/v2/api-docs > src/shared/api/generated/OncoKbAPI-docs.json",
     "buildOncoKbAPI": "node scripts/generate-api.js src/shared/api/generated OncoKbAPI",
+    "updatePdbAnnotationAPI": "npm run fetchPdbAnnotationAPI && npm run buildPdbAnnotationAPI",
+    "fetchPdbAnnotationAPI": "curl https://cbioportal.mskcc.org/pdb-annotation/v2/api-docs?group=pdb_annotation > src/shared/api/generated/PdbAnnotationAPI-docs.json",
+    "buildPdbAnnotationAPI": "node scripts/generate-api.js src/shared/api/generated PdbAnnotationAPI",
     "test": "karma start karma.conf.js",
     "test:watch": "npm run test -- --watch",
     "lint": "tslint 'src/**/*.ts' 'src/**/*.tsx' --exclude 'src/shared/api/generated/**'",
@@ -31,7 +34,7 @@
   "author": "",
   "license": "",
   "dependencies": {
-
+    "3dmol": "^1.1.3",
     "@types/chai": "3.5.2",
     "@types/classnames": "0.0.32",
     "@types/enzyme": "2.8.0",
@@ -122,6 +125,7 @@
     "react-clipboard.js": "^1.0.1",
     "react-collapse": "^2.3.3",
     "react-dom": "^15.4.2",
+    "react-draggable": "^2.2.6",
     "react-file-download": "^0.3.2",
     "react-fontawesome": "^1.5.0",
     "react-height": "^2.2.0",
