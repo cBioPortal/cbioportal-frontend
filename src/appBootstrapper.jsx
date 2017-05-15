@@ -31,9 +31,12 @@ const routingStore = new ExtendedRoutingStore();
 
 //sometimes we need to use memory history where there would be a conflict with
 //existing use of url hashfragment
+
+console.log(window.historyType);
+
 const history = (window.historyType === 'memory') ? createMemoryHistory() : hashHistory;
 
-const syncedHistory = syncHistoryWithStore(hashHistory, routingStore);
+const syncedHistory = syncHistoryWithStore(history, routingStore);
 
 const stores = {
     // Key can be whatever you want
