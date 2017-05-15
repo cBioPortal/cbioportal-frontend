@@ -5,15 +5,18 @@ import {ThreeBounce} from 'better-react-spinkit';
 import {observable, computed} from "mobx";
 import {observer} from "mobx-react";
 import Draggable from 'react-draggable';
+import fileDownload from 'react-file-download';
 import classnames from 'classnames';
 import DefaultTooltip from "shared/components/DefaultTooltip";
+import TextExpander from "shared/components/TextExpander";
 import PdbHeaderCache from "shared/cache/PdbHeaderCache";
 import {IMobXApplicationDataStore} from "shared/lib/IMobXApplicationDataStore";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {generatePdbInfoSummary} from "shared/lib/PdbUtils";
 import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
 import StructureViewer from "./StructureViewer";
-import {ProteinScheme, ProteinColor, SideChain, MutationColor, IResidueSpec} from "./StructureVisualizerWrapper";
+import {ProteinScheme, ProteinColor, SideChain, MutationColor, IResidueSpec} from "./StructureVisualizer";
+import PyMolScriptGenerator from "./PyMolScriptGenerator";
 
 import styles from "./structureViewer.module.scss";
 
@@ -84,7 +87,7 @@ export default class StructureViewerPanel extends React.Component<IStructureView
     public proteinColorTooltipContent()
     {
         return (
-            <div style={{maxWidth: "400px", maxHeight: "200px", overflowY: "auto"}}>
+            <div style={{maxWidth: 400, maxHeight: 200, overflowY: "auto"}}>
                 Color options for the protein structure. <br />
                 <br />
                 <b>Uniform:</b> Colors the entire protein structure with a
@@ -109,7 +112,7 @@ export default class StructureViewerPanel extends React.Component<IStructureView
     public sideChainTooltipContent()
     {
         return (
-            <div style={{maxWidth: "400px", maxHeight: "200px", overflowY: "auto"}}>
+            <div style={{maxWidth: 400, maxHeight: 200, overflowY: "auto"}}>
                 Display options for the side chain atoms. <br />
                 <br />
                 <b>All:</b> Displays the side chain atoms for every mapped residue. <br />
@@ -124,7 +127,7 @@ export default class StructureViewerPanel extends React.Component<IStructureView
     public mutationColorTooltipContent()
     {
         return (
-            <div style={{maxWidth: "400px", maxHeight: "200px", overflowY: "auto"}}>
+            <div style={{maxWidth: 400, maxHeight: 200, overflowY: "auto"}}>
                 Color options for the mapped mutations. <br />
                 <br />
                 <b>Uniform:</b> Colors all mutated residues with a
@@ -155,7 +158,7 @@ export default class StructureViewerPanel extends React.Component<IStructureView
     public boundMoleculesTooltipContent()
     {
         return (
-            <div style={{maxWidth: "400px", maxHeight: "200px", overflowY: "auto"}}>
+            <div style={{maxWidth: 400, maxHeight: 200, overflowY: "auto"}}>
                 Displays co-crystalized molecules.
                 This option has no effect if the current structure does not contain any co-crystalized bound molecules.
             </div>
@@ -165,7 +168,7 @@ export default class StructureViewerPanel extends React.Component<IStructureView
     public helpTooltipContent()
     {
         return (
-            <div style={{maxWidth: "400px", maxHeight: "200px", overflowY: "auto"}}>
+            <div style={{maxWidth: 400, maxHeight: 200, overflowY: "auto"}}>
                 <b>Zoom in/out:</b> Press and hold the SHIFT key and the left mouse button, and then move the mouse backward/forward.<br />
                 <b>Pan:</b> Press and hold the CTRL key, click and hold the left mouse button, and then move the mouse in the desired direction.<br />
                 <b>Rotate:</b> Press and hold the left mouse button, and then move the mouse in the desired direction to rotate along the x and y axes.<br />
@@ -355,7 +358,7 @@ export default class StructureViewerPanel extends React.Component<IStructureView
                         <i
                             className="fa fa-minus-circle"
                             onClick={this.toggleCollapse}
-                            style={{marginRight: "5px", cursor: "pointer"}}
+                            style={{marginRight: 5, cursor: "pointer"}}
                         />
                         <i
                             className="fa fa-times-circle"
@@ -400,21 +403,31 @@ export default class StructureViewerPanel extends React.Component<IStructureView
         return (
             <div className="col col-sm-12">
                 <div className="row">
-                    <span>PDB </span>
-                    <span>
-                        <a
-                            href={`http://www.rcsb.org/pdb/explore/explore.do?structureId=${pdbId}`}
-                            target="_blank"
-                        >
-                            <b>{pdbId}</b>
-                        </a>
-                    </span>
-                    <span>: {pdbInfo}</span>
+                    <div className="pull-left" style={{paddingRight: 5}}>
+                        <span>PDB </span>
+                        <span>
+                            <a
+                                href={`http://www.rcsb.org/pdb/explore/explore.do?structureId=${pdbId}`}
+                                target="_blank"
+                            >
+                                <b>{pdbId}</b>
+                            </a>
+                        </span>
+                        <span>:</span>
+                    </div>
+                    <div>
+                        <TextExpander text={pdbInfo} />
+                    </div>
                 </div>
                 <div className="row">
-                    <span>Chain </span>
-                    <span><b>{chainId}</b></span>
-                    <span>: {moleculeInfo}</span>
+                    <div className="pull-left" style={{paddingRight: 5}}>
+                        <span>Chain </span>
+                        <span><b>{chainId}</b></span>
+                        <span>:</span>
+                    </div>
+                    <div>
+                        <TextExpander text={moleculeInfo} />
+                    </div>
                 </div>
             </div>
         );
@@ -507,7 +520,26 @@ export default class StructureViewerPanel extends React.Component<IStructureView
     }
 
     private handlePyMolDownload() {
-        // TODO generate a PyMol script for the current state of the viewer
+        const filename = `${this.props.pdbId}_${this.props.chainId}.pml`;
+        fileDownload(this.pyMolScript, filename);
+    }
+
+    @computed get pyMolScript()
+    {
+        const scriptGenerator = new PyMolScriptGenerator();
+
+        const visualizerProps = {
+            displayBoundMolecules: this.displayBoundMolecules,
+            proteinScheme: this.proteinScheme,
+            proteinColor: this.proteinColor,
+            sideChain: this.sideChain,
+            mutationColor: this.mutationColor
+        };
+
+        return scriptGenerator.generateScript(this.props.pdbId,
+            this.props.chainId,
+            this.props.residues || [],
+            visualizerProps);
     }
 
     @computed get colorBySecondaryStructureDisabled()
