@@ -98,7 +98,6 @@ export default class DataSetsPageTable extends React.Component <IDataSetsTablePr
             }));
             return (
                 <div>
-                    <h4 className="pull-left">Data Sets</h4>
                     <DataTable
                         data={tableData}
                         columns={
