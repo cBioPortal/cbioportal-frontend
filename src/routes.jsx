@@ -18,6 +18,9 @@ import PatientViewPage from 'bundle?lazy!babel!./pages/patientView/PatientViewPa
 import ResultsViewPage from 'bundle?lazy!babel!./pages/resultsView/ResultsViewPage';
 import HomePage from 'bundle?lazy!babel!./pages/home/HomePage';
 import DatasetPage from 'bundle?lazy!babel!./pages/datasetView/DatasetPage';
+import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
+import RightBar from "./shared/components/rightbar/RightBar";
+
 // accepts bundle-loader's deferred loader function and defers execution of route's render
 // until chunk is loaded
 function lazyLoadComponent(loader) {
@@ -33,6 +36,11 @@ function lazyLoadComponent(loader) {
     };
 };
 
+exposeComponentRenderer('renderRightBar', ()=>{
+    return <RightBar/>
+});
+
+
 var defaultRoute = window.defaultRoute || '/home';
 
 var restoreRoute = inject("routing")(restoreRouteAfterRedirect);
@@ -44,6 +52,7 @@ export const makeRoutes = (routing) => {
         <Route path="/patient" getComponent={lazyLoadComponent(PatientViewPage)}/>
         <Route path="/datasets" getComponent={lazyLoadComponent(DatasetPage)} />
         <Route path="/restore" component={restoreRoute}/>
+        <Route path="/blank" component={<div/>}/>
         <Route path="/query" getComponent={lazyLoadComponent(ResultsViewPage)} />
             <Redirect from="*" to={defaultRoute}/>
         <IndexRedirect to={defaultRoute}/>
