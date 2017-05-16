@@ -96,6 +96,13 @@ export async function fetchUniprotId(swissProtAccession: string)
     return uniprotData.text.split("\n")[1];
 }
 
+export async function fetchPfamGeneData(swissProtAccession: string)
+{
+    const pfamData:Response = await request.get(
+        `http://www.cbioportal.org/proxy/pfam.xfam.org/protein/${swissProtAccession}/graphic`);
+    return JSON.parse(pfamData.text)[0];
+}
+
 export async function fetchClinicalData(studyId:string,
                                         sampleIds:string[],
                                         client:CBioPortalAPI = defaultClient)
