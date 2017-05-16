@@ -1,6 +1,5 @@
 import * as React from 'react';
 import {observer} from "mobx-react";
-import {observable} from "mobx";
 import {Button, ButtonGroup} from 'react-bootstrap';
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import StructureViewerPanel from "shared/components/structureViewer/StructureViewerPanel";
@@ -13,8 +12,9 @@ import {IMyCancerGenomeData} from "shared/model/MyCancerGenome";
 import {MutationMapperStore} from "./MutationMapperStore";
 import ResultsViewMutationTable from "./ResultsViewMutationTable";
 import LollipopMutationPlot from "../../../shared/components/lollipopMutationPlot/LollipopMutationPlot";
-import {computed} from "mobx";
 import ProteinImpactTypePanel from "../../../shared/components/mutationTypePanel/ProteinImpactTypePanel";
+import ProteinChainPanel from "../../../shared/components/proteinChainPanel/ProteinChainPanel";
+import {computed, action, observable} from "mobx";
 
 export interface IMutationMapperProps {
     store: MutationMapperStore;
@@ -37,6 +37,9 @@ const OTHER_COLOR = "#8B00C9";
 export default class MutationMapper extends React.Component<IMutationMapperProps, {}>
 {
     @observable protected is3dPanelOpen = false;
+    @observable lollipopPlotGeneX:number = 0;
+    @observable geneWidth:number = 665;
+
     private handlers:any;
 
     constructor(props: IMutationMapperProps) {
@@ -44,10 +47,12 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
 
         this.open3dPanel = this.open3dPanel.bind(this);
         this.close3dPanel = this.close3dPanel.bind(this);
+        this.toggle3dPanel = this.toggle3dPanel.bind(this);
         this.handlers = {
             resetDataStore:()=>{
                 this.props.store.dataStore.resetFilterAndSelection();
             },
+            onXAxisOffset:action((offset:number)=>{this.lollipopPlotGeneX = offset;})
         };
     }
 
@@ -66,7 +71,7 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                 }
 
                 <ButtonGroup className="pull-right">
-                    <Button className="btn-sm" onClick={this.open3dPanel}>
+                    <Button className="btn-sm" disabled={this.props.store.pdbChainDataStore.allData.length === 0} onClick={this.toggle3dPanel}>
                         3D Structure »
                     </Button>
                 </ButtonGroup>
@@ -76,13 +81,20 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                     (this.props.store.mutationData.isComplete && this.props.store.gene.result) && (
                         <div>
                             <LollipopMutationPlot
-                                dataStore={this.props.store.dataStore}
-                                entrezGeneId={this.props.store.gene.result.entrezGeneId}
-                                hugoGeneSymbol={this.props.store.gene.result.hugoGeneSymbol}
+                                store={this.props.store}
                                 missenseColor={MISSENSE_COLOR}
                                 inframeColor={INFRAME_COLOR}
                                 truncatingColor={TRUNCATING_COLOR}
                                 otherColor={OTHER_COLOR}
+                                onXAxisOffset={this.handlers.onXAxisOffset}
+                                geneWidth={this.geneWidth}
+                            />
+                            <ProteinChainPanel
+                                store={this.props.store}
+                                pdbHeaderCache={this.props.pdbHeaderCache}
+                                geneWidth={this.geneWidth}
+                                geneXOffset={this.lollipopPlotGeneX}
+                                maxChainsHeight={200}
                             />
                             <div style={{marginLeft:"45px", marginTop:"5px", marginBottom:"10px"}}>
                                 <ProteinImpactTypePanel
@@ -126,11 +138,21 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
         );
     }
 
+    private toggle3dPanel() {
+        if (this.is3dPanelOpen) {
+            this.close3dPanel();
+        } else {
+            this.open3dPanel();
+        }
+    }
+
     private open3dPanel() {
         this.is3dPanelOpen = true;
+        this.props.store.pdbChainDataStore.selectFirstChain();
     }
 
     private close3dPanel() {
         this.is3dPanelOpen = false;
+        this.props.store.pdbChainDataStore.selectUid();
     }
 }

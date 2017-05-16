@@ -12,8 +12,8 @@ import LollipopPlotNoTooltip from "./LollipopPlotNoTooltip";
 import {LollipopSpec} from "./LollipopPlotNoTooltip";
 import {DomainSpec} from "./LollipopPlotNoTooltip";
 import ReactDOM from "react-dom";
-import HitZone from "./HitZone";
 import MutationMapperDataStore from "../../../pages/resultsView/mutation/MutationMapperDataStore";
+import HitZone from "../HitZone";
 
 export type LollipopPlotProps = {
     lollipops:LollipopSpec[];
