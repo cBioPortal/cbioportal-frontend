@@ -1,6 +1,5 @@
 import * as React from 'react';
 import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
-import * as styles_any from './styles.scss';
 import {FlexCol, FlexRow} from "../../shared/components/flexbox/FlexBox";
 import {observer} from "mobx-react";
 import DevTools from "mobx-react-devtools";
@@ -10,7 +9,7 @@ import ReactSelect from 'react-select';
 import 'react-select/dist/react-select.css';
 import QueryAndDownloadTabs from "../../shared/components/query/QueryAndDownloadTabs";
 import {QueryStore} from "../../shared/components/query/QueryStore";
-import QueryModal from "./QueryModal";
+import QueryModal from "../../shared/components/query/QueryModal";
 import BarGraph from "shared/components/barGraph/BarGraph";
 import client from '../../shared/api/cbioportalClientInstance';
 import {remoteData} from "../../shared/api/remoteData";
@@ -34,11 +33,6 @@ function getRootElement()
             return node;
     throw new Error("No HTMLElement found");
 }
-
-const styles = styles_any as {
-    HomePage: string,
-    queryModal:string
-};
 
 interface IHomePageProps
 {
@@ -73,7 +67,7 @@ export default class HomePage extends React.Component<IHomePageProps, IHomePageS
 
     getModalWrappedComponent(){
         return (
-            <QueryModal store={this.store} styles={styles} />
+            <QueryModal store={this.store} />
         )
     }
 

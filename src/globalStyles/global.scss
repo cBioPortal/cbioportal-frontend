@@ -263,10 +263,10 @@ th.reactable-header-sort-asc:after {
     .rightBarSection {
       h3 {
         border-bottom:1px solid #ddd;
-        margin: 0 0 8px 0;
-        padding-bottom:5px;
+        margin: 0 0 4px 0;
+        padding-bottom:4px;
       }
-      padding: 0 $gutterWidth $gutterWidth $gutterWidth;
+      padding: 0 $gutterWidth 15px $gutterWidth;
     }
 
     .exampleQueries {
