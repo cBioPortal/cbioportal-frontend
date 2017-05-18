@@ -1,6 +1,6 @@
 import * as React from 'react';
 import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
-import * as styles_any from './styles.module.scss';
+import * as styles_any from './styles.scss';
 import {FlexCol, FlexRow} from "../../shared/components/flexbox/FlexBox";
 import {observer} from "mobx-react";
 import DevTools from "mobx-react-devtools";
@@ -68,7 +68,7 @@ export default class HomePage extends React.Component<IHomePageProps, IHomePageS
         exposeComponentRenderer('renderQuerySelectorInModal', this.getModalWrappedComponent.bind(this));
 
         exposeComponentRenderer('renderQuerySelector', ()=>{ return <QueryAndDownloadTabs store={this.store} />  });
-        
+
 	}
 
     getModalWrappedComponent(){
