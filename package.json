@@ -160,7 +160,7 @@
     "swagger-client": "^2.1.32",
     "swagger-js-codegen": "git+https://github.com/cBioPortal/swagger-js-codegen.git#77031560146c6985c99cd40eda208b04052ab631",
     "ts-loader": "^2.0.0",
-    "typescript": "2.2.1",
+    "typescript": "2.3.2",
     "underscore": "^1.8.3",
     "url": "^0.11.0",
     "url-loader": "^0.5.7",
