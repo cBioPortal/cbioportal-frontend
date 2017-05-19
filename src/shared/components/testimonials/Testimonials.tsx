@@ -100,7 +100,7 @@ export default class Testimonials extends React.Component <{}, {}> {
                 <CSSTransitionGroup transitionName="test-trans" transitionEnterTimeout={2000} transitionLeaveTimeout={2000}>
                     <div className='testimonial-blockquote' key={testimonialIndex}>
                         <p>"{activeTestimonial.quote}"</p>
-                        <cite>&ndash; {activeTestimonial.cite}</cite>
+                        <cite>--{activeTestimonial.cite}</cite>
                     </div>
                 </CSSTransitionGroup>
             </div>

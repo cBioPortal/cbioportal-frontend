@@ -60,6 +60,10 @@
     }
   }
 
+  :global(.sectionLabel) {
+    width:246px;
+  }
+
   label {
     margin-bottom: 0;
     font-weight: normal;
@@ -89,12 +93,40 @@ div.SelectedStudiesWindow {
   }
 }
 
+.CancerStudySelectorHeader {
+  justify-content: space-between;
+  align-items:center;
+  h2 {
+    padding: 0;
+    margin:0;
+    font-size:18px;
+  }
+  padding:0 10px 5px 10px;
+
+  :global(.Select-control) {
+    height: 28px;
+  }
+
+  :global(.Select-input) {
+    height: 28px;
+  }
+
+  :global(.Select-placeholder),
+  :global(.Select--single) > :global(.Select-control .Select-value) {
+    line-height: 28px !important;
+  }
+
+  border-bottom:1px solid #ddd;
+
+
+}
+
 .CancerStudySelector {
   position: relative;
   overflow: hidden;
   user-select: none;
   height: 420px;
-  padding: 10px 0 0 0;
+  padding: 5px 0 0 0;
 
   label {
     display: flex;
@@ -106,28 +138,7 @@ div.SelectedStudiesWindow {
   }
 
   h2 {
-    padding: 0 0 0 10px;
-  }
-
-  .cancerStudySelectorHeader {
-    border-bottom: 1px solid $mediumGrey;
-    height: 50px !important;
-    padding: 10px;
-    display: flex;
-    justify-content: space-between;
-
-    :global(.Select-control) {
-      height: 28px;
-    }
-
-    :global(.Select-input) {
-      height: 38px;
-    }
-
-    :global(.Select-placeholder),
-    :global(.Select--single) > :global(.Select-control .Select-value) {
-      line-height: 28px !important;
-    }
+    padding: 0;
   }
 
   .selectAll {
@@ -138,7 +149,6 @@ div.SelectedStudiesWindow {
 
   .noData,
   .selectedCount {
-    float: right;
     font-size: 12px;
     text-align: right;
     margin: 0 10px;
@@ -260,13 +270,6 @@ div.SelectedStudiesWindow {
 
   .searchTextInput {
     min-width: 220px;
-    height: 28px;
-
-    :global(.Select-control) {
-      :global(.Select-input) {
-        height: 28px;
-      }
-    }
   }
 }
 
@@ -350,6 +353,7 @@ div.SelectedStudiesWindow {
 .GeneSetSelector {
   div:global(.Select) {
     width: 555px;
+    margin-bottom:8px;
   }
 
   .buttonRow {
@@ -365,6 +369,7 @@ div.SelectedStudiesWindow {
         background: linear-gradient(to bottom, #eaeaea 50%, #f3f3f3 100%);
       }
     }
+    margin-bottom:8px;
   }
 
   textarea.geneSet {
@@ -600,6 +605,9 @@ label.transposeDataMatrix {
 }
 
 div.submitRow {
+
+  align-items:center;
+
   button.submit {
     font-weight: 300;
     font-size: 18px;

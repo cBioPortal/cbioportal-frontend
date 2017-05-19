@@ -92,12 +92,6 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
 					</LabeledCheckbox>
 				)}
 
-				{!!(this.store.submitError) && (
-					<span className={styles.errorMessage}>
-						{this.store.submitError}
-					</span>
-				)}
-
 				<FlexRow padded className={styles.submitRow}>
 					<button disabled={!this.store.submitEnabled} className={classNames('cta', styles.submit)} onClick={() => this.handleSubmit()}>
 						Submit
@@ -107,6 +101,13 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
 							Send to GenomeSpace
 						</button>
 					)}
+
+					{!!(this.store.submitError) && (
+						<span className={styles.errorMessage}>
+						{this.store.submitError}
+					</span>
+					)}
+
 				</FlexRow>
 			</FlexCol>
         );
