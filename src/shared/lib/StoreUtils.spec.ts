@@ -1,8 +1,8 @@
-import {fetchCosmicData, fetchOncoKbData} from "./StoreUtils";
+import {fetchCosmicData, fetchOncoKbData, makeStudyToCancerTypeMap} from "./StoreUtils";
 import { assert } from 'chai';
 import sinon from 'sinon';
 import {MobxPromise} from "mobxpromise";
-import {Mutation} from "../api/generated/CBioPortalAPI";
+import {CancerStudy, Mutation} from "../api/generated/CBioPortalAPI";
 
 describe('StoreUtils', () => {
 
@@ -94,6 +94,49 @@ describe('StoreUtils', () => {
                 assert.isTrue(fetchStub.called);
                 done();
             });
+        });
+    });
+
+    describe('makeStudyToCancerTypeMap', ()=>{
+        let studies:CancerStudy[];
+        before(()=>{
+            studies = [];
+            studies.push({
+                studyId: "0",
+                cancerType: {
+                    name: "ZERO"
+                }
+            } as CancerStudy);
+            studies.push({
+                studyId: "1",
+                cancerType: {
+                    name: "ONE"
+                }
+            } as CancerStudy);
+            studies.push({
+                studyId: "2",
+                cancerType: {
+                    name: "TWO"
+                }
+            } as CancerStudy);
+            studies.push({
+                studyId: "3",
+                cancerType: {
+                    name: "three"
+                }
+            } as CancerStudy);
+        });
+
+        it('gives empty map if no studies', ()=>{
+            assert.deepEqual(makeStudyToCancerTypeMap([]), {});
+        });
+        it('handles one study properly', ()=>{
+            assert.deepEqual(makeStudyToCancerTypeMap([studies[0]]), { 0: "ZERO" });
+        });
+        it('handles more than one study properly', ()=>{
+            assert.deepEqual(makeStudyToCancerTypeMap([studies[1], studies[2]]), { 1: "ONE", 2:"TWO" });
+            assert.deepEqual(makeStudyToCancerTypeMap([studies[2], studies[1], studies[3]]), { 1:"ONE", 2:"TWO", 3:"three" });
+            assert.deepEqual(makeStudyToCancerTypeMap(studies), { 0: "ZERO", 1:"ONE", 2:"TWO", 3:"three" });
         });
     });
 
