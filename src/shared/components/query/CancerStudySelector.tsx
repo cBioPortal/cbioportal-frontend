@@ -17,7 +17,7 @@ import {Modal} from 'react-bootstrap';
 const styles = styles_any as {
 	SelectedStudiesWindow: string,
 	CancerStudySelector: string,
-	cancerStudySelectorHeader: string,
+	CancerStudySelectorHeader: string,
 	selectable: string,
 	selected: string,
 	selectedCount: string,
@@ -114,8 +114,13 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 	{
 		return (
 			<FlexCol overflow className={styles.CancerStudySelector}>
-				<SectionHeader promises={[this.store.cancerTypes, this.store.cancerStudies]}>
-					Select Studies:
+				<FlexRow overflow className={styles.CancerStudySelectorHeader}>
+
+					<SectionHeader>
+						Select Studies
+					</SectionHeader>
+
+					<div>
 					{!!(!this.store.cancerTypes.isPending && !this.store.cancerStudies.isPending) && (
 						<Observer>
 							{() => {
@@ -139,9 +144,21 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 							}}
 						</Observer>
 					)}
-				</SectionHeader>
 
-				<FlexRow overflow className={styles.cancerStudySelectorHeader}>
+					{ (!!(!this.store.forDownloadTab) && !!(!this.store.cancerTypes.isPending && !this.store.cancerStudies.isPending)) && (
+						<Observer>
+							{() => {
+								let selectAllChecked = expr(() => this.logic.mainView.getCheckboxProps(this.store.treeData.rootCancerType).checked);
+								return (
+									<a onClick={() => this.logic.mainView.onCheck(this.store.treeData.rootCancerType, !selectAllChecked)}>
+										{selectAllChecked ? "Deselect all" : "Select all"}
+									</a>
+								);
+							}}
+						</Observer>
+					)}
+					</div>
+
 					<Observer>
 						{() => {
 							let searchTextOptions = this.store.searchTextPresets;
@@ -169,19 +186,36 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 							);
 						}}
 					</Observer>
-					{!!(!this.store.forDownloadTab) && (
+
+
+				</FlexRow>
+
+				<SectionHeader style={{display:'none'}} promises={[this.store.cancerTypes, this.store.cancerStudies]}>
+					Select Studies:
+					{!!(!this.store.cancerTypes.isPending && !this.store.cancerStudies.isPending) && (
 						<Observer>
 							{() => {
-								let selectAllChecked = expr(() => this.logic.mainView.getCheckboxProps(this.store.treeData.rootCancerType).checked);
+								let numSelectedStudies = expr(() => this.store.selectedStudyIds.length);
+								let selectedCountClass = classNames({
+									[styles.selectedCount]: true,
+									[styles.selectionsExist]: numSelectedStudies > 0
+								});
 								return (
-									<span className={classNames('cta', styles.selectAll)} onClick={() => this.logic.mainView.onCheck(this.store.treeData.rootCancerType, !selectAllChecked)}>
-										{selectAllChecked ? "Deselect all" : "Select all"}
+									<span
+										className={selectedCountClass}
+										onClick={() => {
+											if (numSelectedStudies)
+												this.store.showSelectedStudiesOnly = !this.store.showSelectedStudiesOnly;
+										}}
+									>
+										<b>{numSelectedStudies}</b> studies selected
+										(<b>{this.store.selectedStudies_totalSampleCount}</b> samples)
 									</span>
 								);
 							}}
 						</Observer>
 					)}
-				</FlexRow>
+				</SectionHeader>
 
 				<FlexRow className={styles.cancerStudySelectorBody}>
 					<div className={styles.cancerTypeListContainer}>

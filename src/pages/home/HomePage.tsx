@@ -73,6 +73,6 @@ export default class HomePage extends React.Component<IHomePageProps, IHomePageS
 
     public render()
     {
-        return (<div style={{width:350}}><RightBar/></div>);
+        return (<QueryAndDownloadTabs store={this.store} />);
     }
 }
