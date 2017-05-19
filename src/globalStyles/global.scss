@@ -80,7 +80,7 @@ th.reactable-header-sort-asc:after {
 .table-border-top .reactable-column-header {
 
   th {
-    border-top:1px dashed #ddd !important;
+
   }
 
 }
@@ -199,7 +199,7 @@ th.reactable-header-sort-asc:after {
   }
 
   .contentWrapper {
-    background:#f5f5f5;
+
   }
 
   header {
@@ -231,6 +231,7 @@ th.reactable-header-sort-asc:after {
 
 .contentWrapper {
 
+  background:#fff;
   min-height:500px;
 
   h1 {
@@ -291,6 +292,7 @@ th.reactable-header-sort-asc:after {
   max-width:1000px;
   padding-left:20px;
   padding-right:20px;
+  margin:0;
 }
 
 .noMargin {
