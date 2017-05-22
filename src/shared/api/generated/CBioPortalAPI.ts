@@ -174,6 +174,8 @@ export type CancerStudy = {
 
         'mrnaMicroarraySampleCount': number
 
+        'mrnaRnaSeqSampleCount': number
+
         'mrnaRnaSeqV2SampleCount': number
 
         'name': string
