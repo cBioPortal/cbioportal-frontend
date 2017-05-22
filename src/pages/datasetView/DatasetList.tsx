@@ -17,6 +17,7 @@ interface IDataTableRow {
     sequenced:number | string;
     cna:number;
     mrnaRnaSeq: number | string;
+    mrnaRnaSeqV2: number | string;
     mrnaMicroarray: number | string;
     miRna: number | string;
     methylation: number | string;
@@ -89,7 +90,8 @@ export default class DataSetsPageTable extends React.Component <IDataSetsTablePr
                 sequenced: study.sequencedSampleCount || "",
                 cna: study.cnaSampleCount,
                 citation: study.citation || "",
-                mrnaRnaSeq: study.mrnaRnaSeqV2SampleCount || "",
+                mrnaRnaSeq: study.mrnaRnaSeqSampleCount || "",
+                mrnaRnaSeqV2: study.mrnaRnaSeqV2SampleCount || "",
                 mrnaMicroarray: study.mrnaMicroarraySampleCount || "",
                 miRna: study.miRnaSampleCount || "",
                 methylation: study.methylationHm27SampleCount || "",
@@ -113,19 +115,37 @@ export default class DataSetsPageTable extends React.Component <IDataSetsTablePr
                                 {name:'Methylation (HM27)', type: 'methylation'},
                                 {name:'RPPA', type: 'rppa'},
                                 {name:'Complete', type: 'complete'},
-                            ].map((column) => (
+                            ].map((column:any) => (
                                 {name: column.name,
-                                 defaultSortDirection:'asc' as 'asc',
-                                 sortBy:(data:IDataTableRow)=>(data[column.type]),
-                                 render: column.render ? column.render : (data:IDataTableRow) => (
-                                     <span style={{textAlign: 'center', width: '100%', display: 'block'}}>{data[column.type]}</span>
-                                 )}
+                                    defaultSortDirection:'asc' as 'asc',
+                                    sortBy:(data:any)=>(data[column.type]),
+                                    render: column.hasOwnProperty('render') ? column.render : (data:any) => {
+                                        const style = {textAlign: 'center', width: '100%', display: 'block'}
+                                        if(column.type === 'mrnaRnaSeq') {
+                                            return (
+                                                <span style={style}>
+                                                 {Number(data.mrnaRnaSeqV2) || Number(data.mrnaRnaSeq)}
+                                            </span>
+                                            );
+                                        } else {
+                                            return <span style={{style}}>{data[column.type]}</span>;
+                                        }
+                                    },
+                                    filter: (data:any, filterString:string, filterStringUpper:string) => {
+                                        if (column.hasOwnProperty('render')) {
+                                            return data[column.type].toUpperCase().indexOf(filterStringUpper) > -1;
+                                        } else {
+                                            return data[column.type].toString().indexOf(filterString) > -1;
+                                        }
+                                    }}
                             ))
                         }
                         initialSortColumn={'Name'}
                         initialSortDirection={'asc'}
                         showPagination={false}
                         showColumnVisibility={false}
+                        showFilter={true}
+                        showCopyDownload={false}
                     />
                 </div>
             );
