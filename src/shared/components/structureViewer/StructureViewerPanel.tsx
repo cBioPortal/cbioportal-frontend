@@ -12,6 +12,7 @@ import TextExpander from "shared/components/TextExpander";
 import PdbHeaderCache from "shared/cache/PdbHeaderCache";
 import {IMobXApplicationDataStore} from "shared/lib/IMobXApplicationDataStore";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
+import {IPdbChain} from "shared/model/Pdb";
 import {generatePdbInfoSummary} from "shared/lib/PdbUtils";
 import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
 import StructureViewer from "./StructureViewer";
@@ -21,10 +22,8 @@ import PyMolScriptGenerator from "./PyMolScriptGenerator";
 import styles from "./structureViewer.module.scss";
 
 export interface IStructureViewerPanelProps {
-    pdbId: string;
-    chainId: string;
-    residues?: IResidueSpec[];
-    dataStore?: IMobXApplicationDataStore<Mutation[]>;
+    pdbChainDataStore: IMobXApplicationDataStore<IPdbChain>
+    mutationDataStore?: IMobXApplicationDataStore<Mutation[]>
     pdbHeaderCache?: PdbHeaderCache;
     onClose?: () => void;
 }
@@ -433,18 +432,15 @@ export default class StructureViewerPanel extends React.Component<IStructureView
         );
     }
 
-    public render() {
-        return (
-            <Draggable
-                handle=".structure-viewer-header"
-            >
-                <div className={classnames(styles["main-3d-panel"], {[styles["collapsed-panel"]]: this.isCollapsed})}>
-                    <div className="structure-viewer-header row">
-                        {this.header()}
-                        <hr style={{borderTopColor: "#BBBBBB"}} />
-                    </div>
+    public mainContent()
+    {
+        if (this.pdbId && this.chainId)
+        {
+            // load pdb info & 3D visualizer
+            return (
+                <span>
                     <div className="row">
-                        {this.pdbInfo(this.props.pdbId, this.props.chainId)}
+                        {this.pdbInfo(this.pdbId, this.chainId)}
                     </div>
                     <If condition={this.residueWarning.length > 0}>
                         <span className="text-danger">
@@ -459,12 +455,42 @@ export default class StructureViewerPanel extends React.Component<IStructureView
                             proteinColor={this.proteinColor}
                             sideChain={this.sideChain}
                             mutationColor={this.mutationColor}
-                            pdbId={this.props.pdbId}
-                            chainId={this.props.chainId}
-                            residues={this.props.residues}
+                            pdbId={this.pdbId}
+                            chainId={this.chainId}
+                            residues={this.residues}
                         />
                         <hr />
                     </div>
+                </span>
+            );
+        }
+        else {
+            // show loader
+            return (
+                <div style={{textAlign: "center"}}>
+                    <ThreeBounce
+                        size={25}
+                        style={{
+                            display: 'inline-block',
+                            padding: 25
+                        }}
+                    />
+                </div>
+            );
+        }
+    }
+
+    public render() {
+        return (
+            <Draggable
+                handle=".structure-viewer-header"
+            >
+                <div className={classnames(styles["main-3d-panel"], {[styles["collapsed-panel"]]: this.isCollapsed})}>
+                    <div className="structure-viewer-header row">
+                        {this.header()}
+                        <hr style={{borderTopColor: "#BBBBBB"}} />
+                    </div>
+                    {this.mainContent()}
                     <div className='row'>
                         {this.topToolbar()}
                         <hr />
@@ -520,8 +546,98 @@ export default class StructureViewerPanel extends React.Component<IStructureView
     }
 
     private handlePyMolDownload() {
-        const filename = `${this.props.pdbId}_${this.props.chainId}.pml`;
-        fileDownload(this.pyMolScript, filename);
+        if (this.pdbId && this.chainId) {
+            const filename = `${this.pdbId}_${this.chainId}.pml`;
+            fileDownload(this.pyMolScript, filename);
+        }
+    }
+
+    @computed get pdbId()
+    {
+        if (this.pdbChain) {
+            return this.pdbChain.pdbId;
+        }
+        else {
+            return undefined;
+        }
+    }
+
+    @computed get chainId()
+    {
+        if (this.pdbChain) {
+            return this.pdbChain.chain;
+        }
+        else {
+            return undefined;
+        }
+    }
+
+    @computed get pdbChain()
+    {
+        let data = this.props.pdbChainDataStore.sortedFilteredSelectedData;
+
+        if (data.length === 0) {
+            data = this.props.pdbChainDataStore.sortedData;
+        }
+
+        if (data.length === 0) {
+            return undefined;
+        }
+        else {
+            return data[0];
+        }
+    }
+
+    @computed get residues()
+    {
+        // TODO this is a static example, actual residues depend on this.props.mutationDataStore
+        return [
+            {
+                positionRange: {
+                    start: {
+                        position: 122
+                    },
+                    end: {
+                        position: 122
+                    }
+                },
+                color: "#FF0000"
+            },
+            {
+                positionRange: {
+                    start: {
+                        position: 1710
+                    },
+                    end: {
+                        position: 1710
+                    }
+                },
+                color: "#FF0000"
+            },
+            {
+                positionRange: {
+                    start: {
+                        position: 1835
+                    },
+                    end: {
+                        position: 1835
+                    }
+                },
+                color: "#00FFFF"
+            },
+            {
+                positionRange: {
+                    start: {
+                        position: 1815
+                    },
+                    end: {
+                        position: 1815
+                    }
+                },
+                color: "#00FF00",
+                highlighted: true
+            }
+        ];
     }
 
     @computed get pyMolScript()
@@ -536,10 +652,16 @@ export default class StructureViewerPanel extends React.Component<IStructureView
             mutationColor: this.mutationColor
         };
 
-        return scriptGenerator.generateScript(this.props.pdbId,
-            this.props.chainId,
-            this.props.residues || [],
-            visualizerProps);
+        if (this.pdbId && this.chainId)
+        {
+            return scriptGenerator.generateScript(this.pdbId,
+                this.chainId,
+                this.residues || [],
+                visualizerProps);
+        }
+        else {
+            return "";
+        }
     }
 
     @computed get colorBySecondaryStructureDisabled()
