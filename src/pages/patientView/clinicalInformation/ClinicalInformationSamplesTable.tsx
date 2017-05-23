@@ -28,9 +28,11 @@ export default class ClinicalInformationSamplesTable extends React.Component<ICl
         const columns = [{id: 'attribute'}, ...sampleInvertedData.columns].map((col) =>  (
             {
                 name: col.id,
-                render: (data:ISampleRow)=><span>{data[col.id]}</span>
+                render: (data:ISampleRow)=><span>{data[col.id]}</span>,
+                filter: (data:ISampleRow, filterString:string, filterStringUpper:string) =>
+                    (data[col.id].toString().toUpperCase().indexOf(filterStringUpper) > -1)
             }
-        ));
+        ))
         return <SampleTableComponent columns={columns} data={tableData} className={styles.sampleTable} showPagination={false} showColumnVisibility={false}/>;
     }
 
