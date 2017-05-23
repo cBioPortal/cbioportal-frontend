@@ -4,6 +4,7 @@ import DefaultTooltip from "shared/components/DefaultTooltip";
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {Mutation} from "../../../../shared/api/generated/CBioPortalAPI";
 import SampleManager from "../../sampleManager";
+import {isUncalled} from '../../../../shared/lib/mutationUtils';
 
 export default class AlleleFreqColumnFormatter {
     static barWidth = 6;
@@ -11,14 +12,27 @@ export default class AlleleFreqColumnFormatter {
     static maxBarHeight = 12;
     static indexToBarLeft = (n:number) => n*(AlleleFreqColumnFormatter.barWidth + AlleleFreqColumnFormatter.barSpacing);
 
-    public static renderFunction(mutations:Mutation[], sampleManager:SampleManager|null) {
-        if (!sampleManager) {
-            return (<span></span>);
-        }
+    public static getComponentForSampleArgs<T extends {tumorAltCount:number,geneticProfileId:string}>(mutation:T) {
+        const altReads = mutation.tumorAltCount;
 
-        const sampleOrder = sampleManager.getSampleIdsInOrder();
-        const barX = sampleOrder.reduce((map:{[s:string]:number}, sampleId:string, i:number) => {map[sampleId] = AlleleFreqColumnFormatter.indexToBarLeft(i); return map;}, {});
-        const sampleElements = mutations.map(function(mutation:Mutation) {
+        let opacity: number = 1;
+        let extraTooltipText: string = '';
+        if (isUncalled(mutation.geneticProfileId)) {
+            if (altReads > 0) {
+                opacity = 0.1;
+                extraTooltipText = "Mutation has supporting reads, but wasn't called";
+            } else {
+                opacity = 0;
+                extraTooltipText = "Mutation has 0 supporting reads and wasn't called";
+            }
+        }
+        return {
+           opacity,
+           extraTooltipText
+        };
+    }
+
+    public static convertMutationToSampleElement<T extends {sampleId:string, tumorRefCount:number, tumorAltCount:number, geneticProfileId:string}>(mutation:T, color:string, barX:number, sampleComponent:any) {
             const altReads = mutation.tumorAltCount;
             const refReads = mutation.tumorRefCount;
             if ((altReads < 0) || (refReads < 0)) {
@@ -29,18 +43,33 @@ export default class AlleleFreqColumnFormatter {
             const barY = AlleleFreqColumnFormatter.maxBarHeight - barHeight;
 
 
-            const bar = (<rect x={barX[mutation.sampleId]} y={barY} width={AlleleFreqColumnFormatter.barWidth} height={barHeight} fill={sampleManager.getColorForSample(mutation.sampleId)}/>);
+            const bar = (<rect x={barX} y={barY} width={AlleleFreqColumnFormatter.barWidth} height={barHeight} fill={color}/>);
 
-            const circleRadius = 6;
-            const sampleId = mutation.sampleId;
-            const component = sampleManager.getComponentForSample(sampleId);
+            const variantReadText:string = `${isUncalled(mutation.geneticProfileId)? "(uncalled) " : ""}(${altReads} variant reads out of ${altReads+refReads} total)`;
 
             const text = (<span>
-                    <strong>{Math.round(100*freq)/100}</strong> {`(${altReads} variant reads out of ${altReads+refReads} total)`}
+                    <strong>{Math.round(100*freq)/100}</strong> {variantReadText}
                 </span>);
             return {
-                sampleId, bar, component, text, freq
+                sampleId:mutation.sampleId, bar, sampleComponent, text, freq
             };
+    }
+
+    public static renderFunction(mutations:Mutation[], sampleManager:SampleManager|null) {
+        if (!sampleManager) {
+            return (<span></span>);
+        }
+
+        const sampleOrder = sampleManager.getSampleIdsInOrder();
+        const barX = sampleOrder.reduce((map:{[s:string]:number}, sampleId:string, i:number) => {map[sampleId] = AlleleFreqColumnFormatter.indexToBarLeft(i); return map;}, {});
+        const sampleElements = mutations.map((m:Mutation) => {
+            const args = AlleleFreqColumnFormatter.getComponentForSampleArgs(m);
+            return AlleleFreqColumnFormatter.convertMutationToSampleElement(
+                m,
+                sampleManager.getColorForSample(m.sampleId),
+                barX[m.sampleId],
+                sampleManager.getComponentForSample(m.sampleId, args.opacity, args.extraTooltipText)
+            );
         });
         const sampleToElements = sampleElements.reduce((map:{[s:string]:any}, elements:any) => {if (elements) { map[elements.sampleId] = elements } return map; }, {});
         const elementsInSampleOrder = sampleOrder.map((sampleId:string) => sampleToElements[sampleId]).filter((x:any) => !!x);
