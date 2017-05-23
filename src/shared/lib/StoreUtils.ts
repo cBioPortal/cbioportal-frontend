@@ -1,4 +1,6 @@
 import * as _ from 'lodash';
+import request from "superagent";
+import Response = request.Response;
 import {
     default as CBioPortalAPI, GeneticProfile, Mutation, MutationFilter, DiscreteCopyNumberData,
     DiscreteCopyNumberFilter, ClinicalData, Sample, CancerStudy, CopyNumberCountIdentifier
@@ -7,6 +9,8 @@ import defaultClient from "shared/api/cbioportalClientInstance";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import hotspot3DClient from 'shared/api/3DhotspotClientInstance';
 import hotspotClient from 'shared/api/hotspotClientInstance';
+import pdbAnnotationClient from "shared/api/pdbAnnotationClientInstance";
+import {PdbUniprotAlignment, default as PdbAnnotationAPI} from "shared/api/generated/PdbAnnotationAPI";
 import {
     CosmicMutation, default as CBioPortalAPIInternal,
     GisticToGene, Gistic, MutSig
@@ -19,6 +23,7 @@ import {Query, default as OncoKbAPI} from "shared/api/generated/OncoKbAPI";
 import {getAlterationString} from "shared/lib/CopyNumberUtils";
 import {MobxPromise} from "mobxpromise";
 import {keywordToCosmic, indexHotspots, geneToMyCancerGenome} from "shared/lib/AnnotationUtils";
+import {processPdbAlignmentData} from "shared/lib/PdbUtils";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {IGisticData} from "shared/model/Gistic";
 import {IMutSigData} from "shared/model/MutSig";
@@ -62,6 +67,33 @@ export async function fetchMutationData(mutationFilter:MutationFilter,
     } else {
         return [];
     }
+}
+
+export async function fetchPdbAlignmentData(uniprotId: string,
+                                            client:PdbAnnotationAPI = pdbAnnotationClient)
+{
+    if (uniprotId) {
+        return await client.postPdbAlignmentByUniprot({
+            uniprotIds: [uniprotId]
+        });
+    } else {
+        return [];
+    }
+}
+
+export async function fetchSwissProtAccession(entrezGeneId: number)
+{
+    // TODO duplicate: see LollipopMutationPlot
+    const myGeneData:Response = await request.get(`http://mygene.info/v3/gene/${entrezGeneId}?fields=uniprot`);
+    return JSON.parse(myGeneData.text).uniprot["Swiss-Prot"];
+}
+
+export async function fetchUniprotId(swissProtAccession: string)
+{
+    const uniprotData:Response = await request.get(
+        `http://www.uniprot.org/uniprot/?query=accession:${swissProtAccession}&format=tab&columns=entry+name`);
+
+    return uniprotData.text.split("\n")[1];
 }
 
 export async function fetchClinicalData(studyId:string,
@@ -488,6 +520,11 @@ export function mergeMutations(mutationData:MobxPromise<Mutation[]>,
     updateIdToMutationsMap(idToMutations, mutationData, generateMutationId, false);
 
     return Object.keys(idToMutations).map((id:string) => idToMutations[id]);
+}
+
+export function mergePdbAlignments(alignmentData: MobxPromise<PdbUniprotAlignment[]>)
+{
+    return processPdbAlignmentData(alignmentData.result || []);
 }
 
 export function mergeMutationsIncludingUncalled(mutationData:MobxPromise<Mutation[]>,

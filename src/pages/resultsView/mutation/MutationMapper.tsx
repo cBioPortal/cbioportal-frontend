@@ -58,60 +58,11 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
             <div>
                 {
                     (this.is3dPanelOpen) && (
-                        // TODO this is a static instance for temporary testing purposes only.
-                        // pdbId, chainId and residues should not be static...
                         <StructureViewerPanel
-                            pdbId="3pxe"
-                            chainId="B"
+                            mutationDataStore={this.props.store.dataStore}
+                            pdbChainDataStore={this.props.store.pdbChainDataStore}
                             pdbHeaderCache={this.props.pdbHeaderCache}
                             onClose={this.close3dPanel}
-                            residues={[
-                                {
-                                    positionRange: {
-                                        start: {
-                                            position: 122
-                                        },
-                                        end: {
-                                            position: 122
-                                        }
-                                    },
-                                    color: "#FF0000"
-                                },
-                                {
-                                    positionRange: {
-                                        start: {
-                                            position: 1710
-                                        },
-                                        end: {
-                                            position: 1710
-                                        }
-                                    },
-                                    color: "#FF0000"
-                                },
-                                {
-                                    positionRange: {
-                                        start: {
-                                            position: 1835
-                                        },
-                                        end: {
-                                            position: 1835
-                                        }
-                                    },
-                                    color: "#00FFFF"
-                                },
-                                {
-                                    positionRange: {
-                                        start: {
-                                            position: 1815
-                                        },
-                                        end: {
-                                            position: 1815
-                                        }
-                                    },
-                                    color: "#00FF00",
-                                    highlighted: true
-                                }
-                            ]}
                         />
                     )
                 }
