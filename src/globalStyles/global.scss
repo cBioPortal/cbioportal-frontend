@@ -235,21 +235,21 @@ th.reactable-header-sort-asc:after {
   min-height:500px;
 
   h1 {
-    font-size:22px;
+    font-size:24px;
     margin-top:0;
-    color:#777;
+    color:$headerColor;
     padding-left:6px;
     border-left:2px solid #C0BFC0;
   }
 
   h2 {
-    color:#777;
+    color:$headerColor;
     font-size:20px;
   }
 
   h3 {
-    color:$brand-primary;
-    font-size:18px;
+    color:$headerColor;
+    font-size:16px;
   }
 
 
@@ -267,7 +267,7 @@ th.reactable-header-sort-asc:after {
         margin: 0 0 4px 0;
         padding-bottom:4px;
       }
-      padding: 0 $gutterWidth 15px $gutterWidth;
+      padding: 0 $gutterWidth 10px $gutterWidth;
     }
 
     .exampleQueries {
@@ -319,3 +319,13 @@ th.reactable-header-sort-asc:after {
     padding-left:0;
   }
 }
+
+.alert {
+  border-color:#ddd;
+  color:inherit;
+}
+
+.alert-info {
+  background:#e8f1f8;
+}
+
