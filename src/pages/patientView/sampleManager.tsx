@@ -132,13 +132,13 @@ class SampleManager {
         this.sampleOrder = _.sortBy(Object.keys(this.sampleIndex), (k) => this.sampleIndex[k]);
     }
 
-    getComponentForSample(sampleId: string, fillOpacity: number = 1) {
+    getComponentForSample(sampleId: string, fillOpacity: number = 1, extraText: string = '') {
 
         let sample = _.find(this.samples, (s: ClinicalDataBySampleId)=> {
             return s.id === sampleId;
         });
 
-        return sample && this.getOverlayTriggerSample(sample, this.sampleIndex[sample.id], this.sampleColors[sample.id], fillOpacity=fillOpacity);
+        return sample && this.getOverlayTriggerSample(sample, this.sampleIndex[sample.id], this.sampleColors[sample.id], fillOpacity=fillOpacity, extraText=extraText);
 
     }
 
@@ -154,36 +154,47 @@ class SampleManager {
         this.samples.map((sample)=>this.getComponentForSample(sample.id));
     }
 
-    getOverlayTriggerSample(sample: ClinicalDataBySampleId, sampleIndex: number, sampleColor: string, fillOpacity: number = 1) {
+    getOverlayTriggerSample(sample: ClinicalDataBySampleId, sampleIndex: number, sampleColor: string, fillOpacity: number = 1, extraText: string = '') {
 
         const sampleNumberText: number = sampleIndex+1;
 
         return (<DefaultTooltip
             placement='bottomLeft'
             trigger={['hover', 'focus']}
-            overlay={this.getPopoverSample(sample, sampleNumberText)}
+            overlay={this.getPopoverSample(sample, sampleNumberText, sampleColor, fillOpacity, extraText)}
             arrowContent={<div className="rc-tooltip-arrow-inner" />}
             destroyTooltipOnHide={false}
             onPopupAlign={placeArrow}
             >
                 <svg height="12" width="12">
                 <SampleInline
-                             sample={sample}
-                             sampleNumber={sampleNumberText}
-                             sampleColor={sampleColor}
-                             fillOpacity={fillOpacity}
-                         >
-                </SampleInline>
+                    sample={sample}
+                    sampleNumber={sampleNumberText}
+                    sampleColor={sampleColor}
+                    fillOpacity={fillOpacity}
+                />
                 </svg>
 
         </DefaultTooltip>);
 
     }
 
-    getPopoverSample(sample: ClinicalDataBySampleId, sampleNumber: number) {
+    getPopoverSample(sample: ClinicalDataBySampleId, sampleNumber: number, sampleColor:string, fillOpacity: number, extraText: string) {
+
         return (
             <div style={{ maxHeight:400, overflow:'auto' }}>
-                <h5>{ sample.id }</h5>
+                <h5 style={{ marginBottom: 1 }}>
+                    <svg height="12" width="12" style={{ marginRight: 5}}>
+                        <SampleInline
+                            sample={sample}
+                            sampleNumber={sampleNumber}
+                            sampleColor={sampleColor}
+                            fillOpacity={fillOpacity}
+                        />
+                    </svg>
+                    { sample.id }
+                </h5>
+                <span style={{ marginBottom: 4}}>{ extraText }</span>
                 <ClinicalInformationPatientTable showTitleBar={false} data={sample.clinicalData} />
             </div>
         );
