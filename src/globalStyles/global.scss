@@ -132,8 +132,6 @@ th.reactable-header-sort-asc:after {
 
   }
 
-  background:#f5f5f5;
-
 }
 
 .urlError {
@@ -234,27 +232,33 @@ th.reactable-header-sort-asc:after {
   background:#fff;
   min-height:500px;
 
+  //header styles
+  h1, h2, h3, h4 {
+    margin-top:30;
+    margin-bottom:20px;
+    color:$headerColor;
+    &:first-child {
+      margin-top:0;
+    }
+  }
+
   h1 {
     font-size:24px;
-    margin-top:0;
-    color:$headerColor;
     padding-left:6px;
     border-left:2px solid #C0BFC0;
   }
 
   h2 {
-    color:$headerColor;
     font-size:20px;
   }
 
   h3 {
-    color:$headerColor;
     font-size:16px;
   }
 
 
   #rightColumn {
-    background:#e8f1f8;
+    background:$lightBlue;
     padding:$gutterWidth 0;
     font-size:12px;
     flex:0 0 325px;
@@ -266,6 +270,7 @@ th.reactable-header-sort-asc:after {
         border-bottom:1px solid #ddd;
         margin: 0 0 4px 0;
         padding-bottom:4px;
+        color:$brand-primary;
       }
       padding: 0 $gutterWidth 10px $gutterWidth;
     }
@@ -288,8 +293,7 @@ th.reactable-header-sort-asc:after {
 }
 
 .fixedWidth .contentWidth {
-  width:1000px;
-  max-width:1000px;
+  width:1200px;
   padding-left:20px;
   padding-right:20px;
   margin:0;
@@ -326,7 +330,7 @@ th.reactable-header-sort-asc:after {
 }
 
 .alert-info {
-  background:#e8f1f8;
+  background:$lightBlue;
 }
 
 .framedImage {
