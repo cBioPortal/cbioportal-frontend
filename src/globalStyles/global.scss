@@ -329,3 +329,28 @@ th.reactable-header-sort-asc:after {
   background:#e8f1f8;
 }
 
+.framedImage {
+  margin:20px 0;
+  border:1px solid #eee !important;
+  border-radius:5px;
+  padding:10px;
+  display:block;
+  box-shadow: 5px 5px 5px 0px rgba(0,0,0,0.21);
+}
+
+.newsPage {
+  #mainColumn li img {
+    @extend .framedImage;
+  }
+  li {
+    margin-bottom:5px;
+  }
+  li ul {
+    margin-top:5px;
+  }
+
+}
+
+
+
+
