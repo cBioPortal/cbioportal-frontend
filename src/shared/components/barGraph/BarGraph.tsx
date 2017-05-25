@@ -170,7 +170,7 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
                     cursor: 'pointer',
                     events: {
                         click: function() {
-                            location.href= 'http://www.cbioportal.org/study?id=' + this.options.studyId, + '#summary';
+                            location.href= 'study?id=' + this.options.studyId, + '#summary';
                         }
                     }
                 }
