@@ -14,6 +14,12 @@ import { getHost } from './shared/api/urls';
 
 import 'script-loader!raven-js/dist/raven.js';
 
+// explose jquery globally if it doesn't exist
+// if (!window.hasOwnProperty("jQuery")) {
+//     window.$ = $;
+//     window.jQuery = $;
+// }
+
 if (/cbioportal\.mskcc\.org|www.cbioportal\.org/.test(window.location.hostname) || window.localStorage.getItem('sentry') === 'true') {
     Raven.config('https://c93645c81c964dd284436dffd1c89551@sentry.io/164574', {
         tags:{
@@ -33,7 +39,7 @@ const routingStore = new ExtendedRoutingStore();
 //existing use of url hashfragment
 const history = (window.historyType === 'memory') ? createMemoryHistory() : hashHistory;
 
-const syncedHistory = syncHistoryWithStore(hashHistory, routingStore);
+const syncedHistory = syncHistoryWithStore(history, routingStore);
 
 const stores = {
     // Key can be whatever you want
