@@ -41,7 +41,17 @@ export function getHotspots3DApiUrl() {
     return cbioUrl('proxy/3dhotspots.org/3d');
 }
 export function getOncoKbApiUrl() {
-    return cbioUrl('proxy/oncokb.org/api/v1');
+    let url = (window as any).oncoKBApiUrl;
+
+    if (typeof url === 'string') {
+        // we need to support legacy configuration values
+        url = url.replace(/^http[s]?:\/\//,''); // get rid of protocol
+        url = url.replace(/\/$/,""); // get rid of trailing slashes
+        return cbioUrl(`proxy/${url}`)
+    } else {
+        return undefined;
+    }
+
 }
 export function getTissueImageCheckUrl(filter:string) {
     return cbioUrl('proxy/cancer.digitalslidearchive.net/local_php/get_slide_list_from_db_groupid_not_needed.php', {
