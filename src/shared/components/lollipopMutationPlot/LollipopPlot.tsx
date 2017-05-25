@@ -13,6 +13,7 @@ import {LollipopSpec} from "./LollipopPlotNoTooltip";
 import {DomainSpec} from "./LollipopPlotNoTooltip";
 import ReactDOM from "react-dom";
 import HitZone from "./HitZone";
+import MutationMapperDataStore from "../../../pages/resultsView/mutation/MutationMapperDataStore";
 
 export type LollipopPlotProps = {
     lollipops:LollipopSpec[];
@@ -21,7 +22,7 @@ export type LollipopPlotProps = {
     vizHeight:number;
     xMax:number;
     yMax?:number;
-    onSelectionChange?:(selectedPositions:{ [pos:number]:boolean} )=>void;
+    dataStore:MutationMapperDataStore;
     onXAxisOffset?:(offset:number)=>void;
 };
 
