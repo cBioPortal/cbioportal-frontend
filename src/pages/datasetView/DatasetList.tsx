@@ -53,9 +53,6 @@ class CancerStudyCell extends React.Component<ICancerStudyCellProps,{}> {
                     target='_blank'
                 >
                     {this.props.name}
-                </a>&nbsp;
-                <a href={`https://github.com/cBioPortal/datahub/blob/master/public/${this.props.studyId}.tar.gz`} download>
-                    <i className='fa fa-download' style={{float:"right"}}/>
                 </a>
             </span>
         );
@@ -105,22 +102,32 @@ export default class DataSetsPageTable extends React.Component <IDataSetsTablePr
                         columns={
                             [
                                 {name:'Name', type: 'name', render:(data:IDataTableRow)=> <CancerStudyCell studyId={data.studyId} name={data.name}/>},
+                                {name:'', sortable:false, type:'download', render:(data:IDataTableRow)=>{
+                                    return (
+                                        <a style={{width:50, display:'block' }} href={`https://github.com/cBioPortal/datahub/blob/master/public/${data.studyId}.tar.gz`} download>
+                                            <i className='fa fa-download'/>
+                                        </a>
+
+                                    )
+                                }},
                                 {name:'Reference', type: 'citation', render:(data:IDataTableRow)=><ReferenceCell pmid={data.pmid} citation={data.citation}/>},
                                 {name:'All', type: 'all'},
                                 {name:'Sequenced', type: 'sequenced'},
                                 {name:'CNA', type: 'cna'},
                                 {name:'Tumor mRNA (RNA-Seq)', type: 'mrnaRnaSeq'},
-                                {name:'Tumor mRNA (microarray)', type: 'mrnaMicroarray'},
-                                {name:'Tumor miRNA', type: 'miRna'},
-                                {name:'Methylation (HM27)', type: 'methylation'},
-                                {name:'RPPA', type: 'rppa'},
-                                {name:'Complete', type: 'complete'},
+                                {name:'Tumor mRNA (microarray)', type: 'mrnaMicroarray', visible:true},
+                                {name:'Tumor miRNA', type: 'miRna', visible:false },
+                                {name:'Methylation (HM27)', type: 'methylation', visible:false },
+                                {name:'RPPA', type: 'rppa', visible:false },
+                                {name:'Complete', type: 'complete' },
                             ].map((column:any) => (
-                                {name: column.name,
+                                {
+                                    visible:(column.visible === false) ? false : true,
+                                    name: column.name,
                                     defaultSortDirection:'asc' as 'asc',
                                     sortBy:(data:any)=>(data[column.type]),
                                     render: column.hasOwnProperty('render') ? column.render : (data:any) => {
-                                        const style = {textAlign: 'center', width: '100%', display: 'block'}
+                                        const style = {};// {textAlign: 'center', width: '100%', display: 'block'}
                                         if(column.type === 'mrnaRnaSeq') {
                                             return (
                                                 <span style={style}>
@@ -143,7 +150,7 @@ export default class DataSetsPageTable extends React.Component <IDataSetsTablePr
                         initialSortColumn={'Name'}
                         initialSortDirection={'asc'}
                         showPagination={false}
-                        showColumnVisibility={false}
+                        showColumnVisibility={true}
                         showFilter={true}
                         showCopyDownload={false}
                     />
