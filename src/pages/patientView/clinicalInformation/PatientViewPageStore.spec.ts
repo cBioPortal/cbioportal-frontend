@@ -6,8 +6,8 @@ import { handlePathologyReportCheckResponse, PatientViewPageStore } from './Pati
 // import React from 'react';
 import { assert } from 'chai';
 // import { shallow, mount } from 'enzyme';
-// import sinon from 'sinon';
-// import AppConfig from 'appConfig';
+import sinon from 'sinon';
+// //import AppConfig from 'appConfig';
 // import request from 'superagent';
 
 describe('PatientViewPageStore', () => {
