@@ -15,6 +15,7 @@ import {
     ONCOKB_DEFAULT, fetchPdbAlignmentData, mergePdbAlignments, fetchSwissProtAccession, fetchUniprotId
 } from "shared/lib/StoreUtils";
 import {IMobXApplicationDataStore, SimpleMobXApplicationDataStore} from "../../../shared/lib/IMobXApplicationDataStore";
+import MutationMapperDataStore from "./MutationMapperDataStore";
 
 export class MutationMapperStore {
 
@@ -174,8 +175,8 @@ export class MutationMapperStore {
         return generateSampleIdToTumorTypeMap(this.clinicalDataForSamples);
     }
 
-    @cached get dataStore():IMobXApplicationDataStore<Mutation[]> {
-        return new SimpleMobXApplicationDataStore<Mutation[]>(this.processedMutationData);
+    @cached get dataStore():MutationMapperDataStore {
+        return new MutationMapperDataStore(this.processedMutationData);
     }
 
     @cached get pdbChainDataStore(): IMobXApplicationDataStore<IPdbChain> {
