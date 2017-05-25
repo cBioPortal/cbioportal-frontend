@@ -24,6 +24,7 @@ export default class Container extends React.Component<IContainerProps, void> {
             ReactDOM.render(<PageHeader router={this.context.router} currentRoutePath={ this.props.location.pathname } />,
                 headerNode);
         }
+
     }
     renderChildren() {
         const childProps = {...this.props};

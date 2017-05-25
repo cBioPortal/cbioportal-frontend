@@ -56,17 +56,21 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 			return null;
 
 		return (
-			<FlexCol padded overflow className={styles.CaseSetSelector}>
-				<SectionHeader promises={[this.store.sampleLists, this.store.asyncCustomCaseSet]}>
+			<FlexRow padded overflow className={styles.CaseSetSelector}>
+				<div>
+				<SectionHeader className="sectionLabel"
+							   secondaryComponent={<a href={getStudyViewUrl(this.store.singleSelectedStudyId)}>To build your own case set, try out our enhanced Study View.</a>}
+							   promises={[this.store.sampleLists, this.store.asyncCustomCaseSet]}>
 					Select Patient/Case Set:
 				</SectionHeader>
+				</div>
+				<div>
 				<ReactSelect
 					value={this.store.selectedSampleListId}
 					options={this.caseSetOptions}
 					clearable={this.store.selectedSampleListId != this.store.defaultSelectedSampleListId}
 					onChange={option => this.store.selectedSampleListId = option ? option.value : undefined}
 				/>
-				<a href={getStudyViewUrl(this.store.singleSelectedStudyId)}>To build your own case set, try out our enhanced Study View.</a>
 
 				{!!(this.store.selectedSampleListId === CUSTOM_CASE_LIST_ID) && (
 					<FlexCol padded>
@@ -86,7 +90,8 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 						</div>
 					</FlexCol>
 				)}
-			</FlexCol>
+				</div>
+			</FlexRow>
 		);
 	}
 
