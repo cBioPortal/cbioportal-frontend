@@ -439,7 +439,7 @@ export function generateSampleIdToTumorTypeMap(clinicalDataForSamples: MobxPromi
 
     if (clinicalDataForSamples.result) {
         _.each(clinicalDataForSamples.result, (clinicalData:ClinicalData) => {
-            if (clinicalData.clinicalAttributeId === "CANCER_TYPE") {
+            if (clinicalData.clinicalAttributeId === "CANCER_TYPE_DETAILED") {
                 map[clinicalData.entityId] = clinicalData.value;
             }
         });
