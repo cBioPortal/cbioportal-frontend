@@ -17,7 +17,7 @@ export default class DataTypePrioritySelector extends QueryStoreComponent<{}, {}
 {
 	render()
 	{
-		if (this.store.singleSelectedStudyId)
+		if (!this.store.isVirtualCohortQuery)
 			return null;
 
 		return (

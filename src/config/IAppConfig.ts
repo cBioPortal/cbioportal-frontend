@@ -26,3 +26,11 @@ export interface IAppConfig {
 export type PriorityStudies = {
     [category:string]: string[]
 };
+
+export type VirtualCohort = {
+    id:string,
+    name:string,
+    description:string,
+    samples:{sampleId:string, studyId:string}[],
+    constituentStudyIds:string[]
+};
