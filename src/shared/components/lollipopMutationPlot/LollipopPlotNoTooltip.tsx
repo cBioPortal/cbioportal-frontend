@@ -5,7 +5,7 @@ import Domain from "./Domain";
 import SVGAxis from "../SVGAxis";
 import {Tick} from "../SVGAxis";
 import {observer} from "mobx-react";
-import {observable, asMap, ObservableMap, computed} from "mobx";
+import {observable, asMap, ObservableMap, computed, action} from "mobx";
 import $ from "jquery";
 import {LollipopPlotProps} from "./LollipopPlot";
 import {SyntheticEvent} from "react";
@@ -48,8 +48,6 @@ const DOMAIN_ID_CLASS_PREFIX = "domain-";
 @observer
 export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotNoTooltipProps, {}> {
 
-    @observable private selectedPositions:ObservableMap<boolean> = observable.map<boolean>();
-
     private lollipopComponents:{[lollipopIndex:string]:Lollipop};
     private domainComponents:{[domainIndex:string]:Domain};
 
@@ -65,13 +63,12 @@ export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotN
     private geneHeight = 14;
     private domainHeight = 24;
 
-    constructor() {
-        super();
+    constructor(props:LollipopPlotNoTooltipProps) {
+        super(props);
         this.handlers = {
             ref: (svg:SVGElement)=>{this.svg = svg;},
             onBackgroundClick:()=>{
-                this.selectedPositions.clear();
-                this.props.onSelectionChange && this.props.onSelectionChange(this.selectedPositions.toJS());
+                this.props.dataStore.clearSelectedPositions();
             },
             onBackgroundMouseMove:()=>{
                 this.props.onBackgroundMouseMove && this.props.onBackgroundMouseMove();
@@ -79,12 +76,11 @@ export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotN
                 this.unhoverAllLollipops();
             },
             onLollipopClick:(codon:number)=>{
-                const prevSelection = this.selectedPositions.get(codon+"");
+                const isSelected = this.props.dataStore.isPositionSelected(codon);
                 if (!this.shiftPressed) {
-                    this.selectedPositions.clear();
+                    this.props.dataStore.clearSelectedPositions();
                 }
-                this.selectedPositions.set(codon+"", !prevSelection);
-                this.props.onSelectionChange && this.props.onSelectionChange(this.selectedPositions.toJS());
+                this.props.dataStore.setPositionSelected(codon, !isSelected);
             },
             onKeyDown:(e: JQueryKeyEventObject)=>{
                 if (e.which === 16) {
@@ -285,7 +281,7 @@ export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotN
                     x={this.geneX + this.codonToX(lollipop.codon)}
                     stickBaseY={this.geneY}
                     stickHeight={this.countToHeight(lollipop.count)}
-                    headRadius={this.selectedPositions.get(lollipop.codon+"") ? 5 : 2.8}
+                    headRadius={this.props.dataStore.isPositionSelected(lollipop.codon) ? 5 : 2.8}
                     hoverHeadRadius={hoverHeadRadius}
                     label={lollipop.label}
                     headColor={lollipop.color}
