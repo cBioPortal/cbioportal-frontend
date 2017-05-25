@@ -20,14 +20,18 @@ import ReactDOM from "react-dom";
 import {Form, Button, FormGroup, InputGroup, ControlLabel, FormControl} from "react-bootstrap";
 import fileDownload from "react-file-download";
 import "./styles.scss";
-import ProteinImpactTypePanel from "../mutationTypePanel/ProteinImpactTypePanel";
 import Collapse from "react-collapse";
+import MutationMapperDataStore from "pages/resultsView/mutation/MutationMapperDataStore";
 
 type LollipopMutationPlotProps = {
-    dataStore:IMobXApplicationDataStore<Mutation[]>;
+    dataStore:MutationMapperDataStore;
     entrezGeneId:number;
     hugoGeneSymbol:string;
     onXAxisOffset?:(offset:number)=>void;
+    missenseColor:string;
+    truncatingColor:string;
+    inframeColor:string;
+    otherColor:string;
 };
 
 const mutationTypePriority:{[canonicalMutationType:string]:number} = {
@@ -60,11 +64,6 @@ function lollipopMutationTypeSort(typeA:CanonicalMutationType, typeB:CanonicalMu
     }
 }
 
-const MISSENSE_COLOR = "#008000";
-const TRUNCATING_COLOR = "#000000";
-const INFRAME_COLOR = "#8B4513";
-const OTHER_COLOR = "#8B00C9";
-
 @observer
 export default class LollipopMutationPlot extends React.Component<LollipopMutationPlotProps, {}> {
 
@@ -82,13 +81,13 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
 
             switch (proteinImpactType) {
                 case "missense":
-                    return MISSENSE_COLOR;
+                    return this.props.missenseColor;
                 case "truncating":
-                    return TRUNCATING_COLOR;
+                    return this.props.truncatingColor;
                 case "inframe":
-                    return INFRAME_COLOR;
+                    return this.props.inframeColor;
                 default:
-                    return OTHER_COLOR;
+                    return this.props.otherColor;
             }
         } else {
             return "#ff0000"; // we only get here if theres no mutations, which shouldnt happen. red to indicate an error
@@ -362,8 +361,8 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
         return [this.countRange[0], Math.max(this.countRange[1], this.countRange[0]+5)];
     }
 
-    constructor() {
-        super();
+    constructor(props:LollipopMutationPlotProps) {
+        super(props);
 
         this.handlers = {
             handleYAxisMaxChange: action((event:any)=>{
@@ -382,9 +381,6 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
             showControls: action(()=>{ this.showControls = true;}),
             hideControls: action(()=>{ this.showControls = false;}),
             ref: (plot:LollipopPlot)=>{ this.plot = plot; },
-            onSelectionChange: (selectedPositions:{ [pos:number]:boolean})=>{
-                this.props.dataStore.setSelector((d:Mutation[])=>!!selectedPositions[d[0].proteinPosStart]);
-            }
         };
     }
 
@@ -408,24 +404,24 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
                     Mutation types and corresponding color codes are as follows:
                     <ul>
                         <li>
-                            <span style={{color:MISSENSE_COLOR, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial, sans-serif"}}>
+                            <span style={{color:this.props.missenseColor, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial, sans-serif"}}>
                                 Missense Mutations
                             </span>
                         </li>
                         <li>
-                            <span style={{color:TRUNCATING_COLOR, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial, sans-serif"}}>
+                            <span style={{color:this.props.truncatingColor, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial, sans-serif"}}>
                                 Truncating Mutations
                             </span>
                             : Nonsense, Nonstop, Frameshift deletion, Frameshift insertion, Splice site
                         </li>
                         <li>
-                            <span style={{color:INFRAME_COLOR, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial, sans-serif"}}>
+                            <span style={{color:this.props.inframeColor, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial, sans-serif"}}>
                                 Inframe Mutations
                             </span>
                             : Inframe deletion, Inframe insertion
                         </li>
                         <li>
-                            <span style={{color:OTHER_COLOR, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial, sans-serif"}}>
+                            <span style={{color:this.props.otherColor, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial, sans-serif"}}>
                                 Other Mutations
                             </span>
                             : All other types of mutations
@@ -496,23 +492,13 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
                         ref={this.handlers.ref}
                         lollipops={this.lollipops}
                         domains={this.domains}
-                        onSelectionChange={this.handlers.onSelectionChange}
+                        dataStore={this.props.dataStore}
                         vizWidth={665}
                         vizHeight={130}
                         xMax={this.pfamGeneData.result.length}
                         yMax={this.yMax}
                         onXAxisOffset={this.props.onXAxisOffset}
                     />
-                    <div style={{marginLeft:"45px"}}>
-                        <ProteinImpactTypePanel
-                            dataStore={this.props.dataStore}
-                            missenseColor={MISSENSE_COLOR}
-                            inframeColor={INFRAME_COLOR}
-                            truncatingColor={TRUNCATING_COLOR}
-                            otherColor={OTHER_COLOR}
-                        />
-                    </div>
-                    <br/>
                 </div>
             ) : (
                 <div>There are no {this.props.hugoGeneSymbol} mutations in the selected samples.<br/></div>

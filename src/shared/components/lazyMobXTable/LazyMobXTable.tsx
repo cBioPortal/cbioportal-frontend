@@ -1,6 +1,6 @@
 import SimpleTable from "../simpleTable/SimpleTable";
 import * as React from 'react';
-import {observable, computed, action} from "mobx";
+import {observable, computed, action, reaction, IReactionDisposer} from "mobx";
 import {observer, Observer} from "mobx-react";
 import './styles.scss';
 import {
@@ -139,7 +139,7 @@ class LazyMobXTableStore<T> {
     @observable public sortAscending:boolean;
     @observable.ref public columns:Column<T>[];
     @observable private _columnVisibility:{[columnId: string]: boolean};
-    @observable private dataStore:IMobXApplicationDataStore<T>;
+    @observable public dataStore:IMobXApplicationDataStore<T>;
 
     @computed public get itemsPerPage() {
         return this._itemsPerPage;
@@ -151,11 +151,7 @@ class LazyMobXTableStore<T> {
     }
 
     @computed get displayData():T[] {
-        if (this.dataStore.sortedFilteredSelectedData.length > 0) {
-            return this.dataStore.sortedFilteredSelectedData;
-        } else {
-            return this.dataStore.sortedFilteredData;
-        }
+        return this.dataStore.tableData;
     }
 
     @computed get showingAllRows(): boolean {
@@ -380,12 +376,12 @@ class LazyMobXTableStore<T> {
     }
 
     @action setFilterString(str:string) {
-        this.filterString = str;
+        this.dataStore.filterString = str;
         this.page = 0;
-        this.dataStore.setFilter((d:T)=>{
+        this.dataStore.setFilter((d:T, filterString:string, filterStringUpper:string, filterStringLower:string)=>{
             let match = false;
             for (const column of this.visibleColumns) {
-                match = (column.filter && column.filter(d, this.filterString, this.filterStringUpper, this.filterStringLower)) || false;
+                match = (column.filter && column.filter(d, filterString, filterStringUpper, filterStringLower)) || false;
                 if (match) {
                     break;
                 }
@@ -457,6 +453,8 @@ class LazyMobXTableStore<T> {
 export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps<T>, {}> {
     private store:LazyMobXTableStore<T>;
     private handlers:{[fnName:string]:(...args:any[])=>void};
+    private filterInput:HTMLInputElement;
+    private filterInputReaction:IReactionDisposer;
 
     public static defaultProps = {
         showFilter: true,
@@ -475,7 +473,7 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
         this.store = new LazyMobXTableStore<T>(props);
 
         this.handlers = {
-            filterInput: (() => {
+            onFilterTextChange: (() => {
                 let searchTimeout:number|null = null;
                 return (evt:any)=>{
                     if (searchTimeout !== null) {
@@ -504,12 +502,23 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
             },
             decPage:()=>{
                 this.store.page -= 1;
+            },
+            filterInputRef: (input:HTMLInputElement)=>{
+                this.filterInput = input;
             }
         };
         this.getDownloadData = this.getDownloadData.bind(this);
         this.getToolbar = this.getToolbar.bind(this);
         this.getTable = this.getTable.bind(this);
         this.getPaginationControls = this.getPaginationControls.bind(this);
+        this.filterInputReaction = reaction(
+            ()=>this.store.dataStore.filterString,
+            str=>{ this.filterInput && (this.filterInput.value = str); }
+        );
+    }
+
+    componentWillUnmount() {
+        this.filterInputReaction();
     }
 
     @action componentWillReceiveProps(nextProps:LazyMobXTableProps<T>) {
@@ -542,7 +551,7 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
             <ButtonToolbar style={{marginLeft:0}} className="tableMainToolbar">
                 { this.props.showFilter ? (
                     <div className={`pull-right form-group has-feedback input-group-sm tableFilter`} style={{ display:'inline-block', marginLeft: 5}}>
-                        <input type="text" onInput={this.handlers.filterInput} className="form-control tableSearchInput" style={{ width:200 }}  />
+                        <input ref={this.handlers.filterInputRef} type="text" onInput={this.handlers.onFilterTextChange} className="form-control tableSearchInput" style={{ width:200 }}  />
                         <span className="fa fa-search form-control-feedback" aria-hidden="true"></span>
                     </div>
                 ) : ""}
