@@ -5,7 +5,7 @@ import { assert } from 'chai';
 import { shallow, mount } from 'enzyme';
 import sinon from 'sinon';
 
-describe.only('AlleleFreqColumnFormatter', () => {
+describe('AlleleFreqColumnFormatter', () => {
 
     before(()=> {
 
