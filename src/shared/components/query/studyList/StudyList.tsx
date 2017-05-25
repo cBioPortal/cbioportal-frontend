@@ -7,7 +7,7 @@ import LabeledCheckbox from "../../labeledCheckbox/LabeledCheckbox";
 import {observer} from "mobx-react";
 import {computed} from "mobx";
 import _ from 'lodash';
-import {getStudySummaryUrl, getPubMedUrl} from "../../../api/urls";
+import {getStudySummaryUrl, getPubMedUrl, openStudySummaryFormSubmit} from "../../../api/urls";
 import {QueryStoreComponent} from "../QueryStore";
 import DefaultTooltip from "../../defaultTooltip/DefaultTooltip";
 import StudyListLogic, {FilteredCancerTreeView} from "../StudyListLogic";
@@ -30,6 +30,7 @@ const styles = {
 
 		icon: string,
 		iconWithTooltip: string,
+		trashIcon: string,
 		tooltip: string,
 
 		disabled: string,
@@ -83,11 +84,12 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, void
 			return (
 				<div className={styles.SelectedStudyList}>
 					<span
-                    className={styles.deselectAll}
-                    onClick={() => {
-                        this.view.onCheck(this.store.treeData.rootCancerType, false);
-                        this.store.showSelectedStudiesOnly = false;
-                    }}
+						className={styles.deselectAll}
+						onClick={() => {
+							this.view.onCheck(this.store.treeData.rootCancerType, false);
+							this.store.showSelectedStudiesOnly = false;
+							this.store.userHasClickedOnAStudy = true;
+						}}
 					>
 						Deselect all
 					</span>
@@ -192,23 +194,29 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, void
 
 	renderStudyLinks = (study:CancerStudy) =>
 	{
-		let links = [
+		let links:{icon:string, onClick?:string|(()=>void), tooltip?:string}[] = [
 			{
 				icon: 'info-circle',
-				url: undefined,
-				tooltip: study.description
+				tooltip: study.description,
 			},
 			{
 				icon: 'bar-chart',
-				url: study.studyId && getStudySummaryUrl(study.studyId),
-				tooltip: study.studyId && "Summary"
+				onClick: study.studyId && (()=>openStudySummaryFormSubmit(study.studyId)),
+				tooltip: study.studyId && "Summary",
 			},
 			{
 				icon: 'book',
-				url: study.pmid && getPubMedUrl(study.pmid),
-				tooltip: study.pmid && "PubMed"
+				onClick: study.pmid && getPubMedUrl(study.pmid),
+				tooltip: study.pmid && "PubMed",
 			},
 		];
+		if (this.store.isVirtualCohort(study.studyId) && !this.store.isTemporaryVirtualCohort(study.studyId)) {
+			links.push({
+				icon: 'trash',
+				tooltip: "Delete this virtual study.",
+				onClick: ()=>this.store.deleteVirtualCohort(study.studyId),
+			});
+		}
 		return (
 			<span className={styles.StudyLinks}>
 				{links.map((link, i) => {
@@ -219,16 +227,27 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, void
 							className={classNames({
 								[styles.icon]: true,
 								[styles.iconWithTooltip]: !!link.tooltip,
+								[styles.trashIcon]: (link.icon === "trash")
 							})}
 						/>
 					);
 
-					if (link.url)
+					if (link.onClick) {
+						let anchorProps:any = {
+							key: i
+						};
+						if (typeof link.onClick === "string") {
+							anchorProps.href = link.onClick;
+							anchorProps.target = "_blank";
+						} else {
+							anchorProps.onClick = link.onClick;
+						}
 						content = (
-							<a key={i} href={link.url}>
+							<a {...anchorProps}>
 								{content}
 							</a>
 						);
+					}
 
 					if (link.tooltip)
 					{
@@ -272,7 +291,10 @@ export class CancerTreeCheckbox extends QueryStoreComponent<ICancerTreeCheckboxP
 		return (
 			<LabeledCheckbox
 				{...this.checkboxProps}
-				onChange={event => this.props.view.onCheck(this.props.node, (event.target as HTMLInputElement).checked)}
+				onChange={event => {
+					this.props.view.onCheck(this.props.node, (event.target as HTMLInputElement).checked);
+					this.store.userHasClickedOnAStudy = true;
+				}}
 			>
 				{this.props.children}
 			</LabeledCheckbox>

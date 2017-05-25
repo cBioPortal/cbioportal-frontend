@@ -1,4 +1,5 @@
 import {default as URL, QueryParams} from "url";
+import formSubmit from "shared/lib/formSubmit";
 
 export function getHost(){
     return (window as any).__API_ROOT__;
@@ -22,11 +23,23 @@ const cbioUrl = buildCBioPortalUrl;
 export function getCbioPortalApiUrl() {
     return cbioUrl('api');
 }
-export function getStudyViewUrl(studyId:string) {
-    return cbioUrl('study', {id: studyId});
+function getStudySummaryUrlParams(studyIds:string | ReadonlyArray<string>) {
+    let cohortsArray:ReadonlyArray<string>;
+    if (typeof studyIds === "string") {
+        cohortsArray = [studyIds];
+    } else {
+        cohortsArray = studyIds;
+    }
+    return {pathname:'study.do', query: {cohorts: cohortsArray.join(",")}};
 }
-export function getStudySummaryUrl(studyId:string) {
-    return cbioUrl('study', {id: studyId}, 'summary');
+
+export function getStudySummaryUrl(studyIds:string | ReadonlyArray<string>) {
+    const params = getStudySummaryUrlParams(studyIds);
+    return cbioUrl(params.pathname, params.query);
+}
+export function openStudySummaryFormSubmit(studyIds: string | ReadonlyArray<string>) {
+    const params = getStudySummaryUrlParams(studyIds);
+    formSubmit(params.pathname, params.query, "_blank");
 }
 export function getPubMedUrl(pmid:string) {
     return `http://www.ncbi.nlm.nih.gov/pubmed/${pmid}`;
