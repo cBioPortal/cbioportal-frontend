@@ -341,16 +341,17 @@ th.reactable-header-sort-asc:after {
 }
 
 .newsPage {
-  #mainColumn li img {
-    @extend .framedImage;
+  #mainColumn {
+    li {
+      margin-bottom:5px;
+      img {
+        @extend .framedImage;
+      }
+      ul {
+        margin-top:5px;
+      }
+    }
   }
-  li {
-    margin-bottom:5px;
-  }
-  li ul {
-    margin-top:5px;
-  }
-
 }
 
 
