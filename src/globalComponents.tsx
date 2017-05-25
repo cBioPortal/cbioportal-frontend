@@ -3,6 +3,7 @@ import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
 import RightBar from "./shared/components/rightbar/RightBar";
 import QueryAndDownloadTabs from "./shared/components/query/QueryAndDownloadTabs";
 import {QueryStore} from "./shared/components/query/QueryStore";
+import formSubmit from "shared/lib/formSubmit";
 
 class GlobalStores {
 
@@ -21,3 +22,4 @@ exposeComponentRenderer('renderQuerySelector', (props:{[k:string]:string|boolean
     return <QueryAndDownloadTabs {...props} store={GlobalStores.queryStore} />;
 });
 
+(window as any).formSubmit = formSubmit;
