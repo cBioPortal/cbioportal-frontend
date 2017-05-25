@@ -21,14 +21,16 @@ export default class DataTypePrioritySelector extends QueryStoreComponent<{}, {}
 			return null;
 
 		return (
-			<FlexCol padded className={styles.DataTypePrioritySelector}>
-				<SectionHeader>Select Data Type Priority:</SectionHeader>
+			<FlexRow padded className={styles.DataTypePrioritySelector}>
+				<SectionHeader className="sectionLabel">Select Data Type Priority:</SectionHeader>
+
 				<FlexRow>
 					<this.DataTypePriorityRadio label='Mutation and CNA' state={{mutation: true, cna: true}}/>
 					<this.DataTypePriorityRadio label='Only Mutation' state={{mutation: true, cna: false}}/>
 					<this.DataTypePriorityRadio label='Only CNA' state={{mutation: false, cna: true}}/>
 				</FlexRow>
-			</FlexCol>
+
+			</FlexRow>
 		);
 	}
 

@@ -1,29 +1,62 @@
 import * as React from "react";
 import * as _ from 'lodash';
-import { Table, Tr, Td }  from 'reactableMSK';
-import { CancerStudy }  from 'shared/api/generated/CBioPortalAPI';
+import { Table, Tr, Td } from 'reactableMSK';
+import { CancerStudy } from 'shared/api/generated/CBioPortalAPI';
 import {ThreeBounce} from 'better-react-spinkit';
 import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
 import TableHeaderControls from "shared/components/tableHeaderControls/TableHeaderControls";
+import LazyMobXTable from "shared/components/lazyMobXTable/LazyMobXTable";
 
 
+interface IDataTableRow {
+    name:string;
+    reference:string;
+    studyId: string;
+    pmid: string;
+    all:number | string;
+    sequenced:number | string;
+    cna:number;
+    mrnaRnaSeq: number | string;
+    mrnaRnaSeqV2: number | string;
+    mrnaMicroarray: number | string;
+    miRna: number | string;
+    methylation: number | string;
+    rppa: number | string;
+    complete:number | string;
+    citation:string;
+}
 
-export interface IDatasetPageUnconnectedProps {
+interface IDataSetsTableProps {
+    className?:string;
+    datasets:CancerStudy[];
+}
 
-    datasets?:Array<CancerStudy> | null;
-    loadDatasetsInfo?:void;
-    status?: any;
+interface ICancerStudyCellProps {
+    name: string;
+    studyId: string;
+}
 
-};
+interface IReferenceCellProps {
+    citation: string;
+    pmid: string;
+}
 
-class CancerStudyCell extends React.Component<{ study:CancerStudy },{}> {
+class DataTable extends LazyMobXTable<IDataTableRow> {}
 
-    render(){
+class CancerStudyCell extends React.Component<ICancerStudyCellProps,{}> {
+
+    render() {
         return (
             <span>
-                <a href={`http://www.cbioportal.org/study?id=${ this.props.study.studyId }#summary`}
-                    target='_blank'>{ this.props.study.name }</a>&nbsp;
-                <a href={`https://github.com/cBioPortal/datahub/blob/master/public/${ this.props.study.studyId }.tar.gz`} download><i className='fa fa-download'></i></a>
+                <a
+                    href={`http://www.cbioportal.org/study?id=${this.props.studyId}#summary`}
+                    target='_blank'
+                >
+                    {this.props.name}
+                </a>&nbsp;
+                <a href={`https://github.com/cBioPortal/datahub/blob/master/public/${this.props.studyId}.tar.gz`} download>
+                    <i className='fa fa-download' style={{float:"right"}}/>
+                </a>
             </span>
         );
 
@@ -31,91 +64,97 @@ class CancerStudyCell extends React.Component<{ study:CancerStudy },{}> {
 
 }
 
-class ReferenceCell extends React.Component<{ study:CancerStudy },{}> {
+class ReferenceCell extends React.Component<IReferenceCellProps ,{}> {
 
-    render(){
+    render() {
         return (
-            <a target='_blank' href={`https://www.ncbi.nlm.nih.gov/pubmed/${ this.props.study.pmid }`}>{ this.props.study.citation }</a>
+            <a target='_blank' href={`https://www.ncbi.nlm.nih.gov/pubmed/${this.props.pmid}`}> {this.props.citation} </a>
         );
 
     }
 
 }
 
-export default class DataSetPageUnconnected extends React.Component<IDatasetPageUnconnectedProps, { filter: string; }> {
-
-    constructor(){
-        super();
-        this.state = { filter:'' };
-    }
-
-    componentDidMount() {
-
-        this.props.loadDatasetsInfo!();
-
-    }
-
-    buildTable(){
-
-        if (this.props.datasets) {
-            return (
-                <Table
-                    className="table table-striped"
-                    filterable={['Name','Reference']}
-                    sortable={true}
-                    hideFilterInput={true}
-                    defaultSort={{column: 'Name', direction: 'asc'}}
-                    filterBy={this.state.filter}
-                    noDataText="No matching results"
-                >
-                    {
-                        _.map(this.props.datasets, (study: CancerStudy) => {
-                            return (
-                                <Tr>
-                                    <Td column="Name" value={study.name}>
-                                        <CancerStudyCell study={study}/>
-                                    </Td>
-                                    <Td column="Reference" value={study.citation}>
-                                        <ReferenceCell study={study}/>
-                                    </Td>
-                                    <Td column="All" data={study.allSampleCount || ""}/>
-                                    <Td column="Sequenced" data={study.sequencedSampleCount || ""}/>
-                                    <Td column="CNA" data={study.cnaSampleCount}/>
-                                    <Td column="Tumor mRNA (RNA-Seq V2)" data={study.mrnaRnaSeqV2SampleCount || ""}/>
-                                    <Td column="Tumor mRNA (microarray)" data={study.mrnaMicroarraySampleCount || ""}/>
-                                    <Td column="Tumor miRNA" data={study.miRnaSampleCount || ""}/>
-                                    <Td column="Methylation (HM27)" data={study.methylationHm27SampleCount || "" }/>
-                                    <Td column="RPPA" data={study.rppaSampleCount || "" }/>
-                                    <Td column="Compete" data={study.completeSampleCount || ""}/>
-                                </Tr>
-                            );
-                        })
-                    }
-                </Table>
-
-
-            );
-        }
-
-    }
+export default class DataSetsPageTable extends React.Component <IDataSetsTableProps, {}> {
 
     render() {
+
         if (this.props.datasets) {
 
-            let sortedDatasets: Array<CancerStudy> = _.sortBy(this.props.datasets, 'name');
-
-            return (<div>
-                        <h4 className="pull-left">Data Sets</h4>
-                        <TableHeaderControls showCopyAndDownload={false} handleInput={(filter: string)=>this.setState({ filter:filter })} showSearch={true} className="pull-right" />
-                        { this.buildTable() }
-                    </div>);
+            const tableData:IDataTableRow[] = _.map(this.props.datasets, (study: CancerStudy) => ({
+                name: study.name,
+                reference: study.citation,
+                all: study.allSampleCount || "",
+                pmid: study.pmid,
+                studyId: study.studyId,
+                sequenced: study.sequencedSampleCount || "",
+                cna: study.cnaSampleCount,
+                citation: study.citation || "",
+                mrnaRnaSeq: study.mrnaRnaSeqSampleCount || "",
+                mrnaRnaSeqV2: study.mrnaRnaSeqV2SampleCount || "",
+                mrnaMicroarray: study.mrnaMicroarraySampleCount || "",
+                miRna: study.miRnaSampleCount || "",
+                methylation: study.methylationHm27SampleCount || "",
+                rppa: study.rppaSampleCount || "",
+                complete: study.completeSampleCount || ""
+            }));
+            return (
+                <div>
+                    <DataTable
+                        data={tableData}
+                        columns={
+                            [
+                                {name:'Name', type: 'name', render:(data:IDataTableRow)=> <CancerStudyCell studyId={data.studyId} name={data.name}/>},
+                                {name:'Reference', type: 'citation', render:(data:IDataTableRow)=><ReferenceCell pmid={data.pmid} citation={data.citation}/>},
+                                {name:'All', type: 'all'},
+                                {name:'Sequenced', type: 'sequenced'},
+                                {name:'CNA', type: 'cna'},
+                                {name:'Tumor mRNA (RNA-Seq)', type: 'mrnaRnaSeq'},
+                                {name:'Tumor mRNA (microarray)', type: 'mrnaMicroarray'},
+                                {name:'Tumor miRNA', type: 'miRna'},
+                                {name:'Methylation (HM27)', type: 'methylation'},
+                                {name:'RPPA', type: 'rppa'},
+                                {name:'Complete', type: 'complete'},
+                            ].map((column:any) => (
+                                {name: column.name,
+                                    defaultSortDirection:'asc' as 'asc',
+                                    sortBy:(data:any)=>(data[column.type]),
+                                    render: column.hasOwnProperty('render') ? column.render : (data:any) => {
+                                        const style = {textAlign: 'center', width: '100%', display: 'block'}
+                                        if(column.type === 'mrnaRnaSeq') {
+                                            return (
+                                                <span style={style}>
+                                                 {Number(data.mrnaRnaSeqV2) || Number(data.mrnaRnaSeq)}
+                                            </span>
+                                            );
+                                        } else {
+                                            return <span style={{style}}>{data[column.type]}</span>;
+                                        }
+                                    },
+                                    filter: (data:any, filterString:string, filterStringUpper:string) => {
+                                        if (column.hasOwnProperty('render')) {
+                                            return data[column.type].toUpperCase().indexOf(filterStringUpper) > -1;
+                                        } else {
+                                            return data[column.type].toString().indexOf(filterString) > -1;
+                                        }
+                                    }}
+                            ))
+                        }
+                        initialSortColumn={'Name'}
+                        initialSortDirection={'asc'}
+                        showPagination={false}
+                        showColumnVisibility={false}
+                        showFilter={true}
+                        showCopyDownload={false}
+                    />
+                </div>
+            );
 
         } else {
-            return <div><ThreeBounce /></div>;
+            return <div><ThreeBounce/></div>;
         }
     }
-}
-;
 
+}
 
 
