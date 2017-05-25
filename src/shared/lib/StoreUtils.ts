@@ -272,7 +272,7 @@ export async function fetchOncoKbData(sampleIdToTumorType:{[sampleId: string]: s
     }
 
     const queryVariants = _.uniqBy(_.map(mutationDataResult, (mutation: Mutation) => {
-        return generateQueryVariant(mutation.gene.hugoGeneSymbol,
+        return generateQueryVariant(mutation.gene.entrezGeneId,
             sampleIdToTumorType[mutation.sampleId],
             mutation.proteinChange,
             mutation.mutationType,
@@ -289,7 +289,7 @@ export async function fetchCnaOncoKbData(sampleIdToTumorType:{[sampleId: string]
 {
     if (discreteCNAData.result && discreteCNAData.result.length > 0) {
         const queryVariants = _.uniqBy(_.map(discreteCNAData.result, (copyNumberData: DiscreteCopyNumberData) => {
-            return generateQueryVariant(copyNumberData.gene.hugoGeneSymbol,
+            return generateQueryVariant(copyNumberData.gene.entrezGeneId,
                 sampleIdToTumorType[copyNumberData.sampleId],
                 getAlterationString(copyNumberData.alteration));
         }), "id");
