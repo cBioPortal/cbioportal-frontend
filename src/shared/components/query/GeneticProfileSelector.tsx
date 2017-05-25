@@ -5,7 +5,7 @@ import FontAwesome from "react-fontawesome";
 import * as styles_any from './styles.module.scss';
 import {observer} from "mobx-react";
 import classNames from 'classnames';
-import {FlexCol} from "../flexbox/FlexBox";
+import { FlexRow } from "../flexbox/FlexBox";
 import {QueryStoreComponent} from "./QueryStore";
 import DefaultTooltip from "../DefaultTooltip";
 import SectionHeader from "../sectionHeader/SectionHeader";
@@ -32,8 +32,8 @@ export default class GeneticProfileSelector extends QueryStoreComponent<{}, {}>
 			return null;
 
 		return (
-			<FlexCol padded className={styles.GeneticProfileSelector}>
-				<SectionHeader promises={[this.store.geneticProfiles]}>
+			<FlexRow padded className={styles.GeneticProfileSelector}>
+				<SectionHeader className="sectionLabel" promises={[this.store.geneticProfiles]}>
 					Select Genomic Profiles:
 				</SectionHeader>
 				<div className={styles.group}>
@@ -47,7 +47,7 @@ export default class GeneticProfileSelector extends QueryStoreComponent<{}, {}>
 						<strong>No Genomic Profiles available for this Cancer Study</strong>
 					)}
 				</div>
-			</FlexCol>
+			</FlexRow>
 		);
 	}
 
