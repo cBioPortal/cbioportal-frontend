@@ -175,7 +175,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                         <span className='clinical-spans'>
                             {
                                 sampleManager!.getComponentForSample(sample.id, 1, '',
-                                    <span>
+                                    <span style={{display:'inline-flex'}}>
                                         {'\u00A0'}
                                         <a
                                             href="javascript:void(0)"
