@@ -41,7 +41,7 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
         return patient && (
             <div key={patient.id} style={{ maxHeight:400, overflow:'auto' }}>
                 <h5>{ patient.id }</h5>
-                <ClinicalInformationPatientTable showTitleBar={false} data={patient.clinicalData} />
+                <ClinicalInformationPatientTable showFilter={false} showCopyDownload={false} showTitleBar={false} data={patient.clinicalData} />
             </div>
         );
     }

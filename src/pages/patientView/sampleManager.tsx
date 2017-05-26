@@ -205,8 +205,8 @@ class SampleManager {
                     </svg>
                     { sample.id }
                 </h5>
-                <span style={{ marginBottom: 4}}>{ extraText }</span>
-                <ClinicalInformationPatientTable showTitleBar={false} data={sample.clinicalData} />
+                <h5>{ extraText }</h5>
+                <ClinicalInformationPatientTable showFilter={false} showCopyDownload={false} showTitleBar={false} data={sample.clinicalData} />
             </div>
         );
     }
