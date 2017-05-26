@@ -173,17 +173,24 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 return (
                     <div className="patientSample">
                         <span className='clinical-spans'>
-                            {  sampleManager!.getComponentForSample(sample.id) }
-                            {'\u00A0'}
-                            <a href="javascript:void(0)" onClick={()=>{ this.handleSampleClick(sample.id) }}>{sample.id}</a>
-                            {getSpanElements(clinicalDataLegacy, 'lgg_ucsf_2014')}
+                            {
+                                sampleManager!.getComponentForSample(sample.id, 1, '',
+                                    <span>
+                                        {'\u00A0'}
+                                        <a
+                                            href="javascript:void(0)"
+                                            onClick={() => this.handleSampleClick(sample.id)}
+                                        >
+                                            {sample.id}
+                                        </a>
+                                        {getSpanElements(clinicalDataLegacy, 'lgg_ucsf_2014')}
+                                    </span>
+                                )
+                            }
                         </span>
                     </div>
-
-                )
+                );
             });
-
-
         }
 
         if (patientViewPageStore.patientIdsInCohort && patientViewPageStore.patientIdsInCohort.length > 0) {
