@@ -28,6 +28,7 @@ export type Column<T> = {
     download?:(data:T)=>string;
     tooltip?:JSX.Element;
     defaultSortDirection?:SortDirection;
+    togglable?:boolean;
 };
 
 type LazyMobXTableProps<T> = {
@@ -304,7 +305,8 @@ class LazyMobXTableStore<T> {
             colVisProp.push({
                 id: column.name,
                 name: column.name,
-                visible: this.columnVisibility[column.name]
+                visible: this.columnVisibility[column.name],
+                togglable:(column.hasOwnProperty(('togglable')) ? column.togglable : true)
             });
         });
 
