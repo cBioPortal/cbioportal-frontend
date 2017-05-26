@@ -102,7 +102,7 @@ export default class DataSetsPageTable extends React.Component <IDataSetsTablePr
                         columns={
                             [
                                 {name:'Name', type: 'name', render:(data:IDataTableRow)=> <CancerStudyCell studyId={data.studyId} name={data.name}/>},
-                                {name:'', sortable:false, type:'download', render:(data:IDataTableRow)=>{
+                                {name:'', sortBy:false, togglable:false, download:false, type:'download', render:(data:IDataTableRow)=>{
                                     return (
                                         <a style={{width:50, display:'block' }} href={`https://github.com/cBioPortal/datahub/blob/master/public/${data.studyId}.tar.gz`} download>
                                             <i className='fa fa-download'/>
@@ -123,9 +123,10 @@ export default class DataSetsPageTable extends React.Component <IDataSetsTablePr
                             ].map((column:any) => (
                                 {
                                     visible:(column.visible === false) ? false : true,
+                                    togglable:(column.togglable === false) ? false : true,
                                     name: column.name,
                                     defaultSortDirection:'asc' as 'asc',
-                                    sortBy:(data:any)=>(data[column.type]),
+                                    sortBy: (column.hasOwnProperty('sortBy')) ? column.sortBy : ((data:any)=>(data[column.type])),
                                     render: column.hasOwnProperty('render') ? column.render : (data:any) => {
                                         const style = {};// {textAlign: 'center', width: '100%', display: 'block'}
                                         if(column.type === 'mrnaRnaSeq') {
@@ -138,6 +139,7 @@ export default class DataSetsPageTable extends React.Component <IDataSetsTablePr
                                             return <span style={{style}}>{data[column.type]}</span>;
                                         }
                                     },
+                                    download: column.hasOwnProperty('download') ? column.download : true,
                                     filter: (data:any, filterString:string, filterStringUpper:string) => {
                                         if (column.hasOwnProperty('render')) {
                                             return data[column.type].toUpperCase().indexOf(filterStringUpper) > -1;
