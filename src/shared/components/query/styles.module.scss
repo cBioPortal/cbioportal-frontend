@@ -96,6 +96,7 @@ div.SelectedStudiesWindow {
 .CancerStudySelectorHeader {
   justify-content: space-between;
   align-items:center;
+
   h2 {
     padding: 0;
     margin:0;
@@ -109,6 +110,10 @@ div.SelectedStudiesWindow {
 
   :global(.Select-input) {
     height: 28px;
+  }
+
+  :global(.autosuggest) {
+    width:200px;
   }
 
   :global(.Select-placeholder),
