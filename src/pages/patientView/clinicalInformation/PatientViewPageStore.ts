@@ -733,7 +733,7 @@ export class PatientViewPageStore {
 
         if (this.clinicalDataForSamples.result) {
             _.each(this.clinicalDataForSamples.result, function (clinicalData) {
-                if (clinicalData.clinicalAttributeId === "CANCER_TYPE") {
+                if (clinicalData.clinicalAttributeId === "CANCER_TYPE_DETAILED") {
                     map[clinicalData.entityId] = clinicalData.value;
                 }
             });
