@@ -220,6 +220,7 @@ export class QueryStore
 	@observable showSelectedStudiesOnly:boolean = false;
 	@observable.shallow selectedCancerTypeIds:string[] = [];
 	@observable clickAgainToDeselectSingle:boolean = true;
+	@observable searchExampleMessage = "";
 
 	@observable private _maxTreeDepth:number = 3;
 	@computed get maxTreeDepth()
