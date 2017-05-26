@@ -51,7 +51,7 @@ export default class AlleleFreqColumnFormatter {
                     <strong>{Math.round(100*freq)/100}</strong> {variantReadText}
                 </span>);
             return {
-                sampleId:mutation.sampleId, bar, sampleComponent, text, freq
+                sampleId:mutation.sampleId, bar, component:sampleComponent, text, freq
             };
     }
 
