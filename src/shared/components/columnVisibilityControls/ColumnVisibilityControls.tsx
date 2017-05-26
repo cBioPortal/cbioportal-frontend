@@ -6,6 +6,7 @@ export interface IColumnVisibilityDef {
     id: string;
     name: string;
     visible: boolean;
+    togglable?: boolean;
 }
 
 export interface IColumnVisibilityControlsProps {
@@ -44,7 +45,7 @@ export class ColumnVisibilityControls extends React.Component<IColumnVisibilityC
                         {
                             this.props.columnVisibility &&
                             _.map(this.props.columnVisibility, (visibility: IColumnVisibilityDef) => {
-                                return (
+                                return (visibility.togglable) ? (
                                     <li key={visibility.id}>
                                         <Checkbox
                                             data-id={visibility.id}
@@ -55,7 +56,7 @@ export class ColumnVisibilityControls extends React.Component<IColumnVisibilityC
                                                 {visibility.name}
                                         </Checkbox>
                                     </li>
-                                );
+                                ) : null;
                             })
                         }
                     </ul>
