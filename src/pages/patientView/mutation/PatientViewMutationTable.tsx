@@ -10,7 +10,7 @@ import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
 import TumorColumnFormatter from "./column/TumorColumnFormatter";
 import {Column} from "shared/components/lazyMobXTable/LazyMobXTable";
 import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter";
-import {GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "../../../shared/constants";
+import {isUncalled} from "../../../shared/lib/mutationUtils";
 
 export interface IPatientViewMutationTableProps extends IMutationTableProps {
     sampleManager:SampleManager | null;
@@ -117,7 +117,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
     @computed private get hasUncalledMutations():boolean {
         return this.props.data.some((row:Mutation[]) => {
             return row.some((m:Mutation) => {
-                return Boolean(m.geneticProfileId && m.geneticProfileId.endsWith(GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX));
+                return isUncalled(m.geneticProfileId);
             });
         });
     }
