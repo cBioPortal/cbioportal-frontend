@@ -17,6 +17,7 @@ import { restoreRouteAfterRedirect } from './shared/lib/redirectHelpers';
 import PatientViewPage from 'bundle?lazy!babel!./pages/patientView/PatientViewPage';
 import ResultsViewPage from 'bundle?lazy!babel!./pages/resultsView/ResultsViewPage';
 import HomePage from 'bundle?lazy!babel!./pages/home/HomePage';
+import TestimonialsPage from 'pages/staticPages/testimonialsPage/TestimonialsPage';
 import DatasetPage from 'bundle?lazy!babel!./pages/datasetView/DatasetPage';
 import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
 import RightBar from "./shared/components/rightbar/RightBar";
@@ -52,6 +53,7 @@ export const makeRoutes = (routing) => {
         <Route path="/patient" getComponent={lazyLoadComponent(PatientViewPage)}/>
         <Route path="/datasets" getComponent={lazyLoadComponent(DatasetPage)} />
         <Route path="/restore" component={restoreRoute}/>
+        <Route path="/testimonials" component={TestimonialsPage}/>
         <Route path="/blank" component={<div/>}/>
         <Route path="/query" getComponent={lazyLoadComponent(ResultsViewPage)} />
             <Redirect from="*" to={defaultRoute}/>
