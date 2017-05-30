@@ -1,53 +1,42 @@
-import {default as SimpleCache, ICache} from "shared/lib/SimpleCache";
+import LazyMobXCache from "../lib/LazyMobXCache";
+import {AugmentedData} from "../lib/LazyMobXCache";
+import request from "superagent";
 
-export default class PmidCache extends SimpleCache<any, number[]>
+async function fetch(pmids: number[])
+{
+        const pmidData:any = await new Promise((resolve, reject) => {
+            // TODO better to separate this call to a configurable client
+            request.post('https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&retmode=json')
+                .type("form")
+                .send({id: pmids.join(',')})
+                .end((err, res)=>{
+                    if (!err && res.ok) {
+                        resolve(JSON.parse(res.text));
+                    } else {
+                        reject(err);
+                    }
+                });
+        });
+
+        const ret:AugmentedData<any, string>[] = [];
+        for (const pmidStr of Object.keys(pmidData)) {
+            ret.push({
+                data: pmidData[pmidStr],
+                meta: pmidStr
+            });
+        }
+
+        return ret;
+}
+
+export default class PmidCache extends LazyMobXCache<number, any, string>
 {
     constructor()
     {
-        super();
-    }
-
-    protected async fetch(pmids: number[])
-    {
-        const cache: ICache<any> = {};
-
-        try {
-            const pmidData:any = await new Promise((resolve, reject) => {
-                // TODO better to separate this call to a configurable client
-                $.post(
-                    'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&retmode=json',
-                    {id: pmids.join(',')}
-                ).then((data) => {
-                    resolve(data);
-                }).fail((err) => {
-                    reject(err);
-                });
-            });
-
-            pmids.forEach((pmid:number) => {
-                if (pmidData.result[pmid]) {
-                    cache[pmid.toString()] = {
-                        status: "complete",
-                        data: pmidData.result[pmid]
-                    };
-                }
-                else {
-                    cache[pmid.toString()] = {
-                        status: "complete"
-                    };
-                }
-            });
-
-            this.putData(cache);
-        }
-        catch (err) {
-            pmids.forEach((pmid:number) => {
-                cache[pmid.toString()] = {
-                    status: "error"
-                };
-            });
-
-            this.putData(cache);
-        }
+        super(
+            q=>q+"",
+            (d:any, pmidStr:string)=>pmidStr,
+            fetch
+        );
     }
 }

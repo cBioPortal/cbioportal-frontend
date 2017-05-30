@@ -189,7 +189,7 @@ export class PatientViewPageStore {
         await: () => [this.derivedPatientId],
         invoke: async() => {
 
-            let resp: any = await request.get(`//api.github.com/search/code?q=${this.patientId}+extension:pdf+in:path+repo:cBioPortal/datahub`);
+            let resp: any = await request.get(`https://api.github.com/search/code?q=${this.patientId}+extension:pdf+in:path+repo:cBioPortal/datahub`);
 
             const parsedResp: any = JSON.parse(resp.text);
 
