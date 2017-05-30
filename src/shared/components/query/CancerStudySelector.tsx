@@ -184,8 +184,6 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 										},400)
 									}
 								}}
-
-
 							/>);
 
 

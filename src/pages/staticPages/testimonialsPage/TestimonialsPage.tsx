@@ -21,8 +21,9 @@ export default class TestimonialsPage extends React.Component<{},{}> {
     renderTestimonials() {
         return this.store.testimonials.map((testimonial:ITestimonial, i:number) => (
             <div className='testimonial-blockquote' key={i}>
-                <p>"{testimonial.quote}"</p>
-                <cite>--{testimonial.cite}</cite>
+                <blockquote className="blockquote">"{testimonial.quote}"
+                <footer className="blockquote-footer"><cite title="Source Title">{testimonial.cite}</cite></footer>
+                </blockquote>
             </div>
         ));
     }
