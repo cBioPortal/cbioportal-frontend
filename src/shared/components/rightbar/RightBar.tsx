@@ -40,18 +40,12 @@ export default class RightBar extends React.Component<{}, {}> {
                 </div>
 
                 <div className="rightBarSection">
-                    <h3>Citations</h3>
-                    Please cite <a href="http://www.ncbi.nlm.nih.gov/pubmed/23550210">Gao et al. <i>Sci. Signal.</i> 2013</a> &amp;
-                    <a href="http://cancerdiscovery.aacrjournals.org/content/2/5/401.abstract"> Cerami et al. <i>Cancer Discov.</i> 2012</a> when publishing results based on cBioPortal.
-                </div>
-
-                <div className="rightBarSection">
                     <h3>Cancer Studies</h3>
                     {
                         (this.studyStore.data.isComplete) && (
-                            <a href="data_sets.jsp">
-                                Total Number of Cancer Studies: {this.studyStore.data.result.length}
-                            </a>
+
+                            <p>The portal contains {this.studyStore.data.result.length} cancer studies <a href="data_sets.jsp">(details)</a></p>
+
                             //<BarGraph data={ this.studyStore.data.result }/>
                         )
                     }
@@ -74,7 +68,7 @@ export default class RightBar extends React.Component<{}, {}> {
                         <li>
                             <a href="index.do?cancer_study_list=ucec_tcga_pub&cancer_study_id=ucec_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ucec_tcga_pub_mutations&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=ucec_tcga_pub_sequenced&case_ids=&gene_set_choice=user-defined-list&gene_list=POLE%3A+MUT+%3D+P286+MUT+%3D+V411+MUT+%3D+L424+MUT+%3D+S297F&clinical_param_selection=null&tab_index=tab_visualize&Action=Submit">POLE hotspot mutations in endometrial cancer</a>
                         </li>
-                        <li>git
+                        <li>
                             <a href="index.do?case_set_id=gbm_tcga_pub_sequenced&tab_index=tab_visualize&Action=Submit&genetic_profile_ids=gbm_tcga_pub_mutations&genetic_profile_ids=gbm_tcga_pub_cna_rae&case_ids=&Z_SCORE_THRESHOLD=1.0&cancer_study_list=gbm_tcga_pub&cancer_study_id=gbm_tcga_pub&gene_list=TP53+MDM2+MDM4&gene_set_choice=user-defined_list&Action=Submit#summary">TP53 and MDM2/4 alterations in GBM</a>
                         </li>
                         <li>
