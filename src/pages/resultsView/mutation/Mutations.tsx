@@ -44,6 +44,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
                     <MSKTab key={gene} id={gene} linkText={gene}>
                         <MutationMapper
                             studyId={this.props.store.studyId}
+                            studyToCancerType={this.props.store.studyToCancerType}
                             store={mutationMapperStore}
                             discreteCNACache={this.props.store.discreteCNACache}
                             oncoKbEvidenceCache={this.props.store.oncoKbEvidenceCache}

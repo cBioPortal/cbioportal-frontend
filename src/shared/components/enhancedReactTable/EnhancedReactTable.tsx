@@ -236,7 +236,7 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
                     filterBy={this.state.filter}
                     itemsPerPage={this.state.itemsPerPage === -1 ? undefined : this.state.itemsPerPage}
                     currentPage={this.state.currentPage}
-                    {...reactTableProps}
+                    {...(reactTableProps as any)}
                 >
                     <Thead>
                         {headers}

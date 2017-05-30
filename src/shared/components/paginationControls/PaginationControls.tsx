@@ -7,6 +7,8 @@ import {observer} from "mobx-react";
 
 export const SHOW_ALL_PAGE_SIZE = -1;
 
+export const MAX_DIGITS = 6;
+
 export interface IPaginationControlsProps {
     currentPage?:number;
     itemsPerPage?:number;
@@ -91,7 +93,7 @@ export class PaginationControls extends React.Component<IPaginationControlsProps
             return;
         }
 
-        if (evt.currentTarget.innerText.length === 3) {
+        if (evt.currentTarget.innerText.length === MAX_DIGITS) {
             evt.preventDefault();
             return;
         }
