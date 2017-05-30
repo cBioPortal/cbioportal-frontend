@@ -1,10 +1,8 @@
 import * as React from "react";
 import {ClinicalData} from "../../../shared/api/generated/CBioPortalAPI";
 import LazyMobXTable from "shared/components/lazyMobXTable/LazyMobXTable";
-import TableHeaderControls from "shared/components/tableHeaderControls/TableHeaderControls";
 
 import styles from './style/patientTable.module.scss';
-import {MSKTab} from "../../../shared/components/MSKTabs/MSKTabs";
 
 export interface IClinicalInformationPatientTableProps {
     data: ClinicalData[];
@@ -31,8 +29,18 @@ export default class ClinicalInformationPatientTable extends React.Component<ICl
         return (
             <PatientTable
                   data={tableData}
-                  columns={[{ name:'Attribute', render:(data)=><span>{data.attribute}</span>},
-                        { name:'Value', render: (data)=><span>{data.value}</span>}]}
+                  columns={[
+                      {   name:'Attribute',
+                          render:(data)=><span>{data.attribute}</span>,
+                          filter: (data:IPatientRow, filterString:string, filterStringUpper:string) =>
+                            data.attribute.toString().toUpperCase().indexOf(filterStringUpper) > -1
+                      },
+                      {
+                          name:'Value',
+                          render: (data)=><span>{data.value}</span>,
+                          filter: (data:IPatientRow, filterString:string, filterStringUpper:string) =>
+                            data.value.toString().toUpperCase().indexOf(filterStringUpper) > -1
+                      }]}
                   showPagination={false}
                   showColumnVisibility={false}
                   className={styles.patientTable}

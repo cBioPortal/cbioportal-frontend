@@ -1,5 +1,5 @@
 import {
-    Mutation, DiscreteCopyNumberFilter, DiscreteCopyNumberData, MutationFilter, Gene
+    Mutation, DiscreteCopyNumberFilter, DiscreteCopyNumberData, MutationFilter, Gene, CancerStudy
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {computed, observable, action} from "mobx";
@@ -16,7 +16,7 @@ import {
     indexHotspotData, fetchHotspotsData, mergeMutations, ONCOKB_DEFAULT,
     fetchCosmicData, fetchOncoKbData, findGeneticProfileIdDiscrete, fetchMyCancerGenomeData, fetchMutationData,
     fetchDiscreteCNAData, generateSampleIdToTumorTypeMap, findMutationGeneticProfileId, mergeDiscreteCNAData,
-    fetchSamples, fetchClinicalData, generateDataQueryFilter
+    fetchSamples, fetchClinicalData, generateDataQueryFilter, makeStudyToCancerTypeMap
 } from "shared/lib/StoreUtils";
 import {MutationMapperStore} from "./mutation/MutationMapperStore";
 
@@ -101,6 +101,14 @@ export class ResultsViewPageStore {
         ],
         invoke: async () => fetchSamples(this.sampleIds, this.studyId)
     }, []);
+
+    readonly studies = remoteData({
+        invoke: async()=>([await client.getStudyUsingGET({studyId: this.studyId})])
+    }, []);
+
+    @computed get studyToCancerType() {
+        return makeStudyToCancerTypeMap(this.studies.result);
+    }
 
     readonly geneticProfilesInStudy = remoteData(() => {
         return client.getAllGeneticProfilesInStudyUsingGET({

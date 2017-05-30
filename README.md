@@ -1,10 +1,24 @@
 # cbioportal-frontend
-[![Build Status](https://travis-ci.org/cBioPortal/cbioportal-frontend.svg?branch=master)](https://travis-ci.org/cBioPortal/cbioportal-frontend)
+## Live demo
+Development: http://cbioportal-frontend-demo.herokuapp.com/#/patient?studyId=prad_fhcrc&caseId=00-090
+Master: http://cbioportal-frontend.herokuapp.com/?cancer_study_id=lgg_ucsf_2014&case_id=P04
+## Test status & Code Quality
+| Branch | master | integration |
+| --- | --- | --- |
+| Status | [![Build Status](https://travis-ci.org/cBioPortal/cbioportal-frontend.svg?branch=master)](https://travis-ci.org/cBioPortal/cbioportal-frontend) | [![Build Status](https://travis-ci.org/cBioPortal/cbioportal-frontend.svg?branch=integration)](https://travis-ci.org/cBioPortal/cbioportal-frontend)
+
 [![codecov](https://codecov.io/gh/cbioportal/cbioportal-frontend/branch/master/graph/badge.svg)](https://codecov.io/gh/cbioportal/cbioportal-frontend)
+
 [![Code Climate](https://codeclimate.com/github/cBioPortal/cbioportal-frontend/badges/gpa.svg)](https://codeclimate.com/github/cBioPortal/cbioportal-frontend)
+
+## Deployment
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
 
-This is the new React frontend for cBioPortal, currently under development. 
+This is the new React frontend for cBioPortal, currently under development.
+
+Make sure you have the latest stable node version installed:
+
+https://nodejs.org/en/
 
 To install all app and dev dependencies 
 ```
@@ -13,7 +27,7 @@ npm install
 
 To build DLLs in common-dist folder (must be done prior to start of dev server)
 ```
-npm run buildDLL
+npm run buildDLL:dev
 ```
 
 To start dev server with hot reload enabled
@@ -50,7 +64,7 @@ can be set to whatever instance of the api you want to use as a backend.)
 
 The default is:
 ```
-API_ROOT=www.cbioportal.org/api-legacy
+API_ROOT=www.cbioportal.org/api
 ```
 
 ## Check in cBioPortal context

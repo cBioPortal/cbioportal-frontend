@@ -25,7 +25,7 @@ export default class SectionHeader extends React.Component<ISectionHeaderProps, 
 {
 	render()
 	{
-		let {promises, children, className, ...divProps} = this.props;
+		let {promises, children, className, secondaryComponent, ...divProps} = this.props;
 		return (
 			<div className={classNames(className, styles.SectionHeader)} {...divProps}>
 				{!!(promises && promises.some(promise => promise.isPending)) && (
@@ -34,8 +34,8 @@ export default class SectionHeader extends React.Component<ISectionHeaderProps, 
 				<h2>{children}</h2>
 
 				{
-					(!!this.props.secondaryComponent) && (
-						this.props.secondaryComponent
+					(!!secondaryComponent) && (
+						secondaryComponent
 					)
 				}
 

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import {Dropdown, Checkbox} from 'react-bootstrap';
+import {Dropdown, Checkbox, DropdownToggleProps, DropdownMenuProps} from 'react-bootstrap';
 
 export interface IColumnVisibilityDef {
     id: string;
@@ -36,10 +36,10 @@ export class ColumnVisibilityControls extends React.Component<IColumnVisibilityC
     {
         return (
             <Dropdown className={this.props.className} id="dropdown-custom-1">
-                <Dropdown.Toggle {...{rootCloseEvent: "click"}} className="btn-sm">
+                <Dropdown.Toggle {...({rootCloseEvent: "click"} as DropdownToggleProps)} className="btn-sm">
                     {this.props.buttonText}
                 </Dropdown.Toggle>
-                <Dropdown.Menu {...{bsRole: "menu"}} style={{ paddingLeft:10, overflow:'auto', maxHeight:300, whiteSpace:'nowrap' }}>
+                <Dropdown.Menu {...({bsRole: "menu"} as DropdownMenuProps)} style={{ paddingLeft:10, overflow:'auto', maxHeight:300, whiteSpace:'nowrap' }}>
                     <ul className="list-unstyled">
                         {
                             this.props.columnVisibility &&

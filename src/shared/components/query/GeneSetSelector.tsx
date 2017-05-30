@@ -77,7 +77,7 @@ export default class GeneSetSelector extends QueryStoreComponent<GeneSetSelector
 					Enter Gene Set:
 				</SectionHeader>
 
-				<FlexCol>
+				<FlexCol overflow>
 				<ReactSelect
 					value={this.selectedGeneListOption}
 					options={this.geneListOptions}

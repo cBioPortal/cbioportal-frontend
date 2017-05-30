@@ -30,10 +30,15 @@ import VariantCountCache from "shared/cache/VariantCountCache";
 import PmidCache from "shared/cache/PmidCache";
 import CancerTypeCache from "../../cache/CancerTypeCache";
 import MutationCountCache from "../../cache/MutationCountCache";
+import MutationCountColumnFormatter from "./column/MutationCountColumnFormatter";
 import LazyLoadedTableCell from "shared/lib/LazyLoadedTableCell";
+import {CacheData} from "../../lib/LazyMobXCache";
+import CancerTypeColumnFormatter from "./column/CancerTypeColumnFormatter";
+import {IMobXApplicationDataStore} from "../../lib/IMobXApplicationDataStore";
 
 export interface IMutationTableProps {
     studyId?:string;
+    studyToCancerType?:{[studyId:string]:string};
     discreteCNACache?:DiscreteCNACache;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
     mrnaExprRankCache?:MrnaExprRankCache;
@@ -49,7 +54,8 @@ export interface IMutationTableProps {
     mrnaExprRankGeneticProfileId?:string;
     discreteCNAGeneticProfileId?:string;
     columns?:MutationTableColumnType[];
-    data:Mutation[][];
+    data?:Mutation[][];
+    dataStore?:IMobXApplicationDataStore<Mutation[]>;
     initialItemsPerPage?:number;
     itemsLabel?:string;
     itemsLabelPlural?:string;
@@ -383,45 +389,16 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
 
         this._columns[MutationTableColumnType.CANCER_TYPE] = {
             name: "Cancer Type",
-            render: LazyLoadedTableCell(
-                (d:Mutation[])=>{
-                    const cancerTypeCache:CancerTypeCache|undefined = this.props.cancerTypeCache;
-                    const studyId:string|undefined = this.props.studyId;
-                    if (cancerTypeCache && studyId) {
-                        return cancerTypeCache.get({
-                            entityId:d[0].sampleId,
-                            studyId: studyId
-                        });
-                    } else {
-                        return {
-                            status: "error",
-                            data: null
-                        };
-                    }
-                },
-                (t:ClinicalData)=>(<span>{t.value}</span>),
-                "Cancer type not available for this sample."
-            ),
+            render:CancerTypeColumnFormatter.makeRenderFunction(this),
+            sortBy:(d:Mutation[])=>CancerTypeColumnFormatter.sortBy(d, this.props.studyId, this.props.cancerTypeCache),
             tooltip:(<span>Cancer Type</span>),
         };
+
         this._columns[MutationTableColumnType.NUM_MUTATIONS] = {
             name: "# Mut in Sample",
-            render: LazyLoadedTableCell(
-                (d:Mutation[])=>{
-                    const mutationCountCache:MutationCountCache|undefined = this.props.mutationCountCache;
-                    if (mutationCountCache) {
-                        return mutationCountCache.get(d[0].sampleId);
-                    } else {
-                        return {
-                            status: "error",
-                            data: null
-                        };
-                    }
-                },
-                (t:MutationCount)=>(<span>{t.mutationCount}</span>),
-                "Mutation count not available for this sample."
-            ),
-            tooltip:(<span>Total number of nonsynonymous mutations in the sample</span>),
+            render: MutationCountColumnFormatter.makeRenderFunction(this),
+            sortBy: (d:Mutation[]) => MutationCountColumnFormatter.sortBy(d, this.props.mutationCountCache),
+            tooltip:(<span>Total number of nonsynonymous mutations in the sample</span>)
         };
     }
 
@@ -459,6 +436,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             <MutationTableComponent
                 columns={this.columns}
                 data={this.props.data}
+                dataStore={this.props.dataStore}
                 initialItemsPerPage={this.props.initialItemsPerPage}
                 initialSortColumn={this.props.initialSortColumn}
                 initialSortDirection={this.props.initialSortDirection}
