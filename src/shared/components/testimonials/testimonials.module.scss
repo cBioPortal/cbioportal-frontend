@@ -33,6 +33,19 @@
 
         }
 
+        .testimonial-links {
+            margin-top: 10px;
+
+            a:first-child{
+                float: left;
+            }
+
+            a:last-child {
+                float: right;
+            }
+
+        }
+
     }
 
 }
