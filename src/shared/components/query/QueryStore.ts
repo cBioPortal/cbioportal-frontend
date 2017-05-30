@@ -236,7 +236,17 @@ export class QueryStore
 	// REMOTE DATA
 	////////////////////////////////////////////////////////////////////////////////
 
-	readonly cancerTypes = remoteData(client.getAllCancerTypesUsingGET({}), []);
+	readonly cancerTypes = remoteData({
+		invoke: async () => {
+			return client.getAllCancerTypesUsingGET({}).then((data)=>{
+				// all types should have parent. this is a correction for a data issue
+				// where there IS a top level (parent=null) item
+				return data.filter(cancerType => {
+					return cancerType.parent !== 'null';
+				});
+			});
+		}
+	}, []);
 
 	readonly cancerStudies = remoteData(client.getAllStudiesUsingGET({}), []);
 
