@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import {
     GeneticProfile, Mutation, MutationFilter, default as CBioPortalAPI, DiscreteCopyNumberData,
-    DiscreteCopyNumberFilter, ClinicalData, Sample
+    DiscreteCopyNumberFilter, ClinicalData, Sample, CancerStudy
 } from "shared/api/generated/CBioPortalAPI";
 import defaultClient from "shared/api/cbioportalClientInstance";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
@@ -272,7 +272,7 @@ export async function fetchOncoKbData(sampleIdToTumorType:{[sampleId: string]: s
     }
 
     const queryVariants = _.uniqBy(_.map(mutationDataResult, (mutation: Mutation) => {
-        return generateQueryVariant(mutation.gene.hugoGeneSymbol,
+        return generateQueryVariant(mutation.gene.entrezGeneId,
             sampleIdToTumorType[mutation.sampleId],
             mutation.proteinChange,
             mutation.mutationType,
@@ -289,7 +289,7 @@ export async function fetchCnaOncoKbData(sampleIdToTumorType:{[sampleId: string]
 {
     if (discreteCNAData.result && discreteCNAData.result.length > 0) {
         const queryVariants = _.uniqBy(_.map(discreteCNAData.result, (copyNumberData: DiscreteCopyNumberData) => {
-            return generateQueryVariant(copyNumberData.gene.hugoGeneSymbol,
+            return generateQueryVariant(copyNumberData.gene.entrezGeneId,
                 sampleIdToTumorType[copyNumberData.sampleId],
                 getAlterationString(copyNumberData.alteration));
         }), "id");
@@ -439,7 +439,7 @@ export function generateSampleIdToTumorTypeMap(clinicalDataForSamples: MobxPromi
 
     if (clinicalDataForSamples.result) {
         _.each(clinicalDataForSamples.result, (clinicalData:ClinicalData) => {
-            if (clinicalData.clinicalAttributeId === "CANCER_TYPE") {
+            if (clinicalData.clinicalAttributeId === "CANCER_TYPE_DETAILED") {
                 map[clinicalData.entityId] = clinicalData.value;
             }
         });
@@ -530,4 +530,11 @@ export function generateDataQueryFilter(sampleListId: string|null, sampleIds?: s
     }
 
     return filter;
+}
+
+export function makeStudyToCancerTypeMap(studies:CancerStudy[]) {
+    return studies.reduce((map:{[studyId:string]:string}, next:CancerStudy)=>{
+        map[next.studyId] = next.cancerType.name;
+        return map;
+    }, {});
 }

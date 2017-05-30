@@ -8,7 +8,7 @@ import {whyRun} from "mobx";
 
 // We have to use 'done' rather than fake clock because for some reason fake clock isn't working with async/await
 //  in LazyMobXCache.populate
-type Query = {numAsString:string, shouldFail?:boolean, shouldDelay?: boolean, shouldNotExist?:boolean};
+type Query = {numAsString:string, shouldFail?:boolean, shouldDelay?: boolean, shouldNotExist?:boolean, meta?:string};
 
 function useFakeClock(callback:(clock:Clock)=>void) {
     let clock = lolex.install();
@@ -16,7 +16,7 @@ function useFakeClock(callback:(clock:Clock)=>void) {
     clock.uninstall();
 }
 describe("LazyMobXCache", ()=>{
-    let cache:LazyMobXCache<number, Query>;
+    let cache:LazyMobXCache<number, Query, string>;
 
     let fetch:SinonSpy;
     beforeEach(()=>{
@@ -39,16 +39,23 @@ describe("LazyMobXCache", ()=>{
                         }, 1000);
                     });
                 } else {
-                    return Promise.resolve(data);
+                    let meta:string | undefined = (queries.find(q=>!!q.meta) || {meta:undefined}).meta;
+                    if (meta) {
+                        return Promise.resolve([{data, meta}]);
+                    } else {
+                        return Promise.resolve(data);
+                    }
                 }
             } else {
                 return Promise.reject("fail!");
             }
         });
 
-        cache = new LazyMobXCache<number, Query>(
-            q=>q.numAsString,
-            (n:number)=>Math.round((n - 3)/25)+"",
+        cache = new LazyMobXCache<number, Query, string>(
+            q=>q.numAsString+(q.meta || ""),
+            (n:number, m?:string)=>{
+                return Math.round((n - 3)/25)+(m || "");
+            },
             fetch,
             25, 3
         );
@@ -78,19 +85,19 @@ describe("LazyMobXCache", ()=>{
                     }), {
                         status: "complete",
                         data: 128
-                    } as CacheData<number>);
+                    } as CacheData<number, string>);
                     assert.deepEqual(cache.peek({
                         numAsString: "10"
                     }), {
                         status: "complete",
                         data: 253
-                    } as CacheData<number>);
+                    } as CacheData<number, string>);
                     assert.deepEqual(cache.peek({
                         numAsString: "15"
                     }), {
                         status: "complete",
                         data: 378
-                    } as CacheData<number>);
+                    } as CacheData<number, string>);
                     assert.deepEqual(cache.peek({
                         numAsString: "20"
                     }), null);
@@ -125,7 +132,7 @@ describe("LazyMobXCache", ()=>{
                     assert.deepEqual(datum, {
                         status: "complete",
                         data: 128
-                    } as CacheData<number>);
+                    } as CacheData<number, string>);
                     reaction();
                     done();
                 }
@@ -134,7 +141,7 @@ describe("LazyMobXCache", ()=>{
         it("doesnt try to fetch already resolved data", ()=>{
             useFakeClock(clock=>{
                 cache.addData([253, 128, 378]);
-                assert.deepEqual(cache.get({numAsString:"5"}), { status:"complete", data:128} as CacheData<number>, "returns existing data");
+                assert.deepEqual(cache.get({numAsString:"5"}), { status:"complete", data:128} as CacheData<number, string>, "returns existing data");
                 clock.tick(100);
                 assert.isFalse(fetch.called, "fetch shouldnt be called at all for existing queries");
                 cache.get({numAsString:"15"});
@@ -166,7 +173,7 @@ describe("LazyMobXCache", ()=>{
                     assert.isNull(firstTry, "returns null if data pending");
                 } else if (timesRun === 2) {
                     let secondTry = cache.get({numAsString:"6"});
-                    assert.deepEqual(secondTry, {status:"complete", data:null} as CacheData<number>, "no data available for this query");
+                    assert.deepEqual(secondTry, {status:"complete", data:null} as CacheData<number, string>, "no data available for this query");
                     reaction();
                     done();
                 }
@@ -181,7 +188,7 @@ describe("LazyMobXCache", ()=>{
                     assert.isNull(firstTry, "returns null if data pending");
                 } else if (timesRun === 2) {
                     let secondTry = cache.get({numAsString:"6"});
-                    assert.deepEqual(secondTry, {status:"error", data:null} as CacheData<number>, "an error occurred during fetch");
+                    assert.deepEqual(secondTry, {status:"error", data:null} as CacheData<number, string>, "an error occurred during fetch");
 
                     cache.get({numAsString:"6"});
                     cache.get({numAsString:"7"});
@@ -191,9 +198,9 @@ describe("LazyMobXCache", ()=>{
                     assert.isTrue(!!fetch.lastCall.args[0].find((x:Query)=>x.numAsString==="8"), "8 should have been queried");
                     assert.isFalse(!!fetch.lastCall.args[0].find((x:Query)=>x.numAsString==="6"), "6 should have been queried, it already failed");
 
-                    assert.deepEqual(cache.peek({numAsString:"7"}), {status:"complete", data:178} as CacheData<number>, "data 1 fetched successfully");
-                    assert.deepEqual(cache.peek({numAsString:"8"}), {status:"complete", data:203} as CacheData<number>, "data 2 fetched successfully");
-                    assert.deepEqual(cache.peek({numAsString:"6"}), {status:"error", data:null} as CacheData<number>, "error data still marked as error");
+                    assert.deepEqual(cache.peek({numAsString:"7"}), {status:"complete", data:178} as CacheData<number, string>, "data 1 fetched successfully");
+                    assert.deepEqual(cache.peek({numAsString:"8"}), {status:"complete", data:203} as CacheData<number, string>, "data 2 fetched successfully");
+                    assert.deepEqual(cache.peek({numAsString:"6"}), {status:"error", data:null} as CacheData<number, string>, "error data still marked as error");
 
                     cache.get({numAsString:"7"});
                     cache.get({numAsString:"9"});
@@ -205,15 +212,39 @@ describe("LazyMobXCache", ()=>{
                     assert.isTrue(!!fetch.lastCall.args[0].find((x:Query)=>x.numAsString==="10"), "10 should have been queried");
                     assert.isTrue(!!fetch.lastCall.args[0].find((x:Query)=>x.numAsString==="11"), "11 should have been queried");
 
-                    assert.deepEqual(cache.peek({numAsString:"7"}), {status:"complete", data:178} as CacheData<number>, "7 still there successfully from before");
-                    assert.deepEqual(cache.peek({numAsString:"9"}), {status:"error", data:null} as CacheData<number>, "there was an error during fetching 9");
-                    assert.deepEqual(cache.peek({numAsString:"10"}), {status:"error", data:null} as CacheData<number>, "there was an error during fetching 10");
-                    assert.deepEqual(cache.peek({numAsString:"11"}), {status:"error", data:null} as CacheData<number>, "there was an error during fetching 11");
+                    assert.deepEqual(cache.peek({numAsString:"7"}), {status:"complete", data:178} as CacheData<number, string>, "7 still there successfully from before");
+                    assert.deepEqual(cache.peek({numAsString:"9"}), {status:"error", data:null} as CacheData<number, string>, "there was an error during fetching 9");
+                    assert.deepEqual(cache.peek({numAsString:"10"}), {status:"error", data:null} as CacheData<number, string>, "there was an error during fetching 10");
+                    assert.deepEqual(cache.peek({numAsString:"11"}), {status:"error", data:null} as CacheData<number, string>, "there was an error during fetching 11");
                     reaction();
                     done();
                 }
             });
         });
+        it("adds data using metadata given by fetch", (done)=>{
+            let timesRun = 0;
+            let reaction = mobx.autorun(()=>{
+                timesRun += 1;
+                let datum = cache.get({
+                    numAsString:"5",
+                    meta:"Q"
+                });
+                if (timesRun === 1) {
+                    assert.isNull(datum, "no data when first checking for it");
+                } else if (timesRun === 2) {
+                    assert.isTrue(fetch.calledOnce, "fetch has been called once");
+                    assert.deepEqual(datum, {
+                        status: "complete",
+                        data: 128,
+                        meta: "Q"
+                    } as CacheData<number, string>, "data found using key with metadata");
+                    assert.equal(cache.peek({ numAsString: "5"}), null, "no data found when querying without metadata");
+                    reaction();
+                    done();
+                }
+            });
+        });
+
         it("returns null if fetch pending", ()=>{
             assert.isNull(cache.get({numAsString:"6"}));
         });

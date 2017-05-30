@@ -16,6 +16,8 @@ describe('convertSamplesData', () => {
 
         assert.equal(result.items['CANCER_TYPE']['TCGA-BK-A0CC-01'], 'Endometrial Cancer');
 
+        assert.equal(result.items['CANCER_TYPE_DETAILED']['TCGA-BK-A0CC-01'], 'Uterine Serous Carcinoma/Uterine Papillary Serous Carcinoma');
+
         assert.equal(result.items['TUMOR_STAGE_2009']['TCGA-BK-A0CC-01'], 'Stage III');
 
     });

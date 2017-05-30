@@ -147,7 +147,13 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
     }
 
     @computed private get hasUncalledMutations():boolean {
-        return this.props.data.some((row:Mutation[]) => {
+        let data:Mutation[][] = [];
+        if (this.props.data) {
+            data = this.props.data;
+        } else if (this.props.dataStore) {
+            data = this.props.dataStore.allData;
+        }
+        return data.some((row:Mutation[]) => {
             return row.some((m:Mutation) => {
                 return Boolean(m.geneticProfileId && m.geneticProfileId.endsWith(GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX));
             });
