@@ -249,7 +249,7 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 				</FlexRow>
 
 				<Modal
-					className={styles.SelectedStudiesWindow}
+					className={classNames(styles.SelectedStudiesWindow, 'cbioportal-frontend')}
 					show={this.store.showSelectedStudiesOnly}
 					onHide={() => this.store.showSelectedStudiesOnly = false}
 				>
