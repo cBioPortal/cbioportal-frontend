@@ -333,7 +333,7 @@ div.SelectedStudiesWindow {
 }
 
 .CaseSetSelector {
-  div:global(.Select) {
+  div:global(.autosuggest) {
     width: 555px;
   }
   textarea {
@@ -356,7 +356,7 @@ div.SelectedStudiesWindow {
 }
 
 .GeneSetSelector {
-  div:global(.Select) {
+  div:global(.autosuggest) {
     width: 555px;
     margin-bottom:8px;
   }
