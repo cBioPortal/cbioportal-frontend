@@ -227,6 +227,16 @@ export class PatientViewPageStore {
         }
     });
 
+    readonly MSKPathSlidesAvailable = remoteData({
+        await: () => [this.derivedPatientId],
+        invoke: async() => {
+                let resp: any = await request.get(`//slides.mskcc.org/cbioportal/${this.patientId}`);
+                return resp.length > 0;
+        },
+        onError: ()=>{
+            //fail silently
+        }
+    }, false);
 
     readonly MDAndersonHeatMapAvailable = remoteData({
         await: () => [this.derivedPatientId],

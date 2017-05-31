@@ -390,6 +390,16 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                         </div>
                     </MSKTab>
 
+                    <MSKTab key={6} id="MSKPathSlidesTab" linkText="MSK Path Slides"
+                            hide={/https/.test(window.location.protocol) || patientViewPageStore.MSKPathSlidesAvailable.isError || (patientViewPageStore.MSKPathSlidesAvailable.isComplete && !patientViewPageStore.MSKPathSlidesAvailable.result)}
+                    >
+                        <div style={{position: "relative"}}>
+                            <ThreeBounce className="center-block text-center" /> {/*Put it underneath so it gets covered by loaded element*/}
+                            <iframe style={{position:"absolute", top:0, width:'100%', height:700, border:'none'}}
+                                    src={ `http://slides.mskcc.org/cbioportal/${patientViewPageStore.patientId}/show` }></iframe>
+                        </div>
+                    </MSKTab>
+
                     </MSKTabs>
 
                     </Then>
