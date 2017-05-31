@@ -15,7 +15,7 @@ import {labelMobxPromises, cached} from "mobxpromise";
 import MrnaExprRankCache from 'shared/cache/MrnaExprRankCache';
 import request from 'superagent';
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
-import {getTissueImageCheckUrl, getDarwinUrl} from "../../../shared/api/urls";
+import {getTissueImageCheckUrl, getDarwinUrl, getMSKSlidesCheckUrl} from "../../../shared/api/urls";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import PmidCache from "shared/cache/PmidCache";
 import {IOncoKbData} from "shared/model/OncoKB";
@@ -230,8 +230,8 @@ export class PatientViewPageStore {
     readonly MSKPathSlidesAvailable = remoteData({
         await: () => [this.derivedPatientId],
         invoke: async() => {
-                let resp: any = await request.get(`//slides.mskcc.org/cbioportal/${this.patientId}`);
-                return resp.length > 0;
+                let resp: any = await request.get(getMSKSlidesCheckUrl(this.patientId));
+                return JSON.parse(resp.text).length > 0;
         },
         onError: ()=>{
             //fail silently

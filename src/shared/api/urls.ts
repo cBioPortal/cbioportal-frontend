@@ -58,6 +58,11 @@ export function getTissueImageCheckUrl(filter:string) {
         slide_name_filter: filter
     });
 }
+
+export function getMSKSlidesCheckUrl(patientId:string) {
+    return cbioUrl(`proxy/slides.mskcc.org/cbioportal/${patientId}`);
+}
+
 export function getDarwinUrl(sampleIds:string[], caseId:string) {
     return cbioUrl('checkDarwinAccess.do', {sample_id: sampleIds.join(','), case_id: caseId});
 }
