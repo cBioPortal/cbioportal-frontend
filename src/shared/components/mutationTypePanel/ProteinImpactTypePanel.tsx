@@ -55,6 +55,7 @@ export default class ProteinImpactTypePanel extends React.Component<ProteinImpac
                     count: proteinImpactTypeToCount[type] || 0,
                     onClick: ()=>{
                         this.props.dataStore.setFilter((d:Mutation[])=>(getProteinImpactType(d[0].mutationType) === type));
+                        this.props.dataStore.filterString = "";
                     }
                 });
             }
