@@ -160,15 +160,17 @@ describe('OncoKB', () => {
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'The score for Oncogenic variant(A) should always higher than other categories(B) even B has treatments.');
 
+        // VariantExist does not have any impact any more
         queryA = initQueryIndicator({
-            variantExist: true
+            variantExist: false
         });
         queryB = initQueryIndicator({
-            variantExist: false
+            variantExist: true,
+            highestSensitiveLevel: 'LEVEL_2A'
         });
         array = [queryB, queryA];
         sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
-        assert.isAbove(
+        assert.isBelow(
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'variantExist test 1');
 
@@ -181,9 +183,40 @@ describe('OncoKB', () => {
         });
         array = [queryB, queryA];
         sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
-        assert.isAbove(
+        assert.isBelow(
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'variantExist test 2');
+
+        // Is Hotspot does not have any impact any more
+        queryA = initQueryIndicator({
+            oncogenic: 'Oncogenic',
+            hotspot: false
+        });
+        queryB = initQueryIndicator({
+            oncogenic: 'Oncogenic',
+            hotspot: true,
+            highestSensitiveLevel: 'LEVEL_2A'
+        });
+        array = [queryB, queryA];
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        assert.isBelow(
+            sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
+            'isHotspot test 1');
+
+        queryA = initQueryIndicator({
+            oncogenic: 'Oncogenic',
+            hotspot: true
+        });
+        queryB = initQueryIndicator({
+            oncogenic: 'Oncogenic',
+            hotspot: false,
+            highestSensitiveLevel: 'LEVEL_2A'
+        });
+        array = [queryB, queryA];
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        assert.isBelow(
+            sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
+            'isHotspot test 2');
     });
 
     after(() => {
