@@ -198,6 +198,9 @@ div.SelectedStudiesWindow {
   div.cancerStudyListContainer {
     overflow: auto;
     flex: 1;
+    &:only-child {
+      padding: 10px 10px 10px 15px;
+    }
   }
 
   ul.cancerTypeList {
