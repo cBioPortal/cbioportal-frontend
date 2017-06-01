@@ -1,7 +1,6 @@
 import * as React from 'react';
 import * as styles_any from './styles.module.scss';
 import {Modal} from 'react-bootstrap';
-import ReactSelect from 'react-select';
 import {observer} from "mobx-react";
 import {computed} from 'mobx';
 import {FlexRow, FlexCol} from "../flexbox/FlexBox";
@@ -13,6 +12,7 @@ import {QueryStoreComponent} from "./QueryStore";
 import MutSigGeneSelector from "./MutSigGeneSelector";
 import GisticGeneSelector from "./GisticGeneSelector";
 import SectionHeader from "../sectionHeader/SectionHeader";
+import Autosuggest from 'react-bootstrap-autosuggest';
 
 const styles = styles_any as {
 	GeneSetSelector: string,
@@ -35,7 +35,7 @@ export default class GeneSetSelector extends QueryStoreComponent<GeneSetSelector
 	@computed get selectedGeneListOption()
 	{
 		let option = this.geneListOptions.find(opt => opt.value == this.store.geneQuery);
-		return option ? option.value : '';
+		return option ? option.label : '';
 	}
 
 	@computed get geneListOptions()
@@ -78,10 +78,16 @@ export default class GeneSetSelector extends QueryStoreComponent<GeneSetSelector
 				</SectionHeader>
 
 				<FlexCol overflow>
-				<ReactSelect
+				<Autosuggest
+					datalist={this.geneListOptions}
 					value={this.selectedGeneListOption}
-					options={this.geneListOptions}
-					onChange={option => this.store.geneQuery = option ? option.value : ''}
+					bsSize="small"
+					valueIsItem={true}
+					itemValuePropName="label"
+					onChange={(option:any) => {
+						this.store.geneQuery = option ? option.value : '';
+					}
+					}
 				/>
 
 				{!!(this.store.mutSigForSingleStudy.result.length || this.store.gisticForSingleStudy.result.length) && (
