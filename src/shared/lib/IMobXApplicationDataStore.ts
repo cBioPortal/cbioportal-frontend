@@ -4,6 +4,7 @@ import {lazyMobXTableSort} from "../components/lazyMobXTable/LazyMobXTable";
 export interface IMobXApplicationDataStore<T> {
     // setter
     setFilter:(fn:(d:T, filterString?:string, filterStringUpper?:string, filterStringLower?:string)=>boolean)=>void;
+
     // mobX computed getters
     allData:T[];
     sortedData:T[];
@@ -11,9 +12,11 @@ export interface IMobXApplicationDataStore<T> {
     sortedFilteredSelectedData:T[];
     tableData:T[];
 
+    // exposed methods for interacting with data
+    isHighlighted:(d:T)=>boolean;
+
     // mobX observable public properties (note you can still implement with getter and setter)
     filterString:string;
-    highlight:(d:T)=>boolean;
     sortAscending:boolean;
     sortMetric:SortMetric<T>;
 };
@@ -22,11 +25,11 @@ export class SimpleMobXApplicationDataStore<T> implements IMobXApplicationDataSt
     @observable.ref protected data:T[];
     @observable protected dataFilter:(d:T, filterString?:string, filterStringUpper?:string, filterStringLower?:string)=>boolean;
     @observable protected dataSelector:(d:T)=>boolean;
+    @observable protected dataHighlighter:(d:T)=>boolean;
 
     @observable public filterString:string;
     @observable public sortMetric:SortMetric<T>;
     @observable public sortAscending:boolean;
-    @observable public highlight:(d:T)=>boolean;
 
     @computed get allData() {
         return this.data;
@@ -66,11 +69,15 @@ export class SimpleMobXApplicationDataStore<T> implements IMobXApplicationDataSt
         this.filterString = "";
     }
 
+    public isHighlighted(d:T) {
+        return this.dataHighlighter(d);
+    }
+
 
     constructor(data:T[]) {
         this.data = data;
         this.filterString = "";
-        this.highlight = ()=>false;
+        this.dataHighlighter = ()=>false;
         this.dataSelector = ()=>false;
         this.dataFilter = ()=>true;
         this.sortMetric = ()=>0;
