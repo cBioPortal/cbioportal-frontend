@@ -577,7 +577,9 @@ export default class StructureViewerPanel extends React.Component<IStructureView
         let data = this.props.pdbChainDataStore.sortedFilteredSelectedData;
 
         if (data.length === 0) {
-            data = this.props.pdbChainDataStore.sortedData;
+            // if no selected data, then try allData,
+            // first element of allData is always the first element of initially sorted data
+            data = this.props.pdbChainDataStore.allData;
         }
 
         if (data.length === 0) {
