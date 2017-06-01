@@ -407,6 +407,10 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                         </div>
                     </MSKTab>
 
+                    <MSKTab key={6} id="ctDNATab" linkText="ctDNA">
+
+                    </MSKTab>
+
                     </MSKTabs>
 
                     </Then>
