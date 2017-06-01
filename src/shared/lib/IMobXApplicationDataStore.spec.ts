@@ -27,7 +27,7 @@ describe('SimpleMobXApplicationDataStore', ()=>{
 
         assert.equal(store.filterString, "", "initial filter string is empty");
         assert.isTrue(store.sortAscending, "initially sort ascending");
-        assert.equal(store.allData.filter(store.highlight).length, 0, "initially nothing is highlighted");
+        assert.equal(store.allData.filter((d:number)=>store.isHighlighted(d)).length, 0, "initially nothing is highlighted");
     });
 
     it("sorts according to given metric and direction", ()=>{
