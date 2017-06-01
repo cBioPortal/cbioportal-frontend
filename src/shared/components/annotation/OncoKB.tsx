@@ -51,11 +51,9 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
 
         const values:number[] = [];
 
-        values[0] = (indicator.variantExist || indicator.alleleExist || indicator.hotspot || indicator.vus) ? 1 : 0;
-        values[1] = calcOncogenicScore(indicator.oncogenic, indicator.vus);
-        values[2] = (indicator.variantExist || indicator.alleleExist || indicator.hotspot) ? 1 : 0;
-        values[3] = calcSensitivityLevelScore(indicator.highestSensitiveLevel);
-        values[4] = calcResistanceLevelScore(indicator.highestResistanceLevel);
+        values[0] = calcOncogenicScore(indicator.oncogenic, indicator.vus);
+        values[1] = calcSensitivityLevelScore(indicator.highestSensitiveLevel);
+        values[2] = calcResistanceLevelScore(indicator.highestResistanceLevel);
 
         return values;
     }
