@@ -37,8 +37,8 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 					description:`${sampleList.name} (${sampleList.sampleCount})`,
 					component: (<DefaultTooltip
 						placement="right"
-						mouseEnterDelay={0}
-						arrowContent=''
+                        destroyTooltipOnHide={true}
+                        overlayClassName="hideTooltipArrow"
 						overlay={<div className={styles.tooltip}>{sampleList.description}</div>}
 					>
 						<span>{`${sampleList.name} (${sampleList.sampleCount})`}</span>
@@ -51,8 +51,8 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 				description:`Specify your own case list`,
 				component: (<DefaultTooltip
 					placement="right"
-					mouseEnterDelay={0}
-					arrowContent=''
+                    destroyTooltipOnHide={true}
+                    overlayClassName="hideTooltipArrow"
 					overlay={<div className={styles.tooltip}>Specify your own case list</div>}
 				>
 					<span>User-defined Case List</span>
@@ -98,8 +98,7 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 
 				<DefaultTooltip
 					placement="right"
-					mouseEnterDelay={0}
-					arrowContent={null}
+                    overlayClassName="hideTooltipArrow"
 					overlay={<div>{this.selectedCaseSetDescription}</div>}
 				>
 				<Autosuggest
