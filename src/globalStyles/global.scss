@@ -93,6 +93,13 @@ th.reactable-header-sort-asc:after {
 
 .rc-tooltip {
   opacity:1 !important;
+
+  &.hideTooltipArrow {
+    .rc-tooltip-arrow {
+      display:none;
+    }
+  }
+
 }
 
 .mainTabs {
