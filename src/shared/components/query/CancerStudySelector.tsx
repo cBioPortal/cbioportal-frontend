@@ -10,6 +10,7 @@ import StudyList from "./studyList/StudyList";
 import {observer, Observer} from "mobx-react";
 import {expr} from 'mobx';
 import memoize from "memoize-weak-decorator";
+import {If, Then} from 'react-if';
 import {QueryStoreComponent} from "./QueryStore";
 import SectionHeader from "../sectionHeader/SectionHeader";
 import {Modal} from 'react-bootstrap';
@@ -240,9 +241,13 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 				</SectionHeader>
 
 				<FlexRow className={styles.cancerStudySelectorBody}>
-					<div className={styles.cancerTypeListContainer}>
-						<this.CancerTypeList/>
-					</div>
+					<If condition={this.store.maxTreeDepth > 0}>
+						<Then>
+							<div className={styles.cancerTypeListContainer}>
+								<this.CancerTypeList/>
+							</div>
+						</Then>
+					</If>
 					<div className={styles.cancerStudyListContainer}>
 						<StudyList/>
 					</div>
