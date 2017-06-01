@@ -230,14 +230,6 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
             ret.push({
                 codon,
                 count: mutations.length,
-                onMouseOver: action(()=>{
-                    this.props.dataStore.highlight = (d:Mutation[])=>{
-                        return (d[0].proteinPosStart === codon);
-                    }
-                }),
-                onMouseOut: action(()=>{
-                    this.props.dataStore.highlight = ()=>false;
-                }),
                 tooltip:this.lollipopTooltip(mutations),
                 color: this.getLollipopColor(mutations),
                 label

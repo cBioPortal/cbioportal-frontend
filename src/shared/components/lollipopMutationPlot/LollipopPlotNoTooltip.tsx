@@ -16,8 +16,6 @@ export type LollipopSpec = {
     label?:string;
     color?:string;
     tooltip?:JSX.Element;
-    onMouseOver?:()=>void;
-    onMouseOut?:()=>void;
 };
 
 export type DomainSpec = {
@@ -107,9 +105,11 @@ export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotN
                             this.props.setHitZone(
                                 lollipopComponent.circleHitRect,
                                 lollipopComponent.props.spec.tooltip,
-                                ()=>{ lollipopComponent.props.spec.onMouseOver && lollipopComponent.props.spec.onMouseOver(); lollipopComponent.isHovered = true},
-                                ()=>this.handlers.onLollipopClick(lollipopComponent.props.spec.codon),
-                                ()=>{ lollipopComponent.props.spec.onMouseOut && lollipopComponent.props.spec.onMouseOut();},
+                                action(()=>{
+                                    this.props.dataStore.setPositionHighlighted(lollipopComponent.props.spec.codon, true);
+                                    lollipopComponent.isHovered = true
+                                }),
+                                ()=>this.handlers.onLollipopClick(lollipopComponent.props.spec.codon)
                             );
                         }
                     }
@@ -144,6 +144,7 @@ export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotN
                 component.isHovered = false;
             }
         }
+        this.props.dataStore.clearHighlightedPositions();
     }
 
 
