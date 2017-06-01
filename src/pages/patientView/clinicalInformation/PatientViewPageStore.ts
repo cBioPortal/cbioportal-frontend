@@ -26,6 +26,7 @@ import VariantCountCache from "shared/cache/VariantCountCache";
 import CopyNumberCountCache from "./CopyNumberCountCache";
 import CancerTypeCache from "shared/cache/CancerTypeCache";
 import MutationCountCache from "shared/cache/MutationCountCache";
+import AppConfig from "appConfig";
 import {
     findGeneticProfileIdDiscrete, ONCOKB_DEFAULT, fetchOncoKbData, fetchCnaOncoKbData,
     indexHotspotData, mergeMutations, fetchHotspotsData, fetchMyCancerGenomeData, fetchCosmicData,
@@ -346,7 +347,7 @@ export class PatientViewPageStore {
             this.derivedPatientId
         ],
         invoke: async() => {
-            let enableDarwin: boolean | null | undefined = ((window as any).enableDarwin);
+            let enableDarwin: boolean | null | undefined = AppConfig.enableDarwin;
 
             if (enableDarwin === true) {
                 let resp = await request.get(getDarwinUrl(this.sampleIds, this.patientId));
