@@ -362,19 +362,8 @@ div.SelectedStudiesWindow {
   }
 
   .buttonRow {
-    button {
-      background: linear-gradient(to bottom, #f3f3f3 50%, #eaeaea 100%);
-      border: 0;
-      border-bottom: 1px solid rgba(0,0,0,0.1);
-      border-radius: 2px;
-      color: #333;
-      padding: 8px 15px;
-
-      &:hover {
-        background: linear-gradient(to bottom, #eaeaea 50%, #f3f3f3 100%);
-      }
-    }
     margin-bottom:8px;
+    justify-content:space-between;
   }
 
   textarea.geneSet {
@@ -612,13 +601,7 @@ label.transposeDataMatrix {
 div.submitRow {
 
   align-items:center;
-
-  button.submit {
-    font-weight: 300;
-    font-size: 18px;
-    width: 240px;
-    padding: 10px 0;
-  }
+  justify-content: center;
 
   button.genomeSpace {
     border: 1px solid $darkestCream;
