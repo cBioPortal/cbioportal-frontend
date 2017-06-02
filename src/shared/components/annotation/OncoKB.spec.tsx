@@ -160,6 +160,33 @@ describe('OncoKB', () => {
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'The score for Oncogenic variant(A) should always higher than other categories(B) even B has treatments.');
 
+        // GeneExist tests
+        queryA = initQueryIndicator({
+            geneExist: true
+        });
+        queryB = initQueryIndicator({
+            geneExist: false
+        });
+        array = [queryB, queryA];
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        assert.isAbove(
+            sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
+            'geneExist test 1');
+
+        // GeneExist tests
+        queryA = initQueryIndicator({
+            geneExist: false,
+            oncogenic: 'Oncogenic'
+        });
+        queryB = initQueryIndicator({
+            geneExist: true
+        });
+        array = [queryB, queryA];
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        assert.isAbove(
+            sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
+            'geneExist test 2');
+
         // VariantExist does not have any impact any more
         queryA = initQueryIndicator({
             variantExist: false
