@@ -249,6 +249,16 @@ if (isDev || isTest) {
     // from dev server
     config.output.publicPath = '//localhost:3000/';
 
+    // Get rid of Dedupe for non-production environments - it messes with scss with duplicate names
+    config.plugins = config.plugins.filter(p => {
+        const name = p.constructor.toString();
+        const fnName = name.match(/^function (.*)\((.*\))/);
+
+        const idx = [
+            'DedupePlugin',
+        ].indexOf(fnName[1]);
+        return idx < 0;
+    });
 
 } else {
 
@@ -362,6 +372,5 @@ if (isTest) {
 
 }
 // End Testing
-
 
 module.exports = config;
