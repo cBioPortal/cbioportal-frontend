@@ -93,12 +93,12 @@ export default class GeneSetSelector extends QueryStoreComponent<GeneSetSelector
 				{!!(this.store.mutSigForSingleStudy.result.length || this.store.gisticForSingleStudy.result.length) && (
 					<FlexRow padded className={styles.buttonRow}>
 						{!!(this.store.mutSigForSingleStudy.result.length) && (
-							<button onClick={() => this.store.showMutSigPopup = true}>
+							<button className="btn btn-default btn-sm" onClick={() => this.store.showMutSigPopup = true}>
 								Select from Recurrently Mutated Genes (MutSig)
 							</button>
 						)}
 						{!!(this.store.gisticForSingleStudy.result.length) && (
-							<button onClick={() => this.store.showGisticPopup = true}>
+							<button className="btn btn-default btn-sm" onClick={() => this.store.showGisticPopup = true}>
 								Select Genes from Recurrent CNAs (Gistic)
 							</button>
 						)}

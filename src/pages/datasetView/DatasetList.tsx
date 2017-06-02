@@ -1,6 +1,5 @@
 import * as React from "react";
 import * as _ from 'lodash';
-import { Table, Tr, Td } from 'reactableMSK';
 import { CancerStudy } from 'shared/api/generated/CBioPortalAPI';
 import {ThreeBounce} from 'better-react-spinkit';
 import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
