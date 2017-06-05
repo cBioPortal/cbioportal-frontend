@@ -27,7 +27,7 @@ import DiscreteCNACache from "shared/cache/DiscreteCNACache";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import MrnaExprRankCache from "shared/cache/MrnaExprRankCache";
 import VariantCountCache from "shared/cache/VariantCountCache";
-import PmidCache from "shared/cache/PmidCache";
+import PubMedCache from "shared/cache/PubMedCache";
 import CancerTypeCache from "../../cache/CancerTypeCache";
 import MutationCountCache from "../../cache/MutationCountCache";
 import MutationCountColumnFormatter from "./column/MutationCountColumnFormatter";
@@ -43,7 +43,7 @@ export interface IMutationTableProps {
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
     mrnaExprRankCache?:MrnaExprRankCache;
     variantCountCache?:VariantCountCache;
-    pmidCache?:PmidCache
+    pubMedCache?:PubMedCache
     cancerTypeCache?:CancerTypeCache;
     mutationCountCache?:MutationCountCache;
     mutSigData?:IMutSigData;
@@ -374,7 +374,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 myCancerGenomeData: this.props.myCancerGenomeData,
                 oncoKbData: this.props.oncoKbData,
                 oncoKbEvidenceCache: this.props.oncoKbEvidenceCache,
-                pmidCache: this.props.pmidCache,
+                pubMedCache: this.props.pubMedCache,
                 enableOncoKb: true,
                 enableMyCancerGenome: true,
                 enableHotspot: true
