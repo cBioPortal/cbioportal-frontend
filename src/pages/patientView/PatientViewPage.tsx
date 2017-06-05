@@ -293,7 +293,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         discreteCNACache={patientViewPageStore.discreteCNACache}
                                         mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}
                                         oncoKbEvidenceCache={patientViewPageStore.oncoKbEvidenceCache}
-                                        pmidCache={patientViewPageStore.pmidCache}
+                                        pubMedCache={patientViewPageStore.pubMedCache}
                                         mrnaExprRankGeneticProfileId={patientViewPageStore.mrnaRankGeneticProfileId.result || undefined}
                                         discreteCNAGeneticProfileId={patientViewPageStore.geneticProfileIdDiscrete.result}
                                         data={patientViewPageStore.mergedMutationDataIncludingUncalled}
@@ -315,7 +315,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 sampleManager={sampleManager}
                                 cnaOncoKbData={patientViewPageStore.cnaOncoKbData.result}
                                 oncoKbEvidenceCache={patientViewPageStore.oncoKbEvidenceCache}
-                                pmidCache={patientViewPageStore.pmidCache}
+                                pubMedCache={patientViewPageStore.pubMedCache}
                                 data={patientViewPageStore.mergedDiscreteCNAData}
                                 copyNumberCountCache={patientViewPageStore.copyNumberCountCache}
                                 mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}
