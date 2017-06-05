@@ -221,6 +221,10 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
         for (let i=0; i<positionMutations.length; i++) {
             const mutations = positionMutations[i];
             const codon = mutations[0].proteinPosStart;
+            if (isNaN(codon) || codon < 0 || (this.pfamGeneData.isComplete && (codon > this.pfamGeneData.result.length))) {
+                // invalid position
+                continue;
+            }
             let label:string|undefined;
             if (i < numLabelsToShow && mutations.length >= minMutationsToShowLabel) {
                 label = this.lollipopLabel(mutations);
