@@ -17,7 +17,7 @@ import request from 'superagent';
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
 import {getTissueImageCheckUrl, getDarwinUrl} from "../../../shared/api/urls";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
-import PmidCache from "shared/cache/PmidCache";
+import PubMedCache from "shared/cache/PubMedCache";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {IHotspotData} from "shared/model/CancerHotspots";
 import {IMutSigData} from "shared/model/MutSig";
@@ -482,8 +482,8 @@ export class PatientViewPageStore {
         return new OncoKbEvidenceCache();
     }
 
-    @cached get pmidCache() {
-        return new PmidCache();
+    @cached get pubMedCache() {
+        return new PubMedCache();
     }
 
     @cached get copyNumberCountCache() {

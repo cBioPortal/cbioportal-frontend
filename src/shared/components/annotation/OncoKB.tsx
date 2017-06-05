@@ -12,14 +12,14 @@ import {
 import {observable} from "mobx";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import OncoKbTooltip from "./OncoKbTooltip";
-import OncokbPmidCache from "shared/cache/PmidCache";
+import OncokbPubMedCache from "shared/cache/PubMedCache";
 import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
 
 export interface IOncoKbProps {
     indicator?: IndicatorQueryResp;
     evidenceCache?: OncoKbEvidenceCache;
     evidenceQuery?: Query;
-    pmidCache?: OncokbPmidCache;
+    pubMedCache?: OncokbPubMedCache;
 }
 
 export function hideArrow(tooltipEl: any) {
@@ -168,7 +168,7 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
                 indicator={this.props.indicator}
                 evidenceCache={this.props.evidenceCache}
                 evidenceQuery={this.props.evidenceQuery}
-                pmidCache={this.props.pmidCache}
+                pubMedCache={this.props.pubMedCache}
                 handleFeedbackOpen={this.handleFeedbackOpen}
                 onLoadComplete={this.handleLoadComplete}
             />
