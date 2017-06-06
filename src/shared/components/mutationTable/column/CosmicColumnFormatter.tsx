@@ -94,8 +94,6 @@ export default class CosmicColumnFormatter
     public static renderFunction(data:Mutation[], cosmicData?:ICosmicData)
     {
         const cosmic:CosmicMutation[]|null = CosmicColumnFormatter.getData(data, cosmicData);
-
-        let value:number = -1;
         let display:string = "";
         let overlay:JSX.Element|null = null;
         let content:JSX.Element;
@@ -103,6 +101,8 @@ export default class CosmicColumnFormatter
         // calculate sum of the all counts
         if (cosmic && cosmic.length > 0)
         {
+            let value:number|undefined = undefined;
+
             value = _.reduce(_.map(cosmic, "count"), (sum:number, count:number) => {
                 return sum + count;
             });
@@ -114,7 +114,11 @@ export default class CosmicColumnFormatter
                 </span>
             );
 
-            display = value.toString();
+            if (value) {
+                display = value.toString();
+            } else {
+                display = "";
+            }
         }
 
         // basic content is the value
