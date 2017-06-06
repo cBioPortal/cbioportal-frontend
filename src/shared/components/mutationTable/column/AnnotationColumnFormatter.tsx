@@ -2,7 +2,7 @@ import * as React from 'react';
 import {If} from 'react-if';
 import * as _ from "lodash";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
-import OncokbPmidCache from "shared/cache/PmidCache";
+import OncokbPubMedCache from "shared/cache/PubMedCache";
 import CancerHotspots from "shared/components/annotation/CancerHotspots";
 import MyCancerGenome from "shared/components/annotation/MyCancerGenome";
 import OncoKB from "shared/components/annotation/OncoKB";
@@ -22,7 +22,7 @@ export interface IAnnotationColumnProps {
     myCancerGenomeData?: IMyCancerGenomeData;
     oncoKbData?: IOncoKbData;
     oncoKbEvidenceCache?: OncoKbEvidenceCache;
-    pmidCache?: OncokbPmidCache;
+    pubMedCache?: OncokbPubMedCache;
 }
 
 export interface IAnnotation {
@@ -155,14 +155,14 @@ export default class AnnotationColumnFormatter
             columnProps,
             columnProps.oncoKbEvidenceCache,
             evidenceQuery,
-            columnProps.pmidCache);
+            columnProps.pubMedCache);
     }
 
     public static mainContent(annotation:IAnnotation,
                               columnProps:IAnnotationColumnProps,
                               evidenceCache?: OncoKbEvidenceCache,
                               evidenceQuery?: Query,
-                              pmidCache?:OncokbPmidCache)
+                              pubMedCache?:OncokbPubMedCache)
     {
         return (
             <span>
@@ -171,7 +171,7 @@ export default class AnnotationColumnFormatter
                         indicator={annotation.oncoKbIndicator}
                         evidenceCache={evidenceCache}
                         evidenceQuery={evidenceQuery}
-                        pmidCache={pmidCache}
+                        pubMedCache={pubMedCache}
                     />
                 </If>
                 <If condition={columnProps.enableMyCancerGenome || false}>

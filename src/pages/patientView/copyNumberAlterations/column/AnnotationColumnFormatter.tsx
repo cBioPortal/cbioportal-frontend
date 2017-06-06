@@ -76,6 +76,6 @@ export default class AnnotationColumnFormatter
             columnProps,
             columnProps.oncoKbEvidenceCache,
             evidenceQuery,
-            columnProps.pmidCache);
+            columnProps.pubMedCache);
     }
 }
