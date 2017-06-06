@@ -16,6 +16,11 @@ const config:IAppConfig = {
     ],
     priorityStudies: {
     },
+    showCivic: (window as any).showCivic,
+    showHotspot: (window as any).showHotspot,
+    showMyCancerGenome: (window as any).showMyCancerGenome,
+    showOncoKB: (window as any).showOncoKB,
+    oncoKBApiUrl: (window as any).oncoKBApiUrl
 };
 
 export default config;

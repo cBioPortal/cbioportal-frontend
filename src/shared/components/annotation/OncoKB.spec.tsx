@@ -160,17 +160,46 @@ describe('OncoKB', () => {
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
             'The score for Oncogenic variant(A) should always higher than other categories(B) even B has treatments.');
 
+        // GeneExist tests
         queryA = initQueryIndicator({
-            variantExist: true
+            geneExist: true
         });
         queryB = initQueryIndicator({
-            variantExist: false
+            geneExist: false
         });
         array = [queryB, queryA];
         sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
         assert.isAbove(
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
-            'variantExist test 1');
+            'A should be higher than B.');
+
+        // GeneExist tests
+        queryA = initQueryIndicator({
+            geneExist: false,
+            oncogenic: 'Oncogenic'
+        });
+        queryB = initQueryIndicator({
+            geneExist: true
+        });
+        array = [queryB, queryA];
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        assert.isAbove(
+            sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
+            'A should be higher than B even A gene does not exist. Because A has higher oncogenicity.');
+
+        // VariantExist does not have any impact any more
+        queryA = initQueryIndicator({
+            variantExist: false
+        });
+        queryB = initQueryIndicator({
+            variantExist: true,
+            highestSensitiveLevel: 'LEVEL_2A'
+        });
+        array = [queryB, queryA];
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        assert.isBelow(
+            sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
+            'A should be lower than B.');
 
         queryA = initQueryIndicator({
             variantExist: true
@@ -181,9 +210,40 @@ describe('OncoKB', () => {
         });
         array = [queryB, queryA];
         sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
-        assert.isAbove(
+        assert.isBelow(
             sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
-            'variantExist test 2');
+            'A should be lower than B[LEVEL_2A] even B variant does not exist.');
+
+        // Is Hotspot does not have any impact any more
+        queryA = initQueryIndicator({
+            oncogenic: 'Oncogenic',
+            hotspot: false
+        });
+        queryB = initQueryIndicator({
+            oncogenic: 'Oncogenic',
+            hotspot: true,
+            highestSensitiveLevel: 'LEVEL_2A'
+        });
+        array = [queryB, queryA];
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        assert.isBelow(
+            sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
+            'A should be lower than B.');
+
+        queryA = initQueryIndicator({
+            oncogenic: 'Oncogenic',
+            hotspot: true
+        });
+        queryB = initQueryIndicator({
+            oncogenic: 'Oncogenic',
+            hotspot: false,
+            highestSensitiveLevel: 'LEVEL_2A'
+        });
+        array = [queryB, queryA];
+        sortedArray = lazyMobXTableSort<IndicatorQueryResp>(array, OncoKB.sortValue, true);
+        assert.isBelow(
+            sortedArray.indexOf(queryA), sortedArray.indexOf(queryB),
+            'A should be lower than B[LEVEL_2A] even A is hotspot.');
     });
 
     after(() => {
