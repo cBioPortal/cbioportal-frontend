@@ -278,7 +278,7 @@ export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotN
         return this.props.lollipops.map((lollipop:LollipopSpec, i:number)=>{
             return (<Lollipop
                     key={lollipop.codon}
-                    ref={(lollipopComponent:Lollipop)=>{this.lollipopComponents[i] = lollipopComponent;}}
+                    ref={(lollipopComponent:Lollipop)=>{ if (lollipopComponent !== null) { this.lollipopComponents[i] = lollipopComponent; } }}
                     x={this.geneX + this.codonToX(lollipop.codon)}
                     stickBaseY={this.geneY}
                     stickHeight={this.countToHeight(lollipop.count)}
@@ -301,7 +301,7 @@ export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotN
             return (
                 <Domain
                     key={index}
-                    ref={(domainComponent:Domain)=>{this.domainComponents[index] = domainComponent;}}
+                    ref={(domainComponent:Domain)=>{ if (domainComponent !== null) { this.domainComponents[index] = domainComponent; } }}
                     x={this.geneX + x}
                     y={this.domainY}
                     width={width}
