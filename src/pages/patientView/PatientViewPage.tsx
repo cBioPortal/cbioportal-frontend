@@ -28,6 +28,7 @@ import validateParameters from '../../shared/lib/validateParameters';
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import ValidationAlert from "shared/components/ValidationAlert";
 import AjaxErrorModal from "shared/components/AjaxErrorModal";
+import AppConfig from 'appConfig';
 
 import './patient.scss';
 
@@ -164,17 +165,24 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 return (
                     <div className="patientSample">
                         <span className='clinical-spans'>
-                            {  sampleManager!.getComponentForSample(sample.id) }
-                            {'\u00A0'}
-                            <a href="javascript:void(0)" onClick={()=>{ this.handleSampleClick(sample.id) }}>{sample.id}</a>
-                            {getSpanElements(clinicalDataLegacy, 'lgg_ucsf_2014')}
+                            {
+                                sampleManager!.getComponentForSample(sample.id, 1, '',
+                                    <span style={{display:'inline-flex'}}>
+                                        {'\u00A0'}
+                                        <a
+                                            href="javascript:void(0)"
+                                            onClick={() => this.handleSampleClick(sample.id)}
+                                        >
+                                            {sample.id}
+                                        </a>
+                                        {getSpanElements(clinicalDataLegacy, 'lgg_ucsf_2014')}
+                                    </span>
+                                )
+                            }
                         </span>
                     </div>
-
-                )
+                );
             });
-
-
         }
 
         if (patientViewPageStore.patientIdsInCohort && patientViewPageStore.patientIdsInCohort.length > 0) {
@@ -302,6 +310,10 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         hotspots={patientViewPageStore.indexedHotspotData}
                                         cosmicData={patientViewPageStore.cosmicData.result}
                                         oncoKbData={patientViewPageStore.oncoKbData.result}
+                                        enableOncoKb={AppConfig.showOncoKB}
+                                        enableHotspot={AppConfig.showHotspot}
+                                        enableMyCancerGenome={AppConfig.showMyCancerGenome}
+                                        enableCivic={AppConfig.showCivic}
                                     />
                                 )
                             }
@@ -315,6 +327,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 sampleManager={sampleManager}
                                 cnaOncoKbData={patientViewPageStore.cnaOncoKbData.result}
                                 oncoKbEvidenceCache={patientViewPageStore.oncoKbEvidenceCache}
+                                enableOncoKb={AppConfig.showOncoKB}
                                 pmidCache={patientViewPageStore.pmidCache}
                                 data={patientViewPageStore.mergedDiscreteCNAData}
                                 copyNumberCountCache={patientViewPageStore.copyNumberCountCache}

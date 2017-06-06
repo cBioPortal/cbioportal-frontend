@@ -8,6 +8,8 @@ export interface IClinicalInformationPatientTableProps {
     data: ClinicalData[];
     showTitleBar?: boolean;
     cssClass?:string;
+    showFilter?:boolean;
+    showCopyDownload?:boolean;
 }
 
 class PatientTable extends LazyMobXTable<IPatientRow> {}
@@ -44,6 +46,8 @@ export default class ClinicalInformationPatientTable extends React.Component<ICl
                   showPagination={false}
                   showColumnVisibility={false}
                   className={styles.patientTable}
+                  showFilter={(this.props.showFilter === false) ? false : true }
+                  showCopyDownload={(this.props.showCopyDownload === false) ? false : true }
             />
         );
     }

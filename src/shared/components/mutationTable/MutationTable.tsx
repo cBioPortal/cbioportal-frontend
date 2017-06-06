@@ -47,6 +47,10 @@ export interface IMutationTableProps {
     cancerTypeCache?:CancerTypeCache;
     mutationCountCache?:MutationCountCache;
     mutSigData?:IMutSigData;
+    enableOncoKb?: boolean;
+    enableMyCancerGenome?: boolean;
+    enableHotspot?: boolean;
+    enableCivic?: boolean;
     myCancerGenomeData?: IMyCancerGenomeData;
     hotspots?: IHotspotData;
     cosmicData?:ICosmicData;
@@ -135,7 +139,11 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
         initialSortColumn: "Annotation",
         initialSortDirection: "desc",
         itemsLabel: "Mutation",
-        itemsLabelPlural: "Mutations"
+        itemsLabelPlural: "Mutations",
+        enableOncoKb: true,
+        enableMyCancerGenome: true,
+        enableHotspot: true,
+        enableCivic: false
     };
 
     constructor(props:P)
@@ -375,9 +383,9 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 oncoKbData: this.props.oncoKbData,
                 oncoKbEvidenceCache: this.props.oncoKbEvidenceCache,
                 pmidCache: this.props.pmidCache,
-                enableOncoKb: true,
-                enableMyCancerGenome: true,
-                enableHotspot: true
+                enableOncoKb: this.props.enableOncoKb as boolean,
+                enableMyCancerGenome: this.props.enableMyCancerGenome as boolean,
+                enableHotspot: this.props.enableHotspot as boolean
             })),
             sortBy:(d:Mutation[])=>{
                 return AnnotationColumnFormatter.sortValue(d,
