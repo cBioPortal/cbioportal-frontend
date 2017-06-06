@@ -26,6 +26,7 @@ import {default as PatientViewMutationTable} from "./mutation/PatientViewMutatio
 import PathologyReport from "./pathologyReport/PathologyReport";
 import { MSKTabs, MSKTab } from "../../shared/components/MSKTabs/MSKTabs";
 import validateParameters from '../../shared/lib/validateParameters';
+import AppConfig from 'appConfig';
 
 import './patient.scss';
 import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIndicator";
@@ -326,6 +327,10 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         hotspots={patientViewPageStore.indexedHotspotData}
                                         cosmicData={patientViewPageStore.cosmicData.result}
                                         oncoKbData={patientViewPageStore.oncoKbData.result}
+                                        enableOncoKb={AppConfig.showOncoKB}
+                                        enableHotspot={AppConfig.showHotspot}
+                                        enableMyCancerGenome={AppConfig.showMyCancerGenome}
+                                        enableCivic={AppConfig.showCivic}
                                     />
                                 )
                             }
@@ -339,6 +344,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 sampleManager={sampleManager}
                                 cnaOncoKbData={patientViewPageStore.cnaOncoKbData.result}
                                 oncoKbEvidenceCache={patientViewPageStore.oncoKbEvidenceCache}
+                                enableOncoKb={AppConfig.showOncoKB}
                                 pmidCache={patientViewPageStore.pmidCache}
                                 data={patientViewPageStore.mergedDiscreteCNAData}
                                 copyNumberCountCache={patientViewPageStore.copyNumberCountCache}
