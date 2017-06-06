@@ -20,6 +20,7 @@ import {ProteinScheme, ProteinColor, SideChain, MutationColor, IResidueSpec} fro
 import PyMolScriptGenerator from "./PyMolScriptGenerator";
 
 import styles from "./structureViewer.module.scss";
+import PdbChainInfo from "../PdbChainInfo";
 
 export interface IStructureViewerPanelProps {
     pdbChainDataStore: IMobXApplicationDataStore<IPdbChain>
@@ -370,68 +371,6 @@ export default class StructureViewerPanel extends React.Component<IStructureView
         );
     }
 
-    public pdbInfo(pdbId:string, chainId:string)
-    {
-        let pdbInfo = null;
-        let moleculeInfo = null;
-
-        if (this.props.pdbHeaderCache)
-        {
-            const cacheData = this.props.pdbHeaderCache.get(pdbId);
-
-            if (cacheData === null) {
-                pdbInfo = <TableCellStatusIndicator status={TableCellStatus.LOADING} />;
-                moleculeInfo = <TableCellStatusIndicator status={TableCellStatus.LOADING} />;
-            }
-            else if (cacheData.status === "error") {
-                pdbInfo = <TableCellStatusIndicator status={TableCellStatus.ERROR} />;
-                moleculeInfo = <TableCellStatusIndicator status={TableCellStatus.ERROR} />;
-            }
-            else if (cacheData.data === null) {
-                pdbInfo = <TableCellStatusIndicator status={TableCellStatus.NA} />;
-                moleculeInfo = <TableCellStatusIndicator status={TableCellStatus.NA} />;
-            }
-            else {
-                const summary = generatePdbInfoSummary(cacheData.data, chainId);
-
-                pdbInfo = summary.pdbInfo;
-                moleculeInfo = summary.moleculeInfo;
-            }
-        }
-
-        return (
-            <div className="col col-sm-12">
-                <div className="row">
-                    <div className="pull-left" style={{paddingRight: 5}}>
-                        <span>PDB </span>
-                        <span>
-                            <a
-                                href={`http://www.rcsb.org/pdb/explore/explore.do?structureId=${pdbId}`}
-                                target="_blank"
-                            >
-                                <b>{pdbId}</b>
-                            </a>
-                        </span>
-                        <span>:</span>
-                    </div>
-                    <div>
-                        <TextExpander text={pdbInfo} />
-                    </div>
-                </div>
-                <div className="row">
-                    <div className="pull-left" style={{paddingRight: 5}}>
-                        <span>Chain </span>
-                        <span><b>{chainId}</b></span>
-                        <span>:</span>
-                    </div>
-                    <div>
-                        <TextExpander text={moleculeInfo} />
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
     public mainContent()
     {
         if (this.pdbId && this.chainId)
@@ -440,7 +379,12 @@ export default class StructureViewerPanel extends React.Component<IStructureView
             return (
                 <span>
                     <div className="row">
-                        {this.pdbInfo(this.pdbId, this.chainId)}
+                        <PdbChainInfo
+                            pdbId={this.pdbId}
+                            chainId={this.chainId}
+                            cache={this.props.pdbHeaderCache}
+                            truncateText={true}
+                        />
                     </div>
                     <If condition={this.residueWarning.length > 0}>
                         <span className="text-danger">

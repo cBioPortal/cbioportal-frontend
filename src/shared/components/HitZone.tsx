@@ -13,8 +13,8 @@ type HitZoneProps = {
     onMouseLeave?:()=>void;
 };
 
-@observer
-export default class HitZone extends React.Component<HitZoneProps, {}> {
+//@observer
+export class HitZone extends React.Component<HitZoneProps, {}> {
     private handlers:any;
 
     constructor(props:HitZoneProps) {
@@ -45,8 +45,9 @@ export default class HitZone extends React.Component<HitZoneProps, {}> {
                 onMouseOver={this.handlers.onMouseOver}
                 onClick={this.props.onClick}
                 onMouseOut={this.handlers.onMouseOut}
-            >
-            </svg>
+            />
         );
     }
 }
+
+export default HitZone;
