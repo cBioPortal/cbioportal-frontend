@@ -31,6 +31,7 @@ type ICopyNumberTableWrapperProps = {
     sampleManager:SampleManager|null;
     cnaOncoKbData?:IOncoKbData;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
+    enableOncoKb?:boolean;
     pmidCache?:PmidCache;
     data:DiscreteCopyNumberData[][];
     copyNumberCountCache?:CopyNumberCountCache;
@@ -43,6 +44,10 @@ type ICopyNumberTableWrapperProps = {
 
 @observer
 export default class CopyNumberTableWrapper extends React.Component<ICopyNumberTableWrapperProps, {}> {
+
+    public static defaultProps = {
+        enableOncoKb: true
+    };
 
     render() {
         const columns: CNATableColumn[] = [];
@@ -87,7 +92,7 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
                 oncoKbData: this.props.cnaOncoKbData,
                 oncoKbEvidenceCache: this.props.oncoKbEvidenceCache,
                 pmidCache: this.props.pmidCache,
-                enableOncoKb: true,
+                enableOncoKb: this.props.enableOncoKb as boolean,
                 enableMyCancerGenome: false,
                 enableHotspot: false
             })),
