@@ -62,7 +62,6 @@ $sample-color-xenograft: pink;
     /* Order sample clinical attributes (they don't exist for patient) */
     .clinical-attribute[attr-id="DERIVED_NORMALIZED_CASE_TYPE"] {
         order: 1;
-        text-transform: capitalize;
     }
     .clinical-attribute[attr-id="DERIVED_SAMPLE_LOCATION"] {
         order: 2;
