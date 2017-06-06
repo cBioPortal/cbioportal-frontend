@@ -1,7 +1,7 @@
 import * as React from 'react';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import SampleManager from "../../sampleManager";
-import {GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from '../../../../shared/constants';
+import {isUncalled} from '../../../../shared/lib/mutationUtils';
 
 
 export default class TumorColumnFormatter {
@@ -20,7 +20,10 @@ export default class TumorColumnFormatter {
                 return (
                     <li className={(sample.id in presentSamples) ? '' : 'invisible'}>
                         {
-                        sampleManager.getComponentForSample(sample.id, (presentSamples[sample.id]) ? 1 : 0.1)
+                        sampleManager.getComponentForSample(sample.id,
+                                                            (presentSamples[sample.id]) ? 1 : 0.1,
+                                                            (presentSamples[sample.id]) ? '' : "Mutation has supporting reads, but wasn't called"
+                                                            )
                         }
                     </li>
                 );
@@ -54,7 +57,7 @@ export default class TumorColumnFormatter {
             // Indicate called mutations with true,
             // uncalled mutations with supporting reads as false
             // exclude uncalled mutations without supporting reads completely
-            if (next.geneticProfileId && next.geneticProfileId.endsWith(GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX)) {
+            if (next.geneticProfileId && isUncalled(next.geneticProfileId)) {
                 if (next.tumorAltCount && next.tumorAltCount > 0) {
                     map[next.sampleId] = false;
                 }

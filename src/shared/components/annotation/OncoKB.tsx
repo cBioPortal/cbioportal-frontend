@@ -1,13 +1,16 @@
-import * as React from 'react';
-import {Modal} from 'react-bootstrap';
+import * as React from "react";
+import {Modal} from "react-bootstrap";
 import {observer} from "mobx-react";
 import {Circle} from "better-react-spinkit";
-import DefaultTooltip from 'shared/components/DefaultTooltip';
+import DefaultTooltip from "shared/components/DefaultTooltip";
 import annotationStyles from "./styles/annotation.module.scss";
 import oncogenicIconStyles from "./styles/oncogenicIcon.module.scss";
 import {IndicatorQueryResp, Query} from "shared/api/generated/OncoKbAPI";
 import {
-    oncogenicImageClassNames, calcOncogenicScore, calcSensitivityLevelScore, calcResistanceLevelScore,
+    oncogenicImageClassNames,
+    calcOncogenicScore,
+    calcSensitivityLevelScore,
+    calcResistanceLevelScore
 } from "shared/lib/OncoKbUtils";
 import {observable} from "mobx";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
@@ -51,11 +54,10 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
 
         const values:number[] = [];
 
-        values[0] = (indicator.variantExist || indicator.alleleExist || indicator.hotspot || indicator.vus) ? 1 : 0;
-        values[1] = calcOncogenicScore(indicator.oncogenic, indicator.vus);
-        values[2] = (indicator.variantExist || indicator.alleleExist || indicator.hotspot) ? 1 : 0;
-        values[3] = calcSensitivityLevelScore(indicator.highestSensitiveLevel);
-        values[4] = calcResistanceLevelScore(indicator.highestResistanceLevel);
+        values[0] = calcOncogenicScore(indicator.oncogenic, indicator.vus);
+        values[1] = calcSensitivityLevelScore(indicator.highestSensitiveLevel);
+        values[2] = calcResistanceLevelScore(indicator.highestResistanceLevel);
+        values[3] = indicator.geneExist ? 1 : 0;
 
         return values;
     }

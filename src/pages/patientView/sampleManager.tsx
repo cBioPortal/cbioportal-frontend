@@ -2,19 +2,10 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import SampleInline from './patientHeader/SampleInline';
 import {ClinicalDataBySampleId} from "../../shared/api/api-types-extended";
-import ClinicalInformationPatientTable from "./clinicalInformation/ClinicalInformationPatientTable";
-import DefaultTooltip from 'shared/components/DefaultTooltip';
 import {cleanAndDerive} from './clinicalInformation/lib/clinicalAttributesUtil.js';
 import styles from './patientHeader/style/clinicalAttributes.scss';
 import naturalSort from 'javascript-natural-sort';
 import {ClinicalEvent, ClinicalEventData} from "../../shared/api/generated/CBioPortalAPI";
-
-// we need this to account for issue with rc-tooltip when dealing with large tooltip overlay content
-export function placeArrow(tooltipEl: any) {
-    const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');
-    const targetEl = this.getRootDomNode();  // eslint-disable-line no-invalid-this
-    arrowEl.style.left = '10px';
-}
 
 
 // sort samples based on event, clinical data and id
@@ -132,14 +123,25 @@ class SampleManager {
         this.sampleOrder = _.sortBy(Object.keys(this.sampleIndex), (k) => this.sampleIndex[k]);
     }
 
-    getComponentForSample(sampleId: string, fillOpacity: number = 1) {
-
+    getComponentForSample(sampleId: string,
+                          fillOpacity: number = 1,
+                          extraTooltipText: string = '',
+                          additionalContent: JSX.Element|null = null)
+    {
         let sample = _.find(this.samples, (s: ClinicalDataBySampleId)=> {
             return s.id === sampleId;
         });
 
-        return sample && this.getOverlayTriggerSample(sample, this.sampleIndex[sample.id], this.sampleColors[sample.id], fillOpacity=fillOpacity);
-
+        return sample && (
+            <SampleInline
+                sample={sample}
+                sampleNumber={this.sampleIndex[sample.id] + 1}
+                sampleColor={this.sampleColors[sample.id]}
+                fillOpacity={fillOpacity}
+                extraTooltipText={extraTooltipText}
+                additionalContent={additionalContent}
+            />
+        );
     }
 
     getColorForSample(sampleId: string):string {
@@ -153,43 +155,6 @@ class SampleManager {
     getComponentsForSamples() {
         this.samples.map((sample)=>this.getComponentForSample(sample.id));
     }
-
-    getOverlayTriggerSample(sample: ClinicalDataBySampleId, sampleIndex: number, sampleColor: string, fillOpacity: number = 1) {
-
-        const sampleNumberText: number = sampleIndex+1;
-
-        return (<DefaultTooltip
-            placement='bottomLeft'
-            trigger={['hover', 'focus']}
-            overlay={this.getPopoverSample(sample, sampleNumberText)}
-            arrowContent={<div className="rc-tooltip-arrow-inner" />}
-            destroyTooltipOnHide={false}
-            onPopupAlign={placeArrow}
-            >
-                <svg height="12" width="12">
-                <SampleInline
-                             sample={sample}
-                             sampleNumber={sampleNumberText}
-                             sampleColor={sampleColor}
-                             fillOpacity={fillOpacity}
-                         >
-                </SampleInline>
-                </svg>
-
-        </DefaultTooltip>);
-
-    }
-
-    getPopoverSample(sample: ClinicalDataBySampleId, sampleNumber: number) {
-        return (
-            <div style={{ maxHeight:400, overflow:'auto' }}>
-                <h5>{ sample.id }</h5>
-                <ClinicalInformationPatientTable showTitleBar={false} data={sample.clinicalData} />
-            </div>
-        );
-    }
-
-
 }
 
 export default SampleManager;
