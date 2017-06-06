@@ -13,10 +13,12 @@ import {lazyMobXTableSort} from "shared/components/lazyMobXTable/LazyMobXTable";
 import {
     indexHotspotData, fetchHotspotsData, fetchCosmicData, fetchOncoKbData,
     fetchMutationData, generateSampleIdToTumorTypeMap, generateDataQueryFilter,
-    ONCOKB_DEFAULT, fetchPdbAlignmentData, mergePdbAlignments, fetchSwissProtAccession, fetchUniprotId
+    ONCOKB_DEFAULT, fetchPdbAlignmentData, mergePdbAlignments, fetchSwissProtAccession, fetchUniprotId,
+    fetchPfamGeneData
 } from "shared/lib/StoreUtils";
 import {IMobXApplicationDataStore, SimpleMobXApplicationDataStore} from "../../../shared/lib/IMobXApplicationDataStore";
 import MutationMapperDataStore from "./MutationMapperDataStore";
+import PdbChainDataStore from "./PdbChainDataStore";
 
 export class MutationMapperStore {
 
@@ -155,6 +157,19 @@ export class MutationMapperStore {
         invoke: async () => fetchOncoKbData(this.sampleIdToTumorType, this.mutationData)
     }, ONCOKB_DEFAULT);
 
+    readonly pfamGeneData = remoteData({
+        await: ()=>[
+            this.swissProtId
+        ],
+        invoke: async()=>{
+            if (this.swissProtId.result) {
+                return fetchPfamGeneData(this.swissProtId.result);
+            } else {
+                return {};
+            }
+        }
+    }, {});
+
     @computed get dataQueryFilter() {
         return generateDataQueryFilter(this.sampleListId, this.sampleIds.result);
     }
@@ -193,8 +208,8 @@ export class MutationMapperStore {
         return new MutationMapperDataStore(this.processedMutationData);
     }
 
-    @cached get pdbChainDataStore(): IMobXApplicationDataStore<IPdbChain> {
+    @cached get pdbChainDataStore(): PdbChainDataStore {
         // initialize with sorted merged alignment data
-        return new SimpleMobXApplicationDataStore<IPdbChain>(this.sortedMergedAlignmentData);
+        return new PdbChainDataStore(this.sortedMergedAlignmentData);
     }
 }

@@ -4,6 +4,7 @@ import {
 import {Mutation} from "../../../shared/api/generated/CBioPortalAPI";
 import {action, computed, observable} from "mobx";
 import Immutable from "seamless-immutable";
+import {IPdbChain} from "../../../shared/model/Pdb";
 
 type PositionAttr = {[position:string]:boolean};
 type ImmutablePositionAttr = PositionAttr & Immutable.ImmutableObject<PositionAttr>;
