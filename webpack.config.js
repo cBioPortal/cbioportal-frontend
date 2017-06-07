@@ -130,12 +130,7 @@ var config = {
                 test: /\.pdf$/,
                 loader: `url-loader?name=${imgPath}&limit=1`,
             },
-            // {
-            //     test: /ClinicalInformationContainer/i,
-            //     include: path.resolve(__dirname, 'src'),
-            //     loaders: ['bundle?lazy', 'babel']
-            // }
-
+            { test: /lodash/, loader: 'imports?define=>false'}
 
 
         ],
