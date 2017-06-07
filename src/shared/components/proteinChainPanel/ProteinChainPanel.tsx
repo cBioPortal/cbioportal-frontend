@@ -12,6 +12,7 @@ import {MutationMapperStore} from "../../../pages/resultsView/mutation/MutationM
 import {ALIGNMENT_GAP, IPdbChain} from "../../model/Pdb";
 import PdbHeaderCache from "../../cache/PdbHeaderCache";
 import PdbChainInfo from "../PdbChainInfo";
+import onNextRenderFrame from "shared/lib/onNextRenderFrame";
 
 type ProteinChainPanelProps = {
     store:MutationMapperStore;
@@ -35,7 +36,14 @@ export default class ProteinChainPanel extends React.Component<ProteinChainPanel
         onClick: ()=>{}
     };
 
+    private chainDiv:HTMLDivElement;
+    private _chainScrollY:number = 0;
+
     private collapseTimeout:number|null = null;
+    private expandTimeout:number|null = null;
+
+    private expandDelayMs = 750;
+    private collapseDelayMs = 3000;
 
     private handlers:any;
 
@@ -43,8 +51,10 @@ export default class ProteinChainPanel extends React.Component<ProteinChainPanel
         super(props);
         this.handlers = {
             onMouseEnter:action(()=>{
-                // expand on mouseover
-                this.isExpanded = true;
+                this.expandTimeout = window.setTimeout(()=>{
+                    this.isExpanded = true;
+                }, this.expandDelayMs);
+
                 if (this.collapseTimeout) {
                     window.clearTimeout(this.collapseTimeout);
                 }
@@ -52,8 +62,18 @@ export default class ProteinChainPanel extends React.Component<ProteinChainPanel
             onMouseLeave:action(()=>{
                 this.collapseTimeout = window.setTimeout(()=>{
                     this.isExpanded = false;
-                }, 3000)
+                }, this.collapseDelayMs);
+
+                if (this.expandTimeout) {
+                    window.clearTimeout(this.expandTimeout);
+                }
             }),
+            chainDivRef:(div:HTMLDivElement)=>{this.chainDiv = div;},
+            onChainScroll:()=>{
+                if (this.chainDiv && this.isExpanded) {
+                    this._chainScrollY = this.chainDiv.scrollTop;
+                }
+            },
             togglePDBTable:action(()=>{
                 this.pdbChainTableShown = !this.pdbChainTableShown;
             }),
@@ -83,6 +103,14 @@ export default class ProteinChainPanel extends React.Component<ProteinChainPanel
             },
         };
 
+    }
+
+    @computed get chainScrollY() {
+        if (this.isExpanded) {
+            return this._chainScrollY;
+        } else {
+            return 0;
+        }
     }
 
     @action private selectChain(chainUid:string) {
@@ -153,6 +181,14 @@ export default class ProteinChainPanel extends React.Component<ProteinChainPanel
         );
     }
 
+    componentDidUpdate() {
+        onNextRenderFrame(()=>{
+          if (this.chainDiv) {
+              this.chainDiv.scrollTop = this.chainScrollY;
+          }
+        });
+    }
+
     render() {
         const tooltipVisibleProps:any = {};
         if (!this.tooltipVisible) {
@@ -164,11 +200,15 @@ export default class ProteinChainPanel extends React.Component<ProteinChainPanel
                     <div style={{
                         marginLeft:this.props.geneXOffset || 0,
                     }}>
-                        <div style={{
-                            overflowY:"scroll",
-                            maxHeight:this.props.maxChainsHeight,
-                            position:"relative"
-                        }}>
+                        <div
+                            ref={this.handlers.chainDivRef}
+                            style={{
+                                overflowY:"scroll",
+                                maxHeight:this.props.maxChainsHeight,
+                                position:"relative",
+                            }}
+                            onScroll={this.handlers.onChainScroll}
+                        >
                             <ProteinChainView
                                 width={this.props.geneWidth}
                                 chains={this.chains}
