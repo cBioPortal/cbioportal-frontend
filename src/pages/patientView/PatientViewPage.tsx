@@ -409,7 +409,16 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     </MSKTab>
 
                     <MSKTab key={6} id="ctDNATab" linkText="ctDNA">
-                    <LineVAFTimePlot/>
+                    {
+                        (patientViewPageStore.mutationData.isComplete && sampleManager)
+                        && ( patientViewPageStore.mutationData.result.length > 0) && (
+
+                        <LineVAFTimePlot
+                          mergedMutations={patientViewPageStore.mergedMutationData}
+                          sampleManager={sampleManager}/>
+
+                        )
+                    }
                     </MSKTab>
 
                     </MSKTabs>
