@@ -26,6 +26,7 @@ import {default as PatientViewMutationTable} from "./mutation/PatientViewMutatio
 import PathologyReport from "./pathologyReport/PathologyReport";
 import { MSKTabs, MSKTab } from "../../shared/components/MSKTabs/MSKTabs";
 import validateParameters from '../../shared/lib/validateParameters';
+import LineVAFTimePlot from './ctDNA/LineVAFTimePlot';
 
 import './patient.scss';
 import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIndicator";
@@ -408,7 +409,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     </MSKTab>
 
                     <MSKTab key={6} id="ctDNATab" linkText="ctDNA">
-
+                    <LineVAFTimePlot/>
                     </MSKTab>
 
                     </MSKTabs>
