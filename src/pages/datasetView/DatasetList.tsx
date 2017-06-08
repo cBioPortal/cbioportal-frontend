@@ -154,6 +154,7 @@ export default class DataSetsPageTable extends React.Component <IDataSetsTablePr
                         showColumnVisibility={true}
                         showFilter={true}
                         showCopyDownload={false}
+                        initialItemsPerPage={this.props.datasets.length}
                     />
                 </div>
             );
