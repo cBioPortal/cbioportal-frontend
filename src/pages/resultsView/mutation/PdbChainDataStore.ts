@@ -28,9 +28,14 @@ export default class PdbChainDataStore extends SimpleMobXApplicationDataStore<IP
         return this.allData.find(c=>(this.getChainUid(c) === chainUid));
     }
 
+    @computed public get tableData() {
+        return this.sortedFilteredData;
+    }
+
     constructor(data:IPdbChain[]) {
         super(data);
         this.selectedUid = "";
         this.dataSelector = (d:IPdbChain)=>(this.getChainUid(d) === this.selectedUid);
+        this.dataHighlighter = this.dataSelector;
     }
 }
