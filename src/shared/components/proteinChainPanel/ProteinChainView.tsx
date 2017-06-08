@@ -23,6 +23,7 @@ type ProteinChainViewProps = {
         hitRect:{x:number, y:number, width:number, height:number},
         chainUid:string
     )=>void;
+    setChainUidToY?:(map:{[uid:string]:number})=>void;
 };
 
 const CHAIN_ID_PREFIX = "chain-";
@@ -75,24 +76,28 @@ export default class ProteinChainView extends React.Component<ProteinChainViewPr
     @computed get rows() {
         let chainCounter = 0;
         this.chainComponents = {};
+        const chainUidToY:{[uid:string]:number} = {};
 
-        return this.rowSpecs.map((rowSpec, rowIndex)=>{
+        const ret = this.rowSpecs.map((rowSpec, rowIndex)=>{
             return (
                 <g key={rowIndex}>
                     {rowSpec.map(chain=>{
                         const className = this.makeChainIdClass(chainCounter++);
+                        const uid = chain.uid;
+                        const y = this.chainY(rowIndex);
+                        chainUidToY[uid] = y;
                         return (
                             <ProteinChain
                                 ref={(proteinChain)=>{if (proteinChain !== null) { this.chainComponents[className] = proteinChain; }}}
                                 positionToX={this.positionToX}
-                                y={this.chainY(rowIndex)}
+                                y={y}
                                 height={this.rowHeight}
                                 uniqueHitZoneClassName={className}
                                 start={chain.start}
                                 end={chain.end}
                                 gaps={chain.gaps}
                                 opacity={chain.opacity}
-                                uid={chain.uid}
+                                uid={uid}
                                 highlighted={this.props.selectedChainUid === chain.uid}
                             />
                         );
@@ -100,6 +105,8 @@ export default class ProteinChainView extends React.Component<ProteinChainViewPr
                 </g>
             );
         });
+        this.props.setChainUidToY && this.props.setChainUidToY(chainUidToY);
+        return ret;
     }
 
     @computed get svgHeight():number {
