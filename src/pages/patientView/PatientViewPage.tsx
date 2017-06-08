@@ -19,7 +19,7 @@ import ClinicalInformationSamples from "./clinicalInformation/ClinicalInformatio
 import {observer, inject } from "mobx-react";
 import {getSpanElements} from './clinicalInformation/lib/clinicalAttributesUtil.js';
 import CopyNumberTableWrapper from "./copyNumberAlterations/CopyNumberTableWrapper";
-import {reaction, computed} from "mobx";
+import {reaction, computed, autorun, IReactionDisposer} from "mobx";
 import Timeline from "./timeline/Timeline";
 import {default as PatientViewMutationTable} from "./mutation/PatientViewMutationTable";
 import PathologyReport from "./pathologyReport/PathologyReport";
@@ -50,6 +50,8 @@ export interface IPatientViewPageProps {
 @inject('routing')
 @observer
 export default class PatientViewPage extends React.Component<IPatientViewPageProps, {}> {
+
+    private updatePageTitleReaction: IReactionDisposer;
 
     constructor(props: IPatientViewPageProps) {
 
@@ -84,11 +86,25 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             },
             { fireImmediately:true }
         );
+
+        this.updatePageTitleReaction = reaction(
+            () => patientViewPageStore.pageTitle,
+            (title:string) => ((window as any).document.title = title),
+            { fireImmediately:true }
+        )
+
     }
 
     public componentDidMount() {
 
         this.exposeComponentRenderersToParentScript();
+
+    }
+
+    public componentWillUnmount(){
+
+        //dispose reaction
+        this.updatePageTitleReaction();
 
     }
 
