@@ -22,56 +22,53 @@ interface ILineVAFTimePlotProps {
     sampleManager:SampleManager;
 }
 
-export default class LineVAFTimePlot extends React.Component<ILineVAFTimePlotProps, {}> {
+export default class LineVAFTimePlot extends React.Component<ILineVAFTimePlotProps, {hugoGeneSymbol:string}> {
 
   constructor(props:ILineVAFTimePlotProps) {
     super(props);
+    const gene = 'TP53';
     this.state = {
-      'gene': 'TP53',
+      hugoGeneSymbol: gene,
     };
   }
 
   public render() {
 
+    // move all of the calculations to another lifecycle hook
     // also pull in uncalled mutations from store
     // perform check if objects still the same (shouldComponentUpdate)
 
     const mutations = _.flatten(this.props.mergedMutations);
     const uniqMutSamples = _.uniq(_.map(mutations, 'sampleId'));
+    const gene = this.state.hugoGeneSymbol;
 
     var plotData:Array<any> = [];
     _.each(this.props.sampleManager.samples, (sample:ClinicalDataBySampleId) => {
       var sampleMutData = _.filter(mutations, function (mutData:Mutation) {
         return (
-          (mutData.sampleId === sample.id && mutData.gene.hugoGeneSymbol === 'TP53')
+          (mutData.sampleId === sample.id && mutData.gene.hugoGeneSymbol === gene)
         );
       });
       if (sampleMutData.length > 0) {
         var mutPush = {
           'sampleId': sampleMutData[0].sampleId,
-          'altFreq': sampleMutData[0].tumorAltCount/(sampleMutData[0].tumorRefCount + sampleMutData[0].tumorAltCount),
+          'altFreq': (sampleMutData[0].tumorAltCount/
+                     (sampleMutData[0].tumorRefCount + sampleMutData[0].tumorAltCount)),
         };
         plotData.push(mutPush);
+      } else {
+        plotData.push({
+          'sampleId': sample.id,
+          'altFreq': NaN,
+        });
       }
     });
-
-    debugger;
-
-    /*const data = [
-      {name: 'Page A', uv: 4000, pv: 2400, amt: 2400},
-      {name: 'Page B', uv: 3000, pv: 1398, amt: 2210},
-      {name: 'Page C', uv: 2000, pv: 9800, amt: 2290},
-      {name: 'Page D', uv: 2780, pv: 3908, amt: 2000},
-      {name: 'Page E', uv: 1890, pv: 4800, amt: 2181},
-      {name: 'Page F', uv: 2390, pv: 3800, amt: 2500},
-      {name: 'Page G', uv: 3490, pv: 4300, amt: 2100},
-    ];*/
 
     return (
         <LineChart width={600} height={300} data={plotData}
               margin={{top: 5, right: 30, left: 20, bottom: 5}}>
          <XAxis dataKey="sampleId"/>
-         <YAxis/>
+         <YAxis type="number" domain={[0, 1]}/>
          <CartesianGrid strokeDasharray="3 3"/>
          <Tooltip/>
          <Legend />
