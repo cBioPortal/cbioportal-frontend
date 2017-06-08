@@ -3,7 +3,7 @@ import {CacheData} from "./LazyMobXCache";
 import {TableCellStatus, default as TableCellStatusIndicator} from "../components/TableCellStatus";
 export default function LazyLoadedTableCell<D,T,M=any>(
     getCacheData:(d:D)=>CacheData<T,M>|null,
-    render:(t:T)=>JSX.Element,
+    render:(t:T, d?:D)=>JSX.Element,
     naAlt?:string
 ):(d:D)=>JSX.Element {
     return (d:D)=>{
@@ -28,7 +28,7 @@ export default function LazyLoadedTableCell<D,T,M=any>(
                 />
             );
         } else {
-            return render(cacheData.data);
+            return render(cacheData.data, d);
         }
     };
 }
