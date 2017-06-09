@@ -24,7 +24,7 @@ import Timeline from "./timeline/Timeline";
 import {default as PatientViewMutationTable} from "./mutation/PatientViewMutationTable";
 import PathologyReport from "./pathologyReport/PathologyReport";
 import { MSKTabs, MSKTab } from "../../shared/components/MSKTabs/MSKTabs";
-import validateParameters from '../../shared/lib/validateParameters';
+import { validateParametersPatientView } from '../../shared/lib/validateParameters';
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import ValidationAlert from "shared/components/ValidationAlert";
 import AjaxErrorModal from "shared/components/AjaxErrorModal";
@@ -60,7 +60,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             () => props.routing.location.query,
             query => {
 
-                const validationResult = validateParameters(query, [ 'studyId', ['sampleId', 'caseId']]);
+                const validationResult = validateParametersPatientView(query);
 
                 if (validationResult.isValid) {
 
