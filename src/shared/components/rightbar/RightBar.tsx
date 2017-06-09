@@ -107,12 +107,7 @@ export default class RightBar extends React.Component<{}, {}> {
                         </a>
                     </h3>
                     <p>Sign up for low-volume email news alerts:</p>
-                    <form className="form-inline">
-                        <div className="form-group form-group-sm">
-                            <input type="email" className="form-control" id="exampleInputEmail2" placeholder="jane.doe@example.com" />
-                        </div>
-                        <button type="submit" className="btn btn-default btn-sm">Subscribe</button>
-                    </form>
+                    <a target="_blank" className="btn btn-default btn-sm" href="http://groups.google.com/group/cbioportal-news/boxsubscribe" style={{width: "100%"}}>Subscribe</a>
                 </div>
                 {datasets}
                 {examples}
