@@ -29,13 +29,15 @@ export interface GeneSetSelectorProps
 {
 }
 
+const USER_DEFINED_LIST = "User-defined List";
+
 @observer
 export default class GeneSetSelector extends QueryStoreComponent<GeneSetSelectorProps, {}>
 {
 	@computed get selectedGeneListOption()
 	{
 		let option = this.geneListOptions.find(opt => opt.value == this.store.geneQuery);
-		return option ? option.label : '';
+		return option ? option.label : USER_DEFINED_LIST;
 	}
 
 	@computed get geneListOptions()
@@ -43,7 +45,7 @@ export default class GeneSetSelector extends QueryStoreComponent<GeneSetSelector
 		return [
 			{
 				label: 'User-defined List',
-				value: ''
+				value: USER_DEFINED_LIST
 			},
 			...gene_lists.map(item => ({
 				label: `${item.id} (${item.genes.length} genes)`,
