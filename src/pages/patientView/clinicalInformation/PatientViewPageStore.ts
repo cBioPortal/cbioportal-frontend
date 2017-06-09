@@ -130,8 +130,17 @@ export class PatientViewPageStore {
     @observable studyId = '';
 
     @observable _sampleId = '';
+
     @computed get sampleId() {
         return this._sampleId;
+    }
+
+    @computed get pageTitle(): string {
+            if (this.pageMode === 'patient') {
+                return `Patient: ${this.patientId}`
+            } else {
+                return `Sample: ${this.sampleId}`
+            }
     }
 
     @computed get pageMode(): PageMode {
