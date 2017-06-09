@@ -24,7 +24,7 @@ export default class RightBar extends React.Component<{}, {}> {
 
     static getExampleSection() {
         const title:string = 'Example Queries';
-        const defaultExamples:JSX.Element =
+        const defaultExamples:JSX.Element = (
             <div className="rightBarSection exampleQueries">
                 <h3>{title}</h3>
                 <ul>
@@ -50,14 +50,13 @@ export default class RightBar extends React.Component<{}, {}> {
                         <a href="case.do#/patient?studyId=ucec_tcga_pub&caseId=TCGA-BK-A0CC">Patient view of an endometrial cancer case</a>
                     </li>
                 </ul>
-            </div>;
+            </div>);
         console.log(AppConfig.skinRightNavExamplesHTML);
 
         if (AppConfig.skinRightNavExamplesHTML) {
             return (
                 <div className="rightBarSection exampleQueries"
-                    dangerouslySetInnerHTML={{__html:'<h3>' + title + '</h3>' + AppConfig.skinRightNavExamplesHTML}}>
-                </div>
+                    dangerouslySetInnerHTML={{__html:'<h3>' + title + '</h3>' + AppConfig.skinRightNavExamplesHTML}}/>
             );
         } else {
             return defaultExamples;
@@ -103,16 +102,11 @@ export default class RightBar extends React.Component<{}, {}> {
                     <h3>
                         What's New
                         <a href="http://www.twitter.com/cbioportal" className="pull-right">
-                            @cbioportal <i className="fa fa-twitter" aria-hidden="true"></i>
+                            @cbioportal <i className="fa fa-twitter" aria-hidden="true"/>
                         </a>
                     </h3>
                     <p>Sign up for low-volume email news alerts:</p>
-                    <form className="form-inline">
-                        <div className="form-group form-group-sm">
-                            <input type="email" className="form-control" id="exampleInputEmail2" placeholder="jane.doe@example.com" />
-                        </div>
-                        <button type="submit" className="btn btn-default btn-sm">Subscribe</button>
-                    </form>
+                    <a target="_blank" className="btn btn-default btn-sm" href="http://groups.google.com/group/cbioportal-news/boxsubscribe" style={{width: "100%"}}>Subscribe</a>
                 </div>
                 {datasets}
                 {examples}
