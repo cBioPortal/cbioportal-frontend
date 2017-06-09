@@ -48,7 +48,7 @@ export default class AlleleFreqColumnFormatter {
             const variantReadText:string = `${isUncalled(mutation.geneticProfileId)? "(uncalled) " : ""}(${altReads} variant reads out of ${altReads+refReads} total)`;
 
             const text = (<span>
-                    <strong>{Math.round(100*freq)/100}</strong> {variantReadText}
+                    <strong>{freq.toFixed(2)}</strong> {variantReadText}
                 </span>);
             return {
                 sampleId:mutation.sampleId, bar, component:sampleComponent, text, freq
@@ -81,7 +81,7 @@ export default class AlleleFreqColumnFormatter {
 
         // single sample: just show the number
         if (sampleManager.samples.length === 1) {
-            content = <span>{ (!isNaN(freqs[0]) ? Math.round(100*freqs[0])/100 : '') }</span>;
+            content = <span>{ (!isNaN(freqs[0]) ? freqs[0].toFixed(2) : '') }</span>;
         }
         // multiple samples: show a graphical component
         // (if no tooltip info available do not update content)
