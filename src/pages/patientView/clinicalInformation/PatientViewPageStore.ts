@@ -1,12 +1,13 @@
 import * as _ from 'lodash';
 import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
 import {
-    ClinicalData, GeneticProfile, Sample, Mutation, DiscreteCopyNumberFilter, DiscreteCopyNumberData, MutationFilter
+    ClinicalData, GeneticProfile, Sample, Mutation, DiscreteCopyNumberFilter, DiscreteCopyNumberData, MutationFilter,
+    CopyNumberCount
 } from "../../../shared/api/generated/CBioPortalAPI";
 import client from "../../../shared/api/cbioportalClientInstance";
 import internalClient from "../../../shared/api/cbioportalInternalClientInstance";
 import {
-    CopyNumberCount, CopyNumberCountIdentifier, Gistic, GisticToGene, default as CBioPortalAPIInternal, MutSig
+    Gistic, GisticToGene, default as CBioPortalAPIInternal, MutSig
 } from "shared/api/generated/CBioPortalAPIInternal";
 import {computed, observable, action} from "mobx";
 import {remoteData, addErrorHandler} from "../../../shared/api/remoteData";
