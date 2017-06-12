@@ -11,6 +11,12 @@ let config = {
         common: ['jquery','imports?jquery=jquery!jquery-migrate', 'react', 'react-dom', 'react-redux', 'react-bootstrap', 'seamless-immutable', 'lodash', 'mobx', 'mobx-react', 'mobx-react-devtools', 'mobx-utils', 'd3', 'datatables.net', 'webpack-raphael']
     },
 
+    module: {
+        loaders: [
+            { test: /lodash/, loader: 'imports?define=>false'}
+        ]
+    },
+
     output: {
         filename: '[name].bundle.js',
         path: 'common-dist',
