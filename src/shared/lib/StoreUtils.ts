@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import {
-    GeneticProfile, Mutation, MutationFilter, default as CBioPortalAPI, DiscreteCopyNumberData,
-    DiscreteCopyNumberFilter, ClinicalData, Sample, CancerStudy
+    default as CBioPortalAPI, GeneticProfile, Mutation, MutationFilter, DiscreteCopyNumberData,
+    DiscreteCopyNumberFilter, ClinicalData, Sample, CancerStudy, CopyNumberCountIdentifier
 } from "shared/api/generated/CBioPortalAPI";
 import defaultClient from "shared/api/cbioportalClientInstance";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
@@ -9,7 +9,7 @@ import hotspot3DClient from 'shared/api/3DhotspotClientInstance';
 import hotspotClient from 'shared/api/hotspotClientInstance';
 import {
     CosmicMutation, default as CBioPortalAPIInternal,
-    GisticToGene, Gistic, CopyNumberCountIdentifier, MutSig
+    GisticToGene, Gistic, MutSig
 } from "shared/api/generated/CBioPortalAPIInternal";
 import oncokbClient from "shared/api/oncokbClientInstance";
 import {
@@ -234,7 +234,7 @@ export async function fetchGisticData(studyId: string, client:CBioPortalAPIInter
 
 export async function fetchCopyNumberData(discreteCNAData:MobxPromise<DiscreteCopyNumberData[]>,
                                           geneticProfileIdDiscrete:MobxPromise<string>,
-                                          client:CBioPortalAPIInternal = internalClient)
+                                          client:CBioPortalAPI = defaultClient)
 {
     const copyNumberCountIdentifiers: CopyNumberCountIdentifier[] = discreteCNAData.result ?
         discreteCNAData.result.map((cnData: DiscreteCopyNumberData) => {
