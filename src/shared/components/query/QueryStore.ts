@@ -19,6 +19,8 @@ import URL from 'url';
 import {buildCBioPortalUrl, BuildUrlParams} from "../../api/urls";
 import {SyntaxError} from "../../lib/oql/oql-parser";
 import StudyListLogic from "./StudyListLogic";
+import {QuerySession} from "../../lib/QuerySession";
+import {stringListToSet} from "../../lib/StringUtils";
 
 // interface for communicating
 type CancerStudyQueryUrlParams = {
@@ -87,6 +89,9 @@ export class QueryStore
 		labelMobxPromises(this);
 		if (urlWithInitialParams)
 			this.setParamsFromUrl(urlWithInitialParams);
+
+		this.addParamsFromWindow();
+		this.setParamsFromQuerySession();
 	}
 
 	copyFrom(other:CancerStudyQueryParams)
@@ -124,6 +129,10 @@ export class QueryStore
 		this._selectedStudyIds = this.forDownloadTab ? ids.slice(-1) : ids;
 	}
 
+	@computed get selectedStudyIdsSet():{[studyId:string]:boolean}
+	{
+		return stringListToSet(this.selectedStudyIds);
+	}
 	@observable dataTypePriority = {mutation: true, cna: true};
 
 	// genetic profile ids
@@ -760,6 +769,34 @@ export class QueryStore
 	////////////////////////////////////////////////////////////////////////////////
 	// ACTIONS
 	////////////////////////////////////////////////////////////////////////////////
+
+	@action setParamsFromQuerySession() {
+		const querySession:QuerySession|undefined = (window as any).QuerySession;
+		if (querySession) {
+			this.selectedStudyIds = querySession.getCancerStudyIds();
+			this._selectedProfileIds = querySession.getGeneticProfileIds();
+			this.zScoreThreshold = (querySession.getZScoreThreshold()+"") || "2.0";
+			this.rppaScoreThreshold = (querySession.getRppaScoreThreshold()+"") || "2.0";
+			this.selectedSampleListId = querySession.getCaseSetId();
+			if (this.selectedSampleListId === "-1") {
+				// legacy compatibility
+				this.selectedSampleListId = CUSTOM_CASE_LIST_ID;
+			}
+			this.caseIds = querySession.getSampleIds().join("\n");
+			this.caseIdsMode = 'sample'; // url always contains sample IDs
+			this.geneQuery = normalizeQuery(querySession.getOQLQuery());
+			this._isFromUrlParams.selectedProfileIds = true;
+			this._isFromUrlParams.selectedSampleListId = true;
+		}
+	}
+
+	@action addParamsFromWindow()
+	{
+		const windowStudyId = (window as any).selectedCancerStudyId;
+		if (windowStudyId && !this.selectedStudyIdsSet[windowStudyId]) {
+			this.selectedStudyIds = this.selectedStudyIds.concat(windowStudyId);
+		}
+	}
 
 	/**
 	 * This is used to prevent selections from being cleared automatically when new data is downloaded.
