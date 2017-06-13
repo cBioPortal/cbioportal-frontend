@@ -113,12 +113,12 @@ export default class DataSetsPageTable extends React.Component <IDataSetsTablePr
                                 {name:'All', type: 'all'},
                                 {name:'Sequenced', type: 'sequenced'},
                                 {name:'CNA', type: 'cna'},
-                                {name:'Tumor mRNA (RNA-Seq)', type: 'mrnaRnaSeq'},
-                                {name:'Tumor mRNA (microarray)', type: 'mrnaMicroarray', visible:true},
+                                {name:'RNA-Seq', type: 'mrnaRnaSeq'},
+                                {name:'Tumor mRNA (microarray)', type: 'mrnaMicroarray', visible:false},
                                 {name:'Tumor miRNA', type: 'miRna', visible:false },
                                 {name:'Methylation (HM27)', type: 'methylation', visible:false },
                                 {name:'RPPA', type: 'rppa', visible:false },
-                                {name:'Complete', type: 'complete' },
+                                {name:'Complete', type: 'complete', visible:false },
                             ].map((column:any) => (
                                 {
                                     visible:(column.visible === false) ? false : true,
