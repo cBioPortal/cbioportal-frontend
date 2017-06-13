@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as _ from 'lodash';
-import { CancerStudy } from 'shared/api/generated/CBioPortalAPI';
+import {CancerStudy} from 'shared/api/generated/CBioPortalAPI';
 import {ThreeBounce} from 'better-react-spinkit';
 import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
 import TableHeaderControls from "shared/components/tableHeaderControls/TableHeaderControls";
@@ -8,26 +8,26 @@ import LazyMobXTable from "shared/components/lazyMobXTable/LazyMobXTable";
 
 
 interface IDataTableRow {
-    name:string;
-    reference:string;
+    name: string;
+    reference: string;
     studyId: string;
     pmid: string;
-    all:number | string;
-    sequenced:number | string;
-    cna:number;
+    all: number | string;
+    sequenced: number | string;
+    cna: number;
     mrnaRnaSeq: number | string;
     mrnaRnaSeqV2: number | string;
     mrnaMicroarray: number | string;
     miRna: number | string;
     methylation: number | string;
     rppa: number | string;
-    complete:number | string;
-    citation:string;
+    complete: number | string;
+    citation: string;
 }
 
 interface IDataSetsTableProps {
-    className?:string;
-    datasets:CancerStudy[];
+    className?: string;
+    datasets: CancerStudy[];
 }
 
 interface ICancerStudyCellProps {
@@ -40,7 +40,8 @@ interface IReferenceCellProps {
     pmid: string;
 }
 
-class DataTable extends LazyMobXTable<IDataTableRow> {}
+class DataTable extends LazyMobXTable<IDataTableRow> {
+}
 
 class CancerStudyCell extends React.Component<ICancerStudyCellProps,{}> {
 
@@ -64,7 +65,8 @@ class ReferenceCell extends React.Component<IReferenceCellProps ,{}> {
 
     render() {
         return (
-            <a target='_blank' href={`https://www.ncbi.nlm.nih.gov/pubmed/${this.props.pmid}`}> {this.props.citation} </a>
+            <a target='_blank'
+               href={`https://www.ncbi.nlm.nih.gov/pubmed/${this.props.pmid}`}> {this.props.citation} </a>
         );
 
     }
@@ -77,7 +79,7 @@ export default class DataSetsPageTable extends React.Component <IDataSetsTablePr
 
         if (this.props.datasets) {
 
-            const tableData:IDataTableRow[] = _.map(this.props.datasets, (study: CancerStudy) => ({
+            const tableData: IDataTableRow[] = _.map(this.props.datasets, (study: CancerStudy) => ({
                 name: study.name,
                 reference: study.citation,
                 all: study.allSampleCount || "",
@@ -100,7 +102,16 @@ export default class DataSetsPageTable extends React.Component <IDataSetsTablePr
                         data={tableData}
                         columns={
                             [
-                                {name:'Name', type: 'name', render:(data:IDataTableRow)=> <CancerStudyCell studyId={data.studyId} name={data.name}/>},
+                                {
+                                    name:'Name',
+                                    type: 'name',
+                                    render:(data:IDataTableRow)=> <CancerStudyCell studyId={data.studyId} name={data.name}/>,
+
+                                    filter:(data:any, filterString:string, filterStringUpper:string) => {
+                                        return data.name.toUpperCase().indexOf(filterStringUpper) > -1
+                                     }
+
+                                },
                                 {name:'', sortBy:false, togglable:false, download:false, type:'download', render:(data:IDataTableRow)=>{
                                     return (
                                         <a style={{width:50, display:'block' }} href={`https://github.com/cBioPortal/datahub/blob/master/public/${data.studyId}.tar.gz`} download>
@@ -109,7 +120,14 @@ export default class DataSetsPageTable extends React.Component <IDataSetsTablePr
 
                                     )
                                 }},
-                                {name:'Reference', type: 'citation', render:(data:IDataTableRow)=><ReferenceCell pmid={data.pmid} citation={data.citation}/>},
+                                {
+                                    name:'Reference',
+                                    type: 'citation', render:(data:IDataTableRow)=><ReferenceCell pmid={data.pmid} citation={data.citation}/>,
+                                     filter:(data:any, filterString:string, filterStringUpper:string) => {
+                                        return data.citation.toUpperCase().indexOf(filterStringUpper) > -1
+                                     }
+
+                                },
                                 {name:'All', type: 'all'},
                                 {name:'Sequenced', type: 'sequenced'},
                                 {name:'CNA', type: 'cna'},
@@ -139,13 +157,8 @@ export default class DataSetsPageTable extends React.Component <IDataSetsTablePr
                                         }
                                     },
                                     download: column.hasOwnProperty('download') ? column.download : true,
-                                    filter: (data:any, filterString:string, filterStringUpper:string) => {
-                                        if (column.hasOwnProperty('render')) {
-                                            return data[column.type].toUpperCase().indexOf(filterStringUpper) > -1;
-                                        } else {
-                                            return data[column.type].toString().indexOf(filterString) > -1;
-                                        }
-                                    }}
+                                    filter: column.filter || undefined
+                                }
                             ))
                         }
                         initialSortColumn={'Name'}
