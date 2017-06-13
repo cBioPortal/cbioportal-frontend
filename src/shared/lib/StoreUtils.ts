@@ -464,7 +464,7 @@ export function mergeDiscreteCNAData(discreteCNAData:MobxPromise<DiscreteCopyNum
 }
 
 export function mergeMutations(mutationData:MobxPromise<Mutation[]>,
-                               generateMutationId:MutationIdGenerator = generateMutationIdByEvent)
+                               generateMutationId:MutationIdGenerator = generateMutationIdByGeneAndProteinChangeAndEvent)
 {
     const idToMutations: {[key: string]: Mutation[]} = {};
 
@@ -475,7 +475,7 @@ export function mergeMutations(mutationData:MobxPromise<Mutation[]>,
 
 export function mergeMutationsIncludingUncalled(mutationData:MobxPromise<Mutation[]>,
                                                 uncalledMutationData:MobxPromise<Mutation[]>,
-                                                generateMutationId:MutationIdGenerator = generateMutationIdByEvent)
+                                                generateMutationId:MutationIdGenerator = generateMutationIdByGeneAndProteinChangeAndEvent)
 {
     const idToMutations: {[key: string]: Mutation[]} = {};
 
@@ -487,7 +487,7 @@ export function mergeMutationsIncludingUncalled(mutationData:MobxPromise<Mutatio
 
 function updateIdToMutationsMap(idToMutations: {[key: string]: Mutation[]},
                                 mutationData:MobxPromise<Mutation[]>,
-                                generateMutationId:MutationIdGenerator = generateMutationIdByEvent)
+                                generateMutationId:MutationIdGenerator = generateMutationIdByGeneAndProteinChangeAndEvent)
 {
     if (mutationData.result) {
         for (const mutation of mutationData.result) {
@@ -510,8 +510,16 @@ export function concatMutationData(mutationData?:MobxPromise<Mutation[]>,
     return mutationDataResult.concat(uncalledMutationDataResult);
 }
 
+function mutationEventFields(m: Mutation) {
+    return [m.gene.chromosome, m.startPosition, m.endPosition, m.referenceAllele, m.variantAllele];
+}
+
 export function generateMutationIdByEvent(m: Mutation): string {
-    return [m.gene.chromosome, m.startPosition, m.endPosition, m.referenceAllele, m.variantAllele].join("_");
+    return mutationEventFields(m).join("_");
+}
+
+export function generateMutationIdByGeneAndProteinChangeAndEvent(m: Mutation): string {
+    return [m.gene.hugoGeneSymbol, m.proteinChange, ...mutationEventFields(m)].join("_");
 }
 
 export function generateDataQueryFilter(sampleListId: string|null, sampleIds?: string[]): IDataQueryFilter
