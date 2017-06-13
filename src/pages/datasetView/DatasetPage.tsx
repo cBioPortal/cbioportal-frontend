@@ -5,6 +5,7 @@ import client from "shared/api/cbioportalClientInstance";
 import {remoteData, addErrorHandler} from "shared/api/remoteData";
 import { CancerStudy } from 'shared/api/generated/CBioPortalAPI';
 import AppConfig from "appConfig";
+import './styles.scss';
 
 export class DatasetPageStore {
 
