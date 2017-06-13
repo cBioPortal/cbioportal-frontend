@@ -18,18 +18,15 @@ const Legend = recharts.Legend;
 
 
 interface ILineVAFTimePlotProps {
+    linePlotGene: string;
     mergedMutations: Mutation[][];
     sampleManager:SampleManager;
 }
 
-export default class LineVAFTimePlot extends React.Component<ILineVAFTimePlotProps, {hugoGeneSymbol:string}> {
+export default class LineVAFTimePlot extends React.Component<ILineVAFTimePlotProps, {}> {
 
   constructor(props:ILineVAFTimePlotProps) {
     super(props);
-    const gene = 'TP53';
-    this.state = {
-      hugoGeneSymbol: gene,
-    };
   }
 
   public render() {
@@ -40,7 +37,7 @@ export default class LineVAFTimePlot extends React.Component<ILineVAFTimePlotPro
 
     const mutations = _.flatten(this.props.mergedMutations);
     const uniqMutSamples = _.uniq(_.map(mutations, 'sampleId'));
-    const gene = this.state.hugoGeneSymbol;
+    const gene = this.props.linePlotGene;
 
     var plotData:Array<any> = [];
     _.each(this.props.sampleManager.samples, (sample:ClinicalDataBySampleId) => {
@@ -72,7 +69,7 @@ export default class LineVAFTimePlot extends React.Component<ILineVAFTimePlotPro
          <CartesianGrid strokeDasharray="3 3"/>
          <Tooltip/>
          <Legend />
-         <Line type="monotone" dataKey="altFreq" stroke="#8884d8" activeDot={{r: 8}}/>
+         <Line type="monotone" dataKey="altFreq" stroke="#990000" strokeWidth={2} activeDot={{r: 8}}/>
         </LineChart>
     )
   }
