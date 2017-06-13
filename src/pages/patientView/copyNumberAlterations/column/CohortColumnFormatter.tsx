@@ -1,6 +1,5 @@
 import * as React from 'react';
-import {DiscreteCopyNumberData} from "shared/api/generated/CBioPortalAPI";
-import {CopyNumberCount} from "shared/api/generated/CBioPortalAPIInternal";
+import {DiscreteCopyNumberData, CopyNumberCount} from "shared/api/generated/CBioPortalAPI";
 import FrequencyBar from "shared/components/cohort/FrequencyBar";
 import Icon from "shared/components/cohort/LetterIcon";
 import {IGisticData, IGisticSummary} from "shared/model/Gistic";
