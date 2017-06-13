@@ -692,7 +692,7 @@ export class PatientViewPageStore {
         let idToMutations: {[key: string]: Array<Mutation>} = {};
         let mutationId: string;
         let MutationId: (m: Mutation) => string = (m: Mutation) => {
-            return [m.gene.chromosome, m.startPosition, m.endPosition, m.referenceAllele, m.variantAllele].join("_");
+            return [m.gene.hugoGeneSymbol, m.proteinChange, m.gene.chromosome, m.startPosition, m.endPosition, m.referenceAllele, m.variantAllele].join("_");
         };
 
         for (const mutation of this.mutationData.result) {
@@ -705,7 +705,7 @@ export class PatientViewPageStore {
     }
 
     static getMutationId(m: any): string {
-        return [m.gene.chromosome, m.startPosition, m.endPosition, m.referenceAllele, m.variantAllele].join("_");
+        return [m.gene.hugoGeneSymbol, m.proteinChange, m.gene.chromosome, m.startPosition, m.endPosition, m.referenceAllele, m.variantAllele].join("_");
     }
 
     @computed get mergedMutationDataIncludingUncalled(): Mutation[][] {
