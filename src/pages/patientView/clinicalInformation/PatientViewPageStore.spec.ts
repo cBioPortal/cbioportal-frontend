@@ -36,7 +36,7 @@ describe('PatientViewPageStore', () => {
     });
 
 
-    it.only('sets page title to patient if theres a patient id and sample if sample id, patient id winning out', ()=>{
+    it('sets page title to patient if theres a patient id and sample if sample id, patient id winning out', ()=>{
 
         assert.equal(store.pageTitle, 'Patient: ');
 
