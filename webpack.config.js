@@ -154,6 +154,7 @@ var config = {
         'contentBase': 'dist',
         'https': false,
         'hostname': 'localhost',
+        'headers': {"Access-Control-Allow-Origin": "*"},
         'stats':'errors-only'
     }
 
