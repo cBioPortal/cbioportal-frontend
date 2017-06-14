@@ -796,6 +796,13 @@ export class QueryStore
 		if (windowStudyId && !this.selectedStudyIdsSet[windowStudyId]) {
 			this.selectedStudyIds = this.selectedStudyIds.concat(windowStudyId);
 		}
+
+		const windowSampleIds:string = (window as any).selectedSampleIds;
+		if (windowSampleIds) {
+			this.selectedSampleListId = CUSTOM_CASE_LIST_ID;
+			this.caseIdsMode = 'sample';
+			this.caseIds = windowSampleIds.split(/\s+/).join("\n");
+		}
 	}
 
 	/**
