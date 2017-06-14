@@ -1,8 +1,13 @@
-import {fetchCosmicData, fetchOncoKbData, makeStudyToCancerTypeMap} from "./StoreUtils";
+import {
+    fetchCosmicData, fetchOncoKbData, makeStudyToCancerTypeMap,
+    mergeMutationsIncludingUncalled, generateMutationIdByEvent, generateMutationIdByGeneAndProteinChangeAndEvent
+} from "./StoreUtils";
+import * as _ from 'lodash';
 import { assert } from 'chai';
 import sinon from 'sinon';
 import {MobxPromise} from "mobxpromise";
 import {CancerStudy, Mutation} from "../api/generated/CBioPortalAPI";
+import {initMutation} from "test/MutationMockUtils";
 
 describe('StoreUtils', () => {
 
@@ -10,6 +15,9 @@ describe('StoreUtils', () => {
     let emptyUncalledMutationData: MobxPromise<Mutation[]>;
     let mutationDataWithNoKeyword: MobxPromise<Mutation[]>;
     let mutationDataWithKeywords: MobxPromise<Mutation[]>;
+    let mutationDataWithFusionsOnly: MobxPromise<Mutation[]>;
+    let mutationDataWithMutationsOnly: MobxPromise<Mutation[]>;
+    let mutationDataWithBothMutationsAndFusions: MobxPromise<Mutation[]>;
 
     before(() => {
         emptyMutationData =  {
@@ -41,6 +49,85 @@ describe('StoreUtils', () => {
 
         emptyUncalledMutationData =  {
             result: [],
+            status: 'complete' as 'complete',
+            isPending: false,
+            isError: false,
+            isComplete: true,
+            error: undefined
+        };
+
+
+        const fusions: Mutation[] = [
+            initMutation({gene: { // fusion for ERG
+                hugoGeneSymbol: "ERG",
+                proteinChange: "TMPRSS2-ERG fusion"
+            }}),
+            initMutation({gene: { // same fusion for TMPRSS2
+                hugoGeneSymbol: "TMPRSS2",
+                proteinChange: "TMPRSS2-ERG fusion"
+            }}),
+            initMutation({gene: { // different fusion
+                hugoGeneSymbol: "FOXP1",
+                proteinChange: "FOXP1-intragenic"
+            }}),
+        ];
+
+        const mutations: Mutation[] = [
+            initMutation({ // mutation
+                gene: {
+                    chromosome: "X",
+                    hugoGeneSymbol: "TP53",
+                },
+                proteinChange: "mutated",
+                startPosition: 100,
+                endPosition: 100,
+                referenceAllele: "A",
+                variantAllele: "T"
+            }),
+            initMutation({ // another mutation with the same mutation event
+                gene: {
+                    chromosome: "X",
+                    hugoGeneSymbol: "TP53"
+                },
+                proteinChange: "mutated",
+                startPosition: 100,
+                endPosition: 100,
+                referenceAllele: "A",
+                variantAllele: "T"
+            }),
+            initMutation({ // mutation with different mutation event
+                gene: {
+                    chromosome: "Y",
+                    hugoGeneSymbol: "PTEN"
+                },
+                proteinChange: "mutated",
+                startPosition: 111,
+                endPosition: 112,
+                referenceAllele: "T",
+                variantAllele: "A"
+            }),
+        ];
+
+        mutationDataWithFusionsOnly =  {
+            result: fusions,
+            status: 'complete' as 'complete',
+            isPending: false,
+            isError: false,
+            isComplete: true,
+            error: undefined
+        };
+
+        mutationDataWithMutationsOnly =  {
+            result: mutations,
+            status: 'complete' as 'complete',
+            isPending: false,
+            isError: false,
+            isComplete: true,
+            error: undefined
+        };
+
+        mutationDataWithBothMutationsAndFusions = {
+            result: [...mutations, ...fusions],
             status: 'complete' as 'complete',
             isPending: false,
             isError: false,
@@ -137,6 +224,39 @@ describe('StoreUtils', () => {
             assert.deepEqual(makeStudyToCancerTypeMap([studies[1], studies[2]]), { 1: "ONE", 2:"TWO" });
             assert.deepEqual(makeStudyToCancerTypeMap([studies[2], studies[1], studies[3]]), { 1:"ONE", 2:"TWO", 3:"three" });
             assert.deepEqual(makeStudyToCancerTypeMap(studies), { 0: "ZERO", 1:"ONE", 2:"TWO", 3:"three" });
+        });
+    });
+
+    describe('mergeMutationsIncludingUncalled', () => {
+        it("merges mutations properly when there is only fusion data", () => {
+            const mergedFusions = mergeMutationsIncludingUncalled(mutationDataWithFusionsOnly, emptyMutationData);
+
+            assert.equal(mergedFusions.length, 3);
+        });
+
+        it("merges mutations properly when there is only mutation data", () => {
+            const mergedMutations = mergeMutationsIncludingUncalled(mutationDataWithMutationsOnly, emptyMutationData);
+
+            assert.equal(mergedMutations.length, 2);
+
+            const sortedMutations = _.sortBy(mergedMutations, "length");
+
+            assert.equal(sortedMutations[0].length, 1);
+            assert.equal(sortedMutations[1].length, 2);
+
+            assert.equal(generateMutationIdByGeneAndProteinChangeAndEvent(sortedMutations[1][0]),
+                generateMutationIdByGeneAndProteinChangeAndEvent(sortedMutations[1][1]),
+                "mutation ids of merged mutations should be same");
+
+            assert.equal(generateMutationIdByEvent(sortedMutations[1][0]),
+                generateMutationIdByEvent(sortedMutations[1][1]),
+                "event based mutation ids of merged mutations should be same, too");
+        });
+
+        it("merges mutations properly when there are both mutation and fusion data ", () => {
+            const mergedMutations = mergeMutationsIncludingUncalled(mutationDataWithBothMutationsAndFusions, emptyMutationData);
+
+            assert.equal(mergedMutations.length, 5);
         });
     });
 
