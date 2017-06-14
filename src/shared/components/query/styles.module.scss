@@ -338,11 +338,13 @@ div.SelectedStudiesWindow {
 .CaseSetSelector {
   div:global(.autosuggest) {
     width: 555px;
+    margin-bottom:10px;
   }
   textarea {
     width: 555px;
     resize: vertical;
     padding: 5px;
+    border-color:$borderColor;
   }
   .radioRow {
     div {
