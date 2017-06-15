@@ -52,7 +52,7 @@ function isInteger(str:string)
 
 function normalizeQuery(geneQuery:string)
 {
-	return geneQuery.replace(/^\s+|\s+$/g, '').replace(/[ \+]+/g, ' ').toUpperCase();
+	return geneQuery.trim().replace(/^\s+|\s+$/g, '').replace(/[ \+]+/g, ' ').toUpperCase();
 }
 
 export type CancerStudyQueryParams = Pick<
@@ -605,7 +605,7 @@ export class QueryStore
 		try
 		{
 			return {
-				query: this.geneQuery && oql_parser.parse(this.geneQuery.toUpperCase()) || [],
+				query: this.geneQuery && oql_parser.parse(this.geneQuery.trim().toUpperCase()) || [],
 				error: undefined
 			};
 		}
