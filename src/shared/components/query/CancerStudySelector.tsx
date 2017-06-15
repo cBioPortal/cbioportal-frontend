@@ -121,7 +121,7 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 			<FlexCol overflow className={styles.CancerStudySelector}>
 				<FlexRow overflow className={styles.CancerStudySelectorHeader}>
 
-					<SectionHeader>
+					<SectionHeader promises={[this.store.cancerTypes, this.store.cancerStudies]}>
 						Select Studies
 					</SectionHeader>
 
