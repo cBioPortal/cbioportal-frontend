@@ -13,6 +13,7 @@ import MutSigGeneSelector from "./MutSigGeneSelector";
 import GisticGeneSelector from "./GisticGeneSelector";
 import SectionHeader from "../sectionHeader/SectionHeader";
 import Autosuggest from 'react-bootstrap-autosuggest';
+import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 
 const styles = styles_any as {
 	GeneSetSelector: string,
@@ -72,9 +73,11 @@ export default class GeneSetSelector extends QueryStoreComponent<GeneSetSelector
 	{
 		return (
 			<FlexRow padded overflow className={styles.GeneSetSelector}>
-				<SectionHeader className="sectionLabel"
-							   secondaryComponent={<a target="_blank" href={getOncoQueryDocUrl()}>Advanced: Onco Query Language (OQL)</a>}
-							   promises={[this.store.mutSigForSingleStudy, this.store.gisticForSingleStudy, this.store.genes]}
+				<SectionHeader
+					className="sectionLabel"
+					secondaryComponent={
+						<a target="_blank" href={getOncoQueryDocUrl()}>Advanced: Onco Query Language (OQL)</a>
+					}
 				>
 					Enter Gene Set:
 				</SectionHeader>
@@ -94,6 +97,9 @@ export default class GeneSetSelector extends QueryStoreComponent<GeneSetSelector
 
 				{!!(this.store.mutSigForSingleStudy.result.length || this.store.gisticForSingleStudy.result.length) && (
 					<FlexRow padded className={styles.buttonRow}>
+						<LoadingIndicator
+							isLoading={!!([this.store.mutSigForSingleStudy, this.store.gisticForSingleStudy].some(promise => promise.isPending))}
+						/>
 						{!!(this.store.mutSigForSingleStudy.result.length) && (
 							<button className="btn btn-default btn-sm" onClick={() => this.store.showMutSigPopup = true}>
 								Select from Recurrently Mutated Genes (MutSig)
