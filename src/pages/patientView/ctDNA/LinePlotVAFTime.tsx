@@ -1,31 +1,22 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import $ from 'jquery';
 import {Mutation} from "../../../shared/api/generated/CBioPortalAPI";
 import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
 import SampleManager from "../sampleManager";
-import {PatientViewPageStore} from "../clinicalInformation/PatientViewPageStore";
 
 // require because recharts doesn't have @types
-const recharts = require('recharts');
-const LineChart = recharts.LineChart;
-const Line = recharts.Line;
-const XAxis = recharts.XAxis;
-const YAxis = recharts.YAxis;
-const Tooltip = recharts.Tooltip;
-const CartesianGrid = recharts.CartesianGrid;
-const Legend = recharts.Legend;
+const {LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, Legend} = require('recharts');
 
 
-interface ILineVAFTimePlotProps {
+interface ILinePlotVAFTimeProps {
     linePlotGene: string;
     mergedMutations: Mutation[][];
     sampleManager:SampleManager;
 }
 
-export default class LineVAFTimePlot extends React.Component<ILineVAFTimePlotProps, {}> {
+export default class LinePlotVAFTime extends React.Component<ILinePlotVAFTimeProps, {}> {
 
-  constructor(props:ILineVAFTimePlotProps) {
+  constructor(props:ILinePlotVAFTimeProps) {
     super(props);
   }
 
@@ -36,28 +27,20 @@ export default class LineVAFTimePlot extends React.Component<ILineVAFTimePlotPro
     // perform check if objects still the same (shouldComponentUpdate)
 
     const mutations = _.flatten(this.props.mergedMutations);
-    const uniqMutSamples = _.uniq(_.map(mutations, 'sampleId'));
+    const sampleOrder = this.props.sampleManager.sampleOrder;
     const gene = this.props.linePlotGene;
 
     var plotData:Array<any> = [];
-    _.each(this.props.sampleManager.samples, (sample:ClinicalDataBySampleId) => {
-      var sampleMutData = _.filter(mutations, function (mutData:Mutation) {
-        return (
-          (mutData.sampleId === sample.id && mutData.gene.hugoGeneSymbol === gene)
-        );
-      });
-      if (sampleMutData.length > 0) {
-        var mutPush = {
-          'sampleId': sampleMutData[0].sampleId,
-          'altFreq': (sampleMutData[0].tumorAltCount/
-                     (sampleMutData[0].tumorRefCount + sampleMutData[0].tumorAltCount)),
+    _.each(mutations, (mutation:Mutation) => {
+      let mutGene = mutation.gene.hugoGeneSymbol;
+      let mutSample = mutation.sampleId;
+      if (~sampleOrder.indexOf(mutSample) && mutGene === gene) {
+        let mutPush = {
+          'sampleId': mutation.sampleId,
+          'hugoGeneSymbol': mutation.gene.hugoGeneSymbol,
+          'altFreq': mutation.tumorAltCount/(mutation.tumorRefCount + mutation.tumorAltCount),
         };
         plotData.push(mutPush);
-      } else {
-        plotData.push({
-          'sampleId': sample.id,
-          'altFreq': NaN,
-        });
       }
     });
 
