@@ -126,7 +126,7 @@ export default class GeneSetSelector extends QueryStoreComponent<GeneSetSelector
 					onHide={() => this.store.showMutSigPopup = false}
 				>
 					<Modal.Header closeButton>
-						<Modal.Title>Recently Mutated Genes</Modal.Title>
+						<Modal.Title>Recurrently Mutated Genes</Modal.Title>
 					</Modal.Header>
 					<Modal.Body>
 						<MutSigGeneSelector
