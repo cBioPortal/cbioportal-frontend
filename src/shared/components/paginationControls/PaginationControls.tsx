@@ -4,6 +4,7 @@ import styles from "./paginationControls.module.scss";
 import { If, Then, Else } from 'react-if';
 import {observable} from "mobx";
 import {observer} from "mobx-react";
+import classNames from 'classnames';
 
 export const SHOW_ALL_PAGE_SIZE = -1;
 
@@ -120,7 +121,7 @@ export class PaginationControls extends React.Component<IPaginationControlsProps
         }
 
         return (
-            <div className={this.props.className} style={this.props.style}>
+            <div className={classNames(styles.paginationControls, this.props.className)} style={this.props.style}>
                 <ButtonGroup bsSize="sm">
                     <If condition={!!this.props.showFirstPage}>
                         <Button key="firstPageBtn" disabled={!!this.props.firstPageDisabled} onClick={this.props.onFirstPageClick}>
