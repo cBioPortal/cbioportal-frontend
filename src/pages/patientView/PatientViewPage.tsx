@@ -120,10 +120,13 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     }
 
-    private handleSampleClick(id: string) {
-
-        this.props.routing.updateRoute({ caseId:undefined, sampleId:id });
-
+    public handleSampleClick(id: string, e: React.MouseEvent<HTMLAnchorElement>) {
+        if (!e.shiftKey && !e.altKey && !e.metaKey) {
+            e.preventDefault();
+            this.props.routing.updateRoute({ caseId:undefined, sampleId:id });
+        }
+        // otherwise do nothing, we want default behavior of link
+        // namely that href will open in a new window/tab
     }
 
     private handleTabChange(id: string) {
@@ -168,8 +171,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             studyName = <a href={`study.do?cancer_study_id=${study.studyId}`} className="studyMetaBar_studyName">{study.name}</a>;
         }
 
-        if (patientViewPageStore.patientViewData.isComplete) {
-            let patientData = patientViewPageStore.patientViewData.result!;
+        if (patientViewPageStore.patientViewData.isComplete && patientViewPageStore.studyMetaData.isComplete) {
+            let patientData = patientViewPageStore.patientViewData.result;
             if (patientViewPageStore.clinicalEvents.isComplete && patientViewPageStore.clinicalEvents.result.length > 0) {
                 sampleManager = new SampleManager(patientData.samples!, patientViewPageStore.clinicalEvents.result);
             } else {
@@ -186,8 +189,9 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                     <span style={{display:'inline-flex'}}>
                                         {'\u00A0'}
                                         <a
-                                            href="javascript:void(0)"
-                                            onClick={() => this.handleSampleClick(sample.id)}
+                                            href={`case.do?#/patient?sampleId=${sample.id}&studyId=${patientViewPageStore.studyMetaData.result!.studyId}`}
+                                            target="_blank"
+                                            onClick={(e: React.MouseEvent<HTMLAnchorElement>) => this.handleSampleClick(sample.id, e)}
                                         >
                                             {sample.id}
                                         </a>
