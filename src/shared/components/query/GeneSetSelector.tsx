@@ -127,7 +127,7 @@ export default class GeneSetSelector extends QueryStoreComponent<GeneSetSelector
 				<GeneSymbolValidator/>
 
 				<Modal
-					className={styles.MutSigGeneSelectorWindow}
+					className={classNames('cbioportal-frontend', styles.MutSigGeneSelectorWindow)}
 					show={this.store.showMutSigPopup}
 					onHide={() => this.store.showMutSigPopup = false}
 				>
@@ -147,7 +147,7 @@ export default class GeneSetSelector extends QueryStoreComponent<GeneSetSelector
 				</Modal>
 
 				<Modal
-					className={styles.GisticGeneSelectorWindow}
+					className={classNames('cbioportal-frontend', styles.GisticGeneSelectorWindow)}
 					show={this.store.showGisticPopup}
 					onHide={() => this.store.showGisticPopup = false}
 				>
