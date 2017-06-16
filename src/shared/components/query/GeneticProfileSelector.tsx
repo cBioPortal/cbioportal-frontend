@@ -134,7 +134,7 @@ export default class GeneticProfileSelector extends QueryStoreComponent<{}, {}>
 		{
 			output.push(
 				<div key={output.length} className={styles.zScore}>
-					Enter a z-score threshold &plusmn;:
+					Enter a z-score threshold <span dangerouslySetInnerHTML={{ __html:['&','plusmn;'].join('') }} />
 					<input
 						type="text"
 						value={this.store.zScoreThreshold}
@@ -150,7 +150,7 @@ export default class GeneticProfileSelector extends QueryStoreComponent<{}, {}>
 		{
 			output.push(
 				<div key={output.length} className={styles.zScore}>
-					Enter a z-score threshold &plusmn;:
+					Enter a z-score threshold <span dangerouslySetInnerHTML={{ __html:['&','plusmn;'].join('') }} />
 					<input
 						type="text"
 						value={this.store.rppaScoreThreshold}
