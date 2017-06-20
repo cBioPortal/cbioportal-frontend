@@ -1,4 +1,5 @@
 var binarysearch = require('./binarysearch.js');
+var hasElementsInInterval = require('./haselementsininterval.js');
 var CachedProperty = require('./CachedProperty.js');
 
 function ifndef(x, val) {
@@ -98,6 +99,7 @@ var clamp = function(x, lower, upper) {
 
 var OncoprintModel = (function () {
     var MIN_ZOOM_PIXELS = 100;
+    var MIN_CELL_HEIGHT_PIXELS = 3;
     function OncoprintModel(init_cell_padding, init_cell_padding_on,
 	    init_horz_zoom, init_vert_zoom, 
 	    init_cell_width, init_track_group_padding) {
@@ -140,9 +142,11 @@ var OncoprintModel = (function () {
 	this.track_rule_set_id = {}; // track id -> rule set id
 	this.track_active_rules = {}; // from track id to active rule map (map with rule ids as keys)
 	this.track_info = {};
+	this.track_has_column_spacing = {}; // track id -> boolean
 	
 	// Rule Set Properties
 	this.rule_sets = {}; // map from rule set id to rule set
+	this.rule_set_active_rules = {}; // map from rule set id to map from rule id to use count
 	
 	// Cached and Recomputed Properties
 	this.visible_id_order = new CachedProperty([], function () {
@@ -206,6 +210,7 @@ var OncoprintModel = (function () {
 	
 	this.track_groups = [];
 	this.track_group_sort_priority = [];
+	this.track_group_header = [];
 	
 	this.track_tops = new CachedProperty({}, function () {
 	    var tops = {};
@@ -213,6 +218,9 @@ var OncoprintModel = (function () {
 	    var y = 0;
 	    for (var i = 0; i < groups.length; i++) {
 		var group = groups[i];
+		if (model.getTrackGroupHeader(i).length > 0 && group.length > 0) {
+		    y += model.getTrackGroupHeaderSize();
+		}
 		for (var j = 0; j < group.length; j++) {
 		    var track_id = group[j];
 		    tops[track_id] = y;
@@ -368,16 +376,29 @@ var OncoprintModel = (function () {
     }
     OncoprintModel.prototype.getHorzZoomToFit = function(width, ids) {
 	ids = ids || [];
+	if (ids.length === 0) {
+	    return 1;
+	}
 	var id_to_index_map = this.getVisibleIdToIndexMap();
 	var indexes = ids.map(function(id) { return id_to_index_map[id]; });
-	var max = Math.max.apply(null, indexes);
-	var min = Math.min.apply(null, indexes);
-	var num_cols = max - min;
+	var max = Number.NEGATIVE_INFINITY;
+	var min = Number.POSITIVE_INFINITY;
+	for (var i=0; i<indexes.length; i++) {
+	    max = Math.max(indexes[i], max);
+	    min = Math.min(indexes[i], min);
+	}
+	var num_cols = max - min + 1;
 	return this.getHorzZoomToFitNumCols(width, num_cols);
     }
     
-    OncoprintModel.prototype.getMinZoom = function() {
+    OncoprintModel.prototype.getMinHorzZoom = function() {
 	return Math.min(MIN_ZOOM_PIXELS / (this.getIdOrder().length*this.getCellWidth(true) + (this.getIdOrder().length-1)*this.getCellPadding(true)), 1);
+    }
+    
+    OncoprintModel.prototype.getMinVertZoom = function() {
+	// Can't zoom to be smaller than max height
+	// That zoom would be z*this.getOncoprintHeight(true) = max_height
+	return this.max_height / this.getOncoprintHeight(true);
     }
     
     OncoprintModel.prototype.setHorzScroll = function(s) {
@@ -407,14 +428,8 @@ var OncoprintModel = (function () {
 	model.column_left.update();
     };
     OncoprintModel.prototype.setHorzZoom = function (z) {
-	var min_zoom = this.getMinZoom();
-	if (z <= 1 && z >= min_zoom) {
-	    this.horz_zoom = z;
-	} else if (z > 1) {
-	    this.horz_zoom = 1;
-	} else if (z < min_zoom) {
-	    this.horz_zoom = min_zoom;
-	}
+	var min_zoom = this.getMinHorzZoom();
+	this.horz_zoom = clamp(z, min_zoom, 1);
 	this.column_left.update();
 	
 	if (this.getCellWidth() < this.cell_padding_off_cell_width_threshold && !this.cell_padding_off_because_of_zoom) {
@@ -431,13 +446,8 @@ var OncoprintModel = (function () {
     }
     
     OncoprintModel.prototype.setVertZoom = function (z) {
-	if (z <= 1 && z >= 0) {
-	    this.vert_zoom = z;
-	} else if (z > 1) {
-	    this.vert_zoom = 1;
-	} else if (z < 0) {
-	    this.vert_zoom = 0;
-	}
+	var min_zoom = this.getMinVertZoom();
+	this.vert_zoom = clamp(z, min_zoom, 1);
 	this.track_tops.update();
 	return this.vert_zoom;
     }
@@ -456,12 +466,48 @@ var OncoprintModel = (function () {
 	}
     }
 
+    var clearTrackActiveRules = function(model, track_id) {
+	var rule_set_id = model.track_rule_set_id[track_id];
+	var track_active_rules = model.track_active_rules[track_id];
+	var rule_set_active_rules = model.rule_set_active_rules[rule_set_id];
+	
+	var track_active_rule_ids = Object.keys(track_active_rules);
+	for (var i=0; i<track_active_rule_ids.length; i++) {
+	    var rule_id = track_active_rule_ids[i];
+	    if (rule_set_active_rules.hasOwnProperty(rule_id)) {
+		rule_set_active_rules[rule_id] -= 1;
+		if (rule_set_active_rules[rule_id] <= 0) {
+		    delete rule_set_active_rules[rule_id];
+		}
+	    }
+	}
+	model.track_active_rules[track_id] = {};
+    };
+    
+    var setTrackActiveRules = function(model, track_id, active_rules) {
+	clearTrackActiveRules(model, track_id);
+	model.track_active_rules[track_id] = active_rules;
+	var rule_set_id = model.track_rule_set_id[track_id];
+	var rule_set_active_rules = model.rule_set_active_rules[rule_set_id];
+	
+	var track_active_rule_ids = Object.keys(active_rules);
+	for (var i=0; i<track_active_rule_ids.length; i++) {
+	    var rule_id = track_active_rule_ids[i];
+	    rule_set_active_rules[rule_id] = rule_set_active_rules[rule_id] || 0;
+	    rule_set_active_rules[rule_id] += 1;
+	}
+    };
+    
     OncoprintModel.prototype.getIdentifiedShapeListList = function(track_id, use_base_size, sort_by_z) {
 	var active_rules = {};
 	var data = this.getTrackData(track_id);
 	var id_key = this.getTrackDataIdKey(track_id);
-	var shapes = this.getRuleSet(track_id).apply(data, this.getCellWidth(use_base_size), this.getCellHeight(track_id, use_base_size), active_rules);
-	this.track_active_rules[track_id] = active_rules;
+	var spacing = this.getTrackHasColumnSpacing(track_id);
+	var width = this.getCellWidth(use_base_size) + (!spacing ? this.getCellPadding(use_base_size, true) : 0);
+	var shapes = this.getRuleSet(track_id).apply(data, width, this.getCellHeight(track_id, use_base_size), active_rules);
+	
+	setTrackActiveRules(this, track_id, active_rules);
+	
 	
 	var z_comparator = function(shapeA, shapeB) {
 	    var zA = parseFloat(shapeA.z);
@@ -486,16 +532,14 @@ var OncoprintModel = (function () {
     }
     
     OncoprintModel.prototype.getActiveRules = function(rule_set_id) {
-	var list_of_active_rules_maps = [];
-	for (var track_id in this.track_rule_set_id) {
-	    if (this.track_rule_set_id.hasOwnProperty(track_id) && this.track_rule_set_id[track_id] === rule_set_id) {
-		list_of_active_rules_maps.push(this.track_active_rules[track_id]);
-	    }
+	var rule_set_active_rules = this.rule_set_active_rules[rule_set_id];
+	if (rule_set_active_rules) {
+	    return this.rule_sets[rule_set_id].getRulesWithId().filter(function(rule_with_id) {
+		return !!rule_set_active_rules[rule_with_id.id];
+	    });
+	} else {
+	    return [];
 	}
-	var active_rules = setUnion(list_of_active_rules_maps);
-	return this.rule_sets[rule_set_id].getRulesWithId().filter(function(rule_with_id) {
-	    return !!active_rules[rule_with_id.id];
-	});
     }
     
     OncoprintModel.prototype.getRuleSets = function() {
@@ -511,6 +555,10 @@ var OncoprintModel = (function () {
 	});
     }
 
+    OncoprintModel.prototype.getTrackHasColumnSpacing = function(track_id) {
+	return !!(this.track_has_column_spacing[track_id]);
+    }
+    
     OncoprintModel.prototype.getCellWidth = function (base) {
 	return this.cell_width * (base ? 1 : this.horz_zoom);
     }
@@ -590,18 +638,28 @@ var OncoprintModel = (function () {
 	this.column_left.update();
     }
 
+    OncoprintModel.prototype.setTrackGroupOrder = function(index, track_order) {
+	this.track_groups[index] = track_order;
+	
+	this.track_tops.update();
+    }
+    
     OncoprintModel.prototype.moveTrackGroup = function (from_index, to_index) {
 	var new_groups = [];
+	var new_headers = [];
 	var group_to_move = this.track_groups[from_index];
 	for (var i = 0; i < this.track_groups.length; i++) {
 	    if (i !== from_index && i !== to_index) {
 		new_groups.push(this.track_groups[i]);
+		new_headers.push(this.track_group_header[i]);
 	    }
 	    if (i === to_index) {
 		new_groups.push(group_to_move);
+		new_headers.push(this.track_group_header[from_index]);
 	    }
 	}
 	this.track_groups = new_groups;
+	this.track_group_header = new_headers;
 	this.track_tops.update();
 	return this.track_groups;
     }
@@ -609,8 +667,8 @@ var OncoprintModel = (function () {
     OncoprintModel.prototype.addTracks = function (params_list) {
 	for (var i = 0; i < params_list.length; i++) {
 	    var params = params_list[i];
-	    addTrack(this, params.track_id, params.target_group,
-		    params.cell_height, params.track_padding,
+	    addTrack(this, params.track_id, params.target_group, params.track_group_header,
+		    params.cell_height, params.track_padding, params.has_column_spacing,
 		    params.data_id_key, params.tooltipFn,
 		    params.removable, params.removeCallback, params.label, params.description, params.track_info,
 		    params.sortCmpFn, params.sort_direction_changeable, params.init_sort_direction,
@@ -619,8 +677,8 @@ var OncoprintModel = (function () {
 	this.track_tops.update();
     }
   
-    var addTrack = function (model, track_id, target_group,
-	    cell_height, track_padding,
+    var addTrack = function (model, track_id, target_group, track_group_header,
+	    cell_height, track_padding, has_column_spacing,
 	    data_id_key, tooltipFn,
 	    removable, removeCallback, label, description, track_info,
 	    sortCmpFn, sort_direction_changeable, init_sort_direction,
@@ -629,6 +687,7 @@ var OncoprintModel = (function () {
 	model.track_description[track_id] = ifndef(description, "");
 	model.cell_height[track_id] = ifndef(cell_height, 23);
 	model.track_padding[track_id] = ifndef(track_padding, 5);
+	model.track_has_column_spacing[track_id] = ifndef(has_column_spacing, true);
 
 	model.track_tooltip_fn[track_id] = ifndef(tooltipFn, function (d) {
 	    return d + '';
@@ -648,14 +707,20 @@ var OncoprintModel = (function () {
 	
 	if (typeof rule_set !== 'undefined') {
 	    model.rule_sets[rule_set.rule_set_id] = rule_set;
+	    model.rule_set_active_rules[rule_set.rule_set_id] = {};
 	    model.track_rule_set_id[track_id] = rule_set.rule_set_id;
 	}
+	model.track_active_rules[track_id] = {};
 
 	model.track_sort_direction[track_id] = ifndef(init_sort_direction, 1);
 	
 	target_group = ifndef(target_group, 0);
 	while (target_group >= model.track_groups.length) {
 	    model.track_groups.push([]);
+	    model.track_group_header.push("");
+	}
+	if (track_group_header) {
+	    model.track_group_header[target_group] = track_group_header;
 	}
 	model.track_groups[target_group].push(track_id);
 	
@@ -695,6 +760,11 @@ var OncoprintModel = (function () {
 	}
 	return used;
     }
+    
+    var removeRuleSet = function(model, rule_set_id) {
+	delete model.rule_sets[rule_set_id];
+	delete model.rule_set_active_rules[rule_set_id];
+    };
    
     OncoprintModel.prototype.removeTrack = function (track_id) {
 	var rule_set_id = this.track_rule_set_id[track_id];
@@ -713,6 +783,7 @@ var OncoprintModel = (function () {
 	delete this.track_sort_direction_changeable[track_id];
 	delete this.track_sort_direction[track_id];
 	delete this.track_info[track_id];
+	delete this.track_has_column_spacing[track_id];
 
 	var containing_track_group = _getContainingTrackGroup(this, track_id, true);
 	if (containing_track_group !== null) {
@@ -726,7 +797,7 @@ var OncoprintModel = (function () {
 	
 	var rule_set_used = isRuleSetUsed(this, rule_set_id);
 	if (!rule_set_used) {
-	    delete this.rule_sets[rule_set_id];
+	    removeRuleSet(this, rule_set_id);
 	}
     }
     
@@ -735,15 +806,29 @@ var OncoprintModel = (function () {
 	var id_order = this.getIdOrder();
 	var zoomed_column_left = this.getZoomedColumnLeft();
 	var nearest_id_index = binarysearch(id_order, x, function(id) { return zoomed_column_left[id];}, true);
-	if (x <= zoomed_column_left[id_order[nearest_id_index]] + this.getCellWidth()) {
-	    var id = id_order[nearest_id_index];
-	    var tracks = this.getTracks();
-	    var cell_tops = this.getCellTops();
-	    var nearest_track_index = binarysearch(tracks, y, function(track) { return cell_tops[track];}, true);
-	    var nearest_track = tracks[nearest_track_index];
-	    if (y < cell_tops[nearest_track] + this.getCellHeight(nearest_track)) {
-		return {'id':id, 'track':nearest_track, 'top':cell_tops[nearest_track], 'left':zoomed_column_left[id]};
-	    }
+	if (nearest_id_index === -1) {
+	    return null;
+	}
+	var id = id_order[nearest_id_index];
+	
+	// Next, see if it's in a track
+	var tracks = this.getTracks();
+	var cell_tops = this.getCellTops();
+	var nearest_track_index = binarysearch(tracks, y, function (track) {
+	    return cell_tops[track];
+	}, true);
+	if (nearest_track_index === -1) {
+	    return null;
+	}
+	var nearest_track = tracks[nearest_track_index];
+	
+	// Finally, see if it's inside a cell
+	var hitzone_right = zoomed_column_left[id] + this.getCellWidth();
+	if (!this.getTrackHasColumnSpacing(nearest_track)) {
+	    hitzone_right += this.getCellPadding();
+	}
+	if (x <= hitzone_right && y < cell_tops[nearest_track] + this.getCellHeight(nearest_track)) {  
+	    return {'id': id, 'track': nearest_track, 'top': cell_tops[nearest_track], 'left': zoomed_column_left[id]};
 	}
 	return null;
     };
@@ -791,6 +876,19 @@ var OncoprintModel = (function () {
 	return _getContainingTrackGroup(this, track_id, false);
     }
 
+    OncoprintModel.prototype.setTrackGroupHeader = function(track_group_id, text) {
+	this.track_group_header[track_group_id] = text;
+	this.track_tops.update();
+    }
+    
+    OncoprintModel.prototype.getTrackGroupHeader = function(track_group_id) {
+	return this.track_group_header[track_group_id] || "";
+    }
+    
+    OncoprintModel.prototype.getTrackGroupHeaderSize = function() {
+	return 20;
+    }
+    
     OncoprintModel.prototype.getTrackGroups = function () {
 	// TODO: make read-only
 	return this.track_groups;
@@ -863,6 +961,7 @@ var OncoprintModel = (function () {
     OncoprintModel.prototype.getCellViewHeight = function() {
 	return Math.min(this.max_height, this.getOncoprintHeight());
     }
+    
     OncoprintModel.prototype.getCellViewWidth = function() {
 	return this.getOncoprintWidth();
     }
@@ -913,31 +1012,26 @@ var OncoprintModel = (function () {
     }
 
     OncoprintModel.prototype.shareRuleSet = function(source_track_id, target_track_id) {
-	var curr_rule_set_id = this.track_rule_set_id[target_track_id];
-	var should_delete_curr_rule_set = true;
-	for (var track_id in this.track_rule_set_id) {
-	    if (this.track_rule_set_id.hasOwnProperty(track_id) && track_id !== source_track_id + '') {
-		if (this.track_rule_set_id[track_id] === curr_rule_set_id) {
-		    should_delete_curr_rule_set = false;
-		    break;
-		}
-	    }
-	}
-	if (should_delete_curr_rule_set) {
-	    delete this.rule_sets[curr_rule_set_id];
-	}
-	delete this.track_active_rules[target_track_id];
+	setTrackActiveRules(this, target_track_id, {});
+	
+	var old_rule_set_id = this.track_rule_set_id[target_track_id];
 	this.track_rule_set_id[target_track_id] = this.track_rule_set_id[source_track_id];
+	if (!isRuleSetUsed(this, old_rule_set_id)) {
+	    removeRuleSet(this, old_rule_set_id);
+	}
     }
     
     OncoprintModel.prototype.setRuleSet = function(track_id, rule_set) {
+	setTrackActiveRules(this, track_id, {});
+	
 	var curr_rule_set_id = this.track_rule_set_id[track_id];
 	this.rule_sets[rule_set.rule_set_id] = rule_set;
+	this.rule_set_active_rules[rule_set.rule_set_id] = {};
 	this.track_rule_set_id[track_id] = rule_set.rule_set_id;
 	
 	var rule_set_used = isRuleSetUsed(this, curr_rule_set_id);
 	if (!rule_set_used) {
-	    delete this.rule_sets[curr_rule_set_id];
+	    removeRuleSet(this, curr_rule_set_id);
 	}
     }
 
@@ -954,6 +1048,14 @@ var OncoprintModel = (function () {
 	return this.track_data[track_id];
     }
     
+    /**
+     * Sets the data for an Oncoprint track.
+     *
+     * @param track_id - the ID that identifies the track
+     * @param {Object[]} data - the list of data for the cells
+     * @param {string} data_id_key - name of the property of the
+     * data objects to use as the (column) key
+     */
     OncoprintModel.prototype.setTrackData = function (track_id, data, data_id_key) {
 	this.track_data[track_id] = data;
 	this.track_data_id_key[track_id] = data_id_key;
@@ -1005,9 +1107,15 @@ var OncoprintModel = (function () {
 	var curr_id_to_index = model.getIdToIndexMap();
 	var combinedComparator = function(idA, idB) {
 	    var res = 0;
+            var abs_res = 0;
 	    for (var i=0; i<track_sort_priority.length; i++) {
-		res = precomputed_comparator[track_sort_priority[i]].compare(idA, idB);
-		if (res !== 0) {
+		var next_res = precomputed_comparator[track_sort_priority[i]].compare(idA, idB);
+                var abs_next_res = Math.abs(next_res);
+		if (abs_next_res > abs_res) {
+		    res = next_res;
+                    abs_res = abs_next_res;
+		}
+		if (abs_res === 1) {
 		    break;
 		}
 	    }
@@ -1015,7 +1123,7 @@ var OncoprintModel = (function () {
 		// stable sort
 		res = ( curr_id_to_index[idA] < curr_id_to_index[idB] ? -1 : 1); // will never be the same, no need to check for 0
 	    }
-	    return res;
+	    return (res > 0) ? 1 : -1;
 	}
 	var id_order = model.getIdOrder(true).slice();
 	id_order.sort(combinedComparator);
@@ -1041,27 +1149,46 @@ var OncoprintModel = (function () {
 
 var PrecomputedComparator = (function() {
     function PrecomputedComparator(list, comparator, sort_direction, element_identifier_key) {
-	var directed_comparator = function(d1, d2) {
-	    if (sort_direction === 0) {
-		return 0;
-	    }
-	    var res = comparator(d1, d2);
-	    if (res === 2) {
-		return 1;
-	    } else if (res === -2) {
-		return -1;
-	    } else {
-		return res*sort_direction;
-	    }
+	var preferred, mandatory;
+	if (typeof comparator === "function") {
+	    preferred = comparator;
+	    mandatory = comparator;
+	} else {
+	    preferred = comparator.preferred;
+	    mandatory = comparator.mandatory;
+	}
+	var makeDirectedComparator = function(cmp) {
+	    return function (d1, d2) {
+		if (sort_direction === 0) {
+		    return 0;
+		}
+		var res = cmp(d1, d2);
+		if (res === 2) {
+		    return 1;
+		} else if (res === -2) {
+		    return -1;
+		} else {
+		    return res * sort_direction;
+		}
+	    };
 	};
-	var sorted_list = list.sort(directed_comparator);
-	this.change_points = []; // i is a change point iff comp(elt[i], elt[i+1]) !== 0
+	var preferredComparator = makeDirectedComparator(preferred);
+	var mandatoryComparator = makeDirectedComparator(mandatory);
+	var sorted_list = list.sort(preferredComparator);
+	
+	// i is a change point iff comp(elt[i], elt[i+1]) !== 0
+	this.preferred_change_points = []; // i is a preferred change pt iff its a change pt with comp = preferredComparator but not with comp = mandatoryComparator
+	this.mandatory_change_points = []; // i is a mandatory change pt iff its a change pt with comp = mandatoryComparator
+	
+	// note that by the following process, preferred_change_points and mandatory_change_points are sorted
 	for (var i=0; i<sorted_list.length; i++) {
 	    if (i === sorted_list.length - 1) {
 		break;
 	    }
-	    if (directed_comparator(sorted_list[i], sorted_list[i+1]) !== 0) {
-		this.change_points.push(i);
+	    if (mandatoryComparator(sorted_list[i], sorted_list[i+1]) !== 0) {
+		this.mandatory_change_points.push(i);
+	    } else if (preferredComparator(sorted_list[i], sorted_list[i+1]) !== 0) {
+		this.preferred_change_points.push(i);
 	    }
 	}
 	// Note that by this process change_points is sorted
@@ -1092,22 +1219,11 @@ var PrecomputedComparator = (function() {
 	    should_negate_result = true;
 	}
 	// See if any changepoints in [indA, indB)
-	var upper_bd_excl = this.change_points.length;
-	var lower_bd_incl = 0;
-	var middle;
 	var res = 0;
-	while (true) {
-	    middle = Math.floor((lower_bd_incl + upper_bd_excl) / 2);
-	    if (lower_bd_incl === upper_bd_excl) {
-		break;
-	    } else if (this.change_points[middle] >= indB) {
-		upper_bd_excl = middle;
-	    } else if (this.change_points[middle] < indA) {
-		lower_bd_incl = middle+1;
-	    } else {
-		res = -1;
-		break;
-	    }
+	if (hasElementsInInterval(this.mandatory_change_points, function(x) { return x; }, indA, indB)) {
+	    res = -1;
+	} else if (hasElementsInInterval(this.preferred_change_points, function(x) { return x; }, indA, indB)) {
+	    res = -0.5;
 	}
 	if (should_negate_result) {
 	    res = res * -1;

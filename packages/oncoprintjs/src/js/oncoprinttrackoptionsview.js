@@ -1,3 +1,4 @@
+var $ = require('jquery');
 var OncoprintTrackOptionsView = (function () {
     function OncoprintTrackOptionsView($div, moveUpCallback, moveDownCallback, removeCallback, sortChangeCallback) {
 	// removeCallback: function(track_id)
@@ -31,8 +32,8 @@ var OncoprintTrackOptionsView = (function () {
 
 	this.interaction_disabled = false;
     }
-
-    var renderAllOptions = function (view, model) {
+    
+    var renderAllOptions = function(view, model) {
 	if (view.rendering_suppressed) {
 	    return;
 	}
@@ -124,7 +125,7 @@ var OncoprintTrackOptionsView = (function () {
 	var $div, $img, $dropdown;
 	var top = model.getZoomedTrackTops(track_id);
 	$div = $('<div>').appendTo(view.$buttons_ctr).css({'position': 'absolute', 'left': '0px', 'top': top + 'px'});
-	$img = $('<img/>').appendTo($div).attr({'src': 'images/menudots.svg', 'width': view.img_size, 'height': view.img_size}).css({'float': 'left', 'cursor': 'pointer', 'border': '1px solid rgba(125,125,125,0)'});
+	$img = $('<img/>').appendTo($div).attr({'src': 'img/menudots.svg', 'width': view.img_size, 'height': view.img_size}).css({'float': 'left', 'cursor': 'pointer', 'border': '1px solid rgba(125,125,125,0)'});
 	$dropdown = $('<ul>').appendTo(view.$dropdown_ctr).css({'position':'absolute', 'width': 120, 'display': 'none', 'list-style-type': 'none', 'padding-left': '6', 'padding-right': '6', 'float': 'right', 'background-color': 'rgb(255,255,255)',
 								'left':'0px', 'top': top + view.img_size + 'px'});
 	view.track_options_$elts[track_id] = {'$div': $div, '$img': $img, '$dropdown': $dropdown};
@@ -240,7 +241,10 @@ var OncoprintTrackOptionsView = (function () {
 	renderAllOptions(this, model);
 	resize(this, model);
     }
-    OncoprintTrackOptionsView.prototype.removeTrack = function (model, track_id) {
+    OncoprintTrackOptionsView.prototype.setTrackGroupOrder = function(model) {
+	renderAllOptions(this, model);
+    }
+    OncoprintTrackOptionsView.prototype.removeTrack = function(model, track_id) {
 	delete this.track_options_$elts[track_id];
 	renderAllOptions(this, model);
 	resize(this, model);

@@ -1,4 +1,5 @@
 var svgfactory = require('./svgfactory.js');
+var $ = require('jquery');
 
 var OncoprintTrackInfoView = (function () {
     function OncoprintTrackInfoView($div) {
@@ -69,6 +70,10 @@ var OncoprintTrackInfoView = (function () {
 	resize(this, model);
     }
     OncoprintTrackInfoView.prototype.moveTrack = function (model) {
+	renderAllInfo(this, model);
+	resize(this, model);
+    }
+    OncoprintTrackInfoView.prototype.setTrackGroupOrder = function(model) {
 	renderAllInfo(this, model);
 	resize(this, model);
     }
