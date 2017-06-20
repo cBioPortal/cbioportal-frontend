@@ -33,3 +33,10 @@ function setArrowLeft(tooltipEl:Element, align:any) {
         arrowEl.style.left = `${arrowLeftOffset + width/2}px`;
     }
 }
+
+// we need this to account for issue with rc-tooltip when dealing with large tooltip overlay content
+export function placeArrowBottomLeft(tooltipEl: any) {
+    const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');
+    const targetEl = this.getRootDomNode();  // eslint-disable-line no-invalid-this
+    arrowEl.style.left = '10px';
+}
