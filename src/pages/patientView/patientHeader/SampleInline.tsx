@@ -4,6 +4,7 @@ import {SampleLabelHTML} from "shared/components/sampleLabel/SampleLabel";
 import {ClinicalDataBySampleId} from "shared/api/api-types-extended";
 import ClinicalInformationPatientTable from "../clinicalInformation/ClinicalInformationPatientTable";
 import DefaultTooltip from "shared/components/DefaultTooltip";
+import {placeArrowBottomLeft} from "shared/components/DefaultTooltip";
 
 interface ISampleInlineProps {
     sample: ClinicalDataBySampleId;
@@ -13,13 +14,6 @@ interface ISampleInlineProps {
     tooltipEnabled?: boolean;
     extraTooltipText?: string;
     additionalContent?: JSX.Element|null;
-}
-
-// we need this to account for issue with rc-tooltip when dealing with large tooltip overlay content
-export function placeArrow(tooltipEl: any) {
-    const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');
-    const targetEl = this.getRootDomNode();  // eslint-disable-line no-invalid-this
-    arrowEl.style.left = '10px';
 }
 
 export default class SampleInline extends React.Component<ISampleInlineProps, {}> {
@@ -59,7 +53,7 @@ export default class SampleInline extends React.Component<ISampleInlineProps, {}
         const {sample, extraTooltipText} = this.props;
 
         return (
-            <div style={{ maxHeight:400, overflow:'auto' }}>
+            <div style={{ maxHeight:400, maxWidth:600, overflow:'auto' }}>
                 <h5 style={{ marginBottom: 1 }}>
                     <svg height="12" width="12" style={{ marginRight: 5}}>
                         {this.sampleLabelHTML()}
@@ -108,7 +102,7 @@ export default class SampleInline extends React.Component<ISampleInlineProps, {}
                 overlay={this.tooltipContent()}
                 arrowContent={<div className="rc-tooltip-arrow-inner" />}
                 destroyTooltipOnHide={false}
-                onPopupAlign={placeArrow}
+                onPopupAlign={placeArrowBottomLeft}
             >
                 {this.mainContent()}
             </DefaultTooltip>
