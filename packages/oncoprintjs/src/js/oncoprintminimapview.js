@@ -1,4 +1,6 @@
+var $ = require('jquery');
 var gl_matrix = require('gl-matrix');
+var OncoprintZoomSlider = require('./oncoprintzoomslider.js');
 
 var arrayFindIndex = function (arr, callback, start_index) {
     start_index = start_index || 0;
@@ -72,53 +74,64 @@ var getWebGLContextAndSetUpMatrices = function (view) {
 	self.pMatrix = pMatrix;
     })(view);
 };
-var getWebGLContextAndSetUpMatricesAndShaders = function (view) {
-    getWebGLContextAndSetUpMatrices(view);
-    (function initializeShaders(self) {// Initialize shaders
-	var vertex_shader_source = ['attribute vec3 aVertexPosition;',
-	    'attribute vec4 aVertexColor;',
-	    'attribute float aVertexOncoprintColumn;',
-	    'uniform float columnWidth;',
-	    'uniform float zoomX;',
-	    'uniform float zoomY;',
-	    'uniform mat4 uMVMatrix;',
-	    'uniform mat4 uPMatrix;',
-	    'uniform float offsetY;',
-	    'varying vec4 vColor;',
-	    'void main(void) {',
-	    '	gl_Position = vec4(aVertexPosition, 1.0);',
-	    '	gl_Position[0] += aVertexOncoprintColumn * columnWidth;',
-	    '	gl_Position[1] += offsetY;',
-	    '	gl_Position *= vec4(zoomX, zoomY, 1.0, 1.0);',
-	    '	gl_Position = uPMatrix * uMVMatrix * gl_Position;',
-	    '	vColor = aVertexColor;',
-	    '}'].join('\n');
-	var fragment_shader_source = ['precision mediump float;',
-	    'varying vec4 vColor;',
-	    '',
-	    'void main(void) {',
-	    '   gl_FragColor = vColor;',
-	    '}'].join('\n');
+var setUpShaders = function(self, vertex_bank_size) {
+    var vertex_shader_source = ['precision highp float;',
+	'attribute float aPosVertex;',
+	'attribute float aColVertex;',
+	'attribute float aVertexOncoprintColumn;',
+	'uniform float columnWidth;',
+	'uniform float zoomX;',
+	'uniform float zoomY;',
+	'uniform mat4 uMVMatrix;',
+	'uniform mat4 uPMatrix;',
+	'uniform float offsetY;',
+	'uniform float positionBitPackBase;',
+	'uniform float texSize;',
+	'varying float texCoord;',
+	'vec3 unpackVec3(float packedVec3, float base) {',
+	'	float pos0 = floor(packedVec3 / (base*base));',
+	'	float pos0Contr = pos0*base*base;',
+	'	float pos1 = floor((packedVec3 - pos0Contr)/base);',
+	'	float pos1Contr = pos1*base;',
+	'	float pos2 = packedVec3 - pos0Contr - pos1Contr;',
+	'	return vec3(pos0, pos1, pos2);',
+	'}',
+	'void main(void) {',
+	'	gl_Position = vec4(unpackVec3(aPosVertex, positionBitPackBase), 1.0);',
+	'	gl_Position[0] += aVertexOncoprintColumn*columnWidth;',
+	'	gl_Position[1] += offsetY;',
+	'	gl_Position *= vec4(zoomX, zoomY, 1.0, 1.0);',
+	'	gl_Position = uPMatrix * uMVMatrix * gl_Position;',
+	'	texCoord = (aColVertex + 0.5) / texSize;',
+	'}'].join('\n');
+	 var fragment_shader_source = ['precision mediump float;',
+		'varying float texCoord;',
+		'uniform sampler2D uSampler;',
+		'void main(void) {',
+		'   gl_FragColor = texture2D(uSampler, vec2(texCoord, 0.5));',
+		'}'].join('\n');
 	var vertex_shader = createShader(self, vertex_shader_source, 'VERTEX_SHADER');
-	var fragment_shader = createShader(self, fragment_shader_source, 'FRAGMENT_SHADER');
+	    var fragment_shader = createShader(self, fragment_shader_source, 'FRAGMENT_SHADER');
 
-	var shader_program = createShaderProgram(self, vertex_shader, fragment_shader);
-	shader_program.vertexPositionAttribute = self.ctx.getAttribLocation(shader_program, 'aVertexPosition');
-	self.ctx.enableVertexAttribArray(shader_program.vertexPositionAttribute);
-	shader_program.vertexColorAttribute = self.ctx.getAttribLocation(shader_program, 'aVertexColor');
-	self.ctx.enableVertexAttribArray(shader_program.vertexColorAttribute);
-	shader_program.vertexOncoprintColumnAttribute = self.ctx.getAttribLocation(shader_program, 'aVertexOncoprintColumn');
-	self.ctx.enableVertexAttribArray(shader_program.vertexOncoprintColumnAttribute);
+	    var shader_program = createShaderProgram(self, vertex_shader, fragment_shader);
+	    shader_program.vertexPositionAttribute = self.ctx.getAttribLocation(shader_program, 'aPosVertex');
+	    self.ctx.enableVertexAttribArray(shader_program.vertexPositionAttribute);
+	    shader_program.vertexColorAttribute = self.ctx.getAttribLocation(shader_program, 'aColVertex');
+	    self.ctx.enableVertexAttribArray(shader_program.vertexColorAttribute);
+	    shader_program.vertexOncoprintColumnAttribute = self.ctx.getAttribLocation(shader_program, 'aVertexOncoprintColumn');
+	    self.ctx.enableVertexAttribArray(shader_program.vertexOncoprintColumnAttribute);
 
-	shader_program.pMatrixUniform = self.ctx.getUniformLocation(shader_program, 'uPMatrix');
-	shader_program.mvMatrixUniform = self.ctx.getUniformLocation(shader_program, 'uMVMatrix');
-	shader_program.columnWidthUniform = self.ctx.getUniformLocation(shader_program, 'columnWidth');
-	shader_program.zoomXUniform = self.ctx.getUniformLocation(shader_program, 'zoomX');
-	shader_program.zoomYUniform = self.ctx.getUniformLocation(shader_program, 'zoomY');
-	shader_program.offsetYUniform = self.ctx.getUniformLocation(shader_program, 'offsetY');
+	    shader_program.samplerUniform = self.ctx.getUniformLocation(shader_program, 'uSampler');
+	    shader_program.pMatrixUniform = self.ctx.getUniformLocation(shader_program, 'uPMatrix');
+	    shader_program.mvMatrixUniform = self.ctx.getUniformLocation(shader_program, 'uMVMatrix');
+	    shader_program.columnWidthUniform = self.ctx.getUniformLocation(shader_program, 'columnWidth');
+	    shader_program.zoomXUniform = self.ctx.getUniformLocation(shader_program, 'zoomX');
+	    shader_program.zoomYUniform = self.ctx.getUniformLocation(shader_program, 'zoomY');
+	    shader_program.offsetYUniform = self.ctx.getUniformLocation(shader_program, 'offsetY');
+	    shader_program.positionBitPackBaseUniform = self.ctx.getUniformLocation(shader_program, 'positionBitPackBase');
+	    shader_program.texSizeUniform = self.ctx.getUniformLocation(shader_program, 'texSize');
 
-	self.shader_program = shader_program;
-    })(view);
+	    self.shader_program = shader_program;
 };
 
 var clamp = function(x, lower, upper) {
@@ -127,21 +140,94 @@ var clamp = function(x, lower, upper) {
 
 var OncoprintMinimapView = (function () {
 
-    function OncoprintMinimapView($div, $canvas, $overlay_canvas, model, cell_view, width, height, drag_callback, viewport_callback) {
+    function OncoprintMinimapView($div, $canvas, $overlay_canvas, model, cell_view, width, height, drag_callback, viewport_callback, horz_zoom_callback, vert_zoom_callback, zoom_to_fit_callback, close_callback) {
 	this.$div = $div;
 	this.$canvas = $canvas;
 	this.$overlay_canvas = $overlay_canvas;
 
-	this.padding = 4;
-	this.$div.css({'min-width': width + 2*this.padding, 'min-height': height + 2*this.padding,
-			'outline':'solid 1px black', 'background-color':'#777777'});
+	var self = this;
+	var padding = 4;
+	var vertical_zoom_area_width = 20;
+	var horizontal_zoom_area_height = 20;
+	var window_bar_height = 20;
+
+	this.layout_numbers = {
+	    window_width: padding + width + padding + vertical_zoom_area_width,
+	    window_height: window_bar_height + padding + height + padding + horizontal_zoom_area_height,
+	    vertical_zoom_area_width: vertical_zoom_area_width,
+	    horizontal_zoom_area_height: horizontal_zoom_area_height,
+	    padding: padding,
+	    window_bar_height: window_bar_height,
+	    canvas_left: padding,
+	    canvas_top: window_bar_height + padding,
+	};
+	this.$div.css({'min-width': this.layout_numbers.window_width,
+			'min-height': this.layout_numbers.window_height,
+			'outline':'solid 1px black', 'background-color':'#ffffff'});
+		    
+	this.$window_bar = $('<div>').css({'position':'absolute', 
+					    'min-width': this.layout_numbers.window_width,
+					    'min-height': this.layout_numbers.window_bar_height,
+					    'background-color':'#cccccc'})
+						.appendTo(this.$div);
+					
+	this.$close_btn = $('<div>').css({'position':'absolute',
+					    'top': 3,
+					    'left': 3,
+					    'min-width': this.layout_numbers.window_bar_height - 6,
+					    'min-height': this.layout_numbers.window_bar_height - 6,
+					    'cursor': 'pointer'})
+						.appendTo(this.$div);
+	$('<span>').addClass("icon fa fa-times-circle").css('font-size', (this.layout_numbers.window_bar_height - 6) + "px").appendTo(this.$close_btn);
+	
+	this.$close_btn.click(close_callback || function(){});
+	
 	this.$canvas[0].width = width;
 	this.$canvas[0].height = height;
-	this.$canvas.css({'top': this.padding, 'left':this.padding});
+	this.$canvas.css({'top': this.layout_numbers.canvas_top, 'left':this.layout_numbers.canvas_left});
 	this.$overlay_canvas[0].width = width;
 	this.$overlay_canvas[0].height = width;
-	this.$overlay_canvas.css({'top': this.padding, 'left':this.padding, 'outline':'solid 1px #444444'});
-	getWebGLContextAndSetUpMatricesAndShaders(this);
+	this.$overlay_canvas.css({'top': this.layout_numbers.canvas_top, 'left':this.layout_numbers.canvas_left, 'outline':'solid 1px #444444'});
+	
+	this.horizontal_zoom = new OncoprintZoomSlider(this.$div, {'btn_size': this.layout_numbers.horizontal_zoom_area_height - padding,
+								    'horizontal': true,
+								    'width': width,
+								    'init_val': model.getHorzZoom(),
+								    'left': padding,
+								    'top': this.layout_numbers.canvas_top + height + padding,
+								    'onChange': function(val) { horz_zoom_callback(val); }});
+	this.vertical_zoom = new OncoprintZoomSlider(this.$div, {'btn_size': this.layout_numbers.vertical_zoom_area_width - padding,
+								    'vertical': true,
+								    'height': height,
+								    'init_val': model.getVertZoom(),
+								    'left': this.layout_numbers.canvas_left + width + padding,
+								    'top': this.layout_numbers.window_bar_height + padding,
+								    'onChange': function(val) { vert_zoom_callback(val); }});							
+	
+	(function setUpZoomToFitButton() {
+	    var btn_height = self.layout_numbers.horizontal_zoom_area_height - padding;
+	    var btn_width = self.layout_numbers.vertical_zoom_area_width - padding;
+	    var $btn = $('<div>').css({'position': 'absolute',
+		'min-height': btn_height,
+		'min-width': btn_width,
+		'outline': 'solid 1px black',
+		'left': self.layout_numbers.canvas_left + width + padding,
+		'top': self.layout_numbers.canvas_top + height + padding,
+		'background-size': (btn_width - 4) + 'px '+ (btn_height - 4) + 'px',
+		'background-position': '2px 2px',
+		'cursor': 'pointer'}).addClass('oncoprint-zoomtofit-btn')
+		    .appendTo($div);
+	    $btn.hover(function () {
+		$(this).css({'background-color': '#cccccc'});
+	    }, function () {
+		$(this).css({'background-color': '#ffffff'});
+	    });
+	    
+	    zoom_to_fit_callback = zoom_to_fit_callback || function() {};
+	    $btn.click(zoom_to_fit_callback);
+	})();
+	getWebGLContextAndSetUpMatrices(this);
+	setUpShaders(this);
 	this.overlay_ctx = $overlay_canvas[0].getContext("2d");
 
 	this.img = new Image();
@@ -255,15 +341,18 @@ var OncoprintMinimapView = (function () {
 	    $div.css('cursor', cursor_val);
 	};
 	var getCanvasMouse = function(view, div_mouse_x, div_mouse_y) {
-	    var outside = false;
-	    if (div_mouse_x < view.padding || div_mouse_x > parseInt(view.$canvas[0].width, 10) + view.padding ||
-		    div_mouse_y < view.padding || div_mouse_y > parseInt(view.$canvas[0].height, 10) + view.padding) {
-		    outside = true;
-	    }
-	    //div_mouse_x = clamp(div_mouse_x, view.padding, view.padding + parseInt(view.$canvas[0].width, 10));
-	    //div_mouse_y = clamp(div_mouse_y, view.padding, view.padding + parseInt(view.$canvas[0].height, 10));
-	    return {'mouse_x': div_mouse_x - view.padding, 
-		    'mouse_y': div_mouse_y - view.padding,
+	    var canv_top = parseInt(view.$canvas[0].style.top, 10);
+	    var canv_left = parseInt(view.$canvas[0].style.left, 10);
+	    var canv_width = parseInt(view.$canvas[0].width, 10);
+	    var canv_height = parseInt(view.$canvas[0].height, 10);
+	    
+	    var mouse_x = div_mouse_x - canv_left;
+	    var mouse_y = div_mouse_y - canv_top;
+	    
+	    var outside = mouse_x < 0 || mouse_x >= canv_width || mouse_y < 0 || mouse_y >= canv_height;
+	    
+	    return {'mouse_x': mouse_x,
+		    'mouse_y': mouse_y,
 		    'outside': outside};
 	};
 	var dragging = false;
@@ -521,23 +610,69 @@ var OncoprintMinimapView = (function () {
 	    }
 	    drawOverlayRect(self, model, cell_view);
 	});
+	
+	(function setUpWindowDrag() {
+	    var start_mouse_x;
+	    var start_mouse_y;
+	    var start_left;
+	    var start_top;
+	    var handleDrag = function(evt) {
+		evt.preventDefault();
+		var delta_mouse_x = evt.pageX - start_mouse_x;
+		var delta_mouse_y = evt.pageY - start_mouse_y;
+		self.setWindowPosition(start_left + delta_mouse_x, start_top + delta_mouse_y);
+	    };
+	    self.$window_bar.hover(function() {
+		$(this).css({'cursor':'move'});
+	    }, function() {
+		$(this).css({'cursor':'auto'});
+	    });
+	    
+	    self.$window_bar.on("mousedown", function (evt) {
+		start_mouse_x = evt.pageX;
+		start_mouse_y = evt.pageY;
+		start_left = parseInt(self.$div.css('left'), 10);
+		start_top = parseInt(self.$div.css('top'), 10);
+		$(document).on("mousemove", handleDrag);
+	    });
+	    $(document).on("mouseup click", function () {
+		$(document).off("mousemove", handleDrag);
+	    });
+	})();
+	
     }
 
     var getTrackBuffers = function (view, cell_view, track_id) {
-	var vertex_position_buffer = view.ctx.createBuffer();
-	var vertex_color_buffer = view.ctx.createBuffer();
-	var vertex_position_array = cell_view.vertex_position_array[track_id];
-	var vertex_color_array = cell_view.vertex_color_array[track_id];
+	var pos_buffer = view.ctx.createBuffer();
+	var pos_array = cell_view.vertex_data[track_id].pos_array;
 
-	view.ctx.bindBuffer(view.ctx.ARRAY_BUFFER, vertex_position_buffer);
-	view.ctx.bufferData(view.ctx.ARRAY_BUFFER, new Float32Array(vertex_position_array), view.ctx.STATIC_DRAW);
-	vertex_position_buffer.itemSize = 3;
-	vertex_position_buffer.numItems = vertex_position_array.length / vertex_position_buffer.itemSize;
+	view.ctx.bindBuffer(view.ctx.ARRAY_BUFFER, pos_buffer);
+	view.ctx.bufferData(view.ctx.ARRAY_BUFFER, new Float32Array(pos_array), view.ctx.STATIC_DRAW);
+	pos_buffer.itemSize = 1;
+	pos_buffer.numItems = pos_array.length / pos_buffer.itemSize;
+	
+	var col_buffer = view.ctx.createBuffer();
+	var col_array = cell_view.vertex_data[track_id].col_array;
 
-	view.ctx.bindBuffer(view.ctx.ARRAY_BUFFER, vertex_color_buffer);
-	view.ctx.bufferData(view.ctx.ARRAY_BUFFER, new Float32Array(vertex_color_array), view.ctx.STATIC_DRAW);
-	vertex_color_buffer.itemSize = 4;
-	vertex_color_buffer.numItems = vertex_color_array.length / vertex_color_buffer.itemSize;
+	view.ctx.bindBuffer(view.ctx.ARRAY_BUFFER, col_buffer);
+	view.ctx.bufferData(view.ctx.ARRAY_BUFFER, new Float32Array(col_array), view.ctx.STATIC_DRAW);
+	col_buffer.itemSize = 1;
+	col_buffer.numItems = col_array.length / col_buffer.itemSize;
+
+	var tex = view.ctx.createTexture();
+	view.ctx.bindTexture(view.ctx.TEXTURE_2D, tex);
+
+	var color_bank = cell_view.vertex_data[track_id].col_bank;
+	var width = Math.pow(2, Math.ceil(Math.log2(color_bank.length / 4)));
+	while (color_bank.length < 4 * width) {
+	    color_bank.push(0);
+	}
+	var height = 1;
+	view.ctx.texImage2D(view.ctx.TEXTURE_2D, 0, view.ctx.RGBA, width, height, 0, view.ctx.RGBA, view.ctx.UNSIGNED_BYTE, new Uint8Array(color_bank));
+	view.ctx.texParameteri(view.ctx.TEXTURE_2D, view.ctx.TEXTURE_MIN_FILTER, view.ctx.NEAREST);
+	view.ctx.texParameteri(view.ctx.TEXTURE_2D, view.ctx.TEXTURE_MAG_FILTER, view.ctx.NEAREST);
+	
+	var color_texture = {'texture': tex, 'size': width};
 
 	var vertex_column_buffer = view.ctx.createBuffer();
 	var vertex_column_array = cell_view.vertex_column_array[track_id];
@@ -546,9 +681,10 @@ var OncoprintMinimapView = (function () {
 	vertex_column_buffer.itemSize = 1;
 	vertex_column_buffer.numItems = vertex_column_array.length / vertex_column_buffer.itemSize;
 
-	return {'position': vertex_position_buffer,
-	    'color': vertex_color_buffer,
-	    'column': vertex_column_buffer};
+	return {'position': pos_buffer,
+		'color': col_buffer,
+		'color_tex': color_texture,
+		'column': vertex_column_buffer};
     };
 
     var drawOncoprint = function (view, model, cell_view) {
@@ -569,23 +705,28 @@ var OncoprintMinimapView = (function () {
 	    if (buffers.position.numItems === 0) {
 		continue;
 	    }
-
+	    
 	    view.ctx.useProgram(view.shader_program);
 	    view.ctx.bindBuffer(view.ctx.ARRAY_BUFFER, buffers.position);
 	    view.ctx.vertexAttribPointer(view.shader_program.vertexPositionAttribute, buffers.position.itemSize, view.ctx.FLOAT, false, 0, 0);
-
 	    view.ctx.bindBuffer(view.ctx.ARRAY_BUFFER, buffers.color);
 	    view.ctx.vertexAttribPointer(view.shader_program.vertexColorAttribute, buffers.color.itemSize, view.ctx.FLOAT, false, 0, 0);
-
+	    
 	    view.ctx.bindBuffer(view.ctx.ARRAY_BUFFER, buffers.column);
 	    view.ctx.vertexAttribPointer(view.shader_program.vertexOncoprintColumnAttribute, buffers.column.itemSize, view.ctx.FLOAT, false, 0, 0);
 
+	    view.ctx.activeTexture(view.ctx.TEXTURE0);
+	    view.ctx.bindTexture(view.ctx.TEXTURE_2D, buffers.color_tex.texture);
+	    view.ctx.uniform1i(view.shader_program.samplerUniform, 0);
+	    view.ctx.uniform1f(view.shader_program.texSizeUniform, buffers.color_tex.size);
+	    
 	    view.ctx.uniformMatrix4fv(view.shader_program.pMatrixUniform, false, view.pMatrix);
 	    view.ctx.uniformMatrix4fv(view.shader_program.mvMatrixUniform, false, view.mvMatrix);
 	    view.ctx.uniform1f(view.shader_program.columnWidthUniform, model.getCellWidth(true));
 	    view.ctx.uniform1f(view.shader_program.zoomXUniform, zoom.x);
 	    view.ctx.uniform1f(view.shader_program.zoomYUniform, zoom.y);
 	    view.ctx.uniform1f(view.shader_program.offsetYUniform, cell_top);
+	    view.ctx.uniform1f(view.shader_program.positionBitPackBaseUniform, cell_view.position_bit_pack_base);
 
 	    view.ctx.drawArrays(view.ctx.TRIANGLES, 0, buffers.position.numItems);
 	}
@@ -706,12 +847,16 @@ var OncoprintMinimapView = (function () {
     }
     OncoprintMinimapView.prototype.setHorzZoom = function (model, cell_view) {
 	drawOverlayRect(this, model, cell_view);
+	this.horizontal_zoom.setSliderValue(model.getHorzZoom());
     }
     OncoprintMinimapView.prototype.setVertZoom = function (model, cell_view) {
 	drawOverlayRect(this, model, cell_view);
+	this.vertical_zoom.setSliderValue(model.getVertZoom());
     }
     OncoprintMinimapView.prototype.setZoom = function(model, cell_view) {
 	drawOverlayRect(this, model, cell_view);
+	this.horizontal_zoom.setSliderValue(model.getHorzZoom());
+	this.vertical_zoom.setSliderValue(model.getVertZoom());
     }
     OncoprintMinimapView.prototype.setScroll = function (model, cell_view) {
 	drawOverlayRect(this, model, cell_view);
@@ -724,6 +869,8 @@ var OncoprintMinimapView = (function () {
     }
     OncoprintMinimapView.prototype.setViewport = function (model, cell_view) {
 	drawOverlayRect(this, model, cell_view);
+	this.horizontal_zoom.setSliderValue(model.getHorzZoom());
+	this.vertical_zoom.setSliderValue(model.getVertZoom());
     }
     OncoprintMinimapView.prototype.sort = function (model, cell_view) {
 	drawOncoprintAndOverlayRect(this, model, cell_view);
@@ -751,10 +898,15 @@ var OncoprintMinimapView = (function () {
 	drawOncoprintAndOverlayRect(this, model, cell_view);
     }
 
+    OncoprintMinimapView.prototype.setWindowPosition = function(x, y) {
+	this.$div.css({'top': y, 'left': x});
+    }
+    
     OncoprintMinimapView.prototype.setWidth = function (w, model, cell_view) {
 	this.$canvas[0].width = w;
 	this.$overlay_canvas[0].width = w;
-	getWebGLContextAndSetUpMatricesAndShaders(this);
+	getWebGLContextAndSetUpMatrices(this);
+	setUpShaders(this);
 	this.overlay_ctx = this.$overlay_canvas[0].getContext("2d");
 
 	drawOncoprintAndOverlayRect(this, model, cell_view);
