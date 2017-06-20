@@ -39,8 +39,8 @@ var routeComponentRegex = /routes\/([^\/]+\/?[^\/]+).js$/;
 var config = {
 
     'entry': [
-        `${path.join(src, 'appBootstrapper.jsx')}`,
-        `babel-polyfill`
+        `babel-polyfill`,
+        `${path.join(src, 'appBootstrapper.jsx')}`
     ],
     'output': {
         path: './dist/',
