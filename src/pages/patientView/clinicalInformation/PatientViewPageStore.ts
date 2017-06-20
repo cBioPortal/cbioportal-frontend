@@ -720,8 +720,11 @@ export class PatientViewPageStore {
 
         for (const mutation of this.uncalledMutationData.result) {
             mutationId = PatientViewPageStore.getMutationId(mutation);
-            idToMutations[mutationId] = idToMutations[mutationId] || [];
-            idToMutations[mutationId].push(mutation);
+            // only add uncalled mutation if it is called in another sample of
+            // this patient
+            if (mutationId in idToMutations) {
+                idToMutations[mutationId].push(mutation);
+            }
         }
 
         return Object.keys(idToMutations).map(id => idToMutations[id]);
