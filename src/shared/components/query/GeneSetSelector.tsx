@@ -14,6 +14,7 @@ import GisticGeneSelector from "./GisticGeneSelector";
 import SectionHeader from "../sectionHeader/SectionHeader";
 import Autosuggest from 'react-bootstrap-autosuggest';
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
+import AutosuggestExtended from "../AutosuggestExtended";
 
 const styles = styles_any as {
 	GeneSetSelector: string,
@@ -83,16 +84,16 @@ export default class GeneSetSelector extends QueryStoreComponent<GeneSetSelector
 				</SectionHeader>
 
 				<FlexCol overflow>
-				<Autosuggest
+				<AutosuggestExtended
+					openOnClick={true}
 					datalist={this.geneListOptions}
 					value={this.selectedGeneListOption}
 					bsSize="small"
 					valueIsItem={true}
 					itemValuePropName="label"
-					onChange={(option:any) => {
-						this.store.geneQuery = option ? option.value : '';
-					}
-					}
+					onChange={(option:{label:string, value:string}) => {
+								this.store.geneQuery = option.value;
+							}}
 				/>
 
 				{!!(this.store.mutSigForSingleStudy.result.length || this.store.gisticForSingleStudy.result.length) && (
