@@ -16,6 +16,7 @@ describe('StoreUtils', () => {
     let mutationDataWithNoKeyword: MobxPromise<Mutation[]>;
     let mutationDataWithKeywords: MobxPromise<Mutation[]>;
     let mutationDataWithFusionsOnly: MobxPromise<Mutation[]>;
+    let uncalledMutationDataWithNewEvent: MobxPromise<Mutation[]>;
     let mutationDataWithMutationsOnly: MobxPromise<Mutation[]>;
     let mutationDataWithBothMutationsAndFusions: MobxPromise<Mutation[]>;
 
@@ -107,6 +108,27 @@ describe('StoreUtils', () => {
                 variantAllele: "A"
             }),
         ];
+
+        uncalledMutationDataWithNewEvent =  {
+            result: [
+                initMutation({ // mutation with different mutation event
+                    gene: {
+                        chromosome: "17",
+                        hugoGeneSymbol: "BRCA1"
+                    },
+                    proteinChange: "mutated",
+                    startPosition: 111,
+                    endPosition: 112,
+                    referenceAllele: "T",
+                    variantAllele: "A"
+                })
+            ],
+            status: 'complete' as 'complete',
+            isPending: false,
+            isError: false,
+            isComplete: true,
+            error: undefined
+        };
 
         mutationDataWithFusionsOnly =  {
             result: fusions,
@@ -255,6 +277,12 @@ describe('StoreUtils', () => {
 
         it("merges mutations properly when there are both mutation and fusion data ", () => {
             const mergedMutations = mergeMutationsIncludingUncalled(mutationDataWithBothMutationsAndFusions, emptyMutationData);
+
+            assert.equal(mergedMutations.length, 5);
+        });
+
+        it("does not include new mutation events from the uncalled mutations, only mutation events already called in >=1 sample should be added", () => {
+            const mergedMutations = mergeMutationsIncludingUncalled(mutationDataWithBothMutationsAndFusions, uncalledMutationDataWithNewEvent);
 
             assert.equal(mergedMutations.length, 5);
         });
