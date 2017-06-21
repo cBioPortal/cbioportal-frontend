@@ -308,7 +308,7 @@ export default class OncoKbCard extends React.Component<IOncoKbCardProps, IOncoK
                                                 </p>
                                             </div>
                                             <If condition={this.props.treatments.length > 0}>
-                                                <div>
+                                                <div className="treatments-wrapper">
                                                     <table className="table" style={{marginTop:6}}>
                                                         <thead>
                                                             <tr>
