@@ -16,6 +16,7 @@ import SectionHeader from "../sectionHeader/SectionHeader";
 import {Modal} from 'react-bootstrap';
 import Autosuggest from 'react-bootstrap-autosuggest'
 import ReactElement = React.ReactElement;
+import AutosuggestExtended from "../AutosuggestExtended";
 
 const styles = styles_any as {
 	SelectedStudiesWindow: string,
@@ -113,8 +114,6 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 		);
 	});
 
-	private autosuggest:React.Component<any,any>;
-
 	render()
 	{
 		return (
@@ -171,9 +170,10 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 								searchTextOptions = [this.store.searchText].concat(searchTextOptions as string[]);
 							let searchTimeout: number|null = null;
 
-							return (<Autosuggest
+							return (<AutosuggestExtended
+								openOnClick={(value:string)=>(value.length === 0)}
 								datalist={searchTextOptions}
-								ref={(el: React.Component<any, any>)=>(this.autosuggest = el)}
+								datalistOnly={false}
 								placeholder="Search..."
 								bsSize="small"
 								onChange={(currentVal:string) => {
@@ -185,13 +185,6 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 									searchTimeout = window.setTimeout(()=>{
 										this.store.setSearchText(currentVal);
 									}, 400);
-								}}
-								onFocus={(value:string)=>{
-									if (value.length === 0) {
-										setTimeout(()=>{
-											this.autosuggest.setState({open:true});
-										},400)
-									}
 								}}
 							/>);
 

@@ -9,6 +9,7 @@ import {getStudyViewUrl} from '../../api/urls';
 import DefaultTooltip from '../DefaultTooltip';
 import SectionHeader from '../sectionHeader/SectionHeader';
 import { default as Autosuggest, ItemAdapter } from 'react-bootstrap-autosuggest';
+import AutosuggestExtended from "../AutosuggestExtended";
 
 const styles = styles_any as {
 	CaseSetSelector: string,
@@ -101,7 +102,8 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
                     overlayClassName="hideTooltipArrow"
 					overlay={<div>{this.selectedCaseSetDescription}</div>}
 				>
-				<Autosuggest
+				<AutosuggestExtended
+					openOnClick={true}
 					datalist={this.caseSetOptions}
 					bsSize="small"
 					itemAdapter={OptionAdapter.instance}
