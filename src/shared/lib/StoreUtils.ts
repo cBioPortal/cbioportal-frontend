@@ -468,7 +468,7 @@ export function mergeMutations(mutationData:MobxPromise<Mutation[]>,
 {
     const idToMutations: {[key: string]: Mutation[]} = {};
 
-    updateIdToMutationsMap(idToMutations, mutationData, generateMutationId);
+    updateIdToMutationsMap(idToMutations, mutationData, generateMutationId, false);
 
     return Object.keys(idToMutations).map((id:string) => idToMutations[id]);
 }
@@ -479,21 +479,24 @@ export function mergeMutationsIncludingUncalled(mutationData:MobxPromise<Mutatio
 {
     const idToMutations: {[key: string]: Mutation[]} = {};
 
-    updateIdToMutationsMap(idToMutations, mutationData, generateMutationId);
-    updateIdToMutationsMap(idToMutations, uncalledMutationData, generateMutationId);
+    updateIdToMutationsMap(idToMutations, mutationData, generateMutationId, false);
+    updateIdToMutationsMap(idToMutations, uncalledMutationData, generateMutationId, true);
 
     return Object.keys(idToMutations).map((id:string) => idToMutations[id]);
 }
 
 function updateIdToMutationsMap(idToMutations: {[key: string]: Mutation[]},
                                 mutationData:MobxPromise<Mutation[]>,
-                                generateMutationId:MutationIdGenerator = generateMutationIdByGeneAndProteinChangeAndEvent)
+                                generateMutationId:MutationIdGenerator = generateMutationIdByGeneAndProteinChangeAndEvent,
+                                onlyUpdateExistingIds: boolean)
 {
     if (mutationData.result) {
         for (const mutation of mutationData.result) {
             const mutationId = generateMutationId(mutation);
-            idToMutations[mutationId] = idToMutations[mutationId] || [];
-            idToMutations[mutationId].push(mutation);
+            if (!onlyUpdateExistingIds || (mutationId in idToMutations)) {
+                idToMutations[mutationId] = idToMutations[mutationId] || [];
+                idToMutations[mutationId].push(mutation);
+            }
         }
     }
 }
