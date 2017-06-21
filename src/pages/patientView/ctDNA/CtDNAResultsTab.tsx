@@ -28,15 +28,17 @@ export default class CtDNAResultsTab extends React.Component<ICtDNAResultsTabPro
 
     return (
       <div>
-      <LinePlotVAFTime
-        linePlotGene={this.state.linePlotGene}
-        mergedMutations={this.props.mergedMutations}
-        sampleManager={this.props.sampleManager}/>
 
       <HeatmapVAFEvents
         heatmapGeneList={this.state.heatmapGeneList}
         mergedMutations={this.props.mergedMutations}
         sampleManager={this.props.sampleManager}/>
+
+      <LinePlotVAFTime
+        linePlotGene={this.state.linePlotGene}
+        mergedMutations={this.props.mergedMutations}
+        sampleManager={this.props.sampleManager}/>
+
       </div>
     )
   }
