@@ -4,9 +4,7 @@ import {Mutation} from "../../../shared/api/generated/CBioPortalAPI";
 import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
 import SampleManager from "../sampleManager";
 
-const Highcharts = require('highcharts');
-const addHeatmap = require('highcharts/modules/heatmap');
-addHeatmap(Highcharts);
+const Chart = require('chart.heatmap.js/dst/Chart.HeatMap.S');
 
 
 interface IHeatmapVAFEventsProps {
@@ -25,64 +23,7 @@ export default class HeatmapVAFEvents extends React.Component<IHeatmapVAFEventsP
     this.chart = undefined;
   }
 
-  componentDidMount() {
-    const config = {
-      chart: {
-          type: 'heatmap',
-          marginTop: 40,
-          marginBottom: 80,
-          plotBorderWidth: 1
-      },
-
-
-      title: {
-          text: 'Sales per employee per weekday'
-      },
-
-      xAxis: {
-          categories: ['Alexander', 'Marie', 'Maximilian', 'Sophia', 'Lukas', 'Maria', 'Leon', 'Anna', 'Tim', 'Laura']
-      },
-
-      yAxis: {
-          categories: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
-          title: null
-      },
-
-      colorAxis: {
-          min: 0,
-          minColor: '#FFFFFF',
-          maxColor: '#003366'
-      },
-
-      legend: {
-          align: 'right',
-          layout: 'vertical',
-          margin: 0,
-          verticalAlign: 'top',
-          y: 25,
-          symbolHeight: 280
-      },
-
-      series: [{
-          name: 'Sales per employee',
-          borderWidth: 1,
-          data: [[0, 0, 10], [0, 1, 19], [0, 2, 8], [0, 3, 24], [0, 4, 67], [1, 0, 92], [1, 1, 58], [1, 2, 78], [1, 3, 117], [1, 4, 48], [2, 0, 35], [2, 1, 15], [2, 2, 123], [2, 3, 64], [2, 4, 52], [3, 0, 72], [3, 1, 132], [3, 2, 114], [3, 3, 19], [3, 4, 16], [4, 0, 38], [4, 1, 5], [4, 2, 8], [4, 3, 117], [4, 4, 115], [5, 0, 88], [5, 1, 32], [5, 2, 12], [5, 3, 6], [5, 4, 120], [6, 0, 13], [6, 1, 44], [6, 2, 88], [6, 3, 98], [6, 4, 96], [7, 0, 31], [7, 1, 1], [7, 2, 82], [7, 3, 32], [7, 4, 30], [8, 0, 85], [8, 1, 97], [8, 2, 123], [8, 3, 64], [8, 4, 84], [9, 0, 47], [9, 1, 114], [9, 2, 31], [9, 3, 48], [9, 4, 91]],
-          dataLabels: {
-              enabled: true,
-              color: '#000000'
-          }
-      }]
-    };
-
-    this.chart = new Highcharts['Chart'](
-      'heatmap-container',
-      config
-    );
-  }
-
-  public render() {
-
-    // move all of the calculations to another lifecycle hook
+  extractPlotData() {
     // also pull in uncalled mutations from store
     // perform check if objects still the same (shouldComponentUpdate)
 
@@ -96,17 +37,62 @@ export default class HeatmapVAFEvents extends React.Component<IHeatmapVAFEventsP
       let mutSample = mutation.sampleId;
       if (~sampleOrder.indexOf(mutSample) && ~heatmapGeneList.indexOf(mutGene)) {
         let vaf = mutation.tumorAltCount/(mutation.tumorRefCount + mutation.tumorAltCount);
-        let mutPush = {
-          x: sampleOrder.indexOf(mutSample),
-          y: heatmapGeneList.indexOf(mutGene),
-          z: Math.round(vaf * 1000),
-        };
+        let mutPush = [
+          sampleOrder.indexOf(mutSample),
+          heatmapGeneList.indexOf(mutGene),
+          vaf,
+        ];
         plotData.push(mutPush);
       }
     });
 
+    let plotMaker = {
+      data: plotData,
+      xTicks: sampleOrder,
+      yTicks: heatmapGeneList,
+    };
+    return plotMaker;
+  }
+
+  componentDidMount() {
+    let plotMaker = this.extractPlotData();
+
+    let config = {};
+
+    let data = {
+      labels : ['0h','1h','2h','3h','4h','5h','6h','7h','8h','9h','10h','11h'],
+      datasets : [
+        {
+          label: 'Monday',
+          data: [8, 6, 5, 7, 9, 8, 1, 6, 3, 3, 8, 7]
+        },
+        {
+          label: 'Tuesday',
+          data: [6, 8, 5, 6, 5, 5, 7, 0, 0, 3, 0, 7]
+        },
+        {
+          label: 'Wednesday',
+          data: [8, 5, 6, 4, 2, 2, 3, 0, 2, 0, 10, 8]
+        },
+        {
+          label: 'Thursday',
+          data: [4, 0, 7, 4, 6, 3, 2, 4, 2, 10, 8, 2]
+        },
+        {
+          label: 'Friday',
+          data: [1, 0, 0, 7, 0, 4, 1, 3, 4, 5, 1, 10]
+        }
+      ]
+    };
+
+    var canvas:any = document.getElementById("heatmap");
+    var ctx = canvas.getContext("2d");
+    this.chart = new Chart(ctx).HeatMap(data, config);
+  }
+
+  public render() {
     return (
-      <div id='heatmap-container'></div>
+      <canvas id="heatmap" width="800" height="400"></canvas>
     )
   }
 }
