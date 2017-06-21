@@ -37,11 +37,16 @@ export default class AutosuggestExtended extends React.Component<AutosuggestExte
         this.props.onBlur && this.props.onBlur(value);
     }
 
+    private searchHandler() {
+        this.autosuggest && this.autosuggest.setState({disableFilter:false});
+    }
+
     constructor() {
         super();
         this.refHandler = this.refHandler.bind(this);
         this.clickHandler = this.clickHandler.bind(this);
         this.blurHandler = this.blurHandler.bind(this);
+        this.searchHandler = this.searchHandler.bind(this);
     }
 
     render() {
@@ -51,6 +56,7 @@ export default class AutosuggestExtended extends React.Component<AutosuggestExte
                 ref={this.refHandler}
                 onClick={this.clickHandler}
                 onBlur={this.blurHandler}
+                onSearch={this.searchHandler}
                 datalistPartial={true /* prevents autocomplete */}
                 datalistOnly={typeof this.props.datalistOnly === "undefined" ? true : this.props.datalistOnly /* allows typing to search, makes onChange only fire for valid selection, not intermediate typing*/}
                 required={true /* makes onChange not fire for empty input */}
