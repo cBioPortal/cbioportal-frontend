@@ -1,6 +1,7 @@
 import * as React from 'react';
 import * as styles_any from './styles.module.scss';
 import {Modal} from 'react-bootstrap';
+import ReactSelect from 'react-select';
 import {observer} from "mobx-react";
 import {computed} from 'mobx';
 import {FlexRow, FlexCol} from "../flexbox/FlexBox";
@@ -12,8 +13,6 @@ import {QueryStoreComponent} from "./QueryStore";
 import MutSigGeneSelector from "./MutSigGeneSelector";
 import GisticGeneSelector from "./GisticGeneSelector";
 import SectionHeader from "../sectionHeader/SectionHeader";
-import Autosuggest from 'react-bootstrap-autosuggest';
-import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 
 const styles = styles_any as {
 	GeneSetSelector: string,
@@ -30,15 +29,13 @@ export interface GeneSetSelectorProps
 {
 }
 
-const USER_DEFINED_LIST = "User-defined List";
-
 @observer
 export default class GeneSetSelector extends QueryStoreComponent<GeneSetSelectorProps, {}>
 {
 	@computed get selectedGeneListOption()
 	{
 		let option = this.geneListOptions.find(opt => opt.value == this.store.geneQuery);
-		return option ? option.label : USER_DEFINED_LIST;
+		return option ? option.value : '';
 	}
 
 	@computed get geneListOptions()
@@ -46,7 +43,7 @@ export default class GeneSetSelector extends QueryStoreComponent<GeneSetSelector
 		return [
 			{
 				label: 'User-defined List',
-				value: USER_DEFINED_LIST
+				value: ''
 			},
 			...gene_lists.map(item => ({
 				label: `${item.id} (${item.genes.length} genes)`,
@@ -73,33 +70,22 @@ export default class GeneSetSelector extends QueryStoreComponent<GeneSetSelector
 	{
 		return (
 			<FlexRow padded overflow className={styles.GeneSetSelector}>
-				<SectionHeader
-					className="sectionLabel"
-					secondaryComponent={
-						<a target="_blank" href={getOncoQueryDocUrl()}>Advanced: Onco Query Language (OQL)</a>
-					}
+				<SectionHeader className="sectionLabel"
+							   secondaryComponent={<a target="_blank" href={getOncoQueryDocUrl()}>Advanced: Onco Query Language (OQL)</a>}
+							   promises={[this.store.mutSigForSingleStudy, this.store.gisticForSingleStudy, this.store.genes]}
 				>
 					Enter Gene Set:
 				</SectionHeader>
 
 				<FlexCol overflow>
-				<Autosuggest
-					datalist={this.geneListOptions}
+				<ReactSelect
 					value={this.selectedGeneListOption}
-					bsSize="small"
-					valueIsItem={true}
-					itemValuePropName="label"
-					onChange={(option:any) => {
-						this.store.geneQuery = option ? option.value : '';
-					}
-					}
+					options={this.geneListOptions}
+					onChange={option => this.store.geneQuery = option ? option.value : ''}
 				/>
 
 				{!!(this.store.mutSigForSingleStudy.result.length || this.store.gisticForSingleStudy.result.length) && (
 					<FlexRow padded className={styles.buttonRow}>
-						<LoadingIndicator
-							isLoading={!!([this.store.mutSigForSingleStudy, this.store.gisticForSingleStudy].some(promise => promise.isPending))}
-						/>
 						{!!(this.store.mutSigForSingleStudy.result.length) && (
 							<button className="btn btn-default btn-sm" onClick={() => this.store.showMutSigPopup = true}>
 								Select from Recurrently Mutated Genes (MutSig)
@@ -127,12 +113,12 @@ export default class GeneSetSelector extends QueryStoreComponent<GeneSetSelector
 				<GeneSymbolValidator/>
 
 				<Modal
-					className={classNames('cbioportal-frontend', styles.MutSigGeneSelectorWindow)}
+					className={classNames('cbioportal-frontend',styles.MutSigGeneSelectorWindow)}
 					show={this.store.showMutSigPopup}
 					onHide={() => this.store.showMutSigPopup = false}
 				>
 					<Modal.Header closeButton>
-						<Modal.Title>Recurrently Mutated Genes</Modal.Title>
+						<Modal.Title>Recently Mutated Genes</Modal.Title>
 					</Modal.Header>
 					<Modal.Body>
 						<MutSigGeneSelector
@@ -147,7 +133,7 @@ export default class GeneSetSelector extends QueryStoreComponent<GeneSetSelector
 				</Modal>
 
 				<Modal
-					className={classNames('cbioportal-frontend', styles.GisticGeneSelectorWindow)}
+					className={classNames('cbioportal-frontend',styles.GisticGeneSelectorWindow)}
 					show={this.store.showGisticPopup}
 					onHide={() => this.store.showGisticPopup = false}
 				>
