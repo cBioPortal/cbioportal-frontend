@@ -22,7 +22,6 @@ export default class HeatmapVAFEvents extends React.Component<IHeatmapVAFEventsP
 
   extractPlotData() {
     // also pull in uncalled mutations from store
-    // perform check if objects still the same (shouldComponentUpdate)
 
     const mutations = _.flatten(this.props.mergedMutations);
     const sampleOrder = this.props.sampleManager.sampleOrder;
@@ -54,24 +53,46 @@ export default class HeatmapVAFEvents extends React.Component<IHeatmapVAFEventsP
     return plotMaker;
   }
 
-  componentDidMount() {
+  drawHeatmap() {
     let plotMaker = this.extractPlotData();
-
     let config = {};
-
     let data = {
       labels : plotMaker.labels,
       datasets : plotMaker.datasets,
     };
-
     let canvas:any = document.getElementById("heatmap");
     let ctx = canvas.getContext("2d");
     let chart = new Chart(ctx).HeatMap(data, config);
   }
 
+  componentDidMount() {
+    this.drawHeatmap();
+  }
+
+  shouldComponentUpdate(newProps:IHeatmapVAFEventsProps, newState:any) {
+    let oldGeneList = this.props.heatmapGeneList.sort();
+    let newGeneList = newProps.heatmapGeneList.sort();
+    let update = false;
+    if (oldGeneList.length === newGeneList.length) {
+      for (let i=0; i<oldGeneList.length; i++) {
+        if (oldGeneList[i] !== newGeneList[i]) {
+          update = true;
+          break;
+        }
+      }
+    } else{
+      update = true;
+    }
+    return update;
+  }
+
+  componentDidUpdate() {
+    this.drawHeatmap();
+  }
+
   public render() {
     return (
-      <canvas id="heatmap" width={400} height={300}></canvas>
+      <canvas id="heatmap" width="400" height="300"></canvas>
     )
   }
 }

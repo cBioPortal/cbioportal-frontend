@@ -20,11 +20,18 @@ export default class LinePlotVAFTime extends React.Component<ILinePlotVAFTimePro
     super(props);
   }
 
+  shouldComponentUpdate(newProps:ILinePlotVAFTimeProps, newState:any) {
+    let update = false;
+    if (this.props.linePlotGene !== newProps.linePlotGene) {
+      update = true;
+    }
+    return update;
+  }
+
   public render() {
 
     // move all of the calculations to another lifecycle hook
     // also pull in uncalled mutations from store
-    // perform check if objects still the same (shouldComponentUpdate)
 
     const mutations = _.flatten(this.props.mergedMutations);
     const sampleOrder = this.props.sampleManager.sampleOrder;
@@ -45,7 +52,7 @@ export default class LinePlotVAFTime extends React.Component<ILinePlotVAFTimePro
     });
 
     return (
-        <LineChart width={600} height={300} data={plotData}
+        <LineChart width={400} height={300} data={plotData}
               margin={{top: 5, right: 30, left: 20, bottom: 5}}>
          <XAxis dataKey="sampleId"/>
          <YAxis type="number" domain={[0, 1]}/>
