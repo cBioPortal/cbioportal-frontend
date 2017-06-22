@@ -336,7 +336,7 @@ div.SelectedStudiesWindow {
 }
 
 .CaseSetSelector {
-  div:global(.autosuggest) {
+  div:global(.Select) {
     width: 555px;
     margin-bottom:10px;
   }
@@ -361,7 +361,7 @@ div.SelectedStudiesWindow {
 }
 
 .GeneSetSelector {
-  div:global(.autosuggest) {
+  div:global(.Select) {
     width: 555px;
     margin-bottom:8px;
   }
