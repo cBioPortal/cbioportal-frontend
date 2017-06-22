@@ -61,7 +61,11 @@
   }
 
   :global(.sectionLabel) {
-    width:246px;
+    width:236px;
+  }
+
+  :global(.sectionContent) {
+    margin-left: 0 !important;
   }
 
   label {
@@ -192,7 +196,8 @@ div.SelectedStudiesWindow {
   }
 
   div.cancerTypeListContainer {
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   div.cancerStudyListContainer {
@@ -219,7 +224,7 @@ div.SelectedStudiesWindow {
       color: #043852;
       border-bottom: 1px solid rgb(222, 233, 241);
       border-top: 1px solid rgb(243, 248, 251);
-      padding: 8px 10px;
+      padding: 8px 16px 8px 10px;
 
       span {
         &.cancerTypeListItemLabel {
@@ -344,7 +349,8 @@ div.SelectedStudiesWindow {
     width: 555px;
     resize: vertical;
     padding: 5px;
-    border-color:$borderColor;
+    border: 1px solid $borderColor;
+    border-radius: 2px;
   }
   .radioRow {
     div {
