@@ -234,7 +234,7 @@ export class QueryStore
 	@observable private _maxTreeDepth:number = (window as any).maxTreeDepth;
 	@computed get maxTreeDepth()
 	{
-		return this.forDownloadTab ? 1 : this._maxTreeDepth;
+		return (this.forDownloadTab && this._maxTreeDepth > 0) ? 1 : this._maxTreeDepth;
 	}
 	set maxTreeDepth(value)
 	{
