@@ -64,7 +64,7 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 					Select Patient/Case Set:
 				</SectionHeader>
 				</div>
-				<div>
+				<div className="sectionContent">
 				<ReactSelect
 					value={this.store.selectedSampleListId}
 					options={this.caseSetOptions}
