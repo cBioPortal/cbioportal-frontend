@@ -6,8 +6,7 @@ export default function(name: string, Comp: React.ComponentClass<any> | React.St
     const win = (window as any);
 
     if(win) {
-        win[name] = (mountNode: HTMLElement): void => {
-
+        win[name] = (mountNode: HTMLElement, props:{[k:string]:string|boolean|number}): void => {
             let el = React.createElement(
                 Comp as any,
                 props
