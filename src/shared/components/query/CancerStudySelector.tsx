@@ -195,26 +195,6 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 								}}
 							/>);
 
-
-							{/*return (*/}
-								{/*<ReactSelect*/}
-									{/*className={styles.searchTextInput}*/}
-									{/*value={this.store.searchText}*/}
-									{/*autofocus={true}*/}
-									{/*options={searchTextOptions.map(str => ({label: str, value: str}))}*/}
-									{/*placeholder='Search...'*/}
-									{/*noResultsText={false}*/}
-									{/*onCloseResetsInput={false}*/}
-									{/*onInputChange={(searchText:string) => {*/}
-										{/*this.store.searchText = searchText;*/}
-										{/*this.store.selectedCancerTypeIds = [];*/}
-									{/*}}*/}
-									{/*onChange={option => {*/}
-										{/*this.store.searchText = option ? option.value || '' : '';*/}
-										{/*this.store.selectedCancerTypeIds = [];*/}
-									{/*}}*/}
-								{/*/>*/}
-							{/*);*/}
 						}}
 					</Observer>
 
