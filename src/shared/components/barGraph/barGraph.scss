@@ -3,3 +3,31 @@
     overflow: auto;
     white-space: normal !important;
 }
+
+#chartjs-tooltip {
+    background: white;
+    position: absolute;
+    border-width: 1px;
+    border-style: solid;
+    font-size: 12px;
+    width: 180px !important;
+    //overflow: auto;
+    //white-space: normal !important;
+    th { font-weight: normal;}
+    td { font-weight: bold;}
+    &:before {
+        width: 0;
+        height: 0;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-top: 6px solid #FFF;
+        content: "";
+        display: block;
+        position: absolute;
+        top: -6px;
+        left: 0px;
+        border-top-color: white;
+        transform: rotate(-180deg);
+    }
+}
+

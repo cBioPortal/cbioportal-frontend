@@ -73,9 +73,13 @@ export default class RightBar extends React.Component<{}, {}> {
                     {
                         (this.studyStore.data.isComplete) && (
 
-                            <p>The portal contains {this.studyStore.data.result.length} cancer studies <a href="data_sets.jsp">(details)</a></p>
+                            <div>
 
-                            //<BarGraph data={ this.studyStore.data.result }/>
+                                <p>The portal contains {this.studyStore.data.result.length} cancer studies <a href="data_sets.jsp">(details)</a></p>
+
+                                <BarGraph data={ this.studyStore.data.result }/>
+
+                            </div>
                         )
                     }
                     {
