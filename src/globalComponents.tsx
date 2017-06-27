@@ -13,4 +13,6 @@ exposeComponentRenderer('renderRightBar', ()=>{
 
 exposeComponentRenderer('renderQuerySelectorInModal', ()=><QueryModal store={queryStore} />);
 
-exposeComponentRenderer('renderQuerySelector', ()=>{ return <QueryAndDownloadTabs store={queryStore} />  });
+exposeComponentRenderer('renderQuerySelector', (props:{[k:string]:string|boolean|number})=>{
+    return <QueryAndDownloadTabs {...props} store={queryStore} />
+});
