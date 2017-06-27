@@ -82,8 +82,6 @@ export default class OncoKbCard extends React.Component<IOncoKbCardProps, IOncoK
                         pmids:number[],
                         abstracts:any[])
     {
-        const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
-
         const levelTooltipContent = () => (
             <div style={{maxWidth: "200px"}}>
                 {levelDes}
@@ -109,7 +107,6 @@ export default class OncoKbCard extends React.Component<IOncoKbCardProps, IOncoK
                         overlay={levelTooltipContent}
                         placement="left"
                         trigger={['hover', 'focus']}
-                        arrowContent={arrowContent}
                         destroyTooltipOnHide={true}
                     >
                         <i
@@ -127,7 +124,6 @@ export default class OncoKbCard extends React.Component<IOncoKbCardProps, IOncoK
                             overlay={treatmentTooltipContent}
                             placement="right"
                             trigger={['hover', 'focus']}
-                            arrowContent={arrowContent}
                             destroyTooltipOnHide={true}
                         >
                             <i className="fa fa-book"/>
@@ -499,8 +495,6 @@ export default class OncoKbCard extends React.Component<IOncoKbCardProps, IOncoK
 
         if (componentType === 'tooltip')
         {
-            const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
-
             const tooltipContent = () => (
                 <div style={{maxWidth: "400px", maxHeight: "200px", overflowY: "auto"}}>
                     <ul className="list-group" style={{marginBottom: 0}}>
@@ -516,7 +510,6 @@ export default class OncoKbCard extends React.Component<IOncoKbCardProps, IOncoK
                         overlay={tooltipContent}
                         placement="right"
                         trigger={['hover', 'focus']}
-                        arrowContent={arrowContent}
                         destroyTooltipOnHide={true}
                     >
                         <i className="fa fa-book" style={{color: "black"}}/>
