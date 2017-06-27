@@ -32,6 +32,11 @@ export const ONCOKB_DEFAULT: IOncoKbData = {
     indicatorMap : {}
 };
 
+export const ONCOKB_ERROR: IOncoKbData = {
+    sampleToTumorMap : null,
+    indicatorMap : null
+};
+
 export const HOTSPOTS_DEFAULT = {
     single: [],
     clustered: []
@@ -267,8 +272,11 @@ export async function fetchOncoKbData(sampleIdToTumorType:{[sampleId: string]: s
 {
     const mutationDataResult = concatMutationData(mutationData, uncalledMutationData);
 
-    if (mutationDataResult.length === 0 || _.isEmpty(sampleIdToTumorType)) {
+    if (mutationDataResult.length === 0) {
         return ONCOKB_DEFAULT;
+    }
+    else if (_.isEmpty(sampleIdToTumorType)) {
+        return ONCOKB_ERROR;
     }
 
     const queryVariants = _.uniqBy(_.map(mutationDataResult, (mutation: Mutation) => {
@@ -287,15 +295,20 @@ export async function fetchCnaOncoKbData(sampleIdToTumorType:{[sampleId: string]
                                          discreteCNAData:MobxPromise<DiscreteCopyNumberData[]>,
                                          client: OncoKbAPI = oncokbClient)
 {
-    if (discreteCNAData.result && discreteCNAData.result.length > 0) {
+    if (!discreteCNAData.result || discreteCNAData.result.length === 0) {
+        return ONCOKB_DEFAULT;
+    }
+    else if (_.isEmpty(sampleIdToTumorType)) {
+        return ONCOKB_ERROR;
+    }
+    else
+    {
         const queryVariants = _.uniqBy(_.map(discreteCNAData.result, (copyNumberData: DiscreteCopyNumberData) => {
             return generateQueryVariant(copyNumberData.gene.entrezGeneId,
                 sampleIdToTumorType[copyNumberData.sampleId],
                 getAlterationString(copyNumberData.alteration));
         }), "id");
         return queryOncoKbData(queryVariants, sampleIdToTumorType, client);
-    } else {
-        return ONCOKB_DEFAULT;
     }
 }
 
@@ -440,6 +453,10 @@ export function generateSampleIdToTumorTypeMap(clinicalDataForSamples: MobxPromi
     if (clinicalDataForSamples.result) {
         _.each(clinicalDataForSamples.result, (clinicalData:ClinicalData) => {
             if (clinicalData.clinicalAttributeId === "CANCER_TYPE_DETAILED") {
+                map[clinicalData.entityId] = clinicalData.value;
+            }
+            // update map with CANCER_TYPE value only if it is not already updated with CANCER_TYPE_DETAILED
+            else if (clinicalData.clinicalAttributeId === "CANCER_TYPE" && map[clinicalData.entityId] === undefined) {
                 map[clinicalData.entityId] = clinicalData.value;
             }
         });
