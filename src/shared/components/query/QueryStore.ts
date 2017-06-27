@@ -22,6 +22,7 @@ import StudyListLogic from "./StudyListLogic";
 import {QuerySession} from "../../lib/QuerySession";
 import {stringListToSet} from "../../lib/StringUtils";
 import chunkMapReduce from "shared/lib/chunkMapReduce";
+import formSubmit from "shared/lib/formSubmit";
 
 // interface for communicating
 type CancerStudyQueryUrlParams = {
@@ -956,7 +957,7 @@ export class QueryStore
 		if (historyUrl != newUrl)
 			window.history.pushState(null, window.document.title, historyUrl);
 
-		window.location.href = newUrl;
+		formSubmit(urlParams.pathname, urlParams.query)
 	}
 
 	@action sendToGenomeSpace()
