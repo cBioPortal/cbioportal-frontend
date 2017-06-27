@@ -288,10 +288,20 @@ describe('StoreUtils', () => {
         });
     });
 
-    it("won't fetch onkokb data if there are no mutations", (done) => {
-        fetchOncoKbData({}, emptyMutationData).then((data: any) => {
-            assert.deepEqual(data, {sampleToTumorMap: {}, indicatorMap: {}});
-            done();
+    describe('fetchOncoKbData', () => {
+        it("won't fetch onkokb data if there are no mutations", (done) => {
+            fetchOncoKbData({}, emptyMutationData).then((data: any) => {
+                assert.deepEqual(data, {sampleToTumorMap: {}, indicatorMap: {}});
+                done();
+            });
         });
+
+        it("will return null maps if there are mutations but sampleIdToTumorType map is empty", (done) => {
+            fetchOncoKbData({}, mutationDataWithNoKeyword).then((data: any) => {
+                assert.deepEqual(data, {sampleToTumorMap: null, indicatorMap: null});
+                done();
+            });
+        });
+
     });
 });
