@@ -21,6 +21,7 @@ import {SyntaxError} from "../../lib/oql/oql-parser";
 import StudyListLogic from "./StudyListLogic";
 import {QuerySession} from "../../lib/QuerySession";
 import {stringListToSet} from "../../lib/StringUtils";
+import chunkMapReduce from "shared/lib/chunkMapReduce";
 
 // interface for communicating
 type CancerStudyQueryUrlParams = {
@@ -406,7 +407,8 @@ export class QueryStore
 				if (caseIds.length)
 				{
 					const sampleIdentifiers = caseIds.map(sampleId => ({studyId, sampleId}));
-					for (const sample of await client.fetchSamplesUsingPOST({sampleIdentifiers, projection: "ID"}))
+					const sampleObjs = await chunkMapReduce(sampleIdentifiers, chunk=>client.fetchSamplesUsingPOST({sampleIdentifiers:chunk, projection: "ID"}), 990);
+					for (const sample of sampleObjs)
 						sampleIds.push(sample.sampleId);
 				}
 				invalidIds.push(..._.difference(caseIds, sampleIds));
@@ -435,7 +437,8 @@ export class QueryStore
 					}`
 				);
 
-			return sampleIds;
+			// if nothing fails, return caseIds as given
+			return caseIds;
 		},
 		500
 	);
