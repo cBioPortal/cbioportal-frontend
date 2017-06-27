@@ -421,7 +421,10 @@ export class PatientViewPageStore {
             this.uncalledMutationData,
             this.clinicalDataForSamples
         ],
-        invoke: async() => fetchOncoKbData(this.sampleIdToTumorType, this.mutationData, this.uncalledMutationData)
+        invoke: async() => fetchOncoKbData(this.sampleIdToTumorType, this.mutationData, this.uncalledMutationData),
+        onError: (err: Error) => {
+            // fail silently, leave the error handling responsibility to the data consumer
+        }
     }, ONCOKB_DEFAULT);
 
     readonly cnaOncoKbData = remoteData<IOncoKbData>({
@@ -429,7 +432,10 @@ export class PatientViewPageStore {
             this.discreteCNAData,
             this.clinicalDataForSamples
         ],
-        invoke: async() => fetchCnaOncoKbData(this.sampleIdToTumorType, this.discreteCNAData)
+        invoke: async() => fetchCnaOncoKbData(this.sampleIdToTumorType, this.discreteCNAData),
+        onError: (err: Error) => {
+            // fail silently, leave the error handling responsibility to the data consumer
+        }
     }, ONCOKB_DEFAULT);
 
     readonly copyNumberCountData = remoteData<CopyNumberCount[]>({
