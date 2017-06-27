@@ -29,7 +29,7 @@ export interface IAnnotation {
     isHotspot: boolean;
     is3dHotspot: boolean;
     myCancerGenomeLinks: string[];
-    oncoKbIndicator?: IndicatorQueryResp;
+    oncoKbIndicator?: IndicatorQueryResp|null;
 }
 
 /**
@@ -69,8 +69,12 @@ export default class AnnotationColumnFormatter
         return value;
     }
 
-    public static getIndicatorData(mutation:Mutation, oncoKbData:IOncoKbData):IndicatorQueryResp
+    public static getIndicatorData(mutation:Mutation, oncoKbData:IOncoKbData): IndicatorQueryResp|null
     {
+        if (oncoKbData.sampleToTumorMap === null || oncoKbData.indicatorMap === null) {
+            return null;
+        }
+
         const id = generateQueryVariantId(mutation.gene.entrezGeneId,
             oncoKbData.sampleToTumorMap[mutation.sampleId],
             mutation.proteinChange,
@@ -79,15 +83,16 @@ export default class AnnotationColumnFormatter
         return oncoKbData.indicatorMap[id];
     }
 
-    public static getEvidenceQuery(mutation:Mutation, oncoKbData:IOncoKbData): Query
+    public static getEvidenceQuery(mutation:Mutation, oncoKbData:IOncoKbData): Query|null
     {
-        return generateQueryVariant(mutation.gene.entrezGeneId,
+        // return null in case sampleToTumorMap is null
+        return oncoKbData.sampleToTumorMap ? generateQueryVariant(mutation.gene.entrezGeneId,
             oncoKbData.sampleToTumorMap[mutation.sampleId],
             mutation.proteinChange,
             mutation.mutationType,
             mutation.proteinPosStart,
             mutation.proteinPosEnd
-        );
+        ) : null;
     }
 
     public static getMyCancerGenomeLinks(mutation:Mutation, myCancerGenomeData: IMyCancerGenomeData):string[] {
@@ -148,7 +153,7 @@ export default class AnnotationColumnFormatter
         let evidenceQuery:Query|undefined;
 
         if (columnProps.oncoKbData) {
-            evidenceQuery = this.getEvidenceQuery(data[0], columnProps.oncoKbData);
+            evidenceQuery = this.getEvidenceQuery(data[0], columnProps.oncoKbData) || undefined;
         }
 
         return AnnotationColumnFormatter.mainContent(annotation,
