@@ -295,13 +295,5 @@ describe('StoreUtils', () => {
                 done();
             });
         });
-
-        it("will return null maps if there are mutations but sampleIdToTumorType map is empty", (done) => {
-            fetchOncoKbData({}, mutationDataWithNoKeyword).then((data: any) => {
-                assert.deepEqual(data, {sampleToTumorMap: null, indicatorMap: null});
-                done();
-            });
-        });
-
     });
 });

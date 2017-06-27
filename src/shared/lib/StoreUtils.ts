@@ -268,6 +268,7 @@ export function fetchMyCancerGenomeData(): IMyCancerGenomeData
 export async function fetchOncoKbData(sampleIdToTumorType:{[sampleId: string]: string},
                                       mutationData:MobxPromise<Mutation[]>,
                                       uncalledMutationData?:MobxPromise<Mutation[]>,
+                                      studyCancerType?: string,
                                       client: OncoKbAPI = oncokbClient)
 {
     const mutationDataResult = concatMutationData(mutationData, uncalledMutationData);
@@ -275,13 +276,10 @@ export async function fetchOncoKbData(sampleIdToTumorType:{[sampleId: string]: s
     if (mutationDataResult.length === 0) {
         return ONCOKB_DEFAULT;
     }
-    else if (_.isEmpty(sampleIdToTumorType)) {
-        return ONCOKB_ERROR;
-    }
 
     const queryVariants = _.uniqBy(_.map(mutationDataResult, (mutation: Mutation) => {
         return generateQueryVariant(mutation.gene.entrezGeneId,
-            sampleIdToTumorType[mutation.sampleId],
+            cancerTypeForOncoKb(mutation.sampleId, sampleIdToTumorType, studyCancerType),
             mutation.proteinChange,
             mutation.mutationType,
             mutation.proteinPosStart,
@@ -293,23 +291,31 @@ export async function fetchOncoKbData(sampleIdToTumorType:{[sampleId: string]: s
 
 export async function fetchCnaOncoKbData(sampleIdToTumorType:{[sampleId: string]: string},
                                          discreteCNAData:MobxPromise<DiscreteCopyNumberData[]>,
+                                         studyCancerType?: string,
                                          client: OncoKbAPI = oncokbClient)
 {
     if (!discreteCNAData.result || discreteCNAData.result.length === 0) {
         return ONCOKB_DEFAULT;
     }
-    else if (_.isEmpty(sampleIdToTumorType)) {
-        return ONCOKB_ERROR;
-    }
     else
     {
         const queryVariants = _.uniqBy(_.map(discreteCNAData.result, (copyNumberData: DiscreteCopyNumberData) => {
             return generateQueryVariant(copyNumberData.gene.entrezGeneId,
-                sampleIdToTumorType[copyNumberData.sampleId],
+                cancerTypeForOncoKb(copyNumberData.sampleId, sampleIdToTumorType, studyCancerType),
                 getAlterationString(copyNumberData.alteration));
         }), "id");
         return queryOncoKbData(queryVariants, sampleIdToTumorType, client);
     }
+}
+
+function cancerTypeForOncoKb(sampleId: string,
+                             sampleIdToTumorType:{[sampleId: string]: string},
+                             studyCancerType?: string): string
+{
+    // first priority is sampleIdToTumorType map (derived from the clinical data).
+    // second priority is the optional studyCancerType parameter
+    // if neither is valid, then we return an empty string and let OncoKB API figure out what to do
+    return sampleIdToTumorType[sampleId] || studyCancerType || "";
 }
 
 export async function queryOncoKbData(queryVariants: Query[],
