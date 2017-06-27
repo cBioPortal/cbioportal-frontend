@@ -19,7 +19,7 @@ import OncokbPubMedCache from "shared/cache/PubMedCache";
 import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
 
 export interface IOncoKbProps {
-    indicator?: IndicatorQueryResp;
+    indicator?: IndicatorQueryResp | null;
     evidenceCache?: OncoKbEvidenceCache;
     evidenceQuery?: Query;
     pubMedCache?: OncokbPubMedCache;
@@ -46,7 +46,7 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
         };
     }
 
-    public static sortValue(indicator:IndicatorQueryResp|undefined):number[]
+    public static sortValue(indicator?: IndicatorQueryResp|undefined|null): number[]
     {
         if (!indicator) {
             return [];
@@ -78,7 +78,15 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
             <span className={`${annotationStyles["annotation-item"]}`} />
         );
 
-        if (this.props.indicator)
+        if (this.props.indicator === null) {
+            // null means there is an error...
+            oncoKbContent = this.errorIcon();
+        }
+        else if (this.props.indicator === undefined) {
+            // undefined means still loading...
+            oncoKbContent = this.loaderIcon();
+        }
+        else
         {
             oncoKbContent = (
                 <span className={`${annotationStyles["annotation-item"]}`}>
@@ -116,15 +124,6 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
                 );
             }
         }
-        else
-        {
-            // Here we assume that every OncoKB component is eventually updated with a valid
-            // IndicatorQueryResp property.
-            //
-            // Ideally we should distinguish "Loading", "NA" and "Error" states. This requires implementing
-            // an OncoKbIndicator cache...
-            oncoKbContent = this.loaderIcon();
-        }
 
         return oncoKbContent;
     }
@@ -133,6 +132,23 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
     {
         return (
             <Circle size={18} scaleEnd={0.5} scaleStart={0.2} color="#aaa" className="pull-left"/>
+        );
+    }
+
+    public errorIcon()
+    {
+        return (
+            <DefaultTooltip
+                overlay={<span>Error fetching OncoKB data</span>}
+                placement="right"
+                trigger={['hover', 'focus']}
+                arrowContent={<div className="rc-tooltip-arrow-inner"/>}
+                destroyTooltipOnHide={true}
+            >
+                <span className={`${annotationStyles["annotation-item-error"]}`}>
+                    <i className="fa fa-exclamation-triangle text-danger" />
+                </span>
+            </DefaultTooltip>
         );
     }
 
@@ -167,7 +183,7 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
     {
         return (
             <OncoKbTooltip
-                indicator={this.props.indicator}
+                indicator={this.props.indicator || undefined}
                 evidenceCache={this.props.evidenceCache}
                 evidenceQuery={this.props.evidenceQuery}
                 pubMedCache={this.props.pubMedCache}
