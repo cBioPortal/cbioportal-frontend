@@ -3,7 +3,7 @@ import {Tabs, Tab, default as ReactBootstrap} from 'react-bootstrap';
 import * as styles_any from './styles.module.scss';
 import {observer} from 'mobx-react';
 import QueryContainer from "./QueryContainer";
-import {QueryStoreComponent, QueryStore} from "./QueryStore";
+import { QueryStore} from "./QueryStore";
 
 const styles = styles_any as {
 	QueryAndDownloadTabs: string,
@@ -16,12 +16,14 @@ interface IQueryAndDownloadTabsProps
 {
 	store:QueryStore;
 	onSubmit?:()=>void;
+	showDownloadTab?:boolean;
 }
 
 
 @observer
 export default class QueryAndDownloadTabs extends React.Component<IQueryAndDownloadTabsProps, {}>
 {
+
 	get store()
 	{
 		return this.props.store;
@@ -42,8 +44,13 @@ export default class QueryAndDownloadTabs extends React.Component<IQueryAndDownl
 					activeKey={this.store.forDownloadTab ? DOWNLOAD : QUERY}
 					onSelect={this.onSelectTab as ReactBootstrap.SelectCallback}
 				>
+
 					<Tab eventKey='query' title="Query"/>
-					<Tab eventKey='download' title="Download Data"/>
+
+					{
+						(this.props.showDownloadTab !== false) && (<Tab eventKey='download' title="Download Data"/>)
+					}
+
 				</Tabs>
 				<QueryContainer onSubmit={this.props.onSubmit} store={this.props.store}/>
 			</div>
