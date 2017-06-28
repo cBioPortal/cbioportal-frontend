@@ -950,14 +950,14 @@ export class QueryStore
 		//TODO this is currently broken because of mobx-react-router
 		// this is supposed to allow you to go back in the browser history to
 		// return to the query page and restore the QueryStore state from the URL.
-		let historyUrl = URL.format({...urlParams, pathname: window.location.href.split('?')[0]});
+		/*let historyUrl = URL.format({...urlParams, pathname: window.location.href.split('?')[0]});
 
 		// TODO remove this temporary HACK to make back button work
 		historyUrl = historyUrl.split('#crosscancer').join('#/home#crosscancer');
 
 		let newUrl = buildCBioPortalUrl(urlParams);
 		if (historyUrl != newUrl)
-			window.history.pushState(null, window.document.title, historyUrl);
+			window.history.pushState(null, window.document.title, historyUrl);*/
 
 		formSubmit(urlParams.pathname, urlParams.query)
 	}
