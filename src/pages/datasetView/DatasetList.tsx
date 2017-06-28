@@ -149,11 +149,11 @@ export default class DataSetsPageTable extends React.Component <IDataSetsTablePr
                                         if(column.type === 'mrnaRnaSeq') {
                                             return (
                                                 <span style={style}>
-                                                 {Number(data.mrnaRnaSeqV2) || Number(data.mrnaRnaSeq)}
-                                            </span>
+                                                    {Number(data.mrnaRnaSeqV2) || Number(data.mrnaRnaSeq) || 0}
+                                                </span>
                                             );
                                         } else {
-                                            return <span style={{style}}>{data[column.type]}</span>;
+                                            return <span style={{style}}>{data[column.type] || 0}</span>;
                                         }
                                     },
                                     download: column.hasOwnProperty('download') ? column.download : true,
