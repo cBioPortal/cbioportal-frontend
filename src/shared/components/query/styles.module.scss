@@ -192,11 +192,13 @@ div.SelectedStudiesWindow {
   }
 
   div.cancerTypeListContainer {
-    overflow: auto;
+    overflow-y: scroll;
+    overflow-x: auto;
   }
 
   div.cancerStudyListContainer {
-    overflow: auto;
+    overflow-y: scroll;
+    overflow-x: auto;
     flex: 1;
     &:only-child {
       padding: 10px 10px 10px 10px;
@@ -344,7 +346,8 @@ div.SelectedStudiesWindow {
     width: 555px;
     resize: vertical;
     padding: 5px;
-    border-color:$borderColor;
+    border: 1px solid $borderColor;
+    border-radius: 2px;
   }
   .radioRow {
     div {
