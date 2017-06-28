@@ -29,6 +29,7 @@ import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicato
 import ValidationAlert from "shared/components/ValidationAlert";
 import AjaxErrorModal from "shared/components/AjaxErrorModal";
 import AppConfig from 'appConfig';
+import PatientViewOncoPrint from "./oncoPrint/PatientViewOncoPrint";
 
 import './patient.scss';
 
@@ -317,6 +318,15 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             }
 
                             <LoadingIndicator isLoading={patientViewPageStore.mutationData.isPending && patientViewPageStore.uncalledMutationData.isPending} />
+
+                            {
+                                (patientViewPageStore.mutationData.isComplete && patientViewPageStore.uncalledMutationData.isComplete && !!sampleManager) && (
+                                    <PatientViewOncoPrint
+                                        sampleManager={sampleManager}
+                                        mutationData={patientViewPageStore.mergedMutationDataIncludingUncalled}
+                                    />
+                                )
+                            }
 
                             {
                                 (patientViewPageStore.mutationData.isComplete && patientViewPageStore.uncalledMutationData.isComplete && !!sampleManager) && (
