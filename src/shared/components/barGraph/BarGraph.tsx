@@ -1,17 +1,20 @@
 import * as React from "react";
 import * as _ from 'lodash';
-import {ThreeBounce} from 'better-react-spinkit';
+import { ThreeBounce } from 'better-react-spinkit';
 import { CancerStudy } from 'shared/api/generated/CBioPortalAPI';
-import * as Highcharts from 'highcharts';
 import './barGraph.scss';
 
-import HCE from 'highcharts/modules/exporting';
-HCE(Highcharts);
-
+import Chart from 'chart.js';
 
 export interface IBarGraphProps {
     data:CancerStudy[];
 };
+
+interface BodyItem {
+    after: string[];
+    before: string[];
+    lines: string[];
+}
 
 interface ICancerTypeStudy {
     caseCount:number;
@@ -39,7 +42,7 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
         const aliases:{[id:string]:string} = {
             'Ovarian': 'Ovary', 'Cervical': 'Cervix', 'Uterine': 'Uterus',
             'Melanoma': 'Skin', 'CCLE':'Mixed', 'Thymoma(TCGA)': 'Thymus', 'Uveal': 'Eye',
-            'Testicular': 'Testicle'
+            'Testicular': 'Testicle', 'Colorectal': 'Colon'
         };
         return _.mapValues(cancerStudiesObj, (cancerStudy) => {
             const shortName = cancerStudy.shortName.split(" ")[0];
@@ -129,74 +132,137 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
             .sort((a, b) => b.caseCount - a.caseCount)
             .slice(0, 20);
 
-        Highcharts.chart(this.chartTarget, {
+        const datasets = _.flattenDeep(cancerTypeStudiesArray.map((cancerStudySet, i) => (
+            cancerStudySet.studies.map((cancerStudy: CancerStudy, j: number) => {
+                const {name, studyId, allSampleCount} = cancerStudy;
+                const max = cancerStudySet.studies.length;
+                const colors = ['1E36BF', '128C47', 'BF2231', '7D1FBF', 'BF7D15'];
+                const color = this.lightenDarkenColor(colors[i%5], (max-j)/max * 120);
+                return {
+                    borderColor: '#F1F6FE',
+                    backgroundColor: color,
+                    borderWidth: 1,
+                    label: name,
+                    total: cancerStudySet.caseCount,
+                    studyId,
+                    data: i === 0 ? [allSampleCount] : [...Array(i).fill(0), allSampleCount]
+                };}
+            ))
+        ));
 
-            chart: {type: 'bar', backgroundColor:'' },
+        const data = {
+            labels: cancerTypeStudiesArray.slice(0, 20).map(cancer => (cancer.shortName)),
+            datasets
+        };
 
-            exporting: { enabled:false },
-
-            title: {text: ''},
-
-            xAxis: {categories: cancerTypeStudiesArray.slice(0, 20).map((cancer) => (cancer.shortName)),
-                    labels: {style: {fontSize: '10px'}}},
-
-            yAxis: {
-                allowDecimals: false,
-                min: 0,
-                // max: 6000,
-                title: {text: ''}
-            },
-
-            legend: {enabled: false},
-
-            tooltip: {
-                useHTML: true,
-                backgroundColor: '#ffffff',
-                formatter: function() {
-                    return `
-                            <div style="font-size:11px;">
-                                ${this.x}: ${this.point.stackTotal} cases
-                                <br/> 
-                                <span style="width: 200px !important; font-size:12px; color:${this.point.color}; overflow:auto; white-space:normal !important;" >
-                                    ${this.series.name}: <b>${this.point.y} cases</b>
-                                </span>
-                            </div>
-                          `;
+        const options = {
+            onClick: function(e: Event) {
+                if (this.getElementAtEvent(e)[0]) {
+                    const {studyId} = datasets[this.getElementAtEvent(e)[0]._datasetIndex];
+                    window.location.href = 'study?id=' + studyId + '#summary';
                 }
             },
+            responsive: true,
+            tooltips: {
+                enabled: false,
+                mode: 'nearest',
+                custom(tooltipModel: any) {
+                    // Tooltip Element
+                    var tooltipEl = document.getElementById('chartjs-tooltip');
 
-            plotOptions: {
-                series: {
-                    stacking: 'normal',
-                    cursor: 'pointer',
-                    events: {
-                        click: function() {
-                            window.location.href= 'study?id=' + this.options.studyId, + '#summary';
-                        }
+                    // Create element on first render
+                    if (!tooltipEl) {
+                        tooltipEl = document.createElement('div');
+                        tooltipEl.id = 'chartjs-tooltip';
+                        tooltipEl.innerHTML = "<table></table>";
+                        document.body.appendChild(tooltipEl);
                     }
+
+                    // Hide if no tooltip
+                    if (tooltipModel.opacity === 0) {
+                        tooltipEl.style.opacity = '0';
+                        return;
+                    }
+
+                    // Set caret Position
+                    tooltipEl.classList.remove('above', 'below', 'no-transform');
+                    if (tooltipModel.yAlign) {
+                        tooltipEl.classList.add(tooltipModel.yAlign);
+                        // tooltipEl.classList.add('below');
+                    } else {
+                        tooltipEl.classList.add('no-transform');
+                    }
+
+                    function getBody(bodyItem:BodyItem) {
+                        return bodyItem.lines;
+                    }
+
+                    // Set Text
+                    if (tooltipModel.body) {
+                        const titleLines = tooltipModel.title || [];
+                        const bodyLines = tooltipModel.body.map(getBody);
+
+                        let innerHtml = '<thead>';
+
+                        titleLines.forEach(function(title: string) {
+                            innerHtml += '<tr><th>' + title + ': ' + datasets[tooltipModel.dataPoints[0].datasetIndex].total + ' cases</th></tr>';
+                        });
+                        innerHtml += '</thead><tbody>';
+
+                        bodyLines.forEach(function(body:string, i:number) {
+                            tooltipEl!.style.borderColor = datasets[tooltipModel.dataPoints[0].datasetIndex].backgroundColor;
+
+                            const colors = tooltipModel.labelColors[i];
+                            let style = 'background-color: ' + tooltipModel.labelColors[0].backgroundColor;
+                            style += '; border-color:' + colors.borderColor + '; border-width: 1px';
+                            // style += '; border-width: 1px';
+                            var span = '<span class="chartjs-tooltip-key" style=' + style + '></span>';
+                            innerHtml += '<tr><td>' + span + body + ' cases</td></tr>';
+                        });
+                        innerHtml += '</tbody>';
+
+                        const tableRoot = tooltipEl.querySelector('table');
+                        tableRoot!.innerHTML = innerHtml;
+                    }
+
+                    // `this` will be the overall tooltip
+                    const position = this._chart.canvas.getBoundingClientRect();
+
+                    // Display, position, and set styles for font
+                    tooltipEl.style.opacity = '1';
+                    tooltipEl.style.left = position.left + tooltipModel.caretX - 10 + 'px';
+                    tooltipEl.style.top = position.top + tooltipModel.caretY + 5 + 'px';
+                    tooltipEl.style.padding = tooltipModel.yPadding + 'px ' + tooltipModel.xPadding + 'px';
                 }
+
             },
+            scales: {
+                xAxes: [{ stacked: true }],
+                yAxes: [{
+                    stacked: true,
+                    gridLines: {display: false},
+                    ticks: {fontSize: 11}
+                }]
+            },
+            legend: { display: false }
+        };
 
-            series: _.flattenDeep(cancerTypeStudiesArray.map((cancerStudySet, i:number) => (
-                cancerStudySet.studies.map((cancerStudy: CancerStudy, j: number) => {
-                    const {name, studyId, allSampleCount} = cancerStudy;
-                    const max = cancerStudySet.studies.length;
-                    const colors = ['1E36BF', '128C47', 'BF2231', '7D1FBF', 'BF7D15'];
-                    const color = this.lightenDarkenColor(colors[i%5], (max-j)/max * 120);
-                    return {
-                        borderColor: '#F1F6FE',
-                        name,
-                        studyId,
-                        data: i === 0 ? [{y: allSampleCount, color}] : [...Array(i).fill(0),{y: allSampleCount, color}]
-                    };
-                })
-            )))
+        const canvas:any = document.getElementById("chart");
 
+        new Chart(canvas.getContext("2d"), {
+            type: 'horizontalBar',
+            data,
+            options
         });
+
     }
 
     render() {
-        return <div ref={el => this.chartTarget = el} />;
+        return (
+            <div id="canvas-holder" style={{position: 'relative'}}>
+                <canvas id="chart" height="500px"/>
+            </div>
+        );
     }
 
 };
