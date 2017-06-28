@@ -29,6 +29,8 @@ let config = {
     plugins: [
 
     ],
+
+    devtool : 'source-map'
 };
 
 config.plugins = [
@@ -59,7 +61,7 @@ if (process.env.NODE_ENV !== 'development') {
             compress: {
                 warnings: false
             },
-            sourceMap:false,
+            sourceMap:true,
             comments:false
         })
 
