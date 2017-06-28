@@ -760,18 +760,11 @@ export class QueryStore
 				let studyIds = this.selectedStudyIds;
 				if (!studyIds.length)
 					studyIds = this.cancerStudies.result.map(study => study.studyId);
+
+				const hash = `crosscancer/overview/${params.data_priority}/${encodeURIComponent(params.gene_list)}/${encodeURIComponent(studyIds.join(','))}`;
 				return {
-					pathname: 'cross_cancer.do',
-					query: params,
-					hash: (
-						`crosscancer/overview/${
-							params.data_priority
-						}/${
-							encodeURIComponent(params.gene_list)
-						}/${
-							encodeURIComponent(studyIds.join(','))
-						}`
-					),
+					pathname: `cross_cancer.do#${hash}`,
+					query: Object.assign({ cancer_study_list: studyIds.join(",")}, params),
 				};
 			}
 
