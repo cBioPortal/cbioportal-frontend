@@ -23,3 +23,10 @@ export function stringListToSet(alos:ReadonlyArray<string>):{[s:string]:boolean}
         return map;
     }, {});
 }
+
+export function stringListToIndexSet(alos:ReadonlyArray<string>):{[s:string]:number} {
+    return alos.reduce((map:{[s:string]:number}, next:string, index:number)=>{
+        map[next] = index;
+        return map;
+    }, {});
+}
