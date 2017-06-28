@@ -20,7 +20,7 @@ import {buildCBioPortalUrl, BuildUrlParams} from "../../api/urls";
 import {SyntaxError} from "../../lib/oql/oql-parser";
 import StudyListLogic from "./StudyListLogic";
 import {QuerySession} from "../../lib/QuerySession";
-import {stringListToSet} from "../../lib/StringUtils";
+import {stringListToIndexSet, stringListToSet} from "../../lib/StringUtils";
 import chunkMapReduce from "shared/lib/chunkMapReduce";
 import formSubmit from "shared/lib/formSubmit";
 
@@ -403,12 +403,18 @@ export class QueryStore
 			const invalidIds:string[] = [];
 			if (!studyId)
 				return [];
+
+			const inputOrder = stringListToIndexSet(caseIds);
+
 			if (params.caseIdsMode === 'sample')
 			{
 				if (caseIds.length)
 				{
 					const sampleIdentifiers = caseIds.map(sampleId => ({studyId, sampleId}));
-					const sampleObjs = await chunkMapReduce(sampleIdentifiers, chunk=>client.fetchSamplesUsingPOST({sampleIdentifiers:chunk, projection: "ID"}), 990);
+					let sampleObjs = await chunkMapReduce(sampleIdentifiers, chunk=>client.fetchSamplesUsingPOST({sampleIdentifiers:chunk, projection: "ID"}), 990);
+					// sort by input order
+					sampleObjs = _.sortBy(sampleObjs, sampleObj=>inputOrder[sampleObj.sampleId]);
+
 					for (const sample of sampleObjs)
 						sampleIds.push(sample.sampleId);
 				}
@@ -418,7 +424,11 @@ export class QueryStore
 			{
 				// convert patient IDs to sample IDs
 				const samplesPromises = caseIds.map(patientId => this.getSamplesForStudyAndPatient(studyId, patientId));
-				for (const {studyId, patientId, samples, error} of await Promise.all(samplesPromises))
+				let result:{studyId:string, patientId:string, samples:Sample[], error?:Error}[] = await Promise.all(samplesPromises);
+				// sort by input order
+				result = _.sortBy(result, obj=>inputOrder[obj.patientId]);
+
+				for (const {studyId, patientId, samples, error} of result)
 				{
 					if (error || !samples.length)
 						invalidIds.push(patientId);
@@ -438,8 +448,7 @@ export class QueryStore
 					}`
 				);
 
-			// if nothing fails, return caseIds as given
-			return caseIds;
+			return sampleIds;
 		},
 		500
 	);
