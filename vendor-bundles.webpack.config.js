@@ -26,6 +26,8 @@ let config = {
         library: '[name]_lib',
     },
 
+    devtool : 'source-map',
+
     plugins: [
 
     ],
