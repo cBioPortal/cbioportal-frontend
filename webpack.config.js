@@ -311,7 +311,7 @@ if (isDev || isTest) {
             compress: {
                 warnings: false
             },
-            sourceMap:false,
+            sourceMap:true,
             comments:false
         })
     );

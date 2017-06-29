@@ -26,6 +26,8 @@ let config = {
         library: '[name]_lib',
     },
 
+    devtool : 'source-map',
+
     plugins: [
 
     ],
@@ -59,7 +61,7 @@ if (process.env.NODE_ENV !== 'development') {
             compress: {
                 warnings: false
             },
-            sourceMap:false,
+            sourceMap:true,
             comments:false
         })
 
