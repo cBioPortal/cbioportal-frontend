@@ -257,7 +257,7 @@ export default class OncoKbCard extends React.Component<IOncoKbCardProps, IOncoK
     public render()
     {
         return (
-            <div className="oncokb-card">
+            <div className="oncokb-card" data-test='oncokb-card'>
                 <div className="z-depth-2">
                     <If condition={this.props.gene.length > 0}>
                         <Then>
