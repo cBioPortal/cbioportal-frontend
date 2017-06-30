@@ -56,7 +56,7 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 			return null;
 
 		return (
-			<FlexRow padded overflow className={styles.CaseSetSelector}>
+			<FlexRow padded overflow className={styles.CaseSetSelector} data-test='CaseSetSelector'>
 				<div>
 				<SectionHeader className="sectionLabel"
 							   secondaryComponent={<a href={getStudyViewUrl(this.store.singleSelectedStudyId)}>To build your own case set, try out our enhanced Study View.</a>}
