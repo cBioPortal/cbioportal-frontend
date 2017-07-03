@@ -74,6 +74,14 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 
 				{!!(this.store.selectedSampleListId === CUSTOM_CASE_LIST_ID) && (
 					<FlexCol padded>
+
+						<div className={styles.radioRow}>
+							<FlexRow padded>
+								<this.CaseIdsModeRadio label='By sample ID' state='sample'/>
+								<this.CaseIdsModeRadio label='By patient ID' state='patient'/>
+							</FlexRow>
+						</div>
+
 						<span>Enter case IDs below:</span>
 						<textarea
 							title="Enter case IDs"
@@ -82,12 +90,6 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 							value={this.store.caseIds}
 							onChange={event => this.store.caseIds = event.currentTarget.value}
 						/>
-						<div className={styles.radioRow}>
-							<FlexCol padded>
-								<this.CaseIdsModeRadio label='By sample ID' state='sample'/>
-								<this.CaseIdsModeRadio label='By patient ID' state='patient'/>
-							</FlexCol>
-						</div>
 					</FlexCol>
 				)}
 				</div>
