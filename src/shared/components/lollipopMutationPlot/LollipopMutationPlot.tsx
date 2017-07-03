@@ -1,6 +1,5 @@
 import * as React from "react";
 import LollipopPlot from "./LollipopPlot";
-import {IMobXApplicationDataStore} from "../../lib/IMobXApplicationDataStore";
 import {Mutation} from "../../api/generated/CBioPortalAPI";
 import {LollipopSpec, DomainSpec} from "./LollipopPlotNoTooltip";
 import {
@@ -20,14 +19,17 @@ import ReactDOM from "react-dom";
 import {Form, Button, FormGroup, InputGroup, ControlLabel, FormControl} from "react-bootstrap";
 import fileDownload from "react-file-download";
 import "./styles.scss";
-import ProteinImpactTypePanel from "../mutationTypePanel/ProteinImpactTypePanel";
 import Collapse from "react-collapse";
+import {MutationMapperStore} from "../../../pages/resultsView/mutation/MutationMapperStore";
 
 type LollipopMutationPlotProps = {
-    dataStore:IMobXApplicationDataStore<Mutation[]>;
-    entrezGeneId:number;
-    hugoGeneSymbol:string;
+    store:MutationMapperStore;
     onXAxisOffset?:(offset:number)=>void;
+    missenseColor:string;
+    truncatingColor:string;
+    inframeColor:string;
+    otherColor:string;
+    geneWidth:number;
 };
 
 const mutationTypePriority:{[canonicalMutationType:string]:number} = {
@@ -60,11 +62,6 @@ function lollipopMutationTypeSort(typeA:CanonicalMutationType, typeB:CanonicalMu
     }
 }
 
-const MISSENSE_COLOR = "#008000";
-const TRUNCATING_COLOR = "#000000";
-const INFRAME_COLOR = "#8B4513";
-const OTHER_COLOR = "#8B00C9";
-
 @observer
 export default class LollipopMutationPlot extends React.Component<LollipopMutationPlotProps, {}> {
 
@@ -82,42 +79,26 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
 
             switch (proteinImpactType) {
                 case "missense":
-                    return MISSENSE_COLOR;
+                    return this.props.missenseColor;
                 case "truncating":
-                    return TRUNCATING_COLOR;
+                    return this.props.truncatingColor;
                 case "inframe":
-                    return INFRAME_COLOR;
+                    return this.props.inframeColor;
                 default:
-                    return OTHER_COLOR;
+                    return this.props.otherColor;
             }
         } else {
             return "#ff0000"; // we only get here if theres no mutations, which shouldnt happen. red to indicate an error
         }
     }
 
-    readonly swissProtId = remoteData({
-        invoke: async()=>{
-            const myGeneData:Response = await request.get(`http://mygene.info/v3/gene/${this.props.entrezGeneId}?fields=uniprot`);
-            return JSON.parse(myGeneData.text).uniprot["Swiss-Prot"];
-        }
-    });
-
-    readonly pfamGeneData = remoteData({
-        await: ()=>[
-            this.swissProtId
-        ],
-        invoke: async()=>{
-            const data:Response = await request.get(`http://www.cbioportal.org/proxy/pfam.xfam.org/protein/${this.swissProtId.result}/graphic`);
-            return JSON.parse(data.text)[0];
-        }
-    }, {});
 
     readonly mutationAlignerLinks = remoteData<{[pfamAccession:string]:string}>({
         await: ()=>[
-            this.pfamGeneData
+            this.props.store.pfamGeneData
         ],
         invoke: ()=>(new Promise((resolve,reject)=>{
-            const regions = this.pfamGeneData.result.regions;
+            const regions = this.props.store.pfamGeneData.result.regions;
             const responsePromises:Promise<Response>[] = [];
             for (let i=0; i<regions.length; i++) {
                 // have to do a for loop because seamlessImmutable will make result of .map immutable,
@@ -176,7 +157,7 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
     @computed private get mutationsByPosition():{[pos:number]:Mutation[]} {
         const ret:{[pos:number]:Mutation[]} = {};
         let codon;
-        for (const mutations of this.props.dataStore.sortedFilteredData) {
+        for (const mutations of this.props.store.dataStore.sortedFilteredData) {
             for (const mutation of mutations) {
                 codon = mutation.proteinPosStart;
                 ret[codon] = ret[codon] || [];
@@ -222,6 +203,10 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
         for (let i=0; i<positionMutations.length; i++) {
             const mutations = positionMutations[i];
             const codon = mutations[0].proteinPosStart;
+            if (isNaN(codon) || codon < 0 || (this.props.store.pfamGeneData.isComplete && (codon > this.props.store.pfamGeneData.result.length))) {
+                // invalid position
+                continue;
+            }
             let label:string|undefined;
             if (i < numLabelsToShow && mutations.length >= minMutationsToShowLabel) {
                 label = this.lollipopLabel(mutations);
@@ -231,14 +216,6 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
             ret.push({
                 codon,
                 count: mutations.length,
-                onMouseOver: action(()=>{
-                    this.props.dataStore.highlight = (d:Mutation[])=>{
-                        return (d[0].proteinPosStart === codon);
-                    }
-                }),
-                onMouseOut: action(()=>{
-                    this.props.dataStore.highlight = ()=>false;
-                }),
                 tooltip:this.lollipopTooltip(mutations),
                 color: this.getLollipopColor(mutations),
                 label
@@ -271,10 +248,10 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
     }
 
     @computed private get domains():DomainSpec[] {
-        if (!this.pfamGeneData.isComplete) {
+        if (!this.props.store.pfamGeneData.isComplete) {
             return [];
         } else {
-            return this.pfamGeneData.result.regions.map((region:any)=>{
+            return this.props.store.pfamGeneData.result.regions.map((region:any)=>{
                 const startCodon:number = region.metadata.start;
                 const endCodon:number = region.metadata.end;
                 const label:string = region.metadata.identifier;
@@ -305,7 +282,7 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
                     y="2"
                     style={{fontFamily:"verdana", fontSize:"12px", fontWeight:"bold"}}
                 >
-                    {this.props.hugoGeneSymbol}
+                    {this.hugoGeneSymbol}
                 </text>
             );
             const labelGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -344,6 +321,10 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
             });
     }
 
+    @computed get hugoGeneSymbol() {
+        return this.props.store.gene.result && this.props.store.gene.result.hugoGeneSymbol;
+    }
+
     @computed get countRange() {
         if (this.lollipops.length === 0) {
             return [0,0];
@@ -362,8 +343,8 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
         return [this.countRange[0], Math.max(this.countRange[1], this.countRange[0]+5)];
     }
 
-    constructor() {
-        super();
+    constructor(props:LollipopMutationPlotProps) {
+        super(props);
 
         this.handlers = {
             handleYAxisMaxChange: action((event:any)=>{
@@ -371,10 +352,10 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
                 this._yMaxInput = parseInt(inputValue, 10);
             }),
             handleSVGClick:()=>{
-                fileDownload(this.toSVGDOMNode().outerHTML,`${this.props.hugoGeneSymbol}_lollipop.svg`);
+                fileDownload(this.toSVGDOMNode().outerHTML,`${this.hugoGeneSymbol}_lollipop.svg`);
             },
             handlePDFClick:()=>{
-                this.downloadAsPDF(`${this.props.hugoGeneSymbol}_lollipop.pdf`)
+                this.downloadAsPDF(`${this.hugoGeneSymbol}_lollipop.pdf`)
             },
             handleToggleLegend: action(()=>{
                 this.legendShown = !this.legendShown;
@@ -382,9 +363,6 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
             showControls: action(()=>{ this.showControls = true;}),
             hideControls: action(()=>{ this.showControls = false;}),
             ref: (plot:LollipopPlot)=>{ this.plot = plot; },
-            onSelectionChange: (selectedPositions:{ [pos:number]:boolean})=>{
-                this.props.dataStore.setSelector((d:Mutation[])=>!!selectedPositions[d[0].proteinPosStart]);
-            }
         };
     }
 
@@ -408,24 +386,24 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
                     Mutation types and corresponding color codes are as follows:
                     <ul>
                         <li>
-                            <span style={{color:MISSENSE_COLOR, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial, sans-serif"}}>
+                            <span style={{color:this.props.missenseColor, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial, sans-serif"}}>
                                 Missense Mutations
                             </span>
                         </li>
                         <li>
-                            <span style={{color:TRUNCATING_COLOR, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial, sans-serif"}}>
+                            <span style={{color:this.props.truncatingColor, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial, sans-serif"}}>
                                 Truncating Mutations
                             </span>
                             : Nonsense, Nonstop, Frameshift deletion, Frameshift insertion, Splice site
                         </li>
                         <li>
-                            <span style={{color:INFRAME_COLOR, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial, sans-serif"}}>
+                            <span style={{color:this.props.inframeColor, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial, sans-serif"}}>
                                 Inframe Mutations
                             </span>
                             : Inframe deletion, Inframe insertion
                         </li>
                         <li>
-                            <span style={{color:OTHER_COLOR, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial, sans-serif"}}>
+                            <span style={{color:this.props.otherColor, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial, sans-serif"}}>
                                 Other Mutations
                             </span>
                             : All other types of mutations
@@ -488,34 +466,24 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
     }
 
     render() {
-        if (this.pfamGeneData.isComplete) {
-            return ( this.props.dataStore.allData.length ? (
+        if (this.props.store.pfamGeneData.isComplete) {
+            return ( this.props.store.dataStore.allData.length ? (
                 <div onMouseEnter={this.handlers.showControls} onMouseLeave={this.handlers.hideControls}>
                     {this.controls}
                     <LollipopPlot
                         ref={this.handlers.ref}
                         lollipops={this.lollipops}
                         domains={this.domains}
-                        onSelectionChange={this.handlers.onSelectionChange}
-                        vizWidth={665}
+                        dataStore={this.props.store.dataStore}
+                        vizWidth={this.props.geneWidth}
                         vizHeight={130}
-                        xMax={this.pfamGeneData.result.length}
+                        xMax={this.props.store.pfamGeneData.result.length}
                         yMax={this.yMax}
                         onXAxisOffset={this.props.onXAxisOffset}
                     />
-                    <div style={{marginLeft:"45px"}}>
-                        <ProteinImpactTypePanel
-                            dataStore={this.props.dataStore}
-                            missenseColor={MISSENSE_COLOR}
-                            inframeColor={INFRAME_COLOR}
-                            truncatingColor={TRUNCATING_COLOR}
-                            otherColor={OTHER_COLOR}
-                        />
-                    </div>
-                    <br/>
                 </div>
             ) : (
-                <div>There are no {this.props.hugoGeneSymbol} mutations in the selected samples.<br/></div>
+                <div>There are no {this.hugoGeneSymbol} mutations in the selected samples.<br/></div>
             ));
         } else {
             return (<LoadingIndicator isLoading={true}/>);

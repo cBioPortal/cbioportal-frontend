@@ -367,7 +367,7 @@ class LazyMobXTableStore<T> {
         const ret = [];
         for (let i=0; i<this.visibleData.length; i++) {
             const rowProps:any = {};
-            if (this.dataStore.highlight(this.visibleData[i])) {
+            if (this.dataStore.isHighlighted(this.visibleData[i])) {
                 rowProps.className = "highlight";
             }
             ret.push(
