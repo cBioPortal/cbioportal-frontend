@@ -151,20 +151,73 @@ describe('LazyMobXTable', ()=>{
         invisibleString:"FILTER4"
     };
     let data = [datum0, datum1, datum2, datum3, datum4];
+    let multiData = [[datum0, datum1], [datum2, datum3], datum4];
     let sortedList:any[];
+    function downloadName(data:{name:string, num:number, str:string, numList:number[], strList:string[],
+        invisibleString:string}|{name:string, num:number, str:string, numList:number[], 
+        strList:string[], invisibleString:string}[]): string|string[] {
+            let result =[];
+            if (data instanceof Array) {
+                for (let datum of data) {
+                    result.push(datum.name);
+                }
+            } else {
+                return data.name;
+            }
+            return result;
+        }
+    function downloadNumber(data:{name:string, num:number, str:string, numList:number[], strList:string[],
+        invisibleString:string}|{name:string, num:number, str:string, numList:number[], 
+        strList:string[], invisibleString:string}[]): string|string[] {
+            let result =[];
+            if (data instanceof Array) {
+                for (let datum of data) {
+                    result.push(datum.num+'');
+                }
+            } else {
+                return data.num+'';
+            }
+            return result;
+        }
+    function downloadString(data:{name:string, num:number, str:string, numList:number[], strList:string[],
+        invisibleString:string}|{name:string, num:number, str:string, numList:number[], 
+        strList:string[], invisibleString:string}[]): string|string[] {
+            let result =[];
+            if (data instanceof Array) {
+                for (let datum of data) {
+                    result.push(datum.str+'');
+                }
+            } else {
+                return data.str+'';
+            }
+            return result;
+        }
+    function downloadInvisible(data:{name:string, num:number, str:string, numList:number[], strList:string[],
+        invisibleString:string}|{name:string, num:number, str:string, numList:number[], 
+        strList:string[], invisibleString:string}[]): string|string[] {
+            let result =[];
+            if (data instanceof Array) {
+                for (let datum of data) {
+                    result.push(datum.name+"HELLO123456");
+                }
+            } else {
+                return data.name+"HELLO123456";
+            }
+            return result;
+        }
     let columns:any[] = [{
         name: "Name",
         filter: (d:any,s:string)=>(d.name.indexOf(s) > -1),
         sortBy: (d:any)=>d.name,
         render:(d:any)=>(<span>{d.name}</span>),
-        download:(d:any)=>d.name,
+        download:(d:any)=>downloadName(d),
         tooltip:(<span>Name of the data.</span>),
         align: "right"
     },{
         name: "Number",
         sortBy: (d:any)=>d.num,
         render:(d:any)=>(<span>{d.num}</span>),
-        download:(d:any)=>d.num+'',
+        download:(d:any)=>downloadNumber(d),
         tooltip:(<span>Number of the data.</span>),
         defaultSortDirection: "desc",
         align: "left"
@@ -173,7 +226,7 @@ describe('LazyMobXTable', ()=>{
         filter: (d:any,s:string)=>(d.str && d.str.indexOf(s) > -1),
         sortBy: (d:any)=>d.str,
         render:(d:any)=>(<span>{d.str}</span>),
-        download:(d:any)=>d.str+'',
+        download:(d:any)=>downloadString(d),
         tooltip:(<span>String of the data</span>),
         defaultSortDirection: "desc",
         align: "center"
@@ -186,7 +239,7 @@ describe('LazyMobXTable', ()=>{
         visible: false,
         sortBy: (d:any)=>d.name,
         render:(d:any)=>(<span>{d.name}</span>),
-        download:(d:any)=>d.name+"HELLO123456",
+        download:(d:any)=>downloadInvisible(d),
     },{
         name: "Initially invisible column with no download",
         render:()=>(<span></span>),
@@ -999,7 +1052,6 @@ describe('LazyMobXTable', ()=>{
                 "3,-1,zijxcpo,,3HELLO123456,,\r\n"+
                 "4,90,zkzxc,,4HELLO123456,,\r\n");
         });
-
         it("gives data back in sorted order according to initially selected sort column and direction", ()=>{
             let table = mount(<Table columns={columns} data={data} initialSortColumn="Number" initialSortDirection="asc"/>);
 
@@ -1010,6 +1062,17 @@ describe('LazyMobXTable', ()=>{
                 "1,6,kdfjpo,,1HELLO123456,,\r\n"+
                 "4,90,zkzxc,,4HELLO123456,,\r\n" +
                 "2,null,null,,2HELLO123456,,\r\n");
+        });
+        
+        it("gives data for data with multiple elements", ()=>{
+            let table = mount(<Table columns={columns} data={multiData}/>)
+            assert.deepEqual((table.instance() as LazyMobXTable<any>).getDownloadData(),
+                "Name,Number,String,Number List,Initially invisible column,Initially invisible column with no download,String without filter function\r\n"+
+                "0,0,asdfj,,0HELLO123456,,\r\n"+
+                "1,6,kdfjpo,,1HELLO123456,,\r\n"+
+                "2,null,null,,2HELLO123456,,\r\n"+
+                "3,-1,zijxcpo,,3HELLO123456,,\r\n"+
+                "4,90,zkzxc,,4HELLO123456,,\r\n");
         });
     });
     describe('pagination', ()=>{
