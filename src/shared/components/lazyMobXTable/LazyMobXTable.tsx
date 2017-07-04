@@ -27,7 +27,7 @@ export type Column<T> = {
     visible?:boolean;
     sortBy?:((data:T)=>(number|null)) | ((data:T)=>(string|null)) | ((data:T)=>(number|null)[]) | ((data:T)=>(string|null)[]);
     render:(data:T)=>JSX.Element;
-    download?:(data:T)=>string;
+    download?:(data:T)=>string|string[];
     tooltip?:JSX.Element;
     defaultSortDirection?:SortDirection;
     togglable?:boolean;
@@ -135,6 +135,50 @@ export function lazyMobXTableSort<T>(data:T[], metric:SortMetric<T>, ascending:b
     return dataAndValue.map(x=>x.data);
 }
 
+function getListOfEmptyStrings<T>(maxColLength:number): string[] {
+     return Array(maxColLength).join(".").split(".");
+}
+
+function getAsList<T>(data: Array<string|string[]>, maxColLength: number): string[][] {
+    let returnList: string[][] = [];
+    data.forEach((datum: string|string[]) => {
+        if (datum instanceof Array) {
+            if (maxColLength != datum.length) {
+                throw new Error('Not all the arrays returned from the download functions are from the same length.');
+            }
+            returnList.push(datum);
+        } else {
+            let arr: string[] = [];
+            for (var i=0; i<maxColLength; i++) {
+                arr = arr.concat(datum);
+            };
+            returnList.push(arr);
+        }
+    })
+    return returnList;
+}
+
+
+function getDownloadObject<T>(columns: Column<T>[], rowData: T) {
+    let downloadObject: {data: Array<string[]|string>; maxColLength: number} = {data: [], maxColLength: 1};
+    columns.forEach((column:Column<T>) => {
+        if (column.download) {
+            let downloadData = column.download(rowData);
+            if (downloadData instanceof Array) {
+                downloadObject.data.push(downloadData);
+                if (downloadData.length > downloadObject.maxColLength) {
+                    downloadObject.maxColLength = downloadData.length;
+                }
+            } else {
+                downloadObject.data.push(downloadData);
+            }
+        } else {
+            downloadObject.data.push("");
+        }
+    });
+    return downloadObject;
+}
+
 class LazyMobXTableStore<T> {
     @observable public filterString:string;
     @observable private _page:number;
@@ -219,22 +263,29 @@ class LazyMobXTableStore<T> {
             tableDownloadData[0].push(column.name);
         });
 
-        // add rows (including hidden columns)
+        // add rows (including hidden columns). The purpose of this part is to ensure that
+        // if any element of rowData contains a column with multiple values, rowData is written as
+        // multiple rows in tableDownloadData
         this.dataStore.sortedData.forEach((rowData:T) => {
-            const rowDownloadData:string[] = [];
-
-            this.columns.forEach((column:Column<T>) => {
-                if (column.download) {
-                    rowDownloadData.push(column.download(rowData));
-                }
-                else {
-                    rowDownloadData.push("");
-                }
+            // retrieve all the download information for each row and store it in an object, 
+            // and calculate the maxColLength (max number of elements found in a column).
+            let downloadObject = getDownloadObject(this.columns, rowData);
+            // normalize the length of all columns based on the maxColLength (so that every column contains the
+            // same number of elements)
+            const rowDownloadData: string[][] = getAsList(downloadObject.data, downloadObject.maxColLength);
+            
+            //rowDownloadData is list of lists, containing all the elements per column.
+            //processedRowsDownloadData becomes the transposed of rowDownloadData.
+            let processedRowsDownloadData = rowDownloadData[0].map(function(row:string, i:number) { 
+              return rowDownloadData.map(function(col) { 
+                return col[i];
+              })
             });
-
-            tableDownloadData.push(rowDownloadData);
+           //Writing the transposed list to tableDownloadData to build the final table.
+           processedRowsDownloadData.forEach((processedRowDownloadData: string[]) => {
+              tableDownloadData.push(processedRowDownloadData);
+           });
         });
-
         return tableDownloadData;
     }
 
