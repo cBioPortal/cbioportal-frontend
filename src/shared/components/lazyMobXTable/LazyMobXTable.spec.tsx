@@ -20,6 +20,13 @@ expect.extend(expectJSX);
 class Table extends LazyMobXTable<any> {
 }
 
+class HighlightingDataStore extends SimpleMobXApplicationDataStore<any> {
+    constructor(data:any[]) {
+        super(data);
+        this.dataHighlighter = (d:any)=>(d.numList[1] === null);
+    }
+}
+
 function getVisibleColumnHeaders(tableWrapper:ReactWrapper<any, any>):string[] {
     return tableWrapper.find('th span').map(span=>span.text());
 }
@@ -795,8 +802,7 @@ describe('LazyMobXTable', ()=>{
             assert.equal(rows.length, 0);
         });
         it("highlights rows properly, according to highlight function in data store", ()=>{
-            const store:SimpleMobXApplicationDataStore<any> = new SimpleMobXApplicationDataStore(data);
-            store.highlight = (d:any)=>(d.numList[1] === null);
+            const store:HighlightingDataStore = new HighlightingDataStore(data);
             let table = mount(<Table columns={columns} dataStore={store}/>);
             let rows = getSimpleTableRows(table);
             assert.isFalse(rows.at(0).hasClass("highlight"), "row 0 not highlighted");
