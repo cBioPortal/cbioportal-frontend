@@ -39,8 +39,8 @@ var routeComponentRegex = /routes\/([^\/]+\/?[^\/]+).js$/;
 var config = {
 
     'entry': [
-        `${path.join(src, 'appBootstrapper.jsx')}`,
-        `babel-polyfill`
+        `babel-polyfill`,
+        `${path.join(src, 'appBootstrapper.jsx')}`
     ],
     'output': {
         path: './dist/',
@@ -130,12 +130,7 @@ var config = {
                 test: /\.pdf$/,
                 loader: `url-loader?name=${imgPath}&limit=1`,
             },
-            // {
-            //     test: /ClinicalInformationContainer/i,
-            //     include: path.resolve(__dirname, 'src'),
-            //     loaders: ['bundle?lazy', 'babel']
-            // }
-
+            { test: /lodash/, loader: 'imports?define=>false'}
 
 
         ],
@@ -159,6 +154,7 @@ var config = {
         'contentBase': 'dist',
         'https': false,
         'hostname': 'localhost',
+        'headers': {"Access-Control-Allow-Origin": "*"},
         'stats':'errors-only'
     }
 
@@ -260,6 +256,17 @@ if (isDev || isTest) {
         return idx < 0;
     });
 
+    // Get rid of Dedupe for non-production environments - it messes with scss with duplicate names
+    config.plugins = config.plugins.filter(p => {
+        const name = p.constructor.toString();
+        const fnName = name.match(/^function (.*)\((.*\))/);
+
+        const idx = [
+            'DedupePlugin',
+        ].indexOf(fnName[1]);
+        return idx < 0;
+    });
+
 } else {
 
 
@@ -314,7 +321,7 @@ if (isDev || isTest) {
             compress: {
                 warnings: false
             },
-            sourceMap:false,
+            sourceMap:true,
             comments:false
         })
     );

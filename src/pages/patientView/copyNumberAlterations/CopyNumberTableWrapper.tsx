@@ -14,7 +14,7 @@ import TumorColumnFormatter from "../mutation/column/TumorColumnFormatter";
 import SampleManager from "../sampleManager";
 import {IOncoKbData} from "../../../shared/model/OncoKB";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
-import PmidCache from "shared/cache/PmidCache";
+import PubMedCache from "shared/cache/PubMedCache";
 import MrnaExprRankCache from "shared/cache/MrnaExprRankCache";
 import {IGisticData} from "../../../shared/model/Gistic";
 import CopyNumberCountCache from "../clinicalInformation/CopyNumberCountCache";
@@ -31,7 +31,8 @@ type ICopyNumberTableWrapperProps = {
     sampleManager:SampleManager|null;
     cnaOncoKbData?:IOncoKbData;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
-    pmidCache?:PmidCache;
+    enableOncoKb?:boolean;
+    pubMedCache?:PubMedCache;
     data:DiscreteCopyNumberData[][];
     copyNumberCountCache?:CopyNumberCountCache;
     mrnaExprRankCache?:MrnaExprRankCache;
@@ -43,6 +44,10 @@ type ICopyNumberTableWrapperProps = {
 
 @observer
 export default class CopyNumberTableWrapper extends React.Component<ICopyNumberTableWrapperProps, {}> {
+
+    public static defaultProps = {
+        enableOncoKb: true
+    };
 
     render() {
         const columns: CNATableColumn[] = [];
@@ -86,8 +91,8 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
             render: (d:DiscreteCopyNumberData[]) => (AnnotationColumnFormatter.renderFunction(d, {
                 oncoKbData: this.props.cnaOncoKbData,
                 oncoKbEvidenceCache: this.props.oncoKbEvidenceCache,
-                pmidCache: this.props.pmidCache,
-                enableOncoKb: true,
+                enableOncoKb: this.props.enableOncoKb as boolean,
+                pubMedCache: this.props.pubMedCache,
                 enableMyCancerGenome: false,
                 enableHotspot: false
             })),

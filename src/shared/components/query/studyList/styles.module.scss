@@ -154,6 +154,10 @@ li.Study {
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
   align-items: flex-start;
 
+  &:hover {
+    background-color:#F8F8F8;
+  }
+
   label {
     font-weight: 400;
     margin: 0;
@@ -166,10 +170,28 @@ li.Study {
 
   .StudyName {
     color: #444;
-    max-width: 360px;
+    max-width: 390px;
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+  }
+
+  @media (min-width: 1450px) {
+    .StudyName {
+      max-width:500px;
+    }
+  }
+
+  @media (min-width: 1600px) {
+    .StudyName {
+      max-width:650px;
+    }
+  }
+
+  @media (min-width: 1800px) {
+    .StudyName {
+      max-width:800px;
+    }
   }
 
   .StudySamples {

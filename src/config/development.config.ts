@@ -3,21 +3,23 @@ import {IAppConfig} from "./IAppConfig";
 const config:IAppConfig = {
     //host: 'cbioportal-rc.herokuapp.com',
     genomespaceEnabled: false,
-    cancerStudySearchPresets: [
-        'tcga',
-        'tcga -provisional',
-        'tcga -moratorium',
-        'tcga OR icgc',
-        '-"cell line"',
-        'prostate mskcc',
-        'esophageal OR stomach',
-        'serous',
-        'breast',
-    ],
-    priorityStudies: {
-        'Shared institutional Data Sets': ['mskimpact', 'cellline_mskcc'],
-        'Priority Studies': ['blca_tcga_pub', 'coadread_tcga_pub', 'brca_tcga_pub2015'], // for demo
-    },
+    cancerStudySearchPresets: (window as any).skinExampleStudyQueries,
+    priorityStudies: (window as any).priorityStudies,
+    showCivic: (window as any).showCivic,
+    showHotspot: (window as any).showHotspot,
+    showMyCancerGenome: (window as any).showMyCancerGenome,
+    showOncoKB: (window as any).showOncoKB,
+    oncoKBApiUrl: (window as any).oncoKBApiUrl,
+    enableDarwin: (window as any).enableDarwin,
+    appVersion: (window as any).appVersion,
+    historyType: (window as any).historyType,
+    skinBlurb: (window as any).skinBlurb,
+    skinDatasetHeader: (window as any).skinDatasetHeader,
+    skinDatasetFooter: (window as any).skinDatasetFooter,
+    skinRightNavShowDatasets: (window as any).skinRightNavShowDatasets,
+    skinRightNavShowExamples: (window as any).skinRightNavShowExamples, 
+    skinRightNavShowTestimonials: (window as any).skinRightNavShowTestimonials,
+    skinRightNavExamplesHTML: (window as any).skinRightNavExamplesHTML
 };
 
 export default config;

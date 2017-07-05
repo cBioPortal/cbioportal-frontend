@@ -14,6 +14,7 @@ import BarGraph from "shared/components/barGraph/BarGraph";
 import client from '../../shared/api/cbioportalClientInstance';
 import {remoteData} from "../../shared/api/remoteData";
 import RightBar from "../../shared/components/rightbar/RightBar";
+import AppConfig from "appConfig";
 
 
 export class HomePageStore {
@@ -73,6 +74,12 @@ export default class HomePage extends React.Component<IHomePageProps, IHomePageS
 
     public render()
     {
-        return (<QueryAndDownloadTabs store={this.store} />);
+        const blurb:JSX.Element|null = AppConfig.skinBlurb? <p style={{marginBottom:"20px"}} dangerouslySetInnerHTML={{__html: AppConfig.skinBlurb}}></p> : null;
+        return (<div>
+                   <div>
+                       {blurb}
+                   </div>
+                   <QueryAndDownloadTabs store={this.store} />
+                </div>);
     }
 }

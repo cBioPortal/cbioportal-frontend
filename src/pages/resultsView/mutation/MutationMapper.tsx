@@ -5,7 +5,7 @@ import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicato
 import StructureViewerPanel from "shared/components/structureViewer/StructureViewerPanel";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
-import PmidCache from "shared/cache/PmidCache";
+import PubMedCache from "shared/cache/PubMedCache";
 import CancerTypeCache from "shared/cache/CancerTypeCache";
 import MutationCountCache from "shared/cache/MutationCountCache";
 import {IMyCancerGenomeData} from "shared/model/MyCancerGenome";
@@ -27,7 +27,7 @@ export interface IMutationMapperProps {
     cancerTypeCache?:CancerTypeCache;
     mutationCountCache?:MutationCountCache;
     pdbHeaderCache?: PdbHeaderCache;
-    pmidCache?:PmidCache;
+    pubMedCache?:PubMedCache;
 }
 
 const MISSENSE_COLOR = "#008000";
@@ -124,7 +124,7 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                                 studyToCancerType={this.props.studyToCancerType}
                                 discreteCNACache={this.props.discreteCNACache}
                                 oncoKbEvidenceCache={this.props.oncoKbEvidenceCache}
-                                pmidCache={this.props.pmidCache}
+                                pubMedCache={this.props.pubMedCache}
                                 cancerTypeCache={this.props.cancerTypeCache}
                                 mutationCountCache={this.props.mutationCountCache}
                                 dataStore={this.props.store.dataStore}

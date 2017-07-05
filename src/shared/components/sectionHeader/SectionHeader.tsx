@@ -1,11 +1,11 @@
 import * as React from 'react';
-import Spinner from 'react-spinkit';
 import MobxPromise from "mobxpromise";
 import {observer} from "mobx-react";
 import * as styles_any from './styles.module.scss';
 import classNames from 'classnames';
 import ErrorBox from "../errorBox/ErrorBox";
 import ReactElement = React.ReactElement;
+import {ThreeBounce} from "better-react-spinkit";
 
 const styles = styles_any as {
 	SectionHeader: string,
@@ -28,10 +28,12 @@ export default class SectionHeader extends React.Component<ISectionHeaderProps, 
 		let {promises, children, className, secondaryComponent, ...divProps} = this.props;
 		return (
 			<div className={classNames(className, styles.SectionHeader)} {...divProps}>
-				{!!(promises && promises.some(promise => promise.isPending)) && (
-					<Spinner/>
-				)}
-				<h2>{children}</h2>
+				<h2>
+					{children}
+					{!!(promises && promises.some(promise => promise.isPending)) && (
+						<ThreeBounce style={{ display:'inline-block', marginLeft:10 }}/>
+					)}
+				</h2>
 
 				{
 					(!!secondaryComponent) && (

@@ -38,7 +38,8 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
     getShortName(cancerStudiesObj:ICounterObj) {
         const aliases:{[id:string]:string} = {
             'Ovarian': 'Ovary', 'Cervical': 'Cervix', 'Uterine': 'Uterus',
-            'Melanoma': 'Skin', 'CCLE':'Mixed', 'Thymoma(TCGA)': 'Thymus', 'Uveal': 'Eye'
+            'Melanoma': 'Skin', 'CCLE':'Mixed', 'Thymoma(TCGA)': 'Thymus', 'Uveal': 'Eye',
+            'Testicular': 'Testicle'
         };
         return _.mapValues(cancerStudiesObj, (cancerStudy) => {
             const shortName = cancerStudy.shortName.split(" ")[0];
@@ -170,7 +171,7 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
                     cursor: 'pointer',
                     events: {
                         click: function() {
-                            location.href= 'http://www.cbioportal.org/study?id=' + this.options.studyId, + '#summary';
+                            window.location.href= 'study?id=' + this.options.studyId, + '#summary';
                         }
                     }
                 }

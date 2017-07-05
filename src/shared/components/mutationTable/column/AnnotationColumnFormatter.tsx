@@ -2,7 +2,7 @@ import * as React from 'react';
 import {If} from 'react-if';
 import * as _ from "lodash";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
-import OncokbPmidCache from "shared/cache/PmidCache";
+import OncokbPubMedCache from "shared/cache/PubMedCache";
 import CancerHotspots from "shared/components/annotation/CancerHotspots";
 import MyCancerGenome from "shared/components/annotation/MyCancerGenome";
 import OncoKB from "shared/components/annotation/OncoKB";
@@ -22,14 +22,14 @@ export interface IAnnotationColumnProps {
     myCancerGenomeData?: IMyCancerGenomeData;
     oncoKbData?: IOncoKbData;
     oncoKbEvidenceCache?: OncoKbEvidenceCache;
-    pmidCache?: OncokbPmidCache;
+    pubMedCache?: OncokbPubMedCache;
 }
 
 export interface IAnnotation {
     isHotspot: boolean;
     is3dHotspot: boolean;
     myCancerGenomeLinks: string[];
-    oncoKbIndicator?: IndicatorQueryResp;
+    oncoKbIndicator?: IndicatorQueryResp|null;
 }
 
 /**
@@ -69,8 +69,12 @@ export default class AnnotationColumnFormatter
         return value;
     }
 
-    public static getIndicatorData(mutation:Mutation, oncoKbData:IOncoKbData):IndicatorQueryResp
+    public static getIndicatorData(mutation:Mutation, oncoKbData:IOncoKbData): IndicatorQueryResp|null
     {
+        if (oncoKbData.sampleToTumorMap === null || oncoKbData.indicatorMap === null) {
+            return null;
+        }
+
         const id = generateQueryVariantId(mutation.gene.entrezGeneId,
             oncoKbData.sampleToTumorMap[mutation.sampleId],
             mutation.proteinChange,
@@ -79,15 +83,16 @@ export default class AnnotationColumnFormatter
         return oncoKbData.indicatorMap[id];
     }
 
-    public static getEvidenceQuery(mutation:Mutation, oncoKbData:IOncoKbData): Query
+    public static getEvidenceQuery(mutation:Mutation, oncoKbData:IOncoKbData): Query|null
     {
-        return generateQueryVariant(mutation.gene.entrezGeneId,
+        // return null in case sampleToTumorMap is null
+        return oncoKbData.sampleToTumorMap ? generateQueryVariant(mutation.gene.entrezGeneId,
             oncoKbData.sampleToTumorMap[mutation.sampleId],
             mutation.proteinChange,
             mutation.mutationType,
             mutation.proteinPosStart,
             mutation.proteinPosEnd
-        );
+        ) : null;
     }
 
     public static getMyCancerGenomeLinks(mutation:Mutation, myCancerGenomeData: IMyCancerGenomeData):string[] {
@@ -148,21 +153,21 @@ export default class AnnotationColumnFormatter
         let evidenceQuery:Query|undefined;
 
         if (columnProps.oncoKbData) {
-            evidenceQuery = this.getEvidenceQuery(data[0], columnProps.oncoKbData);
+            evidenceQuery = this.getEvidenceQuery(data[0], columnProps.oncoKbData) || undefined;
         }
 
         return AnnotationColumnFormatter.mainContent(annotation,
             columnProps,
             columnProps.oncoKbEvidenceCache,
             evidenceQuery,
-            columnProps.pmidCache);
+            columnProps.pubMedCache);
     }
 
     public static mainContent(annotation:IAnnotation,
                               columnProps:IAnnotationColumnProps,
                               evidenceCache?: OncoKbEvidenceCache,
                               evidenceQuery?: Query,
-                              pmidCache?:OncokbPmidCache)
+                              pubMedCache?:OncokbPubMedCache)
     {
         return (
             <span>
@@ -171,7 +176,7 @@ export default class AnnotationColumnFormatter
                         indicator={annotation.oncoKbIndicator}
                         evidenceCache={evidenceCache}
                         evidenceQuery={evidenceQuery}
-                        pmidCache={pmidCache}
+                        pubMedCache={pubMedCache}
                     />
                 </If>
                 <If condition={columnProps.enableMyCancerGenome || false}>

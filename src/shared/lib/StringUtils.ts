@@ -16,3 +16,17 @@ export function longestCommonStartingSubstring(str1:string, str2:string) {
 
     return str1.substring(0, i);
 }
+
+export function stringListToSet(alos:ReadonlyArray<string>):{[s:string]:boolean} {
+    return alos.reduce((map:{[s:string]:boolean}, next:string)=>{
+        map[next] = true;
+        return map;
+    }, {});
+}
+
+export function stringListToIndexSet(alos:ReadonlyArray<string>):{[s:string]:number} {
+    return alos.reduce((map:{[s:string]:number}, next:string, index:number)=>{
+        map[next] = index;
+        return map;
+    }, {});
+}

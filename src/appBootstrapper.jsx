@@ -11,6 +11,7 @@ import $ from 'jquery';
 import URL from 'url';
 import * as superagent from 'superagent';
 import { getHost } from './shared/api/urls';
+import { validateParametersPatientView } from './shared/lib/validateParameters';
 
 if (!window.hasOwnProperty("$")) {
     window.$ = $;
@@ -59,27 +60,31 @@ const end = superagent.Request.prototype.end;
 
 let redirecting = false;
 
-const qs = URL.parse(window.location.href, true).query;
+// check if valid hash parameters for patient view, otherwise convert old style
+// querystring for backwards compatibility
+const validationResult = validateParametersPatientView(routingStore.location.query);
+if (!validationResult.isValid) {
+    const newParams = {};
+    const qs = URL.parse(window.location.href, true).query;
 
-const newParams = {};
+    if ('cancer_study_id' in qs && _.isUndefined(routingStore.location.query.studyId)) {
+        newParams['studyId'] = qs.cancer_study_id;
+    }
+    if ('case_id' in qs && _.isUndefined(routingStore.location.query.caseId)) {
+        newParams['caseId'] = qs.case_id;
+    }
 
-if ('cancer_study_id' in qs && _.isUndefined(routingStore.location.query.studyId)) {
-    newParams['studyId'] = qs.cancer_study_id;
+    if ('sample_id' in qs && _.isUndefined(routingStore.location.query.sampleId)) {
+        newParams['sampleId'] = qs.sample_id;
+    }
+
+    const navCaseIdsMatch = routingStore.location.pathname.match(/(nav_case_ids)=(.*)$/);
+    if (navCaseIdsMatch && navCaseIdsMatch.length > 2) {
+        newParams['navCaseIds'] = navCaseIdsMatch[2];
+    }
+
+    routingStore.updateRoute(newParams);
 }
-if ('case_id' in qs && _.isUndefined(routingStore.location.query.caseId)) {
-    newParams['caseId'] = qs.case_id;
-}
-
-if ('sample_id' in qs && _.isUndefined(routingStore.location.query.sampleId)) {
-    newParams['sampleId'] = qs.sample_id;
-}
-
-const navCaseIdsMatch = routingStore.location.pathname.match(/(nav_case_ids)=(.*)$/);
-if (navCaseIdsMatch && navCaseIdsMatch.length > 2) {
-    newParams['navCaseIds'] = navCaseIdsMatch[2];
-}
-
-routingStore.updateRoute(newParams);
 
 superagent.Request.prototype.end = function (callback) {
     return end.call(this, (error, response) => {
