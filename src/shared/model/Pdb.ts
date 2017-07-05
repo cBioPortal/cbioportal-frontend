@@ -1,3 +1,5 @@
+import {PdbUniprotAlignment} from "../api/generated/PdbAnnotationAPI";
+
 export interface IPdbPosition {
     position: number;
     insertionCode?: string;
@@ -7,6 +9,12 @@ export interface IPdbPositionRange {
     start: IPdbPosition;
     end: IPdbPosition;
 }
+
+export type PdbAlignmentIndex = {
+    [pdbId: string]: {
+        [chainId: string]: PdbUniprotAlignment[]
+    }
+};
 
 export interface IPdbChain {
     pdbId: string;
