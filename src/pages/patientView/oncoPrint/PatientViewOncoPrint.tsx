@@ -53,6 +53,7 @@ export default class PatientViewOncoPrint extends React.Component<IPatientViewOn
 
     var hm_ids:number[] = [];
     var track_data:any[] = [];
+    var share_id = null;
     for (var i=0; i<fake_data.length; i++) {
       const track_params:any = {
         'rule_set_params': {
@@ -73,8 +74,7 @@ export default class PatientViewOncoPrint extends React.Component<IPatientViewOn
       };
       var new_hm_id = oncoprint.addTracks([track_params])[0];
       hm_ids.push(new_hm_id);
-      track_data.push(fake_data[new_hm_id]);
-      var share_id = null;
+      fake_data.track_id = new_hm_id;
       if (hm_ids.length === 0) {
         share_id = new_hm_id;
       } else {
@@ -85,9 +85,9 @@ export default class PatientViewOncoPrint extends React.Component<IPatientViewOn
     oncoprint.hideIds([], true);
     oncoprint.keepSorted(false);
 
-    for (let i=0; i<track_data.length; i++) {
-      oncoprint.setTrackData(i, track_data[i].data, 'sample');
-      oncoprint.setTrackInfo(i, track_data[i].data);
+    for (let i=0; i<fake_data.length; i++) {
+      oncoprint.setTrackData(fake_data[i].track_id, fake_data[i].data, 'sample');
+      oncoprint.setTrackInfo(fake_data[i].track_id, fake_data[i].gene);
     }
 
     oncoprint.keepSorted(true);
