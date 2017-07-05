@@ -1,9 +1,9 @@
 import { assert } from 'chai';
 import {QueryStore, normalizeQuery} from "./QueryStore";
-import {urlParams} from "./QueryStoreUtils";
+import {nonGeneticProfileParams} from "./QueryStoreUtils";
 
 describe('QueryStoreUtils', ()=>{
-    describe('urlParams', ()=>{
+    describe('nonGeneticProfileParams', ()=>{
         it("returns normalized query for gene_list parameter", ()=>{
             let store = new QueryStore();
             let queries = [
@@ -17,7 +17,7 @@ describe('QueryStoreUtils', ()=>{
             ];
             for (let query of queries) {
                 store.geneQuery = query;
-                assert.equal(urlParams(store).query.gene_list, normalizeQuery(query), `got normalized query for query ${query}`);
+                assert.equal(nonGeneticProfileParams(store).gene_list, normalizeQuery(query), `got normalized query for query ${query}`);
             }
         });
     });
