@@ -31,6 +31,7 @@ import {IHotspotData, ICancerHotspotData} from "shared/model/CancerHotspots";
 import {ICivicGeneData, ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
 import CancerHotspotsAPI from "shared/api/generated/CancerHotspotsAPI";
 import {GENETIC_PROFILE_MUTATIONS_SUFFIX, GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
+import AppConfig from 'appConfig';
 
 export const ONCOKB_DEFAULT: IOncoKbData = {
     sampleToTumorMap : {},
@@ -335,26 +336,30 @@ export async function queryOncoKbData(queryVariants: Query[],
 export async function fetchCivicGenes(mutationData?:MobxPromise<Mutation[]>,
                                       uncalledMutationData?:MobxPromise<Mutation[]>) {
     
-    const mutationDataResult = concatMutationData(mutationData, uncalledMutationData);
+    if (AppConfig.showCivic) {
+        const mutationDataResult = concatMutationData(mutationData, uncalledMutationData);
+        
+        if (mutationDataResult.length === 0) {
+            return {};
+        }
+        
+        let queryHugoSymbols: Array<string> = [];
+            
+        mutationDataResult.forEach(function(mutation: Mutation) {
+            queryHugoSymbols.push(mutation.gene.hugoGeneSymbol);
+        });
     
-    if (mutationDataResult.length === 0) {
+        let civicGenes: ICivicGene = await getCivicGenes(queryHugoSymbols);
+    
+        return civicGenes;
+    } else {
         return {};
     }
-    
-    let queryHugoSymbols: Array<string> = [];
-        
-    mutationDataResult.forEach(function(mutation: Mutation) {
-        queryHugoSymbols.push(mutation.gene.hugoGeneSymbol);
-    });
-
-    let civicGenes: ICivicGene = await getCivicGenes(queryHugoSymbols);
-
-    return civicGenes;
 }
 
 export async function fetchCnaCivicGenes(discreteCNAData:MobxPromise<DiscreteCopyNumberData[]>) {
     
-    if (discreteCNAData.result && discreteCNAData.result.length > 0) {
+    if (AppConfig.showCivic && discreteCNAData.result && discreteCNAData.result.length > 0) {
         let queryHugoSymbols: Array<string> = [];
         
         discreteCNAData.result.forEach(function(cna: DiscreteCopyNumberData) {
@@ -374,14 +379,16 @@ export async function fetchCivicVariants(civicGenes: ICivicGene, mutationData?:M
                                          uncalledMutationData?:MobxPromise<Mutation[]>) {
 
     let civicVariants: ICivicVariant = {};
-    if (mutationData && uncalledMutationData) {
-        if (mutationData != {} && uncalledMutationData !={}) {
-            const mutationDataResult = concatMutationData(mutationData, uncalledMutationData);
-            civicVariants = (await getCivicVariants(civicGenes, mutationDataResult));
-        }
-    } else {
-        if (civicGenes != {}) {
-            civicVariants = (await getCivicVariants(civicGenes));
+    if (AppConfig.showCivic) {
+        if (mutationData && uncalledMutationData) {
+            if (mutationData != {} && uncalledMutationData !={}) {
+                const mutationDataResult = concatMutationData(mutationData, uncalledMutationData);
+                civicVariants = (await getCivicVariants(civicGenes, mutationDataResult));
+            }
+        } else {
+            if (civicGenes != {}) {
+                civicVariants = (await getCivicVariants(civicGenes));
+            }
         }
     }
 
