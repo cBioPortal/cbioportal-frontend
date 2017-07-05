@@ -1,12 +1,17 @@
 import * as _ from 'lodash';
+import request from "superagent";
+import Response = request.Response;
 import {
     default as CBioPortalAPI, GeneticProfile, Mutation, MutationFilter, DiscreteCopyNumberData,
     DiscreteCopyNumberFilter, ClinicalData, Sample, CancerStudy, CopyNumberCountIdentifier
 } from "shared/api/generated/CBioPortalAPI";
+import {getMyGeneUrl, getPfamGeneDataUrl, getUniprotIdUrl} from "shared/api/urls";
 import defaultClient from "shared/api/cbioportalClientInstance";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import hotspot3DClient from 'shared/api/3DhotspotClientInstance';
 import hotspotClient from 'shared/api/hotspotClientInstance';
+import pdbAnnotationClient from "shared/api/pdbAnnotationClientInstance";
+import {PdbUniprotAlignment, default as PdbAnnotationAPI} from "shared/api/generated/PdbAnnotationAPI";
 import {
     CosmicMutation, default as CBioPortalAPIInternal,
     GisticToGene, Gistic, MutSig
@@ -19,6 +24,7 @@ import {Query, default as OncoKbAPI} from "shared/api/generated/OncoKbAPI";
 import {getAlterationString} from "shared/lib/CopyNumberUtils";
 import {MobxPromise} from "mobxpromise";
 import {keywordToCosmic, indexHotspots, geneToMyCancerGenome} from "shared/lib/AnnotationUtils";
+import {indexPdbAlignments} from "shared/lib/PdbUtils";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {IGisticData} from "shared/model/Gistic";
 import {IMutSigData} from "shared/model/MutSig";
@@ -62,6 +68,36 @@ export async function fetchMutationData(mutationFilter:MutationFilter,
     } else {
         return [];
     }
+}
+
+export async function fetchPdbAlignmentData(uniprotId: string,
+                                            client:PdbAnnotationAPI = pdbAnnotationClient)
+{
+    if (uniprotId) {
+        return await client.postPdbAlignmentByUniprot({
+            uniprotIds: [uniprotId]
+        });
+    } else {
+        return [];
+    }
+}
+
+export async function fetchSwissProtAccession(entrezGeneId: number)
+{
+    const myGeneData:Response = await request.get(getMyGeneUrl(entrezGeneId));
+    return JSON.parse(myGeneData.text).uniprot["Swiss-Prot"];
+}
+
+export async function fetchUniprotId(swissProtAccession: string)
+{
+    const uniprotData:Response = await request.get(getUniprotIdUrl(swissProtAccession));
+    return uniprotData.text.split("\n")[1];
+}
+
+export async function fetchPfamGeneData(swissProtAccession: string)
+{
+    const pfamData:Response = await request.get(getPfamGeneDataUrl(swissProtAccession));
+    return JSON.parse(pfamData.text)[0];
 }
 
 export async function fetchClinicalData(studyId:string,
@@ -488,6 +524,11 @@ export function mergeMutations(mutationData:MobxPromise<Mutation[]>,
     updateIdToMutationsMap(idToMutations, mutationData, generateMutationId, false);
 
     return Object.keys(idToMutations).map((id:string) => idToMutations[id]);
+}
+
+export function indexPdbAlignmentData(alignmentData: MobxPromise<PdbUniprotAlignment[]>)
+{
+    return indexPdbAlignments(alignmentData.result || []);
 }
 
 export function mergeMutationsIncludingUncalled(mutationData:MobxPromise<Mutation[]>,
