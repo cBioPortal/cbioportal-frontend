@@ -4,7 +4,7 @@ import DefaultTooltip from "shared/components/DefaultTooltip";
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {Mutation} from "../../../../shared/api/generated/CBioPortalAPI";
 import SampleManager from "../../sampleManager";
-import {isUncalled} from '../../../../shared/lib/mutationUtils';
+import {isUncalled} from 'shared/lib/MutationUtils';
 
 export default class AlleleFreqColumnFormatter {
     static barWidth = 6;

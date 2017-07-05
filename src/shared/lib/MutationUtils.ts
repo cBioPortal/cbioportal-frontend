@@ -4,6 +4,7 @@ import {
     ProteinImpactType, getProteinImpactTypeFromCanonical
 } from "./getCanonicalMutationType";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
+import {GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
 import {findFirstMostCommonElt} from "./findFirstMostCommonElt";
 
 export interface IProteinImpactTypeColors
@@ -38,6 +39,11 @@ export const MUTATION_TYPE_PRIORITY: {[canonicalMutationType: string]: number} =
     "silent": 11,
     "other": 11
 };
+
+export function isUncalled(geneticProfileId:string) {
+    const r = new RegExp(GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX + "$");
+    return r.test(geneticProfileId);
+}
 
 export function mutationTypeSort(typeA: CanonicalMutationType, typeB: CanonicalMutationType)
 {
