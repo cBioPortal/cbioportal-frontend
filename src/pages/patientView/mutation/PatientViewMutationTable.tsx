@@ -10,7 +10,8 @@ import AlleleCountColumnFormatter from "shared/components/mutationTable/column/A
 import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
 import TumorColumnFormatter from "./column/TumorColumnFormatter";
 import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter";
-import {isUncalled} from "../../../shared/lib/mutationUtils";
+import {isUncalled} from "shared/lib/MutationUtils";
+
 
 export interface IPatientViewMutationTableProps extends IMutationTableProps {
     sampleManager:SampleManager | null;
