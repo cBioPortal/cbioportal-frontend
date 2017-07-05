@@ -1,5 +1,5 @@
 import {IPdbPositionRange} from "shared/model/Pdb";
-import {convertPdbPosToResCode} from "shared/lib/PdbUtils";
+import {convertPdbPosToResCode} from "./PdbResidueUtils";
 
 export interface IResidueSpec {
     positionRange: IPdbPositionRange;
@@ -68,7 +68,7 @@ export interface IStructureVisualizerProps {
 abstract class StructureVisualizer
 {
     public static defaultProps = {
-        pdbUri: "http://www.rcsb.org/pdb/files/",
+        pdbUri: "https://files.rcsb.org/view/",
         proteinScheme: ProteinScheme.CARTOON,
         displayBoundMolecules: true,
         backgroundColor: "#FFFFFF",
@@ -111,16 +111,46 @@ abstract class StructureVisualizer
                              chainId: string,
                              props: IStructureVisualizerProps)
     {
-        const defaultProps = StructureVisualizer.defaultProps;
+        let style = this.updateScheme(props);
+        this.updateBaseVisualStyle(style, props);
+        this.updateChainVisualStyle(chainId, style, props);
+        this.updateResidueStyle(residues, chainId, props, style);
+        this.updateBoundMolecules(props);
+    }
 
-        let selector = this.selectAll(); // select everything
-        let style = this.setScheme(props.proteinScheme, selector); // show selected style view
+    protected updateScheme(props: IStructureVisualizerProps)
+    {
+        // select everything
+        let selector = this.selectAll();
+
+        // show selected style view
+        return this.setScheme(props.proteinScheme, selector);
+    }
+
+    protected updateBaseVisualStyle(style: any,
+                                    props: IStructureVisualizerProps)
+    {
+        const defaultProps = StructureVisualizer.defaultProps;
 
         // do the initial (uniform) coloring
 
-        this.setColor(props.baseColor || defaultProps.baseColor, selector, style); // set base color
+        let selector = this.selectAll();
+
+        // set base structure color
+        this.setColor(props.baseColor || defaultProps.baseColor, selector, style);
+
+        // set base color
         this.setTransparency(props.baseTranslucency || defaultProps.baseTranslucency, selector, style);
-        selector = this.selectChain(chainId);
+    }
+
+    protected updateChainVisualStyle(chainId: string,
+                                     style: any,
+                                     props: IStructureVisualizerProps)
+    {
+        const defaultProps = StructureVisualizer.defaultProps;
+
+        let selector = this.selectChain(chainId);
+
         this.setColor(props.chainColor || defaultProps.chainColor, selector, style); // set chain color
         this.setTransparency(props.chainTranslucency || defaultProps.chainTranslucency, selector, style);
 
@@ -145,9 +175,10 @@ abstract class StructureVisualizer
             selector = this.selectChain(chainId);
             this.rainbowColor(selector, style);
         }
+    }
 
-        this.updateResidueStyle(residues, chainId, props, style);
-
+    protected updateBoundMolecules(props: IStructureVisualizerProps)
+    {
         if (!props.displayBoundMolecules) {
             this.hideBoundMolecules();
         }
