@@ -27,9 +27,11 @@ script:
       echo 'WARNING: mock data out of sync with API return calls';
     }
   fi
+  # first generate spec files for all source files (to show coverage for each) then run tests
 - |
   if [[ "${TEST}" == unit ]]
   then
+      bash scripts/generate_spec_files.sh && \  
       npm run build && \
       npm test
   fi
