@@ -20,7 +20,9 @@ import {buildCBioPortalUrl, BuildUrlParams} from "../../api/urls";
 import {SyntaxError} from "../../lib/oql/oql-parser";
 import StudyListLogic from "./StudyListLogic";
 import {QuerySession} from "../../lib/QuerySession";
-import {stringListToSet} from "../../lib/StringUtils";
+import {stringListToIndexSet, stringListToSet} from "../../lib/StringUtils";
+import chunkMapReduce from "shared/lib/chunkMapReduce";
+import formSubmit from "shared/lib/formSubmit";
 
 // interface for communicating
 type CancerStudyQueryUrlParams = {
@@ -234,7 +236,7 @@ export class QueryStore
 	@observable private _maxTreeDepth:number = (window as any).maxTreeDepth;
 	@computed get maxTreeDepth()
 	{
-		return this.forDownloadTab ? 1 : this._maxTreeDepth;
+		return (this.forDownloadTab && this._maxTreeDepth > 0) ? 1 : this._maxTreeDepth;
 	}
 	set maxTreeDepth(value)
 	{
@@ -401,12 +403,19 @@ export class QueryStore
 			const invalidIds:string[] = [];
 			if (!studyId)
 				return [];
+
+			const inputOrder = stringListToIndexSet(caseIds);
+
 			if (params.caseIdsMode === 'sample')
 			{
 				if (caseIds.length)
 				{
 					const sampleIdentifiers = caseIds.map(sampleId => ({studyId, sampleId}));
-					for (const sample of await client.fetchSamplesUsingPOST({sampleIdentifiers, projection: "ID"}))
+					let sampleObjs = await chunkMapReduce(sampleIdentifiers, chunk=>client.fetchSamplesUsingPOST({sampleIdentifiers:chunk, projection: "ID"}), 990);
+					// sort by input order
+					sampleObjs = _.sortBy(sampleObjs, sampleObj=>inputOrder[sampleObj.sampleId]);
+
+					for (const sample of sampleObjs)
 						sampleIds.push(sample.sampleId);
 				}
 				invalidIds.push(..._.difference(caseIds, sampleIds));
@@ -415,7 +424,11 @@ export class QueryStore
 			{
 				// convert patient IDs to sample IDs
 				const samplesPromises = caseIds.map(patientId => this.getSamplesForStudyAndPatient(studyId, patientId));
-				for (const {studyId, patientId, samples, error} of await Promise.all(samplesPromises))
+				let result:{studyId:string, patientId:string, samples:Sample[], error?:Error}[] = await Promise.all(samplesPromises);
+				// sort by input order
+				result = _.sortBy(result, obj=>inputOrder[obj.patientId]);
+
+				for (const {studyId, patientId, samples, error} of result)
 				{
 					if (error || !samples.length)
 						invalidIds.push(patientId);
@@ -747,18 +760,11 @@ export class QueryStore
 				let studyIds = this.selectedStudyIds;
 				if (!studyIds.length)
 					studyIds = this.cancerStudies.result.map(study => study.studyId);
+
+				const hash = `crosscancer/overview/${params.data_priority}/${encodeURIComponent(params.gene_list)}/${encodeURIComponent(studyIds.join(','))}`;
 				return {
-					pathname: 'cross_cancer.do',
-					query: params,
-					hash: (
-						`crosscancer/overview/${
-							params.data_priority
-						}/${
-							encodeURIComponent(params.gene_list)
-						}/${
-							encodeURIComponent(studyIds.join(','))
-						}`
-					),
+					pathname: `cross_cancer.do#${hash}`,
+					query: Object.assign({ cancer_study_list: studyIds.join(",")}, params),
 				};
 			}
 
@@ -944,16 +950,16 @@ export class QueryStore
 		//TODO this is currently broken because of mobx-react-router
 		// this is supposed to allow you to go back in the browser history to
 		// return to the query page and restore the QueryStore state from the URL.
-		let historyUrl = URL.format({...urlParams, pathname: window.location.href.split('?')[0]});
+		/*let historyUrl = URL.format({...urlParams, pathname: window.location.href.split('?')[0]});
 
 		// TODO remove this temporary HACK to make back button work
 		historyUrl = historyUrl.split('#crosscancer').join('#/home#crosscancer');
 
 		let newUrl = buildCBioPortalUrl(urlParams);
 		if (historyUrl != newUrl)
-			window.history.pushState(null, window.document.title, historyUrl);
+			window.history.pushState(null, window.document.title, historyUrl);*/
 
-		window.location.href = newUrl;
+		formSubmit(urlParams.pathname, urlParams.query)
 	}
 
 	@action sendToGenomeSpace()
