@@ -31,6 +31,15 @@ export function getStudySummaryUrl(studyId:string) {
 export function getPubMedUrl(pmid:string) {
     return `http://www.ncbi.nlm.nih.gov/pubmed/${pmid}`;
 }
+export function getMyGeneUrl(entrezGeneId: number) {
+    return `https://mygene.info/v3/gene/${entrezGeneId}?fields=uniprot`;
+}
+export function getUniprotIdUrl(swissProtAccession: string) {
+    return cbioUrl(`proxy/uniprot.org/uniprot/?query=accession:${swissProtAccession}&format=tab&columns=entry+name`);
+}
+export function getPfamGeneDataUrl(swissProtAccession: string) {
+    return cbioUrl(`proxy/pfam.xfam.org/protein/${swissProtAccession}/graphic`);
+}
 export function getOncoQueryDocUrl() {
     return cbioUrl('onco_query_lang_desc.jsp');
 }

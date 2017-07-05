@@ -19,7 +19,6 @@ import {
     fetchDiscreteCNAData, generateSampleIdToTumorTypeMap, findMutationGeneticProfileId, mergeDiscreteCNAData,
     fetchSamples, fetchClinicalData, generateDataQueryFilter, makeStudyToCancerTypeMap
 } from "shared/lib/StoreUtils";
-import {processPdbAlignmentData} from "shared/lib/PdbUtils";
 import {MutationMapperStore} from "./mutation/MutationMapperStore";
 
 export class ResultsViewPageStore {

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import * as _ from 'lodash';
 import {FormControl, Checkbox, Button, ButtonGroup} from 'react-bootstrap';
 import {If, Else, Then} from 'react-if';
 import {ThreeBounce} from 'better-react-spinkit';
@@ -8,13 +9,18 @@ import Draggable from 'react-draggable';
 import fileDownload from 'react-file-download';
 import classnames from 'classnames';
 import DefaultTooltip from "shared/components/DefaultTooltip";
-import TextExpander from "shared/components/TextExpander";
 import PdbHeaderCache from "shared/cache/PdbHeaderCache";
+import PdbPositionMappingCache from "shared/cache/PdbPositionMappingCache";
+import {PdbUniprotResidueMapping} from "shared/api/generated/PdbAnnotationAPI";
+import {CacheData} from "shared/lib/LazyMobXCache";
 import {IMobXApplicationDataStore} from "shared/lib/IMobXApplicationDataStore";
+import MutationMapperDataStore from "pages/resultsView/mutation/MutationMapperDataStore";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
-import {IPdbChain} from "shared/model/Pdb";
-import {generatePdbInfoSummary} from "shared/lib/PdbUtils";
-import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
+import {IPdbChain, PdbAlignmentIndex} from "shared/model/Pdb";
+import {
+    groupMutationsByProteinStartPos, getColorForProteinImpactType, IProteinImpactTypeColors,
+    getProteinStartPositionsByRange
+} from "shared/lib/MutationUtils";
 import StructureViewer from "./StructureViewer";
 import {ProteinScheme, ProteinColor, SideChain, MutationColor, IResidueSpec} from "./StructureVisualizer";
 import PyMolScriptGenerator from "./PyMolScriptGenerator";
@@ -22,10 +28,13 @@ import PyMolScriptGenerator from "./PyMolScriptGenerator";
 import styles from "./structureViewer.module.scss";
 import PdbChainInfo from "../PdbChainInfo";
 
-export interface IStructureViewerPanelProps {
-    pdbChainDataStore: IMobXApplicationDataStore<IPdbChain>
-    mutationDataStore?: IMobXApplicationDataStore<Mutation[]>
+export interface IStructureViewerPanelProps extends IProteinImpactTypeColors
+{
+    pdbChainDataStore: IMobXApplicationDataStore<IPdbChain>;
+    pdbAlignmentIndex?: PdbAlignmentIndex;
+    mutationDataStore?: MutationMapperDataStore;
     pdbHeaderCache?: PdbHeaderCache;
+    pdbPositionMappingCache?: PdbPositionMappingCache;
     onClose?: () => void;
 }
 
@@ -38,7 +47,6 @@ export default class StructureViewerPanel extends React.Component<IStructureView
     @observable protected sideChain:SideChain = SideChain.SELECTED;
     @observable protected mutationColor:MutationColor = MutationColor.MUTATION_TYPE;
     @observable protected displayBoundMolecules:boolean = true;
-    @observable protected residueWarning: string = "";
 
     constructor() {
         super();
@@ -373,7 +381,7 @@ export default class StructureViewerPanel extends React.Component<IStructureView
 
     public mainContent()
     {
-        if (this.pdbId && this.chainId)
+        if (this.pdbId && this.chainId && this.residues)
         {
             // load pdb info & 3D visualizer
             return (
@@ -387,9 +395,13 @@ export default class StructureViewerPanel extends React.Component<IStructureView
                         />
                     </div>
                     <If condition={this.residueWarning.length > 0}>
-                        <span className="text-danger">
-                            {this.residueWarning}
-                        </span>
+                        <div className="row">
+                            <div className="col col-sm-12 text-center">
+                                <span className="text-danger">
+                                    {this.residueWarning}
+                                </span>
+                            </div>
+                        </div>
                     </If>
                     <div className={`${styles["vis-container"]} row`}>
                         <hr />
@@ -534,56 +546,179 @@ export default class StructureViewerPanel extends React.Component<IStructureView
         }
     }
 
-    @computed get residues()
+    @computed get residueWarning(): string
     {
-        // TODO this is a static example, actual residues depend on this.props.mutationDataStore
-        return [
-            {
-                positionRange: {
-                    start: {
-                        position: 122
-                    },
-                    end: {
-                        position: 122
-                    }
-                },
-                color: "#FF0000"
-            },
-            {
-                positionRange: {
-                    start: {
-                        position: 1710
-                    },
-                    end: {
-                        position: 1710
-                    }
-                },
-                color: "#FF0000"
-            },
-            {
-                positionRange: {
-                    start: {
-                        position: 1835
-                    },
-                    end: {
-                        position: 1835
-                    }
-                },
-                color: "#00FFFF"
-            },
-            {
-                positionRange: {
-                    start: {
-                        position: 1815
-                    },
-                    end: {
-                        position: 1815
-                    }
-                },
-                color: "#00FF00",
-                highlighted: true
+        let warning = "";
+
+        // None of the mutations (selected or not) can be mapped onto the current PDB chain.
+        if (this.proteinPositions.length === 0 ||
+            (this.residueMappingData &&
+            this.residueMappingData.filter((cacheData) => cacheData === null || cacheData.data !== null).length === 0))
+        {
+            warning = "None of the mutations can be mapped onto this structure";
+        }
+        else {
+            // find the difference between number of selected position and
+            // the number of mapped positions among the selected ones.
+            // if the difference is not zero, then it means there is at least one unmapped position
+            // among the selected positions.
+            const selectedPositionCount = _.keys(this.selectedMutationsByPosition).length;
+            const diff = selectedPositionCount - this.mappedSelectedPositions.length;
+
+            // there is only one position selected, and it cannot be mapped
+            if (selectedPositionCount === 1 && diff === 1) {
+                warning = "Selected mutation cannot be mapped onto this structure";
             }
-        ];
+            // more than one position selected, at least one of them cannot be mapped
+            else if (diff > 0) {
+                warning = `${diff} of the selections cannot be mapped onto this structure`;
+            }
+        }
+
+        return warning;
+    }
+
+    @computed get residues(): IResidueSpec[]|undefined
+    {
+        if (!this.residueMappingData) {
+            return undefined;
+        }
+
+        const residues: IResidueSpec[] = [];
+
+        this.residueMappingData.forEach((cacheData) => {
+            if (cacheData && cacheData.data) {
+                const mutations = this.mutationsByPosition[cacheData.data.uniprotPosition];
+
+                const highlighted: boolean = (
+                    this.props.mutationDataStore && (
+                        this.props.mutationDataStore.isPositionSelected(cacheData.data.uniprotPosition) ||
+                        this.props.mutationDataStore.isPositionHighlighted(cacheData.data.uniprotPosition)
+                    )
+                ) || false;
+
+                if (mutations && mutations.length > 0) {
+                    residues.push(
+                        {
+                            positionRange: {
+                                start: {
+                                    position: cacheData.data.pdbPosition
+                                },
+                                end: {
+                                    position: cacheData.data.pdbPosition
+                                }
+                            },
+                            color: getColorForProteinImpactType(mutations, this.props),
+                            highlighted
+                        }
+                    );
+                }
+            }
+        });
+
+        return _.uniq(residues);
+    }
+
+    @computed get residueMappingData(): Array<CacheData<PdbUniprotResidueMapping>|null>|undefined
+    {
+        if (this.alignmentIds.length === 0) {
+            return undefined;
+        }
+
+        const residueMappingData: Array<CacheData<PdbUniprotResidueMapping>|null> = [];
+
+        if (this.props.pdbPositionMappingCache &&
+            this.proteinPositions.length > 0)
+        {
+            // create query parameters
+            this.proteinPositions.forEach((uniprotPosition: number) => {
+                this.alignmentIds.forEach((alignmentId: number) => {
+                    if (this.props.pdbPositionMappingCache) {
+                        residueMappingData.push(this.props.pdbPositionMappingCache.get({
+                            uniprotPosition,
+                            alignmentId
+                        }));
+                    }
+                });
+            });
+        }
+
+        return residueMappingData;
+    }
+
+    @computed get mappedSelectedPositions(): number[]
+    {
+        if (!this.residueMappingData) {
+            return [];
+        }
+
+        const positions: number[] = [];
+
+        this.residueMappingData.forEach((cacheData) => {
+            if (cacheData &&
+                cacheData.data &&
+                this.props.mutationDataStore &&
+                this.props.mutationDataStore.isPositionSelected(cacheData.data.uniprotPosition))
+            {
+                positions.push(cacheData.data.uniprotPosition);
+            }
+        });
+
+        return _.uniq(positions);
+    }
+
+    @computed get alignmentIds(): number[]
+    {
+        let alignmentIds: number[] = [];
+
+        if (this.pdbChain &&
+            this.props.pdbAlignmentIndex)
+        {
+            const alignments = this.props.pdbAlignmentIndex[this.pdbChain.pdbId][this.pdbChain.chain];
+            alignmentIds = alignments === undefined ? [] :
+                this.props.pdbAlignmentIndex[this.pdbChain.pdbId][this.pdbChain.chain].map(
+                    (alignment) => alignment.alignmentId);
+        }
+
+        return _.uniq(alignmentIds);
+    }
+
+    @computed get mutationsByPosition(): {[pos: number]: Mutation[]}
+    {
+        if (this.props.mutationDataStore) {
+            return groupMutationsByProteinStartPos(this.props.mutationDataStore.sortedFilteredData);
+        }
+        else {
+            return {};
+        }
+    }
+
+    @computed get selectedMutationsByPosition(): {[pos: number]: Mutation[]}
+    {
+        if (this.props.mutationDataStore) {
+            return groupMutationsByProteinStartPos(this.props.mutationDataStore.sortedFilteredSelectedData);
+        }
+        else {
+            return {};
+        }
+    }
+
+    /**
+     * Protein start positions for the mutations falling between the current chain's
+     * start and end. This value is computed for the filtered mutations only.
+     */
+    @computed get proteinPositions(): number[]
+    {
+        let positions: number[] = [];
+
+        if (this.props.mutationDataStore && this.pdbChain)
+        {
+            positions = getProteinStartPositionsByRange(this.props.mutationDataStore.sortedFilteredData,
+                this.pdbChain.uniprotStart,
+                this.pdbChain.uniprotEnd);
+        }
+
+        return positions;
     }
 
     @computed get pyMolScript()
