@@ -51,8 +51,6 @@ export default class PatientViewOncoPrint extends React.Component<IPatientViewOn
     var oncoprint = makeOncoprint(window.Oncoprint, {ctr_selector: "#patient-view-oncoprint", width: 1050});
     oncoprint.suppressRendering();
 
-    var hm_ids:number[] = [];
-    var track_data:any[] = [];
     var share_id = null;
     for (var i=0; i<fake_data.length; i++) {
       const track_params:any = {
@@ -73,9 +71,8 @@ export default class PatientViewOncoPrint extends React.Component<IPatientViewOn
         'removable': true,
       };
       var new_hm_id = oncoprint.addTracks([track_params])[0];
-      hm_ids.push(new_hm_id);
       fake_data.track_id = new_hm_id;
-      if (hm_ids.length === 0) {
+      if (i === 0) {
         share_id = new_hm_id;
       } else {
         oncoprint.shareRuleSet(share_id, new_hm_id);
