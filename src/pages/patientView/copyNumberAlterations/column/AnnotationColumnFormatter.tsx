@@ -39,8 +39,12 @@ export default class AnnotationColumnFormatter
         return value;
     }
 
-    public static getIndicatorData(copyNumberData:DiscreteCopyNumberData[], oncoKbData:IOncoKbData):IndicatorQueryResp
+    public static getIndicatorData(copyNumberData:DiscreteCopyNumberData[], oncoKbData:IOncoKbData): IndicatorQueryResp|null
     {
+        if (oncoKbData.sampleToTumorMap === null || oncoKbData.indicatorMap === null) {
+            return null;
+        }
+
         const id = generateQueryVariantId(copyNumberData[0].gene.entrezGeneId,
             oncoKbData.sampleToTumorMap[copyNumberData[0].sampleId],
             getAlterationString(copyNumberData[0].alteration));
@@ -48,11 +52,13 @@ export default class AnnotationColumnFormatter
         return oncoKbData.indicatorMap[id];
     }
 
-    public static getEvidenceQuery(copyNumberData:DiscreteCopyNumberData[], oncoKbData:IOncoKbData): Query
+    public static getEvidenceQuery(copyNumberData:DiscreteCopyNumberData[], oncoKbData:IOncoKbData): Query|null
     {
-        return generateQueryVariant(copyNumberData[0].gene.entrezGeneId,
+        // return null in case sampleToTumorMap is null
+        return oncoKbData.sampleToTumorMap ? generateQueryVariant(copyNumberData[0].gene.entrezGeneId,
             oncoKbData.sampleToTumorMap[copyNumberData[0].sampleId],
-            getAlterationString(copyNumberData[0].alteration));
+            getAlterationString(copyNumberData[0].alteration)
+        ) : null;
     }
 
     public static sortValue(data:DiscreteCopyNumberData[],
@@ -69,13 +75,13 @@ export default class AnnotationColumnFormatter
         let evidenceQuery:Query|undefined;
 
         if (columnProps.oncoKbData) {
-            evidenceQuery = this.getEvidenceQuery(data, columnProps.oncoKbData);
+            evidenceQuery = this.getEvidenceQuery(data, columnProps.oncoKbData) || undefined;
         }
 
         return DefaultAnnotationColumnFormatter.mainContent(annotation,
             columnProps,
             columnProps.oncoKbEvidenceCache,
             evidenceQuery,
-            columnProps.pmidCache);
+            columnProps.pubMedCache);
     }
 }

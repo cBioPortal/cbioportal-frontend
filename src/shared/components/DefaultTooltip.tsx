@@ -19,11 +19,12 @@ export default class DefaultTooltip extends React.Component<Tooltip.Props, {}> {
 }
 
 function setArrowLeft(tooltipEl:Element, align:any) {
-    // Corrects for screen overflow adjustment
+    // Corrects for screen overflow adjustment (should really be handled by the library...)
     const arrowEl:HTMLDivElement = tooltipEl.querySelector('div.rc-tooltip-arrow') as HTMLDivElement;
     const targetEl = this.getRootDomNode();  // eslint-disable-line no-invalid-this
 
-    if (arrowEl) {
+    if (arrowEl && align && align.points && align.points[1] && align.points[1][1] === "c") {
+        // if aligning to the horizontal center, set arrow left to the horizontal center of the target
         const offset = $(targetEl).offset();
         const width = $(targetEl).width();
         const tooltipOffset = $(tooltipEl).offset();
@@ -31,4 +32,11 @@ function setArrowLeft(tooltipEl:Element, align:any) {
 
         arrowEl.style.left = `${arrowLeftOffset + width/2}px`;
     }
+}
+
+// we need this to account for issue with rc-tooltip when dealing with large tooltip overlay content
+export function placeArrowBottomLeft(tooltipEl: any) {
+    const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');
+    const targetEl = this.getRootDomNode();  // eslint-disable-line no-invalid-this
+    arrowEl.style.left = '10px';
 }

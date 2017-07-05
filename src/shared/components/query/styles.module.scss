@@ -96,6 +96,7 @@ div.SelectedStudiesWindow {
 .CancerStudySelectorHeader {
   justify-content: space-between;
   align-items:center;
+
   h2 {
     padding: 0;
     margin:0;
@@ -109,6 +110,10 @@ div.SelectedStudiesWindow {
 
   :global(.Select-input) {
     height: 28px;
+  }
+
+  :global(.autosuggest) {
+    width:200px;
   }
 
   :global(.Select-placeholder),
@@ -193,6 +198,9 @@ div.SelectedStudiesWindow {
   div.cancerStudyListContainer {
     overflow: auto;
     flex: 1;
+    &:only-child {
+      padding: 10px 10px 10px 10px;
+    }
   }
 
   ul.cancerTypeList {
@@ -330,11 +338,13 @@ div.SelectedStudiesWindow {
 .CaseSetSelector {
   div:global(.Select) {
     width: 555px;
+    margin-bottom:10px;
   }
   textarea {
     width: 555px;
     resize: vertical;
     padding: 5px;
+    border-color:$borderColor;
   }
   .radioRow {
     div {
@@ -357,19 +367,8 @@ div.SelectedStudiesWindow {
   }
 
   .buttonRow {
-    button {
-      background: linear-gradient(to bottom, #f3f3f3 50%, #eaeaea 100%);
-      border: 0;
-      border-bottom: 1px solid rgba(0,0,0,0.1);
-      border-radius: 2px;
-      color: #333;
-      padding: 8px 15px;
-
-      &:hover {
-        background: linear-gradient(to bottom, #eaeaea 50%, #f3f3f3 100%);
-      }
-    }
     margin-bottom:8px;
+    justify-content:space-between;
   }
 
   textarea.geneSet {
@@ -392,6 +391,8 @@ div.SelectedStudiesWindow {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  width: 555px;
+  padding-top: 5px;
   span.icon {
     text-align: center;
     margin-right: 4px;
@@ -607,13 +608,6 @@ label.transposeDataMatrix {
 div.submitRow {
 
   align-items:center;
-
-  button.submit {
-    font-weight: 300;
-    font-size: 18px;
-    width: 240px;
-    padding: 10px 0;
-  }
 
   button.genomeSpace {
     border: 1px solid $darkestCream;

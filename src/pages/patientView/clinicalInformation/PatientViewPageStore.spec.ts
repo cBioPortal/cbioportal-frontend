@@ -35,4 +35,20 @@ describe('PatientViewPageStore', () => {
         assert.deepEqual(result,[]);
     });
 
+
+    it('sets page title to patient if theres a patient id and sample if sample id, patient id winning out', ()=>{
+
+        assert.equal(store.pageTitle, 'Patient: ');
+
+        store.setPatientId('1234');
+        assert.equal(store.pageTitle, 'Patient: 1234');
+
+        store.setSampleId('1234');
+        assert.equal(store.pageTitle, 'Sample: 1234');
+
+        store.setPatientId('1234');
+        assert.equal(store.pageTitle, 'Patient: 1234');
+
+    });
+
 });

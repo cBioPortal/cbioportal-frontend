@@ -15,3 +15,7 @@
     padding: 0 5px 0 5px;
     display: inline-block;
 }
+
+:global(.legacy) .paginationControls button i {
+    line-height:1.5;
+}
