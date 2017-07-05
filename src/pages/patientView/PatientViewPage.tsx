@@ -19,15 +19,16 @@ import ClinicalInformationSamples from "./clinicalInformation/ClinicalInformatio
 import {observer, inject } from "mobx-react";
 import {getSpanElements} from './clinicalInformation/lib/clinicalAttributesUtil.js';
 import CopyNumberTableWrapper from "./copyNumberAlterations/CopyNumberTableWrapper";
-import {reaction, computed} from "mobx";
+import {reaction, computed, autorun, IReactionDisposer} from "mobx";
 import Timeline from "./timeline/Timeline";
 import {default as PatientViewMutationTable} from "./mutation/PatientViewMutationTable";
 import PathologyReport from "./pathologyReport/PathologyReport";
 import { MSKTabs, MSKTab } from "../../shared/components/MSKTabs/MSKTabs";
-import validateParameters from '../../shared/lib/validateParameters';
+import { validateParametersPatientView } from '../../shared/lib/validateParameters';
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import ValidationAlert from "shared/components/ValidationAlert";
 import AjaxErrorModal from "shared/components/AjaxErrorModal";
+import AppConfig from 'appConfig';
 
 import './patient.scss';
 
@@ -50,6 +51,8 @@ export interface IPatientViewPageProps {
 @observer
 export default class PatientViewPage extends React.Component<IPatientViewPageProps, {}> {
 
+    private updatePageTitleReaction: IReactionDisposer;
+
     constructor(props: IPatientViewPageProps) {
 
         super();
@@ -59,7 +62,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             () => props.routing.location.query,
             query => {
 
-                const validationResult = validateParameters(query, [ 'studyId', ['sampleId', 'caseId']]);
+                const validationResult = validateParametersPatientView(query);
 
                 if (validationResult.isValid) {
 
@@ -83,11 +86,25 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             },
             { fireImmediately:true }
         );
+
+        this.updatePageTitleReaction = reaction(
+            () => patientViewPageStore.pageTitle,
+            (title:string) => ((window as any).document.title = title),
+            { fireImmediately:true }
+        )
+
     }
 
     public componentDidMount() {
 
         this.exposeComponentRenderersToParentScript();
+
+    }
+
+    public componentWillUnmount(){
+
+        //dispose reaction
+        this.updatePageTitleReaction();
 
     }
 
@@ -103,10 +120,13 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     }
 
-    private handleSampleClick(id: string) {
-
-        this.props.routing.updateRoute({ caseId:undefined, sampleId:id });
-
+    public handleSampleClick(id: string, e: React.MouseEvent<HTMLAnchorElement>) {
+        if (!e.shiftKey && !e.altKey && !e.metaKey) {
+            e.preventDefault();
+            this.props.routing.updateRoute({ caseId:undefined, sampleId:id });
+        }
+        // otherwise do nothing, we want default behavior of link
+        // namely that href will open in a new window/tab
     }
 
     private handleTabChange(id: string) {
@@ -151,8 +171,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             studyName = <a href={`study.do?cancer_study_id=${study.studyId}`} className="studyMetaBar_studyName">{study.name}</a>;
         }
 
-        if (patientViewPageStore.patientViewData.isComplete) {
-            let patientData = patientViewPageStore.patientViewData.result!;
+        if (patientViewPageStore.patientViewData.isComplete && patientViewPageStore.studyMetaData.isComplete) {
+            let patientData = patientViewPageStore.patientViewData.result;
             if (patientViewPageStore.clinicalEvents.isComplete && patientViewPageStore.clinicalEvents.result.length > 0) {
                 sampleManager = new SampleManager(patientData.samples!, patientViewPageStore.clinicalEvents.result);
             } else {
@@ -164,17 +184,31 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 return (
                     <div className="patientSample">
                         <span className='clinical-spans'>
-                            {  sampleManager!.getComponentForSample(sample.id) }
-                            {'\u00A0'}
-                            <a href="javascript:void(0)" onClick={()=>{ this.handleSampleClick(sample.id) }}>{sample.id}</a>
-                            {getSpanElements(clinicalDataLegacy, 'lgg_ucsf_2014')}
+                            {
+                                sampleManager!.getComponentForSample(sample.id, 1, '',
+                                    <span style={{display:'inline-flex'}}>
+                                        {'\u00A0'}
+                                        <a
+                                            href={`case.do?#/patient?sampleId=${sample.id}&studyId=${patientViewPageStore.studyMetaData.result!.studyId}`}
+                                            target="_blank"
+                                            onClick={(e: React.MouseEvent<HTMLAnchorElement>) => this.handleSampleClick(sample.id, e)}
+                                        >
+                                            {sample.id}
+                                        </a>
+                                        {getSpanElements(clinicalDataLegacy, 'lgg_ucsf_2014')}
+                                    </span>
+                                )
+                            }
                         </span>
                     </div>
-
-                )
+                );
             });
 
-
+            if (sampleHeader && sampleHeader.length > 0 && patientViewPageStore.pageMode === 'sample' && patientViewPageStore.patientId) {
+                sampleHeader.push(
+                    <button className="btn btn-default btn-xs" onClick={()=>this.handlePatientClick(patientViewPageStore.patientId)}>Show all samples</button>
+                );
+            }
         }
 
         if (patientViewPageStore.patientIdsInCohort && patientViewPageStore.patientIdsInCohort.length > 0) {
@@ -293,7 +327,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         discreteCNACache={patientViewPageStore.discreteCNACache}
                                         mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}
                                         oncoKbEvidenceCache={patientViewPageStore.oncoKbEvidenceCache}
-                                        pmidCache={patientViewPageStore.pmidCache}
+                                        pubMedCache={patientViewPageStore.pubMedCache}
                                         mrnaExprRankGeneticProfileId={patientViewPageStore.mrnaRankGeneticProfileId.result || undefined}
                                         discreteCNAGeneticProfileId={patientViewPageStore.geneticProfileIdDiscrete.result}
                                         data={patientViewPageStore.mergedMutationDataIncludingUncalled}
@@ -302,6 +336,10 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         hotspots={patientViewPageStore.indexedHotspotData}
                                         cosmicData={patientViewPageStore.cosmicData.result}
                                         oncoKbData={patientViewPageStore.oncoKbData.result}
+                                        enableOncoKb={AppConfig.showOncoKB}
+                                        enableHotspot={AppConfig.showHotspot}
+                                        enableMyCancerGenome={AppConfig.showMyCancerGenome}
+                                        enableCivic={AppConfig.showCivic}
                                     />
                                 )
                             }
@@ -315,7 +353,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 sampleManager={sampleManager}
                                 cnaOncoKbData={patientViewPageStore.cnaOncoKbData.result}
                                 oncoKbEvidenceCache={patientViewPageStore.oncoKbEvidenceCache}
-                                pmidCache={patientViewPageStore.pmidCache}
+                                enableOncoKb={AppConfig.showOncoKB}
+                                pubMedCache={patientViewPageStore.pubMedCache}
                                 data={patientViewPageStore.mergedDiscreteCNAData}
                                 copyNumberCountCache={patientViewPageStore.copyNumberCountCache}
                                 mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}

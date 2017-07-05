@@ -139,9 +139,11 @@ export default class MutSigGeneSelector extends React.Component<MutSigGeneSelect
 						defaultSort: this.columns.qValue.name,
 					}}
 				/>
-				<button className={styles.selectButton} onClick={() => this.props.onSelect(this.map_geneSymbol_selected)}>
+                <div>
+				<button style={{marginTop:20}} className="btn btn-primary btn-sm pull-right" onClick={() => this.props.onSelect(this.map_geneSymbol_selected)}>
 					Select
 				</button>
+                </div>
 			</div>
 		);
 	}

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { createSelector } from "reselect";
-import {Table, Thead, Th, Tr, Td} from "reactable";
+import {Table, Th, Tr, Td, Thead } from "reactable";
 import DefaultTooltip from 'shared/components/DefaultTooltip';
 import * as _ from 'lodash';
 import TableHeaderControls from "shared/components/tableHeaderControls/TableHeaderControls";
@@ -238,9 +238,9 @@ export default class EnhancedReactTable<T> extends React.Component<IEnhancedReac
                     currentPage={this.state.currentPage}
                     {...(reactTableProps as any)}
                 >
-                    <Thead>
-                        {headers}
-                    </Thead>
+
+                    {headers}
+
                     {rows}
                 </Table>
             </div>

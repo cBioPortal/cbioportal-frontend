@@ -48,7 +48,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
                             store={mutationMapperStore}
                             discreteCNACache={this.props.store.discreteCNACache}
                             oncoKbEvidenceCache={this.props.store.oncoKbEvidenceCache}
-                            pmidCache={this.props.store.pmidCache}
+                            pubMedCache={this.props.store.pubMedCache}
                             cancerTypeCache={this.props.store.cancerTypeCache}
                             mutationCountCache={this.props.store.mutationCountCache}
                             pdbHeaderCache={this.props.store.pdbHeaderCache}

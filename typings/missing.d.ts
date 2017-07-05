@@ -17,4 +17,5 @@ declare module 'expect-jsx';
 declare module 'parameter-validator';
 declare module 'better-react-spinkit';
 declare module 'recompose/withContext';
+declare module 'react-bootstrap-autosuggest';
 declare module 'react-text-truncate';
