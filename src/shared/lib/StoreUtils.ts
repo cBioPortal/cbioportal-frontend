@@ -5,6 +5,7 @@ import {
     default as CBioPortalAPI, GeneticProfile, Mutation, MutationFilter, DiscreteCopyNumberData,
     DiscreteCopyNumberFilter, ClinicalData, Sample, CancerStudy, CopyNumberCountIdentifier
 } from "shared/api/generated/CBioPortalAPI";
+import {getMyGeneUrl, getPfamGeneDataUrl, getUniprotIdUrl} from "shared/api/urls";
 import defaultClient from "shared/api/cbioportalClientInstance";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import hotspot3DClient from 'shared/api/3DhotspotClientInstance';
@@ -27,7 +28,7 @@ import {Query, default as OncoKbAPI} from "shared/api/generated/OncoKbAPI";
 import {getAlterationString} from "shared/lib/CopyNumberUtils";
 import {MobxPromise} from "mobxpromise";
 import {keywordToCosmic, indexHotspots, geneToMyCancerGenome} from "shared/lib/AnnotationUtils";
-import {processPdbAlignmentData} from "shared/lib/PdbUtils";
+import {indexPdbAlignments} from "shared/lib/PdbUtils";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {IGisticData} from "shared/model/Gistic";
 import {IMutSigData} from "shared/model/MutSig";
@@ -89,23 +90,19 @@ export async function fetchPdbAlignmentData(uniprotId: string,
 
 export async function fetchSwissProtAccession(entrezGeneId: number)
 {
-    // TODO duplicate: see LollipopMutationPlot
-    const myGeneData:Response = await request.get(`http://mygene.info/v3/gene/${entrezGeneId}?fields=uniprot`);
+    const myGeneData:Response = await request.get(getMyGeneUrl(entrezGeneId));
     return JSON.parse(myGeneData.text).uniprot["Swiss-Prot"];
 }
 
 export async function fetchUniprotId(swissProtAccession: string)
 {
-    const uniprotData:Response = await request.get(
-        `http://www.uniprot.org/uniprot/?query=accession:${swissProtAccession}&format=tab&columns=entry+name`);
-
+    const uniprotData:Response = await request.get(getUniprotIdUrl(swissProtAccession));
     return uniprotData.text.split("\n")[1];
 }
 
 export async function fetchPfamGeneData(swissProtAccession: string)
 {
-    const pfamData:Response = await request.get(
-        `http://www.cbioportal.org/proxy/pfam.xfam.org/protein/${swissProtAccession}/graphic`);
+    const pfamData:Response = await request.get(getPfamGeneDataUrl(swissProtAccession));
     return JSON.parse(pfamData.text)[0];
 }
 
@@ -597,9 +594,9 @@ export function mergeMutations(mutationData:MobxPromise<Mutation[]>,
     return Object.keys(idToMutations).map((id:string) => idToMutations[id]);
 }
 
-export function mergePdbAlignments(alignmentData: MobxPromise<PdbUniprotAlignment[]>)
+export function indexPdbAlignmentData(alignmentData: MobxPromise<PdbUniprotAlignment[]>)
 {
-    return processPdbAlignmentData(alignmentData.result || []);
+    return indexPdbAlignments(alignmentData.result || []);
 }
 
 export function mergeMutationsIncludingUncalled(mutationData:MobxPromise<Mutation[]>,

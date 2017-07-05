@@ -13,8 +13,9 @@ import Response = request.Response;
 import {observer} from "mobx-react";
 import {computed, observable, action} from "mobx";
 import _ from "lodash";
-import {longestCommonStartingSubstring} from "../../lib/StringUtils";
-import {findFirstMostCommonElt} from "../../lib/findFirstMostCommonElt";
+import {longestCommonStartingSubstring} from "shared/lib/StringUtils";
+import {getColorForProteinImpactType, IProteinImpactTypeColors} from "shared/lib/MutationUtils";
+import {fetchSwissProtAccession} from "shared/lib/StoreUtils";
 import ReactDOM from "react-dom";
 import {Form, Button, FormGroup, InputGroup, ControlLabel, FormControl} from "react-bootstrap";
 import fileDownload from "react-file-download";
@@ -22,76 +23,21 @@ import "./styles.scss";
 import Collapse from "react-collapse";
 import {MutationMapperStore} from "../../../pages/resultsView/mutation/MutationMapperStore";
 
-type LollipopMutationPlotProps = {
+export interface ILollipopMutationPlotProps extends IProteinImpactTypeColors
+{
     store:MutationMapperStore;
     onXAxisOffset?:(offset:number)=>void;
-    missenseColor:string;
-    truncatingColor:string;
-    inframeColor:string;
-    otherColor:string;
     geneWidth:number;
-};
-
-const mutationTypePriority:{[canonicalMutationType:string]:number} = {
-    "missense": 1,
-    "inframe": 2,
-    "truncating": 4,
-    "nonsense": 6,
-    "nonstop": 7,
-    "nonstart": 8,
-    "frameshift": 4,
-    "frame_shift_del": 4,
-    "frame_shift_ins": 5,
-    "in_frame_ins": 3,
-    "in_frame_del": 2,
-    "splice_site": 9,
-    "fusion": 10,
-    "silent": 11,
-    "other": 11
-};
-
-function lollipopMutationTypeSort(typeA:CanonicalMutationType, typeB:CanonicalMutationType) {
-    const priorityA = mutationTypePriority[typeA];
-    const priorityB = mutationTypePriority[typeB];
-    if (priorityA < priorityB) {
-        return -1;
-    } else if (priorityA > priorityB) {
-        return 1;
-    } else {
-        return typeA.localeCompare(typeB);
-    }
 }
 
 @observer
-export default class LollipopMutationPlot extends React.Component<LollipopMutationPlotProps, {}> {
+export default class LollipopMutationPlot extends React.Component<ILollipopMutationPlotProps, {}> {
 
     @observable private showControls:boolean = false;
     @observable private _yMaxInput:number;
     @observable private legendShown:boolean = false;
     private plot:LollipopPlot;
     private handlers:any;
-
-    private getLollipopColor(mutations:Mutation[]):string {
-        const sortedCanonicalMutationTypes:CanonicalMutationType[] = mutations.map(m=>getCanonicalMutationType(m.mutationType)).sort(lollipopMutationTypeSort);
-        const chosenCanonicalType:CanonicalMutationType|undefined = findFirstMostCommonElt(sortedCanonicalMutationTypes);
-        if (chosenCanonicalType) {
-            const proteinImpactType:ProteinImpactType = getProteinImpactTypeFromCanonical(chosenCanonicalType);
-
-            switch (proteinImpactType) {
-                case "missense":
-                    return this.props.missenseColor;
-                case "truncating":
-                    return this.props.truncatingColor;
-                case "inframe":
-                    return this.props.inframeColor;
-                default:
-                    return this.props.otherColor;
-            }
-        } else {
-            return "#ff0000"; // we only get here if theres no mutations, which shouldnt happen. red to indicate an error
-        }
-    }
-
 
     readonly mutationAlignerLinks = remoteData<{[pfamAccession:string]:string}>({
         await: ()=>[
@@ -217,7 +163,7 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
                 codon,
                 count: mutations.length,
                 tooltip:this.lollipopTooltip(mutations),
-                color: this.getLollipopColor(mutations),
+                color: getColorForProteinImpactType(mutations, this.props),
                 label
             });
         }
@@ -343,7 +289,7 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
         return [this.countRange[0], Math.max(this.countRange[1], this.countRange[0]+5)];
     }
 
-    constructor(props:LollipopMutationPlotProps) {
+    constructor(props: ILollipopMutationPlotProps) {
         super(props);
 
         this.handlers = {

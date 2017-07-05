@@ -1,3 +1,4 @@
+import * as _ from 'lodash';
 import {
     SimpleMobXApplicationDataStore
 } from "../../../shared/lib/IMobXApplicationDataStore";
@@ -26,15 +27,23 @@ export default class MutationMapperDataStore extends SimpleMobXApplicationDataSt
     }
 
     @action public clearSelectedPositions() {
-        this.selectedPositions = Immutable.from<PositionAttr>({});
+        if (!_.isEmpty(this.selectedPositions)) {
+            this.selectedPositions = Immutable.from<PositionAttr>({});
+        }
     }
 
     @action public clearHighlightedPositions() {
-        this.highlightedPositions = Immutable.from<PositionAttr>({});
+        if (!_.isEmpty(this.highlightedPositions)) {
+            this.highlightedPositions = Immutable.from<PositionAttr>({});
+        }
     }
 
     public isPositionSelected(position:number) {
         return !!this.selectedPositions[position+""];
+    }
+
+    public isPositionHighlighted(position:number) {
+        return !!this.highlightedPositions[position+""];
     }
 
     @action public resetFilterAndSelection() {

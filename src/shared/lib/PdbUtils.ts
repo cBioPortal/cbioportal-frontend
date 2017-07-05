@@ -1,8 +1,8 @@
 import * as _ from 'lodash';
 import {PdbHeader, PdbUniprotAlignment} from "shared/api/generated/PdbAnnotationAPI";
 import {
-    IPdbPositionRange, IPdbChain, ALIGNMENT_GAP, ALIGNMENT_MINUS, ALIGNMENT_PLUS,
-    ALIGNMENT_SPACE
+    IPdbPositionRange, IPdbChain, PdbAlignmentIndex,
+    ALIGNMENT_GAP, ALIGNMENT_MINUS, ALIGNMENT_PLUS, ALIGNMENT_SPACE,
 } from "shared/model/Pdb";
 
 /**
@@ -32,75 +32,19 @@ export function generatePdbInfoSummary(pdbHeader:PdbHeader, chainId: string)
     return summary;
 }
 
-/**
- * Converts the given PDB position to residue code(s)
- */
-export function convertPdbPosToResCode(position: IPdbPositionRange): string[]
+export function indexPdbAlignments(alignments: PdbUniprotAlignment[]): PdbAlignmentIndex
 {
-    const residues: string[] = [];
-    const start = position.start.position;
-    const end = position.end.position;
-
-    for (let i=start; i <= end; i++) {
-        residues.push(`${i}`);
-    }
-
-    // TODO this may not be accurate if residues.length > 2
-
-    if (position.start.insertionCode)
-    {
-        residues[0] += "^" + position.start.insertionCode;
-    }
-
-    if (residues.length > 1 &&
-        position.end.insertionCode)
-    {
-        residues[residues.length - 1] += "^" + position.end.insertionCode;
-    }
-
-    return residues;
+    return groupAlignmentsByPdbIdAndChain(alignments);
 }
 
-/**
- * Converts the given PDB position to residue and icode pairs
- */
-export function convertPdbPosToResAndInsCode(position: IPdbPositionRange): {resi: number, icode?:string}[]
+export function mergeIndexedPdbAlignments(indexedPdbData: PdbAlignmentIndex): IPdbChain[]
 {
-    const residues: {resi: number, icode?:string}[] = [];
-    const start = position.start.position;
-    const end = position.end.position;
-
-    for (let i=start; i <= end; i++) {
-        residues.push({
-            resi: i
-        });
-    }
-
-    // TODO this may not be accurate if residues.length > 2
-
-    if (position.start.insertionCode) {
-        residues[0].icode = position.start.insertionCode;
-    }
-
-    if (residues.length > 1 && position.end.insertionCode) {
-        residues[residues.length - 1].icode = position.end.insertionCode;
-    }
-
-    return residues;
-}
-
-export function processPdbAlignmentData(alignments: PdbUniprotAlignment[]): IPdbChain[]
-{
-    // ascending sort
-    // TODO we do not actually need to sort if we implement "mergeSortedAlignments" in a way that it does not require a sorted array
-    const sortedAlignments = sortAlignments(alignments);
-
     const chains: IPdbChain[] = [];
 
     // generate chains
-    _.each(groupAlignmentsByPdbIdAndChain(sortedAlignments), (map: {[chainId: string]: PdbUniprotAlignment[]}) => {
+    _.each(indexedPdbData, (map: {[chainId: string]: PdbUniprotAlignment[]}) => {
         _.each(map, (chainAlignments: PdbUniprotAlignment[]) => {
-            const chain = mergeSortedAlignments(chainAlignments);
+            const chain = mergeAlignments(chainAlignments);
 
             if (chain) {
                 chains.push(chain);
@@ -111,32 +55,9 @@ export function processPdbAlignmentData(alignments: PdbUniprotAlignment[]): IPdb
     return chains;
 }
 
-function sortAlignments(alignments: PdbUniprotAlignment[])
-{
-    // alignments might be immutable, shallow copy to avoid exceptions
-    const sortedAlignments = _.clone(alignments);
-
-    sortedAlignments.sort(function(a:PdbUniprotAlignment, b:PdbUniprotAlignment) {
-        let diff = a.uniprotFrom - b.uniprotFrom;
-
-        // for consistency sort by identity when positions are the same
-        if (diff === 0) {
-            diff = a.identity - b.identity;
-        }
-
-        return diff || 0;
-    });
-
-    return sortedAlignments;
-}
-
 function groupAlignmentsByPdbIdAndChain(alignments: PdbUniprotAlignment[])
 {
-    const groupedAlignments: {
-        [pdbId: string]: {
-            [chainId: string]: PdbUniprotAlignment[]
-        }
-    } = {};
+    const groupedAlignments: PdbAlignmentIndex = {};
 
     alignments.forEach((alignment: PdbUniprotAlignment) => {
         if (!groupedAlignments[alignment.pdbId]) {
@@ -153,67 +74,78 @@ function groupAlignmentsByPdbIdAndChain(alignments: PdbUniprotAlignment[])
     return groupedAlignments;
 }
 
-export function mergeSortedAlignments(alignments: PdbUniprotAlignment[]): IPdbChain|undefined
+/**
+ * Assuming that all the provided alignments have the same pdb id and chain,
+ * merges multiple alignments into one.
+ */
+export function mergeAlignments(alignments: PdbUniprotAlignment[]): IPdbChain|undefined
 {
     let mergedAlignment = "";
-    let end: number;
+    let start: number;
 
     if (alignments.length > 0) {
-        // set the end just before the beginning of the first alignment
-        // the iteration below will handle the rest
-        end = alignments[0].uniprotFrom - 1;
+        // start with the first alignment
+        start = alignments[0].uniprotFrom;
     }
     else {
         return undefined;
     }
 
     alignments.forEach((alignment: PdbUniprotAlignment) => {
-        const distance = alignment.uniprotFrom - end - 1;
         const alignmentStr = generateAlignmentString(alignment) || "";
+        let diff = Math.abs(alignment.uniprotFrom - start);
 
-        // check for overlapping uniprot positions...
+        if (alignment.uniprotFrom < start) {
+            let gapOrOverlap = Math.abs(alignmentStr.length - diff);
 
-        // no overlap, and the next alignment starts exactly after the current merge
-        if (distance === 0) {
-            // just concatenate two strings
-            mergedAlignment += alignmentStr;
-        }
-        // no overlap, but there is a gap
-        else if (distance > 0)
-        {
-            let gap: string[] = [];
-
-            // add gap characters (character count = distance)
-            for (let i = 0; i < distance; i++) {
-                gap.push(ALIGNMENT_GAP);
+            // overlap: we need to append non-overlapping segment of mergedAlignment to the current alignment
+            if (alignmentStr.length >= diff) {
+                mergedAlignment = alignmentStr + mergedAlignment.substr(gapOrOverlap);
             }
-
-            // also add the actual string
-            mergedAlignment += gap.join("") + alignmentStr;
+            // gap: we need to add some gap before appending mergedAlignment
+            else {
+                mergedAlignment = alignmentStr + alignmentGap(gapOrOverlap) + mergedAlignment;
+            }
         }
-        // overlapping
-        else {
-            // TODO: here we are assuming that overlapping sections are the same for both alignment strings,
-            // but that's not always the case...
+        else if (alignment.uniprotFrom >= start) {
+            let gapOrOverlap = Math.abs(mergedAlignment.length - diff);
 
-            // merge two strings
-            // (just append the non-overlapping section of the current alignment)
-            mergedAlignment += alignmentStr.substr(-1 * distance);
+            // overlap: we need to "insert" current alignment into merged alignment
+            if (mergedAlignment.length >= diff) {
+                mergedAlignment = mergedAlignment.substr(0, mergedAlignment.length - gapOrOverlap) + alignmentStr +
+                    mergedAlignment.substr(mergedAlignment.length - gapOrOverlap + alignmentStr.length);
+            }
+            // gap: we need to add some gap before appending current alignment
+            else {
+                mergedAlignment = mergedAlignment + alignmentGap(gapOrOverlap) + alignmentStr;
+            }
         }
 
-        // update the end position
-        end = Math.max(end, alignment.uniprotTo);
+        start = Math.min(start, alignment.uniprotFrom);
     });
 
     return {
         pdbId: alignments[0].pdbId,
         chain: alignments[0].chain,
-        uniprotStart: alignments[0].uniprotFrom,
-        uniprotEnd: alignments[0].uniprotFrom + mergedAlignment.length,
+        // to be consistent with the alignment API we would like uniprot position range to be inclusive
+        uniprotStart: start,
+        uniprotEnd: start + mergedAlignment.length - 1,
         alignment: mergedAlignment,
         identityPerc: calcIdentityPerc(mergedAlignment),
         identity: calcIdentity(mergedAlignment)
     };
+}
+
+function alignmentGap(length: number)
+{
+    let gap: string[] = [];
+
+    // add gap characters (character count = distance)
+    for (let i = 0; i < length; i++) {
+        gap.push(ALIGNMENT_GAP);
+    }
+
+    return gap.join("");
 }
 
 export function generateAlignmentString(alignment: PdbUniprotAlignment): string|undefined
@@ -244,7 +176,7 @@ export function generateAlignmentString(alignment: PdbUniprotAlignment): string|
             }
         }
 
-        alignmentStr = stringBuilder.join("")
+        alignmentStr = stringBuilder.join("");
     }
 
     return alignmentStr;
