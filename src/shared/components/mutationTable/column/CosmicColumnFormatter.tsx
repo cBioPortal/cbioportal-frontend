@@ -103,9 +103,9 @@ export default class CosmicColumnFormatter
         // calculate sum of the all counts
         if (cosmic && cosmic.length > 0)
         {
-            value = _.reduce(_.map(cosmic, "count"), (sum:number, count:number) => {
+            value = _.reduce(_.map(cosmic, "count"), (sum:number , count:number) => {
                 return sum + count;
-            });
+            }, 0);
 
             overlay = (
                 <span className={styles["cosmic-table"]}>

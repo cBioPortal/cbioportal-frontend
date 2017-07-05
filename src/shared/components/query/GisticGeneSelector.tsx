@@ -154,12 +154,15 @@ export default class GisticGeneSelector extends React.Component<GisticGeneSelect
 						defaultSort: this.columns.qValue.name,
 					}}
 				/>
+				<div>
 				<button
-					className={classNames('cta', styles.selectButton)}
+					style={{marginTop:20}} className="btn btn-primary btn-sm pull-right"
 					onClick={() => this.props.onSelect(this.map_geneSymbol_selected)}
 				>
 					Select
 				</button>
+				</div>
+
 			</div>
 		);
 	}

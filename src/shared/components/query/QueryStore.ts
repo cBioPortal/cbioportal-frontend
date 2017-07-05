@@ -19,6 +19,10 @@ import URL from 'url';
 import {buildCBioPortalUrl, BuildUrlParams} from "../../api/urls";
 import {SyntaxError} from "../../lib/oql/oql-parser";
 import StudyListLogic from "./StudyListLogic";
+import {QuerySession} from "../../lib/QuerySession";
+import {stringListToIndexSet, stringListToSet} from "../../lib/StringUtils";
+import chunkMapReduce from "shared/lib/chunkMapReduce";
+import formSubmit from "shared/lib/formSubmit";
 
 // interface for communicating
 type CancerStudyQueryUrlParams = {
@@ -50,7 +54,7 @@ function isInteger(str:string)
 
 function normalizeQuery(geneQuery:string)
 {
-	return geneQuery.replace(/^\s+|\s+$/g, '').replace(/[ \+]+/g, ' ').toUpperCase();
+	return geneQuery.trim().replace(/^\s+|\s+$/g, '').replace(/[ \+]+/g, ' ').toUpperCase();
 }
 
 export type CancerStudyQueryParams = Pick<
@@ -87,6 +91,9 @@ export class QueryStore
 		labelMobxPromises(this);
 		if (urlWithInitialParams)
 			this.setParamsFromUrl(urlWithInitialParams);
+
+		this.addParamsFromWindow();
+		this.setParamsFromQuerySession();
 	}
 
 	copyFrom(other:CancerStudyQueryParams)
@@ -124,6 +131,10 @@ export class QueryStore
 		this._selectedStudyIds = this.forDownloadTab ? ids.slice(-1) : ids;
 	}
 
+	@computed get selectedStudyIdsSet():{[studyId:string]:boolean}
+	{
+		return stringListToSet(this.selectedStudyIds);
+	}
 	@observable dataTypePriority = {mutation: true, cna: true};
 
 	// genetic profile ids
@@ -220,11 +231,12 @@ export class QueryStore
 	@observable showSelectedStudiesOnly:boolean = false;
 	@observable.shallow selectedCancerTypeIds:string[] = [];
 	@observable clickAgainToDeselectSingle:boolean = true;
+	@observable searchExampleMessage = "";
 
-	@observable private _maxTreeDepth:number = 3;
+	@observable private _maxTreeDepth:number = (window as any).maxTreeDepth;
 	@computed get maxTreeDepth()
 	{
-		return this.forDownloadTab ? 1 : this._maxTreeDepth;
+		return (this.forDownloadTab && this._maxTreeDepth > 0) ? 1 : this._maxTreeDepth;
 	}
 	set maxTreeDepth(value)
 	{
@@ -236,7 +248,17 @@ export class QueryStore
 	// REMOTE DATA
 	////////////////////////////////////////////////////////////////////////////////
 
-	readonly cancerTypes = remoteData(client.getAllCancerTypesUsingGET({}), []);
+	readonly cancerTypes = remoteData({
+		invoke: async () => {
+			return client.getAllCancerTypesUsingGET({}).then((data)=>{
+				// all types should have parent. this is a correction for a data issue
+				// where there IS a top level (parent=null) item
+				return data.filter(cancerType => {
+					return cancerType.parent !== 'null';
+				});
+			});
+		}
+	}, []);
 
 	readonly cancerStudies = remoteData(client.getAllStudiesUsingGET({}), []);
 
@@ -381,12 +403,19 @@ export class QueryStore
 			const invalidIds:string[] = [];
 			if (!studyId)
 				return [];
+
+			const inputOrder = stringListToIndexSet(caseIds);
+
 			if (params.caseIdsMode === 'sample')
 			{
 				if (caseIds.length)
 				{
 					const sampleIdentifiers = caseIds.map(sampleId => ({studyId, sampleId}));
-					for (const sample of await client.fetchSamplesUsingPOST({sampleIdentifiers, projection: "ID"}))
+					let sampleObjs = await chunkMapReduce(sampleIdentifiers, chunk=>client.fetchSamplesUsingPOST({sampleIdentifiers:chunk, projection: "ID"}), 990);
+					// sort by input order
+					sampleObjs = _.sortBy(sampleObjs, sampleObj=>inputOrder[sampleObj.sampleId]);
+
+					for (const sample of sampleObjs)
 						sampleIds.push(sample.sampleId);
 				}
 				invalidIds.push(..._.difference(caseIds, sampleIds));
@@ -395,7 +424,11 @@ export class QueryStore
 			{
 				// convert patient IDs to sample IDs
 				const samplesPromises = caseIds.map(patientId => this.getSamplesForStudyAndPatient(studyId, patientId));
-				for (const {studyId, patientId, samples, error} of await Promise.all(samplesPromises))
+				let result:{studyId:string, patientId:string, samples:Sample[], error?:Error}[] = await Promise.all(samplesPromises);
+				// sort by input order
+				result = _.sortBy(result, obj=>inputOrder[obj.patientId]);
+
+				for (const {studyId, patientId, samples, error} of result)
 				{
 					if (error || !samples.length)
 						invalidIds.push(patientId);
@@ -585,7 +618,7 @@ export class QueryStore
 		try
 		{
 			return {
-				query: this.geneQuery && oql_parser.parse(this.geneQuery.toUpperCase()) || [],
+				query: this.geneQuery && oql_parser.parse(this.geneQuery.trim().toUpperCase()) || [],
 				error: undefined
 			};
 		}
@@ -727,18 +760,11 @@ export class QueryStore
 				let studyIds = this.selectedStudyIds;
 				if (!studyIds.length)
 					studyIds = this.cancerStudies.result.map(study => study.studyId);
+
+				const hash = `crosscancer/overview/${params.data_priority}/${encodeURIComponent(params.gene_list)}/${encodeURIComponent(studyIds.join(','))}`;
 				return {
-					pathname: 'cross_cancer.do',
-					query: params,
-					hash: (
-						`crosscancer/overview/${
-							params.data_priority
-						}/${
-							encodeURIComponent(params.gene_list)
-						}/${
-							encodeURIComponent(studyIds.join(','))
-						}`
-					),
+					pathname: `cross_cancer.do#${hash}`,
+					query: Object.assign({ cancer_study_list: studyIds.join(",")}, params),
 				};
 			}
 
@@ -749,6 +775,41 @@ export class QueryStore
 	////////////////////////////////////////////////////////////////////////////////
 	// ACTIONS
 	////////////////////////////////////////////////////////////////////////////////
+
+	@action setParamsFromQuerySession() {
+		const querySession:QuerySession|undefined = (window as any).QuerySession;
+		if (querySession) {
+			this.selectedStudyIds = querySession.getCancerStudyIds();
+			this._selectedProfileIds = querySession.getGeneticProfileIds();
+			this.zScoreThreshold = (querySession.getZScoreThreshold()+"") || "2.0";
+			this.rppaScoreThreshold = (querySession.getRppaScoreThreshold()+"") || "2.0";
+			this.selectedSampleListId = querySession.getCaseSetId();
+			if (this.selectedSampleListId === "-1") {
+				// legacy compatibility
+				this.selectedSampleListId = CUSTOM_CASE_LIST_ID;
+			}
+			this.caseIds = querySession.getSampleIds().join("\n");
+			this.caseIdsMode = 'sample'; // url always contains sample IDs
+			this.geneQuery = normalizeQuery(querySession.getOQLQuery());
+			this._isFromUrlParams.selectedProfileIds = true;
+			this._isFromUrlParams.selectedSampleListId = true;
+		}
+	}
+
+	@action addParamsFromWindow()
+	{
+		const windowStudyId = (window as any).selectedCancerStudyId;
+		if (windowStudyId && !this.selectedStudyIdsSet[windowStudyId]) {
+			this.selectedStudyIds = this.selectedStudyIds.concat(windowStudyId);
+		}
+
+		const windowSampleIds:string = (window as any).selectedSampleIds;
+		if (windowSampleIds) {
+			this.selectedSampleListId = CUSTOM_CASE_LIST_ID;
+			this.caseIdsMode = 'sample';
+			this.caseIds = windowSampleIds.split(/\s+/).join("\n");
+		}
+	}
 
 	/**
 	 * This is used to prevent selections from being cleared automatically when new data is downloaded.
@@ -830,6 +891,15 @@ export class QueryStore
 		}
 	}
 
+	@action setSearchText(searchText: string) {
+		this.clearSelectedCancerType();
+		this.searchText = searchText;
+	}
+
+	@action clearSelectedCancerType(){
+		this.selectedCancerTypeIds = [];
+	}
+
 	@action selectGeneticProfile(profile:GeneticProfile, checked:boolean)
 	{
 		let groupProfiles = this.getFilteredProfiles(profile.geneticAlterationType);
@@ -880,16 +950,16 @@ export class QueryStore
 		//TODO this is currently broken because of mobx-react-router
 		// this is supposed to allow you to go back in the browser history to
 		// return to the query page and restore the QueryStore state from the URL.
-		let historyUrl = URL.format({...urlParams, pathname: window.location.href.split('?')[0]});
+		/*let historyUrl = URL.format({...urlParams, pathname: window.location.href.split('?')[0]});
 
 		// TODO remove this temporary HACK to make back button work
 		historyUrl = historyUrl.split('#crosscancer').join('#/home#crosscancer');
 
 		let newUrl = buildCBioPortalUrl(urlParams);
 		if (historyUrl != newUrl)
-			window.history.pushState(null, window.document.title, historyUrl);
+			window.history.pushState(null, window.document.title, historyUrl);*/
 
-		window.location.href = newUrl;
+		formSubmit(urlParams.pathname, urlParams.query)
 	}
 
 	@action sendToGenomeSpace()

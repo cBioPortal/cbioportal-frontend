@@ -77,7 +77,7 @@ export default class GeneSetSelector extends QueryStoreComponent<GeneSetSelector
 					Enter Gene Set:
 				</SectionHeader>
 
-				<FlexCol>
+				<FlexCol overflow>
 				<ReactSelect
 					value={this.selectedGeneListOption}
 					options={this.geneListOptions}
@@ -87,12 +87,12 @@ export default class GeneSetSelector extends QueryStoreComponent<GeneSetSelector
 				{!!(this.store.mutSigForSingleStudy.result.length || this.store.gisticForSingleStudy.result.length) && (
 					<FlexRow padded className={styles.buttonRow}>
 						{!!(this.store.mutSigForSingleStudy.result.length) && (
-							<button onClick={() => this.store.showMutSigPopup = true}>
+							<button className="btn btn-default btn-sm" onClick={() => this.store.showMutSigPopup = true}>
 								Select from Recurrently Mutated Genes (MutSig)
 							</button>
 						)}
 						{!!(this.store.gisticForSingleStudy.result.length) && (
-							<button onClick={() => this.store.showGisticPopup = true}>
+							<button className="btn btn-default btn-sm" onClick={() => this.store.showGisticPopup = true}>
 								Select Genes from Recurrent CNAs (Gistic)
 							</button>
 						)}
@@ -113,7 +113,7 @@ export default class GeneSetSelector extends QueryStoreComponent<GeneSetSelector
 				<GeneSymbolValidator/>
 
 				<Modal
-					className={styles.MutSigGeneSelectorWindow}
+					className={classNames('cbioportal-frontend',styles.MutSigGeneSelectorWindow)}
 					show={this.store.showMutSigPopup}
 					onHide={() => this.store.showMutSigPopup = false}
 				>
@@ -133,7 +133,7 @@ export default class GeneSetSelector extends QueryStoreComponent<GeneSetSelector
 				</Modal>
 
 				<Modal
-					className={styles.GisticGeneSelectorWindow}
+					className={classNames('cbioportal-frontend',styles.GisticGeneSelectorWindow)}
 					show={this.store.showGisticPopup}
 					onHide={() => this.store.showGisticPopup = false}
 				>

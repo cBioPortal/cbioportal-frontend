@@ -10,9 +10,12 @@ import StudyList from "./studyList/StudyList";
 import {observer, Observer} from "mobx-react";
 import {expr} from 'mobx';
 import memoize from "memoize-weak-decorator";
+import {If, Then} from 'react-if';
 import {QueryStoreComponent} from "./QueryStore";
 import SectionHeader from "../sectionHeader/SectionHeader";
 import {Modal} from 'react-bootstrap';
+import Autosuggest from 'react-bootstrap-autosuggest'
+import ReactElement = React.ReactElement;
 
 const styles = styles_any as {
 	SelectedStudiesWindow: string,
@@ -110,13 +113,15 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 		);
 	});
 
+	private autosuggest:React.Component<any,any>;
+
 	render()
 	{
 		return (
 			<FlexCol overflow className={styles.CancerStudySelector}>
 				<FlexRow overflow className={styles.CancerStudySelectorHeader}>
 
-					<SectionHeader>
+					<SectionHeader promises={[this.store.cancerTypes, this.store.cancerStudies]}>
 						Select Studies
 					</SectionHeader>
 
@@ -164,26 +169,32 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 							let searchTextOptions = this.store.searchTextPresets;
 							if (this.store.searchText && searchTextOptions.indexOf(this.store.searchText) < 0)
 								searchTextOptions = [this.store.searchText].concat(searchTextOptions as string[]);
+							let searchTimeout: number|null = null;
 
-							return (
-								<ReactSelect
-									className={styles.searchTextInput}
-									value={this.store.searchText}
-									autofocus={true}
-									options={searchTextOptions.map(str => ({label: str, value: str}))}
-									placeholder='Search...'
-									noResultsText={false}
-									onCloseResetsInput={false}
-									onInputChange={(searchText:string) => {
-										this.store.searchText = searchText;
-										this.store.selectedCancerTypeIds = [];
-									}}
-									onChange={option => {
-										this.store.searchText = option ? option.value || '' : '';
-										this.store.selectedCancerTypeIds = [];
-									}}
-								/>
-							);
+							return (<Autosuggest
+								datalist={searchTextOptions}
+								ref={(el: React.Component<any, any>)=>(this.autosuggest = el)}
+								placeholder="Search..."
+								bsSize="small"
+								onChange={(currentVal:string) => {
+									if (searchTimeout !== null) {
+										window.clearTimeout(searchTimeout);
+										searchTimeout = null;
+									}
+
+									searchTimeout = window.setTimeout(()=>{
+										this.store.setSearchText(currentVal);
+									}, 400);
+								}}
+								onFocus={(value:string)=>{
+									if (value.length === 0) {
+										setTimeout(()=>{
+											this.autosuggest.setState({open:true});
+										},400)
+									}
+								}}
+							/>);
+
 						}}
 					</Observer>
 
@@ -218,16 +229,20 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 				</SectionHeader>
 
 				<FlexRow className={styles.cancerStudySelectorBody}>
-					<div className={styles.cancerTypeListContainer}>
-						<this.CancerTypeList/>
-					</div>
+					<If condition={this.store.maxTreeDepth > 0}>
+						<Then>
+							<div className={styles.cancerTypeListContainer}>
+								<this.CancerTypeList/>
+							</div>
+						</Then>
+					</If>
 					<div className={styles.cancerStudyListContainer}>
 						<StudyList/>
 					</div>
 				</FlexRow>
 
 				<Modal
-					className={styles.SelectedStudiesWindow}
+					className={classNames(styles.SelectedStudiesWindow, 'cbioportal-frontend')}
 					show={this.store.showSelectedStudiesOnly}
 					onHide={() => this.store.showSelectedStudiesOnly = false}
 				>

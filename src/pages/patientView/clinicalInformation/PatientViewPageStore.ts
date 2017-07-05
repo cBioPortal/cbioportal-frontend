@@ -1,12 +1,13 @@
 import * as _ from 'lodash';
 import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
 import {
-    ClinicalData, GeneticProfile, Sample, Mutation, DiscreteCopyNumberFilter, DiscreteCopyNumberData, MutationFilter
+    ClinicalData, GeneticProfile, Sample, Mutation, DiscreteCopyNumberFilter, DiscreteCopyNumberData, MutationFilter,
+    CopyNumberCount
 } from "../../../shared/api/generated/CBioPortalAPI";
 import client from "../../../shared/api/cbioportalClientInstance";
 import internalClient from "../../../shared/api/cbioportalInternalClientInstance";
 import {
-    CopyNumberCount, CopyNumberCountIdentifier, Gistic, GisticToGene, default as CBioPortalAPIInternal, MutSig
+    Gistic, GisticToGene, default as CBioPortalAPIInternal, MutSig
 } from "shared/api/generated/CBioPortalAPIInternal";
 import {computed, observable, action} from "mobx";
 import {remoteData, addErrorHandler} from "../../../shared/api/remoteData";
@@ -17,7 +18,7 @@ import request from 'superagent';
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
 import {getTissueImageCheckUrl, getDarwinUrl} from "../../../shared/api/urls";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
-import PmidCache from "shared/cache/PmidCache";
+import PubMedCache from "shared/cache/PubMedCache";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {IHotspotData} from "shared/model/CancerHotspots";
 import {IMutSigData} from "shared/model/MutSig";
@@ -26,6 +27,7 @@ import VariantCountCache from "shared/cache/VariantCountCache";
 import CopyNumberCountCache from "./CopyNumberCountCache";
 import CancerTypeCache from "shared/cache/CancerTypeCache";
 import MutationCountCache from "shared/cache/MutationCountCache";
+import AppConfig from "appConfig";
 import {
     findGeneticProfileIdDiscrete, ONCOKB_DEFAULT, fetchOncoKbData, fetchCnaOncoKbData,
     indexHotspotData, mergeMutations, fetchHotspotsData, fetchMyCancerGenomeData, fetchCosmicData,
@@ -129,8 +131,17 @@ export class PatientViewPageStore {
     @observable studyId = '';
 
     @observable _sampleId = '';
+
     @computed get sampleId() {
         return this._sampleId;
+    }
+
+    @computed get pageTitle(): string {
+            if (this.pageMode === 'patient') {
+                return `Patient: ${this.patientId}`
+            } else {
+                return `Sample: ${this.sampleId}`
+            }
     }
 
     @computed get pageMode(): PageMode {
@@ -346,7 +357,7 @@ export class PatientViewPageStore {
             this.derivedPatientId
         ],
         invoke: async() => {
-            let enableDarwin: boolean | null | undefined = ((window as any).enableDarwin);
+            let enableDarwin: boolean | null | undefined = AppConfig.enableDarwin;
 
             if (enableDarwin === true) {
                 let resp = await request.get(getDarwinUrl(this.sampleIds, this.patientId));
@@ -482,8 +493,8 @@ export class PatientViewPageStore {
         return new OncoKbEvidenceCache();
     }
 
-    @cached get pmidCache() {
-        return new PmidCache();
+    @cached get pubMedCache() {
+        return new PubMedCache();
     }
 
     @cached get copyNumberCountCache() {
