@@ -99,7 +99,7 @@ export async function fetchUniprotId(swissProtAccession: string)
 export async function fetchPfamGeneData(swissProtAccession: string)
 {
     const pfamData:Response = await request.get(
-        `${window.location.protocol}//www.cbioportal.org/proxy/pfam.xfam.org/protein/${swissProtAccession}/graphic`);
+        `http://www.cbioportal.org/proxy/pfam.xfam.org/protein/${swissProtAccession}/graphic`);
     return JSON.parse(pfamData.text)[0];
 }
 
