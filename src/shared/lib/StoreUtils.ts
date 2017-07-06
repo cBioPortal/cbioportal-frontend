@@ -16,9 +16,13 @@ import {
     GisticToGene, Gistic, MutSig
 } from "shared/api/generated/CBioPortalAPIInternal";
 import oncokbClient from "shared/api/oncokbClientInstance";
+import civicClient from "shared/api/civicClientInstance";
 import {
     generateIdToIndicatorMap, generateQueryVariant, generateEvidenceQuery
 } from "shared/lib/OncoKbUtils";
+import {
+    getCivicVariants, getCivicGenes
+} from "shared/lib/CivicUtils";
 import {Query, default as OncoKbAPI} from "shared/api/generated/OncoKbAPI";
 import {getAlterationString} from "shared/lib/CopyNumberUtils";
 import {MobxPromise} from "mobxpromise";
@@ -29,8 +33,10 @@ import {IGisticData} from "shared/model/Gistic";
 import {IMutSigData} from "shared/model/MutSig";
 import {IMyCancerGenomeData, IMyCancerGenome} from "shared/model/MyCancerGenome";
 import {IHotspotData, ICancerHotspotData} from "shared/model/CancerHotspots";
+import {ICivicGeneData, ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
 import CancerHotspotsAPI from "shared/api/generated/CancerHotspotsAPI";
 import {GENETIC_PROFILE_MUTATIONS_SUFFIX, GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
+import AppConfig from 'appConfig';
 
 export const ONCOKB_DEFAULT: IOncoKbData = {
     sampleToTumorMap : {},
@@ -366,6 +372,68 @@ export async function queryOncoKbData(queryVariants: Query[],
     return oncoKbData;
 }
 
+export async function fetchCivicGenes(mutationData?:MobxPromise<Mutation[]>,
+                                      uncalledMutationData?:MobxPromise<Mutation[]>) {
+    
+    if (AppConfig.showCivic) {
+        const mutationDataResult = concatMutationData(mutationData, uncalledMutationData);
+        
+        if (mutationDataResult.length === 0) {
+            return {};
+        }
+        
+        let queryHugoSymbols: Array<string> = [];
+            
+        mutationDataResult.forEach(function(mutation: Mutation) {
+            queryHugoSymbols.push(mutation.gene.hugoGeneSymbol);
+        });
+    
+        let civicGenes: ICivicGene = await getCivicGenes(queryHugoSymbols);
+    
+        return civicGenes;
+    } else {
+        return {};
+    }
+}
+
+export async function fetchCnaCivicGenes(discreteCNAData:MobxPromise<DiscreteCopyNumberData[]>) {
+    
+    if (AppConfig.showCivic && discreteCNAData.result && discreteCNAData.result.length > 0) {
+        let queryHugoSymbols: Array<string> = [];
+        
+        discreteCNAData.result.forEach(function(cna: DiscreteCopyNumberData) {
+            queryHugoSymbols.push(cna.gene.hugoGeneSymbol);
+        });
+    
+        //For some reason, Typescript indicates that getCivicGenes can be undefined: it can't
+        let civicGenes: ICivicGene = (await getCivicGenes(queryHugoSymbols)) as ICivicGene;
+    
+        return civicGenes;
+    } else {
+        return {};
+    }
+}
+
+export async function fetchCivicVariants(civicGenes: ICivicGene, mutationData?:MobxPromise<Mutation[]>,
+                                         uncalledMutationData?:MobxPromise<Mutation[]>) {
+
+    let civicVariants: ICivicVariant = {};
+    if (AppConfig.showCivic) {
+        if (mutationData && uncalledMutationData) {
+            if (mutationData != {} && uncalledMutationData !={}) {
+                const mutationDataResult = concatMutationData(mutationData, uncalledMutationData);
+                civicVariants = (await getCivicVariants(civicGenes, mutationDataResult));
+            }
+        } else {
+            if (civicGenes != {}) {
+                civicVariants = (await getCivicVariants(civicGenes));
+            }
+        }
+    }
+
+    return civicVariants;
+}
+
 export async function fetchDiscreteCNAData(discreteCopyNumberFilter:DiscreteCopyNumberFilter,
                                            geneticProfileIdDiscrete:MobxPromise<string>,
                                            client:CBioPortalAPI = defaultClient)
@@ -605,7 +673,7 @@ export function generateDataQueryFilter(sampleListId: string|null, sampleIds?: s
 }
 
 export function makeStudyToCancerTypeMap(studies:CancerStudy[]) {
-    return studies.reduce((map:{[studyId:string]:string}, next:CancerStudy)=>{
+    return studies.reduce((map:{[studyId:string]:string}, next:CancerStudy) => {
         map[next.studyId] = next.cancerType.name;
         return map;
     }, {});
