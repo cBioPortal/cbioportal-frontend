@@ -84,14 +84,14 @@ export async function fetchPdbAlignmentData(uniprotId: string,
 export async function fetchSwissProtAccession(entrezGeneId: number)
 {
     // TODO duplicate: see LollipopMutationPlot
-    const myGeneData:Response = await request.get(`http://mygene.info/v3/gene/${entrezGeneId}?fields=uniprot`);
+    const myGeneData:Response = await request.get(`${window.location.protocol}//mygene.info/v3/gene/${entrezGeneId}?fields=uniprot`);
     return JSON.parse(myGeneData.text).uniprot["Swiss-Prot"];
 }
 
 export async function fetchUniprotId(swissProtAccession: string)
 {
     const uniprotData:Response = await request.get(
-        `http://www.uniprot.org/uniprot/?query=accession:${swissProtAccession}&format=tab&columns=entry+name`);
+        `${window.location.protocol}//www.uniprot.org/uniprot/?query=accession:${swissProtAccession}&format=tab&columns=entry+name`);
 
     return uniprotData.text.split("\n")[1];
 }
@@ -99,7 +99,7 @@ export async function fetchUniprotId(swissProtAccession: string)
 export async function fetchPfamGeneData(swissProtAccession: string)
 {
     const pfamData:Response = await request.get(
-        `http://www.cbioportal.org/proxy/pfam.xfam.org/protein/${swissProtAccession}/graphic`);
+        `${window.location.protocol}//www.cbioportal.org/proxy/pfam.xfam.org/protein/${swissProtAccession}/graphic`);
     return JSON.parse(pfamData.text)[0];
 }
 
