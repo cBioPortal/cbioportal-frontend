@@ -48,7 +48,7 @@ export default class PatientViewOncoPrint extends React.Component<IPatientViewOn
         return new newOncoprint(params.ctr_selector, params.width);
     }
 
-    var oncoprint = makeOncoprint(window.Oncoprint, {ctr_selector: "#patient-view-oncoprint", width: 1050});
+    var oncoprint = makeOncoprint(window.Oncoprint, {ctr_selector: "#patient-view-oncoprint", width: 100 + fake_data.length * 50});
     oncoprint.suppressRendering();
 
     var share_id = null;
@@ -63,15 +63,15 @@ export default class PatientViewOncoPrint extends React.Component<IPatientViewOn
             'value_stop_points': [0, 1],
             'null_color': 'rgba(224,224,224,1)'
         },
-        'has_column_spacing': false,
-        'track_padding': 0,
+        'has_column_spacing': true,
+        'track_padding': 5,
         'label': fake_data[i].gene,
         'sortCmpFn': function(d1:any, d2:any) {return 0;},
         'target_group': 0,
         'removable': true,
       };
       var new_hm_id = oncoprint.addTracks([track_params])[0];
-      fake_data.track_id = new_hm_id;
+      fake_data[i].track_id = new_hm_id;
       if (i === 0) {
         share_id = new_hm_id;
       } else {
