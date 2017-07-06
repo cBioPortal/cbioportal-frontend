@@ -6,6 +6,7 @@ import OncokbPubMedCache from "shared/cache/PubMedCache";
 import CancerHotspots from "shared/components/annotation/CancerHotspots";
 import MyCancerGenome from "shared/components/annotation/MyCancerGenome";
 import OncoKB from "shared/components/annotation/OncoKB";
+import Civic from "shared/components/annotation/Civic";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {IMyCancerGenomeData, IMyCancerGenome} from "shared/model/MyCancerGenome";
 import {IHotspotData} from "shared/model/CancerHotspots";
@@ -13,16 +14,21 @@ import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {IndicatorQueryResp, Query} from "shared/api/generated/OncoKbAPI";
 import {generateQueryVariantId, generateQueryVariant} from "shared/lib/OncoKbUtils";
 import {isHotspot, is3dHotspot} from "shared/lib/AnnotationUtils";
+import {ICivicVariant, ICivicGene, ICivicEntry, ICivicVariantData, ICivicGeneData} from "shared/model/Civic.ts";
+import {buildCivicEntry} from "shared/lib/CivicUtils";
 
 export interface IAnnotationColumnProps {
     enableOncoKb: boolean;
     enableMyCancerGenome: boolean;
     enableHotspot: boolean;
+    enableCivic: boolean;
     hotspots?: IHotspotData;
     myCancerGenomeData?: IMyCancerGenomeData;
     oncoKbData?: IOncoKbData;
     oncoKbEvidenceCache?: OncoKbEvidenceCache;
     pubMedCache?: OncokbPubMedCache;
+    civicGenes?: ICivicGene;
+    civicVariants?: ICivicVariant;
 }
 
 export interface IAnnotation {
@@ -30,6 +36,8 @@ export interface IAnnotation {
     is3dHotspot: boolean;
     myCancerGenomeLinks: string[];
     oncoKbIndicator?: IndicatorQueryResp|null;
+    civicEntry?: ICivicEntry | null;
+    hasCivicVariants: boolean;
 }
 
 /**
@@ -40,7 +48,9 @@ export default class AnnotationColumnFormatter
     public static getData(rowData:Mutation[]|undefined,
                           hotspotsData?:IHotspotData,
                           myCancerGenomeData?:IMyCancerGenomeData,
-                          oncoKbData?:IOncoKbData)
+                          oncoKbData?:IOncoKbData,
+                          civicGenes?:ICivicGene,
+                          civicVariants?:ICivicVariant)
     {
         let value: IAnnotation;
 
@@ -50,6 +60,9 @@ export default class AnnotationColumnFormatter
             value = {
                 oncoKbIndicator: oncoKbData ?
                     AnnotationColumnFormatter.getIndicatorData(mutation, oncoKbData) : undefined,
+                civicEntry: civicGenes && civicVariants ?
+                    AnnotationColumnFormatter.getCivicEntry(mutation, civicGenes, civicVariants) : undefined,
+                hasCivicVariants: true,
                 myCancerGenomeLinks: myCancerGenomeData ?
                     AnnotationColumnFormatter.getMyCancerGenomeLinks(mutation, myCancerGenomeData) : [],
                 isHotspot: hotspotsData ?
@@ -62,13 +75,31 @@ export default class AnnotationColumnFormatter
             value = {
                 myCancerGenomeLinks: [],
                 isHotspot: false,
-                is3dHotspot: false
+                is3dHotspot: false,
+                hasCivicVariants: true
             };
         }
 
         return value;
     }
 
+    /**
+     * Returns an ICivicEntry if the civicGenes and civicVariants have information about the gene and the mutation (variant) specified. Otherwise it returns null.
+     */
+    public static getCivicEntry(mutation:Mutation, civicGenes:ICivicGene, civicVariants:ICivicVariant): ICivicEntry | null
+    {
+        let geneSymbol: string = mutation.gene.hugoGeneSymbol;
+        let geneVariants: {[name: string]: ICivicVariantData} = civicVariants[geneSymbol];
+        let geneEntry: ICivicGeneData = civicGenes[geneSymbol];
+        let civicEntry = null;
+        //Only search for matching Civic variants if the gene exists in the Civic API
+        if (geneVariants) {
+            civicEntry = buildCivicEntry(geneEntry, geneVariants);
+        }
+
+        return civicEntry;
+    }
+    
     public static getIndicatorData(mutation:Mutation, oncoKbData:IOncoKbData): IndicatorQueryResp|null
     {
         if (oncoKbData.sampleToTumorMap === null || oncoKbData.indicatorMap === null) {
@@ -132,14 +163,17 @@ export default class AnnotationColumnFormatter
     public static sortValue(data:Mutation[],
                             hotspotsData?:IHotspotData,
                             myCancerGenomeData?:IMyCancerGenomeData,
-                            oncoKbData?:IOncoKbData):number[] {
+                            oncoKbData?:IOncoKbData,
+                            civicGenes?: ICivicGene,
+                            civicVariants?: ICivicVariant):number[] {
         const annotationData:IAnnotation = AnnotationColumnFormatter.getData(
-            data, hotspotsData, myCancerGenomeData, oncoKbData);
+            data, hotspotsData, myCancerGenomeData, oncoKbData, civicGenes, civicVariants);
 
         return _.flatten([
             OncoKB.sortValue(annotationData.oncoKbIndicator),
             MyCancerGenome.sortValue(annotationData.myCancerGenomeLinks),
-            CancerHotspots.sortValue(annotationData.isHotspot, annotationData.is3dHotspot)
+            CancerHotspots.sortValue(annotationData.isHotspot, annotationData.is3dHotspot),
+            Civic.sortValue(annotationData.civicEntry)
         ]);
     }
 
@@ -148,7 +182,9 @@ export default class AnnotationColumnFormatter
         const annotation:IAnnotation = AnnotationColumnFormatter.getData(
             data, columnProps.hotspots,
             columnProps.myCancerGenomeData,
-            columnProps.oncoKbData);
+            columnProps.oncoKbData,
+            columnProps.civicGenes,
+            columnProps.civicVariants);
 
         let evidenceQuery:Query|undefined;
 
@@ -188,6 +224,12 @@ export default class AnnotationColumnFormatter
                     <CancerHotspots
                         isHotspot={annotation.isHotspot}
                         is3dHotspot={annotation.is3dHotspot}
+                    />
+                </If>
+                <If condition={columnProps.enableCivic || false}>
+                    <Civic
+                        civicEntry={annotation.civicEntry}
+                        hasCivicVariants={annotation.hasCivicVariants}
                     />
                 </If>
             </span>
