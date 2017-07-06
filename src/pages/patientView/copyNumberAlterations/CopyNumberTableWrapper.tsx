@@ -18,7 +18,7 @@ import PubMedCache from "shared/cache/PubMedCache";
 import MrnaExprRankCache from "shared/cache/MrnaExprRankCache";
 import {IGisticData} from "../../../shared/model/Gistic";
 import CopyNumberCountCache from "../clinicalInformation/CopyNumberCountCache";
-
+import {ICivicGene, ICivicVariant} from "shared/model/Civic.ts";
 
 class CNATableComponent extends LazyMobXTable<DiscreteCopyNumberData[]> {
 
@@ -30,8 +30,11 @@ type ICopyNumberTableWrapperProps = {
     sampleIds:string[];
     sampleManager:SampleManager|null;
     cnaOncoKbData?:IOncoKbData;
+    cnaCivicGenes?: ICivicGene;
+    cnaCivicVariants?: ICivicVariant,
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
     enableOncoKb?:boolean;
+    enableCivic?:boolean;
     pubMedCache?:PubMedCache;
     data:DiscreteCopyNumberData[][];
     copyNumberCountCache?:CopyNumberCountCache;
@@ -46,7 +49,8 @@ type ICopyNumberTableWrapperProps = {
 export default class CopyNumberTableWrapper extends React.Component<ICopyNumberTableWrapperProps, {}> {
 
     public static defaultProps = {
-        enableOncoKb: true
+        enableOncoKb: true,
+        enableCivic: false
     };
 
     render() {
@@ -93,12 +97,15 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
                 oncoKbEvidenceCache: this.props.oncoKbEvidenceCache,
                 enableOncoKb: this.props.enableOncoKb as boolean,
                 pubMedCache: this.props.pubMedCache,
+                civicGenes: this.props.cnaCivicGenes,
+                civicVariants: this.props.cnaCivicVariants,
+                enableCivic: this.props.enableCivic as boolean,
                 enableMyCancerGenome: false,
                 enableHotspot: false
             })),
             sortBy:(d:DiscreteCopyNumberData[])=>{
                 return AnnotationColumnFormatter.sortValue(d,
-                    this.props.cnaOncoKbData);
+                    this.props.cnaOncoKbData, this.props.cnaCivicGenes, this.props.cnaCivicVariants);
             },
             order: 50
         });

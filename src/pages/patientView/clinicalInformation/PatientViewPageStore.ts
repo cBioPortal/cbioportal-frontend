@@ -22,6 +22,7 @@ import PubMedCache from "shared/cache/PubMedCache";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {IHotspotData} from "shared/model/CancerHotspots";
 import {IMutSigData} from "shared/model/MutSig";
+import {ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
 import {ClinicalInformationData} from "shared/model/ClinicalInformation";
 import VariantCountCache from "shared/cache/VariantCountCache";
 import CopyNumberCountCache from "./CopyNumberCountCache";
@@ -34,7 +35,7 @@ import {
     fetchMutationData, fetchDiscreteCNAData, generateSampleIdToTumorTypeMap, findMutationGeneticProfileId,
     findUncalledMutationGeneticProfileId, mergeMutationsIncludingUncalled, fetchGisticData, fetchCopyNumberData,
     fetchMutSigData, findMrnaRankGeneticProfileId, mergeDiscreteCNAData, fetchSamplesForPatient, fetchClinicalData,
-    fetchCopyNumberSegments, fetchClinicalDataForPatient
+    fetchCopyNumberSegments, fetchClinicalDataForPatient, fetchCivicGenes, fetchCnaCivicGenes, fetchCivicVariants
 } from "shared/lib/StoreUtils";
 
 type PageMode = 'patient' | 'sample';
@@ -423,6 +424,29 @@ export class PatientViewPageStore {
         ],
         invoke: async() => fetchOncoKbData(this.sampleIdToTumorType, this.mutationData, this.uncalledMutationData)
     }, ONCOKB_DEFAULT);
+    
+    readonly civicGenes = remoteData<ICivicGene | undefined>({
+        await: () => [
+            this.mutationData,
+            this.uncalledMutationData,
+            this.clinicalDataForSamples
+        ],
+        invoke: async() => fetchCivicGenes(this.mutationData, this.uncalledMutationData)
+    }, undefined);
+    
+    readonly civicVariants = remoteData<ICivicVariant | undefined>({
+        await: () => [
+            this.civicGenes,
+            this.mutationData,
+            this.uncalledMutationData
+        ],
+        invoke: async() => {
+            if (this.civicGenes.status == "complete") {
+                return fetchCivicVariants(this.civicGenes.result as ICivicGene, 
+                                          this.mutationData, this.uncalledMutationData);
+            }
+       }
+    }, undefined);
 
     readonly cnaOncoKbData = remoteData<IOncoKbData>({
         await: () => [
@@ -431,6 +455,26 @@ export class PatientViewPageStore {
         ],
         invoke: async() => fetchCnaOncoKbData(this.sampleIdToTumorType, this.discreteCNAData)
     }, ONCOKB_DEFAULT);
+    
+    readonly cnaCivicGenes = remoteData<ICivicGene | undefined>({
+        await: () => [
+            this.discreteCNAData,
+            this.clinicalDataForSamples
+        ],
+        invoke: async() => fetchCnaCivicGenes(this.discreteCNAData)
+    }, undefined);
+    
+    readonly cnaCivicVariants = remoteData<ICivicVariant | undefined>({
+        await: () => [
+            this.civicGenes,
+            this.mutationData
+        ],
+        invoke: async() => {
+            if (this.cnaCivicGenes.status == "complete") {
+                return fetchCivicVariants(this.cnaCivicGenes.result as ICivicGene);
+            }
+       }
+    }, undefined);
 
     readonly copyNumberCountData = remoteData<CopyNumberCount[]>({
         await: () => [

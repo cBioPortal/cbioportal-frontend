@@ -22,6 +22,7 @@ import AnnotationColumnFormatter from "./column/AnnotationColumnFormatter";
 import {IMyCancerGenomeData} from "shared/model/MyCancerGenome";
 import {IHotspotData} from "shared/model/CancerHotspots";
 import {IOncoKbData} from "shared/model/OncoKB";
+import {ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
 import {IMutSigData} from "shared/model/MutSig";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
@@ -55,6 +56,8 @@ export interface IMutationTableProps {
     hotspots?: IHotspotData;
     cosmicData?:ICosmicData;
     oncoKbData?:IOncoKbData;
+    civicGenes?: ICivicGene;
+    civicVariants?: ICivicVariant;
     mrnaExprRankGeneticProfileId?:string;
     discreteCNAGeneticProfileId?:string;
     columns?:MutationTableColumnType[];
@@ -383,6 +386,9 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 oncoKbData: this.props.oncoKbData,
                 oncoKbEvidenceCache: this.props.oncoKbEvidenceCache,
                 pubMedCache: this.props.pubMedCache,
+                civicGenes: this.props.civicGenes,
+                civicVariants: this.props.civicVariants,
+                enableCivic: this.props.enableCivic as boolean,
                 enableOncoKb: this.props.enableOncoKb as boolean,
                 enableMyCancerGenome: this.props.enableMyCancerGenome as boolean,
                 enableHotspot: this.props.enableHotspot as boolean
@@ -391,7 +397,9 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 return AnnotationColumnFormatter.sortValue(d,
                     this.props.hotspots,
                     this.props.myCancerGenomeData,
-                    this.props.oncoKbData);
+                    this.props.oncoKbData,
+                    this.props.civicGenes,
+                    this.props.civicVariants);
             }
         };
 
