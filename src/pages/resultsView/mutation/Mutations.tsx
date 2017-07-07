@@ -3,9 +3,10 @@ import {observer} from "mobx-react";
 import {MSKTabs, MSKTab} from "shared/components/MSKTabs/MSKTabs";
 import {ResultsViewPageStore} from "../ResultsViewPageStore";
 import MutationMapper from "./MutationMapper";
+import {observable} from "mobx";
 
 export interface IMutationsPageProps {
-    routing: any;
+    routing?: any;
     genes: string[];
     store: ResultsViewPageStore;
 }
@@ -13,16 +14,21 @@ export interface IMutationsPageProps {
 @observer
 export default class Mutations extends React.Component<IMutationsPageProps, {}>
 {
+
+    @observable mutationsGeneTab:string;
+
     constructor(props: IMutationsPageProps) {
         super(props);
         this.handleTabChange.bind(this);
+        this.mutationsGeneTab = props.genes[0];
     }
 
     public render() {
+        //activeTabId={this.props.routing.location.query.mutationsGeneTab}
         return (
             <MSKTabs
                 id="mutationsPageTabs"
-                activeTabId={this.props.routing.location.query.mutationsGeneTab}
+                activeTabId={this.mutationsGeneTab}
                 onTabClick={(id:string) => this.handleTabChange(id)}
                 className="mainTabs"
             >
@@ -63,6 +69,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
     }
     
     protected handleTabChange(id: string) {
-        this.props.routing.updateRoute({ mutationsGeneTab: id });
+        //this.props.routing.updateRoute({ mutationsGeneTab: id });
+        this.mutationsGeneTab = id;
     }
 }
