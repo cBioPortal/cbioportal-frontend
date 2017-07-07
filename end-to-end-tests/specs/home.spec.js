@@ -12,7 +12,7 @@ describe('homepage', function() {
 
         var devMode = $('.alert-warning');
 
-        devMode.waitForExist(30000);
+        devMode.waitForExist(60000);
         assert(browser.getText('.alert-warning').indexOf('dev mode') > 0);
     });
 
@@ -90,4 +90,32 @@ describe('patient page', function(){
 
     });
 
+});
+
+describe('cross cancer query', function() {
+    it('should show cross cancer bar chart with TP53 in title when selecting multiple studies and querying for TP53', function() {
+        browser.url(`${CBIOPORTAL_URL}`);
+
+        $('[data-test="StudySelect"]').waitForExist(10000);
+        var checkBoxes = $$('[data-test="StudySelect"]');
+        
+        checkBoxes.forEach(function (checkBox, i) {
+            // select a fifth of existing studies
+            if (i % 5 === 0) {
+                checkBox.click();
+            }
+        });
+
+        // query tp53
+        $('[data-test="geneSet"]').setValue('TP53');
+        browser.waitForEnabled('[data-test="queryButton"]', 10000);
+        browser.click('[data-test="queryButton"]');
+
+        // make sure cross cancer title appears
+        $('.cctitle').waitForExist(30000)
+
+        // check if TP53 is in the title of the bar chart
+        var text = browser.getText('.cctitle')
+        assert(text.search('TP53') > -1);
+    });
 });
