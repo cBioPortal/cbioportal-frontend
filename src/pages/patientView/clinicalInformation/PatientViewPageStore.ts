@@ -478,7 +478,9 @@ export class PatientViewPageStore {
     }
 
     @computed get sampleIdToTumorType(): {[sampleId: string]: string} {
-        return generateSampleIdToTumorTypeMap(this.clinicalDataForSamples, this.studyToCancerType[this.studyId]);
+        return generateSampleIdToTumorTypeMap(this.clinicalDataForSamples,
+            this.studyToCancerType[this.studyId],
+            this.samples);
     }
 
     @action("SetSampleId") setSampleId(newId: string) {
