@@ -146,7 +146,7 @@ export function buildTimeline(params, caseIds, patientInfo, clinicalDataMap, cas
     // timeline by
     var testsWithResults = splitData.filter(function (x) {
         return x.parent_track === 'Lab_test' &&
-            _.all(x.times.map(
+            _.every(x.times.map(
                 function (t) {
                     return t.tooltip_tables.length === 1 &&
                         t.tooltip_tables[0].filter(function (a) {
