@@ -19,30 +19,34 @@ export default class AnnotationColumnFormatter
     {
         let value: IAnnotation;
 
-        if (copyNumberData) {
+        if (copyNumberData)
+        {
+            let oncoKbIndicator: IndicatorQueryResp|undefined;
+            let oncoKbStatus = DefaultAnnotationColumnFormatter.getOncoKbStatus(oncoKbData);
+
+            if (oncoKbData && oncoKbStatus === "complete") {
+                oncoKbIndicator = AnnotationColumnFormatter.getIndicatorData(copyNumberData, oncoKbData);
+            }
+
             value = {
-                oncoKbIndicator: oncoKbData ?
-                    AnnotationColumnFormatter.getIndicatorData(copyNumberData, oncoKbData) : undefined,
+                oncoKbStatus,
+                oncoKbIndicator,
                 myCancerGenomeLinks: [],
                 isHotspot: false,
                 is3dHotspot: false
             };
         }
         else {
-            value = {
-                myCancerGenomeLinks: [],
-                isHotspot: false,
-                is3dHotspot: false
-            };
+            value = DefaultAnnotationColumnFormatter.DEFAULT_ANNOTATION_DATA;
         }
 
         return value;
     }
 
-    public static getIndicatorData(copyNumberData:DiscreteCopyNumberData[], oncoKbData:IOncoKbData): IndicatorQueryResp|null
+    public static getIndicatorData(copyNumberData:DiscreteCopyNumberData[], oncoKbData:IOncoKbData): IndicatorQueryResp|undefined
     {
         if (oncoKbData.sampleToTumorMap === null || oncoKbData.indicatorMap === null) {
-            return null;
+            return undefined;
         }
 
         const id = generateQueryVariantId(copyNumberData[0].gene.entrezGeneId,
@@ -52,13 +56,13 @@ export default class AnnotationColumnFormatter
         return oncoKbData.indicatorMap[id];
     }
 
-    public static getEvidenceQuery(copyNumberData:DiscreteCopyNumberData[], oncoKbData:IOncoKbData): Query|null
+    public static getEvidenceQuery(copyNumberData:DiscreteCopyNumberData[], oncoKbData:IOncoKbData): Query|undefined
     {
         // return null in case sampleToTumorMap is null
         return oncoKbData.sampleToTumorMap ? generateQueryVariant(copyNumberData[0].gene.entrezGeneId,
             oncoKbData.sampleToTumorMap[copyNumberData[0].sampleId],
             getAlterationString(copyNumberData[0].alteration)
-        ) : null;
+        ) : undefined;
     }
 
     public static sortValue(data:DiscreteCopyNumberData[],
@@ -75,7 +79,7 @@ export default class AnnotationColumnFormatter
         let evidenceQuery:Query|undefined;
 
         if (columnProps.oncoKbData) {
-            evidenceQuery = this.getEvidenceQuery(data, columnProps.oncoKbData) || undefined;
+            evidenceQuery = this.getEvidenceQuery(data, columnProps.oncoKbData);
         }
 
         return DefaultAnnotationColumnFormatter.mainContent(annotation,
