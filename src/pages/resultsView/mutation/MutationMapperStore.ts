@@ -7,13 +7,14 @@ import {remoteData} from "shared/api/remoteData";
 import {labelMobxPromises, MobxPromise, cached} from "mobxpromise";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {IHotspotData} from "shared/model/CancerHotspots";
-import {IPdbChain} from "shared/model/Pdb";
-import {calcPdbIdNumericalValue} from "shared/lib/PdbUtils";
+import {IPdbChain, PdbAlignmentIndex} from "shared/model/Pdb";
+import PdbPositionMappingCache from "shared/cache/PdbPositionMappingCache";
+import {calcPdbIdNumericalValue, mergeIndexedPdbAlignments} from "shared/lib/PdbUtils";
 import {lazyMobXTableSort} from "shared/components/lazyMobXTable/LazyMobXTable";
 import {
     indexHotspotData, fetchHotspotsData, fetchCosmicData, fetchOncoKbData,
     fetchMutationData, generateSampleIdToTumorTypeMap, generateDataQueryFilter,
-    ONCOKB_DEFAULT, fetchPdbAlignmentData, mergePdbAlignments, fetchSwissProtAccession, fetchUniprotId,
+    ONCOKB_DEFAULT, fetchPdbAlignmentData, fetchSwissProtAccession, fetchUniprotId, indexPdbAlignmentData,
     fetchPfamGeneData
 } from "shared/lib/StoreUtils";
 import {IMobXApplicationDataStore, SimpleMobXApplicationDataStore} from "../../../shared/lib/IMobXApplicationDataStore";
@@ -152,7 +153,8 @@ export class MutationMapperStore {
 
     readonly oncoKbData = remoteData<IOncoKbData>({
         await: () => [
-            this.mutationData
+            this.mutationData,
+            this.clinicalDataForSamples
         ],
         invoke: async () => fetchOncoKbData(this.sampleIdToTumorType, this.mutationData)
     }, ONCOKB_DEFAULT);
@@ -180,7 +182,11 @@ export class MutationMapperStore {
     }
 
     @computed get mergedAlignmentData(): IPdbChain[] {
-        return mergePdbAlignments(this.alignmentData);
+        return mergeIndexedPdbAlignments(this.indexedAlignmentData);
+    }
+
+    @computed get indexedAlignmentData(): PdbAlignmentIndex {
+        return indexPdbAlignmentData(this.alignmentData);
     }
 
     @computed get sortedMergedAlignmentData(): IPdbChain[] {
@@ -211,5 +217,10 @@ export class MutationMapperStore {
     @cached get pdbChainDataStore(): PdbChainDataStore {
         // initialize with sorted merged alignment data
         return new PdbChainDataStore(this.sortedMergedAlignmentData);
+    }
+
+    @cached get pdbPositionMappingCache()
+    {
+        return new PdbPositionMappingCache();
     }
 }
