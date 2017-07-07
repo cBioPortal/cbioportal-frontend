@@ -109,7 +109,7 @@ webdriver-manager start
 Run tests
 ```bash
 # get CBIOPORTAL backend url from my-index.ejs
-export CBIOPORTAL_URL=http://$(grep '__API_ROOT__' my-index.ejs | cut -d= -f2 | tr -d "'" | tr -d [:space:] | tr -d ';')"'")
+export CBIOPORTAL_URL=http://$(grep '__API_ROOT__' my-index.ejs | cut -d= -f2 | tr -d "'" | tr -d [:space:] | tr -d ';')
 cd end-to-end-tests
 npm install
 npm run test-webdriver-manager
