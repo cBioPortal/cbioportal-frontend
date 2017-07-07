@@ -93,7 +93,7 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
 				)}
 
 				<FlexRow padded className={styles.submitRow}>
-					<button style={{paddingLeft:50, paddingRight:50, marginRight:50 }} disabled={!this.store.submitEnabled} className="btn btn-primary btn-lg" onClick={() => this.handleSubmit()}>
+					<button style={{paddingLeft:50, paddingRight:50, marginRight:50 }} disabled={!this.store.submitEnabled} className="btn btn-primary btn-lg" onClick={() => this.handleSubmit()} data-test='queryButton'>
 						Submit Query
 					</button>
 					{!!(this.store.forDownloadTab && AppConfig.genomespaceEnabled) && (
