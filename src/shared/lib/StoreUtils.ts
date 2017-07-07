@@ -449,7 +449,8 @@ export function indexHotspotData(hotspotData:MobxPromise<ICancerHotspotData>): I
 }
 
 export function generateSampleIdToTumorTypeMap(clinicalDataForSamples: MobxPromise<ClinicalData[]>,
-                                               defaultCancerType?: string): {[sampleId: string]: string}
+                                               defaultCancerType?: string,
+                                               samples?: MobxPromise<Sample[]>): {[sampleId: string]: string}
 {
     const map: {[sampleId: string]: string} = {};
 
@@ -471,12 +472,22 @@ export function generateSampleIdToTumorTypeMap(clinicalDataForSamples: MobxPromi
 
         // last resort: fall back to the default cancer type
         if (defaultCancerType) {
-            _.each(clinicalDataForSamples.result, (clinicalData:ClinicalData) => {
-                // update map with defaultCancerType value only if it is not already updated
-                if (map[clinicalData.entityId] === undefined) {
-                    map[clinicalData.entityId] = defaultCancerType;
-                }
-            });
+            if (samples && samples.result) {
+                _.each(samples.result, (sample: Sample) => {
+                    if (map[sample.sampleId] === undefined) {
+                        map[sample.sampleId] = defaultCancerType;
+                    }
+                });
+            }
+            // if no sample list is provided, try to get sample ids from clinical data...
+            else {
+                _.each(clinicalDataForSamples.result, (clinicalData:ClinicalData) => {
+                    // update map with defaultCancerType value only if it is not already updated
+                    if (map[clinicalData.entityId] === undefined) {
+                        map[clinicalData.entityId] = defaultCancerType;
+                    }
+                });
+            }
         }
     }
 
