@@ -34,7 +34,7 @@ import {
     fetchMutationData, fetchDiscreteCNAData, generateSampleIdToTumorTypeMap, findMutationGeneticProfileId,
     findUncalledMutationGeneticProfileId, mergeMutationsIncludingUncalled, fetchGisticData, fetchCopyNumberData,
     fetchMutSigData, findMrnaRankGeneticProfileId, mergeDiscreteCNAData, fetchSamplesForPatient, fetchClinicalData,
-    fetchCopyNumberSegments, fetchClinicalDataForPatient
+    fetchCopyNumberSegments, fetchClinicalDataForPatient, makeStudyToCancerTypeMap
 } from "shared/lib/StoreUtils";
 
 type PageMode = 'patient' | 'sample';
@@ -188,6 +188,14 @@ export class PatientViewPageStore {
         async() => fetchSamplesForPatient(this.studyId, this._patientId, this.sampleId),
         []
     );
+
+    readonly studies = remoteData({
+        invoke: async()=>([await client.getStudyUsingGET({studyId: this.studyId})])
+    }, []);
+
+    @computed get studyToCancerType() {
+        return makeStudyToCancerTypeMap(this.studies.result);
+    }
 
     readonly cnaSegments = remoteData({
         await: () => [
@@ -419,17 +427,25 @@ export class PatientViewPageStore {
         await: () => [
             this.mutationData,
             this.uncalledMutationData,
-            this.clinicalDataForSamples
+            this.clinicalDataForSamples,
+            this.studies
         ],
-        invoke: async() => fetchOncoKbData(this.sampleIdToTumorType, this.mutationData, this.uncalledMutationData)
+        invoke: async() => fetchOncoKbData(this.sampleIdToTumorType, this.mutationData, this.uncalledMutationData),
+        onError: (err: Error) => {
+            // fail silently, leave the error handling responsibility to the data consumer
+        }
     }, ONCOKB_DEFAULT);
 
     readonly cnaOncoKbData = remoteData<IOncoKbData>({
         await: () => [
             this.discreteCNAData,
-            this.clinicalDataForSamples
+            this.clinicalDataForSamples,
+            this.studies
         ],
-        invoke: async() => fetchCnaOncoKbData(this.sampleIdToTumorType, this.discreteCNAData)
+        invoke: async() => fetchCnaOncoKbData(this.sampleIdToTumorType, this.discreteCNAData),
+        onError: (err: Error) => {
+            // fail silently, leave the error handling responsibility to the data consumer
+        }
     }, ONCOKB_DEFAULT);
 
     readonly copyNumberCountData = remoteData<CopyNumberCount[]>({
@@ -462,7 +478,7 @@ export class PatientViewPageStore {
     }
 
     @computed get sampleIdToTumorType(): {[sampleId: string]: string} {
-        return generateSampleIdToTumorTypeMap(this.clinicalDataForSamples);
+        return generateSampleIdToTumorTypeMap(this.clinicalDataForSamples, this.studyToCancerType[this.studyId]);
     }
 
     @action("SetSampleId") setSampleId(newId: string) {
