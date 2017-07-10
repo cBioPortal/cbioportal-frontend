@@ -14,7 +14,6 @@ export interface IMutationsPageProps {
 @observer
 export default class Mutations extends React.Component<IMutationsPageProps, {}>
 {
-
     @observable mutationsGeneTab:string;
 
     constructor(props: IMutationsPageProps) {
@@ -24,11 +23,14 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
     }
 
     public render() {
-        //activeTabId={this.props.routing.location.query.mutationsGeneTab}
+        // use routing if available, if not fall back to the observable variable
+        const activeTabId = this.props.routing ?
+            this.props.routing.location.query.mutationsGeneTab : this.mutationsGeneTab;
+
         return (
             <MSKTabs
                 id="mutationsPageTabs"
-                activeTabId={this.mutationsGeneTab}
+                activeTabId={activeTabId}
                 onTabClick={(id:string) => this.handleTabChange(id)}
                 className="mainTabs"
             >
@@ -69,7 +71,13 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
     }
     
     protected handleTabChange(id: string) {
-        //this.props.routing.updateRoute({ mutationsGeneTab: id });
-        this.mutationsGeneTab = id;
+        // update the hash if routing exits
+        if (this.props.routing) {
+            this.props.routing.updateRoute({ mutationsGeneTab: id });
+        }
+        // update the observable if no routing
+        else {
+            this.mutationsGeneTab = id;
+        }
     }
 }
