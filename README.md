@@ -106,7 +106,12 @@ Start the webdriver-manager
 ```
 webdriver-manager start
 ```
-Run tests
+In one terminal run frontend (this will get mounted inside whatever
+`CBIOPORTAL_URL` is pointing to)
+```bash
+npm run start
+```
+In another terminal run the e2e tests
 ```bash
 # get CBIOPORTAL backend url from my-index.ejs
 export CBIOPORTAL_URL=http://$(grep '__API_ROOT__' my-index.ejs | cut -d= -f2 | tr -d "'" | tr -d [:space:] | tr -d ';')
