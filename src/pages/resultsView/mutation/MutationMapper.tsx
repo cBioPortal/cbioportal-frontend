@@ -29,6 +29,10 @@ export interface IMutationMapperProps {
     mutationCountCache?:MutationCountCache;
     pdbHeaderCache?: PdbHeaderCache;
     pubMedCache?:PubMedCache;
+    enableOncoKb?: boolean;
+    enableMyCancerGenome?: boolean;
+    enableHotspot?: boolean;
+    enableCivic?: boolean;
 }
 
 @observer
@@ -124,6 +128,10 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                                 hotspots={this.props.store.indexedHotspotData}
                                 cosmicData={this.props.store.cosmicData.result}
                                 oncoKbData={this.props.store.oncoKbData.result}
+                                enableOncoKb={this.props.enableOncoKb}
+                                enableHotspot={this.props.enableHotspot}
+                                enableMyCancerGenome={this.props.enableMyCancerGenome}
+                                enableCivic={this.props.enableCivic}
                             />
                     </div>
                     )
