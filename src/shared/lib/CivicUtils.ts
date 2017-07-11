@@ -1,6 +1,4 @@
 import * as _ from 'lodash';
-import * as request from 'superagent';
-import CivicAPI from "shared/api/CivicAPI.ts";
 import {ICivicGene, ICivicGeneData, ICivicVariant, ICivicVariantData} from "shared/model/Civic.ts";
 import civicClient from "shared/api/civicClientInstance";
 
@@ -98,7 +96,7 @@ export function getCivicVariants(civicGenes: ICivicGene, mutationSpecs?: Array<M
         for (let geneName in civicGenes) {
             let geneEntry = civicGenes[geneName];
             let geneVariants = geneEntry.variants;
-            if (geneVariants != {}) {
+            if (!_.isEmpty(geneVariants)) {
                 for (let variantName in geneVariants) {
                     // Only retrieve CNA variants
                     if (variantName == 'AMPLIFICATION' || variantName == 'DELETION') {
