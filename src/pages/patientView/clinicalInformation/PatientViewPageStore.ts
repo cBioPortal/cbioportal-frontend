@@ -431,7 +431,7 @@ export class PatientViewPageStore {
             this.uncalledMutationData,
             this.clinicalDataForSamples
         ],
-        invoke: async() => fetchCivicGenes(this.mutationData, this.uncalledMutationData)
+        invoke: async() => AppConfig.showCivic ? fetchCivicGenes(this.mutationData, this.uncalledMutationData) : {}
     }, undefined);
     
     readonly civicVariants = remoteData<ICivicVariant | undefined>({
@@ -441,9 +441,13 @@ export class PatientViewPageStore {
             this.uncalledMutationData
         ],
         invoke: async() => {
-            if (this.civicGenes.status == "complete") {
+            if (AppConfig.showCivic && this.civicGenes.result) {
                 return fetchCivicVariants(this.civicGenes.result as ICivicGene, 
-                                          this.mutationData, this.uncalledMutationData);
+                    this.mutationData,
+                    this.uncalledMutationData);
+            }
+            else {
+                return {};
             }
        }
     }, undefined);
@@ -461,7 +465,7 @@ export class PatientViewPageStore {
             this.discreteCNAData,
             this.clinicalDataForSamples
         ],
-        invoke: async() => fetchCnaCivicGenes(this.discreteCNAData)
+        invoke: async() => AppConfig.showCivic ? fetchCnaCivicGenes(this.discreteCNAData) : {}
     }, undefined);
     
     readonly cnaCivicVariants = remoteData<ICivicVariant | undefined>({
