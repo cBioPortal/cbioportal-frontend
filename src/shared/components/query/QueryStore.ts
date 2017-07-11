@@ -761,7 +761,7 @@ export class QueryStore
 				if (!studyIds.length)
 					studyIds = this.cancerStudies.result.map(study => study.studyId);
 
-				const hash = `crosscancer/overview/${params.data_priority}/${encodeURIComponent(params.gene_list)}/${encodeURIComponent(studyIds.join(','))}`;
+				const hash = `crosscancer/overview`;
 				return {
 					pathname: `cross_cancer.do#${hash}`,
 					query: Object.assign({ cancer_study_list: studyIds.join(",")}, params),
@@ -801,6 +801,25 @@ export class QueryStore
 		const windowStudyId = (window as any).selectedCancerStudyId;
 		if (windowStudyId && !this.selectedStudyIdsSet[windowStudyId]) {
 			this.selectedStudyIds = this.selectedStudyIds.concat(windowStudyId);
+		}
+
+		const windowSelectedStudyIds = (window as any).selectedStudyIds && (window as any).selectedStudyIds.split(",");
+		if (windowSelectedStudyIds) {
+			for (let studyId of windowSelectedStudyIds) {
+				if (!this.selectedStudyIdsSet[studyId]) {
+					this.selectedStudyIds = this.selectedStudyIds.concat(studyId);
+				}
+			}
+		}
+
+		const windowGeneList = (window as any).geneList;
+		if (windowGeneList) {
+			this.geneQuery = windowGeneList;
+		}
+
+		const windowDataPriority = (window as any).dataPriority;
+		if (typeof windowDataPriority !== "undefined") {
+			this.dataTypePriorityCode = (windowDataPriority + "") as '0' | '1' | '2';
 		}
 
 		const windowSampleIds:string = (window as any).selectedSampleIds;
