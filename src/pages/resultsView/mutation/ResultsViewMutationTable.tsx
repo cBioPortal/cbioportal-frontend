@@ -50,7 +50,7 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
 
         // override default visibility for some columns
         this._columns[MutationTableColumnType.MUTATION_ASSESSOR].visible = true;
-
+        this._columns[MutationTableColumnType.CANCER_TYPE].visible = false;
 
         // order columns
         this._columns[MutationTableColumnType.SAMPLE_ID].order = 10;
