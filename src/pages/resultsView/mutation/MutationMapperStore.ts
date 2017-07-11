@@ -8,6 +8,7 @@ import {labelMobxPromises, MobxPromise, cached} from "mobxpromise";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {IHotspotData} from "shared/model/CancerHotspots";
 import {IPdbChain, PdbAlignmentIndex} from "shared/model/Pdb";
+import {ICivicGene, ICivicVariant} from "shared/model/Civic";
 import PdbPositionMappingCache from "shared/cache/PdbPositionMappingCache";
 import {calcPdbIdNumericalValue, mergeIndexedPdbAlignments} from "shared/lib/PdbUtils";
 import {lazyMobXTableSort} from "shared/components/lazyMobXTable/LazyMobXTable";
@@ -15,9 +16,8 @@ import {
     indexHotspotData, fetchHotspotsData, fetchCosmicData, fetchOncoKbData,
     fetchMutationData, generateSampleIdToTumorTypeMap, generateDataQueryFilter,
     ONCOKB_DEFAULT, fetchPdbAlignmentData, fetchSwissProtAccession, fetchUniprotId, indexPdbAlignmentData,
-    fetchPfamGeneData
+    fetchPfamGeneData, fetchCivicGenes, fetchCivicVariants
 } from "shared/lib/StoreUtils";
-import {IMobXApplicationDataStore, SimpleMobXApplicationDataStore} from "../../../shared/lib/IMobXApplicationDataStore";
 import MutationMapperDataStore from "./MutationMapperDataStore";
 import PdbChainDataStore from "./PdbChainDataStore";
 
@@ -171,6 +171,26 @@ export class MutationMapperStore {
             }
         }
     }, {});
+
+    readonly civicGenes = remoteData<ICivicGene | undefined>({
+        await: () => [
+            this.mutationData,
+            this.clinicalDataForSamples
+        ],
+        invoke: async() => fetchCivicGenes(this.mutationData)
+    }, undefined);
+
+    readonly civicVariants = remoteData<ICivicVariant | undefined>({
+        await: () => [
+            this.civicGenes,
+            this.mutationData
+        ],
+        invoke: async() => {
+            if (this.civicGenes.status == "complete") {
+                return fetchCivicVariants(this.civicGenes.result as ICivicGene, this.mutationData);
+            }
+        }
+    }, undefined);
 
     @computed get dataQueryFilter() {
         return generateDataQueryFilter(this.sampleListId, this.sampleIds.result);
