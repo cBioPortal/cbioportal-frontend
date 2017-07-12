@@ -34,19 +34,23 @@ export default class UnsupportedBrowserModal extends React.Component<{}, IBrowse
   }
 
   handleUnsupportedBrowsers(name:string, version: string) {
-      name = name.toLowerCase();
       const sessionStorage = window.sessionStorage.browserError || false;
       if (sessionStorage === true) {
           this.setState({show: false});
-      } else if (String(name) === 'unsupported') {
-          window.sessionStorage.browserError = true;
-          this.setState({show: true});
-      } else if (!(name === "chrome" || name === "firefox" || name === "edge") || (String(name) === "ie" && Number(version.slice(0,2)) < 11)) {
-          window.sessionStorage.browserError = true;
-          this.setState({show: true});
       } else {
-          this.setState({show: false});
-          window.sessionStorage.browserError = true;
+          const isIE11 = String(name) === "ie" && Number(version.slice(0,2)) === 11;
+          name = name.toLowerCase();
+
+          if (String(name) === 'unsupported') {
+              window.sessionStorage.browserError = true;
+              this.setState({show: true});
+          } else if (!(name === "chrome" || name === "firefox" || name === "edge" || isIE11))  {
+              window.sessionStorage.browserError = true;
+              this.setState({show: true});
+          } else {
+              this.setState({show: false});
+              window.sessionStorage.browserError = true;
+          }
       }
   }
 
