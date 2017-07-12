@@ -11,7 +11,7 @@ import sinon from 'sinon';
 describe('OncoKB', () => {
     const props = {
         indicator: undefined,
-        status: "loading"
+        status: "pending"
     } as IOncoKbProps;
 
     let component: ReactWrapper<any, any>;

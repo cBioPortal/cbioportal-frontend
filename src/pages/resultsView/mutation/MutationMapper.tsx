@@ -131,7 +131,7 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                                 myCancerGenomeData={this.props.myCancerGenomeData}
                                 hotspots={this.props.store.indexedHotspotData}
                                 cosmicData={this.props.store.cosmicData.result}
-                                oncoKbData={this.props.store.oncoKbData.result}
+                                oncoKbData={this.props.store.oncoKbData}
                             />
                     </div>
                     )

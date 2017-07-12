@@ -28,3 +28,8 @@ export interface IOncoKbData {
     indicatorMap: {[id:string]: IndicatorQueryResp} | null;
     sampleToTumorMap: {[sampleId:string]: string} | null;
 }
+
+export interface IOncoKbDataWrapper {
+    status: "pending" | "error" | "complete";
+    result?: IOncoKbData;
+}
