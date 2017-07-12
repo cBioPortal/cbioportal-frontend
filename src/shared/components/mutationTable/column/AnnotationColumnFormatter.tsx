@@ -7,7 +7,7 @@ import CancerHotspots from "shared/components/annotation/CancerHotspots";
 import MyCancerGenome from "shared/components/annotation/MyCancerGenome";
 import OncoKB from "shared/components/annotation/OncoKB";
 import Civic from "shared/components/annotation/Civic";
-import {IOncoKbData} from "shared/model/OncoKB";
+import {IOncoKbData, IOncoKbDataWrapper} from "shared/model/OncoKB";
 import {IMyCancerGenomeData, IMyCancerGenome} from "shared/model/MyCancerGenome";
 import {IHotspotData} from "shared/model/CancerHotspots";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
@@ -24,7 +24,7 @@ export interface IAnnotationColumnProps {
     enableCivic: boolean;
     hotspots?: IHotspotData;
     myCancerGenomeData?: IMyCancerGenomeData;
-    oncoKbData?: IOncoKbData;
+    oncoKbData?: IOncoKbDataWrapper;
     oncoKbEvidenceCache?: OncoKbEvidenceCache;
     pubMedCache?: OncokbPubMedCache;
     civicGenes?: ICivicGene;
@@ -36,7 +36,7 @@ export interface IAnnotation {
     is3dHotspot: boolean;
     myCancerGenomeLinks: string[];
     oncoKbIndicator?: IndicatorQueryResp;
-    oncoKbStatus: "error" | "complete" | "loading";
+    oncoKbStatus: "pending" | "error" | "complete";
     civicEntry?: ICivicEntry | null;
     hasCivicVariants: boolean;
 }
@@ -57,31 +57,10 @@ export default class AnnotationColumnFormatter
         };
     }
 
-    /**
-     * Derives status from data content.
-     * Default (empty) data means loading. Null data means error.
-     */
-    public static getOncoKbStatus(oncoKbData?: IOncoKbData): "complete"|"loading"|"error"
-    {
-        let status: "complete"|"loading"|"error" = "loading";
-
-        if (oncoKbData && oncoKbData.sampleToTumorMap === null && oncoKbData.indicatorMap === null) {
-            status = "error";
-        }
-        else if (oncoKbData && _.isEmpty(oncoKbData.sampleToTumorMap) && _.isEmpty(oncoKbData.indicatorMap)) {
-            status = "loading";
-        }
-        else {
-            status = "complete";
-        }
-
-        return status;
-    }
-
     public static getData(rowData:Mutation[]|undefined,
                           hotspotsData?:IHotspotData,
                           myCancerGenomeData?:IMyCancerGenomeData,
-                          oncoKbData?:IOncoKbData,
+                          oncoKbData?:IOncoKbDataWrapper,
                           civicGenes?:ICivicGene,
                           civicVariants?:ICivicVariant)
     {
@@ -91,14 +70,13 @@ export default class AnnotationColumnFormatter
             const mutation = rowData[0];
 
             let oncoKbIndicator: IndicatorQueryResp|undefined;
-            let oncoKbStatus = AnnotationColumnFormatter.getOncoKbStatus(oncoKbData);
 
-            if (oncoKbData && oncoKbStatus === "complete") {
-                oncoKbIndicator = AnnotationColumnFormatter.getIndicatorData(mutation, oncoKbData);
+            if (oncoKbData && oncoKbData.result && oncoKbData.status === "complete") {
+                oncoKbIndicator = AnnotationColumnFormatter.getIndicatorData(mutation, oncoKbData.result);
             }
 
             value = {
-                oncoKbStatus,
+                oncoKbStatus: oncoKbData ? oncoKbData.status : "pending",
                 oncoKbIndicator,
                 civicEntry: civicGenes && civicVariants ?
                     AnnotationColumnFormatter.getCivicEntry(mutation, civicGenes, civicVariants) : undefined,
@@ -198,7 +176,7 @@ export default class AnnotationColumnFormatter
     public static sortValue(data:Mutation[],
                             hotspotsData?:IHotspotData,
                             myCancerGenomeData?:IMyCancerGenomeData,
-                            oncoKbData?:IOncoKbData,
+                            oncoKbData?: IOncoKbDataWrapper,
                             civicGenes?: ICivicGene,
                             civicVariants?: ICivicVariant):number[] {
         const annotationData:IAnnotation = AnnotationColumnFormatter.getData(
@@ -223,8 +201,8 @@ export default class AnnotationColumnFormatter
 
         let evidenceQuery:Query|undefined;
 
-        if (columnProps.oncoKbData) {
-            evidenceQuery = this.getEvidenceQuery(data[0], columnProps.oncoKbData);
+        if (columnProps.oncoKbData && columnProps.oncoKbData.result) {
+            evidenceQuery = this.getEvidenceQuery(data[0], columnProps.oncoKbData.result);
         }
 
         return AnnotationColumnFormatter.mainContent(annotation,
