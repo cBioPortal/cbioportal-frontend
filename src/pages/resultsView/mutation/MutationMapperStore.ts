@@ -20,15 +20,18 @@ import {
 } from "shared/lib/StoreUtils";
 import MutationMapperDataStore from "./MutationMapperDataStore";
 import PdbChainDataStore from "./PdbChainDataStore";
+import {IMutationMapperConfig} from "./MutationMapper";
 
 export class MutationMapperStore {
 
-    constructor(hugoGeneSymbol:string,
+    constructor(config: IMutationMapperConfig,
+                hugoGeneSymbol:string,
                 mutationGeneticProfileId: MobxPromise<string>,
                 sampleIds: MobxPromise<string[]>,
                 clinicalDataForSamples: MobxPromise<ClinicalData[]>,
                 sampleListId: string|null)
     {
+        this.config = config;
         this.hugoGeneSymbol = hugoGeneSymbol;
         this.mutationGeneticProfileId = mutationGeneticProfileId;
         this.sampleIds = sampleIds;
@@ -41,6 +44,7 @@ export class MutationMapperStore {
     @observable protected sampleListId: string|null = null;
     @observable protected hugoGeneSymbol: string;
 
+    protected config: IMutationMapperConfig;
     protected mutationGeneticProfileId: MobxPromise<string>;
     protected clinicalDataForSamples: MobxPromise<ClinicalData[]>;
     protected sampleIds: MobxPromise<string[]>;
@@ -180,7 +184,7 @@ export class MutationMapperStore {
             this.mutationData,
             this.clinicalDataForSamples
         ],
-        invoke: async() => fetchCivicGenes(this.mutationData)
+        invoke: async() => this.config.showCivic ? fetchCivicGenes(this.mutationData) : {}
     }, undefined);
 
     readonly civicVariants = remoteData<ICivicVariant | undefined>({
@@ -189,8 +193,11 @@ export class MutationMapperStore {
             this.mutationData
         ],
         invoke: async() => {
-            if (this.civicGenes.status == "complete") {
+            if (this.config.showCivic && this.civicGenes.result) {
                 return fetchCivicVariants(this.civicGenes.result as ICivicGene, this.mutationData);
+            }
+            else {
+                return {};
             }
         }
     }, undefined);
