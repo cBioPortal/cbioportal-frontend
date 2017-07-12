@@ -296,16 +296,8 @@ describe('StoreUtils', () => {
                 done();
             });
         });
-        
-                it("will return null maps if there are mutations but sampleIdToTumorType map is empty", (done) => {
-            fetchOncoKbData({}, mutationDataWithNoKeyword).then((data: any) => {
-                assert.deepEqual(data, {sampleToTumorMap: null, indicatorMap: null});
-                done();
-            });
-        });
-
     });
-    
+
     describe('fetchCivicData', () => {
         it("won't fetch civic genes if there are no mutations", (done) => {
             fetchCivicGenes(emptyMutationData, emptyUncalledMutationData).then((data: any) => {
@@ -313,7 +305,7 @@ describe('StoreUtils', () => {
                 done();
             });
         });
-        
+
         it("won't fetch civic variants if there are no mutations", (done) => {
             fetchCivicVariants({}, emptyMutationData, emptyUncalledMutationData).then((data: any) => {
                 assert.deepEqual(data, {});

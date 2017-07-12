@@ -31,6 +31,8 @@ let config = {
     plugins: [
 
     ],
+
+    devtool : 'source-map'
 };
 
 config.plugins = [

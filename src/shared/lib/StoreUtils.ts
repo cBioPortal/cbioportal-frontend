@@ -319,13 +319,10 @@ export async function fetchOncoKbData(sampleIdToTumorType:{[sampleId: string]: s
     if (mutationDataResult.length === 0) {
         return ONCOKB_DEFAULT;
     }
-    else if (_.isEmpty(sampleIdToTumorType)) {
-        return ONCOKB_ERROR;
-    }
 
     const queryVariants = _.uniqBy(_.map(mutationDataResult, (mutation: Mutation) => {
         return generateQueryVariant(mutation.gene.entrezGeneId,
-            sampleIdToTumorType[mutation.sampleId],
+            cancerTypeForOncoKb(mutation.sampleId, sampleIdToTumorType),
             mutation.proteinChange,
             mutation.mutationType,
             mutation.proteinPosStart,
@@ -342,18 +339,23 @@ export async function fetchCnaOncoKbData(sampleIdToTumorType:{[sampleId: string]
     if (!discreteCNAData.result || discreteCNAData.result.length === 0) {
         return ONCOKB_DEFAULT;
     }
-    else if (_.isEmpty(sampleIdToTumorType)) {
-        return ONCOKB_ERROR;
-    }
     else
     {
         const queryVariants = _.uniqBy(_.map(discreteCNAData.result, (copyNumberData: DiscreteCopyNumberData) => {
             return generateQueryVariant(copyNumberData.gene.entrezGeneId,
-                sampleIdToTumorType[copyNumberData.sampleId],
+                cancerTypeForOncoKb(copyNumberData.sampleId, sampleIdToTumorType),
                 getAlterationString(copyNumberData.alteration));
         }), "id");
         return queryOncoKbData(queryVariants, sampleIdToTumorType, client);
     }
+}
+
+function cancerTypeForOncoKb(sampleId: string,
+                             sampleIdToTumorType:{[sampleId: string]: string}): string
+{
+    // first priority is sampleIdToTumorType map (derived either from the clinical data or from the study cancer type).
+    // if it is not valid, then we return an empty string and let OncoKB API figure out what to do
+    return sampleIdToTumorType[sampleId] || "";
 }
 
 export async function queryOncoKbData(queryVariants: Query[],
@@ -545,20 +547,47 @@ export function indexHotspotData(hotspotData:MobxPromise<ICancerHotspotData>): I
     }
 }
 
-export function generateSampleIdToTumorTypeMap(clinicalDataForSamples: MobxPromise<ClinicalData[]>): {[sampleId: string]: string}
+export function generateSampleIdToTumorTypeMap(clinicalDataForSamples: MobxPromise<ClinicalData[]>,
+                                               defaultCancerType?: string,
+                                               samples?: MobxPromise<Sample[]>): {[sampleId: string]: string}
 {
     const map: {[sampleId: string]: string} = {};
 
     if (clinicalDataForSamples.result) {
+        // first priority is CANCER_TYPE_DETAILED in clinical data
         _.each(clinicalDataForSamples.result, (clinicalData:ClinicalData) => {
             if (clinicalData.clinicalAttributeId === "CANCER_TYPE_DETAILED") {
                 map[clinicalData.entityId] = clinicalData.value;
             }
-            // update map with CANCER_TYPE value only if it is not already updated with CANCER_TYPE_DETAILED
-            else if (clinicalData.clinicalAttributeId === "CANCER_TYPE" && map[clinicalData.entityId] === undefined) {
+        });
+
+        // second priority is CANCER_TYPE in clinical data
+        _.each(clinicalDataForSamples.result, (clinicalData:ClinicalData) => {
+            // update map with CANCER_TYPE value only if it is not already updated
+            if (clinicalData.clinicalAttributeId === "CANCER_TYPE" && map[clinicalData.entityId] === undefined) {
                 map[clinicalData.entityId] = clinicalData.value;
             }
         });
+
+        // last resort: fall back to the default cancer type
+        if (defaultCancerType) {
+            if (samples && samples.result) {
+                _.each(samples.result, (sample: Sample) => {
+                    if (map[sample.sampleId] === undefined) {
+                        map[sample.sampleId] = defaultCancerType;
+                    }
+                });
+            }
+            // if no sample list is provided, try to get sample ids from clinical data...
+            else {
+                _.each(clinicalDataForSamples.result, (clinicalData:ClinicalData) => {
+                    // update map with defaultCancerType value only if it is not already updated
+                    if (map[clinicalData.entityId] === undefined) {
+                        map[clinicalData.entityId] = defaultCancerType;
+                    }
+                });
+            }
+        }
     }
 
     return map;

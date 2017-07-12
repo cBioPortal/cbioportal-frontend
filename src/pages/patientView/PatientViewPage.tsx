@@ -25,6 +25,7 @@ import {default as PatientViewMutationTable} from "./mutation/PatientViewMutatio
 import PathologyReport from "./pathologyReport/PathologyReport";
 import { MSKTabs, MSKTab } from "../../shared/components/MSKTabs/MSKTabs";
 import { validateParametersPatientView } from '../../shared/lib/validateParameters';
+import {ONCOKB_ERROR} from "shared/lib/StoreUtils";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import ValidationAlert from "shared/components/ValidationAlert";
 import AjaxErrorModal from "shared/components/AjaxErrorModal";
@@ -335,7 +336,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         myCancerGenomeData={patientViewPageStore.myCancerGenomeData}
                                         hotspots={patientViewPageStore.indexedHotspotData}
                                         cosmicData={patientViewPageStore.cosmicData.result}
-                                        oncoKbData={patientViewPageStore.oncoKbData.result}
+                                        oncoKbData={patientViewPageStore.oncoKbData.error ? ONCOKB_ERROR : patientViewPageStore.oncoKbData.result}
                                         civicGenes={patientViewPageStore.civicGenes.result}
                                         civicVariants={patientViewPageStore.civicVariants.result}
                                         enableOncoKb={AppConfig.showOncoKB}
@@ -353,7 +354,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             <CopyNumberTableWrapper
                                 sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
                                 sampleManager={sampleManager}
-                                cnaOncoKbData={patientViewPageStore.cnaOncoKbData.result}
+                                cnaOncoKbData={patientViewPageStore.cnaOncoKbData.error ? ONCOKB_ERROR : patientViewPageStore.cnaOncoKbData.result}
                                 cnaCivicGenes={patientViewPageStore.cnaCivicGenes.result}
                                 cnaCivicVariants={patientViewPageStore.cnaCivicVariants.result}
                                 oncoKbEvidenceCache={patientViewPageStore.oncoKbEvidenceCache}
