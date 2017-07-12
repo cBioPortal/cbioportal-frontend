@@ -154,7 +154,10 @@ export class MutationMapperStore {
         await: () => [
             this.mutationData
         ],
-        invoke: async () => fetchOncoKbData(this.sampleIdToTumorType, this.mutationData)
+        invoke: async () => fetchOncoKbData(this.sampleIdToTumorType, this.mutationData),
+        onError: (err: Error) => {
+            // fail silently, leave the error handling responsibility to the data consumer
+        }
     }, ONCOKB_DEFAULT);
 
     readonly pfamGeneData = remoteData({

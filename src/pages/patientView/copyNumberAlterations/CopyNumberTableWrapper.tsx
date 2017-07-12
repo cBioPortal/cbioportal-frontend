@@ -1,6 +1,4 @@
 import * as React from 'react';
-import FeatureTitle from "shared/components/featureTitle/FeatureTitle";
-import {PatientViewPageStore} from "../clinicalInformation/PatientViewPageStore";
 import {observer} from "mobx-react";
 import LazyMobXTable from "shared/components/lazyMobXTable/LazyMobXTable";
 import {DiscreteCopyNumberData} from "shared/api/generated/CBioPortalAPI";
@@ -12,11 +10,11 @@ import CnaColumnFormatter from "./column/CnaColumnFormatter";
 import AnnotationColumnFormatter from "./column/AnnotationColumnFormatter";
 import TumorColumnFormatter from "../mutation/column/TumorColumnFormatter";
 import SampleManager from "../sampleManager";
-import {IOncoKbData} from "../../../shared/model/OncoKB";
+import {IOncoKbDataWrapper} from "shared/model/OncoKB";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import PubMedCache from "shared/cache/PubMedCache";
 import MrnaExprRankCache from "shared/cache/MrnaExprRankCache";
-import {IGisticData} from "../../../shared/model/Gistic";
+import {IGisticData} from "shared/model/Gistic";
 import CopyNumberCountCache from "../clinicalInformation/CopyNumberCountCache";
 import {ICivicGene, ICivicVariant} from "shared/model/Civic.ts";
 
@@ -29,7 +27,7 @@ type CNATableColumn = Column<DiscreteCopyNumberData[]>&{order:number};
 type ICopyNumberTableWrapperProps = {
     sampleIds:string[];
     sampleManager:SampleManager|null;
-    cnaOncoKbData?:IOncoKbData;
+    cnaOncoKbData?: IOncoKbDataWrapper;
     cnaCivicGenes?: ICivicGene;
     cnaCivicVariants?: ICivicVariant,
     oncoKbEvidenceCache?:OncoKbEvidenceCache;

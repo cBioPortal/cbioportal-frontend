@@ -4,7 +4,7 @@ import {DiscreteCopyNumberData} from "shared/api/generated/CBioPortalAPI";
 import {
     IAnnotation, IAnnotationColumnProps, default as DefaultAnnotationColumnFormatter
 } from "shared/components/mutationTable/column/AnnotationColumnFormatter";
-import {IOncoKbData} from "shared/model/OncoKB";
+import {IOncoKbData, IOncoKbDataWrapper} from "shared/model/OncoKB";
 import OncoKB from "shared/components/annotation/OncoKB";
 import Civic from "shared/components/annotation/Civic";
 import {generateQueryVariantId, generateQueryVariant} from "shared/lib/OncoKbUtils";
@@ -19,7 +19,7 @@ import {buildCivicEntry} from "shared/lib/CivicUtils";
 export default class AnnotationColumnFormatter
 {
     public static getData(copyNumberData:DiscreteCopyNumberData[]|undefined,
-                          oncoKbData?:IOncoKbData,
+                          oncoKbData?: IOncoKbDataWrapper,
                           civicGenes?: ICivicGene,
                           civicVariants?: ICivicVariant)
     {
@@ -28,14 +28,13 @@ export default class AnnotationColumnFormatter
         if (copyNumberData)
         {
             let oncoKbIndicator: IndicatorQueryResp|undefined;
-            let oncoKbStatus = DefaultAnnotationColumnFormatter.getOncoKbStatus(oncoKbData);
 
-            if (oncoKbData && oncoKbStatus === "complete") {
-                oncoKbIndicator = AnnotationColumnFormatter.getIndicatorData(copyNumberData, oncoKbData);
+            if (oncoKbData && oncoKbData.result && oncoKbData.status === "complete") {
+                oncoKbIndicator = AnnotationColumnFormatter.getIndicatorData(copyNumberData, oncoKbData.result);
             }
 
             value = {
-                oncoKbStatus,
+                oncoKbStatus: oncoKbData ? oncoKbData.status : "pending",
                 oncoKbIndicator,
                 civicEntry: civicGenes && civicVariants ?
                     AnnotationColumnFormatter.getCivicEntry(copyNumberData, civicGenes, civicVariants) : undefined,
@@ -107,7 +106,7 @@ export default class AnnotationColumnFormatter
     }
 
     public static sortValue(data:DiscreteCopyNumberData[],
-                            oncoKbData?:IOncoKbData,
+                            oncoKbData?: IOncoKbDataWrapper,
                             civicGenes?: ICivicGene,
                             civicVariants?: ICivicVariant):number[] {
         const annotationData:IAnnotation = AnnotationColumnFormatter.getData(data, oncoKbData, civicGenes, civicVariants);
@@ -122,8 +121,8 @@ export default class AnnotationColumnFormatter
 
         let evidenceQuery:Query|undefined;
 
-        if (columnProps.oncoKbData) {
-            evidenceQuery = this.getEvidenceQuery(data, columnProps.oncoKbData);
+        if (columnProps.oncoKbData && columnProps.oncoKbData.result) {
+            evidenceQuery = this.getEvidenceQuery(data, columnProps.oncoKbData.result);
         }
 
         return DefaultAnnotationColumnFormatter.mainContent(annotation,
