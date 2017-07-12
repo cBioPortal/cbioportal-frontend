@@ -49,9 +49,19 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
     }
 
     condenseCancerTypes(x:ICancerTypeStudy, y:ICancerTypeStudy[], shortName:string) {
-        const studies = [..._.flattenDeep(_.map(y, 'studies')), ...x.studies]
+        let xStudy = x ? x : {studies:[], caseCount: 0};
+        const yStudies = _.without(y, null, undefined);
+        if (yStudies.length === 0) {
+            if (_.isEmpty(xStudy)) return false;
+            return {
+                caseCount: x.caseCount,
+                shortName,
+                studies: x.studies
+            };
+        }
+        const studies = [..._.flattenDeep(_.map(yStudies, 'studies')), ...xStudy.studies]
         return {
-            caseCount: y.reduce((a, b) => a + b.caseCount, x.caseCount),
+            caseCount: yStudies.reduce((a, b) => a + b!.caseCount, xStudy.caseCount),
             shortName,
             studies
         };
@@ -119,10 +129,10 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
         cancerTypeStudiesObj.ccrcc = this.condenseCancerTypes(ccrcc, [prcc, chrcc, nccrcc], 'Kidney');
         cancerTypeStudiesObj.mnet = this.condenseCancerTypes(mnet, [nbl, acc], 'Adrenal Gland');
 
-        cancerTypeStudiesObj = _.omit(cancerTypeStudiesObj, 'lusc', 'sclc', 'nsclc', 'plmeso',
+        cancerTypeStudiesObj = _.omitBy(_.omit(cancerTypeStudiesObj, 'lusc', 'sclc', 'nsclc', 'plmeso',
             'paad', 'panet', 'escc', 'acyc', 'head_neck', 'gbm', 'mbl', 'aml',
             'all', 'soft_tissue', 'es', 'mm', 'prcc', 'chrcc', 'nbl', 'acc', 'nccrcc',
-            'thyroid', 'mixed');
+            'thyroid', 'mixed'), value => value === false);
 
         const cancerTypeStudiesArray =  Object.keys(cancerTypeStudiesObj).map((cancerType) => (
             { type: cancerType,
