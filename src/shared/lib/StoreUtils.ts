@@ -42,11 +42,6 @@ export const ONCOKB_DEFAULT: IOncoKbData = {
     indicatorMap : {}
 };
 
-export const ONCOKB_ERROR: IOncoKbData = {
-    sampleToTumorMap : null,
-    indicatorMap : null
-};
-
 export const HOTSPOTS_DEFAULT = {
     single: [],
     clustered: []
