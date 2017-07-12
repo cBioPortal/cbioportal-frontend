@@ -3,7 +3,11 @@ import * as _ from 'lodash';
 import CBioPortalAPI from "../../../shared/api/generated/CBioPortalAPI";
 import { ClinicalDataBySampleId } from "../../../shared/api/api-types-extended";
 import {ClinicalData} from "../../../shared/api/generated/CBioPortalAPI";
+import {ClinicalTrialCount} from "../../../shared/api/generated/CBioPortalAPI";
+
 import {ClinicalInformationData} from "shared/model/ClinicalInformation";
+import {ClinicalTrials} from "shared/model/ClinicalTrials";
+
 import {getCbioPortalApiUrl} from "../../../shared/api/urls";
 //import { getTreeNodesFromClinicalData, PDXNode } from './PDXTree';
 //import sampleQuery from 'shared/api/mock/Samples_query_patient_P04.json';
@@ -97,3 +101,40 @@ export default async function getClinicalInformationData():Promise<ClinicalInfor
         clinicalDataSample
     );
 }
+
+// export async function getClinicalTrialCounts():Promise<ClinicalTrials> {
+//     const qs = URL.parse(location.href, true).query;
+//
+//     const studyId = qs['cancer_study_id'] + '';
+//     const patientId = qs['case_id'] + '';
+//
+//     if (!studyId || !patientId)
+//         throw new Error("cancer_study_id and case_id are required page query parameters");
+//
+//     const clinicalDataPatientPromise = tsClient.getAllClinicalDataOfPatientInStudyUsingGET({
+//         projection: 'DETAILED',
+//         studyId,
+//         patientId
+//     });
+//
+//     const samplesOfPatient = await tsClient.getAllSamplesOfPatientInStudyUsingGET({
+//         studyId,
+//         patientId
+//     });
+//
+//     const clinicalDataSample = await tsClient.fetchClinicalDataUsingPOST({
+//         clinicalDataType: 'SAMPLE',
+//         identifiers: samplesOfPatient.map(sample => ({
+//             entityId: sample.sampleId,
+//             studyId
+//         })),
+//         projection: 'DETAILED',
+//     });
+//
+//     return transformClinicalInformationToStoreShape(
+//         patientId,
+//         studyId,
+//         await clinicalDataPatientPromise,
+//         clinicalDataSample
+//     );
+// }

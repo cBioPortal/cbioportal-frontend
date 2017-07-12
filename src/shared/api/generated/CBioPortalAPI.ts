@@ -11,6 +11,11 @@ export type ClinicalData = {
         'value': string
 
 };
+export type ClinicalTrialCount = {
+    'mutation': string
+
+    'count': number
+};
 export type CopyNumberCount = {
     'alteration': number
 
@@ -779,6 +784,54 @@ export default class CBioPortalAPI {
             });
         };
 
+    /**
+     * Fetch clinical trial counts by mutations
+     * @method
+     * @name CBioPortalAPI#fetchClinicalDataUsingPOST
+     * @param {string} attributeId - Attribute ID e.g. CANCER_TYPE
+     * @param {string} clinicalDataType - Type of the clinical data
+     * @param {} identifiers - List of patient or sample identifiers
+     * @param {string} projection - Level of detail of the response
+     */
+    fetchClinicalTrialCountsUsingPOST(parameters: {
+        // 'mutation' ? : string,
+        // 'clinicalDataType' ? : "SAMPLE" | "PATIENT",
+        'mutations': Array < Mutation > ,
+        // 'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        // $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < Array < ClinicalTrialCount >
+        > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/molecularmatch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+
+
+            if (parameters['mutations'] !== undefined) {
+                body = parameters['mutations'];
+            }
+
+            if (parameters['mutations'] === undefined) {
+                reject(new Error('Missing required  parameter: mutations'));
+                return;
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        }).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+
     fetchCopyNumberSegmentsUsingPOSTURL(parameters: {
         'sampleIdentifiers': Array < SampleIdentifier > ,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
@@ -832,7 +885,7 @@ export default class CBioPortalAPI {
                 }
 
                 if (parameters['sampleIdentifiers'] === undefined) {
-                    reject(new Error('Missing required  parameter: sampleIdentifiers'));
+                    reject(new Error('Missing required parameter: sampleIdentifiers'));
                     return;
                 }
 

@@ -34,7 +34,7 @@ import {
     fetchMutationData, fetchDiscreteCNAData, generateSampleIdToTumorTypeMap, findMutationGeneticProfileId,
     findUncalledMutationGeneticProfileId, mergeMutationsIncludingUncalled, fetchGisticData, fetchCopyNumberData,
     fetchMutSigData, findMrnaRankGeneticProfileId, mergeDiscreteCNAData, fetchSamplesForPatient, fetchClinicalData,
-    fetchCopyNumberSegments, fetchClinicalDataForPatient
+    fetchCopyNumberSegments, fetchClinicalDataForPatient, fetchMolecularMatchTrials
 } from "shared/lib/StoreUtils";
 
 type PageMode = 'patient' | 'sample';
@@ -219,6 +219,14 @@ export class PatientViewPageStore {
             this.uncalledMutationData
         ],
         invoke: () => fetchCosmicData(this.mutationData, this.uncalledMutationData)
+    });
+
+    readonly clinicalTrials = remoteData({
+        await: () => [
+            this.mutationData,
+            this.uncalledMutationData
+        ],
+        invoke: () => fetchMolecularMatchTrials(this.mutationData, this.uncalledMutationData)
     });
 
     readonly mutSigData = remoteData({

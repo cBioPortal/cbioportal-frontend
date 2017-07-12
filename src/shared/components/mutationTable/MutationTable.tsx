@@ -3,7 +3,7 @@ import {observer} from "mobx-react";
 import {observable, computed} from "mobx";
 import * as _ from "lodash";
 import {default as LazyMobXTable, Column, SortDirection} from "shared/components/lazyMobXTable/LazyMobXTable";
-import {Mutation, ClinicalData, MutationCount} from "shared/api/generated/CBioPortalAPI";
+import {Mutation, ClinicalData, MutationCount, ClinicalTrialCount} from "shared/api/generated/CBioPortalAPI";
 import SampleColumnFormatter from "./column/SampleColumnFormatter";
 import TumorAlleleFreqColumnFormatter from "./column/TumorAlleleFreqColumnFormatter";
 import NormalAlleleFreqColumnFormatter from "./column/NormalAlleleFreqColumnFormatter";
@@ -35,6 +35,8 @@ import LazyLoadedTableCell from "shared/lib/LazyLoadedTableCell";
 import {CacheData} from "../../lib/LazyMobXCache";
 import CancerTypeColumnFormatter from "./column/CancerTypeColumnFormatter";
 import {IMobXApplicationDataStore} from "../../lib/IMobXApplicationDataStore";
+import {ClinicalTrials} from "../../model/ClinicalTrials";
+import ClinicalTrialsColumnFormatter from "./column/ClinicalTrialsColumnFormatter";
 
 export interface IMutationTableProps {
     studyId?:string;
@@ -55,6 +57,7 @@ export interface IMutationTableProps {
     hotspots?: IHotspotData;
     cosmicData?:ICosmicData;
     oncoKbData?:IOncoKbData;
+    molecularMatchData?:ClinicalTrialCount[];
     mrnaExprRankGeneticProfileId?:string;
     discreteCNAGeneticProfileId?:string;
     columns?:MutationTableColumnType[];
@@ -85,6 +88,7 @@ export enum MutationTableColumnType {
     NORMAL_ALLELE_FREQ,
     MUTATION_ASSESSOR,
     ANNOTATION,
+    CLINICAL_TRIALS,
     COSMIC,
     COPY_NUM,
     MRNA_EXPR,
@@ -393,6 +397,15 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                     this.props.myCancerGenomeData,
                     this.props.oncoKbData);
             }
+        };
+
+        this._columns[MutationTableColumnType.CLINICAL_TRIALS] = {
+            name: "Clinical Trials",
+            render: (d:Mutation[]) => (ClinicalTrialsColumnFormatter.renderFunction(d, {
+                enableMolecularMatch: this.props.enableOncoKb as boolean,
+                molecularMatchData: this.props.molecularMatchData
+
+            }))
         };
 
         this._columns[MutationTableColumnType.CANCER_TYPE] = {

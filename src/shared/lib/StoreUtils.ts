@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import {
     default as CBioPortalAPI, GeneticProfile, Mutation, MutationFilter, DiscreteCopyNumberData,
-    DiscreteCopyNumberFilter, ClinicalData, Sample, CancerStudy, CopyNumberCountIdentifier
+    DiscreteCopyNumberFilter, ClinicalData, Sample, CancerStudy, CopyNumberCountIdentifier, ClinicalTrialCount
 } from "shared/api/generated/CBioPortalAPI";
 import defaultClient from "shared/api/cbioportalClientInstance";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
@@ -26,6 +26,7 @@ import {IMyCancerGenomeData, IMyCancerGenome} from "shared/model/MyCancerGenome"
 import {IHotspotData, ICancerHotspotData} from "shared/model/CancerHotspots";
 import CancerHotspotsAPI from "shared/api/generated/CancerHotspotsAPI";
 import {GENETIC_PROFILE_MUTATIONS_SUFFIX, GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
+import {ClinicalTrial} from "../api/generated/MolecularMatchAPI";
 
 export const ONCOKB_DEFAULT: IOncoKbData = {
     sampleToTumorMap : {},
@@ -62,6 +63,26 @@ export async function fetchMutationData(mutationFilter:MutationFilter,
     } else {
         return [];
     }
+}
+
+export async function fetchMolecularMatchTrials(mutationData: MobxPromise<Mutation[]>,
+                                                uncalledMutationData?: MobxPromise<Mutation[]>,
+                                                client: CBioPortalAPI = defaultClient) {
+
+    const mutationDataResult = concatMutationData(mutationData, uncalledMutationData);
+
+    if (mutationDataResult.length === 0) {
+        return undefined;
+    }
+
+
+    const trialCounts: ClinicalTrialCount[] = await client.fetchClinicalTrialCountsUsingPOST({
+        mutations: mutationDataResult
+    });
+
+    return trialCounts;
+
+
 }
 
 export async function fetchClinicalData(studyId:string,
