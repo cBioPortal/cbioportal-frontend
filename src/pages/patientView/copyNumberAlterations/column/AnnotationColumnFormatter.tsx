@@ -25,10 +25,18 @@ export default class AnnotationColumnFormatter
     {
         let value: IAnnotation;
 
-        if (copyNumberData) {
+        if (copyNumberData)
+        {
+            let oncoKbIndicator: IndicatorQueryResp|undefined;
+            let oncoKbStatus = DefaultAnnotationColumnFormatter.getOncoKbStatus(oncoKbData);
+
+            if (oncoKbData && oncoKbStatus === "complete") {
+                oncoKbIndicator = AnnotationColumnFormatter.getIndicatorData(copyNumberData, oncoKbData);
+            }
+
             value = {
-                oncoKbIndicator: oncoKbData ?
-                    AnnotationColumnFormatter.getIndicatorData(copyNumberData, oncoKbData) : undefined,
+                oncoKbStatus,
+                oncoKbIndicator,
                 civicEntry: civicGenes && civicVariants ?
                     AnnotationColumnFormatter.getCivicEntry(copyNumberData, civicGenes, civicVariants) : undefined,
                 hasCivicVariants: civicGenes && civicVariants ?
@@ -39,19 +47,14 @@ export default class AnnotationColumnFormatter
             };
         }
         else {
-            value = {
-                myCancerGenomeLinks: [],
-                isHotspot: false,
-                is3dHotspot: false,
-                hasCivicVariants: true
-            };
+            value = DefaultAnnotationColumnFormatter.DEFAULT_ANNOTATION_DATA;
         }
 
         return value;
     }
 
    /**
-    * Returns an ICivicEntry if the civicGenes and civicVariants have information about the gene and the mutation (variant) specified. Otherwise it returns 
+    * Returns an ICivicEntry if the civicGenes and civicVariants have information about the gene and the mutation (variant) specified. Otherwise it returns
     * an empty object.
     */
     public static getCivicEntry(copyNumberData:DiscreteCopyNumberData[], civicGenes:ICivicGene, civicVariants:ICivicVariant): ICivicEntry | null
@@ -73,18 +76,18 @@ export default class AnnotationColumnFormatter
         let geneSymbol: string = copyNumberData[0].gene.hugoGeneSymbol;
         let geneVariants: {[name: string]: ICivicVariantData} = civicVariants[geneSymbol];
         let geneEntry: ICivicGeneData = civicGenes[geneSymbol];
-    
+
         if (geneEntry && !geneVariants) {
             return false;
         }
-        
+
         return true;
     }
-    
-    public static getIndicatorData(copyNumberData:DiscreteCopyNumberData[], oncoKbData:IOncoKbData): IndicatorQueryResp|null
+
+    public static getIndicatorData(copyNumberData:DiscreteCopyNumberData[], oncoKbData:IOncoKbData): IndicatorQueryResp|undefined
     {
         if (oncoKbData.sampleToTumorMap === null || oncoKbData.indicatorMap === null) {
-            return null;
+            return undefined;
         }
 
         const id = generateQueryVariantId(copyNumberData[0].gene.entrezGeneId,
@@ -94,13 +97,13 @@ export default class AnnotationColumnFormatter
         return oncoKbData.indicatorMap[id];
     }
 
-    public static getEvidenceQuery(copyNumberData:DiscreteCopyNumberData[], oncoKbData:IOncoKbData): Query|null
+    public static getEvidenceQuery(copyNumberData:DiscreteCopyNumberData[], oncoKbData:IOncoKbData): Query|undefined
     {
         // return null in case sampleToTumorMap is null
         return oncoKbData.sampleToTumorMap ? generateQueryVariant(copyNumberData[0].gene.entrezGeneId,
             oncoKbData.sampleToTumorMap[copyNumberData[0].sampleId],
             getAlterationString(copyNumberData[0].alteration)
-        ) : null;
+        ) : undefined;
     }
 
     public static sortValue(data:DiscreteCopyNumberData[],
@@ -108,7 +111,7 @@ export default class AnnotationColumnFormatter
                             civicGenes?: ICivicGene,
                             civicVariants?: ICivicVariant):number[] {
         const annotationData:IAnnotation = AnnotationColumnFormatter.getData(data, oncoKbData, civicGenes, civicVariants);
-        
+
         return _.flatten([OncoKB.sortValue(annotationData.oncoKbIndicator),
                          Civic.sortValue(annotationData.civicEntry)]);
     }
@@ -120,7 +123,7 @@ export default class AnnotationColumnFormatter
         let evidenceQuery:Query|undefined;
 
         if (columnProps.oncoKbData) {
-            evidenceQuery = this.getEvidenceQuery(data, columnProps.oncoKbData) || undefined;
+            evidenceQuery = this.getEvidenceQuery(data, columnProps.oncoKbData);
         }
 
         return DefaultAnnotationColumnFormatter.mainContent(annotation,

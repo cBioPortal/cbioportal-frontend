@@ -21,6 +21,19 @@ interface IPatientRow {
 
 export default class ClinicalInformationPatientTable extends React.Component<IClinicalInformationPatientTableProps, {}> {
 
+    private getDisplayValue(data:{attribute:string, value:string}):string {
+        let ret:string;
+        switch (data.attribute) {
+            case "Overall Survival (Months)":
+                ret = parseInt(data.value, 10).toFixed(0);
+                break;
+            default:
+                ret = data.value;
+                break;
+        }
+        return ret;
+    }
+
     public render() {
 
         const tableData = this.props.data && this.props.data.map((el: ClinicalData) => ({
@@ -39,7 +52,7 @@ export default class ClinicalInformationPatientTable extends React.Component<ICl
                       },
                       {
                           name:'Value',
-                          render: (data)=><span>{data.value}</span>,
+                          render: (data)=><span>{this.getDisplayValue(data)}</span>,
                           filter: (data:IPatientRow, filterString:string, filterStringUpper:string) =>
                             data.value.toString().toUpperCase().indexOf(filterStringUpper) > -1
                       }]}

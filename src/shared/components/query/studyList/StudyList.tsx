@@ -157,7 +157,7 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, void
 			this.logic.isHighlighted(study) && styles.highlighted,
 		);
 		return (
-			<li key={arrayIndex} className={liClassName}>
+			<li key={arrayIndex} className={liClassName} data-test='StudySelect'>
 				{this.renderStudyName(study)}
 				<div className={styles.StudyMeta}>
 					{this.renderSamples(study)}
