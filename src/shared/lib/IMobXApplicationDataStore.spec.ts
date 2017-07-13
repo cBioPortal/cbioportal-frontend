@@ -26,7 +26,7 @@ describe('SimpleMobXApplicationDataStore', ()=>{
         assert.deepEqual(store.tableData, store.sortedFilteredData, "with no selected data, sortedFilteredData is the tableData");
 
         assert.equal(store.filterString, "", "initial filter string is empty");
-        assert.isTrue(store.sortAscending, "initially sort ascending");
+        assert.isUndefined(store.sortAscending, "initially sort ascending if undefined");
         assert.equal(store.allData.filter((d:number)=>store.isHighlighted(d)).length, 0, "initially nothing is highlighted");
     });
 
