@@ -23,9 +23,10 @@ import {QuerySession} from "../../lib/QuerySession";
 import {stringListToIndexSet, stringListToSet} from "../../lib/StringUtils";
 import chunkMapReduce from "shared/lib/chunkMapReduce";
 import formSubmit from "shared/lib/formSubmit";
+import {urlParams} from "./QueryStoreUtils";
 
 // interface for communicating
-type CancerStudyQueryUrlParams = {
+export type CancerStudyQueryUrlParams = {
 	cancer_study_id: string,
 	genetic_profile_ids_PROFILE_MUTATION_EXTENDED: string,
 	genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION: string,
@@ -52,7 +53,7 @@ function isInteger(str:string)
 	return Number.isInteger(Number(str));
 }
 
-function normalizeQuery(geneQuery:string)
+export function normalizeQuery(geneQuery:string)
 {
 	return geneQuery.trim().replace(/^\s+|\s+$/g, '').replace(/[ \+]+/g, ' ').toUpperCase();
 }
@@ -730,46 +731,7 @@ export class QueryStore
 
 	readonly asyncUrlParams = remoteData({
 		await: () => [this.asyncCustomCaseSet],
-		invoke: async () => {
-			let params: CancerStudyQueryUrlParams = {
-				cancer_study_id: this.singleSelectedStudyId || 'all',
-				genetic_profile_ids_PROFILE_MUTATION_EXTENDED: this.getSelectedProfileIdFromGeneticAlterationType("MUTATION_EXTENDED"),
-				genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION: this.getSelectedProfileIdFromGeneticAlterationType("COPY_NUMBER_ALTERATION"),
-				genetic_profile_ids_PROFILE_MRNA_EXPRESSION: this.getSelectedProfileIdFromGeneticAlterationType("MRNA_EXPRESSION"),
-				genetic_profile_ids_PROFILE_METHYLATION: this.getSelectedProfileIdFromGeneticAlterationType("METHYLATION") || this.getSelectedProfileIdFromGeneticAlterationType("METHYLATION_BINARY"),
-				genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION: this.getSelectedProfileIdFromGeneticAlterationType("PROTEIN_LEVEL"),
-				Z_SCORE_THRESHOLD: this.zScoreThreshold,
-				RPPA_SCORE_THRESHOLD: this.rppaScoreThreshold,
-				data_priority: this.dataTypePriorityCode,
-				case_set_id: this.selectedSampleListId || '-1', // empty string won't work
-				case_ids: this.asyncCustomCaseSet.result.join('\r\n'),
-				gene_list: this.geneQuery || ' ', // empty string won't work
-				tab_index: this.forDownloadTab ? 'tab_download' : 'tab_visualize' as any,
-				transpose_matrix: this.transposeDataMatrix ? 'on' : undefined,
-				Action: 'Submit',
-			};
-
-			// Remove params with no value, because they may cause problems.
-			// For example, the server will always transpose if transpose_matrix is present, no matter the value.
-			for (let key in params)
-				if (!(params as any)[key])
-					delete (params as any)[key];
-
-			if (this.selectedStudyIds.length != 1)
-			{
-				let studyIds = this.selectedStudyIds;
-				if (!studyIds.length)
-					studyIds = this.cancerStudies.result.map(study => study.studyId);
-
-				const hash = `crosscancer/overview/${params.data_priority}/${encodeURIComponent(params.gene_list)}/${encodeURIComponent(studyIds.join(','))}`;
-				return {
-					pathname: `cross_cancer.do#${hash}`,
-					query: Object.assign({ cancer_study_list: studyIds.join(",")}, params),
-				};
-			}
-
-			return {pathname: 'index.do', query: params};
-		}
+		invoke: async () => urlParams(this)
 	});
 
 	////////////////////////////////////////////////////////////////////////////////
