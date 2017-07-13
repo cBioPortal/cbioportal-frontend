@@ -17,8 +17,8 @@ export interface IMobXApplicationDataStore<T> {
 
     // mobX observable public properties (note you can still implement with getter and setter)
     filterString:string;
-    sortAscending:boolean;
-    sortMetric:SortMetric<T>;
+    sortAscending:boolean|undefined;
+    sortMetric:SortMetric<T>|undefined;
 };
 
 export class SimpleMobXApplicationDataStore<T> implements IMobXApplicationDataStore<T> {
@@ -28,14 +28,18 @@ export class SimpleMobXApplicationDataStore<T> implements IMobXApplicationDataSt
     @observable protected dataHighlighter:(d:T)=>boolean;
 
     @observable public filterString:string;
-    @observable public sortMetric:SortMetric<T>;
-    @observable public sortAscending:boolean;
+    @observable public sortMetric:SortMetric<T>|undefined;
+    @observable public sortAscending:boolean|undefined;
 
     @computed get allData() {
         return this.data;
     }
     @computed get sortedData() {
-        return lazyMobXTableSort(this.allData, this.sortMetric, this.sortAscending);
+        // if not defined, use default values for sortMetric and sortAscending
+        const sortMetric = this.sortMetric || (() => 0);
+        const sortAscending = this.sortAscending !== undefined ? this.sortAscending : true;
+
+        return lazyMobXTableSort(this.allData, sortMetric, sortAscending);
     }
 
     @computed get sortedFilteredData() {
@@ -80,7 +84,5 @@ export class SimpleMobXApplicationDataStore<T> implements IMobXApplicationDataSt
         this.dataHighlighter = ()=>false;
         this.dataSelector = ()=>false;
         this.dataFilter = ()=>true;
-        this.sortMetric = ()=>0;
-        this.sortAscending = true;
     }
 }
