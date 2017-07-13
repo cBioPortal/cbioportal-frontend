@@ -18,8 +18,16 @@ import ProteinImpactTypePanel from "../../../shared/components/mutationTypePanel
 import ProteinChainPanel from "../../../shared/components/proteinChainPanel/ProteinChainPanel";
 import {computed, action, observable} from "mobx";
 
+export interface IMutationMapperConfig {
+    showCivic?: boolean;
+    showHotspot?: boolean;
+    showMyCancerGenome?: boolean;
+    showOncoKB?: boolean;
+}
+
 export interface IMutationMapperProps {
     store: MutationMapperStore;
+    config: IMutationMapperConfig;
     studyId?: string;
     studyToCancerType?:{[studyId:string]:string};
     myCancerGenomeData?: IMyCancerGenomeData;
@@ -29,10 +37,6 @@ export interface IMutationMapperProps {
     mutationCountCache?:MutationCountCache;
     pdbHeaderCache?: PdbHeaderCache;
     pubMedCache?:PubMedCache;
-    enableOncoKb?: boolean;
-    enableMyCancerGenome?: boolean;
-    enableHotspot?: boolean;
-    enableCivic?: boolean;
 }
 
 @observer
@@ -130,10 +134,10 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                                 oncoKbData={this.props.store.oncoKbData}
                                 civicGenes={this.props.store.civicGenes.result}
                                 civicVariants={this.props.store.civicVariants.result}
-                                enableOncoKb={this.props.enableOncoKb}
-                                enableHotspot={this.props.enableHotspot}
-                                enableMyCancerGenome={this.props.enableMyCancerGenome}
-                                enableCivic={this.props.enableCivic}
+                                enableOncoKb={this.props.config.showOncoKB}
+                                enableHotspot={this.props.config.showHotspot}
+                                enableMyCancerGenome={this.props.config.showMyCancerGenome}
+                                enableCivic={this.props.config.showCivic}
                             />
                     </div>
                     )

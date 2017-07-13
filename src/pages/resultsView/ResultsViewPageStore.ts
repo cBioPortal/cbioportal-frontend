@@ -1,5 +1,5 @@
 import {
-    Mutation, DiscreteCopyNumberFilter, DiscreteCopyNumberData, MutationFilter, Gene, CancerStudy
+    DiscreteCopyNumberFilter, DiscreteCopyNumberData
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {computed, observable, action} from "mobx";
@@ -7,19 +7,17 @@ import {remoteData, addErrorHandler} from "shared/api/remoteData";
 import {labelMobxPromises, cached} from "mobxpromise";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import PubMedCache from "shared/cache/PubMedCache";
-import {IOncoKbData} from "shared/model/OncoKB";
-import {IHotspotData} from "shared/model/CancerHotspots";
 import CancerTypeCache from "shared/cache/CancerTypeCache";
 import MutationCountCache from "shared/cache/MutationCountCache";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
 import PdbHeaderCache from "shared/cache/PdbHeaderCache";
 import {
-    indexHotspotData, fetchHotspotsData, mergeMutations, ONCOKB_DEFAULT,
-    fetchCosmicData, fetchOncoKbData, findGeneticProfileIdDiscrete, fetchMyCancerGenomeData, fetchMutationData,
-    fetchDiscreteCNAData, generateSampleIdToTumorTypeMap, findMutationGeneticProfileId, mergeDiscreteCNAData,
+    findGeneticProfileIdDiscrete, fetchMyCancerGenomeData,
+    fetchDiscreteCNAData, findMutationGeneticProfileId, mergeDiscreteCNAData,
     fetchSamples, fetchClinicalData, generateDataQueryFilter, makeStudyToCancerTypeMap
 } from "shared/lib/StoreUtils";
 import {MutationMapperStore} from "./mutation/MutationMapperStore";
+import AppConfig from "appConfig";
 
 export class ResultsViewPageStore {
 
@@ -62,7 +60,8 @@ export class ResultsViewPageStore {
             return undefined;
         }
         else {
-            const store = new MutationMapperStore(hugoGeneSymbol,
+            const store = new MutationMapperStore(AppConfig,
+                hugoGeneSymbol,
                 this.mutationGeneticProfileId,
                 this.sampleIds,
                 this.clinicalDataForSamples,
