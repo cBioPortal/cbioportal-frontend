@@ -102,11 +102,11 @@ export default class AnnotationColumnFormatter
     public static getCivicEntry(mutation:Mutation, civicGenes:ICivicGene, civicVariants:ICivicVariant): ICivicEntry | null
     {
         let geneSymbol: string = mutation.gene.hugoGeneSymbol;
-        let geneVariants: {[name: string]: ICivicVariantData} = civicVariants[geneSymbol];
-        let geneEntry: ICivicGeneData = civicGenes[geneSymbol];
         let civicEntry = null;
-        //Only search for matching Civic variants if the gene exists in the Civic API
-        if (geneVariants) {
+        //Only search for matching Civic variants if the gene mutation exists in the Civic API
+        if (civicVariants[geneSymbol] && civicVariants[geneSymbol][mutation.proteinChange]) {
+            let geneVariants: {[name: string]: ICivicVariantData} = {[mutation.proteinChange]: civicVariants[geneSymbol][mutation.proteinChange]};
+            let geneEntry: ICivicGeneData = civicGenes[geneSymbol];
             civicEntry = buildCivicEntry(geneEntry, geneVariants);
         }
 
