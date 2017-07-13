@@ -424,13 +424,22 @@ class LazyMobXTableStore<T> {
         this.highlightColor = props.highlightColor!;
 
         if (props.dataStore) {
-            // if dataStore passed in, inherit its current state
             this.dataStore = props.dataStore;
-            this.sortAscending = this.dataStore.sortAscending;
         } else {
-            // else, initialize it to the tables state
             this.dataStore = new SimpleMobXApplicationDataStore<T>(props.data || []);
+        }
+
+        // even if dataStore passed in, we need to initialize sort props if undefined
+        // otherwise we lose the functionality of 'initialSortColumn' and 'initialSortDirection' props
+        if (this.dataStore.sortAscending === undefined) {
             this.dataStore.sortAscending = this.sortAscending;
+        }
+        else {
+            // inherit the current state if defined
+            this.sortAscending = this.dataStore.sortAscending;
+        }
+
+        if (this.dataStore.sortMetric === undefined) {
             this.dataStore.sortMetric = this.sortMetric;
         }
     }
