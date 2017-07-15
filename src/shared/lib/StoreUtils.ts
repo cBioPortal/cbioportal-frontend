@@ -65,22 +65,36 @@ export async function fetchMutationData(mutationFilter:MutationFilter,
     }
 }
 
-export async function fetchMolecularMatchTrials(mutationData: MobxPromise<Mutation[]>,
-                                                uncalledMutationData?: MobxPromise<Mutation[]>,
+export async function fetchMolecularMatchTrials(mutationData:MobxPromise<Mutation[]>,
                                                 client: CBioPortalAPI = defaultClient) {
 
-    const mutationDataResult = concatMutationData(mutationData, uncalledMutationData);
+    // const mutationDataResult = concatMutationData(mutationData, uncalledMutationData);
+    //
+    // if (mutationDataResult.length === 0) {
+    //     return undefined;
+    // }
 
-    if (mutationDataResult.length === 0) {
+
+    if(mutationData == null) {
         return undefined;
     }
 
 
-    const trialCounts: ClinicalTrialCount[] = await client.fetchClinicalTrialCountsUsingPOST({
-        mutations: mutationDataResult
+    var queryMutations:string[] = _.uniq(_.map(mutationData.result, function(mutation:Mutation) {
+        if (mutation && mutation.gene) {
+            return  "{\"facet\": \"MUTATION\", \"term\": " + mutation.gene + " " + mutation.proteinChange +"\"}";
+        }
+        else {
+            return "";
+        }
+    }));
+    var jsonString = JSON.stringify(queryMutations);
+
+
+    return await client.getMolecularMatchClinicalTrialsUsingPOST({
+        filters: jsonString
     });
 
-    return trialCounts;
 
 
 }

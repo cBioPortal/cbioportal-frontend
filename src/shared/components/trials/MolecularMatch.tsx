@@ -4,6 +4,7 @@ import {observer} from "mobx-react";
 import {Circle} from "better-react-spinkit";
 import DefaultTooltip from "shared/components/DefaultTooltip";
 import annotationStyles from "./styles/annotation.module.scss";
+import molecularMatchIconStyles from "./styles/molecularmatchIcon.module.scss";
 import {observable} from "mobx";
 
 export interface IMolecularMatchProps {
@@ -22,12 +23,12 @@ export default class MolecularMatch extends React.Component<IMolecularMatchProps
     @observable showFeedback:boolean = false;
     @observable tooltipDataLoadComplete:boolean = false;
 
-    // public static get ONCOGENIC_ICON_STYLE()
-    // {
-    //     return {
-    //         backgroundImage: `url(${require('./images/oncogenic_v2_09302016.png')})`
-    //     };
-    // }
+    public static get MOLECULAR_MATCH_ICON_STYLE()
+    {
+        return {
+            backgroundImage: `url(${require('./images/molecularmatch.png')})`
+        };
+    }
 
     constructor(props: IMolecularMatchProps)
     {
@@ -59,6 +60,9 @@ export default class MolecularMatch extends React.Component<IMolecularMatchProps
             mmContent = (
                 <span className={`${annotationStyles["annotation-item"]}`}>
                     <i
+                        className={`${molecularMatchIconStyles['molecularmatch-icon-image']} ${this.molecularMatchImageClassNames(this.props.count)}`}
+                        style={MolecularMatch.MOLECULAR_MATCH_ICON_STYLE}
+                        data-test='molecularmatch-icon-image'
                     />
                 </span>
             );
@@ -123,4 +127,17 @@ export default class MolecularMatch extends React.Component<IMolecularMatchProps
         this.showFeedback = false;
     }
 
+    private molecularMatchImageClassNames(count: number | any) {
+
+        let className: string;
+
+        if(count != null && count <= 10){
+            className = "count" + count;
+        }
+        else{
+            className = "countexceed-10";
+        }
+
+        return className;
+    }
 }

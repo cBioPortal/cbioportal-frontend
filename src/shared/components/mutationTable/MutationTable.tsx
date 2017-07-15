@@ -57,7 +57,7 @@ export interface IMutationTableProps {
     hotspots?: IHotspotData;
     cosmicData?:ICosmicData;
     oncoKbData?:IOncoKbData;
-    molecularMatchData?:ClinicalTrialCount[];
+    molecularMatchData?:Map<string, number>;
     mrnaExprRankGeneticProfileId?:string;
     discreteCNAGeneticProfileId?:string;
     columns?:MutationTableColumnType[];
@@ -402,7 +402,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
         this._columns[MutationTableColumnType.CLINICAL_TRIALS] = {
             name: "Clinical Trials",
             render: (d:Mutation[]) => (ClinicalTrialsColumnFormatter.renderFunction(d, {
-                enableMolecularMatch: this.props.enableOncoKb as boolean,
+                enableMolecularMatch: true,
                 molecularMatchData: this.props.molecularMatchData
 
             }))

@@ -1,24 +1,12 @@
 import * as React from 'react';
 import {If} from 'react-if';
-import * as _ from "lodash";
-import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
-import OncokbPubMedCache from "shared/cache/PubMedCache";
-import CancerHotspots from "shared/components/annotation/CancerHotspots";
-import MyCancerGenome from "shared/components/annotation/MyCancerGenome";
-import OncoKB from "shared/components/annotation/OncoKB";
-import {IOncoKbData} from "shared/model/OncoKB";
-import {IMyCancerGenomeData, IMyCancerGenome} from "shared/model/MyCancerGenome";
-import {IHotspotData} from "shared/model/CancerHotspots";
-import {ClinicalTrialCount, Mutation} from "shared/api/generated/CBioPortalAPI";
+import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {IndicatorQueryResp, Query} from "shared/api/generated/OncoKbAPI";
-import {generateQueryVariantId, generateQueryVariant} from "shared/lib/OncoKbUtils";
-import {isHotspot, is3dHotspot} from "shared/lib/AnnotationUtils";
-import {ClinicalTrials} from "../../../model/ClinicalTrials";
 import MolecularMatch from "../../trials/MolecularMatch";
 
 export interface IClinicalTrialsColumnProps {
     enableMolecularMatch: boolean;
-    molecularMatchData?: ClinicalTrialCount[];
+    molecularMatchData?: Map<string, number>;
 }
 
 export interface IClinicalTrial {
@@ -31,7 +19,7 @@ export interface IClinicalTrial {
 export default class ClinicalTrialsColumnFormatter
 {
     public static getData(rowData:Mutation[]|undefined,
-                          molecularMatchData?:ClinicalTrialCount[])
+                          molecularMatchData?:Map<string, number>)
     {
         let value: IClinicalTrial;
 
@@ -54,20 +42,18 @@ export default class ClinicalTrialsColumnFormatter
         return value;
     }
 
-    public static getIndicatorData(mutation:Mutation, molecularMatchData:ClinicalTrialCount[]): number
+    public static getIndicatorData(mutation:Mutation, molecularMatchData:Map<string, number>): number
     {
         if (molecularMatchData == null) {
             return 0;
         }
 
-        for(var c = 0 ; c < molecularMatchData.length; c++){ // clinicalTrial in
-            // molecularMatchData.clinicalData){
-
-            if(molecularMatchData[c].mutation == (mutation.gene + mutation.proteinChange)){
-
-                return molecularMatchData[c].count;
+        molecularMatchData.forEach((value: number, key: string) => {
+            if(key == (mutation.gene + " " + mutation.proteinChange)){
+                return value;
             }
-        }
+            console.log(key, value);
+        });
 
         return 0;
     }
