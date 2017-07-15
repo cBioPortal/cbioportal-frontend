@@ -23,11 +23,16 @@ import {QuerySession} from "../../lib/QuerySession";
 import {stringListToIndexSet, stringListToSet} from "../../lib/StringUtils";
 import chunkMapReduce from "shared/lib/chunkMapReduce";
 import formSubmit from "shared/lib/formSubmit";
-import {urlParams} from "./QueryStoreUtils";
+import {
+	GeneticProfileQueryParams, NonGeneticProfileQueryParams, queryUrl,
+	nonGeneticProfileParams, currentQueryParams, geneticProfileParams, queryParams
+} from "./QueryStoreUtils";
+import onMobxPromise from "shared/lib/onMobxPromise";
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
 	cancer_study_id: string,
+	cancer_study_list?:string,
 	genetic_profile_ids_PROFILE_MUTATION_EXTENDED: string,
 	genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION: string,
 	genetic_profile_ids_PROFILE_MRNA_EXPRESSION: string,
@@ -87,6 +92,12 @@ export const QueryParamsKeys:(keyof CancerStudyQueryParams)[] = [
 // mobx observable
 export class QueryStore
 {
+	private initialQueryParams:{
+		pathname:string,
+		nonGeneticProfileParams:NonGeneticProfileQueryParams,
+		geneticProfileIds: ReadonlyArray<string>
+	};
+
 	constructor(urlWithInitialParams?:string)
 	{
 		labelMobxPromises(this);
@@ -95,6 +106,14 @@ export class QueryStore
 
 		this.addParamsFromWindow();
 		this.setParamsFromQuerySession();
+
+
+		let initialNonGeneticProfileParams = nonGeneticProfileParams(this);
+		this.initialQueryParams = {
+			nonGeneticProfileParams: initialNonGeneticProfileParams,
+			pathname: queryUrl(this, initialNonGeneticProfileParams),
+			geneticProfileIds: this._selectedProfileIds || []
+		};
 	}
 
 	copyFrom(other:CancerStudyQueryParams)
@@ -494,9 +513,8 @@ export class QueryStore
 
 	// DATA TYPE PRIORITY
 
-	@computed get dataTypePriorityCode():'0'|'1'|'2'
-	{
-		let {mutation, cna} = this.dataTypePriority;
+	private getDataTypePriorityCode(dataTypePriority:{mutation: boolean, cna: boolean}) {
+		let {mutation, cna} = dataTypePriority;
 		if (mutation && cna)
 			return '0';
 		if (mutation)
@@ -506,6 +524,7 @@ export class QueryStore
 
 		return '0';
 	}
+
 	set dataTypePriorityCode(code:'0'|'1'|'2')
 	{
 		switch (code)
@@ -545,9 +564,9 @@ export class QueryStore
 		return _.includes(this.selectedProfileIds, geneticProfileId);
 	}
 
-	getSelectedProfileIdFromGeneticAlterationType(geneticAlterationType:GeneticProfile['geneticAlterationType']):string
+	getSelectedProfileIdFromGeneticAlterationType(geneticAlterationType:GeneticProfile['geneticAlterationType'], selectedProfileIds?: ReadonlyArray<string>):string
 	{
-		for (let profileId of this.selectedProfileIds)
+		for (let profileId of (selectedProfileIds || this.selectedProfileIds))
 		{
 			let profile = this.dict_geneticProfileId_geneticProfile[profileId];
 			if (profile && profile.geneticAlterationType == geneticAlterationType)
@@ -731,7 +750,7 @@ export class QueryStore
 
 	readonly asyncUrlParams = remoteData({
 		await: () => [this.asyncCustomCaseSet],
-		invoke: async () => urlParams(this)
+		invoke: async () => currentQueryParams(this)
 	});
 
 	////////////////////////////////////////////////////////////////////////////////
@@ -922,6 +941,19 @@ export class QueryStore
 			window.history.pushState(null, window.document.title, historyUrl);*/
 
 		formSubmit(urlParams.pathname, urlParams.query)
+	}
+
+	@action addGenesAndSubmit(genes:string[]) {
+		onMobxPromise(this.geneticProfiles, ()=>{
+			const nonProfileParams = _.cloneDeep(this.initialQueryParams.nonGeneticProfileParams);
+			nonProfileParams.gene_list = normalizeQuery(nonProfileParams.gene_list + "\n" + genes.join(" "));
+
+			const profileParams = geneticProfileParams(this, this.initialQueryParams.geneticProfileIds);
+
+			const urlParams = queryParams(nonProfileParams, profileParams, this.initialQueryParams.pathname);
+
+			formSubmit(urlParams.pathname, urlParams.query);
+		});
 	}
 
 	@action sendToGenomeSpace()
