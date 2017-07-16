@@ -11,11 +11,6 @@ export type ClinicalData = {
         'value': string
 
 };
-export type ClinicalTrialCount = {
-    'mutation': string
-
-    'count': number
-};
 export type CopyNumberCount = {
     'alteration': number
 
@@ -837,7 +832,7 @@ export default class CBioPortalAPI {
                 }
 
                 if (parameters['sampleIdentifiers'] === undefined) {
-                    reject(new Error('Missing required parameter: sampleIdentifiers'));
+                    reject(new Error('Missing required  parameter: sampleIdentifiers'));
                     return;
                 }
 
@@ -2244,6 +2239,75 @@ export default class CBioPortalAPI {
             });
         };
 
+    getMolecularMatchClinicalTrialsUsingPOSTURL(parameters: {
+        'filters': string,
+        'method' ? : "GET" | "POST" | "HEAD" | "OPTIONS" | "PUT" | "PATCH" | "DELETE" | "TRACE",
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/molecularmatch';
+        if (parameters['filters'] !== undefined) {
+            queryParameters['filters'] = parameters['filters'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * getMolecularMatchClinicalTrials
+     * @method
+     * @name CBioPortalAPI#getMolecularMatchClinicalTrialsUsingPOST
+     * @param {string} filters - filters
+     * @param {} method - method
+     */
+    getMolecularMatchClinicalTrialsUsingPOST(parameters: {
+        'filters': string,
+        'method' ? : "GET" | "POST" | "HEAD" | "OPTIONS" | "PUT" | "PATCH" | "DELETE" | "TRACE",
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < Map<string, number> > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/molecularmatch';
+        let body: string;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = '*/*';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['filters'] === undefined) {
+                reject(new Error('Missing required  parameter: filters'));
+                return;
+            }
+
+            if (parameters['filters'] !== undefined) {
+                body = parameters['filters'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        }).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+
     fetchMutationsInMultipleGeneticProfilesUsingPOSTURL(parameters: {
         'mutationMultipleStudyFilter': MutationMultipleStudyFilter,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
@@ -2287,58 +2351,81 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * getMolecularMatchClinicalTrials
+     * Fetch mutations in multiple genetic profiles by sample IDs
      * @method
-     * @name CBioPortalAPI#getMolecularMatchClinicalTrialsUsingPOST
-     * @param {string} filters - filters
-     * @param {} method - method
+     * @name CBioPortalAPI#fetchMutationsInMultipleGeneticProfilesUsingPOST
+     * @param {} mutationMultipleStudyFilter - List of Genetic Profile ID and Sample ID pairs and Entrez Gene IDs
+     * @param {string} projection - Level of detail of the response
+     * @param {integer} pageSize - Page size of the result list
+     * @param {integer} pageNumber - Page number of the result list
+     * @param {string} sortBy - Name of the property that the result list is sorted by
+     * @param {string} direction - Direction of the sort
      */
-    getMolecularMatchClinicalTrialsUsingPOST(parameters: {
-        'filters': string,
-        'method' ? :"POST",
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < Map < string, number > >{
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/molecularmatch';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = '*/*';
-            headers['Content-Type'] = 'application/json';
+    fetchMutationsInMultipleGeneticProfilesUsingPOST(parameters: {
+            'mutationMultipleStudyFilter': MutationMultipleStudyFilter,
+            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'pageSize' ? : number,
+            'pageNumber' ? : number,
+            'sortBy' ? : "entrezGeneId" | "center" | "mutationStatus" | "validationStatus" | "tumorAltCount" | "tumorRefCount" | "normalAltCount" | "normalRefCount" | "aminoAcidChange" | "startPosition" | "endPosition" | "referenceAllele" | "variantAllele" | "proteinChange" | "mutationType" | "ncbiBuild" | "variantType" | "refseqMrnaId" | "proteinPosStart" | "proteinPosEnd" | "keyword",
+            'direction' ? : "ASC" | "DESC",
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < Mutation >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/mutations/fetch';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
 
-            if (parameters['filters'] !== undefined) {
-                queryParameters['filters'] = parameters['filters'];
-            }
+                if (parameters['mutationMultipleStudyFilter'] !== undefined) {
+                    body = parameters['mutationMultipleStudyFilter'];
+                }
 
-            if (parameters['filters'] === undefined) {
-                reject(new Error('Missing required  parameter: filters'));
-                return;
-            }
+                if (parameters['mutationMultipleStudyFilter'] === undefined) {
+                    reject(new Error('Missing required  parameter: mutationMultipleStudyFilter'));
+                    return;
+                }
 
-            if (parameters['method'] !== undefined) {
-                body = parameters['method'];
-            }
+                if (parameters['projection'] !== undefined) {
+                    queryParameters['projection'] = parameters['projection'];
+                }
 
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
+                if (parameters['pageSize'] !== undefined) {
+                    queryParameters['pageSize'] = parameters['pageSize'];
+                }
 
-            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+                if (parameters['pageNumber'] !== undefined) {
+                    queryParameters['pageNumber'] = parameters['pageNumber'];
+                }
 
-        }).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
+                if (parameters['sortBy'] !== undefined) {
+                    queryParameters['sortBy'] = parameters['sortBy'];
+                }
 
+                if (parameters['direction'] !== undefined) {
+                    queryParameters['direction'] = parameters['direction'];
+                }
 
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
 
     fetchPatientsUsingPOSTURL(parameters: {
         'patientIdentifiers': Array < PatientIdentifier > ,

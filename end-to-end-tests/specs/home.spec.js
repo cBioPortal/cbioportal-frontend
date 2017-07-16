@@ -12,25 +12,25 @@ describe('homepage', function() {
 
         var devMode = $('.alert-warning');
 
-        devMode.waitForExist(30000);
+        devMode.waitForExist(60000);
         assert(browser.getText('.alert-warning').indexOf('dev mode') > 0);
     });
 
-    it('it should have 29 studies in list', function () {
+    it('it should have 31 studies in list', function () {
         browser.url(CBIOPORTAL_URL);
 
         var studies = $('[data-test="cancerTypeListContainer"] > ul > ul');
         
         studies.waitForExist(10000); // same as `browser.waitForExist('.notification', 10000)`
         
-        //assert.equal(browser.elements('[@data-test=cancerTypeListContainer] > ul > ul').value.length, 29);
+        assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 31);
         
     });
 
 
     it('should filter study list according to filter text input', function () {
         
-        assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 29);
+        assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 31);
         
         var input = $(".autosuggest input[type=text]");
 
@@ -74,6 +74,8 @@ describe('patient page', function(){
         // wait for mutation to exist
         $('span*=PPP2R1A').waitForExist(60000);
 
+        browser.pause(500);
+
         // find oncokb image
         var oncokbIndicator = $('[data-test="oncogenic-icon-image"]');
         oncokbIndicator.waitForExist(30000);
@@ -90,4 +92,32 @@ describe('patient page', function(){
 
     });
 
+});
+
+describe('cross cancer query', function() {
+    it('should show cross cancer bar chart with TP53 in title when selecting multiple studies and querying for TP53', function() {
+        browser.url(`${CBIOPORTAL_URL}`);
+
+        $('[data-test="StudySelect"]').waitForExist(20000);
+        var checkBoxes = $$('[data-test="StudySelect"]');
+        
+        checkBoxes.forEach(function (checkBox, i) {
+            // select a tenth of existing studies
+            if (i % 10 === 0) {
+                checkBox.click();
+            }
+        });
+
+        // query tp53
+        $('[data-test="geneSet"]').setValue('TP53');
+        browser.waitForEnabled('[data-test="queryButton"]', 30000);
+        browser.click('[data-test="queryButton"]');
+
+        // make sure cross cancer title appears
+        $('.cctitle').waitForExist(60000);
+
+        // check if TP53 is in the title of the bar chart
+        var text = browser.getText('.cctitle')
+        assert(text.search('TP53') > -1);
+    });
 });

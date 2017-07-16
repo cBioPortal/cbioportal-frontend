@@ -3,10 +3,8 @@ import * as _ from 'lodash';
 import CBioPortalAPI from "../../../shared/api/generated/CBioPortalAPI";
 import { ClinicalDataBySampleId } from "../../../shared/api/api-types-extended";
 import {ClinicalData} from "../../../shared/api/generated/CBioPortalAPI";
-import {ClinicalTrialCount} from "../../../shared/api/generated/CBioPortalAPI";
 
 import {ClinicalInformationData} from "shared/model/ClinicalInformation";
-import {ClinicalTrials} from "shared/model/ClinicalTrials";
 
 import {getCbioPortalApiUrl} from "../../../shared/api/urls";
 //import { getTreeNodesFromClinicalData, PDXNode } from './PDXTree';
