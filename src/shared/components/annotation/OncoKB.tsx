@@ -19,7 +19,7 @@ import OncokbPubMedCache from "shared/cache/PubMedCache";
 import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
 
 export interface IOncoKbProps {
-    status: "complete" | "error" | "loading";
+    status: "pending" | "error" | "complete";
     indicator?: IndicatorQueryResp;
     evidenceCache?: OncoKbEvidenceCache;
     evidenceQuery?: Query;
@@ -82,7 +82,7 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
         if (this.props.status === "error") {
             oncoKbContent = this.errorIcon();
         }
-        else if (this.props.status === "loading") {
+        else if (this.props.status === "pending") {
             oncoKbContent = this.loaderIcon();
         }
         else if (this.props.indicator)

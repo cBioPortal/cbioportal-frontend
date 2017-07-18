@@ -3,7 +3,7 @@ import {observer} from "mobx-react";
 import {observable, computed} from "mobx";
 import * as _ from "lodash";
 import {default as LazyMobXTable, Column, SortDirection} from "shared/components/lazyMobXTable/LazyMobXTable";
-import {Mutation, ClinicalData, MutationCount} from "shared/api/generated/CBioPortalAPI";
+import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import SampleColumnFormatter from "./column/SampleColumnFormatter";
 import TumorAlleleFreqColumnFormatter from "./column/TumorAlleleFreqColumnFormatter";
 import NormalAlleleFreqColumnFormatter from "./column/NormalAlleleFreqColumnFormatter";
@@ -21,7 +21,8 @@ import {ICosmicData} from "shared/model/Cosmic";
 import AnnotationColumnFormatter from "./column/AnnotationColumnFormatter";
 import {IMyCancerGenomeData} from "shared/model/MyCancerGenome";
 import {IHotspotData} from "shared/model/CancerHotspots";
-import {IOncoKbData} from "shared/model/OncoKB";
+import {IOncoKbDataWrapper} from "shared/model/OncoKB";
+import {ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
 import {IMutSigData} from "shared/model/MutSig";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
@@ -31,8 +32,6 @@ import PubMedCache from "shared/cache/PubMedCache";
 import CancerTypeCache from "../../cache/CancerTypeCache";
 import MutationCountCache from "../../cache/MutationCountCache";
 import MutationCountColumnFormatter from "./column/MutationCountColumnFormatter";
-import LazyLoadedTableCell from "shared/lib/LazyLoadedTableCell";
-import {CacheData} from "../../lib/LazyMobXCache";
 import CancerTypeColumnFormatter from "./column/CancerTypeColumnFormatter";
 import {IMobXApplicationDataStore} from "../../lib/IMobXApplicationDataStore";
 
@@ -54,7 +53,9 @@ export interface IMutationTableProps {
     myCancerGenomeData?: IMyCancerGenomeData;
     hotspots?: IHotspotData;
     cosmicData?:ICosmicData;
-    oncoKbData?:IOncoKbData;
+    oncoKbData?: IOncoKbDataWrapper;
+    civicGenes?: ICivicGene;
+    civicVariants?: ICivicVariant;
     mrnaExprRankGeneticProfileId?:string;
     discreteCNAGeneticProfileId?:string;
     columns?:MutationTableColumnType[];
@@ -383,6 +384,9 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 oncoKbData: this.props.oncoKbData,
                 oncoKbEvidenceCache: this.props.oncoKbEvidenceCache,
                 pubMedCache: this.props.pubMedCache,
+                civicGenes: this.props.civicGenes,
+                civicVariants: this.props.civicVariants,
+                enableCivic: this.props.enableCivic as boolean,
                 enableOncoKb: this.props.enableOncoKb as boolean,
                 enableMyCancerGenome: this.props.enableMyCancerGenome as boolean,
                 enableHotspot: this.props.enableHotspot as boolean
@@ -391,7 +395,9 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 return AnnotationColumnFormatter.sortValue(d,
                     this.props.hotspots,
                     this.props.myCancerGenomeData,
-                    this.props.oncoKbData);
+                    this.props.oncoKbData,
+                    this.props.civicGenes,
+                    this.props.civicVariants);
             }
         };
 

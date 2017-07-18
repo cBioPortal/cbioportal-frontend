@@ -1,6 +1,7 @@
 import {
     fetchCosmicData, fetchOncoKbData, makeStudyToCancerTypeMap,
-    mergeMutationsIncludingUncalled, generateMutationIdByEvent, generateMutationIdByGeneAndProteinChangeAndEvent
+    mergeMutationsIncludingUncalled, generateMutationIdByEvent, generateMutationIdByGeneAndProteinChangeAndEvent,
+    fetchCivicGenes, fetchCnaCivicGenes, fetchCivicVariants
 } from "./StoreUtils";
 import * as _ from 'lodash';
 import { assert } from 'chai';
@@ -296,4 +297,27 @@ describe('StoreUtils', () => {
             });
         });
     });
+
+    describe('fetchCivicData', () => {
+        it("won't fetch civic genes if there are no mutations", (done) => {
+            fetchCivicGenes(emptyMutationData, emptyUncalledMutationData).then((data: any) => {
+                assert.deepEqual(data, {});
+                done();
+            });
+        });
+
+        it("won't fetch civic variants if there are no mutations", (done) => {
+            fetchCivicVariants({}, emptyMutationData, emptyUncalledMutationData).then((data: any) => {
+                assert.deepEqual(data, {});
+                done();
+            });
+        });
+        it("won't fetch civic variants if there are no civic genes", (done) => {
+            fetchCivicVariants({}).then((data: any) => {
+                assert.deepEqual(data, {});
+                done();
+            });
+        });
+    });
+
 });

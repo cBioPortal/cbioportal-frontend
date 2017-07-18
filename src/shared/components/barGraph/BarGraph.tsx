@@ -1,13 +1,11 @@
 import * as React from "react";
 import * as _ from 'lodash';
-import {ThreeBounce} from 'better-react-spinkit';
+import wordwrap from 'word-wrap';
+import { ThreeBounce } from 'better-react-spinkit';
 import { CancerStudy } from 'shared/api/generated/CBioPortalAPI';
-import * as Highcharts from 'highcharts';
-import './barGraph.scss';
+import { ChartTooltipItem } from '@types/chart.js';
 
-import HCE from 'highcharts/modules/exporting';
-HCE(Highcharts);
-
+import Chart from 'chart.js';
 
 export interface IBarGraphProps {
     data:CancerStudy[];
@@ -29,7 +27,7 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
         super();
     }
 
-    chartTarget:HTMLElement;
+    chartTarget:HTMLCanvasElement;
 
     shouldComponentUpdate() {
         return false;
@@ -39,7 +37,7 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
         const aliases:{[id:string]:string} = {
             'Ovarian': 'Ovary', 'Cervical': 'Cervix', 'Uterine': 'Uterus',
             'Melanoma': 'Skin', 'CCLE':'Mixed', 'Thymoma(TCGA)': 'Thymus', 'Uveal': 'Eye',
-            'Testicular': 'Testicle'
+            'Testicular': 'Testicle', 'Colorectal': 'Colon'
         };
         return _.mapValues(cancerStudiesObj, (cancerStudy) => {
             const shortName = cancerStudy.shortName.split(" ")[0];
@@ -51,9 +49,19 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
     }
 
     condenseCancerTypes(x:ICancerTypeStudy, y:ICancerTypeStudy[], shortName:string) {
-        const studies = [..._.flattenDeep(_.map(y, 'studies')), ...x.studies]
+        let xStudy = x ? x : {studies:[], caseCount: 0};
+        const yStudies = _.without(y, null, undefined);
+        if (yStudies.length === 0) {
+            if (_.isEmpty(xStudy)) return false;
+            return {
+                caseCount: x.caseCount,
+                shortName,
+                studies: x.studies
+            };
+        }
+        const studies = [..._.flattenDeep(_.map(yStudies, 'studies')), ...xStudy.studies]
         return {
-            caseCount: y.reduce((a, b) => a + b.caseCount, x.caseCount),
+            caseCount: yStudies.reduce((a, b) => a + b!.caseCount, xStudy.caseCount),
             shortName,
             studies
         };
@@ -97,6 +105,10 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
         }, {} as any);
     }
 
+    formatTooltipString(label: string) {
+        return wordwrap(label, {width: 30}).split(/\r?\n/).map(_label => _label.trim());
+    }
+
     componentDidMount() {
 
         let cancerTypeStudiesObj = this.reduceDataArray(this.props.data);
@@ -117,10 +129,10 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
         cancerTypeStudiesObj.ccrcc = this.condenseCancerTypes(ccrcc, [prcc, chrcc, nccrcc], 'Kidney');
         cancerTypeStudiesObj.mnet = this.condenseCancerTypes(mnet, [nbl, acc], 'Adrenal Gland');
 
-        cancerTypeStudiesObj = _.omit(cancerTypeStudiesObj, 'lusc', 'sclc', 'nsclc', 'plmeso',
+        cancerTypeStudiesObj = _.omitBy(_.omit(cancerTypeStudiesObj, 'lusc', 'sclc', 'nsclc', 'plmeso',
             'paad', 'panet', 'escc', 'acyc', 'head_neck', 'gbm', 'mbl', 'aml',
             'all', 'soft_tissue', 'es', 'mm', 'prcc', 'chrcc', 'nbl', 'acc', 'nccrcc',
-            'thyroid', 'mixed');
+            'thyroid', 'mixed'), value => value === false);
 
         const cancerTypeStudiesArray =  Object.keys(cancerTypeStudiesObj).map((cancerType) => (
             { type: cancerType,
@@ -129,74 +141,88 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
             .sort((a, b) => b.caseCount - a.caseCount)
             .slice(0, 20);
 
-        Highcharts.chart(this.chartTarget, {
+        const datasets = _.flattenDeep(cancerTypeStudiesArray.map((cancerStudySet, i) => (
+            cancerStudySet.studies.sort((a: CancerStudy, b:CancerStudy) => b.allSampleCount - a.allSampleCount).map((cancerStudy: CancerStudy, j: number) => {
+                const {name, studyId, allSampleCount} = cancerStudy;
+                const max = cancerStudySet.studies.length;
+                const colors = ['1E36BF', '128C47', 'BF2231', '7D1FBF', 'BF7D15'];
+                const color = this.lightenDarkenColor(colors[i%5], (j + 1)/max * 120);
+                return {
+                    borderColor: '#F1F6FE',
+                    backgroundColor: color,
+                    borderWidth: 1,
+                    label: name,
+                    total: cancerStudySet.caseCount,
+                    studyId,
+                    data: i === 0 ? [allSampleCount] : [...Array(i).fill(0), allSampleCount]
+                };}
+            ))
+        ));
 
-            chart: {type: 'bar', backgroundColor:'' },
+        const data = {
+            labels: cancerTypeStudiesArray.map(cancer => (cancer.shortName)),
+            datasets
+        };
 
-            exporting: { enabled:false },
-
-            title: {text: ''},
-
-            xAxis: {categories: cancerTypeStudiesArray.slice(0, 20).map((cancer) => (cancer.shortName)),
-                    labels: {style: {fontSize: '10px'}}},
-
-            yAxis: {
-                allowDecimals: false,
-                min: 0,
-                // max: 6000,
-                title: {text: ''}
+        const options = {
+            title: {
+                display: true,
+                text: 'Cases by Primary Site',
+                fontSize: 14,
+                fontStyle: 'normal'
             },
-
-            legend: {enabled: false},
-
-            tooltip: {
-                useHTML: true,
-                backgroundColor: '#ffffff',
-                formatter: function() {
-                    return `
-                            <div style="font-size:11px;">
-                                ${this.x}: ${this.point.stackTotal} cases
-                                <br/> 
-                                <span style="width: 200px !important; font-size:12px; color:${this.point.color}; overflow:auto; white-space:normal !important;" >
-                                    ${this.series.name}: <b>${this.point.y} cases</b>
-                                </span>
-                            </div>
-                          `;
+            onClick: function(e: Event) {
+                if (this.getElementAtEvent(e)[0]) {
+                    const {studyId} = datasets[this.getElementAtEvent(e)[0]._datasetIndex];
+                    window.location.href = 'study?id=' + studyId + '#summary';
                 }
             },
-
-            plotOptions: {
-                series: {
-                    stacking: 'normal',
-                    cursor: 'pointer',
-                    events: {
-                        click: function() {
-                            window.location.href= 'study?id=' + this.options.studyId, + '#summary';
-                        }
-                    }
+            responsive: true,
+            tooltips: {
+                enabled: true,
+                mode: 'nearest',
+                displayColors: false,
+                xPadding: 10,
+                yPadding: 10,
+                backgroundColor: 'rgb(255,255,255)',
+                bodyFontColor: '#000',
+                bodyFontStyle: 'bold',
+                bodyFontSize: 11,
+                titleFontColor: '#000',
+                titleFontStyle: 'normal',
+                callbacks: {
+                    title: (tooltipItem:ChartTooltipItem[], _data:any) => {
+                        const tooltipItems = tooltipItem[0];
+                        const label = tooltipItems.yLabel + ': ' + _data.datasets[tooltipItems.datasetIndex!].total+ ' cases';
+                        return this.formatTooltipString(label);
+                    },
+                    label: (tooltipItems:ChartTooltipItem, _data:any) => {
+                        const label = _data.datasets[tooltipItems.datasetIndex!].label + ': ' + tooltipItems.xLabel + ' cases';
+                        return this.formatTooltipString(label);
+                    },
                 }
             },
+            scales: {
+                xAxes: [{ stacked: true }],
+                yAxes: [{
+                    stacked: true,
+                    gridLines: {display: false},
+                    ticks: {fontSize: 11}
+                }]
+            },
+            legend: { display: false }
+        };
 
-            series: _.flattenDeep(cancerTypeStudiesArray.map((cancerStudySet, i:number) => (
-                cancerStudySet.studies.map((cancerStudy: CancerStudy, j: number) => {
-                    const {name, studyId, allSampleCount} = cancerStudy;
-                    const max = cancerStudySet.studies.length;
-                    const colors = ['1E36BF', '128C47', 'BF2231', '7D1FBF', 'BF7D15'];
-                    const color = this.lightenDarkenColor(colors[i%5], (max-j)/max * 120);
-                    return {
-                        borderColor: '#F1F6FE',
-                        name,
-                        studyId,
-                        data: i === 0 ? [{y: allSampleCount, color}] : [...Array(i).fill(0),{y: allSampleCount, color}]
-                    };
-                })
-            )))
-
+        new Chart(this.chartTarget, {
+            type: 'horizontalBar',
+            data,
+            options
         });
+
     }
 
     render() {
-        return <div ref={el => this.chartTarget = el} />;
+        return <canvas ref={el => this.chartTarget = el} height="500px"/>;
     }
 
 };

@@ -1,4 +1,6 @@
 import * as _ from 'lodash';
+import request from "superagent";
+import Response = request.Response;
 import {
     default as CBioPortalAPI, GeneticProfile, Mutation, MutationFilter, DiscreteCopyNumberData,
     DiscreteCopyNumberFilter, ClinicalData, Sample, CancerStudy, CopyNumberCountIdentifier
@@ -7,34 +9,37 @@ import defaultClient from "shared/api/cbioportalClientInstance";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import hotspot3DClient from 'shared/api/3DhotspotClientInstance';
 import hotspotClient from 'shared/api/hotspotClientInstance';
+import pdbAnnotationClient from "shared/api/pdbAnnotationClientInstance";
+import {PdbUniprotAlignment, default as PdbAnnotationAPI} from "shared/api/generated/PdbAnnotationAPI";
 import {
     CosmicMutation, default as CBioPortalAPIInternal,
     GisticToGene, Gistic, MutSig
 } from "shared/api/generated/CBioPortalAPIInternal";
 import oncokbClient from "shared/api/oncokbClientInstance";
+import civicClient from "shared/api/civicClientInstance";
 import {
     generateIdToIndicatorMap, generateQueryVariant, generateEvidenceQuery
 } from "shared/lib/OncoKbUtils";
+import {
+    getCivicVariants, getCivicGenes
+} from "shared/lib/CivicUtils";
 import {Query, default as OncoKbAPI} from "shared/api/generated/OncoKbAPI";
 import {getAlterationString} from "shared/lib/CopyNumberUtils";
 import {MobxPromise} from "mobxpromise";
 import {keywordToCosmic, indexHotspots, geneToMyCancerGenome} from "shared/lib/AnnotationUtils";
+import {processPdbAlignmentData} from "shared/lib/PdbUtils";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {IGisticData} from "shared/model/Gistic";
 import {IMutSigData} from "shared/model/MutSig";
 import {IMyCancerGenomeData, IMyCancerGenome} from "shared/model/MyCancerGenome";
 import {IHotspotData, ICancerHotspotData} from "shared/model/CancerHotspots";
+import {ICivicGeneData, ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
 import CancerHotspotsAPI from "shared/api/generated/CancerHotspotsAPI";
 import {GENETIC_PROFILE_MUTATIONS_SUFFIX, GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
 
 export const ONCOKB_DEFAULT: IOncoKbData = {
     sampleToTumorMap : {},
     indicatorMap : {}
-};
-
-export const ONCOKB_ERROR: IOncoKbData = {
-    sampleToTumorMap : null,
-    indicatorMap : null
 };
 
 export const HOTSPOTS_DEFAULT = {
@@ -62,6 +67,40 @@ export async function fetchMutationData(mutationFilter:MutationFilter,
     } else {
         return [];
     }
+}
+
+export async function fetchPdbAlignmentData(uniprotId: string,
+                                            client:PdbAnnotationAPI = pdbAnnotationClient)
+{
+    if (uniprotId) {
+        return await client.postPdbAlignmentByUniprot({
+            uniprotIds: [uniprotId]
+        });
+    } else {
+        return [];
+    }
+}
+
+export async function fetchSwissProtAccession(entrezGeneId: number)
+{
+    // TODO duplicate: see LollipopMutationPlot
+    const myGeneData:Response = await request.get(`http://mygene.info/v3/gene/${entrezGeneId}?fields=uniprot`);
+    return JSON.parse(myGeneData.text).uniprot["Swiss-Prot"];
+}
+
+export async function fetchUniprotId(swissProtAccession: string)
+{
+    const uniprotData:Response = await request.get(
+        `http://www.uniprot.org/uniprot/?query=accession:${swissProtAccession}&format=tab&columns=entry+name`);
+
+    return uniprotData.text.split("\n")[1];
+}
+
+export async function fetchPfamGeneData(swissProtAccession: string)
+{
+    const pfamData:Response = await request.get(
+        `http://www.cbioportal.org/proxy/pfam.xfam.org/protein/${swissProtAccession}/graphic`);
+    return JSON.parse(pfamData.text)[0];
 }
 
 export async function fetchClinicalData(studyId:string,
@@ -329,6 +368,61 @@ export async function queryOncoKbData(queryVariants: Query[],
     return oncoKbData;
 }
 
+export async function fetchCivicGenes(mutationData?:MobxPromise<Mutation[]>,
+                                      uncalledMutationData?:MobxPromise<Mutation[]>)
+{
+    const mutationDataResult = concatMutationData(mutationData, uncalledMutationData);
+
+    if (mutationDataResult.length === 0) {
+        return {};
+    }
+
+    let queryHugoSymbols: Array<string> = [];
+
+    mutationDataResult.forEach(function(mutation: Mutation) {
+        queryHugoSymbols.push(mutation.gene.hugoGeneSymbol);
+    });
+
+    let civicGenes: ICivicGene = await getCivicGenes(queryHugoSymbols);
+
+    return civicGenes;
+}
+
+export async function fetchCnaCivicGenes(discreteCNAData:MobxPromise<DiscreteCopyNumberData[]>)
+{
+    if (discreteCNAData.result && discreteCNAData.result.length > 0) {
+        let queryHugoSymbols: Array<string> = [];
+        
+        discreteCNAData.result.forEach(function(cna: DiscreteCopyNumberData) {
+            queryHugoSymbols.push(cna.gene.hugoGeneSymbol);
+        });
+    
+        //For some reason, Typescript indicates that getCivicGenes can be undefined: it can't
+        let civicGenes: ICivicGene = (await getCivicGenes(queryHugoSymbols)) as ICivicGene;
+    
+        return civicGenes;
+    } else {
+        return {};
+    }
+}
+
+export async function fetchCivicVariants(civicGenes: ICivicGene,
+                                         mutationData?:MobxPromise<Mutation[]>,
+                                         uncalledMutationData?:MobxPromise<Mutation[]>)
+{
+    let civicVariants: ICivicVariant = {};
+    const mutationDataResult = concatMutationData(mutationData, uncalledMutationData);
+
+    if (mutationDataResult.length > 0) {
+        civicVariants = (await getCivicVariants(civicGenes, mutationDataResult));
+    }
+    else if (!_.isEmpty(civicGenes)) {
+        civicVariants = (await getCivicVariants(civicGenes));
+    }
+
+    return civicVariants;
+}
+
 export async function fetchDiscreteCNAData(discreteCopyNumberFilter:DiscreteCopyNumberFilter,
                                            geneticProfileIdDiscrete:MobxPromise<string>,
                                            client:CBioPortalAPI = defaultClient)
@@ -519,6 +613,11 @@ export function mergeMutations(mutationData:MobxPromise<Mutation[]>,
     return Object.keys(idToMutations).map((id:string) => idToMutations[id]);
 }
 
+export function mergePdbAlignments(alignmentData: MobxPromise<PdbUniprotAlignment[]>)
+{
+    return processPdbAlignmentData(alignmentData.result || []);
+}
+
 export function mergeMutationsIncludingUncalled(mutationData:MobxPromise<Mutation[]>,
                                                 uncalledMutationData:MobxPromise<Mutation[]>,
                                                 generateMutationId:MutationIdGenerator = generateMutationIdByGeneAndProteinChangeAndEvent)
@@ -590,7 +689,7 @@ export function generateDataQueryFilter(sampleListId: string|null, sampleIds?: s
 }
 
 export function makeStudyToCancerTypeMap(studies:CancerStudy[]) {
-    return studies.reduce((map:{[studyId:string]:string}, next:CancerStudy)=>{
+    return studies.reduce((map:{[studyId:string]:string}, next:CancerStudy) => {
         map[next.studyId] = next.cancerType.name;
         return map;
     }, {});
