@@ -15,7 +15,7 @@ Master: http://cbioportal-frontend.herokuapp.com/#/patient?studyId=prad_fhcrc&ca
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
 
 This is the frontend code for cBioPortal using React, MobX and TypeScript. The
-frontend for the new patient view is now completely in this repo. The 
+frontend for the new patient view is now completely in this repo. The home page has been replaced as well. Currently some work is being done to replace parts of the query page (e.g. the mutations tab).
 
 Make sure you have the latest stable node version installed:
 
