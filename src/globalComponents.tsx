@@ -7,6 +7,8 @@ import QueryAndDownloadTabs from "./shared/components/query/QueryAndDownloadTabs
 
 const queryStore = new QueryStore(window.location.href);
 
+(window as any).addGenesAndSubmitQuery = queryStore.addGenesAndSubmit.bind(queryStore);
+
 exposeComponentRenderer('renderRightBar', ()=>{
     return <RightBar/>
 });
