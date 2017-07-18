@@ -9,20 +9,18 @@ import {
     ProteinImpactType,
     getProteinImpactType
 } from "../../lib/getCanonicalMutationType";
+import {IProteinImpactTypeColors} from "shared/lib/MutationUtils";
 import {MutationTypePanelButton} from "./MutationTypePanel";
 
-type ProteinImpactTypePanelProps = {
+export interface IProteinImpactTypePanelProps extends IProteinImpactTypeColors
+{
     dataStore:IMobXApplicationDataStore<Mutation[]>;
-    missenseColor:string;
-    inframeColor:string;
-    truncatingColor:string;
-    otherColor:string;
-};
+}
 
 const buttonOrder:ProteinImpactType[] = ["missense", "truncating", "inframe", "other"];
 
 @observer
-export default class ProteinImpactTypePanel extends React.Component<ProteinImpactTypePanelProps, {}> {
+export default class ProteinImpactTypePanel extends React.Component<IProteinImpactTypePanelProps, {}> {
     @computed get typeToColor():{[proteinImpactType:string]:string} {
         return {
             "missense": this.props.missenseColor,

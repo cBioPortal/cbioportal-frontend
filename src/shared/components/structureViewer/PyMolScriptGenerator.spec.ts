@@ -13,7 +13,7 @@ describe('PyMolScriptGenerator', () => {
     beforeEach(() => {
         // reset to defaults
         props = {
-            pdbUri: "http://www.rcsb.org/pdb/files/",
+            pdbUri: "https://files.rcsb.org/view/",
             proteinScheme: ProteinScheme.CARTOON,
             displayBoundMolecules: true,
             backgroundColor: "#EFEFEF",

@@ -3,9 +3,11 @@ import {observer} from "mobx-react";
 import {MSKTabs, MSKTab} from "shared/components/MSKTabs/MSKTabs";
 import {ResultsViewPageStore} from "../ResultsViewPageStore";
 import MutationMapper from "./MutationMapper";
+import {observable} from "mobx";
+import AppConfig from 'appConfig';
 
 export interface IMutationsPageProps {
-    routing: any;
+    routing?: any;
     genes: string[];
     store: ResultsViewPageStore;
 }
@@ -13,16 +15,23 @@ export interface IMutationsPageProps {
 @observer
 export default class Mutations extends React.Component<IMutationsPageProps, {}>
 {
+    @observable mutationsGeneTab:string;
+
     constructor(props: IMutationsPageProps) {
         super(props);
         this.handleTabChange.bind(this);
+        this.mutationsGeneTab = props.genes[0];
     }
 
     public render() {
+        // use routing if available, if not fall back to the observable variable
+        const activeTabId = this.props.routing ?
+            this.props.routing.location.query.mutationsGeneTab : this.mutationsGeneTab;
+
         return (
             <MSKTabs
                 id="mutationsPageTabs"
-                activeTabId={this.props.routing.location.query.mutationsGeneTab}
+                activeTabId={activeTabId}
                 onTabClick={(id:string) => this.handleTabChange(id)}
                 className="mainTabs"
             >
@@ -53,6 +62,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
                             mutationCountCache={this.props.store.mutationCountCache}
                             pdbHeaderCache={this.props.store.pdbHeaderCache}
                             myCancerGenomeData={this.props.store.myCancerGenomeData}
+                            config={AppConfig}
                         />
                     </MSKTab>
                 );
@@ -63,6 +73,13 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
     }
     
     protected handleTabChange(id: string) {
-        this.props.routing.updateRoute({ mutationsGeneTab: id });
+        // update the hash if routing exits
+        if (this.props.routing) {
+            this.props.routing.updateRoute({ mutationsGeneTab: id });
+        }
+        // update the observable if no routing
+        else {
+            this.mutationsGeneTab = id;
+        }
     }
 }
