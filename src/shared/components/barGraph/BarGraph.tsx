@@ -4,7 +4,7 @@ import wordwrap from 'word-wrap';
 import { ThreeBounce } from 'better-react-spinkit';
 import { CancerStudy } from 'shared/api/generated/CBioPortalAPI';
 import { ChartTooltipItem } from '@types/chart.js';
-
+const convertCssColorNameToHex = require('convert-css-color-name-to-hex');
 import Chart from 'chart.js';
 
 export interface IBarGraphProps {
@@ -14,6 +14,7 @@ export interface IBarGraphProps {
 interface ICancerTypeStudy {
     caseCount:number;
     shortName:string;
+    color: string;
     studies: CancerStudy[];
 };
 
@@ -56,14 +57,16 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
             return {
                 caseCount: x.caseCount,
                 shortName,
-                studies: x.studies
+                studies: x.studies,
+                color: x.color
             };
         }
         const studies = [..._.flattenDeep(_.map(yStudies, 'studies')), ...xStudy.studies]
         return {
             caseCount: yStudies.reduce((a, b) => a + b!.caseCount, xStudy.caseCount),
             shortName,
-            studies
+            studies,
+            color: yStudies[0]!.color
         };
     }
 
@@ -90,7 +93,7 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
 
     reduceDataArray(data:CancerStudy[]) {
         return _.reduce(data, (counterObj:ICounterObj, study) => {
-            const { cancerTypeId, allSampleCount, shortName } = study;
+            const { cancerTypeId, allSampleCount, shortName, cancerType } = study;
             if (counterObj[cancerTypeId]) {
                 counterObj[cancerTypeId].caseCount += allSampleCount;
                 counterObj[cancerTypeId].studies.push(study);
@@ -98,6 +101,7 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
                 counterObj[cancerTypeId] = {
                     caseCount: allSampleCount,
                     shortName,
+                    color: cancerType.dedicatedColor || "black",
                     studies: [study]
                 };
             }
@@ -143,10 +147,17 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
 
         const datasets = _.flattenDeep(cancerTypeStudiesArray.map((cancerStudySet, i) => (
             cancerStudySet.studies.sort((a: CancerStudy, b:CancerStudy) => b.allSampleCount - a.allSampleCount).map((cancerStudy: CancerStudy, j: number) => {
+                let lightenColorConstant = 3;
+                const cancerColor = cancerStudySet.color;
                 const {name, studyId, allSampleCount} = cancerStudy;
                 const max = cancerStudySet.studies.length;
-                const colors = ['1E36BF', '128C47', 'BF2231', '7D1FBF', 'BF7D15'];
-                const color = this.lightenDarkenColor(colors[i%5], (j + 1)/max * 120);
+                if (cancerColor === "Cyan") {
+                    lightenColorConstant = 18;
+                }
+                if (cancerColor === "LightBlue" || cancerColor === "LightSkyBlue" || cancerColor === "PeachPuff") {
+                    lightenColorConstant = 0;
+                }
+                const color = this.lightenDarkenColor(convertCssColorNameToHex(cancerColor).slice(1), (j + lightenColorConstant)/max * 90);
                 return {
                     borderColor: '#F1F6FE',
                     backgroundColor: color,
