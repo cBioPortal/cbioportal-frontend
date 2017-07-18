@@ -182,7 +182,7 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
                 fontSize: 14,
                 fontStyle: 'normal'
             },
-            onClick: function(e: Event) {
+            onClick: function (e: Event) {
                 if (this.getElementAtEvent(e)[0]) {
                     const {studyId} = datasets[this.getElementAtEvent(e)[0]._datasetIndex];
                     window.location.href = 'study?id=' + studyId + '#summary';
@@ -191,7 +191,6 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
             responsive: true,
             tooltips: {
                 enabled: true,
-                mode: 'nearest',
                 displayColors: false,
                 xPadding: 10,
                 yPadding: 10,
@@ -201,11 +200,18 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
                 bodyFontSize: 11,
                 titleFontColor: '#000',
                 titleFontStyle: 'normal',
+                filter: function (tooltipItem:ChartTooltipItem) {
+                    if (tooltipItem) {
+                        return Number(tooltipItem.xLabel) > 0;
+                    } return false;
+                },
                 callbacks: {
                     title: (tooltipItem:ChartTooltipItem[], _data:any) => {
-                        const tooltipItems = tooltipItem[0];
-                        const label = tooltipItems.yLabel + ': ' + _data.datasets[tooltipItems.datasetIndex!].total+ ' cases';
-                        return this.formatTooltipString(label);
+                        if (tooltipItem.length > 0) {
+                            const tooltipItems = tooltipItem[0];
+                            const label = tooltipItems.yLabel + ': ' + _data.datasets[tooltipItems.datasetIndex!].total + ' cases';
+                            return this.formatTooltipString(label);
+                        }
                     },
                     label: (tooltipItems:ChartTooltipItem, _data:any) => {
                         const label = _data.datasets[tooltipItems.datasetIndex!].label + ': ' + tooltipItems.xLabel + ' cases';
