@@ -93,7 +93,7 @@ export default class Domain extends React.Component<DomainProps, {}> {
         };
         const text = (reference ? (this.props.label || "") : this.displayText);
         if (reference) {
-            props.ref=this.handlers.textRef;
+            //props.ref=this.handlers.textRef;
             props.visibility="hidden";
             props.className=this.props.hitzoneClassName;
         }
