@@ -99,7 +99,7 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                             <div style={{marginLeft:"45px", marginTop:"5px", marginBottom:"10px"}}>
                                 <ButtonGroup className="pull-right">
                                     <Button className="btn-default" disabled={this.props.store.pdbChainDataStore.allData.length === 0} onClick={this.toggle3dPanel}>
-                                        3D Structure »
+                                        3D Structure <i className="fa fa-angle-double-right" aria-hidden="true"></i>
                                     </Button>
                                 </ButtonGroup>
                                 <ProteinImpactTypePanel
