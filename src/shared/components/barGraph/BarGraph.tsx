@@ -38,7 +38,7 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
         const aliases:{[id:string]:string} = {
             'Ovarian': 'Ovary', 'Cervical': 'Cervix', 'Uterine': 'Uterus',
             'Melanoma': 'Skin', 'CCLE':'Mixed', 'Thymoma(TCGA)': 'Thymus', 'Uveal': 'Eye',
-            'Testicular': 'Testicle', 'Colorectal': 'Colon'
+            'Testicular': 'Testicle', 'Colorectal': 'Colon', 'GCT': 'CNS/Brain'
         };
         return _.mapValues(cancerStudiesObj, (cancerStudy) => {
             const shortName = cancerStudy.shortName.split(" ")[0];
@@ -121,7 +121,7 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
 
         const {luad, lusc, sclc, nsclc, plmeso, paac, paad, panet, esca, escc,
             hnsc, acyc, head_neck, thpa, thyroid, mnet, nbl, acc, difg, gbm, mbl,
-            cll, aml, all, es, mm, soft_tissue, ccrcc, prcc, chrcc, nccrcc } = cancerTypeStudiesObj;
+            cll, aml, all, es, mm, soft_tissue, ccrcc, prcc, chrcc, nccrcc, stad, egc } = cancerTypeStudiesObj;
 
         cancerTypeStudiesObj.luad = this.condenseCancerTypes(luad, [lusc, sclc, nsclc, plmeso], 'Lung');
         cancerTypeStudiesObj.paac = this.condenseCancerTypes(paac, [paad, panet], 'Pancreas');
@@ -129,13 +129,14 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
         cancerTypeStudiesObj.hnsc = this.condenseCancerTypes(hnsc, [acyc, head_neck], 'Head/Neck');
         cancerTypeStudiesObj.thpa = this.condenseCancerTypes(thpa, [thyroid], 'Thyroid');
         cancerTypeStudiesObj.difg = this.condenseCancerTypes(difg, [gbm, mbl], 'Brain');
+        cancerTypeStudiesObj.difg = this.condenseCancerTypes(stad, [egc], 'Stomach');
         cancerTypeStudiesObj.cll = this.condenseCancerTypes(cll, [aml, all, soft_tissue, es, mm], 'Blood/Bone');
         cancerTypeStudiesObj.ccrcc = this.condenseCancerTypes(ccrcc, [prcc, chrcc, nccrcc], 'Kidney');
         cancerTypeStudiesObj.mnet = this.condenseCancerTypes(mnet, [nbl, acc], 'Adrenal Gland');
 
         cancerTypeStudiesObj = _.omitBy(_.omit(cancerTypeStudiesObj, 'lusc', 'sclc', 'nsclc', 'plmeso',
             'paad', 'panet', 'escc', 'acyc', 'head_neck', 'gbm', 'mbl', 'aml',
-            'all', 'soft_tissue', 'es', 'mm', 'prcc', 'chrcc', 'nbl', 'acc', 'nccrcc',
+            'all', 'soft_tissue', 'es', 'mm', 'prcc', 'chrcc', 'nbl', 'acc', 'nccrcc', 'egc',
             'thyroid', 'mixed'), value => value === false);
 
         const cancerTypeStudiesArray =  Object.keys(cancerTypeStudiesObj).map((cancerType) => (
@@ -153,8 +154,7 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
                 const max = cancerStudySet.studies.length;
                 if (cancerColor === "Cyan") {
                     lightenColorConstant = 18;
-                }
-                if (cancerColor === "LightBlue" || cancerColor === "LightSkyBlue" || cancerColor === "PeachPuff") {
+                } else if (cancerColor === "LightBlue" || cancerColor === "LightSkyBlue" || cancerColor === "PeachPuff") {
                     lightenColorConstant = 0;
                 }
                 const color = this.lightenDarkenColor(convertCssColorNameToHex(cancerColor).slice(1), (j + lightenColorConstant)/max * 90);
