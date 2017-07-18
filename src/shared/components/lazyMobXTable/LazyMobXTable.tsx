@@ -48,6 +48,8 @@ type LazyMobXTableProps<T> = {
     paginationProps?:IPaginationControlsProps;
     showColumnVisibility?:boolean;
     columnVisibilityProps?:IColumnVisibilityControlsProps;
+    highlightColor?:"yellow"|"bluegray";
+    pageToHighlight?:boolean;
 };
 
 function compareValues<U extends number|string>(a:U|null, b:U|null, asc:boolean):number {
@@ -140,6 +142,7 @@ class LazyMobXTableStore<T> {
     @observable.ref public columns:Column<T>[];
     @observable private _columnVisibility:{[columnId: string]: boolean};
     @observable public dataStore:IMobXApplicationDataStore<T>;
+    @observable private highlightColor:string;
 
     @computed public get itemsPerPage() {
         return this._itemsPerPage;
@@ -148,6 +151,17 @@ class LazyMobXTableStore<T> {
     public set itemsPerPage(i:number) {
         this._itemsPerPage = i;
         this.page = this.page; // trigger clamping in page setter
+    }
+
+    @computed get firstHighlightedRowIndex() {
+        let index = -1;
+        for (let i=0; i<this.displayData.length; i++) {
+            if (this.dataStore.isHighlighted(this.displayData[i])) {
+                index = i;
+                break;
+            }
+        }
+        return index;
     }
 
     @computed get displayData():T[] {
@@ -358,13 +372,21 @@ class LazyMobXTableStore<T> {
         });
     }
 
+    @computed get highlightClassName() {
+        if (this.highlightColor === "yellow") {
+            return "highlight";
+        } else if (this.highlightColor === "bluegray") {
+            return "highlight-bluegray";
+        }
+    }
+
     @computed get rows():JSX.Element[] {
         // We separate this so that highlighting isn't such a costly operation
         const ret = [];
         for (let i=0; i<this.visibleData.length; i++) {
             const rowProps:any = {};
             if (this.dataStore.isHighlighted(this.visibleData[i])) {
-                rowProps.className = "highlight";
+                rowProps.className = this.highlightClassName;
             }
             ret.push(
                 <tr key={i} {...rowProps}>
@@ -373,6 +395,10 @@ class LazyMobXTableStore<T> {
             );
         }
         return ret;
+    }
+
+    @action pageToRowIndex(index:number) {
+        this.page = Math.floor(index / this.itemsPerPage);
     }
 
     @action setFilterString(str:string) {
@@ -395,15 +421,25 @@ class LazyMobXTableStore<T> {
         this._itemsLabel = props.itemsLabel;
         this._itemsLabelPlural = props.itemsLabelPlural;
         this._columnVisibility = this.resolveColumnVisibility(props.columns);
+        this.highlightColor = props.highlightColor!;
 
         if (props.dataStore) {
-            // if dataStore passed in, inherit its current state
             this.dataStore = props.dataStore;
-            this.sortAscending = this.dataStore.sortAscending;
         } else {
-            // else, initialize it to the tables state
             this.dataStore = new SimpleMobXApplicationDataStore<T>(props.data || []);
+        }
+
+        // even if dataStore passed in, we need to initialize sort props if undefined
+        // otherwise we lose the functionality of 'initialSortColumn' and 'initialSortDirection' props
+        if (this.dataStore.sortAscending === undefined) {
             this.dataStore.sortAscending = this.sortAscending;
+        }
+        else {
+            // inherit the current state if defined
+            this.sortAscending = this.dataStore.sortAscending;
+        }
+
+        if (this.dataStore.sortMetric === undefined) {
             this.dataStore.sortMetric = this.sortMetric;
         }
     }
@@ -455,12 +491,14 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
     private handlers:{[fnName:string]:(...args:any[])=>void};
     private filterInput:HTMLInputElement;
     private filterInputReaction:IReactionDisposer;
+    private pageToHighlightReaction:IReactionDisposer;
 
     public static defaultProps = {
         showFilter: true,
         showCopyDownload: true,
         showPagination: true,
-        showColumnVisibility: true
+        showColumnVisibility: true,
+        highlightColor: "yellow"
     };
 
     public getDownloadData(): string
@@ -515,10 +553,19 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
             ()=>this.store.dataStore.filterString,
             str=>{ this.filterInput && (this.filterInput.value = str); }
         );
+        this.pageToHighlightReaction = reaction(
+            ()=>this.store.firstHighlightedRowIndex,
+            (index:number)=>{
+                if (this.props.pageToHighlight) {
+                    this.store.pageToRowIndex(this.store.firstHighlightedRowIndex);
+                }
+            }
+        );
     }
 
     componentWillUnmount() {
         this.filterInputReaction();
+        this.pageToHighlightReaction();
     }
 
     @action componentWillReceiveProps(nextProps:LazyMobXTableProps<T>) {
