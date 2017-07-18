@@ -154,7 +154,7 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
                 if (cancerColor === "Cyan") {
                     lightenColorConstant = 18;
                 }
-                if (cancerColor === "LightBlue" || cancerColor == "LightSkyBlue" || cancerColor == "PeachPuff") {
+                if (cancerColor === "LightBlue" || cancerColor === "LightSkyBlue" || cancerColor === "PeachPuff") {
                     lightenColorConstant = 0;
                 }
                 const color = this.lightenDarkenColor(convertCssColorNameToHex(cancerColor).slice(1), (j + lightenColorConstant)/max * 90);
