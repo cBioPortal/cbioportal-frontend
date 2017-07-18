@@ -7,27 +7,31 @@ import {remoteData} from "shared/api/remoteData";
 import {labelMobxPromises, MobxPromise, cached} from "mobxpromise";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {IHotspotData} from "shared/model/CancerHotspots";
-import {IPdbChain} from "shared/model/Pdb";
-import {calcPdbIdNumericalValue} from "shared/lib/PdbUtils";
+import {IPdbChain, PdbAlignmentIndex} from "shared/model/Pdb";
+import {ICivicGene, ICivicVariant} from "shared/model/Civic";
+import PdbPositionMappingCache from "shared/cache/PdbPositionMappingCache";
+import {calcPdbIdNumericalValue, mergeIndexedPdbAlignments} from "shared/lib/PdbUtils";
 import {lazyMobXTableSort} from "shared/components/lazyMobXTable/LazyMobXTable";
 import {
     indexHotspotData, fetchHotspotsData, fetchCosmicData, fetchOncoKbData,
     fetchMutationData, generateSampleIdToTumorTypeMap, generateDataQueryFilter,
-    ONCOKB_DEFAULT, fetchPdbAlignmentData, mergePdbAlignments, fetchSwissProtAccession, fetchUniprotId,
-    fetchPfamGeneData
+    ONCOKB_DEFAULT, fetchPdbAlignmentData, fetchSwissProtAccession, fetchUniprotId, indexPdbAlignmentData,
+    fetchPfamGeneData, fetchCivicGenes, fetchCivicVariants
 } from "shared/lib/StoreUtils";
-import {IMobXApplicationDataStore, SimpleMobXApplicationDataStore} from "../../../shared/lib/IMobXApplicationDataStore";
 import MutationMapperDataStore from "./MutationMapperDataStore";
 import PdbChainDataStore from "./PdbChainDataStore";
+import {IMutationMapperConfig} from "./MutationMapper";
 
 export class MutationMapperStore {
 
-    constructor(hugoGeneSymbol:string,
+    constructor(config: IMutationMapperConfig,
+                hugoGeneSymbol:string,
                 mutationGeneticProfileId: MobxPromise<string>,
                 sampleIds: MobxPromise<string[]>,
                 clinicalDataForSamples: MobxPromise<ClinicalData[]>,
                 sampleListId: string|null)
     {
+        this.config = config;
         this.hugoGeneSymbol = hugoGeneSymbol;
         this.mutationGeneticProfileId = mutationGeneticProfileId;
         this.sampleIds = sampleIds;
@@ -40,6 +44,7 @@ export class MutationMapperStore {
     @observable protected sampleListId: string|null = null;
     @observable protected hugoGeneSymbol: string;
 
+    protected config: IMutationMapperConfig;
     protected mutationGeneticProfileId: MobxPromise<string>;
     protected clinicalDataForSamples: MobxPromise<ClinicalData[]>;
     protected sampleIds: MobxPromise<string[]>;
@@ -152,7 +157,8 @@ export class MutationMapperStore {
 
     readonly oncoKbData = remoteData<IOncoKbData>({
         await: () => [
-            this.mutationData
+            this.mutationData,
+            this.clinicalDataForSamples
         ],
         invoke: async () => fetchOncoKbData(this.sampleIdToTumorType, this.mutationData),
         onError: (err: Error) => {
@@ -173,6 +179,29 @@ export class MutationMapperStore {
         }
     }, {});
 
+    readonly civicGenes = remoteData<ICivicGene | undefined>({
+        await: () => [
+            this.mutationData,
+            this.clinicalDataForSamples
+        ],
+        invoke: async() => this.config.showCivic ? fetchCivicGenes(this.mutationData) : {}
+    }, undefined);
+
+    readonly civicVariants = remoteData<ICivicVariant | undefined>({
+        await: () => [
+            this.civicGenes,
+            this.mutationData
+        ],
+        invoke: async() => {
+            if (this.config.showCivic && this.civicGenes.result) {
+                return fetchCivicVariants(this.civicGenes.result as ICivicGene, this.mutationData);
+            }
+            else {
+                return {};
+            }
+        }
+    }, undefined);
+
     @computed get dataQueryFilter() {
         return generateDataQueryFilter(this.sampleListId, this.sampleIds.result);
     }
@@ -183,7 +212,11 @@ export class MutationMapperStore {
     }
 
     @computed get mergedAlignmentData(): IPdbChain[] {
-        return mergePdbAlignments(this.alignmentData);
+        return mergeIndexedPdbAlignments(this.indexedAlignmentData);
+    }
+
+    @computed get indexedAlignmentData(): PdbAlignmentIndex {
+        return indexPdbAlignmentData(this.alignmentData);
     }
 
     @computed get sortedMergedAlignmentData(): IPdbChain[] {
@@ -214,5 +247,10 @@ export class MutationMapperStore {
     @cached get pdbChainDataStore(): PdbChainDataStore {
         // initialize with sorted merged alignment data
         return new PdbChainDataStore(this.sortedMergedAlignmentData);
+    }
+
+    @cached get pdbPositionMappingCache()
+    {
+        return new PdbPositionMappingCache();
     }
 }

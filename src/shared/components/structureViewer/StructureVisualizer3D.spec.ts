@@ -49,7 +49,7 @@ describe('StructureVisualizer3D', () => {
 
         // reset to defaults
         props = {
-            pdbUri: "http://www.rcsb.org/pdb/files/",
+            pdbUri: "https://files.rcsb.org/view/",
             proteinScheme: ProteinScheme.CARTOON,
             displayBoundMolecules: true,
             backgroundColor: "#FFFFFF",
@@ -304,12 +304,12 @@ describe('StructureVisualizer3D', () => {
 
         assert.equal(residueToColor[122], "0xFFDD00",
             "Residue 122 should be colored with highlight color (0xFFDD00) when NONE selected");
-        assert.equal(residueToColor[1710], undefined,
-            "Residue 1710 should not be colored when NONE selected");
+        assert.equal(residueToColor[1710], "0x888888",
+            "Residue 1710 should be colored with chain color when NONE selected");
         assert.equal(residueToColor[1815], "0xFFDD00",
             "Residue 1815 should be colored with highlight color (0xFFDD00) when NONE selected");
-        assert.equal(residueToColor[1835], undefined,
-            "Residue 1835 should not be colored when NONE selected");
+        assert.equal(residueToColor[1835], "0x888888",
+            "Residue 1835 should be colored with chain color when NONE selected");
     });
 
     it("styles and colors side chain atoms wrt the corresponding props", () => {

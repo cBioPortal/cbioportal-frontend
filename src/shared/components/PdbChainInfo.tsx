@@ -11,6 +11,7 @@ export interface IPdbChainInfoProps {
     chainId:string;
     cache?:PdbHeaderCache;
     truncateText?:boolean;
+    summaryFormat?:boolean;
 };
 
 @observer
@@ -47,16 +48,20 @@ export default class PdbChainInfo extends React.Component<IPdbChainInfoProps, {}
             <div className={this.props.truncateText ? "col col-sm-12" : ""}>
                 <div className={this.props.truncateText ? "row" : ""}>
                     <div className="pull-left" style={{paddingRight: 5}}>
-                        <span>PDB </span>
-                        <span>
-                            <a
-                                href={`http://www.rcsb.org/pdb/explore/explore.do?structureId=${this.props.pdbId}`}
-                                target="_blank"
-                            >
-                                <b>{this.props.pdbId}</b>
-                            </a>
+                        <span style={{fontWeight:this.props.summaryFormat ? "bold" : "normal"}}>
+                            <span>{this.props.summaryFormat ? "pdb" : "PDB"}</span>
+                            { !this.props.summaryFormat && (
+                                <span style={{paddingLeft: 5}}>
+                                    <a
+                                        href={`http://www.rcsb.org/pdb/explore/explore.do?structureId=${this.props.pdbId}`}
+                                        target="_blank"
+                                    >
+                                        <b>{this.props.pdbId}</b>
+                                    </a>
+                                </span>
+                            )}
+                            <span>:</span>
                         </span>
-                        <span>:</span>
                     </div>
                     <div>
                         {this.props.truncateText ?
@@ -67,9 +72,15 @@ export default class PdbChainInfo extends React.Component<IPdbChainInfoProps, {}
                 </div>
                 <div className={this.props.truncateText ? "row" : ""}>
                     <div className="pull-left" style={{paddingRight: 5}}>
-                        <span>Chain </span>
-                        <span><b>{this.props.chainId}</b></span>
-                        <span>:</span>
+                        <span style={{fontWeight:this.props.summaryFormat ? "bold" : "normal"}}>
+                            <span>{this.props.summaryFormat ? "chain" : "Chain"}</span>
+                            { !this.props.summaryFormat && (
+                                <span style={{paddingLeft: 3}}>
+                                    <b>{this.props.chainId}</b>
+                                </span>
+                            )}
+                            <span>:</span>
+                        </span>
                     </div>
                     <div>
                         {this.props.truncateText ?

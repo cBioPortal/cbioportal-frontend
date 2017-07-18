@@ -161,6 +161,8 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             name: "Sample ID",
             render: (d:Mutation[]) => SampleColumnFormatter.renderFunction(d, this.props.studyId),
             sortBy: SampleColumnFormatter.getTextValue,
+            filter: (d:Mutation[], filterString:string, filterStringUpper:string) =>
+                defaultFilter(d, "sampleId", filterStringUpper),
             visible: true
         };
 
@@ -405,6 +407,17 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             name: "Cancer Type",
             render:CancerTypeColumnFormatter.makeRenderFunction(this),
             sortBy:(d:Mutation[])=>CancerTypeColumnFormatter.sortBy(d, this.props.studyId, this.props.cancerTypeCache),
+            filter:(d:Mutation[], filterString:string, filterStringUpper:string) => {
+                if (this.props.cancerTypeCache) {
+                    return CancerTypeColumnFormatter.filter(d,
+                        filterStringUpper,
+                        this.props.studyId,
+                        this.props.cancerTypeCache,
+                        this.props.studyToCancerType);
+                } else {
+                    return false;
+                }
+            },
             tooltip:(<span>Cancer Type</span>),
         };
 
