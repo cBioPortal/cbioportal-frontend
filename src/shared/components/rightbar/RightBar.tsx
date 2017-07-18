@@ -51,7 +51,6 @@ export default class RightBar extends React.Component<{}, {}> {
                     </li>
                 </ul>
             </div>;
-        console.log(AppConfig.skinRightNavExamplesHTML);
 
         if (AppConfig.skinRightNavExamplesHTML) {
             return (
@@ -65,7 +64,6 @@ export default class RightBar extends React.Component<{}, {}> {
     }
 
     render(){
-
         const datasets:JSX.Element | null = AppConfig.skinRightNavShowDatasets? 
             (
                 <div className="rightBarSection">
