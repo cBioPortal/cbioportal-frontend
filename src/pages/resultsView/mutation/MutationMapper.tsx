@@ -10,6 +10,7 @@ import CancerTypeCache from "shared/cache/CancerTypeCache";
 import MutationCountCache from "shared/cache/MutationCountCache";
 import {IMyCancerGenomeData} from "shared/model/MyCancerGenome";
 import PdbHeaderCache from "shared/cache/PdbHeaderCache";
+import {DEFAULT_PROTEIN_IMPACT_TYPE_COLORS} from "shared/lib/MutationUtils";
 import {MutationMapperStore} from "./MutationMapperStore";
 import ResultsViewMutationTable from "./ResultsViewMutationTable";
 import LollipopMutationPlot from "../../../shared/components/lollipopMutationPlot/LollipopMutationPlot";
@@ -17,8 +18,16 @@ import ProteinImpactTypePanel from "../../../shared/components/mutationTypePanel
 import ProteinChainPanel from "../../../shared/components/proteinChainPanel/ProteinChainPanel";
 import {computed, action, observable} from "mobx";
 
+export interface IMutationMapperConfig {
+    showCivic?: boolean;
+    showHotspot?: boolean;
+    showMyCancerGenome?: boolean;
+    showOncoKB?: boolean;
+}
+
 export interface IMutationMapperProps {
     store: MutationMapperStore;
+    config: IMutationMapperConfig;
     studyId?: string;
     studyToCancerType?:{[studyId:string]:string};
     myCancerGenomeData?: IMyCancerGenomeData;
@@ -29,11 +38,6 @@ export interface IMutationMapperProps {
     pdbHeaderCache?: PdbHeaderCache;
     pubMedCache?:PubMedCache;
 }
-
-const MISSENSE_COLOR = "#008000";
-const TRUNCATING_COLOR = "#000000";
-const INFRAME_COLOR = "#8B4513";
-const OTHER_COLOR = "#8B00C9";
 
 @observer
 export default class MutationMapper extends React.Component<IMutationMapperProps, {}>
@@ -66,17 +70,14 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                         <StructureViewerPanel
                             mutationDataStore={this.props.store.dataStore}
                             pdbChainDataStore={this.props.store.pdbChainDataStore}
+                            pdbAlignmentIndex={this.props.store.indexedAlignmentData}
                             pdbHeaderCache={this.props.pdbHeaderCache}
+                            pdbPositionMappingCache={this.props.store.pdbPositionMappingCache}
                             onClose={this.close3dPanel}
+                            {...DEFAULT_PROTEIN_IMPACT_TYPE_COLORS}
                         />
                     )
                 }
-
-                <ButtonGroup className="pull-right">
-                    <Button className="btn-sm" disabled={this.props.store.pdbChainDataStore.allData.length === 0} onClick={this.toggle3dPanel}>
-                        3D Structure »
-                    </Button>
-                </ButtonGroup>
 
                 <LoadingIndicator isLoading={this.props.store.mutationData.isPending || this.props.store.gene.isPending} />
                 {
@@ -84,12 +85,9 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                         <div>
                             <LollipopMutationPlot
                                 store={this.props.store}
-                                missenseColor={MISSENSE_COLOR}
-                                inframeColor={INFRAME_COLOR}
-                                truncatingColor={TRUNCATING_COLOR}
-                                otherColor={OTHER_COLOR}
                                 onXAxisOffset={this.handlers.onXAxisOffset}
                                 geneWidth={this.geneWidth}
+                                {...DEFAULT_PROTEIN_IMPACT_TYPE_COLORS}
                             />
                             <ProteinChainPanel
                                 store={this.props.store}
@@ -99,12 +97,14 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                                 maxChainsHeight={200}
                             />
                             <div style={{marginLeft:"45px", marginTop:"5px", marginBottom:"10px"}}>
+                                <ButtonGroup className="pull-right">
+                                    <Button className="btn-default" disabled={this.props.store.pdbChainDataStore.allData.length === 0} onClick={this.toggle3dPanel}>
+                                        3D Structure <i className="fa fa-angle-double-right" aria-hidden="true"></i>
+                                    </Button>
+                                </ButtonGroup>
                                 <ProteinImpactTypePanel
                                     dataStore={this.props.store.dataStore}
-                                    missenseColor={MISSENSE_COLOR}
-                                    inframeColor={INFRAME_COLOR}
-                                    truncatingColor={TRUNCATING_COLOR}
-                                    otherColor={OTHER_COLOR}
+                                    {...DEFAULT_PROTEIN_IMPACT_TYPE_COLORS}
                                 />
                             </div>
                             {!this.props.store.dataStore.showingAllData &&
@@ -132,6 +132,12 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                                 hotspots={this.props.store.indexedHotspotData}
                                 cosmicData={this.props.store.cosmicData.result}
                                 oncoKbData={this.props.store.oncoKbData}
+                                civicGenes={this.props.store.civicGenes.result}
+                                civicVariants={this.props.store.civicVariants.result}
+                                enableOncoKb={this.props.config.showOncoKB}
+                                enableHotspot={this.props.config.showHotspot}
+                                enableMyCancerGenome={this.props.config.showMyCancerGenome}
+                                enableCivic={this.props.config.showCivic}
                             />
                     </div>
                     )

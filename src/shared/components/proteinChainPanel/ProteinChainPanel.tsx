@@ -1,8 +1,8 @@
 import * as React from "react";
 import ProteinChainView from "./ProteinChainView";
-import PDBChainTable from "./PDBChainTable"
+import PdbChainTable from "./PdbChainTable"
 import {observer} from "mobx-react";
-import {computed, observable, action} from "mobx";
+import {computed, observable, action, IReactionDisposer, reaction} from "mobx";
 import {ProteinChainSpec} from "./ProteinChainView";
 import Collapse from "react-collapse";
 import DefaultTooltip from "shared/components/DefaultTooltip";
@@ -18,7 +18,7 @@ type ProteinChainPanelProps = {
     store:MutationMapperStore;
     geneWidth:number;
     geneXOffset?:number;
-    maxChainsHeight?: number;
+    maxChainsHeight: number;
     pdbHeaderCache?:PdbHeaderCache;
 };
 
@@ -41,6 +41,8 @@ export default class ProteinChainPanel extends React.Component<ProteinChainPanel
 
     private collapseTimeout:number|null = null;
     private expandTimeout:number|null = null;
+    private chainUidToY:{[uid:string]:number} = {};
+    private onChainSelectReaction:IReactionDisposer;
 
     private expandDelayMs = 750;
     private collapseDelayMs = 3000;
@@ -101,8 +103,27 @@ export default class ProteinChainPanel extends React.Component<ProteinChainPanel
                 };
                 this.hoveredChain = this.props.store.pdbChainDataStore.getPdbChain(chainUid);
             },
+            setChainUidToY:(chainUidToY:{[uid:string]:number})=>{
+                this.chainUidToY = chainUidToY;
+            }
         };
+        this.onChainSelectReaction = reaction(
+            ()=>this.props.store.pdbChainDataStore.selectedUid,
+            (selectedUid:string)=>{
+                const chainY = this.chainUidToY[selectedUid];
+                if (typeof chainY !== "undefined" &&
+                    (chainY < this.chainDiv.scrollTop ||
+                    chainY > (this.chainDiv.scrollTop + this.props.maxChainsHeight))) {
+                    const halfChainsHeight = this.props.maxChainsHeight/2;
+                    this.chainDiv.scrollTop = chainY - halfChainsHeight;
+                }
+            },
 
+        );
+    }
+
+    componentWillUnmount() {
+        this.onChainSelectReaction();
     }
 
     @computed get chainScrollY() {
@@ -215,6 +236,7 @@ export default class ProteinChainPanel extends React.Component<ProteinChainPanel
                                 proteinLength={this.proteinLength}
                                 setHitZone={this.handlers.setHitZone}
                                 selectedChainUid={this.props.store.pdbChainDataStore.selectedUid}
+                                setChainUidToY={this.handlers.setChainUidToY}
                             />
                             <DefaultTooltip
                                 placement="top"
@@ -229,9 +251,14 @@ export default class ProteinChainPanel extends React.Component<ProteinChainPanel
                             <button onClick={this.handlers.togglePDBTable} className="btn btn-default" style={{float:"left"}}>PDB Chain Table</button>
                             <br/>
                             <br/>
-                            <div style={{display: this.pdbChainTableShown ? "inherit" : "none"}}>
-                                {/*<PDBChainTable/>*/}
-                                {"THIS IS WHERE TABLE GOES"}
+                            <div style={{
+                                display: this.pdbChainTableShown ? "inherit" : "none",
+                                maxWidth: this.props.geneWidth
+                            }}>
+                                <PdbChainTable
+                                    dataStore={this.props.store.pdbChainDataStore}
+                                    cache={this.props.pdbHeaderCache}
+                                />
                             </div>
                         </div>
                         <br/>
