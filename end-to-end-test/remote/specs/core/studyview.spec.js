@@ -193,13 +193,13 @@ describe('study laml_tcga tests', () => {
                 const beforeClick = getNumberOfStudyViewCharts();
                 browser.click(ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON);
 
-                browser.waitForVisible("[data-test='chart-container-CUSTOM_FILTERS_3']");
+                browser.waitForVisible("[data-test='chart-container-CUSTOM_FILTERS_4']");
 
                 // it should not impact any other charts
                 assert(beforeClick + 1 === getNumberOfStudyViewCharts());
 
                 // make sure the title is reflected
-                assert(getTextFromElement("[data-test='chart-container-CUSTOM_FILTERS_3'] .chartTitle") === 'Custom Chart 1');
+                assert(getTextFromElement("[data-test='chart-container-CUSTOM_FILTERS_4'] .chartTitle") === 'Custom Chart 1');
 
                 // make sure the chart is filtered
                 const res = browser.checkElement(".userSelections");
@@ -229,7 +229,7 @@ describe('add chart should not be shown in other irrelevant tabs', () => {
 describe('check the filters are working properly', ()=>{
 
     before(function() {
-        const url = `${CBIOPORTAL_URL}/study?id=laml_tcga&filters=%7B%2522clinicalDataEqualityFilters%2522:%5B%7B%2522attributeId%2522:%2522SEX%2522,%2522clinicalDataType%2522:%2522PATIENT%2522,%2522values%2522:%5B%2522Female%2522%5D%7D%5D,%2522clinicalDataIntervalFilters%2522:%5B%7B%2522attributeId%2522:%2522AGE%2522,%2522clinicalDataType%2522:%2522PATIENT%2522,%2522values%2522:%5B%7B%2522start%2522:25,%2522end%2522:30%7D,%7B%2522start%2522:30,%2522end%2522:35%7D,%7B%2522start%2522:35,%2522end%2522:40%7D,%7B%2522start%2522:40,%2522end%2522:45%7D,%7B%2522start%2522:45,%2522end%2522:50%7D,%7B%2522start%2522:50,%2522end%2522:55%7D,%7B%2522start%2522:55,%2522end%2522:60%7D,%7B%2522start%2522:60,%2522end%2522:65%7D,%7B%2522start%2522:65,%2522end%2522:70%7D,%7B%2522start%2522:70,%2522end%2522:75%7D,%7B%2522start%2522:75,%2522end%2522:80%7D%5D%7D%5D,%2522mutatedGenes%2522:%5B%7B%2522entrezGeneIds%2522:%5B2322,4869%5D%7D%5D,%2522cnaGenes%2522:%5B%7B%2522alterations%2522:%5B%7B%2522alteration%2522:-2,%2522entrezGeneId%2522:60412%7D,%7B%2522alteration%2522:2,%2522entrezGeneId%2522:84435%7D%5D%7D%5D%7D`;
+        const url = `${CBIOPORTAL_URL}/study?id=laml_tcga&filters=%7B%2522clinicalDataEqualityFilters%2522:%5B%7B%2522attributeId%2522:%2522SEX%2522,%2522clinicalDataType%2522:%2522PATIENT%2522,%2522values%2522:%5B%2522Female%2522%5D%7D%5D,%2522clinicalDataIntervalFilters%2522:%5B%7B%2522attributeId%2522:%2522AGE%2522,%2522clinicalDataType%2522:%2522PATIENT%2522,%2522values%2522:%5B%7B%2522start%2522:25,%2522end%2522:30%7D,%7B%2522start%2522:30,%2522end%2522:35%7D,%7B%2522start%2522:35,%2522end%2522:40%7D,%7B%2522start%2522:40,%2522end%2522:45%7D,%7B%2522start%2522:45,%2522end%2522:50%7D,%7B%2522start%2522:50,%2522end%2522:55%7D,%7B%2522start%2522:55,%2522end%2522:60%7D,%7B%2522start%2522:60,%2522end%2522:65%7D,%7B%2522start%2522:65,%2522end%2522:70%7D,%7B%2522start%2522:70,%2522end%2522:75%7D,%7B%2522start%2522:75,%2522end%2522:80%7D%5D%7D%5D,%2522mutatedGenes%2522:%5B%7B%2522entrezGeneIds%2522:%5B2322,4869%5D%7D%5D,%2522cnaGenes%2522:%5B%7B%2522alterations%2522:%5B%7B%2522alteration%2522:-2,%2522entrezGeneId%2522:2521%7D,%7B%2522alteration%2522:2,%2522entrezGeneId%2522:4297%7D%5D%7D%5D%7D`;
         goToUrlAndSetLocalStorage(url);
         waitForNetworkQuiet(60000);
     });
@@ -248,8 +248,8 @@ describe('check the filters are working properly', ()=>{
         // Remove bar chart filter
         browser.elements("[data-test='pill-tag-delete']").value[0].click();
         waitForStudyViewSelectedInfo();
-        assert(getTextFromElement(SELECTED_PATIENTS) === '6');
-        assert(getTextFromElement(SELECTED_SAMPLES) === '6');
+        assert(getTextFromElement(SELECTED_PATIENTS) === '5');
+        assert(getTextFromElement(SELECTED_SAMPLES) === '5');
 
 
         // Remove mutated genes filter
@@ -257,8 +257,8 @@ describe('check the filters are working properly', ()=>{
         waitForStudyViewSelectedInfo();
         browser.elements("[data-test='pill-tag-delete']").value[0].click();
         waitForStudyViewSelectedInfo();
-        assert(getTextFromElement(SELECTED_PATIENTS) === '9');
-        assert(getTextFromElement(SELECTED_SAMPLES) === '9');
+        assert(getTextFromElement(SELECTED_PATIENTS) === '13');
+        assert(getTextFromElement(SELECTED_SAMPLES) === '13');
 
         // Remove cna genes filter
         browser.elements("[data-test='pill-tag-delete']").value[0].click();
@@ -270,6 +270,27 @@ describe('check the filters are working properly', ()=>{
     });
 });
 
+// This needs to be done separately due to leak of data in the other tests
+describe('check the fusion filter is working properly', ()=>{
+
+    before(function() {
+        const url = `${CBIOPORTAL_URL}/study/summary?filters=%7B%2522fusionGenes%2522%3A%5B%7B%2522entrezGeneIds%2522%3A%5B2313%5D%7D%5D%7D&id=es_dfarber_broad_2014`;
+        goToUrlAndSetLocalStorage(url);
+        waitForNetworkQuiet(60000);
+    });
+    it('fusion filter filter study from url', function() {
+        const res = checkElementWithMouseDisabled('#mainColumn');
+        assertScreenShotMatch(res);
+    });
+
+    it('fusion filter removing filters are working properly', function() {
+        // Remove cna genes filter
+        browser.elements("[data-test='pill-tag-delete']").value[0].click();
+        waitForStudyViewSelectedInfo();
+        assert(getTextFromElement(SELECTED_PATIENTS) === '103');
+        assert(getTextFromElement(SELECTED_SAMPLES) === '107');
+    });
+});
 
 describe('cancer gene filter', () => {
     before(() => {
