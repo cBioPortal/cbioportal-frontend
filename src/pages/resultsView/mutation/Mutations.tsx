@@ -44,6 +44,15 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
     protected generateTabs(genes: string[])
     {
         const tabs: JSX.Element[] = [];
+        const anchorStyle = {
+            'font-size': '12px',
+            'padding-left': '6px',
+            'padding-right': '6px',
+            'padding-top': '10px',
+            'padding-bottom': '10px',
+            'cursor': 'pointer',
+            'line-height': .8
+        }
         
         genes.forEach((gene: string) => {
             const mutationMapperStore = this.props.store.getMutationMapperStore(gene);
@@ -51,7 +60,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
             if (mutationMapperStore)
             {
                 tabs.push(
-                    <MSKTab key={gene} id={gene} linkText={gene}>
+                    <MSKTab key={gene} id={gene} linkText={gene} anchorStyle={anchorStyle}>
                         <MutationMapper
                             studyId={this.props.store.studyId}
                             studyToCancerType={this.props.store.studyToCancerType}
