@@ -160,6 +160,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
         this._columns[MutationTableColumnType.SAMPLE_ID] = {
             name: "Sample ID",
             render: (d:Mutation[]) => SampleColumnFormatter.renderFunction(d, this.props.studyId),
+            download: SampleColumnFormatter.getTextValue,
             sortBy: SampleColumnFormatter.getTextValue,
             filter: (d:Mutation[], filterString:string, filterStringUpper:string) =>
                 defaultFilter(d, "sampleId", filterStringUpper),
