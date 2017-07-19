@@ -35,7 +35,7 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
         // --- end of raphael config ---
 
         // --- chromosome chart ---
-        var chmInfo = tracksHelper.getChmInfo();
+        var chmInfo = tracksHelper.getChmInfo(this.props.mutations[0].ncbiBuild);
         tracksHelper.plotChromosomes(paper,config,chmInfo);
         // --- end of chromosome chart ---
 
