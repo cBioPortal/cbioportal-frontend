@@ -136,7 +136,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
     @observable protected _columns:{[columnEnum:number]:MutationTableColumn};
 
     public static defaultProps = {
-        initialItemsPerPage: 25,
+        initialItemsPerPage: 10,
         initialSortColumn: "Annotation",
         initialSortDirection: "desc",
         itemsLabel: "Mutation",
