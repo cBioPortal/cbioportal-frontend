@@ -363,7 +363,18 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
     @computed get controls() {
         return (
             <div>
-                <div className={this.showControls ? "fade-in" : "fade-out"}>
+                <span style={{marginRight: 10, display: "inline-block"}}>
+                    <a
+                        href={`http://www.uniprot.org/uniprot/${this.props.store.uniprotId.result}`}
+                        target="_blank"
+                    >
+                        {this.props.store.uniprotId.result}
+                    </a>
+                </span>
+                <span
+                    style={{display: "inline-block"}}
+                    className={this.showControls ? "fade-in" : "fade-out"}
+                >
                     <Form inline>
                         <FormGroup>
                             <Button onClick={this.handlers.handleSVGClick}>
@@ -402,7 +413,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                             </Button>
                         </FormGroup>
                     </Form>
-                </div>
+                </span>
                 <br/>
                 <Collapse isOpened={this.legendShown}>
                     {this.legend}
