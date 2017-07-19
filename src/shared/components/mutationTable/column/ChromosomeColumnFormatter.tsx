@@ -41,7 +41,7 @@ export default class ChromosomeColumnFormatter
     public static getData(data:Mutation[]):string|null
     {
         if (data.length > 0) {
-            return data[0].gene.chromosome
+            return data[0].chr;
         } else {
             return null;
         }

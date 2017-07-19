@@ -56,10 +56,19 @@ function getChmEndsPerc(chms: Array<any>, total: any) {
 /**
  * storing chromesome length info
  */
-export function getChmInfo() {
+export function getChmInfo(genomeBuild:string) {
     let sel: any = {};
-    sel.hg19 = [0,249250621,243199373,198022430,191154276,180915260,171115067,159138663,146364022,141213431,135534747,135006516,133851895,115169878,107349540,102531392,90354753,81195210,78077248,59128983,63025520,48129895,51304566,155270560,59373566];
-    sel.total = 3095677412;
+    const chromSizes = require('./chromSizes.json');
+    for (let i = 0; i < chromSizes.length; i++) {
+        if (chromSizes[i]["build"] === genomeBuild) {
+            sel.hg19 = chromSizes[i]['size'];
+            break;
+        }
+    }
+    sel.total = 0
+    for (let i=0; i < sel.hg19.length; i++ ) {
+        sel.total += sel.hg19[i];
+    }
     sel.perc = getChmEndsPerc(sel.hg19,sel.total);
     sel.loc2perc = function(chm: any,loc: any) {
         return sel.perc[chm-1] + loc/sel.total;
