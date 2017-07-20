@@ -363,7 +363,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
     @computed get controls() {
         return (
             <div>
-                <span style={{marginRight: 10, display: "inline-block", verticalAlign: "bottom"}}>
+                <span style={{marginRight: 10, display: "inline-block"}}>
                     <a
                         href={`http://www.uniprot.org/uniprot/${this.props.store.uniprotId.result}`}
                         target="_blank"

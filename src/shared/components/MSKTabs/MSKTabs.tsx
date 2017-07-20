@@ -49,6 +49,8 @@ interface IMSKTabsProps {
     activeTabId?:string;
     onTabClick?:(tabId:string)=>void;
     enablePagination?:boolean;
+    // only used when pagination is true to style arrows
+    arrowStyle?:{[k:string]:string|number|boolean};
 }
 
 export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
@@ -190,7 +192,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
                 key="prevPage"
                 style={{ cursor:'pointer' }}
             >
-                <a onClick={this.prevPage.bind(this)}><i className="fa fa-chevron-left" /></a>
+                <a onClick={this.prevPage.bind(this)}><i className="fa fa-chevron-left" style={this.props.arrowStyle} /></a>
             </li>
         ) : null;
 
@@ -199,7 +201,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
                 key="nextPage"
                 style={{ cursor:'pointer' }}
             >
-                <a onClick={this.nextPage.bind(this)}><i className="fa fa-chevron-right" /></a>
+                <a onClick={this.nextPage.bind(this)}><i className="fa fa-chevron-right" style={this.props.arrowStyle} /></a>
             </li>
         ) : null;
 
