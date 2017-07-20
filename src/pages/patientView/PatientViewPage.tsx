@@ -345,6 +345,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         oncoKbData={patientViewPageStore.oncoKbData}
                                         civicGenes={patientViewPageStore.civicGenes.result}
                                         civicVariants={patientViewPageStore.civicVariants.result}
+                                        genomeNexusData={patientViewPageStore.genomeNexusData.result}
                                         enableOncoKb={AppConfig.showOncoKB}
                                         enableHotspot={AppConfig.showHotspot}
                                         enableMyCancerGenome={AppConfig.showMyCancerGenome}

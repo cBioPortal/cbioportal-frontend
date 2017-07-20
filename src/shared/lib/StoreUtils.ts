@@ -37,6 +37,7 @@ import {IMyCancerGenomeData, IMyCancerGenome} from "shared/model/MyCancerGenome"
 import {IHotspotData, ICancerHotspotData} from "shared/model/CancerHotspots";
 import {ICivicGeneData, ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
 import CancerHotspotsAPI from "shared/api/generated/CancerHotspotsAPI";
+import GenomeNexusAPI from "shared/api/generated/GenomeNexusAPI";
 import {GENETIC_PROFILE_MUTATIONS_SUFFIX, GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
 
 export const ONCOKB_DEFAULT: IOncoKbData = {
@@ -398,11 +399,52 @@ export function fetchMyCancerGenomeData(): IMyCancerGenomeData
     return geneToMyCancerGenome(data);
 }
 
+export function generateHgvsQuery(data:Mutation[])
+{
+    let genomeNexusQueries:string[] = [];
+    
+    for (var i in data) {
+        let hgvs:string = "";
+        if (data[i].mutationType === "Missense_Mutation") {
+            hgvs += data[i].gene.chromosome + ":g." + data[i].startPosition;
+            hgvs += data[i].referenceAllele + ">" + data[i].variantAllele;
+        }
+        // if not missense mutation, pass empty string into array
+        genomeNexusQueries[i] = hgvs;
+    }
+    
+    return genomeNexusQueries;
+}
+
+export async function fetchGenomeNexusData(mutationData:MobxPromise<Mutation[]>,
+                                           uncalledMutationData?:MobxPromise<Mutation[]>)
+{
+    let client:GenomeNexusAPI = new GenomeNexusAPI("http://localhost:38080");
+    const mutationDataResult = concatMutationData(mutationData, uncalledMutationData);
+
+    if (mutationDataResult.length == 0) {
+        return {};
+    }
+
+    let queryVariants:string[] = generateHgvsQuery(mutationDataResult);
+
+    return queryGenomeNexusData(queryVariants, client)
+}
+
+export async function queryGenomeNexusData(queryVariants:string[],
+                                            client:GenomeNexusAPI)
+{
+    const genomeNexusSearch:any[] = await client.postMutationAssessorAnnotation(
+        { variants : queryVariants });
+
+    return genomeNexusSearch; // array of mutation assessor objects
+}
+
 export async function fetchOncoKbData(sampleIdToTumorType:{[sampleId: string]: string},
                                       mutationData:MobxPromise<Mutation[]>,
                                       uncalledMutationData?:MobxPromise<Mutation[]>,
                                       client: OncoKbAPI = oncokbClient)
-{
+{   
     const mutationDataResult = concatMutationData(mutationData, uncalledMutationData);
 
     if (mutationDataResult.length === 0) {
@@ -417,7 +459,7 @@ export async function fetchOncoKbData(sampleIdToTumorType:{[sampleId: string]: s
             mutation.proteinPosStart,
             mutation.proteinPosEnd);
     }), "id");
-
+ 
     return queryOncoKbData(queryVariants, sampleIdToTumorType, client);
 }
 
@@ -451,6 +493,7 @@ export async function queryOncoKbData(queryVariants: Query[],
                                       sampleIdToTumorType: {[sampleId: string]: string},
                                       client: OncoKbAPI = oncokbClient)
 {
+    //console.log("Again");
     const onkokbSearch = await client.searchPostUsingPOST(
         {body: generateEvidenceQuery(queryVariants)});
 
