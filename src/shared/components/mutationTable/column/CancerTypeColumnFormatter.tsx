@@ -1,4 +1,5 @@
 import * as React from "react";
+import * as _ from "lodash";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import TableCellStatusIndicator from "shared/components/TableCellStatus";
 import {TableCellStatus} from "shared/components/TableCellStatus";
@@ -38,6 +39,26 @@ export default class CancerTypeColumnFormatter {
             data !== null &&
             data.toUpperCase().indexOf(filterStringUpper) > -1
         );
+    }
+
+    public static isVisible(mutations?: Mutation[][], sampleIdToTumorType?: {[sampleId: string]: string}): boolean
+    {
+        if (!mutations || !sampleIdToTumorType) {
+            return false;
+        }
+
+        const tumorTypeToSampleId: {[tumorType: string]: string} = {};
+
+        mutations.forEach((d: Mutation[]) => {
+            const tumorType = CancerTypeColumnFormatter.getData(d, sampleIdToTumorType);
+
+            if (tumorType) {
+                tumorTypeToSampleId[tumorType] = d[0].sampleId;
+            }
+        });
+
+        // only visible if number of distinct tumor type values is greater than 1
+        return _.keys(tumorTypeToSampleId).length > 1;
     }
 
     public static render(d: Mutation[], sampleIdToTumorType?: {[sampleId: string]: string})
