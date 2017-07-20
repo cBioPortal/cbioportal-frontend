@@ -19,6 +19,7 @@ import {
 } from "shared/api/generated/CBioPortalAPIInternal";
 import oncokbClient from "shared/api/oncokbClientInstance";
 import civicClient from "shared/api/civicClientInstance";
+import genomeNexusClient from "shared/api/genomeNexusClientInstance";
 import {
     generateIdToIndicatorMap, generateQueryVariant, generateEvidenceQuery
 } from "shared/lib/OncoKbUtils";
@@ -418,7 +419,6 @@ export async function fetchOncoKbData(sampleIdToTumorType:{[sampleId: string]: s
             mutation.proteinPosStart,
             mutation.proteinPosEnd);
     }), "id");
-
     return queryOncoKbData(queryVariants, sampleIdToTumorType, client);
 }
 

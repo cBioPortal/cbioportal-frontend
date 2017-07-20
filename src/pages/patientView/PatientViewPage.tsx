@@ -332,6 +332,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         sampleIdToTumorType={patientViewPageStore.sampleIdToTumorType}
                                         molecularProfileIdToMolecularProfile={patientViewPageStore.molecularProfileIdToMolecularProfile.result}
                                         variantCountCache={patientViewPageStore.variantCountCache}
+                                        genomeNexusEnrichmentCache={patientViewPageStore.genomeNexusEnrichmentCache}
                                         discreteCNACache={patientViewPageStore.discreteCNACache}
                                         mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}
                                         oncoKbEvidenceCache={patientViewPageStore.oncoKbEvidenceCache}
@@ -347,6 +348,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         civicGenes={patientViewPageStore.civicGenes.result}
                                         civicVariants={patientViewPageStore.civicVariants.result}
                                         enableOncoKb={AppConfig.showOncoKB}
+                                        enableGenomeNexus={AppConfig.showGenomeNexus}
                                         enableHotspot={AppConfig.showHotspot}
                                         enableMyCancerGenome={AppConfig.showMyCancerGenome}
                                         enableCivic={AppConfig.showCivic}
