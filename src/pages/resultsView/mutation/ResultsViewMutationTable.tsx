@@ -79,7 +79,7 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
 
         // exclude
         this._columns[MutationTableColumnType.CANCER_TYPE].shouldExclude = ()=>{
-            return !this.props.cancerTypeCache;
+            return !this.props.sampleIdToTumorType;
         };
         this._columns[MutationTableColumnType.NUM_MUTATIONS].shouldExclude = ()=>{
             return !this.props.mutationCountCache;

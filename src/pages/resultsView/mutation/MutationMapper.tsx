@@ -29,7 +29,6 @@ export interface IMutationMapperProps {
     store: MutationMapperStore;
     config: IMutationMapperConfig;
     studyId?: string;
-    studyToCancerType?:{[studyId:string]:string};
     myCancerGenomeData?: IMyCancerGenomeData;
     discreteCNACache?:DiscreteCNACache;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
@@ -121,11 +120,10 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                             }
                             <ResultsViewMutationTable
                                 studyId={this.props.studyId}
-                                studyToCancerType={this.props.studyToCancerType}
+                                sampleIdToTumorType={this.props.store.sampleIdToTumorType}
                                 discreteCNACache={this.props.discreteCNACache}
                                 oncoKbEvidenceCache={this.props.oncoKbEvidenceCache}
                                 pubMedCache={this.props.pubMedCache}
-                                cancerTypeCache={this.props.cancerTypeCache}
                                 mutationCountCache={this.props.mutationCountCache}
                                 dataStore={this.props.store.dataStore}
                                 myCancerGenomeData={this.props.myCancerGenomeData}
