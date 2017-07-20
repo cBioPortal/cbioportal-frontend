@@ -19,7 +19,7 @@ import {fetchSwissProtAccession} from "shared/lib/StoreUtils";
 import ReactDOM from "react-dom";
 import {Form, Button, FormGroup, InputGroup, ControlLabel, FormControl} from "react-bootstrap";
 import fileDownload from "react-file-download";
-import "./styles.scss";
+import styles from "./lollipopMutationPlot.module.scss";
 import Collapse from "react-collapse";
 import {MutationMapperStore} from "../../../pages/resultsView/mutation/MutationMapperStore";
 
@@ -363,7 +363,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
     @computed get controls() {
         return (
             <div>
-                <span style={{marginRight: 10, display: "inline-block"}}>
+                <span style={{marginRight: 10, display: "inline-block", verticalAlign: "bottom"}}>
                     <a
                         href={`http://www.uniprot.org/uniprot/${this.props.store.uniprotId.result}`}
                         target="_blank"
@@ -373,26 +373,26 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                 </span>
                 <span
                     style={{display: "inline-block"}}
-                    className={this.showControls ? "fade-in" : "fade-out"}
+                    className={this.showControls ? styles["fade-in"] : styles["fade-out"]}
                 >
                     <Form inline>
                         <FormGroup>
-                            <Button onClick={this.handlers.handleSVGClick}>
+                            <Button bsSize="sm" onClick={this.handlers.handleSVGClick}>
                                 SVG
                             </Button>
                         </FormGroup>
                         {' '}
                         <FormGroup>
-                            <Button onClick={this.handlers.handlePDFClick}>
+                            <Button bsSize="sm" onClick={this.handlers.handlePDFClick}>
                                 PDF
                             </Button>
                         </FormGroup>
                         {'  '}
-                        <FormGroup>
-                            <InputGroup>
-                                <InputGroup.Addon>Y-Axis Max:</InputGroup.Addon>
-                                <InputGroup.Addon>{this.countRange[0]}</InputGroup.Addon>
-                                <InputGroup.Addon>
+                        <FormGroup bsSize="xs">
+                            <InputGroup bsSize="xs">
+                                <InputGroup.Addon className={styles["input-addon"]}>Y-Axis Max:</InputGroup.Addon>
+                                <InputGroup.Addon className={styles["input-addon"]}>{this.countRange[0]}</InputGroup.Addon>
+                                <InputGroup.Addon className={styles["input-addon"]}>
                                     <input
                                         style={{display:"inline-block"}}
                                         type="range"
@@ -403,12 +403,12 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                                         value={this.yMax}
                                     />
                                 </InputGroup.Addon>
-                                <InputGroup.Addon>{this.countRange[1]}</InputGroup.Addon>
+                                <InputGroup.Addon className={styles["input-addon"]}>{this.countRange[1]}</InputGroup.Addon>
                             </InputGroup>
                         </FormGroup>
                         {'  '}
                         <FormGroup>
-                            <Button onClick={this.handlers.handleToggleLegend}>
+                            <Button bsSize="sm" onClick={this.handlers.handleToggleLegend}>
                                 Legend
                             </Button>
                         </FormGroup>
