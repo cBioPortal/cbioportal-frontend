@@ -10,6 +10,8 @@ const config:IAppConfig = {
     showMyCancerGenome: (window as any).showMyCancerGenome,
     showOncoKB: (window as any).showOncoKB,
     oncoKBApiUrl: (window as any).oncoKBApiUrl,
+    showGenomeNexus: (window as any).showGenomeNexus,
+    genomeNexusApiUrl: (window as any).genomeNexusApiUrl,
     enableDarwin: (window as any).enableDarwin,
     appVersion: (window as any).appVersion,
     historyType: (window as any).historyType,

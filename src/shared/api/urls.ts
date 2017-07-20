@@ -62,6 +62,17 @@ export function getOncoKbApiUrl() {
     }
 
 }
+export function getGenomeNexusApiUrl() {
+    let url = (window as any).genomeNexusApiUrl;
+    if (typeof url === 'string') {
+        // we need to support legacy configuration values
+        url = url.replace(/^http[s]?:\/\//,''); // get rid of protocol
+        url = url.replace(/\/$/,""); // get rid of trailing slashes
+        return cbioUrl(`proxy/${url}`)
+    } else {
+        return undefined;
+    }
+}
 export function getPdbAnnotationApiUrl() {
     return 'https://cbioportal.mskcc.org/pdb-annotation';
 }
