@@ -75,6 +75,7 @@ export function getCivicVariants(civicGenes: ICivicGene, mutationSpecs?: Array<M
     let promises: Array<Promise<void>> = [];
     
     if (mutationSpecs) {
+        let calledVariants: Set<number> = new Set([]);
         for (let mutation of mutationSpecs) {
             let geneSymbol = mutation.gene.hugoGeneSymbol;
             let geneEntry = civicGenes[geneSymbol];
@@ -84,11 +85,14 @@ export function getCivicVariants(civicGenes: ICivicGene, mutationSpecs?: Array<M
             proteinChanges.push(split[0]);
             for (let proteinChange of proteinChanges) {
                 if (geneEntry && geneEntry.variants[proteinChange]) {
-                    promises.push(addCivicVariant(civicVariants,
-                                                  geneEntry.variants[proteinChange],
-                                                  proteinChange,
-                                                  geneSymbol,
-                                                  geneEntry.id));
+                    if (!calledVariants.has(geneEntry.variants[proteinChange])) { //Avoid calling the same variant
+                        calledVariants.add(geneEntry.variants[proteinChange]);
+                        promises.push(addCivicVariant(civicVariants,
+                                                      geneEntry.variants[proteinChange],
+                                                      proteinChange,
+                                                      geneSymbol,
+                                                      geneEntry.id));
+                    }
                 }
             }
         }
