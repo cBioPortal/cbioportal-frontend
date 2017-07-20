@@ -336,6 +336,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         hotspots={patientViewPageStore.indexedHotspotData}
                                         cosmicData={patientViewPageStore.cosmicData.result}
                                         oncoKbData={patientViewPageStore.oncoKbData.result}
+                                        genomeNexusData={patientViewPageStore.genomeNexusData.result}
                                         enableOncoKb={AppConfig.showOncoKB}
                                         enableHotspot={AppConfig.showHotspot}
                                         enableMyCancerGenome={AppConfig.showMyCancerGenome}

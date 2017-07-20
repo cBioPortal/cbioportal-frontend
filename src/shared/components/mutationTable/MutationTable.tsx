@@ -55,6 +55,7 @@ export interface IMutationTableProps {
     hotspots?: IHotspotData;
     cosmicData?:ICosmicData;
     oncoKbData?:IOncoKbData;
+    genomeNexusData?:any;
     mrnaExprRankGeneticProfileId?:string;
     discreteCNAGeneticProfileId?:string;
     columns?:MutationTableColumnType[];
