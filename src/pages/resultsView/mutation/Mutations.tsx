@@ -36,6 +36,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
                 onTabClick={(id:string) => this.handleTabChange(id)}
                 className="mainTabs resultsPageMutationsGeneTabs"
                 enablePagination={true}
+                arrowStyle={{'line-height':.8}}
             >
                 {this.generateTabs(this.props.genes)}
             </MSKTabs>
