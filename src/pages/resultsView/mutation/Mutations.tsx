@@ -5,6 +5,7 @@ import {ResultsViewPageStore} from "../ResultsViewPageStore";
 import MutationMapper from "./MutationMapper";
 import {observable} from "mobx";
 import AppConfig from 'appConfig';
+import "./mutations.scss";
 
 export interface IMutationsPageProps {
     routing?: any;
@@ -33,7 +34,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
                 id="mutationsPageTabs"
                 activeTabId={activeTabId}
                 onTabClick={(id:string) => this.handleTabChange(id)}
-                className="mainTabs"
+                className="mainTabs resultsPageMutationsGeneTabs"
                 enablePagination={true}
             >
                 {this.generateTabs(this.props.genes)}
