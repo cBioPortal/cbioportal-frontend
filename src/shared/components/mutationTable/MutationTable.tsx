@@ -15,7 +15,7 @@ import GeneColumnFormatter from "./column/GeneColumnFormatter";
 import ChromosomeColumnFormatter from "./column/ChromosomeColumnFormatter";
 import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter";
 import MutationTypeColumnFormatter from "./column/MutationTypeColumnFormatter";
-import MutationAssessorColumnFormatter from "./column/MutationAssessorColumnFormatter";
+import FunctionalImpactColumnFormatter from "./column/FunctionalImpactColumnFormatter";
 import CosmicColumnFormatter from "./column/CosmicColumnFormatter";
 import MutationCountColumnFormatter from "./column/MutationCountColumnFormatter";
 import CancerTypeColumnFormatter from "./column/CancerTypeColumnFormatter";
@@ -30,6 +30,7 @@ import {ICivicVariant, ICivicGene} from "shared/model/Civic";
 import {IMutSigData} from "shared/model/MutSig";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
+import GenomeNexusEnrichmentCache from "shared/cache/GenomeNexusEnrichment";
 import MrnaExprRankCache from "shared/cache/MrnaExprRankCache";
 import VariantCountCache from "shared/cache/VariantCountCache";
 import PubMedCache from "shared/cache/PubMedCache";
@@ -44,6 +45,7 @@ export interface IMutationTableProps {
     molecularProfileIdToMolecularProfile?: {[molecularProfileId:string]:MolecularProfile};
     discreteCNACache?:DiscreteCNACache;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
+    genomeNexusEnrichmentCache?:GenomeNexusEnrichmentCache;
     mrnaExprRankCache?:MrnaExprRankCache;
     variantCountCache?:VariantCountCache;
     pubMedCache?:PubMedCache
@@ -53,6 +55,7 @@ export interface IMutationTableProps {
     enableMyCancerGenome?: boolean;
     enableHotspot?: boolean;
     enableCivic?: boolean;
+    enableGenomeNexus?: boolean;
     myCancerGenomeData?: IMyCancerGenomeData;
     hotspots?: IHotspotData;
     cosmicData?:ICosmicData;
@@ -88,7 +91,7 @@ export enum MutationTableColumnType {
     CENTER,
     TUMOR_ALLELE_FREQ,
     NORMAL_ALLELE_FREQ,
-    MUTATION_ASSESSOR,
+    FUNCTIONAL_IMPACT,
     ANNOTATION,
     COSMIC,
     COPY_NUM,
@@ -149,7 +152,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
         enableOncoKb: true,
         enableMyCancerGenome: true,
         enableHotspot: true,
-        enableCivic: false
+        enableCivic: false,
     };
 
     constructor(props:P)
@@ -387,16 +390,16 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 MutationTypeColumnFormatter.getDisplayValue(d).toUpperCase().indexOf(filterStringUpper) > -1
         };
 
-        this._columns[MutationTableColumnType.MUTATION_ASSESSOR] = {
-            name: "Mutation Assessor",
-            headerRender: (name: string) => <span style={{display:'inline-block', maxWidth:60}}>{name}</span>,
-            render:MutationAssessorColumnFormatter.renderFunction,
-            download:MutationAssessorColumnFormatter.getTextValue,
-            sortBy:(d:Mutation[])=>MutationAssessorColumnFormatter.getSortValue(d),
-            filter:(d:Mutation[], filterString:string, filterStringUpper:string) =>
-                MutationAssessorColumnFormatter.filterValue(d).toUpperCase().indexOf(filterStringUpper) > -1,
-            visible: false
-        };
+        if (this.props.enableGenomeNexus) {
+            this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT] = {
+                name:"Functional Impact",
+                render:(d:Mutation[])=>(this.props.genomeNexusEnrichmentCache
+                    ? FunctionalImpactColumnFormatter.renderFunction(d, this.props.genomeNexusEnrichmentCache as GenomeNexusEnrichmentCache)
+                    : (<span></span>)),
+                headerRender: FunctionalImpactColumnFormatter.headerRender,
+                visible: false,
+            };
+        }
 
         this._columns[MutationTableColumnType.COSMIC] = {
             name: "COSMIC",
