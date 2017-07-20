@@ -119,7 +119,7 @@ export default class CosmicColumnFormatter
 
         // basic content is the value
         content = (
-            <span>
+            <span className="pull-right">
                 {display}
             </span>
         );

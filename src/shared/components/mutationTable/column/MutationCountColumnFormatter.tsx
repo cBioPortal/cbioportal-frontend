@@ -18,7 +18,7 @@ export default class MutationCountColumnFormatter {
                     };
                 }
             },
-            (t:MutationCount)=>(<span>{t.mutationCount}</span>),
+            (t:MutationCount)=>(<span className="pull-right">{t.mutationCount}</span>),
             "Mutation count not available for this sample."
         );
     }
