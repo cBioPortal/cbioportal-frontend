@@ -396,7 +396,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     >
                         <div style={{position: "relative"}}>
                             <ThreeBounce style={{ position:'absolute', left:'50%'}} className="center-block text-center" /> {/*Put it underneath so it gets covered by loaded element*/}
-                            <iframe style={{position:"relative", width:'100%', height:700, border:'none'}}
+                            <iframe style={{position:"relative", width:'100%', height:'100%', border:'none'}}
                                     src={ `http://slides.mskcc.org/cbioportal/${patientViewPageStore.patientId}/show` }></iframe>
                         </div>
                     </MSKTab>
