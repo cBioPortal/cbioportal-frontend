@@ -58,6 +58,7 @@ export interface IMutationTableProps {
     oncoKbData?: IOncoKbDataWrapper;
     civicGenes?: ICivicGene;
     civicVariants?: ICivicVariant;
+    genomeNexusData?:any;
     mrnaExprRankGeneticProfileId?:string;
     discreteCNAGeneticProfileId?:string;
     columns?:MutationTableColumnType[];

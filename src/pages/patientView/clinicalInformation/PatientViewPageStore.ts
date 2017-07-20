@@ -30,7 +30,7 @@ import CancerTypeCache from "shared/cache/CancerTypeCache";
 import MutationCountCache from "shared/cache/MutationCountCache";
 import AppConfig from "appConfig";
 import {
-    findGeneticProfileIdDiscrete, ONCOKB_DEFAULT, fetchOncoKbData, fetchCnaOncoKbData,
+    findGeneticProfileIdDiscrete, ONCOKB_DEFAULT, fetchOncoKbData, fetchGenomeNexusData, fetchCnaOncoKbData,
     indexHotspotData, mergeMutations, fetchHotspotsData, fetchMyCancerGenomeData, fetchCosmicData,
     fetchMutationData, fetchDiscreteCNAData, generateSampleIdToTumorTypeMap, findMutationGeneticProfileId,
     findUncalledMutationGeneticProfileId, mergeMutationsIncludingUncalled, fetchGisticData, fetchCopyNumberData,
@@ -450,6 +450,13 @@ export class PatientViewPageStore {
         }
     }, []);
 
+    readonly genomeNexusData = remoteData({
+        await: () => [
+            this.mutationData,
+            this.uncalledMutationData
+        ],
+        invoke: async() => fetchGenomeNexusData(this.mutationData, this.uncalledMutationData)
+    }, []);
 
     readonly oncoKbData = remoteData<IOncoKbData>({
         await: () => [
