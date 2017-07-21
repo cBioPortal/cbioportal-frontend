@@ -72,10 +72,13 @@ export type PathologyReportPDF = {
 
 }
 
-export function handlePathologyReportCheckResponse(resp: any): PathologyReportPDF[] {
+export function handlePathologyReportCheckResponse(patientId: string, resp: any): PathologyReportPDF[] {
 
     if (resp.total_count > 0) {
-        return _.map(resp.items, (item: any) => ( {url: item.url, name: item.name} ));
+        // only use pdfs starting with the patient id to prevent mismatches
+        const r = new RegExp("^" + patientId);
+        const filteredItems:any = _.filter(resp.items, (item: any) => r.test(item.name));
+        return _.map(filteredItems, (item: any) => ( {url: item.url, name: item.name} ));
     } else {
         return [];
     }
@@ -216,7 +219,7 @@ export class PatientViewPageStore {
 
             const parsedResp: any = JSON.parse(resp.text);
 
-            return handlePathologyReportCheckResponse(parsedResp);
+            return handlePathologyReportCheckResponse(this.patientId, parsedResp);
 
         },
         onError: (err: Error) => {
