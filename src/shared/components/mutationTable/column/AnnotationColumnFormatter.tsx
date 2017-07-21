@@ -219,7 +219,7 @@ export default class AnnotationColumnFormatter
                               pubMedCache?:OncokbPubMedCache)
     {
         return (
-            <span>
+            <span style={{display:'inline-block', minWidth:100}}>
                 <If condition={columnProps.enableOncoKb || false}>
                     <OncoKB
                         status={annotation.oncoKbStatus}
