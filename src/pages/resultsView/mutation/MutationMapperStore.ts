@@ -45,9 +45,10 @@ export class MutationMapperStore {
     @observable protected hugoGeneSymbol: string;
 
     protected config: IMutationMapperConfig;
-    protected mutationGeneticProfileId: MobxPromise<string>;
-    protected clinicalDataForSamples: MobxPromise<ClinicalData[]>;
-    protected sampleIds: MobxPromise<string[]>;
+
+    mutationGeneticProfileId: MobxPromise<string>;
+    clinicalDataForSamples: MobxPromise<ClinicalData[]>;
+    sampleIds: MobxPromise<string[]>;
 
     readonly cosmicData = remoteData({
         await: () => [
