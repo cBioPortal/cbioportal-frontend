@@ -76,7 +76,8 @@ export class ResultsViewPageStore {
     readonly sampleIds = remoteData(async () => {
         // first priority: user provided custom sample list
         if (this.sampleList) {
-            return this.sampleList;
+            // cannot return an observable array directly, need to create a copy
+            return this.sampleList.map(sampleId => sampleId);
         }
         // if no custom sample list try to fetch sample ids from the API
         else if (this.sampleListId) {
