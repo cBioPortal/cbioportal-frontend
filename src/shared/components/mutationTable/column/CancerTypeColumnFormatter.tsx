@@ -66,7 +66,7 @@ export default class CancerTypeColumnFormatter {
         const data = CancerTypeColumnFormatter.getData(d, sampleIdToTumorType);
 
         if (data) {
-            return <span>{data}</span>;
+            return <span style={{display:'inline-block', maxWidth:170}}>{data}</span>;
         }
         else {
             return (
