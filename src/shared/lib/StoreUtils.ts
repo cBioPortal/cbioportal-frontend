@@ -374,13 +374,15 @@ export async function fetchCivicGenes(mutationData?:MobxPromise<Mutation[]>,
         return {};
     }
 
-    let queryHugoSymbols: Array<string> = [];
+    let queryHugoSymbols: Set<string> = new Set([]);
 
     mutationDataResult.forEach(function(mutation: Mutation) {
-        queryHugoSymbols.push(mutation.gene.hugoGeneSymbol);
+        queryHugoSymbols.add(mutation.gene.hugoGeneSymbol);
     });
+    
+    let querySymbols: Array<string> = Array.from(queryHugoSymbols);
 
-    let civicGenes: ICivicGene = await getCivicGenes(queryHugoSymbols);
+    let civicGenes: ICivicGene = await getCivicGenes(querySymbols);
 
     return civicGenes;
 }
@@ -388,14 +390,15 @@ export async function fetchCivicGenes(mutationData?:MobxPromise<Mutation[]>,
 export async function fetchCnaCivicGenes(discreteCNAData:MobxPromise<DiscreteCopyNumberData[]>)
 {
     if (discreteCNAData.result && discreteCNAData.result.length > 0) {
-        let queryHugoSymbols: Array<string> = [];
+        let queryHugoSymbols: Set<string> = new Set([]);
         
         discreteCNAData.result.forEach(function(cna: DiscreteCopyNumberData) {
-            queryHugoSymbols.push(cna.gene.hugoGeneSymbol);
+            queryHugoSymbols.add(cna.gene.hugoGeneSymbol);
         });
+        
+        let querySymbols: Array<string> = Array.from(queryHugoSymbols);
     
-        //For some reason, Typescript indicates that getCivicGenes can be undefined: it can't
-        let civicGenes: ICivicGene = (await getCivicGenes(queryHugoSymbols)) as ICivicGene;
+        let civicGenes: ICivicGene = (await getCivicGenes(querySymbols));
     
         return civicGenes;
     } else {
