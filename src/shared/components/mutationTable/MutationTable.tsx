@@ -29,7 +29,6 @@ import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import MrnaExprRankCache from "shared/cache/MrnaExprRankCache";
 import VariantCountCache from "shared/cache/VariantCountCache";
 import PubMedCache from "shared/cache/PubMedCache";
-import CancerTypeCache from "../../cache/CancerTypeCache";
 import MutationCountCache from "../../cache/MutationCountCache";
 import MutationCountColumnFormatter from "./column/MutationCountColumnFormatter";
 import CancerTypeColumnFormatter from "./column/CancerTypeColumnFormatter";
@@ -37,13 +36,12 @@ import {IMobXApplicationDataStore} from "../../lib/IMobXApplicationDataStore";
 
 export interface IMutationTableProps {
     studyId?:string;
-    studyToCancerType?:{[studyId:string]:string};
+    sampleIdToTumorType?: {[sampleId: string]: string}
     discreteCNACache?:DiscreteCNACache;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
     mrnaExprRankCache?:MrnaExprRankCache;
     variantCountCache?:VariantCountCache;
     pubMedCache?:PubMedCache
-    cancerTypeCache?:CancerTypeCache;
     mutationCountCache?:MutationCountCache;
     mutSigData?:IMutSigData;
     enableOncoKb?: boolean;
@@ -406,19 +404,10 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
 
         this._columns[MutationTableColumnType.CANCER_TYPE] = {
             name: "Cancer Type",
-            render:CancerTypeColumnFormatter.makeRenderFunction(this),
-            sortBy:(d:Mutation[])=>CancerTypeColumnFormatter.sortBy(d, this.props.studyId, this.props.cancerTypeCache),
-            filter:(d:Mutation[], filterString:string, filterStringUpper:string) => {
-                if (this.props.cancerTypeCache) {
-                    return CancerTypeColumnFormatter.filter(d,
-                        filterStringUpper,
-                        this.props.studyId,
-                        this.props.cancerTypeCache,
-                        this.props.studyToCancerType);
-                } else {
-                    return false;
-                }
-            },
+            render: (d:Mutation[]) => CancerTypeColumnFormatter.render(d, this.props.sampleIdToTumorType),
+            sortBy: (d:Mutation[]) => CancerTypeColumnFormatter.sortBy(d, this.props.sampleIdToTumorType),
+            filter: (d:Mutation[], filterString:string, filterStringUpper:string) =>
+                CancerTypeColumnFormatter.filter(d, filterStringUpper, this.props.sampleIdToTumorType),
             tooltip:(<span>Cancer Type</span>),
         };
 
