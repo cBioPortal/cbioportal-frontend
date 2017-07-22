@@ -4,6 +4,7 @@ import {
     IMutationTableProps, MutationTableColumnType, default as MutationTable
 } from "shared/components/mutationTable/MutationTable";
 import CancerTypeColumnFormatter from "shared/components/mutationTable/column/CancerTypeColumnFormatter";
+import TumorAlleleFreqColumnFormatter from "shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter";
 
 export interface IResultsViewMutationTableProps extends IMutationTableProps {
     // add results view specific props here if needed
@@ -54,6 +55,8 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
         this._columns[MutationTableColumnType.CANCER_TYPE].visible = CancerTypeColumnFormatter.isVisible(
             this.props.dataStore ? this.props.dataStore.allData : this.props.data,
             this.props.sampleIdToTumorType);
+        this._columns[MutationTableColumnType.TUMOR_ALLELE_FREQ].visible = TumorAlleleFreqColumnFormatter.isVisible(
+            this.props.dataStore ? this.props.dataStore.allData : this.props.data);
 
         // order columns
         this._columns[MutationTableColumnType.SAMPLE_ID].order = 10;
