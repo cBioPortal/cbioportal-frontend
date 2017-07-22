@@ -26,7 +26,7 @@ export default class MolecularMatch extends React.Component<IMolecularMatchProps
     public static get MOLECULAR_MATCH_ICON_STYLE()
     {
         return {
-            backgroundImage: `url(${require('./images/molecularmatch.png')})`
+            backgroundImage: `url(${require('./images/mm-icons-count.png')})`
         };
     }
 
@@ -56,7 +56,6 @@ export default class MolecularMatch extends React.Component<IMolecularMatchProps
         }
         else
         {
-            //need to alter svg dynamically and set icon
             mmContent = (
                 <span className={`${annotationStyles["annotation-item"]}`}>
                     <i
@@ -138,6 +137,6 @@ export default class MolecularMatch extends React.Component<IMolecularMatchProps
             className = "countexceed-10";
         }
 
-        return className;
+        return molecularMatchIconStyles[className];
     }
 }

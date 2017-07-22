@@ -2239,26 +2239,6 @@ export default class CBioPortalAPI {
             });
         };
 
-    getMolecularMatchClinicalTrialsUsingPOSTURL(parameters: {
-        'filters': string,
-        'method' ? : "GET" | "POST" | "HEAD" | "OPTIONS" | "PUT" | "PATCH" | "DELETE" | "TRACE",
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/molecularmatch';
-        if (parameters['filters'] !== undefined) {
-            queryParameters['filters'] = parameters['filters'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
 
     /**
      * getMolecularMatchClinicalTrials
@@ -2277,12 +2257,12 @@ export default class CBioPortalAPI {
         const errorHandlers = this.errorHandlers;
         const request = this.request;
         let path = '/molecularmatch';
-        let body: string;
+        let body: any;
         let queryParameters: any = {};
         let headers: any = {};
         let form: any = {};
         return new Promise(function(resolve, reject) {
-            headers['Accept'] = '*/*';
+            headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
 
             if (parameters['filters'] === undefined) {
@@ -2291,7 +2271,7 @@ export default class CBioPortalAPI {
             }
 
             if (parameters['filters'] !== undefined) {
-                body = parameters['filters'];
+                queryParameters = "filters=" + encodeURIComponent(parameters['filters']);
             }
 
             if (parameters.$queryParameters) {

@@ -11,7 +11,7 @@ export interface IClinicalTrialsColumnProps {
 
 export interface IClinicalTrial {
     isMolecularMatch: boolean;
-    count: number;
+    count: number | null | undefined;
    // isMatchMiner: boolean;
 }
 
@@ -29,31 +29,38 @@ export default class ClinicalTrialsColumnFormatter
             value = {
                 isMolecularMatch: true,
                 count: molecularMatchData ?
-                    ClinicalTrialsColumnFormatter.getIndicatorData(mutation, molecularMatchData) : 0
+                    ClinicalTrialsColumnFormatter.getIndicatorData(mutation, molecularMatchData) : undefined
             };
         }
         else {
             value = {
                 isMolecularMatch: false,
-                count: 0
+                count: undefined
             };
        }
 
         return value;
     }
 
-    public static getIndicatorData(mutation:Mutation, molecularMatchData:Map<string, number>): number
+    public static getIndicatorData(mutation:Mutation, molecularMatchData:any): number | null
     {
         if (molecularMatchData == null) {
-            return 0;
+            return null;
         }
 
-        molecularMatchData.forEach((value: number, key: string) => {
-            if(key == (mutation.gene + " " + mutation.proteinChange)){
-                return value;
+
+        for (var key in molecularMatchData){
+
+            if(key == (mutation.gene.hugoGeneSymbol)){ //+ " " + mutation.proteinChange
+                return molecularMatchData[key] as number;
             }
-            console.log(key, value);
-        });
+        }
+        // molecularMatchData.forEach((object ke) => {
+        //     if(key == (mutation.gene.hugoGeneSymbol)){ //+ " " + mutation.proteinChange
+        //         return value;
+        //     }
+        //     console.log(key, value);
+        // });
 
         return 0;
     }
