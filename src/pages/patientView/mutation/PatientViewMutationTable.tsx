@@ -72,7 +72,9 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             name: "Allele Freq",
             render: (d:Mutation[])=>AlleleFreqColumnFormatter.renderFunction(d, this.props.sampleManager),
             sortBy:(d:Mutation[])=>AlleleFreqColumnFormatter.getSortValue(d, this.props.sampleManager),
-            tooltip:(<span>Variant allele frequency in the tumor sample</span>)
+            tooltip:(<span>Variant allele frequency in the tumor sample</span>),
+            visible: AlleleFreqColumnFormatter.isVisible(this.props.sampleManager,
+                this.props.dataStore ? this.props.dataStore.allData : this.props.data)
         };
 
         this._columns[MutationTableColumnType.TUMORS] = {
