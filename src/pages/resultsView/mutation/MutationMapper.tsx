@@ -90,7 +90,7 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                             />
                             <ButtonGroup style={{display: "inline-block", verticalAlign: "baseline", paddingBottom: 30}}>
                                 <Button
-                                    className="btn-default"
+                                    className="btn-default btn-sm"
                                     disabled={this.props.store.pdbChainDataStore.allData.length === 0}
                                     onClick={this.toggle3dPanel}
                                 >
