@@ -88,6 +88,15 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                                 geneWidth={this.geneWidth}
                                 {...DEFAULT_PROTEIN_IMPACT_TYPE_COLORS}
                             />
+                            <ButtonGroup style={{display: "inline-block", verticalAlign: "baseline", paddingBottom: 30}}>
+                                <Button
+                                    className="btn-default"
+                                    disabled={this.props.store.pdbChainDataStore.allData.length === 0}
+                                    onClick={this.toggle3dPanel}
+                                >
+                                    3D Structure <i className="fa fa-angle-double-right" aria-hidden="true"></i>
+                                </Button>
+                            </ButtonGroup>
                             <ProteinChainPanel
                                 store={this.props.store}
                                 pdbHeaderCache={this.props.pdbHeaderCache}
@@ -96,11 +105,6 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                                 maxChainsHeight={200}
                             />
                             <div style={{marginLeft:"45px", marginTop:"5px", marginBottom:"10px"}}>
-                                <ButtonGroup className="pull-right">
-                                    <Button className="btn-default" disabled={this.props.store.pdbChainDataStore.allData.length === 0} onClick={this.toggle3dPanel}>
-                                        3D Structure <i className="fa fa-angle-double-right" aria-hidden="true"></i>
-                                    </Button>
-                                </ButtonGroup>
                                 <ProteinImpactTypePanel
                                     dataStore={this.props.store.dataStore}
                                     {...DEFAULT_PROTEIN_IMPACT_TYPE_COLORS}
