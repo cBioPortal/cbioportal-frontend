@@ -333,7 +333,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
 
     private get legend() {
         return (
-            <div style={{maxWidth:"700px"}}>
+            <div style={{maxWidth: 700, marginTop: 5}}>
                 <span style={{color: "#2153AA", fontWeight:"bold", fontSize:"14px", fontFamily:"verdana, arial, sans-serif"}}>
                     Color Codes
                 </span>
@@ -379,7 +379,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
         return (
             <div>
                 <span className={this.showControls ? styles["fade-in"] : styles["fade-out"]}>
-                    <Form inline>
+                    <Form inline style={{marginBottom: 0}}>
                         <FormGroup>
                             <Button bsSize="sm" onClick={this.handlers.handleSVGClick}>
                                 SVG
@@ -418,7 +418,6 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                         </FormGroup>
                     </Form>
                 </span>
-                <br/>
                 <Collapse isOpened={this.legendShown}>
                     {this.legend}
                 </Collapse>
