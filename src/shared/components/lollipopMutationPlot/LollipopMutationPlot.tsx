@@ -33,7 +33,7 @@ export interface ILollipopMutationPlotProps extends IProteinImpactTypeColors
 @observer
 export default class LollipopMutationPlot extends React.Component<ILollipopMutationPlotProps, {}> {
 
-    @observable private showControls:boolean = false;
+    @observable private showControls:boolean = true;
     @observable private _yMaxInput:number;
     @observable private legendShown:boolean = false;
     private plot:LollipopPlot;
@@ -178,15 +178,30 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
         const end = region.metadata.end;
         const pfamAccession = region.metadata.accession;
         const mutationAlignerLink = this.mutationAlignerLinks.result[pfamAccession];
-        const mutationAlignerA = mutationAlignerLink ? (<a href={mutationAlignerLink} target="_blank" style={{marginLeft:"5px"}}>Mutation Aligner</a>) : null;
+        const mutationAlignerA = mutationAlignerLink ?
+            (<a href={mutationAlignerLink} target="_blank">Mutation Aligner</a>) : null;
 
         return (
-            <div>
+            <div style={{maxWidth: 200}}>
                 <div>
                     {identifier} {type}, {description} ({start} - {end})
                 </div>
                 <div>
-                    <a href={`http://pfam.xfam.org/family/${pfamAccession}`} target="_blank">PFAM</a>
+                    <a
+                        href={`http://www.uniprot.org/uniprot/${this.props.store.uniprotId.result}`}
+                        target="_blank"
+                    >
+                        {this.props.store.uniprotId.result}
+                    </a>
+                    <a
+                        style={{marginLeft:"5px"}}
+                        href={`http://pfam.xfam.org/family/${pfamAccession}`}
+                        target="_blank"
+                    >
+                        PFAM
+                    </a>
+                </div>
+                <div>
                     {mutationAlignerA}
                 </div>
             </div>
@@ -363,18 +378,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
     @computed get controls() {
         return (
             <div>
-                <span style={{marginRight: 10, display: "inline-block"}}>
-                    <a
-                        href={`http://www.uniprot.org/uniprot/${this.props.store.uniprotId.result}`}
-                        target="_blank"
-                    >
-                        {this.props.store.uniprotId.result}
-                    </a>
-                </span>
-                <span
-                    style={{display: "inline-block"}}
-                    className={this.showControls ? styles["fade-in"] : styles["fade-out"]}
-                >
+                <span className={this.showControls ? styles["fade-in"] : styles["fade-out"]}>
                     <Form inline>
                         <FormGroup>
                             <Button bsSize="sm" onClick={this.handlers.handleSVGClick}>
@@ -425,7 +429,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
     render() {
         if (this.props.store.pfamGeneData.isComplete) {
             return ( this.props.store.dataStore.allData.length ? (
-                <div onMouseEnter={this.handlers.showControls} onMouseLeave={this.handlers.hideControls}>
+                <div style={{display: "inline-block"}}>
                     {this.controls}
                     <LollipopPlot
                         ref={this.handlers.ref}
