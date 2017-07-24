@@ -8,13 +8,13 @@ import classNames from 'classnames';
 
 export const SHOW_ALL_PAGE_SIZE = -1;
 
-export interface IButtonControlsProps {
+export interface IShowMoreButtonProps {
     itemsPerPage?:number;
     onChangeItemsPerPage?:(itemsPerPage:number)=>void;
 }
 
 @observer
-export class ButtonControls extends React.Component<IButtonControlsProps, {}> {
+export class ShowMoreButton extends React.Component<IShowMoreButtonProps, {}> {
     public static defaultProps = {
         itemsPerPage: SHOW_ALL_PAGE_SIZE
     };
@@ -22,7 +22,7 @@ export class ButtonControls extends React.Component<IButtonControlsProps, {}> {
     counter:number;
     showMoreItems:number[];
     
-    constructor(props:IButtonControlsProps) {
+    constructor(props:IShowMoreButtonProps) {
         super(props);
         this.handleChangeItemsPerPage = this.handleChangeItemsPerPage.bind(this);
         this.counter=0;
@@ -31,10 +31,10 @@ export class ButtonControls extends React.Component<IButtonControlsProps, {}> {
 
     handleChangeItemsPerPage() {
 
-        if(this.props.onChangeItemsPerPage){
+        if (this.props.onChangeItemsPerPage) {
             if (this.props.itemsPerPage) {
                 this.counter = this.showMoreItems.indexOf(this.props.itemsPerPage) + 1
-                if(this.counter < this.showMoreItems.length){
+                if (this.counter < this.showMoreItems.length) {
                     this.props.onChangeItemsPerPage(this.showMoreItems[this.counter]);
                 }        
             }
@@ -51,4 +51,4 @@ export class ButtonControls extends React.Component<IButtonControlsProps, {}> {
     }
 }
 
-export default ButtonControls;
+export default ShowMoreButton;

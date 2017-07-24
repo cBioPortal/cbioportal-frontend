@@ -7,8 +7,8 @@ import {
     SHOW_ALL_PAGE_SIZE as PAGINATION_SHOW_ALL, PaginationControls, IPaginationControlsProps
 } from "../paginationControls/PaginationControls";
 import {
-    ButtonControls, IButtonControlsProps
-} from "../paginationControls/ButtonControls";
+    ShowMoreButton, IShowMoreButtonProps
+} from "../paginationControls/ShowMoreButton";
 import {
     ColumnVisibilityControls, IColumnVisibilityDef, IColumnVisibilityControlsProps
 } from "../columnVisibilityControls/ColumnVisibilityControls";
@@ -513,9 +513,9 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
         this.getDownloadData = this.getDownloadData.bind(this);
         this.getToolbar = this.getToolbar.bind(this);
         this.getTable = this.getTable.bind(this);
-        this.showMore = this.showMore.bind(this);
+        //this.showMore = this.showMore.bind(this);
         this.getPaginationControls = this.getPaginationControls.bind(this);
-        this.getButtonControls = this.getButtonControls.bind(this);
+        this.getShowMoreButton = this.getShowMoreButton.bind(this);
         this.filterInputReaction = reaction(
             ()=>this.store.dataStore.filterString,
             str=>{ this.filterInput && (this.filterInput.value = str); }
@@ -551,9 +551,9 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
         }
     }
 
-    private getButtonControls() {
+    private getShowMoreButton() {
         return (
-                <ButtonControls
+                <ShowMoreButton
                     itemsPerPage={this.store.itemsPerPage}
                     onChangeItemsPerPage={this.handlers.changeItemsPerPage}
                 />
@@ -590,13 +590,13 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
         );
     }
 
-    private showMore() {
-        return (
-            <Observer>
-                { this.getButtonControls }
-            </Observer>
-        );
-    }  
+    // private showMore() {
+    //     return (
+    //         <Observer>
+    //             { this.getShowMoreButton }
+    //         </Observer>
+    //     );
+    // }  
 
     private getTable() {
         return (
@@ -618,7 +618,7 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
                     {this.getTable}
                 </Observer>
                 <Observer>
-                    {this.showMore}
+                    {this.getShowMoreButton}
                 </Observer>
             </div>
         );
