@@ -8,6 +8,17 @@ interface IPatientViewOncoPrintProps {
   mutationData: Mutation[][];
 }
 
+interface IOncoData {
+  track_id?: number;
+  track_info: string;
+  sample: string;
+  data: Array<{
+      gene: string;
+      sample: string;
+      vaf: number;
+  }>;
+}
+
 declare global {
   interface Window {
     Oncoprint:(ctr_selector:string, width:number) => void;
@@ -20,39 +31,39 @@ export default class PatientViewOncoPrint extends React.Component<IPatientViewOn
   }
 
   componentDidMount() {
-    
-    const onco_data:any = [
-      {sample:'biopsy-1',
-       data:[{gene: 'ABC', sample:'biopsy-1', vaf: 0.1},
-             {gene: 'DEF', sample:'biopsy-1', vaf: 0.5},
-             {gene: 'GHI', sample:'biopsy-1', vaf: 0.9},
-            ],
-      },
-      {sample:'biopsy-2',
-       data:[{gene: 'ABC', sample:'biopsy-2', vaf: 0.9},
-             {gene: 'DEF', sample:'biopsy-2', vaf: 0.5},
-             {gene: 'GHI', sample:'biopsy-2', vaf: 0.1},
-            ],
-      },
-      {sample:'biopsy-3',
-       data:[{gene: 'ABC', sample:'biopsy-3', vaf: 0.3},
-             {gene: 'DEF', sample:'biopsy-3', vaf: 0.7},
-             {gene: 'GHI', sample:'biopsy-3', vaf: 0.3},
-            ],
-      },
-      {sample:'biopsy-4',
-       data:[{gene: 'ABC', sample:'biopsy-4', vaf: 0.8},
-             {gene: 'DEF', sample:'biopsy-4', vaf: 0.2},
-             {gene: 'GHI', sample:'biopsy-4', vaf: 0.6},
-            ],
-      },
-    ];
+
+    const hugo_genes = _.map(this.props.mutationData, function(mut_array) {
+      return mut_array[0].gene.hugoGeneSymbol;
+    });
+    const sample_order = this.props.sampleManager.sampleOrder;
+    const mutations = _.flatten(this.props.mutationData);
+
+    const onco_data:IOncoData[] = [];
+    for (var i = 0; i < sample_order.length; i++) {
+      var sample_id = sample_order[i];
+      const push_data:any[] = [];
+      for (var j = 0; j < hugo_genes.length; j++) {
+        var gene_id = hugo_genes[j];
+        push_data.push({gene: gene_id, sample: sample_id, vaf: 0});
+      }
+      onco_data.push({sample: sample_id, data: push_data, track_info: ""});
+    }
+
+    _.each(mutations, function(mut_data) {
+      var i = sample_order.indexOf(mut_data.sampleId);
+      var j = hugo_genes.indexOf(mut_data.gene.hugoGeneSymbol);
+      var tumor_ratio = 0;
+      if (mut_data.tumorAltCount !== -1 && mut_data.tumorRefCount !== -1) {
+        tumor_ratio = mut_data.tumorAltCount/(mut_data.tumorRefCount + mut_data.tumorAltCount);
+      }
+      onco_data[i].data[j].vaf = tumor_ratio;
+    });
 
     function makeOncoprint(newOncoprint:any, params:any) {
         return new newOncoprint(params.ctr_selector, params.width);
     }
 
-    var oncoprint = makeOncoprint(window.Oncoprint, {ctr_selector: "#patient-view-oncoprint", width: 100 + onco_data.length * 50});
+    var oncoprint = makeOncoprint(window.Oncoprint, {ctr_selector: "#patient-view-oncoprint", width: 800});
     oncoprint.suppressRendering();
 
     var share_id = null;
@@ -88,7 +99,7 @@ export default class PatientViewOncoPrint extends React.Component<IPatientViewOn
 
     for (let i=0; i<onco_data.length; i++) {
       oncoprint.setTrackData(onco_data[i].track_id, onco_data[i].data, 'gene');
-      oncoprint.setTrackInfo(onco_data[i].track_id, onco_data[i].sample);
+      oncoprint.setTrackInfo(onco_data[i].track_id, onco_data[i].track_info);
     }
 
     oncoprint.keepSorted(true);
