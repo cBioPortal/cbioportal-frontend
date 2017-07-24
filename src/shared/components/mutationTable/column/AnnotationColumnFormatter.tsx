@@ -184,9 +184,9 @@ export default class AnnotationColumnFormatter
 
         return _.flatten([
             OncoKB.sortValue(annotationData.oncoKbIndicator),
+            Civic.sortValue(annotationData.civicEntry),
             MyCancerGenome.sortValue(annotationData.myCancerGenomeLinks),
-            CancerHotspots.sortValue(annotationData.isHotspot, annotationData.is3dHotspot),
-            Civic.sortValue(annotationData.civicEntry)
+            CancerHotspots.sortValue(annotationData.isHotspot, annotationData.is3dHotspot)
         ]);
     }
 
@@ -229,6 +229,12 @@ export default class AnnotationColumnFormatter
                         pubMedCache={pubMedCache}
                     />
                 </If>
+                <If condition={columnProps.enableCivic || false}>
+                    <Civic
+                        civicEntry={annotation.civicEntry}
+                        hasCivicVariants={annotation.hasCivicVariants}
+                    />
+                </If>
                 <If condition={columnProps.enableMyCancerGenome || false}>
                     <MyCancerGenome
                         linksHTML={annotation.myCancerGenomeLinks}
@@ -238,12 +244,6 @@ export default class AnnotationColumnFormatter
                     <CancerHotspots
                         isHotspot={annotation.isHotspot}
                         is3dHotspot={annotation.is3dHotspot}
-                    />
-                </If>
-                <If condition={columnProps.enableCivic || false}>
-                    <Civic
-                        civicEntry={annotation.civicEntry}
-                        hasCivicVariants={annotation.hasCivicVariants}
                     />
                 </If>
             </span>
