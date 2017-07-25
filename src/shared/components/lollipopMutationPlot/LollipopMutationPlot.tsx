@@ -1,11 +1,7 @@
 import * as React from "react";
 import LollipopPlot from "./LollipopPlot";
 import {Mutation} from "../../api/generated/CBioPortalAPI";
-import {LollipopSpec, DomainSpec} from "./LollipopPlotNoTooltip";
-import {
-    default as getCanonicalMutationType,
-    CanonicalMutationType, ProteinImpactType, getProteinImpactTypeFromCanonical
-} from "shared/lib/getCanonicalMutationType";
+import {LollipopSpec, DomainSpec, SequenceSpec} from "./LollipopPlotNoTooltip";
 import {remoteData} from "../../api/remoteData";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import request from "superagent";
@@ -15,9 +11,8 @@ import {computed, observable, action} from "mobx";
 import _ from "lodash";
 import {longestCommonStartingSubstring} from "shared/lib/StringUtils";
 import {getColorForProteinImpactType, IProteinImpactTypeColors} from "shared/lib/MutationUtils";
-import {fetchSwissProtAccession} from "shared/lib/StoreUtils";
 import ReactDOM from "react-dom";
-import {Form, Button, FormGroup, InputGroup, ControlLabel, FormControl} from "react-bootstrap";
+import {Form, Button, FormGroup, InputGroup} from "react-bootstrap";
 import fileDownload from "react-file-download";
 import styles from "./lollipopMutationPlot.module.scss";
 import Collapse from "react-collapse";
@@ -229,6 +224,26 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
         }
     }
 
+    private sequenceTooltip(): JSX.Element
+    {
+        return (
+            <div style={{maxWidth: 200}}>
+                <a
+                    href={`http://www.uniprot.org/uniprot/${this.props.store.uniprotId.result}`}
+                    target="_blank"
+                >
+                    {this.props.store.uniprotId.result}
+                </a>
+            </div>
+        );
+    }
+
+    @computed private get sequence(): SequenceSpec {
+        return {
+            tooltip: this.sequenceTooltip()
+        };
+    }
+
     public toSVGDOMNode():Element {
         if (this.plot) {
             // Get result of plot
@@ -432,6 +447,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                     {this.controls}
                     <LollipopPlot
                         ref={this.handlers.ref}
+                        sequence={this.sequence}
                         lollipops={this.lollipops}
                         domains={this.domains}
                         dataStore={this.props.store.dataStore}
