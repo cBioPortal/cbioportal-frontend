@@ -14,7 +14,7 @@ import PdbHeaderCache from "shared/cache/PdbHeaderCache";
 import {
     findGeneticProfileIdDiscrete, fetchMyCancerGenomeData,
     fetchDiscreteCNAData, findMutationGeneticProfileId, mergeDiscreteCNAData,
-    fetchSamples, fetchClinicalData, generateDataQueryFilter, makeStudyToCancerTypeMap
+    fetchSamples, fetchClinicalDataInStudy, generateDataQueryFilter, makeStudyToCancerTypeMap
 } from "shared/lib/StoreUtils";
 import {MutationMapperStore} from "./mutation/MutationMapperStore";
 import AppConfig from "appConfig";
@@ -93,7 +93,10 @@ export class ResultsViewPageStore {
         await: () => [
             this.sampleIds
         ],
-        invoke: () => fetchClinicalData(this.studyId, this.sampleIds.result)
+        invoke: () => {
+            const clinicalDataSingleStudyFilter = {attributeIds: ["CANCER_TYPE", "CANCER_TYPE_DETAILED"], ids: this.sampleIds.result};
+            return fetchClinicalDataInStudy(this.studyId, clinicalDataSingleStudyFilter)
+        }
     }, []);
 
     readonly samples = remoteData({

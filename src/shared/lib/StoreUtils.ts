@@ -3,7 +3,8 @@ import request from "superagent";
 import Response = request.Response;
 import {
     default as CBioPortalAPI, GeneticProfile, Mutation, MutationFilter, DiscreteCopyNumberData,
-    DiscreteCopyNumberFilter, ClinicalData, Sample, CancerStudy, CopyNumberCountIdentifier
+    DiscreteCopyNumberFilter, ClinicalData, Sample, CancerStudy, CopyNumberCountIdentifier,
+    ClinicalDataSingleStudyFilter, ClinicalDataMultiStudyFilter
 } from "shared/api/generated/CBioPortalAPI";
 import {getMyGeneUrl, getPfamGeneDataUrl, getUniprotIdUrl} from "shared/api/urls";
 import defaultClient from "shared/api/cbioportalClientInstance";
@@ -100,19 +101,32 @@ export async function fetchPfamGeneData(swissProtAccession: string)
     return JSON.parse(pfamData.text)[0];
 }
 
-export async function fetchClinicalData(studyId:string,
-                                        sampleIds:string[],
+export async function fetchClinicalData(clinicalDataMultiStudyFilter:ClinicalDataMultiStudyFilter,
                                         client:CBioPortalAPI = defaultClient)
 {
-    if (studyId && sampleIds.length > 0)
+    if (clinicalDataMultiStudyFilter)
     {
         return await client.fetchClinicalDataUsingPOST({
             clinicalDataType: 'SAMPLE',
-            identifiers: sampleIds.map((sampleId: string) => ({
-                entityId: sampleId,
-                studyId
-            })),
+            clinicalDataMultiStudyFilter: clinicalDataMultiStudyFilter,
             projection: 'DETAILED',
+        });
+    }
+    else {
+        return [];
+    }
+}
+
+export async function fetchClinicalDataInStudy(studyId:string,
+                                               clinicalDataSingleStudyFilter:ClinicalDataSingleStudyFilter,
+                                               client:CBioPortalAPI = defaultClient)
+{
+    if (clinicalDataSingleStudyFilter) {
+        return await client.fetchAllClinicalDataInStudyUsingPOST({
+            studyId: studyId,
+            clinicalDataType: 'SAMPLE',
+            clinicalDataSingleStudyFilter: clinicalDataSingleStudyFilter,
+            projection: 'SUMMARY',
         });
     }
     else {
