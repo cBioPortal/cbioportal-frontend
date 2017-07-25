@@ -3,6 +3,7 @@ import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import styles from "./mutationAssessor.module.scss";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
+import {MutationAssessor, IGenomeNexusData} from "shared/model/GenomeNexus";
 
 type MA_CLASS_NAME = 'oma-high' | 'oma-medium' | 'oma-low' | 'oma-neutral' | 'oma-na';
 
@@ -11,6 +12,11 @@ export interface IMutationAssessorFormat
     label: string;
     className: MA_CLASS_NAME;
     priority: number;
+}
+
+export interface IColumnProps {
+    mutationData: Mutation[];
+    genomeNexusData?: any;
 }
 
 /**
@@ -32,9 +38,10 @@ export default class MutationAssessorColumnFormatter
         };
     }
 
-    public static getSortValue(d:Mutation[]):(number|null)[]
+    public static getSortValue(columnProps:IColumnProps):(number|null)[]
     {
-        let score:number|undefined = MutationAssessorColumnFormatter.getData(d).score;
+        // If data is missing, it returns undefined. For the way the table works, we map this to null.
+        let score:number|undefined = MutationAssessorColumnFormatter.getData(columnProps).score;
         let returnScore:number|null;
 
         // If data is missing, it returns undefined. For the way the table works, we map this to null.
@@ -43,16 +50,15 @@ export default class MutationAssessorColumnFormatter
         } else {
             returnScore = score;
         }
-
-        const format = MutationAssessorColumnFormatter.getMapEntry(d);
-        const priority = format && format.priority > 0 ? format.priority : null;
+        const format = MutationAssessorColumnFormatter.getMapEntry(columnProps);
+        const priority = format ? format.priority : -1;
 
         return [priority, returnScore];
     }
 
-    public static filterValue(data:Mutation[]):string
+    public static filterValue(columnProps:IColumnProps):string
     {
-        return MutationAssessorColumnFormatter.getDisplayValue(data);
+        return MutationAssessorColumnFormatter.getDisplayValue(columnProps);
     }
 
     /**
@@ -61,10 +67,10 @@ export default class MutationAssessorColumnFormatter
      * @param data  column formatter data
      * @returns {string}    mutation assessor text value
      */
-    public static getDisplayValue(data:Mutation[]):string
+    public static getDisplayValue(columnProps:IColumnProps):string
     {
         const entry:IMutationAssessorFormat|undefined =
-            MutationAssessorColumnFormatter.getMapEntry(data);
+            MutationAssessorColumnFormatter.getMapEntry(columnProps);
 
         // first, try to find a mapped value
         if (entry) {
@@ -72,13 +78,13 @@ export default class MutationAssessorColumnFormatter
         }
         // if no mapped value, then just return empty text
         else {
-            return "";
+            return MutationAssessorColumnFormatter.getTextValue(columnProps);
         }
     }
 
-    public static getTextValue(data:Mutation[]):string
+    public static getTextValue(columnProps:IColumnProps):string
     {
-        const maData = MutationAssessorColumnFormatter.getData(data);
+        const maData = MutationAssessorColumnFormatter.getData(columnProps);
 
         // return impact value (if exists)
         if (maData && maData.impact) {
@@ -89,10 +95,10 @@ export default class MutationAssessorColumnFormatter
         }
     }
 
-    public static getScoreClassName(data:Mutation[]):string
+    public static getScoreClassName(columnProps:IColumnProps):string
     {
         const value:IMutationAssessorFormat|undefined =
-            MutationAssessorColumnFormatter.getMapEntry(data);
+            MutationAssessorColumnFormatter.getMapEntry(columnProps);
 
         if (value) {
             return value.className;
@@ -102,10 +108,10 @@ export default class MutationAssessorColumnFormatter
         }
     }
 
-    public static getMaClassName(data:Mutation[]):string
+    public static getMaClassName(columnProps:IColumnProps):string
     {
         const value:IMutationAssessorFormat|undefined =
-            MutationAssessorColumnFormatter.getMapEntry(data);
+            MutationAssessorColumnFormatter.getMapEntry(columnProps);
 
         if (value) {
             return "oma-link";
@@ -115,9 +121,9 @@ export default class MutationAssessorColumnFormatter
         }
     }
 
-    public static getMapEntry(data:Mutation[])
+    public static getMapEntry(columnProps:IColumnProps)
     {
-        const maData = MutationAssessorColumnFormatter.getData(data);
+        const maData = MutationAssessorColumnFormatter.getData(columnProps);
 
         if (maData && maData.impact) {
             return MutationAssessorColumnFormatter.MA_SCORE_MAP[maData.impact.toLowerCase()];
@@ -127,20 +133,41 @@ export default class MutationAssessorColumnFormatter
         }
     }
 
-    public static getData(data:Mutation[])
+    public static getData(columnProps:IColumnProps)
     {
+        let data:Mutation[] = columnProps.mutationData;
+        let genomeNexusData:IGenomeNexusData = columnProps.genomeNexusData;
+
         let maData;
 
-        if (data.length > 0) {
-            maData = {
-                impact: data[0].functionalImpactScore,
-                score: data[0].fisValue,
-                pdb: data[0].linkPdb,
-                msa: data[0].linkMsa,
-                xVar: data[0].linkXvar
-            };
-        } else {
-            maData = {
+        if (data.length > 0 && genomeNexusData &&
+            genomeNexusData.hasOwnProperty("mutation_assessor")) {
+
+            let genomeNexusMap = genomeNexusData.mutation_assessor;
+            let mutationAssessor:MutationAssessor = genomeNexusMap[data[0].entrezGeneId];
+
+            if (mutationAssessor) {
+                maData = {
+                    impact: mutationAssessor.functionalImpact,
+                    score: mutationAssessor.functionalImpactScore,
+                    pdb: data[0].linkPdb,
+                    msa: data[0].linkMsa,
+                    xVar: data[0].linkXvar
+                };
+            }
+            // when mutation assessor undefined
+            else {
+                maData = {
+                    impact: "na",
+                    score: 0,
+                    pdb: data[0].linkPdb,
+                    msa: data[0].linkMsa,
+                    xVar: data[0].linkXvar
+                }
+            }
+        }
+        else {
+            return maData = {
                 impact: undefined,
                 score: undefined,
                 pdb: undefined,
@@ -148,12 +175,13 @@ export default class MutationAssessorColumnFormatter
                 xVar: undefined
             };
         }
+
         return maData;
     }
 
-    public static getTooltipContent(data:Mutation[])
+    public static getTooltipContent(columnProps:IColumnProps)
     {
-        const maData = MutationAssessorColumnFormatter.getData(data);
+        const maData = MutationAssessorColumnFormatter.getData(columnProps);
         let xVar:any = "";
         let msa:any = "";
         let pdb:any = "";
@@ -164,7 +192,7 @@ export default class MutationAssessorColumnFormatter
         const msaLink = MutationAssessorColumnFormatter.maLink(maData.msa);
         const pdbLink = MutationAssessorColumnFormatter.maLink(maData.pdb);
 
-        if (maData.score)
+        if (maData.score !== undefined )
         {
             impact = (
                 <div>
@@ -235,7 +263,7 @@ export default class MutationAssessorColumnFormatter
             MutationAssessorColumnFormatter.isValidValue(link))
         {
             // getma.org is the legacy link, need to replace it with the actual value
-            url = link.replace("getma.org", "mutationassessor.org/r2");
+            url = link.replace("getma.org", "mutationassessor.org/r3");
 
             // prepend "http://" if needed
             if (url.indexOf("http://") !== 0)
@@ -247,11 +275,12 @@ export default class MutationAssessorColumnFormatter
         return url;
     }
 
-    public static renderFunction(data:Mutation[])
+    public static renderFunction(columnProps:IColumnProps)
     {
         const text:string = MutationAssessorColumnFormatter.getDisplayValue(data);
         const fisClass:string = MutationAssessorColumnFormatter.getScoreClassName(data);
         const maClass:string = MutationAssessorColumnFormatter.getMaClassName(data);
+        let data:Mutation[] = columnProps.mutationData;
 
         let content = (
             <span className={`${styles[maClass]} ${styles[fisClass]}`}>{text}</span>
@@ -261,7 +290,7 @@ export default class MutationAssessorColumnFormatter
         if (MutationAssessorColumnFormatter.isValidValue(text))
         {
             const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
-            const tooltipContent = MutationAssessorColumnFormatter.getTooltipContent(data);
+            const tooltipContent = MutationAssessorColumnFormatter.getTooltipContent(columnProps);
 
             // update content with the tooltip
             content = (
