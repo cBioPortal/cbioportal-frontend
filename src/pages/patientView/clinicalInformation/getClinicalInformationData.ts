@@ -1,6 +1,6 @@
 import URL from 'url';
 import * as _ from 'lodash';
-import CBioPortalAPI from "../../../shared/api/generated/CBioPortalAPI";
+import CBioPortalAPI, {ClinicalDataMultiStudyFilter} from "../../../shared/api/generated/CBioPortalAPI";
 import { ClinicalDataBySampleId } from "../../../shared/api/api-types-extended";
 import {ClinicalData} from "../../../shared/api/generated/CBioPortalAPI";
 import {ClinicalInformationData} from "shared/model/ClinicalInformation";
@@ -81,12 +81,16 @@ export default async function getClinicalInformationData():Promise<ClinicalInfor
         patientId
     });
 
+    const identifiers = samplesOfPatient.map(sample => ({
+        entityId: sample.sampleId,
+        studyId
+    }));
+
+    const clinicalDataMultiStudyFilter = {identifiers} as ClinicalDataMultiStudyFilter;
+
     const clinicalDataSample = await tsClient.fetchClinicalDataUsingPOST({
         clinicalDataType: 'SAMPLE',
-        identifiers: samplesOfPatient.map(sample => ({
-            entityId: sample.sampleId,
-            studyId
-        })),
+        clinicalDataMultiStudyFilter,
         projection: 'DETAILED',
     });
 
