@@ -19,6 +19,7 @@ import DiscreteCNACache from "shared/cache/DiscreteCNACache";
 import {getTissueImageCheckUrl, getDarwinUrl} from "../../../shared/api/urls";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import PubMedCache from "shared/cache/PubMedCache";
+import {MutationAssessor} from "shared/model/GenomeNexus";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {IHotspotData} from "shared/model/CancerHotspots";
 import {IMutSigData} from "shared/model/MutSig";
@@ -30,8 +31,8 @@ import CancerTypeCache from "shared/cache/CancerTypeCache";
 import MutationCountCache from "shared/cache/MutationCountCache";
 import AppConfig from "appConfig";
 import {
-    findGeneticProfileIdDiscrete, ONCOKB_DEFAULT, fetchOncoKbData, fetchGenomeNexusData, fetchCnaOncoKbData,
-    indexHotspotData, mergeMutations, fetchHotspotsData, fetchMyCancerGenomeData, fetchCosmicData,
+    findGeneticProfileIdDiscrete, ONCOKB_DEFAULT, fetchOncoKbData, GENOME_NEXUS_DEFAULT, fetchGenomeNexusData, 
+    fetchCnaOncoKbData, indexHotspotData, mergeMutations, fetchHotspotsData, fetchMyCancerGenomeData, fetchCosmicData,
     fetchMutationData, fetchDiscreteCNAData, generateSampleIdToTumorTypeMap, findMutationGeneticProfileId,
     findUncalledMutationGeneticProfileId, mergeMutationsIncludingUncalled, fetchGisticData, fetchCopyNumberData,
     fetchMutSigData, findMrnaRankGeneticProfileId, mergeDiscreteCNAData, fetchSamplesForPatient, fetchClinicalData,
@@ -456,7 +457,7 @@ export class PatientViewPageStore {
             this.uncalledMutationData
         ],
         invoke: async() => fetchGenomeNexusData(this.mutationData, this.uncalledMutationData)
-    }, []);
+    }, GENOME_NEXUS_DEFAULT);
 
     readonly oncoKbData = remoteData<IOncoKbData>({
         await: () => [
