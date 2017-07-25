@@ -14,7 +14,6 @@ interface IOncoData {
   sample: string;
   data: Array<{
       gene: string;
-      sample: string;
       vaf: number;
   }>;
 }
@@ -44,7 +43,7 @@ export default class PatientViewOncoPrint extends React.Component<IPatientViewOn
       const push_data:any[] = [];
       for (var j = 0; j < hugo_genes.length; j++) {
         var gene_id = hugo_genes[j];
-        push_data.push({gene: gene_id, sample: sample_id, vaf: 0});
+        push_data.push({gene: gene_id, vaf: 0});
       }
       onco_data.push({sample: sample_id, data: push_data, track_info: ""});
     }
@@ -97,9 +96,12 @@ export default class PatientViewOncoPrint extends React.Component<IPatientViewOn
     oncoprint.hideIds([], true);
     oncoprint.keepSorted(false);
 
-    for (let i=0; i<onco_data.length; i++) {
+    for (let i = 0; i < onco_data.length; i++) {
       oncoprint.setTrackData(onco_data[i].track_id, onco_data[i].data, 'gene');
       oncoprint.setTrackInfo(onco_data[i].track_id, onco_data[i].track_info);
+      oncoprint.setTrackTooltipFn(onco_data[i].track_id, function(data:any) {
+        return "<b>Gene: " + data.gene + "<br/>VAF: " + data.vaf.toString().slice(0, 4) + "</b>";
+      });
     }
 
     oncoprint.keepSorted(true);
