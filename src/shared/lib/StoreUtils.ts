@@ -12,6 +12,7 @@ import {
     GisticToGene, Gistic, MutSig
 } from "shared/api/generated/CBioPortalAPIInternal";
 import oncokbClient from "shared/api/oncokbClientInstance";
+import genomeNexusClient from "shared/api/genomeNexusClientInstance";
 import {
     generateIdToIndicatorMap, generateQueryVariant, generateEvidenceQuery
 } from "shared/lib/OncoKbUtils";
@@ -19,11 +20,14 @@ import {Query, default as OncoKbAPI} from "shared/api/generated/OncoKbAPI";
 import {getAlterationString} from "shared/lib/CopyNumberUtils";
 import {MobxPromise} from "mobxpromise";
 import {keywordToCosmic, indexHotspots, geneToMyCancerGenome} from "shared/lib/AnnotationUtils";
+import {generateMutationAssessorQueries, toMutationAssessorMap} from "shared/lib/GenomeNexusUtils";
+import {MutationAssessor} from "shared/model/GenomeNexus";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {IGisticData} from "shared/model/Gistic";
 import {IMutSigData} from "shared/model/MutSig";
 import {IMyCancerGenomeData, IMyCancerGenome} from "shared/model/MyCancerGenome";
 import {IHotspotData, ICancerHotspotData} from "shared/model/CancerHotspots";
+import {IGenomeNexusData} from "shared/model/GenomeNexus";
 import CancerHotspotsAPI from "shared/api/generated/CancerHotspotsAPI";
 import GenomeNexusAPI from "shared/api/generated/GenomeNexusAPI";
 import {GENETIC_PROFILE_MUTATIONS_SUFFIX, GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
@@ -41,6 +45,10 @@ export const ONCOKB_ERROR: IOncoKbData = {
 export const HOTSPOTS_DEFAULT = {
     single: [],
     clustered: []
+};
+
+export const GENOME_NEXUS_DEFAULT = {
+    mutation_assessor: {}
 };
 
 export type MutationIdGenerator = (mutation:Mutation) => string;
@@ -266,45 +274,30 @@ export function fetchMyCancerGenomeData(): IMyCancerGenomeData
     return geneToMyCancerGenome(data);
 }
 
-export function generateHgvsQuery(data:Mutation[])
-{
-    let genomeNexusQueries:string[] = [];
-    
-    for (var i in data) {
-        let hgvs:string = "";
-        if (data[i].mutationType === "Missense_Mutation") {
-            hgvs += data[i].gene.chromosome + ":g." + data[i].startPosition;
-            hgvs += data[i].referenceAllele + ">" + data[i].variantAllele;
-        }
-        // if not missense mutation, pass empty string into array
-        genomeNexusQueries[i] = hgvs;
-    }
-    
-    return genomeNexusQueries;
-}
-
 export async function fetchGenomeNexusData(mutationData:MobxPromise<Mutation[]>,
-                                           uncalledMutationData?:MobxPromise<Mutation[]>)
+                                           uncalledMutationData?:MobxPromise<Mutation[]>,
+                                           client: GenomeNexusAPI = genomeNexusClient)
 {
-    let client:GenomeNexusAPI = new GenomeNexusAPI("http://localhost:38080");
     const mutationDataResult = concatMutationData(mutationData, uncalledMutationData);
 
     if (mutationDataResult.length == 0) {
-        return {};
+        return GENOME_NEXUS_DEFAULT;
     }
 
-    let queryVariants:string[] = generateHgvsQuery(mutationDataResult);
-
-    return queryGenomeNexusData(queryVariants, client)
+    return queryGenomeNexusData(mutationDataResult, client)
 }
 
-export async function queryGenomeNexusData(queryVariants:string[],
-                                            client:GenomeNexusAPI)
+export async function queryGenomeNexusData(mutationData:Mutation[],
+                                            client: GenomeNexusAPI = genomeNexusClient)
 {
-    const genomeNexusSearch:any[] = await client.postMutationAssessorAnnotation(
-        { variants : queryVariants });
+    const genomeNexusSearch:MutationAssessor[] = await client.postMutationAssessorAnnotation(
+        { variants : generateMutationAssessorQueries(mutationData) });
 
-    return genomeNexusSearch; // array of mutation assessor objects
+    const genomeNexusData: IGenomeNexusData = {
+        mutation_assessor : toMutationAssessorMap(mutationData, genomeNexusSearch)
+    };
+
+    return genomeNexusData;
 }
 
 export async function fetchOncoKbData(sampleIdToTumorType:{[sampleId: string]: string},
@@ -358,7 +351,6 @@ export async function queryOncoKbData(queryVariants: Query[],
                                       sampleIdToTumorType: {[sampleId: string]: string},
                                       client: OncoKbAPI = oncokbClient)
 {
-    //console.log("Again");
     const onkokbSearch = await client.searchPostUsingPOST(
         {body: generateEvidenceQuery(queryVariants)});
 

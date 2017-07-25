@@ -23,6 +23,7 @@ import {IMyCancerGenomeData} from "shared/model/MyCancerGenome";
 import {IHotspotData} from "shared/model/CancerHotspots";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {IMutSigData} from "shared/model/MutSig";
+import {IGenomeNexusData} from "shared/model/GenomeNexus";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import MrnaExprRankCache from "shared/cache/MrnaExprRankCache";
@@ -55,7 +56,7 @@ export interface IMutationTableProps {
     hotspots?: IHotspotData;
     cosmicData?:ICosmicData;
     oncoKbData?:IOncoKbData;
-    genomeNexusData?:any;
+    genomeNexusData?:IGenomeNexusData;
     mrnaExprRankGeneticProfileId?:string;
     discreteCNAGeneticProfileId?:string;
     columns?:MutationTableColumnType[];
@@ -359,12 +360,20 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
 
         this._columns[MutationTableColumnType.MUTATION_ASSESSOR] = {
             name: "Mutation Assessor",
-            render:MutationAssessorColumnFormatter.renderFunction,
-            download:MutationAssessorColumnFormatter.getTextValue,
-            sortBy:(d:Mutation[])=>MutationAssessorColumnFormatter.getSortValue(d),
+            render: (d:Mutation[])=>MutationAssessorColumnFormatter.renderFunction({
+                mutationData: d, genomeNexusData: this.props.genomeNexusData
+            }),
+            download: (d:Mutation[])=>MutationAssessorColumnFormatter.getTextValue({
+                mutationData: d, genomeNexusData: this.props.genomeNexusData
+            }),
+            sortBy:(d:Mutation[])=>MutationAssessorColumnFormatter.getSortValue({
+                mutationData: d, genomeNexusData: this.props.genomeNexusData
+            }),
             filter:(d:Mutation[], filterString:string, filterStringUpper:string) =>
-                MutationAssessorColumnFormatter.filterValue(d).toUpperCase().indexOf(filterStringUpper) > -1,
-            visible: false
+                MutationAssessorColumnFormatter.filterValue({
+                mutationData: d, genomeNexusData: this.props.genomeNexusData
+            }).toUpperCase().indexOf(filterStringUpper) > -1,
+            visible: true
         };
 
         this._columns[MutationTableColumnType.COSMIC] = {
