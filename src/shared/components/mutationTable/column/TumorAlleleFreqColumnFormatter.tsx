@@ -59,4 +59,18 @@ export default class TumorAlleleFreqColumnFormatter
 
         return (altReads / (altReads + refReads));
     }
+
+    public static isVisible(allMutations?: Mutation[][]): boolean {
+
+        if (allMutations) {
+            for (const rowMutations of allMutations) {
+                const frequency = this.getSortValue(rowMutations);
+                if (frequency) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 }
