@@ -1,21 +1,13 @@
 import * as React from 'react';
-import _ from "lodash";
-import Lollipop from "./Lollipop";
-import Domain from "./Domain";
-import SVGAxis from "../SVGAxis";
-import {Tick} from "../SVGAxis";
 import {observer} from "mobx-react";
-import {observable, asMap, ObservableMap, computed} from "mobx";
-import $ from "jquery";
+import {observable, computed} from "mobx";
 import DefaultTooltip from "../DefaultTooltip";
-import LollipopPlotNoTooltip from "./LollipopPlotNoTooltip";
-import {LollipopSpec} from "./LollipopPlotNoTooltip";
-import {DomainSpec} from "./LollipopPlotNoTooltip";
-import ReactDOM from "react-dom";
+import {default as LollipopPlotNoTooltip, LollipopSpec, DomainSpec, SequenceSpec} from "./LollipopPlotNoTooltip";
 import MutationMapperDataStore from "../../../pages/resultsView/mutation/MutationMapperDataStore";
 import HitZone from "../HitZone";
 
 export type LollipopPlotProps = {
+    sequence:SequenceSpec;
     lollipops:LollipopSpec[];
     domains:DomainSpec[];
     vizWidth:number;
@@ -26,18 +18,27 @@ export type LollipopPlotProps = {
     onXAxisOffset?:(offset:number)=>void;
 };
 
+type HitZoneConfig = {
+    hitRect: {x:number, y:number, width:number, height:number};
+    content?: JSX.Element;
+    tooltipPlacement?: string;
+    onMouseOver?: () => void;
+    onClick?: () => void;
+    onMouseOut?: () => void;
+}
+
 @observer
 export default class LollipopPlot extends React.Component<LollipopPlotProps, {}> {
-    @observable private hitZoneConfig:{hitRect:{x:number, y:number, width:number, height:number}, content?:JSX.Element,
-        onMouseOver?:()=>void, onClick?:()=>void, onMouseOut?:()=>void} = {
+    @observable private hitZoneConfig: HitZoneConfig = {
         hitRect: {
             x:0, y:0, width:0, height:0
         },
         content:(<span></span>),
+        tooltipPlacement: "top",
         onMouseOver:()=>0,
         onClick:()=>0,
         onMouseOut:()=>0
-    }
+    };
 
     private plot:LollipopPlotNoTooltip;
     private handlers:any;
@@ -47,13 +48,18 @@ export default class LollipopPlot extends React.Component<LollipopPlotProps, {}>
 
         this.handlers = {
             ref: (plot:LollipopPlotNoTooltip)=>{ this.plot = plot; },
-            setHitZone:(hitRect:{x:number, y:number, width:number, height:number}, content?:JSX.Element,
-                        onMouseOver?:()=>void, onClick?:()=>void, onMouseOut?:()=>void)=>{
+            setHitZone:(hitRect:{x:number, y:number, width:number, height:number},
+                        content?:JSX.Element,
+                        onMouseOver?:()=>void,
+                        onClick?:()=>void,
+                        onMouseOut?:()=>void,
+                        tooltipPlacement: string = "top") => {
                 this.hitZoneConfig = {
-                    hitRect, content, onMouseOver, onClick, onMouseOut
+                    hitRect, content, onMouseOver, onClick, onMouseOut, tooltipPlacement
                 };
             },
             getOverlay:()=>this.hitZoneConfig.content,
+            getOverlayPlacement:()=>this.hitZoneConfig.tooltipPlacement,
             onMouseLeave:()=>{
                 this.hitZoneConfig.onMouseOut && this.hitZoneConfig.onMouseOut();
             },
@@ -98,7 +104,7 @@ export default class LollipopPlot extends React.Component<LollipopPlotProps, {}>
         return (
             <div style={{position:"relative"}}>
                 <DefaultTooltip
-                    placement="top"
+                    placement={this.handlers.getOverlayPlacement()}
                     overlay={this.handlers.getOverlay}
                     {...tooltipVisibleProps}
                 >

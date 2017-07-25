@@ -1,11 +1,12 @@
 import * as React from 'react';
 import _ from "lodash";
+import Sequence from "./Sequence";
 import Lollipop from "./Lollipop";
 import Domain from "./Domain";
 import SVGAxis from "../SVGAxis";
 import {Tick} from "../SVGAxis";
 import {observer} from "mobx-react";
-import {observable, asMap, ObservableMap, computed, action} from "mobx";
+import {computed, action} from "mobx";
 import $ from "jquery";
 import {LollipopPlotProps} from "./LollipopPlot";
 import {SyntheticEvent} from "react";
@@ -27,13 +28,18 @@ export type DomainSpec = {
     tooltip?:JSX.Element;
 };
 
+export type SequenceSpec = {
+    tooltip?:JSX.Element;
+}
+
 export type LollipopPlotNoTooltipProps = LollipopPlotProps & {
     setHitZone?:(
         hitRect:{x:number, y:number, width:number, height:number},
         tooltipContent?:JSX.Element,
         onMouseOver?:()=>void,
         onClick?:()=>void,
-        onMouseOut?:()=>void
+        onMouseOut?:()=>void,
+        tooltipPlacement?:string
     )=>void;
     onMouseLeave?:()=>void;
     onBackgroundMouseMove?:()=>void;
@@ -42,12 +48,14 @@ export type LollipopPlotNoTooltipProps = LollipopPlotProps & {
 const DELETE_FOR_DOWNLOAD_CLASS = "delete-for-download";
 const LOLLIPOP_ID_CLASS_PREFIX = "lollipop-";
 const DOMAIN_ID_CLASS_PREFIX = "domain-";
+const SEQUENCE_ID_CLASS_PREFIX = "sequence-";
 
 @observer
 export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotNoTooltipProps, {}> {
 
     private lollipopComponents:{[lollipopIndex:string]:Lollipop};
     private domainComponents:{[domainIndex:string]:Domain};
+    private sequenceComponents: Sequence[] = [];
 
     private svg:SVGElement;
     private shiftPressed:boolean = false;
@@ -96,7 +104,10 @@ export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotN
 
                 const target = e.target as SVGElement;
                 const className = target.getAttribute("class") || "";
-                const lollipopIndex = this.getLollipopIndex(className);
+                const lollipopIndex: number|null = this.getLollipopIndex(className);
+                let domainIndex: number|null = null;
+                let sequenceIndex: number|null = null;
+
                 if (lollipopIndex !== null) {
                     const lollipopComponent = this.lollipopComponents[lollipopIndex];
                     if (lollipopComponent) {
@@ -114,16 +125,32 @@ export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotN
                         }
                     }
                 } else {
-                    const domainIndex = this.getDomainIndex(className);
-                    if (domainIndex !== null) {
-                        const domainComponent = this.domainComponents[domainIndex];
-                        if (domainComponent) {
-                            if (this.props.setHitZone) {
-                                this.props.setHitZone(
-                                    domainComponent.hitRect,
-                                    domainComponent.props.spec.tooltip
-                                );
-                            }
+                    domainIndex = this.getDomainIndex(className);
+                }
+
+                if (domainIndex !== null) {
+                    const domainComponent = this.domainComponents[domainIndex];
+                    if (domainComponent) {
+                        if (this.props.setHitZone) {
+                            this.props.setHitZone(
+                                domainComponent.hitRect,
+                                domainComponent.props.spec.tooltip
+                            );
+                        }
+                    }
+                }
+                else {
+                    sequenceIndex = this.getSequenceIndex(className);
+                }
+
+                if (sequenceIndex !== null) {
+                    const sequenceComponent = this.sequenceComponents[sequenceIndex];
+                    if (sequenceComponent) {
+                        if (this.props.setHitZone) {
+                            this.props.setHitZone(
+                                sequenceComponent.hitRect,
+                                sequenceComponent.props.spec.tooltip
+                            );
                         }
                     }
                 }
@@ -271,6 +298,55 @@ export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotN
         return this.geneY - ((this.domainHeight - this.geneHeight) / 2);
     }
 
+    // we need to create segments for the sequence rectangle for better handling of the tooltip hit zone
+    @computed private get sequenceSegments() {
+        const sequenceComponents: JSX.Element[] = [];
+
+        let start = 0;
+
+        let segments = _.map(this.props.domains, (domain:DomainSpec) => {
+            const segment = {
+                start,
+                end: this.codonToX(domain.startCodon) // segment ends at the start of the current domain
+            };
+
+            // next segment starts at the end of the current domain
+            start = this.codonToX(domain.endCodon);
+
+            return segment;
+        });
+
+        // last segment after the last domain
+        const end = this.props.vizWidth;
+        segments.push({start, end});
+
+        // sort segments by start position
+        segments.sort((a:{start:number, end:number}, b:{start:number, end:number}) => {
+            return a.start - b.start;
+        });
+
+        segments.forEach((segment:{start:number, end:number}, index:number) => {
+            sequenceComponents.push(
+                <Sequence
+                    ref={(sequenceComponent) => {
+                        if (sequenceComponent !== null) {
+                            this.sequenceComponents[index] = sequenceComponent;
+                        }
+                    }}
+                    color="#BABDB6"
+                    x={this.geneX + segment.start}
+                    y={this.geneY}
+                    height={this.geneHeight}
+                    width={segment.end - segment.start}
+                    spec={this.props.sequence}
+                    hitzoneClassName={[DELETE_FOR_DOWNLOAD_CLASS, this.makeSequenceIndexClass(index)].join(" ")}
+                />
+            );
+        });
+
+        return sequenceComponents;
+    }
+
     @computed private get lollipops() {
         this.lollipopComponents = {};
         const maxMutations = this.yMax;
@@ -327,26 +403,35 @@ export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotN
     private makeDomainIndexClass(index:number) {
         return `${DOMAIN_ID_CLASS_PREFIX}${index}`;
     }
-    private getDomainIndex(classes:string):number|null {
-        const match = classes.split(/[\s]+/g).map(c=>c.match(new RegExp(`^${DOMAIN_ID_CLASS_PREFIX}(.*)$`)))
-            .find(x=>(x !== null));
-        if (!match) {
-            return null;
-        } else {
-            return parseInt(match[1], 10);
-        }
-    }
+
     private makeLollipopIndexClass(index:number) {
         return `${LOLLIPOP_ID_CLASS_PREFIX}${index}`;
     }
-    private getLollipopIndex(classes:string):number|null {
-        const match = classes.split(/[\s]+/g).map(c=>c.match(new RegExp(`^${LOLLIPOP_ID_CLASS_PREFIX}(.*)$`)))
+
+    private makeSequenceIndexClass(index:number) {
+        return `${SEQUENCE_ID_CLASS_PREFIX}${index}`;
+    }
+
+    private getComponentIndex(classes:string, classPrefix:string):number|null {
+        const match = classes.split(/[\s]+/g).map(c=>c.match(new RegExp(`^${classPrefix}(.*)$`)))
             .find(x=>(x !== null));
         if (!match) {
             return null;
         } else {
             return parseInt(match[1], 10);
         }
+    }
+
+    private getDomainIndex(classes:string):number|null {
+        return this.getComponentIndex(classes, DOMAIN_ID_CLASS_PREFIX);
+    }
+
+    private getLollipopIndex(classes:string):number|null {
+        return this.getComponentIndex(classes, LOLLIPOP_ID_CLASS_PREFIX);
+    }
+
+    private getSequenceIndex(classes:string):number|null {
+        return this.getComponentIndex(classes, SEQUENCE_ID_CLASS_PREFIX);
     }
 
     public toSVGDOMNode():Element {
@@ -378,13 +463,7 @@ export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotN
                         onClick={this.handlers.onBackgroundClick}
                         onMouseMove={this.handlers.onBackgroundMouseMove}
                     />
-                    <rect
-                        fill="#BABDB6"
-                        x={this.geneX}
-                        y={this.geneY}
-                        height={this.geneHeight}
-                        width={this.props.vizWidth}
-                    />
+                    {this.sequenceSegments}
                     {this.lollipops}
                     {this.domains}
                     <SVGAxis
