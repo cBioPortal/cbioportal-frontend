@@ -142,4 +142,18 @@ export default class AlleleFreqColumnFormatter {
             return (altReads / (altReads + refReads));
         });
     }
+
+    public static isVisible(sampleManager:SampleManager|null, allMutations?: Mutation[][]): boolean {
+
+        if (allMutations) {
+            for (const rowMutations of allMutations) {
+                const frequency = this.getSortValue(rowMutations, sampleManager);
+                if (frequency[0]) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
 }
