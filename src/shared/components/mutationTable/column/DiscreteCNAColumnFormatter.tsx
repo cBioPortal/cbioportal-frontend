@@ -46,7 +46,7 @@ export default class DiscreteCNAColumnFormatter {
     }
 
     protected static getData(data:Mutation[] | undefined, discreteCNACache:DiscreteCNACache):DiscreteCNACacheDataType | null {
-        if (!data || data.length === 0) {
+        if (!data || data.length === 0 || !discreteCNACache.geneticProfileIdDiscrete) {
             return null;
         }
         const sampleId = data[0].sampleId;
@@ -125,5 +125,19 @@ export default class DiscreteCNAColumnFormatter {
         } else {
             return (<span>Querying server for data.</span>);
         }
+    }
+
+    public static isVisible(cache:DiscreteCNACache, allMutations?: Mutation[][]): boolean {
+
+        if (allMutations) {
+            for (const rowMutations of allMutations) {
+                const cnaData = DiscreteCNAColumnFormatter.getData(rowMutations, cache);
+                if (cnaData) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }
