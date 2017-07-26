@@ -15,6 +15,8 @@ export interface IPaginationControlsProps {
     itemsPerPage?:number;
     itemsPerPageOptions?:number[];
     showAllOption?:boolean;
+    showMoreButton?:boolean;
+    textBeforeButtons?:string;
     textBetweenButtons?:string;
     firstButtonContent?: string | JSX.Element;
     previousButtonContent?: string | JSX.Element;
@@ -44,6 +46,7 @@ export class PaginationControls extends React.Component<IPaginationControlsProps
         itemsPerPage: SHOW_ALL_PAGE_SIZE,
         itemsPerPageOptions: [10, 25, 50, 100],
         showAllOption: true,
+        textBeforeButtons:"",
         textBetweenButtons: "text btwn buttons",
         firstButtonContent: (<i className='fa fa-angle-double-left'/>),
         previousButtonContent: (<i className='fa fa-angle-left'/>),
@@ -64,6 +67,8 @@ export class PaginationControls extends React.Component<IPaginationControlsProps
         this.handleChangeItemsPerPage = this.handleChangeItemsPerPage.bind(this);
         this.handleChangeCurrentPage = this.handleChangeCurrentPage.bind(this);
         this.handleOnBlur = this.handleOnBlur.bind(this);
+        this.handleShowMore = this.handleShowMore.bind(this);
+        this.getSectionBetweenPaginationButtons = this.getSectionBetweenPaginationButtons.bind(this);
     }
 
     private pageNumberInput: HTMLSpanElement;
@@ -81,6 +86,16 @@ export class PaginationControls extends React.Component<IPaginationControlsProps
 
         if (this.props.onChangeItemsPerPage) {
             this.props.onChangeItemsPerPage(parseInt((evt.target as HTMLSelectElement).value,10));
+        }
+    }
+
+    handleShowMore() {
+        if (this.props.itemsPerPageOptions && this.props.itemsPerPage && this.props.onChangeItemsPerPage) {
+            const index = this.props.itemsPerPageOptions.indexOf(this.props.itemsPerPage);
+            if (index > -1) {
+                const itemsPerPage:number = (index + 1 < this.props.itemsPerPageOptions.length)? this.props.itemsPerPageOptions[index + 1] : SHOW_ALL_PAGE_SIZE;
+                this.props.onChangeItemsPerPage(itemsPerPage);
+            }
         }
     }
 
@@ -114,27 +129,17 @@ export class PaginationControls extends React.Component<IPaginationControlsProps
         }
     }
 
-    render() {
-        const pageSizeOptionElts = (this.props.itemsPerPageOptions || []).map((opt:number) => (<option key={opt} value={opt+""}>{opt}</option>));
-        if (this.props.showAllOption) {
-            pageSizeOptionElts.push(<option key="all" value={SHOW_ALL_PAGE_SIZE+""}>all</option>);
-        }
-
-        return (
-            <div className={classNames(styles.paginationControls, this.props.className)} style={this.props.style}>
-                <ButtonGroup bsSize="sm">
-                    <If condition={!!this.props.showFirstPage}>
-                        <Button key="firstPageBtn" disabled={!!this.props.firstPageDisabled} onClick={this.props.onFirstPageClick}>
-                            {this.props.firstButtonContent}
-                        </Button>
-                    </If>
-                    <Button className="prevPageBtn" key="prevPageBtn" disabled={!!this.props.previousPageDisabled} onClick={this.props.onPreviousPageClick}>
-                        {this.props.previousButtonContent}
-                    </Button>
-
-                    <span
+    private getSectionBetweenPaginationButtons() {
+        if (this.props.showMoreButton) {
+            return (
+                <Button disabled={(this.props.itemsPerPage===SHOW_ALL_PAGE_SIZE)} onClick={this.handleShowMore}>
+                    Show more
+                </Button>
+            )
+        } else {
+            return (<span
                         key="textBetweenButtons"
-                        className={styles["default-cursor"] + " btn btn-default disabled textBetweenButtons"}
+                        className={"btn btn-default textBetweenButtons disabled" + styles["default-cursor"]}
                     >
                         <If condition={this.props.pageNumberEditable}>
                             <span
@@ -149,7 +154,29 @@ export class PaginationControls extends React.Component<IPaginationControlsProps
                         </If>
                         {this.props.textBetweenButtons}
                     </span>
+            )
+        }
+    }
 
+    render() {
+        const pageSizeOptionElts = (this.props.itemsPerPageOptions || []).map((opt:number) => (<option key={opt} value={opt+""}>{opt}</option>));
+        if (this.props.showAllOption) {
+            pageSizeOptionElts.push(<option key="all" value={SHOW_ALL_PAGE_SIZE+""}>all</option>);
+        }
+
+        return (
+            <div className={classNames(styles.paginationControls, this.props.className)} style={this.props.style}>
+                <span style={{fontSize:12, marginRight:10}}>{this.props.textBeforeButtons}</span>
+                <ButtonGroup bsSize="sm" style={{float:'none'}}>
+                    <If condition={!!this.props.showFirstPage}>
+                        <Button key="firstPageBtn" disabled={!!this.props.firstPageDisabled} onClick={this.props.onFirstPageClick}>
+                            {this.props.firstButtonContent}
+                        </Button>
+                    </If>
+                    <Button className="prevPageBtn" key="prevPageBtn" disabled={!!this.props.previousPageDisabled} onClick={this.props.onPreviousPageClick}>
+                        {this.props.previousButtonContent}
+                    </Button>
+                    {this.getSectionBetweenPaginationButtons()}
                     <Button className="nextPageBtn" key="nextPageBtn" disabled={!!this.props.nextPageDisabled} onClick={this.props.onNextPageClick}>
                         {this.props.nextButtonContent}
                     </Button>
