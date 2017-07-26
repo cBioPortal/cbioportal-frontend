@@ -7,22 +7,18 @@ import { ChartTooltipItem } from '@types/chart.js';
 const convertCssColorNameToHex = require('convert-css-color-name-to-hex');
 import Chart from 'chart.js';
 
-export interface IBarGraphProps {
-    data:CancerStudy[];
-};
-
 interface ICancerTypeStudy {
-    caseCount:number;
-    shortName:string;
+    shortName: string;
     color: string;
     studies: CancerStudy[];
+    caseCount?:number;
+}
+
+export interface IBarGraphProps {
+    data:ICancerTypeStudy[];
 };
 
-interface ICounterObj {
-    [name:string]: ICancerTypeStudy;
-};
-
-export default class BarGraph extends React.Component<IBarGraphProps, {colors: string[]}> {
+export default class BarGraph extends React.Component<IBarGraphProps, {}> {
 
     constructor() {
         super();
@@ -34,39 +30,19 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
         return false;
     }
 
-    getShortName(cancerStudiesObj:ICounterObj) {
+    getShortName(study:ICancerTypeStudy) {
         const aliases:{[id:string]:string} = {
-            'Ovarian': 'Ovary', 'Cervical': 'Cervix', 'Uterine': 'Uterus',
-            'Melanoma': 'Skin', 'CCLE':'Mixed', 'Thymoma(TCGA)': 'Thymus', 'Uveal': 'Eye',
-            'Testicular': 'Testicle', 'Colorectal': 'Colon', 'GCT': 'CNS/Brain'
+            'Esophagus/Stomach': 'Stomach',
+            'Ovary/Fallopian Tube': 'Ovary',
+            'Bladder/Urinary Tract': 'Bladder',
+            'Head and Neck': 'Head/Neck',
+            'Peripheral Nervous System': 'PNS',
+            'Ampulla of Vater': 'Amp. of Vater'
         };
-        return _.mapValues(cancerStudiesObj, (cancerStudy) => {
-            const shortName = cancerStudy.shortName.split(" ")[0];
-            return {
-                ...cancerStudy,
-                shortName: aliases[shortName] ? aliases[shortName] : shortName
-            };
-        });
-    }
-
-    condenseCancerTypes(x:ICancerTypeStudy, y:ICancerTypeStudy[], shortName:string) {
-        let xStudy = x ? x : {studies:[], caseCount: 0};
-        const yStudies = _.without(y, null, undefined);
-        if (yStudies.length === 0) {
-            if (_.isEmpty(xStudy)) return false;
-            return {
-                caseCount: x.caseCount,
-                shortName,
-                studies: x.studies,
-                color: x.color
-            };
-        }
-        const studies = [..._.flattenDeep(_.map(yStudies, 'studies')), ...xStudy.studies]
+        const shortName = study.shortName;
         return {
-            caseCount: yStudies.reduce((a, b) => a + b!.caseCount, xStudy.caseCount),
-            shortName,
-            studies,
-            color: yStudies[0]!.color
+            ...study,
+            shortName: aliases[shortName] || shortName
         };
     }
 
@@ -91,62 +67,18 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
         return "#" + (g | (b << 8) | (r << 16)).toString(16);
     }
 
-    reduceDataArray(data:CancerStudy[]) {
-        return _.reduce(data, (counterObj:ICounterObj, study) => {
-            const { cancerTypeId, allSampleCount, shortName, cancerType } = study;
-            if (counterObj[cancerTypeId]) {
-                counterObj[cancerTypeId].caseCount += allSampleCount;
-                counterObj[cancerTypeId].studies.push(study);
-            } else {
-                counterObj[cancerTypeId] = {
-                    caseCount: allSampleCount,
-                    shortName,
-                    color: cancerType.dedicatedColor || "black",
-                    studies: [study]
-                };
-            }
-            return counterObj;
-        }, {} as any);
-    }
-
     formatTooltipString(label: string) {
         return wordwrap(label, {width: 30}).split(/\r?\n/).map(_label => _label.trim());
     }
 
     componentDidMount() {
 
-        let cancerTypeStudiesObj = this.reduceDataArray(this.props.data);
+        const cancerStudies = this.props.data;
+        cancerStudies.forEach(study => {study.caseCount = study.studies.reduce((sum:number, cStudy) => sum + cStudy.allSampleCount, 0)})
 
-        cancerTypeStudiesObj = this.getShortName(cancerTypeStudiesObj);
+        const cancerTypeStudiesArray = cancerStudies.sort((a, b) => b.caseCount! - a.caseCount!).slice(0, 20).map(study => this.getShortName(study));
 
-        const {luad, lusc, sclc, nsclc, plmeso, paac, paad, panet, esca, escc,
-            hnsc, acyc, head_neck, thpa, thyroid, mnet, nbl, acc, difg, gbm, mbl,
-            cll, aml, all, es, mm, soft_tissue, ccrcc, prcc, chrcc, nccrcc, stad, egc } = cancerTypeStudiesObj;
-
-        cancerTypeStudiesObj.luad = this.condenseCancerTypes(luad, [lusc, sclc, nsclc, plmeso], 'Lung');
-        cancerTypeStudiesObj.paac = this.condenseCancerTypes(paac, [paad, panet], 'Pancreas');
-        cancerTypeStudiesObj.esca = this.condenseCancerTypes(esca, [escc], 'Esophagus');
-        cancerTypeStudiesObj.hnsc = this.condenseCancerTypes(hnsc, [acyc, head_neck], 'Head/Neck');
-        cancerTypeStudiesObj.thpa = this.condenseCancerTypes(thpa, [thyroid], 'Thyroid');
-        cancerTypeStudiesObj.difg = this.condenseCancerTypes(difg, [gbm, mbl], 'Brain');
-        cancerTypeStudiesObj.difg = this.condenseCancerTypes(stad, [egc], 'Stomach');
-        cancerTypeStudiesObj.cll = this.condenseCancerTypes(cll, [aml, all, soft_tissue, es, mm], 'Blood/Bone');
-        cancerTypeStudiesObj.ccrcc = this.condenseCancerTypes(ccrcc, [prcc, chrcc, nccrcc], 'Kidney');
-        cancerTypeStudiesObj.mnet = this.condenseCancerTypes(mnet, [nbl, acc], 'Adrenal Gland');
-
-        cancerTypeStudiesObj = _.omitBy(_.omit(cancerTypeStudiesObj, 'lusc', 'sclc', 'nsclc', 'plmeso',
-            'paad', 'panet', 'escc', 'acyc', 'head_neck', 'gbm', 'mbl', 'aml',
-            'all', 'soft_tissue', 'es', 'mm', 'prcc', 'chrcc', 'nbl', 'acc', 'nccrcc', 'egc',
-            'thyroid', 'mixed'), value => value === false);
-
-        const cancerTypeStudiesArray =  Object.keys(cancerTypeStudiesObj).map((cancerType) => (
-            { type: cancerType,
-                ...cancerTypeStudiesObj[cancerType] }
-        ))
-            .sort((a, b) => b.caseCount - a.caseCount)
-            .slice(0, 20);
-
-        const datasets = _.flattenDeep(cancerTypeStudiesArray.map((cancerStudySet, i) => (
+        const datasets:any = _.flattenDeep(cancerTypeStudiesArray.map((cancerStudySet, i) => (
             cancerStudySet.studies.sort((a: CancerStudy, b:CancerStudy) => b.allSampleCount - a.allSampleCount).map((cancerStudy: CancerStudy, j: number) => {
                 let lightenColorConstant = 3;
                 const cancerColor = cancerStudySet.color;
@@ -154,17 +86,25 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
                 const max = cancerStudySet.studies.length;
                 if (cancerColor === "Cyan") {
                     lightenColorConstant = 18;
-                } else if (cancerColor === "LightBlue" || cancerColor === "LightSkyBlue" || cancerColor === "PeachPuff") {
+                } else if (cancerColor === "Yellow") {
+                    lightenColorConstant = 11;
+                } else if (cancerColor === "LightBlue" || cancerColor === "LightSkyBlue" || cancerColor === "PeachPuff" || cancerColor === "LightYellow" ) {
                     lightenColorConstant = 0;
+                } else if (cancerColor === "Teal") {
+                    lightenColorConstant = 1;
+                } else if (cancerColor === "LightYellow") {
+                    lightenColorConstant = -3;
+                } else if (cancerColor === "Black") {
+                    lightenColorConstant = 6;
                 }
                 const color = this.lightenDarkenColor(convertCssColorNameToHex(cancerColor).slice(1), (j + lightenColorConstant)/max * 90);
                 return {
+                    studyId,
                     borderColor: '#F1F6FE',
                     backgroundColor: color,
                     borderWidth: 1,
                     label: name,
                     total: cancerStudySet.caseCount,
-                    studyId,
                     data: i === 0 ? [allSampleCount] : [...Array(i).fill(0), allSampleCount]
                 };}
             ))
@@ -187,6 +127,7 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
                     const {studyId} = datasets[this.getElementAtEvent(e)[0]._datasetIndex];
                     window.location.href = 'study?id=' + studyId + '#summary';
                 }
+                return false;
             },
             responsive: true,
             tooltips: {
@@ -203,7 +144,8 @@ export default class BarGraph extends React.Component<IBarGraphProps, {colors: s
                 filter: function (tooltipItem:ChartTooltipItem) {
                     if (tooltipItem) {
                         return Number(tooltipItem.xLabel) > 0;
-                    } return false;
+                    }
+                    return false;
                 },
                 callbacks: {
                     title: (tooltipItem:ChartTooltipItem[], _data:any) => {
