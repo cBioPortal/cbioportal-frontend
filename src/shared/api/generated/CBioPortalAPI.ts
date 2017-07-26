@@ -314,6 +314,8 @@ export type DiscreteCopyNumberData = {
 
         'geneticProfileId': string
 
+        'patientId': string
+
         'sampleId': string
 
 };
@@ -365,6 +367,8 @@ export type Mutation = {
         'normalAltCount': number
 
         'normalRefCount': number
+
+        'patientId': string
 
         'proteinChange': string
 

@@ -1,4 +1,5 @@
 var assert = require('assert');
+var expect = require('chai').expect;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
@@ -16,21 +17,19 @@ describe('homepage', function() {
         assert(browser.getText('.alert-warning').indexOf('dev mode') > 0);
     });
 
-    it('it should have 31 studies in list', function () {
+    it('it should have 27 (small test db) or 31 studies (production) in list', function () {
         browser.url(CBIOPORTAL_URL);
 
         var studies = $('[data-test="cancerTypeListContainer"] > ul > ul');
         
         studies.waitForExist(10000); // same as `browser.waitForExist('.notification', 10000)`
-        
-        assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 31);
+
+        expect([27, 31]).to.include(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length);
         
     });
 
 
     it('should filter study list according to filter text input', function () {
-        
-        assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 31);
         
         var input = $(".autosuggest input[type=text]");
 
@@ -45,7 +44,7 @@ describe('homepage', function() {
     });
     
     it('when a single study is selected, a case set selector is provided', function(){
-        
+
         var caseSetSelectorClass = '[data-test="CaseSetSelector"]';
         
         var checkBox = $('[data-test="StudySelect"]');
