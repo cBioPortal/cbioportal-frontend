@@ -22,6 +22,7 @@ type HitZoneConfig = {
     hitRect: {x:number, y:number, width:number, height:number};
     content?: JSX.Element;
     tooltipPlacement?: string;
+    cursor?: string;
     onMouseOver?: () => void;
     onClick?: () => void;
     onMouseOut?: () => void;
@@ -35,6 +36,7 @@ export default class LollipopPlot extends React.Component<LollipopPlotProps, {}>
         },
         content:(<span></span>),
         tooltipPlacement: "top",
+        cursor: "pointer",
         onMouseOver:()=>0,
         onClick:()=>0,
         onMouseOut:()=>0
@@ -53,9 +55,10 @@ export default class LollipopPlot extends React.Component<LollipopPlotProps, {}>
                         onMouseOver?:()=>void,
                         onClick?:()=>void,
                         onMouseOut?:()=>void,
+                        cursor: string = "pointer",
                         tooltipPlacement: string = "top") => {
                 this.hitZoneConfig = {
-                    hitRect, content, onMouseOver, onClick, onMouseOut, tooltipPlacement
+                    hitRect, content, onMouseOver, onClick, onMouseOut, cursor, tooltipPlacement
                 };
             },
             getOverlay:()=>this.hitZoneConfig.content,
@@ -83,6 +86,7 @@ export default class LollipopPlot extends React.Component<LollipopPlotProps, {}>
                 onMouseOver={this.hitZoneConfig.onMouseOver}
                 onClick={this.hitZoneConfig.onClick}
                 onMouseOut={this.hitZoneConfig.onMouseOut}
+                cursor={this.hitZoneConfig.cursor}
             />
         );
     }
