@@ -32,6 +32,7 @@ import PubMedCache from "shared/cache/PubMedCache";
 import MutationCountCache from "../../cache/MutationCountCache";
 import MutationCountColumnFormatter from "./column/MutationCountColumnFormatter";
 import CancerTypeColumnFormatter from "./column/CancerTypeColumnFormatter";
+import MutationStatusColumnFormatter from "./column/MutationStatusColumnFormatter";
 import {IMobXApplicationDataStore} from "../../lib/IMobXApplicationDataStore";
 
 export interface IMutationTableProps {
@@ -293,9 +294,9 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
 
         this._columns[MutationTableColumnType.MUTATION_STATUS] = {
             name: "MS",
-            render: (d:Mutation[])=>getSpanForDataField(d, "mutationStatus"),
-            download: (d:Mutation[])=>getTextForDataField(d, "mutationStatus"),
-            sortBy:(d:Mutation[])=>d.map(m=>m.mutationStatus),
+            render: MutationStatusColumnFormatter.renderFunction,
+            download: MutationStatusColumnFormatter.download,
+            sortBy: MutationStatusColumnFormatter.sortValue,
             filter: (d:Mutation[], filterString:string, filterStringUpper:string) =>
                 defaultFilter(d, "mutationStatus", filterStringUpper),
             visible: false
@@ -342,7 +343,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
 
         this._columns[MutationTableColumnType.PROTEIN_CHANGE] = {
             name: "Protein Change",
-            render: ProteinChangeColumnFormatter.renderFunction,
+            render: ProteinChangeColumnFormatter.renderWithMutationStatus,
             download: ProteinChangeColumnFormatter.getTextValue,
             sortBy:(d:Mutation[])=>ProteinChangeColumnFormatter.getSortValue(d),
             filter: (d:Mutation[], filterString:string, filterStringUpper:string) =>
