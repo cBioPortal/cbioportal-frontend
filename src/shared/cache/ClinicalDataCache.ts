@@ -1,28 +1,29 @@
 import client from "../api/cbioportalClientInstance";
 import LazyMobXCache from "../lib/LazyMobXCache";
-import {ClinicalDataIdentifier, ClinicalData} from "../api/generated/CBioPortalAPI";
+import {ClinicalDataIdentifier, ClinicalData, ClinicalDataMultiStudyFilter} from "../api/generated/CBioPortalAPI";
 
 function fetch(queries:ClinicalDataIdentifier[],
-               attributeId:string,
+               attributeIds:string[],
                clinicalDataType:"SAMPLE"|"PATIENT",
                projection:"ID" | "SUMMARY" | "DETAILED" | "META"):Promise<ClinicalData[]> {
+
+    const clinicalDataMultiStudyFilter = {attributeIds: attributeIds, identifiers: queries};
     return client.fetchClinicalDataUsingPOST({
-        attributeId,
         clinicalDataType,
-        identifiers: queries,
+        clinicalDataMultiStudyFilter,
         projection
     });
 }
 
 export default class ClinicalDataCache extends LazyMobXCache<ClinicalData, ClinicalDataIdentifier> {
     constructor(studyId:string,
-                attributeId:string,
+                attributeIds:string[],
                 clinicalDataType:"SAMPLE"|"PATIENT",
                 projection:"ID" | "SUMMARY" | "DETAILED" | "META") {
         super(
             q=>q.studyId+"~"+q.entityId,
             d=>studyId+"~"+d.entityId,
             fetch,
-            attributeId, clinicalDataType, projection);
+            attributeIds, clinicalDataType, projection);
     }
 }
