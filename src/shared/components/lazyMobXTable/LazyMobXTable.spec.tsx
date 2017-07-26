@@ -91,6 +91,10 @@ function getTextBetweenButtons(table:ReactWrapper<any, any>):string | undefined 
     return table.find(PaginationControls).filterWhere(x=>x.hasClass("topPagination")).props().textBetweenButtons;
 }
 
+function getTextBeforeButtons(table:ReactWrapper<any, any>):string | undefined {
+    return table.find(PaginationControls).filterWhere(x=>x.hasClass("topPagination")).props().textBeforeButtons;
+}
+
 function clickColumnVisibilityCheckbox(table:ReactWrapper<any, any>, columnName:string):boolean {
     let checkbox = table.find(ColumnVisibilityControls).find(Checkbox)
                     .find('input[type="checkbox"]')
@@ -1119,29 +1123,29 @@ describe('LazyMobXTable', ()=>{
                 expect(rows[i]).toEqualJSX(<tr><td><span>{i+100}</span></td></tr>);
             }
         });
-        it("shows the right text between the paging buttons", ()=>{
+        it("shows the right text before the paging buttons", ()=>{
             let table = mount(<Table columns={simpleColumns} data={[]}/>);
             assert.equal(getItemsPerPage(table), 50, "confirm 50 items per page");
-            assert.equal(getTextBetweenButtons(table), "0-0 of 0");
+            assert.equal(getTextBeforeButtons(table), "0-0 of 0");
 
             table.setProps({columns:simpleColumns, data:[simpleData[0]]});
-            assert.equal(getTextBetweenButtons(table), "1-1 of 1");
+            assert.equal(getTextBeforeButtons(table), "1-1 of 1");
 
             table.setProps({columns:simpleColumns, data:simpleData.slice(0, 40)});
-            assert.equal(getTextBetweenButtons(table), "1-40 of 40");
+            assert.equal(getTextBeforeButtons(table), "1-40 of 40");
 
             table.setProps({columns:simpleColumns, data:simpleData});
             assert.equal(simpleData.length, 120, "confirm we're working with 120 data");
-            assert.equal(getTextBetweenButtons(table), "1-50 of 120");
+            assert.equal(getTextBeforeButtons(table), "1-50 of 120");
             clickNextPage(table);
             assert.equal(getCurrentPage(table), 1);
-            assert.equal(getTextBetweenButtons(table), "51-100 of 120");
+            assert.equal(getTextBeforeButtons(table), "51-100 of 120");
             clickNextPage(table);
             assert.equal(getCurrentPage(table), 2);
-            assert.equal(getTextBetweenButtons(table), "101-120 of 120");
+            assert.equal(getTextBeforeButtons(table), "101-120 of 120");
 
             selectItemsPerPage(table, -1);
-            assert.equal(getTextBetweenButtons(table), "1-120 of 120");
+            assert.equal(getTextBeforeButtons(table), "1-120 of 120");
         });
     });
 });
