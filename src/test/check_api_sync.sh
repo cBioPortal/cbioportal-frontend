@@ -20,11 +20,21 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 # move to root dir
 cd ${DIR}/../..
 
-echo "Test if docs used to generate API are same as those in repo (don't fail, just error message)"
+echo "Test if docs used to generate API are same as those in repo (fail with exit code > 0)"
 OUT_OF_SYNC_MSG="out of sync"
+sync_error_count=0
 run_and_check_diff 'npm run fetchAPI' 'src/shared/api/generated/CBioPortalAPI-docs.json src/shared/api/generated/CBioPortalAPIInternal-docs.json' "${OUT_OF_SYNC_MSG}"
+if [[ $? -gt 0 ]]; then
+    sync_error_count=$(($sync_error_count + 1))
+fi
 run_and_check_diff 'npm run fetchHotspotsAPI' src/shared/api/generated/CancerHotspotsAPI-docs.json "${OUT_OF_SYNC_MSG}"
+if [[ $? -gt 0 ]]; then
+    sync_error_count=$(($sync_error_count + 1))
+fi
 run_and_check_diff 'npm run fetchOncoKbAPI' src/shared/api/generated/OncoKbAPI-docs.json "${OUT_OF_SYNC_MSG}"
+if [[ $? -gt 0 ]]; then
+    sync_error_count=$(($sync_error_count + 1))
+fi
 TS_GEN_MSG="generation of typescript client differs compared to checked in version"
 echo "Test if docs generate the same TS client as the one stored in the repo (fail with exit code > 0)"
 generation_error_count=0
@@ -40,4 +50,4 @@ run_and_check_diff 'npm run buildOncoKbAPI' src/shared/api/generated/OncoKbAPI.t
 if [[ $? -gt 0 ]]; then
     generation_error_count=$(($generation_error_count + 1))
 fi
-exit $generation_error_count
+exit $(($generation_error_count + $sync_error_count))
