@@ -33,6 +33,8 @@ import CancerTypeCache from "../../cache/CancerTypeCache";
 import MutationCountCache from "../../cache/MutationCountCache";
 import MutationCountColumnFormatter from "./column/MutationCountColumnFormatter";
 import CancerTypeColumnFormatter from "./column/CancerTypeColumnFormatter";
+import ClonalityColumnFormatter from "./column/ClonalityColumnFormatter";
+import CCFColumnFormatter from "./column/CCFColumnFormatter";
 import {IMobXApplicationDataStore} from "../../lib/IMobXApplicationDataStore";
 
 export interface IMutationTableProps {
@@ -95,7 +97,9 @@ export enum MutationTableColumnType {
     REF_READS,
     VAR_READS,
     CANCER_TYPE,
-    NUM_MUTATIONS
+    NUM_MUTATIONS,
+    CLONAL_STATUS,
+    CCF
 }
 
 type MutationTableColumn = Column<Mutation[]>&{order?:number, shouldExclude?:()=>boolean};
@@ -414,6 +418,32 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             sortBy: (d:Mutation[]) => MutationCountColumnFormatter.sortBy(d, this.props.mutationCountCache),
             tooltip:(<span>Total number of nonsynonymous mutations in the sample</span>)
         };
+
+        // this._columns[MutationTableColumnType.CLONAL_STATUS] = {
+        //     name: "Clonality",
+        //     render: (d:Mutation[])=>getSpanForDataField(d, "clonalStatus"),
+        //     download: (d:Mutation[])=>getTextForDataField(d, "clonalStatus"),
+        //     sortBy:(d:Mutation[])=>d.map(m=>m.clonalStatus),
+        //     visible: true
+        // };
+
+        this._columns[MutationTableColumnType.CLONAL_STATUS] = {
+            name: "Clonality",
+            render:ClonalityColumnFormatter.renderFunction,
+            download:ClonalityColumnFormatter.getTextValue,
+            sortBy:(d:Mutation[])=>ClonalityColumnFormatter.getDisplayValue(d),
+            filter:(d:Mutation[], filterString:string, filterStringUpper:string) =>
+                ClonalityColumnFormatter.getDisplayValue(d).toUpperCase().indexOf(filterStringUpper) > -1
+        };
+
+        // this._columns[MutationTableColumnType.CCF] = {
+        //     name: "Cancer Cell Fraction",
+        //     render: CCFColumnFormatter.renderFunction,
+        //     sortBy: CCFColumnFormatter.getSortValue,
+        //     tooltip:(<span>Cancer cell fraction</span>),
+        //     visible: true
+        // };
+
     }
 
     @computed protected get orderedColumns(): MutationTableColumnType[] {

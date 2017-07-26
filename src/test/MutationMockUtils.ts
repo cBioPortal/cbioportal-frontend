@@ -46,7 +46,10 @@ export function emptyMutation(): Mutation
         tumorRefCount: -1,
         validationStatus: "",
         variantAllele: "",
-        variantType: ""
+        variantType: "",
+        clonalStatus: "",
+        mutCCF: -1,
+        ccfcluster: ""
     };
 }
 

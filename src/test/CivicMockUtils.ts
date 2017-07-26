@@ -85,7 +85,7 @@ export function getMutationData(): Mutation
            geneticProfileId: "ccle_mutations", keyword: "PIK3CA E545 missense", linkMsa:"", linkPdb: "", linkXvar: "", mutationStatus: "NA",
            mutationType: "Missense_Mutation", ncbiBuild: "GRCh37", normalAltCount: -1, normalRefCount: -1, proteinChange: "E545K", proteinPosEnd: 545, 
            proteinPosStart: 545, referenceAllele: "G", refseqMrnaId: "NM_006218.2", sampleId: "NCIH508_LARGE_INTESTINE", startPosition: 178936091,
-           tumorAltCount: -1, tumorRefCount: -1, validationStatus: "NA", variantAllele: "A", variantType: "SNP", aminoAcidChange: ""
+           tumorAltCount: -1, tumorRefCount: -1, validationStatus: "NA", variantAllele: "A", variantType: "SNP", aminoAcidChange: "", clonalStatus: "", mutCCF: -1, ccfcluster: ""
            };
 }
 

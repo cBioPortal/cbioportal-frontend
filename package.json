@@ -12,7 +12,7 @@
     "buildBootstrap": "sass --style :compressed src/globalStyles/bootstrap-entry.scss src/globalStyles/prefixed-bootstrap.min.css",
     "heroku-postbuild": "npm run build && npm install http-server -g",
     "updateAPI": "npm run fetchAPI && npm run buildAPI && npm run updateHotspotsAPI && npm run updateOncoKbAPI",
-    "fetchAPI": "curl http://cbioportal-release-1-7-0.herokuapp.com/api/api-docs > src/shared/api/generated/CBioPortalAPI-docs.json && curl http://cbioportal-release-1-7-0.herokuapp.com/api/api-docs?group=internal > src/shared/api/generated/CBioPortalAPIInternal-docs.json",
+    "fetchAPI": "curl http://localhost:8080/cbioportal/api/api-docs > src/shared/api/generated/CBioPortalAPI-docs.json && curl http://localhost:8080/cbioportal/api/api-docs?group=internal > src/shared/api/generated/CBioPortalAPIInternal-docs.json",
     "buildAPI": "node scripts/generate-api.js src/shared/api/generated CBioPortalAPI CBioPortalAPIInternal",
     "updateHotspotsAPI": "npm run fetchHotspotsAPI && npm run buildHotspotsAPI",
     "fetchHotspotsAPI": "curl http://cancerhotspots.org/v2/api-docs?group=cancer_hotspots > src/shared/api/generated/CancerHotspotsAPI-docs.json",
