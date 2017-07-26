@@ -6,6 +6,7 @@ type HitZoneProps = {
     y:number;
     width:number;
     height:number;
+    cursor?:string;
     onMouseOver?:()=>void;
     onClick?:()=>void;
     onMouseOut?:()=>void;
@@ -40,7 +41,7 @@ export class HitZone extends React.Component<HitZoneProps, {}> {
                      position: "absolute",
                      top: this.props.y,
                      left: this.props.x,
-                     cursor:"pointer",
+                     cursor: this.props.cursor,
                  }}
                 onMouseOver={this.handlers.onMouseOver}
                 onClick={this.props.onClick}

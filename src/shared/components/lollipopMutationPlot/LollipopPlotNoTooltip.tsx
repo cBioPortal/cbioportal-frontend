@@ -39,6 +39,7 @@ export type LollipopPlotNoTooltipProps = LollipopPlotProps & {
         onMouseOver?:()=>void,
         onClick?:()=>void,
         onMouseOut?:()=>void,
+        cursor?:string,
         tooltipPlacement?:string
     )=>void;
     onMouseLeave?:()=>void;
@@ -134,7 +135,9 @@ export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotN
                         if (this.props.setHitZone) {
                             this.props.setHitZone(
                                 domainComponent.hitRect,
-                                domainComponent.props.spec.tooltip
+                                domainComponent.props.spec.tooltip,
+                                undefined, undefined, undefined,
+                                "auto"
                             );
                         }
                     }
@@ -149,7 +152,9 @@ export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotN
                         if (this.props.setHitZone) {
                             this.props.setHitZone(
                                 sequenceComponent.hitRect,
-                                sequenceComponent.props.spec.tooltip
+                                sequenceComponent.props.spec.tooltip,
+                                undefined, undefined, undefined,
+                                "auto"
                             );
                         }
                     }
