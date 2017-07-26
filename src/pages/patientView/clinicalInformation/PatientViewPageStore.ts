@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
 import {
     ClinicalData, GeneticProfile, Sample, Mutation, DiscreteCopyNumberFilter, DiscreteCopyNumberData, MutationFilter,
-    CopyNumberCount
+    CopyNumberCount, ClinicalDataMultiStudyFilter
 } from "../../../shared/api/generated/CBioPortalAPI";
 import client from "../../../shared/api/cbioportalClientInstance";
 import internalClient from "../../../shared/api/cbioportalInternalClientInstance";
@@ -278,7 +278,14 @@ export class PatientViewPageStore {
         await: () => [
             this.samples
         ],
-        invoke: () => fetchClinicalData(this.studyId, this.sampleIds)
+        invoke: () => {
+            const identifiers = this.sampleIds.map((sampleId: string) => ({
+                entityId: sampleId,
+                studyId: this.studyId
+            }));
+            const clinicalDataMultiStudyFilter = {identifiers} as ClinicalDataMultiStudyFilter;
+            return fetchClinicalData(clinicalDataMultiStudyFilter)
+        }
     }, []);
 
     readonly clinicalDataGroupedBySample = remoteData({
