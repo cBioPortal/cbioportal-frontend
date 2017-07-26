@@ -168,6 +168,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
         this._columns[MutationTableColumnType.TUMOR_ALLELE_FREQ] = {
             name: "Allele Freq (T)",
             render: TumorAlleleFreqColumnFormatter.renderFunction,
+            headerRender: (name: string) => <span style={{display:'inline-block', maxWidth:55}}>{name}</span>,
             sortBy: TumorAlleleFreqColumnFormatter.getSortValue,
             tooltip:(<span>Variant allele frequency in the tumor sample</span>),
             visible: true
@@ -176,6 +177,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
         this._columns[MutationTableColumnType.NORMAL_ALLELE_FREQ] = {
             name: "Allele Freq (N)",
             render: NormalAlleleFreqColumnFormatter.renderFunction,
+            headerRender: (name: string) => <span style={{display:'inline-block', maxWidth:55}}>{name}</span>,
             sortBy: NormalAlleleFreqColumnFormatter.getSortValue,
             tooltip:(<span>Variant allele frequency in the normal sample</span>),
             visible: false
@@ -360,6 +362,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
 
         this._columns[MutationTableColumnType.MUTATION_ASSESSOR] = {
             name: "Mutation Assessor",
+            headerRender: (name: string) => <span style={{display:'inline-block', maxWidth:60}}>{name}</span>,
             render:MutationAssessorColumnFormatter.renderFunction,
             download:MutationAssessorColumnFormatter.getTextValue,
             sortBy:(d:Mutation[])=>MutationAssessorColumnFormatter.getSortValue(d),
@@ -414,6 +417,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
         this._columns[MutationTableColumnType.NUM_MUTATIONS] = {
             name: "# Mut in Sample",
             render: MutationCountColumnFormatter.makeRenderFunction(this),
+            headerRender: (name: string) => <span style={{display:'inline-block', maxWidth:55}}>{name}</span>,
             sortBy: (d:Mutation[]) => MutationCountColumnFormatter.sortBy(d, this.props.mutationCountCache),
             tooltip:(<span>Total number of nonsynonymous mutations in the sample</span>)
         };
