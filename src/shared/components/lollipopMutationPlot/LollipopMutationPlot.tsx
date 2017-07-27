@@ -1,11 +1,7 @@
 import * as React from "react";
 import LollipopPlot from "./LollipopPlot";
 import {Mutation} from "../../api/generated/CBioPortalAPI";
-import {LollipopSpec, DomainSpec} from "./LollipopPlotNoTooltip";
-import {
-    default as getCanonicalMutationType,
-    CanonicalMutationType, ProteinImpactType, getProteinImpactTypeFromCanonical
-} from "shared/lib/getCanonicalMutationType";
+import {LollipopSpec, DomainSpec, SequenceSpec} from "./LollipopPlotNoTooltip";
 import {remoteData} from "../../api/remoteData";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import request from "superagent";
@@ -15,9 +11,8 @@ import {computed, observable, action} from "mobx";
 import _ from "lodash";
 import {longestCommonStartingSubstring} from "shared/lib/StringUtils";
 import {getColorForProteinImpactType, IProteinImpactTypeColors} from "shared/lib/MutationUtils";
-import {fetchSwissProtAccession} from "shared/lib/StoreUtils";
 import ReactDOM from "react-dom";
-import {Form, Button, FormGroup, InputGroup, ControlLabel, FormControl} from "react-bootstrap";
+import {Form, Button, FormGroup, InputGroup} from "react-bootstrap";
 import fileDownload from "react-file-download";
 import styles from "./lollipopMutationPlot.module.scss";
 import Collapse from "react-collapse";
@@ -33,7 +28,7 @@ export interface ILollipopMutationPlotProps extends IProteinImpactTypeColors
 @observer
 export default class LollipopMutationPlot extends React.Component<ILollipopMutationPlotProps, {}> {
 
-    @observable private showControls:boolean = false;
+    @observable private showControls:boolean = true;
     @observable private _yMaxInput:number;
     @observable private legendShown:boolean = false;
     private plot:LollipopPlot;
@@ -178,15 +173,30 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
         const end = region.metadata.end;
         const pfamAccession = region.metadata.accession;
         const mutationAlignerLink = this.mutationAlignerLinks.result[pfamAccession];
-        const mutationAlignerA = mutationAlignerLink ? (<a href={mutationAlignerLink} target="_blank" style={{marginLeft:"5px"}}>Mutation Aligner</a>) : null;
+        const mutationAlignerA = mutationAlignerLink ?
+            (<a href={mutationAlignerLink} target="_blank">Mutation Aligner</a>) : null;
 
         return (
-            <div>
+            <div style={{maxWidth: 200}}>
                 <div>
                     {identifier} {type}, {description} ({start} - {end})
                 </div>
                 <div>
-                    <a href={`http://pfam.xfam.org/family/${pfamAccession}`} target="_blank">PFAM</a>
+                    <a
+                        href={`http://www.uniprot.org/uniprot/${this.props.store.uniprotId.result}`}
+                        target="_blank"
+                    >
+                        {this.props.store.uniprotId.result}
+                    </a>
+                    <a
+                        style={{marginLeft:"5px"}}
+                        href={`http://pfam.xfam.org/family/${pfamAccession}`}
+                        target="_blank"
+                    >
+                        PFAM
+                    </a>
+                </div>
+                <div>
                     {mutationAlignerA}
                 </div>
             </div>
@@ -212,6 +222,26 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                 };
             });
         }
+    }
+
+    private sequenceTooltip(): JSX.Element
+    {
+        return (
+            <div style={{maxWidth: 200}}>
+                <a
+                    href={`http://www.uniprot.org/uniprot/${this.props.store.uniprotId.result}`}
+                    target="_blank"
+                >
+                    {this.props.store.uniprotId.result}
+                </a>
+            </div>
+        );
+    }
+
+    @computed private get sequence(): SequenceSpec {
+        return {
+            tooltip: this.sequenceTooltip()
+        };
     }
 
     public toSVGDOMNode():Element {
@@ -318,7 +348,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
 
     private get legend() {
         return (
-            <div style={{maxWidth:"700px"}}>
+            <div style={{maxWidth: 700, marginTop: 5}}>
                 <span style={{color: "#2153AA", fontWeight:"bold", fontSize:"14px", fontFamily:"verdana, arial, sans-serif"}}>
                     Color Codes
                 </span>
@@ -363,19 +393,8 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
     @computed get controls() {
         return (
             <div>
-                <span style={{marginRight: 10, display: "inline-block"}}>
-                    <a
-                        href={`http://www.uniprot.org/uniprot/${this.props.store.uniprotId.result}`}
-                        target="_blank"
-                    >
-                        {this.props.store.uniprotId.result}
-                    </a>
-                </span>
-                <span
-                    style={{display: "inline-block"}}
-                    className={this.showControls ? styles["fade-in"] : styles["fade-out"]}
-                >
-                    <Form inline>
+                <span className={this.showControls ? styles["fade-in"] : styles["fade-out"]}>
+                    <Form inline style={{marginBottom: 0}}>
                         <FormGroup>
                             <Button bsSize="sm" onClick={this.handlers.handleSVGClick}>
                                 SVG
@@ -414,7 +433,6 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                         </FormGroup>
                     </Form>
                 </span>
-                <br/>
                 <Collapse isOpened={this.legendShown}>
                     {this.legend}
                 </Collapse>
@@ -425,10 +443,11 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
     render() {
         if (this.props.store.pfamGeneData.isComplete) {
             return ( this.props.store.dataStore.allData.length ? (
-                <div onMouseEnter={this.handlers.showControls} onMouseLeave={this.handlers.hideControls}>
+                <div style={{display: "inline-block"}}>
                     {this.controls}
                     <LollipopPlot
                         ref={this.handlers.ref}
+                        sequence={this.sequence}
                         lollipops={this.lollipops}
                         domains={this.domains}
                         dataStore={this.props.store.dataStore}
