@@ -21,6 +21,7 @@ export type SortDirection = 'asc' | 'desc';
 
 export type Column<T> = {
     name: string;
+    headerRender?:(name:string)=>JSX.Element;
     filter?:(data:T, filterString:string, filterStringUpper?:string, filterStringLower?:string)=>boolean;
     visible?:boolean;
     sortBy?:((data:T)=>(number|null)) | ((data:T)=>(string|null)) | ((data:T)=>(number|null)[]) | ((data:T)=>(string|null)[]);
@@ -286,12 +287,16 @@ class LazyMobXTableStore<T> {
             if (this.sortColumn === column.name) {
                 headerProps.className = (this.sortAscending ? "sort-asc" : "sort-des");
             }
-            const label = (<span>{column.name}</span>);
+
+            const label = column.headerRender ? column.headerRender(column.name) : (<span>{column.name}</span>);
             let thContents;
+
             if (column.tooltip) {
-                thContents = (<DefaultTooltip placement="top" overlay={column.tooltip}>
-                    {label}
-                </DefaultTooltip>);
+                thContents = (
+                    <DefaultTooltip placement="top" overlay={column.tooltip}>
+                        {label}
+                    </DefaultTooltip>
+                );
             } else {
                 thContents = label;
             }
