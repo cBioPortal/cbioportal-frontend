@@ -1,70 +1,15 @@
 import * as React from 'react';
-import DefaultTooltip from 'shared/components/DefaultTooltip';
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
-import styles from "./sample.module.scss";
+import TruncatedText from "shared/components/TruncatedText";
 
 /**
  * @author Selcuk Onur Sumer
  */
 export default class SampleColumnFormatter
 {
-    // make these thresholds customizable if needed...
-    public static get MAX_LENGTH():number {return 16;}; // max allowed length of a sample id.
-    public static get BUFFER():number {return 2;}; // no need to bother with clipping the text for a few chars.
-    public static get SUFFIX():string {return "...";};
-
     public static getTextValue(data:Mutation[]):string
     {
-        let textValue:string = "";
-        const dataValue = SampleColumnFormatter.getData(data);
-
-        if (dataValue) {
-            textValue = dataValue.toString();
-        }
-
-        return textValue;
-    }
-
-    /**
-     * For short sample ids display value is same as the text value,
-     * but for long sample id's we truncate the id and display a partial value.
-     *
-     * @param data  column formatter data
-     * @returns {string}    display text value (may be truncated)
-     */
-    public static getDisplayValue(data:Mutation[]):string
-    {
-        let text:string = SampleColumnFormatter.getTextValue(data);
-
-        // clip if too long
-        if (SampleColumnFormatter.isTooLong(text,
-                                            SampleColumnFormatter.MAX_LENGTH,
-                                            SampleColumnFormatter.BUFFER))
-        {
-            text = text.substring(0, SampleColumnFormatter.MAX_LENGTH) + SampleColumnFormatter.SUFFIX;
-        }
-
-        return text;
-    }
-
-    public static getTooltipValue(sampleId:string):string
-    {
-        let tooltip:string = "";
-
-        if (SampleColumnFormatter.isTooLong(sampleId,
-                                            SampleColumnFormatter.MAX_LENGTH,
-                                            SampleColumnFormatter.BUFFER))
-        {
-            // enable tooltip for long strings
-            tooltip = sampleId;
-        }
-
-        return tooltip;
-    }
-
-    public static isTooLong(sampleId:string, maxLength:number, buffer:number):boolean
-    {
-        return sampleId != null && (sampleId.length > maxLength + buffer);
+        return SampleColumnFormatter.getData(data) || "";
     }
 
     public static getData(data:Mutation[])
@@ -79,10 +24,13 @@ export default class SampleColumnFormatter
     public static renderFunction(data:Mutation[], studyId?: string)
     {
         const sampleId:string = SampleColumnFormatter.getTextValue(data);
-        const text:string = SampleColumnFormatter.getDisplayValue(data);
-        const toolTip:string = SampleColumnFormatter.getTooltipValue(sampleId);
-
-        let content = <span className={styles['text-no-wrap']}>{text}</span>;
+        let content = (
+            <TruncatedText
+                text={sampleId}
+                tooltip={<div style={{maxWidth: 300}}>{sampleId}</div>}
+                maxLength={16}
+            />
+        );
 
         if (studyId)
         {
@@ -103,18 +51,6 @@ export default class SampleColumnFormatter
                 <a href={linkToPatientView} target='_blank'>
                     {content}
                 </a>
-            );
-        }
-
-        // update content with tooltip if tooltip has a valid value
-        if (toolTip.length > 0)
-        {
-            const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
-
-            content = (
-                <DefaultTooltip overlay={<span>{toolTip}</span>} placement="rightTop" arrowContent={arrowContent}>
-                    {content}
-                </DefaultTooltip>
             );
         }
 
