@@ -3,6 +3,7 @@ import * as _ from "lodash";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import TableCellStatusIndicator from "shared/components/TableCellStatus";
 import {TableCellStatus} from "shared/components/TableCellStatus";
+import TruncatedText from "shared/components/TruncatedText";
 
 export default class CancerTypeColumnFormatter {
 
@@ -66,7 +67,12 @@ export default class CancerTypeColumnFormatter {
         const data = CancerTypeColumnFormatter.getData(d, sampleIdToTumorType);
 
         if (data) {
-            return <span style={{display:'inline-block', maxWidth:170}}>{data}</span>;
+            return (
+                <TruncatedText
+                    text={data || ""}
+                    tooltip={<div style={{maxWidth: 300}}>{data}</div>}
+                />
+            );
         }
         else {
             return (
