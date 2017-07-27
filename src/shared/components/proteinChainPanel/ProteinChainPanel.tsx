@@ -210,6 +210,31 @@ export default class ProteinChainPanel extends React.Component<ProteinChainPanel
         });
     }
 
+    public helpTooltipContent()
+    {
+        return (
+            <div style={{maxWidth: 400}}>
+                This panel displays a list of PDB chains for the corresponding uniprot ID.
+                PDB chains are ranked with respect to their sequence similarity ratio,
+                and aligned to the y-axis of the mutation diagram.
+                Highly ranked chains have darker color than the lowly ranked ones.<br/>
+                <br/>
+                Each chain is represented by a single rectangle.
+                Gaps within the chains are represented by a thin line connecting the segments of the chain.<br/>
+                <br/>
+                By default, only a first few rows are displayed.
+                To see more chains, use the scroll bar next to the panel.
+                To see the detailed list of all available PDB chains in a table
+                click on the link below the panel.<br/>
+                <br/>
+                To select a chain, simply click on it.
+                Selected chain is highlighted with a different frame color.
+                You can also select a chain by clicking on a row in the table.
+                Selecting a chain reloads the PDB data for the 3D structure visualizer.
+            </div>
+        );
+    }
+
     render() {
         const tooltipVisibleProps:any = {};
         if (!this.tooltipVisible) {
@@ -221,6 +246,18 @@ export default class ProteinChainPanel extends React.Component<ProteinChainPanel
                     <div style={{
                         marginLeft:this.props.geneXOffset || 0,
                     }}>
+                        <div style={{display: this.isExpanded ? "inherit" : "none", position: "absolute", left: 20}}>
+                            PDB
+                            <DefaultTooltip
+                                placement="left"
+                                overlay={this.helpTooltipContent}
+                                destroyTooltipOnHide={true}
+                            >
+                                <i className="fa fa-info-circle" style={{paddingLeft: 5}} />
+                            </DefaultTooltip>
+                            <br/>
+                            Chains
+                        </div>
                         <div
                             ref={this.handlers.chainDivRef}
                             style={{
