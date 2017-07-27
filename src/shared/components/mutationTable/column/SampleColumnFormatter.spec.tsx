@@ -1,4 +1,5 @@
 import SampleColumnFormatter from "./SampleColumnFormatter";
+import DefaultTooltip from "shared/components/DefaultTooltip";
 import {initMutation} from "test/MutationMockUtils";
 import React from 'react';
 import { assert } from 'chai';
@@ -32,32 +33,6 @@ describe('SampleColumnFormatter', () => {
         componentLong = mount(SampleColumnFormatter.renderFunction(data));
     });
 
-    it('sample id text is properly formatted', () => {
-        // text and display should be the same for short sample ids
-        assert.equal(SampleColumnFormatter.getTextValue([mutationShort]),
-                     SampleColumnFormatter.getDisplayValue([mutationShort]));
-
-        // text and display values should be different,
-        // and truncated size should have fixed number of characters
-        assert.equal(SampleColumnFormatter.getDisplayValue([mutationLong]).length,
-                     SampleColumnFormatter.MAX_LENGTH + SampleColumnFormatter.SUFFIX.length);
-
-        // suffix should be appended in the end
-        assert.isTrue(SampleColumnFormatter.getDisplayValue([mutationLong]).indexOf(
-                          SampleColumnFormatter.SUFFIX) > -1);
-    });
-
-    it('sample id style class is properly set', () => {
-
-        // no tooltips for short ids
-        assert.notEqual(SampleColumnFormatter.getTooltipValue(SampleColumnFormatter.getTextValue([mutationShort])),
-                        SampleColumnFormatter.getTextValue([mutationShort]));
-
-        // tooltip value should be the same as text value for long ids
-        assert.equal(SampleColumnFormatter.getTooltipValue(SampleColumnFormatter.getTextValue([mutationLong])),
-            SampleColumnFormatter.getTextValue([mutationLong]));
-    });
-
     it('renders sample display value', () => {
         assert.isTrue(componentShort.find(`span`).text().indexOf("Short_Id") > -1,
             'Display value is correct for short sample id');
@@ -66,9 +41,9 @@ describe('SampleColumnFormatter', () => {
     });
 
     it('generates component tooltip', () => {
-        assert.isFalse(componentShort.find('DefaultTooltip').exists(),
+        assert.isFalse(componentShort.find(DefaultTooltip).exists(),
             'Tooltip should not exists for short sample id');
-        assert.isTrue(componentLong.find('DefaultTooltip').exists(),
+        assert.isTrue(componentLong.find(DefaultTooltip).exists(),
             'Tooltip should exists for long sample id');
     });
 
