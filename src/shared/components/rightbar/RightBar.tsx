@@ -24,7 +24,7 @@ export default class RightBar extends React.Component<{}, {}> {
     };
 
     private CancerTypeDescendantStudies(cancerList:CancerType[]) {
-        return cancerList.filter(cancer => cancer.name !== "Other").map((filteredCancer:CancerType) => (
+        return cancerList.filter(cancer => cancer.name !== "Other" && cancer.name.toLowerCase().indexOf("pancancer") < 0).map((filteredCancer:CancerType) => (
             {
                 shortName: filteredCancer.name,
                 color: filteredCancer.dedicatedColor,
