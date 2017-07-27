@@ -9,7 +9,6 @@ import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import AlleleCountColumnFormatter from "shared/components/mutationTable/column/AlleleCountColumnFormatter";
 import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
 import TumorColumnFormatter from "./column/TumorColumnFormatter";
-import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter";
 import {isUncalled} from "shared/lib/MutationUtils";
 
 
@@ -82,9 +81,6 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             render:(d:Mutation[])=>TumorColumnFormatter.renderFunction(d, this.props.sampleManager),
             sortBy:(d:Mutation[])=>TumorColumnFormatter.getSortValue(d, this.props.sampleManager)
         };
-
-        // patient view has a custom renderer for protein change column, so we need to override render function
-        this._columns[MutationTableColumnType.PROTEIN_CHANGE].render = ProteinChangeColumnFormatter.renderFunction;
 
         // customization for allele count columns
 
