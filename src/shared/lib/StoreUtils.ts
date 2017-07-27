@@ -708,3 +708,13 @@ export function makeStudyToCancerTypeMap(studies:CancerStudy[]) {
         return map;
     }, {});
 }
+
+export function groupByEntityId(sampleIds: Array<string>, clinicalDataArray: Array<ClinicalData>) {
+    return _.map(
+        sampleIds,
+        (k: string) => ({
+            id: k,
+            clinicalData: clinicalDataArray.filter((cd: ClinicalData) => cd.entityId === k)
+        })
+    );
+}
