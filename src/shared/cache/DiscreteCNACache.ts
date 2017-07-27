@@ -57,7 +57,14 @@ async function fetch(queries:SampleAndGene[], geneticProfileIdDiscrete:string|un
 }
 export default class DiscreteCNACache extends SampleGeneCache<DiscreteCopyNumberData> {
 
+    private _geneticProfileIdDiscrete:string|undefined;
+
     constructor(geneticProfileIdDiscrete:string|undefined) {
         super(fetch, geneticProfileIdDiscrete);
+        this._geneticProfileIdDiscrete = geneticProfileIdDiscrete;
+    }
+
+    get geneticProfileIdDiscrete():string|undefined {
+        return this._geneticProfileIdDiscrete;
     }
 }
