@@ -1,28 +1,76 @@
+import DefaultTooltip from "shared/components/DefaultTooltip";
 import MutationStatusColumnFormatter from './MutationStatusColumnFormatter';
+import styles from './mutationStatus.module.scss';
 import {initMutation} from "test/MutationMockUtils";
 import React from 'react';
 import { assert } from 'chai';
-import { shallow, mount } from 'enzyme';
-import sinon from 'sinon';
+import {shallow, mount, ReactWrapper} from 'enzyme';
 
 describe('MutationStatusColumnFormatter', () => {
-    const mutation = initMutation({
+    const germlineMutation = initMutation({
         mutationStatus: "Germline"
     });
 
-    const data = [mutation];
+    const somaticMutation = initMutation({
+        mutationStatus: "Somatic"
+    });
+
+    const naMutation = initMutation({
+        mutationStatus: "na"
+    });
+
+    const germlineData = [germlineMutation];
+    const somaticData = [somaticMutation];
+    const naData = [naMutation];
+
+    let germlineComponent: ReactWrapper<any, any>;
+    let somaticComponent: ReactWrapper<any, any>;
+    let naComponent: ReactWrapper<any, any>;
 
     before(() => {
-
+        germlineComponent = mount(MutationStatusColumnFormatter.renderFunction(germlineData));
+        somaticComponent = mount(MutationStatusColumnFormatter.renderFunction(somaticData));
+        naComponent = mount(MutationStatusColumnFormatter.renderFunction(naData));
     });
 
     after(() => {
 
     });
 
-    it('gets mutation status data', () => {
-        assert.equal(MutationStatusColumnFormatter.getData(data), "Germline",
-            "Mutation status data is properly extracted");
+    it('gets mutation status data properly', () => {
+        assert.equal(MutationStatusColumnFormatter.getData(germlineData), "Germline",
+            "Germline mutation status data is properly extracted");
+
+        assert.equal(MutationStatusColumnFormatter.getData(somaticData), "Somatic",
+            "Somatic mutation status data is properly extracted");
     });
 
+    it('renders component display value, class name, and cell value property', () => {
+
+    });
+
+    function testRenderedValues(component: ReactWrapper<any, any>,
+                                className: string,
+                                value: string)
+    {
+        assert.isTrue(component.find(`span.${styles[className]}`).exists(),
+            `Span has the correct class name for ${value}`);
+        assert.isTrue(component.find(`span.${styles[className]}`).text().indexOf(value) > -1,
+            `Display value is correct for ${value}`);
+    }
+
+    it('renders component display value, class name, and cell value property', () => {
+        testRenderedValues(germlineComponent, "germline", "G");
+        testRenderedValues(somaticComponent, "somatic", "S");
+        testRenderedValues(naComponent, "unknown", "na");
+    });
+
+    it('adds tooltips only for germline and somatic mutation statuses', () => {
+        assert.isTrue(germlineComponent.find(DefaultTooltip).exists(),
+            'Tooltip should exists for germline mutations');
+        assert.isTrue(somaticComponent.find(DefaultTooltip).exists(),
+            'Tooltip should exists for somatic mutations');
+        assert.isFalse(naComponent.find(DefaultTooltip).exists(),
+            'Tooltip should not exists for unknown statuses');
+    });
 });
