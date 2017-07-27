@@ -80,7 +80,17 @@ export default class PatientViewOncoPrint extends React.Component<IPatientViewOn
         'has_column_spacing': true,
         'track_padding': 5,
         'label': onco_data[i].sample,
-        'sortCmpFn': function(d1:any, d2:any) {return 0;},
+        'sortCmpFn': function(d1:any, d2:any) {
+          if (d1.vaf && d2.vaf) {
+            return d2.vaf - d1.vaf;
+          } else if (d1.vaf) {
+            return -1;
+          }  else if (d2.vaf) {
+            return 1;
+          }  else {
+            return 0;  
+          }
+        },
         'target_group': 0,
         'removable': true,
       };
