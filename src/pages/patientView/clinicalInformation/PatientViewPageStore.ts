@@ -36,20 +36,10 @@ import {
     findUncalledMutationGeneticProfileId, mergeMutationsIncludingUncalled, fetchGisticData, fetchCopyNumberData,
     fetchMutSigData, findMrnaRankGeneticProfileId, mergeDiscreteCNAData, fetchSamplesForPatient, fetchClinicalData,
     fetchCopyNumberSegments, fetchClinicalDataForPatient, makeStudyToCancerTypeMap,
-    fetchCivicGenes, fetchCnaCivicGenes, fetchCivicVariants
+    fetchCivicGenes, fetchCnaCivicGenes, fetchCivicVariants, groupByEntityId
 } from "shared/lib/StoreUtils";
 
 type PageMode = 'patient' | 'sample';
-
-export function groupByEntityId(clinicalDataArray: Array<ClinicalData>) {
-    return _.map(
-        _.groupBy(clinicalDataArray, 'entityId'),
-        (v: ClinicalData[], k: string): ClinicalDataBySampleId => ({
-            clinicalData: v,
-            id: k,
-        })
-    );
-}
 
 export async function checkForTissueImage(patientId: string): Promise<boolean> {
 
@@ -74,10 +64,13 @@ export type PathologyReportPDF = {
 
 }
 
-export function handlePathologyReportCheckResponse(resp: any): PathologyReportPDF[] {
+export function handlePathologyReportCheckResponse(patientId: string, resp: any): PathologyReportPDF[] {
 
     if (resp.total_count > 0) {
-        return _.map(resp.items, (item: any) => ( {url: item.url, name: item.name} ));
+        // only use pdfs starting with the patient id to prevent mismatches
+        const r = new RegExp("^" + patientId);
+        const filteredItems:any = _.filter(resp.items, (item: any) => r.test(item.name));
+        return _.map(filteredItems, (item: any) => ( {url: item.url, name: item.name} ));
     } else {
         return [];
     }
@@ -88,15 +81,15 @@ export function handlePathologyReportCheckResponse(resp: any): PathologyReportPD
  * Transform clinical data from API to clinical data shape as it will be stored
  * in the store
  */
-function transformClinicalInformationToStoreShape(patientId: string, studyId: string, clinicalDataPatient: Array<ClinicalData>, clinicalDataSample: Array<ClinicalData>): ClinicalInformationData {
+function transformClinicalInformationToStoreShape(patientId: string, studyId: string, sampleIds: Array<string>, clinicalDataPatient: Array<ClinicalData>, clinicalDataSample: Array<ClinicalData>): ClinicalInformationData {
     const patient = {
         id: patientId,
         clinicalData: clinicalDataPatient
     };
-    const samples = groupByEntityId(clinicalDataSample);
+    const samples = groupByEntityId(sampleIds, clinicalDataSample);
     const rv = {
         patient,
-        samples,
+        samples
     };
 
     return rv;
@@ -218,7 +211,7 @@ export class PatientViewPageStore {
 
             const parsedResp: any = JSON.parse(resp.text);
 
-            return handlePathologyReportCheckResponse(parsedResp);
+            return handlePathologyReportCheckResponse(this.patientId, parsedResp);
 
         },
         onError: (err: Error) => {
@@ -290,7 +283,7 @@ export class PatientViewPageStore {
 
     readonly clinicalDataGroupedBySample = remoteData({
         await: () => [this.clinicalDataForSamples],
-        invoke: async() => groupByEntityId(this.clinicalDataForSamples.result)
+        invoke: async() => groupByEntityId(this.sampleIds, this.clinicalDataForSamples.result)
     }, []);
 
     readonly studyMetaData = remoteData({
@@ -300,11 +293,12 @@ export class PatientViewPageStore {
     readonly patientViewData = remoteData({
         await: () => [
             this.clinicalDataPatient,
-            this.clinicalDataForSamples
+            this.clinicalDataForSamples,
         ],
         invoke: async() => transformClinicalInformationToStoreShape(
             this.patientId,
             this.studyId,
+            this.sampleIds,
             this.clinicalDataPatient.result,
             this.clinicalDataForSamples.result
         )
