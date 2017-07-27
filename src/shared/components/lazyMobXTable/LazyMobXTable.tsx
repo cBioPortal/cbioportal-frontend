@@ -551,7 +551,8 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
             }
         };
         this.getDownloadData = this.getDownloadData.bind(this);
-        this.getToolbar = this.getToolbar.bind(this);
+        this.getTopToolbar = this.getTopToolbar.bind(this);
+        this.getBottomToolbar = this.getBottomToolbar.bind(this);
         this.getTable = this.getTable.bind(this);
         this.getPaginationControls = this.getPaginationControls.bind(this);
         this.filterInputReaction = reaction(
@@ -581,13 +582,14 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
         if (this.props.showPagination) {
             return (
                 <PaginationControls
-                    className="pull-left topPagination"
+                    className="text-center topPagination"
                     itemsPerPage={this.store.itemsPerPage}
                     currentPage={this.store.page}
                     onChangeItemsPerPage={this.handlers.changeItemsPerPage}
                     onPreviousPageClick={this.handlers.decPage}
                     onNextPageClick={this.handlers.incPage}
-                    textBetweenButtons={this.store.paginationStatusText}
+                    textBeforeButtons={this.store.paginationStatusText}
+                    showMoreButton={true}
                     previousPageDisabled={this.store.page === 0}
                     nextPageDisabled={this.store.page === this.store.maxPage}
                     {...this.props.paginationProps}
@@ -598,7 +600,7 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
         }
     }
 
-    private getToolbar() {
+    private getTopToolbar() {
         return (
             <ButtonToolbar style={{marginLeft:0}} className="tableMainToolbar">
                 { this.props.showFilter ? (
@@ -607,16 +609,13 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
                         <span className="fa fa-search form-control-feedback" aria-hidden="true"></span>
                     </div>
                 ) : ""}
-                <Observer>
-                    { this.getPaginationControls }
-                </Observer>
                 {this.props.showColumnVisibility ? (
-                    <ColumnVisibilityControls
-                        className="pull-right"
-                        columnVisibility={this.store.colVisProp}
-                        onColumnToggled={this.handlers.visibilityToggle}
-                        {...this.props.columnVisibilityProps}
-                    />) : ""}
+					<ColumnVisibilityControls
+						className="pull-right"
+						columnVisibility={this.store.colVisProp}
+						onColumnToggled={this.handlers.visibilityToggle}
+						{...this.props.columnVisibilityProps}
+					/>) : ""}
                 {this.props.showCopyDownload ? (
                     <CopyDownloadControls
                         className="pull-right"
@@ -624,6 +623,16 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
                         downloadFilename="table.csv"
                         {...this.props.copyDownloadProps}
                     />) : ""}
+            </ButtonToolbar>
+        );
+    }
+
+    private getBottomToolbar() {
+        return (
+            <ButtonToolbar style={{marginLeft:0, float:'none'}} className="tableMainToolbar center">
+                <Observer>
+                    { this.getPaginationControls }
+                </Observer>
             </ButtonToolbar>
         );
     }
@@ -642,10 +651,13 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
         return (
             <div>
                 <Observer>
-                    {this.getToolbar}
+                    {this.getTopToolbar}
                 </Observer>
                 <Observer>
                     {this.getTable}
+                </Observer>
+                <Observer>
+                    {this.getBottomToolbar}
                 </Observer>
             </div>
         );
