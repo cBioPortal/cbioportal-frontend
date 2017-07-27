@@ -1,30 +1,42 @@
 import * as React from 'react';
-import client from '../../api/cbioportalClientInstance';
-import {remoteData} from "../../api/remoteData";
 import BarGraph from "../barGraph/BarGraph";
 import {observer} from "mobx-react";
+import {TypeOfCancer as CancerType} from "../../api/generated/CBioPortalAPI";
 import Testimonials from "../testimonials/Testimonials";
 import {ThreeBounce} from 'better-react-spinkit';
 import AppConfig from "appConfig";
+import {QueryStore} from "shared/components/query/QueryStore";
 
-export class StudyStore {
-
-    readonly data = remoteData({
-        invoke: () => {
-            return client.getAllStudiesUsingGET({projection: "DETAILED"});
-
-        }
-    });
-}
 
 @observer
 export default class RightBar extends React.Component<{}, {}> {
 
-    public studyStore = new StudyStore();
+    public studyStore = new QueryStore();
+
+    get logic() { return this.studyStore.studyListLogic; }
+
+    private CancerTypeList() {
+        return this.logic.cancerTypeListView.getChildCancerTypes(this.studyStore.treeData.rootCancerType);
+    };
+
+    private CancerTypeDescendantStudy({cancerType}: {cancerType:CancerType}) {
+        return this.logic.cancerTypeListView.getDescendantCancerStudies(cancerType);
+    };
+
+    private CancerTypeDescendantStudies(cancerList:CancerType[]) {
+        return cancerList.filter(cancer => cancer.name !== "Other").map((filteredCancer:CancerType) => (
+            {
+                shortName: filteredCancer.name,
+                color: filteredCancer.dedicatedColor,
+                studies:this.CancerTypeDescendantStudy({cancerType: filteredCancer})
+            }
+        ));
+    }
 
     static getExampleSection() {
+
         const title:string = 'Example Queries';
-        const defaultExamples:JSX.Element =
+        const defaultExamples:JSX.Element = (
             <div className="rightBarSection exampleQueries">
                 <h3>{title}</h3>
                 <ul>
@@ -50,7 +62,8 @@ export default class RightBar extends React.Component<{}, {}> {
                         <a href="case.do#/patient?studyId=ucec_tcga_pub&caseId=TCGA-BK-A0CC">Patient view of an endometrial cancer case</a>
                     </li>
                 </ul>
-            </div>;
+            </div>
+        );
 
         if (AppConfig.skinRightNavExamplesHTML) {
             return (
@@ -69,19 +82,20 @@ export default class RightBar extends React.Component<{}, {}> {
                 <div className="rightBarSection">
                     <h3>Cancer Studies</h3>
                     {
-                        (this.studyStore.data.isComplete) && (
+                        (this.studyStore.cancerStudies.isComplete && this.studyStore.cancerTypes.isComplete) && (
 
                             <div>
 
-                                <p>The portal contains {this.studyStore.data.result.length} cancer studies <a href="data_sets.jsp">(details)</a></p>
+                                <p>The portal contains {this.studyStore.cancerStudies.result.length} cancer studies <a href="data_sets.jsp">(details)</a></p>
 
-                                <BarGraph data={ this.studyStore.data.result }/>
+                                <BarGraph data={this.CancerTypeDescendantStudies(this.CancerTypeList())}
+                                />
 
                             </div>
                         )
                     }
                     {
-                        (this.studyStore.data.isPending) && (
+                        (this.studyStore.cancerStudies.isPending) && (
                             <ThreeBounce className="center-block text-center" />
                         )
                     }
