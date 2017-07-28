@@ -18,6 +18,7 @@ import request from 'superagent';
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
 import {getTissueImageCheckUrl, getDarwinUrl} from "../../../shared/api/urls";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
+import GenomeNexusCache from "shared/cache/GenomeNexusCache";
 import PubMedCache from "shared/cache/PubMedCache";
 import {MutationAssessor} from "shared/model/GenomeNexus";
 import {IOncoKbData} from "shared/model/OncoKB";
@@ -593,6 +594,10 @@ export class PatientViewPageStore {
 
     @cached get oncoKbEvidenceCache() {
         return new OncoKbEvidenceCache();
+    }
+
+    @cached get genomeNexusCache() {
+        return new GenomeNexusCache();
     }
 
     @cached get pubMedCache() {

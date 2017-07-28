@@ -4,6 +4,9 @@ import 'rc-tooltip/assets/bootstrap_white.css';
 import styles from "./mutationAssessor.module.scss";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {MutationAssessor, IGenomeNexusData} from "shared/model/GenomeNexus";
+import {generateMutationAssessorQuery} from "shared/lib/GenomeNexusUtils";
+import GenomeNexusCache from "shared/cache/GenomeNexusCache"
+import {ICacheData, ICache} from "shared/lib/SimpleCache";
 
 type MA_CLASS_NAME = 'oma-high' | 'oma-medium' | 'oma-low' | 'oma-neutral' | 'oma-na';
 
@@ -16,13 +19,14 @@ export interface IMutationAssessorFormat
 
 export interface IColumnProps {
     mutationData: Mutation[];
-    genomeNexusData?: any;
+    genomeNexusData?: IGenomeNexusData;
+    genomeNexusCache?: GenomeNexusCache;
 }
 
 /**
  * @author Selcuk Onur Sumer
  */
-export default class MutationAssessorColumnFormatter
+export default class MutationAssessorColumnFormatter //extends React.Component<IColumnProps, {}>
 {
     /**
      * Mapping between the functional impact score (data) values and
@@ -133,16 +137,76 @@ export default class MutationAssessorColumnFormatter
         }
     }
 
+    public static getCacheData(columnProps:IColumnProps)
+    {
+        let cacheData:ICacheData<MutationAssessor>|undefined;
+        let data:Mutation = columnProps.mutationData[0];
+
+        if (columnProps.genomeNexusCache) {
+
+            // getting the data for the current mutation
+            const cache = columnProps.genomeNexusCache.getData([data.entrezGeneId.toString()], data);
+
+            if (cache) {
+                cacheData = cache[data.entrezGeneId.toString()];
+            }
+        }
+
+        return cacheData;
+    }
+
     public static getData(columnProps:IColumnProps)
     {
         let data:Mutation[] = columnProps.mutationData;
-        let genomeNexusData:IGenomeNexusData = columnProps.genomeNexusData;
+        let genomeNexusData = columnProps.genomeNexusData;
+        let genomeNexusCache = columnProps.genomeNexusCache;
 
         let maData;
 
-        if (data.length > 0 && genomeNexusData &&
-            genomeNexusData.hasOwnProperty("mutation_assessor")) {
+        if (data.length > 0 && genomeNexusCache) {
 
+            const cacheData:ICacheData<MutationAssessor>|undefined = 
+                MutationAssessorColumnFormatter.getCacheData(columnProps);
+
+            if (cacheData && cacheData.status === "complete" && cacheData.data) {
+                maData = {
+                    impact: cacheData.data.functionalImpact,
+                    score: cacheData.data.functionalImpactScore,
+                    pdb: data[0].linkPdb,
+                    msa: data[0].linkMsa,
+                    xVar: data[0].linkXvar
+                };
+            }
+            else if (cacheData && cacheData.status === "pending") {
+                maData = {
+                    impact: "pending",
+                    score: 0,
+                    pdb: data[0].linkPdb,
+                    msa: data[0].linkMsa,
+                    xVar: data[0].linkXvar
+                }
+            }
+            else if (cacheData && cacheData.status === "error") {
+                maData = {
+                    impact: "error",
+                    score: 0,
+                    pdb: data[0].linkPdb,
+                    msa: data[0].linkMsa,
+                    xVar: data[0].linkXvar
+                }
+            }
+            else {
+                maData = {
+                    impact: "na",
+                    score: 0,
+                    pdb: data[0].linkPdb,
+                    msa: data[0].linkMsa,
+                    xVar: data[0].linkXvar
+                }
+            }
+        }
+        
+        else if (data.length > 0 && !genomeNexusCache && genomeNexusData) {
             let genomeNexusMap = genomeNexusData.mutation_assessor;
             let mutationAssessor:MutationAssessor = genomeNexusMap[data[0].entrezGeneId];
 
@@ -166,6 +230,7 @@ export default class MutationAssessorColumnFormatter
                 }
             }
         }
+
         else {
             return maData = {
                 impact: undefined,

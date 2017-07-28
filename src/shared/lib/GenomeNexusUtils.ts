@@ -2,6 +2,18 @@ import * as _ from 'lodash';
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {MutationAssessor} from "shared/api/generated/GenomeNexusAPI";
 
+export function generateMutationAssessorQuery(data:Mutation)
+{
+    let hgvs:string = "";
+    if (data.mutationType === "Missense_Mutation" 
+            && data.variantAllele.length == 1)
+    {
+        hgvs += data.gene.chromosome + ":g." + data.startPosition;
+        hgvs += data.referenceAllele + ">" + data.variantAllele;
+    }
+    return hgvs;
+}
+
 // transforms Mutation[] to array of genome nexus formatted queries 
 export function generateMutationAssessorQueries(data:Mutation[])
 {
