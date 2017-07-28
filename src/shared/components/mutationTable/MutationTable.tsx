@@ -228,8 +228,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                     return false;
                 }
             },
-            visible: DiscreteCNAColumnFormatter.isVisible(this.props.discreteCNACache as DiscreteCNACache,
-                this.props.dataStore ? (this.props.dataStore as IMobXApplicationDataStore<Mutation[]>).allData : this.props.data)
+            visible: DiscreteCNAColumnFormatter.isVisible(this.props.discreteCNACache as DiscreteCNACache)
         };
 
         this._columns[MutationTableColumnType.REF_READS_N] = {
