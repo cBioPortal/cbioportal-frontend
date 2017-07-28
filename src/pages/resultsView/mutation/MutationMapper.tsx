@@ -144,8 +144,14 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                                     </span>
                                 </div>)
                             }
-                            <LoadingIndicator isLoading={this.props.store.clinicalDataForSamples.isPending} />
-                            {!this.props.store.clinicalDataForSamples.isPending && (
+                            <LoadingIndicator
+                                isLoading={
+                                    this.props.store.clinicalDataForSamples.isPending ||
+                                    this.props.store.studiesForSamplesWithoutCancerTypeClinicalData.isPending
+                                }
+                            />
+                            {!this.props.store.clinicalDataForSamples.isPending &&
+                            !this.props.store.studiesForSamplesWithoutCancerTypeClinicalData.isPending && (
                                 <ResultsViewMutationTable
                                     studyId={this.props.studyId}
                                     sampleIdToTumorType={this.props.store.sampleIdToTumorType}
