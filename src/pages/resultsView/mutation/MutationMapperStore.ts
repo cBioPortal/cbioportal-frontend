@@ -1,5 +1,5 @@
 import {
-    Mutation, MutationFilter, Gene, ClinicalData
+    Mutation, MutationFilter, Gene, ClinicalData, CancerStudy, Sample
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {computed, observable} from "mobx";
@@ -29,6 +29,8 @@ export class MutationMapperStore {
                 mutationGeneticProfileId: MobxPromise<string>,
                 sampleIds: MobxPromise<string[]>,
                 clinicalDataForSamples: MobxPromise<ClinicalData[]>,
+                studiesForSamplesWithoutCancerTypeClinicalData: MobxPromise<CancerStudy[]>,
+                samplesWithoutCancerTypeClinicalData: MobxPromise<Sample[]>,
                 sampleListId: string|null,
                 patientIds: MobxPromise<string[]>,
                 mskImpactGermlineConsentedPatientIds: MobxPromise<string[]>)
@@ -38,6 +40,8 @@ export class MutationMapperStore {
         this.mutationGeneticProfileId = mutationGeneticProfileId;
         this.sampleIds = sampleIds;
         this.clinicalDataForSamples = clinicalDataForSamples;
+        this.studiesForSamplesWithoutCancerTypeClinicalData = studiesForSamplesWithoutCancerTypeClinicalData;
+        this.samplesWithoutCancerTypeClinicalData = samplesWithoutCancerTypeClinicalData;
         this.sampleListId = sampleListId;
         this.patientIds = patientIds;
         this.mskImpactGermlineConsentedPatientIds = mskImpactGermlineConsentedPatientIds;
@@ -52,6 +56,8 @@ export class MutationMapperStore {
 
     mutationGeneticProfileId: MobxPromise<string>;
     clinicalDataForSamples: MobxPromise<ClinicalData[]>;
+    studiesForSamplesWithoutCancerTypeClinicalData: MobxPromise<CancerStudy[]>;
+    samplesWithoutCancerTypeClinicalData: MobxPromise<Sample[]>;
     sampleIds: MobxPromise<string[]>;
     patientIds: MobxPromise<string[]>;
     mskImpactGermlineConsentedPatientIds: MobxPromise<string[]>;
@@ -165,7 +171,8 @@ export class MutationMapperStore {
     readonly oncoKbData = remoteData<IOncoKbData>({
         await: () => [
             this.mutationData,
-            this.clinicalDataForSamples
+            this.clinicalDataForSamples,
+            this.studiesForSamplesWithoutCancerTypeClinicalData
         ],
         invoke: async () => fetchOncoKbData(this.sampleIdToTumorType, this.mutationData),
         onError: (err: Error) => {
@@ -244,7 +251,9 @@ export class MutationMapperStore {
     }
 
     @computed get sampleIdToTumorType(): {[sampleId: string]: string} {
-        return generateSampleIdToTumorTypeMap(this.clinicalDataForSamples);
+        return generateSampleIdToTumorTypeMap(this.clinicalDataForSamples,
+            this.studiesForSamplesWithoutCancerTypeClinicalData,
+            this.samplesWithoutCancerTypeClinicalData);
     }
 
     @cached get dataStore():MutationMapperDataStore {
