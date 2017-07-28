@@ -217,6 +217,88 @@ export async function fetchSamples(sampleIds:MobxPromise<string[]>,
     }
 }
 
+export function findSampleIdsWithCancerTypeClinicalData(clinicalDataForSamples:MobxPromise<ClinicalData[]>): {[sampleId: string]: boolean}
+{
+    const samplesWithClinicalData: {[sampleId: string]: boolean} = {};
+
+    if (clinicalDataForSamples.result)
+    {
+        _.each(clinicalDataForSamples.result, (clinicalData: ClinicalData) => {
+            if (clinicalData.clinicalAttributeId === "CANCER_TYPE_DETAILED" ||
+                clinicalData.clinicalAttributeId === "CANCER_TYPE") {
+                samplesWithClinicalData[clinicalData.entityId] = true;
+            }
+        });
+    }
+
+    return samplesWithClinicalData;
+}
+
+export function findSamplesWithoutCancerTypeClinicalData(samples:MobxPromise<Sample[]>,
+                                                         clinicalDataForSamples:MobxPromise<ClinicalData[]>): Sample[]
+{
+    if (samples.result &&
+        samples.result.length > 0 &&
+        clinicalDataForSamples.result)
+    {
+        const samplesWithClinicalData = findSampleIdsWithCancerTypeClinicalData(clinicalDataForSamples);
+
+        return _.filter(samples.result, (sample: Sample) => {
+            return samplesWithClinicalData[sample.sampleId] !== true;
+        });
+    }
+    else {
+        return [];
+    }
+}
+
+export async function fetchSamplesWithoutCancerTypeClinicalData(sampleIds:MobxPromise<string[]>,
+                                                                studyId:string,
+                                                                clinicalDataForSamples:MobxPromise<ClinicalData[]>,
+                                                                client:CBioPortalAPI = defaultClient)
+{
+    let samples: Sample[] = [];
+
+    if (sampleIds.result &&
+        sampleIds.result.length > 0 &&
+        clinicalDataForSamples.result)
+    {
+        const samplesWithClinicalData = findSampleIdsWithCancerTypeClinicalData(clinicalDataForSamples);
+
+        const sampleIdsWithoutClinicalData = _.filter(sampleIds.result, (sampleId: string) => {
+            return samplesWithClinicalData[sampleId] !== true;
+        });
+
+        const sampleIdentifierForSamplesWithoutClinicalData = sampleIdsWithoutClinicalData.map(
+            sampleId => ({sampleId, studyId}));
+
+        if (sampleIdentifierForSamplesWithoutClinicalData.length > 0) {
+            samples = await client.fetchSamplesUsingPOST({
+                sampleIdentifiers: sampleIdentifierForSamplesWithoutClinicalData,
+                projection: "DETAILED"
+            });
+        }
+    }
+
+    return samples;
+}
+
+export async function fetchStudiesForSamplesWithoutCancerTypeClinicalData(samplesWithoutClinicalData: MobxPromise<Sample[]>,
+                                                                          client:CBioPortalAPI = defaultClient)
+{
+    let studies: CancerStudy[] = [];
+
+    if (samplesWithoutClinicalData.result) {
+        const studyIdsForSamplesWithoutClinicalData = _.uniq(samplesWithoutClinicalData.result.map(
+            (sample: Sample) => sample.studyId));
+
+        const promises = studyIdsForSamplesWithoutClinicalData.map(studyId => client.getStudyUsingGET({studyId}));
+        studies = await Promise.all(promises);
+    }
+
+    return studies;
+}
+
 export async function fetchCosmicData(mutationData:MobxPromise<Mutation[]>,
                                       uncalledMutationData?:MobxPromise<Mutation[]>,
                                       client:CBioPortalAPIInternal = internalClient)
@@ -558,46 +640,40 @@ export function indexHotspotData(hotspotData:MobxPromise<ICancerHotspotData>): I
 }
 
 export function generateSampleIdToTumorTypeMap(clinicalDataForSamples: MobxPromise<ClinicalData[]>,
-                                               defaultCancerType?: string,
+                                               studies?: MobxPromise<CancerStudy[]>,
                                                samples?: MobxPromise<Sample[]>): {[sampleId: string]: string}
+
 {
     const map: {[sampleId: string]: string} = {};
 
-    if (clinicalDataForSamples.result) {
+    if (clinicalDataForSamples.result)
+    {
         // first priority is CANCER_TYPE_DETAILED in clinical data
-        _.each(clinicalDataForSamples.result, (clinicalData:ClinicalData) => {
+        _.each(clinicalDataForSamples.result, (clinicalData: ClinicalData) => {
             if (clinicalData.clinicalAttributeId === "CANCER_TYPE_DETAILED") {
                 map[clinicalData.entityId] = clinicalData.value;
             }
         });
 
         // second priority is CANCER_TYPE in clinical data
-        _.each(clinicalDataForSamples.result, (clinicalData:ClinicalData) => {
+        _.each(clinicalDataForSamples.result, (clinicalData: ClinicalData) => {
             // update map with CANCER_TYPE value only if it is not already updated
             if (clinicalData.clinicalAttributeId === "CANCER_TYPE" && map[clinicalData.entityId] === undefined) {
                 map[clinicalData.entityId] = clinicalData.value;
             }
         });
+    }
 
-        // last resort: fall back to the default cancer type
-        if (defaultCancerType) {
-            if (samples && samples.result) {
-                _.each(samples.result, (sample: Sample) => {
-                    if (map[sample.sampleId] === undefined) {
-                        map[sample.sampleId] = defaultCancerType;
-                    }
-                });
+    // last resort: fall back to the study cancer type
+    if (studies && studies.result && samples && samples.result)
+    {
+        const studyIdToCancerType = makeStudyToCancerTypeMap(studies.result);
+
+        _.each(samples.result, (sample: Sample) => {
+            if (map[sample.sampleId] === undefined) {
+                map[sample.sampleId] = studyIdToCancerType[sample.studyId];
             }
-            // if no sample list is provided, try to get sample ids from clinical data...
-            else {
-                _.each(clinicalDataForSamples.result, (clinicalData:ClinicalData) => {
-                    // update map with defaultCancerType value only if it is not already updated
-                    if (map[clinicalData.entityId] === undefined) {
-                        map[clinicalData.entityId] = defaultCancerType;
-                    }
-                });
-            }
-        }
+        });
     }
 
     return map;
@@ -703,7 +779,7 @@ export function generateDataQueryFilter(sampleListId: string|null, sampleIds?: s
     return filter;
 }
 
-export function makeStudyToCancerTypeMap(studies:CancerStudy[]) {
+export function makeStudyToCancerTypeMap(studies:CancerStudy[]): {[studyId: string]: string} {
     return studies.reduce((map:{[studyId:string]:string}, next:CancerStudy) => {
         map[next.studyId] = next.cancerType.name;
         return map;
