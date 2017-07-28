@@ -127,15 +127,10 @@ export default class DiscreteCNAColumnFormatter {
         }
     }
 
-    public static isVisible(cache:DiscreteCNACache, allMutations?: Mutation[][]): boolean {
+    public static isVisible(cache:DiscreteCNACache): boolean {
 
-        if (allMutations) {
-            for (const rowMutations of allMutations) {
-                const cnaData = DiscreteCNAColumnFormatter.getData(rowMutations, cache);
-                if (cnaData) {
-                    return true;
-                }
-            }
+        if (cache) {
+            return !!cache.geneticProfileIdDiscrete;
         }
 
         return false;
