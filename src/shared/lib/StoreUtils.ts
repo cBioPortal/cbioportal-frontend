@@ -119,12 +119,13 @@ export async function fetchClinicalData(clinicalDataMultiStudyFilter:ClinicalDat
 
 export async function fetchClinicalDataInStudy(studyId:string,
                                                clinicalDataSingleStudyFilter:ClinicalDataSingleStudyFilter,
+                                               clinicalDataType: 'SAMPLE' | 'PATIENT',
                                                client:CBioPortalAPI = defaultClient)
 {
     if (clinicalDataSingleStudyFilter) {
         return await client.fetchAllClinicalDataInStudyUsingPOST({
             studyId: studyId,
-            clinicalDataType: 'SAMPLE',
+            clinicalDataType: clinicalDataType,
             clinicalDataSingleStudyFilter: clinicalDataSingleStudyFilter,
             projection: 'SUMMARY',
         });
