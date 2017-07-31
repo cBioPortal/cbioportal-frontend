@@ -44,7 +44,7 @@ export default class UnsupportedBrowserModal extends React.Component<{}, IBrowse
           if (String(name) === 'unsupported') {
               window.sessionStorage.browserError = true;
               this.setState({show: true});
-          } else if (!(name === "chrome" || name === "firefox" || name === "edge" || isIE11))  {
+          } else if (!(name === "chrome" || name === "firefox" || name === "edge" || name === "safari" || isIE11))  {
               window.sessionStorage.browserError = true;
               this.setState({show: true});
           } else {
@@ -63,7 +63,7 @@ export default class UnsupportedBrowserModal extends React.Component<{}, IBrowse
                <Modal.Body>
                    <ul>
                        <li>It looks like your using an {this.state.name === 'ie' ? ' old version of Internet Explorer' : 'unsupported browser'}.</li>
-                       <li>Please consider using IE11, Chrome, or Firefox.</li>
+                       <li>Please consider using IE11, Chrome, Safari, or Firefox.</li>
                    </ul>
                </Modal.Body>
           </Modal>

@@ -29,7 +29,7 @@ describe('UnsupportedBrowserModal', () => {
 
     it('shows modal when Safari is being used', () => {
         wrapper.instance().handleUnsupportedBrowsers('safari');
-        expect(wrapper.state('show')).to.equal(true);
+        expect(wrapper.state('show')).to.equal(false);
     });
 
     it('shows modal when IE10 is being used and site is accessed for first time', () => {
