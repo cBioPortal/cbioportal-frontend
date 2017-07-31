@@ -1,5 +1,5 @@
 import {
-    DiscreteCopyNumberFilter, DiscreteCopyNumberData
+    DiscreteCopyNumberFilter, DiscreteCopyNumberData, ClinicalData
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {computed, observable, action} from "mobx";
@@ -18,6 +18,8 @@ import {
 } from "shared/lib/StoreUtils";
 import {MutationMapperStore} from "./mutation/MutationMapperStore";
 import AppConfig from "appConfig";
+import * as _ from 'lodash';
+import { IMPACT_GERMLINE_TESTING_CONSENT } from "shared/constants";
 
 export class ResultsViewPageStore {
 
@@ -65,7 +67,9 @@ export class ResultsViewPageStore {
                 this.mutationGeneticProfileId,
                 this.sampleIds,
                 this.clinicalDataForSamples,
-                this.sampleListId);
+                this.sampleListId,
+                this.patientIds,
+                this.mskImpactGermlineConsentedPatientIds);
 
             this.mutationMapperStores[hugoGeneSymbol] = store;
 
@@ -95,8 +99,28 @@ export class ResultsViewPageStore {
         ],
         invoke: () => {
             const clinicalDataSingleStudyFilter = {attributeIds: ["CANCER_TYPE", "CANCER_TYPE_DETAILED"], ids: this.sampleIds.result};
-            return fetchClinicalDataInStudy(this.studyId, clinicalDataSingleStudyFilter)
+            return fetchClinicalDataInStudy(this.studyId, clinicalDataSingleStudyFilter, 'SAMPLE')
         }
+    }, []);
+
+    readonly mskImpactGermlineConsentedPatientIds = remoteData({
+        await: () => [this.patientIds],
+        invoke: async () => {
+            const clinicalDataSingleStudyFilter = {
+                attributeIds: [IMPACT_GERMLINE_TESTING_CONSENT],
+                ids: this.patientIds.result
+            };
+            const clinicalDataResponse = await fetchClinicalDataInStudy(
+                this.studyId, clinicalDataSingleStudyFilter, 'PATIENT'
+            );
+            if (clinicalDataResponse) {
+                return _.uniq(clinicalDataResponse.map(
+                    (cd:ClinicalData) => cd.entityId)
+                );
+            } else {
+                return [];
+            }
+        },
     }, []);
 
     readonly samples = remoteData({
@@ -104,6 +128,13 @@ export class ResultsViewPageStore {
             this.sampleIds
         ],
         invoke: async () => fetchSamples(this.sampleIds, this.studyId)
+    }, []);
+
+    readonly patientIds = remoteData({
+        await: () => [this.samples],
+        invoke: async () => {
+            return _.chain(this.samples.result).map('patientId').uniq().value();
+        },
     }, []);
 
     readonly studies = remoteData({
