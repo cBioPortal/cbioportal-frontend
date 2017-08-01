@@ -118,7 +118,7 @@ export default class BarGraph extends React.Component<IBarGraphProps, {}> {
         const options = {
             title: {
                 display: true,
-                text: 'Cases by Primary Site',
+                text: 'Cases by Top 20 Primary Sites',
                 fontSize: 14,
                 fontStyle: 'normal'
             },
