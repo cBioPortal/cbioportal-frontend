@@ -244,9 +244,9 @@ export default class ProteinChainPanel extends React.Component<ProteinChainPanel
             <div onMouseEnter={this.handlers.onMouseEnter} onMouseLeave={this.handlers.onMouseLeave}>
                 <Collapse isOpened={this.isOpen}>
                     <div style={{
-                        marginLeft:this.props.geneXOffset || 0,
+                        position:'relative',
                     }}>
-                        <div style={{display: this.isExpanded ? "inherit" : "none", position: "absolute", left: 20}}>
+                        <div className="small" style={{display: this.isExpanded ? "inherit" : "none", position: "absolute", left: 20}}>
                             PDB
                             <DefaultTooltip
                                 placement="left"
@@ -263,7 +263,7 @@ export default class ProteinChainPanel extends React.Component<ProteinChainPanel
                             style={{
                                 overflowY:"scroll",
                                 maxHeight:this.props.maxChainsHeight,
-                                position:"relative",
+                                marginLeft:this.props.geneXOffset
                             }}
                             onScroll={this.handlers.onChainScroll}
                         >
@@ -285,9 +285,9 @@ export default class ProteinChainPanel extends React.Component<ProteinChainPanel
                         </div>
                         <br/>
                         <div style={{display: this.isExpanded ? "inherit" : "none"}}>
-                            <button onClick={this.handlers.togglePDBTable} className="btn btn-default" style={{float:"left"}}>PDB Chain Table</button>
-                            <br/>
-                            <br/>
+                            <button onClick={this.handlers.togglePDBTable} className="btn btn-default">
+                                { (this.pdbChainTableShown) ? 'Hide PDB Chain Table' : 'Show PDB Chain Table'  }
+                            </button>
                             <div style={{
                                 display: this.pdbChainTableShown ? "inherit" : "none",
                                 maxWidth: this.props.geneWidth
