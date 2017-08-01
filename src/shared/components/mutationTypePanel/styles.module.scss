@@ -1,0 +1,11 @@
+.mutationTypeTable {
+
+  margin:15px 0;
+
+  td {
+    padding: 0 15px 10px 0 !important;
+      :global(.badge) {
+        margin-right: 5px;
+      }
+  }
+}
