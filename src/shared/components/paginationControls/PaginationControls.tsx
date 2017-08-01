@@ -60,7 +60,8 @@ export class PaginationControls extends React.Component<IPaginationControlsProps
         style:{},
         previousPageDisabled:false,
         nextPageDisabled:false,
-        pageNumberEditable: false
+        pageNumberEditable: false,
+        showMoreButton: true
     };
 
     constructor(props:IPaginationControlsProps) {
@@ -105,7 +106,12 @@ export class PaginationControls extends React.Component<IPaginationControlsProps
         } else {
             return (<span
                         key="textBetweenButtons"
-                        className={"btn btn-default textBetweenButtons disabled" + styles["default-cursor"]}
+                        className={classNames('btn',
+                                              'btn-default',
+                                              'textBetweenButtons',
+                                              'disabled',
+                                              styles["default-cursor"])}
+                        style={{cursor:'default',color:'black'}} // HACK for parent project
                     >
                         <If condition={this.props.pageNumberEditable}>
                             <EditableSpan

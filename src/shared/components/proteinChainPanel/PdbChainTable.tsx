@@ -141,6 +141,7 @@ export default class PdbChainTable extends React.Component<IPdbChainTableProps, 
                 itemsLabelPlural="PDB chains"
                 paginationProps={{
                     showItemsPerPageSelector:false,
+                    showMoreButton:false
                 }}
                 initialItemsPerPage={6}
                 columns={this.columns}
