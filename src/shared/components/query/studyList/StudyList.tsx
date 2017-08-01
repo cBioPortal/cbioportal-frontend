@@ -8,7 +8,7 @@ import {observer} from "mobx-react";
 import {computed} from "mobx";
 import {getStudySummaryUrl, getPubMedUrl} from "../../../api/urls";
 import {QueryStoreComponent} from "../QueryStore";
-import DefaultTooltip from "../../DefaultTooltip";
+import DefaultTooltip from "../../defaultTooltip/DefaultTooltip";
 import StudyListLogic, {FilteredCancerTreeView} from "../StudyListLogic";
 import {CancerTreeNode} from "../CancerStudyTreeData";
 

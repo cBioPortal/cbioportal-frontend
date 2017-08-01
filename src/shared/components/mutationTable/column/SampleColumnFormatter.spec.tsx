@@ -1,5 +1,5 @@
 import SampleColumnFormatter from "./SampleColumnFormatter";
-import DefaultTooltip from "shared/components/DefaultTooltip";
+import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import {initMutation} from "test/MutationMockUtils";
 import React from 'react';
 import { assert } from 'chai';

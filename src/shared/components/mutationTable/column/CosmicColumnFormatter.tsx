@@ -1,5 +1,5 @@
 import * as React from 'react';
-import DefaultTooltip from 'shared/components/DefaultTooltip';
+import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import * as _ from 'lodash';
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {CosmicMutation} from "shared/api/generated/CBioPortalAPIInternal";
