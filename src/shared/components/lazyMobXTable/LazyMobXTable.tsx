@@ -46,6 +46,8 @@ type LazyMobXTableProps<T> = {
     showCopyDownload?:boolean;
     copyDownloadProps?:ICopyDownloadControlsProps;
     showPagination?:boolean;
+	// used only when showPagination === true (show pagination at bottom otherwise)
+	showPaginationAtTop?:boolean; 
     paginationProps?:IPaginationControlsProps;
     showColumnVisibility?:boolean;
     columnVisibilityProps?:IColumnVisibilityControlsProps;
@@ -503,7 +505,8 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
         showCopyDownload: true,
         showPagination: true,
         showColumnVisibility: true,
-        highlightColor: "yellow"
+        highlightColor: "yellow",
+		showPaginationAtTop: false
     };
 
     public getDownloadData(): string
@@ -580,19 +583,30 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
 
     private getPaginationControls() {
         if (this.props.showPagination) {
+			// default paginationProps
+			let paginationProps:IPaginationControlsProps = {
+				className:"text-center topPagination",
+				itemsPerPage:this.store.itemsPerPage,
+				currentPage:this.store.page,
+				onChangeItemsPerPage:this.handlers.changeItemsPerPage,
+				onPreviousPageClick:this.handlers.decPage,
+				onNextPageClick:this.handlers.incPage,
+				previousPageDisabled:this.store.page === 0,
+				nextPageDisabled:this.store.page === this.store.maxPage,
+				textBeforeButtons:this.store.paginationStatusText
+			};
+			// override with given paginationProps if they exist
+			if (this.props.paginationProps) {
+				// put status text between button if no show more button
+				if (this.props.paginationProps.showMoreButton === false) {
+					delete paginationProps['textBeforeButtons'];
+					paginationProps['textBetweenButtons'] = this.store.paginationStatusText;
+				}
+				paginationProps = Object.assign(paginationProps, this.props.paginationProps)
+			}
             return (
                 <PaginationControls
-                    className="text-center topPagination"
-                    itemsPerPage={this.store.itemsPerPage}
-                    currentPage={this.store.page}
-                    onChangeItemsPerPage={this.handlers.changeItemsPerPage}
-                    onPreviousPageClick={this.handlers.decPage}
-                    onNextPageClick={this.handlers.incPage}
-                    textBeforeButtons={this.store.paginationStatusText}
-                    showMoreButton={true}
-                    previousPageDisabled={this.store.page === 0}
-                    nextPageDisabled={this.store.page === this.store.maxPage}
-                    {...this.props.paginationProps}
+                    {...paginationProps}
                 />
             );
         } else {
@@ -623,6 +637,11 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
                         downloadFilename="table.csv"
                         {...this.props.copyDownloadProps}
                     />) : ""}
+                {this.props.showPaginationAtTop ? (
+                    <Observer>
+                        { this.getPaginationControls }
+                    </Observer>
+                ) : null}
             </ButtonToolbar>
         );
     }
@@ -656,9 +675,13 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
                 <Observer>
                     {this.getTable}
                 </Observer>
-                <Observer>
-                    {this.getBottomToolbar}
-                </Observer>
+                {
+                    (!this.props.showPaginationAtTop) && (
+                        <Observer>
+                            {this.getBottomToolbar}
+                        </Observer>
+                    )
+                }
             </div>
         );
     }
