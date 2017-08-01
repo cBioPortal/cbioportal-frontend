@@ -3,8 +3,8 @@ import {If, Else, Then} from 'react-if';
 import {SampleLabelHTML} from "shared/components/sampleLabel/SampleLabel";
 import {ClinicalDataBySampleId} from "shared/api/api-types-extended";
 import ClinicalInformationPatientTable from "../clinicalInformation/ClinicalInformationPatientTable";
-import DefaultTooltip from "shared/components/DefaultTooltip";
-import {placeArrowBottomLeft} from "shared/components/DefaultTooltip";
+import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
+import {placeArrowBottomLeft} from "shared/components/defaultTooltip/DefaultTooltip";
 
 interface ISampleInlineProps {
     sample: ClinicalDataBySampleId;

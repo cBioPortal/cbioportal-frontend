@@ -7,7 +7,7 @@ import {observer} from "mobx-react";
 import classNames from 'classnames';
 import { FlexRow } from "../flexbox/FlexBox";
 import {QueryStoreComponent} from "./QueryStore";
-import DefaultTooltip from "../DefaultTooltip";
+import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
 import SectionHeader from "../sectionHeader/SectionHeader";
 
 const styles = styles_any as {
