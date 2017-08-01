@@ -6,13 +6,10 @@
   right: 0;
   //top: 0;
   z-index: 100;
-  border-style: outset;
-  border-color: #BABDB6;
-  border-radius: 15px;
+  border:1px solid $borderColor;
+  border-radius: $cornerBorderRadius;
   background-color: #FFFFFF;
   padding: 5px 30px 15px;
-  -moz-border-radius: 15px;
-  -webkit-border-radius: 15px;
   /* fix for bootstrap 3 */
   box-sizing: content-box;
 }

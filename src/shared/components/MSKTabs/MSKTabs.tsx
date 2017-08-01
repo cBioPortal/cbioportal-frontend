@@ -51,6 +51,7 @@ interface IMSKTabsProps {
     enablePagination?:boolean;
     // only used when pagination is true to style arrows
     arrowStyle?:{[k:string]:string|number|boolean};
+    tabButtonStyle?:string;
 }
 
 export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
@@ -205,10 +206,12 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
             </li>
         ) : null;
 
+        const navButtonStyle : string = this.props.tabButtonStyle || 'tabs';
+
         return (
             <ul
                 ref={this.navTabsRefHandler.bind(this)}
-                className="nav nav-tabs"
+                className={classnames('nav',`nav-${navButtonStyle}`)}
                 style={navBarStyle}
             >
                 {prev}

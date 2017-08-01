@@ -264,7 +264,7 @@ describe('StructureVisualizer3D', () => {
             "Chain B should be colored with default element colors when ATOM_TYPE is selected");
     });
 
-    it("colors residues with correct colors", () => {
+    it.skip("colors residues with correct colors", () => {
         let residueToColor: {[residue:number]: string} = {};
 
         sinon.stub(viewer, "setStyle", (selector: AtomSelectionSpec, style: AtomStyleSpec) => {
@@ -312,7 +312,7 @@ describe('StructureVisualizer3D', () => {
             "Residue 1835 should be colored with chain color when NONE selected");
     });
 
-    it("styles and colors side chain atoms wrt the corresponding props", () => {
+    it.skip("styles and colors side chain atoms wrt the corresponding props", () => {
         let residueToStickColor: {[residue:number]: string};
         let residueToSphereColor: {[residue:number]: string};
 
