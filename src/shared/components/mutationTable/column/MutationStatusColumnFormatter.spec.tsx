@@ -45,10 +45,6 @@ describe('MutationStatusColumnFormatter', () => {
             "Somatic mutation status data is properly extracted");
     });
 
-    it('renders component display value, class name, and cell value property', () => {
-
-    });
-
     function testRenderedValues(component: ReactWrapper<any, any>,
                                 className: string,
                                 value: string)
@@ -67,10 +63,10 @@ describe('MutationStatusColumnFormatter', () => {
 
     it('adds tooltips only for germline and somatic mutation statuses', () => {
         assert.isTrue(germlineComponent.find(DefaultTooltip).exists(),
-            'Tooltip should exists for germline mutations');
+            'Tooltip should exist for germline mutations');
         assert.isTrue(somaticComponent.find(DefaultTooltip).exists(),
-            'Tooltip should exists for somatic mutations');
+            'Tooltip should exist for somatic mutations');
         assert.isFalse(naComponent.find(DefaultTooltip).exists(),
-            'Tooltip should not exists for unknown statuses');
+            'Tooltip should not exist for unknown statuses');
     });
 });
