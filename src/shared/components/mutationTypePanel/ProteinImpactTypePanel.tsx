@@ -3,14 +3,13 @@ import * as React from "react";
 import {Mutation} from "../../api/generated/CBioPortalAPI";
 import {IMobXApplicationDataStore} from "../../lib/IMobXApplicationDataStore";
 import {observer} from "mobx-react";
-import {computed} from "mobx";
-import MutationTypePanel from "./MutationTypePanel";
 import {
     ProteinImpactType,
     getProteinImpactType
 } from "../../lib/getCanonicalMutationType";
 import {IProteinImpactTypeColors} from "shared/lib/MutationUtils";
-import {MutationTypePanelButton} from "./MutationTypePanel";
+
+import styles from './styles.module.scss';
 
 export interface IProteinImpactTypePanelProps extends IProteinImpactTypeColors
 {
@@ -19,49 +18,53 @@ export interface IProteinImpactTypePanelProps extends IProteinImpactTypeColors
 
 const buttonOrder:ProteinImpactType[] = ["missense", "truncating", "inframe", "other"];
 
+export function mutationTypeButton(count:number, label:string, color:string, onClick:()=>void) {
+
+    return (
+        <span key={label} onClick={onClick} style={{ cursor:'pointer' }}>
+                <span className="badge" style={{
+                    backgroundColor: color,
+                }}>{count || 0}</span>
+                <span style={{color:color}}>{label}</span>
+            </span>
+    );
+}
+
 @observer
 export default class ProteinImpactTypePanel extends React.Component<IProteinImpactTypePanelProps, {}> {
-    @computed get typeToColor():{[proteinImpactType:string]:string} {
-        return {
-            "missense": this.props.missenseColor,
-            "truncating": this.props.truncatingColor,
-            "inframe": this.props.inframeColor,
-            "other": this.props.otherColor
-        };
+
+    public handleMutationClick(type: string){
+        this.props.dataStore.setFilter((d:Mutation[])=>(getProteinImpactType(d[0].mutationType) === type));
+        this.props.dataStore.filterString = "";
     }
 
-    @computed get presentTypes() {
-        const present:{[proteinImpactType:string]:boolean} = {};
-        for (const datum of this.props.dataStore.allData) {
-            present[getProteinImpactType(datum[0].mutationType)] = true;
-        }
-        return present;
-    }
-
-    @computed get buttons() {
+    render() {
         const proteinImpactTypeToCount:{[proteinImpactType:string]:number} = {};
         for (const datum of this.props.dataStore.sortedFilteredData) {
             const type = getProteinImpactType(datum[0].mutationType);
             proteinImpactTypeToCount[type] = proteinImpactTypeToCount[type] || 0;
             proteinImpactTypeToCount[type] += 1;
         }
-        return buttonOrder.reduce((list:MutationTypePanelButton[], type:ProteinImpactType)=>{
-            if (this.presentTypes[type]) {
-                list.push({
-                    label: type[0].toUpperCase() + type.slice(1),
-                    color: this.typeToColor[type],
-                    count: proteinImpactTypeToCount[type] || 0,
-                    onClick: ()=>{
-                        this.props.dataStore.setFilter((d:Mutation[])=>(getProteinImpactType(d[0].mutationType) === type));
-                        this.props.dataStore.filterString = "";
-                    }
-                });
-            }
-            return list;
-        }, []);
-    }
+        return (
+            <table className={styles.mutationTypeTable}>
+                <tr>
+                    <td>
+                        {mutationTypeButton(proteinImpactTypeToCount['missense'], 'Missense', this.props.missenseColor,  ()=>this.handleMutationClick('missense') )}
+                    </td>
+                    <td>
+                        {mutationTypeButton(proteinImpactTypeToCount['truncating'], 'Truncating', this.props.truncatingColor,  ()=>this.handleMutationClick('truncating') )}
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        {mutationTypeButton(proteinImpactTypeToCount['inframe'], 'Inframe', this.props.inframeColor,  ()=>this.handleMutationClick('inframe') )}
+                    </td>
+                    <td>
+                        {mutationTypeButton(proteinImpactTypeToCount['other'], 'Other', this.props.otherColor,  ()=>this.handleMutationClick('other') )}
+                    </td>
+                </tr>
+            </table>
+        )
 
-    render() {
-        return (<MutationTypePanel buttons={this.buttons}/>);
     }
 }

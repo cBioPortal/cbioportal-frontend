@@ -5,6 +5,7 @@ import {LollipopSpec, DomainSpec, SequenceSpec} from "./LollipopPlotNoTooltip";
 import {remoteData} from "../../api/remoteData";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import request from "superagent";
+import classnames from 'classnames';
 import Response = request.Response;
 import {observer} from "mobx-react";
 import {computed, observable, action} from "mobx";
@@ -393,27 +394,31 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
     @computed get controls() {
         return (
             <div>
-                <span className={this.showControls ? styles["fade-in"] : styles["fade-out"]}>
+                <span>
                     <Form inline style={{marginBottom: 0}}>
-                        <FormGroup>
-                            <Button bsSize="sm" onClick={this.handlers.handleSVGClick}>
-                                SVG
-                            </Button>
-                        </FormGroup>
-                        {' '}
-                        <FormGroup>
-                            <Button bsSize="sm" onClick={this.handlers.handlePDFClick}>
-                                PDF
-                            </Button>
-                        </FormGroup>
-                        {'  '}
-                        <FormGroup bsSize="xs">
-                            <InputGroup bsSize="xs">
-                                <InputGroup.Addon className={styles["input-addon"]}>Y-Axis Max:</InputGroup.Addon>
-                                <InputGroup.Addon className={styles["input-addon"]}>{this.countRange[0]}</InputGroup.Addon>
-                                <InputGroup.Addon className={styles["input-addon"]}>
+
+                        <div role="group" className={ classnames('btn-group', (this.showControls ? styles["fade-in"] : styles["fade-out"])) }>
+                            <button className="btn btn-default btn-xs" onClick={this.handlers.handleSVGClick}>
+                                SVG <i className="fa fa-cloud-download" aria-hidden="true"></i>
+                            </button>
+
+
+                            <button className="btn btn-default btn-xs" onClick={this.handlers.handlePDFClick}>
+                                PDF <i className="fa fa-cloud-download" aria-hidden="true"></i>
+                            </button>
+
+
+                            <button className="btn btn-default btn-xs" onClick={this.handlers.handleToggleLegend}>
+                                Legend <i className="fa fa-eye" aria-hidden="true"></i>
+                            </button>
+                        </div>
+
+                        <div className="small" style={{float:'right',display:'flex'}}>
+                                <span>Y-Axis Max:</span>
+                                <span>{this.countRange[0]}</span>
+
                                     <input
-                                        style={{display:"inline-block"}}
+                                        style={{display:"inline-block", width:200, marginLeft:10, marginRight:10}}
                                         type="range"
                                         min={this.countRange[0]}
                                         max={this.countRange[1]}
@@ -421,16 +426,11 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                                         onChange={this.handlers.handleYAxisMaxChange}
                                         value={this.yMax}
                                     />
-                                </InputGroup.Addon>
-                                <InputGroup.Addon className={styles["input-addon"]}>{this.countRange[1]}</InputGroup.Addon>
-                            </InputGroup>
-                        </FormGroup>
+
+                                <span>{this.countRange[1]}</span>
+                        </div>
                         {'  '}
-                        <FormGroup>
-                            <Button bsSize="sm" onClick={this.handlers.handleToggleLegend}>
-                                Legend
-                            </Button>
-                        </FormGroup>
+
                     </Form>
                 </span>
                 <Collapse isOpened={this.legendShown}>
@@ -443,7 +443,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
     render() {
         if (this.props.store.pfamGeneData.isComplete) {
             return ( this.props.store.dataStore.allData.length ? (
-                <div style={{display: "inline-block"}}>
+                <div style={{display: "inline-block"}} onMouseEnter={this.handlers.showControls} onMouseLeave={this.handlers.hideControls}>
                     {this.controls}
                     <LollipopPlot
                         ref={this.handlers.ref}
