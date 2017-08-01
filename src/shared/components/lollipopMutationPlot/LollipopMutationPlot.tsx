@@ -7,7 +7,7 @@ import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicato
 import request from "superagent";
 import classnames from 'classnames';
 import Response = request.Response;
-import {observer} from "mobx-react";
+import {observer, Observer} from "mobx-react";
 import {computed, observable, action} from "mobx";
 import _ from "lodash";
 import {longestCommonStartingSubstring} from "shared/lib/StringUtils";
@@ -18,6 +18,7 @@ import fileDownload from "react-file-download";
 import styles from "./lollipopMutationPlot.module.scss";
 import Collapse from "react-collapse";
 import {MutationMapperStore} from "../../../pages/resultsView/mutation/MutationMapperStore";
+import EditableSpan from "../editableSpan/EditableSpan";
 
 export interface ILollipopMutationPlotProps extends IProteinImpactTypeColors
 {
@@ -324,9 +325,12 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
         super(props);
 
         this.handlers = {
-            handleYAxisMaxChange: action((event:any)=>{
+            handleYAxisMaxSliderChange: action((event:any)=>{
                 let inputValue:string = (event.target as HTMLInputElement).value;
-                this._yMaxInput = parseInt(inputValue, 10);
+                this._yMaxInput = _.clamp(parseInt(inputValue, 10), this.countRange[0], this.countRange[1]);
+            }),
+            handleYAxisMaxChange: action((val:string)=>{
+                this._yMaxInput = _.clamp(parseInt(val, 10), this.countRange[0], this.countRange[1]);
             }),
             handleSVGClick:()=>{
                 fileDownload(this.toSVGDOMNode().outerHTML,`${this.hugoGeneSymbol}_lollipop.svg`);
@@ -415,19 +419,21 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
 
                         <div className="small" style={{float:'right',display:'flex'}}>
                                 <span>Y-Axis Max:</span>
-                                <span>{this.countRange[0]}</span>
-
                                     <input
                                         style={{display:"inline-block", width:200, marginLeft:10, marginRight:10}}
                                         type="range"
                                         min={this.countRange[0]}
                                         max={this.countRange[1]}
                                         step="1"
-                                        onChange={this.handlers.handleYAxisMaxChange}
+                                        onChange={this.handlers.handleYAxisMaxSliderChange}
                                         value={this.yMax}
                                     />
-
-                                <span>{this.countRange[1]}</span>
+                                    <EditableSpan
+                                        className={styles["ymax-number-input"]}
+                                        value={this.yMax + ""}
+                                        setValue={this.handlers.handleYAxisMaxChange}
+                                        numericOnly={true}
+                                    />
                         </div>
                         {'  '}
 
