@@ -17,6 +17,7 @@ import LollipopMutationPlot from "../../../shared/components/lollipopMutationPlo
 import ProteinImpactTypePanel from "../../../shared/components/mutationTypePanel/ProteinImpactTypePanel";
 import ProteinChainPanel from "../../../shared/components/proteinChainPanel/ProteinChainPanel";
 import {computed, action, observable} from "mobx";
+import MutationRateSummary from "pages/resultsView/mutation/MutationRateSummary";
 
 export interface IMutationMapperConfig {
     showCivic?: boolean;
@@ -61,6 +62,26 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
         };
     }
 
+    @computed get mutationRateSummary():JSX.Element|null {
+        if (this.props.store.gene.result &&
+            this.props.store.gene.result.length > 0 &&
+            this.props.store.patientIds.result &&
+            this.props.store.patientIds.result.length > 0 &&
+            this.props.store.mutationData.isComplete &&
+            this.props.store.mutationData.result.length > 0 &&
+            this.props.store.mskImpactGermlineConsentedPatientIds.result &&
+            this.props.store.mskImpactGermlineConsentedPatientIds.isComplete) {
+            return <MutationRateSummary
+                        hugoGeneSymbol={this.props.store.gene.result.hugoGeneSymbol}
+                        mutations={this.props.store.mutationData.result}
+                        patientIds={this.props.store.patientIds.result}
+                        mskImpactGermlineConsentedPatientIds={this.props.store.mskImpactGermlineConsentedPatientIds.result}
+                    />
+        } else {
+            return null;
+        }
+    }
+
     public render() {
         return (
             <div>
@@ -82,6 +103,7 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                 {
                     (this.props.store.mutationData.isComplete && this.props.store.gene.result) && (
                         <div>
+                            {this.mutationRateSummary}
                             <LollipopMutationPlot
                                 store={this.props.store}
                                 onXAxisOffset={this.handlers.onXAxisOffset}
