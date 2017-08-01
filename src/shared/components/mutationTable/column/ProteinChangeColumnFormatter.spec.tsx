@@ -1,5 +1,6 @@
 import {assert} from "chai";
 import ProteinChangeColumnFormatter from "./ProteinChangeColumnFormatter";
+import DefaultTooltip from "shared/components/DefaultTooltip";
 import styles from './proteinChange.module.scss';
 import {initMutation} from "test/MutationMockUtils";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
@@ -19,8 +20,14 @@ describe('ProteinChangeColumnFormatter', () => {
         mutationStatus: "Somatic"
     });
 
+    const mutationWithLongProteinChangeValue:Mutation = initMutation({
+        proteinChange: "this_is_a_protein_change_with_more_than_20_chars",
+        mutationStatus: "Somatic"
+    });
+
     let germlineComponent: ReactWrapper<any, any>;
     let somaticComponent:ReactWrapper<any, any>;
+    let longProteinChangeComponent:ReactWrapper<any, any>;
 
     before(() => {
         let data = [germlineMutation];
@@ -32,6 +39,9 @@ describe('ProteinChangeColumnFormatter', () => {
 
         // mount a single cell component (Td) for a somatic mutation
         somaticComponent = mount(ProteinChangeColumnFormatter.renderWithMutationStatus(data));
+
+        data = [mutationWithLongProteinChangeValue];
+        longProteinChangeComponent = mount(ProteinChangeColumnFormatter.renderWithMutationStatus(data));
     });
 
     it('renders protein change display value', () => {
@@ -43,6 +53,17 @@ describe('ProteinChangeColumnFormatter', () => {
             'Somatic mutation should have the protein change value');
         assert.isTrue(somaticComponent.find(`.${styles.proteinChange}`).text().indexOf("Q616L") > -1,
             'Protein change value for somatic mutation is correct');
+        assert.isTrue(longProteinChangeComponent.find(`.${styles.proteinChange}`).text().indexOf("this_is_a_protein_change_with_more_than_20_chars") === -1,
+            'Long protein change values should be truncated');
+    });
+
+    it('adds tooltip for long protein change values', () => {
+        assert.isFalse(germlineComponent.find(DefaultTooltip).exists(),
+            'Tooltip should not exists for short values (Q616K)');
+        assert.isFalse(somaticComponent.find(DefaultTooltip).exists(),
+            'Tooltip should not exists for short values (Q616L)');
+        assert.isTrue(longProteinChangeComponent.find(DefaultTooltip).exists(),
+            'Tooltip should exist for long values');
     });
 
     it('renders germline indicator', () => {
