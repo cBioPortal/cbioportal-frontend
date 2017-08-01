@@ -101,8 +101,8 @@ describe('cross cancer query', function() {
         var checkBoxes = $$('[data-test="StudySelect"]');
         
         checkBoxes.forEach(function (checkBox, i) {
-            // select a tenth of existing studies
-            if (i % 10 === 0) {
+            // select a proportion of existing studies
+            if (i % 20 === 0) {
                 checkBox.click();
             }
         });
@@ -118,5 +118,49 @@ describe('cross cancer query', function() {
         // check if TP53 is in the title of the bar chart
         var text = browser.getText('.cctitle')
         assert(text.search('TP53') > -1);
+    });
+});
+
+describe('single study query', function() {
+    describe('mutation mapper ', function() {
+        it('should show somatic and germline mutation rate', function() {
+            browser.url(`${CBIOPORTAL_URL}`);
+
+            var input = $(".autosuggest input[type=text]");
+
+            input.waitForExist(10000); 
+
+            input.setValue('ovarian nature 2011');
+            
+            browser.pause(500);
+
+            // should only be one element
+            assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
+
+            var checkBox = $('[data-test="StudySelect"]');
+
+            checkBox.waitForExist(10000);
+            
+            browser.click('[data-test="StudySelect"]');
+
+            // query BRCA1 and BRCA2
+            $('[data-test="geneSet"]').setValue('BRCA1 BRCA2');
+
+            browser.waitForEnabled('[data-test="queryButton"]', 30000);
+            browser.click('[data-test="queryButton"]');
+
+            // click mutations tab
+            $('#mutation-result-tab').waitForExist(30000);
+            $('#mutation-result-tab').click();
+
+            $('[data-test="germlineMutationRate"]').waitForExist(60000);
+            var text = browser.getText('[data-test="germlineMutationRate"]')
+            // check germline mutation rate
+            assert(text.search('8.2%' > -1));
+            // check somatic mutation 
+            var text = browser.getText('[data-test="somaticMutationRate"]')
+            assert(text.search('3.5%' > -1));
+
+        });
     });
 });
