@@ -4,7 +4,7 @@ import {
     ProteinImpactType, getProteinImpactTypeFromCanonical
 } from "./getCanonicalMutationType";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
-import {GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
+import {MUTATION_STATUS_GERMLINE, GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
 import {findFirstMostCommonElt} from "./findFirstMostCommonElt";
 
 export interface IProteinImpactTypeColors
@@ -125,4 +125,58 @@ export function getProteinStartPositionsByRange(data: Mutation[][], start: numbe
     });
 
     return _.uniq(positions);
+}
+
+/**
+ * Percentage of cases/patients with a germline mutation in given gene.
+ * Assumes all given patient ids in the study had germline screening for all
+ * genes (TODO: use gene panel).
+ */
+export function germlineMutationRate(hugoGeneSymbol:string,
+                                     mutations: Mutation[],
+                                     patientIds: string[])
+{
+    if (mutations.length > 0 && patientIds.length > 0) {
+        const nrCasesGermlineMutation:number =
+            _.chain(mutations)
+            .filter((m:Mutation) => (
+                m.gene.hugoGeneSymbol === hugoGeneSymbol &&
+                m.mutationStatus === MUTATION_STATUS_GERMLINE &&
+                // filter for given patient IDs
+                patientIds.indexOf(m.patientId) > -1
+            ))
+            .map('patientId')
+            .uniq()
+            .value()
+            .length;
+        return nrCasesGermlineMutation * 100.0 / patientIds.length;
+    } else {
+        return 0;
+    }
+}
+
+/**
+ * Percentage of cases/patients with a somatic mutation in given gene.
+ */
+export function somaticMutationRate(hugoGeneSymbol: string,
+                                    mutations: Mutation[],
+                                    patientIds: string[]) {
+    if (mutations.length > 0 && patientIds.length > 0) {
+       return (
+           _.chain(mutations)
+            .filter((m:Mutation) => (
+                m.gene.hugoGeneSymbol === hugoGeneSymbol &&
+                m.mutationStatus !== MUTATION_STATUS_GERMLINE &&
+                // filter for given patient IDs
+                patientIds.indexOf(m.patientId) > -1
+            ))
+           .map('patientId')
+           .uniq()
+           .value()
+           .length * 100.0 /
+           patientIds.length
+       );
+   } else {
+       return 0;
+   }
 }
