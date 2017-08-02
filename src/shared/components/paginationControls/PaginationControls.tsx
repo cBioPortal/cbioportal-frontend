@@ -5,6 +5,7 @@ import { If, Then, Else } from 'react-if';
 import {observable} from "mobx";
 import {observer} from "mobx-react";
 import classNames from 'classnames';
+import EditableSpan from "../editableSpan/EditableSpan";
 
 export const SHOW_ALL_PAGE_SIZE = -1;
 
@@ -65,21 +66,16 @@ export class PaginationControls extends React.Component<IPaginationControlsProps
     constructor(props:IPaginationControlsProps) {
         super(props);
         this.handleChangeItemsPerPage = this.handleChangeItemsPerPage.bind(this);
-        this.handleChangeCurrentPage = this.handleChangeCurrentPage.bind(this);
-        this.handleOnBlur = this.handleOnBlur.bind(this);
+        this.jumpToPage = this.jumpToPage.bind(this);
         this.handleShowMore = this.handleShowMore.bind(this);
         this.getSectionBetweenPaginationButtons = this.getSectionBetweenPaginationButtons.bind(this);
     }
 
-    private pageNumberInput: HTMLSpanElement;
-
-    private jumpToPage() {
+    private jumpToPage(p:string) {
 
         if (this.props.onChangeCurrentPage) {
-            this.props.onChangeCurrentPage(parseInt(this.pageNumberInput.innerText, 10));
+            this.props.onChangeCurrentPage(parseInt(p, 10));
         }
-
-        this.pageNumberInput.innerText = (this.props.currentPage as number).toString();
     }
 
     handleChangeItemsPerPage(evt:React.FormEvent<HTMLSelectElement>) {
@@ -99,36 +95,6 @@ export class PaginationControls extends React.Component<IPaginationControlsProps
         }
     }
 
-    handleChangeCurrentPage(evt:React.KeyboardEvent<HTMLSpanElement>) {
-
-        const newKey = evt.key;
-
-        if (newKey === "Enter") {
-            evt.preventDefault();
-            evt.currentTarget.blur();
-            return;
-        }
-
-        if (evt.currentTarget.innerText.length === MAX_DIGITS) {
-            evt.preventDefault();
-            return;
-        }
-
-        const regex = /^\d$/;
-        if(!regex.test(newKey)) {
-            evt.preventDefault();
-        }
-    }
-
-    handleOnBlur(evt:React.FocusEvent<HTMLSpanElement>) {
-
-        if (evt.currentTarget.innerText.length > 0) {
-            this.jumpToPage();
-        } else {
-            evt.currentTarget.innerText = (this.props.currentPage as number).toString();
-        }
-    }
-
     private getSectionBetweenPaginationButtons() {
         if (this.props.showMoreButton) {
             return (
@@ -142,15 +108,13 @@ export class PaginationControls extends React.Component<IPaginationControlsProps
                         className={"btn btn-default textBetweenButtons disabled" + styles["default-cursor"]}
                     >
                         <If condition={this.props.pageNumberEditable}>
-                            <span
-                                ref={input => this.pageNumberInput = input}
+                            <EditableSpan
                                 className={styles["page-number-input"]}
-                                contentEditable={true}
-                                onKeyPress={this.handleChangeCurrentPage as React.KeyboardEventHandler<any>}
-                                onBlur={this.handleOnBlur as React.FocusEventHandler<any>}
-                            >
-                                {this.props.currentPage}
-                            </span>
+                                value={this.props.currentPage + ""}
+                                setValue={this.jumpToPage}
+                                maxChars={MAX_DIGITS}
+                                numericOnly={true}
+                            />
                         </If>
                         {this.props.textBetweenButtons}
                     </span>
