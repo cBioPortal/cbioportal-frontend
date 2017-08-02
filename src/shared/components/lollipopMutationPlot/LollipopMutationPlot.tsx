@@ -30,11 +30,16 @@ export interface ILollipopMutationPlotProps extends IProteinImpactTypeColors
 @observer
 export default class LollipopMutationPlot extends React.Component<ILollipopMutationPlotProps, {}> {
 
-    @observable private showControls:boolean = true;
+    @observable private mouseInPlot:boolean = true;
     @observable private _yMaxInput:number;
     @observable private legendShown:boolean = false;
+    @observable private yMaxInputFocused:boolean = false;
     private plot:LollipopPlot;
     private handlers:any;
+
+    @computed private get showControls(): boolean {
+        return (this.yMaxInputFocused || this.mouseInPlot);
+    }
 
     readonly mutationAlignerLinks = remoteData<{[pfamAccession:string]:string}>({
         await: ()=>[
@@ -338,11 +343,17 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
             handlePDFClick:()=>{
                 this.downloadAsPDF(`${this.hugoGeneSymbol}_lollipop.pdf`)
             },
+            onYMaxInputFocused:()=>{
+                this.yMaxInputFocused = true;
+            },
+            onYMaxInputBlurred:()=>{
+                this.yMaxInputFocused = false;
+            },
             handleToggleLegend: action(()=>{
                 this.legendShown = !this.legendShown;
             }),
-            showControls: action(()=>{ this.showControls = true;}),
-            hideControls: action(()=>{ this.showControls = false;}),
+            onMouseEnterPlot: action(()=>{ this.mouseInPlot = true;}),
+            onMouseLeavePlot: action(()=>{ this.mouseInPlot = false;}),
             ref: (plot:LollipopPlot)=>{ this.plot = plot; },
         };
     }
@@ -433,6 +444,8 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                                         value={this.yMax + ""}
                                         setValue={this.handlers.handleYAxisMaxChange}
                                         numericOnly={true}
+                                        onFocus={this.handlers.onYMaxInputFocused}
+                                        onBlur={this.handlers.onYMaxInputBlurred}
                                     />
                         </div>
                         {'  '}
@@ -449,7 +462,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
     render() {
         if (this.props.store.pfamGeneData.isComplete && this.props.store.pfamGeneData.result) {
             return (
-                <div style={{display: "inline-block"}} onMouseEnter={this.handlers.showControls} onMouseLeave={this.handlers.hideControls}>
+                <div style={{display: "inline-block"}} onMouseEnter={this.handlers.onMouseEnterPlot} onMouseLeave={this.handlers.onMouseLeavePlot}>
                     {this.controls}
                     <LollipopPlot
                         ref={this.handlers.ref}
