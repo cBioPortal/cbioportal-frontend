@@ -18,7 +18,6 @@ describe('MutationAssessorColumnFormatter', () => {
             linkXvar: "http://mutationassessor.org/r2/?cm=var&var=hg19,0,0,X,X"
         }),
         initMutation({
-
             functionalImpactScore: "H",
             fisValue: 3.8,
             linkPdb: null,
@@ -149,8 +148,8 @@ describe('MutationAssessorColumnFormatter', () => {
             "M(null) should rank higher than M(2.2)");
         assert.isAbove(sortedMutations.indexOf(mutations[2]), sortedMutations.indexOf(mutations[4]),
             "M(null) should rank higher than L(0.7)");
-        assert.isAbove(sortedMutations.indexOf(mutations[4]), sortedMutations.indexOf(mutations[5]),
-            "L(0.7) should rank higher than Unknown(null)");
+        assert.isBelow(sortedMutations.indexOf(mutations[4]), sortedMutations.indexOf(mutations[5]),
+            "L(0.7) should rank lower than Unknown(null)");
     });
 
     after(() => {
