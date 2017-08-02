@@ -7,7 +7,7 @@ import {computed} from 'mobx';
 import {FlexCol, FlexRow} from "../flexbox/FlexBox";
 import {QueryStore, QueryStoreComponent, CUSTOM_CASE_LIST_ID} from "./QueryStore";
 import {getStudyViewUrl} from "../../api/urls";
-import DefaultTooltip from "../DefaultTooltip";
+import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
 import SectionHeader from "../sectionHeader/SectionHeader";
 import {ReactSelectOption} from "react-select";
 

@@ -1,4 +1,4 @@
-import DefaultTooltip from "shared/components/DefaultTooltip";
+import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import MutationStatusColumnFormatter from './MutationStatusColumnFormatter';
 import styles from './mutationStatus.module.scss';
 import {initMutation} from "test/MutationMockUtils";
