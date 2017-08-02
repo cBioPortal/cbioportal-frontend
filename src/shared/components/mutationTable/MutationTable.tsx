@@ -298,6 +298,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
 
         this._columns[MutationTableColumnType.MUTATION_STATUS] = {
             name: "MS",
+            tooltip: (<span>Mutation Status</span>),
             render: MutationStatusColumnFormatter.renderFunction,
             download: MutationStatusColumnFormatter.download,
             sortBy: MutationStatusColumnFormatter.sortValue,
@@ -308,6 +309,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
 
         this._columns[MutationTableColumnType.VALIDATION_STATUS] = {
             name: "VS",
+            tooltip: (<span>Validation Status</span>),
             render: ValidationStatusColumnFormatter.renderFunction,
             download: ValidationStatusColumnFormatter.download,
             sortBy: ValidationStatusColumnFormatter.sortValue,
