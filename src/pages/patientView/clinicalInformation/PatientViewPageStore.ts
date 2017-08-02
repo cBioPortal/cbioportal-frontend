@@ -36,7 +36,8 @@ import {
     findUncalledMutationGeneticProfileId, mergeMutationsIncludingUncalled, fetchGisticData, fetchCopyNumberData,
     fetchMutSigData, findMrnaRankGeneticProfileId, mergeDiscreteCNAData, fetchSamplesForPatient, fetchClinicalData,
     fetchCopyNumberSegments, fetchClinicalDataForPatient, makeStudyToCancerTypeMap,
-    fetchCivicGenes, fetchCnaCivicGenes, fetchCivicVariants, groupByEntityId
+    fetchCivicGenes, fetchCnaCivicGenes, fetchCivicVariants, groupByEntityId, findSamplesWithoutCancerTypeClinicalData,
+    fetchStudiesForSamplesWithoutCancerTypeClinicalData
 } from "shared/lib/StoreUtils";
 
 type PageMode = 'patient' | 'sample';
@@ -187,6 +188,21 @@ export class PatientViewPageStore {
         async() => fetchSamplesForPatient(this.studyId, this._patientId, this.sampleId),
         []
     );
+
+    readonly samplesWithoutCancerTypeClinicalData = remoteData({
+        await: () => [
+            this.samples,
+            this.clinicalDataForSamples
+        ],
+        invoke: async () => findSamplesWithoutCancerTypeClinicalData(this.samples, this.clinicalDataForSamples)
+    }, []);
+
+    readonly studiesForSamplesWithoutCancerTypeClinicalData = remoteData({
+        await: () => [
+            this.samplesWithoutCancerTypeClinicalData
+        ],
+        invoke: async () => fetchStudiesForSamplesWithoutCancerTypeClinicalData(this.samplesWithoutCancerTypeClinicalData)
+    }, []);
 
     readonly studies = remoteData({
         invoke: async()=>([await client.getStudyUsingGET({studyId: this.studyId})])
@@ -435,6 +451,7 @@ export class PatientViewPageStore {
             this.mutationData,
             this.uncalledMutationData,
             this.clinicalDataForSamples,
+            this.studiesForSamplesWithoutCancerTypeClinicalData,
             this.studies
         ],
         invoke: async() => fetchOncoKbData(this.sampleIdToTumorType, this.mutationData, this.uncalledMutationData),
@@ -533,8 +550,8 @@ export class PatientViewPageStore {
 
     @computed get sampleIdToTumorType(): {[sampleId: string]: string} {
         return generateSampleIdToTumorTypeMap(this.clinicalDataForSamples,
-            this.studyToCancerType[this.studyId],
-            this.samples);
+            this.studiesForSamplesWithoutCancerTypeClinicalData,
+            this.samplesWithoutCancerTypeClinicalData);
     }
 
     @action("SetSampleId") setSampleId(newId: string) {
