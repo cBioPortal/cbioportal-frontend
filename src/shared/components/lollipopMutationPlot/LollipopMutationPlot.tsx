@@ -307,8 +307,8 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
         if (this.lollipops.length === 0) {
             return [0,0];
         } else {
-            let max = Number.NEGATIVE_INFINITY;
-            let min = Number.POSITIVE_INFINITY;
+            let max = 5;
+            let min = 1;
             for (const lollipop of this.lollipops) {
                 max = Math.max(max, lollipop.count);
                 min = Math.min(min, lollipop.count);
@@ -348,7 +348,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
     }
 
     @computed get yMax() {
-        return this._yMaxInput || this.countRange[1];
+        return Math.min(this.countRange[1], this._yMaxInput || this.countRange[1]);
     }
 
     private get legend() {
