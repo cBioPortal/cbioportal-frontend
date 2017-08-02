@@ -1,3 +1,4 @@
+import * as _ from "lodash";
 import {
     Mutation, MutationFilter, Gene, ClinicalData
 } from "shared/api/generated/CBioPortalAPI";
@@ -134,7 +135,14 @@ export class MutationMapperStore {
         ],
         invoke: async() => {
             if (this.gene.result) {
-                return fetchSwissProtAccession(this.gene.result.entrezGeneId);
+                const accession:string|string[] = await fetchSwissProtAccession(this.gene.result.entrezGeneId);
+
+                if (_.isArray(accession)) {
+                    return accession[0];
+                }
+                else {
+                    return accession;
+                }
             }
             else {
                 return "";
