@@ -28,22 +28,24 @@ export default class MutationAssessorColumnFormatter
             m: {label: "Medium", className: "oma-medium", priority: 3},
             l: {label: "Low", className: "oma-low", priority: 2},
             n: {label: "Neutral", className: "oma-neutral", priority: 1},
-            na: {label: "NA", className: "oma-na", priority: 0},
+            na: {label: "", className: "oma-na", priority: 0},
         };
     }
 
     public static getSortValue(d:Mutation[]):(number|null)[]
     {
-        // If data is missing, it returns undefined. For the way the table works, we map this to null.
         let score:number|undefined = MutationAssessorColumnFormatter.getData(d).score;
         let returnScore:number|null;
-        if (score === undefined) {
+
+        // If data is missing, it returns undefined. For the way the table works, we map this to null.
+        if (score === undefined || score === 0) {
             returnScore = null;
         } else {
             returnScore = score;
         }
+
         const format = MutationAssessorColumnFormatter.getMapEntry(d);
-        const priority = format ? format.priority : -1;
+        const priority = format && format.priority > 0 ? format.priority : null;
 
         return [priority, returnScore];
     }
@@ -68,9 +70,9 @@ export default class MutationAssessorColumnFormatter
         if (entry) {
             return entry.label;
         }
-        // if no mapped value, then return the text value as is
+        // if no mapped value, then just return empty text
         else {
-            return MutationAssessorColumnFormatter.getTextValue(data);
+            return "";
         }
     }
 
@@ -230,9 +232,7 @@ export default class MutationAssessorColumnFormatter
 
         // ignore invalid links ("", "NA", "Not Available")
         if (link &&
-            link.length > 0 &&
-            link.toLowerCase() !== "na" &&
-            link.toLowerCase().indexOf("not available") === -1)
+            MutationAssessorColumnFormatter.isValidValue(link))
         {
             // getma.org is the legacy link, need to replace it with the actual value
             url = link.replace("getma.org", "mutationassessor.org/r2");
@@ -249,8 +249,6 @@ export default class MutationAssessorColumnFormatter
 
     public static renderFunction(data:Mutation[])
     {
-        const NA:string = MutationAssessorColumnFormatter.MA_SCORE_MAP["na"].label;
-
         const text:string = MutationAssessorColumnFormatter.getDisplayValue(data);
         const fisClass:string = MutationAssessorColumnFormatter.getScoreClassName(data);
         const maClass:string = MutationAssessorColumnFormatter.getMaClassName(data);
@@ -260,7 +258,7 @@ export default class MutationAssessorColumnFormatter
         );
 
         // add tooltip for valid values
-        if (text.length > 0 && text !== NA)
+        if (MutationAssessorColumnFormatter.isValidValue(text))
         {
             const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
             const tooltipContent = MutationAssessorColumnFormatter.getTooltipContent(data);
@@ -274,5 +272,13 @@ export default class MutationAssessorColumnFormatter
         }
 
         return content;
+    }
+
+    public static isValidValue(value: string) {
+        return (
+            value.length > 0 &&
+            value.toLowerCase() !== "na" &&
+            value.toLowerCase().indexOf("not available") === -1
+        );
     }
 }
