@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {If, Else, Then} from 'react-if';
+import classNames from 'classnames';
 import {observer} from "mobx-react";
 import {computed} from "mobx";
 import DefaultTooltip from "./DefaultTooltip";
@@ -7,6 +7,7 @@ import DefaultTooltip from "./DefaultTooltip";
 export interface ITruncatedTextProps
 {
     text: string;
+    className?: string;
     maxLength?: number; // max allowed length of the text
     buffer?: number;    // buffer length before considering truncating the text
     suffix?: string;    // will be added to the end of the text if truncated
@@ -45,7 +46,10 @@ export default class TruncatedText extends React.Component<ITruncatedTextProps, 
     public render()
     {
         let content = (
-            <span style={{whiteSpace: "nowrap"}}>
+            <span
+                style={{whiteSpace: "nowrap"}}
+                className={classNames(this.props.className)}
+            >
                 {this.truncatedText}
             </span>
         );
