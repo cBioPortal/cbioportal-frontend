@@ -1,4 +1,4 @@
-import DefaultTooltip from "shared/components/DefaultTooltip";
+import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import ValidationStatusColumnFormatter from './ValidationStatusColumnFormatter';
 import styles from './validationStatus.module.scss';
 import {initMutation} from "test/MutationMockUtils";

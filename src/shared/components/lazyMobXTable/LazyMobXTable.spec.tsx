@@ -4,7 +4,7 @@ import {shallow, mount, ReactWrapper} from 'enzyme';
 import sinon from 'sinon';
 import {lazyMobXTableSort, default as LazyMobXTable, Column} from "./LazyMobXTable";
 import SimpleTable from "../simpleTable/SimpleTable";
-import DefaultTooltip from "../DefaultTooltip";
+import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
 import expect from 'expect';
 import expectJSX from 'expect-jsx';
 import lolex from "lolex";
