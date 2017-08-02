@@ -219,12 +219,15 @@ export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotN
     }
 
     private calculateTicks(tickInterval:number, rangeSize:number, labelEvenTicks:boolean) {
-        const ret = [];
+        const ret: {position: number, label: string|undefined}[] = [];
         let nextTick = tickInterval;
         while (nextTick < rangeSize) {
-            let label = undefined;
+            let label: string|undefined = undefined;
+
+            // add label only for the even ticks
+            // but do not add label if it is too close to the end value
             if (labelEvenTicks
-                && (rangeSize - nextTick > tickInterval / 3)
+                && (rangeSize - nextTick > (2*tickInterval) / 3)
                 && (nextTick % (2*tickInterval) === 0)) {
                 label = nextTick + "";
             }
