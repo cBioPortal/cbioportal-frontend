@@ -103,35 +103,49 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                 {
                     (this.props.store.mutationData.isComplete && this.props.store.gene.result) && (
                         <div>
-                            {this.mutationRateSummary}
-                            <LollipopMutationPlot
-                                store={this.props.store}
-                                onXAxisOffset={this.handlers.onXAxisOffset}
-                                geneWidth={this.geneWidth}
-                                {...DEFAULT_PROTEIN_IMPACT_TYPE_COLORS}
-                            />
-                            <ButtonGroup style={{display: "inline-block", verticalAlign: "baseline", paddingBottom: 30}}>
-                                <Button
-                                    className="btn-default btn-sm"
-                                    disabled={this.props.store.pdbChainDataStore.allData.length === 0}
-                                    onClick={this.toggle3dPanel}
-                                >
-                                    3D Structure <i className="fa fa-angle-double-right" aria-hidden="true"></i>
-                                </Button>
-                            </ButtonGroup>
-                            <ProteinChainPanel
-                                store={this.props.store}
-                                pdbHeaderCache={this.props.pdbHeaderCache}
-                                geneWidth={this.geneWidth}
-                                geneXOffset={this.lollipopPlotGeneX}
-                                maxChainsHeight={200}
-                            />
-                            <div style={{marginLeft:"45px", marginTop:"5px", marginBottom:"10px"}}>
-                                <ProteinImpactTypePanel
-                                    dataStore={this.props.store.dataStore}
-                                    {...DEFAULT_PROTEIN_IMPACT_TYPE_COLORS}
-                                />
+                            <LoadingIndicator isLoading={this.props.store.pfamGeneData.isPending} />
+                            { (!this.props.store.pfamGeneData.isPending) && (
+                            <div style={{ display:'flex' }}>
+                                <div className="borderedChart" style={{ marginRight:10 }}>
+
+                                    <LollipopMutationPlot
+                                        store={this.props.store}
+                                        onXAxisOffset={this.handlers.onXAxisOffset}
+                                        geneWidth={this.geneWidth}
+                                        {...DEFAULT_PROTEIN_IMPACT_TYPE_COLORS}
+                                    />
+                                    <ProteinChainPanel
+                                        store={this.props.store}
+                                        pdbHeaderCache={this.props.pdbHeaderCache}
+                                        geneWidth={this.geneWidth}
+                                        geneXOffset={this.lollipopPlotGeneX}
+                                        maxChainsHeight={200}
+                                    />
+                                </div>
+
+                                <div>
+
+                                    {this.mutationRateSummary}
+
+                                    <div>
+                                        <ProteinImpactTypePanel
+                                            dataStore={this.props.store.dataStore}
+                                            {...DEFAULT_PROTEIN_IMPACT_TYPE_COLORS}
+                                        />
+                                    </div>
+
+                                    <button
+                                        className="btn btn-default btn-sm"
+                                        disabled={this.props.store.pdbChainDataStore.allData.length === 0}
+                                        onClick={this.toggle3dPanel}
+                                    >
+                                        View 3D Structure
+                                    </button>
+                                </div>
                             </div>
+                            ) }
+                            <hr style={{ marginTop:20 }} />
+
                             {!this.props.store.dataStore.showingAllData &&
                                 (<div style={{
                                     marginTop:"5px",
@@ -172,7 +186,7 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                                     enableCivic={this.props.config.showCivic}
                                 />
                             )}
-                    </div>
+                        </div>
                     )
                 }
             </div>
