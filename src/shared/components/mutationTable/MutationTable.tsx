@@ -17,23 +17,24 @@ import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter"
 import MutationTypeColumnFormatter from "./column/MutationTypeColumnFormatter";
 import MutationAssessorColumnFormatter from "./column/MutationAssessorColumnFormatter";
 import CosmicColumnFormatter from "./column/CosmicColumnFormatter";
+import MutationCountColumnFormatter from "./column/MutationCountColumnFormatter";
+import CancerTypeColumnFormatter from "./column/CancerTypeColumnFormatter";
+import MutationStatusColumnFormatter from "./column/MutationStatusColumnFormatter";
+import ValidationStatusColumnFormatter from "./column/ValidationStatusColumnFormatter";
 import {ICosmicData} from "shared/model/Cosmic";
 import AnnotationColumnFormatter from "./column/AnnotationColumnFormatter";
 import {IMyCancerGenomeData} from "shared/model/MyCancerGenome";
 import {IHotspotData} from "shared/model/CancerHotspots";
 import {IOncoKbDataWrapper} from "shared/model/OncoKB";
-import {ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
+import {ICivicVariant, ICivicGene} from "shared/model/Civic";
 import {IMutSigData} from "shared/model/MutSig";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import MrnaExprRankCache from "shared/cache/MrnaExprRankCache";
 import VariantCountCache from "shared/cache/VariantCountCache";
 import PubMedCache from "shared/cache/PubMedCache";
-import MutationCountCache from "../../cache/MutationCountCache";
-import MutationCountColumnFormatter from "./column/MutationCountColumnFormatter";
-import CancerTypeColumnFormatter from "./column/CancerTypeColumnFormatter";
-import MutationStatusColumnFormatter from "./column/MutationStatusColumnFormatter";
-import {IMobXApplicationDataStore} from "../../lib/IMobXApplicationDataStore";
+import MutationCountCache from "shared/cache/MutationCountCache";
+import {IMobXApplicationDataStore} from "shared/lib/IMobXApplicationDataStore";
 
 export interface IMutationTableProps {
     studyId?:string;
@@ -307,9 +308,9 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
 
         this._columns[MutationTableColumnType.VALIDATION_STATUS] = {
             name: "VS",
-            render: (d:Mutation[])=>getSpanForDataField(d, "validationStatus"),
-            download: (d:Mutation[])=>getTextForDataField(d, "validationStatus"),
-            sortBy:(d:Mutation[])=>d.map(m=>m.validationStatus),
+            render: ValidationStatusColumnFormatter.renderFunction,
+            download: ValidationStatusColumnFormatter.download,
+            sortBy: ValidationStatusColumnFormatter.sortValue,
             filter: (d:Mutation[], filterString:string, filterStringUpper:string) =>
                 defaultFilter(d, "validationStatus", filterStringUpper),
             visible: false
