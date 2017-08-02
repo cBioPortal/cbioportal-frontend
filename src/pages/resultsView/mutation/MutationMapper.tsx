@@ -62,6 +62,16 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
         };
     }
 
+    @computed get geneSummary():JSX.Element {
+        return (
+            <div>
+                {this.props.store.gene.result && this.props.store.gene.result.length > 0 && (
+                    <h4>{this.props.store.gene.result.hugoGeneSymbol}</h4>
+                )}
+            </div>
+        );
+    }
+
     @computed get mutationRateSummary():JSX.Element|null {
         if (this.props.store.gene.result &&
             this.props.store.gene.result.length > 0 &&
@@ -124,6 +134,7 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                                 </div>
 
                                 <div>
+                                    {this.geneSummary}
 
                                     {this.mutationRateSummary}
 

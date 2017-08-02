@@ -27,8 +27,6 @@ export default class MutationRateSummary extends React.Component<IMutationRateSu
 
         return (
             <div>
-                <h4>{this.props.hugoGeneSymbol}</h4>
-
                 <div data-test="somaticMutationRate">
                 <label>Somatic Mutation Frequency:</label>&nbsp;
                 {somaticMutationRate(this.props.hugoGeneSymbol,
