@@ -441,8 +441,8 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
     }
 
     render() {
-        if (this.props.store.pfamGeneData.isComplete) {
-            return ( this.props.store.dataStore.allData.length ? (
+        if (this.props.store.pfamGeneData.isComplete && this.props.store.pfamGeneData.result) {
+            return (
                 <div style={{display: "inline-block"}} onMouseEnter={this.handlers.showControls} onMouseLeave={this.handlers.hideControls}>
                     {this.controls}
                     <LollipopPlot
@@ -458,9 +458,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                         onXAxisOffset={this.props.onXAxisOffset}
                     />
                 </div>
-            ) : (
-                <div>There are no {this.hugoGeneSymbol} mutations in the selected samples.<br/></div>
-            ));
+            );
         } else {
             return (<LoadingIndicator isLoading={true}/>);
         }
