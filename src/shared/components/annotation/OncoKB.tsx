@@ -2,7 +2,7 @@ import * as React from "react";
 import {Modal} from "react-bootstrap";
 import {observer} from "mobx-react";
 import {Circle} from "better-react-spinkit";
-import DefaultTooltip from "shared/components/DefaultTooltip";
+import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import annotationStyles from "./styles/annotation.module.scss";
 import oncogenicIconStyles from "./styles/oncogenicIcon.module.scss";
 import {IndicatorQueryResp, Query} from "shared/api/generated/OncoKbAPI";

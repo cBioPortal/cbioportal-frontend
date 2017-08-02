@@ -1,5 +1,5 @@
 import {default as TruncatedText, truncateText} from "./TruncatedText";
-import DefaultTooltip from "shared/components/DefaultTooltip";
+import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import React from 'react';
 import { assert } from 'chai';
 import {shallow, mount, ReactWrapper} from 'enzyme';

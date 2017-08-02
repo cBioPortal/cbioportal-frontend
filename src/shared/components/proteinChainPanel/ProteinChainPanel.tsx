@@ -5,7 +5,7 @@ import {observer} from "mobx-react";
 import {computed, observable, action, IReactionDisposer, reaction} from "mobx";
 import {ProteinChainSpec} from "./ProteinChainView";
 import Collapse from "react-collapse";
-import DefaultTooltip from "shared/components/DefaultTooltip";
+import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import {HitZone} from "../HitZone";
 import ProteinChain from "./ProteinChain";
 import {MutationMapperStore} from "../../../pages/resultsView/mutation/MutationMapperStore";
