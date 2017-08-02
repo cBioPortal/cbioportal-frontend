@@ -8,7 +8,7 @@ import {observer} from "mobx-react";
 import Draggable from 'react-draggable';
 import fileDownload from 'react-file-download';
 import classnames from 'classnames';
-import DefaultTooltip from "shared/components/DefaultTooltip";
+import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import PdbHeaderCache from "shared/cache/PdbHeaderCache";
 import PdbPositionMappingCache from "shared/cache/PdbPositionMappingCache";
 import {PdbUniprotResidueMapping} from "shared/api/generated/PdbAnnotationAPI";
