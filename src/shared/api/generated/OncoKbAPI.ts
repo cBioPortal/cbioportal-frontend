@@ -92,8 +92,6 @@ export type Alteration = {
 
         'refResidues': string
 
-        'uniqueId': string
-
         'variantResidues': string
 
 };
@@ -381,6 +379,22 @@ export type EvidenceQueries = {
         'queries': Array < Query >
 
         'source': string
+
+};
+export type VariantSearchQuery = {
+    'consequence': string
+
+        'entrezGeneId': number
+
+        'hugoSymbol': string
+
+        'proteinEnd': number
+
+        'proteinStart': number
+
+        'variant': string
+
+        'variantType': string
 
 };
 export type ClinicalTrial = {
@@ -2156,6 +2170,71 @@ export default class OncoKbAPI {
                 }
 
                 request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    variantsLookupPostUsingPOSTURL(parameters: {
+        'body': Array < VariantSearchQuery > ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/variants/lookup';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Search for variants.
+     * @method
+     * @name OncoKbAPI#variantsLookupPostUsingPOST
+     * @param {} body - List of queries.
+     */
+    variantsLookupPostUsingPOST(parameters: {
+            'body': Array < VariantSearchQuery > ,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < Array < {} >
+        >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/variants/lookup';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                if (parameters['body'] !== undefined) {
+                    body = parameters['body'];
+                }
+
+                if (parameters['body'] === undefined) {
+                    reject(new Error('Missing required  parameter: body'));
+                    return;
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
 
             }).then(function(response: request.Response) {
                 return response.body;
