@@ -165,7 +165,6 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
                 >
                     {this.navTabs(children, effectiveActiveTab)}
                     <div className="tab-content">{arr}</div>
-                    <ReactResizeDetector handleWidth={true} onResize={this.initOnResize.bind(this)()} />
                 </div>
             );
         } else {
@@ -217,6 +216,9 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
                 {prev}
                 {pages[this.state.currentPage - 1]}
                 {next}
+                {this.props.enablePagination && (
+                    <ReactResizeDetector handleWidth={true} onResize={this.initOnResize.bind(this)()} />
+                )}
             </ul>
         );
     }
