@@ -410,8 +410,6 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
         return (
             <div className={ classnames((this.showControls ? styles["fade-in"] : styles["fade-out"])) }>
                 <span>
-                    <Form inline style={{marginBottom: 0}}>
-
                         <div role="group" className="btn-group">
                             <button className="btn btn-default btn-xs" onClick={this.handlers.handleSVGClick}>
                                 SVG <i className="fa fa-cloud-download" aria-hidden="true"></i>
@@ -449,8 +447,6 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                                     />
                         </div>
                         {'  '}
-
-                    </Form>
                 </span>
                 <Collapse isOpened={this.legendShown}>
                     {this.legend}
