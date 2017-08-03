@@ -55,7 +55,7 @@ export const makeRoutes = (routing) => {
         <Route path="/restore" component={restoreRoute}/>
         <Route path="/testimonials" component={TestimonialsPage}/>
         <Route path="/blank" component={getBlankPage}/>
-        <Route path="/query" getComponent={lazyLoadComponent(ResultsViewPage)} />
+        <Route path="/results" getComponent={lazyLoadComponent(ResultsViewPage)} />
         <IndexRedirect to={defaultRoute}/>
     </Route>)
 };
