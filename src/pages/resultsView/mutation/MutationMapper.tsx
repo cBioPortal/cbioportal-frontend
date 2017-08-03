@@ -73,20 +73,23 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
     }
 
     @computed get mutationRateSummary():JSX.Element|null {
+        // TODO we should not be even calculating mskImpactGermlineConsentedPatientIds for studies other than msk impact
         if (this.props.store.gene.result &&
             this.props.store.gene.result.length > 0 &&
-            this.props.store.patientIds.result &&
-            this.props.store.patientIds.result.length > 0 &&
+            this.props.store.sampleIds.result &&
             this.props.store.mutationData.isComplete &&
-            this.props.store.mutationData.result.length > 0 &&
-            this.props.store.mskImpactGermlineConsentedPatientIds.result &&
-            this.props.store.mskImpactGermlineConsentedPatientIds.isComplete) {
-            return <MutationRateSummary
-                        hugoGeneSymbol={this.props.store.gene.result.hugoGeneSymbol}
-                        mutations={this.props.store.mutationData.result}
-                        patientIds={this.props.store.patientIds.result}
-                        mskImpactGermlineConsentedPatientIds={this.props.store.mskImpactGermlineConsentedPatientIds.result}
-                    />
+            this.props.store.mutationData.result.length > 0) {
+            return (
+                <MutationRateSummary
+                    hugoGeneSymbol={this.props.store.gene.result.hugoGeneSymbol}
+                    mutations={this.props.store.mutationData.result}
+                    sampleIds={this.props.store.sampleIds.result}
+                    patientIds={this.props.store.patientIds.result}
+                    patientIdsStatus={this.props.store.patientIds.status}
+                    mskImpactGermlineConsentedPatientIds={this.props.store.mskImpactGermlineConsentedPatientIds.result}
+                    mskImpactGermlineConsentedPatientIdsStatus={this.props.store.mskImpactGermlineConsentedPatientIds.status}
+                />
+            );
         } else {
             return null;
         }
