@@ -73,8 +73,8 @@ export default class BarGraph extends React.Component<IBarGraphProps, {}> {
 
     componentDidMount() {
 
-        const cancerStudies = this.props.data;
-        cancerStudies.forEach(study => {study.caseCount = study.studies.reduce((sum:number, cStudy) => sum + cStudy.allSampleCount, 0)})
+        const cancerStudies = this.props.data.filter(cancers => _.every(cancers.studies, study => study.cancerTypeId !== "other" &&  study.cancerTypeId  !== "mixed"));
+        cancerStudies.forEach(study => {study.caseCount = study.studies.reduce((sum:number, cStudy) => sum + cStudy.allSampleCount, 0)});
 
         const cancerTypeStudiesArray = cancerStudies.sort((a, b) => b.caseCount! - a.caseCount!).slice(0, 20).map(study => this.getShortName(study));
 
