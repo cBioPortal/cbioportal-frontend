@@ -2,6 +2,7 @@ import * as React from 'react';
 import {PathologyReportPDF} from "../clinicalInformation/PatientViewPageStore";
 import { If, Then, Else } from 'react-if';
 import * as _ from 'lodash';
+import IFrameLoader from "../../../shared/components/iframeLoader/IFrameLoader";
 
 export type IPathologyReportProps = {
 
@@ -19,8 +20,6 @@ export default class PathologyReport extends React.Component<IPathologyReportPro
     constructor(props: IPathologyReportProps){
 
         super();
-
-        console.log(props.pdfs);
 
         this.state = { pdfUrl: this.buildPDFUrl(props.pdfs[0].name) }
 
@@ -52,7 +51,8 @@ export default class PathologyReport extends React.Component<IPathologyReportPro
                 </select>
             </If>
 
-            <iframe style={{ height:1100, width: '100%', border:'none', ...(this.props.iframeStyle || {})}} src={this.state.pdfUrl}></iframe>
+
+            <IFrameLoader height={700} url={ this.state.pdfUrl } />
 
         </div>)
 
