@@ -31,6 +31,7 @@ import AjaxErrorModal from "shared/components/AjaxErrorModal";
 import AppConfig from 'appConfig';
 
 import './patient.scss';
+import IFrameLoader from "../../shared/components/iframeLoader/IFrameLoader";
 
 const patientViewPageStore = new PatientViewPageStore();
 
@@ -407,8 +408,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             hide={(patientViewPageStore.pathologyReport.isComplete && patientViewPageStore.pathologyReport.result.length === 0)}
                             loading={patientViewPageStore.pathologyReport.isPending}
                     >
-                        <div style={{position:"relative"}}>
-                            <ThreeBounce className="center-block text-center" /> {/*Put it underneath so it gets covered by loaded element*/}
+                        <div>
                             <PathologyReport iframeStyle={{position:"absolute", top:0}} pdfs={patientViewPageStore.pathologyReport.result} />
                         </div>
                     </MSKTab>
@@ -418,11 +418,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                              hide={(patientViewPageStore.MDAndersonHeatMapAvailable.isComplete && !patientViewPageStore.MDAndersonHeatMapAvailable.result)}
                             loading={patientViewPageStore.MDAndersonHeatMapAvailable.isPending}
                     >
-                        <div style={{position:"relative"}}>
-                            <ThreeBounce className="center-block text-center" /> {/*Put it underneath so it gets covered by loaded element*/}
-                            <iframe style={{position:"absolute", top:0, width:'100%', height:700, border:'none'}}
-                                    src={ `//bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?participant=${patientViewPageStore.patientId}` }></iframe>
-                        </div>
+                            <IFrameLoader height={700} url={ `//bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?participant=${patientViewPageStore.patientId}` } />
                     </MSKTab>
 
                     <MSKTab key={5} id="tissueImageTab" linkText="Tissue Image"
@@ -431,9 +427,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             loading={patientViewPageStore.hasTissueImageIFrameUrl.isPending}
                     >
                         <div style={{position: "relative"}}>
-                            <ThreeBounce className="center-block text-center" /> {/*Put it underneath so it gets covered by loaded element*/}
-                            <iframe style={{position:"absolute", top:0, width:'100%', height:700, border:'none'}}
-                                    src={ `http://cancer.digitalslidearchive.net/index_mskcc.php?slide_name=${patientViewPageStore.patientId}` }></iframe>
+                            <IFrameLoader height={700} url={  `http://cancer.digitalslidearchive.net/index_mskcc.php?slide_name=${patientViewPageStore.patientId}` } />
                         </div>
                     </MSKTab>
 
