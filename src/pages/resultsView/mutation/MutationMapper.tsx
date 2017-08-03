@@ -133,7 +133,7 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                                     />
                                 </div>
 
-                                <div>
+                                <div className="mutationMapperMetaColumn">
                                     {this.geneSummary}
 
                                     {this.mutationRateSummary}
