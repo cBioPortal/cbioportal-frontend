@@ -2,7 +2,6 @@ import * as React from 'react';
 import {observer} from "mobx-react";
 import { Mutation } from "shared/api/generated/CBioPortalAPI";
 import {germlineMutationRate, somaticMutationRate} from "shared/lib/MutationUtils";
-import classnames from 'classnames';
 
 export interface IMutationRateSummaryProps {
     patientIds: string[];
@@ -28,7 +27,7 @@ export default class MutationRateSummary extends React.Component<IMutationRateSu
         return (
             <div>
                 <div data-test="somaticMutationRate">
-                <label>Somatic Mutation Frequency:</label>&nbsp;
+                <label>Somatic Mutation Frequency:</label>
                 {somaticMutationRate(this.props.hugoGeneSymbol,
                               this.props.mutations,
                               this.props.patientIds).toFixed(1)}%
@@ -36,7 +35,7 @@ export default class MutationRateSummary extends React.Component<IMutationRateSu
 
 
                 <div data-test='germlineMutationRate' className={(gmr > 0) ? '' : 'invisible' }>
-                    <label>Germline Mutation Frequency:</label>&nbsp;
+                    <label>Germline Mutation Frequency:</label>
                     {(gmr > 0) ? `${gmr.toFixed(1)}%` : '--'}
                 </div>
 
