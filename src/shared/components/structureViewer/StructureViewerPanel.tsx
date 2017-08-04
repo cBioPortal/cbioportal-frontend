@@ -22,11 +22,11 @@ import {
     getProteinStartPositionsByRange
 } from "shared/lib/MutationUtils";
 import StructureViewer from "./StructureViewer";
+import PdbChainInfo from "../PdbChainInfo";
 import {ProteinScheme, ProteinColor, SideChain, MutationColor, IResidueSpec} from "./StructureVisualizer";
 import PyMolScriptGenerator from "./PyMolScriptGenerator";
 
 import styles from "./structureViewer.module.scss";
-import PdbChainInfo from "../PdbChainInfo";
 
 export interface IStructureViewerPanelProps extends IProteinImpactTypeColors
 {
@@ -47,6 +47,11 @@ export default class StructureViewerPanel extends React.Component<IStructureView
     @observable protected sideChain:SideChain = SideChain.SELECTED;
     @observable protected mutationColor:MutationColor = MutationColor.MUTATION_TYPE;
     @observable protected displayBoundMolecules:boolean = true;
+
+    @observable protected structureViewerBounds: {width: number|string, height: number|string} = {
+        width: "auto",
+        height: 350
+    };
 
     constructor() {
         super();
@@ -403,8 +408,7 @@ export default class StructureViewerPanel extends React.Component<IStructureView
                             </div>
                         </div>
                     </If>
-                    <div className={`${styles["vis-container"]} row`}>
-                        <hr />
+                    <div className="row" style={{paddingTop: 5, paddingBottom: 5}}>
                         <StructureViewer
                             displayBoundMolecules={this.displayBoundMolecules}
                             proteinScheme={this.proteinScheme}
@@ -414,8 +418,8 @@ export default class StructureViewerPanel extends React.Component<IStructureView
                             pdbId={this.pdbId}
                             chainId={this.chainId}
                             residues={this.residues}
+                            bounds={this.structureViewerBounds}
                         />
-                        <hr />
                     </div>
                 </span>
             );
