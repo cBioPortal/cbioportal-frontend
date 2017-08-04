@@ -1,1 +1,1 @@
-web: http-server dist/ -p ${PORT}
+web: http-server --cors dist/ -p ${PORT}
