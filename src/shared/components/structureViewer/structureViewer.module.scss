@@ -1,10 +1,10 @@
 .main-3d-panel {
-  width: 420px;
+  width: 480px;
   position: absolute;
   float: right;
   overflow: hidden;
   right: 0;
-  //top: 0;
+  top: 0;
   z-index: 100;
   border:1px solid $borderColor;
   border-radius: $cornerBorderRadius;
