@@ -1,4 +1,5 @@
 import * as React from 'react';
+import * as _ from 'lodash';
 import {observer} from "mobx-react";
 import {
     IStructureVisualizerProps, IResidueSpec
@@ -8,6 +9,7 @@ import StructureVisualizer3D from "./StructureVisualizer3D";
 export interface IStructureViewerProps extends IStructureVisualizerProps {
     pdbId: string;
     chainId: string;
+    bounds: {width: number|string, height: number|string};
     residues?: IResidueSpec[];
 }
 
@@ -16,6 +18,7 @@ export default class StructureViewer extends React.Component<IStructureViewerPro
 {
     private _3dMolDiv: HTMLDivElement|undefined;
     private _pdbId: string;
+    private _bounds: {width: number|string, height: number|string};
     private wrapper: StructureVisualizer3D;
 
     public constructor() {
@@ -29,7 +32,12 @@ export default class StructureViewer extends React.Component<IStructureViewerPro
         return (
             <div
                 ref={this.divHandler}
-                style={{height: 300}}
+                style={{
+                    height: this.props.bounds.height,
+                    width: this.props.bounds.width,
+                    padding: 0
+                }}
+                className="borderedChart"
             />
         );
     }
@@ -39,6 +47,7 @@ export default class StructureViewer extends React.Component<IStructureViewerPro
             this.wrapper = new StructureVisualizer3D(this._3dMolDiv, this.props);
             this.wrapper.init(this.props.pdbId, this.props.chainId, this.props.residues);
             this._pdbId = this.props.pdbId;
+            this._bounds = this.props.bounds;
         }
     }
 
@@ -52,6 +61,10 @@ export default class StructureViewer extends React.Component<IStructureViewerPro
             // other updates just require selection/style updates without reloading the structure
             else {
                 this.wrapper.updateViewer(this.props.chainId, this.props.residues, this.props);
+            }
+
+            if (!_.isEqual(this.props.bounds, this._bounds)) {
+                this.wrapper.resize();
             }
         }
     }
