@@ -1,5 +1,8 @@
 import * as React from 'react';
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
+import TruncatedText from "shared/components/TruncatedText";
+import MutationStatusColumnFormatter from "./MutationStatusColumnFormatter";
+import styles from './proteinChange.module.scss';
 
 /**
  * @author Selcuk Onur Sumer
@@ -116,7 +119,7 @@ export default class ProteinChangeColumnFormatter
         }
     }
 
-    public static renderFunction(data:Mutation[])
+    public static renderPlainText(data:Mutation[])
     {
         // use text as display value
         const text:string = ProteinChangeColumnFormatter.getDisplayValue(data);
@@ -124,5 +127,36 @@ export default class ProteinChangeColumnFormatter
         return (
                 <span>{text}</span>
         );
+    }
+
+    public static renderWithMutationStatus(data:Mutation[])
+    {
+        // use text as display value
+        const text:string = ProteinChangeColumnFormatter.getDisplayValue(data);
+
+        const mutationStatus:string|null = MutationStatusColumnFormatter.getData(data);
+
+        let content = (
+            <TruncatedText
+                text={text}
+                tooltip={<span>{text}</span>}
+                className={styles.proteinChange}
+                maxLength={20}
+            />
+        );
+
+        // add a germline indicator next to protein change if it is a germline mutation!
+        if (mutationStatus &&
+            mutationStatus.toLowerCase().indexOf("germline") > -1)
+        {
+            content = (
+                <span>
+                    {content}
+                    <span className={styles.germline}>Germline</span>
+                </span>
+            );
+        }
+
+        return content;
     }
 }

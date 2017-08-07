@@ -1,123 +1,52 @@
 import * as React from "react";
 import LollipopPlot from "./LollipopPlot";
-import {IMobXApplicationDataStore} from "../../lib/IMobXApplicationDataStore";
 import {Mutation} from "../../api/generated/CBioPortalAPI";
-import {LollipopSpec, DomainSpec} from "./LollipopPlotNoTooltip";
-import {
-    default as getCanonicalMutationType,
-    CanonicalMutationType, ProteinImpactType, getProteinImpactTypeFromCanonical
-} from "shared/lib/getCanonicalMutationType";
+import {LollipopSpec, DomainSpec, SequenceSpec} from "./LollipopPlotNoTooltip";
 import {remoteData} from "../../api/remoteData";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import request from "superagent";
+import classnames from 'classnames';
 import Response = request.Response;
-import {observer} from "mobx-react";
+import {observer, Observer} from "mobx-react";
 import {computed, observable, action} from "mobx";
 import _ from "lodash";
-import {longestCommonStartingSubstring} from "../../lib/StringUtils";
-import {findFirstMostCommonElt} from "../../lib/findFirstMostCommonElt";
+import {longestCommonStartingSubstring} from "shared/lib/StringUtils";
+import {getColorForProteinImpactType, IProteinImpactTypeColors} from "shared/lib/MutationUtils";
 import ReactDOM from "react-dom";
-import {Form, Button, FormGroup, InputGroup, ControlLabel, FormControl} from "react-bootstrap";
+import {Form, Button, FormGroup, InputGroup} from "react-bootstrap";
 import fileDownload from "react-file-download";
-import "./styles.scss";
-import ProteinImpactTypePanel from "../mutationTypePanel/ProteinImpactTypePanel";
+import styles from "./lollipopMutationPlot.module.scss";
 import Collapse from "react-collapse";
+import {MutationMapperStore} from "../../../pages/resultsView/mutation/MutationMapperStore";
+import EditableSpan from "../editableSpan/EditableSpan";
 
-type LollipopMutationPlotProps = {
-    dataStore:IMobXApplicationDataStore<Mutation[]>;
-    entrezGeneId:number;
-    hugoGeneSymbol:string;
+export interface ILollipopMutationPlotProps extends IProteinImpactTypeColors
+{
+    store:MutationMapperStore;
     onXAxisOffset?:(offset:number)=>void;
-};
-
-const mutationTypePriority:{[canonicalMutationType:string]:number} = {
-    "missense": 1,
-    "inframe": 2,
-    "truncating": 4,
-    "nonsense": 6,
-    "nonstop": 7,
-    "nonstart": 8,
-    "frameshift": 4,
-    "frame_shift_del": 4,
-    "frame_shift_ins": 5,
-    "in_frame_ins": 3,
-    "in_frame_del": 2,
-    "splice_site": 9,
-    "fusion": 10,
-    "silent": 11,
-    "other": 11
-};
-
-function lollipopMutationTypeSort(typeA:CanonicalMutationType, typeB:CanonicalMutationType) {
-    const priorityA = mutationTypePriority[typeA];
-    const priorityB = mutationTypePriority[typeB];
-    if (priorityA < priorityB) {
-        return -1;
-    } else if (priorityA > priorityB) {
-        return 1;
-    } else {
-        return typeA.localeCompare(typeB);
-    }
+    geneWidth:number;
 }
 
-const MISSENSE_COLOR = "#008000";
-const TRUNCATING_COLOR = "#000000";
-const INFRAME_COLOR = "#8B4513";
-const OTHER_COLOR = "#8B00C9";
-
 @observer
-export default class LollipopMutationPlot extends React.Component<LollipopMutationPlotProps, {}> {
+export default class LollipopMutationPlot extends React.Component<ILollipopMutationPlotProps, {}> {
 
-    @observable private showControls:boolean = false;
+    @observable private mouseInPlot:boolean = true;
     @observable private _yMaxInput:number;
     @observable private legendShown:boolean = false;
+    @observable private yMaxInputFocused:boolean = false;
     private plot:LollipopPlot;
     private handlers:any;
 
-    private getLollipopColor(mutations:Mutation[]):string {
-        const sortedCanonicalMutationTypes:CanonicalMutationType[] = mutations.map(m=>getCanonicalMutationType(m.mutationType)).sort(lollipopMutationTypeSort);
-        const chosenCanonicalType:CanonicalMutationType|undefined = findFirstMostCommonElt(sortedCanonicalMutationTypes);
-        if (chosenCanonicalType) {
-            const proteinImpactType:ProteinImpactType = getProteinImpactTypeFromCanonical(chosenCanonicalType);
-
-            switch (proteinImpactType) {
-                case "missense":
-                    return MISSENSE_COLOR;
-                case "truncating":
-                    return TRUNCATING_COLOR;
-                case "inframe":
-                    return INFRAME_COLOR;
-                default:
-                    return OTHER_COLOR;
-            }
-        } else {
-            return "#ff0000"; // we only get here if theres no mutations, which shouldnt happen. red to indicate an error
-        }
+    @computed private get showControls(): boolean {
+        return (this.yMaxInputFocused || this.mouseInPlot);
     }
-
-    readonly swissProtId = remoteData({
-        invoke: async()=>{
-            const myGeneData:Response = await request.get(`http://mygene.info/v3/gene/${this.props.entrezGeneId}?fields=uniprot`);
-            return JSON.parse(myGeneData.text).uniprot["Swiss-Prot"];
-        }
-    });
-
-    readonly pfamGeneData = remoteData({
-        await: ()=>[
-            this.swissProtId
-        ],
-        invoke: async()=>{
-            const data:Response = await request.get(`http://www.cbioportal.org/proxy/pfam.xfam.org/protein/${this.swissProtId.result}/graphic`);
-            return JSON.parse(data.text)[0];
-        }
-    }, {});
 
     readonly mutationAlignerLinks = remoteData<{[pfamAccession:string]:string}>({
         await: ()=>[
-            this.pfamGeneData
+            this.props.store.pfamGeneData
         ],
         invoke: ()=>(new Promise((resolve,reject)=>{
-            const regions = this.pfamGeneData.result.regions;
+            const regions = this.props.store.pfamGeneData.result.regions;
             const responsePromises:Promise<Response>[] = [];
             for (let i=0; i<regions.length; i++) {
                 // have to do a for loop because seamlessImmutable will make result of .map immutable,
@@ -176,7 +105,7 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
     @computed private get mutationsByPosition():{[pos:number]:Mutation[]} {
         const ret:{[pos:number]:Mutation[]} = {};
         let codon;
-        for (const mutations of this.props.dataStore.sortedFilteredData) {
+        for (const mutations of this.props.store.dataStore.sortedFilteredData) {
             for (const mutation of mutations) {
                 codon = mutation.proteinPosStart;
                 ret[codon] = ret[codon] || [];
@@ -222,6 +151,10 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
         for (let i=0; i<positionMutations.length; i++) {
             const mutations = positionMutations[i];
             const codon = mutations[0].proteinPosStart;
+            if (isNaN(codon) || codon < 0 || (this.props.store.pfamGeneData.isComplete && (codon > this.props.store.pfamGeneData.result.length))) {
+                // invalid position
+                continue;
+            }
             let label:string|undefined;
             if (i < numLabelsToShow && mutations.length >= minMutationsToShowLabel) {
                 label = this.lollipopLabel(mutations);
@@ -231,16 +164,8 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
             ret.push({
                 codon,
                 count: mutations.length,
-                onMouseOver: action(()=>{
-                    this.props.dataStore.highlight = (d:Mutation[])=>{
-                        return (d[0].proteinPosStart === codon);
-                    }
-                }),
-                onMouseOut: action(()=>{
-                    this.props.dataStore.highlight = ()=>false;
-                }),
                 tooltip:this.lollipopTooltip(mutations),
-                color: this.getLollipopColor(mutations),
+                color: getColorForProteinImpactType(mutations, this.props),
                 label
             });
         }
@@ -255,15 +180,30 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
         const end = region.metadata.end;
         const pfamAccession = region.metadata.accession;
         const mutationAlignerLink = this.mutationAlignerLinks.result[pfamAccession];
-        const mutationAlignerA = mutationAlignerLink ? (<a href={mutationAlignerLink} target="_blank" style={{marginLeft:"5px"}}>Mutation Aligner</a>) : null;
+        const mutationAlignerA = mutationAlignerLink ?
+            (<a href={mutationAlignerLink} target="_blank">Mutation Aligner</a>) : null;
 
         return (
-            <div>
+            <div style={{maxWidth: 200}}>
                 <div>
                     {identifier} {type}, {description} ({start} - {end})
                 </div>
                 <div>
-                    <a href={`http://pfam.xfam.org/family/${pfamAccession}`} target="_blank">PFAM</a>
+                    <a
+                        href={`http://www.uniprot.org/uniprot/${this.props.store.uniprotId.result}`}
+                        target="_blank"
+                    >
+                        {this.props.store.uniprotId.result}
+                    </a>
+                    <a
+                        style={{marginLeft:"5px"}}
+                        href={`http://pfam.xfam.org/family/${pfamAccession}`}
+                        target="_blank"
+                    >
+                        PFAM
+                    </a>
+                </div>
+                <div>
                     {mutationAlignerA}
                 </div>
             </div>
@@ -271,10 +211,10 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
     }
 
     @computed private get domains():DomainSpec[] {
-        if (!this.pfamGeneData.isComplete) {
+        if (!this.props.store.pfamGeneData.isComplete) {
             return [];
         } else {
-            return this.pfamGeneData.result.regions.map((region:any)=>{
+            return this.props.store.pfamGeneData.result.regions.map((region:any)=>{
                 const startCodon:number = region.metadata.start;
                 const endCodon:number = region.metadata.end;
                 const label:string = region.metadata.identifier;
@@ -291,6 +231,26 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
         }
     }
 
+    private sequenceTooltip(): JSX.Element
+    {
+        return (
+            <div style={{maxWidth: 200}}>
+                <a
+                    href={`http://www.uniprot.org/uniprot/${this.props.store.uniprotId.result}`}
+                    target="_blank"
+                >
+                    {this.props.store.uniprotId.result}
+                </a>
+            </div>
+        );
+    }
+
+    @computed private get sequence(): SequenceSpec {
+        return {
+            tooltip: this.sequenceTooltip()
+        };
+    }
+
     public toSVGDOMNode():Element {
         if (this.plot) {
             // Get result of plot
@@ -305,7 +265,7 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
                     y="2"
                     style={{fontFamily:"verdana", fontSize:"12px", fontWeight:"bold"}}
                 >
-                    {this.props.hugoGeneSymbol}
+                    {this.hugoGeneSymbol}
                 </text>
             );
             const labelGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -344,12 +304,16 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
             });
     }
 
+    @computed get hugoGeneSymbol() {
+        return this.props.store.gene.result && this.props.store.gene.result.hugoGeneSymbol;
+    }
+
     @computed get countRange() {
         if (this.lollipops.length === 0) {
             return [0,0];
         } else {
-            let max = Number.NEGATIVE_INFINITY;
-            let min = Number.POSITIVE_INFINITY;
+            let max = 5;
+            let min = 1;
             for (const lollipop of this.lollipops) {
                 max = Math.max(max, lollipop.count);
                 min = Math.min(min, lollipop.count);
@@ -362,39 +326,45 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
         return [this.countRange[0], Math.max(this.countRange[1], this.countRange[0]+5)];
     }
 
-    constructor() {
-        super();
+    constructor(props: ILollipopMutationPlotProps) {
+        super(props);
 
         this.handlers = {
-            handleYAxisMaxChange: action((event:any)=>{
+            handleYAxisMaxSliderChange: action((event:any)=>{
                 let inputValue:string = (event.target as HTMLInputElement).value;
-                this._yMaxInput = parseInt(inputValue, 10);
+                this._yMaxInput = _.clamp(parseInt(inputValue, 10), this.countRange[0], this.countRange[1]);
+            }),
+            handleYAxisMaxChange: action((val:string)=>{
+                this._yMaxInput = _.clamp(parseInt(val, 10), this.countRange[0], this.countRange[1]);
             }),
             handleSVGClick:()=>{
-                fileDownload(this.toSVGDOMNode().outerHTML,`${this.props.hugoGeneSymbol}_lollipop.svg`);
+                fileDownload(this.toSVGDOMNode().outerHTML,`${this.hugoGeneSymbol}_lollipop.svg`);
             },
             handlePDFClick:()=>{
-                this.downloadAsPDF(`${this.props.hugoGeneSymbol}_lollipop.pdf`)
+                this.downloadAsPDF(`${this.hugoGeneSymbol}_lollipop.pdf`)
+            },
+            onYMaxInputFocused:()=>{
+                this.yMaxInputFocused = true;
+            },
+            onYMaxInputBlurred:()=>{
+                this.yMaxInputFocused = false;
             },
             handleToggleLegend: action(()=>{
                 this.legendShown = !this.legendShown;
             }),
-            showControls: action(()=>{ this.showControls = true;}),
-            hideControls: action(()=>{ this.showControls = false;}),
+            onMouseEnterPlot: action(()=>{ this.mouseInPlot = true;}),
+            onMouseLeavePlot: action(()=>{ this.mouseInPlot = false;}),
             ref: (plot:LollipopPlot)=>{ this.plot = plot; },
-            onSelectionChange: (selectedPositions:{ [pos:number]:boolean})=>{
-                this.props.dataStore.setSelector((d:Mutation[])=>!!selectedPositions[d[0].proteinPosStart]);
-            }
         };
     }
 
     @computed get yMax() {
-        return this._yMaxInput || this.countRange[1];
+        return Math.min(this.countRange[1], this._yMaxInput || this.countRange[1]);
     }
 
     private get legend() {
         return (
-            <div style={{maxWidth:"700px"}}>
+            <div style={{maxWidth: 700, marginTop: 5}}>
                 <span style={{color: "#2153AA", fontWeight:"bold", fontSize:"14px", fontFamily:"verdana, arial, sans-serif"}}>
                     Color Codes
                 </span>
@@ -408,24 +378,24 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
                     Mutation types and corresponding color codes are as follows:
                     <ul>
                         <li>
-                            <span style={{color:MISSENSE_COLOR, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial, sans-serif"}}>
+                            <span style={{color:this.props.missenseColor, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial, sans-serif"}}>
                                 Missense Mutations
                             </span>
                         </li>
                         <li>
-                            <span style={{color:TRUNCATING_COLOR, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial, sans-serif"}}>
+                            <span style={{color:this.props.truncatingColor, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial, sans-serif"}}>
                                 Truncating Mutations
                             </span>
                             : Nonsense, Nonstop, Frameshift deletion, Frameshift insertion, Splice site
                         </li>
                         <li>
-                            <span style={{color:INFRAME_COLOR, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial, sans-serif"}}>
+                            <span style={{color:this.props.inframeColor, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial, sans-serif"}}>
                                 Inframe Mutations
                             </span>
                             : Inframe deletion, Inframe insertion
                         </li>
                         <li>
-                            <span style={{color:OTHER_COLOR, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial, sans-serif"}}>
+                            <span style={{color:this.props.otherColor, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial, sans-serif"}}>
                                 Other Mutations
                             </span>
                             : All other types of mutations
@@ -438,48 +408,46 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
 
     @computed get controls() {
         return (
-            <div>
-                <div className={this.showControls ? "fade-in" : "fade-out"}>
-                    <Form inline>
-                        <FormGroup>
-                            <Button onClick={this.handlers.handleSVGClick}>
-                                SVG
-                            </Button>
-                        </FormGroup>
-                        {' '}
-                        <FormGroup>
-                            <Button onClick={this.handlers.handlePDFClick}>
-                                PDF
-                            </Button>
-                        </FormGroup>
-                        {'  '}
-                        <FormGroup>
-                            <InputGroup>
-                                <InputGroup.Addon>Y-Axis Max:</InputGroup.Addon>
-                                <InputGroup.Addon>{this.countRange[0]}</InputGroup.Addon>
-                                <InputGroup.Addon>
+            <div className={ classnames((this.showControls ? styles["fade-in"] : styles["fade-out"])) }>
+                <span>
+                        <div role="group" className="btn-group">
+                            <button className="btn btn-default btn-xs" onClick={this.handlers.handleSVGClick}>
+                                SVG <i className="fa fa-cloud-download" aria-hidden="true"></i>
+                            </button>
+
+
+                            <button className="btn btn-default btn-xs" onClick={this.handlers.handlePDFClick}>
+                                PDF <i className="fa fa-cloud-download" aria-hidden="true"></i>
+                            </button>
+
+
+                            <button className="btn btn-default btn-xs" onClick={this.handlers.handleToggleLegend}>
+                                Legend <i className="fa fa-eye" aria-hidden="true"></i>
+                            </button>
+                        </div>
+
+                        <div className="small" style={{float:'right',display:'flex'}}>
+                                <span>Y-Axis Max:</span>
                                     <input
-                                        style={{display:"inline-block"}}
+                                        style={{display:"inline-block", width:200, marginLeft:10, marginRight:10}}
                                         type="range"
                                         min={this.countRange[0]}
                                         max={this.countRange[1]}
                                         step="1"
-                                        onChange={this.handlers.handleYAxisMaxChange}
+                                        onChange={this.handlers.handleYAxisMaxSliderChange}
                                         value={this.yMax}
                                     />
-                                </InputGroup.Addon>
-                                <InputGroup.Addon>{this.countRange[1]}</InputGroup.Addon>
-                            </InputGroup>
-                        </FormGroup>
+                                    <EditableSpan
+                                        className={styles["ymax-number-input"]}
+                                        value={this.yMax + ""}
+                                        setValue={this.handlers.handleYAxisMaxChange}
+                                        numericOnly={true}
+                                        onFocus={this.handlers.onYMaxInputFocused}
+                                        onBlur={this.handlers.onYMaxInputBlurred}
+                                    />
+                        </div>
                         {'  '}
-                        <FormGroup>
-                            <Button onClick={this.handlers.handleToggleLegend}>
-                                Legend
-                            </Button>
-                        </FormGroup>
-                    </Form>
-                </div>
-                <br/>
+                </span>
                 <Collapse isOpened={this.legendShown}>
                     {this.legend}
                 </Collapse>
@@ -488,35 +456,24 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
     }
 
     render() {
-        if (this.pfamGeneData.isComplete) {
-            return ( this.props.dataStore.allData.length ? (
-                <div onMouseEnter={this.handlers.showControls} onMouseLeave={this.handlers.hideControls}>
+        if (this.props.store.pfamGeneData.isComplete && this.props.store.pfamGeneData.result) {
+            return (
+                <div style={{display: "inline-block"}} onMouseEnter={this.handlers.onMouseEnterPlot} onMouseLeave={this.handlers.onMouseLeavePlot}>
                     {this.controls}
                     <LollipopPlot
                         ref={this.handlers.ref}
+                        sequence={this.sequence}
                         lollipops={this.lollipops}
                         domains={this.domains}
-                        onSelectionChange={this.handlers.onSelectionChange}
-                        vizWidth={665}
+                        dataStore={this.props.store.dataStore}
+                        vizWidth={this.props.geneWidth}
                         vizHeight={130}
-                        xMax={this.pfamGeneData.result.length}
+                        xMax={this.props.store.pfamGeneData.result.length}
                         yMax={this.yMax}
                         onXAxisOffset={this.props.onXAxisOffset}
                     />
-                    <div style={{marginLeft:"45px"}}>
-                        <ProteinImpactTypePanel
-                            dataStore={this.props.dataStore}
-                            missenseColor={MISSENSE_COLOR}
-                            inframeColor={INFRAME_COLOR}
-                            truncatingColor={TRUNCATING_COLOR}
-                            otherColor={OTHER_COLOR}
-                        />
-                    </div>
-                    <br/>
                 </div>
-            ) : (
-                <div>There are no {this.props.hugoGeneSymbol} mutations in the selected samples.<br/></div>
-            ));
+            );
         } else {
             return (<LoadingIndicator isLoading={true}/>);
         }

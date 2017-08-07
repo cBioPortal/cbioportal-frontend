@@ -1,10 +1,12 @@
 import * as React from 'react';
-import DefaultTooltip from 'shared/components/DefaultTooltip';
+import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
+import {getPercentage} from "shared/lib/FormatUtils";
 
 export interface IFrequencyBarProps
 {
     totalCount: number;
     counts: number[];
+    mainCountIndex?: number;
     freqColors?: string[];
     barColor?: string;
     barWidth?: number;
@@ -41,7 +43,16 @@ export default class FrequencyBar extends React.Component<IFrequencyBarProps, {}
         } = this.props;
 
         const freqColors = this.props.freqColors || FrequencyBar.defaultProps.freqColors;
-        const mainProportion = counts[0] / totalCount; // assuming the first count in the list is the main
+
+        // if no mainCountIndex is provided or it is not a valid index, then use the first count in the list
+        // (main count is used to calculate the percentage to display)
+        const mainCountIndex = (
+            this.props.mainCountIndex &&
+            this.props.mainCountIndex >= 0 &&
+            this.props.mainCountIndex < counts.length
+        ) ? this.props.mainCountIndex : 0;
+
+        const mainProportion = counts[mainCountIndex] / totalCount;
         const textPos = (barWidth || 0) + (textMargin || 0);
         const totalWidth = textPos + FrequencyBar.TEXT_WIDTH;
 
@@ -63,7 +74,7 @@ export default class FrequencyBar extends React.Component<IFrequencyBarProps, {}
                     textAnchor="start"
                     fontSize="10"
                 >
-                    {`${(100 * mainProportion).toFixed(1)}%`}
+                    {getPercentage(mainProportion)}
                 </text>
                 <rect
                     y="2"

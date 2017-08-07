@@ -5,6 +5,7 @@ import { If, Then, Else } from 'react-if';
 import {observable} from "mobx";
 import {observer} from "mobx-react";
 import classNames from 'classnames';
+import EditableSpan from "../editableSpan/EditableSpan";
 
 export const SHOW_ALL_PAGE_SIZE = -1;
 
@@ -15,6 +16,8 @@ export interface IPaginationControlsProps {
     itemsPerPage?:number;
     itemsPerPageOptions?:number[];
     showAllOption?:boolean;
+    showMoreButton?:boolean;
+    textBeforeButtons?:string;
     textBetweenButtons?:string;
     firstButtonContent?: string | JSX.Element;
     previousButtonContent?: string | JSX.Element;
@@ -44,6 +47,7 @@ export class PaginationControls extends React.Component<IPaginationControlsProps
         itemsPerPage: SHOW_ALL_PAGE_SIZE,
         itemsPerPageOptions: [10, 25, 50, 100],
         showAllOption: true,
+        textBeforeButtons:"",
         textBetweenButtons: "text btwn buttons",
         firstButtonContent: (<i className='fa fa-angle-double-left'/>),
         previousButtonContent: (<i className='fa fa-angle-left'/>),
@@ -56,25 +60,23 @@ export class PaginationControls extends React.Component<IPaginationControlsProps
         style:{},
         previousPageDisabled:false,
         nextPageDisabled:false,
-        pageNumberEditable: false
+        pageNumberEditable: false,
+        showMoreButton: true
     };
 
     constructor(props:IPaginationControlsProps) {
         super(props);
         this.handleChangeItemsPerPage = this.handleChangeItemsPerPage.bind(this);
-        this.handleChangeCurrentPage = this.handleChangeCurrentPage.bind(this);
-        this.handleOnBlur = this.handleOnBlur.bind(this);
+        this.jumpToPage = this.jumpToPage.bind(this);
+        this.handleShowMore = this.handleShowMore.bind(this);
+        this.getSectionBetweenPaginationButtons = this.getSectionBetweenPaginationButtons.bind(this);
     }
 
-    private pageNumberInput: HTMLSpanElement;
-
-    private jumpToPage() {
+    private jumpToPage(p:string) {
 
         if (this.props.onChangeCurrentPage) {
-            this.props.onChangeCurrentPage(parseInt(this.pageNumberInput.innerText, 10));
+            this.props.onChangeCurrentPage(parseInt(p, 10));
         }
-
-        this.pageNumberInput.innerText = (this.props.currentPage as number).toString();
     }
 
     handleChangeItemsPerPage(evt:React.FormEvent<HTMLSelectElement>) {
@@ -84,33 +86,45 @@ export class PaginationControls extends React.Component<IPaginationControlsProps
         }
     }
 
-    handleChangeCurrentPage(evt:React.KeyboardEvent<HTMLSpanElement>) {
-
-        const newKey = evt.key;
-
-        if (newKey === "Enter") {
-            evt.preventDefault();
-            evt.currentTarget.blur();
-            return;
-        }
-
-        if (evt.currentTarget.innerText.length === MAX_DIGITS) {
-            evt.preventDefault();
-            return;
-        }
-
-        const regex = /^\d$/;
-        if(!regex.test(newKey)) {
-            evt.preventDefault();
+    handleShowMore() {
+        if (this.props.itemsPerPageOptions && this.props.itemsPerPage && this.props.onChangeItemsPerPage) {
+            const index = this.props.itemsPerPageOptions.indexOf(this.props.itemsPerPage);
+            if (index > -1) {
+                const itemsPerPage:number = (index + 1 < this.props.itemsPerPageOptions.length)? this.props.itemsPerPageOptions[index + 1] : SHOW_ALL_PAGE_SIZE;
+                this.props.onChangeItemsPerPage(itemsPerPage);
+            }
         }
     }
 
-    handleOnBlur(evt:React.FocusEvent<HTMLSpanElement>) {
-
-        if (evt.currentTarget.innerText.length > 0) {
-            this.jumpToPage();
+    private getSectionBetweenPaginationButtons() {
+        if (this.props.showMoreButton) {
+            return (
+                <Button disabled={(this.props.itemsPerPage===SHOW_ALL_PAGE_SIZE)} onClick={this.handleShowMore}>
+                    Show more
+                </Button>
+            )
         } else {
-            evt.currentTarget.innerText = (this.props.currentPage as number).toString();
+            return (<span
+                        key="textBetweenButtons"
+                        className={classNames('btn',
+                                              'btn-default',
+                                              'textBetweenButtons',
+                                              'disabled',
+                                              styles["default-cursor"])}
+                        style={{cursor:'default',color:'black'}} // HACK for parent project
+                    >
+                        <If condition={this.props.pageNumberEditable}>
+                            <EditableSpan
+                                className={styles["page-number-input"]}
+                                value={this.props.currentPage + ""}
+                                setValue={this.jumpToPage}
+                                maxChars={MAX_DIGITS}
+                                numericOnly={true}
+                            />
+                        </If>
+                        {this.props.textBetweenButtons}
+                    </span>
+            )
         }
     }
 
@@ -122,7 +136,8 @@ export class PaginationControls extends React.Component<IPaginationControlsProps
 
         return (
             <div className={classNames(styles.paginationControls, this.props.className)} style={this.props.style}>
-                <ButtonGroup bsSize="sm">
+                <span style={{fontSize:12, marginRight:10}}>{this.props.textBeforeButtons}</span>
+                <ButtonGroup bsSize="sm" style={{float:'none'}}>
                     <If condition={!!this.props.showFirstPage}>
                         <Button key="firstPageBtn" disabled={!!this.props.firstPageDisabled} onClick={this.props.onFirstPageClick}>
                             {this.props.firstButtonContent}
@@ -131,25 +146,7 @@ export class PaginationControls extends React.Component<IPaginationControlsProps
                     <Button className="prevPageBtn" key="prevPageBtn" disabled={!!this.props.previousPageDisabled} onClick={this.props.onPreviousPageClick}>
                         {this.props.previousButtonContent}
                     </Button>
-
-                    <span
-                        key="textBetweenButtons"
-                        className={styles["default-cursor"] + " btn btn-default disabled textBetweenButtons"}
-                    >
-                        <If condition={this.props.pageNumberEditable}>
-                            <span
-                                ref={input => this.pageNumberInput = input}
-                                className={styles["page-number-input"]}
-                                contentEditable={true}
-                                onKeyPress={this.handleChangeCurrentPage as React.KeyboardEventHandler<any>}
-                                onBlur={this.handleOnBlur as React.FocusEventHandler<any>}
-                            >
-                                {this.props.currentPage}
-                            </span>
-                        </If>
-                        {this.props.textBetweenButtons}
-                    </span>
-
+                    {this.getSectionBetweenPaginationButtons()}
                     <Button className="nextPageBtn" key="nextPageBtn" disabled={!!this.props.nextPageDisabled} onClick={this.props.onNextPageClick}>
                         {this.props.nextButtonContent}
                     </Button>

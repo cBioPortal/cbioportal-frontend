@@ -1,5 +1,5 @@
 import * as React from 'react';
-import DefaultTooltip from 'shared/components/DefaultTooltip';
+import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {
     DiscreteCNACacheDataType,
@@ -46,7 +46,7 @@ export default class DiscreteCNAColumnFormatter {
     }
 
     protected static getData(data:Mutation[] | undefined, discreteCNACache:DiscreteCNACache):DiscreteCNACacheDataType | null {
-        if (!data || data.length === 0) {
+        if (!data || data.length === 0 || !discreteCNACache.geneticProfileIdDiscrete) {
             return null;
         }
         const sampleId = data[0].sampleId;
@@ -125,5 +125,14 @@ export default class DiscreteCNAColumnFormatter {
         } else {
             return (<span>Querying server for data.</span>);
         }
+    }
+
+    public static isVisible(cache:DiscreteCNACache): boolean {
+
+        if (cache) {
+            return !!cache.geneticProfileIdDiscrete;
+        }
+
+        return false;
     }
 }

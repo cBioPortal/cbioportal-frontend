@@ -1,7 +1,7 @@
 import * as React from 'react';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import SampleManager from "../../sampleManager";
-import {isUncalled} from '../../../../shared/lib/mutationUtils';
+import {isUncalled} from 'shared/lib/MutationUtils';
 
 
 export default class TumorColumnFormatter {

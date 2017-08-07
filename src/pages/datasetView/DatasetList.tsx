@@ -2,6 +2,7 @@ import * as React from "react";
 import * as _ from 'lodash';
 import {CancerStudy} from 'shared/api/generated/CBioPortalAPI';
 import {ThreeBounce} from 'better-react-spinkit';
+import request from 'superagent';
 import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
 import TableHeaderControls from "shared/components/tableHeaderControls/TableHeaderControls";
 import LazyMobXTable from "shared/components/lazyMobXTable/LazyMobXTable";
@@ -28,6 +29,10 @@ interface IDataTableRow {
 interface IDataSetsTableProps {
     className?: string;
     datasets: CancerStudy[];
+}
+
+interface IDataSetsTableState {
+    downloadable: string[];
 }
 
 interface ICancerStudyCellProps {
@@ -73,7 +78,47 @@ class ReferenceCell extends React.Component<IReferenceCellProps ,{}> {
 
 }
 
-export default class DataSetsPageTable extends React.Component <IDataSetsTableProps, {}> {
+export default class DataSetsPageTable extends React.Component <IDataSetsTableProps, IDataSetsTableState> {
+
+    chartTarget:HTMLElement;
+
+    constructor() {
+        super();
+
+        this.state = {
+            downloadable: []
+        };
+
+    }
+
+    componentDidMount() {
+
+        const DATAHUB_GIT_URL = 'https://api.github.com/repos/cBioPortal/datahub/contents/public';
+
+        request
+            .get(DATAHUB_GIT_URL)
+            .then((data:any) => {
+                if (_.isArray(data.body) && data.body.length > 0) {
+                    _.each(data.body, (fileInfo:{type?: string; name?: string; html_url:string;}) => {
+                        if (_.isObject(fileInfo) && fileInfo.type === 'file' && _.isString(fileInfo.name)) {
+                            const fileName = fileInfo.name.split('.tar.gz');
+                            if (fileName.length > 0) {
+                                this.setState ({
+                                    downloadable: [
+                                        ...this.state.downloadable, fileName[0]
+                                    ]
+                                });
+
+                            }
+                        }
+                    });
+
+                }
+            });
+
+    }
+
+
 
     render() {
 
@@ -97,7 +142,7 @@ export default class DataSetsPageTable extends React.Component <IDataSetsTablePr
                 complete: study.completeSampleCount || ""
             }));
             return (
-                <div>
+                <div ref={el => this.chartTarget = el}>
                     <DataTable
                         data={tableData}
                         columns={
@@ -106,25 +151,25 @@ export default class DataSetsPageTable extends React.Component <IDataSetsTablePr
                                     name:'Name',
                                     type: 'name',
                                     render:(data:IDataTableRow)=> <CancerStudyCell studyId={data.studyId} name={data.name}/>,
-
                                     filter:(data:any, filterString:string, filterStringUpper:string) => {
-                                        return data.name.toUpperCase().indexOf(filterStringUpper) > -1
+                                        return data.name.toUpperCase().indexOf(filterStringUpper) > -1;
                                      }
 
                                 },
-                                {name:'', sortBy:false, togglable:false, download:false, type:'download', render:(data:IDataTableRow)=>{
+                                {name:'', sortBy:false, togglable:false, download: false, type:'download', render:(data:IDataTableRow)=> {
+                                    const download = this.state.downloadable.indexOf(data.studyId) > -1;
                                     return (
-                                        <a style={{width:50, display:'block' }} href={`https://github.com/cBioPortal/datahub/blob/master/public/${data.studyId}.tar.gz`} download>
+                                        <a className="dataset-table-download-link" style={download ? {display:'block'} : {display:'none'}}
+                                           href={'https://media.githubusercontent.com/media/cBioPortal/datahub/master/public/' + data.studyId + '.tar.gz'} download>
                                             <i className='fa fa-download'/>
                                         </a>
-
-                                    )
+                                    );
                                 }},
                                 {
                                     name:'Reference',
                                     type: 'citation', render:(data:IDataTableRow)=><ReferenceCell pmid={data.pmid} citation={data.citation}/>,
                                      filter:(data:any, filterString:string, filterStringUpper:string) => {
-                                        return data.citation.toUpperCase().indexOf(filterStringUpper) > -1
+                                        return data.citation.toUpperCase().indexOf(filterStringUpper) > -1;
                                      }
 
                                 },
@@ -156,7 +201,7 @@ export default class DataSetsPageTable extends React.Component <IDataSetsTablePr
                                             return <span style={{style}}>{data[column.type] || 0}</span>;
                                         }
                                     },
-                                    download: column.hasOwnProperty('download') ? column.download : true,
+                                    download: column.hasOwnProperty('download') ? column.download : false,
                                     filter: column.filter || undefined
                                 }
                             ))

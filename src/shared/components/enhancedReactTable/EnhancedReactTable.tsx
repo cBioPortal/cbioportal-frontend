@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { createSelector } from "reselect";
 import {Table, Th, Tr, Td, Thead } from "reactable";
-import DefaultTooltip from 'shared/components/DefaultTooltip';
+import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import * as _ from 'lodash';
 import TableHeaderControls from "shared/components/tableHeaderControls/TableHeaderControls";
 import {
