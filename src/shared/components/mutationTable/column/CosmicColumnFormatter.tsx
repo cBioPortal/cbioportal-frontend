@@ -5,6 +5,7 @@ import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {CosmicMutation} from "shared/api/generated/CBioPortalAPIInternal";
 import CosmicMutationTable from "shared/components/cosmic/CosmicMutationTable";
 import styles from "./cosmic.module.scss";
+import generalStyles from "./styles.module.scss";
 import {ICosmicData} from "shared/model/Cosmic";
 
 export function placeArrow(tooltipEl: any) {
@@ -119,7 +120,7 @@ export default class CosmicColumnFormatter
 
         // basic content is the value
         content = (
-            <span className="pull-right">
+            <span className={generalStyles["cosmic-count"]}>
                 {display}
             </span>
         );
