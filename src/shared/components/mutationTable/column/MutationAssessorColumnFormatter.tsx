@@ -23,6 +23,16 @@ export interface IColumnProps {
     genomeNexusCache?: GenomeNexusCache;
 }
 
+export const MA_DATA_ERROR = {
+    impact: undefined,
+    score: undefined,
+    pdb: undefined,
+    msa: undefined,
+    xVar: undefined
+}
+
+let cacheSet: Set<Mutation> = new Set();
+
 /**
  * @author Selcuk Onur Sumer
  */
@@ -155,6 +165,68 @@ export default class MutationAssessorColumnFormatter //extends React.Component<I
         return cacheData;
     }
 
+    public static getDataFromCache(columnProps:IColumnProps)
+    {
+        let data:Mutation[] = columnProps.mutationData;
+        let genomeNexusCache = columnProps.genomeNexusCache;
+
+        let maData;
+
+        const cacheData:ICacheData<MutationAssessor>|undefined = 
+            MutationAssessorColumnFormatter.getCacheData(columnProps);
+
+        if (cacheData && cacheData.status === "complete" && cacheData.data) {
+            maData = {
+                impact: cacheData.data.functionalImpact,
+                score: cacheData.data.functionalImpactScore,
+                pdb: data[0].linkPdb,
+                msa: data[0].linkMsa,
+                xVar: data[0].linkXvar
+            };
+        } else if (cacheData && cacheData.status === "error") {
+            maData = MA_DATA_ERROR; 
+        } else { // cache pending or no mutation assessor annotation
+            maData = {
+                impact: "na",
+                score: 0,
+                pdb: data[0].linkPdb,
+                msa: data[0].linkMsa,
+                xVar: data[0].linkXvar
+            }
+        }
+
+        return maData;
+    }
+
+    public static getDataFromStore(data:Mutation[], genomeNexusData:IGenomeNexusData)
+    {
+        let genomeNexusMap = genomeNexusData.mutation_assessor;
+        let mutationAssessor:MutationAssessor = genomeNexusMap[data[0].entrezGeneId];
+        
+        let maData;
+
+        if (mutationAssessor) {
+            maData = {
+                impact: mutationAssessor.functionalImpact,
+                score: mutationAssessor.functionalImpactScore,
+                pdb: data[0].linkPdb,
+                msa: data[0].linkMsa,
+                xVar: data[0].linkXvar
+            };
+        } else { // when no mutation assessor annotation exists
+            maData = {
+                impact: "na",
+                score: 0,
+                pdb: data[0].linkPdb,
+                msa: data[0].linkMsa,
+                xVar: data[0].linkXvar
+            }
+        }
+
+        return maData;
+
+    }
+
     public static getData(columnProps:IColumnProps)
     {
         let data:Mutation[] = columnProps.mutationData;
@@ -162,83 +234,16 @@ export default class MutationAssessorColumnFormatter //extends React.Component<I
         let genomeNexusCache = columnProps.genomeNexusCache;
 
         let maData;
-
+//
         if (data.length > 0 && genomeNexusCache) {
-
-            const cacheData:ICacheData<MutationAssessor>|undefined = 
-                MutationAssessorColumnFormatter.getCacheData(columnProps);
-
-            if (cacheData && cacheData.status === "complete" && cacheData.data) {
-                maData = {
-                    impact: cacheData.data.functionalImpact,
-                    score: cacheData.data.functionalImpactScore,
-                    pdb: data[0].linkPdb,
-                    msa: data[0].linkMsa,
-                    xVar: data[0].linkXvar
-                };
-            }
-            else if (cacheData && cacheData.status === "pending") {
-                maData = {
-                    impact: "pending",
-                    score: 0,
-                    pdb: data[0].linkPdb,
-                    msa: data[0].linkMsa,
-                    xVar: data[0].linkXvar
-                }
-            }
-            else if (cacheData && cacheData.status === "error") {
-                maData = {
-                    impact: "error",
-                    score: 0,
-                    pdb: data[0].linkPdb,
-                    msa: data[0].linkMsa,
-                    xVar: data[0].linkXvar
-                }
-            }
-            else {
-                maData = {
-                    impact: "na",
-                    score: 0,
-                    pdb: data[0].linkPdb,
-                    msa: data[0].linkMsa,
-                    xVar: data[0].linkXvar
-                }
-            }
-        }
-        
-        else if (data.length > 0 && !genomeNexusCache && genomeNexusData) {
-            let genomeNexusMap = genomeNexusData.mutation_assessor;
-            let mutationAssessor:MutationAssessor = genomeNexusMap[data[0].entrezGeneId];
-
-            if (mutationAssessor) {
-                maData = {
-                    impact: mutationAssessor.functionalImpact,
-                    score: mutationAssessor.functionalImpactScore,
-                    pdb: data[0].linkPdb,
-                    msa: data[0].linkMsa,
-                    xVar: data[0].linkXvar
-                };
-            }
-            // when mutation assessor undefined
-            else {
-                maData = {
-                    impact: "na",
-                    score: 0,
-                    pdb: data[0].linkPdb,
-                    msa: data[0].linkMsa,
-                    xVar: data[0].linkXvar
-                }
-            }
-        }
-
-        else {
-            return maData = {
-                impact: undefined,
-                score: undefined,
-                pdb: undefined,
-                msa: undefined,
-                xVar: undefined
-            };
+            maData = MutationAssessorColumnFormatter.getDataFromCache(columnProps);
+        } else if (data.length > 0 
+                && !genomeNexusCache 
+                && genomeNexusData
+                && genomeNexusData.hasOwnProperty("mutation_assessor")) {
+            maData = MutationAssessorColumnFormatter.getDataFromStore(data, genomeNexusData);
+        } else {
+            maData = MA_DATA_ERROR;
         }
 
         return maData;
@@ -257,7 +262,7 @@ export default class MutationAssessorColumnFormatter //extends React.Component<I
         const msaLink = MutationAssessorColumnFormatter.maLink(maData.msa);
         const pdbLink = MutationAssessorColumnFormatter.maLink(maData.pdb);
 
-        if (maData.score !== undefined )
+        if (maData.score !== undefined && maData.score !== null)
         {
             impact = (
                 <div>
