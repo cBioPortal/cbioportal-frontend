@@ -20,6 +20,7 @@ export function emptyQueryIndicator(): IndicatorQueryResp
             alterationType: "",
             consequence: "",
             entrezGeneId: -1,
+            hgvs: "",
             hugoSymbol: "",
             id: "",
             proteinEnd: -1,
