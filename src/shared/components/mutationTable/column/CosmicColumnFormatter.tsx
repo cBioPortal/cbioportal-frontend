@@ -6,6 +6,7 @@ import {CosmicMutation} from "shared/api/generated/CBioPortalAPIInternal";
 import CosmicMutationTable from "shared/components/cosmic/CosmicMutationTable";
 import styles from "./cosmic.module.scss";
 import {ICosmicData} from "shared/model/Cosmic";
+import generalStyles from "./styles.module.scss";
 
 export function placeArrow(tooltipEl: any) {
     const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');
@@ -119,9 +120,9 @@ export default class CosmicColumnFormatter
 
         // basic content is the value
         content = (
-            <span className="pull-right">
+            <div className={generalStyles["integer-data"]}>
                 {display}
-            </span>
+            </div>
         );
 
         // add a tooltip if the cosmic value is valid
