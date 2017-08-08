@@ -42,21 +42,21 @@ export interface IStructureViewerPanelProps extends IProteinImpactTypeColors
 export default class StructureViewerPanel extends React.Component<IStructureViewerPanelProps, {}> {
 
     @observable protected isCollapsed:boolean = false;
+    @observable protected isIncreasedSize:boolean = false;
     @observable protected proteinScheme:ProteinScheme = ProteinScheme.CARTOON;
     @observable protected proteinColor:ProteinColor = ProteinColor.UNIFORM;
     @observable protected sideChain:SideChain = SideChain.SELECTED;
     @observable protected mutationColor:MutationColor = MutationColor.MUTATION_TYPE;
     @observable protected displayBoundMolecules:boolean = true;
 
-    @observable protected structureViewerBounds: {width: number|string, height: number|string} = {
-        width: "auto",
-        height: 350
-    };
+    protected _3dMolDiv: HTMLDivElement|undefined;
 
     constructor() {
         super();
 
+        this.containerRefHandler = this.containerRefHandler.bind(this);
         this.toggleCollapse = this.toggleCollapse.bind(this);
+        this.toggleDoubleSize = this.toggleDoubleSize.bind(this);
         this.handleProteinSchemeChange = this.handleProteinSchemeChange.bind(this);
         this.handleProteinColorChange = this.handleProteinColorChange.bind(this);
         this.handleSideChainChange = this.handleSideChainChange.bind(this);
@@ -362,12 +362,17 @@ export default class StructureViewerPanel extends React.Component<IStructureView
     public header()
     {
         return (
-            <div className='row'>
+            <div className={classnames('row', styles["header"])}>
                 <div className='col col-sm-10'>
                     <span>3D Structure</span>
                 </div>
                 <div className="col col-sm-2">
                     <span className="pull-right">
+                        <i
+                            className={classnames("fa", {"fa-compress": this.isIncreasedSize, "fa-expand": !this.isIncreasedSize})}
+                            onClick={this.toggleDoubleSize}
+                            style={{marginRight: 5, cursor: "pointer"}}
+                        />
                         <i
                             className="fa fa-minus-circle"
                             onClick={this.toggleCollapse}
@@ -419,6 +424,7 @@ export default class StructureViewerPanel extends React.Component<IStructureView
                             chainId={this.chainId}
                             residues={this.residues}
                             bounds={this.structureViewerBounds}
+                            containerRef={this.containerRefHandler}
                         />
                     </div>
                 </span>
@@ -445,22 +451,36 @@ export default class StructureViewerPanel extends React.Component<IStructureView
             <Draggable
                 handle=".structure-viewer-header"
             >
-                <div className={classnames(styles["main-3d-panel"], {[styles["collapsed-panel"]]: this.isCollapsed})}>
+                <div
+                    className={
+                        classnames(styles["main-3d-panel"], {
+                            [styles["increased-size-panel"]]: this.isIncreasedSize
+                        })
+                    }
+                >
                     <div className="structure-viewer-header row">
                         {this.header()}
                         <hr style={{borderTopColor: "#BBBBBB"}} />
                     </div>
-                    {this.mainContent()}
-                    <div className='row'>
-                        {this.topToolbar()}
-                        <hr />
-                    </div>
-                    <div className="row">
-                        <div className='col col-sm-6'>
-                            {this.proteinStyleMenu()}
+                    <div
+                        className={
+                            classnames(styles["body"], {
+                                [styles["collapsed-panel"]]: this.isCollapsed
+                            })
+                        }
+                    >
+                        {this.mainContent()}
+                        <div className='row'>
+                            {this.topToolbar()}
+                            <hr />
                         </div>
-                        <div className='col col-sm-6'>
-                            {this.mutationStyleMenu()}
+                        <div className="row">
+                            <div className='col col-sm-6'>
+                                {this.proteinStyleMenu()}
+                            </div>
+                            <div className='col col-sm-6'>
+                                {this.mutationStyleMenu()}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -468,8 +488,16 @@ export default class StructureViewerPanel extends React.Component<IStructureView
         );
     }
 
+    private containerRefHandler(div: HTMLDivElement) {
+        this._3dMolDiv = div;
+    }
+
     private toggleCollapse() {
         this.isCollapsed = !this.isCollapsed;
+    }
+
+    private toggleDoubleSize() {
+        this.isIncreasedSize = !this.isIncreasedSize;
     }
 
     private handleProteinSchemeChange(evt:React.FormEvent<HTMLSelectElement>) {
@@ -511,6 +539,24 @@ export default class StructureViewerPanel extends React.Component<IStructureView
             fileDownload(this.pyMolScript, filename);
         }
     }
+
+    @computed get structureViewerBounds(): {width: number|string, height: number|string} {
+        let width: number|string;
+        let height: number|string;
+
+        // if 3Dmol container div is not initialized yet, just set to a default value: width=auto; height=350
+        // otherwise toggle the size
+        if (this.isIncreasedSize) {
+            width = this._3dMolDiv ? Math.floor(this._3dMolDiv.offsetWidth * (5/3)) : "auto";
+            height = this._3dMolDiv ? this._3dMolDiv.offsetHeight * 2 : 350;
+        }
+        else {
+            width = this._3dMolDiv ? Math.floor(this._3dMolDiv.offsetWidth / (5/3)) : "auto";
+            height = this._3dMolDiv ? this._3dMolDiv.offsetHeight / 2 : 350;
+        }
+
+        return {width, height};
+    };
 
     @computed get pdbId()
     {
