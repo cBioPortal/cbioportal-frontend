@@ -59,14 +59,16 @@ function clickNextPage(table:ReactWrapper<any, any>):boolean {
     }
 }
 
-function selectItemsPerPage(table:ReactWrapper<any, any>, opt:number):boolean {
-    let selector = table.find(PaginationControls).filterWhere(x=>x.hasClass("topPagination")).find(FormControl).filterWhere(x=>x.hasClass("itemsPerPageSelector")).find('select');
+function selectItemsPerPage(table:ReactWrapper<any, any>, opt:number) {
+    /*let selector = table.find(PaginationControls).filterWhere(x=>x.hasClass("topPagination")).find(FormControl).filterWhere(x=>x.hasClass("itemsPerPageSelector")).find('select');
     if (selector.length === 0) {
         return false;
     } else {
         selector.simulate('change', {target: {value:opt+""}});
         return true;
-    }
+    }*/
+    let onChangeItemsPerPage = table.find(PaginationControls).props().onChangeItemsPerPage;
+    onChangeItemsPerPage && onChangeItemsPerPage(opt);
 }
 
 function getItemsPerPage(table:ReactWrapper<any,any>):number|undefined {
