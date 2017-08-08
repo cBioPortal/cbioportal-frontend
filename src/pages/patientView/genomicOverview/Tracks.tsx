@@ -22,9 +22,15 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
     componentDidMount() {
 
         // --- construct params ---
-        let uniqCnasampleIds = _.uniq(_.map(this.props.cnaSegments, 'sampleId'));
-        let uniqMutSampleIds = _.uniq(_.map(this.props.mutations, 'sampleId'));
-        var config = tracksHelper.GenomicOverviewConfig(uniqCnasampleIds.length + uniqMutSampleIds.length, this.props.width);
+        // <old way> only show a track if theres data
+        //let uniqCnasampleIds = _.uniq(_.map(this.props.cnaSegments, 'sampleId'));
+        //let uniqMutSampleIds = _.uniq(_.map(this.props.mutations, 'sampleId'));
+        //var config = tracksHelper.GenomicOverviewConfig(uniqCnasampleIds.length + uniqMutSampleIds.length, this.props.width);
+        //</old way>
+
+        // new way: show CNA and MUT track for every sample, regardless of if theres data
+        var config = tracksHelper.GenomicOverviewConfig(2*this.props.sampleManager.samples.length, this.props.width);
+
         // --- end of params ---
 
         // --- raphael config ---
@@ -41,7 +47,7 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
         _.each(this.props.sampleManager.samples, (sample: ClinicalDataBySampleId) => {
 
             // --- CNA bar chart ---
-            if (_.includes(uniqCnasampleIds, sample.id)) {
+            //if (_.includes(uniqCnasampleIds, sample.id)) { // UNCOMMENT TO ONLY SHOW TRACK WHEN THERES DATA
                 let raphaelData: Array<any> = [];
                 var _trackData = _.filter(this.props.cnaSegments, function (_cnaObj: CopyNumberSeg) {
                     return _cnaObj.sampleId === sample.id;
@@ -72,14 +78,14 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
                         $newContainer[0]
                     );
                 }
-            }
+            //}
         });
         // --- end of CNA bar chart ---
 
 
         // --- mutation events bar chart ---
         _.each(this.props.sampleManager.samples, (sample: ClinicalDataBySampleId) => {
-            if (_.includes(uniqMutSampleIds, sample.id)) {
+            //if (_.includes(uniqMutSampleIds, sample.id)) { // UNCOMMENT TO ONLY SHOW TRACK WHEN THERES DATA
                 var _trackData = _.filter(this.props.mutations, function (_mutObj: any) {
                     return _mutObj.sampleId === sample.id;
                 });
@@ -101,7 +107,7 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
                         $newContainer[0]
                     );
                 }
-            }
+            //}
         });
         // --- end of mutation events bar chart ---
 
