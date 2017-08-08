@@ -13,6 +13,7 @@ import {MutationFrequenciesBySample} from "../vafPlot/VAFPlot";
 interface IGenomicOverviewProps {
     mergedMutations: Mutation[][];
     cnaSegments: any;
+    sequencedSamples:{[sampleId:string]:boolean};
     sampleOrder: {[s:string]:number};
     sampleLabels: {[s:string]:string};
     sampleColors: {[s:string]:string};
@@ -58,6 +59,7 @@ export default class GenomicOverview extends React.Component<IGenomicOverviewPro
                         sampleManager={this.props.sampleManager}
                         width={this.getTracksWidth()}
                         cnaSegments={this.props.cnaSegments}
+                        sequencedSamples={this.props.sequencedSamples}
                 />
                 <If condition={this.shouldShowVAFPlot()}>
                     <ThumbnailExpandVAFPlot

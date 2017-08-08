@@ -39,6 +39,7 @@ import {
     fetchCivicGenes, fetchCnaCivicGenes, fetchCivicVariants, groupByEntityId, findSamplesWithoutCancerTypeClinicalData,
     fetchStudiesForSamplesWithoutCancerTypeClinicalData
 } from "shared/lib/StoreUtils";
+import {stringListToSet} from "../../../shared/lib/StringUtils";
 
 type PageMode = 'patient' | 'sample';
 
@@ -318,6 +319,10 @@ export class PatientViewPageStore {
             this.clinicalDataPatient.result,
             this.clinicalDataForSamples.result
         )
+    }, {});
+
+    readonly sequencedSampleIdsInStudy = remoteData(async() => {
+        return stringListToSet(await client.getAllSampleIdsInSampleListUsingGET({sampleListId:`${this.studyId}_sequenced`}));
     }, {});
 
     readonly geneticProfilesInStudy = remoteData(() => {
