@@ -33,12 +33,17 @@ describe('UnsupportedBrowserModal', () => {
     });
 
     it('shows modal when IE10 is being used and site is accessed for first time', () => {
-        wrapper.instance().handleUnsupportedBrowsers('ie', '10.0.0');
+        wrapper.instance().handleUnsupportedBrowsers('ie', '10.0.0', false);
         expect(wrapper.state('show')).to.equal(true);
     });
-    
-    it('shows no modal when IE11 is being used and site is accessed for first time', () => {
-        wrapper.instance().handleUnsupportedBrowsers('ie', '11.0.0');
+
+    it('does not show modal when IE10 is being used and "do not show has" been checked', () => {
+        wrapper.instance().handleUnsupportedBrowsers('ie', '10.0.0', true);
+        expect(wrapper.state('show')).to.equal(false);
+    });
+
+    it('shows no modal when IE11 is being used', () => {
+        wrapper.instance().handleUnsupportedBrowsers('ie', '11.0.0', false);
         expect(wrapper.state('show')).to.equal(false);
     });
 
