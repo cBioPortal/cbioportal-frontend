@@ -125,7 +125,8 @@ export function generateQueryVariant(entrezGeneId:number,
         consequence: convertConsequence(mutationType || ""),
         proteinStart: proteinPosStart === undefined ? -1 : proteinPosStart,
         proteinEnd: proteinPosEnd === undefined ? -1 : proteinPosEnd,
-        type: "web"
+        type: "web",
+        hgvs: ""
     };
 }
 
