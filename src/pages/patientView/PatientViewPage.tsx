@@ -217,6 +217,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             cohortNav = (
                 <PaginationControls
                     currentPage={indexInCohort + 1}
+                    showMoreButton={false}
                     showItemsPerPageSelector={false}
                     showFirstPage={true}
                     showLastPage={true}
