@@ -1,12 +1,14 @@
 import {
-    fetchCosmicData, fetchOncoKbData, makeStudyToCancerTypeMap,
-    mergeMutationsIncludingUncalled, generateMutationIdByEvent, generateMutationIdByGeneAndProteinChangeAndEvent
+    fetchCosmicData, fetchOncoKbData, fetchGenomeNexusData, makeStudyToCancerTypeMap,
+    mergeMutationsIncludingUncalled, generateMutationIdByEvent, generateMutationIdByGeneAndProteinChangeAndEvent,
+    fetchCivicGenes, fetchCnaCivicGenes, fetchCivicVariants, findSamplesWithoutCancerTypeClinicalData,
+    fetchSamplesWithoutCancerTypeClinicalData, fetchStudiesForSamplesWithoutCancerTypeClinicalData
 } from "./StoreUtils";
 import * as _ from 'lodash';
 import { assert } from 'chai';
 import sinon from 'sinon';
 import {MobxPromise} from "mobxpromise";
-import {CancerStudy, Mutation} from "../api/generated/CBioPortalAPI";
+import {CancerStudy, Mutation, ClinicalData, Sample} from "../api/generated/CBioPortalAPI";
 import {initMutation} from "test/MutationMockUtils";
 
 describe('StoreUtils', () => {
@@ -295,13 +297,121 @@ describe('StoreUtils', () => {
                 done();
             });
         });
+    });
 
-        it("will return null maps if there are mutations but sampleIdToTumorType map is empty", (done) => {
-            fetchOncoKbData({}, mutationDataWithNoKeyword).then((data: any) => {
-                assert.deepEqual(data, {sampleToTumorMap: null, indicatorMap: null});
+    describe('fetchGenomeNexusData', () => {
+        it("won't fetch genomenexus data if there are no mutations", (done) => {
+            fetchGenomeNexusData(emptyMutationData, emptyUncalledMutationData).then((data: any) => {
+                assert.deepEqual(data, {mutation_assessor: {}});
+                done();
+            });
+        });
+    });
+
+    describe('fetchCivicData', () => {
+        it("won't fetch civic genes if there are no mutations", (done) => {
+            fetchCivicGenes(emptyMutationData, emptyUncalledMutationData).then((data: any) => {
+                assert.deepEqual(data, {});
                 done();
             });
         });
 
+        it("won't fetch civic variants if there are no mutations", (done) => {
+            fetchCivicVariants({}, emptyMutationData, emptyUncalledMutationData).then((data: any) => {
+                assert.deepEqual(data, {});
+                done();
+            });
+        });
+        it("won't fetch civic variants if there are no civic genes", (done) => {
+            fetchCivicVariants({}).then((data: any) => {
+                assert.deepEqual(data, {});
+                done();
+            });
+        });
+    });
+
+    describe('samples without cancer type clinical data', () => {
+        const studyId: string = "study";
+        let samples: MobxPromise<Sample[]> = {
+            result: [
+                {sampleId: "Sample1"},
+                {sampleId: "Sample2"},
+                {sampleId: "Sample3"},
+                {sampleId: "Sample4"}
+            ] as Sample[],
+            status: 'complete' as 'complete',
+            isPending: false,
+            isError: false,
+            isComplete: true,
+            error: undefined
+        };
+
+        let samplesWithoutCancerTypeClinicalData: MobxPromise<Sample[]> = {
+            result: [
+                {sampleId: "Sample4", studyId: "study4"}
+            ] as Sample[],
+            status: 'complete' as 'complete',
+            isPending: false,
+            isError: false,
+            isComplete: true,
+            error: undefined
+        };
+
+        let sampleIds: MobxPromise<string[]> = {
+            result: ["Sample1", "Sample2", "Sample3", "Sample4"] as string[],
+            status: 'complete' as 'complete',
+            isPending: false,
+            isError: false,
+            isComplete: true,
+            error: undefined
+        };
+
+        let clinicalDataForSamples: MobxPromise<ClinicalData[]> = {
+            result: [
+                {clinicalAttributeId: 'CANCER_TYPE_DETAILED', entityId: 'Sample1', value: "Invasive Breast Carcinoma"},
+                {clinicalAttributeId: 'CANCER_TYPE', entityId: 'Sample1', value: "Breast"},
+                {clinicalAttributeId: 'CANCER_TYPE_DETAILED', entityId: 'Sample2', value: "Prostate Adenocarcinoma"},
+                {clinicalAttributeId: 'CANCER_TYPE', entityId: 'Sample3', value: "Skin"}
+            ] as ClinicalData[],
+            status: 'complete' as 'complete',
+            isPending: false,
+            isError: false,
+            isComplete: true,
+            error: undefined
+        };
+
+        it('finds samples without cancer type clinical data', () => {
+            const samplesWithoutCancerType = findSamplesWithoutCancerTypeClinicalData(samples, clinicalDataForSamples);
+
+            assert.deepEqual(samplesWithoutCancerType, [{sampleId: "Sample4"}]);
+        });
+
+        const fetchSamplesStub = sinon.stub();
+        const getStudyStub = sinon.stub();
+
+        const client = {
+            fetchSamplesUsingPOST: fetchSamplesStub,
+            getStudyUsingGET: getStudyStub
+        };
+
+        it('fetches samples without cancer type clinical data', () => {
+            const samplesWithoutCancerTypeClinicalData = fetchSamplesWithoutCancerTypeClinicalData(
+                sampleIds, studyId, clinicalDataForSamples, client as any);
+
+            assert.isTrue(fetchSamplesStub.called, "fetchSamples should be called");
+            assert.isTrue(fetchSamplesStub.calledWith({
+                sampleIdentifiers: [{sampleId: "Sample4", studyId: "study"}],
+                projection: "DETAILED"
+            }), "fetchSamples should be called with the correct sample id (Sample4)");
+        });
+
+        it('fetches studies for samples without cancer type clinical data', () => {
+            const studies = fetchStudiesForSamplesWithoutCancerTypeClinicalData(
+                samplesWithoutCancerTypeClinicalData, client as any);
+
+            assert.isTrue(getStudyStub.calledOnce, "getStudy should be called only once");
+            assert.isTrue(getStudyStub.calledWith({studyId: "study4"}),
+                "fetchStudy should be called with the correct study id (study4)");
+        });
     });
 });

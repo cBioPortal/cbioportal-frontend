@@ -1,10 +1,10 @@
 import * as React from 'react';
 import {If, Else, Then } from 'react-if';
-import DefaultTooltip from "shared/components/DefaultTooltip";
+import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import 'rc-tooltip/assets/bootstrap_white.css';
 import {Mutation} from "../../../../shared/api/generated/CBioPortalAPI";
 import SampleManager from "../../sampleManager";
-import {isUncalled} from '../../../../shared/lib/mutationUtils';
+import {isUncalled} from 'shared/lib/MutationUtils';
 
 export default class AlleleFreqColumnFormatter {
     static barWidth = 6;
@@ -141,5 +141,19 @@ export default class AlleleFreqColumnFormatter {
             }
             return (altReads / (altReads + refReads));
         });
+    }
+
+    public static isVisible(sampleManager:SampleManager|null, allMutations?: Mutation[][]): boolean {
+
+        if (allMutations) {
+            for (const rowMutations of allMutations) {
+                const frequency = this.getSortValue(rowMutations, sampleManager);
+                if (frequency[0]) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }

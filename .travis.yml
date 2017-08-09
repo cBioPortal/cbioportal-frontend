@@ -43,12 +43,13 @@ script:
   if [[ "${TEST}" == end-to-end && "${TRAVIS_PULL_REQUEST}" = "false" ]];
   then
     npm run start & \
-    export CBIOPORTAL_URL=http://$(grep '__API_ROOT__' my-index.ejs | cut -d= -f2 | tr -d "'" | tr -d [:space:] | tr -d ';') && \
+    eval "$(./scripts/env_vars.sh)" && \
     curl $CBIOPORTAL_URL > /dev/null && \
     sleep 5s && \
     curl $CBIOPORTAL_URL > /dev/null && \
     sleep 5s && \
     curl $CBIOPORTAL_URL > /dev/null && \
+    sleep 20s && \
     curl http://localhost:3000 > /dev/null && \
     sleep 20s && \
     cd end-to-end-tests && \
@@ -56,23 +57,26 @@ script:
     npm run test-travis
   fi
   # run webdriver-manager on PRs instead of using browserstack
-- |
-  if [[ "${TEST}" == end-to-end && "${TRAVIS_PULL_REQUEST}" = "true" ]];
-  then
-    npm run start & \
-    npm install -g webdriver-manager@10.2.5 && \
-    webdriver-manager start &
-    export CBIOPORTAL_URL=http://$(grep '__API_ROOT__' my-index.ejs | cut -d= -f2 | tr -d "'" | tr -d [:space:] | tr -d ';') && \
-    curl $CBIOPORTAL_URL > /dev/null && \
-    sleep 5s && \
-    curl $CBIOPORTAL_URL > /dev/null && \
-    sleep 5s && \
-    curl $CBIOPORTAL_URL > /dev/null && \
-    curl http://localhost:3000 > /dev/null && \
-    sleep 20s && \
-    cd end-to-end-tests && \
-    npm run test-webdriver-manager
-  fi
+  # not working atm
+  # - |
+  # if [[ "${TEST}" == end-to-end && "${TRAVIS_PULL_REQUEST}" != "false" ]];
+  # then
+  #   npm run start & \
+  #   npm install -g webdriver-manager@10.2.5 && \
+  #   webdriver-manager start &
+  #   eval "$(./scripts/env_vars.sh)" && \
+  #   curl $CBIOPORTAL_URL > /dev/null && \
+  #   sleep 5s && \
+  #   curl $CBIOPORTAL_URL > /dev/null && \
+  #   sleep 5s && \
+  #   curl $CBIOPORTAL_URL > /dev/null && \
+  #   sleep 20s && \
+  #   curl http://localhost:3000 > /dev/null && \
+  #   sleep 20s && \
+  #   cd end-to-end-tests && \
+  #   npm install && \
+  #   npm run test-webdriver-manager
+  # fi
 after_success:
 - cat test/fixtures/outputs/lcov.info | codecov
 cache:

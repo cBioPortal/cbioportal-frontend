@@ -15,13 +15,8 @@ export default class MutationTypePanel extends React.Component<MutationTypePanel
     private mutationTypeButton(count:number, label:string, color:string, onClick:()=>void, marginLeft:number) {
         return (
             <span key={label} onClick={onClick} style={{cursor:"pointer", marginLeft}}>
-                <span style={{
+                <span className="badge" style={{
                     backgroundColor: color,
-                    fontWeight:700,
-                    borderRadius:"10px",
-                    color:"#EFEFEF",
-                    padding: "5px",
-                    lineHeight:"2.5em"
                 }}>{count}</span>
                 <span style={{color:color, fontWeight:400, marginLeft:"5px"}}>{label}</span>
             </span>

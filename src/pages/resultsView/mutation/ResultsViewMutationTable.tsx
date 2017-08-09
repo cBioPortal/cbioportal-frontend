@@ -3,6 +3,8 @@ import {observer} from "mobx-react";
 import {
     IMutationTableProps, MutationTableColumnType, default as MutationTable
 } from "shared/components/mutationTable/MutationTable";
+import CancerTypeColumnFormatter from "shared/components/mutationTable/column/CancerTypeColumnFormatter";
+import TumorAlleleFreqColumnFormatter from "shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter";
 
 export interface IResultsViewMutationTableProps extends IMutationTableProps {
     // add results view specific props here if needed
@@ -50,7 +52,11 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
 
         // override default visibility for some columns
         this._columns[MutationTableColumnType.MUTATION_ASSESSOR].visible = true;
-
+        this._columns[MutationTableColumnType.CANCER_TYPE].visible = CancerTypeColumnFormatter.isVisible(
+            this.props.dataStore ? this.props.dataStore.allData : this.props.data,
+            this.props.sampleIdToTumorType);
+        this._columns[MutationTableColumnType.TUMOR_ALLELE_FREQ].visible = TumorAlleleFreqColumnFormatter.isVisible(
+            this.props.dataStore ? this.props.dataStore.allData : this.props.data);
 
         // order columns
         this._columns[MutationTableColumnType.SAMPLE_ID].order = 10;
@@ -79,7 +85,7 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
 
         // exclude
         this._columns[MutationTableColumnType.CANCER_TYPE].shouldExclude = ()=>{
-            return !this.props.cancerTypeCache;
+            return !this.props.sampleIdToTumorType;
         };
         this._columns[MutationTableColumnType.NUM_MUTATIONS].shouldExclude = ()=>{
             return !this.props.mutationCountCache;

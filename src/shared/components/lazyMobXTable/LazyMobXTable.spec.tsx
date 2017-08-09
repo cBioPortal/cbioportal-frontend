@@ -4,7 +4,7 @@ import {shallow, mount, ReactWrapper} from 'enzyme';
 import sinon from 'sinon';
 import {lazyMobXTableSort, default as LazyMobXTable, Column} from "./LazyMobXTable";
 import SimpleTable from "../simpleTable/SimpleTable";
-import DefaultTooltip from "../DefaultTooltip";
+import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
 import expect from 'expect';
 import expectJSX from 'expect-jsx';
 import lolex from "lolex";
@@ -18,6 +18,13 @@ import cloneJSXWithoutKeyAndRef from "shared/lib/cloneJSXWithoutKeyAndRef";
 expect.extend(expectJSX);
 
 class Table extends LazyMobXTable<any> {
+}
+
+class HighlightingDataStore extends SimpleMobXApplicationDataStore<any> {
+    constructor(data:any[]) {
+        super(data);
+        this.dataHighlighter = (d:any)=>(d.numList[1] === null);
+    }
 }
 
 function getVisibleColumnHeaders(tableWrapper:ReactWrapper<any, any>):string[] {
@@ -82,6 +89,10 @@ function getNumVisibleRows(table:ReactWrapper<any, any>):number {
 
 function getTextBetweenButtons(table:ReactWrapper<any, any>):string | undefined {
     return table.find(PaginationControls).filterWhere(x=>x.hasClass("topPagination")).props().textBetweenButtons;
+}
+
+function getTextBeforeButtons(table:ReactWrapper<any, any>):string | undefined {
+    return table.find(PaginationControls).filterWhere(x=>x.hasClass("topPagination")).props().textBeforeButtons;
 }
 
 function clickColumnVisibilityCheckbox(table:ReactWrapper<any, any>, columnName:string):boolean {
@@ -795,8 +806,7 @@ describe('LazyMobXTable', ()=>{
             assert.equal(rows.length, 0);
         });
         it("highlights rows properly, according to highlight function in data store", ()=>{
-            const store:SimpleMobXApplicationDataStore<any> = new SimpleMobXApplicationDataStore(data);
-            store.highlight = (d:any)=>(d.numList[1] === null);
+            const store:HighlightingDataStore = new HighlightingDataStore(data);
             let table = mount(<Table columns={columns} dataStore={store}/>);
             let rows = getSimpleTableRows(table);
             assert.isFalse(rows.at(0).hasClass("highlight"), "row 0 not highlighted");
@@ -1113,29 +1123,29 @@ describe('LazyMobXTable', ()=>{
                 expect(rows[i]).toEqualJSX(<tr><td><span>{i+100}</span></td></tr>);
             }
         });
-        it("shows the right text between the paging buttons", ()=>{
+        it("shows the right text before the paging buttons", ()=>{
             let table = mount(<Table columns={simpleColumns} data={[]}/>);
             assert.equal(getItemsPerPage(table), 50, "confirm 50 items per page");
-            assert.equal(getTextBetweenButtons(table), "0-0 of 0");
+            assert.equal(getTextBeforeButtons(table), "0-0 of 0");
 
             table.setProps({columns:simpleColumns, data:[simpleData[0]]});
-            assert.equal(getTextBetweenButtons(table), "1-1 of 1");
+            assert.equal(getTextBeforeButtons(table), "1-1 of 1");
 
             table.setProps({columns:simpleColumns, data:simpleData.slice(0, 40)});
-            assert.equal(getTextBetweenButtons(table), "1-40 of 40");
+            assert.equal(getTextBeforeButtons(table), "1-40 of 40");
 
             table.setProps({columns:simpleColumns, data:simpleData});
             assert.equal(simpleData.length, 120, "confirm we're working with 120 data");
-            assert.equal(getTextBetweenButtons(table), "1-50 of 120");
+            assert.equal(getTextBeforeButtons(table), "1-50 of 120");
             clickNextPage(table);
             assert.equal(getCurrentPage(table), 1);
-            assert.equal(getTextBetweenButtons(table), "51-100 of 120");
+            assert.equal(getTextBeforeButtons(table), "51-100 of 120");
             clickNextPage(table);
             assert.equal(getCurrentPage(table), 2);
-            assert.equal(getTextBetweenButtons(table), "101-120 of 120");
+            assert.equal(getTextBeforeButtons(table), "101-120 of 120");
 
             selectItemsPerPage(table, -1);
-            assert.equal(getTextBetweenButtons(table), "1-120 of 120");
+            assert.equal(getTextBeforeButtons(table), "1-120 of 120");
         });
     });
 });

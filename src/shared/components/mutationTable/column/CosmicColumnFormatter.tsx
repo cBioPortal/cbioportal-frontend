@@ -1,5 +1,5 @@
 import * as React from 'react';
-import DefaultTooltip from 'shared/components/DefaultTooltip';
+import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import * as _ from 'lodash';
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {CosmicMutation} from "shared/api/generated/CBioPortalAPIInternal";
@@ -9,7 +9,7 @@ import {ICosmicData} from "shared/model/Cosmic";
 
 export function placeArrow(tooltipEl: any) {
     const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');
-    arrowEl.style.right = '10px';
+    arrowEl.style.left = '10px';
 }
 
 /**
@@ -97,7 +97,7 @@ export default class CosmicColumnFormatter
 
         let value:number = -1;
         let display:string = "";
-        let overlay:JSX.Element|null = null;
+        let overlay:(() => JSX.Element)|null = null;
         let content:JSX.Element;
 
         // calculate sum of the all counts
@@ -107,7 +107,7 @@ export default class CosmicColumnFormatter
                 return sum + count;
             }, 0);
 
-            overlay = (
+            overlay = () => (
                 <span className={styles["cosmic-table"]}>
                     <b>{value}</b> occurrences of <b>{cosmic[0].keyword}</b> mutations in COSMIC
                     <CosmicMutationTable data={cosmic}/>
@@ -119,7 +119,7 @@ export default class CosmicColumnFormatter
 
         // basic content is the value
         content = (
-            <span>
+            <span className="pull-right">
                 {display}
             </span>
         );
@@ -127,14 +127,13 @@ export default class CosmicColumnFormatter
         // add a tooltip if the cosmic value is valid
         if (overlay)
         {
-            const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
-
             content = (
                 <DefaultTooltip
                     overlay={overlay}
                     placement="topLeft"
-                    arrowContent={arrowContent}
                     onPopupAlign={placeArrow}
+                    trigger={['hover', 'focus']}
+                    destroyTooltipOnHide={true}
                 >
                     {content}
                 </DefaultTooltip>

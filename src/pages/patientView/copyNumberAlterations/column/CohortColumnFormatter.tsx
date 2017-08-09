@@ -3,10 +3,11 @@ import {DiscreteCopyNumberData, CopyNumberCount} from "shared/api/generated/CBio
 import FrequencyBar from "shared/components/cohort/FrequencyBar";
 import Icon from "shared/components/cohort/LetterIcon";
 import {IGisticData, IGisticSummary} from "shared/model/Gistic";
+import {getPercentage} from "shared/lib/FormatUtils";
 
 import CopyNumberCountCache from "../../clinicalInformation/CopyNumberCountCache";
 import {CacheData} from "../../../../shared/lib/LazyMobXCache";
-import DefaultTooltip from "../../../../shared/components/DefaultTooltip";
+import DefaultTooltip from "../../../../shared/components/defaultTooltip/DefaultTooltip";
 
 export default class CohortColumnFormatter
 {
@@ -103,8 +104,8 @@ export default class CohortColumnFormatter
     public static tooltipContent(data:DiscreteCopyNumberData[], copyNumberCount:CopyNumberCount)
     {
         const count = copyNumberCount.numberOfSamplesWithAlterationInGene;
-        const percent = 100 * (copyNumberCount.numberOfSamplesWithAlterationInGene / copyNumberCount.numberOfSamples);
-        const boldPercentage = <b>{`${percent.toFixed(1)}%`}</b>;
+        const proportion = copyNumberCount.numberOfSamplesWithAlterationInGene / copyNumberCount.numberOfSamples;
+        const boldPercentage = <b>{getPercentage(proportion)}</b>;
         const gene = data[0].gene.hugoGeneSymbol;
         const cna = data[0].alteration === -2 ? "deleted" : "amplified";
         const samples = count === 1 ? "sample" : "samples";

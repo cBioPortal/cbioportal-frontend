@@ -13,3 +13,15 @@
   transition: opacity 0.2s;
   opacity: 1;
 }
+.input-addon {
+  padding-bottom: 3px !important;
+  padding-top: 3px !important;
+}
+
+.ymax-number-input {
+  cursor: auto !important;
+  border: 1px inset;
+  height: 18px;
+  padding: 0 5px 0 5px;
+  display: inline-block;
+}

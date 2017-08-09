@@ -22,13 +22,10 @@ export default class GenomeNexusCache extends SimpleCache<MutationAssessor, Muta
 
             let responseObj:MutationAssessor = lookup[0];
 
-            // if (responseObj) {
-
-                cache[queryVariant.entrezGeneId.toString()] = {
-                    status: "complete",
-                    data: responseObj
-                }
-            // }
+            cache[queryVariant.entrezGeneId.toString()] = {
+                status: "complete",
+                data: responseObj
+            }
 
             this.putData(cache);
         }

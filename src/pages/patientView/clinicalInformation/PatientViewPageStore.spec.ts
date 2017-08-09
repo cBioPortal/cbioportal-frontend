@@ -22,15 +22,23 @@ describe('PatientViewPageStore', () => {
 
     });
 
-    it('if there are pdf items in response, returns collection, otherwise returns empty array', ()=>{
-        let result = handlePathologyReportCheckResponse({
+    it('if there are pdf items in response and their name starts with a given patientId, return collection, otherwise returns empty array', ()=>{
+        let result = handlePathologyReportCheckResponse('some', {
             total_count:1,
             items:[ { url:'someUrl', name:'someName' } ]
         });
         assert.deepEqual(result,[{ url: 'someUrl' , name: 'someName'}]);
 
-        result = handlePathologyReportCheckResponse({
+        result = handlePathologyReportCheckResponse('some', {
             total_count:0,
+        });
+        assert.deepEqual(result,[]);
+    });
+
+    it('if there are pdf items in response and their name starts with the wrong patientId, return empty array', ()=>{
+        let result = handlePathologyReportCheckResponse('xxx', {
+            total_count:1,
+            items:[ { url:'someUrl', name:'someName' } ]
         });
         assert.deepEqual(result,[]);
     });

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import DefaultTooltip from 'shared/components/DefaultTooltip';
+import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import styles from "./mutationAssessor.module.scss";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
@@ -7,6 +7,7 @@ import {MutationAssessor, IGenomeNexusData} from "shared/model/GenomeNexus";
 import {generateMutationAssessorQuery} from "shared/lib/GenomeNexusUtils";
 import GenomeNexusCache from "shared/cache/GenomeNexusCache"
 import {ICacheData, ICache} from "shared/lib/SimpleCache";
+import {initMutation} from "test/MutationMockUtils";
 
 type MA_CLASS_NAME = 'oma-high' | 'oma-medium' | 'oma-low' | 'oma-neutral' | 'oma-na';
 
@@ -56,14 +57,18 @@ export default class MutationAssessorColumnFormatter //extends React.Component<I
     {
         // If data is missing, it returns undefined. For the way the table works, we map this to null.
         let score:number|undefined = MutationAssessorColumnFormatter.getData(columnProps).score;
+
         let returnScore:number|null;
-        if (score === undefined) {
+
+        // If data is missing, it returns undefined. For the way the table works, we map this to null.
+        if (score === undefined || score === 0) {
             returnScore = null;
         } else {
             returnScore = score;
         }
+
         const format = MutationAssessorColumnFormatter.getMapEntry(columnProps);
-        const priority = format ? format.priority : -1;
+        const priority = format && format.priority > 0 ? format.priority : null;
 
         return [priority, returnScore];
     }
@@ -88,7 +93,7 @@ export default class MutationAssessorColumnFormatter //extends React.Component<I
         if (entry) {
             return entry.label;
         }
-        // if no mapped value, then return the text value as is
+        // if no mapped value, then just return empty text
         else {
             return MutationAssessorColumnFormatter.getTextValue(columnProps);
         }
@@ -222,7 +227,6 @@ export default class MutationAssessorColumnFormatter //extends React.Component<I
         }
 
         return maData;
-
     }
 
     public static getData(columnProps:IColumnProps)
@@ -232,7 +236,7 @@ export default class MutationAssessorColumnFormatter //extends React.Component<I
         let genomeNexusCache = columnProps.genomeNexusCache;
 
         let maData;
-//
+
         if (data.length > 0 && genomeNexusCache) {
             maData = MutationAssessorColumnFormatter.getDataFromCache(columnProps);
         } else if (data.length > 0 
@@ -240,6 +244,18 @@ export default class MutationAssessorColumnFormatter //extends React.Component<I
                 && genomeNexusData
                 && genomeNexusData.hasOwnProperty("mutation_assessor")) {
             maData = MutationAssessorColumnFormatter.getDataFromStore(data, genomeNexusData);
+        } else if (data.length > 0
+                && !genomeNexusCache
+                && !genomeNexusData
+                && data[0].hasOwnProperty("fisValue")
+                && data[0].hasOwnProperty("functionalImpactScore")) {
+            maData = {
+                impact: data[0].functionalImpactScore,
+                score: data[0].fisValue,
+                pdb: data[0].linkPdb,
+                msa: data[0].linkMsa,
+                xVar: data[0].linkXvar
+            }
         } else {
             maData = MA_DATA_ERROR;
         }
@@ -328,9 +344,7 @@ export default class MutationAssessorColumnFormatter //extends React.Component<I
 
         // ignore invalid links ("", "NA", "Not Available")
         if (link &&
-            link.length > 0 &&
-            link.toLowerCase() !== "na" &&
-            link.toLowerCase().indexOf("not available") === -1)
+            MutationAssessorColumnFormatter.isValidValue(link))
         {
             // getma.org is the legacy link, need to replace it with the actual value
             url = link.replace("getma.org", "mutationassessor.org/r3");
@@ -347,8 +361,6 @@ export default class MutationAssessorColumnFormatter //extends React.Component<I
 
     public static renderFunction(columnProps:IColumnProps)
     {
-        let data:Mutation[] = columnProps.mutationData;
-
         const NA:string = MutationAssessorColumnFormatter.MA_SCORE_MAP["na"].label;
 
         const text:string = MutationAssessorColumnFormatter.getDisplayValue(columnProps);
@@ -360,7 +372,7 @@ export default class MutationAssessorColumnFormatter //extends React.Component<I
         );
 
         // add tooltip for valid values
-        if (text.length > 0 && text !== NA)
+        if (MutationAssessorColumnFormatter.isValidValue(text))
         {
             const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
             const tooltipContent = MutationAssessorColumnFormatter.getTooltipContent(columnProps);
@@ -374,5 +386,13 @@ export default class MutationAssessorColumnFormatter //extends React.Component<I
         }
 
         return content;
+    }
+
+    public static isValidValue(value: string) {
+        return (
+            value.length > 0 &&
+            value.toLowerCase() !== "na" &&
+            value.toLowerCase().indexOf("not available") === -1
+        );
     }
 }

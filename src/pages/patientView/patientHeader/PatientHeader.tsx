@@ -4,10 +4,10 @@ import {OverlayTrigger, Popover} from 'react-bootstrap';
 
 import ClinicalInformationPatientTable from '../clinicalInformation/ClinicalInformationPatientTable';
 import {getSpanElements} from '../clinicalInformation/lib/clinicalAttributesUtil.js';
-import {placeArrowBottomLeft} from "shared/components/DefaultTooltip";
+import {placeArrowBottomLeft} from "shared/components/defaultTooltip/DefaultTooltip";
 
 import styles from './styles.module.scss';
-import DefaultTooltip from "../../../shared/components/DefaultTooltip";
+import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
 
 export type IPatientHeaderProps = {
     patient:any;

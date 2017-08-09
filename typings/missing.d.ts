@@ -19,3 +19,4 @@ declare module 'better-react-spinkit';
 declare module 'recompose/withContext';
 declare module 'react-bootstrap-autosuggest';
 declare module 'react-text-truncate';
+declare module 'react-resize-detector';

@@ -39,9 +39,9 @@ describe("PatientViewMutationTable", ()=>{
         assert(hasColumn(getTable(["sampleA"], "mrnaId"), "mRNA Expr."));
     });
 
-    it("shows copy number column if there's only one sample", ()=>{
+    /*it("shows copy number column if there's only one sample", ()=>{
         assert(hasColumn(getTable(["sampleA"], undefined, "cnaId"), "Copy #"));
-    });
+    });*/
 
     it("hides copy number column if there's more than one sample", ()=>{
         assert.isFalse(hasColumn(getTable(["sampleA","sampleB"], undefined, "cnaId"), "Copy #"));
@@ -60,7 +60,7 @@ describe("PatientViewMutationTable", ()=>{
         assert(!hasColumn(getTable(["sampleA"]), "Copy #"));
     });
 
-    it("shows the copy number column if theres a discrete cna profile", ()=>{
+    /*it("shows the copy number column if theres a discrete cna profile", ()=>{
         assert(hasColumn(getTable(["sampleA"], undefined, "cnaId"), "Copy #"));
-    });
+    });*/
 });

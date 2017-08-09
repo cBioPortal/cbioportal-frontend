@@ -1,5 +1,5 @@
 import * as React from 'react';
-import DefaultTooltip from "../DefaultTooltip";
+import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
 
 export interface ILetterIconProps
 {

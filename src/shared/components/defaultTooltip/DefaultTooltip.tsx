@@ -2,6 +2,7 @@ import * as React from 'react';
 import Tooltip from 'rc-tooltip';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import $ from "jquery";
+import "./styles.scss";
 
 export default class DefaultTooltip extends React.Component<Tooltip.Props, {}> {
     static readonly defaultProps = {

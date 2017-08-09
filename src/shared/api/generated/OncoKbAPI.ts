@@ -388,8 +388,6 @@ export type VariantSearchQuery = {
 
         'entrezGeneId': number
 
-        'hgvs': string
-
         'hugoSymbol': string
 
         'proteinEnd': number

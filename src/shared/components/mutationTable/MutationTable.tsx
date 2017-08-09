@@ -3,7 +3,7 @@ import {observer} from "mobx-react";
 import {observable, computed} from "mobx";
 import * as _ from "lodash";
 import {default as LazyMobXTable, Column, SortDirection} from "shared/components/lazyMobXTable/LazyMobXTable";
-import {Mutation, ClinicalData, MutationCount} from "shared/api/generated/CBioPortalAPI";
+import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import SampleColumnFormatter from "./column/SampleColumnFormatter";
 import TumorAlleleFreqColumnFormatter from "./column/TumorAlleleFreqColumnFormatter";
 import NormalAlleleFreqColumnFormatter from "./column/NormalAlleleFreqColumnFormatter";
@@ -17,11 +17,16 @@ import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter"
 import MutationTypeColumnFormatter from "./column/MutationTypeColumnFormatter";
 import MutationAssessorColumnFormatter from "./column/MutationAssessorColumnFormatter";
 import CosmicColumnFormatter from "./column/CosmicColumnFormatter";
+import MutationCountColumnFormatter from "./column/MutationCountColumnFormatter";
+import CancerTypeColumnFormatter from "./column/CancerTypeColumnFormatter";
+import MutationStatusColumnFormatter from "./column/MutationStatusColumnFormatter";
+import ValidationStatusColumnFormatter from "./column/ValidationStatusColumnFormatter";
 import {ICosmicData} from "shared/model/Cosmic";
 import AnnotationColumnFormatter from "./column/AnnotationColumnFormatter";
 import {IMyCancerGenomeData} from "shared/model/MyCancerGenome";
 import {IHotspotData} from "shared/model/CancerHotspots";
-import {IOncoKbData} from "shared/model/OncoKB";
+import {IOncoKbDataWrapper} from "shared/model/OncoKB";
+import {ICivicVariant, ICivicGene} from "shared/model/Civic";
 import {IMutSigData} from "shared/model/MutSig";
 import {IGenomeNexusData} from "shared/model/GenomeNexus";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
@@ -30,24 +35,18 @@ import GenomeNexusCache from "shared/cache/GenomeNexusCache";
 import MrnaExprRankCache from "shared/cache/MrnaExprRankCache";
 import VariantCountCache from "shared/cache/VariantCountCache";
 import PubMedCache from "shared/cache/PubMedCache";
-import CancerTypeCache from "../../cache/CancerTypeCache";
-import MutationCountCache from "../../cache/MutationCountCache";
-import MutationCountColumnFormatter from "./column/MutationCountColumnFormatter";
-import LazyLoadedTableCell from "shared/lib/LazyLoadedTableCell";
-import {CacheData} from "../../lib/LazyMobXCache";
-import CancerTypeColumnFormatter from "./column/CancerTypeColumnFormatter";
-import {IMobXApplicationDataStore} from "../../lib/IMobXApplicationDataStore";
+import MutationCountCache from "shared/cache/MutationCountCache";
+import {IMobXApplicationDataStore} from "shared/lib/IMobXApplicationDataStore";
 
 export interface IMutationTableProps {
     studyId?:string;
-    studyToCancerType?:{[studyId:string]:string};
+    sampleIdToTumorType?: {[sampleId: string]: string}
     discreteCNACache?:DiscreteCNACache;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
     genomeNexusCache?:GenomeNexusCache;
     mrnaExprRankCache?:MrnaExprRankCache;
     variantCountCache?:VariantCountCache;
     pubMedCache?:PubMedCache
-    cancerTypeCache?:CancerTypeCache;
     mutationCountCache?:MutationCountCache;
     mutSigData?:IMutSigData;
     enableOncoKb?: boolean;
@@ -57,8 +56,10 @@ export interface IMutationTableProps {
     myCancerGenomeData?: IMyCancerGenomeData;
     hotspots?: IHotspotData;
     cosmicData?:ICosmicData;
-    oncoKbData?:IOncoKbData;
     genomeNexusData?:IGenomeNexusData;
+    oncoKbData?: IOncoKbDataWrapper;
+    civicGenes?: ICivicGene;
+    civicVariants?: ICivicVariant;
     mrnaExprRankGeneticProfileId?:string;
     discreteCNAGeneticProfileId?:string;
     columns?:MutationTableColumnType[];
@@ -163,13 +164,17 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
         this._columns[MutationTableColumnType.SAMPLE_ID] = {
             name: "Sample ID",
             render: (d:Mutation[]) => SampleColumnFormatter.renderFunction(d, this.props.studyId),
+            download: SampleColumnFormatter.getTextValue,
             sortBy: SampleColumnFormatter.getTextValue,
+            filter: (d:Mutation[], filterString:string, filterStringUpper:string) =>
+                defaultFilter(d, "sampleId", filterStringUpper),
             visible: true
         };
 
         this._columns[MutationTableColumnType.TUMOR_ALLELE_FREQ] = {
             name: "Allele Freq (T)",
             render: TumorAlleleFreqColumnFormatter.renderFunction,
+            headerRender: (name: string) => <span style={{display:'inline-block', maxWidth:55}}>{name}</span>,
             sortBy: TumorAlleleFreqColumnFormatter.getSortValue,
             tooltip:(<span>Variant allele frequency in the tumor sample</span>),
             visible: true
@@ -178,6 +183,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
         this._columns[MutationTableColumnType.NORMAL_ALLELE_FREQ] = {
             name: "Allele Freq (N)",
             render: NormalAlleleFreqColumnFormatter.renderFunction,
+            headerRender: (name: string) => <span style={{display:'inline-block', maxWidth:55}}>{name}</span>,
             sortBy: NormalAlleleFreqColumnFormatter.getSortValue,
             tooltip:(<span>Variant allele frequency in the normal sample</span>),
             visible: false
@@ -226,7 +232,8 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 } else {
                     return false;
                 }
-            }
+            },
+            visible: DiscreteCNAColumnFormatter.isVisible(this.props.discreteCNACache as DiscreteCNACache)
         };
 
         this._columns[MutationTableColumnType.REF_READS_N] = {
@@ -295,9 +302,10 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
 
         this._columns[MutationTableColumnType.MUTATION_STATUS] = {
             name: "MS",
-            render: (d:Mutation[])=>getSpanForDataField(d, "mutationStatus"),
-            download: (d:Mutation[])=>getTextForDataField(d, "mutationStatus"),
-            sortBy:(d:Mutation[])=>d.map(m=>m.mutationStatus),
+            tooltip: (<span>Mutation Status</span>),
+            render: MutationStatusColumnFormatter.renderFunction,
+            download: MutationStatusColumnFormatter.download,
+            sortBy: MutationStatusColumnFormatter.sortValue,
             filter: (d:Mutation[], filterString:string, filterStringUpper:string) =>
                 defaultFilter(d, "mutationStatus", filterStringUpper),
             visible: false
@@ -305,9 +313,10 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
 
         this._columns[MutationTableColumnType.VALIDATION_STATUS] = {
             name: "VS",
-            render: (d:Mutation[])=>getSpanForDataField(d, "validationStatus"),
-            download: (d:Mutation[])=>getTextForDataField(d, "validationStatus"),
-            sortBy:(d:Mutation[])=>d.map(m=>m.validationStatus),
+            tooltip: (<span>Validation Status</span>),
+            render: ValidationStatusColumnFormatter.renderFunction,
+            download: ValidationStatusColumnFormatter.download,
+            sortBy: ValidationStatusColumnFormatter.sortValue,
             filter: (d:Mutation[], filterString:string, filterStringUpper:string) =>
                 defaultFilter(d, "validationStatus", filterStringUpper),
             visible: false
@@ -344,7 +353,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
 
         this._columns[MutationTableColumnType.PROTEIN_CHANGE] = {
             name: "Protein Change",
-            render: ProteinChangeColumnFormatter.renderFunction,
+            render: ProteinChangeColumnFormatter.renderWithMutationStatus,
             download: ProteinChangeColumnFormatter.getTextValue,
             sortBy:(d:Mutation[])=>ProteinChangeColumnFormatter.getSortValue(d),
             filter: (d:Mutation[], filterString:string, filterStringUpper:string) =>
@@ -362,6 +371,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
 
         this._columns[MutationTableColumnType.MUTATION_ASSESSOR] = {
             name: "Mutation Assessor",
+// <<<<<<< HEAD
             render: (d:Mutation[])=>MutationAssessorColumnFormatter.renderFunction({
                 mutationData: d,
                 genomeNexusData: this.props.genomeNexusData,
@@ -375,6 +385,12 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 genomeNexusData: this.props.genomeNexusData,
                 genomeNexusCache: this.props.genomeNexusCache
             }),
+// =======
+            // headerRender: (name: string) => <span style={{display:'inline-block', maxWidth:60}}>{name}</span>,
+            // render:MutationAssessorColumnFormatter.renderFunction,
+            // download:MutationAssessorColumnFormatter.getTextValue,
+            // sortBy:(d:Mutation[])=>MutationAssessorColumnFormatter.getSortValue(d),
+// >>>>>>> master
             filter:(d:Mutation[], filterString:string, filterStringUpper:string) =>
                 MutationAssessorColumnFormatter.filterValue({
                 mutationData: d,
@@ -401,6 +417,9 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 oncoKbData: this.props.oncoKbData,
                 oncoKbEvidenceCache: this.props.oncoKbEvidenceCache,
                 pubMedCache: this.props.pubMedCache,
+                civicGenes: this.props.civicGenes,
+                civicVariants: this.props.civicVariants,
+                enableCivic: this.props.enableCivic as boolean,
                 enableOncoKb: this.props.enableOncoKb as boolean,
                 enableMyCancerGenome: this.props.enableMyCancerGenome as boolean,
                 enableHotspot: this.props.enableHotspot as boolean
@@ -409,20 +428,25 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 return AnnotationColumnFormatter.sortValue(d,
                     this.props.hotspots,
                     this.props.myCancerGenomeData,
-                    this.props.oncoKbData);
+                    this.props.oncoKbData,
+                    this.props.civicGenes,
+                    this.props.civicVariants);
             }
         };
 
         this._columns[MutationTableColumnType.CANCER_TYPE] = {
             name: "Cancer Type",
-            render:CancerTypeColumnFormatter.makeRenderFunction(this),
-            sortBy:(d:Mutation[])=>CancerTypeColumnFormatter.sortBy(d, this.props.studyId, this.props.cancerTypeCache),
+            render: (d:Mutation[]) => CancerTypeColumnFormatter.render(d, this.props.sampleIdToTumorType),
+            sortBy: (d:Mutation[]) => CancerTypeColumnFormatter.sortBy(d, this.props.sampleIdToTumorType),
+            filter: (d:Mutation[], filterString:string, filterStringUpper:string) =>
+                CancerTypeColumnFormatter.filter(d, filterStringUpper, this.props.sampleIdToTumorType),
             tooltip:(<span>Cancer Type</span>),
         };
 
         this._columns[MutationTableColumnType.NUM_MUTATIONS] = {
             name: "# Mut in Sample",
             render: MutationCountColumnFormatter.makeRenderFunction(this),
+            headerRender: (name: string) => <span style={{display:'inline-block', maxWidth:55}}>{name}</span>,
             sortBy: (d:Mutation[]) => MutationCountColumnFormatter.sortBy(d, this.props.mutationCountCache),
             tooltip:(<span>Total number of nonsynonymous mutations in the sample</span>)
         };

@@ -7,6 +7,8 @@ import QueryAndDownloadTabs from "./shared/components/query/QueryAndDownloadTabs
 
 const queryStore = new QueryStore(window.location.href);
 
+(window as any).addGenesAndSubmitQuery = queryStore.addGenesAndSubmit.bind(queryStore);
+
 exposeComponentRenderer('renderRightBar', ()=>{
     return <RightBar/>
 });
@@ -16,3 +18,16 @@ exposeComponentRenderer('renderQuerySelectorInModal', ()=><QueryModal store={que
 exposeComponentRenderer('renderQuerySelector', (props:{[k:string]:string|boolean|number})=>{
     return <QueryAndDownloadTabs {...props} store={queryStore} />
 });
+
+// exposeComponentRenderer('renderMutationsTab', (props:{genes:string[], studyId:string, samples:string[]|string})=>{
+//     const resultsViewPageStore = new ResultsViewPageStore();
+//     resultsViewPageStore.hugoGeneSymbols = props.genes;
+//     resultsViewPageStore.studyId = props.studyId;
+//     if (typeof props.samples === "string") {
+//         resultsViewPageStore.sampleListId = props.samples;
+//     } else {
+//         resultsViewPageStore.sampleList = props.samples;
+//     }
+//
+//     return <Mutations genes={props.genes} store={resultsViewPageStore}/>
+// });

@@ -123,7 +123,7 @@ exports.config = {
     // See the full list at http://mochajs.org/
     mochaOpts: {
         ui: 'bdd',
-        timeout: 10000 // make big when using browser.debug()
+        timeout: 120000 // make big when using browser.debug()
     },
     //
     // =====

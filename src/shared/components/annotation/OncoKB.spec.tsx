@@ -1,16 +1,18 @@
 import {initQueryIndicator} from "test/OncoKbMockUtils";
+import {lazyMobXTableSort} from "shared/components/lazyMobXTable/LazyMobXTable";
+import {IndicatorQueryResp} from "shared/api/generated/OncoKbAPI";
+import {IOncoKbProps} from "./OncoKB";
 import OncoKB from './OncoKB';
 import React from 'react';
 import { assert } from 'chai';
 import {shallow, mount, ReactWrapper} from 'enzyme';
 import sinon from 'sinon';
-import {lazyMobXTableSort} from "../lazyMobXTable/LazyMobXTable";
-import {IndicatorQueryResp} from "../../api/generated/OncoKbAPI";
 
 describe('OncoKB', () => {
     const props = {
-        indicator: undefined
-    };
+        indicator: undefined,
+        status: "pending"
+    } as IOncoKbProps;
 
     let component: ReactWrapper<any, any>;
 
