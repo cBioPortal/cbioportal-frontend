@@ -2,8 +2,7 @@
   "name": "oncoprintjs",
   "version": "1.0.0",
   "description": "A data visualization for cancer genomic data.",
-  "scripts": {
-  },
+  "scripts": {},
   "repository": {
     "type": "git",
     "url": "https://github.com/cBioPortal/oncoprintjs.git"
@@ -24,8 +23,8 @@
       "email": "jianjiong.gao@gmail.com"
     },
     {
-    "name": "Gideon Dresdner",
-    "email": "oncoprintjs@gideonite.com"
+      "name": "Gideon Dresdner",
+      "email": "oncoprintjs@gideonite.com"
     }
   ],
   "license": "ISC",
@@ -36,11 +35,12 @@
   "devDependencies": {
     "browserify": "^14.0.0",
     "gulp": "^3.9.1",
-    "gulp-shell":"^0.6.3"
+    "gulp-shell": "^0.6.3"
   },
   "dependencies": {
+    "express": "^4.15.3",
     "gl-matrix": "^2.3.2",
-    "underscore": "^1.7.0",
-    "jquery":"^1.11.1"
+    "jquery": "^1.11.1",
+    "underscore": "^1.7.0"
   }
 }
