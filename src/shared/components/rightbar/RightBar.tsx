@@ -8,10 +8,17 @@ import AppConfig from "appConfig";
 import {QueryStore} from "shared/components/query/QueryStore";
 
 
-@observer
-export default class RightBar extends React.Component<{}, {}> {
+interface IRightBarProps
+{
+    store:QueryStore;
+}
 
-    public studyStore = new QueryStore();
+@observer
+export default class RightBar extends React.Component<IRightBarProps, {}> {
+
+    get studyStore() {
+      return this.props.store;
+    }
 
     get logic() { return this.studyStore.studyListLogic; }
 
@@ -77,7 +84,7 @@ export default class RightBar extends React.Component<{}, {}> {
         }
     }
 
-    render(){
+    render() {
         const datasets:JSX.Element | null = AppConfig.skinRightNavShowDatasets? 
             (
                 <div className="rightBarSection">
