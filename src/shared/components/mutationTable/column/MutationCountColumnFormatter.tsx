@@ -3,6 +3,7 @@ import LazyLoadedTableCell from "shared/lib/LazyLoadedTableCell";
 import {Mutation, MutationCount} from "../../../api/generated/CBioPortalAPI";
 import MutationCountCache from "../../../cache/MutationCountCache";
 import MutationTable, {IMutationTableProps} from "../MutationTable";
+import generalStyles from "./styles.module.scss";
 
 export default class MutationCountColumnFormatter {
     public static makeRenderFunction<P extends IMutationTableProps>(table:MutationTable<P>) {
@@ -18,7 +19,7 @@ export default class MutationCountColumnFormatter {
                     };
                 }
             },
-            (t:MutationCount)=>(<span className="pull-right">{t.mutationCount}</span>),
+            (t:MutationCount)=>(<div className={generalStyles["integer-data"]}>{t.mutationCount}</div>),
             "Mutation count not available for this sample."
         );
     }

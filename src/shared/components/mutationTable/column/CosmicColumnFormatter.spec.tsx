@@ -108,9 +108,9 @@ describe('CosmicColumnFormatter', () => {
     });
 
     it('renders display value', () => {
-        assert.isTrue(component273.find(`span`).text().indexOf((2 + 3 + 5).toString()) > -1,
+        assert.isTrue(component273.find(`div`).text().indexOf((2 + 3 + 5).toString()) > -1,
             'Cosmic count total for TP53 R273 missense mutation is correct');
-        assert.isTrue(component38.find(`span`).text().indexOf((7 + 11 + 13).toString()) > -1,
+        assert.isTrue(component38.find(`div`).text().indexOf((7 + 11 + 13).toString()) > -1,
             'Cosmic count total for PIK3CA R38 missense mutation is correct');
     });
 
