@@ -35,6 +35,7 @@ describe('GenomicOverview', () => {
             mergedMutations = [];
             genomicOverview = shallow(<GenomicOverview
                 mergedMutations={mergedMutations}
+                sequencedSamples={{}}
                 cnaSegments={[]}
                 sampleOrder={{}}
                 sampleLabels={{}}
@@ -49,6 +50,7 @@ describe('GenomicOverview', () => {
             ];
             genomicOverview = shallow(<GenomicOverview
                 mergedMutations={mergedMutations}
+                sequencedSamples={{}}
                 cnaSegments={[]}
                 sampleOrder={{}}
                 sampleLabels={{}}
@@ -67,6 +69,7 @@ describe('GenomicOverview', () => {
             ];
             genomicOverview = shallow(<GenomicOverview
                 mergedMutations={mergedMutations}
+                sequencedSamples={{}}
                 cnaSegments={[]}
                 sampleOrder={{}}
                 sampleLabels={{}}
@@ -90,6 +93,7 @@ describe('GenomicOverview', () => {
             mergedMutations = [[{sampleId: 'sample1', tumorAltCount: 10, tumorRefCount: 30}]];
             genomicOverview = shallow(<GenomicOverview
                 mergedMutations={mergedMutations}
+                sequencedSamples={{}}
                 cnaSegments={[]}
                 sampleOrder={{sample1:1, sample2:2}}
                 sampleLabels={{}}
@@ -106,6 +110,7 @@ describe('GenomicOverview', () => {
             ]];
             genomicOverview = shallow(<GenomicOverview
                 mergedMutations={mergedMutations}
+                sequencedSamples={{}}
                 cnaSegments={[]}
                 sampleOrder={{sample1:1, sample2:2}}
                 sampleLabels={{}}
@@ -135,6 +140,7 @@ describe('GenomicOverview', () => {
                 ],];
             genomicOverview = shallow(<GenomicOverview
                 mergedMutations={mergedMutations}
+                sequencedSamples={{}}
                 cnaSegments={[]}
                 sampleOrder={{sample1:1, sample2:2}}
                 sampleLabels={{}}
@@ -167,6 +173,7 @@ describe('GenomicOverview', () => {
                 ],];
             genomicOverview = shallow(<GenomicOverview
                 mergedMutations={mergedMutations}
+                sequencedSamples={{}}
                 cnaSegments={[]}
                 sampleOrder={{sample1:1, sample2:2}}
                 sampleLabels={{}}

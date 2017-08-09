@@ -254,6 +254,10 @@ function addToolTip(node: any, tip: any,showDelay: any, position: any) {
         show: {event: "mouseover"},
         hide: {fixed: true, delay: 100, event:"mouseout"},
         style: { classes: 'qtip-light qtip-rounded' },
+        position: {
+            my: "bottom right",
+            at: "top left"
+        }
         //position: {viewport: $(window)}
     }; //TODO: viewport causes jquery exception
     // if (showDelay)
