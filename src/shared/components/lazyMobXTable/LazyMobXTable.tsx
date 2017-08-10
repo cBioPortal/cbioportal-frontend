@@ -599,13 +599,16 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
 			let paginationProps:IPaginationControlsProps = {
 				className:"text-center topPagination",
 				itemsPerPage:this.store.itemsPerPage,
+                totalItems:this.store.displayData.length,
 				currentPage:this.store.page,
 				onChangeItemsPerPage:this.handlers.changeItemsPerPage,
+                showItemsPerPageSelector: false,
 				onPreviousPageClick:this.handlers.decPage,
 				onNextPageClick:this.handlers.incPage,
 				previousPageDisabled:this.store.page === 0,
 				nextPageDisabled:this.store.page === this.store.maxPage,
-				textBeforeButtons:this.store.paginationStatusText
+				textBeforeButtons:this.store.paginationStatusText,
+                groupButtons: false
 			};
 			// override with given paginationProps if they exist
 			if (this.props.paginationProps) {
