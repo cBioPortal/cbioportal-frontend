@@ -1,8 +1,11 @@
 {
   "name": "oncoprintjs",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A data visualization for cancer genomic data.",
-  "scripts": {},
+  "scripts": {
+      "clean": "rm -rf dist",
+      "build": "npm run clean && mkdir -p dist && gulp && mkdir -p dist/img && mv dist/*.svg dist/img"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/cBioPortal/oncoprintjs.git"
