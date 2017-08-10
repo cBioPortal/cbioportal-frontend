@@ -124,7 +124,7 @@ export class PaginationControls extends React.Component<IPaginationControlsProps
                         </If>
                         {this.props.textBetweenButtons}
                     </span>
-            )
+            );
         }
     }
 

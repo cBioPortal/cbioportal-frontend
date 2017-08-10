@@ -198,6 +198,7 @@ export default class ProteinChainPanel extends React.Component<ProteinChainPanel
                 width={this.hitZoneConfig.width}
                 height={this.hitZoneConfig.height}
                 onClick={this.hitZoneConfig.onClick}
+                cursor="pointer"
             />
         );
     }
@@ -263,7 +264,8 @@ export default class ProteinChainPanel extends React.Component<ProteinChainPanel
                             style={{
                                 overflowY:"scroll",
                                 maxHeight:this.props.maxChainsHeight,
-                                marginLeft:this.props.geneXOffset
+                                marginLeft:this.props.geneXOffset,
+                                position:"relative"
                             }}
                             onScroll={this.handlers.onChainScroll}
                         >

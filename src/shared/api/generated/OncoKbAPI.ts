@@ -20,6 +20,8 @@ export type Query = {
 
         'entrezGeneId': number
 
+        'hgvs': string
+
         'hugoSymbol': string
 
         'id': string
@@ -385,6 +387,8 @@ export type VariantSearchQuery = {
     'consequence': string
 
         'entrezGeneId': number
+
+        'hgvs': string
 
         'hugoSymbol': string
 
@@ -1505,6 +1509,7 @@ export default class OncoKbAPI {
         'levels' ? : string,
         'highestLevelOnly' ? : boolean,
         'queryType' ? : string,
+        'hgvs' ? : string,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -1557,6 +1562,10 @@ export default class OncoKbAPI {
             queryParameters['queryType'] = parameters['queryType'];
         }
 
+        if (parameters['hgvs'] !== undefined) {
+            queryParameters['hgvs'] = parameters['hgvs'];
+        }
+
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                 var parameter = parameters.$queryParameters[parameterName];
@@ -1583,6 +1592,7 @@ export default class OncoKbAPI {
      * @param {string} levels - Level of evidences.
      * @param {boolean} highestLevelOnly - Only show treatments of highest level
      * @param {string} queryType - Query type. There maybe slight differences between different query types. Currently support web or regular.
+     * @param {string} hgvs - HGVS varaint. Its priority is higher than entrezGeneId/hugoSymbol + variant combination
      */
     searchGetUsingGET(parameters: {
         'id' ? : string,
@@ -1597,6 +1607,7 @@ export default class OncoKbAPI {
         'levels' ? : string,
         'highestLevelOnly' ? : boolean,
         'queryType' ? : string,
+        'hgvs' ? : string,
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < IndicatorQueryResp > {
@@ -1658,6 +1669,10 @@ export default class OncoKbAPI {
 
             if (parameters['queryType'] !== undefined) {
                 queryParameters['queryType'] = parameters['queryType'];
+            }
+
+            if (parameters['hgvs'] !== undefined) {
+                queryParameters['hgvs'] = parameters['hgvs'];
             }
 
             if (parameters.$queryParameters) {
@@ -2056,6 +2071,7 @@ export default class OncoKbAPI {
         'consequence' ? : string,
         'proteinStart' ? : number,
         'proteinEnd' ? : number,
+        'hgvs' ? : string,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -2088,6 +2104,10 @@ export default class OncoKbAPI {
             queryParameters['proteinEnd'] = parameters['proteinEnd'];
         }
 
+        if (parameters['hgvs'] !== undefined) {
+            queryParameters['hgvs'] = parameters['hgvs'];
+        }
+
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                 var parameter = parameters.$queryParameters[parameterName];
@@ -2109,6 +2129,7 @@ export default class OncoKbAPI {
      * @param {string} consequence - consequence
      * @param {integer} proteinStart - proteinStart
      * @param {integer} proteinEnd - proteinEnd
+     * @param {string} hgvs - HGVS varaint. Its priority is higher than entrezGeneId/hugoSymbol + variant combination
      */
     variantsLookupGetUsingGET(parameters: {
             'entrezGeneId' ? : number,
@@ -2118,6 +2139,7 @@ export default class OncoKbAPI {
             'consequence' ? : string,
             'proteinStart' ? : number,
             'proteinEnd' ? : number,
+            'hgvs' ? : string,
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < Alteration >
@@ -2160,6 +2182,10 @@ export default class OncoKbAPI {
 
                 if (parameters['proteinEnd'] !== undefined) {
                     queryParameters['proteinEnd'] = parameters['proteinEnd'];
+                }
+
+                if (parameters['hgvs'] !== undefined) {
+                    queryParameters['hgvs'] = parameters['hgvs'];
                 }
 
                 if (parameters.$queryParameters) {
