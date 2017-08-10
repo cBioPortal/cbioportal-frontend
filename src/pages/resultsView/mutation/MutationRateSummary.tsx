@@ -1,44 +1,70 @@
 import * as React from 'react';
-import {observer} from "mobx-react";
 import { Mutation } from "shared/api/generated/CBioPortalAPI";
-import {germlineMutationRate, somaticMutationRate} from "shared/lib/MutationUtils";
+import {germlineMutationRate, somaticMutationRate, somaticMutationRateBySample} from "shared/lib/MutationUtils";
 
 export interface IMutationRateSummaryProps {
-    patientIds: string[];
     mutations: Mutation[];
     hugoGeneSymbol: string;
-    mskImpactGermlineConsentedPatientIds: string[];
+    sampleIds: string[];
+    patientIdsStatus: "pending" | "error" | "complete";
+    patientIds?: string[];
+    mskImpactGermlineConsentedPatientIdsStatus: "pending" | "error" | "complete";
+    mskImpactGermlineConsentedPatientIds?: string[];
 }
 
 export default class MutationRateSummary extends React.Component<IMutationRateSummaryProps, {}>
 {
-    render() {
-        // for germline mutation rate
-        // - only use germline constented patients for impact study
-        // - in all other cases assume that every patient had germline testing
-        //   if > 0 germline mutations are found
-        const patientIds = (this.props.mskImpactGermlineConsentedPatientIds.length > 0)?
-                                this.props.mskImpactGermlineConsentedPatientIds :
-                                this.props.patientIds;
-        const gmr = germlineMutationRate(this.props.hugoGeneSymbol,
-                                         this.props.mutations,
-                                         patientIds);
+    public somaticMutationFrequency(): JSX.Element
+    {
+        let rate = 0;
+
+        if (this.props.sampleIds.length > 0) {
+            rate = somaticMutationRateBySample(this.props.hugoGeneSymbol, this.props.mutations, this.props.sampleIds);
+        }
+        else if (this.props.patientIds && this.props.patientIds.length > 0) {
+            rate = somaticMutationRate(this.props.hugoGeneSymbol, this.props.mutations, this.props.patientIds);
+        }
 
         return (
-            <div>
-                <div data-test="somaticMutationRate">
+            <div data-test="somaticMutationRate">
                 <label>Somatic Mutation Frequency:</label>
-                {somaticMutationRate(this.props.hugoGeneSymbol,
-                              this.props.mutations,
-                              this.props.patientIds).toFixed(1)}%
-                </div>
+                {rate.toFixed(1)}%
+            </div>
+        );
+    }
 
+    public germlineMutationFrequency(): JSX.Element
+    {
+        let patientIds: string[]|undefined;
 
-                <div data-test='germlineMutationRate' className={(gmr > 0) ? '' : 'invisible' }>
-                    <label>Germline Mutation Frequency:</label>
-                    {(gmr > 0) ? `${gmr.toFixed(1)}%` : '--'}
-                </div>
+        if (this.props.patientIdsStatus !== "pending" &&
+            this.props.mskImpactGermlineConsentedPatientIdsStatus !== "pending")
+        {
+            // for germline mutation rate
+            // - only use germline constented patients for impact study
+            // - in all other cases assume that every patient had germline testing
+            //   if > 0 germline mutations are found
+            patientIds = (
+                this.props.mskImpactGermlineConsentedPatientIds &&
+                this.props.mskImpactGermlineConsentedPatientIds.length > 0
+            ) ? this.props.mskImpactGermlineConsentedPatientIds : this.props.patientIds;
+        }
 
+        const gmr = patientIds ? germlineMutationRate(this.props.hugoGeneSymbol, this.props.mutations, patientIds) : 0;
+
+        return (
+            <div data-test='germlineMutationRate' className={(gmr > 0) ? '' : 'invisible' }>
+                <label>Germline Mutation Frequency:</label>
+                {(gmr > 0) ? `${gmr.toFixed(1)}%` : '--'}
+            </div>
+        );
+    }
+
+    render() {
+        return (
+            <div>
+                {this.somaticMutationFrequency()}
+                {this.germlineMutationFrequency()}
             </div>
         );
     }
