@@ -9,14 +9,14 @@ const queryStore = new QueryStore(window.location.href);
 
 (window as any).addGenesAndSubmitQuery = queryStore.addGenesAndSubmit.bind(queryStore);
 
-exposeComponentRenderer('renderRightBar', ()=>{
-    return <RightBar/>
+exposeComponentRenderer('renderRightBar', ()=> {
+    return <RightBar store={queryStore}/>;
 });
 
 exposeComponentRenderer('renderQuerySelectorInModal', ()=><QueryModal store={queryStore} />);
 
-exposeComponentRenderer('renderQuerySelector', (props:{[k:string]:string|boolean|number})=>{
-    return <QueryAndDownloadTabs {...props} store={queryStore} />
+exposeComponentRenderer('renderQuerySelector', (props:{[k:string]:string|boolean|number})=> {
+    return <QueryAndDownloadTabs {...props} store={queryStore} />;
 });
 
 // exposeComponentRenderer('renderMutationsTab', (props:{genes:string[], studyId:string, samples:string[]|string})=>{
