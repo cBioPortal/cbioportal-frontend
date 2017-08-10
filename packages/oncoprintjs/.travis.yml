@@ -1,3 +1,14 @@
 language: node_js
 node_js:
 - '6'
+before_deploy:
+- npm run build
+deploy:
+  provider: npm
+  email: cbioportal@gmail.com
+  skip_cleanup: true
+  api_key:
+    secure: ZC3+VW3XnrUF0wPtTxjYm3IDtfICmFJ8q1LYJVWBR8WTq5xrqXHv3/WRshr+br4CtLWHfUXF+Ii+ThT3A5X6+9LfodAN7HwFy3kTwcS4zxv9UrEcy/fJmeyPNmWzjS2h+ZERHoBV5uHDAtWi+XAqAeNfu+5yLa9Ax7rPhhwXrr4=
+  on:
+    tags: true
+    repo: cBioPortal/oncoprintjs
