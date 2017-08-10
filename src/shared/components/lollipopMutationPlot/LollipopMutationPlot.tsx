@@ -426,10 +426,10 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                             </button>
                         </div>
 
-                        <div className="small" style={{float:'right',display:'flex'}}>
+                        <div className="small" style={{float:'right',display:'flex', alignItems:'center'}}>
                                 <span>Y-Axis Max:</span>
                                     <input
-                                        style={{display:"inline-block", width:200, marginLeft:10, marginRight:10}}
+                                        style={{display:"inline-block", padding:0, width:200, marginLeft:10, marginRight:10}}
                                         type="range"
                                         min={this.countRange[0]}
                                         max={this.countRange[1]}

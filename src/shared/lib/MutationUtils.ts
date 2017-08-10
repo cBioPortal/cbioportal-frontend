@@ -180,3 +180,29 @@ export function somaticMutationRate(hugoGeneSymbol: string,
        return 0;
    }
 }
+
+/**
+ * Percentage of cases/samples with a somatic mutation in given gene.
+ */
+// TODO mostly duplicate of somaticMutationRate, we should eventually replace somaticMutationRate with this one
+export function somaticMutationRateBySample(hugoGeneSymbol: string, mutations: Mutation[],
+                                            sampleIds: string[]) {
+    if (mutations.length > 0 && sampleIds.length > 0) {
+        return (
+            _.chain(mutations)
+                .filter((m:Mutation) => (
+                    m.gene.hugoGeneSymbol === hugoGeneSymbol &&
+                    m.mutationStatus !== MUTATION_STATUS_GERMLINE &&
+                    // filter for given sample IDs
+                    sampleIds.indexOf(m.sampleId) > -1
+                ))
+                .map('sampleId')
+                .uniq()
+                .value()
+                .length * 100.0 /
+                sampleIds.length
+        );
+    } else {
+        return 0;
+    }
+}

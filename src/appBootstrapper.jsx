@@ -13,6 +13,10 @@ import * as superagent from 'superagent';
 import { getHost } from './shared/api/urls';
 import { validateParametersPatientView } from './shared/lib/validateParameters';
 
+if (localStorage.heroku && localStorage.localdev !== "true") {
+    __webpack_public_path__ = ['//',localStorage.heroku,'.herokuapp.com','/'].join('');
+}
+
 if (!window.hasOwnProperty("$")) {
     window.$ = $;
 }
