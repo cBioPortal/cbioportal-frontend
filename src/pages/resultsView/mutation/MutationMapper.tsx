@@ -84,10 +84,7 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                     hugoGeneSymbol={this.props.store.gene.result.hugoGeneSymbol}
                     mutations={this.props.store.mutationData.result}
                     sampleIds={this.props.store.sampleIds.result}
-                    patientIds={this.props.store.patientIds.result}
-                    patientIdsStatus={this.props.store.patientIds.status}
-                    mskImpactGermlineConsentedPatientIds={this.props.store.mskImpactGermlineConsentedPatientIds.result}
-                    mskImpactGermlineConsentedPatientIdsStatus={this.props.store.mskImpactGermlineConsentedPatientIds.status}
+                    germlineConsentedSampleIds={this.props.store.germlineConsentedSampleIds}
                 />
             );
         } else {

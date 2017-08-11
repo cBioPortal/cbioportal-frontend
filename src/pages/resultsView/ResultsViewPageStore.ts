@@ -1,5 +1,5 @@
 import {
-    DiscreteCopyNumberFilter, DiscreteCopyNumberData, ClinicalData
+    DiscreteCopyNumberFilter, DiscreteCopyNumberData
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {computed, observable, action} from "mobx";
@@ -14,13 +14,11 @@ import PdbHeaderCache from "shared/cache/PdbHeaderCache";
 import {
     findGeneticProfileIdDiscrete, fetchMyCancerGenomeData,
     fetchDiscreteCNAData, findMutationGeneticProfileId, mergeDiscreteCNAData,
-    fetchSamples, fetchClinicalDataInStudy, generateDataQueryFilter, makeStudyToCancerTypeMap,
+    fetchSamples, fetchClinicalDataInStudy, generateDataQueryFilter,
     fetchSamplesWithoutCancerTypeClinicalData, fetchStudiesForSamplesWithoutCancerTypeClinicalData
 } from "shared/lib/StoreUtils";
 import {MutationMapperStore} from "./mutation/MutationMapperStore";
 import AppConfig from "appConfig";
-import * as _ from 'lodash';
-import { IMPACT_GERMLINE_TESTING_CONSENT } from "shared/constants";
 
 export class ResultsViewPageStore {
 
@@ -71,8 +69,7 @@ export class ResultsViewPageStore {
                 this.studiesForSamplesWithoutCancerTypeClinicalData,
                 this.samplesWithoutCancerTypeClinicalData,
                 this.sampleListId,
-                this.patientIds,
-                this.mskImpactGermlineConsentedPatientIds);
+                this.germlineConsentedSampleIds);
 
             this.mutationMapperStores[hugoGeneSymbol] = store;
 
@@ -106,24 +103,19 @@ export class ResultsViewPageStore {
         }
     }, []);
 
-    readonly mskImpactGermlineConsentedPatientIds = remoteData({
-        await: () => [this.patientIds],
+    readonly germlineConsentedSampleIds = remoteData({
         invoke: async () => {
-            const clinicalDataSingleStudyFilter = {
-                attributeIds: [IMPACT_GERMLINE_TESTING_CONSENT],
-                ids: this.patientIds.result
-            };
-            const clinicalDataResponse = await fetchClinicalDataInStudy(
-                this.studyId, clinicalDataSingleStudyFilter, 'PATIENT'
-            );
-            if (clinicalDataResponse) {
-                return _.uniq(clinicalDataResponse.map(
-                    (cd:ClinicalData) => cd.entityId)
-                );
+            if (this.germlineSampleListId) {
+                return await client.getAllSampleIdsInSampleListUsingGET({
+                    sampleListId: this.germlineSampleListId
+                });
             } else {
                 return [];
             }
         },
+        onError: () => {
+            // fail silently
+        }
     }, []);
 
     readonly samples = remoteData({
@@ -148,19 +140,17 @@ export class ResultsViewPageStore {
         invoke: async () => fetchStudiesForSamplesWithoutCancerTypeClinicalData(this.samplesWithoutCancerTypeClinicalData)
     }, []);
 
-    readonly patientIds = remoteData({
-        await: () => [this.samples],
-        invoke: async () => {
-            return _.chain(this.samples.result).map('patientId').uniq().value();
-        },
-    }, []);
-
     readonly studies = remoteData({
         invoke: async()=>([await client.getStudyUsingGET({studyId: this.studyId})])
     }, []);
 
-    @computed get studyToCancerType() {
-        return makeStudyToCancerTypeMap(this.studies.result);
+    @computed get germlineSampleListId(): string|undefined {
+        if (this.studyId) {
+            return `${this.studyId}_germline`;
+        }
+        else {
+            return undefined;
+        }
     }
 
     readonly geneticProfilesInStudy = remoteData(() => {
