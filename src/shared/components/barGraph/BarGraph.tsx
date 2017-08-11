@@ -185,7 +185,8 @@ export default class BarGraph extends React.Component<IBarGraphProps, {}> {
     }
 
     render() {
-        return this.byPrimarySiteStudies.length ? <canvas ref={el => this.chartTarget = el} height="500px"/> : null;
+        const length = this.byPrimarySiteStudies.length;
+        return length ? <canvas ref={el => this.chartTarget = el} height={70 + 430 * (length > 20 ? 20 : length)/20}/> : null;
     }
 
 };
