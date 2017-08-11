@@ -1,4 +1,5 @@
 import * as React from 'react';
+import * as _ from 'lodash';
 import {observer} from "mobx-react";
 import {
     IStructureVisualizerProps, IResidueSpec
@@ -8,7 +9,9 @@ import StructureVisualizer3D from "./StructureVisualizer3D";
 export interface IStructureViewerProps extends IStructureVisualizerProps {
     pdbId: string;
     chainId: string;
+    bounds: {width: number|string, height: number|string};
     residues?: IResidueSpec[];
+    containerRef?: (div: HTMLDivElement) => void;
 }
 
 @observer
@@ -29,7 +32,12 @@ export default class StructureViewer extends React.Component<IStructureViewerPro
         return (
             <div
                 ref={this.divHandler}
-                style={{height: 300}}
+                style={{
+                    height: this.props.bounds.height,
+                    width: this.props.bounds.width,
+                    padding: 0
+                }}
+                className="borderedChart"
             />
         );
     }
@@ -42,7 +50,7 @@ export default class StructureViewer extends React.Component<IStructureViewerPro
         }
     }
 
-    public componentDidUpdate() {
+    public componentDidUpdate(prevProps: IStructureViewerProps) {
         if (this.wrapper) {
             // if pdbId is updated we need to reload the structure
             if (this.props.pdbId !== this._pdbId) {
@@ -53,10 +61,18 @@ export default class StructureViewer extends React.Component<IStructureViewerPro
             else {
                 this.wrapper.updateViewer(this.props.chainId, this.props.residues, this.props);
             }
+
+            if (!_.isEqual(this.props.bounds, prevProps.bounds)) {
+                this.wrapper.resize();
+            }
         }
     }
 
     private divHandler(div:HTMLDivElement) {
          this._3dMolDiv = div;
+
+         if (this.props.containerRef) {
+             this.props.containerRef(div);
+         }
     }
 }
