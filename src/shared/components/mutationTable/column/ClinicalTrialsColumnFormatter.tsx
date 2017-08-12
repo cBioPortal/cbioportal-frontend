@@ -6,12 +6,13 @@ import MolecularMatch from "../../trials/MolecularMatch";
 
 export interface IClinicalTrialsColumnProps {
     enableMolecularMatch: boolean;
-    molecularMatchData?: Map<string, number>;
+    molecularMatchData?: string;
 }
 
 export interface IClinicalTrial {
     isMolecularMatch: boolean;
     count: number | null | undefined;
+    trials: any[] | null | undefined;
    // isMatchMiner: boolean;
 }
 
@@ -19,7 +20,7 @@ export interface IClinicalTrial {
 export default class ClinicalTrialsColumnFormatter
 {
     public static getData(rowData:Mutation[]|undefined,
-                          molecularMatchData?:Map<string, number>)
+                          molecularMatchData?:string)
     {
         let value: IClinicalTrial;
 
@@ -29,31 +30,51 @@ export default class ClinicalTrialsColumnFormatter
             value = {
                 isMolecularMatch: true,
                 count: molecularMatchData ?
-                    ClinicalTrialsColumnFormatter.getIndicatorData(mutation, molecularMatchData) : undefined
+                    ClinicalTrialsColumnFormatter.getIndicatorData(mutation, molecularMatchData, true) : undefined,
+                trials: molecularMatchData ?
+                    ClinicalTrialsColumnFormatter.getIndicatorData(mutation, molecularMatchData, false) : undefined
             };
         }
         else {
             value = {
                 isMolecularMatch: false,
-                count: undefined
+                count: undefined,
+                trials: undefined
             };
        }
 
         return value;
     }
 
-    public static getIndicatorData(mutation:Mutation, molecularMatchData:any): number | null
+    public static getIndicatorData(mutation:Mutation, molecularMatchData:any, isCount:boolean): any | null
     {
         if (molecularMatchData == null) {
             return null;
         }
 
+        // console.log("$$$$$$$$$$$$$$$$$$$$$$$$$ " + molecularMatchData);
+        var dataArr = JSON.parse(molecularMatchData);
 
-        for (var key in molecularMatchData){
+        for (var data in dataArr){
+            if (dataArr.hasOwnProperty(data)) {
+                console.log("$$$$$$$$$$$$$$$$$$$$$$" +dataArr[data].mutation);
+                console.log("$$$$$$$$$$$$$$$$$$$$$$" +dataArr[data].count);
+                if(dataArr[data].mutation == mutation.gene.hugoGeneSymbol){
 
-            if(key == (mutation.gene.hugoGeneSymbol)){ //+ " " + mutation.proteinChange
-                return molecularMatchData[key] as number;
+                    if(isCount){
+                        return dataArr[data].count as number;
+                    }
+                    else{
+                        console.log("$$$$$$$$$$$$$$$$$$$$$$" +JSON.stringify(dataArr[data].trials));
+
+                        return JSON.stringify(dataArr[data].trials);
+                    }
+                }
             }
+            // if(data"id") == (mutation.gene.hugoGeneSymbol))
+            // if(key == (mutation.gene.hugoGeneSymbol)){ //+ " " + mutation.proteinChange
+            //     return molecularMatchData[key] as number;
+            // }
         }
         // molecularMatchData.forEach((object ke) => {
         //     if(key == (mutation.gene.hugoGeneSymbol)){ //+ " " + mutation.proteinChange
@@ -62,7 +83,7 @@ export default class ClinicalTrialsColumnFormatter
         //     console.log(key, value);
         // });
 
-        return 0;
+        return null;
     }
 
 
@@ -71,7 +92,7 @@ export default class ClinicalTrialsColumnFormatter
         const trial:IClinicalTrial = ClinicalTrialsColumnFormatter.getData(
             data, columnProps.molecularMatchData);
 
-        let evidenceQuery:Query|undefined;
+        // let evidenceQuery:Query|undefined;
 
         if (columnProps.molecularMatchData) {
             //evidenceQuery = this.getEvidenceQuery(data[0], columnProps.oncoKbData) || undefined;
@@ -89,6 +110,7 @@ export default class ClinicalTrialsColumnFormatter
                 <If condition={columnProps.enableMolecularMatch || false}>
         <MolecularMatch
             count={annotation.count}
+            trials={annotation.trials}
         />
         </If>
         </span>

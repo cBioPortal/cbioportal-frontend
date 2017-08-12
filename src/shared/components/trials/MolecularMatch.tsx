@@ -1,14 +1,17 @@
 import * as React from "react";
 import {Modal} from "react-bootstrap";
+// import ReactTooltip from "react-tooltip";
 import {observer} from "mobx-react";
 import {Circle} from "better-react-spinkit";
 import DefaultTooltip from "shared/components/DefaultTooltip";
 import annotationStyles from "./styles/annotation.module.scss";
 import molecularMatchIconStyles from "./styles/molecularmatchIcon.module.scss";
 import {observable} from "mobx";
+import MolecularMatchTooltip from "./MolecularMatchTooltip";
 
 export interface IMolecularMatchProps {
-    count?: number | null;
+    count?: number | null | undefined
+    trials?: any | null | undefined;
 }
 
 export function hideArrow(tooltipEl: any) {
@@ -20,7 +23,6 @@ export function hideArrow(tooltipEl: any) {
 @observer
 export default class MolecularMatch extends React.Component<IMolecularMatchProps, {}>
 {
-    @observable showFeedback:boolean = false;
     @observable tooltipDataLoadComplete:boolean = false;
 
     public static get MOLECULAR_MATCH_ICON_STYLE()
@@ -34,10 +36,8 @@ export default class MolecularMatch extends React.Component<IMolecularMatchProps
     {
         super(props);
 
-        this.handleFeedbackOpen = this.handleFeedbackOpen.bind(this);
-        this.handleFeedbackClose = this.handleFeedbackClose.bind(this);
         this.handleLoadComplete = this.handleLoadComplete.bind(this);
-       // this.tooltipContent = this.tooltipContent.bind(this);
+        this.tooltipContent = this.tooltipContent.bind(this);
     }
 
     public render()
@@ -67,6 +67,24 @@ export default class MolecularMatch extends React.Component<IMolecularMatchProps
             );
         }
 
+        const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
+
+        if (this.tooltipDataLoadComplete || this.props.count !== null)
+    {
+        mmContent = (
+            <DefaultTooltip
+                overlay={this.tooltipContent}
+                placement="right"
+                trigger={['hover', 'focus']}
+                arrowContent={arrowContent}
+                onPopupAlign={hideArrow}
+                destroyTooltipOnHide={false}
+            >
+                {mmContent}
+            </DefaultTooltip>
+        );
+    }
+
         return mmContent;
     }
 
@@ -81,7 +99,7 @@ export default class MolecularMatch extends React.Component<IMolecularMatchProps
     {
         return (
             <DefaultTooltip
-                overlay={<span>Error fetching OncoKB data</span>}
+                overlay={<span>Error fetching MolecularMatch data</span>}
                 placement="right"
                 trigger={['hover', 'focus']}
                 arrowContent={<div className="rc-tooltip-arrow-inner"/>}
@@ -94,20 +112,17 @@ export default class MolecularMatch extends React.Component<IMolecularMatchProps
         );
     }
 
-    //
-    // private tooltipContent(): JSX.Element
-    // {
-    //     return (
-    //         <MolecularMatchTooltip
-    //             indicator={this.props.indicator || undefined}
-    //             evidenceCache={this.props.evidenceCache}
-    //             evidenceQuery={this.props.evidenceQuery}
-    //             pubMedCache={this.props.pubMedCache}
-    //             handleFeedbackOpen={this.handleFeedbackOpen}
-    //             onLoadComplete={this.handleLoadComplete}
-    //         />
-    //     );
-    // }
+    private tooltipContent(): JSX.Element
+    {
+        return (
+            <MolecularMatchTooltip
+                count={this.props.count || undefined}
+                trials={this.props.trials || undefined}
+                onLoadComplete={this.handleLoadComplete}
+            />
+        );
+    }
+
 
     // purpose of this callback is to trigger re-instantiation
     // of the tooltip upon full load of the tooltip data
@@ -116,14 +131,6 @@ export default class MolecularMatch extends React.Component<IMolecularMatchProps
         if (!this.tooltipDataLoadComplete) {
             this.tooltipDataLoadComplete = true;
         }
-    }
-
-    private handleFeedbackOpen(): void {
-        this.showFeedback = true;
-    }
-
-    private handleFeedbackClose(): void {
-        this.showFeedback = false;
     }
 
     private molecularMatchImageClassNames(count: number | any) {
@@ -139,4 +146,6 @@ export default class MolecularMatch extends React.Component<IMolecularMatchProps
 
         return molecularMatchIconStyles[className];
     }
+
+
 }

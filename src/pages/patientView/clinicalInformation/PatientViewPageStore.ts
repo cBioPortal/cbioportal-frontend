@@ -238,8 +238,9 @@ export class PatientViewPageStore {
         await: () => [
             this.mutationData,
             this.uncalledMutationData
+
         ],
-        invoke: () => fetchMolecularMatchTrials(this.mutationData, this.uncalledMutationData)
+        invoke: () => fetchMolecularMatchTrials(this.sampleIdToTumorType, this.mutationData, this.uncalledMutationData)
     });
 
     readonly mutSigData = remoteData({

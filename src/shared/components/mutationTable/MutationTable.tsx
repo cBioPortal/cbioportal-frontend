@@ -56,7 +56,7 @@ export interface IMutationTableProps {
     hotspots?: IHotspotData;
     cosmicData?:ICosmicData;
     oncoKbData?:IOncoKbData;
-    molecularMatchData?:Map<string, number>;
+    molecularMatchData?:string;
     mrnaExprRankGeneticProfileId?:string;
     discreteCNAGeneticProfileId?:string;
     columns?:MutationTableColumnType[];
@@ -87,7 +87,6 @@ export enum MutationTableColumnType {
     NORMAL_ALLELE_FREQ,
     MUTATION_ASSESSOR,
     ANNOTATION,
-    CLINICAL_TRIALS,
     COSMIC,
     COPY_NUM,
     MRNA_EXPR,
@@ -388,7 +387,9 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 pubMedCache: this.props.pubMedCache,
                 enableOncoKb: this.props.enableOncoKb as boolean,
                 enableMyCancerGenome: this.props.enableMyCancerGenome as boolean,
-                enableHotspot: this.props.enableHotspot as boolean
+                enableHotspot: this.props.enableHotspot as boolean,
+                enableMolecularMatch: true,
+                molecularMatchData: this.props.molecularMatchData
             })),
             sortBy:(d:Mutation[])=>{
                 return AnnotationColumnFormatter.sortValue(d,
@@ -398,14 +399,14 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             }
         };
 
-        this._columns[MutationTableColumnType.CLINICAL_TRIALS] = {
-            name: "Clinical Trials",
-            render: (d:Mutation[]) => (ClinicalTrialsColumnFormatter.renderFunction(d, {
-                enableMolecularMatch: true,
-                molecularMatchData: this.props.molecularMatchData
-
-            }))
-        };
+        // this._columns[MutationTableColumnType.CLINICAL_TRIALS] = {
+        //     name: "Clinical Trials",
+        //     render: (d:Mutation[]) => (ClinicalTrialsColumnFormatter.renderFunction(d, {
+        //         enableMolecularMatch: true,
+        //         molecularMatchData: this.props.molecularMatchData
+        //
+        //     }))
+        // };
 
         this._columns[MutationTableColumnType.CANCER_TYPE] = {
             name: "Cancer Type",

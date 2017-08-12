@@ -13,6 +13,7 @@ import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {IndicatorQueryResp, Query} from "shared/api/generated/OncoKbAPI";
 import {generateQueryVariantId, generateQueryVariant} from "shared/lib/OncoKbUtils";
 import {isHotspot, is3dHotspot} from "shared/lib/AnnotationUtils";
+import MolecularMatch from "../../trials/MolecularMatch";
 
 export interface IAnnotationColumnProps {
     enableOncoKb: boolean;
@@ -23,6 +24,8 @@ export interface IAnnotationColumnProps {
     oncoKbData?: IOncoKbData;
     oncoKbEvidenceCache?: OncoKbEvidenceCache;
     pubMedCache?: OncokbPubMedCache;
+    enableMolecularMatch: boolean;
+    molecularMatchData?: string;
 }
 
 export interface IAnnotation {
@@ -31,6 +34,9 @@ export interface IAnnotation {
     myCancerGenomeLinks: string[];
     oncoKbIndicator?: IndicatorQueryResp;
     oncoKbStatus: "error" | "complete" | "loading";
+    isMolecularMatch: boolean;
+    count: number | null | undefined;
+    trials: any | null | undefined;
 }
 
 /**
@@ -44,7 +50,10 @@ export default class AnnotationColumnFormatter
             oncoKbStatus: "complete",
             myCancerGenomeLinks: [],
             isHotspot: false,
-            is3dHotspot: false
+            is3dHotspot: false,
+            isMolecularMatch: false,
+            count: undefined,
+            trials: undefined
         };
     }
 
@@ -69,10 +78,11 @@ export default class AnnotationColumnFormatter
         return status;
     }
 
-    public static getData(rowData:Mutation[]|undefined,
-                          hotspotsData?:IHotspotData,
-                          myCancerGenomeData?:IMyCancerGenomeData,
-                          oncoKbData?:IOncoKbData)
+    public static getData(rowData: Mutation[] | undefined,
+                          hotspotsData?: IHotspotData,
+                          myCancerGenomeData?: IMyCancerGenomeData,
+                          oncoKbData?: IOncoKbData,
+                          molecularMatchData?: string)
     {
         let value: IAnnotation;
 
@@ -94,7 +104,12 @@ export default class AnnotationColumnFormatter
                 isHotspot: hotspotsData ?
                     isHotspot(mutation, hotspotsData.single) : false,
                 is3dHotspot: hotspotsData ?
-                    is3dHotspot(mutation, hotspotsData.clustered) : false
+                    is3dHotspot(mutation, hotspotsData.clustered) : false,
+                isMolecularMatch: true,
+                count: molecularMatchData ?
+                    AnnotationColumnFormatter.getClinicalTrialIndicatorData(mutation, molecularMatchData, true) : undefined,
+                trials: molecularMatchData ?
+                    AnnotationColumnFormatter.getClinicalTrialIndicatorData(mutation, molecularMatchData, false) : undefined
             };
         }
         else {
@@ -116,6 +131,46 @@ export default class AnnotationColumnFormatter
             mutation.mutationType);
 
         return oncoKbData.indicatorMap[id];
+    }
+
+    public static getClinicalTrialIndicatorData(mutation:Mutation, molecularMatchData:any, isCount:boolean): any | null
+    {
+        if (molecularMatchData == null) {
+            return null;
+        }
+
+        // console.log("$$$$$$$$$$$$$$$$$$$$$$$$$ " + molecularMatchData);
+        var dataArr = JSON.parse(molecularMatchData);
+
+        for (var data in dataArr){
+            if (dataArr.hasOwnProperty(data)) {
+                console.log("$$$$$$$$$$$$$$$$$$$$$$" +dataArr[data].mutation);
+                console.log("$$$$$$$$$$$$$$$$$$$$$$" +dataArr[data].count);
+                if(dataArr[data].mutation == mutation.gene.hugoGeneSymbol){
+
+                    if(isCount){
+                        return dataArr[data].count as number;
+                    }
+                    else{
+                        console.log("$$$$$$$$$$$$$$$$$$$$$$" +JSON.stringify(dataArr[data].trials));
+
+                        return JSON.stringify(dataArr[data].trials);
+                    }
+                }
+            }
+            // if(data"id") == (mutation.gene.hugoGeneSymbol))
+            // if(key == (mutation.gene.hugoGeneSymbol)){ //+ " " + mutation.proteinChange
+            //     return molecularMatchData[key] as number;
+            // }
+        }
+        // molecularMatchData.forEach((object ke) => {
+        //     if(key == (mutation.gene.hugoGeneSymbol)){ //+ " " + mutation.proteinChange
+        //         return value;
+        //     }
+        //     console.log(key, value);
+        // });
+
+        return null;
     }
 
     public static getEvidenceQuery(mutation:Mutation, oncoKbData:IOncoKbData): Query|undefined
@@ -183,7 +238,8 @@ export default class AnnotationColumnFormatter
         const annotation:IAnnotation = AnnotationColumnFormatter.getData(
             data, columnProps.hotspots,
             columnProps.myCancerGenomeData,
-            columnProps.oncoKbData);
+            columnProps.oncoKbData,
+            columnProps.molecularMatchData);
 
         let evidenceQuery:Query|undefined;
 
@@ -224,6 +280,12 @@ export default class AnnotationColumnFormatter
                     <CancerHotspots
                         isHotspot={annotation.isHotspot}
                         is3dHotspot={annotation.is3dHotspot}
+                    />
+                </If>
+                <If condition={columnProps.enableMolecularMatch || false}>
+                    <MolecularMatch
+                        count={annotation.count}
+                        trials={annotation.trials}
                     />
                 </If>
             </span>

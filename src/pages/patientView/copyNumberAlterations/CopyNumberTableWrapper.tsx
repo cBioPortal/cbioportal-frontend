@@ -39,6 +39,7 @@ type ICopyNumberTableWrapperProps = {
     gisticData:IGisticData;
     mrnaExprRankGeneticProfileId?:string;
     status:"loading"|"available"|"unavailable";
+    molecularMatchData?: string;
 };
 
 
@@ -94,7 +95,9 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
                 enableOncoKb: this.props.enableOncoKb as boolean,
                 pubMedCache: this.props.pubMedCache,
                 enableMyCancerGenome: false,
-                enableHotspot: false
+                enableHotspot: false,
+                enableMolecularMatch: false,
+                molecularMatchData: this.props.molecularMatchData
             })),
             sortBy:(d:DiscreteCopyNumberData[])=>{
                 return AnnotationColumnFormatter.sortValue(d,
@@ -103,22 +106,22 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
             order: 50
         });
 
-        columns.push({
-            name: "Clinical Trials",
-            render: (d:DiscreteCopyNumberData[]) => (AnnotationColumnFormatter.renderFunction(d, {
-                oncoKbData: this.props.cnaOncoKbData,
-                oncoKbEvidenceCache: this.props.oncoKbEvidenceCache,
-                enableOncoKb: this.props.enableOncoKb as boolean,
-                pubMedCache: this.props.pubMedCache,
-                enableMyCancerGenome: false,
-                enableHotspot: false
-            })),
-            sortBy:(d:DiscreteCopyNumberData[])=>{
-                return AnnotationColumnFormatter.sortValue(d,
-                    this.props.cnaOncoKbData);
-            },
-            order: 50
-        });
+        // columns.push({
+        //     name: "Clinical Trials",
+        //     render: (d:DiscreteCopyNumberData[]) => (AnnotationColumnFormatter.renderFunction(d, {
+        //         oncoKbData: this.props.cnaOncoKbData,
+        //         oncoKbEvidenceCache: this.props.oncoKbEvidenceCache,
+        //         enableOncoKb: this.props.enableOncoKb as boolean,
+        //         pubMedCache: this.props.pubMedCache,
+        //         enableMyCancerGenome: false,
+        //         enableHotspot: false
+        //     })),
+        //     sortBy:(d:DiscreteCopyNumberData[])=>{
+        //         return AnnotationColumnFormatter.sortValue(d,
+        //             this.props.cnaOncoKbData);
+        //     },
+        //     order: 50
+        // });
 
         columns.push({
             name: "Cytoband",

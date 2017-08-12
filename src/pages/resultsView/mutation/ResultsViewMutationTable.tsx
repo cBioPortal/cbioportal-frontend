@@ -22,7 +22,7 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
             MutationTableColumnType.SAMPLE_ID,
             MutationTableColumnType.COPY_NUM,
             MutationTableColumnType.ANNOTATION,
-            MutationTableColumnType.CLINICAL_TRIALS,
+            // MutationTableColumnType.CLINICAL_TRIALS,
             MutationTableColumnType.REF_READS_N,
             MutationTableColumnType.VAR_READS_N,
             MutationTableColumnType.REF_READS,
@@ -58,7 +58,7 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
         this._columns[MutationTableColumnType.CANCER_TYPE].order = 15;
         this._columns[MutationTableColumnType.PROTEIN_CHANGE].order = 20;
         this._columns[MutationTableColumnType.ANNOTATION].order = 30;
-        this._columns[MutationTableColumnType.CLINICAL_TRIALS].order = 35;
+        // this._columns[MutationTableColumnType.CLINICAL_TRIALS].order = 35;
         this._columns[MutationTableColumnType.MUTATION_TYPE].order = 40;
         this._columns[MutationTableColumnType.COPY_NUM].order = 50;
         this._columns[MutationTableColumnType.COSMIC].order = 60;

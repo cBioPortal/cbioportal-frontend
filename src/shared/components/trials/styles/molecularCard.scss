@@ -1,0 +1,201 @@
+h2 {
+  font-family: "Ubuntu",sans-serif,sans;
+  font-size: 1.1875em;
+  line-height: 0.95em;
+  font-weight: 500;
+  text-transform: uppercase;
+  margin: 0.5em 0;
+}
+.col-md-10 {
+  width: 83.33333333%;
+}
+.panel-gray {
+  background: #00a5b5;
+  background: -moz-linear-gradient(left, #00a5b5 0%, #193c6a 100%);
+  background: -webkit-gradient(linear, left top, right top, color-stop(0%, #00a5b5), color-stop(100%, #193c6a));
+  background: -webkit-linear-gradient(left, #00a5b5 0%, #193c6a 100%);
+  background: -o-linear-gradient(left, #00a5b5 0%, #193c6a 100%);
+  background: -ms-linear-gradient(left, #00a5b5 0%, #193c6a 100%);
+  background: linear-gradient(to right, #00a5b5 0%, #193c6a 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00a5b5', endColorstr='#193c6a', GradientType=1);
+  color: white;
+}
+
+.panel-heading {
+  padding: 8px 8px 8px 8px !important;
+  border-bottom: 1px solid transparent;
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+  font-size: 1.8875em !important;
+  text-transform: uppercase;
+
+}
+.col-lg-1, .col-lg-10, .col-lg-11, .col-lg-12, .col-lg-2, .col-lg-3, .col-lg-4, .col-lg-5, .col-lg-6, .col-lg-7, .col-lg-8, .col-lg-9, .col-md-1, .col-md-10, .col-md-11, .col-md-12, .col-md-2, .col-md-3, .col-md-4, .col-md-5, .col-md-6, .col-md-7, .col-md-8, .col-md-9, .col-sm-1, .col-sm-10, .col-sm-11, .col-sm-12, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9, .col-xs-1, .col-xs-10, .col-xs-11, .col-xs-12, .col-xs-2, .col-xs-3, .col-xs-4, .col-xs-5, .col-xs-6, .col-xs-7, .col-xs-8, .col-xs-9 {
+  position: relative;
+  min-height: 1px;
+  padding-right: 5px;
+  padding-left: 7px;
+}
+.molecular-row-link {
+  color: #546e7a;
+  font-size: 12px;
+  line-height: 22px;
+}
+a, a:hover, a::after, a:focus {
+  outline: medium none;
+  text-decoration: none;
+}
+a {
+  color: #00a6b5;
+}
+a {
+  color: #337ab7;
+  text-decoration: none;
+}
+a {
+  background-color: transparent;
+}
+.bs-tooltip {
+  cursor: pointer;
+  height: 15px !important;
+}
+.btn-drug-legend-high {
+  background-color: #00a6b5 !important;
+  border-color: #00a6b5 !important;
+  opacity: 1;
+  color: #000 !important;
+  font-size: 10px !important;
+  border-top-left-radius: 4px !important;
+  border-bottom-left-radius: 4px !important;
+}
+//.btn {
+//  display: inline-block;
+//  padding: 1px 2px;
+//  margin-bottom: 0;
+//  font-size: 10px !important;
+//  font-weight: 400;
+//  line-height: 1.42857143;
+//  text-align: center;
+//  white-space: nowrap;
+//}
+.small-text {
+  font-size: 14px;
+}
+.drug-item-footer {
+  height: 45px;
+  padding-right: 5px;
+  //border-top: 1px solid #ddd;
+  color: #37474f;
+}
+.drug-item-more {
+  cursor: pointer;
+  margin-top: 5px;
+  font-size: 18px;
+}
+.show-more-drug-link {
+  color: #546e7a;
+  font-weight: 300;
+  text-transform: uppercase;
+}
+.align-center, .center {
+  text-align: center !important;
+}
+.drug-item-footer i {
+  color: #f29e1a;
+  opacity: .7;
+  //-webkit-transition: opacity .4s ease-in;
+  //-moz-transition: opacity .4s ease-in;
+  //-o-transition: opacity .4s ease-in;
+  //transition: opacity .4s ease-in;
+}
+.fa {
+  display: inline-block;
+  font-family: FontAwesome;
+  font-style: normal;
+  font-weight: normal;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.show-more-drug-link span {
+  font-size: 14px;
+}
+.align-center, .center {
+  text-align: center !important;
+}
+.wizard-steps {
+  list-style: none;
+  display: table;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  position: relative;
+}
+
+.wizard-steps li .step {
+  border: 5px solid #ced1d6;
+  color: #546474;
+  font-size: 15px;
+  border-radius: 100%;
+  background-color: #FFF;
+  position: relative;
+  z-index: 2;
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+  line-height: 30px;
+  text-align: center;
+}
+#mm-card {
+  width: 600px;
+  height: 400px !important;
+}
+.wizard-steps li {
+  display: table-cell;
+  text-align: center;
+  width: 1%;
+}
+.wizard-steps {
+  list-style: none;
+}
+.wizard-steps li:first-child::before {
+  max-width: 51%;
+  left: 50%;
+}
+.wizard-steps li::before {
+  display: block;
+  content: "";
+  width: 100%;
+  height: 1px;
+  font-size: 0;
+  overflow: hidden;
+  border-top: 4px solid #CED1D6;
+  position: relative;
+  top: 21px;
+  z-index: 1;
+}
+.wizard-steps li.active .step {
+  border-color: #00a6b5 !important;
+}
+.wizard-steps li.active::before {
+  border-color: #00a6b5 !important;
+}
+.molecular-row {
+  background-color: #fff;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  margin: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12),0 1px 2px rgba(0,0,0,0.24);
+}
+
+.molecular-table {
+  border-collapse: separate;
+  border-spacing: 50px 50px;
+}
+
+.molecular-td {
+  padding: 20px 20px 20px 20px;
+  //padding: 5px 5px;
+  //border: 1px solid #000000;
+  //background: #ccc; /* Remove this line to disable grey background color */
+}

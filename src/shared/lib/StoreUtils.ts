@@ -64,7 +64,8 @@ export async function fetchMutationData(mutationFilter:MutationFilter,
     }
 }
 
-export async function fetchMolecularMatchTrials(mutationData:MobxPromise<Mutation[]>,
+export async function fetchMolecularMatchTrials(sampleIdToTumorType:{[sampleId: string]: string},
+                                                mutationData:MobxPromise<Mutation[]>,
                                                 uncalledMutationData?:MobxPromise<Mutation[]>,
                                                 client: CBioPortalAPI = defaultClient) {
 
@@ -82,13 +83,26 @@ export async function fetchMolecularMatchTrials(mutationData:MobxPromise<Mutatio
     var queryMutations:any = _.uniq(_.map(mutationDataResult, function(mutation:Mutation) {
         if (mutation && mutation.gene) {
 
-            var item = {facet: "MUTATION", term: mutation.gene.hugoGeneSymbol + " " + mutation.proteinChange};
-            return item;
+            var item = {facet: "MUTATION", term: mutation.gene.hugoGeneSymbol + " " + mutation.proteinChange } ;
+
+
+            return item ;
         }
         else {
             return {};
         }
     }));
+
+    // var item2 = {facet: "STATUS", term: "Enrolling"};
+    // var item3 = {facet: "TRIALTYPE", term: "Interventional"};
+    // var key;
+    // for(var i in sampleIdToTumorType){
+    //     key = sampleIdToTumorType[i];
+    // }
+    //
+    // var item4 = {facet: "CONDITION", term: key};
+
+    //var arr = queryMutations.concat([item2, item3, item4]);
     var jsonString = JSON.stringify(queryMutations);
 
 

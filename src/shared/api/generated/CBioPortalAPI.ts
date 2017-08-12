@@ -2252,7 +2252,7 @@ export default class CBioPortalAPI {
         'method' ? : "GET" | "POST" | "HEAD" | "OPTIONS" | "PUT" | "PATCH" | "DELETE" | "TRACE",
         $queryParameters ? : any,
         $domain ? : string
-    }): Promise < Map<string, number> > {
+    }): Promise < string > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;

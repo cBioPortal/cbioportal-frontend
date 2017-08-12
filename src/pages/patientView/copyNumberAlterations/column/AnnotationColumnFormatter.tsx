@@ -33,7 +33,10 @@ export default class AnnotationColumnFormatter
                 oncoKbIndicator,
                 myCancerGenomeLinks: [],
                 isHotspot: false,
-                is3dHotspot: false
+                is3dHotspot: false,
+                isMolecularMatch: false,
+                count: 0,
+                trials: "[]"
             };
         }
         else {
