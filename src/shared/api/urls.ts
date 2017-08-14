@@ -30,7 +30,7 @@ function getStudySummaryUrlParams(studyIds:string | ReadonlyArray<string>) {
     } else {
         cohortsArray = studyIds;
     }
-    return {pathname:'study.do', query: {cohorts: cohortsArray.join(",")}};
+    return {pathname:'study', query: {id: cohortsArray.join(",")}};
 }
 
 export function getStudySummaryUrl(studyIds:string | ReadonlyArray<string>) {
@@ -39,7 +39,8 @@ export function getStudySummaryUrl(studyIds:string | ReadonlyArray<string>) {
 }
 export function openStudySummaryFormSubmit(studyIds: string | ReadonlyArray<string>) {
     const params = getStudySummaryUrlParams(studyIds);
-    formSubmit(params.pathname, params.query, "_blank");
+    const method:"get"|"post" = params.query.id.length > 1800 ? "post" : "get";
+    formSubmit(params.pathname, params.query, "_blank", method);
 }
 export function getPubMedUrl(pmid:string) {
     return `http://www.ncbi.nlm.nih.gov/pubmed/${pmid}`;
