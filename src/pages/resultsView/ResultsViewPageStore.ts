@@ -181,10 +181,10 @@ export class ResultsViewPageStore {
     readonly discreteCNAData = remoteData({
         await: () => [
             this.geneticProfileIdDiscrete,
-            this.sampleIds
+            this.dataQueryFilter
         ],
         invoke: async () => {
-            const filter = this.dataQueryFilter as DiscreteCopyNumberFilter;
+            const filter = this.dataQueryFilter.result as DiscreteCopyNumberFilter;
             return fetchDiscreteCNAData(filter, this.geneticProfileIdDiscrete);
         },
         onResult: (result:DiscreteCopyNumberData[]) => {
@@ -195,9 +195,12 @@ export class ResultsViewPageStore {
 
     }, []);
 
-    @computed get dataQueryFilter() {
-        return generateDataQueryFilter(this.sampleListId, this.sampleIds.result);
-    }
+    readonly dataQueryFilter = remoteData({
+        await: () => [
+            this.sampleIds
+        ],
+        invoke: async () => generateDataQueryFilter(this.sampleListId, this.sampleIds.result)
+    });
 
     @computed get mergedDiscreteCNAData():DiscreteCopyNumberData[][] {
         return mergeDiscreteCNAData(this.discreteCNAData);
