@@ -100,13 +100,14 @@ export class MutationMapperStore {
 
     readonly mutationData = remoteData({
         await: () => [
-            this.gene
+            this.gene,
+            this.dataQueryFilter
         ],
         invoke: async () => {
             if (this.gene.result)
             {
                 const mutationFilter = {
-                    ...this.dataQueryFilter,
+                    ...this.dataQueryFilter.result,
                     entrezGeneIds: [this.gene.result.entrezGeneId]
                 } as MutationFilter;
 
@@ -224,9 +225,12 @@ export class MutationMapperStore {
         }
     }, undefined);
 
-    @computed get dataQueryFilter() {
-        return generateDataQueryFilter(this.sampleListId, this.sampleIds.result);
-    }
+    readonly dataQueryFilter = remoteData({
+        await: () => [
+            this.sampleIds
+        ],
+        invoke: async () => generateDataQueryFilter(this.sampleListId, this.sampleIds.result)
+    });
 
     @computed get processedMutationData(): Mutation[][] {
         // just convert Mutation[] to Mutation[][]
