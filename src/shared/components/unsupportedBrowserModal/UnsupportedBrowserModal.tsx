@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Modal } from 'react-bootstrap';
-import browser from 'detect-browser';
+import browser from 'bowser';
 
 interface IBrowserState {
     show: boolean;
@@ -58,13 +58,13 @@ export default class UnsupportedBrowserModal extends React.Component<{}, IBrowse
         if (sessionStorage === true) {
             this.setState({show: false});
         } else {
-            const isIE11 = String(name) === "ie" && Number(version.slice(0,2)) === 11;
+            const isIE11 = String(name) === "msie" && Number(version.slice(0,2)) === 11;
             name = name.toLowerCase();
 
             if (String(name) === 'unsupported') {
                 window.sessionStorage.browserError = true;
                 this.setState({show: true});
-            } else if (!(name === "chrome" || name === "firefox" || name === "edge" || name === "safari" || isIE11))  {
+            } else if (!(name === "chrome" || name === "firefox" || name === "msedge" || name === "safari" || isIE11))  {
                 window.sessionStorage.browserError = true;
                 this.setState({show: true});
             } else {
@@ -87,7 +87,7 @@ export default class UnsupportedBrowserModal extends React.Component<{}, IBrowse
                 </Modal.Header>
                 <Modal.Body>
                     <ul>
-                        <li>It looks like your using an {this.state.name === 'ie' ? ' old version of Internet Explorer' : 'unsupported browser'}.</li>
+                        <li>It looks like your using an {this.state.name === 'ie' ? 'old version of Internet Explorer' : 'unsupported browser'}.</li>
                         <li>Please consider using the latest version of Chrome, Safari, Firefox or Microsoft Edge.</li>
                     </ul>
                     <div style={{paddingLeft: 22}}>
