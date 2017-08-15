@@ -80,7 +80,7 @@
     "bundle-loader": "^0.5.4",
     "chart.js": "^2.6.0",
     "classnames": "^2.2.5",
-    "clinical-timeline": "0.0.14",
+    "clinical-timeline": "0.0.15",
     "convert-css-color-name-to-hex": "^0.1.1",
     "copy-webpack-plugin": "^4.0.1",
     "cross-env": "^3.1.4",
