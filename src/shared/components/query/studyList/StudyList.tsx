@@ -1,4 +1,5 @@
 import * as React from 'react';
+import {Button} from "react-bootstrap";
 import {TypeOfCancer as CancerType, CancerStudy} from "../../../api/generated/CBioPortalAPI";
 import * as styles_any from './styles.module.scss';
 import classNames from 'classnames';
@@ -31,6 +32,7 @@ const styles = {
 		icon: string,
 		iconWithTooltip: string,
 		trashIcon: string,
+		summaryIcon: string,
 		tooltip: string,
 
 		disabled: string,
@@ -200,11 +202,6 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, void
 				tooltip: study.description,
 			},
 			{
-				icon: 'bar-chart',
-				onClick: study.studyId && (()=>openStudySummaryFormSubmit(study.studyId)),
-				tooltip: study.studyId && "Summary",
-			},
-			{
 				icon: 'book',
 				onClick: study.pmid && getPubMedUrl(study.pmid),
 				tooltip: study.pmid && "PubMed",
@@ -267,6 +264,15 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, void
 
 					return content;
 				})}
+				{study.studyId && (
+					<Button bsSize="xs"
+							bsStyle="primary"
+							onClick={()=>openStudySummaryFormSubmit(study.studyId)}
+							className={styles.summaryIcon}
+					>
+						Summary
+					</Button>
+				)}
 			</span>
 		);
 	}
