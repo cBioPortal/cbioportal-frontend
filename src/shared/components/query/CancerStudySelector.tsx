@@ -13,7 +13,7 @@ import memoize from "memoize-weak-decorator";
 import {If, Then} from 'react-if';
 import {QueryStoreComponent} from "./QueryStore";
 import SectionHeader from "../sectionHeader/SectionHeader";
-import {Modal} from 'react-bootstrap';
+import {Modal, Button} from 'react-bootstrap';
 import Autosuggest from 'react-bootstrap-autosuggest'
 import ReactElement = React.ReactElement;
 import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
@@ -191,9 +191,11 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 													}}
 											onClick={this.handlers.onSummaryClick}
 										>
-											<FontAwesome
-												name={"bar-chart"}
-											/>
+											<Button bsSize="xs"
+													bsStyle="primary"
+											>
+												Summary
+											</Button>
 										</div>
 									</DefaultTooltip>
 								);

@@ -740,7 +740,7 @@ export class QueryStore
 	}
 
 	public isTemporaryVirtualCohort(studyId:string):boolean {
-		return !this.temporaryVirtualCohortId.result || this.temporaryVirtualCohortId.result === studyId;
+		return this.temporaryVirtualCohortId.isComplete && this.temporaryVirtualCohortId.result === studyId;
 	}
 
 	private isSingleStudySelected(shouldBeVirtualCohort:boolean) {
