@@ -35,6 +35,8 @@ import VariantCountCache from "shared/cache/VariantCountCache";
 import PubMedCache from "shared/cache/PubMedCache";
 import MutationCountCache from "shared/cache/MutationCountCache";
 import {IMobXApplicationDataStore} from "shared/lib/IMobXApplicationDataStore";
+import generalStyles from "./column/styles.module.scss";
+import classnames from 'classnames';
 
 export interface IMutationTableProps {
     studyId?:string;
@@ -103,9 +105,9 @@ type MutationTableColumn = Column<Mutation[]>&{order?:number, shouldExclude?:()=
 export class MutationTableComponent extends LazyMobXTable<Mutation[]> {
 }
 
-export function getSpanForDataField(data:Mutation[], dataField:string) {
+export function getDivForDataField(data:Mutation[], dataField:string, isInteger?:boolean) {
     let contents = getTextForDataField(data, dataField);
-    return (<span>{contents}</span>);
+    return (<div className={classnames(isInteger ? generalStyles["integer-data"] : undefined)}>{contents}</div>);
 }
 
 export function getTextForDataField(data:Mutation[], dataField:string) {
@@ -237,7 +239,8 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             render: (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, [d[0].sampleId], "normalRefCount"),
             download: (d:Mutation[])=>AlleleCountColumnFormatter.getTextValue(d, [d[0].sampleId], "normalRefCount"),
             sortBy:(d:Mutation[])=>d.map(m=>m.normalRefCount),
-            visible: false
+            visible: false,
+            align: "right"
         };
 
         this._columns[MutationTableColumnType.VAR_READS_N] = {
@@ -245,7 +248,8 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             render: (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, [d[0].sampleId], "normalAltCount"),
             download: (d:Mutation[])=>AlleleCountColumnFormatter.getTextValue(d, [d[0].sampleId], "normalAltCount"),
             sortBy:(d:Mutation[])=>d.map(m=>m.normalAltCount),
-            visible: false
+            visible: false,
+            align: "right"
         };
 
         this._columns[MutationTableColumnType.REF_READS] = {
@@ -253,7 +257,8 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             render: (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, [d[0].sampleId], "tumorRefCount"),
             download: (d:Mutation[])=>AlleleCountColumnFormatter.getTextValue(d, [d[0].sampleId], "tumorRefCount"),
             sortBy:(d:Mutation[])=>d.map(m=>m.tumorRefCount),
-            visible: false
+            visible: false,
+            align: "right"
         };
 
         this._columns[MutationTableColumnType.VAR_READS] = {
@@ -261,28 +266,31 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             render: (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, [d[0].sampleId], "tumorAltCount"),
             download: (d:Mutation[])=>AlleleCountColumnFormatter.getTextValue(d, [d[0].sampleId], "tumorAltCount"),
             sortBy:(d:Mutation[])=>d.map(m=>m.tumorAltCount),
-            visible: false
+            visible: false,
+            align: "right"
         };
 
         this._columns[MutationTableColumnType.START_POS] = {
             name: "Start Pos",
-            render: (d:Mutation[])=>getSpanForDataField(d, "startPosition"),
+            render: (d:Mutation[])=>getDivForDataField(d, "startPosition", true),
             download: (d:Mutation[])=>getTextForDataField(d, "startPosition"),
             sortBy:(d:Mutation[])=>d.map(m=>m.startPosition),
-            visible: false
+            visible: false,
+            align: "right"
         };
 
         this._columns[MutationTableColumnType.END_POS] = {
             name: "End Pos",
-            render: (d:Mutation[])=>getSpanForDataField(d, "endPosition"),
+            render: (d:Mutation[])=>getDivForDataField(d, "endPosition", true),
             download: (d:Mutation[])=>getTextForDataField(d, "endPosition"),
             sortBy:(d:Mutation[])=>d.map(m=>m.endPosition),
-            visible: false
+            visible: false,
+            align: "right"
         };
 
         this._columns[MutationTableColumnType.REF_ALLELE] = {
             name: "Ref",
-            render: (d:Mutation[])=>getSpanForDataField(d, "referenceAllele"),
+            render: (d:Mutation[])=>getDivForDataField(d, "referenceAllele"),
             download: (d:Mutation[])=>getTextForDataField(d, "referenceAllele"),
             sortBy:(d:Mutation[])=>d.map(m=>m.referenceAllele),
             visible: false
@@ -290,7 +298,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
 
         this._columns[MutationTableColumnType.VAR_ALLELE] = {
             name: "Var",
-            render: (d:Mutation[])=>getSpanForDataField(d, "variantAllele"),
+            render: (d:Mutation[])=>getDivForDataField(d, "variantAllele"),
             download: (d:Mutation[])=>getTextForDataField(d, "variantAllele"),
             sortBy:(d:Mutation[])=>d.map(m=>m.variantAllele),
             visible: false
@@ -320,7 +328,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
 
         this._columns[MutationTableColumnType.CENTER] = {
             name: "Center",
-            render: (d:Mutation[])=>getSpanForDataField(d, "center"),
+            render: (d:Mutation[])=>getDivForDataField(d, "center"),
             download: (d:Mutation[])=>getTextForDataField(d, "center"),
             sortBy:(d:Mutation[])=>d.map(m=>m.center),
             filter: (d:Mutation[], filterString:string, filterStringUpper:string) =>
@@ -339,12 +347,13 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
 
         this._columns[MutationTableColumnType.CHROMOSOME] = {
             name: "Chromosome",
-            render: (d:Mutation[])=>(<span>{ChromosomeColumnFormatter.getData(d)}</span>),
+            render: (d:Mutation[])=>(<div className={generalStyles["integer-data"]}>{ChromosomeColumnFormatter.getData(d)}</div>),
             download: (d:Mutation[])=>(ChromosomeColumnFormatter.getData(d) || ""),
             sortBy:(d:Mutation[])=>ChromosomeColumnFormatter.getSortValue(d),
             filter:(d:Mutation[], filterString:string, filterStringUpper:string) =>
                 (ChromosomeColumnFormatter.getData(d)+'').toUpperCase().indexOf(filterStringUpper) > -1,
-            visible: false
+            visible: false,
+            align: "right"
         };
 
         this._columns[MutationTableColumnType.PROTEIN_CHANGE] = {
@@ -382,7 +391,8 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             sortBy: (d:Mutation[])=>CosmicColumnFormatter.getSortValue(d, this.props.cosmicData),
             download: (d:Mutation[])=>CosmicColumnFormatter.getDownloadValue(d, this.props.cosmicData),
             tooltip: (<span>COSMIC occurrences</span>),
-            defaultSortDirection: "desc"
+            defaultSortDirection: "desc",
+            align:"right"
         };
 
         this._columns[MutationTableColumnType.ANNOTATION] = {
@@ -424,7 +434,8 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             render: MutationCountColumnFormatter.makeRenderFunction(this),
             headerRender: (name: string) => <span style={{display:'inline-block', maxWidth:55}}>{name}</span>,
             sortBy: (d:Mutation[]) => MutationCountColumnFormatter.sortBy(d, this.props.mutationCountCache),
-            tooltip:(<span>Total number of nonsynonymous mutations in the sample</span>)
+            tooltip:(<span>Total number of nonsynonymous mutations in the sample</span>),
+            align: "right"
         };
     }
 

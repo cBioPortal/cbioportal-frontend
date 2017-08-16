@@ -1,5 +1,6 @@
 import React from 'react';
-import {assert} from 'chai';
+import {default as chai, assert} from 'chai';
+import chaiEnzyme from 'chai-enzyme';
 import {shallow, mount, ReactWrapper} from 'enzyme';
 import sinon from 'sinon';
 import {lazyMobXTableSort, default as LazyMobXTable, Column} from "./LazyMobXTable";
@@ -16,6 +17,7 @@ import {SimpleMobXApplicationDataStore} from "../../lib/IMobXApplicationDataStor
 import cloneJSXWithoutKeyAndRef from "shared/lib/cloneJSXWithoutKeyAndRef";
 
 expect.extend(expectJSX);
+chai.use(chaiEnzyme());
 
 class Table extends LazyMobXTable<any> {
 }
@@ -57,14 +59,16 @@ function clickNextPage(table:ReactWrapper<any, any>):boolean {
     }
 }
 
-function selectItemsPerPage(table:ReactWrapper<any, any>, opt:number):boolean {
-    let selector = table.find(PaginationControls).filterWhere(x=>x.hasClass("topPagination")).find(FormControl).filterWhere(x=>x.hasClass("itemsPerPageSelector")).find('select');
+function selectItemsPerPage(table:ReactWrapper<any, any>, opt:number) {
+    /*let selector = table.find(PaginationControls).filterWhere(x=>x.hasClass("topPagination")).find(FormControl).filterWhere(x=>x.hasClass("itemsPerPageSelector")).find('select');
     if (selector.length === 0) {
         return false;
     } else {
         selector.simulate('change', {target: {value:opt+""}});
         return true;
-    }
+    }*/
+    let onChangeItemsPerPage = table.find(PaginationControls).props().onChangeItemsPerPage;
+    onChangeItemsPerPage && onChangeItemsPerPage(opt);
 }
 
 function getItemsPerPage(table:ReactWrapper<any,any>):number|undefined {
@@ -154,14 +158,16 @@ describe('LazyMobXTable', ()=>{
         sortBy: (d:any)=>d.name,
         render:(d:any)=>(<span>{d.name}</span>),
         download:(d:any)=>d.name,
-        tooltip:(<span>Name of the data.</span>)
+        tooltip:(<span>Name of the data.</span>),
+        align: "right"
     },{
         name: "Number",
         sortBy: (d:any)=>d.num,
         render:(d:any)=>(<span>{d.num}</span>),
         download:(d:any)=>d.num+'',
         tooltip:(<span>Number of the data.</span>),
-        defaultSortDirection: "desc"
+        defaultSortDirection: "desc",
+        align: "left"
     },{
         name: "String",
         filter: (d:any,s:string)=>(d.str && d.str.indexOf(s) > -1),
@@ -169,7 +175,8 @@ describe('LazyMobXTable', ()=>{
         render:(d:any)=>(<span>{d.str}</span>),
         download:(d:any)=>d.str+'',
         tooltip:(<span>String of the data</span>),
-        defaultSortDirection: "desc"
+        defaultSortDirection: "desc",
+        align: "center"
     },{
         name: "Number List",
         render:(d:any)=>(<span>BLAH</span>),
@@ -315,6 +322,20 @@ describe('LazyMobXTable', ()=>{
 
             table = mount(<Table columns={[]} data={[]}/>);
             assert.deepEqual(table.find(SimpleTable).find("th").length, 0, "no columns given => no column headers rendered, case: no data");
+        });
+
+        it("adds the text-align property for a column header according to the specification", ()=>{
+            let table = mount(<Table columns={columns} data={data}/>);
+            const headers = table.find(SimpleTable).find("th");
+            const nameHeader = headers.at(0);
+            const numberHeader = headers.at(1);
+            const stringHeader = headers.at(2);
+            const numberListHeader = headers.at(3);
+
+            chai.expect(nameHeader).to.have.style("textAlign", "right");
+            chai.expect(numberHeader).to.have.style("textAlign", "left");
+            chai.expect(stringHeader).to.have.style("textAlign", "center");
+            chai.expect(numberListHeader).not.to.have.style("textAlign");
         });
 
         it("has a tooltip element for columns with tooltips, and no tooltips for columns without tooltips", ()=>{
