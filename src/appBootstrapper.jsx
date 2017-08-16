@@ -16,6 +16,10 @@ import { validateParametersPatientView } from './shared/lib/validateParameters';
 
 if (localStorage.heroku && localStorage.localdev !== "true") {
     __webpack_public_path__ = ['//',localStorage.heroku,'.herokuapp.com','/'].join('');
+} else if (window.hasOwnProperty('frontendUrl')) {
+    // use given frontendUrl as base (use when deploying frontend on external
+    // CDN instead of cbioportal backend)
+    __webpack_public_path__ = window.frontendUrl;
 }
 
 if (!window.hasOwnProperty("$")) {
