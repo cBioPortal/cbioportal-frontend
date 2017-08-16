@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import {PdbUniprotAlignment} from "shared/api/generated/PdbAnnotationAPI";
+import {Alignment} from "shared/api/generated/Genome2StructureAPI";
 
 /**
  * Utility functions to generate mock data.
@@ -7,38 +7,44 @@ import {PdbUniprotAlignment} from "shared/api/generated/PdbAnnotationAPI";
  * @author Selcuk Onur Sumer
  */
 
-export function initPdbAlignment(alignmentString: string, uniprotFrom: number): PdbUniprotAlignment
+export function initPdbAlignment(alignmentString: string, uniprotFrom: number): Alignment
 {
     return initPdbAlignmentWithPartialProps({
         midlineAlign: alignmentString,
         pdbAlign: alignmentString,
-        uniprotAlign: alignmentString,
-        uniprotFrom: uniprotFrom,
-        uniprotTo: uniprotFrom + alignmentString.length - 1
+        seqAlign: alignmentString,
+        seqFrom: uniprotFrom,
+        seqTo: uniprotFrom + alignmentString.length - 1
     });
 }
 
-export function emptyPdbAlignment(): PdbUniprotAlignment
+export function emptyPdbAlignment(): Alignment
 {
     return {
         alignmentId: -1,
+        bitscore: 0,
         chain: "",
-        eValue: -1,
+        evalue: "",
         identity: -1,
-        identityP: -1,
+        identityPositive: -1,
         midlineAlign: "",
         pdbAlign: "",
-        uniprotAlign: "",
+        seqAlign: "",
         pdbFrom: 0,
         pdbId: "",
+        pdbNo: "",
+        pdbSeg: "",
         pdbTo: 0,
-        uniprotFrom: -1,
-        uniprotId: "",
-        uniprotTo: -1
+        seqFrom: -1,
+        seqId: "",
+        seqTo: -1,
+        segStart: "",
+        residueMapping: [],
+        updateDate: ""
     };
 }
 
-function initPdbAlignmentWithPartialProps(props:{[key:string]: any}): PdbUniprotAlignment
+function initPdbAlignmentWithPartialProps(props:{[key:string]: any}): Alignment
 {
     const alignment = emptyPdbAlignment();
 
