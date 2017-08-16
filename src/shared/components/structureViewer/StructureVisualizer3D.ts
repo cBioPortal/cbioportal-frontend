@@ -216,6 +216,13 @@ export default class StructureVisualizer3D extends StructureVisualizer
         } as IStructureVisualizerState);
     }
 
+    public resize()
+    {
+        if (this._3dMolViewer) {
+            this._3dMolViewer.resize();
+        }
+    }
+
     protected selectAll()
     {
         return {};

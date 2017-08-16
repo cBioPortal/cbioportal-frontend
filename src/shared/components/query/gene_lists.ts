@@ -9,7 +9,7 @@ const gene_lists = [{
 	"genes": ["AKR1C1", "AKR1C2", "AKR1C4", "CYP3A4", "CYP3A43", "CYP3A5", "CYP3A7", "UGT2B15", "UGT2B17", "UGT2B7"]
 }, {
 	"id": "Prostate Cancer: Down-regulated by androgen",
-	"genes": ["BCHE", "CDK8", "CTBP1", "CXCR7", "DDC", "DPH1", "FN1", "HES6", "MMP16", "MYC", "PEG3", "PIK3R3", "PRKD1", "SCNN1A", "SDC4", "SERPINI1", "SLC29A1", "ST7", "TULP4"]
+	"genes": ["BCHE", "CDK8", "CTBP1", "ACKR3", "DDC", "DPH1", "FN1", "HES6", "MMP16", "MYC", "PEG3", "PIK3R3", "PRKD1", "SCNN1A", "SDC4", "SERPINI1", "SLC29A1", "ST7", "TULP4"]
 }, {
 	"id": "Glioblastoma: TP53 Pathway",
 	"genes": ["CDKN2A", "MDM2", "MDM4", "TP53"]
@@ -60,10 +60,10 @@ const gene_lists = [{
 	"genes": ["RPS6KA1", "RPS6KA2", "RPS6KB1", "RPS6KB2", "EIF5A2", "EIF4E", "EIF4EBP1", "RPS6", "HIF1A"]
 }, {
 	"id": "General: Angiogenesis",
-	"genes": ["VEGFA", "VEGFB", "KDR", "IL8", "CXCR1", "CXCR2"]
+	"genes": ["VEGFA", "VEGFB", "KDR", "CXCL8", "CXCR1", "CXCR2"]
 }, {
 	"id": "General: Folate transport",
-	"genes": ["SLC19A1", "FOLR1", "FOLR2", "FOLR3", "FOLR4"]
+	"genes": ["SLC19A1", "FOLR1", "FOLR2", "FOLR3", "IZUMO1R"]
 }, {
 	"id": "General: Invasion and metastasis",
 	"genes": ["MMP1", "MMP2", "MMP3", "MMP7", "MMP9", "MMP10", "MMP11", "MMP12", "MMP13", "MMP14", "MMP15", "MMP16", "MMP17", "MMP19", "MMP21", "MMP23B", "MMP24", "MMP25", "MMP26", "MMP27", "MMP28", "ITGB3", "ITGAV", "PTK2", "CDH1", "SPARC", "WFDC2"]

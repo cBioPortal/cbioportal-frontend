@@ -22,6 +22,7 @@ export type SortDirection = 'asc' | 'desc';
 export type Column<T> = {
     name: string;
     headerRender?:(name:string)=>JSX.Element;
+    align?:"left"|"center"|"right";
     filter?:(data:T, filterString:string, filterStringUpper?:string, filterStringLower?:string)=>boolean;
     visible?:boolean;
     sortBy?:((data:T)=>(number|null)) | ((data:T)=>(string|null)) | ((data:T)=>(number|null)[]) | ((data:T)=>(string|null)[]);
@@ -290,7 +291,12 @@ class LazyMobXTableStore<T> {
                 headerProps.className = (this.sortAscending ? "sort-asc" : "sort-des");
             }
 
-            const label = column.headerRender ? column.headerRender(column.name) : (<span>{column.name}</span>);
+            let label;
+            if (column.headerRender) {
+                label = column.headerRender(column.name);
+            } else {
+                label = (<span>{column.name}</span>);
+            }
             let thContents;
 
             if (column.tooltip) {
@@ -302,8 +308,14 @@ class LazyMobXTableStore<T> {
             } else {
                 thContents = label;
             }
+
+            let style:any = {};
+            if (column.align) {
+                style.textAlign = column.align;
+            }
+
             return (
-                <th {...headerProps}>
+                <th {...headerProps} style={style}>
                     {thContents}
                 </th>
             );
@@ -587,13 +599,16 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
 			let paginationProps:IPaginationControlsProps = {
 				className:"text-center topPagination",
 				itemsPerPage:this.store.itemsPerPage,
+                totalItems:this.store.displayData.length,
 				currentPage:this.store.page,
 				onChangeItemsPerPage:this.handlers.changeItemsPerPage,
+                showItemsPerPageSelector: false,
 				onPreviousPageClick:this.handlers.decPage,
 				onNextPageClick:this.handlers.incPage,
 				previousPageDisabled:this.store.page === 0,
 				nextPageDisabled:this.store.page === this.store.maxPage,
-				textBeforeButtons:this.store.paginationStatusText
+				textBeforeButtons:this.store.paginationStatusText,
+                groupButtons: false
 			};
 			// override with given paginationProps if they exist
 			if (this.props.paginationProps) {
