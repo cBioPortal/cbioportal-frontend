@@ -548,6 +548,17 @@ export function findGeneticProfileIdDiscrete(geneticProfilesInStudy:MobxPromise<
     return profile ? profile.geneticProfileId : undefined;
 }
 
+export function findMutationGeneticProfileIdSynch(geneticProfilesInStudy: GeneticProfile[],
+                                             studyId:string,
+                                             suffix:string = GENETIC_PROFILE_MUTATIONS_SUFFIX)
+{
+    const profile = geneticProfilesInStudy.find((p: GeneticProfile) => {
+        return p.geneticProfileId === `${studyId}${suffix}`;
+    });
+
+    return profile ? profile.geneticProfileId : undefined;
+}
+
 export function findMutationGeneticProfileId(geneticProfilesInStudy: MobxPromise<GeneticProfile[]>,
                                              studyId:string,
                                              suffix:string = GENETIC_PROFILE_MUTATIONS_SUFFIX)
@@ -556,11 +567,7 @@ export function findMutationGeneticProfileId(geneticProfilesInStudy: MobxPromise
         return undefined;
     }
 
-    const profile = geneticProfilesInStudy.result.find((p: GeneticProfile) => {
-        return p.geneticProfileId === `${studyId}${suffix}`;
-    });
-
-    return profile ? profile.geneticProfileId : undefined;
+    return findMutationGeneticProfileIdSynch(geneticProfilesInStudy.result, studyId, suffix);
 }
 
 export function findUncalledMutationGeneticProfileId(geneticProfilesInStudy: MobxPromise<GeneticProfile[]>,

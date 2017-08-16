@@ -16,6 +16,16 @@ export interface IResultsViewPageProps {
     routing: any;
 }
 
+type MutationsTabInitProps = {
+    genes: string[];
+} & ({
+    studyToSampleMap:{[studyId:string]:{[sampleId:string]:boolean}};
+    studyToSampleListIdMap:{[studyId:string]:string};
+} | {
+    studyToSampleMap:undefined;
+    studyToSampleListIdMap:{[studyId:string]:string};
+});
+
 @inject('routing')
 @observer
 export default class ResultsViewPage extends React.Component<IResultsViewPageProps, {}> {
@@ -61,14 +71,14 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
     public exposeComponentRenderersToParentScript(){
 
-        exposeComponentRenderer('renderMutationsTab', (props:{genes:string[], studyId:string, samples:string[]|string})=>{
+        exposeComponentRenderer('renderMutationsTab',
+            (props:MutationsTabInitProps)=>{
             const resultsViewPageStore = new ResultsViewPageStore();
             resultsViewPageStore.hugoGeneSymbols = props.genes;
-            resultsViewPageStore.studyId = props.studyId;
-            if (typeof props.samples === "string") {
-                resultsViewPageStore.sampleListId = props.samples;
-            } else {
-                resultsViewPageStore.sampleList = props.samples;
+            if (props.studyToSampleMap) {
+                resultsViewPageStore._studyToSampleIds = props.studyToSampleMap;
+            } else if (props.studyToSampleListIdMap) {
+                resultsViewPageStore.studyToSampleListId = props.studyToSampleListIdMap;
             }
 
             return <div>

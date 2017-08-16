@@ -1,5 +1,5 @@
 import {
-    DiscreteCopyNumberFilter, DiscreteCopyNumberData, ClinicalData
+    DiscreteCopyNumberFilter, DiscreteCopyNumberData, ClinicalData, GeneticProfile
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {computed, observable, action} from "mobx";
@@ -15,12 +15,14 @@ import {
     findGeneticProfileIdDiscrete, fetchMyCancerGenomeData,
     fetchDiscreteCNAData, findMutationGeneticProfileId, mergeDiscreteCNAData,
     fetchSamples, fetchClinicalDataInStudy, generateDataQueryFilter, makeStudyToCancerTypeMap,
-    fetchSamplesWithoutCancerTypeClinicalData, fetchStudiesForSamplesWithoutCancerTypeClinicalData
+    fetchSamplesWithoutCancerTypeClinicalData, fetchStudiesForSamplesWithoutCancerTypeClinicalData,
+    findMutationGeneticProfileIdSynch
 } from "shared/lib/StoreUtils";
 import {MutationMapperStore} from "./mutation/MutationMapperStore";
 import AppConfig from "appConfig";
 import * as _ from 'lodash';
 import { IMPACT_GERMLINE_TESTING_CONSENT } from "shared/constants";
+import {stringListToSet} from "../../shared/lib/StringUtils";
 
 export class ResultsViewPageStore {
 
@@ -36,17 +38,61 @@ export class ResultsViewPageStore {
 
     @observable ajaxErrors: Error[] = [];
 
-    @observable studyId: string = '';
-    @observable sampleListId: string|null = null;
+    //@observable studyId: string = '';
+    //@observable sampleListId: string|null = null;
     @observable hugoGeneSymbols: string[]|null = null;
-    @observable sampleList: string[]|null = null;
+    //@observable sampleList: string[]|null = null;
+    @observable _studyToSampleIds:{[studyId:string]:{[sampleId:string]:boolean}}|null = null;
+    @observable studyToSampleListId:{[studyId:string]:string}|null = null;
 
-    readonly mutationGeneticProfileId = remoteData({
+    readonly studyToSampleIds = remoteData<{[studyId:string]:{[sampleId:string]:boolean}}>(async()=>{
+        if (this._studyToSampleIds) {
+            // first priority: user provided custom sample list
+            return this._studyToSampleIds;
+        } else if (this.studyToSampleListId) {
+            // if no custom sample list try to fetch sample ids from the API
+            const studyToSampleListId = this.studyToSampleListId;
+            const studies = Object.keys(studyToSampleListId);
+            const results:string[][] = await Promise.all(studies.map(studyId=>{
+                return client.getAllSampleIdsInSampleListUsingGET({
+                    sampleListId: studyToSampleListId[studyId]
+                });
+            }));
+            return results.reduce((map:{[studyId:string]:{[sampleId:string]:boolean}}, next:string[], index:number)=>{
+                const correspondingStudy = studies[index];
+                map[correspondingStudy] = stringListToSet(next);
+                return map;
+            }, {});
+        } else {
+            return {};
+        }
+    }, {});
+
+    readonly studyToMutationGeneticProfileId = remoteData({
         await: () => [
-            this.geneticProfilesInStudy
+            this.studyToGeneticProfilesInStudy
         ],
-        invoke: async () => findMutationGeneticProfileId(this.geneticProfilesInStudy, this.studyId)
+        invoke: ()=>{
+            const studies = Object.keys(this.studyToGeneticProfilesInStudy);
+            return Promise.resolve(studies.reduce((map:{[studyId:string]:string|undefined}, studyId:string)=>{
+                map[studyId] = findMutationGeneticProfileIdSynch(
+                    this.studyToGeneticProfilesInStudy.result![studyId],
+                    studyId
+                );
+                return map;
+            }, {}));
+        }
     });
+
+    @computed get studyIds():string[] {
+        if (this._studyToSampleIds) {
+            return Object.keys(this._studyToSampleIds);
+        } else if (this.studyToSampleListId) {
+            return Object.keys(this.studyToSampleListId);
+        } else {
+            return [];
+        }
+    }
 
     @computed get myCancerGenomeData() {
         return fetchMyCancerGenomeData();
@@ -80,21 +126,19 @@ export class ResultsViewPageStore {
         }
     }
 
-    readonly sampleIds = remoteData(async () => {
-        // first priority: user provided custom sample list
-        if (this.sampleList) {
-            // cannot return an observable array directly, need to create a copy
-            return this.sampleList.map(sampleId => sampleId);
+    readonly studyToClinicalDataForSamples = remoteData({
+        await: () => [
+            this.studyToSampleIds
+        ],
+        invoke: async() => {
+            const studies = Object.keys(this.studyToSampleIds.result);
+            const clinicalDataSingleStudyFilters = studies.map(studyId=>({
+                attributeIds: ["CANCER_TYPE", "CANCER_TYPE_DETAILED"],
+                ids: this.studyToSampleIds.result[studyId]
+            }));
+            return fetchClinicalDataInStudy(this.studyId, clinicalDataSingleStudyFilter, 'SAMPLE')
         }
-        // if no custom sample list try to fetch sample ids from the API
-        else if (this.sampleListId) {
-            return await client.getAllSampleIdsInSampleListUsingGET({
-                sampleListId: this.sampleListId
-            });
-        }
-
-        return [];
-    }, []);
+    }, {});
 
     readonly clinicalDataForSamples = remoteData({
         await: () => [
@@ -163,11 +207,18 @@ export class ResultsViewPageStore {
         return makeStudyToCancerTypeMap(this.studies.result);
     }
 
-    readonly geneticProfilesInStudy = remoteData(() => {
-        return client.getAllGeneticProfilesInStudyUsingGET({
-            studyId: this.studyId
-        });
-    }, []);
+    readonly studyToGeneticProfilesInStudy = remoteData(async()=>{
+        const results:GeneticProfile[][] = await Promise.all(this.studyIds.map(studyId=>{
+            return client.getAllGeneticProfilesInStudyUsingGET({
+                studyId
+            });
+        }));
+        return results.reduce((map:{[studyId:string]:GeneticProfile[]}, profiles:GeneticProfile[], index:number)=>{
+            const correspondingStudy = this.studyIds[index];
+            map[correspondingStudy] = profiles;
+            return map;
+        }, {});
+    });
 
     readonly geneticProfileIdDiscrete = remoteData({
         await: () => [
