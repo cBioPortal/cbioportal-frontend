@@ -513,7 +513,8 @@ export class QueryStore
 
 	// DATA TYPE PRIORITY
 
-	private getDataTypePriorityCode(dataTypePriority:{mutation: boolean, cna: boolean}) {
+	private calculateDataTypePriorityCode(dataTypePriority:{mutation: boolean, cna: boolean}): '0'|'1'|'2'
+	{
 		let {mutation, cna} = dataTypePriority;
 		if (mutation && cna)
 			return '0';
@@ -540,6 +541,11 @@ export class QueryStore
 				this.dataTypePriority = {mutation: false, cna: true};
 				break;
 		}
+	}
+
+	@computed get dataTypePriorityCode(): '0'|'1'|'2'
+	{
+		return this.calculateDataTypePriorityCode(this.dataTypePriority);
 	}
 
 	// GENETIC PROFILE
