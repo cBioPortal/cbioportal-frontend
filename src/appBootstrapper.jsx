@@ -4,6 +4,7 @@ import { Provider } from 'mobx-react';
 import { hashHistory, createMemoryHistory, Router } from 'react-router';
 import { RouterStore, syncHistoryWithStore  } from 'mobx-react-router';
 import ExtendedRoutingStore from './shared/lib/ExtendedRouterStore';
+import {QueryStore} from "./shared/components/query/QueryStore";
 import {computed, extendObservable} from 'mobx';
 import makeRoutes from './routes';
 import * as _ from 'lodash';
@@ -15,6 +16,10 @@ import { validateParametersPatientView } from './shared/lib/validateParameters';
 
 if (localStorage.heroku && localStorage.localdev !== "true") {
     __webpack_public_path__ = ['//',localStorage.heroku,'.herokuapp.com','/'].join('');
+} else if (window.hasOwnProperty('frontendUrl')) {
+    // use given frontendUrl as base (use when deploying frontend on external
+    // CDN instead of cbioportal backend)
+    __webpack_public_path__ = window.frontendUrl;
 }
 
 if (!window.hasOwnProperty("$")) {
@@ -54,12 +59,18 @@ const history = (window.historyType === 'memory') ? createMemoryHistory() : hash
 
 const syncedHistory = syncHistoryWithStore(history, routingStore);
 
+// lets make query Store since it's used in a lot of places
+const queryStore = new QueryStore(window.location.href);
+
 const stores = {
     // Key can be whatever you want
     routing: routingStore,
+    queryStore
     // ...other stores
 };
-//
+
+window.globalStores = stores;
+
 const end = superagent.Request.prototype.end;
 
 let redirecting = false;
