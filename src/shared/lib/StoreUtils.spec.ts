@@ -1,5 +1,5 @@
 import {
-    fetchCosmicData, fetchOncoKbData, makeStudyToCancerTypeMap,
+    fetchCosmicData, fetchOncoKbData, fetchGenomeNexusData, makeStudyToCancerTypeMap,
     mergeMutationsIncludingUncalled, generateMutationIdByEvent, generateMutationIdByGeneAndProteinChangeAndEvent,
     fetchCivicGenes, fetchCnaCivicGenes, fetchCivicVariants, findSamplesWithoutCancerTypeClinicalData,
     fetchSamplesWithoutCancerTypeClinicalData, fetchStudiesForSamplesWithoutCancerTypeClinicalData
@@ -294,6 +294,15 @@ describe('StoreUtils', () => {
         it("won't fetch onkokb data if there are no mutations", (done) => {
             fetchOncoKbData({}, emptyMutationData).then((data: any) => {
                 assert.deepEqual(data, {sampleToTumorMap: {}, indicatorMap: {}});
+                done();
+            });
+        });
+    });
+
+    describe('fetchGenomeNexusData', () => {
+        it("won't fetch genomenexus data if there are no mutations", (done) => {
+            fetchGenomeNexusData(emptyMutationData, emptyUncalledMutationData).then((data: any) => {
+                assert.deepEqual(data, {mutation_assessor: {}});
                 done();
             });
         });

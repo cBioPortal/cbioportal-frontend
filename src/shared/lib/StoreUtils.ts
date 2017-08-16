@@ -18,6 +18,7 @@ import {
     GisticToGene, Gistic, MutSig
 } from "shared/api/generated/CBioPortalAPIInternal";
 import oncokbClient from "shared/api/oncokbClientInstance";
+import genomeNexusClient from "shared/api/genomeNexusClientInstance";
 import civicClient from "shared/api/civicClientInstance";
 import {
     generateIdToIndicatorMap, generateQueryVariant, generateEvidenceQuery
@@ -29,14 +30,18 @@ import {Query, default as OncoKbAPI} from "shared/api/generated/OncoKbAPI";
 import {getAlterationString} from "shared/lib/CopyNumberUtils";
 import {MobxPromise} from "mobxpromise";
 import {keywordToCosmic, indexHotspots, geneToMyCancerGenome} from "shared/lib/AnnotationUtils";
+import {generateMutationAssessorQueries, toMutationAssessorMap} from "shared/lib/GenomeNexusUtils";
+import {MutationAssessor} from "shared/model/GenomeNexus";
 import {indexPdbAlignments} from "shared/lib/PdbUtils";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {IGisticData} from "shared/model/Gistic";
 import {IMutSigData} from "shared/model/MutSig";
 import {IMyCancerGenomeData, IMyCancerGenome} from "shared/model/MyCancerGenome";
 import {IHotspotData, ICancerHotspotData} from "shared/model/CancerHotspots";
+import {IGenomeNexusData} from "shared/model/GenomeNexus";
 import {ICivicGeneData, ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
 import CancerHotspotsAPI from "shared/api/generated/CancerHotspotsAPI";
+import GenomeNexusAPI from "shared/api/generated/GenomeNexusAPI";
 import {GENETIC_PROFILE_MUTATIONS_SUFFIX, GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
 
 export const ONCOKB_DEFAULT: IOncoKbData = {
@@ -47,6 +52,10 @@ export const ONCOKB_DEFAULT: IOncoKbData = {
 export const HOTSPOTS_DEFAULT = {
     single: [],
     clustered: []
+};
+
+export const GENOME_NEXUS_DEFAULT = {
+    mutation_assessor: {}
 };
 
 export type MutationIdGenerator = (mutation:Mutation) => string;
@@ -398,11 +407,37 @@ export function fetchMyCancerGenomeData(): IMyCancerGenomeData
     return geneToMyCancerGenome(data);
 }
 
+export async function fetchGenomeNexusData(mutationData:MobxPromise<Mutation[]>,
+                                           uncalledMutationData?:MobxPromise<Mutation[]>,
+                                           client: GenomeNexusAPI = genomeNexusClient)
+{
+    const mutationDataResult = concatMutationData(mutationData, uncalledMutationData);
+
+    if (mutationDataResult.length == 0) {
+        return GENOME_NEXUS_DEFAULT;
+    }
+
+    return queryGenomeNexusData(mutationDataResult, client)
+}
+
+export async function queryGenomeNexusData(mutationData:Mutation[],
+                                            client: GenomeNexusAPI = genomeNexusClient)
+{
+    const genomeNexusSearch:MutationAssessor[] = await client.postMutationAssessorAnnotation(
+        { variants : generateMutationAssessorQueries(mutationData) });
+
+    const genomeNexusData: IGenomeNexusData = {
+        mutation_assessor : toMutationAssessorMap(mutationData, genomeNexusSearch)
+    };
+
+    return genomeNexusData;
+}
+
 export async function fetchOncoKbData(sampleIdToTumorType:{[sampleId: string]: string},
                                       mutationData:MobxPromise<Mutation[]>,
                                       uncalledMutationData?:MobxPromise<Mutation[]>,
                                       client: OncoKbAPI = oncokbClient)
-{
+{   
     const mutationDataResult = concatMutationData(mutationData, uncalledMutationData);
 
     if (mutationDataResult.length === 0) {
@@ -417,7 +452,7 @@ export async function fetchOncoKbData(sampleIdToTumorType:{[sampleId: string]: s
             mutation.proteinPosStart,
             mutation.proteinPosEnd);
     }), "id");
-
+ 
     return queryOncoKbData(queryVariants, sampleIdToTumorType, client);
 }
 

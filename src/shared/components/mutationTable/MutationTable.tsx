@@ -28,8 +28,10 @@ import {IHotspotData} from "shared/model/CancerHotspots";
 import {IOncoKbDataWrapper} from "shared/model/OncoKB";
 import {ICivicVariant, ICivicGene} from "shared/model/Civic";
 import {IMutSigData} from "shared/model/MutSig";
+import {IGenomeNexusData} from "shared/model/GenomeNexus";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
+import GenomeNexusCache from "shared/cache/GenomeNexusCache";
 import MrnaExprRankCache from "shared/cache/MrnaExprRankCache";
 import VariantCountCache from "shared/cache/VariantCountCache";
 import PubMedCache from "shared/cache/PubMedCache";
@@ -43,6 +45,7 @@ export interface IMutationTableProps {
     sampleIdToTumorType?: {[sampleId: string]: string}
     discreteCNACache?:DiscreteCNACache;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
+    genomeNexusCache?:GenomeNexusCache;
     mrnaExprRankCache?:MrnaExprRankCache;
     variantCountCache?:VariantCountCache;
     pubMedCache?:PubMedCache
@@ -55,6 +58,7 @@ export interface IMutationTableProps {
     myCancerGenomeData?: IMyCancerGenomeData;
     hotspots?: IHotspotData;
     cosmicData?:ICosmicData;
+    genomeNexusData?:IGenomeNexusData;
     oncoKbData?: IOncoKbDataWrapper;
     civicGenes?: ICivicGene;
     civicVariants?: ICivicVariant;
@@ -376,13 +380,33 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
 
         this._columns[MutationTableColumnType.MUTATION_ASSESSOR] = {
             name: "Mutation Assessor",
-            headerRender: (name: string) => <span style={{display:'inline-block', maxWidth:60}}>{name}</span>,
-            render:MutationAssessorColumnFormatter.renderFunction,
-            download:MutationAssessorColumnFormatter.getTextValue,
-            sortBy:(d:Mutation[])=>MutationAssessorColumnFormatter.getSortValue(d),
+// <<<<<<< HEAD
+            render: (d:Mutation[])=>MutationAssessorColumnFormatter.renderFunction({
+                mutationData: d,
+                genomeNexusData: this.props.genomeNexusData,
+                genomeNexusCache: this.props.genomeNexusCache
+            }),
+            download: (d:Mutation[])=>MutationAssessorColumnFormatter.getTextValue({
+                mutationData: d, genomeNexusData: this.props.genomeNexusData, genomeNexusCache: this.props.genomeNexusCache
+            }),
+            sortBy:(d:Mutation[])=>MutationAssessorColumnFormatter.getSortValue({
+                mutationData: d,
+                genomeNexusData: this.props.genomeNexusData,
+                genomeNexusCache: this.props.genomeNexusCache
+            }),
+// =======
+            // headerRender: (name: string) => <span style={{display:'inline-block', maxWidth:60}}>{name}</span>,
+            // render:MutationAssessorColumnFormatter.renderFunction,
+            // download:MutationAssessorColumnFormatter.getTextValue,
+            // sortBy:(d:Mutation[])=>MutationAssessorColumnFormatter.getSortValue(d),
+// >>>>>>> master
             filter:(d:Mutation[], filterString:string, filterStringUpper:string) =>
-                MutationAssessorColumnFormatter.filterValue(d).toUpperCase().indexOf(filterStringUpper) > -1,
-            visible: false
+                MutationAssessorColumnFormatter.filterValue({
+                mutationData: d,
+                genomeNexusData: this.props.genomeNexusData,
+                genomeNexusCache: this.props.genomeNexusCache
+            }).toUpperCase().indexOf(filterStringUpper) > -1,
+            visible: true
         };
 
         this._columns[MutationTableColumnType.COSMIC] = {

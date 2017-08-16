@@ -1,4 +1,5 @@
 import MutationAssessorColumnFormatter from './MutationAssessorColumnFormatter';
+import {IColumnProps} from './MutationAssessorColumnFormatter';
 import styles from "./mutationAssessor.module.scss";
 import {initMutation} from "test/MutationMockUtils";
 import React from 'react';
@@ -7,39 +8,43 @@ import {shallow, mount, ReactWrapper} from 'enzyme';
 import sinon from 'sinon';
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {lazyMobXTableSort} from "shared/components/lazyMobXTable/LazyMobXTable";
+import GenomeNexusCache from "shared/cache/GenomeNexusCache";
+import {ICacheData, ICache} from "shared/lib/SimpleCache";
+import {MutationAssessor, IGenomeNexusData} from "shared/model/GenomeNexus";
+
 
 describe('MutationAssessorColumnFormatter', () => {
     const mutations = [
         initMutation({
-            functionalImpactScore: "H",
+            functionalImpactScore: "high",
             fisValue: 3.5,
-            linkPdb: "http://mutationassessor.org/r2/pdb.php?var=Q616K",
-            linkMsa: "http://mutationassessor.org/r2/?cm=msa&var=Q616K",
-            linkXvar: "http://mutationassessor.org/r2/?cm=var&var=hg19,0,0,X,X"
+            linkPdb: "http://mutationassessor.org/r3/pdb.php?var=Q616K",
+            linkMsa: "http://mutationassessor.org/r3/?cm=msa&var=Q616K",
+            linkXvar: "http://mutationassessor.org/r3/?cm=var&var=hg19,0,0,X,X"
         }),
         initMutation({
-            functionalImpactScore: "H",
+            functionalImpactScore: "high",
             fisValue: 3.8,
             linkPdb: null,
             linkMsa: null,
-            linkXvar: "http://mutationassessor.org/r2/?cm=var&var=hg19,0,0,Y,Y"
+            linkXvar: "http://mutationassessor.org/r3/?cm=var&var=hg19,0,0,Y,Y"
         }),
         initMutation({
-            functionalImpactScore: "M",
+            functionalImpactScore: "medium",
             fisValue: null,
             linkPdb: null,
-            linkMsa: "http://mutationassessor.org/r2/?cm=msa&var=Q1429R",
-            linkXvar: "http://mutationassessor.org/r2/?cm=var&var=hg19,0,0,Z,Z"
+            linkMsa: "http://mutationassessor.org/r3/?cm=msa&var=Q1429R",
+            linkXvar: "http://mutationassessor.org/r3/?cm=var&var=hg19,0,0,Z,Z"
         }),
         initMutation({
-            functionalImpactScore: "M",
+            functionalImpactScore: "medium",
             fisValue: 2.2,
             linkPdb: null,
-            linkMsa: "http://mutationassessor.org/r2/?cm=msa&var=Q1429R",
+            linkMsa: "http://mutationassessor.org/r3/?cm=msa&var=Q1429R",
             linkXvar: null
         }),
         initMutation({
-            functionalImpactScore: "L",
+            functionalImpactScore: "low",
             fisValue: 0.7,
             linkPdb: null,
             linkMsa: null,
@@ -71,8 +76,12 @@ describe('MutationAssessorColumnFormatter', () => {
         mutations.forEach((mutation) => {
             const data = [mutation];
 
-            components.push(mount(MutationAssessorColumnFormatter.renderFunction(data)));
-            tooltips.push(mount(MutationAssessorColumnFormatter.getTooltipContent(data)));
+            const columnProps:IColumnProps = {
+                mutationData: data,
+            }
+
+            components.push(mount(MutationAssessorColumnFormatter.renderFunction(columnProps)));
+            tooltips.push(mount(MutationAssessorColumnFormatter.getTooltipContent(columnProps)));
         });
     });
 
@@ -136,7 +145,9 @@ describe('MutationAssessorColumnFormatter', () => {
             `PDB link should not exist for impact score Unknown(null)`);
     });
 
-    let sortedMutations = lazyMobXTableSort<Mutation>(mutations, m=>MutationAssessorColumnFormatter.getSortValue([m]), true);
+
+    let sortedMutations = lazyMobXTableSort<Mutation>(mutations, m=>MutationAssessorColumnFormatter.getSortValue({mutationData: [m]}), true);
+
     it('properly sorts by Mutation Assessor column', () => {
         assert.isAbove(sortedMutations.indexOf(mutations[0]), sortedMutations.indexOf(mutations[2]),
             "H(3.5) should rank higher than M(null)");
