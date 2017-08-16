@@ -71,9 +71,13 @@ export default class BarGraph extends React.Component<IBarGraphProps, {}> {
         return wordwrap(label, {width: 30}).split(/\r?\n/).map(_label => _label.trim());
     }
 
+    get byPrimarySiteStudies() {
+        return this.props.data.filter(cancers => _.every(cancers.studies, study => study.cancerTypeId !== "other" &&  study.cancerTypeId  !== "mixed"));
+    }
+
     componentDidMount() {
 
-        const cancerStudies = this.props.data.filter(cancers => _.every(cancers.studies, study => study.cancerTypeId !== "other" &&  study.cancerTypeId  !== "mixed"));
+        const cancerStudies = this.byPrimarySiteStudies;
         cancerStudies.forEach(study => {study.caseCount = study.studies.reduce((sum:number, cStudy) => sum + cStudy.allSampleCount, 0)});
 
         const cancerTypeStudiesArray = cancerStudies.sort((a, b) => b.caseCount! - a.caseCount!).slice(0, 20).map(study => this.getShortName(study));
@@ -181,7 +185,8 @@ export default class BarGraph extends React.Component<IBarGraphProps, {}> {
     }
 
     render() {
-        return <canvas ref={el => this.chartTarget = el} height="500px"/>;
+        const length = this.byPrimarySiteStudies.length;
+        return length ? <canvas ref={el => this.chartTarget = el} height={70 + 430 * (length > 20 ? 20 : length)/20}/> : null;
     }
 
 };
