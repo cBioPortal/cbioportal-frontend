@@ -2,6 +2,8 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import SampleManager from "../sampleManager";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
+const Oncoprint = require('oncoprintjs/dist/oncoprint-bundle.js');
+
 
 interface IPatientViewOncoPrintProps {
   sampleManager: SampleManager;
@@ -63,6 +65,7 @@ export default class PatientViewOncoPrint extends React.Component<IPatientViewOn
     }
 
     var oncoprint = makeOncoprint(window.Oncoprint, {ctr_selector: "#patient-view-oncoprint", width: 800});
+
     oncoprint.suppressRendering();
 
     var share_id = null;
@@ -88,7 +91,7 @@ export default class PatientViewOncoPrint extends React.Component<IPatientViewOn
           }  else if (d2.vaf) {
             return 1;
           }  else {
-            return 0;  
+            return 0;
           }
         },
         'target_group': 0,
