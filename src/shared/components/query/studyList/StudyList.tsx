@@ -269,7 +269,7 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, void
 						mouseEnterDelay={0}
 						placement="top"
 						overlay={
-							<div className={styles.tooltip} dangerouslySetInnerHTML={{__html: "To Study View Page"}}
+							<div className={styles.tooltip} dangerouslySetInnerHTML={{__html: "View study details"}}
 							></div>
 						}
 						children={
