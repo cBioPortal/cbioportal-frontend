@@ -14,7 +14,9 @@ import * as superagent from 'superagent';
 import { getHost } from './shared/api/urls';
 import { validateParametersPatientView } from './shared/lib/validateParameters';
 
-if (localStorage.heroku && localStorage.localdev !== "true") {
+if (localStorage.localdev === 'true') {
+    __webpack_public_path__ = "//localhost:3000/"
+} else if (localStorage.heroku) {
     __webpack_public_path__ = ['//',localStorage.heroku,'.herokuapp.com','/'].join('');
 } else if (window.hasOwnProperty('frontendUrl')) {
     // use given frontendUrl as base (use when deploying frontend on external
