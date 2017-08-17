@@ -272,8 +272,8 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, void
 						mouseEnterDelay={0}
 						placement="top"
 						overlay={
-							<div className={styles.tooltip} dangerouslySetInnerHTML={{__html: "View study details"}}
-							></div>
+							<div className={styles.tooltip}
+							>View study details</div>
 						}
 						children={
 							<span onClick={()=>openStudySummaryFormSubmit(study.studyId)}
