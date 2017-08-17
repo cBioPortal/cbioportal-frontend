@@ -78,7 +78,7 @@ export default class CosmicMutationTable extends React.Component<ICosmicTablePro
             (this.props.initialItemsPerPage || CosmicMutationTable.defaultProps.initialItemsPerPage);
 
         return (
-            <div>
+            <div className='cbioportal-frontend'>
                 <CosmicTable
                     data={data}
                     columns={columns || CosmicMutationTable.defaultProps.columns}
@@ -89,6 +89,8 @@ export default class CosmicMutationTable extends React.Component<ICosmicTablePro
                     showColumnVisibility={false}
                     showFilter={false}
                     showPagination={showPagination}
+                    showPaginationAtTop={true}
+                    paginationProps={{showMoreButton:false}}
                 />
             </div>
         );

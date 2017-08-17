@@ -91,3 +91,31 @@ You can also use a heroku deployed cbioportal-frontend pull request for serving 
 localStorage.setItem("heroku", "cbioportal-frontend-pr-x")
 ```
 Change `x` to the number of your pull request.
+
+## Run e2e tests
+
+Install webdriver-manager, which manages standalone Selenium installation:
+```
+npm install -g webdriver-manager
+```
+Run updater to get necessary binaries
+```
+webdriver-manager update
+```
+Start the webdriver-manager
+```
+webdriver-manager start
+```
+In one terminal run frontend (this will get mounted inside whatever
+`CBIOPORTAL_URL` is pointing to)
+```bash
+npm run start
+```
+In another terminal run the e2e tests
+```bash
+# get CBIOPORTAL backend url from my-index.ejs
+export CBIOPORTAL_URL=http://$(grep '__API_ROOT__' my-index.ejs | cut -d= -f2 | tr -d "'" | tr -d [:space:] | tr -d ';')
+cd end-to-end-tests
+npm install
+npm run test-webdriver-manager
+```

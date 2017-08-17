@@ -122,7 +122,7 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 				<FlexRow overflow className={styles.CancerStudySelectorHeader}>
 
 					<SectionHeader promises={[this.store.cancerTypes, this.store.cancerStudies]}>
-						Select Studies
+						Select Studies:
 					</SectionHeader>
 
 					<div>
@@ -236,7 +236,7 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 							</div>
 						</Then>
 					</If>
-					<div className={styles.cancerStudyListContainer}>
+					<div className={styles.cancerStudyListContainer} data-test='cancerTypeListContainer'>
 						<StudyList/>
 					</div>
 				</FlexRow>

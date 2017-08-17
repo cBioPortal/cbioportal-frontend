@@ -1,5 +1,6 @@
 import * as React from 'react';
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
+import generalStyles from "./styles.module.scss";
 
 /**
  * Designed to customize allele count column content for patient view page.
@@ -43,7 +44,7 @@ export default class AlleleCountColumnFormatter
     public static renderFunction(data:Mutation[], sampleOrder:string[], dataField:string)
     {
         return (
-            <div>
+            <div className={generalStyles["integer-data"]}>
                 {AlleleCountColumnFormatter.getDisplayValue(data, sampleOrder, dataField)}
             </div>
         );

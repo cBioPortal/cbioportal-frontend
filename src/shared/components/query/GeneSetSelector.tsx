@@ -108,6 +108,7 @@ export default class GeneSetSelector extends QueryStoreComponent<GeneSetSelector
 					title="Enter HUGO Gene Symbols or Gene Aliases"
 					value={this.store.geneQuery}
 					onChange={event => this.store.geneQuery = event.currentTarget.value}
+					data-test='geneSet'
 				/>
 
 				<GeneSymbolValidator/>

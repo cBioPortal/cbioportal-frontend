@@ -1,13 +1,15 @@
 import * as React from 'react';
 import * as styles_any from './styles.module.scss';
+import * as _ from 'lodash';
 import ReactSelect from 'react-select';
 import {observer} from "mobx-react";
 import {computed} from 'mobx';
 import {FlexCol, FlexRow} from "../flexbox/FlexBox";
 import {QueryStore, QueryStoreComponent, CUSTOM_CASE_LIST_ID} from "./QueryStore";
 import {getStudyViewUrl} from "../../api/urls";
-import DefaultTooltip from "../DefaultTooltip";
+import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
 import SectionHeader from "../sectionHeader/SectionHeader";
+import {ReactSelectOption} from "react-select";
 
 const styles = styles_any as {
 	CaseSetSelector: string,
@@ -15,10 +17,18 @@ const styles = styles_any as {
 	radioRow: string,
 };
 
+export interface ReactSelectOptionWithName extends ReactSelectOption<any> {
+	textLabel:string;
+}
+
+export function filterCaseSetOptions(opt: ReactSelectOptionWithName, filter: string) {
+	return _.includes(opt.textLabel.toLowerCase(), filter.toLowerCase());
+}
+
 @observer
 export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 {
-	@computed get caseSetOptions()
+	@computed get caseSetOptions() : ReactSelectOptionWithName[]
 	{
 		return [
 			...this.store.sampleLists.result.map(sampleList => {
@@ -32,7 +42,8 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 							<span>{`${sampleList.name} (${sampleList.sampleCount})`}</span>
 						</DefaultTooltip>
 					),
-					value: sampleList.sampleListId
+					value: sampleList.sampleListId,
+					textLabel:sampleList.name
 				};
 			}),
 			{
@@ -45,7 +56,8 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 						<span>User-defined Case List</span>
 					</DefaultTooltip>
 				),
-				value: CUSTOM_CASE_LIST_ID
+				value: CUSTOM_CASE_LIST_ID,
+				textLabel:'User-defined Case List'
 			}
 		];
 	}
@@ -54,9 +66,8 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 	{
 		if (!this.store.singleSelectedStudyId)
 			return null;
-
 		return (
-			<FlexRow padded overflow className={styles.CaseSetSelector}>
+			<FlexRow padded overflow className={styles.CaseSetSelector} data-test='CaseSetSelector'>
 				<div>
 				<SectionHeader className="sectionLabel"
 							   secondaryComponent={<a href={getStudyViewUrl(this.store.singleSelectedStudyId)}>To build your own case set, try out our enhanced Study View.</a>}
@@ -68,12 +79,20 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 				<ReactSelect
 					value={this.store.selectedSampleListId}
 					options={this.caseSetOptions}
-					clearable={this.store.selectedSampleListId != this.store.defaultSelectedSampleListId}
+					filterOption={filterCaseSetOptions}
 					onChange={option => this.store.selectedSampleListId = option ? option.value : undefined}
 				/>
 
 				{!!(this.store.selectedSampleListId === CUSTOM_CASE_LIST_ID) && (
 					<FlexCol padded>
+
+						<div className={styles.radioRow}>
+							<FlexRow padded>
+								<this.CaseIdsModeRadio label='By sample ID' state='sample'/>
+								<this.CaseIdsModeRadio label='By patient ID' state='patient'/>
+							</FlexRow>
+						</div>
+
 						<span>Enter case IDs below:</span>
 						<textarea
 							title="Enter case IDs"
@@ -82,12 +101,6 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 							value={this.store.caseIds}
 							onChange={event => this.store.caseIds = event.currentTarget.value}
 						/>
-						<div className={styles.radioRow}>
-							<FlexCol padded>
-								<this.CaseIdsModeRadio label='By sample ID' state='sample'/>
-								<this.CaseIdsModeRadio label='By patient ID' state='patient'/>
-							</FlexCol>
-						</div>
 					</FlexCol>
 				)}
 				</div>

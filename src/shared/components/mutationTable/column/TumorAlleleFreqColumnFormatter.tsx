@@ -1,5 +1,5 @@
 import * as React from 'react';
-import DefaultTooltip from "shared/components/DefaultTooltip";
+import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import TableCellStatusIndicator from "shared/components/TableCellStatus";
 import {TableCellStatus} from "shared/components/TableCellStatus";
@@ -58,5 +58,19 @@ export default class TumorAlleleFreqColumnFormatter
         }
 
         return (altReads / (altReads + refReads));
+    }
+
+    public static isVisible(allMutations?: Mutation[][]): boolean {
+
+        if (allMutations) {
+            for (const rowMutations of allMutations) {
+                const frequency = this.getSortValue(rowMutations);
+                if (frequency) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }

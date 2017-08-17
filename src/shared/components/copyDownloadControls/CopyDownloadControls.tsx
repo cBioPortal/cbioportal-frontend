@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {Button, ButtonGroup} from 'react-bootstrap';
-import DefaultTooltip from 'shared/components/DefaultTooltip';
+import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import {If} from 'react-if';
 import fileDownload from 'react-file-download';
 const Clipboard = require('clipboard');

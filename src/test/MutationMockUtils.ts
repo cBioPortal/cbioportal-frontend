@@ -41,6 +41,7 @@ export function emptyMutation(): Mutation
         referenceAllele: "",
         refseqMrnaId: "",
         sampleId: "",
+        patientId: "",
         startPosition: -1,
         tumorAltCount: -1,
         tumorRefCount: -1,

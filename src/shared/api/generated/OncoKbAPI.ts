@@ -20,6 +20,8 @@ export type Query = {
 
         'entrezGeneId': number
 
+        'hgvs': string
+
         'hugoSymbol': string
 
         'id': string
@@ -91,8 +93,6 @@ export type Alteration = {
         'proteinStart': number
 
         'refResidues': string
-
-        'uniqueId': string
 
         'variantResidues': string
 
@@ -381,6 +381,24 @@ export type EvidenceQueries = {
         'queries': Array < Query >
 
         'source': string
+
+};
+export type VariantSearchQuery = {
+    'consequence': string
+
+        'entrezGeneId': number
+
+        'hgvs': string
+
+        'hugoSymbol': string
+
+        'proteinEnd': number
+
+        'proteinStart': number
+
+        'variant': string
+
+        'variantType': string
 
 };
 export type ClinicalTrial = {
@@ -1491,6 +1509,7 @@ export default class OncoKbAPI {
         'levels' ? : string,
         'highestLevelOnly' ? : boolean,
         'queryType' ? : string,
+        'hgvs' ? : string,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -1543,6 +1562,10 @@ export default class OncoKbAPI {
             queryParameters['queryType'] = parameters['queryType'];
         }
 
+        if (parameters['hgvs'] !== undefined) {
+            queryParameters['hgvs'] = parameters['hgvs'];
+        }
+
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                 var parameter = parameters.$queryParameters[parameterName];
@@ -1569,6 +1592,7 @@ export default class OncoKbAPI {
      * @param {string} levels - Level of evidences.
      * @param {boolean} highestLevelOnly - Only show treatments of highest level
      * @param {string} queryType - Query type. There maybe slight differences between different query types. Currently support web or regular.
+     * @param {string} hgvs - HGVS varaint. Its priority is higher than entrezGeneId/hugoSymbol + variant combination
      */
     searchGetUsingGET(parameters: {
         'id' ? : string,
@@ -1583,6 +1607,7 @@ export default class OncoKbAPI {
         'levels' ? : string,
         'highestLevelOnly' ? : boolean,
         'queryType' ? : string,
+        'hgvs' ? : string,
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < IndicatorQueryResp > {
@@ -1644,6 +1669,10 @@ export default class OncoKbAPI {
 
             if (parameters['queryType'] !== undefined) {
                 queryParameters['queryType'] = parameters['queryType'];
+            }
+
+            if (parameters['hgvs'] !== undefined) {
+                queryParameters['hgvs'] = parameters['hgvs'];
             }
 
             if (parameters.$queryParameters) {
@@ -2042,6 +2071,7 @@ export default class OncoKbAPI {
         'consequence' ? : string,
         'proteinStart' ? : number,
         'proteinEnd' ? : number,
+        'hgvs' ? : string,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -2074,6 +2104,10 @@ export default class OncoKbAPI {
             queryParameters['proteinEnd'] = parameters['proteinEnd'];
         }
 
+        if (parameters['hgvs'] !== undefined) {
+            queryParameters['hgvs'] = parameters['hgvs'];
+        }
+
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                 var parameter = parameters.$queryParameters[parameterName];
@@ -2095,6 +2129,7 @@ export default class OncoKbAPI {
      * @param {string} consequence - consequence
      * @param {integer} proteinStart - proteinStart
      * @param {integer} proteinEnd - proteinEnd
+     * @param {string} hgvs - HGVS varaint. Its priority is higher than entrezGeneId/hugoSymbol + variant combination
      */
     variantsLookupGetUsingGET(parameters: {
             'entrezGeneId' ? : number,
@@ -2104,6 +2139,7 @@ export default class OncoKbAPI {
             'consequence' ? : string,
             'proteinStart' ? : number,
             'proteinEnd' ? : number,
+            'hgvs' ? : string,
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < Alteration >
@@ -2148,6 +2184,10 @@ export default class OncoKbAPI {
                     queryParameters['proteinEnd'] = parameters['proteinEnd'];
                 }
 
+                if (parameters['hgvs'] !== undefined) {
+                    queryParameters['hgvs'] = parameters['hgvs'];
+                }
+
                 if (parameters.$queryParameters) {
                     Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                         var parameter = parameters.$queryParameters[parameterName];
@@ -2156,6 +2196,71 @@ export default class OncoKbAPI {
                 }
 
                 request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    variantsLookupPostUsingPOSTURL(parameters: {
+        'body': Array < VariantSearchQuery > ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/variants/lookup';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Search for variants.
+     * @method
+     * @name OncoKbAPI#variantsLookupPostUsingPOST
+     * @param {} body - List of queries.
+     */
+    variantsLookupPostUsingPOST(parameters: {
+            'body': Array < VariantSearchQuery > ,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < Array < {} >
+        >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/variants/lookup';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                if (parameters['body'] !== undefined) {
+                    body = parameters['body'];
+                }
+
+                if (parameters['body'] === undefined) {
+                    reject(new Error('Missing required  parameter: body'));
+                    return;
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
 
             }).then(function(response: request.Response) {
                 return response.body;

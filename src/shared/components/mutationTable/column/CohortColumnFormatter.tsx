@@ -7,6 +7,7 @@ import Icon from "shared/components/cohort/LetterIcon";
 import {IMutSigData as MutSigData} from "shared/model/MutSig";
 import {VariantCount} from "shared/api/generated/CBioPortalAPIInternal";
 import {CacheData} from "shared/lib/LazyMobXCache";
+import {getPercentage} from "shared/lib/FormatUtils";
 import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
 
 type AugVariantCountOutput = (CacheData<VariantCount> & {hugoGeneSymbol:string});
@@ -104,11 +105,10 @@ export default class CohortColumnFormatter {
         );
     }
 
-    private static getBoldPercentage(proportion:number) {
+    private static getBoldPercentage(proportion: number)
+    {
         return (
-            <b>
-                {(100*proportion).toFixed(1) + "%"}
-            </b>
+            <b>{getPercentage(proportion)}</b>
         );
     }
 

@@ -1,0 +1,19 @@
+{
+  "name": "end-to-end",
+  "version": "1.0.0",
+  "description": "Dependencies for running tests with webdriverio and browserstack",
+  "main": "index.js",
+  "scripts": {
+    "test-travis": "wdio wdio/travis.conf.js",
+    "test-webdriver-manager": "wdio wdio/webdriver-manager.conf.js"
+  },
+  "author": "",
+  "license": "",
+  "dependencies": {
+    "browserstack-local": "1.3.0",
+    "wdio-browserstack-service": "0.1.4",
+    "wdio-mocha-framework": "0.5.10",
+    "wdio-spec-reporter": "0.1.0",
+    "webdriverio": "4.8.0"
+  }
+}

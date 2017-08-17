@@ -2,7 +2,7 @@ import * as React from "react";
 import {Modal} from "react-bootstrap";
 import {observer} from "mobx-react";
 import {Circle} from "better-react-spinkit";
-import DefaultTooltip from "shared/components/DefaultTooltip";
+import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import annotationStyles from "./styles/annotation.module.scss";
 import oncogenicIconStyles from "./styles/oncogenicIcon.module.scss";
 import {IndicatorQueryResp, Query} from "shared/api/generated/OncoKbAPI";
@@ -19,7 +19,8 @@ import OncokbPubMedCache from "shared/cache/PubMedCache";
 import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
 
 export interface IOncoKbProps {
-    indicator?: IndicatorQueryResp | null;
+    status: "pending" | "error" | "complete";
+    indicator?: IndicatorQueryResp;
     evidenceCache?: OncoKbEvidenceCache;
     evidenceQuery?: Query;
     pubMedCache?: OncokbPubMedCache;
@@ -78,21 +79,20 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
             <span className={`${annotationStyles["annotation-item"]}`} />
         );
 
-        if (this.props.indicator === null) {
-            // null means there is an error...
+        if (this.props.status === "error") {
             oncoKbContent = this.errorIcon();
         }
-        else if (this.props.indicator === undefined) {
-            // undefined means still loading...
+        else if (this.props.status === "pending") {
             oncoKbContent = this.loaderIcon();
         }
-        else
+        else if (this.props.indicator)
         {
             oncoKbContent = (
                 <span className={`${annotationStyles["annotation-item"]}`}>
                     <i
                         className={`${oncogenicIconStyles['oncogenic-icon-image']} ${this.oncogenicImageClassNames(this.props.indicator)}`}
                         style={OncoKB.ONCOGENIC_ICON_STYLE}
+                        data-test='oncogenic-icon-image'
                     />
                 </span>
             );
@@ -108,14 +108,11 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
             }
             else if (this.tooltipDataLoadComplete || this.props.evidenceCache && this.props.evidenceQuery)
             {
-                const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
-
                 oncoKbContent = (
                     <DefaultTooltip
                         overlay={this.tooltipContent}
                         placement="right"
                         trigger={['hover', 'focus']}
-                        arrowContent={arrowContent}
                         onPopupAlign={hideArrow}
                         destroyTooltipOnHide={false}
                     >
@@ -142,7 +139,6 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
                 overlay={<span>Error fetching OncoKB data</span>}
                 placement="right"
                 trigger={['hover', 'focus']}
-                arrowContent={<div className="rc-tooltip-arrow-inner"/>}
                 destroyTooltipOnHide={true}
             >
                 <span className={`${annotationStyles["annotation-item-error"]}`}>
