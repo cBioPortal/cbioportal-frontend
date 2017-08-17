@@ -265,13 +265,18 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, void
 					return content;
 				})}
 				{study.studyId && (
-					<Button bsSize="xs"
-							bsStyle="primary"
-							onClick={()=>openStudySummaryFormSubmit(study.studyId)}
-							className={styles.summaryIcon}
-					>
-						Summary
-					</Button>
+					<DefaultTooltip
+						mouseEnterDelay={0}
+						placement="top"
+						overlay={
+							<div className={styles.tooltip} dangerouslySetInnerHTML={{__html: "To Study View Page"}}
+							></div>
+						}
+						children={
+							<span onClick={()=>openStudySummaryFormSubmit(study.studyId)}
+							  className={styles.summaryIcon}></span>
+						}
+					/>
 				)}
 			</span>
 		);
