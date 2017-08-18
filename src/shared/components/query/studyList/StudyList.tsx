@@ -1,17 +1,16 @@
-import * as React from 'react';
-import {Button} from "react-bootstrap";
+import * as React from "react";
 import {TypeOfCancer as CancerType, CancerStudy} from "../../../api/generated/CBioPortalAPI";
-import * as styles_any from './styles.module.scss';
-import classNames from 'classnames';
+import * as styles_any from "./styles.module.scss";
+import classNames from "classnames";
 import FontAwesome from "react-fontawesome";
 import LabeledCheckbox from "../../labeledCheckbox/LabeledCheckbox";
 import {observer} from "mobx-react";
 import {computed} from "mobx";
-import _ from 'lodash';
-import {getStudySummaryUrl, getPubMedUrl, openStudySummaryFormSubmit} from "../../../api/urls";
+import _ from "lodash";
+import {getPubMedUrl, openStudySummaryFormSubmit} from "../../../api/urls";
 import {QueryStoreComponent} from "../QueryStore";
 import DefaultTooltip from "../../defaultTooltip/DefaultTooltip";
-import StudyListLogic, {FilteredCancerTreeView} from "../StudyListLogic";
+import {FilteredCancerTreeView} from "../StudyListLogic";
 import {CancerTreeNode} from "../CancerStudyTreeData";
 
 const styles = {
@@ -200,13 +199,17 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, void
 			{
 				icon: 'info-circle',
 				tooltip: study.description,
-			},
-			{
+			}
+		];
+
+		if (!this.store.isVirtualCohort(study.studyId)) {
+			links.push({
 				icon: 'book',
 				onClick: study.pmid && getPubMedUrl(study.pmid),
 				tooltip: study.pmid && "PubMed",
-			},
-		];
+			});
+		}
+
 		if (this.store.isVirtualCohort(study.studyId) && !this.store.isTemporaryVirtualCohort(study.studyId)) {
 			links.push({
 				icon: 'trash',
@@ -265,13 +268,18 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, void
 					return content;
 				})}
 				{study.studyId && (
-					<Button bsSize="xs"
-							bsStyle="primary"
-							onClick={()=>openStudySummaryFormSubmit(study.studyId)}
-							className={styles.summaryIcon}
-					>
-						Summary
-					</Button>
+					<DefaultTooltip
+						mouseEnterDelay={0}
+						placement="top"
+						overlay={
+							<div className={styles.tooltip}
+							>View study details</div>
+						}
+						children={
+							<span onClick={()=>openStudySummaryFormSubmit(study.studyId)}
+							  className={styles.summaryIcon}></span>
+						}
+					/>
 				)}
 			</span>
 		);
