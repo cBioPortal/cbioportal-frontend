@@ -25,7 +25,7 @@
     "buildPdbAnnotationAPI": "node scripts/generate-api.js src/shared/api/generated PdbAnnotationAPI",
     "updateGenomeNexusAPI": "npm run fetchGenomeNexusAPI && npm run buildGenomeNexusAPI",
     "fetchGenomeNexusAPI": "curl https://genome-nexus-mutation-assessor.herokuapp.com/v2/api-docs?group=variant_annotation > src/shared/api/generated/GenomeNexusAPI-docs.json",
-    "buildGenomeNexusAPI": "node scripts/generate-api.js src/shared/api/generated GenomeNexusAPI",   
+    "buildGenomeNexusAPI": "node scripts/generate-api.js src/shared/api/generated GenomeNexusAPI",
     "test": "karma start karma.conf.js",
     "test:watch": "npm run test -- --watch",
     "lint": "tslint 'src/**/*.ts' 'src/**/*.tsx' --exclude 'src/shared/api/generated/**'",
