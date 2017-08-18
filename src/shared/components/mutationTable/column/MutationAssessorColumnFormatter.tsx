@@ -347,10 +347,9 @@ export default class MutationAssessorColumnFormatter //extends React.Component<I
 
     public static renderFunction(columnProps:IColumnProps)
     {
-        const text:string = MutationAssessorColumnFormatter.getDisplayValue(data);
-        const fisClass:string = MutationAssessorColumnFormatter.getScoreClassName(data);
-        const maClass:string = MutationAssessorColumnFormatter.getMaClassName(data);
-        let data:Mutation[] = columnProps.mutationData;
+        const text:string = MutationAssessorColumnFormatter.getDisplayValue(columnProps);
+        const fisClass:string = MutationAssessorColumnFormatter.getScoreClassName(columnProps);
+        const maClass:string = MutationAssessorColumnFormatter.getMaClassName(columnProps);
 
         let content = (
             <span className={`${styles[maClass]} ${styles[fisClass]}`}>{text}</span>
