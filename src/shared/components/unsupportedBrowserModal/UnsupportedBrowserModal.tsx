@@ -14,23 +14,11 @@ export default class UnsupportedBrowserModal extends React.Component<{}, IBrowse
     constructor() {
         super();
 
-        let state;
-        if (!browser)  {
-            state = {
-                name: "Unsupported",
-                show: true,
-                version: ""
-            };
-        } else {
-            state = {
-                name: browser.name,
-                show: false,
-                version: browser.version
-            };
-        }
         this.state = {
-            noShowModal: window.localStorage.noShowModal || false,
-            ...state
+            name: browser.name,
+            show: false,
+            version: browser.version.toString(),
+            noShowModal : window.localStorage.noShowModal || false
         };
 
         this.handleCheckboxChange = this.handleCheckboxChange.bind(this);
