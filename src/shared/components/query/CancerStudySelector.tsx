@@ -46,6 +46,10 @@ const styles = styles_any as {
 	cancerTypeListItemCount: string,
 	cancerStudyListContainer: string,
 	submit:string,
+
+	summaryButtonClass: string,
+	summaryButtonIconClass: string,
+	summaryButtonTextClass: string,
 };
 
 export interface ICancerStudySelectorProps
@@ -191,10 +195,11 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 													}}
 											onClick={this.handlers.onSummaryClick}
 										>
-											<Button bsSize="xs"
-													bsStyle="primary"
+											<Button bsSize="xs" bsStyle="default"
+												className={styles.summaryButtonClass}
 											>
-												Summary
+												<span className={styles.summaryButtonIconClass}></span>
+												<span className={styles.summaryButtonTextClass}>Summary</span>
 											</Button>
 										</div>
 									</DefaultTooltip>
