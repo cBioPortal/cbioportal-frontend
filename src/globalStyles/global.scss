@@ -108,10 +108,35 @@ th.reactable-header-sort-asc:after {
     @extend .portalWidth;
     margin:0 auto;
 
-    .active a {
-      border-top:3px solid $brand-primary !important;
-      padding-top:9px;
+    .active {
+      a {
+        border-top: 3px solid $brand-primary !important;
+        padding-top: 9px;
+      }
     }
+
+  }
+
+  > .nav.nav-pills {
+
+    margin-bottom:5px;
+
+    li {
+      a {
+        background: #eee;
+        border-top: none !important;
+      }
+
+      &.active a {
+        background:$brand-primary;
+        border-top:none !important;
+        &:hover {
+          color:#fff !important;
+        }
+      }
+    }
+
+
 
   }
 
@@ -335,7 +360,7 @@ th.reactable-header-sort-asc:after {
 .framedImage {
   margin:20px 0;
   border:1px solid #eee !important;
-  border-radius:5px;
+  border-radius:$cornerBorderRadius;
   padding:10px;
   display:block;
   box-shadow: 1px 1px 1px 0px rgba(0,0,0,0.21);
@@ -357,4 +382,8 @@ th.reactable-header-sort-asc:after {
 
 
 
-
+.borderedChart {
+  padding:10px;
+  border-radius:$cornerBorderRadius;
+  border:1px dashed $borderColor;
+}

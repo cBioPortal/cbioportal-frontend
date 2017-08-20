@@ -4,10 +4,10 @@ import {OverlayTrigger, Popover} from 'react-bootstrap';
 
 import ClinicalInformationPatientTable from '../clinicalInformation/ClinicalInformationPatientTable';
 import {getSpanElements} from '../clinicalInformation/lib/clinicalAttributesUtil.js';
-import {placeArrowBottomLeft} from "shared/components/DefaultTooltip";
+import {placeArrowBottomLeft} from "shared/components/defaultTooltip/DefaultTooltip";
 
 import styles from './styles.module.scss';
-import DefaultTooltip from "../../../shared/components/DefaultTooltip";
+import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
 
 export type IPatientHeaderProps = {
     patient:any;
@@ -48,6 +48,10 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
     }
 
     private getOverlayTriggerPatient(patient: any) {
+        const clinicalDataLegacy = fromPairs(patient.clinicalData.map(
+            (x: any) => [x.clinicalAttributeId, x.value])
+        );
+
         return patient &&
         (
             <DefaultTooltip
@@ -60,7 +64,7 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
             >
                 <span className='clinical-spans' id='patient-attributes'>
                     <a href="javascript:void(0)" onClick={()=>this.props.handlePatientClick(patient.id)}>{patient.id}</a>
-                    {getSpanElements(fromPairs(patient.clinicalData.map((x: any) => [x.clinicalAttributeId, x.value])), 'lgg_ucsf_2014')}
+                    {getSpanElements(clinicalDataLegacy, 'lgg_ucsf_2014')}
                 </span>
             </DefaultTooltip>
         );

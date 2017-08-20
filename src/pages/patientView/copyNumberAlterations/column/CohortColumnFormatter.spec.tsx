@@ -23,7 +23,8 @@ describe('CohortColumnFormatter', () => {
                 type: ""
             },
             geneticProfileId: "alterations",
-            sampleId: "SAMPLE_01"
+            sampleId: "SAMPLE_01",
+            patientId: "PATIENT1"
         },
         {
             alteration: 2,
@@ -37,7 +38,8 @@ describe('CohortColumnFormatter', () => {
                 type: ""
             },
             geneticProfileId: "alterations",
-            sampleId: "SAMPLE_02"
+            sampleId: "SAMPLE_02",
+            patientId: "PATIENT1"
         }
     ];
 

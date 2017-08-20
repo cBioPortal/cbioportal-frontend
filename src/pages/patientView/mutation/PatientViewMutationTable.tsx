@@ -9,8 +9,8 @@ import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import AlleleCountColumnFormatter from "shared/components/mutationTable/column/AlleleCountColumnFormatter";
 import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
 import TumorColumnFormatter from "./column/TumorColumnFormatter";
-import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter";
-import {isUncalled} from "../../../shared/lib/mutationUtils";
+import {isUncalled} from "shared/lib/MutationUtils";
+
 
 export interface IPatientViewMutationTableProps extends IMutationTableProps {
     sampleManager:SampleManager | null;
@@ -72,7 +72,9 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             name: "Allele Freq",
             render: (d:Mutation[])=>AlleleFreqColumnFormatter.renderFunction(d, this.props.sampleManager),
             sortBy:(d:Mutation[])=>AlleleFreqColumnFormatter.getSortValue(d, this.props.sampleManager),
-            tooltip:(<span>Variant allele frequency in the tumor sample</span>)
+            tooltip:(<span>Variant allele frequency in the tumor sample</span>),
+            visible: AlleleFreqColumnFormatter.isVisible(this.props.sampleManager,
+                this.props.dataStore ? this.props.dataStore.allData : this.props.data)
         };
 
         this._columns[MutationTableColumnType.TUMORS] = {
@@ -80,9 +82,6 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             render:(d:Mutation[])=>TumorColumnFormatter.renderFunction(d, this.props.sampleManager),
             sortBy:(d:Mutation[])=>TumorColumnFormatter.getSortValue(d, this.props.sampleManager)
         };
-
-        // patient view has a custom renderer for protein change column, so we need to override render function
-        this._columns[MutationTableColumnType.PROTEIN_CHANGE].render = ProteinChangeColumnFormatter.renderFunction;
 
         // customization for allele count columns
 

@@ -11,9 +11,9 @@
  */
 export default class HotspotSet {
     private regions:[number,number][];
-    constructor(intervals:[number,number][]) {
+    constructor(intervals?:[number,number][]) {
         // intervals: [L:number, U:number][] where L <= U
-        this.regions = createHotspotRegions(intervals);
+        this.regions = intervals ? createHotspotRegions(intervals) : [];
     }
 
     public check(x:number, y?:number):boolean {
@@ -47,6 +47,11 @@ export default class HotspotSet {
             }
         }
         return success;
+    }
+
+    public add(x:number, y:number):void {
+        this.regions.push([x,y]);
+        this.regions = createHotspotRegions(this.regions);
     }
 
     public _getHotspotRegions() {

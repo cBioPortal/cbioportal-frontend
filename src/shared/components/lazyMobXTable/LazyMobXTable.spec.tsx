@@ -1,10 +1,11 @@
 import React from 'react';
-import {assert} from 'chai';
+import {default as chai, assert} from 'chai';
+import chaiEnzyme from 'chai-enzyme';
 import {shallow, mount, ReactWrapper} from 'enzyme';
 import sinon from 'sinon';
 import {lazyMobXTableSort, default as LazyMobXTable, Column} from "./LazyMobXTable";
 import SimpleTable from "../simpleTable/SimpleTable";
-import DefaultTooltip from "../DefaultTooltip";
+import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
 import expect from 'expect';
 import expectJSX from 'expect-jsx';
 import lolex from "lolex";
@@ -16,8 +17,16 @@ import {SimpleMobXApplicationDataStore} from "../../lib/IMobXApplicationDataStor
 import cloneJSXWithoutKeyAndRef from "shared/lib/cloneJSXWithoutKeyAndRef";
 
 expect.extend(expectJSX);
+chai.use(chaiEnzyme());
 
 class Table extends LazyMobXTable<any> {
+}
+
+class HighlightingDataStore extends SimpleMobXApplicationDataStore<any> {
+    constructor(data:any[]) {
+        super(data);
+        this.dataHighlighter = (d:any)=>(d.numList[1] === null);
+    }
 }
 
 function getVisibleColumnHeaders(tableWrapper:ReactWrapper<any, any>):string[] {
@@ -50,14 +59,16 @@ function clickNextPage(table:ReactWrapper<any, any>):boolean {
     }
 }
 
-function selectItemsPerPage(table:ReactWrapper<any, any>, opt:number):boolean {
-    let selector = table.find(PaginationControls).filterWhere(x=>x.hasClass("topPagination")).find(FormControl).filterWhere(x=>x.hasClass("itemsPerPageSelector")).find('select');
+function selectItemsPerPage(table:ReactWrapper<any, any>, opt:number) {
+    /*let selector = table.find(PaginationControls).filterWhere(x=>x.hasClass("topPagination")).find(FormControl).filterWhere(x=>x.hasClass("itemsPerPageSelector")).find('select');
     if (selector.length === 0) {
         return false;
     } else {
         selector.simulate('change', {target: {value:opt+""}});
         return true;
-    }
+    }*/
+    let onChangeItemsPerPage = table.find(PaginationControls).props().onChangeItemsPerPage;
+    onChangeItemsPerPage && onChangeItemsPerPage(opt);
 }
 
 function getItemsPerPage(table:ReactWrapper<any,any>):number|undefined {
@@ -82,6 +93,10 @@ function getNumVisibleRows(table:ReactWrapper<any, any>):number {
 
 function getTextBetweenButtons(table:ReactWrapper<any, any>):string | undefined {
     return table.find(PaginationControls).filterWhere(x=>x.hasClass("topPagination")).props().textBetweenButtons;
+}
+
+function getTextBeforeButtons(table:ReactWrapper<any, any>):string | undefined {
+    return table.find(PaginationControls).filterWhere(x=>x.hasClass("topPagination")).props().textBeforeButtons;
 }
 
 function clickColumnVisibilityCheckbox(table:ReactWrapper<any, any>, columnName:string):boolean {
@@ -143,14 +158,16 @@ describe('LazyMobXTable', ()=>{
         sortBy: (d:any)=>d.name,
         render:(d:any)=>(<span>{d.name}</span>),
         download:(d:any)=>d.name,
-        tooltip:(<span>Name of the data.</span>)
+        tooltip:(<span>Name of the data.</span>),
+        align: "right"
     },{
         name: "Number",
         sortBy: (d:any)=>d.num,
         render:(d:any)=>(<span>{d.num}</span>),
         download:(d:any)=>d.num+'',
         tooltip:(<span>Number of the data.</span>),
-        defaultSortDirection: "desc"
+        defaultSortDirection: "desc",
+        align: "left"
     },{
         name: "String",
         filter: (d:any,s:string)=>(d.str && d.str.indexOf(s) > -1),
@@ -158,7 +175,8 @@ describe('LazyMobXTable', ()=>{
         render:(d:any)=>(<span>{d.str}</span>),
         download:(d:any)=>d.str+'',
         tooltip:(<span>String of the data</span>),
-        defaultSortDirection: "desc"
+        defaultSortDirection: "desc",
+        align: "center"
     },{
         name: "Number List",
         render:(d:any)=>(<span>BLAH</span>),
@@ -304,6 +322,20 @@ describe('LazyMobXTable', ()=>{
 
             table = mount(<Table columns={[]} data={[]}/>);
             assert.deepEqual(table.find(SimpleTable).find("th").length, 0, "no columns given => no column headers rendered, case: no data");
+        });
+
+        it("adds the text-align property for a column header according to the specification", ()=>{
+            let table = mount(<Table columns={columns} data={data}/>);
+            const headers = table.find(SimpleTable).find("th");
+            const nameHeader = headers.at(0);
+            const numberHeader = headers.at(1);
+            const stringHeader = headers.at(2);
+            const numberListHeader = headers.at(3);
+
+            chai.expect(nameHeader).to.have.style("textAlign", "right");
+            chai.expect(numberHeader).to.have.style("textAlign", "left");
+            chai.expect(stringHeader).to.have.style("textAlign", "center");
+            chai.expect(numberListHeader).not.to.have.style("textAlign");
         });
 
         it("has a tooltip element for columns with tooltips, and no tooltips for columns without tooltips", ()=>{
@@ -795,8 +827,7 @@ describe('LazyMobXTable', ()=>{
             assert.equal(rows.length, 0);
         });
         it("highlights rows properly, according to highlight function in data store", ()=>{
-            const store:SimpleMobXApplicationDataStore<any> = new SimpleMobXApplicationDataStore(data);
-            store.highlight = (d:any)=>(d.numList[1] === null);
+            const store:HighlightingDataStore = new HighlightingDataStore(data);
             let table = mount(<Table columns={columns} dataStore={store}/>);
             let rows = getSimpleTableRows(table);
             assert.isFalse(rows.at(0).hasClass("highlight"), "row 0 not highlighted");
@@ -1113,29 +1144,29 @@ describe('LazyMobXTable', ()=>{
                 expect(rows[i]).toEqualJSX(<tr><td><span>{i+100}</span></td></tr>);
             }
         });
-        it("shows the right text between the paging buttons", ()=>{
+        it("shows the right text before the paging buttons", ()=>{
             let table = mount(<Table columns={simpleColumns} data={[]}/>);
             assert.equal(getItemsPerPage(table), 50, "confirm 50 items per page");
-            assert.equal(getTextBetweenButtons(table), "0-0 of 0");
+            assert.equal(getTextBeforeButtons(table), "0-0 of 0");
 
             table.setProps({columns:simpleColumns, data:[simpleData[0]]});
-            assert.equal(getTextBetweenButtons(table), "1-1 of 1");
+            assert.equal(getTextBeforeButtons(table), "1-1 of 1");
 
             table.setProps({columns:simpleColumns, data:simpleData.slice(0, 40)});
-            assert.equal(getTextBetweenButtons(table), "1-40 of 40");
+            assert.equal(getTextBeforeButtons(table), "1-40 of 40");
 
             table.setProps({columns:simpleColumns, data:simpleData});
             assert.equal(simpleData.length, 120, "confirm we're working with 120 data");
-            assert.equal(getTextBetweenButtons(table), "1-50 of 120");
+            assert.equal(getTextBeforeButtons(table), "1-50 of 120");
             clickNextPage(table);
             assert.equal(getCurrentPage(table), 1);
-            assert.equal(getTextBetweenButtons(table), "51-100 of 120");
+            assert.equal(getTextBeforeButtons(table), "51-100 of 120");
             clickNextPage(table);
             assert.equal(getCurrentPage(table), 2);
-            assert.equal(getTextBetweenButtons(table), "101-120 of 120");
+            assert.equal(getTextBeforeButtons(table), "101-120 of 120");
 
             selectItemsPerPage(table, -1);
-            assert.equal(getTextBetweenButtons(table), "1-120 of 120");
+            assert.equal(getTextBeforeButtons(table), "1-120 of 120");
         });
     });
 });

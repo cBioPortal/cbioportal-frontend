@@ -1,17 +1,18 @@
 import * as React from "react";
-import {Modal} from "react-bootstrap";
-// import ReactTooltip from "react-tooltip";
 import {observer} from "mobx-react";
 import {Circle} from "better-react-spinkit";
-import DefaultTooltip from "shared/components/DefaultTooltip";
+import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import annotationStyles from "./styles/annotation.module.scss";
 import molecularMatchIconStyles from "./styles/molecularmatchIcon.module.scss";
 import {observable} from "mobx";
 import MolecularMatchTooltip from "./MolecularMatchTooltip";
+import {Mutation} from "../../api/generated/CBioPortalAPI";
 
 export interface IMolecularMatchProps {
     count?: number | null | undefined
     trials?: any | null | undefined;
+    sampleIDtoTumorType?: { [sampleId: string]: string };
+    mutationData?: Mutation | undefined;
 }
 
 export function hideArrow(tooltipEl: any) {
@@ -21,29 +22,25 @@ export function hideArrow(tooltipEl: any) {
 
 
 @observer
-export default class MolecularMatch extends React.Component<IMolecularMatchProps, {}>
-{
-    @observable tooltipDataLoadComplete:boolean = false;
+export default class MolecularMatch extends React.Component<IMolecularMatchProps, {}> {
+    @observable tooltipDataLoadComplete: boolean = false;
 
-    public static get MOLECULAR_MATCH_ICON_STYLE()
-    {
+    public static get MOLECULAR_MATCH_ICON_STYLE() {
         return {
             backgroundImage: `url(${require('./images/mm-icons-count.png')})`
         };
     }
 
-    constructor(props: IMolecularMatchProps)
-    {
+    constructor(props: IMolecularMatchProps) {
         super(props);
 
         this.handleLoadComplete = this.handleLoadComplete.bind(this);
         this.tooltipContent = this.tooltipContent.bind(this);
     }
 
-    public render()
-    {
-        let mmContent:JSX.Element = (
-            <span className={`${annotationStyles["annotation-item"]}`} />
+    public render() {
+        let mmContent: JSX.Element = (
+            <span className={`${annotationStyles["annotation-item"]}`}/>
         );
 
         if (this.props.count === null) {
@@ -54,8 +51,10 @@ export default class MolecularMatch extends React.Component<IMolecularMatchProps
             // undefined means still loading...
             mmContent = this.loaderIcon();
         }
-        else
-        {
+        else if (this.props.count == 0) {
+            //do not show any mm icon...
+        }
+        else {
             mmContent = (
                 <span className={`${annotationStyles["annotation-item"]}`}>
                     <i
@@ -69,34 +68,31 @@ export default class MolecularMatch extends React.Component<IMolecularMatchProps
 
         const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
 
-        if (this.tooltipDataLoadComplete || this.props.count !== null)
-    {
-        mmContent = (
-            <DefaultTooltip
-                overlay={this.tooltipContent}
-                placement="right"
-                trigger={['hover', 'focus']}
-                arrowContent={arrowContent}
-                onPopupAlign={hideArrow}
-                destroyTooltipOnHide={false}
-            >
-                {mmContent}
-            </DefaultTooltip>
-        );
-    }
+        if (this.tooltipDataLoadComplete || this.props.count !== null) {
+            mmContent = (
+                <DefaultTooltip
+                    overlay={this.tooltipContent}
+                    placement="right"
+                    trigger={['hover', 'focus']}
+                    arrowContent={arrowContent}
+                    onPopupAlign={hideArrow}
+                    destroyTooltipOnHide={false}
+                >
+                    {mmContent}
+                </DefaultTooltip>
+            );
+        }
 
         return mmContent;
     }
 
-    public loaderIcon()
-    {
+    public loaderIcon() {
         return (
             <Circle size={18} scaleEnd={0.5} scaleStart={0.2} color="#aaa" className="pull-left"/>
         );
     }
 
-    public errorIcon()
-    {
+    public errorIcon() {
         return (
             <DefaultTooltip
                 overlay={<span>Error fetching MolecularMatch data</span>}
@@ -106,18 +102,19 @@ export default class MolecularMatch extends React.Component<IMolecularMatchProps
                 destroyTooltipOnHide={true}
             >
                 <span className={`${annotationStyles["annotation-item-error"]}`}>
-                    <i className="fa fa-exclamation-triangle text-danger" />
+                    <i className="fa fa-exclamation-triangle text-danger"/>
                 </span>
             </DefaultTooltip>
         );
     }
 
-    private tooltipContent(): JSX.Element
-    {
+    private tooltipContent(): JSX.Element {
         return (
             <MolecularMatchTooltip
                 count={this.props.count || undefined}
                 trials={this.props.trials || undefined}
+                sampleIDtoTumorType={this.props.sampleIDtoTumorType}
+                mutationData={this.props.mutationData}
                 onLoadComplete={this.handleLoadComplete}
             />
         );
@@ -137,15 +134,13 @@ export default class MolecularMatch extends React.Component<IMolecularMatchProps
 
         let className: string;
 
-        if(count != null && count <= 10){
+        if (count != null && count <= 10) {
             className = "count" + count;
         }
-        else{
+        else {
             className = "countexceed-10";
         }
 
         return molecularMatchIconStyles[className];
     }
-
-
 }

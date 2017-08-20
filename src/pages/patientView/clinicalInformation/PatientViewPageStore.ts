@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
 import {
     ClinicalData, GeneticProfile, Sample, Mutation, DiscreteCopyNumberFilter, DiscreteCopyNumberData, MutationFilter,
-    CopyNumberCount
+    CopyNumberCount, ClinicalDataMultiStudyFilter
 } from "../../../shared/api/generated/CBioPortalAPI";
 import client from "../../../shared/api/cbioportalClientInstance";
 import internalClient from "../../../shared/api/cbioportalInternalClientInstance";
@@ -22,6 +22,7 @@ import PubMedCache from "shared/cache/PubMedCache";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {IHotspotData} from "shared/model/CancerHotspots";
 import {IMutSigData} from "shared/model/MutSig";
+import {ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
 import {ClinicalInformationData} from "shared/model/ClinicalInformation";
 import VariantCountCache from "shared/cache/VariantCountCache";
 import CopyNumberCountCache from "./CopyNumberCountCache";
@@ -34,21 +35,13 @@ import {
     fetchMutationData, fetchDiscreteCNAData, generateSampleIdToTumorTypeMap, findMutationGeneticProfileId,
     findUncalledMutationGeneticProfileId, mergeMutationsIncludingUncalled, fetchGisticData, fetchCopyNumberData,
     fetchMutSigData, findMrnaRankGeneticProfileId, mergeDiscreteCNAData, fetchSamplesForPatient, fetchClinicalData,
-    fetchCopyNumberSegments, fetchClinicalDataForPatient, fetchMolecularMatchTrials, makeStudyToCancerTypeMap
-
+    fetchCopyNumberSegments, fetchClinicalDataForPatient, fetchMolecularMatchTrials, makeStudyToCancerTypeMap,
+    fetchCivicGenes, fetchCnaCivicGenes, fetchCivicVariants, groupByEntityId, findSamplesWithoutCancerTypeClinicalData,
+    fetchStudiesForSamplesWithoutCancerTypeClinicalData
 } from "shared/lib/StoreUtils";
+import {stringListToSet} from "../../../shared/lib/StringUtils";
 
 type PageMode = 'patient' | 'sample';
-
-export function groupByEntityId(clinicalDataArray: Array<ClinicalData>) {
-    return _.map(
-        _.groupBy(clinicalDataArray, 'entityId'),
-        (v: ClinicalData[], k: string): ClinicalDataBySampleId => ({
-            clinicalData: v,
-            id: k,
-        })
-    );
-}
 
 export async function checkForTissueImage(patientId: string): Promise<boolean> {
 
@@ -73,10 +66,13 @@ export type PathologyReportPDF = {
 
 }
 
-export function handlePathologyReportCheckResponse(resp: any): PathologyReportPDF[] {
+export function handlePathologyReportCheckResponse(patientId: string, resp: any): PathologyReportPDF[] {
 
     if (resp.total_count > 0) {
-        return _.map(resp.items, (item: any) => ( {url: item.url, name: item.name} ));
+        // only use pdfs starting with the patient id to prevent mismatches
+        const r = new RegExp("^" + patientId);
+        const filteredItems:any = _.filter(resp.items, (item: any) => r.test(item.name));
+        return _.map(filteredItems, (item: any) => ( {url: item.url, name: item.name} ));
     } else {
         return [];
     }
@@ -87,15 +83,15 @@ export function handlePathologyReportCheckResponse(resp: any): PathologyReportPD
  * Transform clinical data from API to clinical data shape as it will be stored
  * in the store
  */
-function transformClinicalInformationToStoreShape(patientId: string, studyId: string, clinicalDataPatient: Array<ClinicalData>, clinicalDataSample: Array<ClinicalData>): ClinicalInformationData {
+function transformClinicalInformationToStoreShape(patientId: string, studyId: string, sampleIds: Array<string>, clinicalDataPatient: Array<ClinicalData>, clinicalDataSample: Array<ClinicalData>): ClinicalInformationData {
     const patient = {
         id: patientId,
         clinicalData: clinicalDataPatient
     };
-    const samples = groupByEntityId(clinicalDataSample);
+    const samples = groupByEntityId(sampleIds, clinicalDataSample);
     const rv = {
         patient,
-        samples,
+        samples
     };
 
     return rv;
@@ -194,6 +190,21 @@ export class PatientViewPageStore {
         []
     );
 
+    readonly samplesWithoutCancerTypeClinicalData = remoteData({
+        await: () => [
+            this.samples,
+            this.clinicalDataForSamples
+        ],
+        invoke: async () => findSamplesWithoutCancerTypeClinicalData(this.samples, this.clinicalDataForSamples)
+    }, []);
+
+    readonly studiesForSamplesWithoutCancerTypeClinicalData = remoteData({
+        await: () => [
+            this.samplesWithoutCancerTypeClinicalData
+        ],
+        invoke: async () => fetchStudiesForSamplesWithoutCancerTypeClinicalData(this.samplesWithoutCancerTypeClinicalData)
+    }, []);
+
     readonly studies = remoteData({
         invoke: async()=>([await client.getStudyUsingGET({studyId: this.studyId})])
     }, []);
@@ -217,7 +228,7 @@ export class PatientViewPageStore {
 
             const parsedResp: any = JSON.parse(resp.text);
 
-            return handlePathologyReportCheckResponse(parsedResp);
+            return handlePathologyReportCheckResponse(this.patientId, parsedResp);
 
         },
         onError: (err: Error) => {
@@ -286,12 +297,19 @@ export class PatientViewPageStore {
         await: () => [
             this.samples
         ],
-        invoke: () => fetchClinicalData(this.studyId, this.sampleIds)
+        invoke: () => {
+            const identifiers = this.sampleIds.map((sampleId: string) => ({
+                entityId: sampleId,
+                studyId: this.studyId
+            }));
+            const clinicalDataMultiStudyFilter = {identifiers} as ClinicalDataMultiStudyFilter;
+            return fetchClinicalData(clinicalDataMultiStudyFilter)
+        }
     }, []);
 
     readonly clinicalDataGroupedBySample = remoteData({
         await: () => [this.clinicalDataForSamples],
-        invoke: async() => groupByEntityId(this.clinicalDataForSamples.result)
+        invoke: async() => groupByEntityId(this.sampleIds, this.clinicalDataForSamples.result)
     }, []);
 
     readonly studyMetaData = remoteData({
@@ -301,14 +319,19 @@ export class PatientViewPageStore {
     readonly patientViewData = remoteData({
         await: () => [
             this.clinicalDataPatient,
-            this.clinicalDataForSamples
+            this.clinicalDataForSamples,
         ],
         invoke: async() => transformClinicalInformationToStoreShape(
             this.patientId,
             this.studyId,
+            this.sampleIds,
             this.clinicalDataPatient.result,
             this.clinicalDataForSamples.result
         )
+    }, {});
+
+    readonly sequencedSampleIdsInStudy = remoteData(async() => {
+        return stringListToSet(await client.getAllSampleIdsInSampleListUsingGET({sampleListId:`${this.studyId}_sequenced`}));
     }, {});
 
     readonly geneticProfilesInStudy = remoteData(() => {
@@ -442,6 +465,7 @@ export class PatientViewPageStore {
             this.mutationData,
             this.uncalledMutationData,
             this.clinicalDataForSamples,
+            this.studiesForSamplesWithoutCancerTypeClinicalData,
             this.studies
         ],
         invoke: async() => fetchOncoKbData(this.sampleIdToTumorType, this.mutationData, this.uncalledMutationData),
@@ -449,6 +473,33 @@ export class PatientViewPageStore {
             // fail silently, leave the error handling responsibility to the data consumer
         }
     }, ONCOKB_DEFAULT);
+
+    readonly civicGenes = remoteData<ICivicGene | undefined>({
+        await: () => [
+            this.mutationData,
+            this.uncalledMutationData,
+            this.clinicalDataForSamples
+        ],
+        invoke: async() => AppConfig.showCivic ? fetchCivicGenes(this.mutationData, this.uncalledMutationData) : {}
+    }, undefined);
+
+    readonly civicVariants = remoteData<ICivicVariant | undefined>({
+        await: () => [
+            this.civicGenes,
+            this.mutationData,
+            this.uncalledMutationData
+        ],
+        invoke: async() => {
+            if (AppConfig.showCivic && this.civicGenes.result) {
+                return fetchCivicVariants(this.civicGenes.result as ICivicGene,
+                    this.mutationData,
+                    this.uncalledMutationData);
+            }
+            else {
+                return {};
+            }
+       }
+    }, undefined);
 
     readonly cnaOncoKbData = remoteData<IOncoKbData>({
         await: () => [
@@ -461,6 +512,26 @@ export class PatientViewPageStore {
             // fail silently, leave the error handling responsibility to the data consumer
         }
     }, ONCOKB_DEFAULT);
+
+    readonly cnaCivicGenes = remoteData<ICivicGene | undefined>({
+        await: () => [
+            this.discreteCNAData,
+            this.clinicalDataForSamples
+        ],
+        invoke: async() => AppConfig.showCivic ? fetchCnaCivicGenes(this.discreteCNAData) : {}
+    }, undefined);
+
+    readonly cnaCivicVariants = remoteData<ICivicVariant | undefined>({
+        await: () => [
+            this.civicGenes,
+            this.mutationData
+        ],
+        invoke: async() => {
+            if (this.cnaCivicGenes.status == "complete") {
+                return fetchCivicVariants(this.cnaCivicGenes.result as ICivicGene);
+            }
+       }
+    }, undefined);
 
     readonly copyNumberCountData = remoteData<CopyNumberCount[]>({
         await: () => [
@@ -493,8 +564,8 @@ export class PatientViewPageStore {
 
     @computed get sampleIdToTumorType(): {[sampleId: string]: string} {
         return generateSampleIdToTumorTypeMap(this.clinicalDataForSamples,
-            this.studyToCancerType[this.studyId],
-            this.samples);
+            this.studiesForSamplesWithoutCancerTypeClinicalData,
+            this.samplesWithoutCancerTypeClinicalData);
     }
 
     @action("SetSampleId") setSampleId(newId: string) {

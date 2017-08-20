@@ -1,5 +1,5 @@
 import {
-    Mutation, DiscreteCopyNumberFilter, DiscreteCopyNumberData, MutationFilter, Gene, CancerStudy
+    DiscreteCopyNumberFilter, DiscreteCopyNumberData, ClinicalData
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {computed, observable, action} from "mobx";
@@ -7,18 +7,20 @@ import {remoteData, addErrorHandler} from "shared/api/remoteData";
 import {labelMobxPromises, cached} from "mobxpromise";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import PubMedCache from "shared/cache/PubMedCache";
-import {IOncoKbData} from "shared/model/OncoKB";
-import {IHotspotData} from "shared/model/CancerHotspots";
 import CancerTypeCache from "shared/cache/CancerTypeCache";
 import MutationCountCache from "shared/cache/MutationCountCache";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
+import PdbHeaderCache from "shared/cache/PdbHeaderCache";
 import {
-    indexHotspotData, fetchHotspotsData, mergeMutations, ONCOKB_DEFAULT,
-    fetchCosmicData, fetchOncoKbData, findGeneticProfileIdDiscrete, fetchMyCancerGenomeData, fetchMutationData,
-    fetchDiscreteCNAData, generateSampleIdToTumorTypeMap, findMutationGeneticProfileId, mergeDiscreteCNAData,
-    fetchSamples, fetchClinicalData, generateDataQueryFilter, makeStudyToCancerTypeMap
+    findGeneticProfileIdDiscrete, fetchMyCancerGenomeData,
+    fetchDiscreteCNAData, findMutationGeneticProfileId, mergeDiscreteCNAData,
+    fetchSamples, fetchClinicalDataInStudy, generateDataQueryFilter, makeStudyToCancerTypeMap,
+    fetchSamplesWithoutCancerTypeClinicalData, fetchStudiesForSamplesWithoutCancerTypeClinicalData
 } from "shared/lib/StoreUtils";
 import {MutationMapperStore} from "./mutation/MutationMapperStore";
+import AppConfig from "appConfig";
+import * as _ from 'lodash';
+import { IMPACT_GERMLINE_TESTING_CONSENT } from "shared/constants";
 
 export class ResultsViewPageStore {
 
@@ -61,11 +63,16 @@ export class ResultsViewPageStore {
             return undefined;
         }
         else {
-            const store = new MutationMapperStore(hugoGeneSymbol,
+            const store = new MutationMapperStore(AppConfig,
+                hugoGeneSymbol,
                 this.mutationGeneticProfileId,
                 this.sampleIds,
                 this.clinicalDataForSamples,
-                this.sampleListId);
+                this.studiesForSamplesWithoutCancerTypeClinicalData,
+                this.samplesWithoutCancerTypeClinicalData,
+                this.sampleListId,
+                this.patientIds,
+                this.mskImpactGermlineConsentedPatientIds);
 
             this.mutationMapperStores[hugoGeneSymbol] = store;
 
@@ -76,7 +83,8 @@ export class ResultsViewPageStore {
     readonly sampleIds = remoteData(async () => {
         // first priority: user provided custom sample list
         if (this.sampleList) {
-            return this.sampleList;
+            // cannot return an observable array directly, need to create a copy
+            return this.sampleList.map(sampleId => sampleId);
         }
         // if no custom sample list try to fetch sample ids from the API
         else if (this.sampleListId) {
@@ -92,7 +100,30 @@ export class ResultsViewPageStore {
         await: () => [
             this.sampleIds
         ],
-        invoke: () => fetchClinicalData(this.studyId, this.sampleIds.result)
+        invoke: () => {
+            const clinicalDataSingleStudyFilter = {attributeIds: ["CANCER_TYPE", "CANCER_TYPE_DETAILED"], ids: this.sampleIds.result};
+            return fetchClinicalDataInStudy(this.studyId, clinicalDataSingleStudyFilter, 'SAMPLE')
+        }
+    }, []);
+
+    readonly mskImpactGermlineConsentedPatientIds = remoteData({
+        await: () => [this.patientIds],
+        invoke: async () => {
+            const clinicalDataSingleStudyFilter = {
+                attributeIds: [IMPACT_GERMLINE_TESTING_CONSENT],
+                ids: this.patientIds.result
+            };
+            const clinicalDataResponse = await fetchClinicalDataInStudy(
+                this.studyId, clinicalDataSingleStudyFilter, 'PATIENT'
+            );
+            if (clinicalDataResponse) {
+                return _.uniq(clinicalDataResponse.map(
+                    (cd:ClinicalData) => cd.entityId)
+                );
+            } else {
+                return [];
+            }
+        },
     }, []);
 
     readonly samples = remoteData({
@@ -100,6 +131,28 @@ export class ResultsViewPageStore {
             this.sampleIds
         ],
         invoke: async () => fetchSamples(this.sampleIds, this.studyId)
+    }, []);
+
+    readonly samplesWithoutCancerTypeClinicalData = remoteData({
+        await: () => [
+            this.sampleIds,
+            this.clinicalDataForSamples
+        ],
+        invoke: async () => fetchSamplesWithoutCancerTypeClinicalData(this.sampleIds, this.studyId, this.clinicalDataForSamples)
+    }, []);
+
+    readonly studiesForSamplesWithoutCancerTypeClinicalData = remoteData({
+        await: () => [
+            this.samplesWithoutCancerTypeClinicalData
+        ],
+        invoke: async () => fetchStudiesForSamplesWithoutCancerTypeClinicalData(this.samplesWithoutCancerTypeClinicalData)
+    }, []);
+
+    readonly patientIds = remoteData({
+        await: () => [this.samples],
+        invoke: async () => {
+            return _.chain(this.samples.result).map('patientId').uniq().value();
+        },
     }, []);
 
     readonly studies = remoteData({
@@ -168,6 +221,10 @@ export class ResultsViewPageStore {
 
     @cached get mutationCountCache() {
         return new MutationCountCache(this.mutationGeneticProfileId.result);
+    }
+
+    @cached get pdbHeaderCache() {
+        return new PdbHeaderCache();
     }
 
     @action clearErrors() {
