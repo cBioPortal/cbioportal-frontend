@@ -82,10 +82,10 @@ export default class LazyMobXCache<Data, Query, Metadata = any> {
         return this.peek(query);
     }
 
-    public addData(data:Data[]):void {
+    public addData(data:Data[], meta?:Metadata):void {
         const toMerge:Cache<Data, Metadata> = {};
         for (const datum of data) {
-            toMerge[this.dataToKey(datum)] = {
+            toMerge[this.dataToKey(datum, meta)] = {
                 status: "complete",
                 data: datum
             };

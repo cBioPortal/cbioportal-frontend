@@ -1,5 +1,7 @@
 import { assert } from 'chai';
-import {longestCommonStartingSubstring, stringListToIndexSet, stringListToSet} from "./StringUtils";
+import {
+    longestCommonStartingSubstring, stringListToIndexSet, stringListToSet
+} from "./StringUtils";
 
 describe("longestCommonStartingSubstring", ()=>{
     it("finds correct result on various inputs", ()=>{

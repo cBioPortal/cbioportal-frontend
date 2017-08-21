@@ -1,5 +1,5 @@
 import {
-    DiscreteCopyNumberFilter, DiscreteCopyNumberData, ClinicalData, GeneticProfile
+    DiscreteCopyNumberFilter, DiscreteCopyNumberData, ClinicalData, GeneticProfile, Sample
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {computed, observable, action} from "mobx";
@@ -16,13 +16,14 @@ import {
     fetchDiscreteCNAData, findMutationGeneticProfileId, mergeDiscreteCNAData,
     fetchSamples, fetchClinicalDataInStudy, generateDataQueryFilter, makeStudyToCancerTypeMap,
     fetchSamplesWithoutCancerTypeClinicalData, fetchStudiesForSamplesWithoutCancerTypeClinicalData,
-    findMutationGeneticProfileIdSynch
+    findMutationGeneticProfileIdSynch, IDataQueryFilter
 } from "shared/lib/StoreUtils";
 import {MutationMapperStore} from "./mutation/MutationMapperStore";
 import AppConfig from "appConfig";
 import * as _ from 'lodash';
 import { IMPACT_GERMLINE_TESTING_CONSENT } from "shared/constants";
 import {stringListToSet} from "../../shared/lib/StringUtils";
+import {setDifference, setValues, toSet} from "../../shared/lib/SetUtils";
 
 export class ResultsViewPageStore {
 
@@ -111,14 +112,15 @@ export class ResultsViewPageStore {
         else {
             const store = new MutationMapperStore(AppConfig,
                 hugoGeneSymbol,
-                this.mutationGeneticProfileId,
-                this.sampleIds,
-                this.clinicalDataForSamples,
-                this.studiesForSamplesWithoutCancerTypeClinicalData,
-                this.samplesWithoutCancerTypeClinicalData,
-                this.sampleListId,
-                this.patientIds,
-                this.mskImpactGermlineConsentedPatientIds);
+                this.studies,
+                this.studyToMutationGeneticProfileId,
+                this.studyToSampleIds,
+                this.studyToClinicalDataForSamples,
+                this.studyToSamplesWithoutCancerTypeClinicalData,
+                this.studyToSampleListId,
+                this.studyToPatientIds,
+                this.studyToMskImpactGermlineConsentedPatientIds,
+                this.studyToDataQueryFilter);
 
             this.mutationMapperStores[hugoGeneSymbol] = store;
 
@@ -133,74 +135,90 @@ export class ResultsViewPageStore {
         invoke: async() => {
             const studies = Object.keys(this.studyToSampleIds.result);
             const clinicalDataSingleStudyFilters = studies.map(studyId=>({
+                studyId,
                 attributeIds: ["CANCER_TYPE", "CANCER_TYPE_DETAILED"],
-                ids: this.studyToSampleIds.result[studyId]
+                ids: Object.keys(this.studyToSampleIds.result[studyId])
             }));
-            return fetchClinicalDataInStudy(this.studyId, clinicalDataSingleStudyFilter, 'SAMPLE')
+            const results:ClinicalData[][] = await Promise.all(clinicalDataSingleStudyFilters.map(x=>{
+                return fetchClinicalDataInStudy(x.studyId, x, "SAMPLE");
+            }));
+            return results.reduce((map:{[studyId:string]:ClinicalData[]}, next:ClinicalData[], index:number)=>{
+                map[studies[index]] = next;
+                return map;
+            }, {});
         }
     }, {});
 
-    readonly clinicalDataForSamples = remoteData({
-        await: () => [
-            this.sampleIds
-        ],
-        invoke: () => {
-            const clinicalDataSingleStudyFilter = {attributeIds: ["CANCER_TYPE", "CANCER_TYPE_DETAILED"], ids: this.sampleIds.result};
-            return fetchClinicalDataInStudy(this.studyId, clinicalDataSingleStudyFilter, 'SAMPLE')
-        }
-    }, []);
+    readonly studyToMskImpactGermlineConsentedPatientIds = remoteData({
+        await:()=>[this.studyToPatientIds],
+        invoke: async()=>{
+            const studyToPatientIds = this.studyToPatientIds.result;
+            const studies = Object.keys(studyToPatientIds);
+            const results:ClinicalData[][] = await Promise.all(studies.map(studyId=>{
+                const filter = {
+                    attributeIds: [IMPACT_GERMLINE_TESTING_CONSENT],
+                    ids: Object.keys(studyToPatientIds[studyId])
+                };
+                return fetchClinicalDataInStudy(studyId, filter, 'PATIENT');
+            }));
+            return results.reduce((map:{[studyId:string]:{[patientId:string]:boolean}}, next:ClinicalData[], index:number)=>{
+                map[studies[index]] = stringListToSet(next.map(d=>d.entityId));
+                return map;
+            }, {});
+        },
+    });
 
-    readonly mskImpactGermlineConsentedPatientIds = remoteData({
-        await: () => [this.patientIds],
-        invoke: async () => {
-            const clinicalDataSingleStudyFilter = {
-                attributeIds: [IMPACT_GERMLINE_TESTING_CONSENT],
-                ids: this.patientIds.result
-            };
-            const clinicalDataResponse = await fetchClinicalDataInStudy(
-                this.studyId, clinicalDataSingleStudyFilter, 'PATIENT'
+    readonly studyToSamples = remoteData({
+        await: ()=>[
+            this.studyToSampleIds
+        ],
+        invoke: async()=>{
+            const studies = Object.keys(this.studyToSampleIds.result);
+            const results:Sample[][] = await Promise.all(
+                studies.map(studyId=>fetchSamples(Object.keys(this.studyToSampleIds.result[studyId]), studyId))
             );
-            if (clinicalDataResponse) {
-                return _.uniq(clinicalDataResponse.map(
-                    (cd:ClinicalData) => cd.entityId)
-                );
-            } else {
-                return [];
+            return results.reduce((map:{[studyId:string]:Sample[]}, next:Sample[], index:number)=>{
+                map[studies[index]] = next;
+                return map;
+            }, {});
+        }
+    }, {});
+
+    readonly studyToSamplesWithoutCancerTypeClinicalData = remoteData({
+        await: ()=>[
+            this.studyToSamples,
+            this.studyToClinicalDataForSamples
+        ],
+        invoke: ()=>{
+            const studyToSamples = this.studyToSamples.result;
+            const studyToClinicalDataForSamples = this.studyToClinicalDataForSamples.result;
+            const studies = Object.keys(studyToSamples);
+            return Promise.resolve(studies.reduce((map:{[studyId:string]:Sample[]}, studyId:string)=>{
+                const allSamples = toSet(studyToSamples[studyId], d=>d.sampleId);
+                const samplesWithClinicalData = toSet(studyToClinicalDataForSamples[studyId], d=>d.entityId);
+                map[studyId] = setValues(setDifference(allSamples, samplesWithClinicalData));
+                return map;
+            }, {}));
+        }
+    });
+
+    readonly studyToPatientIds = remoteData({
+        await: ()=>[ this.studyToSamples ],
+        invoke: async()=>{
+            const studies = Object.keys(this.studyToSamples.result);
+            const ret:{[studyId:string]:{[patientId:string]:boolean}} = {};
+            for (const study of studies) {
+                ret[study] = this.studyToSamples.result[study].reduce((map:{[patientId:string]:boolean}, next:Sample)=>{
+                    map[next.patientId] = true;
+                    return map;
+                }, {});
             }
-        },
-    }, []);
-
-    readonly samples = remoteData({
-        await: () => [
-            this.sampleIds
-        ],
-        invoke: async () => fetchSamples(this.sampleIds, this.studyId)
-    }, []);
-
-    readonly samplesWithoutCancerTypeClinicalData = remoteData({
-        await: () => [
-            this.sampleIds,
-            this.clinicalDataForSamples
-        ],
-        invoke: async () => fetchSamplesWithoutCancerTypeClinicalData(this.sampleIds, this.studyId, this.clinicalDataForSamples)
-    }, []);
-
-    readonly studiesForSamplesWithoutCancerTypeClinicalData = remoteData({
-        await: () => [
-            this.samplesWithoutCancerTypeClinicalData
-        ],
-        invoke: async () => fetchStudiesForSamplesWithoutCancerTypeClinicalData(this.samplesWithoutCancerTypeClinicalData)
-    }, []);
-
-    readonly patientIds = remoteData({
-        await: () => [this.samples],
-        invoke: async () => {
-            return _.chain(this.samples.result).map('patientId').uniq().value();
-        },
-    }, []);
+            return ret;
+        }
+    }, {});
 
     readonly studies = remoteData({
-        invoke: async()=>([await client.getStudyUsingGET({studyId: this.studyId})])
+        invoke: ()=>Promise.all(this.studyIds.map(studyId=>client.getStudyUsingGET({studyId})))
     }, []);
 
     @computed get studyToCancerType() {
@@ -220,42 +238,73 @@ export class ResultsViewPageStore {
         }, {});
     });
 
-    readonly geneticProfileIdDiscrete = remoteData({
-        await: () => [
-            this.geneticProfilesInStudy
+    readonly studyToGeneticProfileIdDiscrete = remoteData({
+        await: ()=>[
+            this.studyToGeneticProfilesInStudy
         ],
-        invoke: async () => {
-            return findGeneticProfileIdDiscrete(this.geneticProfilesInStudy);
+        invoke: async()=>{
+            const studyToProfiles:{[studyId:string]:GeneticProfile[]} = this.studyToGeneticProfilesInStudy.result!;
+            const studies = Object.keys(this.studyToGeneticProfilesInStudy.result);
+            return studies.reduce((map:{[studyId:string]:string|undefined}, studyId:string)=>{
+                map[studyId] = findGeneticProfileIdDiscrete(studyToProfiles[studyId]);
+                return map;
+            }, {});
         }
     });
 
-    readonly discreteCNAData = remoteData({
+    readonly studyToDiscreteCNAData = remoteData({
         await: () => [
-            this.geneticProfileIdDiscrete,
-            this.dataQueryFilter
+            this.studyToGeneticProfileIdDiscrete,
+            this.studyToDataQueryFilter
         ],
         invoke: async () => {
-            const filter = this.dataQueryFilter.result as DiscreteCopyNumberFilter;
-            return fetchDiscreteCNAData(filter, this.geneticProfileIdDiscrete);
+            const studies = Object.keys(this.studyToDataQueryFilter.result);
+            const studyToDataQueryFilter = this.studyToDataQueryFilter.result;
+            const studyToGeneticProfileIdDiscrete = this.studyToGeneticProfileIdDiscrete.result;
+            if (!studyToDataQueryFilter || !studyToGeneticProfileIdDiscrete) {
+                return {};
+            } else {
+                const results:DiscreteCopyNumberData[][] = await Promise.all(studies.map(studyId=>{
+                    return fetchDiscreteCNAData(studyToDataQueryFilter[studyId] as DiscreteCopyNumberFilter, studyToGeneticProfileIdDiscrete[studyId]);
+                }));
+                return results.reduce((map:{[studyId:string]:DiscreteCopyNumberData[]}, next:DiscreteCopyNumberData[], index:number)=>{
+                    map[studies[index]] = next;
+                    return map;
+                }, {});
+            }
         },
-        onResult: (result:DiscreteCopyNumberData[]) => {
+        onResult: (result:{[studyId:string]:DiscreteCopyNumberData[]}) => {
             // We want to take advantage of this loaded data, and not redownload the same data
             //  for users of the cache
-            this.discreteCNACache.addData(result);
+            for (const studyId of Object.keys(result)) {
+                this.discreteCNACache.addData(result[studyId], studyId);
+            }
         }
 
-    }, []);
+    }, {});
 
-    readonly dataQueryFilter = remoteData({
+    readonly studyToDataQueryFilter = remoteData({
         await: () => [
-            this.sampleIds
+            this.studyToSampleIds
         ],
-        invoke: async () => generateDataQueryFilter(this.sampleListId, this.sampleIds.result)
+        invoke: () => {
+            const studyToSampleIds = this.studyToSampleIds.result;
+            const studies = Object.keys(studyToSampleIds);
+            const ret:{[studyId:string]:IDataQueryFilter} = {};
+            for (const studyId of studies) {
+                if (this.studyToSampleListId && this.studyToSampleListId[studyId]) {
+                    ret[studyId] = {
+                        sampleListId: this.studyToSampleListId[studyId]
+                    };
+                } else {
+                    ret[studyId] = {
+                        sampleIds: Object.keys(studyToSampleIds[studyId])
+                    };
+                }
+            }
+            return Promise.resolve(ret);
+        }
     });
-
-    @computed get mergedDiscreteCNAData():DiscreteCopyNumberData[][] {
-        return mergeDiscreteCNAData(this.discreteCNAData);
-    }
 
     @cached get oncoKbEvidenceCache() {
         return new OncoKbEvidenceCache();
@@ -266,15 +315,15 @@ export class ResultsViewPageStore {
     }
 
     @cached get discreteCNACache() {
-        return new DiscreteCNACache(this.geneticProfileIdDiscrete.result);
+        return new DiscreteCNACache(this.studyToGeneticProfileIdDiscrete.result);
     }
 
     @cached get cancerTypeCache() {
-        return new CancerTypeCache(this.studyId);
+        return new CancerTypeCache();
     }
 
     @cached get mutationCountCache() {
-        return new MutationCountCache(this.mutationGeneticProfileId.result);
+        return new MutationCountCache(this.studyToMutationGeneticProfileId.result);
     }
 
     @cached get pdbHeaderCache() {

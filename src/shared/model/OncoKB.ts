@@ -26,7 +26,7 @@ export interface IEvidence {
 
 export interface IOncoKbData {
     indicatorMap: {[id:string]: IndicatorQueryResp} | null;
-    sampleToTumorMap: {[sampleId:string]: string} | null;
+    studyToSampleToTumorType:{[studyId:string]:{[sampleId: string]: string}} | null;
 }
 
 export interface IOncoKbDataWrapper {
