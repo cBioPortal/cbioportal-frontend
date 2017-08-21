@@ -33,8 +33,7 @@ export class MutationMapperStore {
                 studiesForSamplesWithoutCancerTypeClinicalData: MobxPromise<CancerStudy[]>,
                 samplesWithoutCancerTypeClinicalData: MobxPromise<Sample[]>,
                 sampleListId: string|null,
-                patientIds: MobxPromise<string[]>,
-                mskImpactGermlineConsentedPatientIds: MobxPromise<string[]>)
+                germlineConsentedSampleIds: MobxPromise<string[]>)
     {
         this.config = config;
         this.hugoGeneSymbol = hugoGeneSymbol;
@@ -44,8 +43,7 @@ export class MutationMapperStore {
         this.studiesForSamplesWithoutCancerTypeClinicalData = studiesForSamplesWithoutCancerTypeClinicalData;
         this.samplesWithoutCancerTypeClinicalData = samplesWithoutCancerTypeClinicalData;
         this.sampleListId = sampleListId;
-        this.patientIds = patientIds;
-        this.mskImpactGermlineConsentedPatientIds = mskImpactGermlineConsentedPatientIds;
+        this.germlineConsentedSampleIds = germlineConsentedSampleIds;
 
         labelMobxPromises(this);
     }
@@ -60,8 +58,7 @@ export class MutationMapperStore {
     studiesForSamplesWithoutCancerTypeClinicalData: MobxPromise<CancerStudy[]>;
     samplesWithoutCancerTypeClinicalData: MobxPromise<Sample[]>;
     sampleIds: MobxPromise<string[]>;
-    patientIds: MobxPromise<string[]>;
-    mskImpactGermlineConsentedPatientIds: MobxPromise<string[]>;
+    germlineConsentedSampleIds: MobxPromise<string[]>;
 
     readonly cosmicData = remoteData({
         await: () => [

@@ -128,71 +128,44 @@ export function getProteinStartPositionsByRange(data: Mutation[][], start: numbe
 }
 
 /**
- * Percentage of cases/patients with a germline mutation in given gene.
- * Assumes all given patient ids in the study had germline screening for all
+ * Percentage of cases/samples with a germline mutation in given gene.
+ * Assumes all given sample ids in the study had germline screening for all
  * genes (TODO: use gene panel).
  */
 export function germlineMutationRate(hugoGeneSymbol:string,
                                      mutations: Mutation[],
-                                     patientIds: string[])
+                                     sampleIds: string[])
 {
-    if (mutations.length > 0 && patientIds.length > 0) {
+    if (mutations.length > 0 && sampleIds.length > 0) {
         const nrCasesGermlineMutation:number =
             _.chain(mutations)
             .filter((m:Mutation) => (
                 m.gene.hugoGeneSymbol === hugoGeneSymbol &&
-                m.mutationStatus === MUTATION_STATUS_GERMLINE &&
-                // filter for given patient IDs
-                patientIds.indexOf(m.patientId) > -1
+                new RegExp(MUTATION_STATUS_GERMLINE, "i").test(m.mutationStatus) &&
+                // filter for given sample IDs
+                sampleIds.indexOf(m.sampleId) > -1
             ))
-            .map('patientId')
+            .map('sampleId')
             .uniq()
             .value()
             .length;
-        return nrCasesGermlineMutation * 100.0 / patientIds.length;
+        return nrCasesGermlineMutation * 100.0 / sampleIds.length;
     } else {
         return 0;
     }
 }
 
 /**
- * Percentage of cases/patients with a somatic mutation in given gene.
- */
-export function somaticMutationRate(hugoGeneSymbol: string,
-                                    mutations: Mutation[],
-                                    patientIds: string[]) {
-    if (mutations.length > 0 && patientIds.length > 0) {
-       return (
-           _.chain(mutations)
-            .filter((m:Mutation) => (
-                m.gene.hugoGeneSymbol === hugoGeneSymbol &&
-                m.mutationStatus !== MUTATION_STATUS_GERMLINE &&
-                // filter for given patient IDs
-                patientIds.indexOf(m.patientId) > -1
-            ))
-           .map('patientId')
-           .uniq()
-           .value()
-           .length * 100.0 /
-           patientIds.length
-       );
-   } else {
-       return 0;
-   }
-}
-
-/**
  * Percentage of cases/samples with a somatic mutation in given gene.
  */
-// TODO mostly duplicate of somaticMutationRate, we should eventually replace somaticMutationRate with this one
-export function somaticMutationRateBySample(hugoGeneSymbol: string, mutations: Mutation[],
+export function somaticMutationRate(hugoGeneSymbol: string, mutations: Mutation[],
                                             sampleIds: string[]) {
     if (mutations.length > 0 && sampleIds.length > 0) {
         return (
             _.chain(mutations)
                 .filter((m:Mutation) => (
                     m.gene.hugoGeneSymbol === hugoGeneSymbol &&
-                    m.mutationStatus !== MUTATION_STATUS_GERMLINE &&
+                    !(new RegExp(MUTATION_STATUS_GERMLINE, "i").test(m.mutationStatus)) &&
                     // filter for given sample IDs
                     sampleIds.indexOf(m.sampleId) > -1
                 ))
