@@ -78,6 +78,8 @@ export default class BarGraph extends React.Component<IBarGraphProps, {}> {
     componentDidMount() {
 
         const cancerStudies = this.byPrimarySiteStudies;
+
+        if (!cancerStudies.length) return;
         cancerStudies.forEach(study => {study.caseCount = study.studies.reduce((sum:number, cStudy) => sum + cStudy.allSampleCount, 0)});
 
         const cancerTypeStudiesArray = cancerStudies.sort((a, b) => b.caseCount! - a.caseCount!).slice(0, 20).map(study => this.getShortName(study));
