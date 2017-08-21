@@ -98,6 +98,7 @@ export function getProteinImpactTypeFromCanonical(mutationType:CanonicalMutation
         case "fusion":
         case "silent":
         case "other":
+        default:
             return "other";
     }
 }
