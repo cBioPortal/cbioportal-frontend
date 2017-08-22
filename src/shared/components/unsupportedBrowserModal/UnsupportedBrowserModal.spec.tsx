@@ -36,7 +36,7 @@ describe('UnsupportedBrowserModal', () => {
         expect(wrapper.state('show')).to.equal(false);
     });
 
-    it('shows modal when IE10 is being used and site is accessed for first time', () => {
+    it.skip('shows modal when IE10 is being used and site is accessed for first time', () => {
         wrapper.instance().handleUnsupportedBrowsers('msie', '10.0.0', false);
         expect(wrapper.state('show')).to.equal(true);
     });
