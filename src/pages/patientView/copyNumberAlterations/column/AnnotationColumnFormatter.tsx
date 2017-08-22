@@ -19,6 +19,7 @@ import {buildCivicEntry} from "shared/lib/CivicUtils";
 export default class AnnotationColumnFormatter
 {
     public static getData(copyNumberData:DiscreteCopyNumberData[]|undefined,
+                          geneticProfileIdToStudyId:{[geneticProfileId:string]:string},
                           oncoKbData?: IOncoKbDataWrapper,
                           civicGenes?: ICivicGene,
                           civicVariants?: ICivicVariant)
@@ -30,7 +31,7 @@ export default class AnnotationColumnFormatter
             let oncoKbIndicator: IndicatorQueryResp|undefined;
 
             if (oncoKbData && oncoKbData.result && oncoKbData.status === "complete") {
-                oncoKbIndicator = AnnotationColumnFormatter.getIndicatorData(copyNumberData, oncoKbData.result);
+                oncoKbIndicator = AnnotationColumnFormatter.getIndicatorData(copyNumberData, geneticProfileIdToStudyId, oncoKbData.result);
             }
 
             value = {
@@ -83,46 +84,49 @@ export default class AnnotationColumnFormatter
         return true;
     }
 
-    public static getIndicatorData(copyNumberData:DiscreteCopyNumberData[], oncoKbData:IOncoKbData): IndicatorQueryResp|undefined
+    public static getIndicatorData(copyNumberData:DiscreteCopyNumberData[], geneticProfileIdToStudyId:{[geneticProfileId:string]:string}, oncoKbData:IOncoKbData): IndicatorQueryResp|undefined
     {
-        if (oncoKbData.sampleToTumorMap === null || oncoKbData.indicatorMap === null) {
+        if (oncoKbData.studyToSampleToTumorType === null || oncoKbData.indicatorMap === null) {
             return undefined;
         }
 
+        const studyId = geneticProfileIdToStudyId[copyNumberData[0].geneticProfileId];
         const id = generateQueryVariantId(copyNumberData[0].gene.entrezGeneId,
-            oncoKbData.sampleToTumorMap[copyNumberData[0].sampleId],
+            oncoKbData.studyToSampleToTumorType[studyId][copyNumberData[0].sampleId],
             getAlterationString(copyNumberData[0].alteration));
 
         return oncoKbData.indicatorMap[id];
     }
 
-    public static getEvidenceQuery(copyNumberData:DiscreteCopyNumberData[], oncoKbData:IOncoKbData): Query|undefined
+    public static getEvidenceQuery(copyNumberData:DiscreteCopyNumberData[], geneticProfileIdToStudyId:{[geneticProfileId:string]:string}, oncoKbData:IOncoKbData): Query|undefined
     {
+        const studyId = geneticProfileIdToStudyId[copyNumberData[0].geneticProfileId];
         // return null in case sampleToTumorMap is null
-        return oncoKbData.sampleToTumorMap ? generateQueryVariant(copyNumberData[0].gene.entrezGeneId,
-            oncoKbData.sampleToTumorMap[copyNumberData[0].sampleId],
+        return oncoKbData.studyToSampleToTumorType ? generateQueryVariant(copyNumberData[0].gene.entrezGeneId,
+            oncoKbData.studyToSampleToTumorType[studyId][copyNumberData[0].sampleId],
             getAlterationString(copyNumberData[0].alteration)
         ) : undefined;
     }
 
     public static sortValue(data:DiscreteCopyNumberData[],
+                            geneticProfileIdToStudyId:{[geneticProfileId:string]:string},
                             oncoKbData?: IOncoKbDataWrapper,
                             civicGenes?: ICivicGene,
                             civicVariants?: ICivicVariant):number[] {
-        const annotationData:IAnnotation = AnnotationColumnFormatter.getData(data, oncoKbData, civicGenes, civicVariants);
+        const annotationData:IAnnotation = AnnotationColumnFormatter.getData(data, geneticProfileIdToStudyId, oncoKbData, civicGenes, civicVariants);
 
         return _.flatten([OncoKB.sortValue(annotationData.oncoKbIndicator),
                          Civic.sortValue(annotationData.civicEntry)]);
     }
 
-    public static renderFunction(data:DiscreteCopyNumberData[], columnProps:IAnnotationColumnProps)
+    public static renderFunction(data:DiscreteCopyNumberData[], geneticProfileIdToStudyId:{[geneticProfileId:string]:string}, columnProps:IAnnotationColumnProps)
     {
-        const annotation:IAnnotation = AnnotationColumnFormatter.getData(data, columnProps.oncoKbData, columnProps.civicGenes, columnProps.civicVariants);
+        const annotation:IAnnotation = AnnotationColumnFormatter.getData(data, geneticProfileIdToStudyId, columnProps.oncoKbData, columnProps.civicGenes, columnProps.civicVariants);
 
         let evidenceQuery:Query|undefined;
 
         if (columnProps.oncoKbData && columnProps.oncoKbData.result) {
-            evidenceQuery = this.getEvidenceQuery(data, columnProps.oncoKbData.result);
+            evidenceQuery = this.getEvidenceQuery(data, geneticProfileIdToStudyId, columnProps.oncoKbData.result);
         }
 
         return DefaultAnnotationColumnFormatter.mainContent(annotation,

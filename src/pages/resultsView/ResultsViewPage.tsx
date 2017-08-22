@@ -73,7 +73,6 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
         exposeComponentRenderer('renderMutationsTab',
             (props:MutationsTabInitProps)=>{
-            const resultsViewPageStore = new ResultsViewPageStore();
             resultsViewPageStore.hugoGeneSymbols = props.genes;
             if (props.studyToSampleMap) {
                 resultsViewPageStore._studyToSampleIds = props.studyToSampleMap;

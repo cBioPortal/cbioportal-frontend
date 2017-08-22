@@ -16,7 +16,7 @@ import {
     fetchDiscreteCNAData, findMutationGeneticProfileId, mergeDiscreteCNAData,
     fetchSamples, fetchClinicalDataInStudy, generateDataQueryFilter, makeStudyToCancerTypeMap,
     fetchSamplesWithoutCancerTypeClinicalData, fetchStudiesForSamplesWithoutCancerTypeClinicalData,
-    findMutationGeneticProfileIdSynch, IDataQueryFilter
+    findMutationGeneticProfileIdSynch, IDataQueryFilter, hasSampleOrPatient
 } from "shared/lib/StoreUtils";
 import {MutationMapperStore} from "./mutation/MutationMapperStore";
 import AppConfig from "appConfig";
@@ -74,7 +74,7 @@ export class ResultsViewPageStore {
             this.studyToGeneticProfilesInStudy
         ],
         invoke: ()=>{
-            const studies = Object.keys(this.studyToGeneticProfilesInStudy);
+            const studies = Object.keys(this.studyToGeneticProfilesInStudy.result);
             return Promise.resolve(studies.reduce((map:{[studyId:string]:string|undefined}, studyId:string)=>{
                 map[studyId] = findMutationGeneticProfileIdSynch(
                     this.studyToGeneticProfilesInStudy.result![studyId],
@@ -134,7 +134,8 @@ export class ResultsViewPageStore {
         ],
         invoke: async() => {
             const studies = Object.keys(this.studyToSampleIds.result);
-            const clinicalDataSingleStudyFilters = studies.map(studyId=>({
+            const clinicalDataSingleStudyFilters = studies.filter(studyId=>!!Object.keys(this.studyToSampleIds.result[studyId]).length)
+                .map(studyId=>({
                 studyId,
                 attributeIds: ["CANCER_TYPE", "CANCER_TYPE_DETAILED"],
                 ids: Object.keys(this.studyToSampleIds.result[studyId])
@@ -238,6 +239,20 @@ export class ResultsViewPageStore {
         }, {});
     });
 
+    readonly geneticProfileIdToStudyId = remoteData({
+        await: ()=>[this.studyToGeneticProfilesInStudy],
+        invoke: ()=>{
+            const studyToGeneticProfilesInStudy = this.studyToGeneticProfilesInStudy.result!;
+            const ret:{[geneticProfileId:string]:string} = {};
+            _.each(studyToGeneticProfilesInStudy, (profiles:GeneticProfile[], studyId:string)=>{
+                _.each(profiles, (profile:GeneticProfile)=>{
+                    ret[profile.geneticProfileId] = studyId;
+                });
+            });
+            return Promise.resolve(ret);
+        }
+    }, {});
+
     readonly studyToGeneticProfileIdDiscrete = remoteData({
         await: ()=>[
             this.studyToGeneticProfilesInStudy
@@ -283,16 +298,18 @@ export class ResultsViewPageStore {
 
     }, {});
 
-    readonly studyToDataQueryFilter = remoteData({
+    readonly studyToDataQueryFilter = remoteData<{[studyId:string]:IDataQueryFilter|undefined}>({
         await: () => [
             this.studyToSampleIds
         ],
         invoke: () => {
             const studyToSampleIds = this.studyToSampleIds.result;
             const studies = Object.keys(studyToSampleIds);
-            const ret:{[studyId:string]:IDataQueryFilter} = {};
+            const ret:{[studyId:string]:IDataQueryFilter|undefined} = {};
             for (const studyId of studies) {
-                if (this.studyToSampleListId && this.studyToSampleListId[studyId]) {
+                if (Object.keys(studyToSampleIds[studyId]).length === 0) {
+                    ret[studyId] = undefined;
+                } else if (this.studyToSampleListId && this.studyToSampleListId[studyId]) {
                     ret[studyId] = {
                         sampleListId: this.studyToSampleListId[studyId]
                     };

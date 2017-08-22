@@ -1,15 +1,18 @@
 import * as React from 'react';
 import { Mutation } from "shared/api/generated/CBioPortalAPI";
 import {germlineMutationRate, somaticMutationRate, somaticMutationRateBySample} from "shared/lib/MutationUtils";
+import _ from "lodash";
+import {hasSampleOrPatient} from "../../../shared/lib/StoreUtils";
 
 export interface IMutationRateSummaryProps {
     mutations: Mutation[];
     hugoGeneSymbol: string;
-    sampleIds: string[];
+    geneticProfileIdToStudyId:{[geneticProfileId:string]:string};
+    studyToSampleIds: {[studyId:string]:{[sampleId:string]:boolean}};
     patientIdsStatus: "pending" | "error" | "complete";
-    patientIds?: string[];
+    studyToPatientIds?: {[studyId:string]:{[patientId:string]:boolean}};
     mskImpactGermlineConsentedPatientIdsStatus: "pending" | "error" | "complete";
-    mskImpactGermlineConsentedPatientIds?: string[];
+    studyToMskImpactGermlineConsentedPatientIds?: {[studyId:string]:{[patientId:string]:boolean}};
 }
 
 export default class MutationRateSummary extends React.Component<IMutationRateSummaryProps, {}>
@@ -18,11 +21,13 @@ export default class MutationRateSummary extends React.Component<IMutationRateSu
     {
         let rate = 0;
 
-        if (this.props.sampleIds.length > 0) {
-            rate = somaticMutationRateBySample(this.props.hugoGeneSymbol, this.props.mutations, this.props.sampleIds);
+        if (hasSampleOrPatient(this.props.studyToSampleIds)) {
+            rate = somaticMutationRateBySample(this.props.hugoGeneSymbol, this.props.mutations,
+                this.props.geneticProfileIdToStudyId, this.props.studyToSampleIds);
         }
-        else if (this.props.patientIds && this.props.patientIds.length > 0) {
-            rate = somaticMutationRate(this.props.hugoGeneSymbol, this.props.mutations, this.props.patientIds);
+        else if (this.props.studyToPatientIds && hasSampleOrPatient(this.props.studyToPatientIds)) {
+            rate = somaticMutationRate(this.props.hugoGeneSymbol, this.props.mutations,
+                this.props.geneticProfileIdToStudyId, this.props.studyToPatientIds);
         }
 
         return (
@@ -35,7 +40,7 @@ export default class MutationRateSummary extends React.Component<IMutationRateSu
 
     public germlineMutationFrequency(): JSX.Element
     {
-        let patientIds: string[]|undefined;
+        let patientIds: {[studyId:string]:{[patientId:string]:boolean}}|undefined;
 
         if (this.props.patientIdsStatus !== "pending" &&
             this.props.mskImpactGermlineConsentedPatientIdsStatus !== "pending")
@@ -45,12 +50,13 @@ export default class MutationRateSummary extends React.Component<IMutationRateSu
             // - in all other cases assume that every patient had germline testing
             //   if > 0 germline mutations are found
             patientIds = (
-                this.props.mskImpactGermlineConsentedPatientIds &&
-                this.props.mskImpactGermlineConsentedPatientIds.length > 0
-            ) ? this.props.mskImpactGermlineConsentedPatientIds : this.props.patientIds;
+                this.props.studyToMskImpactGermlineConsentedPatientIds &&
+                hasSampleOrPatient(this.props.studyToMskImpactGermlineConsentedPatientIds)
+            ) ? this.props.studyToMskImpactGermlineConsentedPatientIds : this.props.studyToPatientIds;
         }
 
-        const gmr = patientIds ? germlineMutationRate(this.props.hugoGeneSymbol, this.props.mutations, patientIds) : 0;
+        const gmr = patientIds ? germlineMutationRate(this.props.hugoGeneSymbol, this.props.mutations,
+                            this.props.geneticProfileIdToStudyId, patientIds) : 0;
 
         return (
             <div data-test='germlineMutationRate' className={(gmr > 0) ? '' : 'invisible' }>

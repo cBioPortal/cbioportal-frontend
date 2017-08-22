@@ -100,18 +100,20 @@ export default class MrnaExprColumnFormatter {
         }
     }
 
-    protected static getData(data: Mutation[], cache:MrnaExprRankCache):MrnaExprRankCacheDataType | null {
+    protected static getData(data: Mutation[], geneticProfileIdToStudyId:{[geneticProfileId:string]:string}, cache:MrnaExprRankCache):MrnaExprRankCacheDataType | null {
         if (data.length === 0) {
             return null;
         }
         const sampleId = data[0].sampleId;
         const entrezGeneId = data[0].entrezGeneId;
-        return cache.get({sampleId, entrezGeneId});
+        const studyId = geneticProfileIdToStudyId[data[0].geneticProfileId];
+        return cache.get({studyId, sampleId, entrezGeneId});
     }
-    protected static getDataFromCNA(data: DiscreteCopyNumberData[], cache:MrnaExprRankCache):MrnaExprRankCacheDataType | null {
+    protected static getDataFromCNA(data: DiscreteCopyNumberData[], geneticProfileIdToStudyId:{[geneticProfileId:string]:string}, cache:MrnaExprRankCache):MrnaExprRankCacheDataType | null {
         const sampleId = data[0].sampleId;
         const entrezGeneId = data[0].entrezGeneId;
-        return cache.get({sampleId, entrezGeneId});
+        const studyId = geneticProfileIdToStudyId[data[0].geneticProfileId];
+        return cache.get({studyId, sampleId, entrezGeneId});
     }
 
     private static renderFromCacheDatum(cacheDatum:MrnaExprRankCacheDataType|null) {
@@ -123,13 +125,13 @@ export default class MrnaExprColumnFormatter {
             {MrnaExprColumnFormatter.getTdContents(cacheDatum)}
         </DefaultTooltip>);
     }
-    public static renderFunction(data: Mutation[], cache:MrnaExprRankCache) {
-        const cacheDatum = MrnaExprColumnFormatter.getData(data, cache);
+    public static renderFunction(data: Mutation[], geneticProfileIdToStudyId:{[geneticProfileId:string]:string}, cache:MrnaExprRankCache) {
+        const cacheDatum = MrnaExprColumnFormatter.getData(data, geneticProfileIdToStudyId, cache);
         return MrnaExprColumnFormatter.renderFromCacheDatum(cacheDatum);
     }
 
-    public static cnaRenderFunction(data: DiscreteCopyNumberData[], cache:MrnaExprRankCache) {
-        const cacheDatum = MrnaExprColumnFormatter.getDataFromCNA(data, cache);
+    public static cnaRenderFunction(data: DiscreteCopyNumberData[], geneticProfileIdToStudyId:{[geneticProfileId:string]:string}, cache:MrnaExprRankCache) {
+        const cacheDatum = MrnaExprColumnFormatter.getDataFromCNA(data, geneticProfileIdToStudyId, cache);
         return MrnaExprColumnFormatter.renderFromCacheDatum(cacheDatum);
     }
 }

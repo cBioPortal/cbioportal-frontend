@@ -58,6 +58,7 @@ export default class AnnotationColumnFormatter
     }
 
     public static getData(rowData:Mutation[]|undefined,
+                          geneticProfileIdToStudyId: {[geneticProfileId:string]:string},
                           hotspotsData?:IHotspotData,
                           myCancerGenomeData?:IMyCancerGenomeData,
                           oncoKbData?:IOncoKbDataWrapper,
@@ -72,7 +73,7 @@ export default class AnnotationColumnFormatter
             let oncoKbIndicator: IndicatorQueryResp|undefined;
 
             if (oncoKbData && oncoKbData.result && oncoKbData.status === "complete") {
-                oncoKbIndicator = AnnotationColumnFormatter.getIndicatorData(mutation, oncoKbData.result);
+                oncoKbIndicator = AnnotationColumnFormatter.getIndicatorData(mutation, geneticProfileIdToStudyId, oncoKbData.result);
             }
 
             value = {
@@ -113,25 +114,25 @@ export default class AnnotationColumnFormatter
         return civicEntry;
     }
 
-    public static getIndicatorData(mutation:Mutation, oncoKbData:IOncoKbData): IndicatorQueryResp|undefined
+    public static getIndicatorData(mutation:Mutation, geneticProfileIdToStudyId: {[geneticProfileId:string]:string}, oncoKbData:IOncoKbData): IndicatorQueryResp|undefined
     {
-        if (oncoKbData.sampleToTumorMap === null || oncoKbData.indicatorMap === null) {
+        if (oncoKbData.studyToSampleToTumorType === null || oncoKbData.indicatorMap === null) {
             return undefined;
         }
 
         const id = generateQueryVariantId(mutation.gene.entrezGeneId,
-            oncoKbData.sampleToTumorMap[mutation.sampleId],
+            oncoKbData.studyToSampleToTumorType[geneticProfileIdToStudyId[mutation.geneticProfileId]][mutation.sampleId],
             mutation.proteinChange,
             mutation.mutationType);
 
         return oncoKbData.indicatorMap[id];
     }
 
-    public static getEvidenceQuery(mutation:Mutation, oncoKbData:IOncoKbData): Query|undefined
+    public static getEvidenceQuery(mutation:Mutation, geneticProfileIdToStudyId: {[geneticProfileId:string]:string}, oncoKbData:IOncoKbData): Query|undefined
     {
         // return null in case sampleToTumorMap is null
-        return oncoKbData.sampleToTumorMap ? generateQueryVariant(mutation.gene.entrezGeneId,
-            oncoKbData.sampleToTumorMap[mutation.sampleId],
+        return oncoKbData.studyToSampleToTumorType ? generateQueryVariant(mutation.gene.entrezGeneId,
+            oncoKbData.studyToSampleToTumorType[geneticProfileIdToStudyId[mutation.geneticProfileId]][mutation.sampleId],
             mutation.proteinChange,
             mutation.mutationType,
             mutation.proteinPosStart,
@@ -174,13 +175,14 @@ export default class AnnotationColumnFormatter
     }
 
     public static sortValue(data:Mutation[],
+                            geneticProfileIdToStudyId: {[geneticProfileId:string]:string},
                             hotspotsData?:IHotspotData,
                             myCancerGenomeData?:IMyCancerGenomeData,
                             oncoKbData?: IOncoKbDataWrapper,
                             civicGenes?: ICivicGene,
                             civicVariants?: ICivicVariant):number[] {
         const annotationData:IAnnotation = AnnotationColumnFormatter.getData(
-            data, hotspotsData, myCancerGenomeData, oncoKbData, civicGenes, civicVariants);
+            data, geneticProfileIdToStudyId, hotspotsData, myCancerGenomeData, oncoKbData, civicGenes, civicVariants);
 
         return _.flatten([
             OncoKB.sortValue(annotationData.oncoKbIndicator),
@@ -190,10 +192,10 @@ export default class AnnotationColumnFormatter
         ]);
     }
 
-    public static renderFunction(data:Mutation[], columnProps:IAnnotationColumnProps)
+    public static renderFunction(data:Mutation[], geneticProfileIdToStudyId: {[geneticProfileId:string]:string}, columnProps:IAnnotationColumnProps)
     {
         const annotation:IAnnotation = AnnotationColumnFormatter.getData(
-            data, columnProps.hotspots,
+            data, geneticProfileIdToStudyId, columnProps.hotspots,
             columnProps.myCancerGenomeData,
             columnProps.oncoKbData,
             columnProps.civicGenes,
@@ -202,7 +204,7 @@ export default class AnnotationColumnFormatter
         let evidenceQuery:Query|undefined;
 
         if (columnProps.oncoKbData && columnProps.oncoKbData.result) {
-            evidenceQuery = this.getEvidenceQuery(data[0], columnProps.oncoKbData.result);
+            evidenceQuery = this.getEvidenceQuery(data[0], geneticProfileIdToStudyId, columnProps.oncoKbData.result);
         }
 
         return AnnotationColumnFormatter.mainContent(annotation,

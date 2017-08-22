@@ -21,7 +21,7 @@ export default class SampleColumnFormatter
         }
     }
 
-    public static renderFunction(data:Mutation[], studyId?: string)
+    public static renderFunction(data:Mutation[], geneticProfileIdToStudyId?: {[geneticProfileId:string]:string})
     {
         const sampleId:string = SampleColumnFormatter.getTextValue(data);
         let content = (
@@ -31,7 +31,7 @@ export default class SampleColumnFormatter
                 maxLength={16}
             />
         );
-
+        const studyId = geneticProfileIdToStudyId && geneticProfileIdToStudyId[data[0].geneticProfileId];
         if (studyId)
         {
             let linkToPatientView:string = `#/patient?sampleId=${sampleId}&studyId=${studyId}`;

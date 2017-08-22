@@ -18,6 +18,7 @@ import ProteinImpactTypePanel from "../../../shared/components/mutationTypePanel
 import ProteinChainPanel from "../../../shared/components/proteinChainPanel/ProteinChainPanel";
 import {computed, action, observable} from "mobx";
 import MutationRateSummary from "pages/resultsView/mutation/MutationRateSummary";
+import {MobxPromise} from "mobxpromise";
 
 export interface IMutationMapperConfig {
     showCivic?: boolean;
@@ -29,7 +30,9 @@ export interface IMutationMapperConfig {
 export interface IMutationMapperProps {
     store: MutationMapperStore;
     config: IMutationMapperConfig;
-    studyId?: string;
+    geneticProfileIdToStudyId?:{[geneticProfileId:string]:string};
+    studyToSampleIds:MobxPromise<{[studyId:string]:{[sampleId:string]:boolean}}>;
+    studyToPatientIds:MobxPromise<{[studyId:string]:{[patientId:string]:boolean}}>;
     myCancerGenomeData?: IMyCancerGenomeData;
     discreteCNACache?:DiscreteCNACache;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
@@ -76,18 +79,21 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
         // TODO we should not be even calculating mskImpactGermlineConsentedPatientIds for studies other than msk impact
         if (this.props.store.gene.result &&
             this.props.store.gene.result.length > 0 &&
-            this.props.store.sampleIds.result &&
+            this.props.geneticProfileIdToStudyId &&
+            this.props.studyToSampleIds.isComplete &&
+            this.props.studyToPatientIds.isComplete &&
             this.props.store.mutationData.isComplete &&
             this.props.store.mutationData.result.length > 0) {
             return (
                 <MutationRateSummary
                     hugoGeneSymbol={this.props.store.gene.result.hugoGeneSymbol}
                     mutations={this.props.store.mutationData.result}
-                    sampleIds={this.props.store.sampleIds.result}
-                    patientIds={this.props.store.patientIds.result}
-                    patientIdsStatus={this.props.store.patientIds.status}
-                    mskImpactGermlineConsentedPatientIds={this.props.store.mskImpactGermlineConsentedPatientIds.result}
-                    mskImpactGermlineConsentedPatientIdsStatus={this.props.store.mskImpactGermlineConsentedPatientIds.status}
+                    geneticProfileIdToStudyId={this.props.geneticProfileIdToStudyId}
+                    studyToSampleIds={this.props.studyToSampleIds.result!}
+                    studyToPatientIds={this.props.studyToPatientIds.result!}
+                    patientIdsStatus={this.props.studyToPatientIds.status}
+                    studyToMskImpactGermlineConsentedPatientIds={this.props.store.studyToMskImpactGermlineConsentedPatientIds.result}
+                    mskImpactGermlineConsentedPatientIdsStatus={this.props.store.studyToMskImpactGermlineConsentedPatientIds.status}
                 />
             );
         } else {
@@ -174,15 +180,19 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                             }
                             <LoadingIndicator
                                 isLoading={
-                                    this.props.store.clinicalDataForSamples.isPending ||
-                                    this.props.store.studiesForSamplesWithoutCancerTypeClinicalData.isPending
+                                    this.props.store.studyToClinicalDataForSamples.isPending ||
+                                    this.props.store.studies.isPending ||
+                                    this.props.store.studyToSampleToTumorType.isPending ||
+                                    this.props.store.studyToSamplesWithoutCancerTypeClinicalData.isPending
                                 }
                             />
-                            {!this.props.store.clinicalDataForSamples.isPending &&
-                            !this.props.store.studiesForSamplesWithoutCancerTypeClinicalData.isPending && (
+                            {!this.props.store.studyToClinicalDataForSamples.isPending &&
+                            !this.props.store.studies.isPending &&
+                            !this.props.store.studyToSampleToTumorType.isPending &&
+                            !this.props.store.studyToSamplesWithoutCancerTypeClinicalData.isPending && (
                                 <ResultsViewMutationTable
-                                    studyId={this.props.studyId}
-                                    sampleIdToTumorType={this.props.store.sampleIdToTumorType}
+                                    studyToSampleToTumorType={this.props.store.studyToSampleToTumorType.result}
+                                    geneticProfileIdToStudyId={this.props.geneticProfileIdToStudyId}
                                     discreteCNACache={this.props.discreteCNACache}
                                     oncoKbEvidenceCache={this.props.oncoKbEvidenceCache}
                                     pubMedCache={this.props.pubMedCache}

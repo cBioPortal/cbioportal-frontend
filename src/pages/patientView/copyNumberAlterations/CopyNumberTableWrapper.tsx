@@ -26,6 +26,7 @@ type CNATableColumn = Column<DiscreteCopyNumberData[]>&{order:number};
 
 type ICopyNumberTableWrapperProps = {
     sampleIds:string[];
+    geneticProfileIdToStudyId?:{[geneticProfileId:string]:string};
     sampleManager:SampleManager|null;
     cnaOncoKbData?: IOncoKbDataWrapper;
     cnaCivicGenes?: ICivicGene;
@@ -90,7 +91,10 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
 
         columns.push({
             name: "Annotation",
-            render: (d:DiscreteCopyNumberData[]) => (AnnotationColumnFormatter.renderFunction(d, {
+            render: (d:DiscreteCopyNumberData[]) => (
+                this.props.geneticProfileIdToStudyId ?
+                    (AnnotationColumnFormatter.renderFunction(d,
+                this.props.geneticProfileIdToStudyId, {
                 oncoKbData: this.props.cnaOncoKbData,
                 oncoKbEvidenceCache: this.props.oncoKbEvidenceCache,
                 enableOncoKb: this.props.enableOncoKb as boolean,
@@ -100,10 +104,14 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
                 enableCivic: this.props.enableCivic as boolean,
                 enableMyCancerGenome: false,
                 enableHotspot: false
-            })),
+                        })):(<span></span>)),
             sortBy:(d:DiscreteCopyNumberData[])=>{
-                return AnnotationColumnFormatter.sortValue(d,
+                if (this.props.geneticProfileIdToStudyId) {
+                    return AnnotationColumnFormatter.sortValue(d, this.props.geneticProfileIdToStudyId,
                     this.props.cnaOncoKbData, this.props.cnaCivicGenes, this.props.cnaCivicVariants);
+                } else {
+                    return [];
+                }
             },
             order: 50
         });
@@ -139,8 +147,8 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
         if ((numSamples === 1) && this.props.mrnaExprRankGeneticProfileId) {
             columns.push({
                 name: "mRNA Expr.",
-                render: (d:DiscreteCopyNumberData[])=>(this.props.mrnaExprRankCache
-                                    ? MrnaExprColumnFormatter.cnaRenderFunction(d, this.props.mrnaExprRankCache)
+                render: (d:DiscreteCopyNumberData[])=>((this.props.mrnaExprRankCache && this.props.geneticProfileIdToStudyId)
+                                    ? MrnaExprColumnFormatter.cnaRenderFunction(d, this.props.geneticProfileIdToStudyId, this.props.mrnaExprRankCache)
                                     : (<span/>)),
                 order: 70
             });

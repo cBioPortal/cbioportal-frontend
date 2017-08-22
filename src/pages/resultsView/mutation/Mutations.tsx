@@ -65,8 +65,10 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
                 tabs.push(
                     <MSKTab key={gene} id={gene} linkText={gene} anchorStyle={anchorStyle}>
                         <MutationMapper
-                            studyId={this.props.store.studyId}
                             store={mutationMapperStore}
+                            studyToSampleIds={this.props.store.studyToSampleIds}
+                            studyToPatientIds={this.props.store.studyToPatientIds}
+                            geneticProfileIdToStudyId={this.props.store.geneticProfileIdToStudyId.result}
                             discreteCNACache={this.props.store.discreteCNACache}
                             oncoKbEvidenceCache={this.props.store.oncoKbEvidenceCache}
                             pubMedCache={this.props.store.pubMedCache}

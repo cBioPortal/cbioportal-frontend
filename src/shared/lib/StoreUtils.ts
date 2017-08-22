@@ -454,6 +454,19 @@ export async function fetchCnaOncoKbData(studyToSampleToTumorType:{[studyId:stri
     }
 }
 
+export function hasSampleOrPatient(map:{[studyId:string]:{[id:string]:any}}):boolean {
+    // returns true iff there is at least one sample/patient in this map
+    let ret = false;
+    const studies = Object.keys(map);
+    for (const studyId of studies) {
+        if (Object.keys(map[studyId]).length > 0) {
+            ret = true;
+            break;
+        }
+    }
+    return ret;
+}
+
 function cancerTypeForOncoKb(sampleId: string,
                              studyId:string,
                              studyToSampleToTumorType:{[studyId:string]:{[sampleId: string]: string}}): string

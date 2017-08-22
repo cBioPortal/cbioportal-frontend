@@ -18,8 +18,8 @@ export default class DiscreteCNAColumnFormatter {
         "-2": "deepdel"
     };
 
-    public static renderFunction(data: Mutation[], cache:DiscreteCNACache) {
-        const cnaData = DiscreteCNAColumnFormatter.getData(data, cache);
+    public static renderFunction(data: Mutation[], geneticProfileIdToStudyId:{[geneticProfileId:string]:string}, cache:DiscreteCNACache) {
+        const cnaData = DiscreteCNAColumnFormatter.getData(data, geneticProfileIdToStudyId, cache);
         return (<DefaultTooltip
                 placement="left"
                 overlay={DiscreteCNAColumnFormatter.getTooltipContents(cnaData)}
@@ -30,12 +30,12 @@ export default class DiscreteCNAColumnFormatter {
         );
     }
 
-    public static getSortValue(data:Mutation[], cache:DiscreteCNACache) {
-        return DiscreteCNAColumnFormatter.getTdValue(DiscreteCNAColumnFormatter.getData(data, cache));
+    public static getSortValue(data:Mutation[], geneticProfileIdToStudyId:{[geneticProfileId:string]:string}, cache:DiscreteCNACache) {
+        return DiscreteCNAColumnFormatter.getTdValue(DiscreteCNAColumnFormatter.getData(data, geneticProfileIdToStudyId, cache));
     }
 
-    public static filter(data:Mutation[], cache:DiscreteCNACache, filterString:string):boolean {
-        const cnaData = DiscreteCNAColumnFormatter.getData(data, cache);
+    public static filter(data:Mutation[], geneticProfileIdToStudyId:{[geneticProfileId:string]:string}, cache:DiscreteCNACache, filterString:string):boolean {
+        const cnaData = DiscreteCNAColumnFormatter.getData(data, geneticProfileIdToStudyId, cache);
         if (cnaData && cnaData.data) {
             return (!!DiscreteCNAColumnFormatter.altToFilterString[cnaData.data.alteration])
                 && (DiscreteCNAColumnFormatter.altToFilterString[cnaData.data.alteration]
@@ -45,13 +45,14 @@ export default class DiscreteCNAColumnFormatter {
         }
     }
 
-    protected static getData(data:Mutation[] | undefined, discreteCNACache:DiscreteCNACache):DiscreteCNACacheDataType | null {
+    protected static getData(data:Mutation[] | undefined, geneticProfileIdToStudyId:{[geneticProfileId:string]:string}, discreteCNACache:DiscreteCNACache):DiscreteCNACacheDataType | null {
         if (!data || data.length === 0 || !discreteCNACache.geneticProfileIdDiscrete) {
             return null;
         }
         const sampleId = data[0].sampleId;
         const entrezGeneId = data[0].entrezGeneId;
-        return discreteCNACache.get({sampleId, entrezGeneId});
+        const studyId = geneticProfileIdToStudyId[data[0].geneticProfileId];
+        return discreteCNACache.get({studyId, sampleId, entrezGeneId});
     }
 
     protected static getTdValue(cacheDatum:DiscreteCNACacheDataType | null):number|null {

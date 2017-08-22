@@ -10,8 +10,9 @@ export default class MutationCountColumnFormatter {
         return LazyLoadedTableCell(
             (d:Mutation[])=>{
                 const mutationCountCache:MutationCountCache|undefined = table.props.mutationCountCache;
-                if (mutationCountCache) {
-                    return mutationCountCache.get(d[0].sampleId);
+                const geneticProfileIdToStudyId:{[geneticProfileId:string]:string}|undefined = table.props.geneticProfileIdToStudyId;
+                if (mutationCountCache && geneticProfileIdToStudyId) {
+                    return mutationCountCache.get({sampleId: d[0].sampleId, studyId: geneticProfileIdToStudyId[d[0].geneticProfileId]});
                 } else {
                     return {
                         status: "error",
@@ -24,10 +25,10 @@ export default class MutationCountColumnFormatter {
         );
     }
 
-    public static sortBy(d:Mutation[], mutationCountCache?:MutationCountCache) {
+    public static sortBy(d:Mutation[], mutationCountCache?:MutationCountCache, geneticProfileIdToStudyId?:{[geneticProfileId:string]:string}) {
         let ret;
-        if (mutationCountCache) {
-            const cacheDatum = mutationCountCache.get(d[0].sampleId);
+        if (mutationCountCache && geneticProfileIdToStudyId) {
+            const cacheDatum = mutationCountCache.get({sampleId: d[0].sampleId, studyId: geneticProfileIdToStudyId[d[0].geneticProfileId]});
             if (cacheDatum && cacheDatum.data) {
                 ret = cacheDatum.data.mutationCount;
             } else {

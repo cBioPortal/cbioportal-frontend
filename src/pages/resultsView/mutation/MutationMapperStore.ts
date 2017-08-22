@@ -27,15 +27,15 @@ export class MutationMapperStore {
 
     constructor(protected config: IMutationMapperConfig,
                 protected hugoGeneSymbol:string,
-                private studies: MobxPromise<CancerStudy[]>,
+                public studies: MobxPromise<CancerStudy[]>,
                 private studyToMutationGeneticProfileId: MobxPromise<{[studyId:string]:string|undefined}>,
                 private studyToSampleIds: MobxPromise<{[studyId:string]:{[sampleId:string]:boolean}}>,
-                private studyToClinicalDataForSamples: MobxPromise<{[studyId:string]:ClinicalData[]}>,
-                private studyToSamplesWithoutCancerTypeClinicalData: MobxPromise<{[studyId:string]:Sample[]}>,
+                public studyToClinicalDataForSamples: MobxPromise<{[studyId:string]:ClinicalData[]}>,
+                public studyToSamplesWithoutCancerTypeClinicalData: MobxPromise<{[studyId:string]:Sample[]}>,
                 private studyToSampleListId: {[studyId:string]:string}|null,
                 private studyToPatientIds: MobxPromise<{[studyId:string]:{[patientId:string]:boolean}}>,
-                private studyToMskImpactGermlineConsentedPatientIds: MobxPromise<{[studyId:string]:{[patientId:string]:boolean}}>,
-                private studyToDataQueryFilter:MobxPromise<{[studyId:string]:IDataQueryFilter}>)
+                public studyToMskImpactGermlineConsentedPatientIds: MobxPromise<{[studyId:string]:{[patientId:string]:boolean}}>,
+                private studyToDataQueryFilter:MobxPromise<{[studyId:string]:IDataQueryFilter|undefined}>)
     {
         labelMobxPromises(this);
     }
@@ -87,7 +87,7 @@ export class MutationMapperStore {
                 const studyToMutationGeneticProfileId = this.studyToMutationGeneticProfileId.result!;
                 const studyToDataQueryFilter = this.studyToDataQueryFilter.result!;
                 const studies = Object.keys(studyToDataQueryFilter);
-                const results:Mutation[][] = await Promise.all(studies.map(studyId=>{
+                const results:Mutation[][] = await Promise.all(studies.filter(studyId=>!!studyToDataQueryFilter[studyId]).map(studyId=>{
                     const mutationFilter = {
                         ...studyToDataQueryFilter[studyId],
                         entrezGeneIds: [gene.entrezGeneId]
