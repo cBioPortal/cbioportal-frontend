@@ -37,6 +37,7 @@ import MutationCountCache from "shared/cache/MutationCountCache";
 import {IMobXApplicationDataStore} from "shared/lib/IMobXApplicationDataStore";
 import generalStyles from "./column/styles.module.scss";
 import classnames from 'classnames';
+import {IPaginationControlsProps} from "../paginationControls/PaginationControls";
 
 export interface IMutationTableProps {
     studyId?:string;
@@ -67,7 +68,8 @@ export interface IMutationTableProps {
     itemsLabel?:string;
     itemsLabelPlural?:string;
     initialSortColumn?:string;
-    initialSortDirection?:SortDirection
+    initialSortDirection?:SortDirection,
+    paginationProps?:IPaginationControlsProps
 }
 
 export enum MutationTableColumnType {
@@ -139,6 +141,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
 
     public static defaultProps = {
         initialItemsPerPage: 25,
+        paginationProps:{ itemsPerPageOptions:[25,50,100] },
         initialSortColumn: "Annotation",
         initialSortDirection: "desc",
         itemsLabel: "Mutation",
@@ -479,6 +482,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 initialSortDirection={this.props.initialSortDirection}
                 itemsLabel={this.props.itemsLabel}
                 itemsLabelPlural={this.props.itemsLabelPlural}
+                paginationProps={this.props.paginationProps}
             />
         );
     }
