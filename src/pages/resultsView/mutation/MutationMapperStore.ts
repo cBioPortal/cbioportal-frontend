@@ -75,31 +75,40 @@ export class MutationMapperStore {
         return undefined;
     });
 
-    readonly studyToMutationData = remoteData({
+    readonly studyToMutationData = remoteData<{[studyId:string]:Mutation[]}>({
         await: ()=>[
             this.gene,
             this.studyToDataQueryFilter,
             this.studyToMutationGeneticProfileId
         ],
         invoke: async ()=>{
+            const studyToDataQueryFilter = this.studyToDataQueryFilter.result!;
+            const studies = Object.keys(studyToDataQueryFilter);
             const gene = this.gene.result;
             if (gene) {
                 const studyToMutationGeneticProfileId = this.studyToMutationGeneticProfileId.result!;
-                const studyToDataQueryFilter = this.studyToDataQueryFilter.result!;
-                const studies = Object.keys(studyToDataQueryFilter);
-                const results:Mutation[][] = await Promise.all(studies.filter(studyId=>!!studyToDataQueryFilter[studyId]).map(studyId=>{
-                    const mutationFilter = {
-                        ...studyToDataQueryFilter[studyId],
-                        entrezGeneIds: [gene.entrezGeneId]
-                    } as MutationFilter;
-                    return fetchMutationData(mutationFilter, studyToMutationGeneticProfileId[studyId])
+                const results:Mutation[][] = await Promise.all(studies.map(studyId=>{
+                    const dataQueryFilter = studyToDataQueryFilter[studyId];
+                    const profileId = studyToMutationGeneticProfileId[studyId];
+                    if (dataQueryFilter && profileId) {
+                        const mutationFilter = {
+                            ...dataQueryFilter,
+                            entrezGeneIds: [gene.entrezGeneId]
+                        } as MutationFilter;
+                        return fetchMutationData(mutationFilter, profileId)
+                    } else {
+                        return Promise.resolve([]);
+                    }
                 }));
                 return results.reduce((map:{[studyId:string]:Mutation[]}, next:Mutation[], index:number)=>{
                     map[studies[index]] = next;
                     return map;
                 }, {});
             } else {
-                return {};
+                return studies.reduce((map,next)=>{
+                    map[next] = [];
+                    return map;
+                }, {} as {[studyId:string]:Mutation[]});
             }
         }
     }, {});

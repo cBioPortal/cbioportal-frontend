@@ -56,7 +56,7 @@ export default class MutationRateSummary extends React.Component<IMutationRateSu
         }
 
         const gmr = patientIds ? germlineMutationRate(this.props.hugoGeneSymbol, this.props.mutations,
-                            this.props.geneticProfileIdToStudyId, patientIds) : 0;
+            this.props.geneticProfileIdToStudyId, patientIds) : 0;
 
         return (
             <div data-test='germlineMutationRate' className={(gmr > 0) ? '' : 'invisible' }>

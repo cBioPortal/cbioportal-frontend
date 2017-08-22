@@ -7,6 +7,8 @@ import AjaxErrorModal from "shared/components/AjaxErrorModal";
 import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
 import {ResultsViewPageStore} from "./ResultsViewPageStore";
 import Mutations from "./mutation/Mutations";
+import {stringListToSet} from "../../shared/lib/StringUtils";
+import _ from "lodash";
 
 const resultsViewPageStore = new ResultsViewPageStore();
 
@@ -19,7 +21,7 @@ export interface IResultsViewPageProps {
 type MutationsTabInitProps = {
     genes: string[];
 } & ({
-    studyToSampleMap:{[studyId:string]:{[sampleId:string]:boolean}};
+    studyToSampleMap:{[studyId:string]:string[]};
     studyToSampleListIdMap:{[studyId:string]:string};
 } | {
     studyToSampleMap:undefined;
@@ -75,7 +77,11 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             (props:MutationsTabInitProps)=>{
             resultsViewPageStore.hugoGeneSymbols = props.genes;
             if (props.studyToSampleMap) {
-                resultsViewPageStore._studyToSampleIds = props.studyToSampleMap;
+                let _studyToSampleIds:{[studyId:string]:{[sampleId:string]:boolean}} = {};
+                _.each(props.studyToSampleMap, (sampleIds:string[], studyId:string)=>{
+                    _studyToSampleIds[studyId] = stringListToSet(sampleIds);
+                });
+                resultsViewPageStore._studyToSampleIds = _studyToSampleIds;
             } else if (props.studyToSampleListIdMap) {
                 resultsViewPageStore.studyToSampleListId = props.studyToSampleListIdMap;
             }

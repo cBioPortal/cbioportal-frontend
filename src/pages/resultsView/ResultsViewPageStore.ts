@@ -128,20 +128,26 @@ export class ResultsViewPageStore {
         }
     }
 
-    readonly studyToClinicalDataForSamples = remoteData({
+    readonly studyToClinicalDataForSamples = remoteData<{[studyId:string]:ClinicalData[]}>({
         await: () => [
             this.studyToSampleIds
         ],
         invoke: async() => {
             const studies = Object.keys(this.studyToSampleIds.result);
-            const clinicalDataSingleStudyFilters = studies.filter(studyId=>!!Object.keys(this.studyToSampleIds.result[studyId]).length)
+            const clinicalDataSingleStudyFilters = studies
                 .map(studyId=>({
-                studyId,
-                attributeIds: ["CANCER_TYPE", "CANCER_TYPE_DETAILED"],
-                ids: Object.keys(this.studyToSampleIds.result[studyId])
+                    studyId,
+                    filter: {
+                        attributeIds: ["CANCER_TYPE", "CANCER_TYPE_DETAILED"],
+                        ids: Object.keys(this.studyToSampleIds.result[studyId])
+                    }
             }));
             const results:ClinicalData[][] = await Promise.all(clinicalDataSingleStudyFilters.map(x=>{
-                return fetchClinicalDataInStudy(x.studyId, x, "SAMPLE");
+                if (x.filter.ids.length > 0) {
+                    return fetchClinicalDataInStudy(x.studyId, x.filter, "SAMPLE");
+                } else {
+                    return Promise.resolve([]);
+                }
             }));
             return results.reduce((map:{[studyId:string]:ClinicalData[]}, next:ClinicalData[], index:number)=>{
                 map[studies[index]] = next;
