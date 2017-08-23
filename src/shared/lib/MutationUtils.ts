@@ -6,6 +6,7 @@ import {
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {MUTATION_STATUS_GERMLINE, GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
 import {findFirstMostCommonElt} from "./findFirstMostCommonElt";
+import {hasSampleOrPatient} from "./StoreUtils";
 
 export interface IProteinImpactTypeColors
 {
@@ -134,22 +135,26 @@ export function getProteinStartPositionsByRange(data: Mutation[][], start: numbe
  */
 export function germlineMutationRate(hugoGeneSymbol:string,
                                      mutations: Mutation[],
-                                     patientIds: string[])
+                                     geneticProfileIdToStudyId:{[geneticProfileId:string]:string},
+                                     patientIds: {[studyId:string]:{[patientId:string]:boolean}})
 {
-    if (mutations.length > 0 && patientIds.length > 0) {
+    if (mutations.length > 0 && hasSampleOrPatient(patientIds)) {
         const nrCasesGermlineMutation:number =
             _.chain(mutations)
-            .filter((m:Mutation) => (
-                m.gene.hugoGeneSymbol === hugoGeneSymbol &&
-                m.mutationStatus === MUTATION_STATUS_GERMLINE &&
-                // filter for given patient IDs
-                patientIds.indexOf(m.patientId) > -1
-            ))
+            .filter((m:Mutation) => {
+                const studyId = geneticProfileIdToStudyId[m.geneticProfileId];
+                return (
+                    m.gene.hugoGeneSymbol === hugoGeneSymbol &&
+                    m.mutationStatus === MUTATION_STATUS_GERMLINE &&
+                    // filter for given patient IDs
+                    patientIds[studyId] && patientIds[studyId][m.patientId]
+                );
+            })
             .map('patientId')
             .uniq()
             .value()
             .length;
-        return nrCasesGermlineMutation * 100.0 / patientIds.length;
+        return nrCasesGermlineMutation * 100.0 / _.flatten(_.values(patientIds).map(x=>Object.keys(x))).length;
     } else {
         return 0;
     }
@@ -160,21 +165,25 @@ export function germlineMutationRate(hugoGeneSymbol:string,
  */
 export function somaticMutationRate(hugoGeneSymbol: string,
                                     mutations: Mutation[],
-                                    patientIds: string[]) {
-    if (mutations.length > 0 && patientIds.length > 0) {
+                                    geneticProfileIdToStudyId:{[geneticProfileId:string]:string},
+                                    patientIds:{[studyId:string]:{[patientId:string]:boolean}}) {
+    if (mutations.length > 0 && hasSampleOrPatient(patientIds)) {
        return (
            _.chain(mutations)
-            .filter((m:Mutation) => (
-                m.gene.hugoGeneSymbol === hugoGeneSymbol &&
-                m.mutationStatus !== MUTATION_STATUS_GERMLINE &&
-                // filter for given patient IDs
-                patientIds.indexOf(m.patientId) > -1
-            ))
+            .filter((m:Mutation) => {
+                const studyId = geneticProfileIdToStudyId[m.geneticProfileId];
+                return (
+                    m.gene.hugoGeneSymbol === hugoGeneSymbol &&
+                    m.mutationStatus !== MUTATION_STATUS_GERMLINE &&
+                    // filter for given patient IDs
+                    patientIds[studyId] && patientIds[studyId][m.patientId]
+                );
+            })
            .map('patientId')
            .uniq()
            .value()
            .length * 100.0 /
-           patientIds.length
+           _.flatten(_.values(patientIds).map(x=>Object.keys(x))).length
        );
    } else {
        return 0;
@@ -186,21 +195,25 @@ export function somaticMutationRate(hugoGeneSymbol: string,
  */
 // TODO mostly duplicate of somaticMutationRate, we should eventually replace somaticMutationRate with this one
 export function somaticMutationRateBySample(hugoGeneSymbol: string, mutations: Mutation[],
-                                            sampleIds: string[]) {
-    if (mutations.length > 0 && sampleIds.length > 0) {
+                                            geneticProfileIdToStudyId:{[geneticProfileId:string]:string},
+                                            sampleIds: {[studyId:string]:{[sampleId:string]:boolean}}) {
+    if (mutations.length > 0 && hasSampleOrPatient(sampleIds)) {
         return (
             _.chain(mutations)
-                .filter((m:Mutation) => (
-                    m.gene.hugoGeneSymbol === hugoGeneSymbol &&
-                    m.mutationStatus !== MUTATION_STATUS_GERMLINE &&
-                    // filter for given sample IDs
-                    sampleIds.indexOf(m.sampleId) > -1
-                ))
+                .filter((m:Mutation) => {
+                    const studyId = geneticProfileIdToStudyId[m.geneticProfileId];
+                    return (
+                        m.gene.hugoGeneSymbol === hugoGeneSymbol &&
+                        m.mutationStatus !== MUTATION_STATUS_GERMLINE &&
+                        // filter for given sample IDs
+                        sampleIds[studyId] && sampleIds[studyId][m.sampleId]
+                    );
+                })
                 .map('sampleId')
                 .uniq()
                 .value()
                 .length * 100.0 /
-                sampleIds.length
+                _.flatten(_.values(sampleIds).map(x=>Object.keys(x))).length
         );
     } else {
         return 0;

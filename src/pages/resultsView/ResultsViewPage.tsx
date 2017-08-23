@@ -7,6 +7,8 @@ import AjaxErrorModal from "shared/components/AjaxErrorModal";
 import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
 import {ResultsViewPageStore} from "./ResultsViewPageStore";
 import Mutations from "./mutation/Mutations";
+import {stringListToSet} from "../../shared/lib/StringUtils";
+import _ from "lodash";
 
 const resultsViewPageStore = new ResultsViewPageStore();
 
@@ -15,6 +17,16 @@ const resultsViewPageStore = new ResultsViewPageStore();
 export interface IResultsViewPageProps {
     routing: any;
 }
+
+type MutationsTabInitProps = {
+    genes: string[];
+} & ({
+    studyToSampleMap:{[studyId:string]:string[]};
+    studyToSampleListIdMap:{[studyId:string]:string};
+} | {
+    studyToSampleMap:undefined;
+    studyToSampleListIdMap:{[studyId:string]:string};
+});
 
 @inject('routing')
 @observer
@@ -61,14 +73,17 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
     public exposeComponentRenderersToParentScript(){
 
-        exposeComponentRenderer('renderMutationsTab', (props:{genes:string[], studyId:string, samples:string[]|string})=>{
-            const resultsViewPageStore = new ResultsViewPageStore();
+        exposeComponentRenderer('renderMutationsTab',
+            (props:MutationsTabInitProps)=>{
             resultsViewPageStore.hugoGeneSymbols = props.genes;
-            resultsViewPageStore.studyId = props.studyId;
-            if (typeof props.samples === "string") {
-                resultsViewPageStore.sampleListId = props.samples;
-            } else {
-                resultsViewPageStore.sampleList = props.samples;
+            if (props.studyToSampleMap) {
+                let _studyToSampleIds:{[studyId:string]:{[sampleId:string]:boolean}} = {};
+                _.each(props.studyToSampleMap, (sampleIds:string[], studyId:string)=>{
+                    _studyToSampleIds[studyId] = stringListToSet(sampleIds);
+                });
+                resultsViewPageStore._studyToSampleIds = _studyToSampleIds;
+            } else if (props.studyToSampleListIdMap) {
+                resultsViewPageStore.studyToSampleListId = props.studyToSampleListIdMap;
             }
 
             return <div>

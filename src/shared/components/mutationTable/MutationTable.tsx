@@ -39,8 +39,7 @@ import generalStyles from "./column/styles.module.scss";
 import classnames from 'classnames';
 
 export interface IMutationTableProps {
-    studyId?:string;
-    sampleIdToTumorType?: {[sampleId: string]: string}
+    studyToSampleToTumorType?: {[studyId:string]:{[sampleId: string]: string}};
     discreteCNACache?:DiscreteCNACache;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
     mrnaExprRankCache?:MrnaExprRankCache;
@@ -60,6 +59,7 @@ export interface IMutationTableProps {
     civicVariants?: ICivicVariant;
     mrnaExprRankGeneticProfileId?:string;
     discreteCNAGeneticProfileId?:string;
+    geneticProfileIdToStudyId?:{[geneticProfileId:string]:string};
     columns?:MutationTableColumnType[];
     data?:Mutation[][];
     dataStore?:IMobXApplicationDataStore<Mutation[]>;
@@ -67,7 +67,7 @@ export interface IMutationTableProps {
     itemsLabel?:string;
     itemsLabelPlural?:string;
     initialSortColumn?:string;
-    initialSortDirection?:SortDirection
+    initialSortDirection?:SortDirection,
 }
 
 export enum MutationTableColumnType {
@@ -161,7 +161,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
 
         this._columns[MutationTableColumnType.SAMPLE_ID] = {
             name: "Sample ID",
-            render: (d:Mutation[]) => SampleColumnFormatter.renderFunction(d, this.props.studyId),
+            render: (d:Mutation[]) => SampleColumnFormatter.renderFunction(d, this.props.geneticProfileIdToStudyId),
             download: SampleColumnFormatter.getTextValue,
             sortBy: SampleColumnFormatter.getTextValue,
             filter: (d:Mutation[], filterString:string, filterStringUpper:string) =>
@@ -189,9 +189,17 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
 
         this._columns[MutationTableColumnType.MRNA_EXPR] = {
             name:"mRNA Expr.",
-            render:(d:Mutation[])=>(this.props.mrnaExprRankCache
-                ? MrnaExprColumnFormatter.renderFunction(d, this.props.mrnaExprRankCache as MrnaExprRankCache)
-                : (<span></span>))
+            render:(d:Mutation[])=>{
+                if (this.props.mrnaExprRankCache && this.props.geneticProfileIdToStudyId) {
+                    return MrnaExprColumnFormatter.renderFunction(
+                        d,
+                        this.props.geneticProfileIdToStudyId as {[geneticProfileId:string]:string},
+                        this.props.mrnaExprRankCache as MrnaExprRankCache
+                    );
+                } else {
+                    return (<span></span>);
+                }
+            }
         };
 
         this._columns[MutationTableColumnType.COHORT] = {
@@ -213,20 +221,21 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
 
         this._columns[MutationTableColumnType.COPY_NUM] = {
             name: "Copy #",
-            render:(d:Mutation[])=>(this.props.discreteCNACache
-                ? DiscreteCNAColumnFormatter.renderFunction(d, this.props.discreteCNACache as DiscreteCNACache)
+            render:(d:Mutation[])=>(this.props.geneticProfileIdToStudyId && this.props.discreteCNACache
+                ? DiscreteCNAColumnFormatter.renderFunction(d, this.props.geneticProfileIdToStudyId as {[geneticProfileId:string]:string}, this.props.discreteCNACache as DiscreteCNACache)
                 : (<span></span>)),
             sortBy: (d:Mutation[]):number|null=>{
                 const cache = this.props.discreteCNACache;
-                if (cache) {
-                    return DiscreteCNAColumnFormatter.getSortValue(d, cache as DiscreteCNACache);
+                const gpToStudy = this.props.geneticProfileIdToStudyId;
+                if (cache && gpToStudy) {
+                    return DiscreteCNAColumnFormatter.getSortValue(d, gpToStudy as {[geneticProfileId:string]:string}, cache as DiscreteCNACache);
                 } else {
                     return 0;
                 }
             },
             filter:(d:Mutation[], filterString:string)=>{
-                if (this.props.discreteCNACache) {
-                    return DiscreteCNAColumnFormatter.filter(d, this.props.discreteCNACache as DiscreteCNACache, filterString)
+                if (this.props.discreteCNACache && this.props.geneticProfileIdToStudyId) {
+                    return DiscreteCNAColumnFormatter.filter(d, this.props.geneticProfileIdToStudyId as {[geneticProfileId:string]:string}, this.props.discreteCNACache as DiscreteCNACache, filterString)
                 } else {
                     return false;
                 }
@@ -397,7 +406,9 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
 
         this._columns[MutationTableColumnType.ANNOTATION] = {
             name: "Annotation",
-            render: (d:Mutation[]) => (AnnotationColumnFormatter.renderFunction(d, {
+            render: (d:Mutation[]) => (this.props.geneticProfileIdToStudyId ?
+                (AnnotationColumnFormatter.renderFunction(d, this.props.geneticProfileIdToStudyId as {[geneticProfileId:string]:string},
+                    {
                 hotspots: this.props.hotspots,
                 myCancerGenomeData: this.props.myCancerGenomeData,
                 oncoKbData: this.props.oncoKbData,
@@ -409,23 +420,28 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 enableOncoKb: this.props.enableOncoKb as boolean,
                 enableMyCancerGenome: this.props.enableMyCancerGenome as boolean,
                 enableHotspot: this.props.enableHotspot as boolean
-            })),
+            })) : (<span></span>)),
             sortBy:(d:Mutation[])=>{
-                return AnnotationColumnFormatter.sortValue(d,
-                    this.props.hotspots,
-                    this.props.myCancerGenomeData,
-                    this.props.oncoKbData,
-                    this.props.civicGenes,
-                    this.props.civicVariants);
+                if (this.props.geneticProfileIdToStudyId) {
+                    return AnnotationColumnFormatter.sortValue(d,
+                        this.props.geneticProfileIdToStudyId as {[geneticProfileId:string]:string},
+                        this.props.hotspots,
+                        this.props.myCancerGenomeData,
+                        this.props.oncoKbData,
+                        this.props.civicGenes,
+                        this.props.civicVariants);
+                } else {
+                    return [];
+                }
             }
         };
 
         this._columns[MutationTableColumnType.CANCER_TYPE] = {
             name: "Cancer Type",
-            render: (d:Mutation[]) => CancerTypeColumnFormatter.render(d, this.props.sampleIdToTumorType),
-            sortBy: (d:Mutation[]) => CancerTypeColumnFormatter.sortBy(d, this.props.sampleIdToTumorType),
+            render: (d:Mutation[]) => CancerTypeColumnFormatter.render(d, this.props.geneticProfileIdToStudyId, this.props.studyToSampleToTumorType),
+            sortBy: (d:Mutation[]) => CancerTypeColumnFormatter.sortBy(d, this.props.geneticProfileIdToStudyId, this.props.studyToSampleToTumorType),
             filter: (d:Mutation[], filterString:string, filterStringUpper:string) =>
-                CancerTypeColumnFormatter.filter(d, filterStringUpper, this.props.sampleIdToTumorType),
+                CancerTypeColumnFormatter.filter(d, filterStringUpper, this.props.geneticProfileIdToStudyId, this.props.studyToSampleToTumorType),
             tooltip:(<span>Cancer Type</span>),
         };
 
@@ -433,7 +449,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             name: "# Mut in Sample",
             render: MutationCountColumnFormatter.makeRenderFunction(this),
             headerRender: (name: string) => <span style={{display:'inline-block', maxWidth:55}}>{name}</span>,
-            sortBy: (d:Mutation[]) => MutationCountColumnFormatter.sortBy(d, this.props.mutationCountCache),
+            sortBy: (d:Mutation[]) => MutationCountColumnFormatter.sortBy(d, this.props.mutationCountCache, this.props.geneticProfileIdToStudyId),
             tooltip:(<span>Total number of nonsynonymous mutations in the sample</span>),
             align: "right"
         };

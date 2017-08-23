@@ -7,20 +7,23 @@ import TruncatedText from "shared/components/TruncatedText";
 
 export default class CancerTypeColumnFormatter {
 
-    public static getData(d: Mutation[], sampleIdToTumorType?: {[sampleId: string]: string}): string|null
+    public static getData(d: Mutation[], geneticProfileIdToStudyId?:{[geneticProfileId:string]:string},
+                          studyToSampleToTumorType?: {[studyId:string]:{[sampleId: string]: string}}): string|null
     {
         let data: string|null = null;
 
-        if (sampleIdToTumorType) {
-            data = sampleIdToTumorType[d[0].sampleId] || null;
+        if (studyToSampleToTumorType && geneticProfileIdToStudyId) {
+            const studyId = geneticProfileIdToStudyId[d[0].geneticProfileId];
+            data = studyToSampleToTumorType[studyId][d[0].sampleId] || null;
         }
 
         return data;
     }
 
-    public static sortBy(d: Mutation[], sampleIdToTumorType?: {[sampleId: string]: string}): string|null
+    public static sortBy(d: Mutation[], geneticProfileIdToStudyId?:{[geneticProfileId:string]:string},
+                         studyToSampleToTumorType?: {[studyId:string]:{[sampleId: string]: string}}): string|null
     {
-        const data = CancerTypeColumnFormatter.getData(d, sampleIdToTumorType);
+        const data = CancerTypeColumnFormatter.getData(d, geneticProfileIdToStudyId, studyToSampleToTumorType);
 
         if (data) {
             return data;
@@ -32,9 +35,10 @@ export default class CancerTypeColumnFormatter {
 
     public static filter(d: Mutation[],
                          filterStringUpper: string,
-                         sampleIdToTumorType?: {[sampleId: string]: string}): boolean
+                         geneticProfileIdToStudyId?:{[geneticProfileId:string]:string},
+                         studyToSampleToTumorType?: {[studyId:string]:{[sampleId: string]: string}}): boolean
     {
-        const data = CancerTypeColumnFormatter.getData(d, sampleIdToTumorType);
+        const data = CancerTypeColumnFormatter.getData(d, geneticProfileIdToStudyId, studyToSampleToTumorType);
 
         return (
             data !== null &&
@@ -42,16 +46,17 @@ export default class CancerTypeColumnFormatter {
         );
     }
 
-    public static isVisible(mutations?: Mutation[][], sampleIdToTumorType?: {[sampleId: string]: string}): boolean
+    public static isVisible(mutations?: Mutation[][], geneticProfileIdToStudyId?:{[geneticProfileId:string]:string},
+                            studyToSampleToTumorType?: {[studyId:string]:{[sampleId: string]: string}}): boolean
     {
-        if (!mutations || !sampleIdToTumorType) {
+        if (!mutations || !studyToSampleToTumorType) {
             return false;
         }
 
         const tumorTypeToSampleId: {[tumorType: string]: string} = {};
 
         mutations.forEach((d: Mutation[]) => {
-            const tumorType = CancerTypeColumnFormatter.getData(d, sampleIdToTumorType);
+            const tumorType = CancerTypeColumnFormatter.getData(d, geneticProfileIdToStudyId, studyToSampleToTumorType);
 
             if (tumorType) {
                 tumorTypeToSampleId[tumorType] = d[0].sampleId;
@@ -62,9 +67,11 @@ export default class CancerTypeColumnFormatter {
         return _.keys(tumorTypeToSampleId).length > 1;
     }
 
-    public static render(d: Mutation[], sampleIdToTumorType?: {[sampleId: string]: string})
+    public static render(d: Mutation[],
+                         geneticProfileIdToStudyId?:{[geneticProfileId:string]:string},
+                         studyToSampleToTumorType?: {[studyId:string]:{[sampleId: string]: string}})
     {
-        const data = CancerTypeColumnFormatter.getData(d, sampleIdToTumorType);
+        const data = CancerTypeColumnFormatter.getData(d, geneticProfileIdToStudyId, studyToSampleToTumorType);
 
         if (data) {
             return (

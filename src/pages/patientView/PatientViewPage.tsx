@@ -329,7 +329,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                     <PatientViewMutationTable
                                         sampleManager={sampleManager}
                                         sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
-                                        sampleIdToTumorType={patientViewPageStore.sampleIdToTumorType}
+                                        studyToSampleToTumorType={patientViewPageStore.studyToSampleToTumorType.result}
                                         variantCountCache={patientViewPageStore.variantCountCache}
                                         discreteCNACache={patientViewPageStore.discreteCNACache}
                                         mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}

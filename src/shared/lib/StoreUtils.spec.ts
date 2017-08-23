@@ -13,6 +13,7 @@ import {initMutation} from "test/MutationMockUtils";
 
 describe('StoreUtils', () => {
 
+    let emptyStudyToMutationData: MobxPromise<{[studyId:string]:Mutation[]}>;
     let emptyMutationData: MobxPromise<Mutation[]>;
     let emptyUncalledMutationData: MobxPromise<Mutation[]>;
     let mutationDataWithNoKeyword: MobxPromise<Mutation[]>;
@@ -23,6 +24,15 @@ describe('StoreUtils', () => {
     let mutationDataWithBothMutationsAndFusions: MobxPromise<Mutation[]>;
 
     before(() => {
+        emptyStudyToMutationData = {
+            result: {},
+            status: 'complete',
+            isPending: false,
+            isError: false,
+            isComplete: true,
+            error: undefined
+        };
+
         emptyMutationData =  {
             result: [],
             status: 'complete' as 'complete',
@@ -292,7 +302,7 @@ describe('StoreUtils', () => {
 
     describe('fetchOncoKbData', () => {
         it("won't fetch onkokb data if there are no mutations", (done) => {
-            fetchOncoKbData({}, emptyMutationData).then((data: any) => {
+            fetchOncoKbData({}, emptyStudyToMutationData).then((data: any) => {
                 assert.deepEqual(data, {sampleToTumorMap: {}, indicatorMap: {}});
                 done();
             });

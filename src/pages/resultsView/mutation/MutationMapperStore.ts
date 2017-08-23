@@ -15,9 +15,9 @@ import {calcPdbIdNumericalValue, mergeIndexedPdbAlignments} from "shared/lib/Pdb
 import {lazyMobXTableSort} from "shared/components/lazyMobXTable/LazyMobXTable";
 import {
     indexHotspotData, fetchHotspotsData, fetchCosmicData, fetchOncoKbData,
-    fetchMutationData, generateSampleIdToTumorTypeMap, generateDataQueryFilter,
+    fetchMutationData, generateStudyToSampleToTumorTypeMap, generateDataQueryFilter,
     ONCOKB_DEFAULT, fetchPdbAlignmentData, fetchSwissProtAccession, fetchUniprotId, indexPdbAlignmentData,
-    fetchPfamGeneData, fetchCivicGenes, fetchCivicVariants
+    fetchPfamGeneData, fetchCivicGenes, fetchCivicVariants, IDataQueryFilter
 } from "shared/lib/StoreUtils";
 import MutationMapperDataStore from "./MutationMapperDataStore";
 import PdbChainDataStore from "./PdbChainDataStore";
@@ -25,43 +25,20 @@ import {IMutationMapperConfig} from "./MutationMapper";
 
 export class MutationMapperStore {
 
-    constructor(config: IMutationMapperConfig,
-                hugoGeneSymbol:string,
-                mutationGeneticProfileId: MobxPromise<string>,
-                sampleIds: MobxPromise<string[]>,
-                clinicalDataForSamples: MobxPromise<ClinicalData[]>,
-                studiesForSamplesWithoutCancerTypeClinicalData: MobxPromise<CancerStudy[]>,
-                samplesWithoutCancerTypeClinicalData: MobxPromise<Sample[]>,
-                sampleListId: string|null,
-                patientIds: MobxPromise<string[]>,
-                mskImpactGermlineConsentedPatientIds: MobxPromise<string[]>)
+    constructor(protected config: IMutationMapperConfig,
+                protected hugoGeneSymbol:string,
+                public studies: MobxPromise<CancerStudy[]>,
+                private studyToMutationGeneticProfileId: MobxPromise<{[studyId:string]:string|undefined}>,
+                private studyToSampleIds: MobxPromise<{[studyId:string]:{[sampleId:string]:boolean}}>,
+                public studyToClinicalDataForSamples: MobxPromise<{[studyId:string]:ClinicalData[]}>,
+                public studyToSamplesWithoutCancerTypeClinicalData: MobxPromise<{[studyId:string]:Sample[]}>,
+                private studyToSampleListId: {[studyId:string]:string}|null,
+                private studyToPatientIds: MobxPromise<{[studyId:string]:{[patientId:string]:boolean}}>,
+                public studyToMskImpactGermlineConsentedPatientIds: MobxPromise<{[studyId:string]:{[patientId:string]:boolean}}>,
+                private studyToDataQueryFilter:MobxPromise<{[studyId:string]:IDataQueryFilter|undefined}>)
     {
-        this.config = config;
-        this.hugoGeneSymbol = hugoGeneSymbol;
-        this.mutationGeneticProfileId = mutationGeneticProfileId;
-        this.sampleIds = sampleIds;
-        this.clinicalDataForSamples = clinicalDataForSamples;
-        this.studiesForSamplesWithoutCancerTypeClinicalData = studiesForSamplesWithoutCancerTypeClinicalData;
-        this.samplesWithoutCancerTypeClinicalData = samplesWithoutCancerTypeClinicalData;
-        this.sampleListId = sampleListId;
-        this.patientIds = patientIds;
-        this.mskImpactGermlineConsentedPatientIds = mskImpactGermlineConsentedPatientIds;
-
         labelMobxPromises(this);
     }
-
-    @observable protected sampleListId: string|null = null;
-    @observable protected hugoGeneSymbol: string;
-
-    protected config: IMutationMapperConfig;
-
-    mutationGeneticProfileId: MobxPromise<string>;
-    clinicalDataForSamples: MobxPromise<ClinicalData[]>;
-    studiesForSamplesWithoutCancerTypeClinicalData: MobxPromise<CancerStudy[]>;
-    samplesWithoutCancerTypeClinicalData: MobxPromise<Sample[]>;
-    sampleIds: MobxPromise<string[]>;
-    patientIds: MobxPromise<string[]>;
-    mskImpactGermlineConsentedPatientIds: MobxPromise<string[]>;
 
     readonly cosmicData = remoteData({
         await: () => [
@@ -98,24 +75,48 @@ export class MutationMapperStore {
         return undefined;
     });
 
-    readonly mutationData = remoteData({
-        await: () => [
+    readonly studyToMutationData = remoteData<{[studyId:string]:Mutation[]}>({
+        await: ()=>[
             this.gene,
-            this.dataQueryFilter
+            this.studyToDataQueryFilter,
+            this.studyToMutationGeneticProfileId
         ],
-        invoke: async () => {
-            if (this.gene.result)
-            {
-                const mutationFilter = {
-                    ...this.dataQueryFilter.result,
-                    entrezGeneIds: [this.gene.result.entrezGeneId]
-                } as MutationFilter;
+        invoke: async ()=>{
+            const studyToDataQueryFilter = this.studyToDataQueryFilter.result!;
+            const studies = Object.keys(studyToDataQueryFilter);
+            const gene = this.gene.result;
+            if (gene) {
+                const studyToMutationGeneticProfileId = this.studyToMutationGeneticProfileId.result!;
+                const results:Mutation[][] = await Promise.all(studies.map(studyId=>{
+                    const dataQueryFilter = studyToDataQueryFilter[studyId];
+                    const profileId = studyToMutationGeneticProfileId[studyId];
+                    if (dataQueryFilter && profileId) {
+                        const mutationFilter = {
+                            ...dataQueryFilter,
+                            entrezGeneIds: [gene.entrezGeneId]
+                        } as MutationFilter;
+                        return fetchMutationData(mutationFilter, profileId)
+                    } else {
+                        return Promise.resolve([]);
+                    }
+                }));
+                return results.reduce((map:{[studyId:string]:Mutation[]}, next:Mutation[], index:number)=>{
+                    map[studies[index]] = next;
+                    return map;
+                }, {});
+            } else {
+                return studies.reduce((map,next)=>{
+                    map[next] = [];
+                    return map;
+                }, {} as {[studyId:string]:Mutation[]});
+            }
+        }
+    }, {});
 
-                return fetchMutationData(mutationFilter, this.mutationGeneticProfileId.result);
-            }
-            else {
-                return [];
-            }
+    readonly mutationData = remoteData<Mutation[]>({
+        await: ()=>[this.studyToMutationData],
+        invoke:()=>{
+            return Promise.resolve(_.flatten(_.values(this.studyToMutationData.result)));
         }
     }, []);
 
@@ -180,10 +181,9 @@ export class MutationMapperStore {
     readonly oncoKbData = remoteData<IOncoKbData>({
         await: () => [
             this.mutationData,
-            this.clinicalDataForSamples,
-            this.studiesForSamplesWithoutCancerTypeClinicalData
+            this.studyToSampleToTumorType
         ],
-        invoke: async () => fetchOncoKbData(this.sampleIdToTumorType, this.mutationData),
+        invoke:async()=>fetchOncoKbData(this.studyToSampleToTumorType.result, this.studyToMutationData),
         onError: (err: Error) => {
             // fail silently, leave the error handling responsibility to the data consumer
         }
@@ -204,8 +204,7 @@ export class MutationMapperStore {
 
     readonly civicGenes = remoteData<ICivicGene | undefined>({
         await: () => [
-            this.mutationData,
-            this.clinicalDataForSamples
+            this.mutationData
         ],
         invoke: async() => this.config.showCivic ? fetchCivicGenes(this.mutationData) : {}
     }, undefined);
@@ -224,13 +223,6 @@ export class MutationMapperStore {
             }
         }
     }, undefined);
-
-    readonly dataQueryFilter = remoteData({
-        await: () => [
-            this.sampleIds
-        ],
-        invoke: async () => generateDataQueryFilter(this.sampleListId, this.sampleIds.result)
-    });
 
     @computed get processedMutationData(): Mutation[][] {
         // just convert Mutation[] to Mutation[][]
@@ -262,11 +254,20 @@ export class MutationMapperStore {
         return indexHotspotData(this.hotspotData);
     }
 
-    @computed get sampleIdToTumorType(): {[sampleId: string]: string} {
-        return generateSampleIdToTumorTypeMap(this.clinicalDataForSamples,
-            this.studiesForSamplesWithoutCancerTypeClinicalData,
-            this.samplesWithoutCancerTypeClinicalData);
-    }
+    readonly studyToSampleToTumorType = remoteData({
+        await:()=>[
+            this.studyToClinicalDataForSamples,
+            this.studies,
+            this.studyToSamplesWithoutCancerTypeClinicalData
+        ],
+        invoke:()=>{
+            return Promise.resolve(generateStudyToSampleToTumorTypeMap(
+                this.studyToClinicalDataForSamples,
+                this.studies,
+                this.studyToSamplesWithoutCancerTypeClinicalData
+            ));
+        }
+    }, {});
 
     @cached get dataStore():MutationMapperDataStore {
         return new MutationMapperDataStore(this.processedMutationData);

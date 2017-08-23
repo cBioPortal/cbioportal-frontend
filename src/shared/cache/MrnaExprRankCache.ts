@@ -1,12 +1,12 @@
 import * as _ from 'lodash';
-import {default as SampleGeneCache, SampleAndGene} from 'shared/lib/SampleGeneCache';
+import {default as SampleGeneCache, Query} from 'shared/lib/SampleGeneCache';
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import {MrnaPercentile} from "shared/api/generated/CBioPortalAPIInternal";
 import {CacheData} from "shared/lib/LazyMobXCache";
 
 export type MrnaExprRankCacheDataType = CacheData<MrnaPercentile>;
 
-async function fetch(queries:SampleAndGene[], mrnaRankGeneticProfileId:string|null):Promise<MrnaPercentile[]> {
+async function fetch(queries:Query[], mrnaRankGeneticProfileId:string|null):Promise<MrnaPercentile[]> {
     try {
         const sampleToEntrezList:{[sampleId:string]:number[]} = {};
         for (const query of queries) {
