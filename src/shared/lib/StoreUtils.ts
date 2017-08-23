@@ -557,7 +557,7 @@ export async function fetchDiscreteCNAData(discreteCopyNumberFilter:DiscreteCopy
         return [];
     }
     let geneticProfileId:string;
-    if (geneticProfileIdDiscrete instanceof String) {
+    if (typeof geneticProfileIdDiscrete === "string") {
         geneticProfileId = geneticProfileIdDiscrete;
     } else {
         geneticProfileId = geneticProfileIdDiscrete.result || "";
