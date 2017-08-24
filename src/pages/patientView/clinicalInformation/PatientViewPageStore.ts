@@ -388,6 +388,17 @@ export class PatientViewPageStore {
         }
     });
 
+    readonly studyToGeneticProfileDiscrete = remoteData({
+        await: ()=>[this.geneticProfileIdDiscrete],
+        invoke:async ()=>{
+            const ret:{[studyId:string]:GeneticProfile} = {};
+            if (this.geneticProfileIdDiscrete.result) {
+                ret[this.studyId] = await client.getGeneticProfileUsingGET({geneticProfileId:this.geneticProfileIdDiscrete.result});
+            }
+            return ret;
+        }
+    }, {});
+
     readonly darwinUrl = remoteData({
         await: () => [
             this.derivedPatientId
@@ -580,7 +591,7 @@ export class PatientViewPageStore {
     }
 
     @cached get discreteCNACache() {
-        return new DiscreteCNACache(this.geneticProfileIdDiscrete.result);
+        return new DiscreteCNACache(this.studyToGeneticProfileDiscrete.result);
     }
 
     @cached get oncoKbEvidenceCache() {
@@ -596,11 +607,11 @@ export class PatientViewPageStore {
     }
 
     @cached get cancerTypeCache() {
-        return new CancerTypeCache(this.studyId);
+        return new CancerTypeCache();
     }
 
     @cached get mutationCountCache() {
-        return new MutationCountCache(this.mutationGeneticProfileId.result);
+        return new MutationCountCache();
     }
 
     @action setActiveTabId(id: string) {
