@@ -19,6 +19,7 @@ import ResultsViewPage from 'bundle?lazy!babel!./pages/resultsView/ResultsViewPa
 import HomePage from 'bundle?lazy!babel!./pages/home/HomePage';
 import TestimonialsPage from 'pages/staticPages/testimonialsPage/TestimonialsPage';
 import DatasetPage from 'bundle?lazy!babel!./pages/datasetView/DatasetPage';
+import MutationMapperToolPage from './pages/tools/mutationMapper/MutationMapperToolPage';
 import './globalComponents';
 
 // accepts bundle-loader's deferred loader function and defers execution of route's render
@@ -54,6 +55,7 @@ export const makeRoutes = (routing) => {
         <Route path="/datasets" getComponent={lazyLoadComponent(DatasetPage)} />
         <Route path="/restore" component={restoreRoute}/>
         <Route path="/testimonials" component={TestimonialsPage}/>
+        <Route path="/mutationmappertool" component={MutationMapperToolPage}/>
         <Route path="/blank" component={getBlankPage}/>
         <Route path="/results" getComponent={lazyLoadComponent(ResultsViewPage)} />
         <IndexRedirect to={defaultRoute}/>
