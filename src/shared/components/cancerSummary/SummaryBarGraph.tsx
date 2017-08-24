@@ -187,7 +187,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
             legend: {
                 display: this.props.legend,
                 labels: {
-                    filter: function (chartItem: IChartLegendItem,) {
+                    filter: function (chartItem: IChartLegendItem) {
                         //TODO: change integer to length of different mutation types
                         if (that.props.legend === false) return false;
                         if (chartItem.datasetIndex < 4) return true;

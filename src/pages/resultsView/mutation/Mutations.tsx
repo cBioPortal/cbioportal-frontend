@@ -3,9 +3,11 @@ import {observer} from "mobx-react";
 import {MSKTabs, MSKTab} from "shared/components/MSKTabs/MSKTabs";
 import {ResultsViewPageStore} from "../ResultsViewPageStore";
 import MutationMapper from "./MutationMapper";
-import {observable} from "mobx";
+import {observable, computed} from "mobx";
 import AppConfig from 'appConfig';
 import "./mutations.scss";
+import {filterCBioPortalWebServiceData} from '../../../shared/lib/oql/oqlfilter';
+import accessors from '../../../shared/lib/oql/accessors';
 import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator";
 
 export interface IMutationsPageProps {

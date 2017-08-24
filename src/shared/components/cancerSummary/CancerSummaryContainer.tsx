@@ -6,9 +6,10 @@ import { MSKTabs, MSKTab } from "shared/components/MSKTabs/MSKTabs";
 import {If, Then, Else} from 'react-if';
 import {ThreeBounce} from 'better-react-spinkit';
 import {CancerSummaryContent} from './CancerSummaryContent';
+import {ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
 
 @observer
-export default class CancerSummaryContainer extends React.Component<{},{}> {
+export default class CancerSummaryContainer extends React.Component<{ store:ResultsViewPageStore },{}> {
 
     private data = {
         EGFR: {
@@ -51,11 +52,11 @@ export default class CancerSummaryContainer extends React.Component<{},{}> {
             }
         }
     };
-    @observable private activeTab = Object.keys(this.data)[0];
+
+    @observable private activeTab;
 
     constructor() {
         super();
-
         this.handleTabClick = this.handleTabClick.bind(this);
     }
 
@@ -63,9 +64,13 @@ export default class CancerSummaryContainer extends React.Component<{},{}> {
         this.activeTab = id;
     }
 
+    private get defaultTabId():string {
+        return 'all';
+    }
+
     @computed
     private get tabs() {
-        return _.map(this.data, (geneData, geneName) => (
+        return _.map(this.props.store.alterationCountsForCancerTypesByGene.result, (geneData, geneName) => (
             <MSKTab key={geneName} id={"summaryTab" + geneName} linkText={geneName}>
                 <CancerSummaryContent data={geneData}/>
             </MSKTab>
@@ -73,12 +78,17 @@ export default class CancerSummaryContainer extends React.Component<{},{}> {
     }
 
     public render() {
-        return (
+        return (this.props.store.alterationCountsForCancerTypesForAllGenes.isComplete &&
+                this.props.store.alterationCountsForCancerTypesByGene.isComplete)
+            && (
             <div>
                 <If condition={true}>
                     <Then>
                         <MSKTabs onTabClick={this.handleTabClick}
-                                 activeTabId={this.activeTab} className="mainTabs">
+                                 activeTabId={this.activeTab || this.defaultTabId} className="mainTabs">
+                            <MSKTab key="all" linkText="All Genes">
+                                <CancerSummaryContent data={this.props.store.alterationCountsForCancerTypesForAllGenes.result}/>
+                            </MSKTab>
                             {this.tabs}
                         </MSKTabs>
                     </Then>
