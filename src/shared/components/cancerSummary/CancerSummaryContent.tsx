@@ -98,7 +98,8 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
             const totalCases = cancer.total;
             const cancerAlterations:ICancerTypeAlterationPlotData | {} = _.omit(cancer, ['total']);
             const altTotalCount = _.reduce(cancerAlterations, (total:number, value:number) => total + value, 0);
-            const altTotalPercent = _.round((altTotalCount / totalCases * 100), 1);
+            let altTotalPercent = _.round((altTotalCount / totalCases * 100), 1);
+            altTotalPercent = altTotalPercent > 100 ? 100 : altTotalPercent;
             if (this.selectedCancerTypes[cancerType] && totalCases >= this.totalCasesValue) {
                 accum.push({
                     label: cancerType,
@@ -106,7 +107,8 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                     symbol: yAxis === "abs-count" ? '' : "%",
                     sortCount: yAxis === "abs-count" ? altTotalCount : altTotalPercent,
                     data: _.map(cancerAlterations, (count:number, altType: string) => {
-                        const percent = count / totalCases * 100;
+                        let percent = count / totalCases * 100;
+                        percent = percent > 100 ? 100 : percent;
                         const total = yAxis === "abs-count" ? count : percent;
                         return {
                             label: altType,
