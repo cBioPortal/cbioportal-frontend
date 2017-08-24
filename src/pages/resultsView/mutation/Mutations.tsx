@@ -3,9 +3,11 @@ import {observer} from "mobx-react";
 import {MSKTabs, MSKTab} from "shared/components/MSKTabs/MSKTabs";
 import {ResultsViewPageStore} from "../ResultsViewPageStore";
 import MutationMapper from "./MutationMapper";
-import {observable} from "mobx";
+import {observable, computed} from "mobx";
 import AppConfig from 'appConfig';
 import "./mutations.scss";
+import {filterCBioPortalWebServiceData} from '../../../shared/lib/oql/oqlfilter';
+import accessors from '../../../shared/lib/oql/accessors';
 
 export interface IMutationsPageProps {
     routing?: any;
@@ -23,6 +25,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
         this.handleTabChange.bind(this);
         this.mutationsGeneTab = props.genes[0];
     }
+
 
     public render() {
         // use routing if available, if not fall back to the observable variable
@@ -56,7 +59,8 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
             'cursor': 'pointer',
             'line-height': .8
         }
-        
+
+
         genes.forEach((gene: string) => {
             const mutationMapperStore = this.props.store.getMutationMapperStore(gene);
 

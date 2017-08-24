@@ -11,6 +11,10 @@ export function addErrorHandler(handler: errorHandler) {
 
 }
 
+(MobxPromise as any).prototype.toJSON = function(){
+    return JSON.stringify(this.result);
+};
+
 /**
  * Constructs a MobxPromise which will call seamlessImmutable.from() on the result and the default value.
  */
