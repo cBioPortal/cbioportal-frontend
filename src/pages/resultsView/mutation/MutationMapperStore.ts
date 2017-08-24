@@ -1,6 +1,6 @@
 import * as _ from "lodash";
 import {
-    Mutation, MutationFilter, Gene, ClinicalData, CancerStudy, Sample
+    Mutation, MutationFilter, Gene, ClinicalData, CancerStudy, Sample, GeneticProfile, SampleIdentifier
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {computed, observable} from "mobx";
@@ -17,48 +17,34 @@ import {
     indexHotspotData, fetchHotspotsData, fetchCosmicData, fetchOncoKbData,
     fetchMutationData, generateSampleIdToTumorTypeMap, generateDataQueryFilter,
     ONCOKB_DEFAULT, fetchPdbAlignmentData, fetchSwissProtAccession, fetchUniprotId, indexPdbAlignmentData,
-    fetchPfamGeneData, fetchCivicGenes, fetchCivicVariants
+    fetchPfamGeneData, fetchCivicGenes, fetchCivicVariants, IDataQueryFilter
 } from "shared/lib/StoreUtils";
 import MutationMapperDataStore from "./MutationMapperDataStore";
 import PdbChainDataStore from "./PdbChainDataStore";
 import {IMutationMapperConfig} from "./MutationMapper";
+import MutationDataCache from "../../../shared/cache/MutationDataCache";
 
 export class MutationMapperStore {
 
-    constructor(config: IMutationMapperConfig,
-                hugoGeneSymbol:string,
-                mutationGeneticProfileId: MobxPromise<string>,
-                sampleIds: MobxPromise<string[]>,
-                clinicalDataForSamples: MobxPromise<ClinicalData[]>,
-                studiesForSamplesWithoutCancerTypeClinicalData: MobxPromise<CancerStudy[]>,
-                samplesWithoutCancerTypeClinicalData: MobxPromise<Sample[]>,
-                sampleListId: string|null,
-                germlineConsentedSampleIds: MobxPromise<string[]>)
+    constructor(protected config: IMutationMapperConfig,
+                protected hugoGeneSymbol:string,
+                public samples:MobxPromise<SampleIdentifier[]>,
+                // getMutationDataCache needs to be a getter for the following reason:
+                // when the input parameters to the mutationDataCache change, the cache
+                // is recomputed. Mobx needs to respond to this. But if we pass the mutationDataCache
+                // in as a value, then when using it we don't access the observable property mutationDataCache,
+                // so that when it changes we won't react. Thus we need to access it as store.mutationDataCache
+                // (which will be done in the getter thats passed in here) so that the cache itself is observable
+                // and we will react when it changes to a new object.
+                private getMutationDataCache: ()=>MutationDataCache,
+                public geneticProfileIdToGeneticProfile:MobxPromise<{[geneticProfileId:string]:GeneticProfile}>,
+                public clinicalDataForSamples: MobxPromise<ClinicalData[]>,
+                public studiesForSamplesWithoutCancerTypeClinicalData: MobxPromise<CancerStudy[]>,
+                private samplesWithoutCancerTypeClinicalData: MobxPromise<Sample[]>,
+                public germlineConsentedSamples:MobxPromise<SampleIdentifier[]>)
     {
-        this.config = config;
-        this.hugoGeneSymbol = hugoGeneSymbol;
-        this.mutationGeneticProfileId = mutationGeneticProfileId;
-        this.sampleIds = sampleIds;
-        this.clinicalDataForSamples = clinicalDataForSamples;
-        this.studiesForSamplesWithoutCancerTypeClinicalData = studiesForSamplesWithoutCancerTypeClinicalData;
-        this.samplesWithoutCancerTypeClinicalData = samplesWithoutCancerTypeClinicalData;
-        this.sampleListId = sampleListId;
-        this.germlineConsentedSampleIds = germlineConsentedSampleIds;
-
         labelMobxPromises(this);
     }
-
-    @observable protected sampleListId: string|null = null;
-    @observable protected hugoGeneSymbol: string;
-
-    protected config: IMutationMapperConfig;
-
-    mutationGeneticProfileId: MobxPromise<string>;
-    clinicalDataForSamples: MobxPromise<ClinicalData[]>;
-    studiesForSamplesWithoutCancerTypeClinicalData: MobxPromise<CancerStudy[]>;
-    samplesWithoutCancerTypeClinicalData: MobxPromise<Sample[]>;
-    sampleIds: MobxPromise<string[]>;
-    germlineConsentedSampleIds: MobxPromise<string[]>;
 
     readonly cosmicData = remoteData({
         await: () => [
@@ -80,7 +66,7 @@ export class MutationMapperStore {
         }
     });
 
-    readonly gene = remoteData(async () => {
+    readonly gene = remoteData<Gene|undefined>(async () => {
         if (this.hugoGeneSymbol) {
             let genes = await client.fetchGenesUsingPOST({
                 geneIds: [this.hugoGeneSymbol],
@@ -98,19 +84,13 @@ export class MutationMapperStore {
     readonly mutationData = remoteData({
         await: () => [
             this.gene,
-            this.dataQueryFilter
         ],
         invoke: async () => {
-            if (this.gene.result)
-            {
-                const mutationFilter = {
-                    ...this.dataQueryFilter.result,
-                    entrezGeneIds: [this.gene.result.entrezGeneId]
-                } as MutationFilter;
-
-                return fetchMutationData(mutationFilter, this.mutationGeneticProfileId.result);
-            }
-            else {
+            const gene = this.gene.result;
+            if (gene) {
+                const cacheData = this.getMutationDataCache().get({entrezGeneId: gene.entrezGeneId});
+                return (cacheData && cacheData.data) || [];
+            } else {
                 return [];
             }
         }
@@ -221,13 +201,6 @@ export class MutationMapperStore {
             }
         }
     }, undefined);
-
-    readonly dataQueryFilter = remoteData({
-        await: () => [
-            this.sampleIds
-        ],
-        invoke: async () => generateDataQueryFilter(this.sampleListId, this.sampleIds.result)
-    });
 
     @computed get processedMutationData(): Mutation[][] {
         // just convert Mutation[] to Mutation[][]
