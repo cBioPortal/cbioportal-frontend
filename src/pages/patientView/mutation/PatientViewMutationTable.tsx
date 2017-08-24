@@ -28,6 +28,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
     {
         ...MutationTable.defaultProps,
         initialItemsPerPage: 10,
+        paginationProps:{ itemsPerPageOptions:[10,25,50,100] },
         columns: [
             MutationTableColumnType.COHORT,
             MutationTableColumnType.MRNA_EXPR,
