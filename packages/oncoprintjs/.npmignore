@@ -1,5 +1,13 @@
 # Created by https://www.gitignore.io
 
+### Repo Files ###
+src/
+test/
+server.js
+gulpfile.js
+.gitignore
+.travis.yml
+
 ### Node ###
 # Logs
 logs

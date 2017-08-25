@@ -3,8 +3,8 @@
   "version": "1.0.2",
   "description": "A data visualization for cancer genomic data.",
   "scripts": {
-      "clean": "rm -rf dist",
-      "build": "npm run clean && mkdir -p dist && gulp && mkdir -p dist/img && mv dist/*.svg dist/img"
+    "clean": "rm -rf dist",
+    "build": "npm run clean && gulp"
   },
   "repository": {
     "type": "git",
@@ -43,7 +43,7 @@
   "dependencies": {
     "express": "^4.15.3",
     "gl-matrix": "^2.3.2",
-    "jquery": "^1.11.1",
+    "jquery": "^1.11.3",
     "underscore": "^1.7.0"
   }
 }
