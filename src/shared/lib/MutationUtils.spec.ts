@@ -15,19 +15,19 @@ describe('MutationUtils', () => {
     before(()=>{
         somaticMutations = [
             initMutation({ // mutation
-                patientId: "PATIENT1",
+                sampleId: "PATIENT1",
                 gene: {
                     hugoGeneSymbol: "TP53",
                 },
              }),
             initMutation({ // mutation in same gene, same patient
-                patientId: "PATIENT1",
+                sampleId: "PATIENT1",
                 gene: {
                     hugoGeneSymbol: "TP53",
                 },
              }),
             initMutation({ // mutation in same patient different gene
-                patientId: "PATIENT2",
+                sampleId: "PATIENT2",
                 gene: {
                     hugoGeneSymbol: "PIK3CA",
                 },
@@ -35,21 +35,21 @@ describe('MutationUtils', () => {
         ];
         germlineMutations = [
             initMutation({ // mutation
-                patientId: "PATIENT1",
+                sampleId: "PATIENT1",
                 gene: {
                     hugoGeneSymbol: "TP53",
                 },
                 mutationStatus: MUTATION_STATUS_GERMLINE
              }),
             initMutation({ // mutation in same gene, same patient
-                patientId: "PATIENT1",
+                sampleId: "PATIENT1",
                 gene: {
                     hugoGeneSymbol: "BRCA1",
                 },
                 mutationStatus: MUTATION_STATUS_GERMLINE
              }),
             initMutation({ // mutation in same patient different gene
-                patientId: "PATIENT2",
+                sampleId: "PATIENT2",
                 gene: {
                     hugoGeneSymbol: "BRCA2",
                 },
@@ -67,7 +67,7 @@ describe('MutationUtils', () => {
                     somaticMutations,
                     ['PATIENT1', 'PATIENT2']
                 );
-            assert.equal(result, 50)
+            assert.equal(result, 50);
 
             // No non-existing gene mutations
             result = 
@@ -76,7 +76,7 @@ describe('MutationUtils', () => {
                     somaticMutations,
                     ['PATIENT1', 'PATIENT2']
                 );
-            assert.equal(result, 0)
+            assert.equal(result, 0);
 
             // when nr of given patientIds is 1 it should give 100% (not sure if
             // this should be an error instead)
@@ -86,7 +86,7 @@ describe('MutationUtils', () => {
                     somaticMutations,
                     ['PATIENT2']
                 );
-            assert.equal(result, 100)
+            assert.equal(result, 100);
 
             // germline mutations should be ignored
             result = 
@@ -95,7 +95,7 @@ describe('MutationUtils', () => {
                     somaticMutations.concat(germlineMutations),
                     ['PATIENT2']
                 );
-            assert.equal(result, 0)
+            assert.equal(result, 0);
 
             // ignore all mutations for non existent patient id
             result = 
@@ -104,7 +104,7 @@ describe('MutationUtils', () => {
                     somaticMutations,
                     ['XXXX']
                 );
-            assert.equal(result, 0)
+            assert.equal(result, 0);
         });
     });
 
@@ -117,7 +117,7 @@ describe('MutationUtils', () => {
                     germlineMutations,
                     ['PATIENT1', 'PATIENT2'],
                 );
-            assert.equal(result, 50)
+            assert.equal(result, 50);
 
             // somatic mutations should be ignored
             result = 
@@ -126,7 +126,7 @@ describe('MutationUtils', () => {
                     germlineMutations.concat(somaticMutations),
                     ['PATIENT1', 'PATIENT2'],
                 );
-            assert.equal(result, 0)
+            assert.equal(result, 0);
 
             // ignore all mutations for non existent patient id
             result = 
@@ -135,7 +135,7 @@ describe('MutationUtils', () => {
                     germlineMutations,
                     ['XXXX']
                 );
-            assert.equal(result, 0)
+            assert.equal(result, 0);
 
             // No non-existing gene mutations
             result = 
@@ -144,7 +144,7 @@ describe('MutationUtils', () => {
                     germlineMutations,
                     ['PATIENT1', 'PATIENT2']
                 );
-            assert.equal(result, 0)
+            assert.equal(result, 0);
         });
     });
 });
