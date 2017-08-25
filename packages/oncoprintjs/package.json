@@ -1,6 +1,6 @@
 {
   "name": "oncoprintjs",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A data visualization for cancer genomic data.",
   "scripts": {
     "clean": "rm -rf dist",
