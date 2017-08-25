@@ -76,7 +76,7 @@ export default class PatientViewOncoPrint extends React.Component<IPatientViewOn
             'legend_label': 'Heatmap',
             'value_key': 'vaf',
             'value_range': [0, 1],
-            'colors': [[0,0,0,1],[0,0,255,1]],
+            'colors': [[241,242,181,1],[19,80,88,1]],
             'value_stop_points': [0, 1],
             'null_color': 'rgba(224,224,224,1)'
         },
@@ -120,6 +120,9 @@ export default class PatientViewOncoPrint extends React.Component<IPatientViewOn
     oncoprint.keepSorted(true);
     oncoprint.releaseRendering();
   }
+
+  // ctDNA data:
+  // http://localhost:3000/#/patient?caseId=05-144&navCaseIds=03-192%2C04-050%2C05-144%2C06-081%2C99-091&studyId=prad_fhcrc
 
   render() {
 
