@@ -6,6 +6,8 @@ before_deploy:
 - mv ./dist/oncoprint-bundle.js ./index.js
 - cp -r ./dist/* ./
 - rm -rf dist
+# generate version in package.json using git describe --tags
+- sed -i "s/\"oncoprintjs\",/\"oncoprintjs\",\n\ \ \"version\":\"$(git describe --tags | sed 's/^v//g')\",/g" package.json
 deploy:
   provider: npm
   email: cbioportal@gmail.com
