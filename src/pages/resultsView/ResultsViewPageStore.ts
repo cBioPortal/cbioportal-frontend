@@ -26,6 +26,8 @@ import {stringListToSet} from "../../shared/lib/StringUtils";
 import {toSampleUuid} from "../../shared/lib/UuidUtils";
 import MutationDataCache from "../../shared/cache/MutationDataCache";
 
+export type SamplesSpecificationElement = { studyId:string, sampleId:string, sampleListId:undefined } |
+                                    { studyId:string, sampleId:undefined, sampleListId:string};
 export class ResultsViewPageStore {
 
     constructor() {
@@ -40,35 +42,43 @@ export class ResultsViewPageStore {
 
     @observable ajaxErrors: Error[] = [];
 
-    //@observable studyId: string = '';
-    //@observable sampleListId: string|null = null;
     @observable hugoGeneSymbols: string[]|null = null;
-    //@observable sampleList: string[]|null = null;
-    @observable _studyToSampleIds:{[studyId:string]:{[sampleId:string]:boolean}}|null = null;
-    @observable studyToSampleListId:{[studyId:string]:string}|null = null;
+    @observable samplesSpecification:SamplesSpecificationElement[] = [];
 
     readonly studyToSampleIds = remoteData<{[studyId:string]:{[sampleId:string]:boolean}}>(async()=>{
-        if (this._studyToSampleIds) {
-            // first priority: user provided custom sample list
-            return this._studyToSampleIds;
-        } else if (this.studyToSampleListId) {
-            // if no custom sample list try to fetch sample ids from the API
-            const studyToSampleListId = this.studyToSampleListId;
-            const studies = Object.keys(studyToSampleListId);
-            const results:string[][] = await Promise.all(studies.map(studyId=>{
-                return client.getAllSampleIdsInSampleListUsingGET({
-                    sampleListId: studyToSampleListId[studyId]
-                });
-            }));
-            return results.reduce((map:{[studyId:string]:{[sampleId:string]:boolean}}, next:string[], index:number)=>{
-                const correspondingStudy = studies[index];
-                map[correspondingStudy] = stringListToSet(next);
-                return map;
-            }, {});
-        } else {
-            return {};
+        const sampleListsToQuery:{studyId:string, sampleListId:string}[] = [];
+        const ret:{[studyId:string]:{[sampleId:string]:boolean}} = {};
+        for (const sampleSpec of this.samplesSpecification) {
+            if (sampleSpec.sampleId) {
+                ret[sampleSpec.studyId] = ret[sampleSpec.studyId] || {};
+                ret[sampleSpec.studyId][sampleSpec.sampleId] = true;
+            } else if (sampleSpec.sampleListId) {
+                sampleListsToQuery.push(sampleSpec as {studyId:string, sampleListId:string});
+            }
         }
+        const results:string[][] = await Promise.all(sampleListsToQuery.map(spec=>{
+            return client.getAllSampleIdsInSampleListUsingGET({
+                sampleListId: spec.sampleListId
+            });
+        }));
+        for (let i=0; i<results.length; i++) {
+            ret[sampleListsToQuery[i].studyId] = ret[sampleListsToQuery[i].studyId] || {};
+            const sampleMap = ret[sampleListsToQuery[i].studyId];
+            results[i].map(sampleId=>{
+                sampleMap[sampleId] = true;
+            });
+        }
+        return ret;
     }, {});
+
+    @computed get studyToSampleListId():{[studyId:string]:string} {
+        return this.samplesSpecification.reduce((map, next)=>{
+            if (next.sampleListId) {
+                map[next.studyId] = next.sampleListId;
+            }
+            return map;
+        }, {} as {[studyId:string]:string});
+    }
 
     readonly studyToMutationGeneticProfile = remoteData<{[studyId:string]:GeneticProfile}>({
         await: () => [
@@ -87,13 +97,7 @@ export class ResultsViewPageStore {
     }, {});
 
     @computed get studyIds():string[] {
-        if (this._studyToSampleIds) {
-            return Object.keys(this._studyToSampleIds);
-        } else if (this.studyToSampleListId) {
-            return Object.keys(this.studyToSampleListId);
-        } else {
-            return [];
-        }
+        return Object.keys(this.studyToSampleIds.result);
     }
 
     @computed get myCancerGenomeData() {
@@ -280,7 +284,7 @@ export class ResultsViewPageStore {
             const studies = this.studyIds;
             const ret:{[studyId:string]:IDataQueryFilter} = {};
             for (const studyId of studies) {
-                ret[studyId] = generateDataQueryFilter((this.studyToSampleListId && this.studyToSampleListId[studyId])||null, Object.keys(this.studyToSampleIds.result[studyId]))
+                ret[studyId] = generateDataQueryFilter(this.studyToSampleListId[studyId]||null, Object.keys(this.studyToSampleIds.result[studyId] || {}))
             }
             return Promise.resolve(ret);
         }
