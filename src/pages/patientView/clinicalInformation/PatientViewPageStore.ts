@@ -391,6 +391,7 @@ export class PatientViewPageStore {
     readonly studyToGeneticProfileDiscrete = remoteData({
         await: ()=>[this.geneticProfileIdDiscrete],
         invoke:async ()=>{
+            // we just need it in this form for input to DiscreteCNACache
             const ret:{[studyId:string]:GeneticProfile} = {};
             if (this.geneticProfileIdDiscrete.result) {
                 ret[this.studyId] = await client.getGeneticProfileUsingGET({geneticProfileId:this.geneticProfileIdDiscrete.result});
