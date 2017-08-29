@@ -1,12 +1,12 @@
 import * as _ from 'lodash';
-import {default as SampleGeneCache, SampleAndGene} from "shared/lib/SampleGeneCache";
-import {CacheData} from "shared/lib/LazyMobXCache";
+import {AugmentedData, CacheData, default as LazyMobXCache} from "shared/lib/LazyMobXCache";
 import client from "shared/api/cbioportalClientInstance";
-import {DiscreteCopyNumberData, DiscreteCopyNumberFilter} from "shared/api/generated/CBioPortalAPI";
+import {DiscreteCopyNumberData, DiscreteCopyNumberFilter, GeneticProfile} from "shared/api/generated/CBioPortalAPI";
 
 export type DiscreteCNACacheDataType = CacheData<DiscreteCopyNumberData>;
+type Query = {studyId:string, sampleId:string, entrezGeneId:number};
 
-async function fetch(queries:SampleAndGene[], geneticProfileIdDiscrete:string|undefined):Promise<DiscreteCopyNumberData[]> {
+async function fetchForStudy(queries:Query[], studyId:string, geneticProfileIdDiscrete:string|undefined):Promise<AugmentedData<DiscreteCopyNumberData, string>> {
     try {
         const uniqueSamples = _.uniq(queries.map(q=>q.sampleId));
         const uniqueGenes = _.uniq(queries.map(q=>q.entrezGeneId));
@@ -50,21 +50,36 @@ async function fetch(queries:SampleAndGene[], geneticProfileIdDiscrete:string|un
                 });
             }
         }));
-        return _.flatten(allData);
+        return {data:_.flatten(allData), meta:studyId};
     } catch (err) {
         throw err;
     }
 }
-export default class DiscreteCNACache extends SampleGeneCache<DiscreteCopyNumberData> {
-
-    private _geneticProfileIdDiscrete:string|undefined;
-
-    constructor(geneticProfileIdDiscrete:string|undefined) {
-        super(fetch, geneticProfileIdDiscrete);
-        this._geneticProfileIdDiscrete = geneticProfileIdDiscrete;
+function fetch(queries:Query[], studyToGeneticProfileDiscrete:{[studyId:string]:GeneticProfile}):Promise<AugmentedData<DiscreteCopyNumberData, string>[]> {
+    if (!studyToGeneticProfileDiscrete) {
+        throw "No study to genetic profile id map given";
+    } else {
+        const studyToQueries = _.groupBy(queries, 'studyId');
+        return Promise.all(Object.keys(studyToQueries)
+            .map(studyId=>{
+                const profile = studyToGeneticProfileDiscrete[studyId];
+                if (profile) {
+                    return fetchForStudy(studyToQueries[studyId], studyId, profile.geneticProfileId);
+                } else {
+                    return Promise.resolve({data: [], meta: studyId});
+                }
+            }));
     }
-
-    get geneticProfileIdDiscrete():string|undefined {
-        return this._geneticProfileIdDiscrete;
+}
+function key(d:{studyId?:string, sampleId:string, entrezGeneId:number}, m?:string) {
+    const studyId = d.studyId ? d.studyId : m;
+    return `${studyId}~${d.sampleId}~${d.entrezGeneId}`;
+}
+export default class DiscreteCNACache extends LazyMobXCache<DiscreteCopyNumberData, Query, string> {
+    constructor(private studyToGeneticProfileDiscrete?:{[studyId:string]:GeneticProfile}) {
+        super(key, key, fetch, studyToGeneticProfileDiscrete);
+    }
+    public get isActive():boolean {
+        return !!(this.studyToGeneticProfileDiscrete && Object.keys(this.studyToGeneticProfileDiscrete).length > 0);
     }
 }

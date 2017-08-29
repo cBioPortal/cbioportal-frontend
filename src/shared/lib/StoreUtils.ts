@@ -548,6 +548,10 @@ export function findGeneticProfileIdDiscrete(geneticProfilesInStudy:MobxPromise<
     return profile ? profile.geneticProfileId : undefined;
 }
 
+export function isMutationProfile(profile:GeneticProfile):boolean {
+    return profile.geneticAlterationType === "MUTATION_EXTENDED";
+}
+
 export function findMutationGeneticProfileId(geneticProfilesInStudy: MobxPromise<GeneticProfile[]>,
                                              studyId:string,
                                              suffix:string = GENETIC_PROFILE_MUTATIONS_SUFFIX)
