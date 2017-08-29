@@ -2563,45 +2563,45 @@ export default class CBioPortalAPI {
      * @param {} mutationPositionIdentifiers - List of gene and positions
      */
     fetchMutationCountsByPositionUsingPOST(parameters: {
-        'mutationPositionIdentifiers': Array < MutationPositionIdentifier > ,
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < Array < MutationCountByPosition >
+            'mutationPositionIdentifiers': Array < MutationPositionIdentifier > ,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < MutationCountByPosition >
         > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/mutation-counts-by-position/fetch';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/mutation-counts-by-position/fetch';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
 
-            if (parameters['mutationPositionIdentifiers'] !== undefined) {
-                body = parameters['mutationPositionIdentifiers'];
-            }
+                if (parameters['mutationPositionIdentifiers'] !== undefined) {
+                    body = parameters['mutationPositionIdentifiers'];
+                }
 
-            if (parameters['mutationPositionIdentifiers'] === undefined) {
-                reject(new Error('Missing required  parameter: mutationPositionIdentifiers'));
-                return;
-            }
+                if (parameters['mutationPositionIdentifiers'] === undefined) {
+                    reject(new Error('Missing required  parameter: mutationPositionIdentifiers'));
+                    return;
+                }
 
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
 
-            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
 
-        }).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
 
     /**
      * getMolecularMatchClinicalTrials
@@ -2626,10 +2626,8 @@ export default class CBioPortalAPI {
         let form: any = {};
         return new Promise(function(resolve, reject) {
 
-            headers['Accept'] = 'application/json'; //'text/plain;charset=UTF-8';
+            headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'text/plain';
-            // headers['dataType'] = 'json';
-            // headers['Access-Control-Allow-Origin'] = '*';
 
             if (parameters['filters'] === undefined) {
                 reject(new Error('Missing required  parameter: filters'));
@@ -2637,16 +2635,8 @@ export default class CBioPortalAPI {
             }
 
             if (parameters['filters'] != undefined) {
-               // queryParameters = "filters=" + encodeURIComponent(parameters['filters']);
                 body = parameters['filters'];
             }
-
-            // if (parameters.$queryParameters) {
-            //     Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-            //         var parameter = parameters.$queryParameters[parameterName];
-            //         queryParameters[parameterName] = parameter;
-            //     });
-            // }
 
             request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
 

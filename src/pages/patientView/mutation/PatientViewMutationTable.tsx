@@ -33,7 +33,6 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             MutationTableColumnType.MRNA_EXPR,
             MutationTableColumnType.COPY_NUM,
             MutationTableColumnType.ANNOTATION,
-            // MutationTableColumnType.CLINICAL_TRIALS,
             MutationTableColumnType.REF_READS_N,
             MutationTableColumnType.VAR_READS_N,
             MutationTableColumnType.REF_READS,
@@ -111,7 +110,6 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         this._columns[MutationTableColumnType.GENE].order = 20;
         this._columns[MutationTableColumnType.PROTEIN_CHANGE].order = 30;
         this._columns[MutationTableColumnType.ANNOTATION].order = 35;
-        // this._columns[MutationTableColumnType.CLINICAL_TRIALS].order = 38;
         this._columns[MutationTableColumnType.CHROMOSOME].order = 40;
         this._columns[MutationTableColumnType.START_POS].order = 50;
         this._columns[MutationTableColumnType.END_POS].order = 60;
