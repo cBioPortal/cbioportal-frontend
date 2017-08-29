@@ -27,7 +27,7 @@ export function queryUrl(store:QueryStore, nonGeneticProfileParams:NonGeneticPro
         }
 
         const hash = `crosscancer/overview/${nonGeneticProfileParams.data_priority}/${encodeURIComponent(nonGeneticProfileParams.gene_list)}/${encodeURIComponent(studyIds.join(","))}`;
-        return `cross_cancer.do#${hash}`;
+        return `cross_cancer.do?#${hash}`;
     } else {
         return 'index.do';
     }*/
