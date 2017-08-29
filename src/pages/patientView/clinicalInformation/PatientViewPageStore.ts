@@ -331,6 +331,17 @@ export class PatientViewPageStore {
         })
     }, []);
 
+    readonly geneticProfileIdToGeneticProfile = remoteData<{[geneticProfileId:string]:GeneticProfile}>({
+        await:()=>[this.geneticProfilesInStudy],
+        invoke:()=>{
+            return Promise.resolve(this.geneticProfilesInStudy.result.reduce((map:{[geneticProfileId:string]:GeneticProfile}, next:GeneticProfile)=>{
+                map[next.geneticProfileId] = next;
+                return map;
+            }, {}));
+        }
+    }, {});
+
+
     public readonly mrnaRankGeneticProfileId = remoteData({
         await: () => [
             this.geneticProfilesInStudy
