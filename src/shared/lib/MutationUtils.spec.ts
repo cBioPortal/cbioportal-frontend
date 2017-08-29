@@ -4,33 +4,42 @@ import {
 import * as _ from 'lodash';
 import { assert, expect } from 'chai';
 import sinon from 'sinon';
-import {Mutation} from "../api/generated/CBioPortalAPI";
+import {GeneticProfile, Mutation} from "../api/generated/CBioPortalAPI";
 import {initMutation} from "test/MutationMockUtils";
 import { MUTATION_STATUS_GERMLINE } from "shared/constants";
 
 describe('MutationUtils', () => {
     let somaticMutations: Mutation[];
     let germlineMutations: Mutation[];
+    let geneticProfileIdToGeneticProfile:{[geneticProfileId:string]:GeneticProfile};
 
     before(()=>{
+        geneticProfileIdToGeneticProfile = {
+            'GP1':{
+                studyId: 'STUDY1'
+            } as GeneticProfile
+        };
         somaticMutations = [
             initMutation({ // mutation
                 sampleId: "PATIENT1",
                 gene: {
                     hugoGeneSymbol: "TP53",
                 },
+                geneticProfileId:"GP1"
              }),
             initMutation({ // mutation in same gene, same patient
                 sampleId: "PATIENT1",
                 gene: {
                     hugoGeneSymbol: "TP53",
                 },
+                geneticProfileId:"GP1"
              }),
             initMutation({ // mutation in same patient different gene
                 sampleId: "PATIENT2",
                 gene: {
                     hugoGeneSymbol: "PIK3CA",
                 },
+                geneticProfileId:"GP1"
              })
         ];
         germlineMutations = [
@@ -39,21 +48,24 @@ describe('MutationUtils', () => {
                 gene: {
                     hugoGeneSymbol: "TP53",
                 },
-                mutationStatus: MUTATION_STATUS_GERMLINE
+                mutationStatus: MUTATION_STATUS_GERMLINE,
+                geneticProfileId:"GP1"
              }),
             initMutation({ // mutation in same gene, same patient
                 sampleId: "PATIENT1",
                 gene: {
                     hugoGeneSymbol: "BRCA1",
                 },
-                mutationStatus: MUTATION_STATUS_GERMLINE
+                mutationStatus: MUTATION_STATUS_GERMLINE,
+                geneticProfileId:"GP1"
              }),
             initMutation({ // mutation in same patient different gene
                 sampleId: "PATIENT2",
                 gene: {
                     hugoGeneSymbol: "BRCA2",
                 },
-                mutationStatus: MUTATION_STATUS_GERMLINE
+                mutationStatus: MUTATION_STATUS_GERMLINE,
+                geneticProfileId:"GP1"
              })
         ];
     });
@@ -65,7 +77,8 @@ describe('MutationUtils', () => {
                 somaticMutationRate(
                     "TP53",
                     somaticMutations,
-                    ['PATIENT1', 'PATIENT2']
+                    geneticProfileIdToGeneticProfile,
+                    [{studyId:'STUDY1', sampleId:'PATIENT1'}, {studyId:'STUDY1', sampleId:'PATIENT2'}]
                 );
             assert.equal(result, 50);
 
@@ -74,7 +87,8 @@ describe('MutationUtils', () => {
                 somaticMutationRate(
                     "NASDASFASG",
                     somaticMutations,
-                    ['PATIENT1', 'PATIENT2']
+                    geneticProfileIdToGeneticProfile,
+                    [{studyId:'STUDY1', sampleId:'PATIENT1'}, {studyId:'STUDY1', sampleId:'PATIENT2'}]
                 );
             assert.equal(result, 0);
 
@@ -84,7 +98,8 @@ describe('MutationUtils', () => {
                 somaticMutationRate(
                     "PIK3CA",
                     somaticMutations,
-                    ['PATIENT2']
+                    geneticProfileIdToGeneticProfile,
+                    [{studyId:'STUDY1', sampleId:'PATIENT2'}]
                 );
             assert.equal(result, 100);
 
@@ -93,7 +108,8 @@ describe('MutationUtils', () => {
                 somaticMutationRate(
                     "BRCA1",
                     somaticMutations.concat(germlineMutations),
-                    ['PATIENT2']
+                    geneticProfileIdToGeneticProfile,
+                    [{studyId:'STUDY1', sampleId:'PATIENT2'}]
                 );
             assert.equal(result, 0);
 
@@ -102,7 +118,8 @@ describe('MutationUtils', () => {
                 somaticMutationRate(
                     "PIK3CA",
                     somaticMutations,
-                    ['XXXX']
+                    geneticProfileIdToGeneticProfile,
+                    [{studyId:'STUDY1', sampleId:'XXXX'}]
                 );
             assert.equal(result, 0);
         });
@@ -115,7 +132,8 @@ describe('MutationUtils', () => {
                 germlineMutationRate(
                     "BRCA1",
                     germlineMutations,
-                    ['PATIENT1', 'PATIENT2'],
+                    geneticProfileIdToGeneticProfile,
+                    [{studyId:'STUDY1', sampleId:'PATIENT1'}, {studyId:'STUDY1', sampleId:'PATIENT2'}]
                 );
             assert.equal(result, 50);
 
@@ -124,7 +142,8 @@ describe('MutationUtils', () => {
                 germlineMutationRate(
                     "PIK3CA",
                     germlineMutations.concat(somaticMutations),
-                    ['PATIENT1', 'PATIENT2'],
+                    geneticProfileIdToGeneticProfile,
+                    [{studyId:'STUDY1', sampleId:'PATIENT1'}, {studyId:'STUDY1', sampleId:'PATIENT2'}]
                 );
             assert.equal(result, 0);
 
@@ -133,7 +152,8 @@ describe('MutationUtils', () => {
                 germlineMutationRate(
                     "BRCA2",
                     germlineMutations,
-                    ['XXXX']
+                    geneticProfileIdToGeneticProfile,
+                    [{studyId:'STUDY1', sampleId:'XXXX'}]
                 );
             assert.equal(result, 0);
 
@@ -142,7 +162,8 @@ describe('MutationUtils', () => {
                 germlineMutationRate(
                     "NASDASFASG",
                     germlineMutations,
-                    ['PATIENT1', 'PATIENT2']
+                    geneticProfileIdToGeneticProfile,
+                    [{studyId:'STUDY1', sampleId:'PATIENT1'}, {studyId:'STUDY1', sampleId:'PATIENT2'}]
                 );
             assert.equal(result, 0);
         });
