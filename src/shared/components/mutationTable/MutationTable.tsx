@@ -37,7 +37,6 @@ import MutationCountCache from "shared/cache/MutationCountCache";
 import {IMobXApplicationDataStore} from "shared/lib/IMobXApplicationDataStore";
 import generalStyles from "./column/styles.module.scss";
 import classnames from 'classnames';
-import ClinicalTrialsColumnFormatter from "./column/ClinicalTrialsColumnFormatter";
 
 export interface IMutationTableProps {
     studyId?:string;
