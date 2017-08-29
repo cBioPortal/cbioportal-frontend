@@ -181,6 +181,7 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                                 <ResultsViewMutationTable
                                     sampleIdToTumorType={this.props.store.sampleIdToTumorType}
                                     discreteCNACache={this.props.discreteCNACache}
+                                    geneticProfileIdToGeneticProfile={this.props.store.geneticProfileIdToGeneticProfile.result}
                                     oncoKbEvidenceCache={this.props.oncoKbEvidenceCache}
                                     pubMedCache={this.props.pubMedCache}
                                     mutationCountCache={this.props.mutationCountCache}
