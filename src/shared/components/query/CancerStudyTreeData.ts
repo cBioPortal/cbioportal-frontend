@@ -50,7 +50,8 @@ export default class CancerStudyTreeData
 		studies = CancerStudyTreeData.sortNodes(studies);
 
 		// add virtual cohort category, and studies
-		const virtualCohortsName = "My Virtual Studies";
+		// disabled, for now
+		/*const virtualCohortsName = "My Virtual Studies";
 		const virtualCohortsCategory = {
 			clinicalTrialKeywords: '',
 			dedicatedColor: '',
@@ -69,7 +70,7 @@ export default class CancerStudyTreeData
 				cancerTypeId: virtualCohortsName
 			} as CancerStudy;
 			virtualCohortStudies.push(study);
-		}
+		}*/
 
 		// add priority categories
 		for (let name in priorityStudies)
@@ -83,8 +84,9 @@ export default class CancerStudyTreeData
 				cancerTypeId: name
 			});
 		}
-		cancerTypes = [virtualCohortsCategory].concat(this.priorityCategories).concat(this.rootCancerType, cancerTypes);
-		studies = virtualCohortStudies.concat(studies);
+		//cancerTypes = [virtualCohortsCategory].concat(this.priorityCategories).concat(this.rootCancerType, cancerTypes);
+		//studies = virtualCohortStudies.concat(studies);
+		cancerTypes = this.priorityCategories.concat(this.rootCancerType, cancerTypes);
 
 		// initialize lookups and metadata entries
 		for (nodes of [cancerTypes, studies])

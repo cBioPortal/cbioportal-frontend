@@ -1044,6 +1044,7 @@ export class QueryStore
 	@action setParamsFromQuerySession() {
 		const querySession:QuerySession|undefined = (window as any).QuerySession;
 		if (querySession) {
+			this.selectedStudyIds = querySession.getCancerStudyIds();
 			this._selectedProfileIds = querySession.getGeneticProfileIds();
 			this.zScoreThreshold = (querySession.getZScoreThreshold()+"") || "2.0";
 			this.rppaScoreThreshold = (querySession.getRppaScoreThreshold()+"") || "2.0";
