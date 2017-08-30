@@ -38,6 +38,7 @@ export class MutationMapperStore {
                 // and we will react when it changes to a new object.
                 private getMutationDataCache: ()=>MutationDataCache,
                 public geneticProfileIdToGeneticProfile:MobxPromise<{[geneticProfileId:string]:GeneticProfile}>,
+                public studyIdToStudy:MobxPromise<{[studyId:string]:CancerStudy}>,
                 public clinicalDataForSamples: MobxPromise<ClinicalData[]>,
                 public studiesForSamplesWithoutCancerTypeClinicalData: MobxPromise<CancerStudy[]>,
                 private samplesWithoutCancerTypeClinicalData: MobxPromise<Sample[]>,
