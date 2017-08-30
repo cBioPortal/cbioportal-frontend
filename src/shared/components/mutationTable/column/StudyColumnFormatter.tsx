@@ -26,7 +26,9 @@ export default class StudyColumnFormatter
                 <a href={getStudySummaryUrl(study.studyId)} target="_blank">
                     <TruncatedText
                         text={study.name}
-                        tooltip={<div style={{maxWidth: 300}}>{`${study.name}: ${study.description}`}</div>}
+                        tooltip={<div style={{maxWidth: 300}} dangerouslySetInnerHTML={{
+                            __html: `${study.name}: ${study.description}`
+                        }}/>}
                         maxLength={16}
                     />
                 </a>
