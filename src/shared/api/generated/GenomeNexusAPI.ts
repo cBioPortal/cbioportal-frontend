@@ -1,13 +1,176 @@
 import * as request from "superagent";
 
 type CallbackHandler = (err: any, res ? : request.Response) => void;
-export type MutationAssessor = any;
-export type ModelMap = {};
-export type IsoformOverride = any;
-export type ModelAndView = any;
-export type VariantAnnotation = any;
-export type Hotspot = any;
-export type TranscriptConsequence = any;
+export type MutationAssessor = {
+    'codonStartPosition': string
+
+        'cosmicCount': number
+
+        'functionalImpact': string
+
+        'functionalImpactScore': number
+
+        'hugoSymbol': string
+
+        'input': string
+
+        'mappingIssue': string
+
+        'msaGaps': number
+
+        'msaHeight': number
+
+        'msaLink': string
+
+        'pdbLink': string
+
+        'referenceGenomeVariant': string
+
+        'referenceGenomeVariantType': string
+
+        'refseqId': string
+
+        'refseqPosition': number
+
+        'refseqResidue': string
+
+        'snpCount': number
+
+        'uniprotId': string
+
+        'uniprotPosition': number
+
+        'uniprotResidue': string
+
+        'variant': string
+
+        'variantConservationScore': number
+
+        'variantSpecificityScore': number
+
+};
+export type GeneXref = {
+    'db_display_name': string
+
+        'dbname': string
+
+        'description': string
+
+        'display_id': string
+
+        'info_text': string
+
+        'info_types': string
+
+        'primary_id': string
+
+        'synonyms': Array < string >
+
+        'version': string
+
+};
+export type IsoformOverride = {
+    'ccdsId': string
+
+        'geneSymbol': string
+
+        'refseqId': string
+
+        'transcriptId': string
+
+};
+export type ModelAndView = {
+    'empty': boolean
+
+        'model': {}
+
+        'modelMap': {}
+
+        'reference': boolean
+
+        'view': View
+
+        'viewName': string
+
+};
+export type VariantAnnotation = {
+    'allele_string': string
+
+        'annotationJSON': string
+
+        'assembly_name': string
+
+        'end': number
+
+        'id': string
+
+        'most_severe_consequence': string
+
+        'seq_region_name': string
+
+        'start': number
+
+        'strand': number
+
+        'transcript_consequences': Array < TranscriptConsequence >
+
+        'variant': string
+
+};
+export type Hotspot = {
+    'geneId': string
+
+        'hugoSymbol': string
+
+        'proteinEnd': string
+
+        'proteinStart': string
+
+        'residue': string
+
+        'transcriptId': string
+
+};
+export type TranscriptConsequence = {
+    'amino_acids': string
+
+        'canonical': string
+
+        'codons': string
+
+        'consequence_terms': Array < string >
+
+        'gene_id': string
+
+        'gene_symbol': string
+
+        'hgnc_id': string
+
+        'hgvsc': string
+
+        'hgvsp': string
+
+        'polyphen_prediction': string
+
+        'polyphen_score': string
+
+        'protein_end': string
+
+        'protein_id': string
+
+        'protein_start': string
+
+        'refseq_transcript_ids': Array < string >
+
+        'sift_prediction': string
+
+        'sift_score': string
+
+        'transcript_id': string
+
+        'variant_allele': string
+
+};
 export type View = {
     'contentType': string
 
@@ -135,7 +298,7 @@ export default class GenomeNexusAPI {
         };
 
     getHotspotAnnotationURL(parameters: {
-        'variants': Array < string > ,
+        'variants': string,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -157,10 +320,10 @@ export default class GenomeNexusAPI {
      * Retrieves hotspot annotation for the provided list of variants
      * @method
      * @name GenomeNexusAPI#getHotspotAnnotation
-     * @param {array} variants - Comma separated list of variants. For example 7:g.140453136A>T,12:g.25398285C>A
+     * @param {string} variants - Comma separated list of variants. For example 7:g.140453136A>T,12:g.25398285C>A
      */
     getHotspotAnnotation(parameters: {
-            'variants': Array < string > ,
+            'variants': string,
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < Hotspot >
@@ -645,7 +808,7 @@ export default class GenomeNexusAPI {
         };
 
     getVariantAnnotationURL(parameters: {
-        'variants': Array < string > ,
+        'variants': string,
         'isoformOverrideSource' ? : string,
         'fields' ? : Array < string > ,
         $queryParameters ? : any
@@ -676,12 +839,12 @@ export default class GenomeNexusAPI {
      * Retrieves VEP annotation for the provided list of variants
      * @method
      * @name GenomeNexusAPI#getVariantAnnotation
-     * @param {array} variants - Comma separated list of variants. For example X:g.66937331T>A,17:g.41242962->GA
+     * @param {string} variants - Comma separated list of variants. For example X:g.66937331T>A,17:g.41242962->GA
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
      * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor
      */
     getVariantAnnotation(parameters: {
-            'variants': Array < string > ,
+            'variants': string,
             'isoformOverrideSource' ? : string,
             'fields' ? : Array < string > ,
             $queryParameters ? : any,
@@ -977,7 +1140,7 @@ export default class GenomeNexusAPI {
 
     getIsoformOverrideURL(parameters: {
         'source': string,
-        'transcriptIds': Array < string > ,
+        'transcriptIds': string,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -1002,11 +1165,11 @@ export default class GenomeNexusAPI {
      * @method
      * @name GenomeNexusAPI#getIsoformOverride
      * @param {string} source - Override source. For example uniprot.
-     * @param {array} transcriptIds - Comma separated list of transcript ids. For example ENST00000361125,ENST00000443649.
+     * @param {string} transcriptIds - Comma separated list of transcript ids. For example ENST00000361125,ENST00000443649.
      */
     getIsoformOverride(parameters: {
             'source': string,
-            'transcriptIds': Array < string > ,
+            'transcriptIds': string,
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < IsoformOverride >
@@ -1116,7 +1279,7 @@ export default class GenomeNexusAPI {
         };
 
     getMutationAssessorAnnotationURL(parameters: {
-        'variants': Array < string > ,
+        'variants': string,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -1138,10 +1301,10 @@ export default class GenomeNexusAPI {
      * Retrieves mutation assessor information for the provided list of variants
      * @method
      * @name GenomeNexusAPI#getMutationAssessorAnnotation
-     * @param {array} variants - Comma separated list of variants. For example 7:g.140453136A>T,12:g.25398285C>A
+     * @param {string} variants - Comma separated list of variants. For example 7:g.140453136A>T,12:g.25398285C>A
      */
     getMutationAssessorAnnotation(parameters: {
-            'variants': Array < string > ,
+            'variants': string,
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < MutationAssessor >
@@ -1162,6 +1325,70 @@ export default class GenomeNexusAPI {
 
                 if (parameters['variants'] === undefined) {
                     reject(new Error('Missing required  parameter: variants'));
+                    return;
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    getGeneXrefsURL(parameters: {
+        'accession': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/xrefs/{accession}';
+
+        path = path.replace('{accession}', parameters['accession'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Perform lookups of Ensembl identifiers and retrieve their external referenes in other databases
+     * @method
+     * @name GenomeNexusAPI#getGeneXrefs
+     * @param {string} accession - Ensembl gene accession. For example ENSG00000169083
+     */
+    getGeneXrefs(parameters: {
+            'accession': string,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < GeneXref >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/xrefs/{accession}';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                path = path.replace('{accession}', parameters['accession'] + '');
+
+                if (parameters['accession'] === undefined) {
+                    reject(new Error('Missing required  parameter: accession'));
                     return;
                 }
 

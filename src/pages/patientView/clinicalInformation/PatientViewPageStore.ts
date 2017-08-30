@@ -18,9 +18,9 @@ import request from 'superagent';
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
 import {getTissueImageCheckUrl, getDarwinUrl} from "../../../shared/api/urls";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
-import GenomeNexusCache from "shared/cache/GenomeNexusCache";
+import GenomeNexusEnrichmentCache from "shared/cache/GenomeNexusEnrichment";
 import PubMedCache from "shared/cache/PubMedCache";
-import {MutationAssessor} from "shared/model/GenomeNexus";
+import {MutationAssessor} from "shared/api/generated/GenomeNexusAPI";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {IHotspotData} from "shared/model/CancerHotspots";
 import {IMutSigData} from "shared/model/MutSig";
@@ -32,7 +32,7 @@ import CancerTypeCache from "shared/cache/CancerTypeCache";
 import MutationCountCache from "shared/cache/MutationCountCache";
 import AppConfig from "appConfig";
 import {
-    findGeneticProfileIdDiscrete, ONCOKB_DEFAULT, fetchOncoKbData, GENOME_NEXUS_DEFAULT, fetchGenomeNexusData, 
+    findGeneticProfileIdDiscrete, ONCOKB_DEFAULT, fetchOncoKbData, GENOME_NEXUS_DEFAULT,
     fetchCnaOncoKbData, indexHotspotData, mergeMutations, fetchHotspotsData, fetchMyCancerGenomeData, fetchCosmicData,
     fetchMutationData, fetchDiscreteCNAData, generateSampleIdToTumorTypeMap, findMutationGeneticProfileId,
     findUncalledMutationGeneticProfileId, mergeMutationsIncludingUncalled, fetchGisticData, fetchCopyNumberData,
@@ -452,14 +452,6 @@ export class PatientViewPageStore {
         }
     }, []);
 
-    readonly genomeNexusData = remoteData({
-        await: () => [
-            this.mutationData,
-            this.uncalledMutationData
-        ],
-        invoke: async() => fetchGenomeNexusData(this.mutationData, this.uncalledMutationData)
-    }, GENOME_NEXUS_DEFAULT);
-
     readonly oncoKbData = remoteData<IOncoKbData>({
         await: () => [
             this.mutationData,
@@ -596,8 +588,8 @@ export class PatientViewPageStore {
         return new OncoKbEvidenceCache();
     }
 
-    @cached get genomeNexusCache() {
-        return new GenomeNexusCache();
+    @cached get genomeNexusEnrichmentCache() {
+        return new GenomeNexusEnrichmentCache();
     }
 
     @cached get pubMedCache() {

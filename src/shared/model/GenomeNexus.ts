@@ -1,13 +1,5 @@
-
-export type MutationAssessor = {
-	"variant": string,
-	"aminoAcidVariant": string,
-	"functionalImpact": string,
-	"functionalImpactScore": number,
-	"hugoSymbol": string,
-	"proteinPosition": number	
-}
+import {MutationAssessor} from 'shared/api/generated/GenomeNexusAPI';
 
 export interface IGenomeNexusData {
-	mutation_assessor: {[id:string]: MutationAssessor}
+	mutation_assessor: {[id:string]: MutationAssessor|undefined}
 }

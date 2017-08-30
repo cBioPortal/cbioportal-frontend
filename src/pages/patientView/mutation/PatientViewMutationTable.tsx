@@ -49,7 +49,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             MutationTableColumnType.CHROMOSOME,
             MutationTableColumnType.PROTEIN_CHANGE,
             MutationTableColumnType.MUTATION_TYPE,
-            MutationTableColumnType.MUTATION_ASSESSOR,
+            MutationTableColumnType.FUNCTIONAL_CONSEQUENCE,
             MutationTableColumnType.COSMIC,
             MutationTableColumnType.TUMOR_ALLELE_FREQ,
             MutationTableColumnType.TUMORS
@@ -129,7 +129,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         this._columns[MutationTableColumnType.MRNA_EXPR].order = 182;
         this._columns[MutationTableColumnType.COHORT].order = 183;
         this._columns[MutationTableColumnType.COSMIC].order = 184;
-        this._columns[MutationTableColumnType.MUTATION_ASSESSOR].order = 190;
+        this._columns[MutationTableColumnType.FUNCTIONAL_CONSEQUENCE].order = 185;
 
         // exclusions
         this._columns[MutationTableColumnType.MRNA_EXPR].shouldExclude = ()=>{

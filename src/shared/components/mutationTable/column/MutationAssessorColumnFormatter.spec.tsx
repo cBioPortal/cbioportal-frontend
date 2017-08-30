@@ -1,5 +1,5 @@
-import MutationAssessorColumnFormatter from './MutationAssessorColumnFormatter';
-import {IColumnProps} from './MutationAssessorColumnFormatter';
+//import MutationAssessorColumnFormatter from './MutationAssessorColumnFormatter';
+//import {IColumnProps} from './MutationAssessorColumnFormatter';
 import styles from "./mutationAssessor.module.scss";
 import {initMutation} from "test/MutationMockUtils";
 import React from 'react';
@@ -72,12 +72,12 @@ describe('MutationAssessorColumnFormatter', () => {
         mutations.forEach((mutation) => {
             const data = [mutation];
 
-            const columnProps:IColumnProps = {
-                mutationData: data,
-            }
+            //const columnProps:IColumnProps = {
+            //    mutationData: data,
+            //}
 
-            components.push(mount(MutationAssessorColumnFormatter.renderFunction(columnProps)));
-            tooltips.push(mount(MutationAssessorColumnFormatter.getTooltipContent(columnProps)));
+            //components.push(mount(MutationAssessorColumnFormatter.renderFunction(columnProps)));
+            //tooltips.push(mount(MutationAssessorColumnFormatter.getTooltipContent(columnProps)));
         });
     });
 

@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
-import {MutationAssessor} from "shared/api/generated/GenomeNexusAPI";
+import {VariantAnnotation, MutationAssessor} from "shared/api/generated/GenomeNexusAPI";
 
 export function generateMutationAssessorQuery(data:Mutation)
 {
@@ -44,7 +44,65 @@ export function toMutationAssessorMap(data:Mutation[], response:MutationAssessor
         responseMap[mutationAssessor.variant] = mutationAssessor;
     });
 
-    const map:{[geneId:string]: MutationAssessor} = {};
+    const map:{[geneId:string]: MutationAssessor|undefined} = {};
+
+    _.each(data, function(mutation) {
+    	if (mutation.mutationType === "Missense_Mutation") {
+    		let hgvs:string = mutation.gene.chromosome + ":g." + mutation.startPosition +
+    			mutation.referenceAllele + ">" + mutation.variantAllele;
+    		map[mutation.entrezGeneId] = responseMap[hgvs];
+    	}
+        else {
+            map[mutation.entrezGeneId] = undefined;
+        }
+    });
+
+    return map;
+}
+
+export function generateGenomeNexusQuery(data:Mutation)
+{
+    let hgvs:string = "";
+    if (data.mutationType === "Missense_Mutation" 
+            && data.variantAllele.length == 1)
+    {
+        hgvs += data.gene.chromosome + ":g." + data.startPosition;
+        hgvs += data.referenceAllele + ">" + data.variantAllele;
+    }
+    return hgvs;
+}
+
+// transforms Mutation[] to array of genome nexus formatted queries 
+export function generateGenomeNexusQueryQueries(data:Mutation[])
+{
+    let genomeNexusQueries:string[] = [];
+    
+    for (var i in data)
+    {    
+        // only queries single-substitution missense mutations
+        if (data[i].mutationType === "Missense_Mutation" 
+        	&& data[i].variantAllele.length == 1)
+        {
+        	let hgvs:string = "";
+            hgvs += data[i].gene.chromosome + ":g." + data[i].startPosition;
+            hgvs += data[i].referenceAllele + ">" + data[i].variantAllele;
+            genomeNexusQueries.push(hgvs);
+        }        
+    }
+    
+    return genomeNexusQueries;
+}
+
+// creates map of entrezGeneId key to mutation assessor object response
+export function toGenomeNexusMap(data:Mutation[], response:VariantAnnotation[])
+{
+	const responseMap:{[geneId:string]: VariantAnnotation} = {};
+
+    _.each(response, function(variantAnnotation) {
+        responseMap[variantAnnotation.variant] = variantAnnotation;
+    });
+
+    const map:{[geneId:string]: VariantAnnotation|undefined} = {};
 
     _.each(data, function(mutation) {
     	if (mutation.mutationType === "Missense_Mutation") {

@@ -15,7 +15,7 @@ import GeneColumnFormatter from "./column/GeneColumnFormatter";
 import ChromosomeColumnFormatter from "./column/ChromosomeColumnFormatter";
 import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter";
 import MutationTypeColumnFormatter from "./column/MutationTypeColumnFormatter";
-import MutationAssessorColumnFormatter from "./column/MutationAssessorColumnFormatter";
+import FunctionalConsequenceColumnFormatter from "./column/FunctionalConsequenceColumnFormatter";
 import CosmicColumnFormatter from "./column/CosmicColumnFormatter";
 import MutationCountColumnFormatter from "./column/MutationCountColumnFormatter";
 import CancerTypeColumnFormatter from "./column/CancerTypeColumnFormatter";
@@ -31,7 +31,7 @@ import {IMutSigData} from "shared/model/MutSig";
 import {IGenomeNexusData} from "shared/model/GenomeNexus";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
-import GenomeNexusCache from "shared/cache/GenomeNexusCache";
+import GenomeNexusEnrichmentCache from "shared/cache/GenomeNexusEnrichment";
 import MrnaExprRankCache from "shared/cache/MrnaExprRankCache";
 import VariantCountCache from "shared/cache/VariantCountCache";
 import PubMedCache from "shared/cache/PubMedCache";
@@ -46,7 +46,7 @@ export interface IMutationTableProps {
     sampleIdToTumorType?: {[sampleId: string]: string}
     discreteCNACache?:DiscreteCNACache;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
-    genomeNexusCache?:GenomeNexusCache;
+    genomeNexusEnrichmentCache?:GenomeNexusEnrichmentCache;
     mrnaExprRankCache?:MrnaExprRankCache;
     variantCountCache?:VariantCountCache;
     pubMedCache?:PubMedCache
@@ -62,7 +62,6 @@ export interface IMutationTableProps {
     oncoKbData?: IOncoKbDataWrapper;
     civicGenes?: ICivicGene;
     civicVariants?: ICivicVariant;
-    genomeNexusData?:IGenomeNexusData;
     mrnaExprRankGeneticProfileId?:string;
     discreteCNAGeneticProfileId?:string;
     columns?:MutationTableColumnType[];
@@ -93,6 +92,7 @@ export enum MutationTableColumnType {
     TUMOR_ALLELE_FREQ,
     NORMAL_ALLELE_FREQ,
     MUTATION_ASSESSOR,
+    FUNCTIONAL_CONSEQUENCE,
     ANNOTATION,
     COSMIC,
     COPY_NUM,
@@ -381,28 +381,12 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 MutationTypeColumnFormatter.getDisplayValue(d).toUpperCase().indexOf(filterStringUpper) > -1
         };
 
-        this._columns[MutationTableColumnType.MUTATION_ASSESSOR] = {
-            name: "Mutation Assessor",
-            headerRender: (name: string) => <span style={{display:'inline-block', maxWidth:60}}>{name}</span>,
-            render: (d:Mutation[])=>MutationAssessorColumnFormatter.renderFunction({
-                mutationData: d,
-                genomeNexusData: this.props.genomeNexusData,
-                genomeNexusCache: this.props.genomeNexusCache
-            }),
-            download: (d:Mutation[])=>MutationAssessorColumnFormatter.getTextValue({
-                mutationData: d, genomeNexusData: this.props.genomeNexusData, genomeNexusCache: this.props.genomeNexusCache
-            }),
-            sortBy:(d:Mutation[])=>MutationAssessorColumnFormatter.getSortValue({
-                mutationData: d,
-                genomeNexusData: this.props.genomeNexusData,
-                genomeNexusCache: this.props.genomeNexusCache
-            }),
-            filter:(d:Mutation[], filterString:string, filterStringUpper:string) =>
-                MutationAssessorColumnFormatter.filterValue({
-                mutationData: d,
-                genomeNexusData: this.props.genomeNexusData,
-                genomeNexusCache: this.props.genomeNexusCache
-            }).toUpperCase().indexOf(filterStringUpper) > -1,
+        this._columns[MutationTableColumnType.FUNCTIONAL_CONSEQUENCE] = {
+            name:"Functional Consequence",
+            render:(d:Mutation[])=>(this.props.genomeNexusEnrichmentCache
+                ? FunctionalConsequenceColumnFormatter.renderFunction(d, this.props.genomeNexusEnrichmentCache as GenomeNexusEnrichmentCache)
+                : (<span></span>)),
+            headerRender: (name: string) => <span style={{display:'inline-block', maxWidth:30}}>{name}</span>,
             visible: true
         };
 
