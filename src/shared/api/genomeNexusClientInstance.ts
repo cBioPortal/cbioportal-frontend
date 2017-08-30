@@ -1,5 +1,6 @@
 import GenomeNexusAPI from "./generated/GenomeNexusAPI";
+import {getGenomeNexusApiUrl} from "./urls";
 
-const client = new GenomeNexusAPI("https://genome-nexus-mutation-assessor.herokuapp.com");
+const client = new GenomeNexusAPI(getGenomeNexusApiUrl());
 
 export default client;

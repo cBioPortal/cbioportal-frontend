@@ -4,6 +4,7 @@ import 'rc-tooltip/assets/bootstrap_white.css';
 import GenomeNexusCache, {GenomeNexusCacheDataType} from "shared/cache/GenomeNexusEnrichment";
 import {Mutation, DiscreteCopyNumberData} from "shared/api/generated/CBioPortalAPI";
 import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
+import MutationAssessor from "shared/components/annotation/genomeNexus/MutationAssessor";
 
 export default class FunctionalConsequenceColumnFormatter {
 
@@ -32,7 +33,7 @@ export default class FunctionalConsequenceColumnFormatter {
         } else if (genomeNexusData.data === null) {
             status = TableCellStatus.NA;
         } else {
-            return genomeNexusData.data.mutation_assessor.annotation.functionalImpact;
+            return <MutationAssessor mutationAssessor={genomeNexusData.data.mutation_assessor.annotation} />;
         }
         if (status !== null) {
             return (
