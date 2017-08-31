@@ -1,0 +1,21 @@
+.sift-icon-image {
+  width: 14px;
+  height: 14px;
+  line-height: 14px;
+  vertical-align: middle;
+  display: block !important;
+  background-position: 0 0;
+  margin: 5px 0 2px 6px;
+}
+.deleterious {
+  background-position:  -1px -3px;
+}
+.deleterious_low_confidence {
+  background-position: -18px -3px;
+}
+.tolerated {
+  background-position: -105px -3px;
+}
+.tolerated_low_confidence {
+  background-position: -123px -3px;
+}

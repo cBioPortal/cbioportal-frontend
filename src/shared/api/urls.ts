@@ -62,6 +62,10 @@ export function getOncoKbApiUrl() {
     }
 
 }
+export function getGenomeNexusApiUrl() {
+    let url = (window as any).genomeNexusApiUrl;
+    return url;
+}
 export function getPdbAnnotationApiUrl() {
     return 'https://cbioportal.mskcc.org/pdb-annotation';
 }

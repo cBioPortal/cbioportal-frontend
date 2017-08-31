@@ -19,6 +19,7 @@ import {
 } from "shared/api/generated/CBioPortalAPIInternal";
 import oncokbClient from "shared/api/oncokbClientInstance";
 import civicClient from "shared/api/civicClientInstance";
+import genomeNexusClient from "shared/api/genomeNexusClientInstance";
 import {
     generateIdToIndicatorMap, generateQueryVariant, generateEvidenceQuery
 } from "shared/lib/OncoKbUtils";
@@ -47,6 +48,10 @@ export const ONCOKB_DEFAULT: IOncoKbData = {
 export const HOTSPOTS_DEFAULT = {
     single: [],
     clustered: []
+};
+
+export const GENOME_NEXUS_DEFAULT = {
+    mutation_assessor: {}
 };
 
 export type MutationIdGenerator = (mutation:Mutation) => string;
@@ -402,7 +407,7 @@ export async function fetchOncoKbData(sampleIdToTumorType:{[sampleId: string]: s
                                       mutationData:MobxPromise<Mutation[]>,
                                       uncalledMutationData?:MobxPromise<Mutation[]>,
                                       client: OncoKbAPI = oncokbClient)
-{
+{   
     const mutationDataResult = concatMutationData(mutationData, uncalledMutationData);
 
     if (mutationDataResult.length === 0) {
@@ -417,7 +422,7 @@ export async function fetchOncoKbData(sampleIdToTumorType:{[sampleId: string]: s
             mutation.proteinPosStart,
             mutation.proteinPosEnd);
     }), "id");
-
+ 
     return queryOncoKbData(queryVariants, sampleIdToTumorType, client);
 }
 
