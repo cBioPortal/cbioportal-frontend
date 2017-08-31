@@ -15,7 +15,7 @@ import GeneColumnFormatter from "./column/GeneColumnFormatter";
 import ChromosomeColumnFormatter from "./column/ChromosomeColumnFormatter";
 import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter";
 import MutationTypeColumnFormatter from "./column/MutationTypeColumnFormatter";
-import FunctionalConsequenceColumnFormatter from "./column/FunctionalConsequenceColumnFormatter";
+import FunctionalImpactColumnFormatter from "./column/FunctionalImpactColumnFormatter";
 import CosmicColumnFormatter from "./column/CosmicColumnFormatter";
 import MutationCountColumnFormatter from "./column/MutationCountColumnFormatter";
 import CancerTypeColumnFormatter from "./column/CancerTypeColumnFormatter";
@@ -92,7 +92,7 @@ export enum MutationTableColumnType {
     TUMOR_ALLELE_FREQ,
     NORMAL_ALLELE_FREQ,
     MUTATION_ASSESSOR,
-    FUNCTIONAL_CONSEQUENCE,
+    FUNCTIONAL_IMPACT,
     ANNOTATION,
     COSMIC,
     COPY_NUM,
@@ -381,12 +381,12 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 MutationTypeColumnFormatter.getDisplayValue(d).toUpperCase().indexOf(filterStringUpper) > -1
         };
 
-        this._columns[MutationTableColumnType.FUNCTIONAL_CONSEQUENCE] = {
-            name:"Functional Consequence",
+        this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT] = {
+            name:"Functional Impact",
             render:(d:Mutation[])=>(this.props.genomeNexusEnrichmentCache
-                ? FunctionalConsequenceColumnFormatter.renderFunction(d, this.props.genomeNexusEnrichmentCache as GenomeNexusEnrichmentCache)
+                ? FunctionalImpactColumnFormatter.renderFunction(d, this.props.genomeNexusEnrichmentCache as GenomeNexusEnrichmentCache)
                 : (<span></span>)),
-            headerRender: (name: string) => <span style={{display:'inline-block', maxWidth:30}}>{name}</span>,
+            // headerRender: (name: string) => <span style={{display:'inline-block', maxWidth:60}}>{name}</span>,
             visible: true
         };
 

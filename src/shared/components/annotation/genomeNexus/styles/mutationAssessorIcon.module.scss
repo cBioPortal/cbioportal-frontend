@@ -1,19 +1,21 @@
 .mutationassessor-icon-image {
-  width: 29px;
-  height: 29px;
-  line-height: 29px;
+  width: 14px;
+  height: 14px;
+  line-height: 14px;
+  vertical-align: middle;
   display: block !important;
   background-position: 0 0;
+  margin: 5px 0 2px 6px;
 }
-
-.high {
-  background-position: -5px -0px;
-}
-
-.medium {
-  background-position: -34px -0px;
-}
-
 .low {
-  background-position: -34px -34px;
+  background-position:  -1px -3px;
+}
+.medium {
+  background-position: -18px -3px;
+}
+.high {
+  background-position: -105px -3px;
+}
+.neutral {
+  background-position: -123px -3px;
 }

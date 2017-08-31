@@ -3,7 +3,7 @@ import {observer} from "mobx-react";
 import {Circle} from "better-react-spinkit";
 import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import annotationStyles from "./../styles/annotation.module.scss";
-import styles from "./../../mutationTable/column/mutationAssessor.module.scss";
+import tooltipStyles from "./styles/mutationAssessorTooltip.module.scss";
 import mutationAssessorIconStyles from "./styles/mutationAssessorIcon.module.scss";
 import {observable} from "mobx";
 import {GenomeNexusCacheDataType} from "shared/cache/GenomeNexusEnrichment";
@@ -68,72 +68,58 @@ export default class MutationAssessor extends React.Component<IMutationAssessorP
 
     private tooltipContent() {
         const maData = this.props.mutationAssessor;
-        let xVar:any = "";
-        let msa:any = "";
-        let pdb:any = "";
-        let impact:any = "";
-
         const xVarLink = MutationAssessor.maLink(`http://mutationassessor.org/r3/?cm=var&var=${maData.input}`);
         const msaLink = MutationAssessor.maLink(maData.msaLink);
         const pdbLink = MutationAssessor.maLink(maData.pdbLink);
 
-        if (maData.functionalImpactScore)
-        {
-            impact = (
-                <div>
-                    Predicted impact score: <b>{maData.functionalImpactScore.toFixed(2)}</b>
-                </div>
-            );
-        }
+		const impact = maData.functionalImpact? (
+			<div>
+				<table>
+					<tr><td style={{paddingRight:'5px'}}>Impact</td><td><span className={tooltipStyles[`ma-${maData.functionalImpact}`]}>{maData.functionalImpact}</span></td></tr>
+					{maData.functionalImpactScore? <tr><td style={{paddingRight:'5px'}}>Score</td><td><b>{maData.functionalImpactScore.toFixed(2)}</b></td></tr> : null}
+				</table>
+			</div>
+		) : null;
 
-        if (xVarLink)
-        {
-            xVar = (
-                <div className={styles['mutation-assessor-link']}>
-                    <a href={xVarLink} target='_blank'>
-                        <img
-                            height='15'
-                            width='19'
-                            src={require("./../../mutationTable/column/mutationAssessor.png")}
-                            className={styles['mutation-assessor-main-img']}
-                            alt='Mutation Assessor'
-                        />
-                        Go to Mutation Assessor
-                    </a>
-                </div>
-            );
-        }
+        const xVar = xVarLink? (
+			<div className={tooltipStyles['mutation-assessor-link']}>
+				<a href={xVarLink} target='_blank'>
+					<img
+						height='15'
+						width='19'
+						src={require("./../../mutationTable/column/mutationAssessor.png")}
+						className={tooltipStyles['mutation-assessor-main-img']}
+						alt='Mutation Assessor'
+					/>
+					Go to Mutation Assessor
+				</a>
+			</div>
+		) : null;
 
-        if (msaLink)
-        {
-            msa = (
-                <div className={styles['mutation-assessor-link']}>
-                    <a href={msaLink} target='_blank'>
-                        <span className={`${styles['ma-icon']} ${styles['ma-msa-icon']}`}>msa</span>
-                        Multiple Sequence Alignment
-                    </a>
-                </div>
-            );
-        }
+        const msa = msaLink? (
+			<div className={tooltipStyles['mutation-assessor-link']}>
+				<a href={msaLink} target='_blank'>
+					<span className={`${tooltipStyles['ma-icon']} ${tooltipStyles['ma-msa-icon']}`}>msa</span>
+					Multiple Sequence Alignment
+				</a>
+			</div>
+		) : null;
 
-        if (pdbLink)
-        {
-            pdb = (
-                <div className={styles['mutation-assessor-link']}>
-                    <a href={pdbLink} target='_blank'>
-                        <span className={`${styles['ma-icon']} ${styles['ma-3d-icon']}`}>3D</span>
-                        Mutation Assessor 3D View
-                    </a>
-                </div>
-            );
-        }
+        const pdb = pdbLink? (
+			<div className={tooltipStyles['mutation-assessor-link']}>
+				<a href={pdbLink} target='_blank'>
+					<span className={`${tooltipStyles['ma-icon']} ${tooltipStyles['ma-3d-icon']}`}>3D</span>
+					Mutation Assessor 3D View
+				</a>
+			</div>
+		) : null;
 
         return (
             <span>
                 {impact}
-                {xVar}
                 {msa}
                 {pdb}
+                {xVar}
             </span>
         );
     }

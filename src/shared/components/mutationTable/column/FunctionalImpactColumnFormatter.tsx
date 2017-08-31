@@ -6,13 +6,13 @@ import {Mutation, DiscreteCopyNumberData} from "shared/api/generated/CBioPortalA
 import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
 import MutationAssessor from "shared/components/annotation/genomeNexus/MutationAssessor";
 
-export default class FunctionalConsequenceColumnFormatter {
+export default class FunctionalImpactColumnFormatter {
 
     public static renderFunction(data:Mutation[], genomeNexusCache:GenomeNexusCache) {
-        const genomeNexusData = FunctionalConsequenceColumnFormatter.getGenomeNexusData(data, genomeNexusCache);
+        const genomeNexusData = FunctionalImpactColumnFormatter.getGenomeNexusData(data, genomeNexusCache);
         return (
                 <div>
-                    {FunctionalConsequenceColumnFormatter.makeFuncionalConsequenceViz(genomeNexusData)}
+                    {FunctionalImpactColumnFormatter.makeFuncionalConsequenceViz(genomeNexusData)}
                 </div>
         );
     };
