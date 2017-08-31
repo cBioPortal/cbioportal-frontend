@@ -1,5 +1,5 @@
 import AlleleFreqColumnFormatter from './AlleleFreqColumnFormatter';
-import {GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX, GENETIC_PROFILE_MUTATIONS_SUFFIX} from '../../../../shared/constants';
+import {MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX, MOLECULAR_PROFILE_MUTATIONS_SUFFIX} from '../../../../shared/constants';
 import React from 'react';
 import { assert } from 'chai';
 import { shallow, mount } from 'enzyme';
@@ -17,7 +17,7 @@ describe('AlleleFreqColumnFormatter', () => {
 
     it('uncalled mutations component w/o reads should have 0 opacity', ()=> {
         const uncalledMutationWithoutSupport = {
-            geneticProfileId:`study_${GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX}`,
+            molecularProfileId:`study_${MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX}`,
             tumorAltCount:0,
             tumorRefCount:10
         };
@@ -26,7 +26,7 @@ describe('AlleleFreqColumnFormatter', () => {
     });
     it('uncalled mutations component w supporting reads should have >0 and <1 opacity', ()=> {
         const uncalledMutationWithSupport = {
-            geneticProfileId:`study_${GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX}`,
+            molecularProfileId:`study_${MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX}`,
             tumorAltCount:1,
             tumorRefCount:10
         };
@@ -35,7 +35,7 @@ describe('AlleleFreqColumnFormatter', () => {
     });
     it('called mutations component w supporting reads should have 1 opacity', ()=> {
         const calledMutation = {
-            geneticProfileId:`study_${GENETIC_PROFILE_MUTATIONS_SUFFIX}`,
+            molecularProfileId:`study_${MOLECULAR_PROFILE_MUTATIONS_SUFFIX}`,
             tumorAltCount:1,
             tumorRefCount:10
         };
@@ -45,7 +45,7 @@ describe('AlleleFreqColumnFormatter', () => {
     it('sampleElement should have the text (uncalled)', ()=> {
         const uncalledMutationWithSupport = {
             sampleId:'1',
-            geneticProfileId:`study_${GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX}`,
+            molecularProfileId:`study_${MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX}`,
             tumorAltCount:1,
             tumorRefCount:10
         };

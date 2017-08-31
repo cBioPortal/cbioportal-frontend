@@ -1,6 +1,6 @@
 import * as _ from "lodash";
 import {
-    Mutation, MutationFilter, Gene, ClinicalData, CancerStudy, Sample, GeneticProfile, SampleIdentifier
+    Mutation, MutationFilter, Gene, ClinicalData, CancerStudy, Sample, MolecularProfile, SampleIdentifier
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {computed, observable} from "mobx";
@@ -37,7 +37,7 @@ export class MutationMapperStore {
                 // (which will be done in the getter thats passed in here) so that the cache itself is observable
                 // and we will react when it changes to a new object.
                 private getMutationDataCache: ()=>MutationDataCache,
-                public geneticProfileIdToGeneticProfile:MobxPromise<{[geneticProfileId:string]:GeneticProfile}>,
+                public molecularProfileIdToMolecularProfile:MobxPromise<{[molecularProfileId:string]:MolecularProfile}>,
                 public clinicalDataForSamples: MobxPromise<ClinicalData[]>,
                 public studiesForSamplesWithoutCancerTypeClinicalData: MobxPromise<CancerStudy[]>,
                 private samplesWithoutCancerTypeClinicalData: MobxPromise<Sample[]>,
