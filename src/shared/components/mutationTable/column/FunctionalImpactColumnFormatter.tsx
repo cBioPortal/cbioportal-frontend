@@ -5,6 +5,7 @@ import GenomeNexusCache, {GenomeNexusCacheDataType} from "shared/cache/GenomeNex
 import {Mutation, DiscreteCopyNumberData} from "shared/api/generated/CBioPortalAPI";
 import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
 import MutationAssessor from "shared/components/annotation/genomeNexus/MutationAssessor";
+import Sift from "shared/components/annotation/genomeNexus/Sift";
 
 export default class FunctionalImpactColumnFormatter {
 
@@ -12,7 +13,7 @@ export default class FunctionalImpactColumnFormatter {
         const genomeNexusData = FunctionalImpactColumnFormatter.getGenomeNexusData(data, genomeNexusCache);
         return (
                 <div>
-                    {FunctionalImpactColumnFormatter.makeFuncionalConsequenceViz(genomeNexusData)}
+                    {FunctionalImpactColumnFormatter.makeFuncionalImpactViz(genomeNexusData)}
                 </div>
         );
     };
@@ -24,7 +25,7 @@ export default class FunctionalImpactColumnFormatter {
         return cache.get(data[0]);
     }
 
-    private static makeFuncionalConsequenceViz(genomeNexusData:GenomeNexusCacheDataType | null) {
+    private static makeFuncionalImpactViz(genomeNexusData:GenomeNexusCacheDataType | null) {
         let status:TableCellStatus | null = null;
         if (genomeNexusData === null) {
             status = TableCellStatus.LOADING;
@@ -33,7 +34,13 @@ export default class FunctionalImpactColumnFormatter {
         } else if (genomeNexusData.data === null) {
             status = TableCellStatus.NA;
         } else {
-            return <MutationAssessor mutationAssessor={genomeNexusData.data.mutation_assessor.annotation} />;
+            // TODO: handle multiple transcripts of SIFT instead of just picking first one
+            return (
+                <div>
+                    <MutationAssessor mutationAssessor={genomeNexusData.data.mutation_assessor.annotation} />
+                    <Sift siftScore={parseInt(genomeNexusData.data.transcript_consequences[0].sift_score)} siftPrediction={genomeNexusData.data.transcript_consequences[0].sift_prediction} />
+                </div>
+            );
         }
         if (status !== null) {
             return (

@@ -1,11 +1,8 @@
 import * as React from "react";
-import {observer} from "mobx-react";
-import {Circle} from "better-react-spinkit";
 import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import annotationStyles from "./../styles/annotation.module.scss";
 import tooltipStyles from "./styles/mutationAssessorTooltip.module.scss";
 import mutationAssessorIconStyles from "./styles/mutationAssessorIcon.module.scss";
-import {observable} from "mobx";
 import {GenomeNexusCacheDataType} from "shared/cache/GenomeNexusEnrichment";
 import {MutationAssessor as MutationAssessorData} from 'shared/api/generated/GenomeNexusAPI';
 
@@ -74,9 +71,9 @@ export default class MutationAssessor extends React.Component<IMutationAssessorP
 
 		const impact = maData.functionalImpact? (
 			<div>
-				<table>
-					<tr><td style={{paddingRight:'5px'}}>Impact</td><td><span className={tooltipStyles[`ma-${maData.functionalImpact}`]}>{maData.functionalImpact}</span></td></tr>
-					{maData.functionalImpactScore? <tr><td style={{paddingRight:'5px'}}>Score</td><td><b>{maData.functionalImpactScore.toFixed(2)}</b></td></tr> : null}
+				<table className={tooltipStyles['ma-tooltip-table']}>
+					<tr><td>Impact</td><td><span className={tooltipStyles[`ma-${maData.functionalImpact}`]}>{maData.functionalImpact}</span></td></tr>
+					{maData.functionalImpactScore? <tr><td>Score</td><td><b>{maData.functionalImpactScore.toFixed(2)}</b></td></tr> : null}
 				</table>
 			</div>
 		) : null;
