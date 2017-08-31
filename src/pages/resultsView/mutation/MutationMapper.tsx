@@ -82,7 +82,7 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
             return (
                 <MutationRateSummary
                     hugoGeneSymbol={this.props.store.gene.result.hugoGeneSymbol}
-                    geneticProfileIdToGeneticProfile={this.props.store.geneticProfileIdToGeneticProfile}
+                    molecularProfileIdToMolecularProfile={this.props.store.molecularProfileIdToMolecularProfile}
                     mutations={this.props.store.mutationData.result}
                     samples={this.props.store.samples.result!}
                     germlineConsentedSamples={this.props.store.germlineConsentedSamples}
@@ -181,7 +181,7 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                                 <ResultsViewMutationTable
                                     sampleIdToTumorType={this.props.store.sampleIdToTumorType}
                                     discreteCNACache={this.props.discreteCNACache}
-                                    geneticProfileIdToGeneticProfile={this.props.store.geneticProfileIdToGeneticProfile.result}
+                                    molecularProfileIdToMolecularProfile={this.props.store.molecularProfileIdToMolecularProfile.result}
                                     oncoKbEvidenceCache={this.props.oncoKbEvidenceCache}
                                     pubMedCache={this.props.pubMedCache}
                                     mutationCountCache={this.props.mutationCountCache}

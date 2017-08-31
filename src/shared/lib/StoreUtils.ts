@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import request from "superagent";
 import Response = request.Response;
 import {
-    default as CBioPortalAPI, GeneticProfile, Mutation, MutationFilter, DiscreteCopyNumberData,
+    default as CBioPortalAPI, MolecularProfile, Mutation, MutationFilter, DiscreteCopyNumberData,
     DiscreteCopyNumberFilter, ClinicalData, Sample, CancerStudy, CopyNumberCountIdentifier,
     ClinicalDataSingleStudyFilter, ClinicalDataMultiStudyFilter
 } from "shared/api/generated/CBioPortalAPI";
@@ -37,7 +37,7 @@ import {IMyCancerGenomeData, IMyCancerGenome} from "shared/model/MyCancerGenome"
 import {IHotspotData, ICancerHotspotData} from "shared/model/CancerHotspots";
 import {ICivicGeneData, ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
 import CancerHotspotsAPI from "shared/api/generated/CancerHotspotsAPI";
-import {GENETIC_PROFILE_MUTATIONS_SUFFIX, GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
+import {MOLECULAR_PROFILE_MUTATIONS_SUFFIX, MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
 
 export const ONCOKB_DEFAULT: IOncoKbData = {
     sampleToTumorMap : {},
@@ -57,12 +57,12 @@ export interface IDataQueryFilter {
 }
 
 export async function fetchMutationData(mutationFilter:MutationFilter,
-                                        geneticProfileId?:string,
+                                        molecularProfileId?:string,
                                         client:CBioPortalAPI = defaultClient)
 {
-    if (geneticProfileId) {
-        return await client.fetchMutationsInGeneticProfileUsingPOST({
-            geneticProfileId,
+    if (molecularProfileId) {
+        return await client.fetchMutationsInMolecularProfileUsingPOST({
+            molecularProfileId,
             mutationFilter,
             projection: "DETAILED"
         });
@@ -371,7 +371,7 @@ export async function fetchGisticData(studyId: string, client:CBioPortalAPIInter
 }
 
 export async function fetchCopyNumberData(discreteCNAData:MobxPromise<DiscreteCopyNumberData[]>,
-                                          geneticProfileIdDiscrete:MobxPromise<string>,
+                                          molecularProfileIdDiscrete:MobxPromise<string>,
                                           client:CBioPortalAPI = defaultClient)
 {
     const copyNumberCountIdentifiers: CopyNumberCountIdentifier[] = discreteCNAData.result ?
@@ -382,9 +382,9 @@ export async function fetchCopyNumberData(discreteCNAData:MobxPromise<DiscreteCo
             };
         }) : [];
 
-    if (geneticProfileIdDiscrete.result && copyNumberCountIdentifiers.length > 0) {
+    if (molecularProfileIdDiscrete.result && copyNumberCountIdentifiers.length > 0) {
         return await client.fetchCopyNumberCountsUsingPOST({
-            geneticProfileId: geneticProfileIdDiscrete.result,
+            molecularProfileId: molecularProfileIdDiscrete.result,
             copyNumberCountIdentifiers
         });
     } else {
@@ -521,77 +521,77 @@ export async function fetchCivicVariants(civicGenes: ICivicGene,
 }
 
 export async function fetchDiscreteCNAData(discreteCopyNumberFilter:DiscreteCopyNumberFilter,
-                                           geneticProfileIdDiscrete:MobxPromise<string>,
+                                           molecularProfileIdDiscrete:MobxPromise<string>,
                                            client:CBioPortalAPI = defaultClient)
 {
-    if (geneticProfileIdDiscrete.isComplete && geneticProfileIdDiscrete.result) {
-        return await client.fetchDiscreteCopyNumbersInGeneticProfileUsingPOST({
+    if (molecularProfileIdDiscrete.isComplete && molecularProfileIdDiscrete.result) {
+        return await client.fetchDiscreteCopyNumbersInMolecularProfileUsingPOST({
             projection: 'DETAILED',
             discreteCopyNumberFilter,
-            geneticProfileId: geneticProfileIdDiscrete.result
+            molecularProfileId: molecularProfileIdDiscrete.result
         });
     } else {
         return [];
     }
 }
 
-export function findGeneticProfileIdDiscrete(geneticProfilesInStudy:MobxPromise<GeneticProfile[]>)
+export function findMolecularProfileIdDiscrete(molecularProfilesInStudy:MobxPromise<MolecularProfile[]>)
 {
-    if (!geneticProfilesInStudy.result) {
+    if (!molecularProfilesInStudy.result) {
         return undefined;
     }
 
-    const profile = geneticProfilesInStudy.result.find((p: GeneticProfile) => {
+    const profile = molecularProfilesInStudy.result.find((p: MolecularProfile) => {
         return p.datatype === 'DISCRETE';
     });
 
-    return profile ? profile.geneticProfileId : undefined;
+    return profile ? profile.molecularProfileId : undefined;
 }
 
-export function isMutationProfile(profile:GeneticProfile):boolean {
-    return profile.geneticAlterationType === "MUTATION_EXTENDED";
+export function isMutationProfile(profile:MolecularProfile):boolean {
+    return profile.molecularAlterationType === "MUTATION_EXTENDED";
 }
 
-export function findMutationGeneticProfileId(geneticProfilesInStudy: MobxPromise<GeneticProfile[]>,
+export function findMutationMolecularProfileId(molecularProfilesInStudy: MobxPromise<MolecularProfile[]>,
                                              studyId:string,
-                                             suffix:string = GENETIC_PROFILE_MUTATIONS_SUFFIX)
+                                             suffix:string = MOLECULAR_PROFILE_MUTATIONS_SUFFIX)
 {
-    if (!geneticProfilesInStudy.result) {
+    if (!molecularProfilesInStudy.result) {
         return undefined;
     }
 
-    const profile = geneticProfilesInStudy.result.find((p: GeneticProfile) => {
-        return p.geneticProfileId === `${studyId}${suffix}`;
+    const profile = molecularProfilesInStudy.result.find((p: MolecularProfile) => {
+        return p.molecularProfileId === `${studyId}${suffix}`;
     });
 
-    return profile ? profile.geneticProfileId : undefined;
+    return profile ? profile.molecularProfileId : undefined;
 }
 
-export function findUncalledMutationGeneticProfileId(geneticProfilesInStudy: MobxPromise<GeneticProfile[]>,
+export function findUncalledMutationMolecularProfileId(molecularProfilesInStudy: MobxPromise<MolecularProfile[]>,
                                                      studyId:string,
-                                                     suffix:string = GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX)
+                                                     suffix:string = MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX)
 {
-    return findMutationGeneticProfileId(geneticProfilesInStudy, studyId, suffix);
+    return findMutationMolecularProfileId(molecularProfilesInStudy, studyId, suffix);
 }
 
-export function findMrnaRankGeneticProfileId(geneticProfilesInStudy: MobxPromise<GeneticProfile[]>)
+export function findMrnaRankMolecularProfileId(molecularProfilesInStudy: MobxPromise<MolecularProfile[]>)
 {
-    if (!geneticProfilesInStudy.result) {
+    if (!molecularProfilesInStudy.result) {
         return null;
     }
 
     const regex1 = /^.+rna_seq.*_zscores$/; // We prefer profiles that look like this
     const regex2 = /^.*_zscores$/; // If none of the above are available, we'll look for ones like this
-    const preferredProfile: (GeneticProfile | undefined) = geneticProfilesInStudy.result.find(
-        (gp: GeneticProfile) => regex1.test(gp.geneticProfileId.toLowerCase()));
+    const preferredProfile: (MolecularProfile | undefined) = molecularProfilesInStudy.result.find(
+        (gp: MolecularProfile) => regex1.test(gp.molecularProfileId.toLowerCase()));
 
     if (preferredProfile) {
-        return preferredProfile.geneticProfileId;
+        return preferredProfile.molecularProfileId;
     } else {
-        const fallbackProfile: (GeneticProfile | undefined) = geneticProfilesInStudy.result.find(
-            (gp: GeneticProfile) => regex2.test(gp.geneticProfileId.toLowerCase()));
+        const fallbackProfile: (MolecularProfile | undefined) = molecularProfilesInStudy.result.find(
+            (gp: MolecularProfile) => regex2.test(gp.molecularProfileId.toLowerCase()));
 
-        return fallbackProfile ? fallbackProfile.geneticProfileId : null;
+        return fallbackProfile ? fallbackProfile.molecularProfileId : null;
     }
 }
 

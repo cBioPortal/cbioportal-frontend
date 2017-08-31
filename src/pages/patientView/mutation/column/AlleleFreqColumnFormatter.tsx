@@ -12,12 +12,12 @@ export default class AlleleFreqColumnFormatter {
     static maxBarHeight = 12;
     static indexToBarLeft = (n:number) => n*(AlleleFreqColumnFormatter.barWidth + AlleleFreqColumnFormatter.barSpacing);
 
-    public static getComponentForSampleArgs<T extends {tumorAltCount:number,geneticProfileId:string}>(mutation:T) {
+    public static getComponentForSampleArgs<T extends {tumorAltCount:number,molecularProfileId:string}>(mutation:T) {
         const altReads = mutation.tumorAltCount;
 
         let opacity: number = 1;
         let extraTooltipText: string = '';
-        if (isUncalled(mutation.geneticProfileId)) {
+        if (isUncalled(mutation.molecularProfileId)) {
             if (altReads > 0) {
                 opacity = 0.1;
                 extraTooltipText = "Mutation has supporting reads, but wasn't called";
@@ -32,7 +32,7 @@ export default class AlleleFreqColumnFormatter {
         };
     }
 
-    public static convertMutationToSampleElement<T extends {sampleId:string, tumorRefCount:number, tumorAltCount:number, geneticProfileId:string}>(mutation:T, color:string, barX:number, sampleComponent:any) {
+    public static convertMutationToSampleElement<T extends {sampleId:string, tumorRefCount:number, tumorAltCount:number, molecularProfileId:string}>(mutation:T, color:string, barX:number, sampleComponent:any) {
             const altReads = mutation.tumorAltCount;
             const refReads = mutation.tumorRefCount;
             if ((altReads < 0) || (refReads < 0)) {
@@ -45,7 +45,7 @@ export default class AlleleFreqColumnFormatter {
 
             const bar = (<rect x={barX} y={barY} width={AlleleFreqColumnFormatter.barWidth} height={barHeight} fill={color}/>);
 
-            const variantReadText:string = `${isUncalled(mutation.geneticProfileId)? "(uncalled) " : ""}(${altReads} variant reads out of ${altReads+refReads} total)`;
+            const variantReadText:string = `${isUncalled(mutation.molecularProfileId)? "(uncalled) " : ""}(${altReads} variant reads out of ${altReads+refReads} total)`;
 
             const text = (<span>
                     <strong>{freq.toFixed(2)}</strong> {variantReadText}

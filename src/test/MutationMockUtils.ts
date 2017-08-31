@@ -25,7 +25,7 @@ export function emptyMutation(): Mutation
             length: -1,
             type: ""
         },
-        geneticProfileId: "",
+        molecularProfileId: "",
         keyword: "",
         linkMsa: "",
         linkPdb: "",
