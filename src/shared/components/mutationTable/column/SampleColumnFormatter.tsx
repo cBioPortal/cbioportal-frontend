@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {GeneticProfile, Mutation} from "shared/api/generated/CBioPortalAPI";
+import {MolecularProfile, Mutation} from "shared/api/generated/CBioPortalAPI";
 import TruncatedText from "shared/components/TruncatedText";
 
 /**
@@ -21,7 +21,7 @@ export default class SampleColumnFormatter
         }
     }
 
-    public static renderFunction(data:Mutation[], geneticProfileIdToGeneticProfile?: {[geneticProfileId:string]:GeneticProfile})
+    public static renderFunction(data:Mutation[], molecularProfileIdToMolecularProfile?: {[molecularProfileId:string]:MolecularProfile})
     {
         const sampleId:string = SampleColumnFormatter.getTextValue(data);
         let content = (
@@ -32,9 +32,9 @@ export default class SampleColumnFormatter
             />
         );
 
-        if (geneticProfileIdToGeneticProfile)
+        if (molecularProfileIdToMolecularProfile)
         {
-            const profile = geneticProfileIdToGeneticProfile[data[0].geneticProfileId];
+            const profile = molecularProfileIdToMolecularProfile[data[0].molecularProfileId];
             const studyId = profile && profile.studyId;
             if (studyId) {
                 let linkToPatientView:string = `#/patient?sampleId=${sampleId}&studyId=${studyId}`;

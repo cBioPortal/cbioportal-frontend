@@ -14,8 +14,8 @@ function getTable(samples:string[], mrnaId?:string, cnaId?:string):ReactWrapper<
     return mount(<PatientViewMutationTable
         sampleManager={null}
         sampleIds={samples}
-        mrnaExprRankGeneticProfileId={mrnaId}
-        discreteCNAGeneticProfileId={cnaId}
+        mrnaExprRankMolecularProfileId={mrnaId}
+        discreteCNAMolecularProfileId={cnaId}
         columns={[MutationTableColumnType.GENE,
                     MutationTableColumnType.MRNA_EXPR,
                     MutationTableColumnType.TUMORS,
