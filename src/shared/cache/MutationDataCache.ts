@@ -1,6 +1,6 @@
 import client from "../api/cbioportalClientInstance";
 import LazyMobXCache, {AugmentedData} from "../lib/LazyMobXCache";
-import {GeneticProfile, Mutation, MutationFilter} from "../api/generated/CBioPortalAPI";
+import {MolecularProfile, Mutation, MutationFilter} from "../api/generated/CBioPortalAPI";
 import {IDataQueryFilter} from "../lib/StoreUtils";
 import _ from "lodash";
 
@@ -17,16 +17,16 @@ function queryToKey(q:Query) {
 }
 
 async function fetch(queries:Query[],
-               studyToGeneticProfile:{[studyId:string]:GeneticProfile},
+               studyToMolecularProfile:{[studyId:string]:MolecularProfile},
                 studyToDataQueryFilter:{[studyId:string]:IDataQueryFilter}):Promise<Mutation[][]> {
-    const studies = Object.keys(studyToGeneticProfile);
+    const studies = Object.keys(studyToMolecularProfile);
     const results:Mutation[][] = await Promise.all(studies.map(studyId=>{
         const filter = studyToDataQueryFilter[studyId];
-        const geneticProfile = studyToGeneticProfile[studyId];
+        const molecularProfile = studyToMolecularProfile[studyId];
         const entrezGeneIds = queries.map(x=>x.entrezGeneId);
-        if (filter && geneticProfile && entrezGeneIds.length > 0) {
-            return client.fetchMutationsInGeneticProfileUsingPOST({
-                geneticProfileId: geneticProfile.geneticProfileId,
+        if (filter && molecularProfile && entrezGeneIds.length > 0) {
+            return client.fetchMutationsInMolecularProfileUsingPOST({
+                molecularProfileId: molecularProfile.molecularProfileId,
                 mutationFilter: {
                     ...filter,
                     entrezGeneIds
@@ -41,8 +41,8 @@ async function fetch(queries:Query[],
 }
 
 export default class MutationDataCache extends LazyMobXCache<Mutation[], Query, string> {
-    constructor(studyToGeneticProfile:{[studyId:string]:GeneticProfile},
+    constructor(studyToMolecularProfile:{[studyId:string]:MolecularProfile},
                 studyToDataQueryFilter:{[studyId:string]:IDataQueryFilter}) {
-        super(queryToKey, dataToKey, fetch, studyToGeneticProfile, studyToDataQueryFilter);
+        super(queryToKey, dataToKey, fetch, studyToMolecularProfile, studyToDataQueryFilter);
     }
 }

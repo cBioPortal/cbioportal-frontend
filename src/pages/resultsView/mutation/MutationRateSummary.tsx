@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {GeneticProfile, Mutation, SampleIdentifier} from "shared/api/generated/CBioPortalAPI";
+import {MolecularProfile, Mutation, SampleIdentifier} from "shared/api/generated/CBioPortalAPI";
 import {germlineMutationRate, somaticMutationRate} from "shared/lib/MutationUtils";
 import {MobxPromise} from "mobxpromise";
 import {observer} from "mobx-react";
@@ -10,7 +10,7 @@ export interface IMutationRateSummaryProps {
     hugoGeneSymbol: string;
     samples: SampleIdentifier[];
     germlineConsentedSamples: MobxPromise<SampleIdentifier[]>;
-    geneticProfileIdToGeneticProfile:MobxPromise<{[geneticProfileId:string]:GeneticProfile}>;
+    molecularProfileIdToMolecularProfile:MobxPromise<{[molecularProfileId:string]:MolecularProfile}>;
 }
 
 @observer
@@ -21,7 +21,7 @@ export default class MutationRateSummary extends React.Component<IMutationRateSu
         let rate = 0;
 
         if (this.props.samples.length > 0) {
-            rate = somaticMutationRate(this.props.hugoGeneSymbol, this.props.mutations, this.props.geneticProfileIdToGeneticProfile.result!, this.props.samples);
+            rate = somaticMutationRate(this.props.hugoGeneSymbol, this.props.mutations, this.props.molecularProfileIdToMolecularProfile.result!, this.props.samples);
         }
 
         return (
@@ -56,7 +56,7 @@ export default class MutationRateSummary extends React.Component<IMutationRateSu
             ) ? this.props.germlineConsentedSamples.result : this.props.samples;
         }
 
-        const gmr = samples ? germlineMutationRate(this.props.hugoGeneSymbol, this.props.mutations, this.props.geneticProfileIdToGeneticProfile.result!, samples) : 0;
+        const gmr = samples ? germlineMutationRate(this.props.hugoGeneSymbol, this.props.mutations, this.props.molecularProfileIdToMolecularProfile.result!, samples) : 0;
 
         return (
             <div data-test='germlineMutationRate' className={(gmr > 0) ? '' : 'invisible' }>

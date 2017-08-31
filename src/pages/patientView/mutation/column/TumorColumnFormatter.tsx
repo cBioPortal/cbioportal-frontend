@@ -52,12 +52,12 @@ export default class TumorColumnFormatter {
         }
     }
 
-    public static getPresentSamples<T extends {sampleId:string, tumorAltCount?: number, geneticProfileId?: string}>(data:T[]) {
+    public static getPresentSamples<T extends {sampleId:string, tumorAltCount?: number, molecularProfileId?: string}>(data:T[]) {
         return data.reduce((map:{[s:string]:boolean}, next:T, currentIndex:number) => {
             // Indicate called mutations with true,
             // uncalled mutations with supporting reads as false
             // exclude uncalled mutations without supporting reads completely
-            if (next.geneticProfileId && isUncalled(next.geneticProfileId)) {
+            if (next.molecularProfileId && isUncalled(next.molecularProfileId)) {
                 if (next.tumorAltCount && next.tumorAltCount > 0) {
                     map[next.sampleId] = false;
                 }
