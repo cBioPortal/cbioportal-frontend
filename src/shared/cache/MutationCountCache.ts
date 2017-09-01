@@ -1,24 +1,24 @@
 import client from "../api/cbioportalClientInstance";
 import LazyMobXCache, {AugmentedData} from "../lib/LazyMobXCache";
-import {GeneticProfile, MutationCount} from "../api/generated/CBioPortalAPI";
+import {MolecularProfile, MutationCount} from "../api/generated/CBioPortalAPI";
 import _ from "lodash";
 
 type Query = {
     sampleId: string;
-    geneticProfileId: string;
+    molecularProfileId: string;
 };
 
-function key(d:{geneticProfileId:string, sampleId:string}) {
-    return `${d.geneticProfileId}~${d.sampleId}`;
+function key(d:{molecularProfileId:string, sampleId:string}) {
+    return `${d.molecularProfileId}~${d.sampleId}`;
 }
 async function fetch(queries:Query[]):Promise<MutationCount[]> {
-    const groupedQueries = _.groupBy(queries, x=>x.geneticProfileId);
-    const geneticProfileIds = Object.keys(groupedQueries);
-    const results:MutationCount[][] = await Promise.all(geneticProfileIds.map(geneticProfileId=>{
-        const sampleIds = groupedQueries[geneticProfileId].map(d=>d.sampleId);
+    const groupedQueries = _.groupBy(queries, x=>x.molecularProfileId);
+    const molecularProfileIds = Object.keys(groupedQueries);
+    const results:MutationCount[][] = await Promise.all(molecularProfileIds.map(molecularProfileId=>{
+        const sampleIds = groupedQueries[molecularProfileId].map(d=>d.sampleId);
         if (sampleIds.length > 0) {
-            return client.fetchMutationCountsInGeneticProfileUsingPOST({
-                geneticProfileId,
+            return client.fetchMutationCountsInMolecularProfileUsingPOST({
+                molecularProfileId,
                 sampleIds
             });
         } else {

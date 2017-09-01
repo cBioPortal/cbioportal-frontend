@@ -10,12 +10,12 @@ function getKey<T extends { entrezGeneId:number, keyword?:string}>(obj:T):string
     }
 }
 
-function fetch(queries:VariantCountIdentifier[], mutationGeneticProfileId:string|undefined):Promise<VariantCount[]> {
-    if (!mutationGeneticProfileId) {
-        return Promise.reject("No mutation genetic profile id given");
+function fetch(queries:VariantCountIdentifier[], mutationMolecularProfileId:string|undefined):Promise<VariantCount[]> {
+    if (!mutationMolecularProfileId) {
+        return Promise.reject("No mutation molecular profile id given");
     } else if (queries.length > 0) {
         return client.fetchVariantCountsUsingPOST({
-            geneticProfileId: mutationGeneticProfileId,
+            molecularProfileId: mutationMolecularProfileId,
             variantCountIdentifiers: queries
         });
     } else {
@@ -24,8 +24,8 @@ function fetch(queries:VariantCountIdentifier[], mutationGeneticProfileId:string
 }
 
 export default class VariantCountCache extends LazyMobXCache<VariantCount, VariantCountIdentifier> {
-    constructor(mutationGeneticProfileId:string|undefined) {
+    constructor(mutationMolecularProfileId:string|undefined) {
         super(getKey, getKey,
-            fetch, mutationGeneticProfileId);
+            fetch, mutationMolecularProfileId);
     }
 }

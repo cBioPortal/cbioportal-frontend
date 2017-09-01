@@ -4,7 +4,7 @@ import CancerStudySelector from "./CancerStudySelector";
 import {FlexRow, FlexCol} from "../flexbox/FlexBox";
 import * as styles_any from './styles.module.scss';
 import classNames from 'classnames';
-import GeneticProfileSelector from "./GeneticProfileSelector";
+import MolecularProfileSelector from "./MolecularProfileSelector";
 import {observable, computed, action} from 'mobx';
 import {observer} from "mobx-react";
 import DataTypePrioritySelector from "./DataTypePrioritySelector";
@@ -63,7 +63,7 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
 				<CancerStudySelector/>
 
 				{!!(this.store.singleSelectedStudyId) && (
-					<GeneticProfileSelector/>
+					<MolecularProfileSelector/>
 				)}
 
 				{!!(this.store.singleSelectedStudyId) && (

@@ -3,7 +3,7 @@ import {observer} from "mobx-react";
 import {observable, computed} from "mobx";
 import * as _ from "lodash";
 import {default as LazyMobXTable, Column, SortDirection} from "shared/components/lazyMobXTable/LazyMobXTable";
-import {GeneticProfile, Mutation} from "shared/api/generated/CBioPortalAPI";
+import {MolecularProfile, Mutation} from "shared/api/generated/CBioPortalAPI";
 import SampleColumnFormatter from "./column/SampleColumnFormatter";
 import TumorAlleleFreqColumnFormatter from "./column/TumorAlleleFreqColumnFormatter";
 import NormalAlleleFreqColumnFormatter from "./column/NormalAlleleFreqColumnFormatter";
@@ -41,7 +41,7 @@ import {IPaginationControlsProps} from "../paginationControls/PaginationControls
 
 export interface IMutationTableProps {
     sampleIdToTumorType?: {[sampleId: string]: string}
-    geneticProfileIdToGeneticProfile?: {[geneticProfileId:string]:GeneticProfile};
+    molecularProfileIdToMolecularProfile?: {[molecularProfileId:string]:MolecularProfile};
     discreteCNACache?:DiscreteCNACache;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
     mrnaExprRankCache?:MrnaExprRankCache;
@@ -59,8 +59,8 @@ export interface IMutationTableProps {
     oncoKbData?: IOncoKbDataWrapper;
     civicGenes?: ICivicGene;
     civicVariants?: ICivicVariant;
-    mrnaExprRankGeneticProfileId?:string;
-    discreteCNAGeneticProfileId?:string;
+    mrnaExprRankMolecularProfileId?:string;
+    discreteCNAMolecularProfileId?:string;
     columns?:MutationTableColumnType[];
     data?:Mutation[][];
     dataStore?:IMobXApplicationDataStore<Mutation[]>;
@@ -164,7 +164,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
 
         this._columns[MutationTableColumnType.SAMPLE_ID] = {
             name: "Sample ID",
-            render: (d:Mutation[]) => SampleColumnFormatter.renderFunction(d, this.props.geneticProfileIdToGeneticProfile),
+            render: (d:Mutation[]) => SampleColumnFormatter.renderFunction(d, this.props.molecularProfileIdToMolecularProfile),
             download: SampleColumnFormatter.getTextValue,
             sortBy: SampleColumnFormatter.getTextValue,
             filter: (d:Mutation[], filterString:string, filterStringUpper:string) =>
@@ -217,27 +217,27 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
         this._columns[MutationTableColumnType.COPY_NUM] = {
             name: "Copy #",
             render:(d:Mutation[])=>{
-                if (this.props.discreteCNACache && this.props.geneticProfileIdToGeneticProfile) {
+                if (this.props.discreteCNACache && this.props.molecularProfileIdToMolecularProfile) {
                     return DiscreteCNAColumnFormatter.renderFunction(d,
-                        this.props.geneticProfileIdToGeneticProfile as {[geneticProfileId:string]:GeneticProfile},
+                        this.props.molecularProfileIdToMolecularProfile as {[molecularProfileId:string]:MolecularProfile},
                         this.props.discreteCNACache as DiscreteCNACache);
                 } else {
                     return (<span></span>);
                 }
             },
             sortBy: (d:Mutation[]):number|null=>{
-                if (this.props.discreteCNACache && this.props.geneticProfileIdToGeneticProfile) {
+                if (this.props.discreteCNACache && this.props.molecularProfileIdToMolecularProfile) {
                     return DiscreteCNAColumnFormatter.getSortValue(d,
-                        this.props.geneticProfileIdToGeneticProfile as {[geneticProfileId:string]:GeneticProfile},
+                        this.props.molecularProfileIdToMolecularProfile as {[molecularProfileId:string]:MolecularProfile},
                         this.props.discreteCNACache as DiscreteCNACache);
                 } else {
                     return 0;
                 }
             },
             filter:(d:Mutation[], filterString:string)=>{
-                if (this.props.discreteCNACache && this.props.geneticProfileIdToGeneticProfile) {
+                if (this.props.discreteCNACache && this.props.molecularProfileIdToMolecularProfile) {
                     return DiscreteCNAColumnFormatter.filter(d,
-                        this.props.geneticProfileIdToGeneticProfile as {[geneticProfileId:string]:GeneticProfile},
+                        this.props.molecularProfileIdToMolecularProfile as {[molecularProfileId:string]:MolecularProfile},
                         this.props.discreteCNACache as DiscreteCNACache,
                         filterString);
                 } else {
