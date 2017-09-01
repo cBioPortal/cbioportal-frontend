@@ -1,11 +1,11 @@
 import {
     DiscreteCopyNumberFilter, DiscreteCopyNumberData, ClinicalData, ClinicalDataMultiStudyFilter, Sample,
-    SampleIdentifier, MolecularProfile, Mutation
+    SampleIdentifier, MolecularProfile, Mutation, Gene
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {computed, observable, action} from "mobx";
 import {remoteData, addErrorHandler} from "shared/api/remoteData";
-import {labelMobxPromises, cached} from "mobxpromise";
+import {labelMobxPromises, cached, MobxPromise} from "mobxpromise";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import PubMedCache from "shared/cache/PubMedCache";
 import CancerTypeCache from "shared/cache/CancerTypeCache";
@@ -22,10 +22,11 @@ import {
 import {MutationMapperStore} from "./mutation/MutationMapperStore";
 import AppConfig from "appConfig";
 import * as _ from 'lodash';
-import {stringListToSet} from "../../shared/lib/StringUtils";
+import {stringListToIndexSet, stringListToSet} from "../../shared/lib/StringUtils";
 import {toSampleUuid} from "../../shared/lib/UuidUtils";
 import MutationDataCache from "../../shared/cache/MutationDataCache";
 import MutationMapper from "./mutation/MutationMapper";
+import {CacheData} from "../../shared/lib/LazyMobXCache";
 
 export type SamplesSpecificationElement = { studyId:string, sampleId:string, sampleListId:undefined } |
                                     { studyId:string, sampleId:undefined, sampleListId:string};
@@ -287,6 +288,30 @@ export class ResultsViewPageStore {
             return Promise.resolve(ret);
         }
     }, {});
+
+    readonly genes = remoteData<Gene[]>(async()=>{
+        if (this.hugoGeneSymbols) {
+            const order = stringListToIndexSet(this.hugoGeneSymbols);
+            return _.sortBy(await client.fetchGenesUsingPOST({
+                geneIdType: "HUGO_GENE_SYMBOL",
+                geneIds: this.hugoGeneSymbols,
+                projection: "ID"
+            }), (gene:Gene)=>order[gene.hugoGeneSymbol]);
+        } else {
+            return [];
+        }
+    });
+
+    @computed get geneToMutationData():{[hugoGeneSymbol:string]:CacheData<Mutation[]>|null} {
+        if (this.genes.result) {
+            return this.genes.result.reduce((map:{[hugoGeneSymbol:string]:CacheData<Mutation[]>|null}, gene:Gene)=>{
+                map[gene.hugoGeneSymbol] = this.mutationDataCache.get({ entrezGeneId: gene.entrezGeneId });
+                return map;
+            }, {});
+        } else {
+            return {};
+        }
+    }
 
     @computed get mergedDiscreteCNAData():DiscreteCopyNumberData[][] {
         return mergeDiscreteCNAData(this.discreteCNAData);
