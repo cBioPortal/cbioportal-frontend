@@ -25,6 +25,7 @@ import * as _ from 'lodash';
 import {stringListToSet} from "../../shared/lib/StringUtils";
 import {toSampleUuid} from "../../shared/lib/UuidUtils";
 import MutationDataCache from "../../shared/cache/MutationDataCache";
+import MutationMapper from "./mutation/MutationMapper";
 
 export type SamplesSpecificationElement = { studyId:string, sampleId:string, sampleListId:undefined } |
                                     { studyId:string, sampleId:undefined, sampleListId:string};
@@ -104,31 +105,28 @@ export class ResultsViewPageStore {
         return fetchMyCancerGenomeData();
     }
 
-    protected mutationMapperStores: {[hugoGeneSymbol: string]: MutationMapperStore} = {};
+    @computed get mutationMapperStores():{[hugoGeneSymbol: string]: MutationMapperStore} {
+        if (this.hugoGeneSymbols) {
+            return this.hugoGeneSymbols.reduce((map:{[hugoGeneSymbol:string]:MutationMapperStore}, hugoGeneSymbol:string)=>{
+                map[hugoGeneSymbol] = new MutationMapperStore(AppConfig,
+                                                    hugoGeneSymbol,
+                                                    this.samples,
+                                                    ()=>(this.mutationDataCache),
+                                                    this.molecularProfileIdToMolecularProfile,
+                                                    this.clinicalDataForSamples,
+                                                    this.studiesForSamplesWithoutCancerTypeClinicalData,
+                                                    this.samplesWithoutCancerTypeClinicalData,
+                                                    this.germlineConsentedSamples);
+                return map;
+            }, {});
+        } else {
+            return {};
+        }
+    }
 
     public getMutationMapperStore(hugoGeneSymbol:string): MutationMapperStore|undefined
     {
-        if (this.mutationMapperStores[hugoGeneSymbol]) {
-            return this.mutationMapperStores[hugoGeneSymbol];
-        }
-        else if (!this.hugoGeneSymbols || !this.hugoGeneSymbols.find((gene:string) => gene === hugoGeneSymbol)) {
-            return undefined;
-        }
-        else {
-            const store = new MutationMapperStore(AppConfig,
-                hugoGeneSymbol,
-                this.samples,
-                ()=>(this.mutationDataCache),
-                this.molecularProfileIdToMolecularProfile,
-                this.clinicalDataForSamples,
-                this.studiesForSamplesWithoutCancerTypeClinicalData,
-                this.samplesWithoutCancerTypeClinicalData,
-                this.germlineConsentedSamples);
-
-            this.mutationMapperStores[hugoGeneSymbol] = store;
-
-            return store;
-        }
+        return this.mutationMapperStores[hugoGeneSymbol];
     }
 
     readonly clinicalDataForSamples = remoteData<ClinicalData[]>({
