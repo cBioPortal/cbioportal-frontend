@@ -3,8 +3,8 @@ import {
     default as getCanonicalMutationType, CanonicalMutationType,
     ProteinImpactType, getProteinImpactTypeFromCanonical
 } from "./getCanonicalMutationType";
-import {GeneticProfile, Mutation, SampleIdentifier} from "shared/api/generated/CBioPortalAPI";
-import {MUTATION_STATUS_GERMLINE, GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
+import {MolecularProfile, Mutation, SampleIdentifier} from "shared/api/generated/CBioPortalAPI";
+import {MUTATION_STATUS_GERMLINE, MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
 import {findFirstMostCommonElt} from "./findFirstMostCommonElt";
 import {toSampleUuid} from "./UuidUtils";
 import {stringListToSet} from "./StringUtils";
@@ -42,9 +42,9 @@ export const MUTATION_TYPE_PRIORITY: {[canonicalMutationType: string]: number} =
     "other": 11
 };
 
-export function isUncalled(geneticProfileId:string) {
-    const r = new RegExp(GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX + "$");
-    return r.test(geneticProfileId);
+export function isUncalled(molecularProfileId:string) {
+    const r = new RegExp(MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX + "$");
+    return r.test(molecularProfileId);
 }
 
 export function mutationTypeSort(typeA: CanonicalMutationType, typeB: CanonicalMutationType)
@@ -136,7 +136,7 @@ export function getProteinStartPositionsByRange(data: Mutation[][], start: numbe
  */
 export function germlineMutationRate(hugoGeneSymbol:string,
                                      mutations: Mutation[],
-                                     geneticProfileIdToGeneticProfile:{[geneticProfileId:string]:GeneticProfile},
+                                     molecularProfileIdToMolecularProfile:{[molecularProfileId:string]:MolecularProfile},
                                      samples: SampleIdentifier[])
 {
     if (mutations.length > 0 && samples.length > 0) {
@@ -144,7 +144,7 @@ export function germlineMutationRate(hugoGeneSymbol:string,
         const nrCasesGermlineMutation:number =
             _.chain(mutations)
             .filter((m:Mutation) => {
-                const profile = geneticProfileIdToGeneticProfile[m.geneticProfileId];
+                const profile = molecularProfileIdToMolecularProfile[m.molecularProfileId];
                 if (profile) {
                     return (
                         m.gene.hugoGeneSymbol === hugoGeneSymbol &&
@@ -170,14 +170,14 @@ export function germlineMutationRate(hugoGeneSymbol:string,
  * Percentage of cases/samples with a somatic mutation in given gene.
  */
 export function somaticMutationRate(hugoGeneSymbol: string, mutations: Mutation[],
-                                    geneticProfileIdToGeneticProfile:{[geneticProfileId:string]:GeneticProfile},
+                                    molecularProfileIdToMolecularProfile:{[molecularProfileId:string]:MolecularProfile},
                                     samples: SampleIdentifier[]) {
     if (mutations.length > 0 && samples.length > 0) {
         const sampleIds = stringListToSet(samples.map(toSampleUuid));
         return (
             _.chain(mutations)
                 .filter((m:Mutation) => {
-                    const profile = geneticProfileIdToGeneticProfile[m.geneticProfileId];
+                    const profile = molecularProfileIdToMolecularProfile[m.molecularProfileId];
                     if (profile) {
                         return (
                             m.gene.hugoGeneSymbol === hugoGeneSymbol &&

@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import client from "../../api/cbioportalClientInstance";
 import {ObservableMap, toJS, observable, reaction, action, computed, whyRun, expr} from "mobx";
 import {
-	TypeOfCancer as CancerType, GeneticProfile, CancerStudy, SampleList, Gene,
+	TypeOfCancer as CancerType, MolecularProfile, CancerStudy, SampleList, Gene,
 	Sample, SampleIdentifier
 } from "../../api/generated/CBioPortalAPI";
 import CancerStudyTreeData from "./CancerStudyTreeData";
@@ -24,8 +24,8 @@ import {stringListToIndexSet, stringListToSet} from "../../lib/StringUtils";
 import chunkMapReduce from "shared/lib/chunkMapReduce";
 import formSubmit from "shared/lib/formSubmit";
 import {
-	GeneticProfileQueryParams, NonGeneticProfileQueryParams, queryUrl,
-	nonGeneticProfileParams, currentQueryParams, geneticProfileParams, queryParams
+	MolecularProfileQueryParams, NonMolecularProfileQueryParams, queryUrl,
+	nonMolecularProfileParams, currentQueryParams, molecularProfileParams, queryParams
 } from "./QueryStoreUtils";
 import onMobxPromise from "shared/lib/onMobxPromise";
 
@@ -33,11 +33,11 @@ import onMobxPromise from "shared/lib/onMobxPromise";
 export type CancerStudyQueryUrlParams = {
 	cancer_study_id: string,
 	cancer_study_list?:string,
-	genetic_profile_ids_PROFILE_MUTATION_EXTENDED: string,
-	genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION: string,
-	genetic_profile_ids_PROFILE_MRNA_EXPRESSION: string,
-	genetic_profile_ids_PROFILE_METHYLATION: string,
-	genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION: string,
+	molecular_profile_ids_PROFILE_MUTATION_EXTENDED: string,
+	molecular_profile_ids_PROFILE_COPY_NUMBER_ALTERATION: string,
+	molecular_profile_ids_PROFILE_MRNA_EXPRESSION: string,
+	molecular_profile_ids_PROFILE_METHYLATION: string,
+	molecular_profile_ids_PROFILE_PROTEIN_EXPRESSION: string,
 	Z_SCORE_THRESHOLD: string,
 	RPPA_SCORE_THRESHOLD: string,
 	data_priority: '0'|'1'|'2',
@@ -94,8 +94,8 @@ export class QueryStore
 {
 	private initialQueryParams:{
 		pathname:string,
-		nonGeneticProfileParams:NonGeneticProfileQueryParams,
-		geneticProfileIds: ReadonlyArray<string>
+		nonMolecularProfileParams:NonMolecularProfileQueryParams,
+		molecularProfileIds: ReadonlyArray<string>
 	};
 
 	constructor(urlWithInitialParams?:string)
@@ -108,11 +108,11 @@ export class QueryStore
 		this.setParamsFromQuerySession();
 
 
-		let initialNonGeneticProfileParams = nonGeneticProfileParams(this);
+		let initialNonMolecularProfileParams = nonMolecularProfileParams(this);
 		this.initialQueryParams = {
-			nonGeneticProfileParams: initialNonGeneticProfileParams,
-			pathname: queryUrl(this, initialNonGeneticProfileParams),
-			geneticProfileIds: this._selectedProfileIds || []
+			nonMolecularProfileParams: initialNonMolecularProfileParams,
+			pathname: queryUrl(this, initialNonMolecularProfileParams),
+			molecularProfileIds: this._selectedProfileIds || []
 		};
 	}
 
@@ -157,7 +157,7 @@ export class QueryStore
 	}
 	@observable dataTypePriority = {mutation: true, cna: true};
 
-	// genetic profile ids
+	// molecular profile ids
 	@observable.ref private _selectedProfileIds?:ReadonlyArray<string> = undefined; // user selection
 	@computed get selectedProfileIds():ReadonlyArray<string>
 	{
@@ -170,7 +170,7 @@ export class QueryStore
 		else
 		{
 			// compute default selection
-			const altTypes:GeneticProfile['geneticAlterationType'][] = [
+			const altTypes:MolecularProfile['molecularAlterationType'][] = [
 				'MUTATION_EXTENDED',
 				'COPY_NUMBER_ALTERATION',
 			];
@@ -179,7 +179,7 @@ export class QueryStore
 			{
 				let profiles = this.getFilteredProfiles(altType);
 				if (profiles.length)
-					selectedIds.push(profiles[0].geneticProfileId);
+					selectedIds.push(profiles[0].molecularProfileId);
 			}
 		}
 
@@ -189,7 +189,7 @@ export class QueryStore
 
 		// query tab only allows selecting profiles with showProfileInAnalysisTab=true
 		return selectedIds.filter(id => {
-			let profile = this.dict_geneticProfileId_geneticProfile[id];
+			let profile = this.dict_molecularProfileId_molecularProfile[id];
 			return profile && profile.showProfileInAnalysisTab;
 		});
 	}
@@ -282,11 +282,11 @@ export class QueryStore
 
 	readonly cancerStudies = remoteData(client.getAllStudiesUsingGET({}), []);
 
-	readonly geneticProfiles = remoteData<GeneticProfile[]>({
+	readonly molecularProfiles = remoteData<MolecularProfile[]>({
 		invoke: async () => {
 			if (!this.singleSelectedStudyId)
 				return [];
-			return await client.getAllGeneticProfilesInStudyUsingGET({
+			return await client.getAllMolecularProfilesInStudyUsingGET({
 				studyId: this.singleSelectedStudyId
 			});
 		},
@@ -548,35 +548,35 @@ export class QueryStore
 		return this.calculateDataTypePriorityCode(this.dataTypePriority);
 	}
 
-	// GENETIC PROFILE
+	// MOLECULAR PROFILE
 
-	@computed get dict_geneticProfileId_geneticProfile():_.Dictionary<GeneticProfile | undefined>
+	@computed get dict_molecularProfileId_molecularProfile():_.Dictionary<MolecularProfile | undefined>
 	{
-		return _.keyBy(this.geneticProfiles.result, profile => profile.geneticProfileId);
+		return _.keyBy(this.molecularProfiles.result, profile => profile.molecularProfileId);
 	}
 
-	getFilteredProfiles(geneticAlterationType:GeneticProfile['geneticAlterationType'])
+	getFilteredProfiles(molecularAlterationType:MolecularProfile['molecularAlterationType'])
 	{
-		return this.geneticProfiles.result.filter(profile => {
-			if (profile.geneticAlterationType != geneticAlterationType)
+		return this.molecularProfiles.result.filter(profile => {
+			if (profile.molecularAlterationType != molecularAlterationType)
 				return false;
 
 			return profile.showProfileInAnalysisTab || this.forDownloadTab;
 		});
 	}
 
-	isProfileSelected(geneticProfileId:string)
+	isProfileSelected(molecularProfileId:string)
 	{
-		return _.includes(this.selectedProfileIds, geneticProfileId);
+		return _.includes(this.selectedProfileIds, molecularProfileId);
 	}
 
-	getSelectedProfileIdFromGeneticAlterationType(geneticAlterationType:GeneticProfile['geneticAlterationType'], selectedProfileIds?: ReadonlyArray<string>):string
+	getSelectedProfileIdFromMolecularAlterationType(molecularAlterationType:MolecularProfile['molecularAlterationType'], selectedProfileIds?: ReadonlyArray<string>):string
 	{
 		for (let profileId of (selectedProfileIds || this.selectedProfileIds))
 		{
-			let profile = this.dict_geneticProfileId_geneticProfile[profileId];
-			if (profile && profile.geneticAlterationType == geneticAlterationType)
-				return profile.geneticProfileId;
+			let profile = this.dict_molecularProfileId_molecularProfile[profileId];
+			if (profile && profile.molecularAlterationType == molecularAlterationType)
+				return profile.molecularProfileId;
 		}
 		return '';
 	}
@@ -589,10 +589,10 @@ export class QueryStore
 		if (!studyId)
 			return undefined;
 
-		let mutSelect = this.getSelectedProfileIdFromGeneticAlterationType('MUTATION_EXTENDED');
-		let cnaSelect = this.getSelectedProfileIdFromGeneticAlterationType('COPY_NUMBER_ALTERATION');
-		let expSelect = this.getSelectedProfileIdFromGeneticAlterationType('MRNA_EXPRESSION');
-		let rppaSelect = this.getSelectedProfileIdFromGeneticAlterationType('PROTEIN_LEVEL');
+		let mutSelect = this.getSelectedProfileIdFromMolecularAlterationType('MUTATION_EXTENDED');
+		let cnaSelect = this.getSelectedProfileIdFromMolecularAlterationType('COPY_NUMBER_ALTERATION');
+		let expSelect = this.getSelectedProfileIdFromMolecularAlterationType('MRNA_EXPRESSION');
+		let rppaSelect = this.getSelectedProfileIdFromMolecularAlterationType('PROTEIN_LEVEL');
 		let sampleListId = studyId + "_all";
 
 		if (mutSelect && cnaSelect && !expSelect && !rppaSelect)
@@ -707,11 +707,11 @@ export class QueryStore
 		if (this.singleSelectedStudyId)
 		{
 			if (!this.selectedProfileIds.length)
-				return "Please select one or more genetic profiles.";
+				return "Please select one or more molecular profiles.";
 
-			let expProfileSelected = this.getSelectedProfileIdFromGeneticAlterationType('MRNA_EXPRESSION');
+			let expProfileSelected = this.getSelectedProfileIdFromMolecularAlterationType('MRNA_EXPRESSION');
 			if (haveExpInQuery && !expProfileSelected)
-				return "Expression specified in the list of genes, but not selected in the Genetic Profile Checkboxes.";
+				return "Expression specified in the list of genes, but not selected in the Molecular Profile Checkboxes.";
 
 			if (this.selectedSampleListId === CUSTOM_CASE_LIST_ID)
 			{
@@ -733,7 +733,7 @@ export class QueryStore
 			return "Please edit the gene symbols.";
 	}
 
-	private readonly dict_geneticAlterationType_filenameSuffix:{[K in GeneticProfile['geneticAlterationType']]?: string} = {
+	private readonly dict_molecularAlterationType_filenameSuffix:{[K in MolecularProfile['molecularAlterationType']]?: string} = {
 		"MUTATION_EXTENDED": 'mutations',
 		"COPY_NUMBER_ALTERATION": 'cna',
 		"MRNA_EXPRESSION": 'mrna',
@@ -745,12 +745,12 @@ export class QueryStore
 	@computed get downloadDataFilename()
 	{
 		let study = this.singleSelectedStudyId && this.treeData.map_studyId_cancerStudy.get(this.singleSelectedStudyId);
-		let profile = this.dict_geneticProfileId_geneticProfile[this.selectedProfileIds[0] as string];
+		let profile = this.dict_molecularProfileId_molecularProfile[this.selectedProfileIds[0] as string];
 
 		if (!this.forDownloadTab || !study || !profile)
 			return 'cbioportal-data.txt';
 
-		let suffix = this.dict_geneticAlterationType_filenameSuffix[profile.geneticAlterationType] || profile.geneticAlterationType.toLowerCase();
+		let suffix = this.dict_molecularAlterationType_filenameSuffix[profile.molecularAlterationType] || profile.molecularAlterationType.toLowerCase();
 		return `cbioportal-${study.studyId}-${suffix}.txt`;
 	}
 
@@ -836,11 +836,11 @@ export class QueryStore
 			}
 		}
 		let profileIds = [
-			params.genetic_profile_ids_PROFILE_MUTATION_EXTENDED,
-			params.genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION,
-			params.genetic_profile_ids_PROFILE_MRNA_EXPRESSION,
-			params.genetic_profile_ids_PROFILE_METHYLATION,
-			params.genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION,
+			params.molecular_profile_ids_PROFILE_MUTATION_EXTENDED,
+			params.molecular_profile_ids_PROFILE_COPY_NUMBER_ALTERATION,
+			params.molecular_profile_ids_PROFILE_MRNA_EXPRESSION,
+			params.molecular_profile_ids_PROFILE_METHYLATION,
+			params.molecular_profile_ids_PROFILE_PROTEIN_EXPRESSION,
 		];
 
 		this.selectedStudyIds = hashParams.cancer_study_list || (params.cancer_study_id ? [params.cancer_study_id] : []);
@@ -887,20 +887,20 @@ export class QueryStore
 		this.selectedCancerTypeIds = [];
 	}
 
-	@action selectGeneticProfile(profile:GeneticProfile, checked:boolean)
+	@action selectMolecularProfile(profile:MolecularProfile, checked:boolean)
 	{
-		let groupProfiles = this.getFilteredProfiles(profile.geneticAlterationType);
-		let groupProfileIds = groupProfiles.map(profile => profile.geneticProfileId);
+		let groupProfiles = this.getFilteredProfiles(profile.molecularAlterationType);
+		let groupProfileIds = groupProfiles.map(profile => profile.molecularProfileId);
 		if (this.forDownloadTab)
 		{
 			// download tab only allows a single selection
-			this._selectedProfileIds = [profile.geneticProfileId];
+			this._selectedProfileIds = [profile.molecularProfileId];
 		}
 		else
 		{
 			let difference = _.difference(this.selectedProfileIds, groupProfileIds);
 			if (checked)
-				this._selectedProfileIds = _.union(difference, [profile.geneticProfileId]);
+				this._selectedProfileIds = _.union(difference, [profile.molecularProfileId]);
 			else
 				this._selectedProfileIds = difference;
 		}
@@ -950,11 +950,11 @@ export class QueryStore
 	}
 
 	@action addGenesAndSubmit(genes:string[]) {
-		onMobxPromise(this.geneticProfiles, ()=>{
-			const nonProfileParams = _.cloneDeep(this.initialQueryParams.nonGeneticProfileParams);
+		onMobxPromise(this.molecularProfiles, ()=>{
+			const nonProfileParams = _.cloneDeep(this.initialQueryParams.nonMolecularProfileParams);
 			nonProfileParams.gene_list = normalizeQuery(nonProfileParams.gene_list + "\n" + genes.join(" "));
 
-			const profileParams = geneticProfileParams(this, this.initialQueryParams.geneticProfileIds);
+			const profileParams = molecularProfileParams(this, this.initialQueryParams.molecularProfileIds);
 
 			const urlParams = queryParams(nonProfileParams, profileParams, this.initialQueryParams.pathname);
 

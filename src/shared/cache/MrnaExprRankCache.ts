@@ -6,7 +6,7 @@ import {CacheData} from "shared/lib/LazyMobXCache";
 
 export type MrnaExprRankCacheDataType = CacheData<MrnaPercentile>;
 
-async function fetch(queries:SampleAndGene[], mrnaRankGeneticProfileId:string|null):Promise<MrnaPercentile[]> {
+async function fetch(queries:SampleAndGene[], mrnaRankMolecularProfileId:string|null):Promise<MrnaPercentile[]> {
     try {
         const sampleToEntrezList:{[sampleId:string]:number[]} = {};
         for (const query of queries) {
@@ -14,10 +14,10 @@ async function fetch(queries:SampleAndGene[], mrnaRankGeneticProfileId:string|nu
             sampleToEntrezList[query.sampleId].push(query.entrezGeneId);
         }
         const allMrnaPercentiles:MrnaPercentile[][] = await Promise.all(Object.keys(sampleToEntrezList).map((sampleId:string)=>
-            ( mrnaRankGeneticProfileId === null ?
-                    Promise.reject("No genetic profile id given.") :
+            ( mrnaRankMolecularProfileId === null ?
+                    Promise.reject("No molecular profile id given.") :
                     internalClient.fetchMrnaPercentileUsingPOST({
-                        geneticProfileId: mrnaRankGeneticProfileId,
+                        molecularProfileId: mrnaRankMolecularProfileId,
                         sampleId,
                         entrezGeneIds: sampleToEntrezList[sampleId]
                     })
@@ -31,7 +31,7 @@ async function fetch(queries:SampleAndGene[], mrnaRankGeneticProfileId:string|nu
 
 export default class MrnaExprRankCache extends SampleGeneCache<MrnaPercentile> {
 
-    constructor(mrnaRankGeneticProfileId:string|null) {
-        super(fetch, mrnaRankGeneticProfileId);
+    constructor(mrnaRankMolecularProfileId:string|null) {
+        super(fetch, mrnaRankMolecularProfileId);
     }
 }
