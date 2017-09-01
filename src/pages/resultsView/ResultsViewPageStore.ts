@@ -1,6 +1,6 @@
 import {
     DiscreteCopyNumberFilter, DiscreteCopyNumberData, ClinicalData, ClinicalDataMultiStudyFilter, Sample,
-    SampleIdentifier, GeneticProfile, Mutation
+    SampleIdentifier, MolecularProfile, Mutation
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {computed, observable, action} from "mobx";
@@ -13,8 +13,8 @@ import MutationCountCache from "shared/cache/MutationCountCache";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
 import PdbHeaderCache from "shared/cache/PdbHeaderCache";
 import {
-    findGeneticProfileIdDiscrete, fetchMyCancerGenomeData,
-    fetchDiscreteCNAData, findMutationGeneticProfileId, mergeDiscreteCNAData,
+    findMolecularProfileIdDiscrete, fetchMyCancerGenomeData,
+    fetchDiscreteCNAData, findMutationMolecularProfileId, mergeDiscreteCNAData,
     fetchSamples, fetchClinicalDataInStudy, generateDataQueryFilter,
     fetchSamplesWithoutCancerTypeClinicalData, fetchStudiesForSamplesWithoutCancerTypeClinicalData, IDataQueryFilter,
     isMutationProfile
@@ -80,13 +80,13 @@ export class ResultsViewPageStore {
         }, {} as {[studyId:string]:string});
     }
 
-    readonly studyToMutationGeneticProfile = remoteData<{[studyId:string]:GeneticProfile}>({
+    readonly studyToMutationMolecularProfile = remoteData<{[studyId:string]:MolecularProfile}>({
         await: () => [
-            this.geneticProfilesInStudies
+            this.molecularProfilesInStudies
         ],
         invoke: ()=>{
-            const ret:{[studyId:string]:GeneticProfile} = {};
-            for (const profile of this.geneticProfilesInStudies.result) {
+            const ret:{[studyId:string]:MolecularProfile} = {};
+            for (const profile of this.molecularProfilesInStudies.result) {
                 const studyId = profile.studyId;
                 if (!ret[studyId] && isMutationProfile(profile)) {
                     ret[studyId] = profile;
@@ -119,7 +119,7 @@ export class ResultsViewPageStore {
                 hugoGeneSymbol,
                 this.samples,
                 ()=>(this.mutationDataCache),
-                this.geneticProfileIdToGeneticProfile,
+                this.molecularProfileIdToMolecularProfile,
                 this.clinicalDataForSamples,
                 this.studiesForSamplesWithoutCancerTypeClinicalData,
                 this.samplesWithoutCancerTypeClinicalData,
@@ -213,35 +213,35 @@ export class ResultsViewPageStore {
         return `${studyId}_germline`;
     }
 
-    readonly geneticProfilesInStudies = remoteData<GeneticProfile[]>({
+    readonly molecularProfilesInStudies = remoteData<MolecularProfile[]>({
         invoke:async()=>{
             return _.flatten(await Promise.all(this.studyIds.map(studyId=>{
-                return client.getAllGeneticProfilesInStudyUsingGET({
+                return client.getAllMolecularProfilesInStudyUsingGET({
                     studyId
                 });
             })));
         }
     }, []);
 
-    readonly geneticProfileIdToGeneticProfile = remoteData<{[geneticProfileId:string]:GeneticProfile}>({
-        await:()=>[this.geneticProfilesInStudies],
+    readonly molecularProfileIdToMolecularProfile = remoteData<{[molecularProfileId:string]:MolecularProfile}>({
+        await:()=>[this.molecularProfilesInStudies],
         invoke:()=>{
-            return Promise.resolve(this.geneticProfilesInStudies.result.reduce((map:{[geneticProfileId:string]:GeneticProfile}, next:GeneticProfile)=>{
-                map[next.geneticProfileId] = next;
+            return Promise.resolve(this.molecularProfilesInStudies.result.reduce((map:{[molecularProfileId:string]:MolecularProfile}, next:MolecularProfile)=>{
+                map[next.molecularProfileId] = next;
                 return map;
             }, {}));
         }
     }, {});
 
-    readonly studyToGeneticProfileDiscrete = remoteData<{[studyId:string]:GeneticProfile}>({
+    readonly studyToMolecularProfileDiscrete = remoteData<{[studyId:string]:MolecularProfile}>({
         await: () => [
-            this.geneticProfilesInStudies
+            this.molecularProfilesInStudies
         ],
         invoke: async () => {
-            const ret:{[studyId:string]:GeneticProfile} = {};
-            for (const geneticProfile of this.geneticProfilesInStudies.result) {
-                if (geneticProfile.datatype === "DISCRETE") {
-                    ret[geneticProfile.studyId] = geneticProfile;
+            const ret:{[studyId:string]:MolecularProfile} = {};
+            for (const molecularProfile of this.molecularProfilesInStudies.result) {
+                if (molecularProfile.datatype === "DISCRETE") {
+                    ret[molecularProfile.studyId] = molecularProfile;
                 }
             }
             return ret;
@@ -250,19 +250,19 @@ export class ResultsViewPageStore {
 
     readonly discreteCNAData = remoteData<DiscreteCopyNumberData[]>({
         await: () => [
-            this.studyToGeneticProfileDiscrete,
+            this.studyToMolecularProfileDiscrete,
             this.studyToDataQueryFilter
         ],
         invoke: async () => {
             const studies = this.studyIds;
             const results:DiscreteCopyNumberData[][] = await Promise.all(studies.map(studyId=>{
                 const filter = this.studyToDataQueryFilter.result[studyId];
-                const profile = this.studyToGeneticProfileDiscrete.result[studyId];
+                const profile = this.studyToMolecularProfileDiscrete.result[studyId];
                 if (filter && profile) {
-                    return client.fetchDiscreteCopyNumbersInGeneticProfileUsingPOST({
+                    return client.fetchDiscreteCopyNumbersInMolecularProfileUsingPOST({
                         projection: "DETAILED",
                         discreteCopyNumberFilter: filter as DiscreteCopyNumberFilter,
-                        geneticProfileId: profile.geneticProfileId
+                        molecularProfileId: profile.molecularProfileId
                     });
                 } else {
                     return Promise.resolve([]);
@@ -303,7 +303,7 @@ export class ResultsViewPageStore {
     }
 
     @cached get discreteCNACache() {
-        return new DiscreteCNACache(this.studyToGeneticProfileDiscrete.result);
+        return new DiscreteCNACache(this.studyToMolecularProfileDiscrete.result);
     }
 
     @cached get cancerTypeCache() {
@@ -319,7 +319,7 @@ export class ResultsViewPageStore {
     }
 
     @cached get mutationDataCache() {
-        return new MutationDataCache(this.studyToMutationGeneticProfile.result,
+        return new MutationDataCache(this.studyToMutationMolecularProfile.result,
                                     this.studyToDataQueryFilter.result);
     }
 
