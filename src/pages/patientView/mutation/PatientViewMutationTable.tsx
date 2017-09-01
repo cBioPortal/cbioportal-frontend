@@ -133,7 +133,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
 
         // exclusions
         this._columns[MutationTableColumnType.MRNA_EXPR].shouldExclude = ()=>{
-            return (!this.props.mrnaExprRankGeneticProfileId) || (this.getSamples().length > 1);
+            return (!this.props.mrnaExprRankMolecularProfileId) || (this.getSamples().length > 1);
         };
         // only hide tumor column if there is one sample and no uncalled
         // mutations (there is no information added in that case by the sample
@@ -142,7 +142,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             return this.getSamples().length < 2 && !this.hasUncalledMutations;
         };
         this._columns[MutationTableColumnType.COPY_NUM].shouldExclude = ()=>{
-            return (!this.props.discreteCNAGeneticProfileId) || (this.getSamples().length > 1);
+            return (!this.props.discreteCNAMolecularProfileId) || (this.getSamples().length > 1);
         };
     }
 
@@ -155,7 +155,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         }
         return data.some((row:Mutation[]) => {
             return row.some((m:Mutation) => {
-                return isUncalled(m.geneticProfileId);
+                return isUncalled(m.molecularProfileId);
             });
         });
     }
