@@ -1,5 +1,4 @@
 import AlleleFreqColumnFormatter from './AlleleFreqColumnFormatter';
-import {GENETIC_PROFILE_UNCALLED_MUTATIONS_SUFFIX, GENETIC_PROFILE_MUTATIONS_SUFFIX} from '../../../../shared/constants';
 import {initMutation} from "test/MutationMockUtils";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX, MOLECULAR_PROFILE_MUTATIONS_SUFFIX} from '../../../../shared/constants';
