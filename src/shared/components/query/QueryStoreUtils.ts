@@ -5,9 +5,9 @@ export type NonMolecularProfileQueryParams = Pick<CancerStudyQueryUrlParams,
     'case_set_id' | 'case_ids' | 'gene_list' | 'tab_index' | 'transpose_matrix' | 'Action'>;
 
 export type MolecularProfileQueryParams = Pick<CancerStudyQueryUrlParams,
-    'molecular_profile_ids_PROFILE_MUTATION_EXTENDED' | 'molecular_profile_ids_PROFILE_COPY_NUMBER_ALTERATION' |
-    'molecular_profile_ids_PROFILE_MRNA_EXPRESSION' | 'molecular_profile_ids_PROFILE_METHYLATION' |
-    'molecular_profile_ids_PROFILE_PROTEIN_EXPRESSION'>;
+    'genetic_profile_ids_PROFILE_MUTATION_EXTENDED' | 'genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION' |
+    'genetic_profile_ids_PROFILE_MRNA_EXPRESSION' | 'genetic_profile_ids_PROFILE_METHYLATION' |
+    'genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION'>;
 
 
 export function currentQueryParams(store:QueryStore) {
@@ -72,10 +72,10 @@ export function nonMolecularProfileParams(store:QueryStore):NonMolecularProfileQ
 
 export function molecularProfileParams(store:QueryStore, molecularProfileIds?:ReadonlyArray<string>) {
     return {
-        molecular_profile_ids_PROFILE_MUTATION_EXTENDED: store.getSelectedProfileIdFromMolecularAlterationType("MUTATION_EXTENDED", molecularProfileIds),
-        molecular_profile_ids_PROFILE_COPY_NUMBER_ALTERATION: store.getSelectedProfileIdFromMolecularAlterationType("COPY_NUMBER_ALTERATION", molecularProfileIds),
-        molecular_profile_ids_PROFILE_MRNA_EXPRESSION: store.getSelectedProfileIdFromMolecularAlterationType("MRNA_EXPRESSION", molecularProfileIds),
-        molecular_profile_ids_PROFILE_METHYLATION: store.getSelectedProfileIdFromMolecularAlterationType("METHYLATION", molecularProfileIds) || store.getSelectedProfileIdFromMolecularAlterationType("METHYLATION_BINARY", molecularProfileIds),
-        molecular_profile_ids_PROFILE_PROTEIN_EXPRESSION: store.getSelectedProfileIdFromMolecularAlterationType("PROTEIN_LEVEL", molecularProfileIds)
+        genetic_profile_ids_PROFILE_MUTATION_EXTENDED: store.getSelectedProfileIdFromMolecularAlterationType("MUTATION_EXTENDED", molecularProfileIds),
+        genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION: store.getSelectedProfileIdFromMolecularAlterationType("COPY_NUMBER_ALTERATION", molecularProfileIds),
+        genetic_profile_ids_PROFILE_MRNA_EXPRESSION: store.getSelectedProfileIdFromMolecularAlterationType("MRNA_EXPRESSION", molecularProfileIds),
+        genetic_profile_ids_PROFILE_METHYLATION: store.getSelectedProfileIdFromMolecularAlterationType("METHYLATION", molecularProfileIds) || store.getSelectedProfileIdFromMolecularAlterationType("METHYLATION_BINARY", molecularProfileIds),
+        genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION: store.getSelectedProfileIdFromMolecularAlterationType("PROTEIN_LEVEL", molecularProfileIds)
     };
 }
