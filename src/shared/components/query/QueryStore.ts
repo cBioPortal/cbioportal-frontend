@@ -33,11 +33,11 @@ import onMobxPromise from "shared/lib/onMobxPromise";
 export type CancerStudyQueryUrlParams = {
 	cancer_study_id: string,
 	cancer_study_list?:string,
-	molecular_profile_ids_PROFILE_MUTATION_EXTENDED: string,
-	molecular_profile_ids_PROFILE_COPY_NUMBER_ALTERATION: string,
-	molecular_profile_ids_PROFILE_MRNA_EXPRESSION: string,
-	molecular_profile_ids_PROFILE_METHYLATION: string,
-	molecular_profile_ids_PROFILE_PROTEIN_EXPRESSION: string,
+	genetic_profile_ids_PROFILE_MUTATION_EXTENDED: string,
+	genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION: string,
+	genetic_profile_ids_PROFILE_MRNA_EXPRESSION: string,
+	genetic_profile_ids_PROFILE_METHYLATION: string,
+	genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION: string,
 	Z_SCORE_THRESHOLD: string,
 	RPPA_SCORE_THRESHOLD: string,
 	data_priority: '0'|'1'|'2',
@@ -836,11 +836,11 @@ export class QueryStore
 			}
 		}
 		let profileIds = [
-			params.molecular_profile_ids_PROFILE_MUTATION_EXTENDED,
-			params.molecular_profile_ids_PROFILE_COPY_NUMBER_ALTERATION,
-			params.molecular_profile_ids_PROFILE_MRNA_EXPRESSION,
-			params.molecular_profile_ids_PROFILE_METHYLATION,
-			params.molecular_profile_ids_PROFILE_PROTEIN_EXPRESSION,
+			params.genetic_profile_ids_PROFILE_MUTATION_EXTENDED,
+			params.genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION,
+			params.genetic_profile_ids_PROFILE_MRNA_EXPRESSION,
+			params.genetic_profile_ids_PROFILE_METHYLATION,
+			params.genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION,
 		];
 
 		this.selectedStudyIds = hashParams.cancer_study_list || (params.cancer_study_id ? [params.cancer_study_id] : []);
