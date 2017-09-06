@@ -305,7 +305,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
     }
 
     @computed get hugoGeneSymbol() {
-        return this.props.store.gene.result && this.props.store.gene.result.hugoGeneSymbol;
+        return this.props.store.gene.hugoGeneSymbol;
     }
 
     @computed get countRange() {

@@ -65,23 +65,19 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
     @computed get geneSummary():JSX.Element {
         return (
             <div>
-                {this.props.store.gene.result && this.props.store.gene.result.length > 0 && (
-                    <h4>{this.props.store.gene.result.hugoGeneSymbol}</h4>
-                )}
+                <h4>{this.props.store.gene.hugoGeneSymbol}</h4>
             </div>
         );
     }
 
     @computed get mutationRateSummary():JSX.Element|null {
         // TODO we should not be even calculating mskImpactGermlineConsentedPatientIds for studies other than msk impact
-        if (this.props.store.gene.result &&
-            this.props.store.gene.result.length > 0 &&
-            this.props.store.germlineConsentedSamples.result &&
+        if (this.props.store.germlineConsentedSamples.result &&
             this.props.store.mutationData.isComplete &&
             this.props.store.mutationData.result.length > 0) {
             return (
                 <MutationRateSummary
-                    hugoGeneSymbol={this.props.store.gene.result.hugoGeneSymbol}
+                    hugoGeneSymbol={this.props.store.gene.hugoGeneSymbol}
                     molecularProfileIdToMolecularProfile={this.props.store.molecularProfileIdToMolecularProfile}
                     mutations={this.props.store.mutationData.result}
                     samples={this.props.store.samples.result!}
@@ -110,9 +106,9 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                     )
                 }
 
-                <LoadingIndicator isLoading={this.props.store.mutationData.isPending || this.props.store.gene.isPending} />
+                <LoadingIndicator isLoading={this.props.store.mutationData.isPending} />
                 {
-                    (this.props.store.mutationData.isComplete && this.props.store.gene.result) && (
+                    (this.props.store.mutationData.isComplete) && (
                         <div>
                             <LoadingIndicator isLoading={this.props.store.pfamGeneData.isPending} />
                             { (!this.props.store.pfamGeneData.isPending) && (

@@ -106,28 +106,34 @@ export class ResultsViewPageStore {
         return fetchMyCancerGenomeData();
     }
 
-    @computed get mutationMapperStores():{[hugoGeneSymbol: string]: MutationMapperStore} {
-        if (this.hugoGeneSymbols) {
-            return this.hugoGeneSymbols.reduce((map:{[hugoGeneSymbol:string]:MutationMapperStore}, hugoGeneSymbol:string)=>{
-                map[hugoGeneSymbol] = new MutationMapperStore(AppConfig,
-                                                    hugoGeneSymbol,
-                                                    this.samples,
-                                                    ()=>(this.mutationDataCache),
-                                                    this.molecularProfileIdToMolecularProfile,
-                                                    this.clinicalDataForSamples,
-                                                    this.studiesForSamplesWithoutCancerTypeClinicalData,
-                                                    this.samplesWithoutCancerTypeClinicalData,
-                                                    this.germlineConsentedSamples);
-                return map;
-            }, {});
-        } else {
-            return {};
+    readonly mutationMapperStores = remoteData<{[hugoGeneSymbol: string]: MutationMapperStore}>({
+        await: ()=>[this.genes],
+        invoke: ()=>{
+            if (this.genes.result) {
+                // we have to use _.reduce, otherwise this.genes.result (Immutable, due to remoteData) will return
+                //  an Immutable as the result of reduce, and MutationMapperStore when it is made immutable all the
+                //  mobx machinery going on in the readonly remoteDatas and observables somehow gets messed up.
+                return Promise.resolve(_.reduce(this.genes.result, (map:{[hugoGeneSymbol:string]:MutationMapperStore}, gene:Gene)=>{
+                    map[gene.hugoGeneSymbol] = new MutationMapperStore(AppConfig,
+                        gene,
+                        this.samples,
+                        ()=>(this.mutationDataCache),
+                        this.molecularProfileIdToMolecularProfile,
+                        this.clinicalDataForSamples,
+                        this.studiesForSamplesWithoutCancerTypeClinicalData,
+                        this.samplesWithoutCancerTypeClinicalData,
+                        this.germlineConsentedSamples);
+                    return map;
+                }, {}));
+            } else {
+                return Promise.resolve({});
+            }
         }
-    }
+    }, {});
 
     public getMutationMapperStore(hugoGeneSymbol:string): MutationMapperStore|undefined
     {
-        return this.mutationMapperStores[hugoGeneSymbol];
+        return this.mutationMapperStores.result[hugoGeneSymbol];
     }
 
     readonly clinicalDataForSamples = remoteData<ClinicalData[]>({
@@ -290,11 +296,11 @@ export class ResultsViewPageStore {
     }, {});
 
     readonly genes = remoteData<Gene[]>(async()=>{
-        if (this.hugoGeneSymbols) {
+        if (this.hugoGeneSymbols && this.hugoGeneSymbols.length) {
             const order = stringListToIndexSet(this.hugoGeneSymbols);
             return _.sortBy(await client.fetchGenesUsingPOST({
                 geneIdType: "HUGO_GENE_SYMBOL",
-                geneIds: this.hugoGeneSymbols,
+                geneIds: this.hugoGeneSymbols.slice(),
                 projection: "ID"
             }), (gene:Gene)=>order[gene.hugoGeneSymbol]);
         } else {
