@@ -40,9 +40,15 @@ export type FractionGenomeAlteredFilter = {
 
 };
 export type FractionGenomeAltered = {
-    'sampleId': string
+    'patientId': string
+
+        'sampleId': string
 
         'studyId': string
+
+        'uniquePatientKey': string
+
+        'uniqueSampleKey': string
 
         'value': number
 
@@ -62,7 +68,15 @@ export type MutationSpectrum = {
 
         'molecularProfileId': string
 
+        'patientId': string
+
         'sampleId': string
+
+        'studyId': string
+
+        'uniquePatientKey': string
+
+        'uniqueSampleKey': string
 
 };
 export type MutSig = {
@@ -98,7 +112,15 @@ export type GenesetMolecularData = {
 
         'geneticProfileId': string
 
+        'patientId': string
+
         'sampleId': string
+
+        'studyId': string
+
+        'uniquePatientKey': string
+
+        'uniqueSampleKey': string
 
         'value': string
 
@@ -220,9 +242,17 @@ export type MrnaPercentile = {
 
         'molecularProfileId': string
 
+        'patientId': string
+
         'percentile': number
 
         'sampleId': string
+
+        'studyId': string
+
+        'uniquePatientKey': string
+
+        'uniqueSampleKey': string
 
         'zScore': number
 

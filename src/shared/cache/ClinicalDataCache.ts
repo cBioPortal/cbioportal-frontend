@@ -30,7 +30,7 @@ export default class ClinicalDataCache extends LazyMobXCache<ClinicalData, Clini
                 projection:"ID" | "SUMMARY" | "DETAILED" | "META") {
         super(
             key,
-            key,
+            d => `${d.studyId}~${d.sampleId}`,
             fetch,
             attributeIds, clinicalDataType, projection);
     }
