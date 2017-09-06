@@ -226,7 +226,7 @@ export function findSampleIdsWithCancerTypeClinicalData(clinicalDataForSamples:M
         _.each(clinicalDataForSamples.result, (clinicalData: ClinicalData) => {
             if (clinicalData.clinicalAttributeId === "CANCER_TYPE_DETAILED" ||
                 clinicalData.clinicalAttributeId === "CANCER_TYPE") {
-                samplesWithClinicalData[clinicalData.entityId] = true;
+                samplesWithClinicalData[clinicalData.sampleId] = true;
             }
         });
     }
@@ -655,15 +655,15 @@ export function generateSampleIdToTumorTypeMap(clinicalDataForSamples: MobxPromi
         // first priority is CANCER_TYPE_DETAILED in clinical data
         _.each(clinicalDataForSamples.result, (clinicalData: ClinicalData) => {
             if (clinicalData.clinicalAttributeId === "CANCER_TYPE_DETAILED") {
-                map[clinicalData.entityId] = clinicalData.value;
+                map[clinicalData.sampleId] = clinicalData.value;
             }
         });
 
         // second priority is CANCER_TYPE in clinical data
         _.each(clinicalDataForSamples.result, (clinicalData: ClinicalData) => {
             // update map with CANCER_TYPE value only if it is not already updated
-            if (clinicalData.clinicalAttributeId === "CANCER_TYPE" && map[clinicalData.entityId] === undefined) {
-                map[clinicalData.entityId] = clinicalData.value;
+            if (clinicalData.clinicalAttributeId === "CANCER_TYPE" && map[clinicalData.sampleId] === undefined) {
+                map[clinicalData.sampleId] = clinicalData.value;
             }
         });
     }
@@ -790,12 +790,12 @@ export function makeStudyToCancerTypeMap(studies:CancerStudy[]): {[studyId: stri
     }, {});
 }
 
-export function groupByEntityId(sampleIds: Array<string>, clinicalDataArray: Array<ClinicalData>) {
+export function groupBySampleId(sampleIds: Array<string>, clinicalDataArray: Array<ClinicalData>) {
     return _.map(
         sampleIds,
         (k: string) => ({
             id: k,
-            clinicalData: clinicalDataArray.filter((cd: ClinicalData) => cd.entityId === k)
+            clinicalData: clinicalDataArray.filter((cd: ClinicalData) => cd.sampleId === k)
         })
     );
 }
