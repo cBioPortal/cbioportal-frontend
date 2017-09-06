@@ -46,6 +46,10 @@ export function calculatePValue(a: number, b: number, c: number, d: number): num
 }
 
 export function calculateLogOddsRatio(a: number, b: number, c: number, d: number): number {
+
+    if ((a * d) === 0 && (b * c) === 0) {
+        return Infinity;
+    }
     return Math.log((a * d) / (b * c));
 }
 
