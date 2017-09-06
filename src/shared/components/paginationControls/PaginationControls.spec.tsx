@@ -5,6 +5,7 @@ import { shallow, mount } from 'enzyme';
 import chaiEnzyme from "chai-enzyme";
 import sinon from 'sinon';
 import styles from "./paginationControls.module.scss";
+import {Button} from "react-bootstrap";
 
 chai.use(chaiEnzyme());
 
@@ -58,7 +59,7 @@ describe('PaginationControls', () => {
                     itemsPerPageOptions={[1,2,3,4]}
                 />
             );
-            expect(paginationControls.find("Button"), "no buttons exist").to.not.exist;
+            expect(paginationControls.find(Button), "no buttons exist").to.not.exist;
 
             paginationControls = mount(
                 <PaginationControls
@@ -68,7 +69,7 @@ describe('PaginationControls', () => {
                     itemsPerPageOptions={[1,2,3,4]}
                 />
             );
-            expect(paginationControls.find("Button"), "buttons should exist if theres more than one page").to.exist;
+            expect(paginationControls.find(Button), "buttons should exist if theres more than one page").to.exist;
         });
 
         it("shows functional reset button if its showing more than minimum per page", ()=>{
