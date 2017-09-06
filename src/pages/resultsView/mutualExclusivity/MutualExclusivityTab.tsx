@@ -6,7 +6,7 @@ import styles from "./styles.module.scss";
 import {computed, observable} from "mobx";
 import {MutualExclusivity} from "../../../shared/model/MutualExclusivity";
 import Combinatorics from 'js-combinatorics';
-import fisherTest from 'fishertest';
+import {getCumulativePValue} from "../../../shared/lib/FisherExactTestCalculator";
 
 export interface IMutualExclusivityTabProps {
     // a mapping from Hugo Gene Symbol to list of booleans,
@@ -42,7 +42,7 @@ export function countOccurences(valuesA: boolean[], valuesB: boolean[]): [number
 }
 
 export function calculatePValue(a: number, b: number, c: number, d: number): number {
-    return fisherTest(a, b, c, d).toNumber();
+    return getCumulativePValue(a, b, c, d);
 }
 
 export function calculateLogOddsRatio(a: number, b: number, c: number, d: number): number {
