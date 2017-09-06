@@ -17,42 +17,42 @@ const exampleData = [
     {
         "geneA": "EGFR",
         "geneB": "KRAS",
-        "pValue": 0.003968253968253968,
+        "pValue": 0.003968253968253951,
         "logOddsRatio": -Infinity,
         "association": "Tendency towards mutual exclusivity"
     },
     {
         "geneA": "EGFR",
         "geneB": "TP53",
-        "pValue": 0.08333333333333333,
+        "pValue": 0.08333333333333293,
         "logOddsRatio": -Infinity,
         "association": "Tendency towards mutual exclusivity"
     },
     {
         "geneA": "KRAS",
         "geneB": "TP53",
-        "pValue": 0.08333333333333333,
+        "pValue": 0.08333333333333293,
         "logOddsRatio": Infinity,
         "association": "Tendency towards co-occurrence"
     },
     {
         "geneA": "EGFR",
         "geneB": "BRAF",
-        "pValue": 0.23809523809523808,
+        "pValue": 0.2619047619047609,
         "logOddsRatio": -1.791759469228055,
         "association": "Tendency towards mutual exclusivity"
     },
     {
         "geneA": "KRAS",
         "geneB": "BRAF",
-        "pValue": 0.23809523809523808,
+        "pValue": 0.2619047619047609,
         "logOddsRatio": 1.791759469228055,
         "association": "Tendency towards co-occurrence"
     },
     {
         "geneA": "TP53",
         "geneB": "BRAF",
-        "pValue": 0.03333333333333333,
+        "pValue": 0.03333333333333314,
         "logOddsRatio": Infinity,
         "association": "Tendency towards co-occurrence"
     }
@@ -95,12 +95,12 @@ describe("MutualExclusivityTab", () => {
     });
 
     describe("#calculatePValue()", () => {
-        it("should return 0.28846153846153844 for 4, 3, 7, 2", () => {
-            assert.equal(calculatePValue(4, 3, 7, 2), 0.28846153846153844);
+        it("should return 0.3653846153846146 for 4, 3, 7, 2", () => {
+            assert.equal(calculatePValue(4, 3, 7, 2), 0.3653846153846146);
         });
 
-        it("should return 0.063968015992004 for 13, 7, 3, 7", () => {
-            assert.equal(calculatePValue(13, 7, 3, 7), 0.063968015992004);
+        it("should return 0.07706146926536687 for 13, 7, 3, 7", () => {
+            assert.equal(calculatePValue(13, 7, 3, 7), 0.07706146926536687);
         });
     });
 
@@ -226,6 +226,7 @@ describe("MutualExclusivityTab", () => {
         it("should return correct data", () => {
 
             const result = getData(isSampleAlteredMap);
+            console.log(result);
             assert.deepEqual(result, exampleData);
         });
     });
@@ -239,7 +240,7 @@ describe("MutualExclusivityTab", () => {
                     {
                         "geneA": "EGFR",
                         "geneB": "KRAS",
-                        "pValue": 0.003968253968253968,
+                        "pValue": 0.003968253968253951,
                         "logOddsRatio": -Infinity,
                         "association": "Tendency towards mutual exclusivity"
                     }
