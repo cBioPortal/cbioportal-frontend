@@ -190,7 +190,7 @@ export class ResultsViewPageStore {
         invoke: () => {
             const sampleHasData:{[sampleUid:string]:boolean} = {};
             for (const data of this.clinicalDataForSamples.result) {
-                sampleHasData[toSampleUuid(data.clinicalAttribute.studyId, data.entityId)] = true;
+                sampleHasData[toSampleUuid(data.clinicalAttribute.studyId, data.sampleId)] = true;
             }
             return Promise.resolve(this.samples.result.filter(sample=>{
                 return !sampleHasData[toSampleUuid(sample.studyId, sample.sampleId)];
