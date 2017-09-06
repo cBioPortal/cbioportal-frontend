@@ -6,6 +6,7 @@ import MutationMapper from "./MutationMapper";
 import {observable} from "mobx";
 import AppConfig from 'appConfig';
 import "./mutations.scss";
+import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator";
 
 export interface IMutationsPageProps {
     routing?: any;
@@ -30,17 +31,22 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
             this.props.routing.location.query.mutationsGeneTab : this.mutationsGeneTab;
 
         return (
-            <MSKTabs
-                id="mutationsPageTabs"
-                activeTabId={activeTabId}
-                onTabClick={(id:string) => this.handleTabChange(id)}
-                className="mainTabs resultsPageMutationsGeneTabs"
-                enablePagination={true}
-                arrowStyle={{'line-height':.8}}
-                tabButtonStyle="pills"
-            >
-                {this.generateTabs(this.props.genes)}
-            </MSKTabs>
+            <div>
+                <Loader isLoading={this.props.store.mutationMapperStores.isPending} />
+                {(this.props.store.mutationMapperStores.isComplete) && (
+                    <MSKTabs
+                        id="mutationsPageTabs"
+                        activeTabId={activeTabId}
+                        onTabClick={(id:string) => this.handleTabChange(id)}
+                        className="mainTabs resultsPageMutationsGeneTabs"
+                        enablePagination={true}
+                        arrowStyle={{'line-height':.8}}
+                        tabButtonStyle="pills"
+                    >
+                        {this.generateTabs(this.props.genes)}
+                    </MSKTabs>
+                )}
+            </div>
         );
     }
     
