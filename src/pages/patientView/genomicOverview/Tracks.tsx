@@ -2,15 +2,16 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as _ from 'lodash';
 import * as tracksHelper from './tracksHelper'
-import {CopyNumberSeg, Mutation} from 'shared/api/generated/CBioPortalAPI';
+import {CopyNumberSeg, Mutation, Sample} from 'shared/api/generated/CBioPortalAPI';
 import SampleManager from "../sampleManager";
 import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
+import {stringListToSet} from "../../../shared/lib/StringUtils";
 
 interface TracksPropTypes {
     mutations:Array<Mutation>;
     cnaSegments:Array<CopyNumberSeg>;
     sampleManager:SampleManager;
-    sequencedSamples:{[sampleId:string]:boolean};
+    samples:Sample[];
     width:number;
 }
 
@@ -23,9 +24,9 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
     componentDidMount() {
 
         // --- construct params ---
-        let uniqCnasampleIds = _.uniq(_.map(this.props.cnaSegments, 'sampleId'));
-        let sequencedSamples = this.props.sampleManager.samples.filter(x=>!!this.props.sequencedSamples[x.id]);
-        var config = tracksHelper.GenomicOverviewConfig(uniqCnasampleIds.length + sequencedSamples.length, this.props.width);
+        let cnaSamples = _.keyBy(this.props.samples.filter(s=>s.copyNumberSegmentPresent), s=>s.sampleId);
+        let mutSamples = _.keyBy(this.props.samples.filter(s=>s.sequenced), s=>s.sampleId);
+        var config = tracksHelper.GenomicOverviewConfig(Object.keys(cnaSamples).length + Object.keys(mutSamples).length, this.props.width);
         // --- end of params ---
 
         // --- raphael config ---
@@ -42,7 +43,7 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
         _.each(this.props.sampleManager.samples, (sample: ClinicalDataBySampleId) => {
 
             // --- CNA bar chart ---
-            if (_.includes(uniqCnasampleIds, sample.id)) {
+            if (cnaSamples[sample.id]) {
                 let raphaelData: Array<any> = [];
                 var _trackData = _.filter(this.props.cnaSegments, function (_cnaObj: CopyNumberSeg) {
                     return _cnaObj.sampleId === sample.id;
@@ -79,28 +80,30 @@ export default class Tracks extends React.Component<TracksPropTypes, {}> {
 
 
         // --- mutation events bar chart ---
-        _.each(sequencedSamples, (sample: ClinicalDataBySampleId) => {
-            var _trackData = _.filter(this.props.mutations, function (_mutObj: any) {
-                return _mutObj.sampleId === sample.id;
-            });
-            tracksHelper.plotMuts(paper, config, chmInfo, rowIndex, _trackData, sample.id);
-            rowIndex = rowIndex + 1;
+        _.each(this.props.sampleManager.samples, (sample: ClinicalDataBySampleId) => {
+            if (mutSamples[sample.id]) {
+                var _trackData = _.filter(this.props.mutations, function (_mutObj: any) {
+                    return _mutObj.sampleId === sample.id;
+                });
+                tracksHelper.plotMuts(paper, config, chmInfo, rowIndex, _trackData, sample.id);
+                rowIndex = rowIndex + 1;
 
-            if (this.props.sampleManager.samples.length > 1) {
-                const id = `#mutTrack${sample.id}`;
-                const $container = $(id);
-                const pos = {x: parseInt($container.attr('x')) - 10, y: parseInt($container.attr('y')) - 5};
-                const $newContainer = $(`<svg id="${id}" height="12" width="12" />`);
-                $newContainer.attr(pos);
-                $container.replaceWith($newContainer);
+                if (this.props.sampleManager.samples.length > 1) {
+                    const id = `#mutTrack${sample.id}`;
+                    const $container = $(id);
+                    const pos = {x: parseInt($container.attr('x')) - 10, y: parseInt($container.attr('y')) - 5};
+                    const $newContainer = $(`<svg id="${id}" height="12" width="12" />`);
+                    $newContainer.attr(pos);
+                    $container.replaceWith($newContainer);
 
-                let comp: any = this.props.sampleManager.getComponentForSample(sample.id);
+                    let comp: any = this.props.sampleManager.getComponentForSample(sample.id);
 
-                ReactDOM.render(
-                    comp,
-                    $newContainer[0]
-                );
-            }
+                    ReactDOM.render(
+                        comp,
+                        $newContainer[0]
+                    );
+                }
+            };
         });
         // --- end of mutation events bar chart ---
 
