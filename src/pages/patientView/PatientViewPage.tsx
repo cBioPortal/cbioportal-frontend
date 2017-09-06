@@ -309,7 +309,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                     <div>
                                         <GenomicOverview
                                             mergedMutations={patientViewPageStore.mergedMutationData}
-                                            sequencedSamples={patientViewPageStore.sequencedSampleIdsInStudy.result}
+                                            samples={patientViewPageStore.samples.result}
                                             cnaSegments={patientViewPageStore.cnaSegments.result}
                                             sampleOrder={sampleManager.sampleIndex}
                                             sampleLabels={sampleManager.sampleLabels}
