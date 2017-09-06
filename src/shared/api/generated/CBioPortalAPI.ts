@@ -6,7 +6,15 @@ export type ClinicalData = {
 
         'clinicalAttributeId': string
 
-        'entityId': string
+        'patientId': string
+
+        'sampleId': string
+
+        'studyId': string
+
+        'uniquePatientKey': string
+
+        'uniqueSampleKey': string
 
         'value': string
 
@@ -18,7 +26,15 @@ export type GeneMolecularData = {
 
         'molecularProfileId': string
 
+        'patientId': string
+
         'sampleId': string
+
+        'studyId': string
+
+        'uniquePatientKey': string
+
+        'uniqueSampleKey': string
 
         'value': string
 
@@ -190,7 +206,15 @@ export type GenePanelData = {
 
         'molecularProfileId': string
 
+        'patientId': string
+
         'sampleId': string
+
+        'studyId': string
+
+        'uniquePatientKey': string
+
+        'uniqueSampleKey': string
 
 };
 export type GenePanelToGene = {
@@ -216,13 +240,21 @@ export type SampleIdentifier = {
 export type Sample = {
     'cancerTypeId': string
 
+        'copyNumberSegmentPresent': boolean
+
         'patientId': string
 
         'sampleId': string
 
         'sampleType': "Primary Solid Tumor" | "Recurrent Solid Tumor" | "Primary Blood Tumor" | "Recurrent Blood Tumor" | "Metastatic" | "Blood Derived Normal" | "Solid Tissues Normal"
 
+        'sequenced': boolean
+
         'studyId': string
+
+        'uniquePatientKey': string
+
+        'uniqueSampleKey': string
 
 };
 export type CopyNumberSeg = {
@@ -232,6 +264,8 @@ export type CopyNumberSeg = {
 
         'numberOfProbes': number
 
+        'patientId': string
+
         'sampleId': string
 
         'segmentMean': number
@@ -240,11 +274,19 @@ export type CopyNumberSeg = {
 
         'studyId': string
 
+        'uniquePatientKey': string
+
+        'uniqueSampleKey': string
+
 };
 export type Patient = {
     'patientId': string
 
         'studyId': string
+
+        'uniquePatientKey': string
+
+        'uniqueSampleKey': string
 
 };
 export type TypeOfCancer = {
@@ -284,6 +326,10 @@ export type ClinicalEvent = {
 
         'studyId': string
 
+        'uniquePatientKey': string
+
+        'uniqueSampleKey': string
+
 };
 export type PatientIdentifier = {
     'patientId': string
@@ -311,6 +357,12 @@ export type DiscreteCopyNumberData = {
         'patientId': string
 
         'sampleId': string
+
+        'studyId': string
+
+        'uniquePatientKey': string
+
+        'uniqueSampleKey': string
 
 };
 export type MutationFilter = {
@@ -384,9 +436,15 @@ export type Mutation = {
 
         'startPosition': number
 
+        'studyId': string
+
         'tumorAltCount': number
 
         'tumorRefCount': number
+
+        'uniquePatientKey': string
+
+        'uniqueSampleKey': string
 
         'validationStatus': string
 

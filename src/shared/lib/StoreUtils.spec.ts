@@ -359,10 +359,10 @@ describe('StoreUtils', () => {
 
         let clinicalDataForSamples: MobxPromise<ClinicalData[]> = {
             result: [
-                {clinicalAttributeId: 'CANCER_TYPE_DETAILED', entityId: 'Sample1', value: "Invasive Breast Carcinoma"},
-                {clinicalAttributeId: 'CANCER_TYPE', entityId: 'Sample1', value: "Breast"},
-                {clinicalAttributeId: 'CANCER_TYPE_DETAILED', entityId: 'Sample2', value: "Prostate Adenocarcinoma"},
-                {clinicalAttributeId: 'CANCER_TYPE', entityId: 'Sample3', value: "Skin"}
+                {clinicalAttributeId: 'CANCER_TYPE_DETAILED', sampleId: 'Sample1', value: "Invasive Breast Carcinoma"},
+                {clinicalAttributeId: 'CANCER_TYPE', sampleId: 'Sample1', value: "Breast"},
+                {clinicalAttributeId: 'CANCER_TYPE_DETAILED', sampleId: 'Sample2', value: "Prostate Adenocarcinoma"},
+                {clinicalAttributeId: 'CANCER_TYPE', sampleId: 'Sample3', value: "Skin"}
             ] as ClinicalData[],
             status: 'complete' as 'complete',
             isPending: false,
