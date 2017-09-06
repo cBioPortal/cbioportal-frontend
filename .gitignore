@@ -6,6 +6,7 @@ npm-debug.log
 .idea/**
 .eslintcache
 coverage/
+tslint.json
 stats.json
 .DS_Store
 tsDist/
