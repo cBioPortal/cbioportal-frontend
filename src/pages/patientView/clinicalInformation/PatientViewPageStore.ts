@@ -36,7 +36,7 @@ import {
     findUncalledMutationMolecularProfileId, mergeMutationsIncludingUncalled, fetchGisticData, fetchCopyNumberData,
     fetchMutSigData, findMrnaRankMolecularProfileId, mergeDiscreteCNAData, fetchSamplesForPatient, fetchClinicalData,
     fetchCopyNumberSegments, fetchClinicalDataForPatient, makeStudyToCancerTypeMap,
-    fetchCivicGenes, fetchCnaCivicGenes, fetchCivicVariants, groupByEntityId, findSamplesWithoutCancerTypeClinicalData,
+    fetchCivicGenes, fetchCnaCivicGenes, fetchCivicVariants, groupBySampleId, findSamplesWithoutCancerTypeClinicalData,
     fetchStudiesForSamplesWithoutCancerTypeClinicalData
 } from "shared/lib/StoreUtils";
 import {stringListToSet} from "../../../shared/lib/StringUtils";
@@ -88,7 +88,7 @@ function transformClinicalInformationToStoreShape(patientId: string, studyId: st
         id: patientId,
         clinicalData: clinicalDataPatient
     };
-    const samples = groupByEntityId(sampleIds, clinicalDataSample);
+    const samples = groupBySampleId(sampleIds, clinicalDataSample);
     const rv = {
         patient,
         samples
@@ -300,7 +300,7 @@ export class PatientViewPageStore {
 
     readonly clinicalDataGroupedBySample = remoteData({
         await: () => [this.clinicalDataForSamples],
-        invoke: async() => groupByEntityId(this.sampleIds, this.clinicalDataForSamples.result)
+        invoke: async() => groupBySampleId(this.sampleIds, this.clinicalDataForSamples.result)
     }, []);
 
     readonly studyMetaData = remoteData({
