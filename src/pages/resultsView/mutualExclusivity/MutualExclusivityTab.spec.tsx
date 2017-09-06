@@ -112,6 +112,10 @@ describe("MutualExclusivityTab", () => {
         it("should return 1.466337068793427 for 13, 7, 3, 7", () => {
             assert.equal(calculateLogOddsRatio(13, 7, 3, 7), 1.466337068793427);
         });
+
+        it("should return Infinity for 5, 0 ,1, 0", () => {
+            assert.equal(calculateLogOddsRatio(5, 0, 1, 0), Infinity);
+        });
     });
 
     describe("#getMutuallyExclusiveCounts()", () => {
