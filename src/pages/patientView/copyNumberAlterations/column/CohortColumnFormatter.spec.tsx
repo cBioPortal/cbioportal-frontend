@@ -24,7 +24,10 @@ describe('CohortColumnFormatter', () => {
             },
             molecularProfileId: "alterations",
             sampleId: "SAMPLE_01",
-            patientId: "PATIENT1"
+            patientId: "PATIENT1",
+            studyId: "STUDY1",
+            uniquePatientKey: "",
+            uniqueSampleKey: ""
         },
         {
             alteration: 2,
@@ -39,7 +42,10 @@ describe('CohortColumnFormatter', () => {
             },
             molecularProfileId: "alterations",
             sampleId: "SAMPLE_02",
-            patientId: "PATIENT1"
+            patientId: "PATIENT1",
+            studyId: "STUDY1",
+            uniquePatientKey: "",
+            uniqueSampleKey: ""
         }
     ];
 
