@@ -41,6 +41,7 @@ export interface IPaginationControlsProps {
     lastPageDisabled?:boolean;
     pageNumberEditable?:boolean;
     groupButtons?:boolean;
+    hidePaginationIfOnePage?:boolean;
 }
 
 @observer
@@ -64,7 +65,8 @@ export class PaginationControls extends React.Component<IPaginationControlsProps
         nextPageDisabled:false,
         pageNumberEditable: false,
         showMoreButton: true,
-        groupButtons: true
+        groupButtons: true,
+        hidePaginationIfOnePage:true
     };
 
     constructor(props:IPaginationControlsProps) {
@@ -147,6 +149,13 @@ export class PaginationControls extends React.Component<IPaginationControlsProps
         }
     }
 
+    private get shouldHidePaginationControls() {
+        return (this.props.hidePaginationIfOnePage
+            && this.props.itemsPerPageOptions
+            && typeof this.props.totalItems!=="undefined"
+            && this.props.itemsPerPageOptions[0] >= this.props.totalItems);
+    }
+
     render() {
         const pageSizeOptionElts = (this.props.itemsPerPageOptions || []).map((opt:number) => (<option key={opt} value={opt+""}>{opt}</option>));
         if (this.props.showAllOption) {
@@ -216,11 +225,15 @@ export class PaginationControls extends React.Component<IPaginationControlsProps
             </div>);
         }
 
+        if (this.shouldHidePaginationControls) {
+            buttons = null;
+        }
+
         return (
             <div className={classNames(styles.paginationControls, this.props.className)} style={this.props.style}>
                 <span style={{fontSize:12, marginRight:10}}>{this.props.textBeforeButtons}</span>
                 {buttons}
-                <If condition={!!this.props.showItemsPerPageSelector}>
+                <If condition={!!this.props.showItemsPerPageSelector && !this.shouldHidePaginationControls}>
                     <FormGroup bsSize="sm" className={styles["form-select"]}>
                         <FormControl
                             className="itemsPerPageSelector"
