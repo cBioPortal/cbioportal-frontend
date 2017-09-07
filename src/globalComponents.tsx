@@ -4,6 +4,7 @@ import RightBar from "./shared/components/rightbar/RightBar";
 import QueryAndDownloadTabs from "./shared/components/query/QueryAndDownloadTabs";
 import {QueryStore} from "./shared/components/query/QueryStore";
 import formSubmit from "shared/lib/formSubmit";
+import {getStudySummaryUrl} from "./shared/api/urls";
 
 class GlobalStores {
 
@@ -12,6 +13,8 @@ class GlobalStores {
     }
 
 }
+
+(window as any).getStudySummaryUrl = getStudySummaryUrl;
 
 exposeComponentRenderer('renderRightBar', ()=> {
     return <RightBar store={GlobalStores.queryStore} />;
