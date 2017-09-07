@@ -5,7 +5,7 @@ import $ from 'jquery';
 import {If, Then, Else} from 'react-if';
 import Tracks from './Tracks';
 import {ThumbnailExpandVAFPlot} from '../vafPlot/ThumbnailExpandVAFPlot';
-import {Mutation} from "../../../shared/api/generated/CBioPortalAPI";
+import {Mutation, Sample} from "../../../shared/api/generated/CBioPortalAPI";
 import SampleManager from "../sampleManager";
 import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
 import {MutationFrequenciesBySample} from "../vafPlot/VAFPlot";
@@ -13,7 +13,7 @@ import {MutationFrequenciesBySample} from "../vafPlot/VAFPlot";
 interface IGenomicOverviewProps {
     mergedMutations: Mutation[][];
     cnaSegments: any;
-    sequencedSamples:{[sampleId:string]:boolean};
+    samples:Sample[];
     sampleOrder: {[s:string]:number};
     sampleLabels: {[s:string]:string};
     sampleColors: {[s:string]:string};
@@ -59,7 +59,7 @@ export default class GenomicOverview extends React.Component<IGenomicOverviewPro
                         sampleManager={this.props.sampleManager}
                         width={this.getTracksWidth()}
                         cnaSegments={this.props.cnaSegments}
-                        sequencedSamples={this.props.sequencedSamples}
+                        samples={this.props.samples}
                 />
                 <If condition={this.shouldShowVAFPlot()}>
                     <ThumbnailExpandVAFPlot
