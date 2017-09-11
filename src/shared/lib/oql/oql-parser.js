@@ -100,7 +100,7 @@ const oql_parser = (function() {
         peg$c65 = "!=",
         peg$c66 = { type: "literal", value: "!=", description: "\"!=\"" },
         peg$c67 = function(mutation) { return {"alteration_type":"mut", "constr_rel": "!=", "constr_type":mutation.type, "constr_val":mutation.value, "info":mutation.info}; },
-        peg$c68 = function() { return {"alteration_type":"mut"}; },
+        peg$c68 = function() { return {"alteration_type":"mut", "info":{}}; },
         peg$c69 = "EXP",
         peg$c70 = function(op, constrval) { return {"alteration_type":"exp", "constr_rel":op, "constr_val":parseFloat(constrval)}; },
         peg$c71 = "FUSION",
@@ -149,7 +149,7 @@ const oql_parser = (function() {
         peg$c114 = function() { return {"type":"class", "value":"PROMOTER", "info":{}}; },
         peg$c115 = function(letter, position, string) { return {"type":"name" , "value":(letter+position+string), "info":{}};},
         peg$c116 = function(letter, position) { return {"type":"position", "value":parseInt(position), "info":{"amino_acid":letter.toUpperCase()}}; },
-        peg$c117 = function(mutation_name) { return {"type":"name", "value":mutation_name, "info":{}}; },
+        peg$c117 = function(mutation_name) { return {"type":"name", "value":mutation_name, "info":{"unrecognized":true}}; },
 
         peg$currPos          = 0,
         peg$reportedPos      = 0,
@@ -1753,5 +1753,4 @@ const oql_parser = (function() {
     parse:       parse
   };
 })();
-
 export default oql_parser;
