@@ -67,26 +67,26 @@ doTest("TP53", [{gene:"TP53", alterations:false}]);
 doTest("TP53;", [{gene:"TP53", alterations:false}]);
 doTest("TP53\n", [{gene:"TP53", alterations:false}]);
 doTest("TP53 BRCA1 KRAS NRAS", [{gene:"TP53", alterations:false}, {gene:"BRCA1", alterations:false}, {gene:"KRAS", alterations:false}, {gene:"NRAS", alterations:false}]);
-doTest("TP53:MUT", [{gene:"TP53", alterations:[{alteration_type: "mut"}]}])
+doTest("TP53:MUT", [{gene:"TP53", alterations:[{alteration_type: "mut", info:{}}]}])
 doTest("TP53:MISSENSE PROMOTER", [{gene:"TP53", alterations:[{alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "MISSENSE", info: {}},{alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "PROMOTER", info: {}}]}])
-doTest("TP53:MUT;", [{gene:"TP53", alterations:[{alteration_type: "mut"}]}])
-doTest("TP53:MUT\n", [{gene:"TP53", alterations:[{alteration_type: "mut"}]}])
-doTest("TP53:MUT; BRCA1: gAiN hetloss EXP>=3 PROT<1", [{gene:"TP53", alterations:[{alteration_type: "mut"}]},
+doTest("TP53:MUT;", [{gene:"TP53", alterations:[{alteration_type: "mut", info:{}}]}])
+doTest("TP53:MUT\n", [{gene:"TP53", alterations:[{alteration_type: "mut", info:{}}]}])
+doTest("TP53:MUT; BRCA1: gAiN hetloss EXP>=3 PROT<1", [{gene:"TP53", alterations:[{alteration_type: "mut", info:{}}]},
 							{gene:"BRCA1", alterations:[{alteration_type: "cna", constr_rel: "=", constr_val: "GAIN"}, 
 										    {alteration_type: "cna", constr_rel: "=", constr_val: "HETLOSS"},
 										    {alteration_type: "exp", constr_rel: ">=", constr_val: 3},
 										    {alteration_type: "prot", constr_rel: "<", constr_val: 1}]}])
-doTest("TP53:MUT;;;\n BRCA1: AMP HOMDEL EXP>=3 PROT<1", [{gene:"TP53", alterations:[{alteration_type: "mut"}]},
+doTest("TP53:MUT;;;\n BRCA1: AMP HOMDEL EXP>=3 PROT<1", [{gene:"TP53", alterations:[{alteration_type: "mut", info:{}}]},
 							{gene:"BRCA1", alterations:[{alteration_type: "cna", constr_rel: "=", constr_val: "AMP"}, 
 										    {alteration_type: "cna", constr_rel: "=", constr_val: "HOMDEL"},
 										    {alteration_type: "exp", constr_rel: ">=", constr_val: 3},
 										    {alteration_type: "prot", constr_rel: "<", constr_val: 1}]}])
-doTest("TP53:MUT;\n BRCA1: amp GAIN EXP>=3 PROT<1", [{gene:"TP53", alterations:[{alteration_type: "mut"}]},
+doTest("TP53:MUT;\n BRCA1: amp GAIN EXP>=3 PROT<1", [{gene:"TP53", alterations:[{alteration_type: "mut", info:{}}]},
 							{gene:"BRCA1", alterations:[{alteration_type: "cna", constr_rel: "=", constr_val: "AMP"}, 
 										    {alteration_type: "cna", constr_rel: "=", constr_val: "GAIN"},
 										    {alteration_type: "exp", constr_rel: ">=", constr_val: 3},
 										    {alteration_type: "prot", constr_rel: "<", constr_val: 1}]}])
-doTest("TP53:MUT\n BRCA1: AMP HOMDEL EXP>=3 PROT<1;", [{gene:"TP53", alterations:[{alteration_type: "mut"}]},
+doTest("TP53:MUT\n BRCA1: AMP HOMDEL EXP>=3 PROT<1;", [{gene:"TP53", alterations:[{alteration_type: "mut", info:{}}]},
 							{gene:"BRCA1", alterations:[{alteration_type: "cna", constr_rel: "=", constr_val: "AMP"}, 
 										    {alteration_type: "cna", constr_rel: "=", constr_val: "HOMDEL"},
 										    {alteration_type: "exp", constr_rel: ">=", constr_val: 3},
