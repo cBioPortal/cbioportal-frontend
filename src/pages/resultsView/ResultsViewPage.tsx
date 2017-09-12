@@ -6,6 +6,7 @@ import ValidationAlert from "shared/components/ValidationAlert";
 import AjaxErrorModal from "shared/components/AjaxErrorModal";
 import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
 import {ResultsViewPageStore, SamplesSpecificationElement} from "./ResultsViewPageStore";
+import CancerSummaryContainer from "shared/components/cancerSummary/CancerSummaryContainer";
 import Mutations from "./mutation/Mutations";
 import {stringListToSet} from "../../shared/lib/StringUtils";
 import _ from "lodash";
@@ -85,7 +86,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
     public render() {
 
-        return null;
+        return <CancerSummaryContainer/>;
 
         //
         // return null;
