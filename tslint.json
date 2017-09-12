@@ -11,7 +11,7 @@
                 ["Symbol", "Avoid using the `Symbol` type. Did you mean `symbol`?"]
             ]
         },
-        "member-access": [true, "check-accessor", "check-constructor"],
+        "member-access": [false],
         "member-ordering": [true, {
             "order": "statics-first",
             "alphabetize": false
@@ -58,7 +58,7 @@
 
         "await-promise": true,
 
-        "curly": true,
+        "curly": false,
         "forin": true,
 
         "label-position": true,
@@ -106,12 +106,12 @@
         "linebreak-style": [true, "LF"],
         "max-classes-per-file": [true, 3],
         "max-file-line-count": [true, 1000],
-        "max-line-length": [true, 120],
+        "max-line-length": [false],
         "no-default-export": false,
         "no-irregular-whitespace": true,
         "no-mergeable-namespace": true,
         "no-require-imports": false,
-        "no-trailing-whitespace": true,
+        "no-trailing-whitespace": false,
         "object-literal-sort-keys": false,
         "prefer-const": true,
         "trailing-comma": [false, {
