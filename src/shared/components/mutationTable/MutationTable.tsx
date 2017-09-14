@@ -42,8 +42,8 @@ import {IPaginationControlsProps} from "../paginationControls/PaginationControls
 import StudyColumnFormatter from "./column/StudyColumnFormatter";
 
 export interface IMutationTableProps {
-    sampleIdToTumorType?: {[sampleId: string]: string};
     studyIdToStudy?: {[studyId:string]:CancerStudy};
+    uniqueSampleKeyToTumorType?: {[uniqueSampleKey: string]: string};
     molecularProfileIdToMolecularProfile?: {[molecularProfileId:string]:MolecularProfile};
     discreteCNACache?:DiscreteCNACache;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
@@ -458,11 +458,11 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
 
         this._columns[MutationTableColumnType.CANCER_TYPE] = {
             name: "Cancer Type",
-            render: (d:Mutation[]) => CancerTypeColumnFormatter.render(d, this.props.sampleIdToTumorType),
-            download: (d:Mutation[]) => CancerTypeColumnFormatter.download(d, this.props.sampleIdToTumorType),
-            sortBy: (d:Mutation[]) => CancerTypeColumnFormatter.sortBy(d, this.props.sampleIdToTumorType),
+            render: (d:Mutation[]) => CancerTypeColumnFormatter.render(d, this.props.uniqueSampleKeyToTumorType),
+            download: (d:Mutation[]) => CancerTypeColumnFormatter.download(d, this.props.uniqueSampleKeyToTumorType),
+            sortBy: (d:Mutation[]) => CancerTypeColumnFormatter.sortBy(d, this.props.uniqueSampleKeyToTumorType),
             filter: (d:Mutation[], filterString:string, filterStringUpper:string) =>
-                CancerTypeColumnFormatter.filter(d, filterStringUpper, this.props.sampleIdToTumorType),
+                CancerTypeColumnFormatter.filter(d, filterStringUpper, this.props.uniqueSampleKeyToTumorType),
             tooltip:(<span>Cancer Type</span>),
         };
 
