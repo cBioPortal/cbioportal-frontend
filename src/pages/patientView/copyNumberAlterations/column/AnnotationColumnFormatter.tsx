@@ -110,12 +110,12 @@ export default class AnnotationColumnFormatter
 
     public static getIndicatorData(copyNumberData:DiscreteCopyNumberData[], oncoKbData:IOncoKbData): IndicatorQueryResp|undefined
     {
-        if (oncoKbData.sampleToTumorMap === null || oncoKbData.indicatorMap === null) {
+        if (oncoKbData.uniqueSampleKeyToTumorType === null || oncoKbData.indicatorMap === null) {
             return undefined;
         }
 
         const id = generateQueryVariantId(copyNumberData[0].gene.entrezGeneId,
-            oncoKbData.sampleToTumorMap[copyNumberData[0].sampleId],
+            oncoKbData.uniqueSampleKeyToTumorType[copyNumberData[0].uniqueSampleKey],
             getAlterationString(copyNumberData[0].alteration));
 
         return oncoKbData.indicatorMap[id];
@@ -124,8 +124,8 @@ export default class AnnotationColumnFormatter
     public static getEvidenceQuery(copyNumberData:DiscreteCopyNumberData[], oncoKbData:IOncoKbData): Query|undefined
     {
         // return null in case sampleToTumorMap is null
-        return oncoKbData.sampleToTumorMap ? generateQueryVariant(copyNumberData[0].gene.entrezGeneId,
-            oncoKbData.sampleToTumorMap[copyNumberData[0].sampleId],
+        return oncoKbData.uniqueSampleKeyToTumorType ? generateQueryVariant(copyNumberData[0].gene.entrezGeneId,
+            oncoKbData.uniqueSampleKeyToTumorType[copyNumberData[0].uniqueSampleKey],
             getAlterationString(copyNumberData[0].alteration)
         ) : undefined;
     }

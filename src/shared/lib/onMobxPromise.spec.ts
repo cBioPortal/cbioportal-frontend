@@ -19,6 +19,35 @@ describe('onMobxPromise', ()=>{
             done();
         });
     });
+    it('executes the given callback with the results when the mobx promises complete', (done)=>{
+        let promiseInvokeCount = 0;
+        let promise1 = remoteData({
+            invoke:async ()=>{
+                promiseInvokeCount +=1;
+                return 5;
+            }
+        });
+        let promise2 = remoteData({
+            invoke:async ()=>{
+                promiseInvokeCount +=1;
+                return 6;
+            }
+        });
+        let promise3 = remoteData({
+            invoke:async ()=>{
+                promiseInvokeCount +=1;
+                return 7;
+            }
+        });
+        assert.equal(promiseInvokeCount, 0, "promise not invoked yet");
+        onMobxPromise([promise1, promise2, promise3], (result1:number, result2:number, result3:number)=>{
+            assert.equal(promiseInvokeCount, 3, "promises each invoked once");
+            assert.equal(result1, 5, "promise invoked with right result");
+            assert.equal(result2, 6, "promise invoked with right result");
+            assert.equal(result3, 7, "promise invoked with right result");
+            done();
+        });
+    });
     it('executes the given callback the specified number of times', (done)=>{
         let handlerInvokeCount = 0;
         let promiseResult = observable(0);
