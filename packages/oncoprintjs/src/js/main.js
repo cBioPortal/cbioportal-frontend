@@ -1,5 +1,1 @@
-var Oncoprint = require('./oncoprint.js');
-if (window) {
-	window.Oncoprint = Oncoprint;
-}
-module.exports = Oncoprint;
+window.Oncoprint = require('./oncoprint.js');

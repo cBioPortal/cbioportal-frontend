@@ -11,7 +11,6 @@ var OncoprintTrackInfoView = require('./oncoprinttrackinfoview.js');
 var OncoprintMinimapView = require('./oncoprintminimapview.js');
 
 var svgfactory = require('./svgfactory.js');
-var $ = require('jquery');
 
 var clamp = function(val, lower, upper) {
     return Math.min(Math.max(val, lower), upper);
