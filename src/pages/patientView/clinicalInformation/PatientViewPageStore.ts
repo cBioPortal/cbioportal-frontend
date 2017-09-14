@@ -33,7 +33,7 @@ import AppConfig from "appConfig";
 import {
     findMolecularProfileIdDiscrete, ONCOKB_DEFAULT, fetchOncoKbData,
     fetchCnaOncoKbData, indexHotspotData, mergeMutations, fetchHotspotsData, fetchMyCancerGenomeData, fetchCosmicData,
-    fetchMutationData, fetchDiscreteCNAData, generateSampleIdToTumorTypeMap, findMutationMolecularProfileId,
+    fetchMutationData, fetchDiscreteCNAData, generateUniqueSampleKeyToTumorTypeMap, findMutationMolecularProfileId,
     findUncalledMutationMolecularProfileId, mergeMutationsIncludingUncalled, fetchGisticData, fetchCopyNumberData,
     fetchMutSigData, findMrnaRankMolecularProfileId, mergeDiscreteCNAData, fetchSamplesForPatient, fetchClinicalData,
     fetchCopyNumberSegments, fetchClinicalDataForPatient, makeStudyToCancerTypeMap,
@@ -497,7 +497,7 @@ export class PatientViewPageStore {
             this.studies
         ],
         invoke: () => {
-            return fetchOncoKbData(this.sampleIdToTumorType, this.oncoKbAnnotatedGenes.result || {}, this.mutationData, this.uncalledMutationData);
+            return fetchOncoKbData(this.uniqueSampleKeyToTumorType, this.oncoKbAnnotatedGenes.result || {}, this.mutationData, this.uncalledMutationData);
         },
         onError: (err: Error) => {
             // fail silently, leave the error handling responsibility to the data consumer
@@ -544,7 +544,7 @@ export class PatientViewPageStore {
             this.clinicalDataForSamples,
             this.studies
         ],
-        invoke: async() => fetchCnaOncoKbData(this.sampleIdToTumorType, this.oncoKbAnnotatedGenes.result || {}, this.discreteCNAData),
+        invoke: async() => fetchCnaOncoKbData(this.uniqueSampleKeyToTumorType, this.oncoKbAnnotatedGenes.result || {}, this.discreteCNAData),
         onError: (err: Error) => {
             // fail silently, leave the error handling responsibility to the data consumer
         }
@@ -605,8 +605,8 @@ export class PatientViewPageStore {
         return mergeMutationsIncludingUncalled(this.mutationData, this.uncalledMutationData);
     }
 
-    @computed get sampleIdToTumorType(): {[sampleId: string]: string} {
-        return generateSampleIdToTumorTypeMap(this.clinicalDataForSamples,
+    @computed get uniqueSampleKeyToTumorType(): {[sampleId: string]: string} {
+        return generateUniqueSampleKeyToTumorTypeMap(this.clinicalDataForSamples,
             this.studiesForSamplesWithoutCancerTypeClinicalData,
             this.samplesWithoutCancerTypeClinicalData);
     }

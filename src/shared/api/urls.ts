@@ -43,6 +43,12 @@ export function openStudySummaryFormSubmit(studyIds: string | ReadonlyArray<stri
     const method:"get"|"post" = params.query.id.length > 1800 ? "post" : "get";
     formSubmit(params.pathname, params.query, "_blank", method);
 }
+export function getSampleViewUrl(studyId:string, sampleId:string) {
+    return cbioUrl('case.do', {}, `/patient?studyId=${studyId}&sampleId=${sampleId}`);
+}
+export function getPatientViewUrl(studyId:string, patientId:string) {
+    return cbioUrl('case.do', {}, `/patient?studyId=${studyId}&caseId=${patientId}`);
+}
 export function getPubMedUrl(pmid:string) {
     return `https://www.ncbi.nlm.nih.gov/pubmed/${pmid}`;
 }

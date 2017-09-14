@@ -3794,7 +3794,19 @@
           "type": "integer",
           "format": "int32"
         },
+        "patientId": {
+          "type": "string"
+        },
         "sampleId": {
+          "type": "string"
+        },
+        "studyId": {
+          "type": "string"
+        },
+        "uniquePatientKey": {
+          "type": "string"
+        },
+        "uniqueSampleKey": {
           "type": "string"
         }
       }
