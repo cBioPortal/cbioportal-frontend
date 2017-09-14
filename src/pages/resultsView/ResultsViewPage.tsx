@@ -25,6 +25,9 @@ import OverlappingStudiesWarning from "../../shared/components/overlappingStudie
         ctx.fillRect(0, 0, chartInstance.chart.width, chartInstance.chart.height);
     }
 });
+import Oncoprint, {GeneticTrackDatum} from "shared/components/oncoprint/Oncoprint";
+import {QuerySession} from "../../shared/lib/QuerySession";
+import ResultsViewOncoprint from "shared/components/oncoprint/ResultsViewOncoprint";
 
 function initStore() {
 
@@ -85,6 +88,15 @@ type MutationsTabInitProps = {
     samplesSpecification: SamplesSpecificationElement[]
 };
 
+type OncoprintTabInitProps = {
+    divId: string;
+    querySession:QuerySession;
+    customDriverMetadata:{
+        hasDriverAnnotations: boolean,
+        customDriverTiers: string[]
+    }
+};
+
 @inject('routing')
 @observer
 export default class ResultsViewPage extends React.Component<IResultsViewPageProps, {}> {
@@ -124,6 +136,17 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
     public exposeComponentRenderersToParentScript(){
 
+        exposeComponentRenderer('renderOncoprint',
+            (props:OncoprintTabInitProps)=>{
+                return (
+                    <ResultsViewOncoprint
+                        divId={props.divId}
+                        store={resultsViewPageStore}
+                        routing={this.props.routing}
+                        customDriverMetadata={props.customDriverMetadata}
+                    />
+                );
+            });
         exposeComponentRenderer('renderMutationsTab',
             (props: MutationsTabInitProps) => {
                 return <div>

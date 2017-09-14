@@ -36,6 +36,14 @@
             skinRightNavShowDatasets : true,
             skinRightNavShowExamples : true,
             skinRightNavShowTestimonials : true,
+            //labels to be displayed in oncoprint "Mutation color" menu for custom annotation of driver and passenger mutations in the oncoprint.
+// Set any of these properties to enable the respective menu options in oncoprint:
+            oncoprintCustomDriverAnnotationBinaryMenuLabel: "Custom driver annotation",
+            oncoprintCustomDriverAnnotationTiersMenuLabel: "Custom driver tiers",
+// set this to false to disable the automatic selection of the custom driver/passenger mutations annotation (binary) in the oncoprint when custom annotation data is present
+            oncoprintCustomDriverAnnotationDefault: false,
+// set this to false to disable the automatic selection of the custom tiers in the oncoprint when custom annotation data is present. By default this property is true.
+            oncoprintCustomDriverTiersAnnotationDefault: false,
         }
     </script>
     <script src="reactapp/common.bundle.js"></script>

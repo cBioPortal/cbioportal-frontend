@@ -198,7 +198,15 @@ export type MutationCount = {
 
         'mutationCount': number
 
+        'patientId': string
+
         'sampleId': string
+
+        'studyId': string
+
+        'uniquePatientKey': string
+
+        'uniqueSampleKey': string
 
 };
 export type GenePanelData = {
