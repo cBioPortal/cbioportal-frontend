@@ -26,15 +26,17 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
     @observable private chartTarget:HTMLCanvasElement;
     @observable.ref private chart:any;
     @observable private chartConfig:any={type:'bar'};
+    @observable private chartContainerWidth = 0;
 
     constructor() {
         super();
 
-        this.updateChart =this.updateChart.bind(this);
+        this.updateChart = this.updateChart.bind(this);
+        this.getChartOptions = this.getChartOptions.bind(this);
     }
 
     private getTooltipOptions(tooltipModel: any, data:IBarGraphConfigOptions, chartOptions:any) {
-        $('#chartjs-tooltip').remove();
+        // $('#chartjs-tooltip').remove();
 
         // Tooltip Element
         let tooltipEl = document.getElementById('chartjs-tooltip');
@@ -106,28 +108,36 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
         // Display, position, and set styles for font
         tooltipEl.style.opacity = '1';
         // tooltipEl.style.display = 'block';
-        tooltipEl.style.left = position.left + tooltipModel.caretX + 'px';
+        tooltipEl.style.left = position.left + tooltipModel.caretX + 10 + 'px';
         tooltipEl.style.top = position.top + tooltipModel.caretY + 5 + 'px';
     }
 
     private componentDidMount() {
         this.chartConfig.data = this.props.data;
-        this.chartConfig.options = this.chartOptions;
+        this.chartConfig.options = this.getChartOptions(1000);
         this.chart = new Chart(this.chartTarget, this.chartConfig);
+        this.updateChartWidth();
+    }
+
+    private updateChartWidth() {
+        const container = document.getElementsByClassName('cancer-summary-chart-container')[0] as HTMLElement;
+        if (container){
+            this.chartContainerWidth = container.offsetWidth;
+        }
     }
 
     private componentDidUpdate() {
         this.updateChart();
+        this.updateChartWidth();
     }
 
     private updateChart() {
-        const {data} = this.props;
-        this.chartConfig.data = data;
-        this.chartConfig.options = this.chartOptions;
+        this.chartConfig.data = this.props.data;
+        this.chartConfig.options = this.getChartOptions(1);
         this.chart.update();
     }
 
-    private get chartOptions() {
+    private getChartOptions(duration: number) {
         const {data} = this.props;
         const that = this;
 
@@ -156,7 +166,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
                     gridLines: {display: false},
                     stacked: true,
                     ticks: {
-                        maxRotation: 70
+                        maxRotation: 80
                     }
                 }],
                 yAxes: [{
@@ -175,16 +185,18 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
                 }]
             },
             legend: {
-                display: that.props.legend,
+                display: this.props.legend,
                 labels: {
                     filter: function (chartItem: IChartLegendItem,) {
                         //TODO: change integer to length of different mutation types
+                        if (that.props.legend === false) return false;
                         if (chartItem.datasetIndex < 4) return true;
                         return false;
                     },
                 }
             },
             animation: {
+                duration,
                 onComplete: () => {
                     this.toImagePdf();
                 }
@@ -199,13 +211,19 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
             const pdf = this.chartTarget.toDataURL();
             this.props.setPdfAnchor(pdf);
         }
+    }
 
+    get width() {
+        const labelsL = this.props.data.labels.length;
+        const contWidth = this.chartContainerWidth;
+        if (!contWidth) return null;
+        return (60 + labelsL * 50) > contWidth ? contWidth : (60 + labelsL * 50);
     }
 
     public render() {
         let errorMessage = null;
         if (!this.props.data.datasets.length) {
-            errorMessage = <div className="cancer-summary-error-message">No alteration plot data.</div>
+            errorMessage = <div className="cancer-summary-error-message">No alteration plot data.</div>;
         }
         return (
             <div className="cancer-summary-chart-container">
