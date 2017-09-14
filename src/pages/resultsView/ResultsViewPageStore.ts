@@ -22,12 +22,10 @@ import {
 import {MutationMapperStore} from "./mutation/MutationMapperStore";
 import AppConfig from "appConfig";
 import * as _ from 'lodash';
-import {stringListToSet} from "../../shared/lib/StringUtils";
 import {toSampleUuid} from "../../shared/lib/UuidUtils";
 import MutationDataCache from "../../shared/cache/MutationDataCache";
 import accessors from "../../shared/lib/oql/accessors";
-import {filterCBioPortalWebServiceData} from "../../shared/lib/oql/oqlfilter";
-import {keepAlive} from "mobx-utils";
+import {filterCBioPortalWebServiceData} from "../../shared/lib/oql/oqlfilter.js";
 
 export type SamplesSpecificationElement = {studyId: string, sampleId: string, sampleListId: undefined} |
     {studyId: string, sampleId: undefined, sampleListId: string};
@@ -43,11 +41,7 @@ export const AlterationTypeConstants = {
 interface ExtendedAlteration extends Mutation, GeneMolecularData {
     alterationType: string
     alterationSubType: string
-}
-;
-
-type blah = keyof AlterationTypeConstants;
-
+};
 
 export function buildDefaultOQLProfile(profilesTypes: string[], zScoreThreshold: number, rppaScoreThreshold: number) {
 
@@ -122,8 +116,8 @@ export function countAlterationOccurences(samplesByCancerType: {[cancerType: str
                                 if (alteration.alterationSubType === 'down') counts.mrnaExpressionDown++;
                                 break;
                             case AlterationTypeConstants.PROTEIN_LEVEL:
-                                if (alteration.alterationSubType > 0) counts.protExpressionUp++;
-                                if (alteration.alterationSubType < 0) counts.protExpressionDown++;
+                                if (alteration.alterationSubType === 'up') counts.protExpressionUp++;
+                                if (alteration.alterationSubType === 'down') counts.protExpressionDown++;
                                 break;
                             case AlterationTypeConstants.MUTATION_EXTENDED:
                                 counts.mutated++;
@@ -235,7 +229,7 @@ export class ResultsViewPageStore {
             // now merge alterations with mutations by gene
             const mergedAlterationsByGene = _.mapValues(genesAsDictionary, (gene: Gene) => {
                 // if for some reason it doesn't exist, assign empty array;
-                return _.concat(([] as (Mutation|GeneMolecularData)[]), this.allMutations.result[gene.hugoGeneSymbol], filteredMolecularDataByGene[gene.hugoGeneSymbol]);
+                return _.concat(([] as (Mutation|GeneMolecularData)[]), this.allMutations.result![gene.hugoGeneSymbol], filteredMolecularDataByGene[gene.hugoGeneSymbol]);
             });
             const ret = _.mapValues(mergedAlterationsByGene, (mutations: (Mutation|GeneMolecularData)[]) => {
                 return filterCBioPortalWebServiceData(this.oqlQuery, mutations, (new accessors(this.selectedMolecularProfiles.result!)), this.defaultOQLQuery.result!, undefined, true);
@@ -255,7 +249,7 @@ export class ResultsViewPageStore {
 
     });
 
-    readonly samplesByDetailedCancerType = remoteData({
+    readonly samplesByDetailedCancerType = remoteData<{[cancerType:string]:Sample[]}>({
         await: () => [
             this.samples,
             this.clinicalDataForSamples
@@ -263,7 +257,6 @@ export class ResultsViewPageStore {
         invoke: () => {
             // first group samples by type
             const sampleKeyToCancerTypeClinicalDataMap = _.reduce(this.clinicalDataForSamples.result, (memo: any, clinicalData: ClinicalData) => {
-
                 if (clinicalData.clinicalAttributeId === 'CANCER_TYPE_DETAILED') {
                     memo[clinicalData.uniqueSampleKey] = clinicalData.value;
                 }
@@ -273,10 +266,9 @@ export class ResultsViewPageStore {
                 if (!memo[clinicalData.uniqueSampleKey]) {
                     memo[clinicalData.uniqueSampleKey] = clinicalData.value;
                 }
-
                 return memo;
             }, {});
-            let ret = _.reduce(this.samples.result, (memo, sample: Sample) => {
+            let ret = _.reduce(this.samples.result, (memo:{[cancerType:string]:Sample[]} , sample: Sample) => {
                 if (sample.uniqueSampleKey in sampleKeyToCancerTypeClinicalDataMap) {
                     memo[sampleKeyToCancerTypeClinicalDataMap[sample.uniqueSampleKey]] = memo[sampleKeyToCancerTypeClinicalDataMap[sample.uniqueSampleKey]] || [];
                     memo[sampleKeyToCancerTypeClinicalDataMap[sample.uniqueSampleKey]].push(sample);
@@ -309,7 +301,7 @@ export class ResultsViewPageStore {
         invoke: () => {
             // look through list of alterations for each gene
             const ret = _.mapValues(this.alterationsBySampleIdByGene.result, (alterationsBySampleId: {[sampleId: string]: ExtendedAlteration[]}, gene: string) => {
-                return countAlterationOccurences(this.samplesByDetailedCancerType.result, alterationsBySampleId);
+                return countAlterationOccurences(this.samplesByDetailedCancerType.result!, alterationsBySampleId);
             });
             return Promise.resolve(ret);
         }
@@ -323,28 +315,21 @@ export class ResultsViewPageStore {
             this.alterationsBySampleIdByGene
         ],
         invoke: () => {
-            // look through list of alterations for each gene
-            //const ret = _.mapValues(this.alterationsBySampleIdByGene.result, (alterationsBySampleId: {[sampleId: string]: ExtendedAlteration[]}, gene: string) => {
-
             const flattened = _.flatMap(this.alterationsBySampleIdByGene.result, (map)=>map);
             // NEED TO FLATTEN and then merge this to get all alteration by sampleId
-
-            function customizer(objValue, srcValue) {
+            function customizer(objValue:any, srcValue:any) {
                 if (_.isArray(objValue)) {
                     return objValue.concat(srcValue);
                 }
             }
-
-            const merged = _.mergeWith({},...flattened, customizer);
-
-            const ret = countAlterationOccurences(this.samplesByDetailedCancerType.result, merged);
-
-
+            const merged: {[uniqueSampleKey:string]: ExtendedAlteration[] } =
+                (_.mergeWith({},...flattened, customizer) as {[uniqueSampleKey:string]: ExtendedAlteration[] });
+            const ret = countAlterationOccurences(this.samplesByDetailedCancerType.result!, merged);
             return Promise.resolve(ret);
         }
     });
 
-    readonly filteredAlterationsAsSampleIdArrays = remoteData<>({
+    readonly filteredAlterationsAsSampleIdArrays = remoteData({
         await: () => [
             this.filteredAlterations
         ],
