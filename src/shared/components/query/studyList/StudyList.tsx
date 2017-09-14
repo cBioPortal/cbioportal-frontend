@@ -49,7 +49,7 @@ export interface IStudyListProps
 }
 
 @observer
-export default class StudyList extends QueryStoreComponent<IStudyListProps, void>
+export default class StudyList extends QueryStoreComponent<IStudyListProps, {}>
 {
 	private _view:FilteredCancerTreeView;
 
@@ -260,7 +260,7 @@ export interface ICancerTreeCheckboxProps
 }
 
 @observer
-export class CancerTreeCheckbox extends QueryStoreComponent<ICancerTreeCheckboxProps, void>
+export class CancerTreeCheckbox extends QueryStoreComponent<ICancerTreeCheckboxProps, {}>
 {
 	@computed.struct get checkboxProps()
 	{

@@ -7,6 +7,18 @@ import {If, Then, Else} from 'react-if';
 import {ThreeBounce} from 'better-react-spinkit';
 import {CancerSummaryContent} from './CancerSummaryContent';
 import {ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
+import Loader from "../loadingIndicator/LoadingIndicator";
+
+const anchorStyle = {
+    'font-size': '12px',
+    'padding-left': '6px',
+    'padding-right': '6px',
+    'padding-top': '10px',
+    'padding-bottom': '10px',
+    'cursor': 'pointer',
+    'line-height': .8
+}
+
 
 @observer
 export default class CancerSummaryContainer extends React.Component<{ store:ResultsViewPageStore },{}> {
@@ -53,7 +65,7 @@ export default class CancerSummaryContainer extends React.Component<{ store:Resu
         }
     };
 
-    @observable private activeTab;
+    @observable private activeTab:string = "all";
 
     constructor() {
         super();
@@ -70,33 +82,44 @@ export default class CancerSummaryContainer extends React.Component<{ store:Resu
 
     @computed
     private get tabs() {
+
         return _.map(this.props.store.alterationCountsForCancerTypesByGene.result, (geneData, geneName) => (
-            <MSKTab key={geneName} id={"summaryTab" + geneName} linkText={geneName}>
+            <MSKTab key={geneName} id={"summaryTab" + geneName} linkText={geneName}  anchorStyle={anchorStyle}>
                 <CancerSummaryContent data={geneData}/>
             </MSKTab>
         ));
     }
 
     public render() {
-        return (this.props.store.alterationCountsForCancerTypesForAllGenes.isComplete &&
-                this.props.store.alterationCountsForCancerTypesByGene.isComplete)
-            && (
-            <div>
-                <If condition={true}>
-                    <Then>
-                        <MSKTabs onTabClick={this.handleTabClick}
-                                 activeTabId={this.activeTab || this.defaultTabId} className="mainTabs">
-                            <MSKTab key="all" linkText="All Genes">
-                                <CancerSummaryContent data={this.props.store.alterationCountsForCancerTypesForAllGenes.result}/>
-                            </MSKTab>
-                            {this.tabs}
-                        </MSKTabs>
-                    </Then>
-                    <Else>
-                        <ThreeBounce size={20} className="center-block text-center"/>
-                    </Else>
-                </If>
-            </div>
-        );
+        if (this.props.store.alterationCountsForCancerTypesForAllGenes.isComplete &&
+            this.props.store.alterationCountsForCancerTypesByGene.isComplete) {
+            return (
+                <div>
+                    <If condition={true}>
+                        <Then>
+                            <MSKTabs onTabClick={this.handleTabClick}
+                                     enablePagination={true}
+                                     arrowStyle={{'line-height':.8}}
+                                     tabButtonStyle="pills"
+                                     activeTabId={this.activeTab} className="mainTabs">
+                                <MSKTab key="all" id="allGenes" linkText="All Genes" anchorStyle={anchorStyle}>
+                                    <CancerSummaryContent
+                                        data={this.props.store.alterationCountsForCancerTypesForAllGenes.result}/>
+                                </MSKTab>
+                                {this.tabs}
+                            </MSKTabs>
+                        </Then>
+                        <Else>
+                            <ThreeBounce size={20} className="center-block text-center"/>
+                        </Else>
+                    </If>
+                </div>
+            );
+        } else if (this.props.store.alterationCountsForCancerTypesForAllGenes.isPending) {
+            return <Loader isLoading={true} />
+        } else {
+            // TODO: error!
+            return null;
+        }
     }
 };

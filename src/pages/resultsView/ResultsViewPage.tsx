@@ -22,14 +22,14 @@ function initStore(){
     var props = {
         genes: qSession.getQueryGenes()
     };
-    var samplesSpecification = [];
+    var samplesSpecification:any = [];
     if (["-1", "all"].indexOf(qSession.getCaseSetId()) > -1) {
         // "-1" means custom case id, "all" means all cases in the queried stud(y/ies). Neither is an actual case set that could eg be queried
         var studyToSampleMap = qSession.getStudySampleMap();
         var studies = Object.keys(studyToSampleMap);
         for (var i=0; i<studies.length; i++) {
             var study = studies[i];
-            samplesSpecification = samplesSpecification.concat(studyToSampleMap[study].map(function(sampleId) {
+            samplesSpecification = samplesSpecification.concat(studyToSampleMap[study].map(function(sampleId:string) {
                 return {
                     sampleId: sampleId,
                     studyId: study
@@ -79,41 +79,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
     constructor(props: IResultsViewPageProps) {
         super();
-
         this.exposeComponentRenderersToParentScript();
-
-        // const reaction1 = reaction(
-        //     () => props.routing.location.query,
-        //     query => {
-        //
-        //         const validationResult = validateParameters(query, ['studyId']);
-        //
-        //         if (validationResult.isValid) {
-        //             resultsViewPageStore.urlValidationError = null;
-        //
-        //             resultsViewPageStore.studyId = query.studyId;
-        //
-        //             if ('sampleListId' in query) {
-        //                 resultsViewPageStore.sampleListId = query.sampleListId as string;
-        //             }
-        //
-        //             // TODO we may want to split by ","
-        //
-        //             if ('sampleList' in query) {
-        //                 resultsViewPageStore.sampleList = (query.sampleList as string).split(" ");
-        //             }
-        //
-        //             if ('geneList' in query) {
-        //                 resultsViewPageStore.hugoGeneSymbols = (query.geneList as string).split(" ");
-        //             }
-        //         }
-        //         else {
-        //             resultsViewPageStore.urlValidationError = validationResult.message;
-        //         }
-        //
-        //     },
-        //     { fireImmediately:true }
-        // );
     }
 
     componentDidMount(){
@@ -125,9 +91,6 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
         exposeComponentRenderer('renderMutationsTab',
             (props:MutationsTabInitProps)=>{
-                resultsViewPageStore.hugoGeneSymbols = props.genes;
-                resultsViewPageStore.samplesSpecification = props.samplesSpecification;
-
                 return <div>
                     <AjaxErrorModal
                         show={(resultsViewPageStore.ajaxErrors.length > 0)}
@@ -139,9 +102,6 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
         exposeComponentRenderer('renderCancerTypeSummary',
             (props:MutationsTabInitProps)=>{
-                //resultsViewPageStore.hugoGeneSymbols = props.genes;
-                //resultsViewPageStore.samplesSpecification = props.samplesSpecification;
-
                 return <div>
                     <AjaxErrorModal
                         show={(resultsViewPageStore.ajaxErrors.length > 0)}
@@ -153,50 +113,6 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
 
         exposeComponentRenderer('renderMutExTab', () => {
-
-            // const qSession:any = (window as any).QuerySession;
-            //
-            // var props:any = {
-            //     genes: qSession.getQueryGenes()
-            // };
-            //
-            // var samplesSpecification: any = [];
-            // if (["-1", "all"].indexOf(qSession.getCaseSetId()) > -1) {
-            //     // "-1" means custom case id, "all" means all cases in the queried stud(y/ies). Neither is an actual case set that could eg be queried
-            //     var studyToSampleMap = qSession.getStudySampleMap();
-            //     var studies = Object.keys(studyToSampleMap);
-            //     for (var i=0; i<studies.length; i++) {
-            //         var study: any = studies[i];
-            //         samplesSpecification = samplesSpecification.concat(studyToSampleMap[study].map(function(sampleId:any) {
-            //             return {
-            //                 sampleId: sampleId,
-            //                 studyId: study
-            //             };
-            //         }));
-            //     }
-            // } else {
-            //     //var studyToSampleListIdMap = qSession.getStudySampleListMap();
-            //
-            //     var studyToSampleListIdMap:any = {};
-            //     studyToSampleListIdMap[qSession.getCancerStudyIds()[0]] = qSession.getCaseSetId();
-            //
-
-                {/*var studies = Object.keys(studyToSampleListIdMap);*/}
-                {/*for (var i=0; i<studies.length; i++) {*/}
-                    {/*samplesSpecification.push({*/}
-                        {/*sampleListId: studyToSampleListIdMap[studies[i]],*/}
-                        {/*studyId: studies[i]*/}
-                    {/*});*/}
-                {/*}*/}
-            {/*}*/}
-            {/*resultsViewPageStore.samplesSpecification = samplesSpecification;*/}
-            {/*resultsViewPageStore.hugoGeneSymbols = qSession.getQueryGenes();*/}
-            {/*resultsViewPageStore.selectedMolecularProfileIds = qSession.getGeneticProfileIds();*/}
-            {/*resultsViewPageStore.rppaScoreThreshold = qSession.getRppaScoreThreshold();*/}
-            // resultsViewPageStore.zScoreThreshold = qSession.getZScoreThreshold();
-            // resultsViewPageStore.oqlQuery = qSession.oql_query;
-            //
-            // _.each(props.genes, (gene:string)=>resultsViewPageStore.getMutationMapperStore(gene));
 
             return (<div>
                 <MutualExclusivityTab store={resultsViewPageStore}/>
@@ -211,26 +127,5 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
         return null;
 
-        //
-        // return null;
-        //
-        // if (resultsViewPageStore.urlValidationError) {
-        //     return <ValidationAlert urlValidationError={resultsViewPageStore.urlValidationError} />;
-        // }
-        //
-        // return (
-        //     <div className="resultsViewPage">
-        //         <AjaxErrorModal
-        //             show={(resultsViewPageStore.ajaxErrors.length > 0)}
-        //             onHide={()=>{ resultsViewPageStore.clearErrors() }}
-        //         />
-        //
-        //         <Mutations
-        //             genes={resultsViewPageStore.hugoGeneSymbols || []}
-        //             store={resultsViewPageStore}
-        //             routing={this.props.routing}
-        //         />
-        //     </div>
-        // );
     }
 }
