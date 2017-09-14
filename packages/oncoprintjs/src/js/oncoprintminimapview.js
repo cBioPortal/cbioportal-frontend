@@ -1,4 +1,3 @@
-var $ = require('jquery');
 var gl_matrix = require('gl-matrix');
 var OncoprintZoomSlider = require('./oncoprintzoomslider.js');
 
