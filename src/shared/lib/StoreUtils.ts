@@ -44,7 +44,7 @@ import GenomeNexusAPI from "shared/api/generated/GenomeNexusAPI";
 import GenomeNexusAPIInternal from "shared/api/generated/GenomeNexusAPIInternal";
 
 export const ONCOKB_DEFAULT: IOncoKbData = {
-    sampleToTumorMap : {},
+    uniqueSampleKeyToTumorType : {},
     indicatorMap : {}
 };
 
@@ -233,7 +233,7 @@ export async function fetchSamples(sampleIds:MobxPromise<string[]>,
     }
 }
 
-export function findSampleIdsWithCancerTypeClinicalData(clinicalDataForSamples:MobxPromise<ClinicalData[]>): {[sampleId: string]: boolean}
+export function findSampleIdsWithCancerTypeClinicalData(clinicalDataForSamples:MobxPromise<ClinicalData[]>): {[uniqueSampleKey: string]: boolean}
 {
     const samplesWithClinicalData: {[sampleId: string]: boolean} = {};
 
@@ -242,7 +242,7 @@ export function findSampleIdsWithCancerTypeClinicalData(clinicalDataForSamples:M
         _.each(clinicalDataForSamples.result, (clinicalData: ClinicalData) => {
             if (clinicalData.clinicalAttributeId === "CANCER_TYPE_DETAILED" ||
                 clinicalData.clinicalAttributeId === "CANCER_TYPE") {
-                samplesWithClinicalData[clinicalData.sampleId] = true;
+                samplesWithClinicalData[clinicalData.uniqueSampleKey] = true;
             }
         });
     }
@@ -260,7 +260,7 @@ export function findSamplesWithoutCancerTypeClinicalData(samples:MobxPromise<Sam
         const samplesWithClinicalData = findSampleIdsWithCancerTypeClinicalData(clinicalDataForSamples);
 
         return _.filter(samples.result, (sample: Sample) => {
-            return samplesWithClinicalData[sample.sampleId] !== true;
+            return samplesWithClinicalData[sample.uniqueSampleKey] !== true;
         });
     }
     else {
@@ -421,7 +421,7 @@ export async function fetchOncoKbAnnotatedGenes(client: OncoKbAPI = oncokbClient
         }, {});
 }
 
-export async function fetchOncoKbData(sampleIdToTumorType:{[sampleId: string]: string},
+export async function fetchOncoKbData(uniqueSampleKeyToTumorType:{[uniqueSampleKey: string]: string},
                                       annotatedGenes:{[entrezGeneId:number]:boolean},
                                       mutationData:MobxPromise<Mutation[]>,
                                       uncalledMutationData?:MobxPromise<Mutation[]>,
@@ -436,16 +436,16 @@ export async function fetchOncoKbData(sampleIdToTumorType:{[sampleId: string]: s
     const mutationsToQuery = _.filter(mutationDataResult, m=>!!annotatedGenes[m.entrezGeneId]);
     const queryVariants = _.uniqBy(_.map(mutationsToQuery, (mutation: Mutation) => {
         return generateQueryVariant(mutation.gene.entrezGeneId,
-            cancerTypeForOncoKb(mutation.sampleId, sampleIdToTumorType),
+            cancerTypeForOncoKb(mutation.uniqueSampleKey, uniqueSampleKeyToTumorType),
             mutation.proteinChange,
             mutation.mutationType,
             mutation.proteinPosStart,
             mutation.proteinPosEnd);
     }), "id");
-    return queryOncoKbData(queryVariants, sampleIdToTumorType, client);
+    return queryOncoKbData(queryVariants, uniqueSampleKeyToTumorType, client);
 }
 
-export async function fetchCnaOncoKbData(sampleIdToTumorType:{[sampleId: string]: string},
+export async function fetchCnaOncoKbData(uniqueSampleKeyToTumorType:{[uniqueSampleKey: string]: string},
                                          annotatedGenes:{[entrezGeneId:number]:boolean},
                                          discreteCNAData:MobxPromise<DiscreteCopyNumberData[]>,
                                          client: OncoKbAPI = oncokbClient)
@@ -458,30 +458,30 @@ export async function fetchCnaOncoKbData(sampleIdToTumorType:{[sampleId: string]
         const alterationsToQuery = _.filter(discreteCNAData.result, d=>!!annotatedGenes[d.gene.entrezGeneId]);
         const queryVariants = _.uniqBy(_.map(alterationsToQuery, (copyNumberData: DiscreteCopyNumberData) => {
             return generateQueryVariant(copyNumberData.gene.entrezGeneId,
-                cancerTypeForOncoKb(copyNumberData.sampleId, sampleIdToTumorType),
+                cancerTypeForOncoKb(copyNumberData.uniqueSampleKey, uniqueSampleKeyToTumorType),
                 getAlterationString(copyNumberData.alteration));
         }), "id");
-        return queryOncoKbData(queryVariants, sampleIdToTumorType, client);
+        return queryOncoKbData(queryVariants, uniqueSampleKeyToTumorType, client);
     }
 }
 
-function cancerTypeForOncoKb(sampleId: string,
-                             sampleIdToTumorType:{[sampleId: string]: string}): string
+function cancerTypeForOncoKb(uniqueSampleKey: string,
+                             uniqueSampleKeyToTumorType:{[uniqueSampleKey: string]: string}): string
 {
     // first priority is sampleIdToTumorType map (derived either from the clinical data or from the study cancer type).
     // if it is not valid, then we return an empty string and let OncoKB API figure out what to do
-    return sampleIdToTumorType[sampleId] || "";
+    return uniqueSampleKeyToTumorType[uniqueSampleKey] || "";
 }
 
 export async function queryOncoKbData(queryVariants: Query[],
-                                      sampleIdToTumorType: {[sampleId: string]: string},
+                                      uniqueSampleKeyToTumorType: {[sampleId: string]: string},
                                       client: OncoKbAPI = oncokbClient)
 {
     const onkokbSearch = await client.searchPostUsingPOST(
         {body: generateEvidenceQuery(queryVariants)});
 
     const oncoKbData: IOncoKbData = {
-        sampleToTumorMap: sampleIdToTumorType,
+        uniqueSampleKeyToTumorType: uniqueSampleKeyToTumorType,
         indicatorMap: generateIdToIndicatorMap(onkokbSearch)
     };
 
@@ -669,7 +669,7 @@ export function indexHotspotData(hotspotData:MobxPromise<ICancerHotspotData>): I
     }
 }
 
-export function generateSampleIdToTumorTypeMap(clinicalDataForSamples: MobxPromise<ClinicalData[]>,
+export function generateUniqueSampleKeyToTumorTypeMap(clinicalDataForSamples: MobxPromise<ClinicalData[]>,
                                                studies?: MobxPromise<CancerStudy[]>,
                                                samples?: MobxPromise<Sample[]>): {[sampleId: string]: string}
 
@@ -681,15 +681,15 @@ export function generateSampleIdToTumorTypeMap(clinicalDataForSamples: MobxPromi
         // first priority is CANCER_TYPE_DETAILED in clinical data
         _.each(clinicalDataForSamples.result, (clinicalData: ClinicalData) => {
             if (clinicalData.clinicalAttributeId === "CANCER_TYPE_DETAILED") {
-                map[clinicalData.sampleId] = clinicalData.value;
+                map[clinicalData.uniqueSampleKey] = clinicalData.value;
             }
         });
 
         // second priority is CANCER_TYPE in clinical data
         _.each(clinicalDataForSamples.result, (clinicalData: ClinicalData) => {
             // update map with CANCER_TYPE value only if it is not already updated
-            if (clinicalData.clinicalAttributeId === "CANCER_TYPE" && map[clinicalData.sampleId] === undefined) {
-                map[clinicalData.sampleId] = clinicalData.value;
+            if (clinicalData.clinicalAttributeId === "CANCER_TYPE" && map[clinicalData.uniqueSampleKey] === undefined) {
+                map[clinicalData.uniqueSampleKey] = clinicalData.value;
             }
         });
     }
@@ -700,8 +700,8 @@ export function generateSampleIdToTumorTypeMap(clinicalDataForSamples: MobxPromi
         const studyIdToCancerType = makeStudyToCancerTypeMap(studies.result);
 
         _.each(samples.result, (sample: Sample) => {
-            if (map[sample.sampleId] === undefined) {
-                map[sample.sampleId] = studyIdToCancerType[sample.studyId];
+            if (map[sample.uniqueSampleKey] === undefined) {
+                map[sample.uniqueSampleKey] = studyIdToCancerType[sample.studyId];
             }
         });
     }
@@ -824,4 +824,17 @@ export function groupBySampleId(sampleIds: Array<string>, clinicalDataArray: Arr
             clinicalData: clinicalDataArray.filter((cd: ClinicalData) => cd.sampleId === k)
         })
     );
+}
+
+export function groupBy<T>(data:T[], keyFn:(d:T)=>string, defaultKeys:string[]=[]):{[key:string]:T[]} {
+    const ret:{[key:string]:T[]} = {};
+    for (const key of defaultKeys) {
+        ret[key] = [];
+    }
+    for (const datum of data) {
+        const key = keyFn(datum);
+        ret[key] = ret[key] || [];
+        ret[key].push(datum);
+    }
+    return ret;
 }

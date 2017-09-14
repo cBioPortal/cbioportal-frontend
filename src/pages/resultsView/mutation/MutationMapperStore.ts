@@ -16,7 +16,7 @@ import {calcPdbIdNumericalValue, mergeIndexedPdbAlignments} from "shared/lib/Pdb
 import {lazyMobXTableSort} from "shared/components/lazyMobXTable/LazyMobXTable";
 import {
     indexHotspotData, fetchHotspotsData, fetchCosmicData, fetchOncoKbData,
-    fetchMutationData, generateSampleIdToTumorTypeMap, generateDataQueryFilter,
+    fetchMutationData, generateUniqueSampleKeyToTumorTypeMap, generateDataQueryFilter,
     ONCOKB_DEFAULT, fetchPdbAlignmentData, fetchSwissProtAccession, fetchUniprotId, indexPdbAlignmentData,
     fetchPfamDomainData, fetchCivicGenes, fetchCivicVariants, IDataQueryFilter, fetchCanonicalTranscript,
 } from "shared/lib/StoreUtils";
@@ -46,7 +46,8 @@ export class MutationMapperStore {
                 public clinicalDataForSamples: MobxPromise<ClinicalData[]>,
                 public studiesForSamplesWithoutCancerTypeClinicalData: MobxPromise<CancerStudy[]>,
                 private samplesWithoutCancerTypeClinicalData: MobxPromise<Sample[]>,
-                public germlineConsentedSamples:MobxPromise<SampleIdentifier[]>)
+                public germlineConsentedSamples:MobxPromise<SampleIdentifier[]>,
+                public indexedHotspotData:MobxPromise<IHotspotData|undefined>)
     {
         labelMobxPromises(this);
     }
@@ -56,19 +57,6 @@ export class MutationMapperStore {
             this.mutationData
         ],
         invoke: () => fetchCosmicData(this.mutationData)
-    });
-
-
-    readonly hotspotData = remoteData({
-        await: ()=> [
-            this.mutationData
-        ],
-        invoke: async () => {
-            return fetchHotspotsData(this.mutationData);
-        },
-        onError: () => {
-            // fail silently
-        }
     });
 
     readonly mutationData = remoteData({
@@ -142,7 +130,7 @@ export class MutationMapperStore {
             this.clinicalDataForSamples,
             this.studiesForSamplesWithoutCancerTypeClinicalData
         ],
-        invoke: async () => fetchOncoKbData(this.sampleIdToTumorType, this.oncoKbAnnotatedGenes, this.mutationData),
+        invoke: async () => fetchOncoKbData(this.uniqueSampleKeyToTumorType, this.oncoKbAnnotatedGenes, this.mutationData),
         onError: (err: Error) => {
             // fail silently, leave the error handling responsibility to the data consumer
         }
@@ -230,12 +218,8 @@ export class MutationMapperStore {
         return lazyMobXTableSort(this.mergedAlignmentData, sortMetric, false);
     }
 
-    @computed get indexedHotspotData(): IHotspotData|undefined {
-        return indexHotspotData(this.hotspotData);
-    }
-
-    @computed get sampleIdToTumorType(): {[sampleId: string]: string} {
-        return generateSampleIdToTumorTypeMap(this.clinicalDataForSamples,
+    @computed get uniqueSampleKeyToTumorType(): {[uniqueSampleKey: string]: string} {
+        return generateUniqueSampleKeyToTumorTypeMap(this.clinicalDataForSamples,
             this.studiesForSamplesWithoutCancerTypeClinicalData,
             this.samplesWithoutCancerTypeClinicalData);
     }
