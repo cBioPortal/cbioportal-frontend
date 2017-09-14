@@ -1,7 +1,6 @@
 import {
     DiscreteCopyNumberFilter, DiscreteCopyNumberData, ClinicalData, ClinicalDataMultiStudyFilter, Sample,
-    MolecularProfile, Mutation, Gene,
-    SampleIdentifier, GeneMolecularData, MolecularDataFilter
+    SampleIdentifier, MolecularProfile, Mutation, GeneMolecularData, MolecularDataFilter, Gene
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {computed, observable, action} from "mobx";
@@ -27,6 +26,7 @@ import {stringListToIndexSet, stringListToSet} from "../../shared/lib/StringUtil
 import {toSampleUuid} from "../../shared/lib/UuidUtils";
 import MutationDataCache from "../../shared/cache/MutationDataCache";
 import accessors from "../../shared/lib/oql/accessors";
+import {filterCBioPortalWebServiceData} from "../../shared/lib/oql/oqlfilter.js";
 import {filterCBioPortalWebServiceData} from "../../shared/lib/oql/oqlfilter";
 import {keepAlive} from "mobx-utils";
 import MutationMapper from "./mutation/MutationMapper";
@@ -124,8 +124,8 @@ export function countAlterationOccurences(samplesByCancerType: {[cancerType: str
                                 if (alteration.alterationSubType === 'down') counts.mrnaExpressionDown++;
                                 break;
                             case AlterationTypeConstants.PROTEIN_LEVEL:
-                                if (alteration.alterationSubType > 0) counts.protExpressionUp++;
-                                if (alteration.alterationSubType < 0) counts.protExpressionDown++;
+                                if (alteration.alterationSubType === 'up') counts.protExpressionUp++;
+                                if (alteration.alterationSubType === 'down') counts.protExpressionDown++;
                                 break;
                             case AlterationTypeConstants.MUTATION_EXTENDED:
                                 counts.mutated++;
@@ -237,7 +237,7 @@ export class ResultsViewPageStore {
             // now merge alterations with mutations by gene
             const mergedAlterationsByGene = _.mapValues(genesAsDictionary, (gene: Gene) => {
                 // if for some reason it doesn't exist, assign empty array;
-                return _.concat(([] as (Mutation|GeneMolecularData)[]), this.allMutations.result[gene.hugoGeneSymbol], filteredMolecularDataByGene[gene.hugoGeneSymbol]);
+                return _.concat(([] as (Mutation|GeneMolecularData)[]), this.allMutations.result![gene.hugoGeneSymbol], filteredMolecularDataByGene[gene.hugoGeneSymbol]);
             });
             const ret = _.mapValues(mergedAlterationsByGene, (mutations: (Mutation|GeneMolecularData)[]) => {
                 return filterCBioPortalWebServiceData(this.oqlQuery, mutations, (new accessors(this.selectedMolecularProfiles.result!)), this.defaultOQLQuery.result!, undefined, true);
@@ -257,7 +257,7 @@ export class ResultsViewPageStore {
 
     });
 
-    readonly samplesByDetailedCancerType = remoteData({
+    readonly samplesByDetailedCancerType = remoteData<{[cancerType:string]:Sample[]}>({
         await: () => [
             this.samples,
             this.clinicalDataForSamples
@@ -265,7 +265,6 @@ export class ResultsViewPageStore {
         invoke: () => {
             // first group samples by type
             const sampleKeyToCancerTypeClinicalDataMap = _.reduce(this.clinicalDataForSamples.result, (memo: any, clinicalData: ClinicalData) => {
-
                 if (clinicalData.clinicalAttributeId === 'CANCER_TYPE_DETAILED') {
                     memo[clinicalData.uniqueSampleKey] = clinicalData.value;
                 }
@@ -278,7 +277,7 @@ export class ResultsViewPageStore {
 
                 return memo;
             }, {});
-            let ret = _.reduce(this.samples.result, (memo, sample: Sample) => {
+            let ret = _.reduce(this.samples.result, (memo:{[cancerType:string]:Sample[]} , sample: Sample) => {
                 if (sample.uniqueSampleKey in sampleKeyToCancerTypeClinicalDataMap) {
                     memo[sampleKeyToCancerTypeClinicalDataMap[sample.uniqueSampleKey]] = memo[sampleKeyToCancerTypeClinicalDataMap[sample.uniqueSampleKey]] || [];
                     memo[sampleKeyToCancerTypeClinicalDataMap[sample.uniqueSampleKey]].push(sample);
@@ -311,7 +310,7 @@ export class ResultsViewPageStore {
         invoke: () => {
             // look through list of alterations for each gene
             const ret = _.mapValues(this.alterationsBySampleIdByGene.result, (alterationsBySampleId: {[sampleId: string]: ExtendedAlteration[]}, gene: string) => {
-                return countAlterationOccurences(this.samplesByDetailedCancerType.result, alterationsBySampleId);
+                return countAlterationOccurences(this.samplesByDetailedCancerType.result!, alterationsBySampleId);
             });
             return Promise.resolve(ret);
         }
@@ -330,23 +329,19 @@ export class ResultsViewPageStore {
 
             const flattened = _.flatMap(this.alterationsBySampleIdByGene.result, (map)=>map);
             // NEED TO FLATTEN and then merge this to get all alteration by sampleId
-
-            function customizer(objValue, srcValue) {
+            function customizer(objValue:any, srcValue:any) {
                 if (_.isArray(objValue)) {
                     return objValue.concat(srcValue);
                 }
             }
-
-            const merged = _.mergeWith({},...flattened, customizer);
-
-            const ret = countAlterationOccurences(this.samplesByDetailedCancerType.result, merged);
-
-
+            const merged: {[uniqueSampleKey:string]: ExtendedAlteration[] } =
+                (_.mergeWith({},...flattened, customizer) as {[uniqueSampleKey:string]: ExtendedAlteration[] });
+            const ret = countAlterationOccurences(this.samplesByDetailedCancerType.result!, merged);
             return Promise.resolve(ret);
         }
     });
 
-    readonly filteredAlterationsAsSampleIdArrays = remoteData<>({
+    readonly filteredAlterationsAsSampleIdArrays = remoteData({
         await: () => [
             this.filteredAlterations
         ],

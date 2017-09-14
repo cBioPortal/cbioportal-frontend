@@ -3,7 +3,7 @@ import {HTMLProps} from "react";
 import {observer} from "mobx-react";
 import {computed, observable} from "mobx";
 
-export interface IEditableSpanProps extends HTMLProps<HTMLSpanElement>{
+export interface IEditableSpanProps extends React.DetailedHTMLProps<React.HTMLAttributes<HTMLSpanElement>, HTMLSpanElement> {
     value:string;
     setValue:(val:string)=>void;
     maxChars?:number;

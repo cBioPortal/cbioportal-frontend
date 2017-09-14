@@ -72,23 +72,23 @@ export default class DiscreteCNAColumnFormatter {
         if (cacheDatum !== null && cacheDatum.status === "complete" && cacheDatum.data !== null) {
             const alteration = cacheDatum.data.alteration;
             if (alteration === 2) {
-                return (<span style={{color:"red", textAlign:"center", fontSize:"12px"}} alt="High-level amplification">
+                return (<span style={{color:"red", textAlign:"center", fontSize:"12px"}}>
                     <b>Amp</b>
                 </span>);
             } else if (alteration === 1) {
-                return (<span style={{color:"red", textAlign:"center", fontSize:"smaller"}} alt="Low-level gain">
+                return (<span style={{color:"red", textAlign:"center", fontSize:"smaller"}}>
                     <b>Gain</b>
                 </span>);
             } else if (alteration === 0) {
-                return (<span style={{color:"black", textAlign:"center", fontSize:"xx-small"}} alt="Diploid / normal">
+                return (<span style={{color:"black", textAlign:"center", fontSize:"xx-small"}}>
                     Diploid
                 </span>);
             } else if (alteration === -1) {
-                return (<span style={{color:"blue", textAlign:"center", fontSize:"smaller"}} alt="Shallow deletion">
+                return (<span style={{color:"blue", textAlign:"center", fontSize:"smaller"}}>
                     <b>ShallowDel</b>
                 </span>);
             } else {
-                return (<span style={{color:"blue", textAlign:"center", fontSize:"12px"}} alt="Deep deletion">
+                return (<span style={{color:"blue", textAlign:"center", fontSize:"12px"}}>
                     <b>DeepDel</b>
                 </span>);
             }

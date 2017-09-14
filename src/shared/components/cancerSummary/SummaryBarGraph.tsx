@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as _ from 'lodash';
 import {computed, observable} from "mobx";
-import { ChartTooltipItem } from '@types/chart.js';
+import { ChartTooltipItem } from 'chart.js';
 import Chart, {ChartLegendItem} from 'chart.js';
 import {IBarGraphConfigOptions} from './CancerSummaryContent';
 import {observer} from "mobx-react";
@@ -112,7 +112,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
         tooltipEl.style.top = position.top + tooltipModel.caretY + 5 + 'px';
     }
 
-    private componentDidMount() {
+    public componentDidMount() {
         this.chartConfig.data = this.props.data;
         this.chartConfig.options = this.getChartOptions(1000);
         this.chart = new Chart(this.chartTarget, this.chartConfig);
@@ -126,7 +126,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
         }
     }
 
-    private componentDidUpdate() {
+    public componentDidUpdate() {
         this.updateChart();
         this.updateChartWidth();
     }
@@ -228,7 +228,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
         return (
             <div className="cancer-summary-chart-container">
                 {errorMessage}
-                <canvas ref={el => this.chartTarget = el} width="100%" height="600"/>
+                <canvas ref={(el:HTMLCanvasElement) => this.chartTarget = el} width="100%" height="600"/>
             </div>
         );
     }

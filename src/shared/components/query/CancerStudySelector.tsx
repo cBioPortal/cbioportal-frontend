@@ -51,7 +51,7 @@ export interface ICancerStudySelectorProps
 }
 
 @observer
-export default class CancerStudySelector extends QueryStoreComponent<ICancerStudySelectorProps, void>
+export default class CancerStudySelector extends QueryStoreComponent<ICancerStudySelectorProps, {}>
 {
 	constructor(props: ICancerStudySelectorProps)
 	{
