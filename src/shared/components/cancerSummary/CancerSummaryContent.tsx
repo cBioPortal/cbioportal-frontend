@@ -12,7 +12,7 @@ import 'react-select/dist/react-select.css';
 import 'react-rangeslider/lib/index.css';
 
 import SummaryBarGraph from './SummaryBarGraph';
-
+//
 export interface ICancerTypeAlterationPlotData {
     mutated:number;
     amplified:number;
@@ -96,7 +96,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
         const {yAxis} = this;
         return _.reduce(data, (accum, cancer:ICancerTypeAlterationData, cancerType:string) => {
             const totalCases = cancer.total;
-            const cancerAlterations:ICancerTypeAlterationPlotData | {} = _.omit(cancer, ['total']);
+            const cancerAlterations:Partial<ICancerTypeAlterationPlotData> = _.omit(cancer, ['total']);
             const altTotalCount = _.reduce(cancerAlterations, (total:number, value:number) => total + value, 0);
             let altTotalPercent = _.round((altTotalCount / totalCases * 100), 1);
             altTotalPercent = altTotalPercent > 100 ? 100 : altTotalPercent;
@@ -334,11 +334,11 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
             <div>
                 <div className="btn-row">
                     <button onClick={this.toggleShowControls} className="btn btn-primary">Customize Histogram</button>
-                    <a type="button" className={`btn btn-primary${this.pngAnchor ? '': ' disabled'}`}
+                    <a className={`btn btn-primary${this.pngAnchor ? '': ' disabled'}`}
                         href={this.pngAnchor} download="cBioPortalCancerSummary.png">
                         PNG
                     </a>
-                    <a type="button" className={`btn btn-primary${this.pdfAnchor ? '': ' disabled'}`}
+                    <a className={`btn btn-primary${this.pdfAnchor ? '': ' disabled'}`}
                        onClick={this.downloadPdf}>
                         PDF
                     </a>
