@@ -65,7 +65,6 @@ export default class CohortColumnFormatter
                     >
                         <span
                             style={{color: "gray", fontSize:"xx-small", textAlign:"center"}}
-                            alt="Data not available."
                         >
                             NA
                         </span>
@@ -78,7 +77,6 @@ export default class CohortColumnFormatter
                         >
                         <span
                             style={{color: "gray", fontSize:"xx-small", textAlign:"center"}}
-                            alt="Error retrieving data."
                         >
                         ERROR
                         </span>
@@ -92,7 +90,6 @@ export default class CohortColumnFormatter
                     >
                     <span
                         style={{color: "gray", fontSize:"xx-small", textAlign:"center"}}
-                        alt="Querying server for data."
                     >
                         LOADING
                     </span>
