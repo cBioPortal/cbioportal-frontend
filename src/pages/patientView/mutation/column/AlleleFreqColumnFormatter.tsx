@@ -1,8 +1,9 @@
 import * as React from 'react';
+import * as _ from 'lodash';
 import {If, Else, Then } from 'react-if';
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import 'rc-tooltip/assets/bootstrap_white.css';
-import {Mutation} from "../../../../shared/api/generated/CBioPortalAPI";
+import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import SampleManager from "../../sampleManager";
 import {isUncalled} from 'shared/lib/MutationUtils';
 
@@ -148,7 +149,8 @@ export default class AlleleFreqColumnFormatter {
         if (allMutations) {
             for (const rowMutations of allMutations) {
                 const frequency = this.getSortValue(rowMutations, sampleManager);
-                if (frequency[0]) {
+                // if there is at least one valid (non-falsey) value, it should be visible
+                if (_.compact(frequency).length > 0) {
                     return true;
                 }
             }
