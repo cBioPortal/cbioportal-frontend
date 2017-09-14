@@ -40,6 +40,7 @@ export interface IBarChartSortedData {
 }
 
 export interface IBarGraphConfigOptions {
+    labels: string[];
     datasets: IBarGraphDataset[];
 }
 
@@ -69,16 +70,20 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
     @observable private multiSelectOptions = this.cancerTypes;
     @observable private altCasesValue = 0;
     @observable private totalCasesValue = 0;
+    @observable private tempTotalCasesValue = 0;
+    @observable private tempAltCasesValue = 0;
 
     constructor(props:ICancerSummaryContentProps) {
         super(props);
 
         this.handleYAxisChange = this.handleYAxisChange.bind(this);
         this.handleXAxisChange = this.handleXAxisChange.bind(this);
-        this.handleAltSliderChange = this.handleAltSliderChange.bind(this);
         this.handleGenomicCheckboxChange = this.handleGenomicCheckboxChange.bind(this);
         this.handleSelectChange = this.handleSelectChange.bind(this);
+        this.handleAltSliderChange = this.handleAltSliderChange.bind(this);
         this.handleTotalSliderChange = this.handleTotalSliderChange.bind(this);
+        this.handleAltSliderChangeComplete = this.handleAltSliderChangeComplete.bind(this);
+        this.handleTotalSliderChangeComplete = this.handleTotalSliderChangeComplete.bind(this);
         this.toggleShowControls = this.toggleShowControls.bind(this);
         this.setPngAnchor = this.setPngAnchor.bind(this);
         this.setPdfAnchor = this.setPdfAnchor.bind(this);
@@ -139,11 +144,19 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
     }
 
     private handleAltSliderChange(value:number) {
-        this.altCasesValue = value;
+        this.tempAltCasesValue = value;
     }
 
     private handleTotalSliderChange(value:number) {
-        this.totalCasesValue = value;
+        this.tempTotalCasesValue = value;
+    }
+
+    private handleAltSliderChangeComplete() {
+        this.altCasesValue = this.tempAltCasesValue;
+    }
+
+    private handleTotalSliderChangeComplete() {
+        this.totalCasesValue = this.tempTotalCasesValue;
     }
 
     private toggleShowControls() {
@@ -152,12 +165,12 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
 
     private getColors(color:string) {
         const colors:{[id:string]:string} = {
-            mutated:"#36a2eb",
-            amplified:"#ff6384",
-            deleted:"#ffce56",
-            multiple:"#cc65fe",
+            mutated:"#008000",
+            amplified:"#ff0000",
+            deleted:"#0000ff",
+            multiple:"#aaaaaa",
         };
-        return this.showGenomicAlt ? (colors[color] || "#4BC0C0") : '#aaaaaa';
+        return this.showGenomicAlt ? (colors[color] || "#000000") : '#aaaaaa';
     }
 
     @computed private get cancerTypes() {
@@ -197,17 +210,20 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
         const flattenedDatasets = _.flatten(
             orderedDatasets.filter(dataPoint => dataPoint.sortCount >= altCasesValue)
                             .map((orderedDataset, i) => (
-                            orderedDataset.data.map(dataPoint => (
-                                {
-                                    ...dataPoint,
-                                    data: i === 0 ? [dataPoint.total] : [...Array(i).fill(0), dataPoint.total]
-                                }
-                            ))
+                                orderedDataset.data.map(dataPoint => (
+                                    {
+                                        ...dataPoint,
+                                        data: i === 0 ? [dataPoint.total] : [...Array(i).fill(0), dataPoint.total]
+                                    }
+                                ))
             ))
         );
 
         return {
-            labels: orderedDatasets.map(dataset => dataset!.label),
+            labels: _.reduce(orderedDatasets, (accum, data) => {
+                if (data.sortCount >= this.altCasesValue) accum.push(data.label);
+                return accum;
+                }, [] as string[]),
             datasets: flattenedDatasets
         };
     }
@@ -265,15 +281,16 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                                 <Slider
                                     min={0}
                                     max={altMax}
-                                    value={this.altCasesValue}
+                                    value={this.tempAltCasesValue}
                                     labels={{0:0 + symbol, [altMax]:altMax + symbol}}
                                     format={(val:string) => val + symbol}
                                     onChange={this.handleAltSliderChange}
+                                    onChangeComplete={this.handleAltSliderChangeComplete}
                                 />
                             </div>
                         </FormGroup>
                         <FormGroup>
-                            <FormControl type="text" value={this.altCasesValue + symbol}/>
+                            <FormControl type="text" value={this.tempAltCasesValue + symbol}/>
                         </FormGroup>
                     </div>
                 </div>
@@ -297,14 +314,15 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                                 <Slider
                                     min={0}
                                     max={totalCasesMax}
-                                    value={this.totalCasesValue}
+                                    value={this.tempTotalCasesValue}
                                     labels={{0:0, [totalCasesMax]:totalCasesMax}}
                                     onChange={this.handleTotalSliderChange}
+                                    onChangeComplete={this.handleTotalSliderChangeComplete}
                                 />
                             </div>
                         </FormGroup>
                         <FormGroup>
-                            <FormControl type="text" value={this.totalCasesValue}/>
+                            <FormControl type="text" value={this.tempTotalCasesValue}/>
                         </FormGroup>
                     </div>
                 </div>
