@@ -30,6 +30,10 @@ export interface IAppConfig {
     skinRightNavWhatsNewBlurb?: string;
     userEmailAddress?: string;
     querySetsOfGenes?: {"id": string, "genes":string[]}[];
+    oncoprintCustomDriverAnnotationBinaryMenuLabel?:string;
+    oncoprintCustomDriverAnnotationTiersMenuLabel?:string;
+    oncoprintCustomDriverAnnotationDefault?:string;
+    oncoprintCustomDriverTiersAnnotationDefault?:string;
 }
 
 export type PriorityStudies = {
