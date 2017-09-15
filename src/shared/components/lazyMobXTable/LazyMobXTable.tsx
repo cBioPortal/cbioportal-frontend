@@ -645,7 +645,7 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
     }
 
     private getPaginationControls() {
-        if (this.props.showPagination) {
+        //if (this.props.showPagination) {
 			// default paginationProps
 			let paginationProps:IPaginationControlsProps = {
 				className:"text-center topPagination",
@@ -675,9 +675,9 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
                     {...paginationProps}
                 />
             );
-        } else {
-            return null;
-        }
+        // } else {
+        //     return null;
+        // }
     }
 
     private getTopToolbar() {
@@ -703,7 +703,7 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
                         downloadFilename="table.csv"
                         {...this.props.copyDownloadProps}
                     />) : ""}
-                {this.props.showPaginationAtTop ? (
+                {this.props.showPagination && this.props.showPaginationAtTop ? (
                     <Observer>
                         { this.getPaginationControls }
                     </Observer>
@@ -715,9 +715,11 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
     private getBottomToolbar() {
         return (
             <ButtonToolbar style={{marginLeft:0, float:'none'}} className="tableMainToolbar center">
-                <Observer>
-                    { this.getPaginationControls }
-                </Observer>
+                {(this.props.showPagination) && (
+                    <Observer>
+                        { this.getPaginationControls }
+                    </Observer>
+                )}
             </ButtonToolbar>
         );
     }

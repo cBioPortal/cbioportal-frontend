@@ -15,7 +15,6 @@ import {Button, FormControl, Checkbox} from 'react-bootstrap';
 import {ColumnVisibilityControls} from "../columnVisibilityControls/ColumnVisibilityControls";
 import {SimpleMobXApplicationDataStore} from "../../lib/IMobXApplicationDataStore";
 import cloneJSXWithoutKeyAndRef from "shared/lib/cloneJSXWithoutKeyAndRef";
-import DetailedHTMLProps = require("react");
 
 expect.extend(expectJSX);
 chai.use(chaiEnzyme());
@@ -101,7 +100,7 @@ function getTextBeforeButtons(table:ReactWrapper<any, any>):string | undefined {
 }
 
 function clickColumnVisibilityCheckbox(table:ReactWrapper<any, any>, columnName:string):boolean {
-    let checkbox: DetailedHTMLProps = table.find(ColumnVisibilityControls).find(Checkbox)
+    let checkbox: any = table.find(ColumnVisibilityControls).find(Checkbox)
                     .find('input[type="checkbox"]')
                     .filterWhere(x=>(((x.props() as any)['data-id'] as string) === columnName))
     checkbox.simulate('change', {target: {checked:true}});
