@@ -27,7 +27,6 @@ import {toSampleUuid} from "../../shared/lib/UuidUtils";
 import MutationDataCache from "../../shared/cache/MutationDataCache";
 import accessors from "../../shared/lib/oql/accessors";
 import {filterCBioPortalWebServiceData} from "../../shared/lib/oql/oqlfilter.js";
-import {filterCBioPortalWebServiceData} from "../../shared/lib/oql/oqlfilter";
 import {keepAlive} from "mobx-utils";
 import MutationMapper from "./mutation/MutationMapper";
 import {CacheData} from "../../shared/lib/LazyMobXCache";
@@ -47,9 +46,6 @@ interface ExtendedAlteration extends Mutation, GeneMolecularData {
     alterationType: string
     alterationSubType: string
 };
-
-type blah = keyof AlterationTypeConstants;
-
 
 export function buildDefaultOQLProfile(profilesTypes: string[], zScoreThreshold: number, rppaScoreThreshold: number) {
 
@@ -223,8 +219,8 @@ export class ResultsViewPageStore {
     readonly filteredAlterations = remoteData({
         await: () => [
             this.genes,
-            this.allMutations,
             this.selectedMolecularProfiles,
+            this.mutationMapperStores,
             this.molecularData,
             this.defaultOQLQuery
         ],
@@ -234,10 +230,12 @@ export class ResultsViewPageStore {
 
             const genesAsDictionary = _.keyBy(this.genes.result, (gene: Gene) => gene.hugoGeneSymbol);
 
+            //TODO must check state
             // now merge alterations with mutations by gene
             const mergedAlterationsByGene = _.mapValues(genesAsDictionary, (gene: Gene) => {
                 // if for some reason it doesn't exist, assign empty array;
-                return _.concat(([] as (Mutation|GeneMolecularData)[]), this.allMutations.result![gene.hugoGeneSymbol], filteredMolecularDataByGene[gene.hugoGeneSymbol]);
+                return _.concat(([] as (Mutation|GeneMolecularData)[]), this.geneToMutationData[gene.hugoGeneSymbol]!.data!,
+                    filteredMolecularDataByGene![gene.hugoGeneSymbol!]!);
             });
             const ret = _.mapValues(mergedAlterationsByGene, (mutations: (Mutation|GeneMolecularData)[]) => {
                 return filterCBioPortalWebServiceData(this.oqlQuery, mutations, (new accessors(this.selectedMolecularProfiles.result!)), this.defaultOQLQuery.result!, undefined, true);
@@ -361,15 +359,15 @@ export class ResultsViewPageStore {
         }
     });
 
-    readonly genes = remoteData(async() => {
-        if (this.hugoGeneSymbols) {
-            return client.fetchGenesUsingPOST({
-                geneIds: this.hugoGeneSymbols.slice(),
-                geneIdType: "HUGO_GENE_SYMBOL"
-            });
-        }
-        return undefined;
-    });
+    // readonly genes = remoteData(async() => {
+    //     if (this.hugoGeneSymbols) {
+    //         return client.fetchGenesUsingPOST({
+    //             geneIds: this.hugoGeneSymbols.slice(),
+    //             geneIdType: "HUGO_GENE_SYMBOL"
+    //         });
+    //     }
+    //     return undefined;
+    // });
 
     readonly studyToSampleIds = remoteData<{[studyId: string]: {[sampleId: string]: boolean}}>(async() => {
         const sampleListsToQuery: {studyId: string, sampleListId: string}[] = [];

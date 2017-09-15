@@ -27,6 +27,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
         this.mutationsGeneTab = props.genes[0];
     }
 
+
     public render() {
         // use routing if available, if not fall back to the observable variable
         const activeTabId = this.props.routing ?
@@ -40,7 +41,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
                         id="mutationsPageTabs"
                         activeTabId={activeTabId}
                         onTabClick={(id:string) => this.handleTabChange(id)}
-                        className="mainTabs resultsPageMutationsGeneTabs"
+                        className="secondaryTabs resultsPageMutationsGeneTabs"
                         enablePagination={true}
                         arrowStyle={{'line-height':.8}}
                         tabButtonStyle="pills"
@@ -64,7 +65,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
             'cursor': 'pointer',
             'line-height': .8
         }
-        
+
         genes.forEach((gene: string) => {
             const mutationMapperStore = this.props.store.getMutationMapperStore(gene);
 
