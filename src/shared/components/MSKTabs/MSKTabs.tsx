@@ -184,8 +184,8 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
         // we need a little style tweak to prevent initial overflow flashing when paging enabled
         // TODO disabling maxHeight tweak due to inconsistencies for now
         const navBarStyle = this.props.enablePagination ? {
-            /*maxHeight: 40,*/ border: 0, overflow: "hidden"
-        } : undefined;
+           border: 0, overflow: "hidden"
+        } : {};
 
         const prev = this.state.currentPage > 1 ? (
             <li

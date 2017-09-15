@@ -61,7 +61,7 @@ export default class AlleleFreqColumnFormatter {
         }
 
         const sampleOrder = sampleManager.getSampleIdsInOrder();
-        const barX = sampleOrder.reduce((map:{[s:string]:number}, sampleId:string, i:number) => {map[sampleId] = AlleleFreqColumnFormatter.indexToBarLeft(i); return map;}, {});
+        const barX = sampleOrder.reduce((map, sampleId:string, i:number) => {map[sampleId] = AlleleFreqColumnFormatter.indexToBarLeft(i); return map;}, {} as {[s:string]:number});
         const sampleElements = mutations.map((m:Mutation) => {
             const args = AlleleFreqColumnFormatter.getComponentForSampleArgs(m);
             return AlleleFreqColumnFormatter.convertMutationToSampleElement(
@@ -71,7 +71,7 @@ export default class AlleleFreqColumnFormatter {
                 sampleManager.getComponentForSample(m.sampleId, args.opacity, args.extraTooltipText)
             );
         });
-        const sampleToElements = sampleElements.reduce((map:{[s:string]:any}, elements:any) => {if (elements) { map[elements.sampleId] = elements } return map; }, {});
+        const sampleToElements = sampleElements.reduce((map, elements:any) => {if (elements) { map[elements.sampleId] = elements } return map; }, {} as {[s:string]:any});
         const elementsInSampleOrder = sampleOrder.map((sampleId:string) => sampleToElements[sampleId]).filter((x:any) => !!x);
         const tooltipLines = elementsInSampleOrder.map((elements:any)=>(<span key={elements.sampleId}>{elements.component}  {elements.text}<br/></span>));
         const freqs = sampleOrder.map((sampleId:string) => (sampleToElements[sampleId] && sampleToElements[sampleId].freq) || undefined);
@@ -129,7 +129,7 @@ export default class AlleleFreqColumnFormatter {
         const sampleToMutation = d.reduce((map:{[s:string]:Mutation}, next:Mutation)=>{
             map[next.sampleId] = next;
             return map;
-        }, {});
+        }, {} as {[s:string]:Mutation});
         return sampleManager.getSampleIdsInOrder().map(sampleId=>sampleToMutation[sampleId]).map(mutation=>{
             if (!mutation) {
                 return null;

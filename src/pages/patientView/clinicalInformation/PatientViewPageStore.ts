@@ -307,7 +307,7 @@ export class PatientViewPageStore {
         invoke: async() => client.getStudyUsingGET({studyId: this.studyId})
     });
 
-    readonly patientViewData = remoteData({
+    readonly patientViewData = remoteData<ClinicalInformationData>({
         await: () => [
             this.clinicalDataPatient,
             this.clinicalDataForSamples,
