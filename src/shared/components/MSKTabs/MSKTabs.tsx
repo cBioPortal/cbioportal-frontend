@@ -130,7 +130,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
     }
 
     render(){
-        if (this.props.children) {
+        if (this.props.children && React.Children.count(this.props.children)) {
 
             let children = (this.props.children as React.ReactElement<IMSKTabProps>[]);
 
