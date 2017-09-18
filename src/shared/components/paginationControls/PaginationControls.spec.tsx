@@ -9,7 +9,7 @@ import styles from "./paginationControls.module.scss";
 chai.use(chaiEnzyme());
 
 describe('PaginationControls', () => {
-    describe("'Show more' button", ()=>{
+    describe.skip("'Show more' button", ()=>{
         it("on click, increases the itemsPerPage until everything is shown, in proper increments, then disables", ()=>{
             let itemsPerPage = 1;
             let paginationControls = mount(
