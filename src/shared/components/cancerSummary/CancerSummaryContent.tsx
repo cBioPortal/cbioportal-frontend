@@ -339,16 +339,16 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
         ) : null;
         return (
             <div>
-                <div className="btn-row">
-                    <button onClick={this.toggleShowControls} className="btn btn-primary">Customize Histogram</button>
-                    <a className={`btn btn-primary${this.pngAnchor ? '': ' disabled'}`}
+                <div role="group" className="btn-group">
+                    <button onClick={this.toggleShowControls} className="btn btn-default btn-xs">Customize <i className="fa fa-cog" aria-hidden="true"></i></button>
+                    <a className={`btn btn-default btn-xs ${this.pngAnchor ? '': ' disabled'}`}
                         href={this.pngAnchor} download="cBioPortalCancerSummary.png" style={{color: 'white'}}>
-                        PNG
+                        PNG <i className="fa fa-cloud-download" aria-hidden="true"></i>
                     </a>
-                    <a className={`btn btn-primary${this.pdfAnchor ? '': ' disabled'}`}
+                    <button className={`btn btn-default btn-xs ${this.pdfAnchor ? '': ' disabled'}`}
                        onClick={this.downloadPdf}>
-                        PDF
-                    </a>
+                        PDF <i className="fa fa-cloud-download" aria-hidden="true"></i>
+                    </button>
                 </div>
                 {controls}
                 <SummaryBarGraph data={this.chartData} yAxis={this.yAxis} xAxis={this.xAxis}

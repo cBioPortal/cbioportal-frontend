@@ -101,8 +101,8 @@ export default class CancerSummaryContainer extends React.Component<{ store:Resu
                                      enablePagination={true}
                                      arrowStyle={{'line-height':.8}}
                                      tabButtonStyle="pills"
-                                     activeTabId={this.activeTab} className="mainTabs">
-                                <MSKTab key="all" id="allGenes" linkText="All Genes" anchorStyle={anchorStyle}>
+                                     activeTabId={this.activeTab} className="secondaryTabs">
+                                <MSKTab key="all" id="allGenes" linkText="All Queried Genes" anchorStyle={anchorStyle}>
                                     <CancerSummaryContent
                                         data={this.props.store.alterationCountsForCancerTypesForAllGenes.result}/>
                                 </MSKTab>

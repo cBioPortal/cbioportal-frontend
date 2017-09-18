@@ -127,7 +127,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
     }
 
     private getLegendNames(id:string) {
-        const names = {
+        const names: {[alterationName:string]:string} = {
             mutated: "Mutation",
             amplified: "Amplification",
             deleted: "Deletion",
@@ -151,7 +151,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
         return {
             title: {
                 display: true,
-                text: 'Cancer Summary',
+                text: 'Cancer Type Summary',
                 fontSize: 14,
                 fontStyle: 'normal'
             },
@@ -193,7 +193,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
                 }]
             },
             legend: {
-                // position: 'bottom',
+                position: 'right',
                 display: this.props.legend,
                 labels: {
                     generateLabels:(chart:any) => {
@@ -244,7 +244,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
             errorMessage = <div className="cancer-summary-error-message">No alteration plot data.</div>;
         }
         return (
-            <div ref={el => this.chartContainer = el} className="cancer-summary-chart-container">
+            <div ref={(el: HTMLDivElement) => this.chartContainer = el} className="cancer-summary-chart-container">
                 {errorMessage}
                 <canvas ref={(el:HTMLCanvasElement) => this.chartTarget = el} width="100%" height="600"/>
             </div>

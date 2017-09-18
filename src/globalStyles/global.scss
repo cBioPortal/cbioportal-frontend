@@ -7,8 +7,10 @@ body {
   text-align:left;
 }
 
+/* importants are necessary for override of legacy style */
 .btn-default {
-  background-image: linear-gradient(to bottom,#fff 0,#eee 100%);
+  background-image: linear-gradient(to bottom,#fff 0,#eee 100%) !important;
+  color:$text-color !important;
 }
 
 /* fix for legacy style isses. makes it bootstrap */
@@ -102,21 +104,8 @@ th.reactable-header-sort-asc:after {
 
 }
 
-.mainTabs {
 
-  > .nav {
-    @extend .portalWidth;
-    margin:0 auto;
-
-    .active {
-      a {
-        border-top: 3px solid $brand-primary !important;
-        padding-top: 9px;
-      }
-    }
-
-  }
-
+.secondaryTabs {
   > .nav.nav-pills {
 
     margin-bottom:5px;
@@ -136,7 +125,21 @@ th.reactable-header-sort-asc:after {
       }
     }
 
+  }
+}
 
+.mainTabs {
+
+  > .nav {
+    @extend .portalWidth;
+    margin:0 auto;
+
+    .active {
+      a {
+        border-top: 3px solid $brand-primary !important;
+        padding-top: 9px;
+      }
+    }
 
   }
 
