@@ -27,7 +27,7 @@ import MutationDataCache from "../../../shared/cache/MutationDataCache";
 export class MutationMapperStore {
 
     constructor(protected config: IMutationMapperConfig,
-                protected hugoGeneSymbol:string,
+                public gene:Gene,
                 public samples:MobxPromise<SampleIdentifier[]>,
                 // getMutationDataCache needs to be a getter for the following reason:
                 // when the input parameters to the mutationDataCache change, the cache
@@ -66,33 +66,10 @@ export class MutationMapperStore {
         }
     });
 
-    readonly gene = remoteData<Gene|undefined>(async () => {
-        if (this.hugoGeneSymbol) {
-            let genes = await client.fetchGenesUsingPOST({
-                geneIds: [this.hugoGeneSymbol],
-                geneIdType: "HUGO_GENE_SYMBOL"
-            });
-
-            if (genes.length > 0) {
-                return genes[0];
-            }
-        }
-
-        return undefined;
-    });
-
     readonly mutationData = remoteData({
-        await: () => [
-            this.gene,
-        ],
-        invoke: async () => {
-            const gene = this.gene.result;
-            if (gene) {
-                const cacheData = this.getMutationDataCache().get({entrezGeneId: gene.entrezGeneId});
-                return (cacheData && cacheData.data) || [];
-            } else {
-                return [];
-            }
+        invoke: () => {
+            const cacheData = this.getMutationDataCache().get({entrezGeneId: this.gene.entrezGeneId});
+            return Promise.resolve((cacheData && cacheData.data) || []);
         }
     }, []);
 
@@ -114,22 +91,14 @@ export class MutationMapperStore {
     }, []);
 
     readonly swissProtId = remoteData({
-        await: () => [
-            this.gene
-        ],
         invoke: async() => {
-            if (this.gene.result) {
-                const accession:string|string[] = await fetchSwissProtAccession(this.gene.result.entrezGeneId);
+            const accession:string|string[] = await fetchSwissProtAccession(this.gene.entrezGeneId);
 
-                if (_.isArray(accession)) {
-                    return accession[0];
-                }
-                else {
-                    return accession;
-                }
+            if (_.isArray(accession)) {
+                return accession[0];
             }
             else {
-                return "";
+                return accession;
             }
         },
         onError: (err: Error) => {
