@@ -41,8 +41,21 @@ export default class RightBar extends React.Component<IRightBarProps, {}> {
         ));
     }
 
-    static getExampleSection() {
+    static getWhatsNewBlurb() {
+        const defaultWhatsNewBlurb:JSX.Element = (
+            <div>
+                <p>Sign up for low-volume email news alerts:</p>
+                <a target="_blank" className="btn btn-default btn-sm" href="http://groups.google.com/group/cbioportal-news/boxsubscribe" style={{width: "100%"}}>Subscribe</a>
+            </div>
+        );
+        if (AppConfig.skinRightNavWhatsNewBlurb) {
+            return <div dangerouslySetInnerHTML={{__html:AppConfig.skinRightNavWhatsNewBlurb}}></div>;
+        } else {
+            return defaultWhatsNewBlurb;
+        }
+    }
 
+    static getExampleSection() {
         const title:string = 'Example Queries';
         const defaultExamples:JSX.Element = (
             <div className="rightBarSection exampleQueries">
@@ -130,8 +143,7 @@ export default class RightBar extends React.Component<IRightBarProps, {}> {
                             @cbioportal <i className="fa fa-twitter" aria-hidden="true"></i>
                         </a>
                     </h3>
-                    <p>Sign up for low-volume email news alerts:</p>
-                    <a target="_blank" className="btn btn-default btn-sm" href="http://groups.google.com/group/cbioportal-news/boxsubscribe" style={{width: "100%"}}>Subscribe</a>
+                    {RightBar.getWhatsNewBlurb()}
                 </div>
                 {datasets}
                 {examples}
