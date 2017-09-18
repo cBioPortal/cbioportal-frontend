@@ -123,7 +123,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
         this.chartConfig.data = this.props.data;
         this.chartConfig.options = {};
         this.chartConfig.options = this.chartOptions;
-        this.chart.update({duration: 0});
+        this.chart.update();
     }
 
     private getLegendNames(id:string) {
@@ -197,15 +197,27 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
                 display: this.props.legend,
                 labels: {
                     generateLabels:(chart:any) => {
-                        const {data:cdata} = chart;
-                        if (cdata.labels.length && cdata.datasets.length) {
-                            return _.uniqBy(cdata.datasets, 'label').map((dataset:IBarGraphDataset, i) => {
-                                return {
-                                    text: this.getLegendNames(dataset.label),
-                                    fillStyle: dataset.backgroundColor,
-                                    index: i
-                                };
-                            });
+                        let counter = 0;
+                        const {data:chartData} = chart;
+                        if (chartData.labels.length && chartData.datasets.length) {
+                            const g = _.reduce(chartData.datasets, (obj, dataset:IBarGraphDataset) => {
+                                if (obj[dataset.label]) {
+                                    obj[dataset.label].count = obj[dataset.label].count + dataset.total;
+                                } else {
+                                    obj[dataset.label] = {count: dataset.total, backgroundColor:dataset.backgroundColor};
+                                }
+                                return obj;
+                            }, {} as any)
+                            return _.reduce(g, (arr, value:{count:number, backgroundColor: string}, label) => {
+                                if (value.count) {
+                                    arr.push({
+                                        text: this.getLegendNames(label),
+                                        fillStyle: value.backgroundColor,
+                                        index: counter ++
+                                    });
+                                }
+                                return arr;
+                            }, [] as any);
                         } else {
                             return [];
                         }
