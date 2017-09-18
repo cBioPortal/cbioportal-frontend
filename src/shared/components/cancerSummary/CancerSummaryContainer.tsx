@@ -2,7 +2,7 @@ import * as React from "react";
 import * as _ from 'lodash';
 import {computed, observable} from "mobx";
 import {observer} from "mobx-react";
-import { MSKTabs, MSKTab } from "shared/components/MSKTabs/MSKTabs";
+import {MSKTabs, MSKTab} from "shared/components/MSKTabs/MSKTabs";
 import {If, Then, Else} from 'react-if';
 import {ThreeBounce} from 'better-react-spinkit';
 import {CancerSummaryContent} from './CancerSummaryContent';
@@ -21,7 +21,7 @@ const anchorStyle = {
 
 
 @observer
-export default class CancerSummaryContainer extends React.Component<{ store:ResultsViewPageStore },{}> {
+export default class CancerSummaryContainer extends React.Component<{store: ResultsViewPageStore},{}> {
 
     private data = {
         EGFR: {
@@ -65,7 +65,7 @@ export default class CancerSummaryContainer extends React.Component<{ store:Resu
         }
     };
 
-    @observable private activeTab:string = "all";
+    @observable private activeTab: string = "all";
 
     constructor() {
         super();
@@ -76,7 +76,7 @@ export default class CancerSummaryContainer extends React.Component<{ store:Resu
         this.activeTab = id;
     }
 
-    private get defaultTabId():string {
+    private get defaultTabId(): string {
         return 'all';
     }
 
@@ -84,7 +84,7 @@ export default class CancerSummaryContainer extends React.Component<{ store:Resu
     private get tabs() {
 
         return _.map(this.props.store.alterationCountsForCancerTypesByGene.result, (geneData, geneName) => (
-            <MSKTab key={geneName} id={"summaryTab" + geneName} linkText={geneName}  anchorStyle={anchorStyle}>
+            <MSKTab key={geneName} id={"summaryTab" + geneName} linkText={geneName} anchorStyle={anchorStyle}>
                 <CancerSummaryContent data={geneData}/>
             </MSKTab>
         ));
@@ -95,28 +95,21 @@ export default class CancerSummaryContainer extends React.Component<{ store:Resu
             this.props.store.alterationCountsForCancerTypesByGene.isComplete) {
             return (
                 <div>
-                    <If condition={true}>
-                        <Then>
-                            <MSKTabs onTabClick={this.handleTabClick}
-                                     enablePagination={true}
-                                     arrowStyle={{'line-height':.8}}
-                                     tabButtonStyle="pills"
-                                     activeTabId={this.activeTab} className="secondaryTabs">
-                                <MSKTab key="all" id="allGenes" linkText="All Queried Genes" anchorStyle={anchorStyle}>
-                                    <CancerSummaryContent
-                                        data={this.props.store.alterationCountsForCancerTypesForAllGenes.result}/>
-                                </MSKTab>
-                                {this.tabs}
-                            </MSKTabs>
-                        </Then>
-                        <Else>
-                            <ThreeBounce size={20} className="center-block text-center"/>
-                        </Else>
-                    </If>
+                    <MSKTabs onTabClick={this.handleTabClick}
+                             enablePagination={true}
+                             arrowStyle={{'line-height':.8}}
+                             tabButtonStyle="pills"
+                             activeTabId={this.activeTab} className="secondaryTabs">
+                        <MSKTab key="all" id="allGenes" linkText="All Queried Genes" anchorStyle={anchorStyle}>
+                            <CancerSummaryContent
+                                data={this.props.store.alterationCountsForCancerTypesForAllGenes.result}/>
+                        </MSKTab>
+                        {this.tabs}
+                    </MSKTabs>
                 </div>
             );
         } else if (this.props.store.alterationCountsForCancerTypesForAllGenes.isPending) {
-            return <Loader isLoading={true} />
+            return <Loader isLoading={true}/>
         } else {
             // TODO: error!
             return null;

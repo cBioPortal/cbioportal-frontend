@@ -268,7 +268,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
         const altMax = altCasesMax;
         const symbol = yAxis === 'alt-freq' ? '%' : '';
         const controls = this.showControls ? (
-            <span>
+            <div style={{ marginTop:10 }}>
                 <div className="form-section">
                     <FormGroup>
                         <ControlLabel>Cancer Type(s):</ControlLabel>
@@ -335,7 +335,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                         </FormGroup>
                     </div>
                 </div>
-            </span>
+            </div>
         ) : null;
         return (
             <div>
