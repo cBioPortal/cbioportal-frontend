@@ -12,7 +12,7 @@ import 'react-select/dist/react-select.css';
 import 'react-rangeslider/lib/index.css';
 
 import SummaryBarGraph from './SummaryBarGraph';
-//
+
 export interface ICancerTypeAlterationPlotData {
     mutated:number;
     amplified:number;
@@ -98,7 +98,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
             const totalCases = cancer.total;
             const cancerAlterations:Partial<ICancerTypeAlterationPlotData> = _.omit(cancer, ['total']);
             const altTotalCount = _.reduce(cancerAlterations, (total:number, value:number) => total + value, 0);
-            let altTotalPercent = _.round((altTotalCount / totalCases * 100), 1);
+            let altTotalPercent = altTotalCount / totalCases * 100;
             altTotalPercent = altTotalPercent > 100 ? 100 : altTotalPercent;
             if (this.selectedCancerTypes[cancerType] && totalCases >= this.totalCasesValue) {
                 accum.push({
@@ -171,6 +171,13 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
             amplified:"#ff0000",
             deleted:"#0000ff",
             multiple:"#aaaaaa",
+            fusion: "#8B00C9",
+            gain: "rgb(255,182,193)",
+            homdel: "rgb(0,0,255)",
+            mrnaExpressionUp: "rgb(0, 0, 0)", //rgb(255, 153, 153)
+            mrnaExpressionDown: "rgb(0, 0, 0)", //rgb(102, 153, 204)
+            protExpressionUp: "rgb(0, 0, 0)",
+            protExpressionDown: "rgb(0, 0, 0)",
         };
         return this.showGenomicAlt ? (colors[color] || "#000000") : '#aaaaaa';
     }
@@ -335,7 +342,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                 <div className="btn-row">
                     <button onClick={this.toggleShowControls} className="btn btn-primary">Customize Histogram</button>
                     <a className={`btn btn-primary${this.pngAnchor ? '': ' disabled'}`}
-                        href={this.pngAnchor} download="cBioPortalCancerSummary.png">
+                        href={this.pngAnchor} download="cBioPortalCancerSummary.png" style={{color: 'white'}}>
                         PNG
                     </a>
                     <a className={`btn btn-primary${this.pdfAnchor ? '': ' disabled'}`}
