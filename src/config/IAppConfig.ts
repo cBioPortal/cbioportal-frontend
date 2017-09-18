@@ -20,7 +20,8 @@ export interface IAppConfig {
     skinRightNavShowDatasets?: boolean,
     skinRightNavShowExamples?: boolean, 
     skinRightNavShowTestimonials?: boolean,
-    skinRightNavExamplesHTML?: string 
+    skinRightNavExamplesHTML?: string,
+    skinRightNavWhatsNewBlurb?: string 
 }
 
 export type PriorityStudies = {
