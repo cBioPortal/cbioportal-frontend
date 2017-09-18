@@ -3,7 +3,9 @@
   "description": "A data visualization for cancer genomic data.",
   "scripts": {
     "clean": "rm -rf dist",
-    "build": "npm run clean && gulp"
+    "build": "npm run clean && gulp",
+    "test": "karma start karma.conf.js",
+    "test:watch": "npm run test -- --watch"
   },
   "repository": {
     "type": "git",
@@ -37,7 +39,14 @@
   "devDependencies": {
     "browserify": "^14.0.0",
     "gulp": "^3.9.1",
-    "gulp-shell": "^0.6.3"
+    "gulp-shell": "^0.6.3",
+    "jasmine-core": "^2.8.0",
+    "karma": "^1.7.1",
+    "karma-jasmine": "^1.1.0",
+    "karma-phantomjs-launcher": "^1.0.4",
+    "phantomjs-polyfill": "0.0.2",
+    "phantomjs-prebuilt": "^2.1.15",
+    "yargs": "^9.0.1"
   },
   "dependencies": {
     "express": "^4.15.3",
