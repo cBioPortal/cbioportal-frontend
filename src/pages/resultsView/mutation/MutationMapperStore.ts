@@ -204,7 +204,10 @@ export class MutationMapperStore {
             this.mutationData,
             this.clinicalDataForSamples
         ],
-        invoke: async() => this.config.showCivic ? fetchCivicGenes(this.mutationData) : {}
+        invoke: async() => this.config.showCivic ? fetchCivicGenes(this.mutationData) : {},
+        onError: (err: Error) => {
+            // fail silently
+        }
     }, undefined);
 
     readonly civicVariants = remoteData<ICivicVariant | undefined>({
@@ -219,6 +222,9 @@ export class MutationMapperStore {
             else {
                 return {};
             }
+        },
+        onError: (err: Error) => {
+            // fail silently
         }
     }, undefined);
 
