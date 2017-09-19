@@ -2,6 +2,7 @@
   "name": "oncoprintjs",
   "description": "A data visualization for cancer genomic data.",
   "types": "./index.d.ts",
+  "main": "src/js/oncoprint.js",
   "scripts": {
     "clean": "rm -rf dist",
     "build": "npm run clean && gulp",
