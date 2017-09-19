@@ -7,6 +7,7 @@ import ReactChildren = React.ReactChildren;
 import {ThreeBounce} from 'better-react-spinkit';
 import ReactResizeDetector from 'react-resize-detector';
 import onNextRenderFrame from "shared/lib/onNextRenderFrame";
+import './styles.scss';
 
 interface IMSKTabProps {
     inactive?:boolean;
@@ -161,7 +162,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
             return (
                 <div
                     id={(this.props.id) ? this.props.id : ''}
-                    className={ classnames(this.props.className) }
+                    className={ classnames('msk-tabs', this.props.className) }
                 >
                     {this.navTabs(children, effectiveActiveTab)}
                     <div className="tab-content">{arr}</div>
@@ -184,8 +185,8 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
         // we need a little style tweak to prevent initial overflow flashing when paging enabled
         // TODO disabling maxHeight tweak due to inconsistencies for now
         const navBarStyle = this.props.enablePagination ? {
-            /*maxHeight: 40,*/ border: 0, overflow: "hidden"
-        } : undefined;
+           border: 0, overflow: "hidden"
+        } : {};
 
         const prev = this.state.currentPage > 1 ? (
             <li

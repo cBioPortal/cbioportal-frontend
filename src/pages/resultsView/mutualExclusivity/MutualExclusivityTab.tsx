@@ -1,4 +1,5 @@
 import * as React from 'react';
+import * as _ from 'lodash';
 import MutualExclusivityTable from "./MutualExclusivityTable";
 import {observer} from "mobx-react";
 import {Checkbox} from 'react-bootstrap';
@@ -7,11 +8,16 @@ import {computed, observable} from "mobx";
 import {MutualExclusivity} from "../../../shared/model/MutualExclusivity";
 import Combinatorics from 'js-combinatorics';
 import {getCumulativePValue} from "../../../shared/lib/FisherExactTestCalculator";
+import Dictionary = _.Dictionary;
+import {ResultsViewPageStore} from "../ResultsViewPageStore";
+import DiscreteCNACache from "../../../shared/cache/DiscreteCNACache";
+import { If, Then, Else } from 'react-if';
+import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator";
 
 export interface IMutualExclusivityTabProps {
     // a mapping from Hugo Gene Symbol to list of booleans,
     // each element of the list representing the altered status of a sample
-    isSampleAlteredMap: {[key: string]: boolean[]};
+    store:ResultsViewPageStore
 }
 
 export function calculateAssociation(logOddsRatio: number): string {
@@ -93,10 +99,11 @@ export function getCountsText(data: MutualExclusivity[]): JSX.Element {
         coOccurentCounts[1]}.</p>;
 }
 
-export function getData(isSampleAlteredMap: {[key: string]: boolean[]}): MutualExclusivity[] {
+export function getData(isSampleAlteredMap: Dictionary<boolean[]>): MutualExclusivity[] {
 
     let data: MutualExclusivity[] = [];
     const combinations = Combinatorics.combination(Object.keys(isSampleAlteredMap), 2).toArray();
+
     combinations.forEach(combination => {
 
         const geneA = combination[0];
@@ -143,7 +150,7 @@ export default class MutualExclusivityTab extends React.Component<IMutualExclusi
     }
 
     @computed get data(): MutualExclusivity[] {
-        return getData(this.props.isSampleAlteredMap);
+        return getData(this.props.store.isSampleAlteredMap.result!);
     }
 
     @computed get filteredData(): MutualExclusivity[] {
@@ -165,25 +172,35 @@ export default class MutualExclusivityTab extends React.Component<IMutualExclusi
 
     public render() {
 
-        return (
-            <div>
-                {getCountsText(this.data)}
-                <div className={styles.Checkboxes}>
-                    <Checkbox checked={this.mutualExclusivityFilter}
-                              onChange={this.mutualExclusivityFilterChange}>
-                        Mutual exclusivity
-                    </Checkbox>
-                    <Checkbox checked={this.coOccurenceFilter}
-                              onChange={this.coOccurenceFilterChange}>
-                        Co-occurrence
-                    </Checkbox>
-                    <Checkbox checked={this.significantPairsFilter}
-                              onChange={this.significantPairsFilterChange}>
-                        Significant only
-                    </Checkbox>
-                </div>
-                <MutualExclusivityTable data={this.filteredData}/>
-            </div>
-        );
+        if (this.props.store.isSampleAlteredMap.isPending) {
+            return <Loader isLoading={true} />
+        } else if (this.props.store.isSampleAlteredMap.isComplete) {
+            if (_.size(this.props.store.isSampleAlteredMap.result) > 1) {
+                return (
+                    <div>
+                        {getCountsText(this.data)}
+                        <div className={styles.Checkboxes}>
+                            <Checkbox checked={this.mutualExclusivityFilter}
+                                      onChange={this.mutualExclusivityFilterChange}>
+                                Mutual exclusivity
+                            </Checkbox>
+                            <Checkbox checked={this.coOccurenceFilter}
+                                      onChange={this.coOccurenceFilterChange}>
+                                Co-occurrence
+                            </Checkbox>
+                            <Checkbox checked={this.significantPairsFilter}
+                                      onChange={this.significantPairsFilterChange}>
+                                Significant only
+                            </Checkbox>
+                        </div>
+                        <MutualExclusivityTable data={this.filteredData}/>
+                    </div>
+                );
+            } else {
+                return <div>Mutual exclusivity analysis cannot be provided when only a single gene is selected.</div>
+            }
+        } else {
+            return null;
+        }
     }
 }

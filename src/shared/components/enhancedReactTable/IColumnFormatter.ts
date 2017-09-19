@@ -6,8 +6,8 @@ import * as React from 'react';
 
 export interface IColumnFormatterData<T> {
     name:string; // column name
-    tableData?:Array<T>; // entire table data (array of instances)
-    rowData?:T; // single instance representing the row data
+    tableData?:Array<any>; // entire table data (array of instances)
+    rowData?:any; // single instance representing the row data
     columnData?:any; // column specific data
 }
 

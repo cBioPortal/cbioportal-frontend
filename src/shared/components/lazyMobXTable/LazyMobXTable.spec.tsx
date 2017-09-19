@@ -100,7 +100,7 @@ function getTextBeforeButtons(table:ReactWrapper<any, any>):string | undefined {
 }
 
 function clickColumnVisibilityCheckbox(table:ReactWrapper<any, any>, columnName:string):boolean {
-    let checkbox = table.find(ColumnVisibilityControls).find(Checkbox)
+    let checkbox: any = table.find(ColumnVisibilityControls).find(Checkbox)
                     .find('input[type="checkbox"]')
                     .filterWhere(x=>(((x.props() as any)['data-id'] as string) === columnName))
     checkbox.simulate('change', {target: {checked:true}});

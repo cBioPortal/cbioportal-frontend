@@ -135,7 +135,7 @@ var config = {
 
         ],
 
-        noParse:[/3Dmol-nojquery/],
+        noParse:[/3Dmol-nojquery/,/jspdf/],
 
         preLoaders: [
             // All output '.js' files will have any sourcemaps re-processed by 'source-map-loader'.
