@@ -38,30 +38,25 @@ export default class UnsupportedBrowserModal extends React.Component<{}, IBrowse
     }
 
     handleUnsupportedBrowsers(name:string, version: string, localStorage: boolean) {
-        return;
-        // if (localStorage) {
-        //     this.setState({show: false});
-        //     return;
-        // }
-        // const sessionStorage = window.sessionStorage.browserError || false;
-        // if (sessionStorage === true) {
-        //     this.setState({show: false});
-        // } else {
-        //     const isIE11 = String(name) === "msie" && Number(version.slice(0,2)) === 11;
-        //     alert(name);
-        //     name = name.toLowerCase();
-        //
-        //     if (String(name) === 'unsupported') {
-        //         window.sessionStorage.browserError = true;
-        //         this.setState({show: true});
-        //     } else if (!(name === "chrome" || name === "firefox" || name === "msedge" || name === "safari" || isIE11))  {
-        //         window.sessionStorage.browserError = true;
-        //         this.setState({show: true});
-        //     } else {
-        //         this.setState({show: false})
-        //         window.sessionStorage.browserError = true;
-        //     }
-        // }
+        if (localStorage) {
+            this.setState({show: false});
+            return;
+        }
+        const sessionStorage = window.sessionStorage.browserError || false;
+        if (sessionStorage === true) {
+            this.setState({show: false});
+        } else {
+            name = name.toLowerCase();
+            const isIE11 = (name === "internet explorer" || name === "msie") && Number(version.slice(0,2)) === 11;
+
+            if (!(name === "chrome" || name === "firefox" || name === "microsoft edge" || name === "msedge" || name === "safari" || isIE11))  {
+                window.sessionStorage.browserError = true;
+                this.setState({show: true});
+            } else {
+                this.setState({show: false})
+                window.sessionStorage.browserError = true;
+            }
+        }
     }
 
     handleHideClick() {
@@ -70,14 +65,15 @@ export default class UnsupportedBrowserModal extends React.Component<{}, IBrowse
     }
 
     public render() {
+        const {show, name} = this.state;
         return (
-            <Modal show={this.state.show} onHide={this.handleHideClick}>
+            <Modal show={show} onHide={this.handleHideClick}>
                 <Modal.Header closeButton>
                     <Modal.Title>Sorry, we do not support your browser version!</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <ul>
-                        <li>It looks like your using an {this.state.name === 'ie' ? 'old version of Internet Explorer' : 'unsupported browser'}.</li>
+                        <li>It looks like your using an {name === 'msie' || name === 'internet explorer' ? 'old version of Internet Explorer' : 'unsupported browser'}.</li>
                         <li>Please consider using the latest version of Chrome, Safari, Firefox or Microsoft Edge.</li>
                     </ul>
                     <div style={{paddingLeft: 22}}>

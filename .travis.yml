@@ -38,12 +38,13 @@ script:
   then
     npm run buildDLL:dev
   fi
-  # Use browserstack only on runs within repo
+  # Use browserstack only on runs within repo (use cbioportal.org for master &
+  # hotfix, cbioportal.org/beta for everything else)
 - |
   if [[ "${TEST}" == end-to-end && "${TRAVIS_PULL_REQUEST}" = "false" ]];
   then
     npm run start & \
-    eval "$(./scripts/env_vars.sh)" && \
+    export CBIOPORTAL_URL=http://www.cbioportal.org$((test "$TRAVIS_BRANCH" != master && test "$TRAVIS_BRANCH" != hotfix) && echo /beta) && \
     curl $CBIOPORTAL_URL > /dev/null && \
     sleep 5s && \
     curl $CBIOPORTAL_URL > /dev/null && \
