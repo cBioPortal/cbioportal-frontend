@@ -494,7 +494,10 @@ export class PatientViewPageStore {
             this.uncalledMutationData,
             this.clinicalDataForSamples
         ],
-        invoke: async() => AppConfig.showCivic ? fetchCivicGenes(this.mutationData, this.uncalledMutationData) : {}
+        invoke: async() => AppConfig.showCivic ? fetchCivicGenes(this.mutationData, this.uncalledMutationData) : {},
+        onError: (err: Error) => {
+            // fail silently
+        }
     }, undefined);
 
     readonly civicVariants = remoteData<ICivicVariant | undefined>({
@@ -512,7 +515,10 @@ export class PatientViewPageStore {
             else {
                 return {};
             }
-       }
+        },
+        onError: (err: Error) => {
+            // fail silently
+        }
     }, undefined);
 
     readonly cnaOncoKbData = remoteData<IOncoKbData>({
@@ -532,7 +538,10 @@ export class PatientViewPageStore {
             this.discreteCNAData,
             this.clinicalDataForSamples
         ],
-        invoke: async() => AppConfig.showCivic ? fetchCnaCivicGenes(this.discreteCNAData) : {}
+        invoke: async() => AppConfig.showCivic ? fetchCnaCivicGenes(this.discreteCNAData) : {},
+        onError: (err: Error) => {
+            // fail silently
+        }
     }, undefined);
 
     readonly cnaCivicVariants = remoteData<ICivicVariant | undefined>({
@@ -544,7 +553,10 @@ export class PatientViewPageStore {
             if (this.cnaCivicGenes.status == "complete") {
                 return fetchCivicVariants(this.cnaCivicGenes.result as ICivicGene);
             }
-       }
+        },
+        onError: (err: Error) => {
+            // fail silently
+        }
     }, undefined);
 
     readonly copyNumberCountData = remoteData<CopyNumberCount[]>({
