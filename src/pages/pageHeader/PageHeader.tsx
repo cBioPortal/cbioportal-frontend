@@ -6,7 +6,7 @@ interface IPageHeaderProps {
     currentRoutePath: string;
 }
 
-export default class PageHeader extends React.Component<IPageHeaderProps, void> {
+export default class PageHeader extends React.Component<IPageHeaderProps, {}> {
 
     routeInput: HTMLInputElement;
 
@@ -22,7 +22,7 @@ export default class PageHeader extends React.Component<IPageHeaderProps, void> 
                 <div className="pull-right">
                     <form className="form-inline" onSubmit={(e) => this.handleSubmit(e)}>
                         <div className="form-group">
-                                <input className="form-control" defaultValue={this.props.currentRoutePath} ref={(c) => { this.routeInput = c; }} />
+                                <input className="form-control" defaultValue={this.props.currentRoutePath} ref={(c:HTMLInputElement) => { this.routeInput = c; }} />
                         </div>
                     </form>
                 </div>
