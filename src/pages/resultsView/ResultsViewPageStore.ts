@@ -451,7 +451,7 @@ export class ResultsViewPageStore {
                 return Promise.resolve({});
             }
         }
-    }, {}, true);
+    }, {});
 
     public getMutationMapperStore(hugoGeneSymbol:string): MutationMapperStore|undefined
     {
