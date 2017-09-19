@@ -3,3 +3,9 @@
   @import './global.scss';
 
 }
+
+.legacy {
+  .cbioportal-frontend {
+    @import './legacy.scss';
+  }
+}

@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import wordwrap from 'word-wrap';
 import { ThreeBounce } from 'better-react-spinkit';
 import { CancerStudy } from 'shared/api/generated/CBioPortalAPI';
-import { ChartTooltipItem } from '@types/chart.js';
+import { ChartTooltipItem } from 'chart.js';
 const convertCssColorNameToHex = require('convert-css-color-name-to-hex');
 import Chart from 'chart.js';
 
@@ -188,7 +188,7 @@ export default class BarGraph extends React.Component<IBarGraphProps, {}> {
 
     render() {
         const length = this.byPrimarySiteStudies.length;
-        return length ? <canvas ref={el => this.chartTarget = el} height={70 + 430 * (length > 20 ? 20 : length)/20}/> : null;
+        return length ? <canvas ref={(el:HTMLCanvasElement) => this.chartTarget = el} height={70 + 430 * (length > 20 ? 20 : length)/20}/> : null;
     }
 
 };

@@ -20,7 +20,7 @@ export interface ISampleRow {
 class SampleTableComponent extends LazyMobXTable<ISampleRow> {
 }
 
-export default class ClinicalInformationSamplesTable extends React.Component<IClinicalInformationSamplesTableProps, void> {
+export default class ClinicalInformationSamplesTable extends React.Component<IClinicalInformationSamplesTableProps, {}> {
 
     public render() {
         const sampleInvertedData = convertSamplesData(this.props.samples);
