@@ -18,13 +18,25 @@ export function addErrorHandler(handler: errorHandler) {
 /**
  * Constructs a MobxPromise which will call seamlessImmutable.from() on the result and the default value.
  */
-export const remoteData:MobxPromiseFactory = function<R>(input:MobxPromiseInputUnion<R>, defaultResult?:R) {
+
+export const remoteData:MobxPromiseFactory = function<R>(input:MobxPromiseInputUnion<R>, defaultResult?:R, notImmutableResult?:boolean) {
     const normalizedInput = MobxPromiseImpl.normalizeInput(input, defaultResult);
     const {invoke, onError} = normalizedInput;
+    const invokeParam = ()=>{
+        if (!notImmutableResult) {
+            return invoke().then(seamlessImmutable.from);
+        } else {
+            return invoke();
+        }
+    };
+    let defaultParam = normalizedInput.default;
+    if (!notImmutableResult) {
+        defaultParam = seamlessImmutable.from(defaultParam);
+    }
     const mobxPromise = new MobxPromise({
         ...input,
-        invoke: () => invoke().then(seamlessImmutable.from),
-        default: seamlessImmutable.from(normalizedInput.default),
+        invoke: invokeParam,
+        default: defaultParam,
         onError: error => {
             if (onError)
             {
