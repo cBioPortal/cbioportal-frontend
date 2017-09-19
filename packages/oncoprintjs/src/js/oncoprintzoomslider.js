@@ -1,3 +1,5 @@
+var $ = require('jquery');
+
 var OncoprintZoomSlider = (function() {
     var VERTICAL = "v";
     var HORIZONTAL = "h";

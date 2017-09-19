@@ -3,6 +3,7 @@ var svgfactory = require('./svgfactory.js');
 var shapeToVertexes = require('./oncoprintshapetovertexes.js');
 var CachedProperty = require('./CachedProperty.js');
 var Shape = require('./oncoprintshape.js');
+var $ = require('jquery');
 
 var sgndiff = function(a,b) {
     if (a < b) {

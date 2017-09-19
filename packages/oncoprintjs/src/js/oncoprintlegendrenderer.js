@@ -1,4 +1,5 @@
 var svgfactory = require('./svgfactory.js');
+var $ = require('jquery');
 
 var nodeIsVisible = function(node) {
     var ret = true;
