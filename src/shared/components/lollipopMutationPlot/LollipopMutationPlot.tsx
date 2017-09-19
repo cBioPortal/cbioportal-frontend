@@ -12,6 +12,7 @@ import {computed, observable, action} from "mobx";
 import _ from "lodash";
 import {longestCommonStartingSubstring} from "shared/lib/StringUtils";
 import {getColorForProteinImpactType, IProteinImpactTypeColors} from "shared/lib/MutationUtils";
+import {getMutationAlignerUrl} from "shared/api/urls";
 import ReactDOM from "react-dom";
 import {Form, Button, FormGroup, InputGroup} from "react-bootstrap";
 import fileDownload from "react-file-download";
@@ -52,7 +53,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                 // have to do a for loop because seamlessImmutable will make result of .map immutable,
                 // and that causes infinite loop here
                 responsePromises.push(
-                    request.get(`http://www.cbioportal.org/getMutationAligner.json?pfamAccession=${regions[i].metadata.accession}`)
+                    request.get(`${getMutationAlignerUrl()}?pfamAccession=${regions[i].metadata.accession}`)
                 );
             }
             const allResponses = Promise.all(responsePromises);
