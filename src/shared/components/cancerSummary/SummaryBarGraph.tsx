@@ -14,6 +14,7 @@ interface ISummaryBarGraphProps {
     legend: boolean;
     setPngAnchor:any;
     setPdfAnchor:any;
+    gene: string;
 }
 
 @observer
@@ -32,19 +33,18 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
         this.updateChart = this.updateChart.bind(this);
     }
 
-    private getTooltipOptions(tooltipModel: any, data:IBarGraphConfigOptions, chartOptions:any) {
-        // $('#chartjs-tooltip').remove();
-
-        // Tooltip Element
-        let tooltipEl = document.getElementById('chartjs-tooltip');
+    private getTooltipOptions(tooltipModel: any, data:IBarGraphConfigOptions, chartOptions:any, uniqueId:string) {
+        let tooltipEl = document.getElementById('cancer-type-summary-tab-tooltip-' + uniqueId);
 
         // Create element on first render
         if (!tooltipEl) {
             tooltipEl = document.createElement('div');
-            tooltipEl.id = 'chartjs-tooltip';
+            tooltipEl.id = 'cancer-type-summary-tab-tooltip-' + uniqueId;
+            tooltipEl.className = 'cancer-type-summary-tab-tooltip';
             tooltipEl.innerHTML = "<div></div>";
-            document.getElementsByClassName('cancer-summary-chart-container')[0].appendChild(tooltipEl);
+            this.chartContainer.appendChild(tooltipEl);
         }
+
 
         // Hide if no tooltip
         if (tooltipModel.opacity === 0) {
@@ -165,7 +165,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
                     return false;
                 },
                 custom(tooltipModel: any){
-                    return that.getTooltipOptions(tooltipModel, data, this);}
+                    return that.getTooltipOptions(tooltipModel, data, this, that.props.gene);}
             },
             scales: {
                 xAxes: [{
