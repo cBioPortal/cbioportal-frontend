@@ -1,3 +1,5 @@
+var $ = require('jquery');
+
 var OncoprintToolTip = (function() {
     function OncoprintToolTip($container, params) {
 	params = params || {};

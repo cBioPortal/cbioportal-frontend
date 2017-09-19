@@ -1,3 +1,5 @@
+var $ = require('jquery');
+
 var OncoprintTrackOptionsView = (function () {
     function OncoprintTrackOptionsView($div, moveUpCallback, moveDownCallback, removeCallback, sortChangeCallback) {
 	// removeCallback: function(track_id)

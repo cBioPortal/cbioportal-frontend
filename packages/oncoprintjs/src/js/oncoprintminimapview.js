@@ -1,5 +1,6 @@
 var gl_matrix = require('gl-matrix');
 var OncoprintZoomSlider = require('./oncoprintzoomslider.js');
+var $ = require('jquery');
 
 var arrayFindIndex = function (arr, callback, start_index) {
     start_index = start_index || 0;

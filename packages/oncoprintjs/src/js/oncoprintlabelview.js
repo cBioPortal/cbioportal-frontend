@@ -1,4 +1,5 @@
 var svgfactory = require('./svgfactory.js');
+var $ = require('jquery');
 
 var OncoprintLabelView = (function () {
     function OncoprintLabelView($canvas, model, tooltip) {
