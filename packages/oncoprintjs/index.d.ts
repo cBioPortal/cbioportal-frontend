@@ -16,8 +16,69 @@ declare module "oncoprintjs"
     export type TrackSortComparator<D> = (d1:D, d2:D)=>(0|1|2|-1|-2);
     export type TrackTooltipFn<D> = (cell_datum:D)=>HTMLElement|string;
 
-    export type RuleSetSpec = {
+    export type RuleSetParams = ICategoricalRuleSetParams |
+                                IGradientRuleSetParams |
+                                IBarRuleSetParams |
+                                IStackedBarRuleSetParams |
+                                IGeneticAlterationRuleSetParams;
+
+    interface IGeneralRuleSetParams {
+        legend_label?: string;
+        exclude_from_legend?: boolean;
     }
+
+    // all colors are hex, rgb, or rgba
+    export interface ICategoricalRuleSetParams extends IGeneralRuleSetParams {
+        type: "categorical"
+        category_key: string; // key into data which gives category
+        category_to_color?: {[category:string]:string};
+    }
+
+    export interface IGradientRuleSetParams extends IGeneralRuleSetParams {
+        type: "gradient"
+        // either `colormap_name` or `colors` needs to be present
+        colors?: string[]; // hex, rgb, rgba
+        colormap_name?: string; // name of a colormap found in src/js/heatmapcolors.js
+        null_color?: string;
+
+        log_scale?:boolean;
+        value_key: string;
+        value_range: [number, number];
+    }
+
+    export interface IBarRuleSetParams extends IGeneralRuleSetParams {
+        type: "bar"
+        fill?: string;
+        negative_fill?: string;
+
+        log_scale?:boolean;
+        value_key: string;
+        value_range: [number, number];
+    }
+
+    export interface IStackedBarRuleSetParams extends IGeneralRuleSetParams {
+        type: "stacked_bar"
+        value_key: string;
+        categories: string[];
+        fills?: string[];
+    }
+
+    export interface IGeneticAlterationRuleSetParams extends IGeneralRuleSetParams {
+        type: "gene"
+        rule_params: GeneticAlterationRuleParams;
+    }
+
+    export type GeneticAlterationRuleParams = {
+        [datumKey:string]:{
+            [commaSeparatedDatumValues:string]:{
+                shapes: ShapeSpec[];
+                legend_label: string;
+                exclude_from_legend?:boolean;
+            }
+        }
+    };
+
+    export type ShapeSpec = any; // TODO
 
     export type TrackSpec<D> = {
         target_group?:TrackGroupIndex;
@@ -39,10 +100,10 @@ declare module "oncoprintjs"
         sort_direction_changeable?:boolean;
         init_sort_direction?:TrackSortDirection;
         data?:D[];
-        rule_set_params?:RuleSetSpec;
+        rule_set_params?:RuleSetParams;
     };
 
-    export default class Oncoprint<D> {
+    export default class OncoprintJS<D> {
         setMinimapVisible:(visible:boolean)=>void;
         scrollTo:(left:number)=>void;
         onHorzZoom:(callback:(newHorzZoom:number)=>void)=>void;
@@ -77,7 +138,7 @@ declare module "oncoprintjs"
         setTrackTooltipFn:(track_id:TrackId, tooltipFn:TrackTooltipFn<D>)=>void;
         sort:()=>void;
         shareRuleSet:(source_track_id:TrackId, target_track_id:TrackId)=>void;
-        setRuleSet:(track_id:TrackId, rule_set_params:RuleSetSpec)=>void;
+        setRuleSet:(track_id:TrackId, rule_set_params:RuleSetParams)=>void;
         setSortConfig:(params:SortConfig)=>void;
         setIdOrder:(ids:string[])=>void;
         suppressRendering:()=>void;
@@ -93,5 +154,7 @@ declare module "oncoprintjs"
         setIdClipboardContents:(array:string[])=>void;
         getIdClipboardContents:()=>string[];
         onClipboardChange:(callback:(array:string[])=>void)=>void;
+
+        constructor(ctr_selector:string, width:number);
     }
 }
