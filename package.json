@@ -31,6 +31,10 @@
     "syncmock": "node src/test/fetchMockData.js --diff",
     "validate": "npm ls"
   },
+  "engines": {
+    "npm": "5.4.2",
+    "node": "6.11.0"
+  },
   "author": "",
   "license": "",
   "dependencies": {
