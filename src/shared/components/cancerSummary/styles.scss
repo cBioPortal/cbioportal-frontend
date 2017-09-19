@@ -20,8 +20,14 @@
 #chartjs-tooltip {
     background-color: white;
     position: absolute;
+    display: block;
     padding: 10px;
-    .table > thead > tr > th {line-height: 1; }
+    max-width: 300px;
+    .table {
+        margin-bottom: 0;
+        > thead > tr > th {
+            font-size: 12px;
+            line-height: 1; }}
     th:first-child, td:first-child {
           border-right: 2px solid #ddd;
           text-transform: capitalize;} }
@@ -57,8 +63,6 @@
 .rangeslider { margin: 8px 0 20px;}
 
 .slider {width:100%}
-
-.btn-row .btn {margin: 0 2px 10px;}
 
 .rangeslider-horizontal .rangeslider__handle {
     width: 20px;

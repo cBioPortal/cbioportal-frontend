@@ -96,9 +96,10 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
         const {yAxis} = this;
         return _.reduce(data, (accum, cancer:ICancerTypeAlterationData, cancerType:string) => {
             const totalCases = cancer.total;
-            const cancerAlterations:ICancerTypeAlterationPlotData | {} = _.omit(cancer, ['total']);
+            const cancerAlterations:Partial<ICancerTypeAlterationPlotData> = _.omit(cancer, ['total']);
             const altTotalCount = _.reduce(cancerAlterations, (total:number, value:number) => total + value, 0);
-            const altTotalPercent = _.round((altTotalCount / totalCases * 100), 1);
+            let altTotalPercent = altTotalCount / totalCases * 100;
+            altTotalPercent = altTotalPercent > 100 ? 100 : altTotalPercent;
             if (this.selectedCancerTypes[cancerType] && totalCases >= this.totalCasesValue) {
                 accum.push({
                     label: cancerType,
@@ -106,7 +107,8 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                     symbol: yAxis === "abs-count" ? '' : "%",
                     sortCount: yAxis === "abs-count" ? altTotalCount : altTotalPercent,
                     data: _.map(cancerAlterations, (count:number, altType: string) => {
-                        const percent = count / totalCases * 100;
+                        let percent = count / totalCases * 100;
+                        percent = percent > 100 ? 100 : percent;
                         const total = yAxis === "abs-count" ? count : percent;
                         return {
                             label: altType,
@@ -169,6 +171,13 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
             amplified:"#ff0000",
             deleted:"#0000ff",
             multiple:"#aaaaaa",
+            fusion: "#8B00C9",
+            gain: "rgb(255,182,193)",
+            homdel: "rgb(0,0,255)",
+            mrnaExpressionUp: "rgb(0, 0, 0)", //rgb(255, 153, 153)
+            mrnaExpressionDown: "rgb(0, 0, 0)", //rgb(102, 153, 204)
+            protExpressionUp: "rgb(0, 0, 0)",
+            protExpressionDown: "rgb(0, 0, 0)",
         };
         return this.showGenomicAlt ? (colors[color] || "#000000") : '#aaaaaa';
     }
@@ -259,7 +268,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
         const altMax = altCasesMax;
         const symbol = yAxis === 'alt-freq' ? '%' : '';
         const controls = this.showControls ? (
-            <span>
+            <div style={{ marginTop:10 }}>
                 <div className="form-section">
                     <FormGroup>
                         <ControlLabel>Cancer Type(s):</ControlLabel>
@@ -326,20 +335,20 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                         </FormGroup>
                     </div>
                 </div>
-            </span>
+            </div>
         ) : null;
         return (
             <div>
-                <div className="btn-row">
-                    <button onClick={this.toggleShowControls} className="btn btn-primary">Customize Histogram</button>
-                    <a type="button" className={`btn btn-primary${this.pngAnchor ? '': ' disabled'}`}
-                        href={this.pngAnchor} download="cBioPortalCancerSummary.png">
-                        PNG
+                <div role="group" className="btn-group">
+                    <button onClick={this.toggleShowControls} className="btn btn-default btn-xs">Customize <i className="fa fa-cog" aria-hidden="true"></i></button>
+                    <a className={`btn btn-default btn-xs ${this.pngAnchor ? '': ' disabled'}`}
+                        href={this.pngAnchor} download="cBioPortalCancerSummary.png" style={{color: 'white'}}>
+                        PNG <i className="fa fa-cloud-download" aria-hidden="true"></i>
                     </a>
-                    <a type="button" className={`btn btn-primary${this.pdfAnchor ? '': ' disabled'}`}
+                    <button className={`btn btn-default btn-xs ${this.pdfAnchor ? '': ' disabled'}`}
                        onClick={this.downloadPdf}>
-                        PDF
-                    </a>
+                        PDF <i className="fa fa-cloud-download" aria-hidden="true"></i>
+                    </button>
                 </div>
                 {controls}
                 <SummaryBarGraph data={this.chartData} yAxis={this.yAxis} xAxis={this.xAxis}

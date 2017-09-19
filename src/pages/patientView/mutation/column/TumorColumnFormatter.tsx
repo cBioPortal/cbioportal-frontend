@@ -52,7 +52,7 @@ export default class TumorColumnFormatter {
     }
 
     public static getPresentSamples<T extends {sampleId:string, tumorAltCount?: number, molecularProfileId?: string}>(data:T[]) {
-        return data.reduce((map:{[s:string]:boolean}, next:T, currentIndex:number) => {
+        return data.reduce((map, next:T, currentIndex:number) => {
             // Indicate called mutations with true,
             // uncalled mutations with supporting reads as false
             // exclude uncalled mutations without supporting reads completely
@@ -64,7 +64,7 @@ export default class TumorColumnFormatter {
                 map[next.sampleId] = true;
             }
             return map;
-        }, {});
+        }, {} as {[s:string]:boolean});
     }
 
     public static getSample(data:Array<{sampleId:string}>): string|string[] {
