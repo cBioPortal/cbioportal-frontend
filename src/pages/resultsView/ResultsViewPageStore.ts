@@ -222,7 +222,8 @@ export class ResultsViewPageStore {
             this.selectedMolecularProfiles,
             this.mutationMapperStores,
             this.molecularData,
-            this.defaultOQLQuery
+            this.defaultOQLQuery,
+            this.mutationDataReady
         ],
         invoke: async() => {
 
@@ -245,6 +246,10 @@ export class ResultsViewPageStore {
         }
     });
 
+    readonly mutationDataReady = remoteData({
+        await: ()=>[this.genes],
+        invoke: ()=>this.mutationDataCache.getPromise(this.genes.result)
+    });
 
     readonly defaultOQLQuery = remoteData({
         await: () => [this.selectedMolecularProfiles],
