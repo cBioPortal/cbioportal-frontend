@@ -248,7 +248,7 @@ export class ResultsViewPageStore {
 
     readonly mutationDataReady = remoteData({
         await: ()=>[this.genes],
-        invoke: ()=>this.mutationDataCache.getPromise(this.genes.result)
+        invoke: ()=>this.mutationDataCache.getPromise(this.genes.result!)
     });
 
     readonly defaultOQLQuery = remoteData({
@@ -674,6 +674,7 @@ export class ResultsViewPageStore {
         return new PdbHeaderCache();
     }
 
+    readonly
     @cached get mutationDataCache() {
         return new MutationDataCache(this.studyToMutationMolecularProfile.result,
             this.studyToDataQueryFilter.result);

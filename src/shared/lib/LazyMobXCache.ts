@@ -71,7 +71,7 @@ export default class LazyMobXCache<Data, Query, Metadata = any> {
 
         reaction(
             ()=>this._cache,
-            (cache:Cache<Data, MetaData>)=>{
+            (cache:Cache<Data, Metadata>)=>{
                 // filter out completed promises, we dont listen on them anymore
                 this.promises = this.promises.filter(promise=>!this.tryTrigger(promise));
             }
@@ -87,10 +87,10 @@ export default class LazyMobXCache<Data, Query, Metadata = any> {
         return this._cache;
     }
 
-    public getPromise(keys:string[]):Promise<CacheData<Data, Metadata>[]> {
+    public getPromise(queries:Query[]):Promise<CacheData<Data, Metadata>[]> {
         return new Promise((resolve, reject)=>{
             const newPromise = {
-                keys,
+                keys:queries.map(this.queryToKey),
                 callback: resolve,
                 error: reject
             };
@@ -106,7 +106,7 @@ export default class LazyMobXCache<Data, Query, Metadata = any> {
         let allDefined = true;
         let error = false;
         const data = promise.keys.map(key=>{
-            const datum = cache[key];
+            const datum = this._cache[key];
             if (!datum) {
                 allDefined = false;
             } else if (datum.status === "error") {
