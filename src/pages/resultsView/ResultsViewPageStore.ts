@@ -150,9 +150,10 @@ export class ResultsViewPageStore {
     constructor() {
         labelMobxPromises(this);
 
-        addErrorHandler((error: any) => {
-            this.ajaxErrors.push(error);
-        });
+        // addErrorHandler((error: any) => {
+        //     this.ajaxErrors.push(error);
+        // });
+
     }
 
     @observable public urlValidationError: string | null = null;
