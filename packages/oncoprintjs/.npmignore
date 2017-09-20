@@ -1,7 +1,7 @@
 # Created by https://www.gitignore.io
 
 ### Repo Files ###
-src/
+# src/
 test/
 server.js
 gulpfile.js
