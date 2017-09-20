@@ -1,6 +1,6 @@
 import Immutable from "seamless-immutable"; // need to use immutables so mobX can observe the cache shallowly
 import accumulatingDebounce from "./accumulatingDebounce";
-import {observable, action} from "mobx";
+import {observable, action, reaction} from "mobx";
 import {AccumulatingDebouncedFunction} from "./accumulatingDebounce";
 
 export type CacheData<D, M = any> = {
@@ -31,6 +31,12 @@ export type AugmentedData<D,M> = {
 
 type FetchResult<D,M> = AugmentedData<D, M>[] | D[];
 
+type CachePromise<D,M> = {
+    keys: string[],
+    callback:(data:CacheData<D, M>[])=>void,
+    error: ()=>void;
+};
+
 function isAugmentedData<D,M>(data:D | AugmentedData<D,M>): data is AugmentedData<D,M> {
     return data.hasOwnProperty("meta");
 }
@@ -41,6 +47,8 @@ export default class LazyMobXCache<Data, Query, Metadata = any> {
 
     private staticDependencies:any[];
     private debouncedPopulate:AccumulatingDebouncedFunction<Query>;
+
+    private promises:CachePromise<Data,Metadata>[];
 
     constructor(private queryToKey:(q:Query)=>string, // query maps to the key of the datum it will fill
                 private dataToKey:(d:Data, m?:Metadata)=>string, // should uniquely identify the data - for indexing in cache
@@ -60,14 +68,78 @@ export default class LazyMobXCache<Data, Query, Metadata = any> {
             ()=>{return {};},
             0
         );
+
+        reaction(
+            ()=>this._cache,
+            (cache:Cache<Data, Metadata>)=>{
+                // filter out completed promises, we dont listen on them anymore
+                this.promises = this.promises.filter(promise=>!this.tryTrigger(promise));
+            }
+        );
     }
 
     private init() {
         this.pending = {};
         this._cache = Immutable.from<Cache<Data, Metadata>>({});
+        this.promises = [];
     }
     public get cache() {
         return this._cache;
+    }
+
+    public get activePromisesCount() {
+        return this.promises.length;
+    }
+
+    public awaitComplete(queries:Query|Query[], makeRequest?:boolean):Promise<CacheData<Data, Metadata>[]> {
+        return new Promise((resolve, reject)=>{
+            let queriesArray:Query[];
+            if (Array.isArray(queries)) {
+                queriesArray = queries;
+            } else {
+                queriesArray = [queries];
+            }
+            const newPromise = {
+                keys:queriesArray.map(query=>this.queryToKey(query)),
+                callback: resolve,
+                error: reject
+            };
+            if (!this.tryTrigger(newPromise)) {
+                // try to trigger it immediately
+                // if not triggered immediately, add it to callback list
+                this.promises.push(newPromise);
+                // request if desired
+                if (makeRequest) {
+                    queriesArray.map(query=>this.debouncedPopulate(query));
+                }
+            }
+        });
+    }
+
+    private tryTrigger(promise:CachePromise<Data, Metadata>) {
+        let allDefined = true;
+        let error = false;
+        const data = promise.keys.map(key=>{
+            const datum = this._cache[key];
+            if (!datum) {
+                allDefined = false;
+            } else if (datum.status === "error") {
+                allDefined = false;
+                error = true;
+            }
+            return datum;
+        });
+        if (error) {
+            promise.error();
+            return true;
+        } else if (allDefined) {
+            // if all data fetching complete, then trigger callback
+            promise.callback(data);
+            return true;
+        } else {
+            // otherwise, not complete yet
+            return false;
+        }
     }
 
     public peek(query:Query):CacheData<Data, Metadata> | null {
