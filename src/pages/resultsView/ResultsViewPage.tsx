@@ -54,7 +54,7 @@ function initStore(){
     resultsViewPageStore.zScoreThreshold = qSession.getZScoreThreshold();
     resultsViewPageStore.oqlQuery = qSession.oql_query;
 
-    _.each(props.genes, (gene:string)=>resultsViewPageStore.getMutationMapperStore(gene));
+    //_.each(props.genes, (gene:string)=>resultsViewPageStore.getMutationMapperStore(gene));
 
     return resultsViewPageStore;
 
