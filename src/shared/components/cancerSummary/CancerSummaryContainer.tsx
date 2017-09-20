@@ -85,12 +85,13 @@ export default class CancerSummaryContainer extends React.Component<{store: Resu
 
         return _.map(this.props.store.alterationCountsForCancerTypesByGene.result, (geneData, geneName) => (
             <MSKTab key={geneName} id={"summaryTab" + geneName} linkText={geneName} anchorStyle={anchorStyle}>
-                <CancerSummaryContent data={geneData}/>
+                <CancerSummaryContent data={geneData} gene={this.activeTab}/>
             </MSKTab>
         ));
     }
 
     public render() {
+
         if (this.props.store.alterationCountsForCancerTypesForAllGenes.isComplete &&
             this.props.store.alterationCountsForCancerTypesByGene.isComplete) {
             return (
@@ -101,7 +102,7 @@ export default class CancerSummaryContainer extends React.Component<{store: Resu
                              tabButtonStyle="pills"
                              activeTabId={this.activeTab} className="secondaryTabs">
                         <MSKTab key="all" id="allGenes" linkText="All Queried Genes" anchorStyle={anchorStyle}>
-                            <CancerSummaryContent
+                            <CancerSummaryContent gene={this.activeTab}
                                 data={this.props.store.alterationCountsForCancerTypesForAllGenes.result}/>
                         </MSKTab>
                         {this.tabs}

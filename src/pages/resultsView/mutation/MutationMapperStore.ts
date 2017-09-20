@@ -68,6 +68,7 @@ export class MutationMapperStore {
 
     readonly mutationData = remoteData({
         invoke: () => {
+            console.log("getting mutation data", this.gene.entrezGeneId);
             const cacheData = this.getMutationDataCache().get({entrezGeneId: this.gene.entrezGeneId});
             return Promise.resolve((cacheData && cacheData.data) || []);
         }
