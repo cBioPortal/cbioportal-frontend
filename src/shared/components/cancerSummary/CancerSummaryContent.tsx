@@ -52,6 +52,7 @@ interface ICancerSummaryContentProps {
     data: {
         [cancerType:string]:ICancerTypeAlterationData
     };
+    gene: string;
 }
 
 
@@ -351,7 +352,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                     </button>
                 </div>
                 {controls}
-                <SummaryBarGraph data={this.chartData} yAxis={this.yAxis} xAxis={this.xAxis}
+                <SummaryBarGraph data={this.chartData} yAxis={this.yAxis} xAxis={this.xAxis} gene={this.props.gene}
                                  setPdfAnchor={this.setPdfAnchor} setPngAnchor={this.setPngAnchor} legend={this.showGenomicAlt}/>
             </div>
         );
