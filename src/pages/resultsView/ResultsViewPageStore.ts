@@ -223,7 +223,7 @@ export class ResultsViewPageStore {
             this.mutationMapperStores,
             this.molecularData,
             this.defaultOQLQuery,
-            this.mutationDataReady
+            this.geneToMutationData
         ],
         invoke: async() => {
 
@@ -235,7 +235,7 @@ export class ResultsViewPageStore {
             // now merge alterations with mutations by gene
             const mergedAlterationsByGene = _.mapValues(genesAsDictionary, (gene: Gene) => {
                 // if for some reason it doesn't exist, assign empty array;
-                return _.concat(([] as (Mutation|GeneMolecularData)[]), this.geneToMutationData[gene.hugoGeneSymbol]!.data!,
+                return _.concat(([] as (Mutation|GeneMolecularData)[]), this.geneToMutationData.result![gene.hugoGeneSymbol]!.data!,
                     filteredMolecularDataByGene![gene.hugoGeneSymbol!]!);
             });
             const ret = _.mapValues(mergedAlterationsByGene, (mutations: (Mutation|GeneMolecularData)[]) => {
@@ -244,11 +244,6 @@ export class ResultsViewPageStore {
 
             return ret;
         }
-    });
-
-    readonly mutationDataReady = remoteData({
-        await: ()=>[this.genes],
-        invoke: ()=>this.mutationDataCache.getPromise(this.genes.result!)
     });
 
     readonly defaultOQLQuery = remoteData({
@@ -638,16 +633,29 @@ export class ResultsViewPageStore {
         }
     });
 
-    @computed get geneToMutationData():{[hugoGeneSymbol:string]:CacheData<Mutation[]>|null} {
-        if (this.genes.result) {
-            return this.genes.result.reduce((map:{[hugoGeneSymbol:string]:CacheData<Mutation[]>|null}, gene:Gene)=>{
+    readonly geneToMutationData = remoteData({
+        await:()=>[
+            this.genes,
+            this.mutationDataCache
+        ],
+        invoke:()=>{
+            return Promise.resolve(this.genes.result.reduce((map:{[hugoGeneSymbol:string]:CacheData<Mutation[]>|null}, gene:Gene)=>{
                 map[gene.hugoGeneSymbol] = this.mutationDataCache.get({ entrezGeneId: gene.entrezGeneId });
                 return map;
-            }, {});
-        } else {
-            return {};
+            }, {}));
         }
-    }
+    });
+
+    /*@computed get geneToMutationData():{[hugoGeneSymbol:string]:CacheData<Mutation[]>|null} {
+     if (this.genes.result) {
+     return this.genes.result.reduce((map:{[hugoGeneSymbol:string]:CacheData<Mutation[]>|null}, gene:Gene)=>{
+     map[gene.hugoGeneSymbol] = this.mutationDataCache.get({ entrezGeneId: gene.entrezGeneId });
+     return map;
+     }, {});
+     } else {
+     return {};
+     }
+     }*/
 
 
     @cached get oncoKbEvidenceCache() {
@@ -674,11 +682,16 @@ export class ResultsViewPageStore {
         return new PdbHeaderCache();
     }
 
-    readonly
-    @cached get mutationDataCache() {
-        return new MutationDataCache(this.studyToMutationMolecularProfile.result,
-            this.studyToDataQueryFilter.result);
-    }
+    readonly mutationDataCache = remoteData({
+        await:()=>[
+            this.studyToMutationMolecularProfile,
+            this.studyToDataQueryFilter
+        ],
+        invoke:()=>{
+            return Promise.resolve(new MutationDataCache(this.studyToMutationMolecularProfile.result,
+                this.studyToDataQueryFilter.result));
+        }
+    });
 
     @action clearErrors() {
         this.ajaxErrors = [];
