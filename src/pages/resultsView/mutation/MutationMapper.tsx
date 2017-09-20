@@ -90,6 +90,9 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
     }
 
     public render() {
+
+        console.log("rendering mapper");
+
         return (
             <div>
                 {
