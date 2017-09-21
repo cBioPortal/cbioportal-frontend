@@ -34,45 +34,50 @@
           border-right: 2px solid #ddd;
           text-transform: capitalize;} }
 
-.form-section {
+.cancer-study-form-controls {
+
+  .form-section {
     display: flex;
     justify-content: space-between;
-    align-items: flex-end;
+    align-items: flex-start;
     margin-bottom: 5px;
     > div {
-        margin: 0 25px;
-        flex:1 1 100%}
-}
+      margin-right:25px;
+      flex:1 1 100%}
+  }
 
-.slider-holder {
+  .slider-holder {
     display: flex;
     align-items: flex-end;
     >div:first-child {
-        flex: 1 1 100%;
-        margin-bottom: 0px;}
+      flex: 1 1 100%;
+      margin-bottom: 0px;}
     >div:last-child {margin-left: 25px;}
-}
+  }
 
-.rangeslider-horizontal .rangeslider__fill {
+  .rangeslider-horizontal .rangeslider__fill {
     background-image: -webkit-linear-gradient(top,#89cdef 0,#81bfde 100%);
     background-image: -o-linear-gradient(top,#89cdef 0,#81bfde 100%);
     background-image: linear-gradient(to bottom,#89cdef 0,#81bfde 100%);
     background-repeat: repeat-x;
-}
+  }
 
-.rangeslider__label-list .rangeslider__label {top: 20px;  }
+  .rangeslider__label-list .rangeslider__label {top: 20px;  }
 
-.rangeslider { margin: 8px 0 20px;}
+  .rangeslider { margin: 8px 0 20px;}
 
-.slider {width:100%}
+  .slider {width:100%}
 
-.rangeslider-horizontal .rangeslider__handle {
+  .rangeslider-horizontal .rangeslider__handle {
     width: 20px;
     height: 20px;
     border-radius: 20px;
-    top: -4px;
     &:after {
-        width: 12px;
-        height: 12px;
-        top: 3px;
-        left: 3px;}}
+      width: 12px;
+      height: 12px;
+      top: 3px;
+      left: 3px;}}
+
+
+}
+
