@@ -10,8 +10,8 @@ import fileDownload from 'react-file-download';
 import classnames from 'classnames';
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import PdbHeaderCache from "shared/cache/PdbHeaderCache";
-import PdbPositionMappingCache from "shared/cache/PdbPositionMappingCache";
-import {PdbUniprotResidueMapping} from "shared/api/generated/PdbAnnotationAPI";
+import ResidueMappingCache from "shared/cache/ResidueMappingCache";
+import {ResidueMapping} from "shared/api/generated/Genome2StructureAPI";
 import {CacheData} from "shared/lib/LazyMobXCache";
 import {IMobXApplicationDataStore} from "shared/lib/IMobXApplicationDataStore";
 import MutationMapperDataStore from "pages/resultsView/mutation/MutationMapperDataStore";
@@ -34,7 +34,8 @@ export interface IStructureViewerPanelProps extends IProteinImpactTypeColors
     pdbAlignmentIndex?: PdbAlignmentIndex;
     mutationDataStore?: MutationMapperDataStore;
     pdbHeaderCache?: PdbHeaderCache;
-    pdbPositionMappingCache?: PdbPositionMappingCache;
+    residueMappingCache?: ResidueMappingCache;
+    uniprotId?: string;
     onClose?: () => void;
 }
 
@@ -638,12 +639,12 @@ export default class StructureViewerPanel extends React.Component<IStructureView
 
         this.residueMappingData.forEach((cacheData) => {
             if (cacheData && cacheData.data) {
-                const mutations = this.mutationsByPosition[cacheData.data.uniprotPosition];
+                const mutations = this.mutationsByPosition[cacheData.data.queryPosition];
 
                 const highlighted: boolean = (
                     this.props.mutationDataStore && (
-                        this.props.mutationDataStore.isPositionSelected(cacheData.data.uniprotPosition) ||
-                        this.props.mutationDataStore.isPositionHighlighted(cacheData.data.uniprotPosition)
+                        this.props.mutationDataStore.isPositionSelected(cacheData.data.queryPosition) ||
+                        this.props.mutationDataStore.isPositionHighlighted(cacheData.data.queryPosition)
                     )
                 ) || false;
 
@@ -669,28 +670,44 @@ export default class StructureViewerPanel extends React.Component<IStructureView
         return _.uniq(residues);
     }
 
-    @computed get residueMappingData(): Array<CacheData<PdbUniprotResidueMapping>|null>|undefined
+    @computed get residueMappingData(): Array<CacheData<ResidueMapping>|null>|undefined
     {
         if (this.alignmentIds.length === 0) {
             return undefined;
         }
 
-        const residueMappingData: Array<CacheData<PdbUniprotResidueMapping>|null> = [];
+        let residueMappingData: Array<CacheData<ResidueMapping>|null> = [];
 
-        if (this.props.pdbPositionMappingCache &&
+        if (this.props.residueMappingCache &&
+            this.props.uniprotId &&
+            this.pdbId &&
+            this.chainId &&
             this.proteinPositions.length > 0)
         {
+            // TODO remove this after implementing the cache!
             // create query parameters
-            this.proteinPositions.forEach((uniprotPosition: number) => {
-                this.alignmentIds.forEach((alignmentId: number) => {
-                    if (this.props.pdbPositionMappingCache) {
-                        residueMappingData.push(this.props.pdbPositionMappingCache.get({
-                            uniprotPosition,
-                            alignmentId
-                        }));
-                    }
-                });
+            // this.proteinPositions.forEach((uniprotPosition: number) => {
+            //     this.alignmentIds.forEach((alignmentId: number) => {
+            //         if (this.props.pdbPositionMappingCache) {
+            //             residueMappingData.push(this.props.pdbPositionMappingCache.get({
+            //                 uniprotPosition,
+            //                 alignmentId
+            //             }));
+            //         }
+            //     });
+            // });
+
+            // TODO this query may slightly change wrt to the cache implementation
+            const remoteData = this.props.residueMappingCache.get({
+                uniprotId: this.props.uniprotId,
+                pdbId: this.pdbId,
+                chainId: this.chainId,
+                uniprotPositions: this.proteinPositions
             });
+
+            if (remoteData.result) {
+                residueMappingData = remoteData.result;
+            }
         }
 
         return residueMappingData;
@@ -708,9 +725,9 @@ export default class StructureViewerPanel extends React.Component<IStructureView
             if (cacheData &&
                 cacheData.data &&
                 this.props.mutationDataStore &&
-                this.props.mutationDataStore.isPositionSelected(cacheData.data.uniprotPosition))
+                this.props.mutationDataStore.isPositionSelected(cacheData.data.queryPosition))
             {
-                positions.push(cacheData.data.uniprotPosition);
+                positions.push(cacheData.data.queryPosition);
             }
         });
 

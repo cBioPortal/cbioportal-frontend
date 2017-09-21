@@ -11,8 +11,8 @@ import defaultClient from "shared/api/cbioportalClientInstance";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import hotspot3DClient from 'shared/api/3DhotspotClientInstance';
 import hotspotClient from 'shared/api/hotspotClientInstance';
-import pdbAnnotationClient from "shared/api/pdbAnnotationClientInstance";
-import {PdbUniprotAlignment, default as PdbAnnotationAPI} from "shared/api/generated/PdbAnnotationAPI";
+import g2sClient from "shared/api/g2sClientInstance";
+import {Alignment, default as Genome2StructureAPI} from "shared/api/generated/Genome2StructureAPI";
 import {
     CosmicMutation, default as CBioPortalAPIInternal,
     GisticToGene, Gistic, MutSig
@@ -72,11 +72,12 @@ export async function fetchMutationData(mutationFilter:MutationFilter,
 }
 
 export async function fetchPdbAlignmentData(uniprotId: string,
-                                            client:PdbAnnotationAPI = pdbAnnotationClient)
+                                            client:Genome2StructureAPI = g2sClient)
 {
     if (uniprotId) {
-        return await client.postPdbAlignmentByUniprot({
-            uniprotIds: [uniprotId]
+        return await client.getAlignmentUsingGET({
+            idType: "uniprot",
+            id: uniprotId
         });
     } else {
         return [];
@@ -708,7 +709,7 @@ export function mergeMutations(mutationData:MobxPromise<Mutation[]>,
     return Object.keys(idToMutations).map((id:string) => idToMutations[id]);
 }
 
-export function indexPdbAlignmentData(alignmentData: MobxPromise<PdbUniprotAlignment[]>)
+export function indexPdbAlignmentData(alignmentData: MobxPromise<Alignment[]>)
 {
     return indexPdbAlignments(alignmentData.result || []);
 }
