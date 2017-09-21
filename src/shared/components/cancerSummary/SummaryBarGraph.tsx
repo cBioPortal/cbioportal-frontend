@@ -5,6 +5,7 @@ import { ChartTooltipItem } from 'chart.js';
 import Chart, {ChartLegendItem} from 'chart.js';
 import {IBarGraphConfigOptions, IBarGraphDataset} from './CancerSummaryContent';
 import {observer} from "mobx-react";
+import classnames from 'classnames';
 import './styles.scss';
 
 interface ISummaryBarGraphProps {
@@ -14,6 +15,7 @@ interface ISummaryBarGraphProps {
     legend: boolean;
     setPngAnchor:any;
     setPdfAnchor:any;
+    gene: string;
 }
 
 @observer
@@ -32,24 +34,23 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
         this.updateChart = this.updateChart.bind(this);
     }
 
-    private getTooltipOptions(tooltipModel: any, data:IBarGraphConfigOptions, chartOptions:any) {
-        // $('#chartjs-tooltip').remove();
+    private getTooltipOptions(tooltipModel: any, data:IBarGraphConfigOptions, chartOptions:any, uniqueId:string) {
 
         // Tooltip Element
-        let tooltipEl = document.getElementById('chartjs-tooltip');
+        let tooltipEl = document.getElementById('cancer-type-summary-tab-tooltip-' + uniqueId);
 
         // Create element on first render
         if (!tooltipEl) {
             tooltipEl = document.createElement('div');
-            tooltipEl.id = 'chartjs-tooltip';
+            tooltipEl.id = 'cancer-type-summary-tab-tooltip-' + uniqueId;
+            tooltipEl.className = 'cancer-type-summary-tab-tooltip';
             tooltipEl.innerHTML = "<div></div>";
-            document.getElementsByClassName('cancer-summary-chart-container')[0].appendChild(tooltipEl);
+            this.chartContainer.appendChild(tooltipEl);
         }
 
         // Hide if no tooltip
         if (tooltipModel.opacity === 0) {
             tooltipEl.style.opacity = '0';
-            // tooltipEl.style.display = 'none';
             return;
         }
 
@@ -99,12 +100,11 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
             tableRoot!.innerHTML = innerHtml;
         }
 
-        // `this` will be the overall tooltip
-        const position = chartOptions._chart.canvas.getBoundingClientRect();
+        // `chartOptions` will be the overall tooltip
+        // const position = chartOptions._chart.canvas.getBoundingClientRect();
 
         // Display, position, and set styles for font
         tooltipEl.style.opacity = '1';
-        // tooltipEl.style.display = 'block';
         tooltipEl.style.left =  tooltipModel.caretX + 35 + 'px';
         tooltipEl.style.top = tooltipModel.caretY + 5 + 'px';
     }
@@ -124,6 +124,10 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
         this.chartConfig.options = {};
         this.chartConfig.options = this.chartOptions;
         this.chart.update();
+    }
+
+    private hasAlterations() {
+        return _.sumBy(this.props.data.datasets, function(dataset) { return dataset.count }) > 0;
     }
 
     private getLegendNames(id:string) {
@@ -165,7 +169,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
                     return false;
                 },
                 custom(tooltipModel: any){
-                    return that.getTooltipOptions(tooltipModel, data, this);}
+                    return that.getTooltipOptions(tooltipModel, data, this, that.props.gene);}
             },
             scales: {
                 xAxes: [{
@@ -184,11 +188,13 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
                         fontSize: 13,
                         labelString: 'Alteration Frequency'
                     },
+                    display:true,
                     ticks: {
                         fontSize: 11,
                         callback: function(value:number) {
-                            return that.props.yAxis === "abs-count" ? value : _.round(value) + '%';
-                        }
+                            return that.props.yAxis === "abs-count" ? value : (Math.round(value*10)/10) + '%';
+                        },
+
                     }
                 }]
             },
@@ -252,13 +258,15 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
 
     public render() {
         let errorMessage = null;
-        if (!this.props.data.datasets.length) {
-            errorMessage = <div className="cancer-summary-error-message">No alteration plot data.</div>;
+        if (!this.hasAlterations()) {
+            errorMessage = <div className="alert alert-info">No alteration plot data.</div>;
         }
         return (
-            <div ref={(el: HTMLDivElement) => this.chartContainer = el} className="cancer-summary-chart-container">
+            <div ref={(el: HTMLDivElement) => this.chartContainer = el}
+                 className="cancer-summary-chart-container">
                 {errorMessage}
-                <canvas ref={(el:HTMLCanvasElement) => this.chartTarget = el} width="100%" height="600"/>
+                <canvas ref={(el:HTMLCanvasElement) => this.chartTarget = el}
+                        className={classnames({ hidden:!this.hasAlterations() })} width="100%" height="600"/>
             </div>
         );
     }
