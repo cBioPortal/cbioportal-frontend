@@ -208,13 +208,24 @@ th.reactable-header-sort-asc:after {
   left: -9999px;
 }
 
-// corrects for a problem with build of react-bootstrap (unicode corrupted when build on linux  machines)
-.modal-header .close {
+// corrects for a problem with build of react-bootstrap and react-select (unicode corrupted when build on linux  machines)
+.Select--multi .Select-value-icon {
 
+  text-indent: -9999px;
+  line-height: 0; /* Collapse the original line */
+
+  &::after {
+    content:"✖";
+    text-indent: 0;
+    display: block;
+    line-height: initial; /* New content takes up original line height */
+  }
+}
+
+.modal-header .close {
   &::before {
     content: "✖";
   }
-
   span {
     display:none;
   }
