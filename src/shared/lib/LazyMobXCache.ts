@@ -87,10 +87,10 @@ export default class LazyMobXCache<Data, Query, Metadata = any> {
         return this._cache;
     }
 
-    public getPromise(queries:Query[]):Promise<CacheData<Data, Metadata>[]> {
+    public awaitComplete(queries:Query[], makeRequest?:boolean):Promise<CacheData<Data, Metadata>[]> {
         return new Promise((resolve, reject)=>{
             const newPromise = {
-                keys:queries.map(this.queryToKey),
+                keys:queries.map(key=>this.queryToKey(key)),
                 callback: resolve,
                 error: reject
             };
@@ -98,6 +98,10 @@ export default class LazyMobXCache<Data, Query, Metadata = any> {
                 // try to trigger it immediately
                 // if not triggered immediately, add it to callback list
                 this.promises.push(newPromise);
+                // request if desired
+                if (makeRequest) {
+                    queries.map(q=>this.debouncedPopulate(q));
+                }
             }
         });
     }

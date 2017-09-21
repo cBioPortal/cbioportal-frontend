@@ -226,7 +226,6 @@ export class ResultsViewPageStore {
             this.geneToMutationData
         ],
         invoke: async() => {
-
             const filteredMolecularDataByGene = _.groupBy(this.molecularData.result, (item: GeneMolecularData) => item.gene.hugoGeneSymbol);
 
             const genesAsDictionary = _.keyBy(this.genes.result, (gene: Gene) => gene.hugoGeneSymbol);
@@ -235,7 +234,8 @@ export class ResultsViewPageStore {
             // now merge alterations with mutations by gene
             const mergedAlterationsByGene = _.mapValues(genesAsDictionary, (gene: Gene) => {
                 // if for some reason it doesn't exist, assign empty array;
-                return _.concat(([] as (Mutation|GeneMolecularData)[]), this.geneToMutationData.result![gene.hugoGeneSymbol]!.data!,
+                const mutationData:Mutation[]|null = this.geneToMutationData.result![gene.hugoGeneSymbol]!.data;
+                return _.concat(([] as (Mutation|GeneMolecularData)[]), mutationData || [],
                     filteredMolecularDataByGene![gene.hugoGeneSymbol!]!);
             });
             const ret = _.mapValues(mergedAlterationsByGene, (mutations: (Mutation|GeneMolecularData)[]) => {
@@ -429,7 +429,10 @@ export class ResultsViewPageStore {
     }
 
     readonly mutationMapperStores = remoteData<{[hugoGeneSymbol: string]: MutationMapperStore}>({
-        await: ()=>[this.genes],
+        await: ()=>[
+            this.genes,
+            this.mutationDataCache
+        ],
         invoke: ()=>{
             if (this.genes.result) {
                 // we have to use _.reduce, otherwise this.genes.result (Immutable, due to remoteData) will return
@@ -439,7 +442,7 @@ export class ResultsViewPageStore {
                     map[gene.hugoGeneSymbol] = new MutationMapperStore(AppConfig,
                         gene,
                         this.samples,
-                        ()=>(this.mutationDataCache),
+                        ()=>(this.mutationDataCache.result!),
                         this.molecularProfileIdToMolecularProfile,
                         this.clinicalDataForSamples,
                         this.studiesForSamplesWithoutCancerTypeClinicalData,
@@ -633,16 +636,18 @@ export class ResultsViewPageStore {
         }
     });
 
-    readonly geneToMutationData = remoteData({
+    readonly geneToMutationData = remoteData<{[hugoGeneSymbol:string]:CacheData<Mutation[]>|null}>({
         await:()=>[
             this.genes,
             this.mutationDataCache
         ],
         invoke:()=>{
-            return Promise.resolve(this.genes.result.reduce((map:{[hugoGeneSymbol:string]:CacheData<Mutation[]>|null}, gene:Gene)=>{
-                map[gene.hugoGeneSymbol] = this.mutationDataCache.get({ entrezGeneId: gene.entrezGeneId });
-                return map;
-            }, {}));
+            return this.mutationDataCache.result!.awaitComplete(this.genes.result!, true).then(()=>{
+                return this.genes.result!.reduce((map:{[hugoGeneSymbol:string]:CacheData<Mutation[]>|null}, gene:Gene)=>{
+                    map[gene.hugoGeneSymbol] = this.mutationDataCache.result!.get({ entrezGeneId: gene.entrezGeneId });
+                    return map;
+                }, {});
+            });
         }
     });
 
