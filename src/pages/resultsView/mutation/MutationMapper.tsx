@@ -102,7 +102,8 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                             pdbChainDataStore={this.props.store.pdbChainDataStore}
                             pdbAlignmentIndex={this.props.store.indexedAlignmentData}
                             pdbHeaderCache={this.props.pdbHeaderCache}
-                            pdbPositionMappingCache={this.props.store.pdbPositionMappingCache}
+                            residueMappingCache={this.props.store.residueMappingCache}
+                            uniprotId={this.props.store.uniprotId.result}
                             onClose={this.close3dPanel}
                             {...DEFAULT_PROTEIN_IMPACT_TYPE_COLORS}
                         />

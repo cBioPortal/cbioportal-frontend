@@ -2,11 +2,11 @@ import { assert } from 'chai';
 import {mergeAlignments} from './PdbUtils';
 import {initPdbAlignment} from "test/PdbMockUtils";
 import {IPdbChain} from "shared/model/Pdb";
-import {PdbUniprotAlignment} from "shared/api/generated/PdbAnnotationAPI";
+import {Alignment} from "shared/api/generated/Genome2StructureAPI";
 
 describe('PdbUtils', () => {
     it('merges alignments properly', () => {
-        let alignments: PdbUniprotAlignment[];
+        let alignments: Alignment[];
         let chain: IPdbChain|undefined;
 
         // overlapping, ordered
