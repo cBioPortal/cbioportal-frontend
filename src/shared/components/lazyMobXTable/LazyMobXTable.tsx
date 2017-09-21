@@ -1,6 +1,6 @@
 import SimpleTable from "../simpleTable/SimpleTable";
 import * as React from 'react';
-import {observable, computed, action, reaction, IReactionDisposer} from "mobx";
+import {observable, computed, action, reaction, IReactionDisposer, autorun} from "mobx";
 import {observer, Observer} from "mobx-react";
 import './styles.scss';
 import {
@@ -16,6 +16,7 @@ import {ButtonToolbar} from "react-bootstrap";
 import { If } from 'react-if';
 import {SortMetric} from "../../lib/ISortMetric";
 import {IMobXApplicationDataStore, SimpleMobXApplicationDataStore} from "../../lib/IMobXApplicationDataStore";
+import {maxPage} from "./utils";
 
 export type SortDirection = 'asc' | 'desc';
 
@@ -234,11 +235,7 @@ class LazyMobXTableStore<T> {
     }
 
     @computed get maxPage() {
-        if (this.itemsPerPage === PAGINATION_SHOW_ALL) {
-            return 0;
-        } else {
-            return Math.floor(this.displayData.length / this.itemsPerPage);
-        }
+        return maxPage(this.displayData.length, this.itemsPerPage);
     }
 
     @computed get filterStringUpper() {
@@ -552,6 +549,8 @@ class LazyMobXTableStore<T> {
 
         this._page = 0;
         this.itemsPerPage = lazyMobXTableProps.initialItemsPerPage || 50;
+
+        reaction(()=>this.displayData.length, ()=>{ this.page = this.clampPage(this.page); /* update for possibly reduced maxPage */});
     }
 }
 
