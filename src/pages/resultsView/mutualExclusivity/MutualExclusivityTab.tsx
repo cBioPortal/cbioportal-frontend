@@ -102,7 +102,7 @@ export function getCountsText(data: MutualExclusivity[]): JSX.Element {
 export function getData(isSampleAlteredMap: Dictionary<boolean[]>): MutualExclusivity[] {
 
     let data: MutualExclusivity[] = [];
-    const combinations = Combinatorics.combination(Object.keys(isSampleAlteredMap), 2).toArray();
+    const combinations: string[][] = (Combinatorics as any).bigCombination(Object.keys(isSampleAlteredMap), 2).toArray();
 
     combinations.forEach(combination => {
 
