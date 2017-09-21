@@ -269,7 +269,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
         const altMax = altCasesMax;
         const symbol = yAxis === 'alt-freq' ? '%' : '';
         const controls = this.showControls ? (
-            <div style={{ marginTop:10 }}>
+            <div style={{ marginTop:10 }} className="cancer-study-form-controls">
                 <div className="form-section">
                     <FormGroup>
                         <ControlLabel>Cancer Type(s):</ControlLabel>
