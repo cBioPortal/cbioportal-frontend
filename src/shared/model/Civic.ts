@@ -25,3 +25,13 @@ export interface ICivicEntry {
     url: string;
     variants: {[name: string]: ICivicVariantData};
 };
+
+export interface ICivicGeneDataWrapper {
+    status: "pending" | "error" | "complete";
+    result?: ICivicGene;
+}
+
+export interface ICivicVariantDataWrapper {
+    status: "pending" | "error" | "complete";
+    result?: ICivicVariant;
+}
