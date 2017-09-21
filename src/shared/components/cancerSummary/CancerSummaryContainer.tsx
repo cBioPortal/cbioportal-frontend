@@ -23,48 +23,6 @@ const anchorStyle = {
 @observer
 export default class CancerSummaryContainer extends React.Component<{store: ResultsViewPageStore},{}> {
 
-    private data = {
-        EGFR: {
-            MixedCancerTypes: {
-                mutated: 41,
-                amplified: 75,
-                deleted: 76,
-                multiple: 11,
-                total: 581
-            },
-            LungCancer: {
-                mutated: 41,
-                amplified: 54,
-                deleted: 36,
-                multiple: 71,
-                total: 681
-            },
-            BrainCancer: {
-                mutated: 91,
-                amplified: 154,
-                deleted: 56,
-                multiple: 331,
-                total: 639
-            },
-        },
-        BRCA1: {
-            MixedCancerTypes: {
-                mutated: 41,
-                amplified: 75,
-                deleted: 6,
-                multiple: 11,
-                total: 881
-            },
-            LungCancer: {
-                mutated: 11,
-                amplified: 54,
-                deleted: 16,
-                multiple: 71,
-                total: 581
-            }
-        }
-    };
-
     @observable private activeTab: string = "all";
 
     constructor() {
