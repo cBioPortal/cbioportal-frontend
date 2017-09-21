@@ -1,6 +1,6 @@
 import {
     DiscreteCopyNumberFilter, DiscreteCopyNumberData, ClinicalData, ClinicalDataMultiStudyFilter, Sample,
-    SampleIdentifier, GeneticProfile, Mutation
+    SampleIdentifier, GeneticProfile, Mutation, CancerStudy
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {computed, observable, action} from "mobx";
@@ -120,6 +120,7 @@ export class ResultsViewPageStore {
                 this.samples,
                 ()=>(this.mutationDataCache),
                 this.geneticProfileIdToGeneticProfile,
+                this.studyIdToStudy,
                 this.clinicalDataForSamples,
                 this.studiesForSamplesWithoutCancerTypeClinicalData,
                 this.samplesWithoutCancerTypeClinicalData,
@@ -208,6 +209,11 @@ export class ResultsViewPageStore {
     readonly studies = remoteData({
         invoke: ()=>Promise.all(this.studyIds.map(studyId=>client.getStudyUsingGET({studyId})))
     }, []);
+
+    readonly studyIdToStudy = remoteData({
+        await: ()=>[this.studies],
+        invoke:()=>Promise.resolve(_.keyBy(this.studies.result, x=>x.studyId))
+    }, {});
 
     private getGermlineSampleListId(studyId:string):string {
         return `${studyId}_germline`;
