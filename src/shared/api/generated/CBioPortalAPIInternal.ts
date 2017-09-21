@@ -53,6 +53,12 @@ export type FractionGenomeAltered = {
         'value': number
 
 };
+export type Info = {
+    'dbVersion': string
+
+        'portalVersion': string
+
+};
 export type MutationSpectrum = {
     'CtoA': number
 
@@ -271,7 +277,7 @@ export type GenesetCorrelation = {
 };
 
 /**
- * A web service for supplying JSON formatted data to cBioPortal clients.
+ * A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
  * @class CBioPortalAPIInternal
  * @param {(string)} [domainOrOptions] - The project domain.
  */
@@ -836,6 +842,57 @@ export default class CBioPortalAPIInternal {
                 return response.body;
             });
         };
+
+    getInfoUsingGETURL(parameters: {
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/info';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get information about the running instance
+     * @method
+     * @name CBioPortalAPIInternal#getInfoUsingGET
+     */
+    getInfoUsingGET(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < Info > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/info';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        }).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
 
     fetchCoExpressionsUsingPOSTURL(parameters: {
         'molecularProfileId': string,
