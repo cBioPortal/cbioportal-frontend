@@ -479,7 +479,7 @@ export type ClinicalAttribute = {
 };
 
 /**
- * A web service for supplying JSON formatted data to cBioPortal clients.
+ * A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
  * @class CBioPortalAPI
  * @param {(string)} [domainOrOptions] - The project domain.
  */
@@ -742,7 +742,7 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Get all clinical attributes in a study
+     * Get all clinical attributes
      * @method
      * @name CBioPortalAPI#getAllClinicalAttributesUsingGET
      * @param {string} projection - Level of detail of the response
@@ -834,7 +834,7 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Fetch clinical data by patient IDs or sample IDs
+     * Fetch clinical data by patient IDs or sample IDs (all studies)
      * @method
      * @name CBioPortalAPI#fetchClinicalDataUsingPOST
      * @param {string} clinicalDataType - Type of the clinical data
@@ -2116,7 +2116,7 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Fetch molecular data in a molecular profile
+     * Fetch molecular data by sample ID(s)
      * @method
      * @name CBioPortalAPI#fetchAllMolecularDataInMolecularProfileUsingPOST
      * @param {string} molecularProfileId - Molecular Profile ID e.g. acc_tcga_rna_seq_v2_mrna
@@ -3376,7 +3376,7 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Get all clinical attributes in a study
+     * Get all clinical attributes in the specified study
      * @method
      * @name CBioPortalAPI#getAllClinicalAttributesInStudyUsingGET
      * @param {string} studyId - Study ID e.g. acc_tcga
@@ -3473,7 +3473,7 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Get all clinical attributes in a study
+     * Get specified clinical attribute
      * @method
      * @name CBioPortalAPI#getClinicalAttributeInStudyUsingGET
      * @param {string} studyId - Study ID e.g. acc_tcga
@@ -3695,7 +3695,7 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Fetch all clinical data in a study
+     * Fetch clinical data by patient IDs or sample IDs (specific study)
      * @method
      * @name CBioPortalAPI#fetchAllClinicalDataInStudyUsingPOST
      * @param {string} studyId - Study ID e.g. acc_tcga

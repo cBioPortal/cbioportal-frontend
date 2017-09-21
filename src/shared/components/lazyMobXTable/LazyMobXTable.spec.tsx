@@ -10,11 +10,12 @@ import expect from 'expect';
 import expectJSX from 'expect-jsx';
 import lolex from "lolex";
 import {Clock} from "lolex";
-import {PaginationControls} from "../paginationControls/PaginationControls";
+import {PaginationControls, SHOW_ALL_PAGE_SIZE} from "../paginationControls/PaginationControls";
 import {Button, FormControl, Checkbox} from 'react-bootstrap';
 import {ColumnVisibilityControls} from "../columnVisibilityControls/ColumnVisibilityControls";
 import {SimpleMobXApplicationDataStore} from "../../lib/IMobXApplicationDataStore";
 import cloneJSXWithoutKeyAndRef from "shared/lib/cloneJSXWithoutKeyAndRef";
+import {maxPage} from "./utils";
 
 expect.extend(expectJSX);
 chai.use(chaiEnzyme());
@@ -267,6 +268,35 @@ describe('LazyMobXTable', ()=>{
 
     after(()=>{
         clock.uninstall();
+    });
+
+    describe('utils', ()=>{
+        describe('maxPage', ()=>{
+            it("gives the correct outputs in various cases", ()=>{
+                assert.equal(maxPage(0, SHOW_ALL_PAGE_SIZE), 0 , "maxPage is 0 when showing all");
+                assert.equal(maxPage(100, SHOW_ALL_PAGE_SIZE), 0 , "maxPage is 0 when showing all");
+                assert.equal(maxPage(1000, SHOW_ALL_PAGE_SIZE), 0 , "maxPage is 0 when showing all");
+
+                assert.equal(maxPage(0, 50), 0, "maxPage is 0 when no data");
+                assert.equal(maxPage(0, 25), 0, "maxPage is 0 when no data");
+                assert.equal(maxPage(0, 100), 0, "maxPage is 0 when no data");
+
+                assert.equal(maxPage(1, 50), 0, "maxPage is 0 when less than page size");
+                assert.equal(maxPage(5, 50), 0, "maxPage is 0 when less than page size");
+                assert.equal(maxPage(10, 50), 0, "maxPage is 0 when less than page size");
+                assert.equal(maxPage(3, 10), 0, "maxPage is 0 when less than page size");
+                assert.equal(maxPage(7, 10), 0, "maxPage is 0 when less than page size");
+                assert.equal(maxPage(9, 10), 0, "maxPage is 0 when less than page size");
+
+                assert.equal(maxPage(50, 50), 0, "maxPage is 0 when equal to page size");
+                assert.equal(maxPage(24, 24), 0, "maxPage is 0 when equal to page size");
+                assert.equal(maxPage(1, 1), 0, "maxPage is 0 when equal to page size");
+
+                assert.equal(maxPage(25,10), 2, "maxPage calculated correctly");
+                assert.equal(maxPage(50,10), 4, "maxPage calculated correctly");
+                assert.equal(maxPage(11,2), 5, "maxPage calculated correctly");
+            });
+        });
     });
 
     describe('lazyMobXTableSort', ()=>{
