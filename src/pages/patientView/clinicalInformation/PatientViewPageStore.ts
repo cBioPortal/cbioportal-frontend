@@ -20,7 +20,6 @@ import {getTissueImageCheckUrl, getDarwinUrl} from "../../../shared/api/urls";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import GenomeNexusEnrichmentCache from "shared/cache/GenomeNexusEnrichment";
 import PubMedCache from "shared/cache/PubMedCache";
-import {MutationAssessor} from "shared/api/generated/GenomeNexusAPI";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {IHotspotData} from "shared/model/CancerHotspots";
 import {IMutSigData} from "shared/model/MutSig";
