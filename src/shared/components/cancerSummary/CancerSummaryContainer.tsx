@@ -41,11 +41,21 @@ export default class CancerSummaryContainer extends React.Component<{store: Resu
     @computed
     private get tabs() {
 
-        return _.map(this.props.store.alterationCountsForCancerTypesByGene.result, (geneData, geneName) => (
+        const geneTabs = _.map(this.props.store.alterationCountsForCancerTypesByGene.result, (geneData, geneName) => (
             <MSKTab key={geneName} id={"summaryTab" + geneName} linkText={geneName} anchorStyle={anchorStyle}>
                 <CancerSummaryContent data={geneData} gene={this.activeTab}/>
             </MSKTab>
         ));
+
+        // only add combined gene tab if there's more than one gene
+        if (geneTabs.length > 1) {
+            geneTabs.unshift(<MSKTab key="all" id="allGenes" linkText="All Queried Genes" anchorStyle={anchorStyle}>
+                <CancerSummaryContent gene={'all'}
+                                      data={this.props.store.alterationCountsForCancerTypesForAllGenes.result!}/>
+            </MSKTab>)
+        }
+        return geneTabs;
+
     }
 
     public render() {
@@ -59,10 +69,6 @@ export default class CancerSummaryContainer extends React.Component<{store: Resu
                              arrowStyle={{'line-height':.8}}
                              tabButtonStyle="pills"
                              activeTabId={this.activeTab} className="secondaryTabs">
-                        <MSKTab key="all" id="allGenes" linkText="All Queried Genes" anchorStyle={anchorStyle}>
-                            <CancerSummaryContent gene={this.activeTab}
-                                data={this.props.store.alterationCountsForCancerTypesForAllGenes.result}/>
-                        </MSKTab>
                         {this.tabs}
                     </MSKTabs>
                 </div>
