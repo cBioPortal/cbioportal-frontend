@@ -11,6 +11,7 @@ import PubMedCache from "shared/cache/PubMedCache";
 import CancerTypeCache from "shared/cache/CancerTypeCache";
 import MutationCountCache from "shared/cache/MutationCountCache";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
+import GenomeNexusEnrichmentCache from "shared/cache/GenomeNexusEnrichment";
 import PdbHeaderCache from "shared/cache/PdbHeaderCache";
 import {
     findMolecularProfileIdDiscrete, fetchMyCancerGenomeData,
@@ -685,6 +686,10 @@ export class ResultsViewPageStore {
 
     @cached get discreteCNACache() {
         return new DiscreteCNACache(this.studyToMolecularProfileDiscrete.result);
+    }
+
+    @cached get genomeNexusEnrichmentCache() {
+        return new GenomeNexusEnrichmentCache();
     }
 
     @cached get cancerTypeCache() {
