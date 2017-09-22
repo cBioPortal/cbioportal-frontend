@@ -321,7 +321,7 @@ class LazyMobXTableStore<T> {
     @computed get headers():JSX.Element[] {
         return this.visibleColumns.map((column:Column<T>)=>{
             const headerProps:{role?:"button",
-                className?:"sort-asc"|"sort-des",
+                className?:"multilineHeader sort-asc"|"multilineHeader sort-des",
                 onClick?:()=>void} = {};
             if (column.sortBy) {
                 headerProps.role = "button";
@@ -336,7 +336,7 @@ class LazyMobXTableStore<T> {
                 };
             }
             if (this.sortColumn === column.name) {
-                headerProps.className = (this.sortAscending ? "sort-asc" : "sort-des");
+                headerProps.className = (this.sortAscending ? "multilineHeader sort-asc" : "multilineHeader sort-des");
             }
 
             let label;
@@ -356,14 +356,13 @@ class LazyMobXTableStore<T> {
             } else {
                 thContents = label;
             }
-
             let style:any = {};
             if (column.align) {
                 style.textAlign = column.align;
             }
 
             return (
-                <th {...headerProps} style={style}>
+                <th className='multilineHeader' {...headerProps} style={style}>
                     {thContents}
                 </th>
             );
