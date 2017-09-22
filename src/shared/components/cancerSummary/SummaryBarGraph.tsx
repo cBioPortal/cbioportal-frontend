@@ -174,6 +174,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
             scales: {
                 xAxes: [{
                     maxBarThickness: 40,
+                    barThickness:10,
                     gridLines: {display: false},
                     stacked: true,
                     ticks: {
@@ -249,11 +250,8 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
         }
     }
 
-    get width() {
-        const labelsL = this.props.data.labels.length;
-        const contWidth = this.chartContainerWidth;
-        if (!contWidth) return null;
-        return (60 + labelsL * 50) > contWidth ? contWidth : (60 + labelsL * 50);
+    private get width() {
+        return this.props.data.labels.length * 100;
     }
 
     public render() {
@@ -262,11 +260,13 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
             errorMessage = <div className="alert alert-info">No alteration plot data.</div>;
         }
         return (
-            <div ref={(el: HTMLDivElement) => this.chartContainer = el}
+            <div style={{overflowX:'auto'}}>
+            <div style={{width:this.width}} ref={(el: HTMLDivElement) => this.chartContainer = el}
                  className="cancer-summary-chart-container">
                 {errorMessage}
                 <canvas ref={(el:HTMLCanvasElement) => this.chartTarget = el}
-                        className={classnames({ hidden:!this.hasAlterations() })} width="100%" height="600"/>
+                        className={classnames({ hidden:!this.hasAlterations() })} height="400"/>
+            </div>
             </div>
         );
     }
