@@ -24,6 +24,7 @@ export interface IMutationMapperConfig {
     showHotspot?: boolean;
     showMyCancerGenome?: boolean;
     showOncoKB?: boolean;
+    showGenomeNexus?: boolean;
 }
 
 export interface IMutationMapperProps {
@@ -193,6 +194,7 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                                     civicGenes={this.props.store.civicGenes.result}
                                     civicVariants={this.props.store.civicVariants.result}
                                     enableOncoKb={this.props.config.showOncoKB}
+                                    enableGenomeNexus={this.props.config.showGenomeNexus}
                                     enableHotspot={this.props.config.showHotspot}
                                     enableMyCancerGenome={this.props.config.showMyCancerGenome}
                                     enableCivic={this.props.config.showCivic}
