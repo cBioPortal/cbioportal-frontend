@@ -265,13 +265,13 @@ export class ResultsViewPageStore {
         invoke: () => {
             // first group samples by type
             const sampleKeyToCancerTypeClinicalDataMap = _.reduce(this.clinicalDataForSamples.result, (memo: any, clinicalData: ClinicalData) => {
-                if (clinicalData.clinicalAttributeId === 'CANCER_TYPE_DETAILED') {
+                if (clinicalData.clinicalAttributeId === 'CANCER_TYPE') {
                     memo[clinicalData.uniqueSampleKey] = clinicalData.value;
                 }
                 // we only use CANCER_TYPE (more general than CANCNER_TYPE_DETAILED) IF
                 // if we haven't yet found a detailed type
                 // this way, detailed can override not-detailed, but not vice-versa
-                if (!memo[clinicalData.uniqueSampleKey]) {
+                if (!memo[clinicalData.uniqueSampleKey] && clinicalData.clinicalAttributeId === 'CANCER_TYPE_DETAILED') {
                     memo[clinicalData.uniqueSampleKey] = clinicalData.value;
                 }
 
