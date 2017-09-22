@@ -4,6 +4,7 @@ import {Button, ButtonGroup} from 'react-bootstrap';
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import StructureViewerPanel from "shared/components/structureViewer/StructureViewerPanel";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
+import GenomeNexusEnrichmentCache from "shared/cache/GenomeNexusEnrichment";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import PubMedCache from "shared/cache/PubMedCache";
 import CancerTypeCache from "shared/cache/CancerTypeCache";
@@ -33,6 +34,7 @@ export interface IMutationMapperProps {
     studyId?: string;
     myCancerGenomeData?: IMyCancerGenomeData;
     discreteCNACache?:DiscreteCNACache;
+    genomeNexusEnrichmentCache?:GenomeNexusEnrichmentCache;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
     cancerTypeCache?:CancerTypeCache;
     mutationCountCache?:MutationCountCache;
@@ -182,6 +184,7 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                                 <ResultsViewMutationTable
                                     sampleIdToTumorType={this.props.store.sampleIdToTumorType}
                                     discreteCNACache={this.props.discreteCNACache}
+                                    genomeNexusEnrichmentCache={this.props.genomeNexusEnrichmentCache}
                                     molecularProfileIdToMolecularProfile={this.props.store.molecularProfileIdToMolecularProfile.result}
                                     oncoKbEvidenceCache={this.props.oncoKbEvidenceCache}
                                     pubMedCache={this.props.pubMedCache}
