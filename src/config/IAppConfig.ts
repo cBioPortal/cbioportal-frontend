@@ -11,6 +11,8 @@ export interface IAppConfig {
     showMyCancerGenome?: boolean;
     showOncoKB?: boolean;
     oncoKBApiUrl?: string;
+    showGenomeNexus?: boolean;
+    genomeNexusApiUrl?: string;
     enableDarwin?: boolean;
     appVersion?: string;
     historyType?: string;

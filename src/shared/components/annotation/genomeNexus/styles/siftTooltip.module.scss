@@ -1,0 +1,21 @@
+.sift-deleterious {
+  color: #C83C3C;
+  font-weight:bold;
+}
+
+.sift-deleterious_low_confidence,
+.sift-tolerated_low_confidence {
+  color: #988A3E;
+  font-weight:bold;
+}
+
+.sift-tolerated {
+  color: #909090;
+  font-weight:bold;
+}
+
+.sift-tooltip-table {
+  td:first-child {
+    padding-right: 5px;
+  }
+}
