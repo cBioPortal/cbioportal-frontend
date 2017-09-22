@@ -175,10 +175,10 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
             fusion: "#8B00C9",
             gain: "rgb(255,182,193)",
             homdel: "rgb(0,0,255)",
-            mrnaExpressionUp: "rgb(0, 0, 0)", //rgb(255, 153, 153)
-            mrnaExpressionDown: "rgb(0, 0, 0)", //rgb(102, 153, 204)
-            protExpressionUp: "rgb(0, 0, 0)",
-            protExpressionDown: "rgb(0, 0, 0)",
+            mrnaExpressionUp: "#FF989A",
+            mrnaExpressionDown: "#529AC8",
+            protExpressionUp: "#FF989A",
+            protExpressionDown: "#E0FFFF",
         };
         return this.showGenomicAlt ? (colors[color] || "#000000") : '#aaaaaa';
     }
