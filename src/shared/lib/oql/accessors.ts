@@ -12,7 +12,7 @@ var cna_profile_data_to_string: any = {
 
 var getSimplifiedMutationType = function (type: string) {
     var ret = null;
-    type = type.toLowerCase();
+    type = (typeof type === "string") ? type.toLowerCase() : "";
     switch (type) {
         case "missense_mutation":
         case "missense":
