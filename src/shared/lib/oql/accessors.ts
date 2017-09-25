@@ -70,10 +70,6 @@ var getSimplifiedMutationType = function (type: string) {
     return ret;
 };
 
-function getAltType(){
-
-}
-
 export default class accessors {
 
     constructor(public geneticProfiles: MolecularProfile[]) {
@@ -152,11 +148,7 @@ export default class accessors {
     }
 
     public fusion(d: Mutation) {
-        if (this.alterationType(d.molecularProfileId) === 'MUTATION_EXTENDED') {
-            return (getSimplifiedMutationType(d.mutationType) === "fusion");
-        } else {
-            return null;
-        }
+        return (getSimplifiedMutationType(d.mutationType) === "fusion") ? true : null;
     }
 
 

@@ -173,8 +173,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
             },
             scales: {
                 xAxes: [{
-                    maxBarThickness: 40,
-                    barThickness:10,
+                    barThickness:30,
                     gridLines: {display: false},
                     stacked: true,
                     ticks: {
@@ -251,7 +250,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
     }
 
     private get width() {
-        return this.props.data.labels.length * 100;
+        return 220 + this.props.data.labels.length * 57;
     }
 
     public render() {
