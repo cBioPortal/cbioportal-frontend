@@ -73,6 +73,11 @@
     color: $redError;
     font-weight: bold;
   }
+
+  .oqlMessage {
+    color: $brand-info;
+    font-weight: bold;
+  }
 }
 
 .CancerStudySelector,
@@ -404,6 +409,7 @@ div.SelectedStudiesWindow {
     line-height: 17px;
   }
   span.pendingMessage,
+  span.oqlNotice,
   span.errorMessage {
     font-size: small;
   }
