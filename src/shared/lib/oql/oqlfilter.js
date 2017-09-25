@@ -188,17 +188,20 @@ var isDatumWantedByOQLAlterationCommand = function(alt_cmd, datum, accessors, op
     }
 };
 
+// this command can ONLY return null or TRUE
 var isDatumWantedByFUSIONCommand = function(alt_cmd, datum, accessors) {
     /* Helper method for isDatumWantedByOQLAlterationCommand
      * In/Out: See isDatumWantedByOQLAlterationCommand
      */
-    var d_fusion = accessors.fusion(datum);
+    var d_fusion = accessors.fusion(datum); // null || true
     if (d_fusion === null) {
         // If no fusion data, it's not addressed
         return 0;
     } else {
-        datum.alterationType = 'FUSION';
-        return 2*(+d_fusion) - 1;
+        if (d_fusion === true) {
+            datum.alterationType = 'FUSION';
+        }
+        return 1;
     }
 };
 

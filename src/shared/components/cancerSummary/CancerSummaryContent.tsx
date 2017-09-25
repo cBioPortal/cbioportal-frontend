@@ -171,7 +171,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
             mutated:"#008000",
             amplified:"#ff0000",
             deleted:"#0000ff",
-            multiple:"#aaaaaa",
+            multiple:"#000000",
             fusion: "#8B00C9",
             gain: "rgb(255,182,193)",
             homdel: "rgb(0,0,255)",
@@ -184,10 +184,14 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
     }
 
     @computed private get cancerTypes() {
+
+        // build array of cancer type options and sort alphabetically
+        const sortedCancerTypes = Object.keys(this.props.data).map(point => (
+            {label: point, value: point}
+        )).sort();
+
         return [{label: 'All', value: 'all'},
-            ...Object.keys(this.props.data).map(point => (
-                {label: point, value: point}
-            ))
+            ...sortedCancerTypes
         ];
     }
 
@@ -311,7 +315,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                         </Checkbox>
                     </FormGroup>
                     <FormGroup >
-                        <ControlLabel>X Axis Value:</ControlLabel>
+                        <ControlLabel>Sort X Axis By:</ControlLabel>
                         <FormControl componentClass="select" onChange={this.handleXAxisChange} ref={(el:any) => this.inputXAxisEl = el }>
                             <option value="y-axis">Y-Axis Values</option>
                             <option value="can-types">Cancer Types</option>
