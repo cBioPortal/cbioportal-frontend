@@ -9,7 +9,7 @@ import CancerStudyTreeData from "./CancerStudyTreeData";
 import {remoteData} from "../../api/remoteData";
 import {labelMobxPromises, cached, debounceAsync} from "mobxpromise";
 import internalClient from "../../api/cbioportalInternalClientInstance";
-import oql_parser from "../../lib/oql/oql-parser";
+import oql_parser, {MUTCommand} from "../../lib/oql/oql-parser";
 import memoize from "memoize-weak-decorator";
 import AppConfig from 'appConfig';
 import {gsUploadByGet} from "../../api/gsuploadwindow";
@@ -693,6 +693,15 @@ export class QueryStore
 			this.genes.isComplete &&
 			this.asyncUrlParams.isComplete
 		) || !!this.oql.error; // to make "Please click 'Submit' to see location of error." possible
+	}
+
+	@computed get oqlMessages():string[] {
+		let unrecognizedMutations = _.flatten(this.oql.query.map(result => {
+			return (result.alterations || []).filter(alt => (alt.alteration_type === 'mut' && (alt.info as any).unrecognized)) as MUTCommand<any>[];
+		}));
+		return unrecognizedMutations.map(mutCommand=>{
+			return `Unrecognized input "${(mutCommand as any).constr_val}" is interpreted as a mutation code.`;
+		});
 	}
 
 	@computed get submitError()
