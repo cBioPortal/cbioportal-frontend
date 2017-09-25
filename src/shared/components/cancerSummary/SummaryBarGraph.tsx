@@ -175,7 +175,6 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
             },
             scales: {
                 xAxes: [{
-                    // barThickness:30,
                     gridLines: {display: false},
                     stacked: true,
                     ticks: {
@@ -196,6 +195,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
                         callback: function(value:number) {
                             return _.round(value, 1) + (that.props.yAxis === "abs-count" ? '': '%');
                         },
+
                     }
                 }]
             },
