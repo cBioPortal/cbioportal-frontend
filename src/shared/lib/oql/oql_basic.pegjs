@@ -69,7 +69,7 @@ CNACommand
 MUTCommand
 	= "MUT" msp "=" msp mutation:Mutation { return {"alteration_type":"mut", "constr_rel": "=", "constr_type":mutation.type, "constr_val":mutation.value, "info":mutation.info}; }
 	/ "MUT" msp "!=" msp mutation:Mutation { return {"alteration_type":"mut", "constr_rel": "!=", "constr_type":mutation.type, "constr_val":mutation.value, "info":mutation.info}; }
-	/ "MUT" { return {"alteration_type":"mut"}; }
+	/ "MUT" { return {"alteration_type":"mut", "info":{}}; }
 	/ mutation:Mutation { return {"alteration_type":"mut", "constr_rel": "=", "constr_type":mutation.type, "constr_val":mutation.value, "info":mutation.info}; }
 
 EXPCommand
@@ -96,7 +96,7 @@ Mutation
 	/ "INFRAME"i { return {"type":"class", "value":"INFRAME", "info":{}}; }
 	/ "SPLICE"i { return {"type":"class", "value":"SPLICE", "info":{}}; }
 	/ "TRUNC"i { return {"type":"class", "value":"TRUNC", "info":{}}; }
-        / "PROMOTER"i { return {"type":"class", "value":"PROMOTER", "info":{}}; }
-        / letter:AminoAcid position:NaturalNumber string:String { return {"type":"name" , "value":(letter+position+string), "info":{}};}
-        / letter:AminoAcid position:NaturalNumber { return {"type":"position", "value":parseInt(position), "info":{"amino_acid":letter.toUpperCase()}}; }
-	/ mutation_name:String { return {"type":"name", "value":mutation_name, "info":{}}; }
+    / "PROMOTER"i { return {"type":"class", "value":"PROMOTER", "info":{}}; }
+    / letter:AminoAcid position:NaturalNumber string:String { return {"type":"name" , "value":(letter+position+string), "info":{}};}
+    / letter:AminoAcid position:NaturalNumber { return {"type":"position", "value":parseInt(position), "info":{"amino_acid":letter.toUpperCase()}}; }
+	/ mutation_name:String { return {"type":"name", "value":mutation_name, "info":{"unrecognized":true}}; }
