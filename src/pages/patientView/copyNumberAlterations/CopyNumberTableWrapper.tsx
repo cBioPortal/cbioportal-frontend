@@ -166,6 +166,7 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
                         initialItemsPerPage={10}
                         itemsLabel="Copy Number Alteration"
                         itemsLabelPlural="Copy Number Alterations"
+                        showCountHeader={true}
                     />
                 )
             }
