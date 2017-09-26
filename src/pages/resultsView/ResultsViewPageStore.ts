@@ -105,7 +105,7 @@ export function countAlterationOccurences(samplesByCancerType: {[cancerType: str
 
                 // if we have multiple alterations, we just register this as "multiple" and do NOT add
                 // individual alterations to their respective counts
-                if (alterations.length > 1) {
+                if (uniqueAlterations.length > 1) {
                     counts.multiple++;
                 } else {
 
