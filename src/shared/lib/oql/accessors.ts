@@ -12,7 +12,7 @@ var cna_profile_data_to_string: any = {
 
 var getSimplifiedMutationType = function (type: string) {
     var ret = null;
-    type = type.toLowerCase();
+    type = (typeof type === "string") ? type.toLowerCase() : "";
     switch (type) {
         case "missense_mutation":
         case "missense":
@@ -69,10 +69,6 @@ var getSimplifiedMutationType = function (type: string) {
     }
     return ret;
 };
-
-function getAltType(){
-
-}
 
 export default class accessors {
 
@@ -152,11 +148,7 @@ export default class accessors {
     }
 
     public fusion(d: Mutation) {
-        if (this.alterationType(d.molecularProfileId) === 'MUTATION_EXTENDED') {
-            return (getSimplifiedMutationType(d.mutationType) === "fusion");
-        } else {
-            return null;
-        }
+        return (getSimplifiedMutationType(d.mutationType) === "fusion") ? true : null;
     }
 
 
