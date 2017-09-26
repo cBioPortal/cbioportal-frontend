@@ -182,7 +182,8 @@ export async function fetchSamplesForPatient(studyId:string,
     {
         return await client.getAllSamplesOfPatientInStudyUsingGET({
             studyId,
-            patientId
+            patientId,
+            projection: 'DETAILED'
         });
     }
     else if (studyId && sampleId)
@@ -210,8 +211,7 @@ export async function fetchSamples(sampleIds:MobxPromise<string[]>,
         );
 
         return await client.fetchSamplesUsingPOST({
-            sampleIdentifiers,
-            projection: "DETAILED"
+            sampleIdentifiers
         });
     }
     else {
@@ -276,8 +276,7 @@ export async function fetchSamplesWithoutCancerTypeClinicalData(sampleIds:MobxPr
 
         if (sampleIdentifierForSamplesWithoutClinicalData.length > 0) {
             samples = await client.fetchSamplesUsingPOST({
-                sampleIdentifiers: sampleIdentifierForSamplesWithoutClinicalData,
-                projection: "DETAILED"
+                sampleIdentifiers: sampleIdentifierForSamplesWithoutClinicalData
             });
         }
     }
