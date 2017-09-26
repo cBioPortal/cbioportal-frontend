@@ -24,6 +24,8 @@ const anchorStyle = {
 export default class CancerSummaryContainer extends React.Component<{store: ResultsViewPageStore},{}> {
 
     @observable private activeTab: string = "all";
+    @observable private resultsViewPageWidth:number;
+    private resultsViewPageContent:HTMLElement;
 
     constructor() {
         super();
@@ -38,19 +40,26 @@ export default class CancerSummaryContainer extends React.Component<{store: Resu
         return 'all';
     }
 
+    componentDidUpdate(){
+        if (this.props.store.alterationCountsForCancerTypesForAllGenes.isComplete &&
+            this.props.store.alterationCountsForCancerTypesByGene.isComplete) {
+                this.resultsViewPageWidth = this.resultsViewPageContent.offsetWidth;
+        }
+    }
+
     @computed
     private get tabs() {
 
         const geneTabs = _.map(this.props.store.alterationCountsForCancerTypesByGene.result, (geneData, geneName) => (
             <MSKTab key={geneName} id={"summaryTab" + geneName} linkText={geneName} anchorStyle={anchorStyle}>
-                <CancerSummaryContent data={geneData} gene={this.activeTab}/>
+                <CancerSummaryContent data={geneData} gene={this.activeTab} width={this.resultsViewPageWidth}/>
             </MSKTab>
         ));
 
         // only add combined gene tab if there's more than one gene
         if (geneTabs.length > 1) {
             geneTabs.unshift(<MSKTab key="all" id="allGenes" linkText="All Queried Genes" anchorStyle={anchorStyle}>
-                <CancerSummaryContent gene={'all'}
+                <CancerSummaryContent gene={'all'} width={this.resultsViewPageWidth}
                                       data={this.props.store.alterationCountsForCancerTypesForAllGenes.result!}/>
             </MSKTab>)
         }
@@ -63,7 +72,7 @@ export default class CancerSummaryContainer extends React.Component<{store: Resu
         if (this.props.store.alterationCountsForCancerTypesForAllGenes.isComplete &&
             this.props.store.alterationCountsForCancerTypesByGene.isComplete) {
             return (
-                <div>
+                <div ref={(el: HTMLDivElement) => this.resultsViewPageContent = el}>
                     <MSKTabs onTabClick={this.handleTabClick}
                              enablePagination={true}
                              arrowStyle={{'line-height':.8}}
