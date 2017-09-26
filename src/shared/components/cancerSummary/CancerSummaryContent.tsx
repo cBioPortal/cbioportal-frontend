@@ -53,6 +53,7 @@ interface ICancerSummaryContentProps {
         [cancerType:string]:ICancerTypeAlterationData
     };
     gene:string;
+    width: number;
 }
 
 
@@ -222,7 +223,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                                     [xAxis === "y-axis" ? 'desc' : 'asc']);
 
         const flattenedDatasets = _.flatten(
-            orderedDatasets.filter(dataPoint => dataPoint.sortCount >= altCasesValue)
+            orderedDatasets.filter(dataPoint => dataPoint.sortCount && dataPoint.sortCount >= altCasesValue)
                             .map((orderedDataset, i) => (
                                 orderedDataset.data.map(dataPoint => (
                                     {
@@ -235,7 +236,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
 
         return {
             labels: _.reduce(orderedDatasets, (accum, data) => {
-                if (data.sortCount >= this.altCasesValue) accum.push(data.label);
+                if (data.sortCount && data.sortCount >= this.altCasesValue) accum.push(data.label);
                 return accum;
                 }, [] as string[]),
             datasets: flattenedDatasets
@@ -356,7 +357,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                     </button>
                 </div>
                 {controls}
-                <SummaryBarGraph data={this.chartData} yAxis={this.yAxis} xAxis={this.xAxis} gene={this.props.gene}
+                <SummaryBarGraph data={this.chartData} yAxis={this.yAxis} xAxis={this.xAxis} gene={this.props.gene} width={this.props.width}
                                  setPdfAnchor={this.setPdfAnchor} setPngAnchor={this.setPngAnchor} legend={this.showGenomicAlt}/>
             </div>
         );
