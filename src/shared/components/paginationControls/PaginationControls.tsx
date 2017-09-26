@@ -42,6 +42,7 @@ export interface IPaginationControlsProps {
     pageNumberEditable?:boolean;
     groupButtons?:boolean;
     hidePaginationIfOnePage?:boolean;
+    bsStyle?:"default"|"primary"|"success"|"info"|"warning";
 }
 
 @observer
@@ -66,7 +67,8 @@ export class PaginationControls extends React.Component<IPaginationControlsProps
         pageNumberEditable: false,
         showMoreButton: true,
         groupButtons: true,
-        hidePaginationIfOnePage:true
+        hidePaginationIfOnePage:true,
+        bsStyle: "default"
     };
 
     constructor(props:IPaginationControlsProps) {
@@ -119,6 +121,7 @@ export class PaginationControls extends React.Component<IPaginationControlsProps
                             disabled={!this.props.itemsPerPageOptions || !this.props.itemsPerPage || !this.props.totalItems || (this.props.itemsPerPage >= this.props.totalItems)}
                             onClick={this.handleShowMore}
                             style={{width:200}}
+                            bsStyle={this.props.bsStyle}
                     >
                         Show more
                     </Button>
@@ -169,6 +172,7 @@ export class PaginationControls extends React.Component<IPaginationControlsProps
                         disabled={!!this.props.firstPageDisabled}
                         onClick={this.props.onFirstPageClick}
                         className={classNames(this.props.groupButtons ? undefined : styles['margin-right-button'])}
+                        bsStyle={this.props.bsStyle}
                 >
                     {this.props.firstButtonContent}
                 </Button>
@@ -178,6 +182,7 @@ export class PaginationControls extends React.Component<IPaginationControlsProps
                 bsSize="sm"
                 disabled={!!this.props.previousPageDisabled}
                 onClick={this.props.onPreviousPageClick}
+                bsStyle={this.props.bsStyle}
             >
                 {this.props.previousButtonContent}
             </Button>,
@@ -186,7 +191,9 @@ export class PaginationControls extends React.Component<IPaginationControlsProps
                     key="nextPageBtn"
                     bsSize="sm"
                     disabled={!!this.props.nextPageDisabled}
-                    onClick={this.props.onNextPageClick}>
+                    onClick={this.props.onNextPageClick}
+                    bsStyle={this.props.bsStyle}
+            >
                 {this.props.nextButtonContent}
             </Button>,
             <If condition={!!this.props.showLastPage}>
@@ -195,6 +202,7 @@ export class PaginationControls extends React.Component<IPaginationControlsProps
                         disabled={!!this.props.lastPageDisabled}
                         onClick={this.props.onLastPageClick}
                         className={classNames(this.props.groupButtons ? undefined : styles['margin-left-button'])}
+                        bsStyle={this.props.bsStyle}
                 >
                     {this.props.lastButtonContent}
                 </Button>
