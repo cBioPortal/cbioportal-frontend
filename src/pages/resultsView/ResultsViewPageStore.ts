@@ -637,17 +637,21 @@ export class ResultsViewPageStore {
     });
 
     readonly geneToMutationData = remoteData<{[hugoGeneSymbol:string]:CacheData<Mutation[]>|null}>({
-        await:()=>[
-            this.genes,
-            this.mutationDataCache
-        ],
+        await:()=>{
+            const ret:MobxPromise<any>[] = [
+                this.genes,
+                this.mutationDataCache
+            ];
+            if (this.genes.isComplete && this.mutationDataCache.isComplete) {
+                ret.push(this.mutationDataCache.result.await(this.genes.result));
+            }
+            return ret;
+        },
         invoke:()=>{
-            return this.mutationDataCache.result!.awaitComplete(this.genes.result!, true).then(()=>{
-                return this.genes.result!.reduce((map:{[hugoGeneSymbol:string]:CacheData<Mutation[]>|null}, gene:Gene)=>{
-                    map[gene.hugoGeneSymbol] = this.mutationDataCache.result!.get({ entrezGeneId: gene.entrezGeneId });
-                    return map;
-                }, {});
-            });
+            return Promise.resolve(this.genes.result!.reduce((map:{[hugoGeneSymbol:string]:CacheData<Mutation[]>|null}, gene:Gene)=>{
+                map[gene.hugoGeneSymbol] = this.mutationDataCache.result!.get({ entrezGeneId: gene.entrezGeneId });
+                return map;
+            }, {}));
         }
     });
 

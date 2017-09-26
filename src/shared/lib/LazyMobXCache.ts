@@ -2,6 +2,8 @@ import Immutable from "seamless-immutable"; // need to use immutables so mobX ca
 import accumulatingDebounce from "./accumulatingDebounce";
 import {observable, action, reaction} from "mobx";
 import {AccumulatingDebouncedFunction} from "./accumulatingDebounce";
+import {MobxPromise} from "mobxpromise";
+import {remoteData} from "../api/remoteData";
 
 export type CacheData<D, M = any> = {
     status: "complete" | "error";
@@ -33,7 +35,7 @@ type FetchResult<D,M> = AugmentedData<D, M>[] | D[];
 
 type CachePromise<D,M> = {
     keys: string[],
-    callback:(data:CacheData<D, M>[])=>void,
+    success:(data:CacheData<D, M>[])=>void,
     error: ()=>void;
 };
 
@@ -48,7 +50,8 @@ export default class LazyMobXCache<Data, Query, Metadata = any> {
     private staticDependencies:any[];
     private debouncedPopulate:AccumulatingDebouncedFunction<Query>;
 
-    private promises:CachePromise<Data,Metadata>[];
+    private pendingPromises:CachePromise<Data,Metadata>[];
+    private mobxPromises:{[uid:string]:MobxPromise<CacheData<Data, Metadata>[]>};
 
     constructor(private queryToKey:(q:Query)=>string, // query maps to the key of the datum it will fill
                 private dataToKey:(d:Data, m?:Metadata)=>string, // should uniquely identify the data - for indexing in cache
@@ -73,7 +76,7 @@ export default class LazyMobXCache<Data, Query, Metadata = any> {
             ()=>this._cache,
             (cache:Cache<Data, Metadata>)=>{
                 // filter out completed promises, we dont listen on them anymore
-                this.promises = this.promises.filter(promise=>!this.tryTrigger(promise));
+                this.pendingPromises = this.pendingPromises.filter(promise=>!this.tryTrigger(promise));
             }
         );
     }
@@ -81,39 +84,42 @@ export default class LazyMobXCache<Data, Query, Metadata = any> {
     private init() {
         this.pending = {};
         this._cache = Immutable.from<Cache<Data, Metadata>>({});
-        this.promises = [];
+        this.pendingPromises = [];
+        this.mobxPromises = {};
     }
     public get cache() {
         return this._cache;
     }
 
-    public get activePromisesCount() {
-        return this.promises.length;
+    public get pendingPromisesCount() {
+        return this.pendingPromises.length;
     }
 
-    public awaitComplete(queries:Query|Query[], makeRequest?:boolean):Promise<CacheData<Data, Metadata>[]> {
-        return new Promise((resolve, reject)=>{
-            let queriesArray:Query[];
-            if (Array.isArray(queries)) {
-                queriesArray = queries;
-            } else {
-                queriesArray = [queries];
-            }
-            const newPromise = {
-                keys:queriesArray.map(query=>this.queryToKey(query)),
-                callback: resolve,
+    public await(queries:Query|Query[]):MobxPromise<CacheData<Data, Metadata>[]> {
+        let queriesArray:Query[];
+        if (Array.isArray(queries)) {
+            queriesArray = queries;
+        } else {
+            queriesArray = [queries];
+        }
+        const promiseKeys = queriesArray.map(query=>this.queryToKey(query));
+        const promiseUid = JSON.stringify(promiseKeys.sort());
+        // make a new promise if it doesnt exist
+        this.mobxPromises[promiseUid] = this.mobxPromises[promiseUid] || remoteData(()=>(new Promise<CacheData<Data, Metadata>[]>((resolve, reject)=>{
+            const newPromise:CachePromise<Data, Metadata> = {
+                keys:promiseKeys,
+                success: resolve,
                 error: reject
             };
             if (!this.tryTrigger(newPromise)) {
                 // try to trigger it immediately
-                // if not triggered immediately, add it to callback list
-                this.promises.push(newPromise);
-                // request if desired
-                if (makeRequest) {
-                    queriesArray.map(query=>this.debouncedPopulate(query));
-                }
+                // if not triggered immediately, add it
+                this.pendingPromises.push(newPromise);
+                // request data
+                queriesArray.map(query=>this.debouncedPopulate(query));
             }
-        });
+        })));
+        return this.mobxPromises[promiseUid];
     }
 
     private tryTrigger(promise:CachePromise<Data, Metadata>) {
@@ -134,7 +140,7 @@ export default class LazyMobXCache<Data, Query, Metadata = any> {
             return true;
         } else if (allDefined) {
             // if all data fetching complete, then trigger callback
-            promise.callback(data);
+            promise.success(data);
             return true;
         } else {
             // otherwise, not complete yet

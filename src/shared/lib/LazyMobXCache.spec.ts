@@ -3,8 +3,9 @@ import {default as sinon, SinonSpy} from 'sinon';
 import lolex from "lolex";
 import {Clock} from "lolex";
 import {default as LazyMobXCache, CacheData} from "./LazyMobXCache";
-import mobx from "mobx";
+import mobx, {autorun, IReactionDisposer, observable, reaction} from "mobx";
 import {whyRun} from "mobx";
+import {remoteData} from "../api/remoteData";
 
 // We have to use 'done' rather than fake clock because for some reason fake clock isn't working with async/await
 //  in LazyMobXCache.populate
@@ -315,97 +316,162 @@ describe("LazyMobXCache", ()=>{
                 assert.equal(getFn.callCount, 1);
         });
     });
-    describe("#awaitComplete", ()=>{
-        it("resolves immediately if the selected queries are already there", async()=>{
-            let callback = sinon.spy((data:number[])=>{});
-            await cache.awaitComplete([]).then(callback);
-            assert.equal(callback.callCount, 1); // immediately called
-            assert.equal(cache.activePromisesCount, 0);
-            assert.deepEqual(callback.args[0], [[]]);
-            cache.get({ numAsString:"3" });
-            await cache.awaitComplete([{numAsString:"3"}]).then(callback);
-            assert.equal(callback.callCount, 2); // immediately called
-            assert.equal(cache.activePromisesCount, 0);
-            assert.deepEqual(callback.args[1][0].map((x:any)=>x.data), [78]);
-            cache.get({ numAsString:"2" });
-            cache.get({ numAsString:"1" });
-            await cache.awaitComplete([{numAsString:"3"}, {numAsString:"2"},{numAsString:"1"}]).then(callback);
-            assert.equal(callback.callCount, 3);
-            assert.equal(cache.activePromisesCount, 0);
-            assert.deepEqual(callback.args[2][0].map((x:any)=>x.data), [78, 53, 28]);
-            return true;
-        });
-        it("resolves when the selected queries become available: request made", (done)=>{
-            let callback = sinon.spy((data:CacheData<number, string>[])=>{
-                assert.equal(callback.callCount, 1);
-                assert.deepEqual(data.map(x=>x.data), [28, 103]);
-                done();
+    describe.only("#await", ()=>{
+        it("does not cause observation of the cache, aka only responds to what its awaiting", (done)=>{
+            let disposer:IReactionDisposer;
+            let shouldFail = true;
+            let rd = remoteData({
+                await:()=>[cache.await([{numAsString:"3"}])],
+                invoke:()=>{
+                    if (shouldFail) {
+                        assert(false);
+                    } else {
+                        disposer();
+                        done();
+                    }
+                    return Promise.resolve({});
+                }
             });
-            cache.awaitComplete([{numAsString:"1"}, {numAsString:"4"}], true).then(callback);
-        });
-        it("resolves when the selected queries become available: request not made", (done)=>{
-            let callback = sinon.spy((data:CacheData<number, string>[])=>{
-                assert.equal(callback.callCount, 1);
-                assert.deepEqual(data.map(x=>x.data), [28, 103]);
-                done();
+            disposer = autorun(()=>{
+                rd.status; // set up reaction to trigger this
             });
-            cache.awaitComplete([{numAsString:"1"}, {numAsString:"4"}]).then(callback);
-            assert.equal(callback.callCount, 0);
-            cache.get({numAsString:"1"});
-            assert.equal(callback.callCount, 0);
-            cache.get({numAsString:"4"});
-            assert.equal(callback.callCount, 0);
+            cache.addData([1]); // mobx is synchronous, so this would get to the false assertion
+            shouldFail = false;
+            cache.addData([3]);
+        });
+        it("resolves immediately if the selected query is already there: empty", (done)=>{
+            let rd = cache.await([]);
+            let assertionReached = false;
+            let disposer = autorun(()=>{
+                if (rd.isComplete) {
+                    disposer();
+                    assert.isTrue(assertionReached);
+                    done();
+                }
+                assert.equal(cache.pendingPromisesCount, 0);
+                assertionReached = true;
+            });
+        });
+        it.only("resolves if the selected query is already there: one", (done)=>{
+            cache.addData([1]);
+            let rd = cache.await([{numAsString:"1"}]);
+            let assertionReached = false;
+            let disposer = autorun(()=>{
+                console.log("HELLOOOO");
+                if (rd.isComplete) {
+                    disposer();
+                    assert.isTrue(assertionReached);
+                    done();
+                }
+                assert.equal(cache.pendingPromisesCount, 0);
+                assertionReached = true;
+            });
+        });
+        it.only("resolves if the selected query is already there: several", (done)=>{
+            cache.addData([1,2,3]);
+            let rd = cache.await([{numAsString:"1"},{numAsString:"2"},{numAsString:"3"}]);
+            let assertionReached = false;
+            let disposer = autorun(()=>{
+                console.log("GOODBYEEEEE");
+                if (rd.isComplete) {
+                    disposer();
+                    assert.isTrue(assertionReached);
+                    done();
+                }
+                assert.equal(cache.pendingPromisesCount, 0);
+                assertionReached = true;
+            });
+        });
+        it("resolves when the selected queries become available", (done)=>{
+            let disposer:IReactionDisposer;
+            let rd = remoteData({
+                await: ()=>[cache.await([{numAsString:"1"}, {numAsString:"4"}])],
+                invoke:()=>{
+                    assert.deepEqual(
+                        cache.await([{numAsString:"1"}, {numAsString:"4"}]).result!.map(x=>x.data), [28, 103]
+                    );
+                    disposer();
+                    done();
+                    return Promise.resolve();
+                }
+            });
+            disposer = autorun(()=>{
+                rd.status; // set up reaction to trigger
+            });
         });
         it("errors if there is an error", (done)=>{
-            let callback = sinon.spy(()=>{
-                assert.equal(callback.callCount, 1);
-                done();
+            let disposer:IReactionDisposer;
+            let rd = cache.await([{numAsString:"1"}, {numAsString:"4", shouldFail:true}]);
+            disposer = autorun(()=>{
+                if (rd.isError) {
+                    disposer();
+                    done();
+                } else if (rd.isComplete) {
+                    assert(false); // shouldnt get here
+                }
             });
-            cache.awaitComplete([{numAsString:"1"}, {numAsString:"4"}]).catch(callback);
-            assert.equal(callback.callCount, 0);
-            cache.get({numAsString:"1"});
-            assert.equal(callback.callCount, 0);
-            cache.get({numAsString:"4", shouldFail: true});
-            assert.equal(callback.callCount, 0);
         });
         it("can handle multiple pending listeners", (done)=>{
-            let callbackCount = 0;
-            assert.equal(cache.activePromisesCount, 0);
-            cache.awaitComplete([{numAsString:"1"}]).then(()=>{
-                callbackCount += 1;
-                assert.equal(callbackCount, 1);
+            assert.equal(cache.pendingPromisesCount, 0);
+            let rd1 = cache.await([{numAsString:"1"}]);
+            rd1.status; // trigger
+            assert.equal(cache.pendingPromisesCount, 1);
+            let rd2 = cache.await([{numAsString:"2"}]);
+            rd2.status; // trigger
+            assert.equal(cache.pendingPromisesCount, 2);
+            let rd3 = cache.await([{numAsString:"2"}, {numAsString:"3"}, {numAsString:"4"}]);
+            rd3.status; // trigger
+            assert.equal(cache.pendingPromisesCount, 3);
+
+            let disposer:IReactionDisposer;
+            disposer = autorun(()=>{
+                if (!rd1.isComplete) {
+                    assert.equal(cache.pendingPromisesCount, 3);
+                    cache.addData([1]);
+                } else if (!rd2.isComplete) {
+                    assert.equal(cache.pendingPromisesCount, 2);
+                    cache.addData([2]);
+                } else if (!rd3.isComplete) {
+                    assert.equal(cache.pendingPromisesCount, 1);
+                    cache.addData([3,4]);
+                } else if (rd1.isComplete && rd2.isComplete && rd3.isComplete) {
+                    assert.equal(cache.pendingPromisesCount, 0);
+                    disposer();
+                    done();
+                }
             });
-            assert.equal(cache.activePromisesCount, 1);
-            cache.awaitComplete({numAsString:"2"}).then(()=>{
-                callbackCount += 1;
-                assert.equal(callbackCount, 2);
-            });
-            assert.equal(cache.activePromisesCount, 2);
-            cache.awaitComplete({numAsString:"3"}).then(()=>{
-                callbackCount += 1;
-                assert.equal(callbackCount, 3);
-                done();
-            });
-            assert.equal(cache.activePromisesCount, 3);
-            cache.get({numAsString:"1"});
-            cache.get({numAsString:"2"});
-            cache.get({numAsString:"3"});
         });
-        it("unregisters the listener once it has been triggered: resolve", (done)=>{
-            cache.awaitComplete([{numAsString:"1"}]).then(()=>{
-                assert.equal(cache.activePromisesCount, 0);
-                done();
+        it("unregisters a listener once it has been resolved", (done)=>{
+            assert.equal(cache.pendingPromisesCount, 0);
+            let rd = cache.await([{numAsString:"1"}]);
+            let gottenToEnd = false;
+            let disposer = autorun(()=>{
+                if (rd.isComplete) {
+                    assert.isTrue(gottenToEnd);
+                    assert.equal(cache.pendingPromisesCount, 0);
+                    disposer();
+                    done();
+                }
             });
-            assert.equal(cache.activePromisesCount, 1);
-            cache.get({numAsString:"1"});
+            assert.equal(cache.pendingPromisesCount, 1);
+            gottenToEnd = true;
+            cache.addData([1]);
         });
-        it("unregisters the listener once it has been triggered: error", (done)=>{
-            cache.awaitComplete([{numAsString:"1"}]).catch(()=>{
-                assert.equal(cache.activePromisesCount, 0);
-                done();
+        it("unregisters a listener once it has errored", (done)=>{
+            assert.equal(cache.pendingPromisesCount, 0);
+            let rd = cache.await([{numAsString:"1", shouldFail: true}]);
+            let gottenToEnd = false;
+            let disposer = autorun(()=>{
+                if (rd.isError) {
+                    assert.isTrue(gottenToEnd);
+                    assert.equal(cache.pendingPromisesCount, 0);
+                    disposer();
+                    done();
+                }
             });
-            assert.equal(cache.activePromisesCount, 1);
-            cache.get({numAsString:"1", shouldFail: true});
+            assert.equal(cache.pendingPromisesCount, 1);
+            gottenToEnd = true;
+            cache.addData([1]);
         });
     });
 });
