@@ -27,7 +27,6 @@ export interface IBarGraphDataset {
     total: number;
     count: number;
     percent: number;
-    data: number[];
     backgroundColor: string;
 }
 
@@ -102,29 +101,36 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
             let altTotalPercent = altTotalCount / totalCases * 100;
             altTotalPercent = altTotalPercent > 100 ? 100 : altTotalPercent;
             if (this.selectedCancerTypes[cancerType] && totalCases >= this.totalCasesValue) {
+                const datasets = _.reduce(cancerAlterations, (memo, count:number, altType: string) => {
+                    let percent = count / totalCases * 100;
+                    percent = percent > 100 ? 100 : percent;
+                    const total = yAxis === "abs-count" ? count : percent;
+                    memo.push({
+                        label: altType === 'deleted' ? 'hetloss': altType,
+                        totalCases,
+                        altTotalPercent,
+                        total,
+                        count,
+                        percent,
+                        backgroundColor: this.getColors(altType)
+                    });
+                    return memo;
+                }, [] as IBarGraphDataset[]);
+                const sortedDatasets = datasets.sort((a:IBarGraphDataset,b:IBarGraphDataset) => {
+                    const orderedAlts = ['multiple', 'mutated', 'fusion', 'amplified', 'gain', 'homdel', 'hetloss',
+                        'mrnaExpressionUp', 'mrnaExpressionDown', 'protExpressionUp', 'protExpressionDown'];
+                    return orderedAlts.indexOf(a.label) - orderedAlts.indexOf(b.label);
+                });
                 accum.push({
                     label: cancerType,
                     sortBy: yAxis,
                     symbol: yAxis === "abs-count" ? '' : "%",
                     sortCount: yAxis === "abs-count" ? altTotalCount : altTotalPercent,
-                    data: _.map(cancerAlterations, (count:number, altType: string) => {
-                        let percent = count / totalCases * 100;
-                        percent = percent > 100 ? 100 : percent;
-                        const total = yAxis === "abs-count" ? count : percent;
-                        return {
-                            label: altType,
-                            totalCases,
-                            altTotalPercent,
-                            total,
-                            count,
-                            percent,
-                            backgroundColor: this.getColors(altType)
-                        };
-                    })
+                    data: sortedDatasets
                 });
             }
             return accum;
-        }, [] as any[]);
+        }, [] as IBarChartSortedData[]);
     }
 
     private handleYAxisChange(e:any) {
@@ -171,14 +177,14 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
             mutated:"#008000",
             amplified:"#ff0000",
             deleted:"#0000ff",
-            multiple:"#000000",
-            fusion: "#8B00C9",
-            gain: "rgb(255,182,193)",
-            homdel: "rgb(0,0,255)",
-            mrnaExpressionUp: "#FF989A",
-            mrnaExpressionDown: "#529AC8",
-            protExpressionUp: "#FF989A",
-            protExpressionDown: "#E0FFFF",
+            multiple:"#383838",
+            fusion:"#8B00C9",
+            gain:"rgb(255,182,193)",
+            homdel:"rgb(0,0,255)",
+            mrnaExpressionUp:"#FF989A",
+            mrnaExpressionDown:"#529AC8",
+            protExpressionUp:"#FF989A",
+            protExpressionDown:"#E0FFFF",
         };
         return this.showGenomicAlt ? (colors[color] || "#000000") : '#aaaaaa';
     }
