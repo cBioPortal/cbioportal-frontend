@@ -75,10 +75,10 @@ export default class AnnotationColumnFormatter
     
     public static getCivicStatus(civicGenesStatus:"pending" | "error" | "complete", civicVariantsStatus:"pending" | "error" | "complete"): "pending" | "error" | "complete"
     {
-    if (civicGenesStatus == "error" || civicVariantsStatus == "error") {
+    if (civicGenesStatus === "error" || civicVariantsStatus === "error") {
         return "error";
     }
-    if (civicGenesStatus == "complete" && civicVariantsStatus == "complete") {
+    if (civicGenesStatus === "complete" && civicVariantsStatus === "complete") {
         return "complete";
     }
     
