@@ -508,8 +508,7 @@ export class ResultsViewPageStore {
                 })));
             });
             return client.fetchSamplesUsingPOST({
-                sampleIdentifiers,
-                projection: "DETAILED"
+                sampleIdentifiers
             });
         }
     }, []);
