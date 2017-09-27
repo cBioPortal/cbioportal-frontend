@@ -391,8 +391,7 @@ describe('StoreUtils', () => {
 
             assert.isTrue(fetchSamplesStub.called, "fetchSamples should be called");
             assert.isTrue(fetchSamplesStub.calledWith({
-                sampleIdentifiers: [{sampleId: "Sample4", studyId: "study"}],
-                projection: "DETAILED"
+                sampleIdentifiers: [{sampleId: "Sample4", studyId: "study"}]
             }), "fetchSamples should be called with the correct sample id (Sample4)");
         });
 
