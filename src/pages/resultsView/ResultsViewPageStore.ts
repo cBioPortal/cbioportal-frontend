@@ -1,6 +1,7 @@
 import {
     DiscreteCopyNumberFilter, DiscreteCopyNumberData, ClinicalData, ClinicalDataMultiStudyFilter, Sample,
-    SampleIdentifier, MolecularProfile, Mutation, GeneMolecularData, MolecularDataFilter, Gene
+    SampleIdentifier, MolecularProfile, Mutation, GeneMolecularData, MolecularDataFilter, Gene,
+    ClinicalDataSingleStudyFilter
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {computed, observable, action} from "mobx";
@@ -462,18 +463,35 @@ export class ResultsViewPageStore {
 
     readonly clinicalDataForSamples = remoteData<ClinicalData[]>({
         await: () => [
+            this.studies,
             this.samples
         ],
         invoke: () => {
-            const filter: ClinicalDataMultiStudyFilter = {
-                attributeIds: ["CANCER_TYPE", "CANCER_TYPE_DETAILED"],
-                identifiers: this.samples.result.map((s: Sample) => ({entityId: s.sampleId, studyId: s.studyId}))
-            };
-            return client.fetchClinicalDataUsingPOST({
-                clinicalDataType: "SAMPLE",
-                clinicalDataMultiStudyFilter: filter,
-                projection: "DETAILED"
-            });
+            // single study query endpoint is optimal so we should use it
+            // when there's only one study
+            const clinicalDataTypes: string[] = ["CANCER_TYPE", "CANCER_TYPE_DETAILED"];
+
+            if (this.studies.result.length === 1) {
+                const study = this.studies.result[0];
+                const filter: ClinicalDataSingleStudyFilter = {
+                    attributeIds: clinicalDataTypes,
+                    ids: this.samples.result.map((s: Sample) =>s.sampleId)
+                };
+                return client.fetchAllClinicalDataInStudyUsingPOST({
+                    studyId:study.studyId,
+                    clinicalDataSingleStudyFilter: filter,
+                    clinicalDataType: "SAMPLE"
+                });
+            } else {
+                const filter: ClinicalDataMultiStudyFilter = {
+                    attributeIds: clinicalDataTypes,
+                    identifiers: this.samples.result.map((s: Sample) => ({entityId: s.sampleId, studyId: s.studyId}))
+                };
+                return client.fetchClinicalDataUsingPOST({
+                    clinicalDataType: "SAMPLE",
+                    clinicalDataMultiStudyFilter: filter
+                });
+            }
         }
     }, []);
 
