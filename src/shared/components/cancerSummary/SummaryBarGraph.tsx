@@ -16,16 +16,16 @@ interface ISummaryBarGraphProps {
     setPngAnchor:any;
     setPdfAnchor:any;
     gene: string;
+    width: number;
 }
 
 @observer
 export default class SummaryBarGraph extends React.Component<ISummaryBarGraphProps, {}> {
 
-    @observable private chartContainer:HTMLElement;
-    @observable private chartTarget:HTMLCanvasElement;
+    private chartContainer:HTMLElement;
+    private chartTarget:HTMLCanvasElement;
     private chart:any;
-    @observable private chartConfig:any={type:'bar'};
-    @observable private chartContainerWidth = 0;
+    private chartConfig:any={type:'bar'};
 
 
     constructor() {
@@ -173,7 +173,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
             },
             scales: {
                 xAxes: [{
-                    barThickness:30,
+                    // barThickness:30,
                     gridLines: {display: false},
                     stacked: true,
                     ticks: {
@@ -192,9 +192,8 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
                     ticks: {
                         fontSize: 11,
                         callback: function(value:number) {
-                            return that.props.yAxis === "abs-count" ? value : (Math.round(value*10)/10) + '%';
+                            return _.round(value, 1) + (that.props.yAxis === "abs-count" ? '': '%');
                         },
-
                     }
                 }]
             },
@@ -250,7 +249,9 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
     }
 
     private get width() {
-        return 220 + this.props.data.labels.length * 57;
+        const maxWidth = 220 + this.props.data.labels.length * 57;
+        const conWidth = (this.props.width || 1159);
+        return maxWidth > conWidth ? conWidth : maxWidth;
     }
 
     public render() {
@@ -259,13 +260,11 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
             errorMessage = <div className="alert alert-info">No alteration plot data.</div>;
         }
         return (
-            <div style={{overflowX:'auto'}}>
             <div style={{width:this.width}} ref={(el: HTMLDivElement) => this.chartContainer = el}
                  className="cancer-summary-chart-container">
                 {errorMessage}
                 <canvas ref={(el:HTMLCanvasElement) => this.chartTarget = el}
                         className={classnames({ hidden:!this.hasAlterations() })} height="400"/>
-            </div>
             </div>
         );
     }
