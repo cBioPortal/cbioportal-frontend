@@ -198,9 +198,7 @@ var isDatumWantedByFUSIONCommand = function(alt_cmd, datum, accessors) {
         // If no fusion data, it's not addressed
         return 0;
     } else {
-        if (d_fusion === true) {
-            datum.alterationType = 'FUSION';
-        }
+        datum.alterationType = 'FUSION';
         return 1;
     }
 };
