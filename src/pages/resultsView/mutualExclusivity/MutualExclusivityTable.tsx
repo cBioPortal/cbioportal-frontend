@@ -106,7 +106,7 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
             name: "Log Odds Ratio",
             render: (d:MutualExclusivity)=><span>{formatLogOddsRatio(d.logOddsRatio)}</span>,
             tooltip: <span style={{display:'inline-block', maxWidth:300}}>Quantifies how strongly the presence or
-                absence of alterations in gene A are associated withthe presence or absence of alterations in gene B in
+                absence of alterations in gene A are associated with the presence or absence of alterations in gene B in
                 the selected tumors.</span>,
             sortBy:(d:MutualExclusivity)=>d.logOddsRatio,
             download:(d:MutualExclusivity)=>formatLogOddsRatio(d.logOddsRatio)
@@ -116,8 +116,8 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
             name: "Association",
             render: (d:MutualExclusivity)=><span>{d.association}&nbsp;&nbsp;&nbsp;{d.pValue < 0.05 ?
                 <Badge style={{backgroundColor: '#58ACFA'}}>Significant</Badge> : "" }</span>,
-            tooltip: <span>Log odds ratio > 0 &nbsp;&nbsp;: Association towards co-occurrence<br/>
-                Log odds ratio &lt;= 0 : Association towards mutual exclusivity<br/>
+            tooltip: <span>Log odds ratio > 0 &nbsp;&nbsp;: Tendency towards co-occurrence<br/>
+                Log odds ratio &lt;= 0 : Tendency towards mutual exclusivity<br/>
                 p-Value &lt; 0.05 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Significant association</span>,
             filter: (d:MutualExclusivity, filterString:string, filterStringUpper:string) =>
                 d.association.toUpperCase().includes(filterStringUpper),
