@@ -34,7 +34,9 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
         this.updateChart = this.updateChart.bind(this);
     }
 
-    private getTooltipOptions(tooltipModel: any, data:IBarGraphConfigOptions, chartOptions:any, uniqueId:string) {
+    private getTooltipOptions(tooltipModel: any, data:IBarGraphConfigOptions, chartOptions:any, sumBarGraph:any) {
+
+        const uniqueId = sumBarGraph.props.gene;
 
         // Tooltip Element
         let tooltipEl = document.getElementById('cancer-type-summary-tab-tooltip-' + uniqueId);
@@ -89,7 +91,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
             bodyLines.forEach(body => {
                 innerHtml += (
                     `<tr>
-                        <td> ${body.label} </td>
+                        <td> ${sumBarGraph.getLegendNames(body.label)} </td>
                         <td> ${_.round(body.percent, 2)}% (${body.count} cases)</td>
                      </tr>`
                 );
@@ -134,7 +136,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
         const names: {[alterationName:string]:string} = {
             mutated: "Mutation",
             amplified: "Amplification",
-            deleted: "Deletion",
+            // deleted: "Deletion",
             fusion: "Fusion",
             gain: "Gain",
             mrnaExpressionUp: "mRNA Upregulation",
@@ -169,7 +171,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
                     return false;
                 },
                 custom(tooltipModel: any){
-                    return that.getTooltipOptions(tooltipModel, data, this, that.props.gene);}
+                    return that.getTooltipOptions(tooltipModel, data, this, that);}
             },
             scales: {
                 xAxes: [{
@@ -205,7 +207,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
                         let counter = 0;
                         const {data:chartData} = chart;
                         if (chartData.labels.length && chartData.datasets.length) {
-                            const g = _.reduce(chartData.datasets, (obj, dataset:IBarGraphDataset) => {
+                            const alterationCounts = _.reduce(chartData.datasets, (obj, dataset:IBarGraphDataset) => {
                                 if (obj[dataset.label]) {
                                     obj[dataset.label].count = obj[dataset.label].count + dataset.total;
                                 } else {
@@ -213,7 +215,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
                                 }
                                 return obj;
                             }, {} as any)
-                            return _.reduce(g, (arr, value:{count:number, backgroundColor: string}, label) => {
+                            return _.reduce(alterationCounts, (arr, value:{count:number, backgroundColor: string}, label) => {
                                 if (value.count) {
                                     arr.push({
                                         text: this.getLegendNames(label),
