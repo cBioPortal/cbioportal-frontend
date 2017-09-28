@@ -8,6 +8,7 @@ import {ThreeBounce} from 'better-react-spinkit';
 import ReactResizeDetector from 'react-resize-detector';
 import onNextRenderFrame from "shared/lib/onNextRenderFrame";
 import './styles.scss';
+import {ReactElement} from "react";
 
 interface IMSKTabProps {
     inactive?:boolean;
@@ -135,31 +136,6 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
 
             let children = (this.props.children as React.ReactElement<IMSKTabProps>[]);
 
-            // let hasActive: boolean = false;
-            // let effectiveActiveTab: string = "";
-            //
-            // const arr = _.reduce(React.Children.toArray(children), (memo: React.ReactElement<IMSKTabProps>[], child:React.ReactElement<IMSKTabProps>) => {
-            //     if (!child.props.hide) {
-            //         if (child.props.id === this.props.activeTabId) {
-            //             hasActive = true;
-            //             effectiveActiveTab = this.props.activeTabId;
-            //             this.shownTabs.push(child.props.id);
-            //             memo.push(this.cloneTab(child, false, !!child.props.loading));
-            //         } else if (_.includes(this.shownTabs, child.props.id) && !child.props.loading) {
-            //             memo.push(this.cloneTab(child, true, !!child.props.loading));
-            //         }
-            //     }
-            //     return memo;
-            // }, []);
-            //
-            // // if we don't have an active child, then default to first
-            // if (hasActive === false) {
-            //     this.shownTabs.push(children[0].props.id);
-            //     arr[0] = this.cloneTab(children[0], false, !!children[0].props.loading);
-            //     effectiveActiveTab = children[0].props.id;
-            // }
-
-
             let hasActive: boolean = false;
             let effectiveActiveTab: string = "";
 
@@ -181,9 +157,10 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
 
             // if we don't have an active child, then default to first
             if (hasActive === false) {
-                this.shownTabs.push(toArrayedChildren[0].props.id);
-                arr[0] = this.cloneTab(toArrayedChildren[0], false, !!toArrayedChildren[0].props.loading);
-                effectiveActiveTab = toArrayedChildren[0].props.id;
+                const tabElement = toArrayedChildren[0] as React.ReactElement<IMSKTabProps>
+                this.shownTabs.push(tabElement.props.id);
+                arr[0] = this.cloneTab(tabElement, false, !!tabElement.props.loading);
+                effectiveActiveTab = tabElement.props.id;
             }
 
 
