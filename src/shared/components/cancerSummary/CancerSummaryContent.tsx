@@ -13,12 +13,20 @@ import 'react-rangeslider/lib/index.css';
 
 import SummaryBarGraph from './SummaryBarGraph';
 
+
 export interface ICancerTypeAlterationPlotData {
-    mutated:number;
-    amplified:number;
-    deleted:number;
+    mutated: number;
+    amp:number;
+    homdel:number;
+    hetloss:number;
+    gain:number;
+    fusion:number;
+    mrnaExpressionUp:number;
+    mrnaExpressionDown:number;
+    protExpressionUp:number;
+    protExpressionDown:number;
     multiple:number;
-}
+};
 
 export interface IBarGraphDataset {
     label: string;
@@ -174,20 +182,21 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
     }
 
     private getColors(color:string) {
-        const colors:{[id:string]:string} = {
+        const alterationToColor: Record<keyof ICancerTypeAlterationPlotData, string> = {
             mutated:"#008000",
-            amplified:"#ff0000",
-            deleted:"#0000ff",
-            multiple:"#383838",
-            fusion:"#8B00C9",
-            gain:"rgb(255,182,193)",
+            amp:"#ff0000",
             homdel:"rgb(0,0,255)",
+            hetloss:"#000",
+            gain:"rgb(255,182,193)",
+            fusion:"#8B00C9",
             mrnaExpressionUp:"#FF989A",
             mrnaExpressionDown:"#529AC8",
             protExpressionUp:"#FF989A",
             protExpressionDown:"#E0FFFF",
+            multiple:"#666"
         };
-        return this.showGenomicAlt ? (colors[color] || "#000000") : '#aaaaaa';
+        // TODO: fix ts index signature issue so we don't have to cast alterationToColor as any
+        return this.showGenomicAlt ? ((alterationToColor as any)[color] || "#000000") : '#aaaaaa';
     }
 
     @computed private get cancerTypes() {

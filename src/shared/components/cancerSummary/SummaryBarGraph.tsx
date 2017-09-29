@@ -3,7 +3,10 @@ import * as _ from 'lodash';
 import {computed, observable} from "mobx";
 import { ChartTooltipItem } from 'chart.js';
 import Chart, {ChartLegendItem} from 'chart.js';
-import {IBarGraphConfigOptions, IBarGraphDataset} from './CancerSummaryContent';
+import {
+    IBarGraphConfigOptions, IBarGraphDataset,
+    ICancerTypeAlterationPlotData
+} from './CancerSummaryContent';
 import {observer} from "mobx-react";
 import classnames from 'classnames';
 import './styles.scss';
@@ -133,21 +136,21 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
     }
 
     private getLegendNames(id:string) {
-        const names: {[alterationName:string]:string} = {
+        const names: Record<keyof ICancerTypeAlterationPlotData, string> = {
             mutated: "Mutation",
-            amplified: "Amplification",
-            // deleted: "Deletion",
-            fusion: "Fusion",
+            amp: "Amplification",
+            homdel: "Deep Deletion",
+            hetloss: "Shallow Deletion",
             gain: "Gain",
+            fusion: "Fusion",
             mrnaExpressionUp: "mRNA Upregulation",
             mrnaExpressionDown: "mRNA Downregulation",
             protExpressionUp: "Protein Upregulation",
             protExpressionDown: "Protein Downregulation",
-            multiple: "Multiple Alterations",
-            homdel: "Deep Deletion",
-            hetloss: "Shallow Deletion"
+            multiple: "Multiple Alterations"
         };
-        return names[id] || id;
+        //TODO: figure out ts issue with index signature.
+        return (names as any)[id] || id;
     }
 
     private get chartOptions() {
@@ -177,6 +180,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
                 xAxes: [{
                     gridLines: {display: false},
                     stacked: true,
+                    maxBarThickness:30,
                     ticks: {
                         maxRotation: 90,
                         autoSkip: false
@@ -251,7 +255,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
     }
 
     private get width() {
-        const maxWidth = 220 + this.props.data.labels.length * 57;
+        const maxWidth = 220 + this.props.data.labels.length * 45;
         const conWidth = (this.props.width || 1159);
         return maxWidth > conWidth ? conWidth : maxWidth;
     }

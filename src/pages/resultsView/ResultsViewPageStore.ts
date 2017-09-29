@@ -32,6 +32,11 @@ import {filterCBioPortalWebServiceData} from "../../shared/lib/oql/oqlfilter.js"
 import {keepAlive} from "mobx-utils";
 import MutationMapper from "./mutation/MutationMapper";
 import {CacheData} from "../../shared/lib/LazyMobXCache";
+import {Dictionary} from "lodash";
+import {
+    ICancerTypeAlterationData,
+    ICancerTypeAlterationPlotData
+} from "../../shared/components/cancerSummary/CancerSummaryContent";
 
 export type SamplesSpecificationElement = {studyId: string, sampleId: string, sampleListId: undefined} |
     {studyId: string, sampleId: undefined, sampleListId: string};
@@ -82,10 +87,12 @@ export function countAlterationOccurences(samplesByCancerType: {[cancerType: str
 
     return _.mapValues(samplesByCancerType, (samples: Sample[], cancerType: string) => {
 
-        const counts = {
+        const counts: ICancerTypeAlterationData = {
             mutated: 0,
-            amplified: 0,
-            deleted: 0,
+            amp: 0, // 2
+            homdel: 0, // -2
+            hetloss: 0, // -1
+            gain:0, // 1
             fusion: 0,
             mrnaExpressionUp: 0,
             mrnaExpressionDown: 0,
@@ -114,8 +121,8 @@ export function countAlterationOccurences(samplesByCancerType: {[cancerType: str
                     _.forEach(uniqueAlterations, (alteration: ExtendedAlteration) => {
                         switch (alteration.alterationType) {
                             case AlterationTypeConstants.COPY_NUMBER_ALTERATION:
-                                if (alteration.alterationSubType === 'amp') counts.amplified++;
-                                if (alteration.alterationSubType === 'homdel') counts.deleted++;
+                                // to do: type oqlfilter so that we can be sure alterationSubType is truly key of interface
+                                counts[(alteration.alterationSubType as keyof ICancerTypeAlterationPlotData)]++;
                                 break;
                             case AlterationTypeConstants.MRNA_EXPRESSION:
                                 if (alteration.alterationSubType === 'up') counts.mrnaExpressionUp++;
