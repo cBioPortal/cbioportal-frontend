@@ -75,10 +75,15 @@
     color: $redError;
     font-weight: bold;
   }
+
+  .oqlMessage {
+    color: $brand-info;
+    font-weight: bold;
+  }
 }
 
 .CancerStudySelector,
-.GeneticProfileSelector,
+.MolecularProfileSelector,
 .DataTypePrioritySelector,
 .CaseSetSelector,
 .GeneSetSelector {
@@ -285,7 +290,7 @@ div.SelectedStudiesWindow {
   }
 }
 
-.GeneticProfileSelector {
+.MolecularProfileSelector {
   div.group {
     display: flex;
     flex-direction: column;
@@ -406,6 +411,7 @@ div.SelectedStudiesWindow {
     line-height: 17px;
   }
   span.pendingMessage,
+  span.oqlNotice,
   span.errorMessage {
     font-size: small;
   }

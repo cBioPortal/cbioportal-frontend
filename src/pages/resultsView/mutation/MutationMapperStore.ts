@@ -1,6 +1,6 @@
 import * as _ from "lodash";
 import {
-    Mutation, MutationFilter, Gene, ClinicalData, CancerStudy, Sample, GeneticProfile, SampleIdentifier
+    Mutation, MutationFilter, Gene, ClinicalData, CancerStudy, Sample, MolecularProfile, SampleIdentifier
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {computed, observable} from "mobx";
@@ -11,6 +11,7 @@ import {IHotspotData} from "shared/model/CancerHotspots";
 import {IPdbChain, PdbAlignmentIndex} from "shared/model/Pdb";
 import {ICivicGene, ICivicVariant} from "shared/model/Civic";
 import PdbPositionMappingCache from "shared/cache/PdbPositionMappingCache";
+import ResidueMappingCache from "shared/cache/ResidueMappingCache";
 import {calcPdbIdNumericalValue, mergeIndexedPdbAlignments} from "shared/lib/PdbUtils";
 import {lazyMobXTableSort} from "shared/components/lazyMobXTable/LazyMobXTable";
 import {
@@ -27,7 +28,7 @@ import MutationDataCache from "../../../shared/cache/MutationDataCache";
 export class MutationMapperStore {
 
     constructor(protected config: IMutationMapperConfig,
-                protected hugoGeneSymbol:string,
+                public gene:Gene,
                 public samples:MobxPromise<SampleIdentifier[]>,
                 // getMutationDataCache needs to be a getter for the following reason:
                 // when the input parameters to the mutationDataCache change, the cache
@@ -37,8 +38,8 @@ export class MutationMapperStore {
                 // (which will be done in the getter thats passed in here) so that the cache itself is observable
                 // and we will react when it changes to a new object.
                 private getMutationDataCache: ()=>MutationDataCache,
-                public geneticProfileIdToGeneticProfile:MobxPromise<{[geneticProfileId:string]:GeneticProfile}>,
                 public studyIdToStudy:MobxPromise<{[studyId:string]:CancerStudy}>,
+                public molecularProfileIdToMolecularProfile:MobxPromise<{[molecularProfileId:string]:MolecularProfile}>,
                 public clinicalDataForSamples: MobxPromise<ClinicalData[]>,
                 public studiesForSamplesWithoutCancerTypeClinicalData: MobxPromise<CancerStudy[]>,
                 private samplesWithoutCancerTypeClinicalData: MobxPromise<Sample[]>,
@@ -67,33 +68,11 @@ export class MutationMapperStore {
         }
     });
 
-    readonly gene = remoteData<Gene|undefined>(async () => {
-        if (this.hugoGeneSymbol) {
-            let genes = await client.fetchGenesUsingPOST({
-                geneIds: [this.hugoGeneSymbol],
-                geneIdType: "HUGO_GENE_SYMBOL"
-            });
-
-            if (genes.length > 0) {
-                return genes[0];
-            }
-        }
-
-        return undefined;
-    });
-
     readonly mutationData = remoteData({
-        await: () => [
-            this.gene,
-        ],
-        invoke: async () => {
-            const gene = this.gene.result;
-            if (gene) {
-                const cacheData = this.getMutationDataCache().get({entrezGeneId: gene.entrezGeneId});
-                return (cacheData && cacheData.data) || [];
-            } else {
-                return [];
-            }
+        invoke: () => {
+            console.log("getting mutation data", this.gene.entrezGeneId);
+            const cacheData = this.getMutationDataCache().get({entrezGeneId: this.gene.entrezGeneId});
+            return Promise.resolve((cacheData && cacheData.data) || []);
         }
     }, []);
 
@@ -115,22 +94,14 @@ export class MutationMapperStore {
     }, []);
 
     readonly swissProtId = remoteData({
-        await: () => [
-            this.gene
-        ],
         invoke: async() => {
-            if (this.gene.result) {
-                const accession:string|string[] = await fetchSwissProtAccession(this.gene.result.entrezGeneId);
+            const accession:string|string[] = await fetchSwissProtAccession(this.gene.entrezGeneId);
 
-                if (_.isArray(accession)) {
-                    return accession[0];
-                }
-                else {
-                    return accession;
-                }
+            if (_.isArray(accession)) {
+                return accession[0];
             }
             else {
-                return "";
+                return accession;
             }
         },
         onError: (err: Error) => {
@@ -185,7 +156,10 @@ export class MutationMapperStore {
             this.mutationData,
             this.clinicalDataForSamples
         ],
-        invoke: async() => this.config.showCivic ? fetchCivicGenes(this.mutationData) : {}
+        invoke: async() => this.config.showCivic ? fetchCivicGenes(this.mutationData) : {},
+        onError: (err: Error) => {
+            // fail silently
+        }
     }, undefined);
 
     readonly civicVariants = remoteData<ICivicVariant | undefined>({
@@ -200,6 +174,9 @@ export class MutationMapperStore {
             else {
                 return {};
             }
+        },
+        onError: (err: Error) => {
+            // fail silently
         }
     }, undefined);
 
@@ -251,5 +228,10 @@ export class MutationMapperStore {
     @cached get pdbPositionMappingCache()
     {
         return new PdbPositionMappingCache();
+    }
+
+    @cached get residueMappingCache()
+    {
+        return new ResidueMappingCache();
     }
 }

@@ -3,7 +3,7 @@ import {observer} from "mobx-react";
 import {observable, computed} from "mobx";
 import * as _ from "lodash";
 import {default as LazyMobXTable, Column, SortDirection} from "shared/components/lazyMobXTable/LazyMobXTable";
-import {CancerStudy, GeneticProfile, Mutation} from "shared/api/generated/CBioPortalAPI";
+import {CancerStudy, MolecularProfile, Mutation} from "shared/api/generated/CBioPortalAPI";
 import SampleColumnFormatter from "./column/SampleColumnFormatter";
 import TumorAlleleFreqColumnFormatter from "./column/TumorAlleleFreqColumnFormatter";
 import NormalAlleleFreqColumnFormatter from "./column/NormalAlleleFreqColumnFormatter";
@@ -15,7 +15,7 @@ import GeneColumnFormatter from "./column/GeneColumnFormatter";
 import ChromosomeColumnFormatter from "./column/ChromosomeColumnFormatter";
 import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter";
 import MutationTypeColumnFormatter from "./column/MutationTypeColumnFormatter";
-import MutationAssessorColumnFormatter from "./column/MutationAssessorColumnFormatter";
+import FunctionalImpactColumnFormatter from "./column/FunctionalImpactColumnFormatter";
 import CosmicColumnFormatter from "./column/CosmicColumnFormatter";
 import MutationCountColumnFormatter from "./column/MutationCountColumnFormatter";
 import CancerTypeColumnFormatter from "./column/CancerTypeColumnFormatter";
@@ -30,6 +30,7 @@ import {ICivicVariant, ICivicGene} from "shared/model/Civic";
 import {IMutSigData} from "shared/model/MutSig";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
+import GenomeNexusEnrichmentCache from "shared/cache/GenomeNexusEnrichment";
 import MrnaExprRankCache from "shared/cache/MrnaExprRankCache";
 import VariantCountCache from "shared/cache/VariantCountCache";
 import PubMedCache from "shared/cache/PubMedCache";
@@ -42,10 +43,11 @@ import StudyColumnFormatter from "./column/StudyColumnFormatter";
 
 export interface IMutationTableProps {
     sampleIdToTumorType?: {[sampleId: string]: string}
-    geneticProfileIdToGeneticProfile?: {[geneticProfileId:string]:GeneticProfile};
     studyIdToStudy?: {[studyId:string]:CancerStudy};
+    molecularProfileIdToMolecularProfile?: {[molecularProfileId:string]:MolecularProfile};
     discreteCNACache?:DiscreteCNACache;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
+    genomeNexusEnrichmentCache?:GenomeNexusEnrichmentCache;
     mrnaExprRankCache?:MrnaExprRankCache;
     variantCountCache?:VariantCountCache;
     pubMedCache?:PubMedCache
@@ -55,14 +57,15 @@ export interface IMutationTableProps {
     enableMyCancerGenome?: boolean;
     enableHotspot?: boolean;
     enableCivic?: boolean;
+    enableGenomeNexus?: boolean;
     myCancerGenomeData?: IMyCancerGenomeData;
     hotspots?: IHotspotData;
     cosmicData?:ICosmicData;
     oncoKbData?: IOncoKbDataWrapper;
     civicGenes?: ICivicGene;
     civicVariants?: ICivicVariant;
-    mrnaExprRankGeneticProfileId?:string;
-    discreteCNAGeneticProfileId?:string;
+    mrnaExprRankMolecularProfileId?:string;
+    discreteCNAMolecularProfileId?:string;
     columns?:MutationTableColumnType[];
     data?:Mutation[][];
     dataStore?:IMobXApplicationDataStore<Mutation[]>;
@@ -91,7 +94,7 @@ export enum MutationTableColumnType {
     CENTER,
     TUMOR_ALLELE_FREQ,
     NORMAL_ALLELE_FREQ,
-    MUTATION_ASSESSOR,
+    FUNCTIONAL_IMPACT,
     ANNOTATION,
     COSMIC,
     COPY_NUM,
@@ -152,7 +155,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
         enableOncoKb: true,
         enableMyCancerGenome: true,
         enableHotspot: true,
-        enableCivic: false
+        enableCivic: false,
     };
 
     constructor(props:P)
@@ -167,18 +170,18 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
 
         this._columns[MutationTableColumnType.STUDY] = {
             name: "Study",
-            render: (d:Mutation[])=> StudyColumnFormatter.renderFunction(d, this.props.geneticProfileIdToGeneticProfile, this.props.studyIdToStudy),
-            download: (d:Mutation[])=>StudyColumnFormatter.getTextValue(d, this.props.geneticProfileIdToGeneticProfile, this.props.studyIdToStudy),
-            sortBy: (d:Mutation[])=>StudyColumnFormatter.getTextValue(d, this.props.geneticProfileIdToGeneticProfile, this.props.studyIdToStudy),
+            render: (d:Mutation[])=> StudyColumnFormatter.renderFunction(d, this.props.molecularProfileIdToMolecularProfile, this.props.studyIdToStudy),
+            download: (d:Mutation[])=>StudyColumnFormatter.getTextValue(d, this.props.molecularProfileIdToMolecularProfile, this.props.studyIdToStudy),
+            sortBy: (d:Mutation[])=>StudyColumnFormatter.getTextValue(d, this.props.molecularProfileIdToMolecularProfile, this.props.studyIdToStudy),
             filter: (d:Mutation[], filterString:string, filterStringUpper:string)=>{
-                return StudyColumnFormatter.filter(d, filterStringUpper, this.props.geneticProfileIdToGeneticProfile, this.props.studyIdToStudy);
+                return StudyColumnFormatter.filter(d, filterStringUpper, this.props.molecularProfileIdToMolecularProfile, this.props.studyIdToStudy);
             },
             visible: false
         };
 
         this._columns[MutationTableColumnType.SAMPLE_ID] = {
             name: "Sample ID",
-            render: (d:Mutation[]) => SampleColumnFormatter.renderFunction(d, this.props.geneticProfileIdToGeneticProfile),
+            render: (d:Mutation[]) => SampleColumnFormatter.renderFunction(d, this.props.molecularProfileIdToMolecularProfile),
             download: SampleColumnFormatter.getTextValue,
             sortBy: SampleColumnFormatter.getTextValue,
             filter: (d:Mutation[], filterString:string, filterStringUpper:string) =>
@@ -231,27 +234,27 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
         this._columns[MutationTableColumnType.COPY_NUM] = {
             name: "Copy #",
             render:(d:Mutation[])=>{
-                if (this.props.discreteCNACache && this.props.geneticProfileIdToGeneticProfile) {
+                if (this.props.discreteCNACache && this.props.molecularProfileIdToMolecularProfile) {
                     return DiscreteCNAColumnFormatter.renderFunction(d,
-                        this.props.geneticProfileIdToGeneticProfile as {[geneticProfileId:string]:GeneticProfile},
+                        this.props.molecularProfileIdToMolecularProfile as {[molecularProfileId:string]:MolecularProfile},
                         this.props.discreteCNACache as DiscreteCNACache);
                 } else {
                     return (<span></span>);
                 }
             },
             sortBy: (d:Mutation[]):number|null=>{
-                if (this.props.discreteCNACache && this.props.geneticProfileIdToGeneticProfile) {
+                if (this.props.discreteCNACache && this.props.molecularProfileIdToMolecularProfile) {
                     return DiscreteCNAColumnFormatter.getSortValue(d,
-                        this.props.geneticProfileIdToGeneticProfile as {[geneticProfileId:string]:GeneticProfile},
+                        this.props.molecularProfileIdToMolecularProfile as {[molecularProfileId:string]:MolecularProfile},
                         this.props.discreteCNACache as DiscreteCNACache);
                 } else {
                     return 0;
                 }
             },
             filter:(d:Mutation[], filterString:string)=>{
-                if (this.props.discreteCNACache && this.props.geneticProfileIdToGeneticProfile) {
+                if (this.props.discreteCNACache && this.props.molecularProfileIdToMolecularProfile) {
                     return DiscreteCNAColumnFormatter.filter(d,
-                        this.props.geneticProfileIdToGeneticProfile as {[geneticProfileId:string]:GeneticProfile},
+                        this.props.molecularProfileIdToMolecularProfile as {[molecularProfileId:string]:MolecularProfile},
                         this.props.discreteCNACache as DiscreteCNACache,
                         filterString);
                 } else {
@@ -401,16 +404,16 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 MutationTypeColumnFormatter.getDisplayValue(d).toUpperCase().indexOf(filterStringUpper) > -1
         };
 
-        this._columns[MutationTableColumnType.MUTATION_ASSESSOR] = {
-            name: "Mutation Assessor",
-            headerRender: (name: string) => <span style={{display:'inline-block', maxWidth:60}}>{name}</span>,
-            render:MutationAssessorColumnFormatter.renderFunction,
-            download:MutationAssessorColumnFormatter.getTextValue,
-            sortBy:(d:Mutation[])=>MutationAssessorColumnFormatter.getSortValue(d),
-            filter:(d:Mutation[], filterString:string, filterStringUpper:string) =>
-                MutationAssessorColumnFormatter.filterValue(d).toUpperCase().indexOf(filterStringUpper) > -1,
-            visible: false
-        };
+        if (this.props.enableGenomeNexus) {
+            this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT] = {
+                name:"Functional Impact",
+                render:(d:Mutation[])=>(this.props.genomeNexusEnrichmentCache
+                    ? FunctionalImpactColumnFormatter.renderFunction(d, this.props.genomeNexusEnrichmentCache as GenomeNexusEnrichmentCache)
+                    : (<span></span>)),
+                headerRender: FunctionalImpactColumnFormatter.headerRender,
+                visible: false,
+            };
+        }
 
         this._columns[MutationTableColumnType.COSMIC] = {
             name: "COSMIC",

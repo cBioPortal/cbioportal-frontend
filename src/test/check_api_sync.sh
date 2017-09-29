@@ -35,6 +35,10 @@ run_and_check_diff 'npm run fetchOncoKbAPI' src/shared/api/generated/OncoKbAPI-d
 if [[ $? -gt 0 ]]; then
     sync_error_count=$(($sync_error_count + 1))
 fi
+run_and_check_diff 'npm run fetchGenomeNexusAPI' src/shared/api/generated/GenomeNexusAPI-docs.json "${OUT_OF_SYNC_MSG}"
+if [[ $? -gt 0 ]]; then
+    sync_error_count=$(($sync_error_count + 1))
+fi
 TS_GEN_MSG="generation of typescript client differs compared to checked in version"
 echo "Test if docs generate the same TS client as the one stored in the repo (fail with exit code > 0)"
 generation_error_count=0
@@ -47,6 +51,11 @@ if [[ $? -gt 0 ]]; then
     generation_error_count=$(($generation_error_count + 1))
 fi
 run_and_check_diff 'npm run buildOncoKbAPI' src/shared/api/generated/OncoKbAPI.ts "${TS_GEN_MSG}"
+if [[ $? -gt 0 ]]; then
+    generation_error_count=$(($generation_error_count + 1))
+fi
+exit $(($generation_error_count + $sync_error_count))
+run_and_check_diff 'npm run buildGenomeNexusAPI' src/shared/api/generated/GenomeNexusAPI.ts "${TS_GEN_MSG}"
 if [[ $? -gt 0 ]]; then
     generation_error_count=$(($generation_error_count + 1))
 fi

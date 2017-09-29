@@ -58,7 +58,7 @@ export interface ICancerStudySelectorProps
 }
 
 @observer
-export default class CancerStudySelector extends QueryStoreComponent<ICancerStudySelectorProps, void>
+export default class CancerStudySelector extends QueryStoreComponent<ICancerStudySelectorProps, {}>
 {
 	private handlers = {
 		onSummaryClick:()=>{
