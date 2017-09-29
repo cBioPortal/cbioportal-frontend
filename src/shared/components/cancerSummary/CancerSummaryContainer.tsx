@@ -24,7 +24,7 @@ const anchorStyle = {
 export default class CancerSummaryContainer extends React.Component<{store: ResultsViewPageStore},{}> {
 
     @observable private activeTab: string = "all";
-    @observable private resultsViewPageWidth:number;
+    @observable private resultsViewPageWidth:number = 1150;
     private resultsViewPageContent:HTMLElement;
 
     constructor() {
@@ -40,19 +40,12 @@ export default class CancerSummaryContainer extends React.Component<{store: Resu
         return 'all';
     }
 
-    componentDidUpdate(){
-        if (this.props.store.alterationCountsForCancerTypesForAllGenes.isComplete &&
-            this.props.store.alterationCountsForCancerTypesByGene.isComplete) {
-                this.resultsViewPageWidth = this.resultsViewPageContent.offsetWidth;
-        }
-    }
-
     @computed
     private get tabs() {
 
         const geneTabs = _.map(this.props.store.alterationCountsForCancerTypesByGene.result, (geneData, geneName) => (
             <MSKTab key={geneName} id={"summaryTab" + geneName} linkText={geneName} anchorStyle={anchorStyle}>
-                <CancerSummaryContent data={geneData} gene={this.activeTab} width={this.resultsViewPageWidth}/>
+                <CancerSummaryContent data={geneData} gene={geneName} width={this.resultsViewPageWidth}/>
             </MSKTab>
         ));
 
