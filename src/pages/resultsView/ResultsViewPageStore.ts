@@ -193,16 +193,16 @@ export class ResultsViewPageStore {
         }
     });
 
-    readonly molecularData = remoteData({
+    readonly molecularData = remoteData<GeneMolecularData[]>({
         await: () => [
             this.studyToDataQueryFilter,
             this.genes,
             this.selectedMolecularProfiles
         ],
-        invoke: async() => {
+        invoke: () => {
             // we get mutations with mutations endpoint, all other alterations with this one, so filter out mutation genetic profile
             const profilesWithoutMutationProfile = _.filter(this.selectedMolecularProfiles.result, (profile: MolecularProfile) => profile.molecularAlterationType !== 'MUTATION_EXTENDED');
-            if (profilesWithoutMutationProfile) {
+            if (profilesWithoutMutationProfile.length) {
                 const promises: Promise<GeneMolecularData[]>[] = profilesWithoutMutationProfile.map((profile: MolecularProfile) => {
                     const filter: MolecularDataFilter = (Object.assign(
                             {},
@@ -220,7 +220,7 @@ export class ResultsViewPageStore {
                 });
                 return Promise.all(promises).then((arrs: GeneMolecularData[][]) => _.concat([], ...arrs));
             } else {
-                return [];
+                return Promise.resolve([]);
             }
         }
     });
@@ -355,7 +355,7 @@ export class ResultsViewPageStore {
             this.filteredAlterations
         ],
         invoke: async() => {
-            return _.mapValues(this.filteredAlterations.result, (mutations: Mutation[]) => _.map(mutations, 'sampleId'));
+            return _.mapValues(this.filteredAlterations.result, (mutations: Mutation[]) => _.map(mutations, mutation=>mutation.uniqueSampleKey));
         }
     });
 
@@ -364,7 +364,7 @@ export class ResultsViewPageStore {
         invoke: async() => {
             return _.mapValues(this.filteredAlterationsAsSampleIdArrays.result, (sampleIds: string[]) => {
                 return this.samples.result.map((sample: Sample) => {
-                    return _.includes(sampleIds, sample.sampleId);
+                    return _.includes(sampleIds, sample.uniqueSampleKey);
                 });
             });
         }
@@ -665,7 +665,7 @@ export class ResultsViewPageStore {
         }
     });
 
-    readonly geneToMutData = remoteData({
+    readonly geneToMutData = remoteData<{[hugoGeneSymbol:string]: Mutation[]}>({
         await: () => [
             this.selectedMolecularProfiles,
             this.genes,
@@ -673,34 +673,36 @@ export class ResultsViewPageStore {
         ],
         invoke: async () => {
 
-            const mutationMolecularProfile = _.find(this.selectedMolecularProfiles.result,
+            const mutationMolecularProfiles = _.filter(this.selectedMolecularProfiles.result,
                 (molecularProfile: MolecularProfile) => {
                     return molecularProfile.molecularAlterationType === AlterationTypeConstants.MUTATION_EXTENDED;
                 });
 
-            if (mutationMolecularProfile) {
-                const mutationFilter: MolecularDataFilter = (Object.assign(
-                        {},
-                        {
-                            entrezGeneIds: this.genes.result!.map(gene => gene.entrezGeneId)
-                        },
-                        this.studyToDataQueryFilter.result![mutationMolecularProfile.studyId]
-                    ) as MolecularDataFilter
-                );
-                return client.fetchMutationsInMolecularProfileUsingPOST({
-                    molecularProfileId: mutationMolecularProfile.molecularProfileId,
-                    mutationFilter,
-                    projection: "DETAILED"
-                }).then((mutations) => {
-                    const groupedByGene = _.groupBy(mutations, (mutation: Mutation) => mutation.gene.hugoGeneSymbol);
-                    return _.reduce(this.genes.result, (memo, gene: Gene) => {
-                        // a gene may have no mutations
-                        memo[gene.hugoGeneSymbol] = groupedByGene[gene.hugoGeneSymbol] || [];
-                        return memo;
-                    },{} as { [hugoGeneSymbol:string] : Mutation[] });
-                })
+            if (mutationMolecularProfiles.length) {
+                const promises: Promise<Mutation[]>[] = mutationMolecularProfiles.map((mutationMolecularProfile:MolecularProfile)=>{
+                    const mutationFilter: MolecularDataFilter = (Object.assign(
+                            {},
+                            {
+                                entrezGeneIds: this.genes.result!.map(gene => gene.entrezGeneId)
+                            },
+                            this.studyToDataQueryFilter.result![mutationMolecularProfile.studyId]
+                        ) as MolecularDataFilter
+                    );
+                    return client.fetchMutationsInMolecularProfileUsingPOST({
+                        molecularProfileId: mutationMolecularProfile.molecularProfileId,
+                        mutationFilter,
+                        projection: "DETAILED"
+                    });
+                });
+                const mutations:Mutation[] = _.flatten(await Promise.all(promises));
+                const groupedByGene = _.groupBy(mutations, (mutation: Mutation) => mutation.gene.hugoGeneSymbol);
+                return _.reduce(this.genes.result, (memo, gene: Gene) => {
+                    // a gene may have no mutations
+                    memo[gene.hugoGeneSymbol] = groupedByGene[gene.hugoGeneSymbol] || [];
+                    return memo;
+                },{} as { [hugoGeneSymbol:string] : Mutation[] });
             } else {
-                return {}
+                return {};
             }
         }
     });
