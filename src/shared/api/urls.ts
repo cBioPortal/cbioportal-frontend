@@ -40,6 +40,9 @@ export function getUniprotIdUrl(swissProtAccession: string) {
 export function getPfamGeneDataUrl(swissProtAccession: string) {
     return cbioUrl(`proxy/pfam.xfam.org/protein/${swissProtAccession}/graphic`);
 }
+export function getMutationAlignerUrl() {
+    return cbioUrl(`getMutationAligner.json`);
+}
 export function getOncoQueryDocUrl() {
     return cbioUrl('onco_query_lang_desc.jsp');
 }
