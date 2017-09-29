@@ -255,7 +255,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
     }
 
     private get width() {
-        const maxWidth = 220 + this.props.data.labels.length * 45;
+        const maxWidth = 250 + this.props.data.labels.length * 45;
         const conWidth = (this.props.width || 1159);
         return maxWidth > conWidth ? conWidth : maxWidth;
     }
