@@ -143,8 +143,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     }
 
     @computed get cnaTableStatus() {
-        if (patientViewPageStore.geneticProfileIdDiscrete.isComplete) {
-            if (patientViewPageStore.geneticProfileIdDiscrete.result === undefined) {
+        if (patientViewPageStore.molecularProfileIdDiscrete.isComplete) {
+            if (patientViewPageStore.molecularProfileIdDiscrete.result === undefined) {
                 return "unavailable";
             } else if (patientViewPageStore.discreteCNAData.isComplete) {
                 return "available";
@@ -309,7 +309,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                     <div>
                                         <GenomicOverview
                                             mergedMutations={patientViewPageStore.mergedMutationData}
-                                            sequencedSamples={patientViewPageStore.sequencedSampleIdsInStudy.result}
+                                            samples={patientViewPageStore.samples.result}
                                             cnaSegments={patientViewPageStore.cnaSegments.result}
                                             sampleOrder={sampleManager.sampleIndex}
                                             sampleLabels={sampleManager.sampleLabels}
@@ -330,14 +330,15 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         sampleManager={sampleManager}
                                         sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
                                         sampleIdToTumorType={patientViewPageStore.sampleIdToTumorType}
-                                        geneticProfileIdToGeneticProfile={patientViewPageStore.geneticProfileIdToGeneticProfile.result}
+                                        molecularProfileIdToMolecularProfile={patientViewPageStore.molecularProfileIdToMolecularProfile.result}
                                         variantCountCache={patientViewPageStore.variantCountCache}
+                                        genomeNexusEnrichmentCache={patientViewPageStore.genomeNexusEnrichmentCache}
                                         discreteCNACache={patientViewPageStore.discreteCNACache}
                                         mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}
                                         oncoKbEvidenceCache={patientViewPageStore.oncoKbEvidenceCache}
                                         pubMedCache={patientViewPageStore.pubMedCache}
-                                        mrnaExprRankGeneticProfileId={patientViewPageStore.mrnaRankGeneticProfileId.result || undefined}
-                                        discreteCNAGeneticProfileId={patientViewPageStore.geneticProfileIdDiscrete.result}
+                                        mrnaExprRankMolecularProfileId={patientViewPageStore.mrnaRankMolecularProfileId.result || undefined}
+                                        discreteCNAMolecularProfileId={patientViewPageStore.molecularProfileIdDiscrete.result}
                                         data={patientViewPageStore.mergedMutationDataIncludingUncalled}
                                         mutSigData={patientViewPageStore.mutSigData.result}
                                         myCancerGenomeData={patientViewPageStore.myCancerGenomeData}
@@ -347,6 +348,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         civicGenes={patientViewPageStore.civicGenes.result}
                                         civicVariants={patientViewPageStore.civicVariants.result}
                                         enableOncoKb={AppConfig.showOncoKB}
+                                        enableGenomeNexus={AppConfig.showGenomeNexus}
                                         enableHotspot={AppConfig.showHotspot}
                                         enableMyCancerGenome={AppConfig.showMyCancerGenome}
                                         enableCivic={AppConfig.showCivic}
@@ -372,7 +374,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 copyNumberCountCache={patientViewPageStore.copyNumberCountCache}
                                 mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}
                                 gisticData={patientViewPageStore.gisticData.result}
-                                mrnaExprRankGeneticProfileId={patientViewPageStore.mrnaRankGeneticProfileId.result || undefined}
+                                mrnaExprRankMolecularProfileId={patientViewPageStore.mrnaRankMolecularProfileId.result || undefined}
                                 status={this.cnaTableStatus}
                             />
                         </MSKTab>

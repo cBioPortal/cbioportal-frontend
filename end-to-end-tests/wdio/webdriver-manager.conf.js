@@ -55,6 +55,7 @@ exports.config = {
     // the wdio-sync package. If you still want to run your tests in an async way
     // e.g. using promises you can set the sync option to false.
     sync: true,
+
     //
     // Level of logging verbosity: silent | verbose | command | data | result | error
     logLevel: 'silent',

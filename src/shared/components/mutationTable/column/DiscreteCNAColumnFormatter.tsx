@@ -5,7 +5,7 @@ import {
     DiscreteCNACacheDataType,
     default as DiscreteCNACache
 } from "shared/cache/DiscreteCNACache";
-import {GeneticProfile, Mutation} from "shared/api/generated/CBioPortalAPI";
+import {MolecularProfile, Mutation} from "shared/api/generated/CBioPortalAPI";
 import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
 
 export default class DiscreteCNAColumnFormatter {
@@ -18,8 +18,8 @@ export default class DiscreteCNAColumnFormatter {
         "-2": "deepdel"
     };
 
-    public static renderFunction(data: Mutation[], geneticProfileIdToGeneticProfile: {[geneticProfileId:string]:GeneticProfile}, cache:DiscreteCNACache) {
-        const cnaData = DiscreteCNAColumnFormatter.getData(data, geneticProfileIdToGeneticProfile, cache);
+    public static renderFunction(data: Mutation[], molecularProfileIdToMolecularProfile: {[molecularProfileId:string]:MolecularProfile}, cache:DiscreteCNACache) {
+        const cnaData = DiscreteCNAColumnFormatter.getData(data, molecularProfileIdToMolecularProfile, cache);
         return (<DefaultTooltip
                 placement="left"
                 overlay={DiscreteCNAColumnFormatter.getTooltipContents(cnaData)}
@@ -30,12 +30,12 @@ export default class DiscreteCNAColumnFormatter {
         );
     }
 
-    public static getSortValue(data:Mutation[], geneticProfileIdToGeneticProfile: {[geneticProfileId:string]:GeneticProfile}, cache:DiscreteCNACache) {
-        return DiscreteCNAColumnFormatter.getTdValue(DiscreteCNAColumnFormatter.getData(data, geneticProfileIdToGeneticProfile, cache));
+    public static getSortValue(data:Mutation[], molecularProfileIdToMolecularProfile: {[molecularProfileId:string]:MolecularProfile}, cache:DiscreteCNACache) {
+        return DiscreteCNAColumnFormatter.getTdValue(DiscreteCNAColumnFormatter.getData(data, molecularProfileIdToMolecularProfile, cache));
     }
 
-    public static filter(data:Mutation[], geneticProfileIdToGeneticProfile: {[geneticProfileId:string]:GeneticProfile}, cache:DiscreteCNACache, filterString:string):boolean {
-        const cnaData = DiscreteCNAColumnFormatter.getData(data, geneticProfileIdToGeneticProfile, cache);
+    public static filter(data:Mutation[], molecularProfileIdToMolecularProfile: {[molecularProfileId:string]:MolecularProfile}, cache:DiscreteCNACache, filterString:string):boolean {
+        const cnaData = DiscreteCNAColumnFormatter.getData(data, molecularProfileIdToMolecularProfile, cache);
         if (cnaData && cnaData.data) {
             return (!!DiscreteCNAColumnFormatter.altToFilterString[cnaData.data.alteration])
                 && (DiscreteCNAColumnFormatter.altToFilterString[cnaData.data.alteration]
@@ -45,15 +45,15 @@ export default class DiscreteCNAColumnFormatter {
         }
     }
 
-    protected static getData(data:Mutation[] | undefined, geneticProfileIdToGeneticProfile: {[geneticProfileId:string]:GeneticProfile}, discreteCNACache:DiscreteCNACache):DiscreteCNACacheDataType | null {
+    protected static getData(data:Mutation[] | undefined, molecularProfileIdToMolecularProfile: {[molecularProfileId:string]:MolecularProfile}, discreteCNACache:DiscreteCNACache):DiscreteCNACacheDataType | null {
         if (!data || data.length === 0 || !discreteCNACache.isActive) {
             return null;
         }
         const sampleId = data[0].sampleId;
         const entrezGeneId = data[0].entrezGeneId;
-        const geneticProfile = geneticProfileIdToGeneticProfile[data[0].geneticProfileId];
-        if (geneticProfile) {
-            return discreteCNACache.get({sampleId, entrezGeneId, studyId: geneticProfile.studyId});
+        const molecularProfile = molecularProfileIdToMolecularProfile[data[0].molecularProfileId];
+        if (molecularProfile) {
+            return discreteCNACache.get({sampleId, entrezGeneId, studyId: molecularProfile.studyId});
         } else {
             return null;
         }
@@ -72,23 +72,23 @@ export default class DiscreteCNAColumnFormatter {
         if (cacheDatum !== null && cacheDatum.status === "complete" && cacheDatum.data !== null) {
             const alteration = cacheDatum.data.alteration;
             if (alteration === 2) {
-                return (<span style={{color:"red", textAlign:"center", fontSize:"12px"}} alt="High-level amplification">
+                return (<span style={{color:"red", textAlign:"center", fontSize:"12px"}}>
                     <b>Amp</b>
                 </span>);
             } else if (alteration === 1) {
-                return (<span style={{color:"red", textAlign:"center", fontSize:"smaller"}} alt="Low-level gain">
+                return (<span style={{color:"red", textAlign:"center", fontSize:"smaller"}}>
                     <b>Gain</b>
                 </span>);
             } else if (alteration === 0) {
-                return (<span style={{color:"black", textAlign:"center", fontSize:"xx-small"}} alt="Diploid / normal">
+                return (<span style={{color:"black", textAlign:"center", fontSize:"xx-small"}}>
                     Diploid
                 </span>);
             } else if (alteration === -1) {
-                return (<span style={{color:"blue", textAlign:"center", fontSize:"smaller"}} alt="Shallow deletion">
+                return (<span style={{color:"blue", textAlign:"center", fontSize:"smaller"}}>
                     <b>ShallowDel</b>
                 </span>);
             } else {
-                return (<span style={{color:"blue", textAlign:"center", fontSize:"12px"}} alt="Deep deletion">
+                return (<span style={{color:"blue", textAlign:"center", fontSize:"12px"}}>
                     <b>DeepDel</b>
                 </span>);
             }
