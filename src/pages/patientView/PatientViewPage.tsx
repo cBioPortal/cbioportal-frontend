@@ -343,8 +343,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         hotspots={patientViewPageStore.indexedHotspotData}
                                         cosmicData={patientViewPageStore.cosmicData.result}
                                         oncoKbData={patientViewPageStore.oncoKbData}
-                                        civicGenes={patientViewPageStore.civicGenes.result}
-                                        civicVariants={patientViewPageStore.civicVariants.result}
+                                        civicGenes={patientViewPageStore.civicGenes}
+                                        civicVariants={patientViewPageStore.civicVariants}
                                         enableOncoKb={AppConfig.showOncoKB}
                                         enableHotspot={AppConfig.showHotspot}
                                         enableMyCancerGenome={AppConfig.showMyCancerGenome}
@@ -361,8 +361,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
                                 sampleManager={sampleManager}
                                 cnaOncoKbData={patientViewPageStore.cnaOncoKbData}
-                                cnaCivicGenes={patientViewPageStore.cnaCivicGenes.result}
-                                cnaCivicVariants={patientViewPageStore.cnaCivicVariants.result}
+                                cnaCivicGenes={patientViewPageStore.cnaCivicGenes}
+                                cnaCivicVariants={patientViewPageStore.cnaCivicVariants}
                                 oncoKbEvidenceCache={patientViewPageStore.oncoKbEvidenceCache}
                                 enableOncoKb={AppConfig.showOncoKB}
                                 enableCivic={AppConfig.showCivic}
