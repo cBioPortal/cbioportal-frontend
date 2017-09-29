@@ -67,7 +67,7 @@ export class CopyDownloadControls extends React.Component<ICopyDownloadControlsP
                         arrowContent={arrowContent}
                     >
                         <button
-                            ref={(el) => {this._copyButton = el;}}
+                            ref={(el:HTMLButtonElement) => {this._copyButton = el;}}
                             className="btn btn-sm btn-default"
                             data-clipboard-text="NA"
                             id="copyButton"

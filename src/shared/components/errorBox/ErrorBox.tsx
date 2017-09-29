@@ -3,18 +3,19 @@ import FontAwesome from "react-fontawesome";
 import * as styles_any from './styles.module.scss';
 import classNames from 'classnames';
 
+
 const styles = styles_any as {
 	error: string,
 	message: string,
 	icon: string,
 };
 
-interface ISectionHeaderProps extends React.HTMLProps<HTMLDivElement>
+interface ISectionHeaderProps extends React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
 {
 	error: Error;
 }
 
-export default class ErrorBox extends React.Component<ISectionHeaderProps, void>
+export default class ErrorBox extends React.Component<ISectionHeaderProps, {}>
 {
 	render()
 	{

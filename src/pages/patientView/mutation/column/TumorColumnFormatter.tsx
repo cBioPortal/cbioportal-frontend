@@ -3,7 +3,6 @@ import 'rc-tooltip/assets/bootstrap_white.css';
 import SampleManager from "../../sampleManager";
 import {isUncalled} from 'shared/lib/MutationUtils';
 
-
 export default class TumorColumnFormatter {
 
     public static renderFunction<T extends {sampleId:string}>(data:T[], sampleManager:SampleManager|null) {
@@ -52,12 +51,12 @@ export default class TumorColumnFormatter {
         }
     }
 
-    public static getPresentSamples<T extends {sampleId:string, tumorAltCount?: number, geneticProfileId?: string}>(data:T[]) {
-        return data.reduce((map:{[s:string]:boolean}, next:T, currentIndex:number) => {
+    public static getPresentSamples<T extends {sampleId:string, tumorAltCount?: number, molecularProfileId?: string}>(data:T[]) {
+        return data.reduce((map, next:T, currentIndex:number) => {
             // Indicate called mutations with true,
             // uncalled mutations with supporting reads as false
             // exclude uncalled mutations without supporting reads completely
-            if (next.geneticProfileId && isUncalled(next.geneticProfileId)) {
+            if (next.molecularProfileId && isUncalled(next.molecularProfileId)) {
                 if (next.tumorAltCount && next.tumorAltCount > 0) {
                     map[next.sampleId] = false;
                 }
@@ -65,6 +64,19 @@ export default class TumorColumnFormatter {
                 map[next.sampleId] = true;
             }
             return map;
-        }, {});
+        }, {} as {[s:string]:boolean});
+    }
+
+    public static getSample(data:Array<{sampleId:string}>): string|string[] {
+        let result: string[] =[];
+        if (data) {
+            data.forEach((datum:{sampleId:string}) => {
+                result.push(datum.sampleId);
+            })
+        }
+        if (result.length == 1) {
+            return result[0];
+        }
+        return result;
     }
 }

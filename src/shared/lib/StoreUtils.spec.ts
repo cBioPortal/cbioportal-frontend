@@ -359,10 +359,10 @@ describe('StoreUtils', () => {
 
         let clinicalDataForSamples: MobxPromise<ClinicalData[]> = {
             result: [
-                {clinicalAttributeId: 'CANCER_TYPE_DETAILED', entityId: 'Sample1', value: "Invasive Breast Carcinoma"},
-                {clinicalAttributeId: 'CANCER_TYPE', entityId: 'Sample1', value: "Breast"},
-                {clinicalAttributeId: 'CANCER_TYPE_DETAILED', entityId: 'Sample2', value: "Prostate Adenocarcinoma"},
-                {clinicalAttributeId: 'CANCER_TYPE', entityId: 'Sample3', value: "Skin"}
+                {clinicalAttributeId: 'CANCER_TYPE_DETAILED', sampleId: 'Sample1', value: "Invasive Breast Carcinoma"},
+                {clinicalAttributeId: 'CANCER_TYPE', sampleId: 'Sample1', value: "Breast"},
+                {clinicalAttributeId: 'CANCER_TYPE_DETAILED', sampleId: 'Sample2', value: "Prostate Adenocarcinoma"},
+                {clinicalAttributeId: 'CANCER_TYPE', sampleId: 'Sample3', value: "Skin"}
             ] as ClinicalData[],
             status: 'complete' as 'complete',
             isPending: false,
@@ -391,8 +391,7 @@ describe('StoreUtils', () => {
 
             assert.isTrue(fetchSamplesStub.called, "fetchSamples should be called");
             assert.isTrue(fetchSamplesStub.calledWith({
-                sampleIdentifiers: [{sampleId: "Sample4", studyId: "study"}],
-                projection: "DETAILED"
+                sampleIdentifiers: [{sampleId: "Sample4", studyId: "study"}]
             }), "fetchSamples should be called with the correct sample id (Sample4)");
         });
 

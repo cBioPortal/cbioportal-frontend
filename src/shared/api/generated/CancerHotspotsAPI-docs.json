@@ -1,1 +1,1180 @@
-{"swagger":"2.0","info":{"description":"Cancer Hotspots API","version":"2.0","title":"Cancer Hotspots API","contact":{"name":"CMO, MSKCC"},"license":{"name":"GNU AFFERO GENERAL PUBLIC LICENSE Version 3","url":"https://github.com/cBioPortal/cancerhotspots/blob/master/LICENSE"}},"host":"cancerhotspots.org","basePath":"/","tags":[{"name":"hotspot-controller","description":"Hotspot Controller"}],"paths":{"/api/clusters":{"post":{"tags":["hotspot-controller"],"summary":"get clusters","operationId":"fetchClustersPOST","consumes":["application/json"],"produces":["application/json"],"parameters":[{"in":"body","name":"clusterIds","description":"List of cluster ids, for example [1,2,3]","required":false,"schema":{"type":"array","items":{"type":"string"}}},{"name":"hugoSymbol","in":"query","description":"Hugo gene symbol, for example BRAF","required":false,"type":"string"},{"name":"residue","in":"query","description":"Residue, for example F595","required":false,"type":"string"}],"responses":{"200":{"description":"OK","schema":{"type":"array","items":{"$ref":"#/definitions/Cluster"}}},"201":{"description":"Created"},"401":{"description":"Unauthorized"},"403":{"description":"Forbidden"},"404":{"description":"Not Found"}}}},"/api/clusters/id/{clusterIds}":{"get":{"tags":["hotspot-controller"],"summary":"get clusters by cluster id","operationId":"fetchClustersByClusterIdGET","consumes":["application/json"],"produces":["application/json"],"parameters":[{"name":"clusterIds","in":"path","description":"Comma separated list of cluster ids, for example 1,2,3","required":true,"type":"array","items":{"type":"string"},"collectionFormat":"csv"}],"responses":{"200":{"description":"OK","schema":{"type":"array","items":{"$ref":"#/definitions/Cluster"}}},"401":{"description":"Unauthorized"},"403":{"description":"Forbidden"},"404":{"description":"Not Found"}}}},"/api/clusters/{hugoSymbol}":{"get":{"tags":["hotspot-controller"],"summary":"get clusters by hugo symbol","operationId":"fetchClustersByHugoSymbolGET","consumes":["application/json"],"produces":["application/json"],"parameters":[{"name":"hugoSymbol","in":"path","description":"Hugo gene symbol, for example BRAF","required":true,"type":"string"}],"responses":{"200":{"description":"OK","schema":{"type":"array","items":{"$ref":"#/definitions/Cluster"}}},"401":{"description":"Unauthorized"},"403":{"description":"Forbidden"},"404":{"description":"Not Found"}}}},"/api/clusters/{hugoSymbol}/{residue}":{"get":{"tags":["hotspot-controller"],"summary":"get clusters by hugo symbol and residue","operationId":"fetchClustersByHugoSymbolAndResidueGET","consumes":["application/json"],"produces":["application/json"],"parameters":[{"name":"hugoSymbol","in":"path","description":"Hugo gene symbol, for example BRAF","required":true,"type":"string"},{"name":"residue","in":"path","description":"Residue, for example F595","required":true,"type":"string"}],"responses":{"200":{"description":"OK","schema":{"type":"array","items":{"$ref":"#/definitions/Cluster"}}},"401":{"description":"Unauthorized"},"403":{"description":"Forbidden"},"404":{"description":"Not Found"}}}},"/api/hotspots/3d":{"get":{"tags":["hotspot-controller"],"summary":"get all 3D hotspot mutations","operationId":"fetch3dHotspotMutationsPOST_1","consumes":["application/json"],"produces":["application/json"],"parameters":[{"name":"hugoSymbols","in":"query","description":"Comma separated list of hugo symbols. For example PTEN,BRAF,TP53","required":false,"type":"array","items":{"type":"string"},"collectionFormat":"multi"}],"responses":{"200":{"description":"OK","schema":{"type":"array","items":{"$ref":"#/definitions/HotspotMutation"}}},"401":{"description":"Unauthorized"},"403":{"description":"Forbidden"},"404":{"description":"Not Found"}}},"post":{"tags":["hotspot-controller"],"summary":"get all 3D hotspot mutations","operationId":"fetch3dHotspotMutationsPOST","consumes":["application/json"],"produces":["application/json"],"parameters":[{"name":"hugoSymbols","in":"query","description":"Comma separated list of hugo symbols. For example PTEN,BRAF,TP53","required":false,"type":"array","items":{"type":"string"},"collectionFormat":"multi"}],"responses":{"200":{"description":"OK","schema":{"type":"array","items":{"$ref":"#/definitions/HotspotMutation"}}},"201":{"description":"Created"},"401":{"description":"Unauthorized"},"403":{"description":"Forbidden"},"404":{"description":"Not Found"}}}},"/api/hotspots/3d/byGene":{"post":{"tags":["hotspot-controller"],"summary":"get all hotspot mutations for the specified genes","operationId":"fetch3dHotspotMutationsByGenePOST","consumes":["application/json"],"produces":["application/json"],"parameters":[{"in":"body","name":"hugoSymbols","description":"List of hugo symbols. For example [\"PTEN\",\"BRAF\",\"TP53\"]","required":true,"schema":{"type":"array","items":{"type":"string"}}}],"responses":{"200":{"description":"OK","schema":{"type":"array","items":{"$ref":"#/definitions/HotspotMutation"}}},"201":{"description":"Created"},"401":{"description":"Unauthorized"},"403":{"description":"Forbidden"},"404":{"description":"Not Found"}}}},"/api/hotspots/3d/byGene/{hugoSymbols}":{"get":{"tags":["hotspot-controller"],"summary":"get all hotspot mutations for the specified genes","operationId":"fetch3dHotspotMutationsByGeneGET","consumes":["application/json"],"produces":["application/json"],"parameters":[{"name":"hugoSymbols","in":"path","description":"Comma separated list of hugo symbols. For example PTEN,BRAF,TP53","required":true,"type":"array","items":{"type":"string"},"collectionFormat":"csv"}],"responses":{"200":{"description":"OK","schema":{"type":"array","items":{"$ref":"#/definitions/HotspotMutation"}}},"401":{"description":"Unauthorized"},"403":{"description":"Forbidden"},"404":{"description":"Not Found"}}}},"/api/hotspots/3d/byTranscript":{"post":{"tags":["hotspot-controller"],"summary":"get 3D hotspot mutations by transcript id","operationId":"fetch3dHotspotMutationsByTranscriptPOST","consumes":["application/json"],"produces":["application/json"],"parameters":[{"in":"body","name":"transcriptIds","description":"List of transcript IDs. For example [\"ENST00000288602\",\"ENST00000275493\"]","required":true,"schema":{"type":"array","items":{"type":"string"}}}],"responses":{"200":{"description":"OK","schema":{"type":"array","items":{"$ref":"#/definitions/HotspotMutation"}}},"201":{"description":"Created"},"401":{"description":"Unauthorized"},"403":{"description":"Forbidden"},"404":{"description":"Not Found"}}}},"/api/hotspots/3d/byTranscript/{transcriptIds}":{"get":{"tags":["hotspot-controller"],"summary":"get 3D hotspot mutations by transcript id","operationId":"fetch3dHotspotMutationsByTranscriptGET","consumes":["application/json"],"produces":["application/json"],"parameters":[{"name":"transcriptIds","in":"path","description":"Comma separated list of transcript IDs. For example ENST00000288602,ENST00000275493","required":true,"type":"array","items":{"type":"string"},"collectionFormat":"csv"}],"responses":{"200":{"description":"OK","schema":{"type":"array","items":{"$ref":"#/definitions/HotspotMutation"}}},"401":{"description":"Unauthorized"},"403":{"description":"Forbidden"},"404":{"description":"Not Found"}}}},"/api/hotspots/3d/{hugoSymbols}":{"get":{"tags":["hotspot-controller"],"summary":"get all hotspot mutations for the specified genes","operationId":"fetch3dHotspotMutationsByGene_Legacy","consumes":["application/json"],"produces":["application/json"],"parameters":[{"name":"hugoSymbols","in":"path","description":"Comma separated list of hugo symbols. For example PTEN,BRAF,TP53","required":true,"type":"array","items":{"type":"string"},"collectionFormat":"csv"}],"responses":{"200":{"description":"OK","schema":{"type":"array","items":{"$ref":"#/definitions/HotspotMutation"}}},"401":{"description":"Unauthorized"},"403":{"description":"Forbidden"},"404":{"description":"Not Found"}}}},"/api/hotspots/single":{"get":{"tags":["hotspot-controller"],"summary":"get all single residue hotspot mutations","operationId":"fetchSingleResidueHotspotMutations","consumes":["application/json"],"produces":["application/json"],"responses":{"200":{"description":"OK","schema":{"type":"array","items":{"$ref":"#/definitions/HotspotMutation"}}},"401":{"description":"Unauthorized"},"403":{"description":"Forbidden"},"404":{"description":"Not Found"}}},"post":{"tags":["hotspot-controller"],"summary":"get all single residue hotspot mutations","operationId":"fetchSingleResidueHotspotMutations_1","consumes":["application/json"],"produces":["application/json"],"responses":{"200":{"description":"OK","schema":{"type":"array","items":{"$ref":"#/definitions/HotspotMutation"}}},"201":{"description":"Created"},"401":{"description":"Unauthorized"},"403":{"description":"Forbidden"},"404":{"description":"Not Found"}}}},"/api/hotspots/single/byGene":{"post":{"tags":["hotspot-controller"],"summary":"get hotspot mutations by hugo gene symbol","operationId":"fetchSingleResidueHotspotMutationsByGenePOST","consumes":["application/json"],"produces":["application/json"],"parameters":[{"in":"body","name":"hugoSymbols","description":"List of hugo gene symbols. For example [\"PTEN\",\"BRAF\",\"TP53\"]","required":true,"schema":{"type":"array","items":{"type":"string"}}}],"responses":{"200":{"description":"OK","schema":{"type":"array","items":{"$ref":"#/definitions/HotspotMutation"}}},"201":{"description":"Created"},"401":{"description":"Unauthorized"},"403":{"description":"Forbidden"},"404":{"description":"Not Found"}}}},"/api/hotspots/single/byGene/{hugoSymbols}":{"get":{"tags":["hotspot-controller"],"summary":"get hotspot mutations by hugo gene symbol","operationId":"fetchSingleResidueHotspotMutationsByGeneGET","consumes":["application/json"],"produces":["application/json"],"parameters":[{"name":"hugoSymbols","in":"path","description":"Comma separated list of hugo gene symbols. For example PTEN,BRAF,TP53","required":true,"type":"array","items":{"type":"string"},"collectionFormat":"csv"}],"responses":{"200":{"description":"OK","schema":{"type":"array","items":{"$ref":"#/definitions/HotspotMutation"}}},"401":{"description":"Unauthorized"},"403":{"description":"Forbidden"},"404":{"description":"Not Found"}}}},"/api/hotspots/single/byTranscript":{"post":{"tags":["hotspot-controller"],"summary":"get hotspot mutations by transcript id","operationId":"fetchSingleResidueHotspotMutationsByTranscriptPOST","consumes":["application/json"],"produces":["application/json"],"parameters":[{"in":"body","name":"transcriptIds","description":"List of transcript IDs. For example [\"ENST00000288602\",\"ENST00000275493\"]","required":true,"schema":{"type":"array","items":{"type":"string"}}}],"responses":{"200":{"description":"OK","schema":{"type":"array","items":{"$ref":"#/definitions/HotspotMutation"}}},"201":{"description":"Created"},"401":{"description":"Unauthorized"},"403":{"description":"Forbidden"},"404":{"description":"Not Found"}}}},"/api/hotspots/single/byTranscript/{transcriptIds}":{"get":{"tags":["hotspot-controller"],"summary":"get hotspot mutations by transcript id","operationId":"fetchSingleResidueHotspotMutationsByTranscriptGET","consumes":["application/json"],"produces":["application/json"],"parameters":[{"name":"transcriptIds","in":"path","description":"Comma separated list of transcript IDs. For example ENST00000288602,ENST00000275493","required":true,"type":"array","items":{"type":"string"},"collectionFormat":"csv"}],"responses":{"200":{"description":"OK","schema":{"type":"array","items":{"$ref":"#/definitions/HotspotMutation"}}},"401":{"description":"Unauthorized"},"403":{"description":"Forbidden"},"404":{"description":"Not Found"}}}},"/api/metadata":{"get":{"tags":["hotspot-controller"],"summary":"get metadata","operationId":"fetchMetadata","consumes":["application/json"],"produces":["application/json"],"responses":{"200":{"description":"OK","schema":{"type":"object","additionalProperties":{"type":"string"}}},"401":{"description":"Unauthorized"},"403":{"description":"Forbidden"},"404":{"description":"Not Found"}}},"post":{"tags":["hotspot-controller"],"summary":"get metadata","operationId":"fetchMetadata_1","consumes":["application/json"],"produces":["application/json"],"responses":{"200":{"description":"OK","schema":{"type":"object","additionalProperties":{"type":"string"}}},"201":{"description":"Created"},"401":{"description":"Unauthorized"},"403":{"description":"Forbidden"},"404":{"description":"Not Found"}}}},"/api/variants":{"get":{"tags":["hotspot-controller"],"summary":"get all variant tumor type composition","operationId":"fetchAllVariantsGET","consumes":["application/json"],"produces":["application/json"],"responses":{"200":{"description":"OK","schema":{"type":"array","items":{"$ref":"#/definitions/TumorTypeComposition"}}},"401":{"description":"Unauthorized"},"403":{"description":"Forbidden"},"404":{"description":"Not Found"}}},"post":{"tags":["hotspot-controller"],"summary":"get variant tumor type compositions","operationId":"fetchVariantsPOST","consumes":["application/json"],"produces":["application/json"],"parameters":[{"name":"hugoSymbol","in":"query","description":"Hugo gene symbol, for example BRAF","required":false,"type":"string"},{"in":"body","name":"aminoAcidChanges","description":"List of amino acid change values. For example [\"V600E\",\"V600K\"]","required":false,"schema":{"type":"array","items":{"type":"string"}}}],"responses":{"200":{"description":"OK","schema":{"type":"array","items":{"$ref":"#/definitions/TumorTypeComposition"}}},"201":{"description":"Created"},"401":{"description":"Unauthorized"},"403":{"description":"Forbidden"},"404":{"description":"Not Found"}}}},"/api/variants/{hugoSymbol}/{aminoAcidChanges}":{"get":{"tags":["hotspot-controller"],"summary":"get variant tumor type compositions by gene and amino acid change","operationId":"fetchVariantsGET","consumes":["application/json"],"produces":["application/json"],"parameters":[{"name":"hugoSymbol","in":"path","description":"Hugo gene symbol, for example BRAF","required":true,"type":"string"},{"name":"aminoAcidChanges","in":"path","description":"Comma separated list of amino acid change values. For example V600E,V600K","required":true,"type":"array","items":{"type":"string"},"collectionFormat":"csv"}],"responses":{"200":{"description":"OK","schema":{"type":"array","items":{"$ref":"#/definitions/TumorTypeComposition"}}},"401":{"description":"Unauthorized"},"403":{"description":"Forbidden"},"404":{"description":"Not Found"}}}}},"definitions":{"HotspotMutation":{"required":["hugoSymbol","residue","tumorCount","tumorTypeComposition","variantAminoAcid"],"properties":{"aminoAcidPosition":{"description":"Amino Acid Position","$ref":"#/definitions/IntegerRange"},"hugoSymbol":{"type":"string","description":"Hugo gene symbol"},"residue":{"type":"string","description":"Residue"},"transcriptId":{"type":"string","description":"Ensemble Transcript Id"},"tumorCount":{"type":"integer","format":"int32","description":"Number of Tumors"},"tumorTypeComposition":{"type":"object","description":"Tumor Type Composition"},"tumorTypeCount":{"type":"integer","format":"int32","description":"Number of Distinct Tumor Types"},"variantAminoAcid":{"type":"object","description":"Variant Amino Acid"}}},"IntegerRange":{"properties":{"end":{"type":"integer","format":"int32"},"start":{"type":"integer","format":"int32"}}},"TumorTypeComposition":{"properties":{"aminoAcidPosition":{"$ref":"#/definitions/IntegerRange"},"hugoSymbol":{"type":"string"},"referenceAminoAcid":{"type":"string"},"residue":{"type":"string"},"tumorTypeComposition":{"type":"object"},"variantAminoAcid":{"type":"string"}}},"Cluster":{"required":["clusterId","hugoSymbol","pValue","pdbChains","residues"],"properties":{"clusterId":{"type":"string","description":"Cluster ID"},"hugoSymbol":{"type":"string","description":"Hugo gene symbol"},"pValue":{"type":"string","description":"P-value"},"pdbChains":{"type":"object","description":"PDB chains (with p-value)"},"residues":{"type":"object","description":"Residues within this cluster (with overall tumor count)"}}}}}
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "Cancer Hotspots API",
+    "version": "2.0",
+    "title": "Cancer Hotspots API",
+    "contact": {
+      "name": "CMO, MSKCC"
+    },
+    "license": {
+      "name": "GNU AFFERO GENERAL PUBLIC LICENSE Version 3",
+      "url": "https://github.com/cBioPortal/cancerhotspots/blob/master/LICENSE"
+    }
+  },
+  "host": "cancerhotspots.org",
+  "basePath": "/",
+  "tags": [
+    {
+      "name": "hotspot-controller",
+      "description": "Hotspot Controller"
+    }
+  ],
+  "paths": {
+    "/api/clusters": {
+      "post": {
+        "tags": [
+          "hotspot-controller"
+        ],
+        "summary": "get clusters",
+        "operationId": "fetchClustersPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "clusterIds",
+            "description": "List of cluster ids, for example [1,2,3]",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "hugoSymbol",
+            "in": "query",
+            "description": "Hugo gene symbol, for example BRAF",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "residue",
+            "in": "query",
+            "description": "Residue, for example F595",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Cluster"
+              }
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/clusters/id/{clusterIds}": {
+      "get": {
+        "tags": [
+          "hotspot-controller"
+        ],
+        "summary": "get clusters by cluster id",
+        "operationId": "fetchClustersByClusterIdGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "clusterIds",
+            "in": "path",
+            "description": "Comma separated list of cluster ids, for example 1,2,3",
+            "required": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "csv"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Cluster"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/clusters/{hugoSymbol}": {
+      "get": {
+        "tags": [
+          "hotspot-controller"
+        ],
+        "summary": "get clusters by hugo symbol",
+        "operationId": "fetchClustersByHugoSymbolGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "hugoSymbol",
+            "in": "path",
+            "description": "Hugo gene symbol, for example BRAF",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Cluster"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/clusters/{hugoSymbol}/{residue}": {
+      "get": {
+        "tags": [
+          "hotspot-controller"
+        ],
+        "summary": "get clusters by hugo symbol and residue",
+        "operationId": "fetchClustersByHugoSymbolAndResidueGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "hugoSymbol",
+            "in": "path",
+            "description": "Hugo gene symbol, for example BRAF",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "residue",
+            "in": "path",
+            "description": "Residue, for example F595",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Cluster"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/hotspots/3d": {
+      "get": {
+        "tags": [
+          "hotspot-controller"
+        ],
+        "summary": "get all 3D hotspot mutations",
+        "operationId": "fetch3dHotspotMutationsPOST_1",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "hugoSymbols",
+            "in": "query",
+            "description": "Comma separated list of hugo symbols. For example PTEN,BRAF,TP53",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HotspotMutation"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "hotspot-controller"
+        ],
+        "summary": "get all 3D hotspot mutations",
+        "operationId": "fetch3dHotspotMutationsPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "hugoSymbols",
+            "in": "query",
+            "description": "Comma separated list of hugo symbols. For example PTEN,BRAF,TP53",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HotspotMutation"
+              }
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/hotspots/3d/byGene": {
+      "post": {
+        "tags": [
+          "hotspot-controller"
+        ],
+        "summary": "get all hotspot mutations for the specified genes",
+        "operationId": "fetch3dHotspotMutationsByGenePOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "hugoSymbols",
+            "description": "List of hugo symbols. For example [\"PTEN\",\"BRAF\",\"TP53\"]",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HotspotMutation"
+              }
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/hotspots/3d/byGene/{hugoSymbols}": {
+      "get": {
+        "tags": [
+          "hotspot-controller"
+        ],
+        "summary": "get all hotspot mutations for the specified genes",
+        "operationId": "fetch3dHotspotMutationsByGeneGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "hugoSymbols",
+            "in": "path",
+            "description": "Comma separated list of hugo symbols. For example PTEN,BRAF,TP53",
+            "required": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "csv"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HotspotMutation"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/hotspots/3d/byTranscript": {
+      "post": {
+        "tags": [
+          "hotspot-controller"
+        ],
+        "summary": "get 3D hotspot mutations by transcript id",
+        "operationId": "fetch3dHotspotMutationsByTranscriptPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "transcriptIds",
+            "description": "List of transcript IDs. For example [\"ENST00000288602\",\"ENST00000275493\"]",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HotspotMutation"
+              }
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/hotspots/3d/byTranscript/{transcriptIds}": {
+      "get": {
+        "tags": [
+          "hotspot-controller"
+        ],
+        "summary": "get 3D hotspot mutations by transcript id",
+        "operationId": "fetch3dHotspotMutationsByTranscriptGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "transcriptIds",
+            "in": "path",
+            "description": "Comma separated list of transcript IDs. For example ENST00000288602,ENST00000275493",
+            "required": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "csv"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HotspotMutation"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/hotspots/3d/{hugoSymbols}": {
+      "get": {
+        "tags": [
+          "hotspot-controller"
+        ],
+        "summary": "get all hotspot mutations for the specified genes",
+        "operationId": "fetch3dHotspotMutationsByGene_Legacy",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "hugoSymbols",
+            "in": "path",
+            "description": "Comma separated list of hugo symbols. For example PTEN,BRAF,TP53",
+            "required": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "csv"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HotspotMutation"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/hotspots/single": {
+      "get": {
+        "tags": [
+          "hotspot-controller"
+        ],
+        "summary": "get all single residue hotspot mutations",
+        "operationId": "fetchSingleResidueHotspotMutations",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HotspotMutation"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "hotspot-controller"
+        ],
+        "summary": "get all single residue hotspot mutations",
+        "operationId": "fetchSingleResidueHotspotMutations_1",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HotspotMutation"
+              }
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/hotspots/single/byGene": {
+      "post": {
+        "tags": [
+          "hotspot-controller"
+        ],
+        "summary": "get hotspot mutations by hugo gene symbol",
+        "operationId": "fetchSingleResidueHotspotMutationsByGenePOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "hugoSymbols",
+            "description": "List of hugo gene symbols. For example [\"PTEN\",\"BRAF\",\"TP53\"]",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HotspotMutation"
+              }
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/hotspots/single/byGene/{hugoSymbols}": {
+      "get": {
+        "tags": [
+          "hotspot-controller"
+        ],
+        "summary": "get hotspot mutations by hugo gene symbol",
+        "operationId": "fetchSingleResidueHotspotMutationsByGeneGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "hugoSymbols",
+            "in": "path",
+            "description": "Comma separated list of hugo gene symbols. For example PTEN,BRAF,TP53",
+            "required": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "csv"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HotspotMutation"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/hotspots/single/byTranscript": {
+      "post": {
+        "tags": [
+          "hotspot-controller"
+        ],
+        "summary": "get hotspot mutations by transcript id",
+        "operationId": "fetchSingleResidueHotspotMutationsByTranscriptPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "transcriptIds",
+            "description": "List of transcript IDs. For example [\"ENST00000288602\",\"ENST00000275493\"]",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HotspotMutation"
+              }
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/hotspots/single/byTranscript/{transcriptIds}": {
+      "get": {
+        "tags": [
+          "hotspot-controller"
+        ],
+        "summary": "get hotspot mutations by transcript id",
+        "operationId": "fetchSingleResidueHotspotMutationsByTranscriptGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "transcriptIds",
+            "in": "path",
+            "description": "Comma separated list of transcript IDs. For example ENST00000288602,ENST00000275493",
+            "required": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "csv"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/HotspotMutation"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/metadata": {
+      "get": {
+        "tags": [
+          "hotspot-controller"
+        ],
+        "summary": "get metadata",
+        "operationId": "fetchMetadata",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "hotspot-controller"
+        ],
+        "summary": "get metadata",
+        "operationId": "fetchMetadata_1",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/variants": {
+      "get": {
+        "tags": [
+          "hotspot-controller"
+        ],
+        "summary": "get all variant tumor type composition",
+        "operationId": "fetchAllVariantsGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/TumorTypeComposition"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "hotspot-controller"
+        ],
+        "summary": "get variant tumor type compositions",
+        "operationId": "fetchVariantsPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "hugoSymbol",
+            "in": "query",
+            "description": "Hugo gene symbol, for example BRAF",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "aminoAcidChanges",
+            "description": "List of amino acid change values. For example [\"V600E\",\"V600K\"]",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/TumorTypeComposition"
+              }
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/api/variants/{hugoSymbol}/{aminoAcidChanges}": {
+      "get": {
+        "tags": [
+          "hotspot-controller"
+        ],
+        "summary": "get variant tumor type compositions by gene and amino acid change",
+        "operationId": "fetchVariantsGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "hugoSymbol",
+            "in": "path",
+            "description": "Hugo gene symbol, for example BRAF",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "aminoAcidChanges",
+            "in": "path",
+            "description": "Comma separated list of amino acid change values. For example V600E,V600K",
+            "required": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "csv"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/TumorTypeComposition"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "HotspotMutation": {
+      "required": [
+        "hugoSymbol",
+        "residue",
+        "tumorCount",
+        "tumorTypeComposition",
+        "variantAminoAcid"
+      ],
+      "properties": {
+        "aminoAcidPosition": {
+          "description": "Amino Acid Position",
+          "$ref": "#/definitions/IntegerRange"
+        },
+        "hugoSymbol": {
+          "type": "string",
+          "description": "Hugo gene symbol"
+        },
+        "residue": {
+          "type": "string",
+          "description": "Residue"
+        },
+        "transcriptId": {
+          "type": "string",
+          "description": "Ensemble Transcript Id"
+        },
+        "tumorCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Number of Tumors"
+        },
+        "tumorTypeComposition": {
+          "type": "object",
+          "description": "Tumor Type Composition"
+        },
+        "tumorTypeCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Number of Distinct Tumor Types"
+        },
+        "variantAminoAcid": {
+          "type": "object",
+          "description": "Variant Amino Acid"
+        }
+      }
+    },
+    "IntegerRange": {
+      "properties": {
+        "end": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "start": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "TumorTypeComposition": {
+      "properties": {
+        "aminoAcidPosition": {
+          "$ref": "#/definitions/IntegerRange"
+        },
+        "hugoSymbol": {
+          "type": "string"
+        },
+        "referenceAminoAcid": {
+          "type": "string"
+        },
+        "residue": {
+          "type": "string"
+        },
+        "tumorTypeComposition": {
+          "type": "object"
+        },
+        "variantAminoAcid": {
+          "type": "string"
+        }
+      }
+    },
+    "Cluster": {
+      "required": [
+        "clusterId",
+        "hugoSymbol",
+        "pValue",
+        "pdbChains",
+        "residues"
+      ],
+      "properties": {
+        "clusterId": {
+          "type": "string",
+          "description": "Cluster ID"
+        },
+        "hugoSymbol": {
+          "type": "string",
+          "description": "Hugo gene symbol"
+        },
+        "pValue": {
+          "type": "string",
+          "description": "P-value"
+        },
+        "pdbChains": {
+          "type": "object",
+          "description": "PDB chains (with p-value)"
+        },
+        "residues": {
+          "type": "object",
+          "description": "Residues within this cluster (with overall tumor count)"
+        }
+      }
+    }
+  }
+}

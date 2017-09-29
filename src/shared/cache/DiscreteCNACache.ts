@@ -1,12 +1,12 @@
 import * as _ from 'lodash';
 import {AugmentedData, CacheData, default as LazyMobXCache} from "shared/lib/LazyMobXCache";
 import client from "shared/api/cbioportalClientInstance";
-import {DiscreteCopyNumberData, DiscreteCopyNumberFilter, GeneticProfile} from "shared/api/generated/CBioPortalAPI";
+import {DiscreteCopyNumberData, DiscreteCopyNumberFilter, MolecularProfile} from "shared/api/generated/CBioPortalAPI";
 
 export type DiscreteCNACacheDataType = CacheData<DiscreteCopyNumberData>;
 type Query = {studyId:string, sampleId:string, entrezGeneId:number};
 
-async function fetchForStudy(queries:Query[], studyId:string, geneticProfileIdDiscrete:string|undefined):Promise<AugmentedData<DiscreteCopyNumberData, string>> {
+async function fetchForStudy(queries:Query[], studyId:string, molecularProfileIdDiscrete:string|undefined):Promise<AugmentedData<DiscreteCopyNumberData, string>> {
     try {
         const uniqueSamples = _.uniq(queries.map(q=>q.sampleId));
         const uniqueGenes = _.uniq(queries.map(q=>q.entrezGeneId));
@@ -39,12 +39,12 @@ async function fetchForStudy(queries:Query[], studyId:string, geneticProfileIdDi
             });
         }
         const allData:DiscreteCopyNumberData[][] = await Promise.all(filters.map(filter=>{
-            if (typeof geneticProfileIdDiscrete === "undefined") {
-                return Promise.reject("No genetic profile id given.");
+            if (typeof molecularProfileIdDiscrete === "undefined") {
+                return Promise.reject("No molecular profile id given.");
             } else {
-                return client.fetchDiscreteCopyNumbersInGeneticProfileUsingPOST({
+                return client.fetchDiscreteCopyNumbersInMolecularProfileUsingPOST({
                     projection: "DETAILED",
-                    geneticProfileId: geneticProfileIdDiscrete,
+                    molecularProfileId: molecularProfileIdDiscrete,
                     discreteCopyNumberFilter: filter,
                     discreteCopyNumberEventType: "ALL"
                 });
@@ -55,16 +55,16 @@ async function fetchForStudy(queries:Query[], studyId:string, geneticProfileIdDi
         throw err;
     }
 }
-function fetch(queries:Query[], studyToGeneticProfileDiscrete:{[studyId:string]:GeneticProfile}):Promise<AugmentedData<DiscreteCopyNumberData, string>[]> {
-    if (!studyToGeneticProfileDiscrete) {
-        throw "No study to genetic profile id map given";
+function fetch(queries:Query[], studyToMolecularProfileDiscrete:{[studyId:string]:MolecularProfile}):Promise<AugmentedData<DiscreteCopyNumberData, string>[]> {
+    if (!studyToMolecularProfileDiscrete) {
+        throw "No study to molecular profile id map given";
     } else {
         const studyToQueries = _.groupBy(queries, 'studyId');
         return Promise.all(Object.keys(studyToQueries)
             .map(studyId=>{
-                const profile = studyToGeneticProfileDiscrete[studyId];
+                const profile = studyToMolecularProfileDiscrete[studyId];
                 if (profile) {
-                    return fetchForStudy(studyToQueries[studyId], studyId, profile.geneticProfileId);
+                    return fetchForStudy(studyToQueries[studyId], studyId, profile.molecularProfileId);
                 } else {
                     return Promise.resolve({data: [], meta: studyId});
                 }
@@ -76,10 +76,10 @@ function key(d:{studyId?:string, sampleId:string, entrezGeneId:number}, m?:strin
     return `${studyId}~${d.sampleId}~${d.entrezGeneId}`;
 }
 export default class DiscreteCNACache extends LazyMobXCache<DiscreteCopyNumberData, Query, string> {
-    constructor(private studyToGeneticProfileDiscrete?:{[studyId:string]:GeneticProfile}) {
-        super(key, key, fetch, studyToGeneticProfileDiscrete);
+    constructor(private studyToMolecularProfileDiscrete?:{[studyId:string]:MolecularProfile}) {
+        super(key, key, fetch, studyToMolecularProfileDiscrete);
     }
     public get isActive():boolean {
-        return !!(this.studyToGeneticProfileDiscrete && Object.keys(this.studyToGeneticProfileDiscrete).length > 0);
+        return !!(this.studyToMolecularProfileDiscrete && Object.keys(this.studyToMolecularProfileDiscrete).length > 0);
     }
 }

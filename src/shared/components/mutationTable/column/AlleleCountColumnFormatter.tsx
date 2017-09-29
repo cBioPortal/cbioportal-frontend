@@ -49,4 +49,18 @@ export default class AlleleCountColumnFormatter
             </div>
         );
     }
+    
+    public static getReads(mutations:Mutation[], dataField:string): string|string[]
+    {
+        let result = [];
+        if (mutations) {
+            for (let mutation of mutations) {
+                result.push((mutation as any)[dataField]);
+            }
+        }
+        if (result.length == 1) {
+            return result[0];
+        }
+        return result;
+    }
 }

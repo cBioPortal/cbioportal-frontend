@@ -38,7 +38,7 @@ type ICopyNumberTableWrapperProps = {
     copyNumberCountCache?:CopyNumberCountCache;
     mrnaExprRankCache?:MrnaExprRankCache;
     gisticData:IGisticData;
-    mrnaExprRankGeneticProfileId?:string;
+    mrnaExprRankMolecularProfileId?:string;
     status:"loading"|"available"|"unavailable";
 };
 
@@ -60,6 +60,7 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
                 name: "Tumors",
                 render:(d:DiscreteCopyNumberData[])=>TumorColumnFormatter.renderFunction(d, this.props.sampleManager),
                 sortBy:(d:DiscreteCopyNumberData[])=>TumorColumnFormatter.getSortValue(d, this.props.sampleManager),
+                download: (d:DiscreteCopyNumberData[])=>TumorColumnFormatter.getSample(d),
                 order: 20
             });
         }
@@ -136,7 +137,7 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
             order: 80
         });
 
-        if ((numSamples === 1) && this.props.mrnaExprRankGeneticProfileId) {
+        if ((numSamples === 1) && this.props.mrnaExprRankMolecularProfileId) {
             columns.push({
                 name: "mRNA Expr.",
                 render: (d:DiscreteCopyNumberData[])=>(this.props.mrnaExprRankCache

@@ -1,0 +1,19 @@
+.polyPhen2-probably_damaging {
+  color: #C83C3C;
+  font-weight:bold;
+}
+
+.polyPhen2-possibly_damaging {
+  color: #988A3E;
+  font-weight:bold;
+}
+
+.polyPhen2-benign {
+  color: #909090;
+  font-weight:bold;
+}
+.polyPhen2-tooltip-table {
+  td:first-child {
+    padding-right: 5px;
+  }
+}
