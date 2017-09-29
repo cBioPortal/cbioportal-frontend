@@ -4,6 +4,7 @@ import {Button, ButtonGroup} from 'react-bootstrap';
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import StructureViewerPanel from "shared/components/structureViewer/StructureViewerPanel";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
+import GenomeNexusEnrichmentCache from "shared/cache/GenomeNexusEnrichment";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import PubMedCache from "shared/cache/PubMedCache";
 import CancerTypeCache from "shared/cache/CancerTypeCache";
@@ -24,6 +25,7 @@ export interface IMutationMapperConfig {
     showHotspot?: boolean;
     showMyCancerGenome?: boolean;
     showOncoKB?: boolean;
+    showGenomeNexus?: boolean;
 }
 
 export interface IMutationMapperProps {
@@ -32,6 +34,7 @@ export interface IMutationMapperProps {
     studyId?: string;
     myCancerGenomeData?: IMyCancerGenomeData;
     discreteCNACache?:DiscreteCNACache;
+    genomeNexusEnrichmentCache?:GenomeNexusEnrichmentCache;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
     cancerTypeCache?:CancerTypeCache;
     mutationCountCache?:MutationCountCache;
@@ -65,24 +68,20 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
     @computed get geneSummary():JSX.Element {
         return (
             <div>
-                {this.props.store.gene.result && this.props.store.gene.result.length > 0 && (
-                    <h4>{this.props.store.gene.result.hugoGeneSymbol}</h4>
-                )}
+                <h4>{this.props.store.gene.hugoGeneSymbol}</h4>
             </div>
         );
     }
 
     @computed get mutationRateSummary():JSX.Element|null {
         // TODO we should not be even calculating mskImpactGermlineConsentedPatientIds for studies other than msk impact
-        if (this.props.store.gene.result &&
-            this.props.store.gene.result.length > 0 &&
-            this.props.store.germlineConsentedSamples.result &&
+        if (this.props.store.germlineConsentedSamples.result &&
             this.props.store.mutationData.isComplete &&
             this.props.store.mutationData.result.length > 0) {
             return (
                 <MutationRateSummary
-                    hugoGeneSymbol={this.props.store.gene.result.hugoGeneSymbol}
-                    geneticProfileIdToGeneticProfile={this.props.store.geneticProfileIdToGeneticProfile}
+                    hugoGeneSymbol={this.props.store.gene.hugoGeneSymbol}
+                    molecularProfileIdToMolecularProfile={this.props.store.molecularProfileIdToMolecularProfile}
                     mutations={this.props.store.mutationData.result}
                     samples={this.props.store.samples.result!}
                     germlineConsentedSamples={this.props.store.germlineConsentedSamples}
@@ -94,6 +93,9 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
     }
 
     public render() {
+
+        console.log("rendering mapper");
+
         return (
             <div>
                 {
@@ -103,16 +105,17 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                             pdbChainDataStore={this.props.store.pdbChainDataStore}
                             pdbAlignmentIndex={this.props.store.indexedAlignmentData}
                             pdbHeaderCache={this.props.pdbHeaderCache}
-                            pdbPositionMappingCache={this.props.store.pdbPositionMappingCache}
+                            residueMappingCache={this.props.store.residueMappingCache}
+                            uniprotId={this.props.store.uniprotId.result}
                             onClose={this.close3dPanel}
                             {...DEFAULT_PROTEIN_IMPACT_TYPE_COLORS}
                         />
                     )
                 }
 
-                <LoadingIndicator isLoading={this.props.store.mutationData.isPending || this.props.store.gene.isPending} />
+                <LoadingIndicator isLoading={this.props.store.mutationData.isPending} />
                 {
-                    (this.props.store.mutationData.isComplete && this.props.store.gene.result) && (
+                    (this.props.store.mutationData.isComplete) && (
                         <div>
                             <LoadingIndicator isLoading={this.props.store.pfamGeneData.isPending} />
                             { (!this.props.store.pfamGeneData.isPending) && (
@@ -181,8 +184,9 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                                 <ResultsViewMutationTable
                                     sampleIdToTumorType={this.props.store.sampleIdToTumorType}
                                     discreteCNACache={this.props.discreteCNACache}
-                                    geneticProfileIdToGeneticProfile={this.props.store.geneticProfileIdToGeneticProfile.result}
                                     studyIdToStudy={this.props.store.studyIdToStudy.result}
+                                    genomeNexusEnrichmentCache={this.props.genomeNexusEnrichmentCache}
+                                    molecularProfileIdToMolecularProfile={this.props.store.molecularProfileIdToMolecularProfile.result}
                                     oncoKbEvidenceCache={this.props.oncoKbEvidenceCache}
                                     pubMedCache={this.props.pubMedCache}
                                     mutationCountCache={this.props.mutationCountCache}
@@ -194,6 +198,7 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                                     civicGenes={this.props.store.civicGenes.result}
                                     civicVariants={this.props.store.civicVariants.result}
                                     enableOncoKb={this.props.config.showOncoKB}
+                                    enableGenomeNexus={this.props.config.showGenomeNexus}
                                     enableHotspot={this.props.config.showHotspot}
                                     enableMyCancerGenome={this.props.config.showMyCancerGenome}
                                     enableCivic={this.props.config.showCivic}

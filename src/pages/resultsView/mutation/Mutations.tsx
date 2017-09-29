@@ -3,9 +3,12 @@ import {observer} from "mobx-react";
 import {MSKTabs, MSKTab} from "shared/components/MSKTabs/MSKTabs";
 import {ResultsViewPageStore} from "../ResultsViewPageStore";
 import MutationMapper from "./MutationMapper";
-import {observable} from "mobx";
+import {observable, computed} from "mobx";
 import AppConfig from 'appConfig';
 import "./mutations.scss";
+import {filterCBioPortalWebServiceData} from '../../../shared/lib/oql/oqlfilter';
+import accessors from '../../../shared/lib/oql/accessors';
+import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator";
 
 export interface IMutationsPageProps {
     routing?: any;
@@ -24,23 +27,29 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
         this.mutationsGeneTab = props.genes[0];
     }
 
+
     public render() {
         // use routing if available, if not fall back to the observable variable
         const activeTabId = this.props.routing ?
             this.props.routing.location.query.mutationsGeneTab : this.mutationsGeneTab;
 
         return (
-            <MSKTabs
-                id="mutationsPageTabs"
-                activeTabId={activeTabId}
-                onTabClick={(id:string) => this.handleTabChange(id)}
-                className="mainTabs resultsPageMutationsGeneTabs"
-                enablePagination={true}
-                arrowStyle={{'line-height':.8}}
-                tabButtonStyle="pills"
-            >
-                {this.generateTabs(this.props.genes)}
-            </MSKTabs>
+            <div>
+                <Loader isLoading={this.props.store.mutationMapperStores.isPending} />
+                {(this.props.store.mutationMapperStores.isComplete) && (
+                    <MSKTabs
+                        id="mutationsPageTabs"
+                        activeTabId={activeTabId}
+                        onTabClick={(id:string) => this.handleTabChange(id)}
+                        className="secondaryTabs resultsPageMutationsGeneTabs"
+                        enablePagination={true}
+                        arrowStyle={{'line-height':.8}}
+                        tabButtonStyle="pills"
+                    >
+                        {this.generateTabs(this.props.genes)}
+                    </MSKTabs>
+                )}
+            </div>
         );
     }
     
@@ -56,7 +65,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
             'cursor': 'pointer',
             'line-height': .8
         }
-        
+
         genes.forEach((gene: string) => {
             const mutationMapperStore = this.props.store.getMutationMapperStore(gene);
 
@@ -67,6 +76,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
                         <MutationMapper
                             store={mutationMapperStore}
                             discreteCNACache={this.props.store.discreteCNACache}
+                            genomeNexusEnrichmentCache={this.props.store.genomeNexusEnrichmentCache}
                             oncoKbEvidenceCache={this.props.store.oncoKbEvidenceCache}
                             pubMedCache={this.props.store.pubMedCache}
                             cancerTypeCache={this.props.store.cancerTypeCache}

@@ -6,6 +6,12 @@ th.sort-asc:after {
   content: ' \25B2';
 }
 
+.cbioportal-frontend .table > thead > tr > th.multilineHeader {
+  vertical-align: top;
+  line-height: 1.1;
+  padding-bottom: 4px;
+}
+
 .topPagination {
   .textBetweenButtons {
     opacity: 1.00 !important;

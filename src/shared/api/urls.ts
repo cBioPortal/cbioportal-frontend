@@ -76,8 +76,22 @@ export function getOncoKbApiUrl() {
     }
 
 }
+export function getGenomeNexusApiUrl() {
+    let url = (window as any).genomeNexusApiUrl;
+    if (typeof url === 'string') {
+        // we need to support legacy configuration values
+        url = url.replace(/^http[s]?:\/\//,''); // get rid of protocol
+        url = url.replace(/\/$/,""); // get rid of trailing slashes
+        return cbioUrl(`proxy/${url}`)
+    } else {
+        return undefined;
+    }
+}
 export function getPdbAnnotationApiUrl() {
     return 'https://cbioportal.mskcc.org/pdb-annotation';
+}
+export function getG2SApiUrl() {
+    return 'https://g2s.genomenexus.org';
 }
 export function getTissueImageCheckUrl(filter:string) {
     return cbioUrl('proxy/cancer.digitalslidearchive.net/local_php/get_slide_list_from_db_groupid_not_needed.php', {
