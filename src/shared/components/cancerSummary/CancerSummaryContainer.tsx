@@ -9,17 +9,6 @@ import {CancerSummaryContent} from './CancerSummaryContent';
 import {ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
 import Loader from "../loadingIndicator/LoadingIndicator";
 
-const anchorStyle = {
-    'font-size': '12px',
-    'padding-left': '6px',
-    'padding-right': '6px',
-    'padding-top': '10px',
-    'padding-bottom': '10px',
-    'cursor': 'pointer',
-    'line-height': .8
-}
-
-
 @observer
 export default class CancerSummaryContainer extends React.Component<{store: ResultsViewPageStore},{}> {
 
@@ -44,14 +33,14 @@ export default class CancerSummaryContainer extends React.Component<{store: Resu
     private get tabs() {
 
         const geneTabs = _.map(this.props.store.alterationCountsForCancerTypesByGene.result, (geneData, geneName) => (
-            <MSKTab key={geneName} id={"summaryTab" + geneName} linkText={geneName} anchorStyle={anchorStyle}>
+            <MSKTab key={geneName} id={"summaryTab" + geneName} linkText={geneName}>
                 <CancerSummaryContent data={geneData} gene={geneName} width={this.resultsViewPageWidth}/>
             </MSKTab>
         ));
 
         // only add combined gene tab if there's more than one gene
         if (geneTabs.length > 1) {
-            geneTabs.unshift(<MSKTab key="all" id="allGenes" linkText="All Queried Genes" anchorStyle={anchorStyle}>
+            geneTabs.unshift(<MSKTab key="all" id="allGenes" linkText="All Queried Genes">
                 <CancerSummaryContent gene={'all'} width={this.resultsViewPageWidth}
                                       data={this.props.store.alterationCountsForCancerTypesForAllGenes.result!}/>
             </MSKTab>)
