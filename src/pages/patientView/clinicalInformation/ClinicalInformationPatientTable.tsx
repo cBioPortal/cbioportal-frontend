@@ -3,6 +3,7 @@ import {ClinicalData} from "../../../shared/api/generated/CBioPortalAPI";
 import LazyMobXTable from "shared/components/lazyMobXTable/LazyMobXTable";
 
 import styles from './style/patientTable.module.scss';
+import {SHOW_ALL_PAGE_SIZE} from "../../../shared/components/paginationControls/PaginationControls";
 
 export interface IClinicalInformationPatientTableProps {
     data: ClinicalData[];
@@ -59,6 +60,7 @@ export default class ClinicalInformationPatientTable extends React.Component<ICl
                   showPagination={false}
                   showColumnVisibility={false}
                   className={styles.patientTable}
+                  initialItemsPerPage={SHOW_ALL_PAGE_SIZE}
                   showFilter={(this.props.showFilter === false) ? false : true }
                   showCopyDownload={(this.props.showCopyDownload === false) ? false : true }
             />
