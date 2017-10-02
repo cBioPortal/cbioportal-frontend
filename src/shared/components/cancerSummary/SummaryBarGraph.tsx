@@ -4,8 +4,7 @@ import {computed, observable} from "mobx";
 import { ChartTooltipItem } from 'chart.js';
 import Chart, {ChartLegendItem} from 'chart.js';
 import {
-    IBarGraphConfigOptions, IBarGraphDataset,
-    ICancerTypeAlterationPlotData
+    IBarGraphConfigOptions, IBarGraphDataset, ICancerTypeAlterationCounts, ICancerTypeAlterationData
 } from './CancerSummaryContent';
 import {observer} from "mobx-react";
 import classnames from 'classnames';
@@ -136,7 +135,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
     }
 
     private getLegendNames(id:string) {
-        const names: Record<keyof ICancerTypeAlterationPlotData, string> = {
+        const names: Record<keyof ICancerTypeAlterationCounts, string> = {
             mutated: "Mutation",
             amp: "Amplification",
             homdel: "Deep Deletion",
