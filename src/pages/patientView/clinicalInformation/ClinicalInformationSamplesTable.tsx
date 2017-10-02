@@ -7,6 +7,7 @@ import TableHeaderControls from "shared/components/tableHeaderControls/TableHead
 import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
 
 import styles from './style/sampleTable.module.scss';
+import {SHOW_ALL_PAGE_SIZE} from "../../../shared/components/paginationControls/PaginationControls";
 
 interface IClinicalInformationSamplesTableProps {
     samples?: ClinicalDataBySampleId[];
@@ -33,7 +34,7 @@ export default class ClinicalInformationSamplesTable extends React.Component<ICl
                     (data[col.id].toString().toUpperCase().indexOf(filterStringUpper) > -1)
             }
         ));
-        return <SampleTableComponent columns={columns} data={tableData} className={styles.sampleTable} showPagination={false} showColumnVisibility={false}/>;
+        return <SampleTableComponent columns={columns} data={tableData} className={styles.sampleTable} showPagination={false} initialItemsPerPage={SHOW_ALL_PAGE_SIZE} showColumnVisibility={false}/>;
     }
 
     public prepareData(sampleInvertedData: IConvertedSamplesData) {
