@@ -263,7 +263,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
     public render() {
         let errorMessage = null;
         if (!this.hasAlterations()) {
-            errorMessage = <div className="alert alert-info">No alteration plot data.</div>;
+            errorMessage = <div className="alert alert-info">There are no alterations in this gene.</div>;
         }
         return (
             <div style={{width:this.width}} ref={(el: HTMLDivElement) => this.chartContainer = el}
