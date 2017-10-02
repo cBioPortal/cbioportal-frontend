@@ -15,6 +15,8 @@ export function hideArrow(tooltipEl: any) {
 }
 
 export default class PolyPhen2 extends React.Component<IPolyPhen2Props, {}> {
+    static POLYPHEN2_URL:string = "http://genetics.bwh.harvard.edu/pph2/";
+
     constructor(props: IPolyPhen2Props) {
         super(props);
         this.tooltipContent = this.tooltipContent.bind(this);
@@ -25,16 +27,13 @@ export default class PolyPhen2 extends React.Component<IPolyPhen2Props, {}> {
             <span className={`${annotationStyles["annotation-item-text"]}`}/>
         );
 
-        if (this.props.polyPhenPrediction === null || this.props.polyPhenPrediction === undefined || this.props.polyPhenPrediction.length === 0) {
-            //do not show any icon...
-        } else {
-            let text: string = this.props.polyPhenPrediction.split('_').length > 1? 
-                this.props.polyPhenPrediction.split('_')[1].substring(0,1).toUpperCase() : 
-                this.props.polyPhenPrediction.substring(0,1).toUpperCase();
+        if (this.props.polyPhenPrediction && this.props.polyPhenPrediction.length > 0) {
             content = (
-                <span className={classNames(annotationStyles["annotation-item-text"], tooltipStyles[`polyPhen2-${this.props.polyPhenPrediction}`])}>{text}</span>
+                <span className={classNames(annotationStyles["annotation-item-text"], tooltipStyles[`polyPhen2-${this.props.polyPhenPrediction}`])}>
+                    <i className='fa fa-circle' aria-hidden="true"></i>
+                </span>
             );
-			const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
+            const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
             content = (
                 <DefaultTooltip
                     overlay={this.tooltipContent}
@@ -46,21 +45,22 @@ export default class PolyPhen2 extends React.Component<IPolyPhen2Props, {}> {
                 >
                     {content}
                 </DefaultTooltip>
-			);
+            );
         }
 
         return content;
     }
 
     private tooltipContent() {
-		const impact = this.props.polyPhenPrediction? (
-			<div>
-				<table className={tooltipStyles['polyPhen2-tooltip-table']}>
-					<tr><td>Impact</td><td><span className={tooltipStyles[`polyPhen2-${this.props.polyPhenPrediction}`]}>{this.props.polyPhenPrediction}</span></td></tr>
-					{this.props.polyPhenScore !== undefined && this.props.polyPhenScore !== null? <tr><td>Score</td><td><b>{this.props.polyPhenScore.toFixed(2)}</b></td></tr> : null}
-				</table>
-			</div>
-		) : null;
+        const impact = this.props.polyPhenPrediction? (
+            <div>
+                <table className={tooltipStyles['polyPhen2-tooltip-table']}>
+                    <tr><td>Source</td><td><a href="http://genetics.bwh.harvard.edu/pph2/">PolyPhen-2</a></td></tr>
+                    <tr><td>Impact</td><td><span className={tooltipStyles[`polyPhen2-${this.props.polyPhenPrediction}`]}>{this.props.polyPhenPrediction}</span></td></tr>
+                    {(this.props.polyPhenScore || this.props.polyPhenScore === 0) && (<tr><td>Score</td><td><b>{this.props.polyPhenScore.toFixed(2)}</b></td></tr>)}
+                </table>
+            </div>
+        ) : null;
 
         return (
             <span>
