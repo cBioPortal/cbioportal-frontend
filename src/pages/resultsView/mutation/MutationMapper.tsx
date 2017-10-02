@@ -67,8 +67,11 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
 
     @computed get geneSummary():JSX.Element {
         return (
-            <div>
+            <div style={{'paddingBottom':10}}>
                 <h4>{this.props.store.gene.hugoGeneSymbol}</h4>
+                {this.props.store.uniprotId.result && (
+                    <span>UniProt: <a href={`http://www.uniprot.org/uniprot/${this.props.store.uniprotId.result}`}>{this.props.store.uniprotId.result}</a></span>
+                )}
             </div>
         );
     }
