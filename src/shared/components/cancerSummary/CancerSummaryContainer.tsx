@@ -5,27 +5,16 @@ import {observer} from "mobx-react";
 import {MSKTabs, MSKTab} from "shared/components/MSKTabs/MSKTabs";
 import {If, Then, Else} from 'react-if';
 import {ThreeBounce} from 'better-react-spinkit';
-import {CancerSummaryContent} from './CancerSummaryContent';
+import {CancerSummaryContent, ICancerTypeAlterationData} from './CancerSummaryContent';
 import {ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
 import Loader from "../loadingIndicator/LoadingIndicator";
 
-const anchorStyle = {
-    'font-size': '12px',
-    'padding-left': '6px',
-    'padding-right': '6px',
-    'padding-top': '10px',
-    'padding-bottom': '10px',
-    'cursor': 'pointer',
-    'line-height': .8
-}
-
-
 @observer
-export default class CancerSummaryContainer extends React.Component<{store: ResultsViewPageStore},{}> {
+export default class CancerSummaryContainer extends React.Component<{ store: ResultsViewPageStore }, {}> {
 
     @observable private activeTab: string = "all";
-    @observable private resultsViewPageWidth:number = 1150;
-    private resultsViewPageContent:HTMLElement;
+    @observable private resultsViewPageWidth: number = 1150;
+    private resultsViewPageContent: HTMLElement;
 
     constructor() {
         super();
@@ -43,15 +32,26 @@ export default class CancerSummaryContainer extends React.Component<{store: Resu
     @computed
     private get tabs() {
 
-        const geneTabs = _.map(this.props.store.alterationCountsForCancerTypesByGene.result, (geneData, geneName) => (
-            <MSKTab key={geneName} id={"summaryTab" + geneName} linkText={geneName} anchorStyle={anchorStyle}>
-                <CancerSummaryContent data={geneData} gene={geneName} width={this.resultsViewPageWidth}/>
-            </MSKTab>
-        ));
+        const geneTabs = _.map(this.props.store.alterationCountsForCancerTypesByGene.result, (geneData, geneName: string) => {
+
+            // count how many alterations there are across all cancer types for this gene
+            const alterationCountAcrossCancerType = _.reduce(geneData,(count, alterationData:ICancerTypeAlterationData)=>{
+                return count + alterationData.alterationTotal;
+            },0);
+
+            // if there are no alterations for this gene, show a grey background
+            const anchorStyle = (alterationCountAcrossCancerType === 0) ? { backgroundColor:'#ccc', color:'#999' } : {};
+
+            return (
+                <MSKTab key={geneName} id={"summaryTab" + geneName} linkText={geneName} anchorStyle={anchorStyle}>
+                    <CancerSummaryContent data={geneData} gene={geneName} width={this.resultsViewPageWidth}/>
+                </MSKTab>
+            )
+        });
 
         // only add combined gene tab if there's more than one gene
         if (geneTabs.length > 1) {
-            geneTabs.unshift(<MSKTab key="all" id="allGenes" linkText="All Queried Genes" anchorStyle={anchorStyle}>
+            geneTabs.unshift(<MSKTab key="all" id="allGenes" linkText="All Queried Genes">
                 <CancerSummaryContent gene={'all'} width={this.resultsViewPageWidth}
                                       data={this.props.store.alterationCountsForCancerTypesForAllGenes.result!}/>
             </MSKTab>)
@@ -68,7 +68,7 @@ export default class CancerSummaryContainer extends React.Component<{store: Resu
                 <div ref={(el: HTMLDivElement) => this.resultsViewPageContent = el}>
                     <MSKTabs onTabClick={this.handleTabClick}
                              enablePagination={true}
-                             arrowStyle={{'line-height':.8}}
+                             arrowStyle={{'line-height': .8}}
                              tabButtonStyle="pills"
                              activeTabId={this.activeTab} className="secondaryTabs">
                         {this.tabs}
