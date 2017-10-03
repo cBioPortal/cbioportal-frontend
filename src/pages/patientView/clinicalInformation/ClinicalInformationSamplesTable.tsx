@@ -29,6 +29,7 @@ export default class ClinicalInformationSamplesTable extends React.Component<ICl
             {
                 name: col.id,
                 render: (data:ISampleRow)=><span>{data[col.id]}</span>,
+                download: (data:ISampleRow) => `${data[col.id]}`,
                 filter: (data:ISampleRow, filterString:string, filterStringUpper:string) =>
                     (data[col.id].toString().toUpperCase().indexOf(filterStringUpper) > -1)
             }
@@ -38,7 +39,7 @@ export default class ClinicalInformationSamplesTable extends React.Component<ICl
 
     public prepareData(sampleInvertedData: IConvertedSamplesData) {
 
-        const tableData: ISampleRow[] = []
+        const tableData: ISampleRow[] = [];
 
         for (const key in sampleInvertedData.items) {
             const rowData = sampleInvertedData.items[key];
