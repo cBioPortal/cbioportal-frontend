@@ -130,8 +130,15 @@ th.reactable-header-sort-asc:after {
         }
       }
     }
-
   }
+
+  li a {
+    font-size: 12px;
+    padding: 10px 6px !important;
+    cursor: pointer;
+    line-height: 0.8px;
+  }
+
 }
 
 .mainTabs {

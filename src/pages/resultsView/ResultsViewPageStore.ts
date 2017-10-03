@@ -34,8 +34,8 @@ import MutationMapper from "./mutation/MutationMapper";
 import {CacheData} from "../../shared/lib/LazyMobXCache";
 import {Dictionary} from "lodash";
 import {
-    ICancerTypeAlterationData,
-    ICancerTypeAlterationPlotData
+    ICancerTypeAlterationCounts,
+    ICancerTypeAlterationData
 } from "../../shared/components/cancerSummary/CancerSummaryContent";
 
 export type SamplesSpecificationElement = {studyId: string, sampleId: string, sampleListId: undefined} |
@@ -82,12 +82,11 @@ export function buildDefaultOQLProfile(profilesTypes: string[], zScoreThreshold:
 
 }
 
-
-export function countAlterationOccurences(samplesByCancerType: {[cancerType: string]: Sample[]}, alterationsBySampleId: {[id: string]: ExtendedAlteration[]}) {
+export function countAlterationOccurences(samplesByCancerType: {[cancerType: string]: Sample[]}, alterationsBySampleId: {[id: string]: ExtendedAlteration[]}):{ [entrezGeneId:string]:ICancerTypeAlterationData } {
 
     return _.mapValues(samplesByCancerType, (samples: Sample[], cancerType: string) => {
 
-        const counts: ICancerTypeAlterationData = {
+        const counts: ICancerTypeAlterationCounts = {
             mutated: 0,
             amp: 0, // 2
             homdel: 0, // -2
@@ -99,8 +98,14 @@ export function countAlterationOccurences(samplesByCancerType: {[cancerType: str
             protExpressionUp: 0,
             protExpressionDown: 0,
             multiple: 0,
-            total: samples.length
         };
+
+        const ret: ICancerTypeAlterationData = {
+            sampleTotal:samples.length,
+            alterationTotal:0,
+            alterationTypeCounts:counts
+        };
+
         // for each sample in cancer type
         _.forIn(samples, (sample: Sample) => {
             // there are alterations corresponding to that sample
@@ -110,6 +115,8 @@ export function countAlterationOccurences(samplesByCancerType: {[cancerType: str
 
                 //a sample could have multiple mutations.  we only want to to count one
                 const uniqueAlterations = _.uniqBy(alterations, (alteration) => alteration.alterationType);
+
+                ret.alterationTotal = uniqueAlterations.length;
 
                 // if we have multiple alterations, we just register this as "multiple" and do NOT add
                 // individual alterations to their respective counts
@@ -122,7 +129,7 @@ export function countAlterationOccurences(samplesByCancerType: {[cancerType: str
                         switch (alteration.alterationType) {
                             case AlterationTypeConstants.COPY_NUMBER_ALTERATION:
                                 // to do: type oqlfilter so that we can be sure alterationSubType is truly key of interface
-                                counts[(alteration.alterationSubType as keyof ICancerTypeAlterationPlotData)]++;
+                                counts[(alteration.alterationSubType as keyof ICancerTypeAlterationCounts)]++;
                                 break;
                             case AlterationTypeConstants.MRNA_EXPRESSION:
                                 if (alteration.alterationSubType === 'up') counts.mrnaExpressionUp++;
@@ -147,7 +154,9 @@ export function countAlterationOccurences(samplesByCancerType: {[cancerType: str
             }
 
         });
-        return counts;
+
+        return ret;
+
 
     });
 
