@@ -366,7 +366,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
     private get legend() {
         return (
             <div style={{maxWidth: 700, marginTop: 5}}>
-                <span style={{color: "#2153AA", fontWeight:"bold", fontSize:"14px", fontFamily:"verdana, arial, sans-serif"}}>
+                <span style={{color: "#2153AA", fontWeight:"bold", fontSize:"14px", fontFamily:"verdana, arial"}}>
                     Color Codes
                 </span>
                 <p>
@@ -379,24 +379,24 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                     Mutation types and corresponding color codes are as follows:
                     <ul>
                         <li>
-                            <span style={{color:this.props.missenseColor, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial, sans-serif"}}>
+                            <span style={{color:this.props.missenseColor, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial"}}>
                                 Missense Mutations
                             </span>
                         </li>
                         <li>
-                            <span style={{color:this.props.truncatingColor, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial, sans-serif"}}>
+                            <span style={{color:this.props.truncatingColor, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial"}}>
                                 Truncating Mutations
                             </span>
                             : Nonsense, Nonstop, Frameshift deletion, Frameshift insertion, Splice site
                         </li>
                         <li>
-                            <span style={{color:this.props.inframeColor, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial, sans-serif"}}>
+                            <span style={{color:this.props.inframeColor, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial"}}>
                                 Inframe Mutations
                             </span>
                             : Inframe deletion, Inframe insertion
                         </li>
                         <li>
-                            <span style={{color:this.props.otherColor, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial, sans-serif"}}>
+                            <span style={{color:this.props.otherColor, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial"}}>
                                 Other Mutations
                             </span>
                             : All other types of mutations
@@ -449,9 +449,6 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                         </div>
                         {'  '}
                 </span>
-                <Collapse isOpened={this.legendShown}>
-                    {this.legend}
-                </Collapse>
             </div>
         );
     }
@@ -461,6 +458,9 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
             return (
                 <div style={{display: "inline-block"}} onMouseEnter={this.handlers.onMouseEnterPlot} onMouseLeave={this.handlers.onMouseLeavePlot}>
                     {this.controls}
+                    <Collapse isOpened={this.legendShown}>
+                        {this.legend}
+                    </Collapse>
                     <LollipopPlot
                         ref={this.handlers.ref}
                         sequence={this.sequence}

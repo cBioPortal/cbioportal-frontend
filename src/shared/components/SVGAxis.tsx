@@ -39,7 +39,7 @@ export default class SVGAxis extends React.Component<SVGAxisProps, {}> {
                             textAnchor="end"
                             style={{
                                 fontSize:"10px",
-                                fontFamily:"sans-serif"
+                                fontFamily:"arial"
                             }}
                             dx={-1*labelPadding}
                             dy="0.4em"
@@ -55,7 +55,7 @@ export default class SVGAxis extends React.Component<SVGAxisProps, {}> {
                             textAnchor="middle"
                             style={{
                                 fontSize:"10px",
-                                fontFamily:"sans-serif"
+                                fontFamily:"arial"
                             }}
                             x={x2}
                             y={y2}
@@ -100,7 +100,7 @@ export default class SVGAxis extends React.Component<SVGAxisProps, {}> {
                 <text
                     textAnchor="middle"
                     style={{
-                        fontFamily: "sans-serif",
+                        fontFamily: "arial",
                         fontSize: "12px",
                         fontWeight: "normal"
                     }}
