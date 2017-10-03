@@ -25,7 +25,7 @@ export class CopyDownloadControls extends React.Component<ICopyDownloadControlsP
         className: "",
         showCopy: true,
         showDownload: true,
-        downloadFilename: "data.csv"
+        downloadFilename: "data.tsv"
     };
 
     constructor()

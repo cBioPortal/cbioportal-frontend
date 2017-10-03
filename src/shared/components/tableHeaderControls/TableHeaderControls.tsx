@@ -102,7 +102,7 @@ export default class TableHeaderControls extends React.Component<ITableHeaderCon
         showPagination:false,
         searchClassName: '',
         copyDownloadClassName: '',
-        downloadFilename: 'patient-clinical-attributes.csv',
+        downloadFilename: 'patient-clinical-attributes.tsv',
         downloadDataContainsHeader: false,
         paginationProps:{},
         columnVisibilityProps:{},
