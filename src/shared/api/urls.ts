@@ -29,7 +29,7 @@ export function getStudySummaryUrl(studyId:string) {
     return cbioUrl('study', {id: studyId}, 'summary');
 }
 export function getPubMedUrl(pmid:string) {
-    return `http://www.ncbi.nlm.nih.gov/pubmed/${pmid}`;
+    return `https://www.ncbi.nlm.nih.gov/pubmed/${pmid}`;
 }
 export function getOncoQueryDocUrl() {
     return cbioUrl('onco_query_lang_desc.jsp');

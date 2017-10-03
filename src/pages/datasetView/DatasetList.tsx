@@ -49,7 +49,7 @@ class CancerStudyCell extends React.Component<ICancerStudyCellProps,{}> {
         return (
             <span>
                 <a
-                    href={`http://www.cbioportal.org/study?id=${this.props.studyId}#summary`}
+                    href={`study?id=${this.props.studyId}#summary`}
                     target='_blank'
                 >
                     {this.props.name}

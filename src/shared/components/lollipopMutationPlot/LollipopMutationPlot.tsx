@@ -97,7 +97,7 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
 
     readonly swissProtId = remoteData({
         invoke: async()=>{
-            const myGeneData:Response = await request.get(`http://mygene.info/v3/gene/${this.props.entrezGeneId}?fields=uniprot`);
+            const myGeneData:Response = await request.get(`https://mygene.info/v3/gene/${this.props.entrezGeneId}?fields=uniprot`);
             return JSON.parse(myGeneData.text).uniprot["Swiss-Prot"];
         }
     });
@@ -107,7 +107,7 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
             this.swissProtId
         ],
         invoke: async()=>{
-            const data:Response = await request.get(`http://www.cbioportal.org/proxy/pfam.xfam.org/protein/${this.swissProtId.result}/graphic`);
+            const data:Response = await request.get(`proxy/pfam.xfam.org/protein/${this.swissProtId.result}/graphic`);
             return JSON.parse(data.text)[0];
         }
     }, {});
@@ -123,7 +123,7 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
                 // have to do a for loop because seamlessImmutable will make result of .map immutable,
                 // and that causes infinite loop here
                 responsePromises.push(
-                    request.get(`http://www.cbioportal.org/getMutationAligner.json?pfamAccession=${regions[i].metadata.accession}`)
+                    request.get(`getMutationAligner.json?pfamAccession=${regions[i].metadata.accession}`)
                 );
             }
             const allResponses = Promise.all(responsePromises);
@@ -332,7 +332,7 @@ export default class LollipopMutationPlot extends React.Component<LollipopMutati
 
     public downloadAsPDF(filename:string) {
         const svgelement = "<?xml version='1.0'?>"+this.toSVGDOMNode().outerHTML;
-        const servletURL = "http://www.cbioportal.org/svgtopdf.do";
+        const servletURL = "svgtopdf.do";
         const filetype = "pdf_data";
         request.post(servletURL)
             .type('form')
