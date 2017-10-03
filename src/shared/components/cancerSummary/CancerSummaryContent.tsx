@@ -13,8 +13,7 @@ import 'react-rangeslider/lib/index.css';
 
 import SummaryBarGraph from './SummaryBarGraph';
 
-
-export interface ICancerTypeAlterationPlotData {
+export interface ICancerTypeAlterationCounts {
     mutated: number;
     amp:number;
     homdel:number;
@@ -27,6 +26,14 @@ export interface ICancerTypeAlterationPlotData {
     protExpressionDown:number;
     multiple:number;
 };
+
+
+export interface ICancerTypeAlterationData {
+    alterationTotal:number;
+    sampleTotal:number;
+    alterationTypeCounts:ICancerTypeAlterationCounts;
+
+}
 
 export interface IBarGraphDataset {
     label: string;
@@ -49,10 +56,6 @@ export interface IBarChartSortedData {
 export interface IBarGraphConfigOptions {
     labels: string[];
     datasets: IBarGraphDataset[];
-}
-
-export interface ICancerTypeAlterationData extends ICancerTypeAlterationPlotData {
-    total:number;
 }
 
 interface ICancerSummaryContentProps {
@@ -101,22 +104,18 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
     }
 
     @computed get barChartDatasets():IBarChartSortedData[] {
-        const {data} = this.props;
-        const {yAxis} = this;
-        return _.reduce(data, (accum, cancer:ICancerTypeAlterationData, cancerType:string) => {
-            const totalCases = cancer.total;
-            const cancerAlterations:Partial<ICancerTypeAlterationPlotData> = _.omit(cancer, ['total']);
-            const altTotalCount = _.reduce(cancerAlterations, (total:number, value:number) => total + value, 0);
-            let altTotalPercent = altTotalCount / totalCases * 100;
+        return _.reduce(this.props.data, (accum, alterationData, cancerType:string) => {
+            const cancerAlterations = alterationData.alterationTypeCounts;
+            let altTotalPercent = alterationData.alterationTotal / alterationData.sampleTotal * 100;
             altTotalPercent = altTotalPercent > 100 ? 100 : altTotalPercent;
-            if (this.selectedCancerTypes[cancerType] && totalCases >= this.totalCasesValue) {
-                const datasets = _.reduce(cancerAlterations, (memo, count:number, altType: string) => {
-                    let percent = count / totalCases * 100;
+            if (this.selectedCancerTypes[cancerType] && alterationData.sampleTotal >= this.totalCasesValue) {
+                const datasets = _.reduce(cancerAlterations as any, (memo, count:number, altType: string) => {
+                    let percent = count / alterationData.sampleTotal * 100;
                     percent = percent > 100 ? 100 : percent;
-                    const total = yAxis === "abs-count" ? count : percent;
+                    const total = this.yAxis === "abs-count" ? count : percent;
                     memo.push({
                         label: altType === 'deleted' ? 'hetloss': altType,
-                        totalCases,
+                        totalCases: alterationData.sampleTotal,
                         altTotalPercent,
                         total,
                         count,
@@ -132,9 +131,9 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                 });
                 accum.push({
                     label: cancerType,
-                    sortBy: yAxis,
-                    symbol: yAxis === "abs-count" ? '' : "%",
-                    sortCount: yAxis === "abs-count" ? altTotalCount : altTotalPercent,
+                    sortBy: this.yAxis,
+                    symbol: this.yAxis === "abs-count" ? '' : "%",
+                    sortCount: this.yAxis === "abs-count" ? alterationData.alterationTotal : altTotalPercent,
                     data: sortedDatasets
                 });
             }
@@ -182,7 +181,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
     }
 
     private getColors(color:string) {
-        const alterationToColor: Record<keyof ICancerTypeAlterationPlotData, string> = {
+        const alterationToColor: Record<keyof ICancerTypeAlterationCounts, string> = {
             mutated:"#008000",
             amp:"#ff0000",
             homdel:"rgb(0,0,255)",
@@ -227,7 +226,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
         return Math.max(
                 ..._.map(
                     _.filter(this.props.data, (unusedData, label) => this.selectedCancerTypes[label]),
-                    (cancer:ICancerTypeAlterationData) => cancer.total));
+                    (cancer:ICancerTypeAlterationData) => cancer.sampleTotal));
     }
 
     @computed private get chartData() {
