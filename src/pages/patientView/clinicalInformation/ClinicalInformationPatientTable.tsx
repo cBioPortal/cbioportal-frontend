@@ -49,7 +49,8 @@ export default class ClinicalInformationPatientTable extends React.Component<ICl
                       {   name:'Attribute',
                           render:(data)=><span>{data.attribute}</span>,
                           filter: (data:IPatientRow, filterString:string, filterStringUpper:string) =>
-                            data.attribute.toString().toUpperCase().indexOf(filterStringUpper) > -1
+                            data.attribute.toString().toUpperCase().indexOf(filterStringUpper) > -1,
+                          sortBy: (data)=>data.attribute
                       },
                       {
                           name:'Value',
@@ -61,6 +62,8 @@ export default class ClinicalInformationPatientTable extends React.Component<ICl
                   showColumnVisibility={false}
                   className={styles.patientTable}
                   initialItemsPerPage={SHOW_ALL_PAGE_SIZE}
+                  initialSortColumn="Attribute"
+                  initialSortDirection="asc"
                   showFilter={(this.props.showFilter === false) ? false : true }
                   showCopyDownload={(this.props.showCopyDownload === false) ? false : true }
             />
