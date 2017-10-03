@@ -52,7 +52,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                 // have to do a for loop because seamlessImmutable will make result of .map immutable,
                 // and that causes infinite loop here
                 responsePromises.push(
-                    request.get(`http://www.cbioportal.org/getMutationAligner.json?pfamAccession=${regions[i].metadata.accession}`)
+                    request.get(`getMutationAligner.json?pfamAccession=${regions[i].metadata.accession}`)
                 );
             }
             const allResponses = Promise.all(responsePromises);
@@ -292,7 +292,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
 
     public downloadAsPDF(filename:string) {
         const svgelement = "<?xml version='1.0'?>"+this.toSVGDOMNode().outerHTML;
-        const servletURL = "http://www.cbioportal.org/svgtopdf.do";
+        const servletURL = "svgtopdf.do";
         const filetype = "pdf_data";
         request.post(servletURL)
             .type('form')
