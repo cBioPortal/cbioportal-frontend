@@ -95,7 +95,7 @@ export default class CosmicColumnFormatter
     {
         const cosmic:CosmicMutation[]|null = CosmicColumnFormatter.getData(data, cosmicData);
 
-        let value:number = -1;
+        let value:number|undefined = -1;
         let display:string = "";
         let overlay:JSX.Element|null = null;
         let content:JSX.Element;
@@ -114,7 +114,7 @@ export default class CosmicColumnFormatter
                 </span>
             );
 
-            display = value.toString();
+            display = value + "";
         }
 
         // basic content is the value
