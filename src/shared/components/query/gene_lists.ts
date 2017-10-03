@@ -67,6 +67,100 @@ const gene_lists = [{
 }, {
 	"id": "General: Invasion and metastasis",
 	"genes": ["MMP1", "MMP2", "MMP3", "MMP7", "MMP9", "MMP10", "MMP11", "MMP12", "MMP13", "MMP14", "MMP15", "MMP16", "MMP17", "MMP19", "MMP21", "MMP23B", "MMP24", "MMP25", "MMP26", "MMP27", "MMP28", "ITGB3", "ITGAV", "PTK2", "CDH1", "SPARC", "WFDC2"]
-}];
+},	{
+	"id":"General: Interferon_Signaling_Pathway",
+	"genes":['IFNGR1', 'IFNGR2', 'JAK1', 'JAK2', 'TYK2', 'STAT1', 'STAT3', 'STAT5A', 'STAT5B', 'IRF1']
+}, {
+    "id": "General: Polymerase_error",
+    "genes": ['POLE', 'POLD1']
+}, {
+    "id":"General: Immuno-Proteosome",
+	"genes":['ERAP1', 'ERAP2', 'PSMB8', 'PSMB9', 'PSMB10', 'PSMB11', 'NRD1', 'THOP1', 'TPP2']
+}, {
+    "id":"General: MHCI_antigen_processing_and_presenting_machinery",
+	"genes":['HLA-I', 'B2M', 'TAP1', 'TAP2', 'CLX', 'CLT', 'TPN', 'ERP57', 'LMP7', 'ERAP1', 'HLA-A', 'LMP2', 'LMP10']
+}, {
+    "id":"General: Interferon_gamma_pathway",
+	"genes":['IFNG', 'IFNGR1', 'IFNGR2', 'JAK1', 'JAK2', 'PPKCD', 'STAT1', 'STAT2', 'STAT3', 'STAT4', 'IFR1', 'IFR9', 'CXCL10', 'IFI30', 'PSME1', 'SOCS1', 'SOCS3', 'PIAS1', 'PIAS4', 'IL10RA', 'IL10RB', 'IL12RA']
+}, {
+    "id":"General: Stabilize_PD-L1_protein",
+	"genes":['CMTM6', 'CMTM4']
+}, {
+    "id":"General: MMR",
+	"genes":['MSH2', 'MSH6', 'MLH1', 'PMS2']
+}, {
+    "id":"General: HR",
+	"genes":['BRCA1', 'BRCA2', 'PALB2']
+}, {
+    "id":"General: Peptide_Loading_Complex",
+	"genes":['TAP1', 'TAP2', 'TAPBP', 'CALR', 'CANX', 'PDIA3']
+}, {
+    "id":"General: MHC_Components",
+	"genes":['JAK1', 'B2M', 'HLA-A', 'HLA-B', 'HLA-C']
+}, {
+    "id":"General: BER",
+	"genes":['MUTYH']
+}, {
+    "id":"General: NER",
+	"genes":['ERCC2']
+}, {
+    "id":"General: DNA_polymerases_(catalytic_subunits)",
+	"genes":['POLB', 'POLG', 'POLD1', 'POLE', 'PCNA', 'REV3L_(POLZ)', 'MAD2L2_(REV7)', 'REV1L_(REV1)', 'POLH', 'POLI_(RAD30B)', 'POLQ', 'POLK_(DINB1)', 'POLL', 'POLM', 'POLN_(POL4P)']
+}, {
+    "id":"General: Homologous_recombination",
+	"genes":['RAD51', 'RAD51B', 'RAD51D', 'DMC1', 'XRCC2', 'XRCC3', 'RAD52', 'RAD54L', 'RAD54B', 'BRCA1', 'SHFM1_(DSS1)', 'RAD50', 'MRE11A', 'NBN_(NBS1)', 'RBBP8_(CtIP)', 'MUS81', 'EME1_(MMS4L)', 'EME2', 'GIYD1_(SLX1A)', 'GIYD2_(SLX1B)', 'GEN1']
+}, {
+    "id":"General: Ubiquitination_and_modification",
+	"genes":['UBE2A_(RAD6A)', 'UBE2B_(RAD6B)', 'RAD18', 'SHPRH', 'HLTF_(SMARCA3)', 'RNF168', 'SPRTN_(c1orf124)', 'RNF8', 'RNF4', 'UBE2V2_(MMS2)', 'UBE2N_(UBC13)']
+}, {
+    "id":"General: Other_identified_genes_with_known_or_suspected_DNA_repair_function",
+	"genes":['DCLRE1A_(SNM1)', 'DCLRE1B_(SNM1B)', 'RPA4', 'PRPF19_(PSO4)', 'RECQL_(RECQ1)', 'RECQL5', 'HELQ_(HEL308)', 'RDM1_(RAD52B)', 'OBFC2B_(SSB1)']
+}, {
+    "id":"General: Modulation_of_nucleotide_pools",
+	"genes":['NUDT1_(MTH1)', 'DUT', 'RRM2B_(p53R2)']
+}, {
+    "id":"General: Non-homologous_end-joining",
+	"genes":['XRCC6_(Ku70)', 'XRCC5_(Ku80)', 'PRKDC', 'LIG4', 'XRCC4', 'DCLRE1C_(Artemis)', 'NHEJ1_(XLF,_Cernunnos)']
+}, {
+    "id":"General: Fanconi_anemia",
+	"genes":['FANCA', 'FANCB', 'FANCC', 'BRCA2_(FANCD1)', 'FANCD2', 'FANCE', 'FANCF', 'FANCG_(XRCC9)', 'FANCI_(KIAA1794)', 'BRIP1_(FANCJ)', 'FANCL', 'FANCM', 'PALB2_(FANCN)', 'RAD51C_(FANCO)', 'BTBD12_(SLX4)_(FANCP)', 'FAAP20_(C1orf86)', 'FAAP24_(C19orf40)']
+}, {
+    "id":"General: Editing_and_processing_nucleases",
+	"genes":['FEN1_(DNase_IV)', 'FAN1_(MTMR15)', 'TREX1_(DNase_III)', 'TREX2', 'EXO1_(HEX1)', 'APTX_(aprataxin)', 'SPO11', 'ENDOV']
+}, {
+    "id":"General: Mismatch_excision_repair_(MMR)",
+	"genes":['MSH2', 'MSH3', 'MSH6', 'MLH1', 'PMS2', 'MSH4', 'MSH5', 'MLH3', 'PMS1', 'PMS2L3']
+}, {
+    "id":"General: Poly(ADP-ribose)_polymerase_(PARP)_enzymes_that_bind_to_DNA",
+	"genes":['PARP1_(ADPRT)', 'PARP2_(ADPRTL2)', 'PARP3_(ADPRTL3)']
+}, {
+    "id":"General: NER-related",
+	"genes":['ERCC8_(CSA)', 'ERCC6_(CSB)', 'UVSSA_(KIAA1530)', 'XAB2_(HCNP)', 'MMS19']
+}, {
+    "id":"General: Direct_reversal_of_damage",
+	"genes":['MGMT', 'ALKBH2_(ABH2)', 'ALKBH3_(DEPC1)']
+}, {
+    "id":"General: Genes_defective_in_diseases_associated_with_sensitivity_to_DNA_damaging_agents",
+	"genes":['BLM', 'WRN', 'RECQL4', 'ATM', 'TTDN1_(C7orf11)']
+}, {
+    "id":"General: Repair_of_DNA-topoisomerase_crosslinks",
+	"genes":['TDP1', 'TDP2_(TTRAP)']
+}, {
+    "id":"General: Chromatin_Structure_and_Modification",
+	"genes":['H2AFX_(H2AX)', 'CHAF1A_(CAF1)', 'SETMAR_(METNASE)']
+}, {
+    "id":"General: Other_BER_and_strand_break_joining_factors",
+	"genes":['APEX1_(APE1)', 'APEX2', 'LIG3', 'XRCC1', 'PNKP', 'APLF_(C2ORF13)']
+}, {
+    "id":"General: Other_conserved_DNA_damage_response_genes",
+	"genes":['ATR', 'ATRIP', 'MDC1', 'RAD1', 'RAD9A', 'HUS1', 'RAD17_(RAD24)', 'CHEK1', 'CHEK2', 'TP53', 'TP53BP1_(53BP1)', 'RIF1', 'TOPBP1', 'CLK2', 'PER1']
+}, {
+    "id":"General: Nucleotide_excision_repair_(NER)",
+	"genes":['XPC', 'RAD23B', 'CETN2', 'RAD23A', 'XPA', 'DDB1', 'DDB2_(XPE)', 'RPA1', 'RPA2', 'RPA3', 'TFIIH', 'ERCC3_(XPB)', 'ERCC2_(XPD)', 'GTF2H1', 'GTF2H2', 'GTF2H3', 'GTF2H4', 'GTF2H5_(TTDA)', 'CDK7', 'CCNH', 'MNAT1', 'ERCC5_(XPG)', 'ERCC1', 'ERCC4_(XPF)', 'LIG1']
+}, {
+    "id":"General: Base_excision_repair_(BER)",
+	"genes":['UNG', 'SMUG1', 'MBD4', 'TDG', 'OGG1', 'MUTYH_(MYH)', 'NTHL1_(NTH1)', 'MPG', 'NEIL1', 'NEIL2', 'NEIL3']
+}
+];
 
 export default gene_lists;

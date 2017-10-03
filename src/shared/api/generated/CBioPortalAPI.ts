@@ -90,7 +90,7 @@ export type MolecularProfile = {
 
         'description': string
 
-        'molecularAlterationType': "MUTATION_EXTENDED" | "FUSION" | "STRUCTURAL_VARIANT" | "COPY_NUMBER_ALTERATION" | "MICRO_RNA_EXPRESSION" | "MRNA_EXPRESSION" | "MRNA_EXPRESSION_NORMALS" | "RNA_EXPRESSION" | "METHYLATION" | "METHYLATION_BINARY" | "PHOSPHORYLATION" | "PROTEIN_LEVEL" | "PROTEIN_ARRAY_PROTEIN_LEVEL" | "PROTEIN_ARRAY_PHOSPHORYLATION" | "GENESET_SCORE"
+        'molecularAlterationType': "MUTATION_EXTENDED" | "FUSION" | "STRUCTURAL_VARIANT" | "COPY_NUMBER_ALTERATION" | "MICRO_RNA_EXPRESSION" | "MRNA_EXPRESSION" | "MRNA_EXPRESSION_NORMALS" | "RNA_EXPRESSION" | "METHYLATION" | "METHYLATION_BINARY" | "PHOSPHORYLATION" | "PROTEIN_LEVEL" | "PROTEIN_ARRAY_PROTEIN_LEVEL" | "PROTEIN_ARRAY_PHOSPHORYLATION" | "GENESET_SCORE" | "COPY_NUMBER_SEGMENT"
 
         'molecularProfileId': string
 
@@ -262,6 +262,8 @@ export type CopyNumberSeg = {
 
         'end': number
 
+        'molecularProfileId': string
+
         'numberOfProbes': number
 
         'patientId': string
@@ -389,6 +391,16 @@ export type Mutation = {
     'aminoAcidChange': string
 
         'center': string
+
+        'chromosome': string
+
+        'driverFilter': string
+
+        'driverFilterAnnotation': string
+
+        'driverTiersFilter': string
+
+        'driverTiersFilterAnnotation': string
 
         'endPosition': number
 
@@ -893,12 +905,16 @@ export default class CBioPortalAPI {
         };
 
     fetchCopyNumberSegmentsUsingPOSTURL(parameters: {
+        'molecularProfileIds': Array < string > ,
         'sampleIdentifiers': Array < SampleIdentifier > ,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/copy-number-segments/fetch';
+        if (parameters['molecularProfileIds'] !== undefined) {
+            queryParameters['molecularProfileIds'] = parameters['molecularProfileIds'];
+        }
 
         if (parameters['projection'] !== undefined) {
             queryParameters['projection'] = parameters['projection'];
@@ -918,10 +934,12 @@ export default class CBioPortalAPI {
      * Fetch copy number segments by sample ID
      * @method
      * @name CBioPortalAPI#fetchCopyNumberSegmentsUsingPOST
+     * @param {array} molecularProfileIds - List of Molecular Profile IDs
      * @param {} sampleIdentifiers - List of sample identifiers
      * @param {string} projection - Level of detail of the response
      */
     fetchCopyNumberSegmentsUsingPOST(parameters: {
+            'molecularProfileIds': Array < string > ,
             'sampleIdentifiers': Array < SampleIdentifier > ,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             $queryParameters ? : any,
@@ -939,6 +957,15 @@ export default class CBioPortalAPI {
             return new Promise(function(resolve, reject) {
                 headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
+
+                if (parameters['molecularProfileIds'] !== undefined) {
+                    queryParameters['molecularProfileIds'] = parameters['molecularProfileIds'];
+                }
+
+                if (parameters['molecularProfileIds'] === undefined) {
+                    reject(new Error('Missing required  parameter: molecularProfileIds'));
+                    return;
+                }
 
                 if (parameters['sampleIdentifiers'] !== undefined) {
                     body = parameters['sampleIdentifiers'];
@@ -4922,6 +4949,7 @@ export default class CBioPortalAPI {
 
     getCopyNumberSegmentsInSampleInStudyUsingGETURL(parameters: {
         'studyId': string,
+        'molecularProfileId': string,
         'sampleId': string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
@@ -4934,6 +4962,9 @@ export default class CBioPortalAPI {
         let path = '/studies/{studyId}/samples/{sampleId}/copy-number-segments';
 
         path = path.replace('{studyId}', parameters['studyId'] + '');
+        if (parameters['molecularProfileId'] !== undefined) {
+            queryParameters['molecularProfileId'] = parameters['molecularProfileId'];
+        }
 
         path = path.replace('{sampleId}', parameters['sampleId'] + '');
         if (parameters['projection'] !== undefined) {
@@ -4971,6 +5002,7 @@ export default class CBioPortalAPI {
      * @method
      * @name CBioPortalAPI#getCopyNumberSegmentsInSampleInStudyUsingGET
      * @param {string} studyId - Study ID e.g. acc_tcga
+     * @param {string} molecularProfileId - Molecular Profile ID
      * @param {string} sampleId - Sample ID e.g. TCGA-OR-A5J2-01
      * @param {string} projection - Level of detail of the response
      * @param {integer} pageSize - Page size of the result list
@@ -4980,6 +5012,7 @@ export default class CBioPortalAPI {
      */
     getCopyNumberSegmentsInSampleInStudyUsingGET(parameters: {
             'studyId': string,
+            'molecularProfileId': string,
             'sampleId': string,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
@@ -5006,6 +5039,15 @@ export default class CBioPortalAPI {
 
                 if (parameters['studyId'] === undefined) {
                     reject(new Error('Missing required  parameter: studyId'));
+                    return;
+                }
+
+                if (parameters['molecularProfileId'] !== undefined) {
+                    queryParameters['molecularProfileId'] = parameters['molecularProfileId'];
+                }
+
+                if (parameters['molecularProfileId'] === undefined) {
+                    reject(new Error('Missing required  parameter: molecularProfileId'));
                     return;
                 }
 

@@ -38,7 +38,7 @@ import {
     fetchMutSigData, findMrnaRankMolecularProfileId, mergeDiscreteCNAData, fetchSamplesForPatient, fetchClinicalData,
     fetchCopyNumberSegments, fetchClinicalDataForPatient, makeStudyToCancerTypeMap,
     fetchCivicGenes, fetchCnaCivicGenes, fetchCivicVariants, groupBySampleId, findSamplesWithoutCancerTypeClinicalData,
-    fetchStudiesForSamplesWithoutCancerTypeClinicalData
+    fetchStudiesForSamplesWithoutCancerTypeClinicalData, findSegmentMolecularProfileId
 } from "shared/lib/StoreUtils";
 import {stringListToSet} from "../../../shared/lib/StringUtils";
 
@@ -157,6 +157,13 @@ export class PatientViewPageStore {
         invoke: async() => findMutationMolecularProfileId(this.molecularProfilesInStudy, this.studyId)
     });
 
+    readonly segmentMolecularProfileId = remoteData({
+        await: () => [
+            this.molecularProfilesInStudy
+        ],
+        invoke: async() => findSegmentMolecularProfileId(this.molecularProfilesInStudy)
+    });
+
     readonly uncalledMutationMolecularProfileId = remoteData({
         await: () => [
             this.molecularProfilesInStudy
@@ -218,7 +225,7 @@ export class PatientViewPageStore {
         await: () => [
             this.samples
         ],
-        invoke: () => fetchCopyNumberSegments(this.studyId, this.sampleIds)
+        invoke: () => fetchCopyNumberSegments(this.studyId, this.segmentMolecularProfileId.result, this.sampleIds)
     }, []);
 
     readonly pathologyReport = remoteData({
