@@ -24,7 +24,7 @@ function fetch(queries: Mutation[]):Promise<VariantAnnotationEnriched[]> {
                 // default
                 fields: ['hotspots', 'mutation_assessor']
             }
-        ); 
+        ) as Promise<VariantAnnotationEnriched[]>; 
     } else {
         return Promise.resolve([]);
     }
