@@ -390,6 +390,14 @@ export type Mutation = {
 
         'center': string
 
+        'driverFilter': string
+
+        'driverFilterAnnotation': string
+
+        'driverTiersFilter': string
+
+        'driverTiersFilterAnnotation': string
+
         'endPosition': number
 
         'entrezGeneId': number
