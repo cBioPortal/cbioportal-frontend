@@ -32,6 +32,10 @@ if (!window.hasOwnProperty("jQuery")) {
     window.jQuery = $;
 }
 
+// expose version on window
+window.FRONTEND_VERSION = VERSION;
+window.FRONTEND_COMMIT = COMMIT;
+
 import 'script-loader!raven-js/dist/raven.js';
 
 // explose jquery globally if it doesn't exist
