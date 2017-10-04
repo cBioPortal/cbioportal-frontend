@@ -50,7 +50,11 @@ export function emptyMutation(): Mutation
         tumorRefCount: -1,
         validationStatus: "",
         variantAllele: "",
-        variantType: ""
+        variantType: "",
+        driverFilter: "",
+        driverFilterAnnotation: "",
+        driverTiersFilter: "",
+        driverTiersFilterAnnotation: ""
     };
 }
 
