@@ -698,7 +698,7 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
                     <CopyDownloadControls
                         className="pull-right"
                         downloadData={this.getDownloadData}
-                        downloadFilename="table.csv"
+                        downloadFilename="table.tsv"
                         {...this.props.copyDownloadProps}
                     />) : ""}
                 {this.props.showPagination && this.props.showPaginationAtTop ? (
