@@ -13,6 +13,11 @@ export function emptyMutation(): Mutation
     return {
         aminoAcidChange: "",
         center: "",
+        chromosome: "",
+        driverFilter: "",
+        driverFilterAnnotation: "",
+        driverTiersFilter: "",
+        driverTiersFilterAnnotation: "",
         endPosition: -1,
         entrezGeneId: -1,
         fisValue: -1,

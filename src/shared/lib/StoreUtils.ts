@@ -38,7 +38,8 @@ import {IMyCancerGenomeData, IMyCancerGenome} from "shared/model/MyCancerGenome"
 import {IHotspotData, ICancerHotspotData} from "shared/model/CancerHotspots";
 import {ICivicGeneData, ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
 import CancerHotspotsAPI from "shared/api/generated/CancerHotspotsAPI";
-import {MOLECULAR_PROFILE_MUTATIONS_SUFFIX, MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
+import {MOLECULAR_PROFILE_MUTATIONS_SUFFIX, MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX,
+    COPY_NUMBER_SEGMENT} from "shared/constants";
 
 export const ONCOKB_DEFAULT: IOncoKbData = {
     sampleToTumorMap : {},
@@ -155,12 +156,14 @@ export async function fetchClinicalDataForPatient(studyId:string,
 }
 
 export async function fetchCopyNumberSegments(studyId:string,
+                                              molecularProfileIds: any,
                                               sampleIds:string[],
                                               client:CBioPortalAPI = defaultClient)
 {
-    if (studyId && sampleIds.length > 0)
+    if (studyId && molecularProfileIds && molecularProfileIds.length > 0 && sampleIds.length > 0)
     {
         return await client.fetchCopyNumberSegmentsUsingPOST({
+            molecularProfileIds,
             sampleIdentifiers: sampleIds.map((sampleId: string) => ({
                 sampleId,
                 studyId
@@ -543,6 +546,19 @@ export function findMolecularProfileIdDiscrete(molecularProfilesInStudy:MobxProm
 
     const profile = molecularProfilesInStudy.result.find((p: MolecularProfile) => {
         return p.datatype === 'DISCRETE';
+    });
+
+    return profile ? profile.molecularProfileId : undefined;
+}
+
+export function findSegmentMolecularProfileId(molecularProfilesInStudy:MobxPromise<MolecularProfile[]>)
+{
+    if (!molecularProfilesInStudy.result) {
+        return undefined;
+    }
+
+    const profile = molecularProfilesInStudy.result.find((p: MolecularProfile) => {
+        return p.molecularAlterationType === COPY_NUMBER_SEGMENT;
     });
 
     return profile ? profile.molecularProfileId : undefined;

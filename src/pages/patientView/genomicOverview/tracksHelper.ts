@@ -56,11 +56,20 @@ function getChmEndsPerc(chms: Array<any>, total: any) {
 /**
  * storing chromesome length info
  */
-export function getChmInfo() {
+export function getChmInfo(genomeBuild:string) {
     let sel: any = {};
-    sel.hg19 = [0,249250621,243199373,198022430,191154276,180915260,171115067,159138663,146364022,141213431,135534747,135006516,133851895,115169878,107349540,102531392,90354753,81195210,78077248,59128983,63025520,48129895,51304566,155270560,59373566];
-    sel.total = 3095677412;
-    sel.perc = getChmEndsPerc(sel.hg19,sel.total);
+    const chromSizes = require('./chromSizes.json');
+    for (let i = 0; i < chromSizes.length; i++) {
+        if (chromSizes[i]["build"] === genomeBuild) {
+            sel.genomeRef = chromSizes[i]['size'];
+            break;
+        }
+    }
+    sel.total = 0
+    for (let i=0; i < sel.genomeRef.length; i++ ) {
+        sel.total += sel.genomeRef[i];
+    }
+    sel.perc = getChmEndsPerc(sel.genomeRef,sel.total);
     sel.loc2perc = function(chm: any,loc: any) {
         return sel.perc[chm-1] + loc/sel.total;
     };
@@ -70,7 +79,7 @@ export function getChmInfo() {
     sel.perc2loc = function(xPerc: any,startChm: any) {
         var chm;
         if (!startChm) {//binary search
-            var low = 1, high = sel.hg19.length-1, i;
+            var low = 1, high = sel.genomeRef.length-1, i;
             while (low <= high) {
                 i = Math.floor((low + high) / 2);
                 if (sel.perc[i] >= xPerc)  {high = i - 1;}
@@ -79,7 +88,7 @@ export function getChmInfo() {
             chm = low;
         } else {//linear search
             var i;
-            for (i=startChm; i<sel.hg19.length; i++) {
+            for (i=startChm; i<sel.genomeRef.length; i++) {
                 if (xPerc<=sel.perc[i]) break;
             }
             chm = i;
@@ -92,7 +101,7 @@ export function getChmInfo() {
         return sel.perc2loc(xPerc,startChm);
     };
     sel.middle = function(chm: any, goConfig: any) {
-        var loc = sel.hg19[chm]/2;
+        var loc = sel.genomeRef[chm]/2;
         return sel.loc2xpixil(chm,loc,goConfig);
     };
     sel.chmName = function(chm: any) {
@@ -107,7 +116,7 @@ export function plotChromosomes(p: any, config: any,chmInfo: any) {
     var yRuler = config.rowMargin+config.ticHeight;
     drawLine(config.wideLeftText,yRuler,config.wideLeftText+config.GenomeWidth,yRuler,p,'#000',1);
     // ticks & texts
-    for (var i=1; i<chmInfo.hg19.length; i++) {
+    for (var i=1; i<chmInfo.genomeRef.length; i++) {
         var xt = chmInfo.loc2xpixil(i,0,config);
         drawLine(xt,yRuler,xt,config.rowMargin,p,'#000',1);
 
@@ -148,7 +157,7 @@ export function plotCnSegs(p: any,config: any,chmInfo: any,row: any, segs: Array
 
     _.each(segs, function(seg: any) {
         let chm: any = translateChm(seg[chrCol]);
-        if (chm == null || chm[0]>=chmInfo.hg19.length) return;
+        if (chm == null || chm[0]>=chmInfo.genomeRef.length) return;
         var start = seg[startCol];
         var end = seg[endCol];
         var segMean = seg[segCol];
@@ -202,9 +211,9 @@ export function plotMuts(p: any, config: any,chmInfo: any,row: any, mutations: A
     let pixelMap: Array<Array<string>> = [];
     for (var i = 0; i < mutObjs.length; i++) {
         var mutObj: Mutation = mutObjs[i];
-        if (typeof mutObj.gene.chromosome !== 'undefined') {
-            var chm = translateChm(mutObj.gene.chromosome);
-            if (chm != null && chm <= chmInfo.hg19.length) {
+        if (typeof mutObj.chromosome !== 'undefined') {
+            var chm = translateChm(mutObj.chromosome);
+            if (chm != null && chm <= chmInfo.genomeRef.length) {
                 var x = Math.round(chmInfo.loc2xpixil(chm, (mutObj.startPosition + mutObj.endPosition)/2, config));
                 var xBin = x - x%config.pixelsPerBinMut;
                 if (pixelMap[xBin] == null) pixelMap[xBin] = [];

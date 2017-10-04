@@ -87,7 +87,8 @@ export function getMutationData(): Mutation
            mutationType: "Missense_Mutation", ncbiBuild: "GRCh37", normalAltCount: -1, normalRefCount: -1, proteinChange: "E545K", proteinPosEnd: 545, 
            proteinPosStart: 545, referenceAllele: "G", refseqMrnaId: "NM_006218.2", sampleId: "NCIH508_LARGE_INTESTINE", patientId: "PATIENT1",
            studyId: "STUDY1", uniquePatientKey: "", uniqueSampleKey: "", startPosition: 178936091, tumorAltCount: -1, tumorRefCount: -1,
-           validationStatus: "NA", variantAllele: "A", variantType: "SNP", aminoAcidChange: ""
+           validationStatus: "NA", variantAllele: "A", variantType: "SNP", aminoAcidChange: "", chromosome:"3",
+           driverFilter: "", driverFilterAnnotation: "", driverTiersFilter: "", driverTiersFilterAnnotation: ""
            };
 }
 

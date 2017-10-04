@@ -4,7 +4,7 @@
     "description": "A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.",
     "version": "1.0 (beta)",
     "title": "cBioPortal web API [Beta]",
-    "termsOfService": "www.cbioportal.org",
+    "termsOfService": "http://www.cbioportal.org",
     "contact": {
       "name": "cBioPortal",
       "url": "www.cbioportal.org",
@@ -15,7 +15,7 @@
       "url": "https://github.com/cBioPortal/cbioportal/blob/master/LICENSE"
     }
   },
-  "basePath": "/api",
+  "basePath": "/cbioportal/api",
   "tags": [
     {
       "name": "Gene Set Correlation",
@@ -81,6 +81,10 @@
       "name": "Significant Copy Number Regions",
       "description": " "
     }
+  ],
+  "schemes": [
+    "http",
+    "https"
   ],
   "paths": {
     "/cosmic-counts/fetch": {
@@ -618,6 +622,59 @@
         }
       }
     },
+    "/molecular-profiles/{molecularProfileId}/fraction-genome-altered/fetch": {
+      "post": {
+        "tags": [
+          "Fraction Genome Altered"
+        ],
+        "summary": "Fetch fraction genome altered",
+        "operationId": "fetchFractionGenomeAlteredUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "molecularProfileId",
+            "in": "query",
+            "description": "Molecular Profile ID",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "fractionGenomeAlteredFilter",
+            "description": "List of Sample IDs/Sample List ID",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/FractionGenomeAlteredFilter"
+            }
+          },
+          {
+            "name": "cutoff",
+            "in": "query",
+            "description": "Cutoff",
+            "required": true,
+            "type": "number",
+            "default": 0.2,
+            "format": "double"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/FractionGenomeAltered"
+              }
+            }
+          }
+        }
+      }
+    },
     "/molecular-profiles/{molecularProfileId}/mrna-percentile/fetch": {
       "post": {
         "tags": [
@@ -814,59 +871,6 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/VariantCount"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/studies/{studyId}/fraction-genome-altered/fetch": {
-      "post": {
-        "tags": [
-          "Fraction Genome Altered"
-        ],
-        "summary": "Fetch fraction genome altered",
-        "operationId": "fetchFractionGenomeAlteredUsingPOST",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "studyId",
-            "in": "path",
-            "description": "Study ID e.g. acc_tcga",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "in": "body",
-            "name": "fractionGenomeAlteredFilter",
-            "description": "List of Sample IDs/Sample List ID",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/FractionGenomeAlteredFilter"
-            }
-          },
-          {
-            "name": "cutoff",
-            "in": "query",
-            "description": "Cutoff",
-            "required": true,
-            "type": "number",
-            "default": 0.2,
-            "format": "double"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/FractionGenomeAltered"
               }
             }
           }
@@ -1155,13 +1159,13 @@
     "FractionGenomeAltered": {
       "type": "object",
       "properties": {
+        "molecularProfileId": {
+          "type": "string"
+        },
         "patientId": {
           "type": "string"
         },
         "sampleId": {
-          "type": "string"
-        },
-        "studyId": {
           "type": "string"
         },
         "uniquePatientKey": {

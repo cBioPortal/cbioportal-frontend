@@ -4,7 +4,7 @@
     "description": "A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.",
     "version": "1.0 (beta)",
     "title": "cBioPortal web API [Beta]",
-    "termsOfService": "www.cbioportal.org",
+    "termsOfService": "http://www.cbioportal.org",
     "contact": {
       "name": "cBioPortal",
       "url": "www.cbioportal.org",
@@ -15,7 +15,7 @@
       "url": "https://github.com/cBioPortal/cbioportal/blob/master/LICENSE"
     }
   },
-  "basePath": "/api",
+  "basePath": "/cbioportal/api",
   "tags": [
     {
       "name": "Molecular Data",
@@ -77,6 +77,10 @@
       "name": "Studies",
       "description": " "
     }
+  ],
+  "schemes": [
+    "http",
+    "https"
   ],
   "paths": {
     "/cancer-types": {
@@ -363,6 +367,17 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "molecularProfileIds",
+            "in": "query",
+            "description": "List of Molecular Profile IDs",
+            "required": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
           {
             "in": "body",
             "name": "sampleIdentifiers",
@@ -3267,6 +3282,13 @@
             "type": "string"
           },
           {
+            "name": "molecularProfileId",
+            "in": "query",
+            "description": "Molecular Profile ID",
+            "required": true,
+            "type": "string"
+          },
+          {
             "name": "sampleId",
             "in": "path",
             "description": "Sample ID e.g. TCGA-OR-A5J2-01",
@@ -3542,7 +3564,8 @@
             "PROTEIN_LEVEL",
             "PROTEIN_ARRAY_PROTEIN_LEVEL",
             "PROTEIN_ARRAY_PHOSPHORYLATION",
-            "GENESET_SCORE"
+            "GENESET_SCORE",
+            "COPY_NUMBER_SEGMENT"
           ]
         },
         "molecularProfileId": {
@@ -3861,6 +3884,9 @@
           "type": "integer",
           "format": "int32"
         },
+        "molecularProfileId": {
+          "type": "string"
+        },
         "numberOfProbes": {
           "type": "integer",
           "format": "int32"
@@ -4110,6 +4136,21 @@
           "type": "string"
         },
         "center": {
+          "type": "string"
+        },
+        "chromosome": {
+          "type": "string"
+        },
+        "driverFilter": {
+          "type": "string"
+        },
+        "driverFilterAnnotation": {
+          "type": "string"
+        },
+        "driverTiersFilter": {
+          "type": "string"
+        },
+        "driverTiersFilterAnnotation": {
           "type": "string"
         },
         "endPosition": {
