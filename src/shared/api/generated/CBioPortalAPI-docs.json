@@ -4,7 +4,6 @@
     "description": "A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.",
     "version": "1.0 (beta)",
     "title": "cBioPortal web API [Beta]",
-    "termsOfService": "www.cbioportal.org",
     "contact": {
       "name": "cBioPortal",
       "url": "www.cbioportal.org",
@@ -15,7 +14,6 @@
       "url": "https://github.com/cBioPortal/cbioportal/blob/master/LICENSE"
     }
   },
-  "basePath": "/api",
   "tags": [
     {
       "name": "Molecular Data",
@@ -77,6 +75,10 @@
       "name": "Studies",
       "description": " "
     }
+  ],
+  "schemes": [
+    "http",
+    "https"
   ],
   "paths": {
     "/cancer-types": {
@@ -4110,6 +4112,18 @@
           "type": "string"
         },
         "center": {
+          "type": "string"
+        },
+        "driverFilter": {
+          "type": "string"
+        },
+        "driverFilterAnnotation": {
+          "type": "string"
+        },
+        "driverTiersFilter": {
+          "type": "string"
+        },
+        "driverTiersFilterAnnotation": {
           "type": "string"
         },
         "endPosition": {

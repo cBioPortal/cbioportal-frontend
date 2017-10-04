@@ -19,6 +19,10 @@
       "description": "Annotation Controller"
     },
     {
+      "name": "pfam-controller",
+      "description": "PFAM Controller"
+    },
+    {
       "name": "basic-error-controller",
       "description": "Basic Error Controller"
     }
@@ -94,11 +98,7 @@
             "in": "path",
             "description": "Comma separated list of variants. For example 7:g.140453136A>T,12:g.25398285C>A",
             "required": true,
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "collectionFormat": "csv"
+            "type": "string"
           }
         ],
         "responses": {
@@ -131,19 +131,22 @@
         "tags": [
           "basic-error-controller"
         ],
-        "summary": "errorHtml",
-        "operationId": "errorHtmlUsingGET",
+        "summary": "error",
+        "operationId": "errorUsingGET",
         "consumes": [
           "application/json"
         ],
         "produces": [
-          "text/html"
+          "*/*"
         ],
         "responses": {
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/ModelAndView"
+              "type": "object",
+              "additionalProperties": {
+                "type": "object"
+              }
             }
           },
           "401": {
@@ -161,19 +164,22 @@
         "tags": [
           "basic-error-controller"
         ],
-        "summary": "errorHtml",
-        "operationId": "errorHtmlUsingHEAD",
+        "summary": "error",
+        "operationId": "errorUsingHEAD",
         "consumes": [
           "application/json"
         ],
         "produces": [
-          "text/html"
+          "*/*"
         ],
         "responses": {
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/ModelAndView"
+              "type": "object",
+              "additionalProperties": {
+                "type": "object"
+              }
             }
           },
           "204": {
@@ -191,19 +197,22 @@
         "tags": [
           "basic-error-controller"
         ],
-        "summary": "errorHtml",
-        "operationId": "errorHtmlUsingPOST",
+        "summary": "error",
+        "operationId": "errorUsingPOST",
         "consumes": [
           "application/json"
         ],
         "produces": [
-          "text/html"
+          "*/*"
         ],
         "responses": {
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/ModelAndView"
+              "type": "object",
+              "additionalProperties": {
+                "type": "object"
+              }
             }
           },
           "201": {
@@ -224,19 +233,22 @@
         "tags": [
           "basic-error-controller"
         ],
-        "summary": "errorHtml",
-        "operationId": "errorHtmlUsingPUT",
+        "summary": "error",
+        "operationId": "errorUsingPUT",
         "consumes": [
           "application/json"
         ],
         "produces": [
-          "text/html"
+          "*/*"
         ],
         "responses": {
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/ModelAndView"
+              "type": "object",
+              "additionalProperties": {
+                "type": "object"
+              }
             }
           },
           "201": {
@@ -257,19 +269,22 @@
         "tags": [
           "basic-error-controller"
         ],
-        "summary": "errorHtml",
-        "operationId": "errorHtmlUsingDELETE",
+        "summary": "error",
+        "operationId": "errorUsingDELETE",
         "consumes": [
           "application/json"
         ],
         "produces": [
-          "text/html"
+          "*/*"
         ],
         "responses": {
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/ModelAndView"
+              "type": "object",
+              "additionalProperties": {
+                "type": "object"
+              }
             }
           },
           "204": {
@@ -287,19 +302,22 @@
         "tags": [
           "basic-error-controller"
         ],
-        "summary": "errorHtml",
-        "operationId": "errorHtmlUsingOPTIONS",
+        "summary": "error",
+        "operationId": "errorUsingOPTIONS",
         "consumes": [
           "application/json"
         ],
         "produces": [
-          "text/html"
+          "*/*"
         ],
         "responses": {
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/ModelAndView"
+              "type": "object",
+              "additionalProperties": {
+                "type": "object"
+              }
             }
           },
           "204": {
@@ -317,19 +335,22 @@
         "tags": [
           "basic-error-controller"
         ],
-        "summary": "errorHtml",
-        "operationId": "errorHtmlUsingPATCH",
+        "summary": "error",
+        "operationId": "errorUsingPATCH",
         "consumes": [
           "application/json"
         ],
         "produces": [
-          "text/html"
+          "*/*"
         ],
         "responses": {
           "200": {
             "description": "OK",
             "schema": {
-              "$ref": "#/definitions/ModelAndView"
+              "type": "object",
+              "additionalProperties": {
+                "type": "object"
+              }
             }
           },
           "204": {
@@ -433,11 +454,7 @@
             "in": "path",
             "description": "Comma separated list of variants. For example X:g.66937331T>A,17:g.41242962->GA",
             "required": true,
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "collectionFormat": "csv"
+            "type": "string"
           },
           {
             "name": "isoformOverrideSource",
@@ -689,11 +706,7 @@
             "in": "path",
             "description": "Comma separated list of transcript ids. For example ENST00000361125,ENST00000443649.",
             "required": true,
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "collectionFormat": "csv"
+            "type": "string"
           }
         ],
         "responses": {
@@ -795,11 +808,7 @@
             "in": "path",
             "description": "Comma separated list of variants. For example 7:g.140453136A>T,12:g.25398285C>A",
             "required": true,
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "collectionFormat": "csv"
+            "type": "string"
           }
         ],
         "responses": {
@@ -814,6 +823,425 @@
           },
           "400": {
             "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/pfam/domain": {
+      "get": {
+        "tags": [
+          "pfam-controller"
+        ],
+        "summary": "Retrieves all PFAM domains",
+        "operationId": "fetchAllPfamDomainsGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PfamDomain"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/pfam/domain/gene": {
+      "post": {
+        "tags": [
+          "pfam-controller"
+        ],
+        "summary": "Retrieves PFAM domains by Ensembl gene IDs",
+        "operationId": "fetchPfamDomainsByGeneIdsPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "geneIds",
+            "description": "List of Ensembl gene IDs. For example [\"ENSG00000136999\",\"ENSG00000272398\",\"ENSG00000198695\"]",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PfamDomain"
+              }
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/pfam/domain/gene/{geneId}": {
+      "get": {
+        "tags": [
+          "pfam-controller"
+        ],
+        "summary": "Retrieves PFAM domains by an Ensembl gene ID",
+        "operationId": "fetchPfamDomainsByGeneIdGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "geneId",
+            "in": "path",
+            "description": "An Ensembl gene ID. For example ENSG00000136999",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PfamDomain"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/pfam/domain/pfam": {
+      "post": {
+        "tags": [
+          "pfam-controller"
+        ],
+        "summary": "Retrieves PFAM domains by PFAM domain IDs",
+        "operationId": "fetchPfamDomainsByPfamIdsPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "pfamDomainIds",
+            "description": "List of PFAM domain IDs. For example [\"PF02827\",\"PF00093\",\"PF15276\"]",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PfamDomain"
+              }
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/pfam/domain/pfam/{pfamDomainId}": {
+      "get": {
+        "tags": [
+          "pfam-controller"
+        ],
+        "summary": "Retrieves PFAM domains by a PFAM domain ID",
+        "operationId": "fetchPfamDomainsByPfamIdGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "pfamDomainId",
+            "in": "path",
+            "description": "A PFAM domain ID. For example PF02827",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PfamDomain"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/pfam/domain/protein": {
+      "post": {
+        "tags": [
+          "pfam-controller"
+        ],
+        "summary": "Retrieves PFAM domains by Ensembl protein IDs",
+        "operationId": "fetchPfamDomainsByProteinIdsPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "proteinIds",
+            "description": "List of Ensembl protein IDs. For example [\"ENSP00000439985\",\"ENSP00000478460\",\"ENSP00000346196\"]",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PfamDomain"
+              }
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/pfam/domain/protein/{proteinId}": {
+      "get": {
+        "tags": [
+          "pfam-controller"
+        ],
+        "summary": "Retrieves PFAM domains by an Ensembl protein ID",
+        "operationId": "fetchPfamDomainsByProteinIdGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "proteinId",
+            "in": "path",
+            "description": "An Ensembl protein ID. For example ENSP00000439985",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PfamDomain"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/pfam/domain/transcript": {
+      "post": {
+        "tags": [
+          "pfam-controller"
+        ],
+        "summary": "Retrieves PFAM domains by Ensembl transcript IDs",
+        "operationId": "fetchPfamDomainsByTranscriptIdsPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "transcriptIds",
+            "description": "List of Ensembl transcript IDs. For example [\"ENST00000361390\",\"ENST00000361453\",\"ENST00000361624\"]",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PfamDomain"
+              }
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/pfam/domain/transcript/{transcriptId}": {
+      "get": {
+        "tags": [
+          "pfam-controller"
+        ],
+        "summary": "Retrieves PFAM domains by an Ensembl transcript ID",
+        "operationId": "fetchPfamDomainsByTranscriptIdGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "transcriptId",
+            "in": "path",
+            "description": "An Ensembl transcript ID. For example ENST00000361390",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PfamDomain"
+              }
+            }
           },
           "401": {
             "description": "Unauthorized"
@@ -876,7 +1304,142 @@
     }
   },
   "definitions": {
+    "GeneXref": {
+      "type": "object",
+      "required": [
+        "db_display_name",
+        "dbname",
+        "description",
+        "display_id",
+        "primary_id",
+        "version"
+      ],
+      "properties": {
+        "db_display_name": {
+          "type": "string",
+          "description": "Database display name"
+        },
+        "dbname": {
+          "type": "string",
+          "description": "Database name"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description"
+        },
+        "display_id": {
+          "type": "string",
+          "description": "Display id"
+        },
+        "info_text": {
+          "type": "string",
+          "description": "Database info text"
+        },
+        "info_types": {
+          "type": "string",
+          "description": "Database info type"
+        },
+        "primary_id": {
+          "type": "string",
+          "description": "Primary id"
+        },
+        "synonyms": {
+          "type": "array",
+          "description": "Synonyms",
+          "items": {
+            "type": "string"
+          }
+        },
+        "version": {
+          "type": "string",
+          "description": "Version"
+        }
+      }
+    },
+    "Hotspot": {
+      "type": "object",
+      "required": [
+        "transcriptId"
+      ],
+      "properties": {
+        "geneId": {
+          "type": "string",
+          "description": "Ensembl gene id"
+        },
+        "hugoSymbol": {
+          "type": "string",
+          "description": "Hugo gene symbol"
+        },
+        "proteinEnd": {
+          "type": "string",
+          "description": "Protein end position"
+        },
+        "proteinStart": {
+          "type": "string",
+          "description": "Protein start position"
+        },
+        "residue": {
+          "type": "string",
+          "description": "Hotspot Residue"
+        },
+        "transcriptId": {
+          "type": "string",
+          "description": "Transcript id"
+        }
+      }
+    },
+    "IsoformOverride": {
+      "type": "object",
+      "required": [
+        "transcriptId"
+      ],
+      "properties": {
+        "ccdsId": {
+          "type": "string",
+          "description": "CCDS ID"
+        },
+        "geneSymbol": {
+          "type": "string",
+          "description": "Hugo gene symbol"
+        },
+        "refseqId": {
+          "type": "string",
+          "description": "RefSeq ID"
+        },
+        "transcriptId": {
+          "type": "string",
+          "description": "Ensembl transcript id"
+        }
+      }
+    },
+    "ModelAndView": {
+      "type": "object",
+      "properties": {
+        "empty": {
+          "type": "boolean"
+        },
+        "model": {
+          "type": "object"
+        },
+        "modelMap": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object"
+          }
+        },
+        "reference": {
+          "type": "boolean"
+        },
+        "view": {
+          "$ref": "#/definitions/View"
+        },
+        "viewName": {
+          "type": "string"
+        }
+      }
+    },
     "MutationAssessor": {
+      "type": "object",
       "required": [
         "input"
       ],
@@ -984,172 +1547,11 @@
         }
       }
     },
-    "GeneXref": {
-      "required": [
-        "db_display_name",
-        "dbname",
-        "description",
-        "display_id",
-        "primary_id",
-        "version"
-      ],
-      "properties": {
-        "db_display_name": {
-          "type": "string",
-          "description": "Database display name"
-        },
-        "dbname": {
-          "type": "string",
-          "description": "Database name"
-        },
-        "description": {
-          "type": "string",
-          "description": "Description"
-        },
-        "display_id": {
-          "type": "string",
-          "description": "Display id"
-        },
-        "info_text": {
-          "type": "string",
-          "description": "Database info text"
-        },
-        "info_types": {
-          "type": "string",
-          "description": "Database info type"
-        },
-        "primary_id": {
-          "type": "string",
-          "description": "Primary id"
-        },
-        "synonyms": {
-          "type": "array",
-          "description": "Synonyms",
-          "items": {
-            "type": "string"
-          }
-        },
-        "version": {
-          "type": "string",
-          "description": "Version"
-        }
-      }
-    },
-    "ModelMap": {
+    "PfamDomain": {
       "type": "object",
-      "additionalProperties": {
-        "type": "object"
-      }
-    },
-    "IsoformOverride": {
       "required": [
-        "transcriptId"
-      ],
-      "properties": {
-        "ccdsId": {
-          "type": "string",
-          "description": "CCDS ID"
-        },
-        "geneSymbol": {
-          "type": "string",
-          "description": "Hugo gene symbol"
-        },
-        "refseqId": {
-          "type": "string",
-          "description": "RefSeq ID"
-        },
-        "transcriptId": {
-          "type": "string",
-          "description": "Ensembl transcript id"
-        }
-      }
-    },
-    "ModelAndView": {
-      "properties": {
-        "empty": {
-          "type": "boolean"
-        },
-        "model": {
-          "type": "object"
-        },
-        "modelMap": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "object"
-          }
-        },
-        "reference": {
-          "type": "boolean"
-        },
-        "view": {
-          "$ref": "#/definitions/View"
-        },
-        "viewName": {
-          "type": "string"
-        }
-      }
-    },
-    "VariantAnnotation": {
-      "required": [
-        "annotationJSON",
-        "id",
-        "variant"
-      ],
-      "properties": {
-        "allele_string": {
-          "type": "string",
-          "description": "Allele string (e.g: A/T)"
-        },
-        "annotationJSON": {
-          "type": "string",
-          "description": "Annotation data as JSON string"
-        },
-        "assembly_name": {
-          "type": "string",
-          "description": "NCBI build number"
-        },
-        "end": {
-          "type": "integer",
-          "format": "int32",
-          "description": "End position"
-        },
-        "id": {
-          "type": "string",
-          "description": "Variant id"
-        },
-        "most_severe_consequence": {
-          "type": "string",
-          "description": "Most severe consequence"
-        },
-        "seq_region_name": {
-          "type": "string",
-          "description": "Chromosome"
-        },
-        "start": {
-          "type": "integer",
-          "format": "int32",
-          "description": "Start position"
-        },
-        "strand": {
-          "type": "integer",
-          "format": "int32",
-          "description": "Strand (negative or positive)"
-        },
-        "transcript_consequences": {
-          "type": "array",
-          "description": "List of transcripts",
-          "items": {
-            "$ref": "#/definitions/TranscriptConsequence"
-          }
-        },
-        "variant": {
-          "type": "string",
-          "description": "Variant key"
-        }
-      }
-    },
-    "Hotspot": {
-      "required": [
+        "geneId",
+        "proteinId",
         "transcriptId"
       ],
       "properties": {
@@ -1157,29 +1559,42 @@
           "type": "string",
           "description": "Ensembl gene id"
         },
-        "hugoSymbol": {
+        "geneSymbol": {
           "type": "string",
           "description": "Hugo gene symbol"
         },
-        "proteinEnd": {
+        "getPfamDomainEnd": {
           "type": "string",
-          "description": "Protein end position"
+          "description": "PFAM domain end"
         },
-        "proteinStart": {
+        "pfamDomainDescription": {
           "type": "string",
-          "description": "Protein start position"
+          "description": "PFAM domain description"
         },
-        "residue": {
+        "pfamDomainId": {
           "type": "string",
-          "description": "Hotspot Residue"
+          "description": "PFAM domain id"
+        },
+        "pfamDomainName": {
+          "type": "string",
+          "description": "PFAM domain name"
+        },
+        "pfamDomainStart": {
+          "type": "string",
+          "description": "PFAM domain start"
+        },
+        "proteinId": {
+          "type": "string",
+          "description": "Ensembl translation id"
         },
         "transcriptId": {
           "type": "string",
-          "description": "Transcript id"
+          "description": "Ensembl transcript id"
         }
       }
     },
     "TranscriptConsequence": {
+      "type": "object",
       "required": [
         "transcript_id"
       ],
@@ -1265,6 +1680,66 @@
         "variant_allele": {
           "type": "string",
           "description": "Variant allele"
+        }
+      }
+    },
+    "VariantAnnotation": {
+      "type": "object",
+      "required": [
+        "annotationJSON",
+        "id",
+        "variant"
+      ],
+      "properties": {
+        "allele_string": {
+          "type": "string",
+          "description": "Allele string (e.g: A/T)"
+        },
+        "annotationJSON": {
+          "type": "string",
+          "description": "Annotation data as JSON string"
+        },
+        "assembly_name": {
+          "type": "string",
+          "description": "NCBI build number"
+        },
+        "end": {
+          "type": "integer",
+          "format": "int32",
+          "description": "End position"
+        },
+        "id": {
+          "type": "string",
+          "description": "Variant id"
+        },
+        "most_severe_consequence": {
+          "type": "string",
+          "description": "Most severe consequence"
+        },
+        "seq_region_name": {
+          "type": "string",
+          "description": "Chromosome"
+        },
+        "start": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Start position"
+        },
+        "strand": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Strand (negative or positive)"
+        },
+        "transcript_consequences": {
+          "type": "array",
+          "description": "List of transcripts",
+          "items": {
+            "$ref": "#/definitions/TranscriptConsequence"
+          }
+        },
+        "variant": {
+          "type": "string",
+          "description": "Variant key"
         }
       }
     },
