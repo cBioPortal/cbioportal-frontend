@@ -3,12 +3,19 @@ var HtmlWebpackPlugin = require('html-webpack-plugin');
 var WebpackFailPlugin = require('webpack-fail-plugin');
 var ProgressBarPlugin = require('progress-bar-webpack-plugin');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
-var GitRevisionPlugin = require('git-revision-webpack-plugin');
 
-// show full git version
-var gitRevisionPlugin = new GitRevisionPlugin({
-    versionCommand: 'describe --always --tags --dirty'
-});
+var commit = 'unknown';
+var version = 'unknown';
+// Don't show COMMIT/VERSION on Heroku (crashes, because no git dir)
+if (process.env.PATH.indexOf('heroku') === -1) {
+    // show full git version
+    var GitRevisionPlugin = require('git-revision-webpack-plugin');
+    var gitRevisionPlugin = new GitRevisionPlugin({
+        versionCommand: 'describe --always --tags --dirty'
+    });
+    commit = JSON.stringify(gitRevisionPlugin.commithash())
+    version = JSON.stringify(gitRevisionPlugin.version())
+}
 
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
@@ -72,8 +79,8 @@ var config = {
 
     plugins: [
         new webpack.DefinePlugin({
-            'VERSION': JSON.stringify(gitRevisionPlugin.version()),
-            'COMMIT': JSON.stringify(gitRevisionPlugin.commithash()),
+            'VERSION': version,
+            'COMMIT': commit,
         }),
         new HtmlWebpackPlugin({cache: false, template: 'my-index.ejs'}),
         new webpack.optimize.DedupePlugin(),
