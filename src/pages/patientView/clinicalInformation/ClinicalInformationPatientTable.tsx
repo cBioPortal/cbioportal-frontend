@@ -47,12 +47,14 @@ export default class ClinicalInformationPatientTable extends React.Component<ICl
                   columns={[
                       {   name:'Attribute',
                           render:(data)=><span>{data.attribute}</span>,
+                          download: (data) => data.attribute,
                           filter: (data:IPatientRow, filterString:string, filterStringUpper:string) =>
                             data.attribute.toString().toUpperCase().indexOf(filterStringUpper) > -1
                       },
                       {
                           name:'Value',
                           render: (data)=><span>{this.getDisplayValue(data)}</span>,
+                          download: (data) => this.getDisplayValue(data),
                           filter: (data:IPatientRow, filterString:string, filterStringUpper:string) =>
                             data.value.toString().toUpperCase().indexOf(filterStringUpper) > -1
                       }]}
