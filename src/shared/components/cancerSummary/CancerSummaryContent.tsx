@@ -7,6 +7,7 @@ import Slider from 'react-rangeslider';
 import Select from 'react-select';
 import {FormGroup, ControlLabel, FormControl} from 'react-bootstrap';
 import jsPDF from 'jspdf';
+import { If, Then, Else } from 'react-if';
 
 import 'react-select/dist/react-select.css';
 import 'react-rangeslider/lib/index.css';
@@ -257,6 +258,12 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
         };
     }
 
+    @computed private get hasAlterations() {
+        return _.reduce(this.props.data,(count, alterationData:ICancerTypeAlterationData)=>{
+            return count + alterationData.alterationTotal;
+        },0) > 0;
+    }
+
     private handleSelectChange (value: any) {
         const values = value.split(",");
         if (_.last(values) === "all") {
@@ -358,8 +365,11 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
             </div>
         ) : null;
         return (
-            <div>
-                <div role="group" className="btn-group">
+
+                <If condition={this.hasAlterations}>
+                    <Then>
+                    <div>
+                    <div role="group" className="btn-group">
                     <button onClick={this.toggleShowControls} className="btn btn-default btn-xs">Customize <i className="fa fa-cog" aria-hidden="true"></i></button>
                     <a className={`btn btn-default btn-xs ${this.pngAnchor ? '': ' disabled'}`}
                         href={this.pngAnchor} download="cBioPortalCancerSummary.png" style={{color: 'white'}}>
@@ -373,7 +383,14 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                 {controls}
                 <SummaryBarGraph data={this.chartData} yAxis={this.yAxis} xAxis={this.xAxis} gene={this.props.gene} width={this.props.width}
                                  setPdfAnchor={this.setPdfAnchor} setPngAnchor={this.setPngAnchor} legend={this.showGenomicAlt}/>
-            </div>
+
+                    </div>
+                    </Then>
+                    <Else>
+                        <div className="alert alert-info">There are no alterations in this gene.</div>
+                    </Else>
+                </If>
+
         );
     }
 }
