@@ -32,7 +32,13 @@ export function getPubMedUrl(pmid:string) {
     return `https://www.ncbi.nlm.nih.gov/pubmed/${pmid}`;
 }
 export function getMyGeneUrl(entrezGeneId: number) {
-    return `https://mygene.info/v3/gene/${entrezGeneId}?fields=uniprot`;
+    //return `https://mygene.info/v3/gene/${entrezGeneId}?fields=uniprot`;
+    //EntrezId is EnsemblId in this case (the numeric part):
+    let ensemblIdNumericPart = entrezGeneId;
+    var ensemblId = 'ENSG' + ensemblIdNumericPart.toLocaleString('en', 
+                                                                 {minimumIntegerDigits:11, 
+                                                                   useGrouping:false});
+    return `https://mygene.info/v3/gene/${ensemblId}?fields=uniprot`;
 }
 export function getUniprotIdUrl(swissProtAccession: string) {
     return cbioUrl(`proxy/uniprot.org/uniprot/?query=accession:${swissProtAccession}&format=tab&columns=entry+name`);
