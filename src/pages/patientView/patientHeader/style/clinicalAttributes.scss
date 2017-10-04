@@ -125,6 +125,9 @@ $sample-color-xenograft: pink;
     .clinical-attribute[attr-id="DERIVED_NORMALIZED_CASE_TYPE"][attr-value="Metastasis"] {
       color: $sample-color-metastasis;
     }
+    .clinical-attribute[attr-id="DERIVED_NORMALIZED_CASE_TYPE"][attr-value="Xenograft"] {
+        display: none; // already showing icon, no need to show text
+    }
 }
 #patient-attributes {
     /* Order patient clinical attributes */
