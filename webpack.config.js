@@ -4,8 +4,8 @@ var WebpackFailPlugin = require('webpack-fail-plugin');
 var ProgressBarPlugin = require('progress-bar-webpack-plugin');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
 
-var commit = 'unknown';
-var version = 'unknown';
+var commit = '"unknown"';
+var version = '"unknown"';
 // Don't show COMMIT/VERSION on Heroku (crashes, because no git dir)
 if (process.env.PATH.indexOf('heroku') === -1) {
     // show full git version
