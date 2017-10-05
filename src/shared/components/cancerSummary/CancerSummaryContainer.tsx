@@ -39,8 +39,8 @@ export default class CancerSummaryContainer extends React.Component<{ store: Res
                 return count + alterationData.alterationTotal;
             },0);
 
-            // if there are no alterations for this gene, show a grey background
-            const anchorStyle = (alterationCountAcrossCancerType === 0) ? { backgroundColor:'#ccc', color:'#999' } : {};
+            // if there are no alterations for this gene, grey out text
+            const anchorStyle = (alterationCountAcrossCancerType === 0) ? { color:'#bbb' } : {};
 
             return (
                 <MSKTab key={geneName} id={"summaryTab" + geneName} linkText={geneName} anchorStyle={anchorStyle}>
