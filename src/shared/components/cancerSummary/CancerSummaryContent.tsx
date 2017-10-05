@@ -14,6 +14,20 @@ import 'react-rangeslider/lib/index.css';
 
 import SummaryBarGraph from './SummaryBarGraph';
 
+const orderedLabels:Record<keyof ICancerTypeAlterationCounts, string> = {
+    multiple: "Multiple Alterations",
+    protExpressionDown: "Protein Downregulation",
+    protExpressionUp: "Protein Upregulation",
+    mrnaExpressionDown: "mRNA Downregulation",
+    mrnaExpressionUp: "mRNA Upregulation",
+    hetloss: "Shallow Deletion",
+    homdel: "Deep Deletion",
+    gain: "Gain",
+    amp: "Amplification",
+    fusion: "Fusion",
+    mutated: "Mutation"
+};
+
 export interface ICancerTypeAlterationCounts {
     mutated: number;
     amp:number;
@@ -73,8 +87,10 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
 
     private inputYAxisEl:any;
     private inputXAxisEl:any;
+    @observable private tempAltCasesInputValue = 0;
+    @observable private tempTotalCasesInputValue = 0;
     @observable private pngAnchor = '';
-    @observable private pdfAnchor = '';
+    @observable private pdf:{anchor:string;width:number;height:number} = {anchor:'',width: 0,height:0};
     @observable private showControls = false;
     @observable private showGenomicAlt = true;
     @observable private yAxis: 'alt-freq' | 'abs-count' = 'alt-freq';
@@ -97,9 +113,13 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
         this.handleTotalSliderChange = this.handleTotalSliderChange.bind(this);
         this.handleAltSliderChangeComplete = this.handleAltSliderChangeComplete.bind(this);
         this.handleTotalSliderChangeComplete = this.handleTotalSliderChangeComplete.bind(this);
+        this.handleAltInputChange = this.handleAltInputChange.bind(this);
+        this.handleAltInputKeyPress = this.handleAltInputKeyPress.bind(this);
+        this.handleTotalInputChange = this.handleTotalInputChange.bind(this);
+        this.handleTotalInputKeyPress = this.handleTotalInputKeyPress.bind(this);
         this.toggleShowControls = this.toggleShowControls.bind(this);
         this.setPngAnchor = this.setPngAnchor.bind(this);
-        this.setPdfAnchor = this.setPdfAnchor.bind(this);
+        this.setPdfProperties = this.setPdfProperties.bind(this);
         this.downloadPdf = this.downloadPdf.bind(this);
         this.resetSliders = this.resetSliders.bind(this);
     }
@@ -125,9 +145,8 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                     });
                     return memo;
                 }, [] as IBarGraphDataset[]);
+                const orderedAlts = _.keys(orderedLabels);
                 const sortedDatasets = datasets.sort((a:IBarGraphDataset,b:IBarGraphDataset) => {
-                    const orderedAlts = ['multiple', 'mutated', 'fusion', 'amplified', 'gain', 'homdel', 'hetloss',
-                        'mrnaExpressionUp', 'mrnaExpressionDown', 'protExpressionUp', 'protExpressionDown'];
                     return orderedAlts.indexOf(a.label) - orderedAlts.indexOf(b.label);
                 });
                 accum.push({
@@ -155,6 +174,8 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
     private resetSliders() {
         this.altCasesValue = 0;
         this.totalCasesValue = 0;
+        this.handleAltSliderChange(0);
+        this.handleTotalSliderChange(0);
     }
 
     private handleGenomicCheckboxChange() {
@@ -163,10 +184,46 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
 
     private handleAltSliderChange(value:number) {
         this.tempAltCasesValue = value;
+        this.tempAltCasesInputValue = value;
     }
 
     private handleTotalSliderChange(value:number) {
         this.tempTotalCasesValue = value;
+        this.tempTotalCasesInputValue = value;
+    }
+
+    private handleAltInputKeyPress(target:any) {
+        if (target.charCode === 13){
+            if (isNaN(this.tempAltCasesInputValue)) {
+                this.tempAltCasesInputValue = 0;
+                return;
+            }
+            //removes leading 0s
+            this.tempAltCasesInputValue = Number(this.tempAltCasesInputValue);
+            this.tempAltCasesValue = this.tempAltCasesInputValue;
+            this.handleAltSliderChangeComplete();
+        }
+    }
+
+    private handleTotalInputKeyPress(target:any) {
+        if (target.charCode === 13){
+            if (isNaN(this.tempTotalCasesInputValue)) {
+                this.tempTotalCasesInputValue = 0;
+                return;
+            }
+            //removes leading 0s
+            this.tempTotalCasesInputValue = Number(this.tempTotalCasesInputValue);
+            this.tempTotalCasesValue = this.tempTotalCasesInputValue;
+            this.handleTotalSliderChangeComplete();
+        }
+    }
+
+    private handleAltInputChange(e:any) {
+        this.tempAltCasesInputValue = e.target.value.replace(/[^0-9\.]/g, '');
+    }
+
+    private handleTotalInputChange(e:any) {
+        this.tempTotalCasesInputValue = e.target.value.replace(/[^0-9\.]/g, '');
     }
 
     private handleAltSliderChangeComplete() {
@@ -200,7 +257,6 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
     }
 
     @computed private get cancerTypes() {
-
         // build array of cancer type options and sort alphabetically
         const sortedCancerTypes = Object.keys(this.props.data).map(point => (
             {label: point, value: point}
@@ -212,7 +268,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
     }
 
     @computed private get altCasesMax() {
-        return Math.floor(Math.max(...this.barChartDatasets.map(data => data.sortCount)));
+        return Math.max(...this.barChartDatasets.map(data => data.sortCount));
     }
 
     @computed private get selectedCancerTypes() {
@@ -280,13 +336,14 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
         this.pngAnchor = href;
     }
 
-    public setPdfAnchor(dataURL:string) {
-        this.pdfAnchor = dataURL;
+    public setPdfProperties(anchor:string, width: number = 1100, height: number = 600) {
+        this.pdf = {anchor, width, height};
     }
 
     private downloadPdf() {
-        const pdf = new jsPDF('l')
-            .addImage(this.pdfAnchor, 'JPEG', 0, 0)
+        const {anchor, width, height} = this.pdf;
+        const pdf = new jsPDF({orientation: 'l', unit:'mm', format:[width + 20, height + 20]})
+            .addImage(anchor, 'JPEG', 0,0)
             .save("cBioPortalCancerSummary.pdf");
     }
 
@@ -326,7 +383,8 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                             </div>
                         </FormGroup>
                         <FormGroup>
-                            <FormControl type="text" value={this.tempAltCasesValue + symbol}/>
+                            <FormControl type="text" value={this.tempAltCasesInputValue + symbol} onChange={this.handleAltInputChange}
+                                         onKeyPress={this.handleAltInputKeyPress}/>
                         </FormGroup>
                     </div>
                 </div>
@@ -358,7 +416,8 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                             </div>
                         </FormGroup>
                         <FormGroup>
-                            <FormControl type="text" value={this.tempTotalCasesValue}/>
+                            <FormControl type="text" value={this.tempTotalCasesInputValue} onChange={this.handleTotalInputChange}
+                                         onKeyPress={this.handleTotalInputKeyPress}/>
                         </FormGroup>
                     </div>
                 </div>
@@ -372,17 +431,19 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                     <div role="group" className="btn-group">
                     <button onClick={this.toggleShowControls} className="btn btn-default btn-xs">Customize <i className="fa fa-cog" aria-hidden="true"></i></button>
                     <a className={`btn btn-default btn-xs ${this.pngAnchor ? '': ' disabled'}`}
-                        href={this.pngAnchor} download="cBioPortalCancerSummary.png" style={{color: 'white'}}>
+                        href={this.pngAnchor} download="cBioPortalCancerSummary.png">
                         PNG <i className="fa fa-cloud-download" aria-hidden="true"></i>
                     </a>
-                    <button className={`btn btn-default btn-xs ${this.pdfAnchor ? '': ' disabled'}`}
+                    <button className={`btn btn-default btn-xs ${this.pdf.anchor ? '': ' disabled'}`}
                        onClick={this.downloadPdf}>
                         PDF <i className="fa fa-cloud-download" aria-hidden="true"></i>
                     </button>
                 </div>
                 {controls}
                 <SummaryBarGraph data={this.chartData} yAxis={this.yAxis} xAxis={this.xAxis} gene={this.props.gene} width={this.props.width}
-                                 setPdfAnchor={this.setPdfAnchor} setPngAnchor={this.setPngAnchor} legend={this.showGenomicAlt}/>
+                                 setPdfProperties={this.setPdfProperties} setPngAnchor={this.setPngAnchor} legend={this.showGenomicAlt}
+                                 orderedLabels={orderedLabels}
+                />
 
                     </div>
                     </Then>
