@@ -4,7 +4,8 @@ import {computed, observable} from "mobx";
 import { ChartTooltipItem } from 'chart.js';
 import Chart, {ChartLegendItem} from 'chart.js';
 import {
-    IBarGraphConfigOptions, IBarGraphDataset, ICancerTypeAlterationCounts, ICancerTypeAlterationData
+    IBarGraphConfigOptions, IBarGraphDataset,
+    // ICancerTypeAlterationPlotData
 } from './CancerSummaryContent';
 import {observer} from "mobx-react";
 import classnames from 'classnames';
@@ -15,10 +16,13 @@ interface ISummaryBarGraphProps {
     yAxis: 'alt-freq' | 'abs-count';
     xAxis: 'y-axis' | 'can-types';
     legend: boolean;
-    setPngAnchor:any;
-    setPdfAnchor:any;
+    setPngAnchor:(href:string) => void;
+    setPdfProperties:(anchor:string, width: number, height: number) => void;
     gene: string;
     width: number;
+    orderedLabels: {
+        [key:string]: string;
+    };
 }
 
 @observer
@@ -34,6 +38,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
         super();
 
         this.updateChart = this.updateChart.bind(this);
+        this.getLegendNames = this.getLegendNames.bind(this);
     }
 
     private getTooltipOptions(tooltipModel: any, data:IBarGraphConfigOptions, chartOptions:any, sumBarGraph:any) {
@@ -90,7 +95,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
                         <tbody>`
             );
 
-            bodyLines.forEach(body => {
+            bodyLines.reverse().forEach(body => {
                 innerHtml += (
                     `<tr>
                         <td> ${sumBarGraph.getLegendNames(body.label)} </td>
@@ -125,36 +130,24 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
 
     private updateChart() {
         this.chartConfig.data = this.props.data;
-        this.chartConfig.options = {};
         this.chartConfig.options = this.chartOptions;
         this.chart.update();
     }
 
     private hasAlterations() {
-        return _.sumBy(this.props.data.datasets, function(dataset) { return dataset.count }) > 0;
+        return _.sumBy(this.props.data.datasets, function(dataset) { return dataset.count; }) > 0;
     }
 
     private getLegendNames(id:string) {
-        const names: Record<keyof ICancerTypeAlterationCounts, string> = {
-            mutated: "Mutation",
-            amp: "Amplification",
-            homdel: "Deep Deletion",
-            hetloss: "Shallow Deletion",
-            gain: "Gain",
-            fusion: "Fusion",
-            mrnaExpressionUp: "mRNA Upregulation",
-            mrnaExpressionDown: "mRNA Downregulation",
-            protExpressionUp: "Protein Upregulation",
-            protExpressionDown: "Protein Downregulation",
-            multiple: "Multiple Alterations"
-        };
         //TODO: figure out ts issue with index signature.
-        return (names as any)[id] || id;
+        return this.props.orderedLabels[id] || id;
     }
 
     private get chartOptions() {
-        const {data} = this.props;
+        const {data, yAxis} = this.props;
         const that = this;
+
+        const orderedAltNames = _.values(this.props.orderedLabels);
 
         return {
             title: {
@@ -181,7 +174,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
                     stacked: true,
                     maxBarThickness:30,
                     ticks: {
-                        maxRotation: 90,
+                        maxRotation: 70,
                         autoSkip: false
                     }
                 }],
@@ -190,7 +183,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
                     scaleLabel: {
                         display: true,
                         fontSize: 13,
-                        labelString: 'Alteration Frequency'
+                        labelString: yAxis === 'abs-count' ? 'Absolute Counts': 'Alteration Frequency'
                     },
                     display:true,
                     ticks: {
@@ -207,7 +200,6 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
                 display: this.props.legend,
                 labels: {
                     generateLabels:(chart:any) => {
-                        let counter = 0;
                         const {data:chartData} = chart;
                         if (chartData.labels.length && chartData.datasets.length) {
                             const alterationCounts = _.reduce(chartData.datasets, (obj, dataset:IBarGraphDataset) => {
@@ -218,16 +210,18 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
                                 }
                                 return obj;
                             }, {} as any)
-                            return _.reduce(alterationCounts, (arr, value:{count:number, backgroundColor: string}, label) => {
+                            const alterationLabels = _.reduce(alterationCounts, (arr, value:{count:number, backgroundColor: string}, label) => {
                                 if (value.count) {
                                     arr.push({
                                         text: this.getLegendNames(label),
-                                        fillStyle: value.backgroundColor,
-                                        index: counter ++
+                                        fillStyle: value.backgroundColor
                                     });
                                 }
                                 return arr;
-                            }, [] as any);
+                            }, [] as {text: string, fillStyle: string}[]);
+                            return alterationLabels.sort((a, b) => {
+                                return orderedAltNames.indexOf(b.text) - orderedAltNames.indexOf(a.text);
+                            });
                         } else {
                             return [];
                         }
@@ -249,7 +243,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
         }
         if (this.chartTarget) {
             const pdf = this.chartTarget.toDataURL();
-            this.props.setPdfAnchor(pdf);
+            this.props.setPdfProperties(pdf, this.width, this.chartTarget.offsetHeight);
         }
     }
 
@@ -266,7 +260,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
                  className="cancer-summary-chart-container">
                 {errorMessage}
                 <canvas ref={(el:HTMLCanvasElement) => this.chartTarget = el}
-                        className={classnames({ hidden:!this.hasAlterations() })} height="400"/>
+                        className={classnames({ hidden:!this.hasAlterations() })}/>
             </div>
         );
     }
