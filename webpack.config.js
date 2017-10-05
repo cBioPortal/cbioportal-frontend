@@ -9,6 +9,19 @@ var GitRevisionPlugin = require('git-revision-webpack-plugin');
 var gitRevisionPlugin = new GitRevisionPlugin({
     versionCommand: 'describe --always --tags --dirty'
 });
+var COMMIT;
+// use try/catch for Heroku (i.e. when there's no git repo)
+try {
+    COMMIT = JSON.stringify(gitRevisionPlugin.commithash())
+} catch(e) {
+    COMMIT = '';
+}
+var VERSION;
+try {
+    VERSION = JSON.stringify(gitRevisionPlugin.version())
+} catch(e) {
+    VERSION = '';
+}
 
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
@@ -72,8 +85,8 @@ var config = {
 
     plugins: [
         new webpack.DefinePlugin({
-            'VERSION': JSON.stringify(gitRevisionPlugin.version()),
-            'COMMIT': JSON.stringify(gitRevisionPlugin.commithash()),
+            'VERSION': VERSION,
+            'COMMIT': COMMIT,
         }),
         new HtmlWebpackPlugin({cache: false, template: 'my-index.ejs'}),
         new webpack.optimize.DedupePlugin(),
