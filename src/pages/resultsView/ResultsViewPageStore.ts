@@ -280,30 +280,48 @@ export class ResultsViewPageStore {
             this.clinicalDataForSamples
         ],
         invoke: () => {
-            // first group samples by type
-            const sampleKeyToCancerTypeClinicalDataMap = _.reduce(this.clinicalDataForSamples.result, (memo: any, clinicalData: ClinicalData) => {
-                if (clinicalData.clinicalAttributeId === 'CANCER_TYPE') {
-                    memo[clinicalData.uniqueSampleKey] = clinicalData.value;
-                }
-                // we only use CANCER_TYPE (more general than CANCNER_TYPE_DETAILED) IF
-                // if we haven't yet found a detailed type
-                // this way, detailed can override not-detailed, but not vice-versa
+            let groupedSamples = this.groupSamplesByCancerType(this.clinicalDataForSamples.result,this.samples.result, 'CANCER_TYPE');
+            if (_.size(groupedSamples) === 1) {
+                groupedSamples = this.groupSamplesByCancerType(this.clinicalDataForSamples.result, this.samples.result, 'CANCER_TYPE_DETAILED');
+            }
+            return Promise.resolve(groupedSamples);
+        }
+    });
+
+    public groupSamplesByCancerType(clinicalDataForSamples: ClinicalData[], samples: Sample[], cancerTypeLevel:'CANCER_TYPE' | 'CANCER_TYPE_DETAILED') {
+
+        // first generate map of sampleId to it's cancer type
+        const sampleKeyToCancerTypeClinicalDataMap = _.reduce(clinicalDataForSamples, (memo, clinicalData: ClinicalData) => {
+            if (clinicalData.clinicalAttributeId === cancerTypeLevel) {
+                memo[clinicalData.uniqueSampleKey] = clinicalData.value;
+            }
+
+            // if we were told CANCER_TYPE and we find CANCER_TYPE_DETAILED, then fall back on it. if we encounter
+            // a CANCER_TYPE later, it will override this.
+            if (cancerTypeLevel === 'CANCER_TYPE') {
                 if (!memo[clinicalData.uniqueSampleKey] && clinicalData.clinicalAttributeId === 'CANCER_TYPE_DETAILED') {
                     memo[clinicalData.uniqueSampleKey] = clinicalData.value;
                 }
+            }
 
-                return memo;
-            }, {});
-            let ret = _.reduce(this.samples.result, (memo:{[cancerType:string]:Sample[]} , sample: Sample) => {
-                if (sample.uniqueSampleKey in sampleKeyToCancerTypeClinicalDataMap) {
-                    memo[sampleKeyToCancerTypeClinicalDataMap[sample.uniqueSampleKey]] = memo[sampleKeyToCancerTypeClinicalDataMap[sample.uniqueSampleKey]] || [];
-                    memo[sampleKeyToCancerTypeClinicalDataMap[sample.uniqueSampleKey]].push(sample);
-                }
-                return memo;
-            }, {});
-            return Promise.resolve(ret);
-        }
-    });
+            return memo;
+        }, {} as { [uniqueSampleId:string]:string });
+
+        // now group samples by cancer type
+        let samplesGroupedByCancerType = _.reduce(samples, (memo:{[cancerType:string]:Sample[]} , sample: Sample) => {
+            // if it appears in map, then we have a cancer type
+            if (sample.uniqueSampleKey in sampleKeyToCancerTypeClinicalDataMap) {
+                memo[sampleKeyToCancerTypeClinicalDataMap[sample.uniqueSampleKey]] = memo[sampleKeyToCancerTypeClinicalDataMap[sample.uniqueSampleKey]] || [];
+                memo[sampleKeyToCancerTypeClinicalDataMap[sample.uniqueSampleKey]].push(sample);
+            } else {
+                // TODO: we need to fall back to study cancer type
+            }
+            return memo;
+        }, {} as { [cancerType:string]:Sample[] });
+
+        return samplesGroupedByCancerType;
+
+    }
 
     readonly alterationsBySampleIdByGene = remoteData({
         await: () => [
