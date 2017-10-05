@@ -11,6 +11,15 @@ import CancerSummaryContainer from "shared/components/cancerSummary/CancerSummar
 import Mutations from "./mutation/Mutations";
 import {stringListToSet} from "../../shared/lib/StringUtils";
 import MutualExclusivityTab from "./mutualExclusivity/MutualExclusivityTab";
+import Chart from 'chart.js';
+
+(Chart as any).plugins.register({
+    beforeDraw: function(chartInstance:any) {
+        const ctx = chartInstance.chart.ctx;
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, chartInstance.chart.width, chartInstance.chart.height);
+    }
+});
 
 function initStore(){
 
