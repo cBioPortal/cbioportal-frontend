@@ -197,11 +197,11 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
             },
             legend: {
                 position: 'right',
-                display: this.props.legend,
                 labels: {
                     generateLabels:(chart:any) => {
                         const {data:chartData} = chart;
-                        if (chartData.labels.length && chartData.datasets.length) {
+                        if (!this.props.legend) return [];
+                        else if (chartData.labels.length && chartData.datasets.length) {
                             const alterationCounts = _.reduce(chartData.datasets, (obj, dataset:IBarGraphDataset) => {
                                 if (obj[dataset.label]) {
                                     obj[dataset.label].count = obj[dataset.label].count + dataset.total;
