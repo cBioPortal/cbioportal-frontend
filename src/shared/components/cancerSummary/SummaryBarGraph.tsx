@@ -159,6 +159,14 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
             },
             maintainAspectRatio: false,
             responsive: true,
+            layout: {
+              padding:{
+                  top:5,
+                  left:20,
+                  right:20,
+                  bottom:5
+              }
+            },
             tooltips: {
                 enabled: false,
                 position:'nearest',
@@ -259,7 +267,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
         let errorMessage = null;
         return (
             <div style={{width:this.width}} ref={(el: HTMLDivElement) => this.chartContainer = el}
-                 className="cancer-summary-chart-container">
+                 className="cancer-summary-chart-container borderedChart">
                 {errorMessage}
                 <canvas ref={(el:HTMLCanvasElement) => this.chartTarget = el}
                         className={classnames({ hidden:!this.hasAlterations() })}/>
