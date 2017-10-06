@@ -59,7 +59,8 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
 
         // Hide if no tooltip
         if (tooltipModel.opacity === 0) {
-            tooltipEl.style.opacity = '0';
+            //tooltipEl.style.opacity = '0';
+            tooltipEl.style.display = 'none';
             return;
         }
 
@@ -113,9 +114,9 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
         // const position = chartOptions._chart.canvas.getBoundingClientRect();
 
         // Display, position, and set styles for font
-        tooltipEl.style.opacity = '1';
+        tooltipEl.style.display ='block';
         tooltipEl.style.left =  tooltipModel.caretX + 35 + 'px';
-        tooltipEl.style.top = tooltipModel.caretY + 5 + 'px';
+        tooltipEl.style.top =  tooltipModel.y + 'px';
     }
 
     public componentDidMount() {
@@ -160,7 +161,8 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
             responsive: true,
             tooltips: {
                 enabled: false,
-                mode: 'x',
+                position:'nearest',
+                mode:'x',
                 filter(tooltipItem:ChartTooltipItem) {
                     if (tooltipItem) return Number(tooltipItem.yLabel) > 0;
                     return false;
