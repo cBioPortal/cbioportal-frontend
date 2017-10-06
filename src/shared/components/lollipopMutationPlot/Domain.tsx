@@ -60,7 +60,7 @@ export default class Domain extends React.Component<DomainProps, {}> {
             return label;
         }
 
-        if (!$(label).is(":visible")) {
+        if (!$(this.textElt).is(":visible")) {
             return label;
         }
 
