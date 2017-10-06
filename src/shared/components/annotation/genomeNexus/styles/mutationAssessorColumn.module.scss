@@ -1,19 +1,21 @@
+@import "functionalImpact";
+
 .ma-high {
-  color: #C83C3C;
-  font-weight:bold;
+  color: $high;
+  font-weight: bold;
 }
 
 .ma-medium {
-  color: #9F6F47;
-  font-weight:bold;
+  color: $medium;
+  font-weight: bold;
 }
 
 .ma-low {
-  color: #988A3E;
-  font-weight:bold;
+  color: $low;
+  font-weight: bold;
 }
 
 .ma-neutral {
-  color: #909090;
-  font-weight:bold;
+  color: $neutral;
+  font-weight: bold;
 }
