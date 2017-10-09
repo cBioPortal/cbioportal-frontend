@@ -22,7 +22,8 @@ const config:IAppConfig = {
     skinRightNavShowExamples: (window as any).skinRightNavShowExamples, 
     skinRightNavShowTestimonials: (window as any).skinRightNavShowTestimonials,
     skinRightNavExamplesHTML: (window as any).skinRightNavExamplesHTML,
-    skinRightNavWhatsNewBlurb: (window as any).skinRightNavWhatsNewBlurb
+    skinRightNavWhatsNewBlurb: (window as any).skinRightNavWhatsNewBlurb,
+    querySetsOfGenes: (window as any).querySetsOfGenes
 };
 
 export default config;
