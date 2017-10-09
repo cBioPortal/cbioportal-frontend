@@ -2,6 +2,7 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import SampleInline from './patientHeader/SampleInline';
 import {ClinicalDataBySampleId} from "../../shared/api/api-types-extended";
+import { ClinicalData } from "shared/api/generated/CBioPortalAPI";
 import {cleanAndDerive} from './clinicalInformation/lib/clinicalAttributesUtil.js';
 import styles from './patientHeader/style/clinicalAttributes.scss';
 import naturalSort from 'javascript-natural-sort';
@@ -82,6 +83,7 @@ class SampleManager {
     sampleOrder: string[];
     clinicalDataLegacyCleanAndDerived: { [s:string]:any };
     sampleColors: { [s:string]:string };
+    commonClinicalDataLegacyCleanAndDerived: { [s:string]:string };
 
     constructor(public samples: Array<ClinicalDataBySampleId>, events?: any) {
 
@@ -89,6 +91,9 @@ class SampleManager {
         this.sampleLabels = {};
         this.clinicalDataLegacyCleanAndDerived = {};
         this.sampleColors = {};
+        // clinical attributes that should be displayed at patient level, since
+        // they are the same in all samples
+        this.commonClinicalDataLegacyCleanAndDerived = {};
 
         samples.forEach((sample, i) => {
            // add legacy clinical data
@@ -114,6 +119,17 @@ class SampleManager {
            this.sampleColors[sample.id] = color;
         });
 
+        // remove common CANCER_TYPE/CANCER_TYPE_DETAILED in top bar (display on
+        // patient)
+        ['CANCER_TYPE', 'CANCER_TYPE_DETAILED'].forEach((attr) => {
+            if (SampleManager.isSameClinicalAttributeInAllSamples(samples, attr)) {
+                this.commonClinicalDataLegacyCleanAndDerived[attr] = this.clinicalDataLegacyCleanAndDerived[samples[0].id][attr];
+                samples.forEach((sample) => {
+                    delete this.clinicalDataLegacyCleanAndDerived[sample.id][attr];
+                });
+            }
+        })
+
         this.samples = sortSamples(samples, this.clinicalDataLegacyCleanAndDerived, events);
         this.samples.forEach((sample, i) => {
             this.sampleIndex[sample.id] = i;
@@ -121,6 +137,16 @@ class SampleManager {
         });
         // order as array of sample ids (used further downstream)
         this.sampleOrder = _.sortBy(Object.keys(this.sampleIndex), (k) => this.sampleIndex[k]);
+    }
+
+    static isSameClinicalAttributeInAllSamples(samples:Array<ClinicalDataBySampleId>, attribute:string) {
+        let uniqueValues = _.uniq(samples.map((sample) => {
+            let attr = sample.clinicalData.find(
+                (x:ClinicalData) => x.clinicalAttributeId === attribute
+            );
+            return attr? attr.value : attr
+        }));
+        return uniqueValues.length === 1 && uniqueValues[0];
     }
 
     getComponentForSample(sampleId: string,
