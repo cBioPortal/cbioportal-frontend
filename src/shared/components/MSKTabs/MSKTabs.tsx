@@ -287,26 +287,6 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
 
     }
 
-    componentDidUpdate() {
-        setTimeout(()=>{
-            // if there are page breaks, it means that page calculations already performed
-            if (this.props.enablePagination &&
-                this.state.pageBreaks.length  === 0)
-            {
-                // find page breaks: depends on width of the container
-                const pageBreaks: string[] = this.findPageBreaks();
-
-                // find current page: depends on active tab id
-                const currentPage: number = this.findCurrentPage(pageBreaks);
-
-                this.setState({
-                    currentPage,
-                    pageBreaks
-                } as IMSKTabsState);
-            }
-        },1);
-    }
-
     findCurrentPage(pageBreaks: string[]) {
         let currentPage = 1;
         let found = false;
