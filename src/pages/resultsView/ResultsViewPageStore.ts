@@ -103,7 +103,8 @@ export function countAlterationOccurences(samplesByCancerType: {[cancerType: str
         const ret: ICancerTypeAlterationData = {
             sampleTotal:samples.length,
             alterationTotal:0,
-            alterationTypeCounts:counts
+            alterationTypeCounts:counts,
+            alteredSampleCount:0
         };
 
         // for each sample in cancer type
@@ -116,7 +117,13 @@ export function countAlterationOccurences(samplesByCancerType: {[cancerType: str
                 //a sample could have multiple mutations.  we only want to to count one
                 const uniqueAlterations = _.uniqBy(alterations, (alteration) => alteration.alterationType);
 
-                ret.alterationTotal = uniqueAlterations.length;
+                ret.alterationTotal += uniqueAlterations.length;
+
+                // if the sample has at least one alteration, it's altered so
+                // increment alteredSampleTotal
+                if (uniqueAlterations.length > 0) { //
+                    ret.alteredSampleCount+=1;
+                }
 
                 // if we have multiple alterations, we just register this as "multiple" and do NOT add
                 // individual alterations to their respective counts

@@ -130,9 +130,13 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
     }
 
     private updateChart() {
+
+        // we need to start over
+        this.chart.destroy();
         this.chartConfig.data = this.props.data;
         this.chartConfig.options = this.chartOptions;
-        this.chart.update();
+        this.chart = new Chart(this.chartTarget, this.chartConfig);
+
     }
 
     private hasAlterations() {
@@ -146,7 +150,6 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
 
     private get chartOptions() {
         const {data, yAxis} = this.props;
-        const that = this;
 
         const orderedAltNames = _.values(this.props.orderedLabels);
 
@@ -171,12 +174,13 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
                 enabled: false,
                 position:'nearest',
                 mode:'x',
-                filter(tooltipItem:ChartTooltipItem) {
+                filter:(tooltipItem:ChartTooltipItem)=>{
                     if (tooltipItem) return Number(tooltipItem.yLabel) > 0;
                     return false;
                 },
-                custom(tooltipModel: any){
-                    return that.getTooltipOptions(tooltipModel, data, this, that);}
+                custom:(tooltipModel: any)=>{
+                    return this.getTooltipOptions(tooltipModel, data, this, this);
+                }
             },
             scales: {
                 xAxes: [{
@@ -198,10 +202,9 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
                     display:true,
                     ticks: {
                         fontSize: 11,
-                        callback: function(value:number) {
-                            return _.round(value, 1) + (that.props.yAxis === "abs-count" ? '': '%');
-                        },
-
+                        callback: (value:number) => {
+                            return _.round(value, 1) + (this.props.yAxis === "abs-count" ? '': '%');
+                        }
                     }
                 }]
             },
