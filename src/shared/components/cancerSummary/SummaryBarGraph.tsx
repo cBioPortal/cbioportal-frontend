@@ -186,7 +186,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
                 xAxes: [{
                     gridLines: {display: false},
                     stacked: true,
-                    maxBarThickness:30,
+                    barThickness:(this.props.data.labels.length > 15) ? 14 : 20,
                     ticks: {
                         maxRotation: 70,
                         autoSkip: false
@@ -261,7 +261,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
     }
 
     private get width() {
-        const maxWidth = 250 + this.props.data.labels.length * 45;
+        const maxWidth = 250 + this.props.data.labels.length * 53;
         const conWidth = (this.props.width || 1159);
         return maxWidth > conWidth ? conWidth : maxWidth;
     }
