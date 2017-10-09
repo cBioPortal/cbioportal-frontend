@@ -97,8 +97,6 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
 
     public render() {
 
-        console.log("rendering mapper");
-
         return (
             <div>
                 {
@@ -116,98 +114,97 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                     )
                 }
 
-                <LoadingIndicator isLoading={this.props.store.mutationData.isPending} />
                 {
-                    (this.props.store.mutationData.isComplete) && (
-                        <div>
-                            <LoadingIndicator isLoading={this.props.store.pfamGeneData.isPending} />
-                            { (!this.props.store.pfamGeneData.isPending) && (
-                            <div style={{ display:'flex' }}>
-                                <div className="borderedChart" style={{ marginRight:10 }}>
 
-                                    <LollipopMutationPlot
-                                        store={this.props.store}
-                                        onXAxisOffset={this.handlers.onXAxisOffset}
-                                        geneWidth={this.geneWidth}
+                    <div>
+                        <LoadingIndicator isLoading={this.props.store.pfamGeneData.isPending} />
+                        { (!this.props.store.pfamGeneData.isPending) && (
+                        <div style={{ display:'flex' }}>
+                            <div className="borderedChart" style={{ marginRight:10 }}>
+
+                                <LollipopMutationPlot
+                                    store={this.props.store}
+                                    onXAxisOffset={this.handlers.onXAxisOffset}
+                                    geneWidth={this.geneWidth}
+                                    {...DEFAULT_PROTEIN_IMPACT_TYPE_COLORS}
+                                />
+                                <ProteinChainPanel
+                                    store={this.props.store}
+                                    pdbHeaderCache={this.props.pdbHeaderCache}
+                                    geneWidth={this.geneWidth}
+                                    geneXOffset={this.lollipopPlotGeneX}
+                                    maxChainsHeight={200}
+                                />
+                            </div>
+
+                            <div className="mutationMapperMetaColumn">
+                                {this.geneSummary}
+
+                                {this.mutationRateSummary}
+
+                                <div>
+                                    <ProteinImpactTypePanel
+                                        dataStore={this.props.store.dataStore}
                                         {...DEFAULT_PROTEIN_IMPACT_TYPE_COLORS}
                                     />
-                                    <ProteinChainPanel
-                                        store={this.props.store}
-                                        pdbHeaderCache={this.props.pdbHeaderCache}
-                                        geneWidth={this.geneWidth}
-                                        geneXOffset={this.lollipopPlotGeneX}
-                                        maxChainsHeight={200}
-                                    />
                                 </div>
 
-                                <div className="mutationMapperMetaColumn">
-                                    {this.geneSummary}
-
-                                    {this.mutationRateSummary}
-
-                                    <div>
-                                        <ProteinImpactTypePanel
-                                            dataStore={this.props.store.dataStore}
-                                            {...DEFAULT_PROTEIN_IMPACT_TYPE_COLORS}
-                                        />
-                                    </div>
-
-                                    <button
-                                        className="btn btn-default btn-sm"
-                                        disabled={this.props.store.pdbChainDataStore.allData.length === 0}
-                                        onClick={this.toggle3dPanel}
-                                    >
-                                        View 3D Structure
-                                    </button>
-                                </div>
+                                <button
+                                    className="btn btn-default btn-sm"
+                                    disabled={this.props.store.pdbChainDataStore.allData.length === 0}
+                                    onClick={this.toggle3dPanel}
+                                >
+                                    View 3D Structure
+                                </button>
                             </div>
-                            ) }
-                            <hr style={{ marginTop:20 }} />
-
-                            {!this.props.store.dataStore.showingAllData &&
-                                (<div style={{
-                                    marginTop:"5px",
-                                    marginBottom:"5px"
-                                }}>
-                                    <span style={{color:"red", fontSize:"14px", fontFamily:"verdana,arial,sans-serif"}}>
-                                        <span>Current view shows filtered results. Click </span>
-                                        <a style={{cursor:"pointer"}} onClick={this.handlers.resetDataStore}>here</a>
-                                        <span> to reset all filters.</span>
-                                    </span>
-                                </div>)
-                            }
-                            <LoadingIndicator
-                                isLoading={
-                                    this.props.store.clinicalDataForSamples.isPending ||
-                                    this.props.store.studiesForSamplesWithoutCancerTypeClinicalData.isPending
-                                }
-                            />
-                            {!this.props.store.clinicalDataForSamples.isPending &&
-                            !this.props.store.studiesForSamplesWithoutCancerTypeClinicalData.isPending && (
-                                <ResultsViewMutationTable
-                                    sampleIdToTumorType={this.props.store.sampleIdToTumorType}
-                                    discreteCNACache={this.props.discreteCNACache}
-                                    genomeNexusEnrichmentCache={this.props.genomeNexusEnrichmentCache}
-                                    molecularProfileIdToMolecularProfile={this.props.store.molecularProfileIdToMolecularProfile.result}
-                                    oncoKbEvidenceCache={this.props.oncoKbEvidenceCache}
-                                    pubMedCache={this.props.pubMedCache}
-                                    mutationCountCache={this.props.mutationCountCache}
-                                    dataStore={this.props.store.dataStore}
-                                    myCancerGenomeData={this.props.myCancerGenomeData}
-                                    hotspots={this.props.store.indexedHotspotData}
-                                    cosmicData={this.props.store.cosmicData.result}
-                                    oncoKbData={this.props.store.oncoKbData}
-                                    civicGenes={this.props.store.civicGenes.result}
-                                    civicVariants={this.props.store.civicVariants.result}
-                                    enableOncoKb={this.props.config.showOncoKB}
-                                    enableGenomeNexus={this.props.config.showGenomeNexus}
-                                    enableHotspot={this.props.config.showHotspot}
-                                    enableMyCancerGenome={this.props.config.showMyCancerGenome}
-                                    enableCivic={this.props.config.showCivic}
-                                />
-                            )}
                         </div>
-                    )
+                        ) }
+                        <hr style={{ marginTop:20 }} />
+
+                        {!this.props.store.dataStore.showingAllData &&
+                            (<div style={{
+                                marginTop:"5px",
+                                marginBottom:"5px"
+                            }}>
+                                <span style={{color:"red", fontSize:"14px", fontFamily:"verdana,arial,sans-serif"}}>
+                                    <span>Current view shows filtered results. Click </span>
+                                    <a style={{cursor:"pointer"}} onClick={this.handlers.resetDataStore}>here</a>
+                                    <span> to reset all filters.</span>
+                                </span>
+                            </div>)
+                        }
+                        <LoadingIndicator
+                            isLoading={
+                                this.props.store.clinicalDataForSamples.isPending ||
+                                this.props.store.studiesForSamplesWithoutCancerTypeClinicalData.isPending
+                            }
+                        />
+                        {!this.props.store.clinicalDataForSamples.isPending &&
+                        !this.props.store.studiesForSamplesWithoutCancerTypeClinicalData.isPending && (
+                            <ResultsViewMutationTable
+                                sampleIdToTumorType={this.props.store.sampleIdToTumorType}
+                                discreteCNACache={this.props.discreteCNACache}
+                                genomeNexusEnrichmentCache={this.props.genomeNexusEnrichmentCache}
+                                molecularProfileIdToMolecularProfile={this.props.store.molecularProfileIdToMolecularProfile.result}
+                                oncoKbEvidenceCache={this.props.oncoKbEvidenceCache}
+                                pubMedCache={this.props.pubMedCache}
+                                mutationCountCache={this.props.mutationCountCache}
+                                dataStore={this.props.store.dataStore}
+                                myCancerGenomeData={this.props.myCancerGenomeData}
+                                hotspots={this.props.store.indexedHotspotData}
+                                cosmicData={this.props.store.cosmicData.result}
+                                oncoKbData={this.props.store.oncoKbData}
+                                civicGenes={this.props.store.civicGenes.result}
+                                civicVariants={this.props.store.civicVariants.result}
+                                enableOncoKb={this.props.config.showOncoKB}
+                                enableGenomeNexus={this.props.config.showGenomeNexus}
+                                enableHotspot={this.props.config.showHotspot}
+                                enableMyCancerGenome={this.props.config.showMyCancerGenome}
+                                enableCivic={this.props.config.showCivic}
+                            />
+                        )}
+                    </div>
+
                 }
             </div>
         );
