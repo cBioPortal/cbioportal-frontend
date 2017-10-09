@@ -47,6 +47,7 @@ export interface ICancerTypeAlterationData {
     alterationTotal:number;
     sampleTotal:number;
     alterationTypeCounts:ICancerTypeAlterationCounts;
+    alteredSampleCount:number;
 
 }
 
@@ -127,15 +128,15 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
     @computed get barChartDatasets():IBarChartSortedData[] {
         return _.reduce(this.props.data, (accum, alterationData, cancerType:string) => {
             const cancerAlterations = alterationData.alterationTypeCounts;
-            let altTotalPercent = alterationData.alterationTotal / alterationData.sampleTotal * 100;
-            altTotalPercent = altTotalPercent > 100 ? 100 : altTotalPercent;
+            let altTotalPercent = (alterationData.alteredSampleCount / alterationData.sampleTotal) * 100;
+            ///altTotalPercent = altTotalPercent > 100 ? 100 : altTotalPercent;
             if (this.selectedCancerTypes[cancerType] && alterationData.sampleTotal >= this.totalCasesValue) {
                 const datasets = _.reduce(cancerAlterations as any, (memo, count:number, altType: string) => {
-                    let percent = count / alterationData.sampleTotal * 100;
-                    percent = percent > 100 ? 100 : percent;
-                    const total = this.yAxis === "abs-count" ? count : percent;
+                    let percent = (count / alterationData.sampleTotal) * 100;
+                    //percent = percent > 100 ? 100 : percent;
+                    const total = (this.yAxis === "abs-count") ? count : percent;
                     memo.push({
-                        label: altType === 'deleted' ? 'hetloss': altType,
+                        label: altType,
                         totalCases: alterationData.sampleTotal,
                         altTotalPercent,
                         total,
@@ -153,7 +154,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                     label: cancerType,
                     sortBy: this.yAxis,
                     symbol: this.yAxis === "abs-count" ? '' : "%",
-                    sortCount: this.yAxis === "abs-count" ? alterationData.alterationTotal : altTotalPercent,
+                    sortCount: this.yAxis === "abs-count" ? alterationData.alteredSampleCount : altTotalPercent,
                     data: sortedDatasets
                 });
             }
