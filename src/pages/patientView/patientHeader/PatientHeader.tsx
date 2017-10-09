@@ -5,12 +5,14 @@ import {OverlayTrigger, Popover} from 'react-bootstrap';
 import ClinicalInformationPatientTable from '../clinicalInformation/ClinicalInformationPatientTable';
 import {getSpanElements} from '../clinicalInformation/lib/clinicalAttributesUtil.js';
 import {placeArrowBottomLeft} from "shared/components/defaultTooltip/DefaultTooltip";
+import SampleManager from './../sampleManager';
 
 import styles from './styles.module.scss';
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
 
 export type IPatientHeaderProps = {
     patient:any;
+    sampleManager?:SampleManager | null;
     handlePatientClick:any;
     darwinUrl?: string;
 }
@@ -19,7 +21,7 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
 
         return (
             <div className={styles.patientHeader}>
-                {this.props.patient && this.getOverlayTriggerPatient(this.props.patient)}
+                {this.props.patient && this.getOverlayTriggerPatient(this.props.patient, this.props.sampleManager)}
                 {this.getDarwinUrl(this.props.darwinUrl)}
             </div>
         );
@@ -47,10 +49,16 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
         );
     }
 
-    private getOverlayTriggerPatient(patient: any) {
+    private getOverlayTriggerPatient(patient: any, sampleManager?: SampleManager|null) {
         const clinicalDataLegacy = fromPairs(patient.clinicalData.map(
             (x: any) => [x.clinicalAttributeId, x.value])
         );
+        // get common clinical attributes in all samples
+        if (sampleManager) {
+            Object.keys(sampleManager.commonClinicalDataLegacyCleanAndDerived).forEach((attr:string) => {
+                clinicalDataLegacy[attr] = sampleManager.commonClinicalDataLegacyCleanAndDerived[attr];
+            });
+        }
 
         return patient &&
         (
