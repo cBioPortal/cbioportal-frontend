@@ -376,7 +376,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                                     min={0}
                                     max={altMax}
                                     value={this.tempAltCasesValue}
-                                    labels={{0:0 + symbol, [altMax]:altMax + symbol}}
+                                    labels={{0:0 + symbol, [altMax]:Math.ceil(altMax) + symbol}}
                                     format={(val:string) => val + symbol}
                                     onChange={this.handleAltSliderChange}
                                     onChangeComplete={this.handleAltSliderChangeComplete}
