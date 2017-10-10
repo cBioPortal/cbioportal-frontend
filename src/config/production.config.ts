@@ -19,7 +19,8 @@ const config:IAppConfig = {
     skinRightNavShowDatasets: (window as any).skinRightNavShowDatasets,
     skinRightNavShowExamples: (window as any).skinRightNavShowExamples, 
     skinRightNavShowTestimonials: (window as any).skinRightNavShowTestimonials,
-    skinRightNavExamplesHTML: (window as any).skinRightNavExamplesHTML
+    skinRightNavExamplesHTML: (window as any).skinRightNavExamplesHTML,
+    skinRightNavWhatsNewBlurb: (window as any).skinRightNavWhatsNewBlurb
 };
 
 export default config;
