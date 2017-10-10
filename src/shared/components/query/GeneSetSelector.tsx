@@ -45,7 +45,7 @@ export default class GeneSetSelector extends QueryStoreComponent<GeneSetSelector
 				label: 'User-defined List',
 				value: ''
 			},
-			AppConfig.querySetsOfGenes.map(item => ({
+			...AppConfig.querySetsOfGenes == undefined ? [{label:"", value:""}] : AppConfig.querySetsOfGenes.map(item => ({
 				label: `${item.id} (${item.genes.length} genes)`,
 				value: item.genes.join(' ')
 			}))
