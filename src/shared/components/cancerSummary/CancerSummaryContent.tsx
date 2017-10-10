@@ -343,8 +343,12 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
 
     private downloadPdf() {
         const {anchor, width, height} = this.pdf;
-        const pdf = new jsPDF({orientation: 'l', unit:'mm', format:[width + 20, height + 20]})
-            .addImage(anchor, 'JPEG', 0,0)
+        let orientation = 'p';
+        if  (width > height) {
+            orientation = 'l';
+        }
+        const pdf = new jsPDF({orientation, unit:'mm', format:[width * 0.264583 , height * 0.264583 ]});
+        pdf.addImage(anchor, 'JPEG', 0,0, pdf.internal.pageSize.width , pdf.internal.pageSize.height)
             .save("cBioPortalCancerSummary.pdf");
     }
 
