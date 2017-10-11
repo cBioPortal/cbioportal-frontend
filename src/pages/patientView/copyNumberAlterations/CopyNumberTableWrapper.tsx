@@ -31,6 +31,7 @@ type ICopyNumberTableWrapperProps = {
     cnaCivicGenes?: ICivicGene;
     cnaCivicVariants?: ICivicVariant,
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
+    oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean};
     enableOncoKb?:boolean;
     enableCivic?:boolean;
     pubMedCache?:PubMedCache;
@@ -94,6 +95,7 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
             render: (d:DiscreteCopyNumberData[]) => (AnnotationColumnFormatter.renderFunction(d, {
                 oncoKbData: this.props.cnaOncoKbData,
                 oncoKbEvidenceCache: this.props.oncoKbEvidenceCache,
+                oncoKbAnnotatedGenes: this.props.oncoKbAnnotatedGenes,
                 enableOncoKb: this.props.enableOncoKb as boolean,
                 pubMedCache: this.props.pubMedCache,
                 civicGenes: this.props.cnaCivicGenes,
@@ -104,7 +106,7 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
             })),
             sortBy:(d:DiscreteCopyNumberData[])=>{
                 return AnnotationColumnFormatter.sortValue(d,
-                    this.props.cnaOncoKbData, this.props.cnaCivicGenes, this.props.cnaCivicVariants);
+                    this.props.oncoKbAnnotatedGenes, this.props.cnaOncoKbData, this.props.cnaCivicGenes, this.props.cnaCivicVariants);
             },
             order: 50
         });

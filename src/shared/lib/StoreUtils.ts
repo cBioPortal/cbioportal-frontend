@@ -26,7 +26,7 @@ import {
 import {
     getCivicVariants, getCivicGenes
 } from "shared/lib/CivicUtils";
-import {Query, default as OncoKbAPI} from "shared/api/generated/OncoKbAPI";
+import {Query, default as OncoKbAPI, Gene} from "shared/api/generated/OncoKbAPI";
 import {getAlterationString} from "shared/lib/CopyNumberUtils";
 import {MobxPromise} from "mobxpromise";
 import {keywordToCosmic, indexHotspots, geneToMyCancerGenome} from "shared/lib/AnnotationUtils";
@@ -399,7 +399,16 @@ export function fetchMyCancerGenomeData(): IMyCancerGenomeData
     return geneToMyCancerGenome(data);
 }
 
+export async function fetchOncoKbAnnotatedGenes(client: OncoKbAPI = oncokbClient): Promise<{[entrezGeneId:number]:boolean}>
+{
+    return _.reduce(await client.genesGetUsingGET({}), (map:{[entrezGeneId:number]:boolean}, next:Gene)=>{
+            map[next.entrezGeneId] = true;
+            return map;
+        }, {});
+}
+
 export async function fetchOncoKbData(sampleIdToTumorType:{[sampleId: string]: string},
+                                      annotatedGenes:{[entrezGeneId:number]:boolean},
                                       mutationData:MobxPromise<Mutation[]>,
                                       uncalledMutationData?:MobxPromise<Mutation[]>,
                                       client: OncoKbAPI = oncokbClient)
@@ -410,7 +419,8 @@ export async function fetchOncoKbData(sampleIdToTumorType:{[sampleId: string]: s
         return ONCOKB_DEFAULT;
     }
 
-    const queryVariants = _.uniqBy(_.map(mutationDataResult, (mutation: Mutation) => {
+    const mutationsToQuery = _.filter(mutationDataResult, m=>!!annotatedGenes[m.entrezGeneId]);
+    const queryVariants = _.uniqBy(_.map(mutationsToQuery, (mutation: Mutation) => {
         return generateQueryVariant(mutation.gene.entrezGeneId,
             cancerTypeForOncoKb(mutation.sampleId, sampleIdToTumorType),
             mutation.proteinChange,
@@ -422,6 +432,7 @@ export async function fetchOncoKbData(sampleIdToTumorType:{[sampleId: string]: s
 }
 
 export async function fetchCnaOncoKbData(sampleIdToTumorType:{[sampleId: string]: string},
+                                         annotatedGenes:{[entrezGeneId:number]:boolean},
                                          discreteCNAData:MobxPromise<DiscreteCopyNumberData[]>,
                                          client: OncoKbAPI = oncokbClient)
 {
@@ -430,7 +441,8 @@ export async function fetchCnaOncoKbData(sampleIdToTumorType:{[sampleId: string]
     }
     else
     {
-        const queryVariants = _.uniqBy(_.map(discreteCNAData.result, (copyNumberData: DiscreteCopyNumberData) => {
+        const alterationsToQuery = _.filter(discreteCNAData.result, d=>!!annotatedGenes[d.gene.entrezGeneId]);
+        const queryVariants = _.uniqBy(_.map(alterationsToQuery, (copyNumberData: DiscreteCopyNumberData) => {
             return generateQueryVariant(copyNumberData.gene.entrezGeneId,
                 cancerTypeForOncoKb(copyNumberData.sampleId, sampleIdToTumorType),
                 getAlterationString(copyNumberData.alteration));
