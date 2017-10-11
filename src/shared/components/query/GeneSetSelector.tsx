@@ -5,7 +5,6 @@ import ReactSelect from 'react-select';
 import {observer} from "mobx-react";
 import {computed} from 'mobx';
 import {FlexRow, FlexCol} from "../flexbox/FlexBox";
-import gene_lists from './gene_lists';
 import GeneSymbolValidator from "./GeneSymbolValidator";
 import classNames from 'classnames';
 import {getOncoQueryDocUrl} from "../../api/urls";
@@ -13,6 +12,7 @@ import {QueryStoreComponent} from "./QueryStore";
 import MutSigGeneSelector from "./MutSigGeneSelector";
 import GisticGeneSelector from "./GisticGeneSelector";
 import SectionHeader from "../sectionHeader/SectionHeader";
+import AppConfig from "appConfig";
 
 const styles = styles_any as {
 	GeneSetSelector: string,
@@ -45,7 +45,7 @@ export default class GeneSetSelector extends QueryStoreComponent<GeneSetSelector
 				label: 'User-defined List',
 				value: ''
 			},
-			...gene_lists.map(item => ({
+			...AppConfig.querySetsOfGenes == undefined ? [{label:"", value:""}] : AppConfig.querySetsOfGenes.map(item => ({
 				label: `${item.id} (${item.genes.length} genes)`,
 				value: item.genes.join(' ')
 			}))
