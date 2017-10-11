@@ -60,6 +60,7 @@ export interface IMutationTableProps {
     hotspots?: IHotspotData;
     cosmicData?:ICosmicData;
     oncoKbData?: IOncoKbDataWrapper;
+    oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean};
     civicGenes?: ICivicGene;
     civicVariants?: ICivicVariant;
     mrnaExprRankMolecularProfileId?:string;
@@ -418,6 +419,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 myCancerGenomeData: this.props.myCancerGenomeData,
                 oncoKbData: this.props.oncoKbData,
                 oncoKbEvidenceCache: this.props.oncoKbEvidenceCache,
+                oncoKbAnnotatedGenes: this.props.oncoKbAnnotatedGenes,
                 pubMedCache: this.props.pubMedCache,
                 civicGenes: this.props.civicGenes,
                 civicVariants: this.props.civicVariants,
@@ -428,6 +430,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             })),
             sortBy:(d:Mutation[])=>{
                 return AnnotationColumnFormatter.sortValue(d,
+                    this.props.oncoKbAnnotatedGenes,
                     this.props.hotspots,
                     this.props.myCancerGenomeData,
                     this.props.oncoKbData,
