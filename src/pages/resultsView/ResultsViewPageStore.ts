@@ -54,6 +54,11 @@ interface ExtendedAlteration extends Mutation, GeneMolecularData {
     alterationSubType: string
 };
 
+interface ExtendedSample extends Sample {
+    cancerType: string;
+    cancerTypeDetailed: string;
+}
+
 export function buildDefaultOQLProfile(profilesTypes: string[], zScoreThreshold: number, rppaScoreThreshold: number) {
 
     var default_oql_uniq: any = {};
@@ -82,9 +87,9 @@ export function buildDefaultOQLProfile(profilesTypes: string[], zScoreThreshold:
 
 }
 
-export function countAlterationOccurences(samplesByCancerType: {[cancerType: string]: Sample[]}, alterationsBySampleId: {[id: string]: ExtendedAlteration[]}):{ [entrezGeneId:string]:ICancerTypeAlterationData } {
+export function countAlterationOccurences(samplesByCancerType: {[cancerType: string]: ExtendedSample[]}, alterationsBySampleId: {[id: string]: ExtendedAlteration[]}):{ [entrezGeneId:string]:ICancerTypeAlterationData } {
 
-    return _.mapValues(samplesByCancerType, (samples: Sample[], cancerType: string) => {
+    return _.mapValues(samplesByCancerType, (samples: ExtendedSample[], cancerType: string) => {
 
         const counts: ICancerTypeAlterationCounts = {
             mutated: 0,
@@ -104,7 +109,8 @@ export function countAlterationOccurences(samplesByCancerType: {[cancerType: str
             sampleTotal:samples.length,
             alterationTotal:0,
             alterationTypeCounts:counts,
-            alteredSampleCount:0
+            alteredSampleCount:0,
+            parentCancerType:samples[0].cancerType
         };
 
         // for each sample in cancer type
@@ -295,6 +301,46 @@ export class ResultsViewPageStore {
         }
     });
 
+    readonly samplesExtendedWithClinicalData = remoteData<ExtendedSample[]>({
+        await: () => [
+            this.samples,
+            this.clinicalDataForSamples
+        ],
+        invoke: () => {
+            const clinicalDataGroupedBySampleId = _.groupBy(this.clinicalDataForSamples.result, (clinicalData:ClinicalData)=>clinicalData.uniqueSampleKey);
+            const extendedSamples = this.samples.result.map((sample: ExtendedSample)=>{
+                const clinicalData = clinicalDataGroupedBySampleId[sample.uniqueSampleKey];
+                if (clinicalData) {
+                    clinicalData.forEach((clinicalDatum:ClinicalData)=>{
+                        switch (clinicalDatum.clinicalAttributeId) {
+                            case 'CANCER_TYPE_DETAILED':
+                                sample.cancerTypeDetailed = clinicalDatum.value;
+                                break;
+                            case 'CANCER_TYPE':
+                                sample.cancerType = clinicalDatum.value;
+                                break;
+                            default:
+                                break;
+                        }
+                    });
+                }
+                return sample;
+            });
+
+            extendedSamples.forEach((sample:ExtendedSample)=>{
+                if (sample.cancerType && !sample.cancerTypeDetailed) {
+                    sample.cancerTypeDetailed = sample.cancerType;
+                }
+                if (!sample.cancerType) {
+                    // we need to fall back to studyies cancerType
+                }
+            });
+
+            return Promise.resolve(extendedSamples);
+        }
+    });
+
+
     public groupSamplesByCancerType(clinicalDataForSamples: ClinicalData[], samples: Sample[], cancerTypeLevel:'CANCER_TYPE' | 'CANCER_TYPE_DETAILED') {
 
         // first generate map of sampleId to it's cancer type
@@ -342,47 +388,38 @@ export class ResultsViewPageStore {
         }
     });
 
-    readonly alterationCountsForCancerTypesByGene = remoteData({
-        await: () => [
-            this.samplesByDetailedCancerType,
-            this.filteredAlterations,
-            this.selectedMolecularProfiles,
-            this.alterationsBySampleIdByGene
-        ],
-        invoke: () => {
-            // look through list of alterations for each gene
-            const ret = _.mapValues(this.alterationsBySampleIdByGene.result, (alterationsBySampleId: {[sampleId: string]: ExtendedAlteration[]}, gene: string) => {
-                return countAlterationOccurences(this.samplesByDetailedCancerType.result!, alterationsBySampleId);
+    public getAlterationCountsForCancerTypesByGene(alterationsBySampleIdByGene:{ [geneName:string]: {[sampleId: string]: ExtendedAlteration[]} },
+                                                   samplesExtendedWithClinicalData:ExtendedSample[],
+                                                   detailed: boolean){
+        const ret = _.mapValues(alterationsBySampleIdByGene, (alterationsBySampleId: {[sampleId: string]: ExtendedAlteration[]}, gene: string) => {
+            const samplesByCancerType = _.groupBy(samplesExtendedWithClinicalData,(sample:ExtendedSample)=>{
+                return (detailed) ? sample.cancerTypeDetailed : sample.cancerType;
             });
-            return Promise.resolve(ret);
-        }
-    });
+            return countAlterationOccurences(samplesByCancerType, alterationsBySampleId);
+        });
+        return ret;
+    }
 
-    readonly alterationCountsForCancerTypesForAllGenes = remoteData({
-        await: () => [
-            this.samplesByDetailedCancerType,
-            this.filteredAlterations,
-            this.selectedMolecularProfiles,
-            this.alterationsBySampleIdByGene
-        ],
-        invoke: () => {
-            // look through list of alterations for each gene
-            //const ret = _.mapValues(this.alterationsBySampleIdByGene.result, (alterationsBySampleId: {[sampleId: string]: ExtendedAlteration[]}, gene: string) => {
+    public getAlterationCountsForCancerTypesForAllGenes(alterationsBySampleIdByGene:{ [geneName:string]: {[sampleId: string]: ExtendedAlteration[]} },
+                                                   samplesExtendedWithClinicalData:ExtendedSample[],
+                                                   detailed: boolean){
 
-            const flattened = _.flatMap(this.alterationsBySampleIdByGene.result, (map) => map);
+        const samplesByCancerType = _.groupBy(samplesExtendedWithClinicalData,(sample:ExtendedSample)=>{
+            return (detailed) ? sample.cancerTypeDetailed : sample.cancerType;
+        });
+        const flattened = _.flatMap(alterationsBySampleIdByGene, (map) => map);
 
-            // NEED TO FLATTEN and then merge this to get all alteration by sampleId
-            function customizer(objValue: any, srcValue: any) {
-                if (_.isArray(objValue)) {
-                    return objValue.concat(srcValue);
-                }
+        // NEED TO FLATTEN and then merge this to get all alteration by sampleId
+        function customizer(objValue: any, srcValue: any) {
+            if (_.isArray(objValue)) {
+                return objValue.concat(srcValue);
             }
-            const merged: { [uniqueSampleKey: string]: ExtendedAlteration[] } =
-                (_.mergeWith({}, ...flattened, customizer) as { [uniqueSampleKey: string]: ExtendedAlteration[] });
-            const ret = countAlterationOccurences(this.samplesByDetailedCancerType.result!, merged);
-            return Promise.resolve(ret);
         }
-    });
+        const merged: { [uniqueSampleKey: string]: ExtendedAlteration[] } =
+            (_.mergeWith({}, ...flattened, customizer) as { [uniqueSampleKey: string]: ExtendedAlteration[] });
+        return countAlterationOccurences(samplesByCancerType, merged);
+
+    }
 
     readonly filteredAlterationsAsSampleIdArrays = remoteData({
         await: () => [
