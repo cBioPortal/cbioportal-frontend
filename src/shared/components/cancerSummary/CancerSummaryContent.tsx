@@ -48,6 +48,7 @@ export interface ICancerTypeAlterationData {
     sampleTotal:number;
     alterationTypeCounts:ICancerTypeAlterationCounts;
     alteredSampleCount:number;
+    parentCancerType:string;
 
 }
 
@@ -75,7 +76,10 @@ export interface IBarGraphConfigOptions {
 }
 
 interface ICancerSummaryContentProps {
-    data: {
+    dataByCancerSubType: {
+        [cancerType:string]:ICancerTypeAlterationData
+    };
+    dataByCancerType: {
         [cancerType:string]:ICancerTypeAlterationData
     };
     gene:string;
@@ -102,6 +106,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
     @observable private totalCasesValue = 0;
     @observable private tempTotalCasesValue = 0;
     @observable private tempAltCasesValue = 0;
+    @observable private viewCountsByCancerSubType = false;
 
     constructor(props:ICancerSummaryContentProps) {
         super(props);
@@ -109,6 +114,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
         this.handleYAxisChange = this.handleYAxisChange.bind(this);
         this.handleXAxisChange = this.handleXAxisChange.bind(this);
         this.handleGenomicCheckboxChange = this.handleGenomicCheckboxChange.bind(this);
+        this.handleCancerTypeCheckboxChange = this.handleCancerTypeCheckboxChange.bind(this);
         this.handleSelectChange = this.handleSelectChange.bind(this);
         this.handleAltSliderChange = this.handleAltSliderChange.bind(this);
         this.handleTotalSliderChange = this.handleTotalSliderChange.bind(this);
@@ -125,12 +131,26 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
         this.resetSliders = this.resetSliders.bind(this);
     }
 
+    public componentWillMount() {
+        //if there is only one cancer type, then we want to default to show cancer sub types
+        this.viewCountsByCancerSubType = (_.size(this.props.dataByCancerType) === 1);
+    }
+
+    @computed get onlyOneSelected() {
+        return this.multiSelectValue !== "all";
+    }
+
+    @computed get countsData() {
+        return (this.viewCountsByCancerSubType || this.onlyOneSelected)? this.props.dataByCancerSubType : this.props.dataByCancerType;
+    }
+
     @computed get barChartDatasets():IBarChartSortedData[] {
-        return _.reduce(this.props.data, (accum, alterationData, cancerType:string) => {
+        return _.reduce(this.countsData, (accum, alterationData, cancerType:string) => {
             const cancerAlterations = alterationData.alterationTypeCounts;
             let altTotalPercent = (alterationData.alteredSampleCount / alterationData.sampleTotal) * 100;
             ///altTotalPercent = altTotalPercent > 100 ? 100 : altTotalPercent;
-            if (this.selectedCancerTypes[cancerType] && alterationData.sampleTotal >= this.totalCasesValue) {
+
+            if ((this.selectedCancerTypes[cancerType] || this.selectedCancerTypes[alterationData.parentCancerType]) && alterationData.sampleTotal >= this.totalCasesValue) {
                 const datasets = _.reduce(cancerAlterations as any, (memo, count:number, altType: string) => {
                     let percent = (count / alterationData.sampleTotal) * 100;
                     //percent = percent > 100 ? 100 : percent;
@@ -177,6 +197,10 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
         this.totalCasesValue = 0;
         this.handleAltSliderChange(0);
         this.handleTotalSliderChange(0);
+    }
+
+    private handleCancerTypeCheckboxChange() {
+        this.viewCountsByCancerSubType = (this.viewCountsByCancerSubType === false);
     }
 
     private handleGenomicCheckboxChange() {
@@ -259,7 +283,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
 
     @computed private get cancerTypes() {
         // build array of cancer type options and sort alphabetically
-        const sortedCancerTypes = Object.keys(this.props.data).map(point => (
+        const sortedCancerTypes = Object.keys(this.countsData).map(point => (
             {label: point, value: point}
         )).sort();
 
@@ -274,7 +298,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
 
     @computed private get selectedCancerTypes() {
         const multiSelectValuesArray = this.multiSelectValue.toLowerCase().split(",");
-        return _.reduce(this.props.data, (accum, value, key) => {
+        return _.reduce(this.props.dataByCancerType, (accum, value, key) => {
                 accum[key] = !!_.intersection(["all", "", key.toLowerCase()], multiSelectValuesArray).length;
                 return accum;
             }, {} as any);
@@ -283,7 +307,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
     @computed private get totalCasesMax() {
         return Math.max(
                 ..._.map(
-                    _.filter(this.props.data, (unusedData, label) => this.selectedCancerTypes[label]),
+                    _.filter(this.countsData, (unusedData: ICancerTypeAlterationData, label) => this.selectedCancerTypes[unusedData.parentCancerType]),
                     (cancer:ICancerTypeAlterationData) => cancer.sampleTotal));
     }
 
@@ -316,7 +340,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
     }
 
     @computed private get hasAlterations() {
-        return _.reduce(this.props.data,(count, alterationData:ICancerTypeAlterationData)=>{
+        return _.reduce(this.countsData,(count, alterationData:ICancerTypeAlterationData)=>{
             return count + alterationData.alterationTotal;
         },0) > 0;
     }
@@ -353,6 +377,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
     }
 
     public render() {
+
         const {totalCasesMax, altCasesMax, yAxis} = this;
         const altMax = altCasesMax;
         const symbol = yAxis === 'alt-freq' ? '%' : '';
@@ -361,7 +386,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                 <div className="form-section">
                     <FormGroup>
                         <ControlLabel>Cancer Type(s):</ControlLabel>
-                        <Select multi simpleValue
+                        <Select simpleValue
                                 value={this.multiSelectValue} placeholder="Select cancer types"
                                 options={this.multiSelectOptions} onChange={this.handleSelectChange} />
                     </FormGroup>
@@ -388,6 +413,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                             </div>
                         </FormGroup>
                         <FormGroup>
+                            <ControlLabel className="invisible">Hidden</ControlLabel>
                             <FormControl type="text" value={this.tempAltCasesInputValue + symbol} onChange={this.handleAltInputChange}
                                          onKeyPress={this.handleAltInputKeyPress}/>
                         </FormGroup>
@@ -421,6 +447,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                             </div>
                         </FormGroup>
                         <FormGroup>
+                            <ControlLabel className="invisible">Hidden</ControlLabel>
                             <FormControl type="text" value={this.tempTotalCasesInputValue} onChange={this.handleTotalInputChange}
                                          onKeyPress={this.handleTotalInputKeyPress}/>
                         </FormGroup>
