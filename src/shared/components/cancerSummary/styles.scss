@@ -51,7 +51,7 @@
 
   .slider-holder {
     display: flex;
-    align-items: flex-end;
+    align-items: flex-start;
     >div:first-child {
       flex: 1 1 100%;
       margin-bottom: 0px;}
@@ -75,7 +75,6 @@
     width: 20px;
     height: 20px;
     border-radius: 20px;
-    top: -4px;
     &:after {
       width: 12px;
       height: 12px;
