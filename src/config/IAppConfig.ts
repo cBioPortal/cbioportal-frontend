@@ -13,6 +13,7 @@ export interface IAppConfig {
     showHotspot?: boolean;
     showMyCancerGenome?: boolean;
     showOncoKB?: boolean;
+    showTwitter?: boolean;
     oncoKBApiUrl?: string;
     showGenomeNexus?: boolean;
     genomeNexusApiUrl?: string;
