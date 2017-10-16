@@ -153,11 +153,6 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
 
         const orderedAltNames = _.values(this.props.orderedLabels);
 
-        let yAxisMax;
-        if (this.props.yAxis === 'alt-freq') {
-            yAxisMax = {max: 100};
-        }
-
         return {
             title: {
                 display: true,
@@ -207,7 +202,6 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
                     display:true,
                     ticks: {
                         fontSize: 11,
-                        ...yAxisMax,
                         callback: (value:number) => {
                             return _.round(value, 1) + (this.props.yAxis === "abs-count" ? '': '%');
                         }
