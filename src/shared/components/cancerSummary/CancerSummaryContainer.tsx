@@ -32,7 +32,15 @@ export default class CancerSummaryContainer extends React.Component<{ store: Res
     @computed
     private get tabs() {
 
-        const geneTabs = _.map(this.props.store.alterationCountsForCancerTypesByGene.result, (geneData, geneName: string) => {
+        const alterationCountsForCancerTypesByGene =
+            this.props.store.getAlterationCountsForCancerTypesByGene(this.props.store.alterationsBySampleIdByGene.result!,
+                this.props.store.samplesExtendedWithClinicalData.result!, false);
+
+        const alterationCountsForCancerSubTypesByGene =
+            this.props.store.getAlterationCountsForCancerTypesByGene(this.props.store.alterationsBySampleIdByGene.result!,
+                this.props.store.samplesExtendedWithClinicalData.result!, true);
+
+        const geneTabs = _.map(alterationCountsForCancerTypesByGene, (geneData, geneName: string) => {
 
             // count how many alterations there are across all cancer types for this gene
             const alterationCountAcrossCancerType = _.reduce(geneData,(count, alterationData:ICancerTypeAlterationData)=>{
@@ -44,7 +52,11 @@ export default class CancerSummaryContainer extends React.Component<{ store: Res
 
             return (
                 <MSKTab key={geneName} id={"summaryTab" + geneName} linkText={geneName} anchorStyle={anchorStyle}>
-                    <CancerSummaryContent data={geneData} gene={geneName} width={this.resultsViewPageWidth}/>
+                    <CancerSummaryContent
+                        dataByCancerSubType={alterationCountsForCancerSubTypesByGene[geneName]}
+                        dataByCancerType={alterationCountsForCancerTypesByGene[geneName]}
+                        gene={geneName}
+                        width={this.resultsViewPageWidth}/>
                 </MSKTab>
             )
         });
@@ -53,7 +65,10 @@ export default class CancerSummaryContainer extends React.Component<{ store: Res
         if (geneTabs.length > 1) {
             geneTabs.unshift(<MSKTab key="all" id="allGenes" linkText="All Queried Genes">
                 <CancerSummaryContent gene={'all'} width={this.resultsViewPageWidth}
-                                      data={this.props.store.alterationCountsForCancerTypesForAllGenes.result!}/>
+                                      dataByCancerSubType={this.props.store.getAlterationCountsForCancerTypesForAllGenes(this.props.store.alterationsBySampleIdByGene.result!, this.props.store.samplesExtendedWithClinicalData.result!, true)}
+                                      dataByCancerType={this.props.store.getAlterationCountsForCancerTypesForAllGenes(this.props.store.alterationsBySampleIdByGene.result!, this.props.store.samplesExtendedWithClinicalData.result!, false)}
+
+                />
             </MSKTab>)
         }
         return geneTabs;
@@ -62,8 +77,11 @@ export default class CancerSummaryContainer extends React.Component<{ store: Res
 
     public render() {
 
-        if (this.props.store.alterationCountsForCancerTypesForAllGenes.isComplete &&
-            this.props.store.alterationCountsForCancerTypesByGene.isComplete) {
+        const isComplete = this.props.store.samplesExtendedWithClinicalData.isComplete && this.props.store.alterationsBySampleIdByGene.isComplete;
+        const isPending = this.props.store.samplesExtendedWithClinicalData.isPending && this.props.store.alterationsBySampleIdByGene.isPending;
+
+
+        if (isComplete) {
             return (
                 <div ref={(el: HTMLDivElement) => this.resultsViewPageContent = el}>
                     <MSKTabs onTabClick={this.handleTabClick}
@@ -75,7 +93,7 @@ export default class CancerSummaryContainer extends React.Component<{ store: Res
                     </MSKTabs>
                 </div>
             );
-        } else if (this.props.store.alterationCountsForCancerTypesForAllGenes.isPending) {
+        } else if (isPending) {
             return <Loader isLoading={true}/>
         } else {
             // TODO: error!
