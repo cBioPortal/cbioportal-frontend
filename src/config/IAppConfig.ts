@@ -23,7 +23,8 @@ export interface IAppConfig {
     skinRightNavShowExamples?: boolean, 
     skinRightNavShowTestimonials?: boolean,
     skinRightNavExamplesHTML?: string,
-    skinRightNavWhatsNewBlurb?: string 
+    skinRightNavWhatsNewBlurb?: string,
+    querySetsOfGenes?: {"id": string, "genes":string[]}[]
 }
 
 export type PriorityStudies = {
