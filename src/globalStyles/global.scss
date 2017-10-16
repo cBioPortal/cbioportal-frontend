@@ -8,9 +8,8 @@ body {
 }
 
 //get rid of blue border around active button
-button:active {
-  outline: none;
-  border: none;
+button:active, button:focus, div:focus, div:active {
+  outline: none !important;
 }
 
 /* importants are necessary for override of legacy style */
