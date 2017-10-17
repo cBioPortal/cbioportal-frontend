@@ -39,7 +39,7 @@ export function getCivicGenes(): ICivicGene
 export function getCnaCivicVariants(): ICivicVariant
 {
     return {
-        "RAF1": { "AMPLIFICATION": {
+        "RAF1": {"AMPLIFICATION": {
                                    id: 591,
                                    name: "AMPLIFICATION",
                                    geneId: 4767,
@@ -73,7 +73,7 @@ export function getMutationCivicVariants(): ICivicVariant
 
 export function getCnaData(): Array<DiscreteCopyNumberData>
 {
-    return [{alteration: -2, entrezGeneId: 5894, gene: {chromosome: "3", cytoband:"3p25", entrezGeneId: 5894, hugoGeneSymbol: "RAF1", length: 7847, 
+    return [{alteration: 2, entrezGeneId: 5894, gene: {chromosome: "3", cytoband:"3p25", entrezGeneId: 5894, hugoGeneSymbol: "RAF1", length: 7847, 
            type: "protein-coding"}, molecularProfileId: "ccle_gistic", sampleId: "NCIH508_LARGE_INTESTINE", patientId:"PATIENT1", studyId: "STUDY1",
            uniquePatientKey: "", uniqueSampleKey: ""}];
 }
@@ -116,7 +116,7 @@ export function getExpectedCnaCivicEntry(): ICivicEntry
            name: "RAF1",
            description: "",
            url: "https://civic.genome.wustl.edu/#/events/genes/4767/summary",
-           variants: {"AMPLIFICATION": {
+           variants: {"RAF1": {
                                        id: 591,
                                        name: "AMPLIFICATION",
                                        geneId: 4767,
