@@ -76,7 +76,13 @@ export async function fetchPdbAlignmentData(uniprotId: string,
                                             client:Genome2StructureAPI = g2sClient)
 {
     if (uniprotId) {
-        return await client.getAlignmentUsingGET({
+        // return await client.getAlignmentUsingGET({
+        //     idType: "uniprot",
+        //     id: uniprotId
+        // });
+
+        // TODO temporary workaround to exclude alignments with no residue mapping data
+        return await client.postResidueMappingUsingGET({
             idType: "uniprot",
             id: uniprotId
         });
