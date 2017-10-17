@@ -38,9 +38,10 @@ import {
     fetchMutSigData, findMrnaRankMolecularProfileId, mergeDiscreteCNAData, fetchSamplesForPatient, fetchClinicalData,
     fetchCopyNumberSegments, fetchClinicalDataForPatient, makeStudyToCancerTypeMap,
     fetchCivicGenes, fetchCnaCivicGenes, fetchCivicVariants, groupBySampleId, findSamplesWithoutCancerTypeClinicalData,
-    fetchStudiesForSamplesWithoutCancerTypeClinicalData
+    fetchStudiesForSamplesWithoutCancerTypeClinicalData, fetchOncoKbAnnotatedGenes
 } from "shared/lib/StoreUtils";
 import {stringListToSet} from "../../../shared/lib/StringUtils";
+import {Gene as OncoKbGene} from "../../../shared/api/generated/OncoKbAPI";
 
 type PageMode = 'patient' | 'sample';
 
@@ -474,15 +475,22 @@ export class PatientViewPageStore {
         }
     }, []);
 
+    readonly oncoKbAnnotatedGenes = remoteData({
+        invoke:()=>fetchOncoKbAnnotatedGenes()
+    }, {});
+
     readonly oncoKbData = remoteData<IOncoKbData>({
         await: () => [
+            this.oncoKbAnnotatedGenes,
             this.mutationData,
             this.uncalledMutationData,
             this.clinicalDataForSamples,
             this.studiesForSamplesWithoutCancerTypeClinicalData,
             this.studies
         ],
-        invoke: async() => fetchOncoKbData(this.sampleIdToTumorType, this.mutationData, this.uncalledMutationData),
+        invoke: () => {
+            return fetchOncoKbData(this.sampleIdToTumorType, this.oncoKbAnnotatedGenes.result!, this.mutationData, this.uncalledMutationData);
+        },
         onError: (err: Error) => {
             // fail silently, leave the error handling responsibility to the data consumer
         }
@@ -523,11 +531,12 @@ export class PatientViewPageStore {
 
     readonly cnaOncoKbData = remoteData<IOncoKbData>({
         await: () => [
+            this.oncoKbAnnotatedGenes,
             this.discreteCNAData,
             this.clinicalDataForSamples,
             this.studies
         ],
-        invoke: async() => fetchCnaOncoKbData(this.sampleIdToTumorType, this.discreteCNAData),
+        invoke: async() => fetchCnaOncoKbData(this.sampleIdToTumorType, this.oncoKbAnnotatedGenes.result!, this.discreteCNAData),
         onError: (err: Error) => {
             // fail silently, leave the error handling responsibility to the data consumer
         }
