@@ -55,7 +55,7 @@ describe('AnnotationColumnFormatter', () => {
         
         assert.deepEqual(
             AnnotationColumnFormatter.hasCivicVariants(cna, civicGenes, civicVariants), false,
-            'Civic has variants');
+            'Civic has no variants');
     });
 
 
