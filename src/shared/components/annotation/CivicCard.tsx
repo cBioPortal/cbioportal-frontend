@@ -2,6 +2,7 @@ import * as React from 'react';
 import { If, Then, Else } from 'react-if';
 import { ICivicVariantData } from "shared/model/Civic.ts";
 import "./styles/civicCard.scss";
+import * as _ from "lodash";
 
 export interface ICivicCardProps {
     title: string;
@@ -25,15 +26,19 @@ export default class CivicCard extends React.Component<ICivicCardProps, {}> {
         const list: JSX.Element[] = [];
 
         if (variantMap) {
-            for (let name in variantMap) {
-                let variant = variantMap[name];
-                let entryTypes: string = '';
-                for (let evidenceType in variant.evidence) {
-                    entryTypes += evidenceType.toLowerCase() + ': ' + variant.evidence[evidenceType] + ', ';
-                }
-                entryTypes = entryTypes.slice(0, -2) + '.';
+            if (_.isEmpty(variantMap)) {
+                list.push(this.variantItem());
+            } else {
+                for (let name in variantMap) {
+                    let variant = variantMap[name];
+                    let entryTypes: string = '';
+                    for (let evidenceType in variant.evidence) {
+                        entryTypes += evidenceType.toLowerCase() + ': ' + variant.evidence[evidenceType] + ', ';
+                    }
+                    entryTypes = entryTypes.slice(0, -2) + '.';
 
-                list.push(this.variantItem(variant.url, variant.name, entryTypes, variant.description));
+                    list.push(this.variantItem(variant.url, variant.name, entryTypes, variant.description));
+                }
             }
         } else {
             list.push(this.variantItem());
