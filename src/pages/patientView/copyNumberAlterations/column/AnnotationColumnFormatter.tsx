@@ -11,7 +11,7 @@ import {generateQueryVariantId, generateQueryVariant} from "shared/lib/OncoKbUti
 import {IndicatorQueryResp, Query} from "shared/api/generated/OncoKbAPI";
 import {getAlterationString} from "shared/lib/CopyNumberUtils";
 import {ICivicVariant, ICivicGene, ICivicEntry, ICivicVariantData, ICivicGeneData, ICivicGeneDataWrapper, ICivicVariantDataWrapper} from "shared/model/Civic.ts";
-import {buildCivicEntry} from "shared/lib/CivicUtils";
+import {buildCivicEntry, getCivicCNAVariants} from "shared/lib/CivicUtils";
 
 /**
  * @author Selcuk Onur Sumer
@@ -73,10 +73,10 @@ export default class AnnotationColumnFormatter
     {
         let civicEntry = null;
         let geneSymbol: string = copyNumberData[0].gene.hugoGeneSymbol;
-        let geneVariants: {[name: string]: ICivicVariantData} = civicVariants[geneSymbol];
+        let geneVariants:{[name: string]: ICivicVariantData} = getCivicCNAVariants(copyNumberData, geneSymbol, civicVariants);
         let geneEntry: ICivicGeneData = civicGenes[geneSymbol];
         //Only return data for genes with variants or it has a description provided by the Civic API
-        if (geneVariants || (geneEntry && geneEntry.description !== "")) {
+        if (!_.isEmpty(geneVariants) || geneEntry && geneEntry.description !== "") {
             civicEntry = buildCivicEntry(geneEntry, geneVariants);
         }
 
@@ -98,10 +98,10 @@ export default class AnnotationColumnFormatter
     public static hasCivicVariants (copyNumberData:DiscreteCopyNumberData[], civicGenes:ICivicGene, civicVariants:ICivicVariant): boolean
     {
         let geneSymbol: string = copyNumberData[0].gene.hugoGeneSymbol;
-        let geneVariants: {[name: string]: ICivicVariantData} = civicVariants[geneSymbol];
+        let geneVariants:{[name: string]: ICivicVariantData} = getCivicCNAVariants(copyNumberData, geneSymbol, civicVariants);
         let geneEntry: ICivicGeneData = civicGenes[geneSymbol];
 
-        if (geneEntry && !geneVariants) {
+        if (geneEntry && _.isEmpty(geneVariants)) {
             return false;
         }
 
