@@ -211,7 +211,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
     }
 
     @computed private get domains():DomainSpec[] {
-        if (!this.props.store.pfamGeneData.isComplete) {
+        if (!this.props.store.pfamGeneData.isComplete || !this.props.store.pfamGeneData.result.regions) {
             return [];
         } else {
             return this.props.store.pfamGeneData.result.regions.map((region:any)=>{
@@ -468,7 +468,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                         dataStore={this.props.store.dataStore}
                         vizWidth={this.props.geneWidth}
                         vizHeight={130}
-                        xMax={this.props.store.pfamGeneData.result.length}
+                        xMax={this.props.store.pfamGeneData.result.length || (this.props.store.gene.length / 3)}
                         yMax={this.yMax}
                         onXAxisOffset={this.props.onXAxisOffset}
                     />
