@@ -24,12 +24,14 @@ import MutationMapperDataStore from "./MutationMapperDataStore";
 import PdbChainDataStore from "./PdbChainDataStore";
 import {IMutationMapperConfig} from "./MutationMapper";
 import MutationDataCache from "../../../shared/cache/MutationDataCache";
+import {Gene as OncoKbGene} from "../../../shared/api/generated/OncoKbAPI";
 
 export class MutationMapperStore {
 
     constructor(protected config: IMutationMapperConfig,
                 public gene:Gene,
                 public samples:MobxPromise<SampleIdentifier[]>,
+                public oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean},
                 // getMutationDataCache needs to be a getter for the following reason:
                 // when the input parameters to the mutationDataCache change, the cache
                 // is recomputed. Mobx needs to respond to this. But if we pass the mutationDataCache
@@ -137,7 +139,7 @@ export class MutationMapperStore {
             this.clinicalDataForSamples,
             this.studiesForSamplesWithoutCancerTypeClinicalData
         ],
-        invoke: async () => fetchOncoKbData(this.sampleIdToTumorType, this.mutationData),
+        invoke: async () => fetchOncoKbData(this.sampleIdToTumorType, this.oncoKbAnnotatedGenes, this.mutationData),
         onError: (err: Error) => {
             // fail silently, leave the error handling responsibility to the data consumer
         }

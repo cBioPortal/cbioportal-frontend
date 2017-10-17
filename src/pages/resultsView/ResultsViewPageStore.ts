@@ -19,7 +19,7 @@ import {
     fetchDiscreteCNAData, findMutationMolecularProfileId, mergeDiscreteCNAData,
     fetchSamples, fetchClinicalDataInStudy, generateDataQueryFilter,
     fetchSamplesWithoutCancerTypeClinicalData, fetchStudiesForSamplesWithoutCancerTypeClinicalData, IDataQueryFilter,
-    isMutationProfile
+    isMutationProfile, fetchOncoKbAnnotatedGenes
 } from "shared/lib/StoreUtils";
 import {MutationMapperStore} from "./mutation/MutationMapperStore";
 import AppConfig from "appConfig";
@@ -511,7 +511,7 @@ export class ResultsViewPageStore {
     }
 
     readonly mutationMapperStores = remoteData<{ [hugoGeneSymbol: string]: MutationMapperStore }>({
-        await: () => [this.genes],
+        await: () => [this.genes, this.oncoKbAnnotatedGenes],
         invoke: () => {
             if (this.genes.result) {
                 // we have to use _.reduce, otherwise this.genes.result (Immutable, due to remoteData) will return
@@ -521,6 +521,7 @@ export class ResultsViewPageStore {
                     map[gene.hugoGeneSymbol] = new MutationMapperStore(AppConfig,
                         gene,
                         this.samples,
+                        this.oncoKbAnnotatedGenes.result!,
                         () => (this.mutationDataCache),
                         this.molecularProfileIdToMolecularProfile,
                         this.clinicalDataForSamples,
@@ -538,6 +539,10 @@ export class ResultsViewPageStore {
     public getMutationMapperStore(hugoGeneSymbol: string): MutationMapperStore | undefined {
         return this.mutationMapperStores.result[hugoGeneSymbol];
     }
+
+    readonly oncoKbAnnotatedGenes = remoteData({
+        invoke:()=>fetchOncoKbAnnotatedGenes()
+    }, {});
 
     readonly clinicalDataForSamples = remoteData<ClinicalData[]>({
         await: () => [

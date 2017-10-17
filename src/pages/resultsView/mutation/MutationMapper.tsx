@@ -183,6 +183,7 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                         !this.props.store.studiesForSamplesWithoutCancerTypeClinicalData.isPending && (
                             <ResultsViewMutationTable
                                 sampleIdToTumorType={this.props.store.sampleIdToTumorType}
+                                oncoKbAnnotatedGenes={this.props.store.oncoKbAnnotatedGenes}
                                 discreteCNACache={this.props.discreteCNACache}
                                 genomeNexusEnrichmentCache={this.props.genomeNexusEnrichmentCache}
                                 molecularProfileIdToMolecularProfile={this.props.store.molecularProfileIdToMolecularProfile.result}
@@ -204,7 +205,6 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                             />
                         )}
                     </div>
-
                 }
             </div>
         );

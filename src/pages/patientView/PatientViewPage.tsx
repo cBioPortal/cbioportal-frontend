@@ -332,10 +332,10 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 )
                             }
 
-                            <LoadingIndicator isLoading={patientViewPageStore.mutationData.isPending && patientViewPageStore.uncalledMutationData.isPending} />
+                            <LoadingIndicator isLoading={patientViewPageStore.mutationData.isPending || patientViewPageStore.uncalledMutationData.isPending || patientViewPageStore.oncoKbAnnotatedGenes.isPending} />
 
                             {
-                                (patientViewPageStore.mutationData.isComplete && patientViewPageStore.uncalledMutationData.isComplete && !!sampleManager) && (
+                                (patientViewPageStore.oncoKbAnnotatedGenes.isComplete && patientViewPageStore.mutationData.isComplete && patientViewPageStore.uncalledMutationData.isComplete && !!sampleManager) && (
                                     <PatientViewMutationTable
                                         sampleManager={sampleManager}
                                         sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
@@ -355,6 +355,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         hotspots={patientViewPageStore.indexedHotspotData}
                                         cosmicData={patientViewPageStore.cosmicData.result}
                                         oncoKbData={patientViewPageStore.oncoKbData}
+                                        oncoKbAnnotatedGenes={patientViewPageStore.oncoKbAnnotatedGenes.result}
                                         civicGenes={patientViewPageStore.civicGenes.result}
                                         civicVariants={patientViewPageStore.civicVariants.result}
                                         enableOncoKb={AppConfig.showOncoKB}
@@ -377,6 +378,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 cnaCivicGenes={patientViewPageStore.cnaCivicGenes.result}
                                 cnaCivicVariants={patientViewPageStore.cnaCivicVariants.result}
                                 oncoKbEvidenceCache={patientViewPageStore.oncoKbEvidenceCache}
+                                oncoKbAnnotatedGenes={patientViewPageStore.oncoKbAnnotatedGenes.result}
                                 enableOncoKb={AppConfig.showOncoKB}
                                 enableCivic={AppConfig.showCivic}
                                 pubMedCache={patientViewPageStore.pubMedCache}
