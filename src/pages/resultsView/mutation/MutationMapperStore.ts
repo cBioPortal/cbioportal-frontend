@@ -94,6 +94,12 @@ export class MutationMapperStore {
 
     readonly swissProtId = remoteData({
         invoke: async() => {
+            // do not try fetching swissprot data for invalid entrez gene ids,
+            // just return the default value
+            if (this.gene.entrezGeneId < 1) {
+                return "";
+            }
+
             const accession:string|string[] = await fetchSwissProtAccession(this.gene.entrezGeneId);
 
             if (_.isArray(accession)) {

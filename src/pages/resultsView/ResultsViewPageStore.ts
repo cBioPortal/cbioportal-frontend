@@ -723,7 +723,7 @@ export class ResultsViewPageStore {
             return _.sortBy(await client.fetchGenesUsingPOST({
                 geneIdType: "HUGO_GENE_SYMBOL",
                 geneIds: this.hugoGeneSymbols.slice(),
-                projection: "ID"
+                projection: "SUMMARY"
             }), (gene: Gene) => order[gene.hugoGeneSymbol]);
         } else {
             return [];
