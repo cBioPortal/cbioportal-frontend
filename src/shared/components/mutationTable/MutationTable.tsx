@@ -145,6 +145,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
 
     public static defaultProps = {
         initialItemsPerPage: 25,
+        showCountHeader: true,
         paginationProps:{ itemsPerPageOptions:[25,50,100] },
         initialSortColumn: "Annotation",
         initialSortDirection: "desc",
