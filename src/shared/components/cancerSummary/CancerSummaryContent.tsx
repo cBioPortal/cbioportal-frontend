@@ -466,10 +466,12 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                         href={this.pngAnchor} download="cBioPortalCancerSummary.png">
                         PNG <i className="fa fa-cloud-download" aria-hidden="true"></i>
                     </a>
+                    {/*
                     <button className={`btn btn-default btn-xs ${this.pdf.anchor ? '': ' disabled'}`}
                        onClick={this.downloadPdf}>
                         PDF <i className="fa fa-cloud-download" aria-hidden="true"></i>
                     </button>
+                   */}
                 </div>
                 {controls}
                 <SummaryBarGraph data={this.chartData} yAxis={this.yAxis} xAxis={this.xAxis} gene={this.props.gene} width={this.props.width}
