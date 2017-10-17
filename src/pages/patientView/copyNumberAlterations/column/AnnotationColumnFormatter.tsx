@@ -19,6 +19,7 @@ import {buildCivicEntry} from "shared/lib/CivicUtils";
 export default class AnnotationColumnFormatter
 {
     public static getData(copyNumberData:DiscreteCopyNumberData[]|undefined,
+                          oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean},
                           oncoKbData?: IOncoKbDataWrapper,
                           civicGenes?: ICivicGene,
                           civicVariants?: ICivicVariant)
@@ -27,15 +28,24 @@ export default class AnnotationColumnFormatter
 
         if (copyNumberData)
         {
-            let oncoKbIndicator: IndicatorQueryResp|undefined;
+            let oncoKbIndicator: IndicatorQueryResp|undefined = undefined;
+            let oncoKbStatus:IAnnotation["oncoKbStatus"] = "complete";
+            let hugoGeneSymbol = copyNumberData[0].gene.hugoGeneSymbol;
+            const oncoKbGeneExist = !!oncoKbAnnotatedGenes[copyNumberData[0].entrezGeneId];
 
-            if (oncoKbData && oncoKbData.result && oncoKbData.status === "complete") {
-                oncoKbIndicator = AnnotationColumnFormatter.getIndicatorData(copyNumberData, oncoKbData.result);
+            if (oncoKbGeneExist) {
+                if (oncoKbData && oncoKbData.result && oncoKbData.status === "complete") {
+                    oncoKbIndicator = AnnotationColumnFormatter.getIndicatorData(copyNumberData, oncoKbData.result);
+                }
+                oncoKbStatus = oncoKbData ? oncoKbData.status : "pending";
             }
 
+
             value = {
-                oncoKbStatus: oncoKbData ? oncoKbData.status : "pending",
+                hugoGeneSymbol,
+                oncoKbStatus,
                 oncoKbIndicator,
+                oncoKbGeneExist,
                 civicEntry: civicGenes && civicVariants ?
                     AnnotationColumnFormatter.getCivicEntry(copyNumberData, civicGenes, civicVariants) : undefined,
                 hasCivicVariants: civicGenes && civicVariants ?
@@ -106,10 +116,11 @@ export default class AnnotationColumnFormatter
     }
 
     public static sortValue(data:DiscreteCopyNumberData[],
+                            oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean},
                             oncoKbData?: IOncoKbDataWrapper,
                             civicGenes?: ICivicGene,
                             civicVariants?: ICivicVariant):number[] {
-        const annotationData:IAnnotation = AnnotationColumnFormatter.getData(data, oncoKbData, civicGenes, civicVariants);
+        const annotationData:IAnnotation = AnnotationColumnFormatter.getData(data, oncoKbAnnotatedGenes, oncoKbData, civicGenes, civicVariants);
 
         return _.flatten([OncoKB.sortValue(annotationData.oncoKbIndicator),
                          Civic.sortValue(annotationData.civicEntry)]);
@@ -117,7 +128,7 @@ export default class AnnotationColumnFormatter
 
     public static renderFunction(data:DiscreteCopyNumberData[], columnProps:IAnnotationColumnProps)
     {
-        const annotation:IAnnotation = AnnotationColumnFormatter.getData(data, columnProps.oncoKbData, columnProps.civicGenes, columnProps.civicVariants);
+        const annotation:IAnnotation = AnnotationColumnFormatter.getData(data, columnProps.oncoKbAnnotatedGenes, columnProps.oncoKbData, columnProps.civicGenes, columnProps.civicVariants);
 
         let evidenceQuery:Query|undefined;
 

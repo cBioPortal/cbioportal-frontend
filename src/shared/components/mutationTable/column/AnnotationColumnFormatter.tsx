@@ -26,6 +26,7 @@ export interface IAnnotationColumnProps {
     myCancerGenomeData?: IMyCancerGenomeData;
     oncoKbData?: IOncoKbDataWrapper;
     oncoKbEvidenceCache?: OncoKbEvidenceCache;
+    oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean};
     pubMedCache?: OncokbPubMedCache;
     civicGenes?: ICivicGene;
     civicVariants?: ICivicVariant;
@@ -37,8 +38,10 @@ export interface IAnnotation {
     myCancerGenomeLinks: string[];
     oncoKbIndicator?: IndicatorQueryResp;
     oncoKbStatus: "pending" | "error" | "complete";
+    oncoKbGeneExist:boolean;
     civicEntry?: ICivicEntry | null;
     hasCivicVariants: boolean;
+    hugoGeneSymbol:string;
 }
 
 /**
@@ -50,34 +53,36 @@ export default class AnnotationColumnFormatter
     {
         return {
             oncoKbStatus: "complete",
+            oncoKbGeneExist: false,
             myCancerGenomeLinks: [],
             isHotspot: false,
             is3dHotspot: false,
-            hasCivicVariants: true
+            hasCivicVariants: true,
+            hugoGeneSymbol: ''
         };
     }
 
     public static getData(rowData:Mutation[]|undefined,
+                          oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean},
                           hotspotsData?:IHotspotData,
                           myCancerGenomeData?:IMyCancerGenomeData,
                           oncoKbData?:IOncoKbDataWrapper,
                           civicGenes?:ICivicGene,
                           civicVariants?:ICivicVariant)
     {
-        let value: IAnnotation;
+        let value: Partial<IAnnotation>;
 
         if (rowData) {
             const mutation = rowData[0];
 
             let oncoKbIndicator: IndicatorQueryResp|undefined;
+            let hugoGeneSymbol = mutation.gene.hugoGeneSymbol;
 
-            if (oncoKbData && oncoKbData.result && oncoKbData.status === "complete") {
-                oncoKbIndicator = AnnotationColumnFormatter.getIndicatorData(mutation, oncoKbData.result);
-            }
+            const oncoKbGeneExist = !!oncoKbAnnotatedGenes[mutation.entrezGeneId];
 
             value = {
-                oncoKbStatus: oncoKbData ? oncoKbData.status : "pending",
-                oncoKbIndicator,
+                hugoGeneSymbol,
+                oncoKbGeneExist,
                 civicEntry: civicGenes && civicVariants ?
                     AnnotationColumnFormatter.getCivicEntry(mutation, civicGenes, civicVariants) : undefined,
                 hasCivicVariants: true,
@@ -88,12 +93,29 @@ export default class AnnotationColumnFormatter
                 is3dHotspot: hotspotsData ?
                     is3dHotspot(mutation, hotspotsData.clustered) : false
             };
+            if (oncoKbGeneExist) {
+                if (oncoKbData && oncoKbData.result && oncoKbData.status === "complete") {
+                    oncoKbIndicator = AnnotationColumnFormatter.getIndicatorData(mutation, oncoKbData.result);
+                }
+
+                value = {
+                    ...value,
+                    oncoKbStatus: oncoKbData ? oncoKbData.status : "pending",
+                    oncoKbIndicator,
+                };
+            } else {
+                value = {
+                    ...value,
+                    oncoKbStatus: "complete",
+                    oncoKbIndicator: undefined
+                }
+            }
         }
         else {
             value = AnnotationColumnFormatter.DEFAULT_ANNOTATION_DATA;
         }
 
-        return value;
+        return value as IAnnotation;
     }
 
     /**
@@ -174,13 +196,14 @@ export default class AnnotationColumnFormatter
     }
 
     public static sortValue(data:Mutation[],
+                            oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean},
                             hotspotsData?:IHotspotData,
                             myCancerGenomeData?:IMyCancerGenomeData,
                             oncoKbData?: IOncoKbDataWrapper,
                             civicGenes?: ICivicGene,
                             civicVariants?: ICivicVariant):number[] {
         const annotationData:IAnnotation = AnnotationColumnFormatter.getData(
-            data, hotspotsData, myCancerGenomeData, oncoKbData, civicGenes, civicVariants);
+            data, oncoKbAnnotatedGenes, hotspotsData, myCancerGenomeData, oncoKbData, civicGenes, civicVariants);
 
         return _.flatten([
             OncoKB.sortValue(annotationData.oncoKbIndicator),
@@ -193,7 +216,9 @@ export default class AnnotationColumnFormatter
     public static renderFunction(data:Mutation[], columnProps:IAnnotationColumnProps)
     {
         const annotation:IAnnotation = AnnotationColumnFormatter.getData(
-            data, columnProps.hotspots,
+            data,
+            columnProps.oncoKbAnnotatedGenes,
+            columnProps.hotspots,
             columnProps.myCancerGenomeData,
             columnProps.oncoKbData,
             columnProps.civicGenes,
@@ -222,6 +247,8 @@ export default class AnnotationColumnFormatter
             <span style={{display:'inline-block', minWidth:100}}>
                 <If condition={columnProps.enableOncoKb || false}>
                     <OncoKB
+                        hugoGeneSymbol={annotation.hugoGeneSymbol}
+                        geneNotExist={!annotation.oncoKbGeneExist}
                         status={annotation.oncoKbStatus}
                         indicator={annotation.oncoKbIndicator}
                         evidenceCache={evidenceCache}

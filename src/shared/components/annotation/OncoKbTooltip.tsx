@@ -18,6 +18,7 @@ export interface IOncoKbTooltipProps {
     pubMedCache?: OncokbPubMedCache;
     handleFeedbackOpen?: () => void;
     onLoadComplete?: () => void;
+    geneNotExist:boolean;
 }
 
 /**
@@ -30,7 +31,7 @@ export default class OncoKbTooltip extends React.Component<IOncoKbTooltipProps, 
     {
         let cacheData:ICacheData<IEvidence>|undefined;
 
-        if (this.props.evidenceCache && this.props.evidenceQuery)
+        if (!this.props.geneNotExist && this.props.evidenceCache && this.props.evidenceQuery)
         {
             const cache = this.props.evidenceCache.getData([this.props.evidenceQuery.id], [this.props.evidenceQuery]);
 
@@ -61,18 +62,28 @@ export default class OncoKbTooltip extends React.Component<IOncoKbTooltipProps, 
         let tooltipContent: JSX.Element = <span />;
         const cacheData:ICacheData<IEvidence>|undefined = this.evidenceCacheData;
 
+        if (this.props.geneNotExist) {
+            tooltipContent = (
+                <OncoKbCard
+                    geneNotExist={true}
+                    pmidData={{}}
+                    handleFeedbackOpen={this.props.handleFeedbackOpen}
+                />
+            );
+        }
+
         if (!cacheData || !this.props.indicator)
         {
             return tooltipContent;
         }
 
-        if (cacheData.status === 'complete' && cacheData.data)
+        if (cacheData.status === 'complete' && cacheData.data && !this.props.geneNotExist)
         {
             const evidence = cacheData.data;
             const pmidData: ICache<any> = this.pmidData;
-
             tooltipContent = (
                 <OncoKbCard
+                    geneNotExist={this.props.geneNotExist}
                     title={`${this.props.indicator.query.hugoSymbol} ${this.props.indicator.query.alteration} in ${this.props.indicator.query.tumorType}`}
                     gene={this.props.indicator.geneExist ? this.props.indicator.query.hugoSymbol : ''}
                     oncogenicity={this.props.indicator.oncogenic}
