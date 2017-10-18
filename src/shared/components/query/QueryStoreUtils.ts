@@ -1,23 +1,23 @@
 import {CancerStudyQueryUrlParams, normalizeQuery, QueryStore} from "./QueryStore";
 
-export type NonGeneticProfileQueryParams = Pick<CancerStudyQueryUrlParams,
+export type NonMolecularProfileQueryParams = Pick<CancerStudyQueryUrlParams,
     'cancer_study_id' | 'cancer_study_list' | 'Z_SCORE_THRESHOLD' | 'RPPA_SCORE_THRESHOLD' | 'data_priority' |
     'case_set_id' | 'case_ids' | 'gene_list' | 'tab_index' | 'transpose_matrix' | 'Action'>;
 
-export type GeneticProfileQueryParams = Pick<CancerStudyQueryUrlParams,
+export type MolecularProfileQueryParams = Pick<CancerStudyQueryUrlParams,
     'genetic_profile_ids_PROFILE_MUTATION_EXTENDED' | 'genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION' |
     'genetic_profile_ids_PROFILE_MRNA_EXPRESSION' | 'genetic_profile_ids_PROFILE_METHYLATION' |
     'genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION'>;
 
 
 export function currentQueryParams(store:QueryStore) {
-    let nonProfileParams = nonGeneticProfileParams(store);
-    let profileParams = geneticProfileParams(store);
+    let nonProfileParams = nonMolecularProfileParams(store);
+    let profileParams = molecularProfileParams(store);
     let path = queryUrl(store, nonProfileParams);
     return queryParams(nonProfileParams, profileParams, path);
 }
 
-export function queryUrl(store:QueryStore, nonGeneticProfileParams:NonGeneticProfileQueryParams) {
+export function queryUrl(store:QueryStore, nonMolecularProfileParams:NonMolecularProfileQueryParams) {
 
     if (store.selectedStudyIds.length != 1)
     {
@@ -26,17 +26,17 @@ export function queryUrl(store:QueryStore, nonGeneticProfileParams:NonGeneticPro
             studyIds = store.cancerStudies.result.map(study => study.studyId);
         }
 
-        const hash = `crosscancer/overview/${nonGeneticProfileParams.data_priority}/${encodeURIComponent(nonGeneticProfileParams.gene_list)}/${encodeURIComponent(studyIds.join(","))}`;
-        return `cross_cancer.do#${hash}`;
+        const hash = `crosscancer/overview/${nonMolecularProfileParams.data_priority}/${encodeURIComponent(nonMolecularProfileParams.gene_list)}/${encodeURIComponent(studyIds.join(","))}`;
+        return `cross_cancer.do?#${hash}`;
     } else {
         return 'index.do';
     }
 }
 
-export function queryParams(nonGeneticProfileParams:NonGeneticProfileQueryParams,
-                            geneticProfileParams:GeneticProfileQueryParams,
+export function queryParams(nonMolecularProfileParams:NonMolecularProfileQueryParams,
+                            molecularProfileParams:MolecularProfileQueryParams,
                             path:string) {
-    let params:CancerStudyQueryUrlParams = Object.assign({}, nonGeneticProfileParams, geneticProfileParams);
+    let params:CancerStudyQueryUrlParams = Object.assign({}, nonMolecularProfileParams, molecularProfileParams);
 
     // Remove params with no value, because they may cause problems.
     // For example, the server will always transpose if transpose_matrix is present, no matter the value.
@@ -49,8 +49,8 @@ export function queryParams(nonGeneticProfileParams:NonGeneticProfileQueryParams
     return {pathname: path, query:params};
 }
 
-export function nonGeneticProfileParams(store:QueryStore):NonGeneticProfileQueryParams {
-    let ret:NonGeneticProfileQueryParams = {
+export function nonMolecularProfileParams(store:QueryStore):NonMolecularProfileQueryParams {
+    let ret:NonMolecularProfileQueryParams = {
         cancer_study_id: store.singleSelectedStudyId || 'all',
         Z_SCORE_THRESHOLD: store.zScoreThreshold,
         RPPA_SCORE_THRESHOLD: store.rppaScoreThreshold,
@@ -70,12 +70,12 @@ export function nonGeneticProfileParams(store:QueryStore):NonGeneticProfileQuery
     return ret;
 }
 
-export function geneticProfileParams(store:QueryStore, geneticProfileIds?:ReadonlyArray<string>) {
+export function molecularProfileParams(store:QueryStore, molecularProfileIds?:ReadonlyArray<string>) {
     return {
-        genetic_profile_ids_PROFILE_MUTATION_EXTENDED: store.getSelectedProfileIdFromGeneticAlterationType("MUTATION_EXTENDED", geneticProfileIds),
-        genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION: store.getSelectedProfileIdFromGeneticAlterationType("COPY_NUMBER_ALTERATION", geneticProfileIds),
-        genetic_profile_ids_PROFILE_MRNA_EXPRESSION: store.getSelectedProfileIdFromGeneticAlterationType("MRNA_EXPRESSION", geneticProfileIds),
-        genetic_profile_ids_PROFILE_METHYLATION: store.getSelectedProfileIdFromGeneticAlterationType("METHYLATION", geneticProfileIds) || store.getSelectedProfileIdFromGeneticAlterationType("METHYLATION_BINARY", geneticProfileIds),
-        genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION: store.getSelectedProfileIdFromGeneticAlterationType("PROTEIN_LEVEL", geneticProfileIds)
+        genetic_profile_ids_PROFILE_MUTATION_EXTENDED: store.getSelectedProfileIdFromMolecularAlterationType("MUTATION_EXTENDED", molecularProfileIds),
+        genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION: store.getSelectedProfileIdFromMolecularAlterationType("COPY_NUMBER_ALTERATION", molecularProfileIds),
+        genetic_profile_ids_PROFILE_MRNA_EXPRESSION: store.getSelectedProfileIdFromMolecularAlterationType("MRNA_EXPRESSION", molecularProfileIds),
+        genetic_profile_ids_PROFILE_METHYLATION: store.getSelectedProfileIdFromMolecularAlterationType("METHYLATION", molecularProfileIds) || store.getSelectedProfileIdFromMolecularAlterationType("METHYLATION_BINARY", molecularProfileIds),
+        genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION: store.getSelectedProfileIdFromMolecularAlterationType("PROTEIN_LEVEL", molecularProfileIds)
     };
 }

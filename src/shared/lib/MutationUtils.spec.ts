@@ -4,56 +4,68 @@ import {
 import * as _ from 'lodash';
 import { assert, expect } from 'chai';
 import sinon from 'sinon';
-import {Mutation} from "../api/generated/CBioPortalAPI";
+import {MolecularProfile, Mutation} from "../api/generated/CBioPortalAPI";
 import {initMutation} from "test/MutationMockUtils";
 import { MUTATION_STATUS_GERMLINE } from "shared/constants";
 
 describe('MutationUtils', () => {
     let somaticMutations: Mutation[];
     let germlineMutations: Mutation[];
+    let molecularProfileIdToMolecularProfile:{[molecularProfileId:string]:MolecularProfile};
 
     before(()=>{
+        molecularProfileIdToMolecularProfile = {
+            'GP1':{
+                studyId: 'STUDY1'
+            } as MolecularProfile
+        };
         somaticMutations = [
             initMutation({ // mutation
-                patientId: "PATIENT1",
+                sampleId: "PATIENT1",
                 gene: {
                     hugoGeneSymbol: "TP53",
                 },
+                molecularProfileId:"GP1"
              }),
             initMutation({ // mutation in same gene, same patient
-                patientId: "PATIENT1",
+                sampleId: "PATIENT1",
                 gene: {
                     hugoGeneSymbol: "TP53",
                 },
+                molecularProfileId:"GP1"
              }),
             initMutation({ // mutation in same patient different gene
-                patientId: "PATIENT2",
+                sampleId: "PATIENT2",
                 gene: {
                     hugoGeneSymbol: "PIK3CA",
                 },
+                molecularProfileId:"GP1"
              })
         ];
         germlineMutations = [
             initMutation({ // mutation
-                patientId: "PATIENT1",
+                sampleId: "PATIENT1",
                 gene: {
                     hugoGeneSymbol: "TP53",
                 },
-                mutationStatus: MUTATION_STATUS_GERMLINE
+                mutationStatus: MUTATION_STATUS_GERMLINE,
+                molecularProfileId:"GP1"
              }),
             initMutation({ // mutation in same gene, same patient
-                patientId: "PATIENT1",
+                sampleId: "PATIENT1",
                 gene: {
                     hugoGeneSymbol: "BRCA1",
                 },
-                mutationStatus: MUTATION_STATUS_GERMLINE
+                mutationStatus: MUTATION_STATUS_GERMLINE,
+                molecularProfileId:"GP1"
              }),
             initMutation({ // mutation in same patient different gene
-                patientId: "PATIENT2",
+                sampleId: "PATIENT2",
                 gene: {
                     hugoGeneSymbol: "BRCA2",
                 },
-                mutationStatus: MUTATION_STATUS_GERMLINE
+                mutationStatus: MUTATION_STATUS_GERMLINE,
+                molecularProfileId:"GP1"
              })
         ];
     });
@@ -65,18 +77,20 @@ describe('MutationUtils', () => {
                 somaticMutationRate(
                     "TP53",
                     somaticMutations,
-                    ['PATIENT1', 'PATIENT2']
+                    molecularProfileIdToMolecularProfile,
+                    [{studyId:'STUDY1', sampleId:'PATIENT1'}, {studyId:'STUDY1', sampleId:'PATIENT2'}]
                 );
-            assert.equal(result, 50)
+            assert.equal(result, 50);
 
             // No non-existing gene mutations
             result = 
                 somaticMutationRate(
                     "NASDASFASG",
                     somaticMutations,
-                    ['PATIENT1', 'PATIENT2']
+                    molecularProfileIdToMolecularProfile,
+                    [{studyId:'STUDY1', sampleId:'PATIENT1'}, {studyId:'STUDY1', sampleId:'PATIENT2'}]
                 );
-            assert.equal(result, 0)
+            assert.equal(result, 0);
 
             // when nr of given patientIds is 1 it should give 100% (not sure if
             // this should be an error instead)
@@ -84,27 +98,30 @@ describe('MutationUtils', () => {
                 somaticMutationRate(
                     "PIK3CA",
                     somaticMutations,
-                    ['PATIENT2']
+                    molecularProfileIdToMolecularProfile,
+                    [{studyId:'STUDY1', sampleId:'PATIENT2'}]
                 );
-            assert.equal(result, 100)
+            assert.equal(result, 100);
 
             // germline mutations should be ignored
             result = 
                 somaticMutationRate(
                     "BRCA1",
                     somaticMutations.concat(germlineMutations),
-                    ['PATIENT2']
+                    molecularProfileIdToMolecularProfile,
+                    [{studyId:'STUDY1', sampleId:'PATIENT2'}]
                 );
-            assert.equal(result, 0)
+            assert.equal(result, 0);
 
             // ignore all mutations for non existent patient id
             result = 
                 somaticMutationRate(
                     "PIK3CA",
                     somaticMutations,
-                    ['XXXX']
+                    molecularProfileIdToMolecularProfile,
+                    [{studyId:'STUDY1', sampleId:'XXXX'}]
                 );
-            assert.equal(result, 0)
+            assert.equal(result, 0);
         });
     });
 
@@ -115,36 +132,40 @@ describe('MutationUtils', () => {
                 germlineMutationRate(
                     "BRCA1",
                     germlineMutations,
-                    ['PATIENT1', 'PATIENT2'],
+                    molecularProfileIdToMolecularProfile,
+                    [{studyId:'STUDY1', sampleId:'PATIENT1'}, {studyId:'STUDY1', sampleId:'PATIENT2'}]
                 );
-            assert.equal(result, 50)
+            assert.equal(result, 50);
 
             // somatic mutations should be ignored
             result = 
                 germlineMutationRate(
                     "PIK3CA",
                     germlineMutations.concat(somaticMutations),
-                    ['PATIENT1', 'PATIENT2'],
+                    molecularProfileIdToMolecularProfile,
+                    [{studyId:'STUDY1', sampleId:'PATIENT1'}, {studyId:'STUDY1', sampleId:'PATIENT2'}]
                 );
-            assert.equal(result, 0)
+            assert.equal(result, 0);
 
             // ignore all mutations for non existent patient id
             result = 
                 germlineMutationRate(
                     "BRCA2",
                     germlineMutations,
-                    ['XXXX']
+                    molecularProfileIdToMolecularProfile,
+                    [{studyId:'STUDY1', sampleId:'XXXX'}]
                 );
-            assert.equal(result, 0)
+            assert.equal(result, 0);
 
             // No non-existing gene mutations
             result = 
                 germlineMutationRate(
                     "NASDASFASG",
                     germlineMutations,
-                    ['PATIENT1', 'PATIENT2']
+                    molecularProfileIdToMolecularProfile,
+                    [{studyId:'STUDY1', sampleId:'PATIENT1'}, {studyId:'STUDY1', sampleId:'PATIENT2'}]
                 );
-            assert.equal(result, 0)
+            assert.equal(result, 0);
         });
     });
 });

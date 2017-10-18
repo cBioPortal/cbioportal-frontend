@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {Mutation} from "shared/api/generated/CBioPortalAPI";
+import {MolecularProfile, Mutation} from "shared/api/generated/CBioPortalAPI";
 import TruncatedText from "shared/components/TruncatedText";
 
 /**
@@ -21,7 +21,7 @@ export default class SampleColumnFormatter
         }
     }
 
-    public static renderFunction(data:Mutation[], studyId?: string)
+    public static renderFunction(data:Mutation[], molecularProfileIdToMolecularProfile?: {[molecularProfileId:string]:MolecularProfile})
     {
         const sampleId:string = SampleColumnFormatter.getTextValue(data);
         let content = (
@@ -32,26 +32,30 @@ export default class SampleColumnFormatter
             />
         );
 
-        if (studyId)
+        if (molecularProfileIdToMolecularProfile)
         {
-            let linkToPatientView:string = `#/patient?sampleId=${sampleId}&studyId=${studyId}`;
-            /** 
-             * HACK to deal with having mutation mapper on index.do
-             * Change it to case.do
-             * https://github.com/cBioPortal/cbioportal/issues/2783
-             */
-            const indexLocation:number = window.location.href.search('index.do');
-            if (indexLocation > -1) {
-                linkToPatientView = window.location.href.substring(0, indexLocation) + 'case.do' + linkToPatientView;
+            const profile = molecularProfileIdToMolecularProfile[data[0].molecularProfileId];
+            const studyId = profile && profile.studyId;
+            if (studyId) {
+                let linkToPatientView:string = `#/patient?sampleId=${sampleId}&studyId=${studyId}`;
+                /**
+                 * HACK to deal with having mutation mapper on index.do
+                 * Change it to case.do
+                 * https://github.com/cBioPortal/cbioportal/issues/2783
+                 */
+                const indexLocation:number = window.location.href.search('index.do');
+                if (indexLocation > -1) {
+                    linkToPatientView = window.location.href.substring(0, indexLocation) + 'case.do' + linkToPatientView;
+                }
+                // END HACK
+
+
+                content = (
+                    <a href={linkToPatientView} target='_blank'>
+                        {content}
+                    </a>
+                );
             }
-            // END HACK
-
-
-            content = (
-                <a href={linkToPatientView} target='_blank'>
-                    {content}
-                </a>
-            );
         }
 
         return content;

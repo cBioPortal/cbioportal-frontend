@@ -11,6 +11,8 @@ export interface IAppConfig {
     showMyCancerGenome?: boolean;
     showOncoKB?: boolean;
     oncoKBApiUrl?: string;
+    showGenomeNexus?: boolean;
+    genomeNexusApiUrl?: string;
     enableDarwin?: boolean;
     appVersion?: string;
     historyType?: string;
@@ -20,7 +22,9 @@ export interface IAppConfig {
     skinRightNavShowDatasets?: boolean,
     skinRightNavShowExamples?: boolean, 
     skinRightNavShowTestimonials?: boolean,
-    skinRightNavExamplesHTML?: string 
+    skinRightNavExamplesHTML?: string,
+    skinRightNavWhatsNewBlurb?: string,
+    querySetsOfGenes?: {"id": string, "genes":string[]}[]
 }
 
 export type PriorityStudies = {

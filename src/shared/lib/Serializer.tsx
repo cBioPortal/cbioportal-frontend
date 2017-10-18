@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 
-export function serializeData(data: any[], autoGenerateHeader = false, delim = ',')
+export function serializeData(data: any[], autoGenerateHeader = false, delim = '\t')
 {
     const content: string[] = [];
 

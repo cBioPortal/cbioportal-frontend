@@ -142,7 +142,7 @@ export default class DataSetsPageTable extends React.Component <IDataSetsTablePr
                 complete: study.completeSampleCount || ""
             }));
             return (
-                <div ref={el => this.chartTarget = el}>
+                <div ref={(el:HTMLDivElement) => this.chartTarget = el}>
                     <DataTable
                         data={tableData}
                         columns={

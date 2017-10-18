@@ -102,7 +102,7 @@ export default class TableHeaderControls extends React.Component<ITableHeaderCon
         showPagination:false,
         searchClassName: '',
         copyDownloadClassName: '',
-        downloadFilename: 'patient-clinical-attributes.csv',
+        downloadFilename: 'patient-clinical-attributes.tsv',
         downloadDataContainsHeader: false,
         paginationProps:{},
         columnVisibilityProps:{},
@@ -147,7 +147,7 @@ export default class TableHeaderControls extends React.Component<ITableHeaderCon
                         <ButtonGroup className={this.props.copyDownloadClassName} style={{ marginLeft:10 }}>
 
                             <DefaultTooltip overlay={<span>Copy</span>} placement="top" mouseLeaveDelay={0} mouseEnterDelay={0.5}  arrowContent={arrowContent}>
-                                    <button ref={(el)=>{ this._copyButton = el }} className="btn btn-sm btn-default" data-clipboard-text="blablabhabha" id="donkey" option-text={ this.getText }>
+                                    <button ref={(el: HTMLButtonElement)=>{ this._copyButton = el }} className="btn btn-sm btn-default" data-clipboard-text="blablabhabha" id="donkey" option-text={ this.getText }>
                                             <i className='fa fa-clipboard'/>
                                     </button>
                                 </DefaultTooltip>
