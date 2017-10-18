@@ -94,7 +94,7 @@ export default class Domain extends React.Component<DomainProps, {}> {
             fill:(this.props.labelColor || "#FFFFFF"),
             style:{
                 fontSize: "12px",
-                fontFamily: "sans-serif",
+                fontFamily: "arial",
             }
         };
         const text = (reference ? (this.props.label || "") : this.displayText);
