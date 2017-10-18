@@ -25,7 +25,7 @@ export function emptyMutation(): Mutation
             length: -1,
             type: ""
         },
-        geneticProfileId: "",
+        molecularProfileId: "",
         keyword: "",
         linkMsa: "",
         linkPdb: "",
@@ -42,12 +42,19 @@ export function emptyMutation(): Mutation
         refseqMrnaId: "",
         sampleId: "",
         patientId: "",
+        studyId: "",
+        uniqueSampleKey: "",
+        uniquePatientKey: "",
         startPosition: -1,
         tumorAltCount: -1,
         tumorRefCount: -1,
         validationStatus: "",
         variantAllele: "",
-        variantType: ""
+        variantType: "",
+        driverFilter: "",
+        driverFilterAnnotation: "",
+        driverTiersFilter: "",
+        driverTiersFilterAnnotation: ""
     };
 }
 

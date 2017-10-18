@@ -9,20 +9,21 @@ function hasColumn(tableWrapper:ReactWrapper<any, any>, columnName:string):boole
     return (columns.indexOf(columnName) > -1);
 }
 
-function getTable(samples:string[], mrnaGeneticProfileId?:string):ReactWrapper<any, any> {
+function getTable(samples:string[], mrnaMolecularProfileId?:string):ReactWrapper<any, any> {
     return mount(<CopyNumberTableWrapper
         sampleManager={null}
         sampleIds={samples}
+        oncoKbAnnotatedGenes={{}}
         gisticData={{}}
         status="available"
         data={[]}
-        mrnaExprRankGeneticProfileId={mrnaGeneticProfileId}
+        mrnaExprRankMolecularProfileId={mrnaMolecularProfileId}
     />);
 }
 
 describe("CopyNumberTableWrapper", ()=>{
 
-    it("shows mrna expr column iff theres one sample and a genetic profile id", ()=>{
+    it("shows mrna expr column iff theres one sample and a molecular profile id", ()=>{
         assert(hasColumn(getTable(["sampleA"], "id"), "mRNA Expr."), "Has with one sample and id");
         assert(!hasColumn(getTable(["sampleA"]), "mRNA Expr."), "Doesnt have with one sample and no id");
         assert(!hasColumn(getTable([], "id"), "mRNA Expr."), "Doesn't have with 0 samples and id");

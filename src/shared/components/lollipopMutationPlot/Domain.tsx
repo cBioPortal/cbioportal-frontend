@@ -1,5 +1,6 @@
 import * as React from 'react';
 import _ from "lodash";
+import $ from 'jquery';
 import {DomainSpec} from "./LollipopPlotNoTooltip";
 import {observer} from "mobx-react";
 import {action, computed, observable} from "mobx";
@@ -58,6 +59,11 @@ export default class Domain extends React.Component<DomainProps, {}> {
         if (!this.textElt || !this.isMounted) {
             return label;
         }
+
+        if (!$(this.textElt).is(":visible")) {
+            return label;
+        }
+
         let substringLength = label.length;
         // Find the number of characters that will fit inside
         while ((substringLength > 0) &&
@@ -88,7 +94,7 @@ export default class Domain extends React.Component<DomainProps, {}> {
             fill:(this.props.labelColor || "#FFFFFF"),
             style:{
                 fontSize: "12px",
-                fontFamily: "sans-serif",
+                fontFamily: "arial",
             }
         };
         const text = (reference ? (this.props.label || "") : this.displayText);

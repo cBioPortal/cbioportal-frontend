@@ -1,15 +1,14 @@
 import * as React from 'react';
 import { expect } from 'chai';
-import { shallow, mount } from 'enzyme';
+import { shallow } from 'enzyme';
 import UnsupportedBrowserModal from "./UnsupportedBrowserModal";
-import browser from 'detect-browser';
 
 describe('UnsupportedBrowserModal', () => {
 
     let wrapper: any;
 
     before(()=> {
-         wrapper = shallow(<UnsupportedBrowserModal/>);
+        wrapper = shallow(<UnsupportedBrowserModal/>);
     });
 
     it('does not show modal when Chrome is being used', () => {
@@ -18,7 +17,7 @@ describe('UnsupportedBrowserModal', () => {
     });
 
     it('does not show modal when Edge is being used', () => {
-        wrapper.instance().handleUnsupportedBrowsers('edge');
+        wrapper.instance().handleUnsupportedBrowsers('msedge');
         expect(wrapper.state('show')).to.equal(false);
     });
 
@@ -27,18 +26,28 @@ describe('UnsupportedBrowserModal', () => {
         expect(wrapper.state('show')).to.equal(false);
     });
 
-    it('shows modal when Safari is being used', () => {
+    it('does not show modal when Safari is being used', () => {
         wrapper.instance().handleUnsupportedBrowsers('safari');
         expect(wrapper.state('show')).to.equal(false);
     });
 
-    it('shows modal when IE10 is being used and site is accessed for first time', () => {
-        wrapper.instance().handleUnsupportedBrowsers('ie', '10.0.0');
+    it('does not show modal when Firefox is being used', () => {
+        wrapper.instance().handleUnsupportedBrowsers('firefox');
+        expect(wrapper.state('show')).to.equal(false);
+    });
+
+    it.skip('shows modal when IE10 is being used and site is accessed for first time', () => {
+        wrapper.instance().handleUnsupportedBrowsers('msie', '10.0.0', false);
         expect(wrapper.state('show')).to.equal(true);
     });
-    
-    it('shows no modal when IE11 is being used and site is accessed for first time', () => {
-        wrapper.instance().handleUnsupportedBrowsers('ie', '11.0.0');
+
+    it('does not show modal when IE10 is being used and "do not show has" been checked', () => {
+        wrapper.instance().handleUnsupportedBrowsers('msie', '10.0.0', true);
+        expect(wrapper.state('show')).to.equal(false);
+    });
+
+    it('shows no modal when IE11 is being used', () => {
+        wrapper.instance().handleUnsupportedBrowsers('msie', '11.0.0', false);
         expect(wrapper.state('show')).to.equal(false);
     });
 

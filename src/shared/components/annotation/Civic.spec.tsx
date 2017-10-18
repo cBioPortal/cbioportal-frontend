@@ -5,12 +5,14 @@ import {shallow, mount, ReactWrapper} from 'enzyme';
 import sinon from 'sinon';
 import {getExpectedCivicEntry, getExpectedCnaCivicEntry} from "test/CivicMockUtils";
 import CivicCard from "./CivicCard";
+import {ICivicProps} from "./Civic";
 
 describe('Civic with no data', () => {
     const props = {
         civicEntry: undefined,
+        civicStatus: "complete",
         hasCivicVariants: true
-    };
+    } as ICivicProps;
 
     let component: ReactWrapper<any, any>;
 
@@ -39,8 +41,9 @@ describe('Civic with no data', () => {
 describe('Civic with data with variants', () => {
     const props = {
         civicEntry: getExpectedCivicEntry(),
+        civicStatus: "complete",
         hasCivicVariants: true
-    };
+    } as ICivicProps;
 
     let component: ReactWrapper<any, any>;
 
@@ -72,8 +75,9 @@ describe('Civic with data with variants', () => {
 describe('Civic with data with no variants', () => {
     const props = {
         civicEntry: getExpectedCnaCivicEntry(),
+        civicStatus: "complete",
         hasCivicVariants: false
-    };
+    } as ICivicProps;
 
     let component: ReactWrapper<any, any>;
 

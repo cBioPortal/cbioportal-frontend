@@ -10,6 +10,7 @@ import CivicCard from "./CivicCard";
 
 export interface ICivicProps { 
     civicEntry: ICivicEntry | null | undefined;
+    civicStatus: "pending" | "error" | "complete";
     hasCivicVariants: boolean;
 }
 
@@ -55,9 +56,12 @@ export default class Civic extends React.Component<ICivicProps, {}>
             civicImgSrc = require("./images/civic-logo-no-variants.png");
         }
 
-        if (this.props.civicEntry !== undefined)
+        if (this.props.civicStatus == "error") {
+            civicContent = this.errorIcon();
+        }
+        else if (this.props.civicEntry !== undefined)
         {
-            if (this.props.civicEntry !== null)
+            if (this.props.civicEntry !== null && this.props.civicStatus == "complete")
             {
                 civicContent = (
                     <span className={`${annotationStyles["annotation-item"]}`}>
@@ -99,6 +103,22 @@ export default class Civic extends React.Component<ICivicProps, {}>
     {
         return (
             <Circle size={18} scaleEnd={0.5} scaleStart={0.2} color="#aaa" className="pull-left"/>
+        );
+    }
+    
+    public errorIcon()
+    {
+        return (
+            <DefaultTooltip
+                overlay={<span>Error fetching Civic data</span>}
+                placement="right"
+                trigger={['hover', 'focus']}
+                destroyTooltipOnHide={true}
+            >
+                <span className={`${annotationStyles["annotation-item-error"]}`}>
+                    <i className="fa fa-exclamation-triangle text-danger" />
+                </span>
+            </DefaultTooltip>
         );
     }
 

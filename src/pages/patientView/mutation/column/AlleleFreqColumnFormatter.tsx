@@ -1,8 +1,9 @@
 import * as React from 'react';
+import * as _ from 'lodash';
 import {If, Else, Then } from 'react-if';
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import 'rc-tooltip/assets/bootstrap_white.css';
-import {Mutation} from "../../../../shared/api/generated/CBioPortalAPI";
+import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import SampleManager from "../../sampleManager";
 import {isUncalled} from 'shared/lib/MutationUtils';
 
@@ -12,12 +13,12 @@ export default class AlleleFreqColumnFormatter {
     static maxBarHeight = 12;
     static indexToBarLeft = (n:number) => n*(AlleleFreqColumnFormatter.barWidth + AlleleFreqColumnFormatter.barSpacing);
 
-    public static getComponentForSampleArgs<T extends {tumorAltCount:number,geneticProfileId:string}>(mutation:T) {
+    public static getComponentForSampleArgs<T extends {tumorAltCount:number,molecularProfileId:string}>(mutation:T) {
         const altReads = mutation.tumorAltCount;
 
         let opacity: number = 1;
         let extraTooltipText: string = '';
-        if (isUncalled(mutation.geneticProfileId)) {
+        if (isUncalled(mutation.molecularProfileId)) {
             if (altReads > 0) {
                 opacity = 0.1;
                 extraTooltipText = "Mutation has supporting reads, but wasn't called";
@@ -32,7 +33,7 @@ export default class AlleleFreqColumnFormatter {
         };
     }
 
-    public static convertMutationToSampleElement<T extends {sampleId:string, tumorRefCount:number, tumorAltCount:number, geneticProfileId:string}>(mutation:T, color:string, barX:number, sampleComponent:any) {
+    public static convertMutationToSampleElement<T extends {sampleId:string, tumorRefCount:number, tumorAltCount:number, molecularProfileId:string}>(mutation:T, color:string, barX:number, sampleComponent:any) {
             const altReads = mutation.tumorAltCount;
             const refReads = mutation.tumorRefCount;
             if ((altReads < 0) || (refReads < 0)) {
@@ -45,7 +46,7 @@ export default class AlleleFreqColumnFormatter {
 
             const bar = (<rect x={barX} y={barY} width={AlleleFreqColumnFormatter.barWidth} height={barHeight} fill={color}/>);
 
-            const variantReadText:string = `${isUncalled(mutation.geneticProfileId)? "(uncalled) " : ""}(${altReads} variant reads out of ${altReads+refReads} total)`;
+            const variantReadText:string = `${isUncalled(mutation.molecularProfileId)? "(uncalled) " : ""}(${altReads} variant reads out of ${altReads+refReads} total)`;
 
             const text = (<span>
                     <strong>{freq.toFixed(2)}</strong> {variantReadText}
@@ -61,7 +62,7 @@ export default class AlleleFreqColumnFormatter {
         }
 
         const sampleOrder = sampleManager.getSampleIdsInOrder();
-        const barX = sampleOrder.reduce((map:{[s:string]:number}, sampleId:string, i:number) => {map[sampleId] = AlleleFreqColumnFormatter.indexToBarLeft(i); return map;}, {});
+        const barX = sampleOrder.reduce((map, sampleId:string, i:number) => {map[sampleId] = AlleleFreqColumnFormatter.indexToBarLeft(i); return map;}, {} as {[s:string]:number});
         const sampleElements = mutations.map((m:Mutation) => {
             const args = AlleleFreqColumnFormatter.getComponentForSampleArgs(m);
             return AlleleFreqColumnFormatter.convertMutationToSampleElement(
@@ -71,7 +72,7 @@ export default class AlleleFreqColumnFormatter {
                 sampleManager.getComponentForSample(m.sampleId, args.opacity, args.extraTooltipText)
             );
         });
-        const sampleToElements = sampleElements.reduce((map:{[s:string]:any}, elements:any) => {if (elements) { map[elements.sampleId] = elements } return map; }, {});
+        const sampleToElements = sampleElements.reduce((map, elements:any) => {if (elements) { map[elements.sampleId] = elements } return map; }, {} as {[s:string]:any});
         const elementsInSampleOrder = sampleOrder.map((sampleId:string) => sampleToElements[sampleId]).filter((x:any) => !!x);
         const tooltipLines = elementsInSampleOrder.map((elements:any)=>(<span key={elements.sampleId}>{elements.component}  {elements.text}<br/></span>));
         const freqs = sampleOrder.map((sampleId:string) => (sampleToElements[sampleId] && sampleToElements[sampleId].freq) || undefined);
@@ -129,7 +130,7 @@ export default class AlleleFreqColumnFormatter {
         const sampleToMutation = d.reduce((map:{[s:string]:Mutation}, next:Mutation)=>{
             map[next.sampleId] = next;
             return map;
-        }, {});
+        }, {} as {[s:string]:Mutation});
         return sampleManager.getSampleIdsInOrder().map(sampleId=>sampleToMutation[sampleId]).map(mutation=>{
             if (!mutation) {
                 return null;
@@ -148,12 +149,30 @@ export default class AlleleFreqColumnFormatter {
         if (allMutations) {
             for (const rowMutations of allMutations) {
                 const frequency = this.getSortValue(rowMutations, sampleManager);
-                if (frequency[0]) {
+                // if there is at least one valid (non-falsey) value, it should be visible
+                if (_.compact(frequency).length > 0) {
                     return true;
                 }
             }
         }
 
         return false;
+    }
+
+
+    public static getFrequency(data:Mutation[]): string|string[] {
+        let result = [];
+        if (data) {
+            for (let mutation of data) {
+                let frequency = mutation.tumorAltCount/(mutation.tumorAltCount+mutation.tumorRefCount);
+                if (frequency) {
+                    result.push(String(frequency));
+                }
+            }
+        }
+        if (result.length == 1) {
+            return result[0];
+        }
+        return result;
     }
 }

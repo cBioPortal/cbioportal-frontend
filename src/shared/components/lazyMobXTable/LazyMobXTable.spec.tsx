@@ -10,11 +10,12 @@ import expect from 'expect';
 import expectJSX from 'expect-jsx';
 import lolex from "lolex";
 import {Clock} from "lolex";
-import {PaginationControls} from "../paginationControls/PaginationControls";
+import {PaginationControls, SHOW_ALL_PAGE_SIZE} from "../paginationControls/PaginationControls";
 import {Button, FormControl, Checkbox} from 'react-bootstrap';
 import {ColumnVisibilityControls} from "../columnVisibilityControls/ColumnVisibilityControls";
 import {SimpleMobXApplicationDataStore} from "../../lib/IMobXApplicationDataStore";
 import cloneJSXWithoutKeyAndRef from "shared/lib/cloneJSXWithoutKeyAndRef";
+import {maxPage} from "./utils";
 
 expect.extend(expectJSX);
 chai.use(chaiEnzyme());
@@ -100,7 +101,7 @@ function getTextBeforeButtons(table:ReactWrapper<any, any>):string | undefined {
 }
 
 function clickColumnVisibilityCheckbox(table:ReactWrapper<any, any>, columnName:string):boolean {
-    let checkbox = table.find(ColumnVisibilityControls).find(Checkbox)
+    let checkbox: any = table.find(ColumnVisibilityControls).find(Checkbox)
                     .find('input[type="checkbox"]')
                     .filterWhere(x=>(((x.props() as any)['data-id'] as string) === columnName))
     checkbox.simulate('change', {target: {checked:true}});
@@ -151,20 +152,73 @@ describe('LazyMobXTable', ()=>{
         invisibleString:"FILTER4"
     };
     let data = [datum0, datum1, datum2, datum3, datum4];
+    let multiData = [[datum0, datum1], [datum2, datum3], datum4];
     let sortedList:any[];
+    function downloadName(data:{name:string, num:number, str:string, numList:number[], strList:string[],
+        invisibleString:string}|{name:string, num:number, str:string, numList:number[], 
+        strList:string[], invisibleString:string}[]): string|string[] {
+            let result =[];
+            if (data instanceof Array) {
+                for (let datum of data) {
+                    result.push(datum.name);
+                }
+            } else {
+                return data.name;
+            }
+            return result;
+        }
+    function downloadNumber(data:{name:string, num:number, str:string, numList:number[], strList:string[],
+        invisibleString:string}|{name:string, num:number, str:string, numList:number[], 
+        strList:string[], invisibleString:string}[]): string|string[] {
+            let result =[];
+            if (data instanceof Array) {
+                for (let datum of data) {
+                    result.push(datum.num+'');
+                }
+            } else {
+                return data.num+'';
+            }
+            return result;
+        }
+    function downloadString(data:{name:string, num:number, str:string, numList:number[], strList:string[],
+        invisibleString:string}|{name:string, num:number, str:string, numList:number[], 
+        strList:string[], invisibleString:string}[]): string|string[] {
+            let result =[];
+            if (data instanceof Array) {
+                for (let datum of data) {
+                    result.push(datum.str+'');
+                }
+            } else {
+                return data.str+'';
+            }
+            return result;
+        }
+    function downloadInvisible(data:{name:string, num:number, str:string, numList:number[], strList:string[],
+        invisibleString:string}|{name:string, num:number, str:string, numList:number[], 
+        strList:string[], invisibleString:string}[]): string|string[] {
+            let result =[];
+            if (data instanceof Array) {
+                for (let datum of data) {
+                    result.push(datum.name+"HELLO123456");
+                }
+            } else {
+                return data.name+"HELLO123456";
+            }
+            return result;
+        }
     let columns:any[] = [{
         name: "Name",
         filter: (d:any,s:string)=>(d.name.indexOf(s) > -1),
         sortBy: (d:any)=>d.name,
         render:(d:any)=>(<span>{d.name}</span>),
-        download:(d:any)=>d.name,
+        download:(d:any)=>downloadName(d),
         tooltip:(<span>Name of the data.</span>),
         align: "right"
     },{
         name: "Number",
         sortBy: (d:any)=>d.num,
         render:(d:any)=>(<span>{d.num}</span>),
-        download:(d:any)=>d.num+'',
+        download:(d:any)=>downloadNumber(d),
         tooltip:(<span>Number of the data.</span>),
         defaultSortDirection: "desc",
         align: "left"
@@ -173,7 +227,7 @@ describe('LazyMobXTable', ()=>{
         filter: (d:any,s:string)=>(d.str && d.str.indexOf(s) > -1),
         sortBy: (d:any)=>d.str,
         render:(d:any)=>(<span>{d.str}</span>),
-        download:(d:any)=>d.str+'',
+        download:(d:any)=>downloadString(d),
         tooltip:(<span>String of the data</span>),
         defaultSortDirection: "desc",
         align: "center"
@@ -186,7 +240,7 @@ describe('LazyMobXTable', ()=>{
         visible: false,
         sortBy: (d:any)=>d.name,
         render:(d:any)=>(<span>{d.name}</span>),
-        download:(d:any)=>d.name+"HELLO123456",
+        download:(d:any)=>downloadInvisible(d),
     },{
         name: "Initially invisible column with no download",
         render:()=>(<span></span>),
@@ -214,6 +268,35 @@ describe('LazyMobXTable', ()=>{
 
     after(()=>{
         clock.uninstall();
+    });
+
+    describe('utils', ()=>{
+        describe('maxPage', ()=>{
+            it("gives the correct outputs in various cases", ()=>{
+                assert.equal(maxPage(0, SHOW_ALL_PAGE_SIZE), 0 , "maxPage is 0 when showing all");
+                assert.equal(maxPage(100, SHOW_ALL_PAGE_SIZE), 0 , "maxPage is 0 when showing all");
+                assert.equal(maxPage(1000, SHOW_ALL_PAGE_SIZE), 0 , "maxPage is 0 when showing all");
+
+                assert.equal(maxPage(0, 50), 0, "maxPage is 0 when no data");
+                assert.equal(maxPage(0, 25), 0, "maxPage is 0 when no data");
+                assert.equal(maxPage(0, 100), 0, "maxPage is 0 when no data");
+
+                assert.equal(maxPage(1, 50), 0, "maxPage is 0 when less than page size");
+                assert.equal(maxPage(5, 50), 0, "maxPage is 0 when less than page size");
+                assert.equal(maxPage(10, 50), 0, "maxPage is 0 when less than page size");
+                assert.equal(maxPage(3, 10), 0, "maxPage is 0 when less than page size");
+                assert.equal(maxPage(7, 10), 0, "maxPage is 0 when less than page size");
+                assert.equal(maxPage(9, 10), 0, "maxPage is 0 when less than page size");
+
+                assert.equal(maxPage(50, 50), 0, "maxPage is 0 when equal to page size");
+                assert.equal(maxPage(24, 24), 0, "maxPage is 0 when equal to page size");
+                assert.equal(maxPage(1, 1), 0, "maxPage is 0 when equal to page size");
+
+                assert.equal(maxPage(25,10), 2, "maxPage calculated correctly");
+                assert.equal(maxPage(50,10), 4, "maxPage calculated correctly");
+                assert.equal(maxPage(11,2), 5, "maxPage calculated correctly");
+            });
+        });
     });
 
     describe('lazyMobXTableSort', ()=>{
@@ -981,35 +1064,45 @@ describe('LazyMobXTable', ()=>{
         it("gives just the column names when theres no data in the table", ()=>{
             let table = mount(<Table columns={columns} data={[]}/>);
             assert.deepEqual((table.instance() as LazyMobXTable<any>).getDownloadData(),
-                "Name,Number,String,Number List,Initially invisible column,Initially invisible column with no download,String without filter function\r\n");
+                "Name\tNumber\tString\tNumber List\tInitially invisible column\tInitially invisible column with no download\tString without filter function\r\n");
         });
         it("gives one row of data when theres one row. data given for every column, including hidden, and without download def'n. if no data, gives empty string for that cell.", ()=>{
             let table = mount(<Table columns={columns} data={[data[0]]}/>);
             assert.deepEqual((table.instance() as LazyMobXTable<any>).getDownloadData(),
-                "Name,Number,String,Number List,Initially invisible column,Initially invisible column with no download,String without filter function\r\n"+
-                "0,0,asdfj,,0HELLO123456,,\r\n");
+                "Name\tNumber\tString\tNumber List\tInitially invisible column\tInitially invisible column with no download\tString without filter function\r\n"+
+                "0\t0\tasdfj\t\t0HELLO123456\t\t\r\n");
         });
         it("gives data for all rows. data given for every column, including hidden, and without download def'n. if no data, gives empty string for that cell", ()=>{
             let table = mount(<Table columns={columns} data={data}/>)
             assert.deepEqual((table.instance() as LazyMobXTable<any>).getDownloadData(),
-                "Name,Number,String,Number List,Initially invisible column,Initially invisible column with no download,String without filter function\r\n"+
-                "0,0,asdfj,,0HELLO123456,,\r\n"+
-                "1,6,kdfjpo,,1HELLO123456,,\r\n"+
-                "2,null,null,,2HELLO123456,,\r\n"+
-                "3,-1,zijxcpo,,3HELLO123456,,\r\n"+
-                "4,90,zkzxc,,4HELLO123456,,\r\n");
+                "Name\tNumber\tString\tNumber List\tInitially invisible column\tInitially invisible column with no download\tString without filter function\r\n"+
+                "0\t0\tasdfj\t\t0HELLO123456\t\t\r\n"+
+                "1\t6\tkdfjpo\t\t1HELLO123456\t\t\r\n"+
+                "2\tnull\tnull\t\t2HELLO123456\t\t\r\n"+
+                "3\t-1\tzijxcpo\t\t3HELLO123456\t\t\r\n"+
+                "4\t90\tzkzxc\t\t4HELLO123456\t\t\r\n");
         });
-
         it("gives data back in sorted order according to initially selected sort column and direction", ()=>{
             let table = mount(<Table columns={columns} data={data} initialSortColumn="Number" initialSortDirection="asc"/>);
 
             assert.deepEqual((table.instance() as LazyMobXTable<any>).getDownloadData(),
-                "Name,Number,String,Number List,Initially invisible column,Initially invisible column with no download,String without filter function\r\n"+
-                "3,-1,zijxcpo,,3HELLO123456,,\r\n"+
-                "0,0,asdfj,,0HELLO123456,,\r\n"+
-                "1,6,kdfjpo,,1HELLO123456,,\r\n"+
-                "4,90,zkzxc,,4HELLO123456,,\r\n" +
-                "2,null,null,,2HELLO123456,,\r\n");
+                "Name\tNumber\tString\tNumber List\tInitially invisible column\tInitially invisible column with no download\tString without filter function\r\n"+
+                "3\t-1\tzijxcpo\t\t3HELLO123456\t\t\r\n"+
+                "0\t0\tasdfj\t\t0HELLO123456\t\t\r\n"+
+                "1\t6\tkdfjpo\t\t1HELLO123456\t\t\r\n"+
+                "4\t90\tzkzxc\t\t4HELLO123456\t\t\r\n" +
+                "2\tnull\tnull\t\t2HELLO123456\t\t\r\n");
+        });
+        
+        it("gives data for data with multiple elements", ()=>{
+            let table = mount(<Table columns={columns} data={multiData}/>)
+            assert.deepEqual((table.instance() as LazyMobXTable<any>).getDownloadData(),
+                "Name\tNumber\tString\tNumber List\tInitially invisible column\tInitially invisible column with no download\tString without filter function\r\n"+
+                "0\t0\tasdfj\t\t0HELLO123456\t\t\r\n"+
+                "1\t6\tkdfjpo\t\t1HELLO123456\t\t\r\n"+
+                "2\tnull\tnull\t\t2HELLO123456\t\t\r\n"+
+                "3\t-1\tzijxcpo\t\t3HELLO123456\t\t\r\n"+
+                "4\t90\tzkzxc\t\t4HELLO123456\t\t\r\n");
         });
     });
     describe('pagination', ()=>{
@@ -1147,26 +1240,26 @@ describe('LazyMobXTable', ()=>{
         it("shows the right text before the paging buttons", ()=>{
             let table = mount(<Table columns={simpleColumns} data={[]}/>);
             assert.equal(getItemsPerPage(table), 50, "confirm 50 items per page");
-            assert.equal(getTextBeforeButtons(table), "0-0 of 0");
+            assert.equal(getTextBeforeButtons(table), "Showing 0-0 of 0");
 
             table.setProps({columns:simpleColumns, data:[simpleData[0]]});
-            assert.equal(getTextBeforeButtons(table), "1-1 of 1");
+            assert.equal(getTextBeforeButtons(table), "Showing 1-1 of 1");
 
             table.setProps({columns:simpleColumns, data:simpleData.slice(0, 40)});
-            assert.equal(getTextBeforeButtons(table), "1-40 of 40");
+            assert.equal(getTextBeforeButtons(table), "Showing 1-40 of 40");
 
             table.setProps({columns:simpleColumns, data:simpleData});
             assert.equal(simpleData.length, 120, "confirm we're working with 120 data");
-            assert.equal(getTextBeforeButtons(table), "1-50 of 120");
+            assert.equal(getTextBeforeButtons(table), "Showing 1-50 of 120");
             clickNextPage(table);
             assert.equal(getCurrentPage(table), 1);
-            assert.equal(getTextBeforeButtons(table), "51-100 of 120");
+            assert.equal(getTextBeforeButtons(table), "Showing 51-100 of 120");
             clickNextPage(table);
             assert.equal(getCurrentPage(table), 2);
-            assert.equal(getTextBeforeButtons(table), "101-120 of 120");
+            assert.equal(getTextBeforeButtons(table), "Showing 101-120 of 120");
 
             selectItemsPerPage(table, -1);
-            assert.equal(getTextBeforeButtons(table), "1-120 of 120");
+            assert.equal(getTextBeforeButtons(table), "Showing 1-120 of 120");
         });
     });
 });

@@ -6,7 +6,35 @@ export type ClinicalData = {
 
         'clinicalAttributeId': string
 
-        'entityId': string
+        'patientId': string
+
+        'sampleId': string
+
+        'studyId': string
+
+        'uniquePatientKey': string
+
+        'uniqueSampleKey': string
+
+        'value': string
+
+};
+export type GeneMolecularData = {
+    'entrezGeneId': number
+
+        'gene': Gene
+
+        'molecularProfileId': string
+
+        'patientId': string
+
+        'sampleId': string
+
+        'studyId': string
+
+        'uniquePatientKey': string
+
+        'uniqueSampleKey': string
 
         'value': string
 
@@ -30,7 +58,7 @@ export type CopyNumberCount = {
 
         'entrezGeneId': number
 
-        'geneticProfileId': string
+        'molecularProfileId': string
 
         'numberOfSamples': number
 
@@ -43,26 +71,34 @@ export type CopyNumberCountIdentifier = {
         'entrezGeneId': number
 
 };
-export type GeneticProfile = {
+export type MolecularDataFilter = {
+    'entrezGeneIds': Array < number >
+
+        'sampleIds': Array < string >
+
+        'sampleListId': string
+
+};
+export type ClinicalDataIdentifier = {
+    'entityId': string
+
+        'studyId': string
+
+};
+export type MolecularProfile = {
     'datatype': string
 
         'description': string
 
-        'geneticAlterationType': "MUTATION_EXTENDED" | "FUSION" | "STRUCTURAL_VARIANT" | "COPY_NUMBER_ALTERATION" | "MICRO_RNA_EXPRESSION" | "MRNA_EXPRESSION" | "MRNA_EXPRESSION_NORMALS" | "RNA_EXPRESSION" | "METHYLATION" | "METHYLATION_BINARY" | "PHOSPHORYLATION" | "PROTEIN_LEVEL" | "PROTEIN_ARRAY_PROTEIN_LEVEL" | "PROTEIN_ARRAY_PHOSPHORYLATION" | "GENESET_SCORE"
+        'molecularAlterationType': "MUTATION_EXTENDED" | "FUSION" | "STRUCTURAL_VARIANT" | "COPY_NUMBER_ALTERATION" | "MICRO_RNA_EXPRESSION" | "MRNA_EXPRESSION" | "MRNA_EXPRESSION_NORMALS" | "RNA_EXPRESSION" | "METHYLATION" | "METHYLATION_BINARY" | "PHOSPHORYLATION" | "PROTEIN_LEVEL" | "PROTEIN_ARRAY_PROTEIN_LEVEL" | "PROTEIN_ARRAY_PHOSPHORYLATION" | "GENESET_SCORE"
 
-        'geneticProfileId': string
+        'molecularProfileId': string
 
         'name': string
 
         'showProfileInAnalysisTab': boolean
 
         'study': CancerStudy
-
-        'studyId': string
-
-};
-export type ClinicalDataIdentifier = {
-    'entityId': string
 
         'studyId': string
 
@@ -87,18 +123,6 @@ export type MutationPositionIdentifier = {
         'proteinPosEnd': number
 
         'proteinPosStart': number
-
-};
-export type GeneGeneticData = {
-    'entrezGeneId': number
-
-        'gene': Gene
-
-        'geneticProfileId': string
-
-        'sampleId': string
-
-        'value': string
 
 };
 export type ClinicalEventData = {
@@ -153,14 +177,6 @@ export type CancerStudy = {
         'studyId': string
 
 };
-export type GeneticDataFilter = {
-    'entrezGeneIds': Array < number >
-
-        'sampleIds': Array < string >
-
-        'sampleListId': string
-
-};
 export type SampleList = {
     'category': string
 
@@ -176,7 +192,7 @@ export type SampleList = {
 
 };
 export type MutationCount = {
-    'geneticProfileId': string
+    'molecularProfileId': string
 
         'mutationCount': number
 
@@ -188,9 +204,17 @@ export type GenePanelData = {
 
         'genePanelId': string
 
-        'geneticProfileId': string
+        'molecularProfileId': string
+
+        'patientId': string
 
         'sampleId': string
+
+        'studyId': string
+
+        'uniquePatientKey': string
+
+        'uniqueSampleKey': string
 
 };
 export type GenePanelToGene = {
@@ -216,13 +240,21 @@ export type SampleIdentifier = {
 export type Sample = {
     'cancerTypeId': string
 
+        'copyNumberSegmentPresent': boolean
+
         'patientId': string
 
         'sampleId': string
 
         'sampleType': "Primary Solid Tumor" | "Recurrent Solid Tumor" | "Primary Blood Tumor" | "Recurrent Blood Tumor" | "Metastatic" | "Blood Derived Normal" | "Solid Tissues Normal"
 
+        'sequenced': boolean
+
         'studyId': string
+
+        'uniquePatientKey': string
+
+        'uniqueSampleKey': string
 
 };
 export type CopyNumberSeg = {
@@ -232,6 +264,8 @@ export type CopyNumberSeg = {
 
         'numberOfProbes': number
 
+        'patientId': string
+
         'sampleId': string
 
         'segmentMean': number
@@ -240,11 +274,19 @@ export type CopyNumberSeg = {
 
         'studyId': string
 
+        'uniquePatientKey': string
+
+        'uniqueSampleKey': string
+
 };
 export type Patient = {
     'patientId': string
 
         'studyId': string
+
+        'uniquePatientKey': string
+
+        'uniqueSampleKey': string
 
 };
 export type TypeOfCancer = {
@@ -284,11 +326,9 @@ export type ClinicalEvent = {
 
         'studyId': string
 
-};
-export type SampleGeneticIdentifier = {
-    'geneticProfileId': string
+        'uniquePatientKey': string
 
-        'sampleId': string
+        'uniqueSampleKey': string
 
 };
 export type PatientIdentifier = {
@@ -300,9 +340,9 @@ export type PatientIdentifier = {
 export type MutationMultipleStudyFilter = {
     'entrezGeneIds': Array < number >
 
-        'geneticProfileIds': Array < string >
+        'molecularProfileIds': Array < string >
 
-        'sampleGeneticIdentifiers': Array < SampleGeneticIdentifier >
+        'sampleMolecularIdentifiers': Array < SampleMolecularIdentifier >
 
 };
 export type DiscreteCopyNumberData = {
@@ -312,11 +352,17 @@ export type DiscreteCopyNumberData = {
 
         'gene': Gene
 
-        'geneticProfileId': string
+        'molecularProfileId': string
 
         'patientId': string
 
         'sampleId': string
+
+        'studyId': string
+
+        'uniquePatientKey': string
+
+        'uniqueSampleKey': string
 
 };
 export type MutationFilter = {
@@ -333,10 +379,24 @@ export type ClinicalDataMultiStudyFilter = {
         'identifiers': Array < ClinicalDataIdentifier >
 
 };
+export type SampleMolecularIdentifier = {
+    'molecularProfileId': string
+
+        'sampleId': string
+
+};
 export type Mutation = {
     'aminoAcidChange': string
 
         'center': string
+
+        'driverFilter': string
+
+        'driverFilterAnnotation': string
+
+        'driverTiersFilter': string
+
+        'driverTiersFilterAnnotation': string
 
         'endPosition': number
 
@@ -348,8 +408,6 @@ export type Mutation = {
 
         'gene': Gene
 
-        'geneticProfileId': string
-
         'keyword': string
 
         'linkMsa': string
@@ -357,6 +415,8 @@ export type Mutation = {
         'linkPdb': string
 
         'linkXvar': string
+
+        'molecularProfileId': string
 
         'mutationStatus': string
 
@@ -384,9 +444,15 @@ export type Mutation = {
 
         'startPosition': number
 
+        'studyId': string
+
         'tumorAltCount': number
 
         'tumorRefCount': number
+
+        'uniquePatientKey': string
+
+        'uniqueSampleKey': string
 
         'validationStatus': string
 
@@ -421,7 +487,7 @@ export type ClinicalAttribute = {
 };
 
 /**
- * A web service for supplying JSON formatted data to cBioPortal clients.
+ * A web service for supplying JSON formatted data to cBioPortal clients. Please note that this API is currently in beta and subject to change.
  * @class CBioPortalAPI
  * @param {(string)} [domainOrOptions] - The project domain.
  */
@@ -684,7 +750,7 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Get all clinical attributes in a study
+     * Get all clinical attributes
      * @method
      * @name CBioPortalAPI#getAllClinicalAttributesUsingGET
      * @param {string} projection - Level of detail of the response
@@ -776,7 +842,7 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Fetch clinical data by patient IDs or sample IDs
+     * Fetch clinical data by patient IDs or sample IDs (all studies)
      * @method
      * @name CBioPortalAPI#fetchClinicalDataUsingPOST
      * @param {string} clinicalDataType - Type of the clinical data
@@ -1407,16 +1473,16 @@ export default class CBioPortalAPI {
             });
         };
 
-    getAllGeneticProfilesUsingGETURL(parameters: {
+    getAllMolecularProfilesUsingGETURL(parameters: {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "geneticProfileId" | "geneticAlterationType" | "datatype" | "name" | "description" | "showProfileInAnalysisTab",
+        'sortBy' ? : "molecularProfileId" | "molecularAlterationType" | "datatype" | "name" | "description" | "showProfileInAnalysisTab",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/genetic-profiles';
+        let path = '/molecular-profiles';
         if (parameters['projection'] !== undefined) {
             queryParameters['projection'] = parameters['projection'];
         }
@@ -1448,29 +1514,29 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Get all genetic profiles
+     * Get all molecular profiles
      * @method
-     * @name CBioPortalAPI#getAllGeneticProfilesUsingGET
+     * @name CBioPortalAPI#getAllMolecularProfilesUsingGET
      * @param {string} projection - Level of detail of the response
      * @param {integer} pageSize - Page size of the result list
      * @param {integer} pageNumber - Page number of the result list
      * @param {string} sortBy - Name of the property that the result list is sorted by
      * @param {string} direction - Direction of the sort
      */
-    getAllGeneticProfilesUsingGET(parameters: {
+    getAllMolecularProfilesUsingGET(parameters: {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "geneticProfileId" | "geneticAlterationType" | "datatype" | "name" | "description" | "showProfileInAnalysisTab",
+            'sortBy' ? : "molecularProfileId" | "molecularAlterationType" | "datatype" | "name" | "description" | "showProfileInAnalysisTab",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
                 $domain ? : string
-        }): Promise < Array < GeneticProfile >
+        }): Promise < Array < MolecularProfile >
         > {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
             const request = this.request;
-            let path = '/genetic-profiles';
+            let path = '/molecular-profiles';
             let body: any;
             let queryParameters: any = {};
             let headers: any = {};
@@ -1513,14 +1579,14 @@ export default class CBioPortalAPI {
             });
         };
 
-    getGeneticProfileUsingGETURL(parameters: {
-        'geneticProfileId': string,
+    getMolecularProfileUsingGETURL(parameters: {
+        'molecularProfileId': string,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/genetic-profiles/{geneticProfileId}';
+        let path = '/molecular-profiles/{molecularProfileId}';
 
-        path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
+        path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -1533,20 +1599,20 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Get genetic profile
+     * Get molecular profile
      * @method
-     * @name CBioPortalAPI#getGeneticProfileUsingGET
-     * @param {string} geneticProfileId - Genetic Profile ID e.g. acc_tcga_mutations
+     * @name CBioPortalAPI#getMolecularProfileUsingGET
+     * @param {string} molecularProfileId - Molecular Profile ID e.g. acc_tcga_mutations
      */
-    getGeneticProfileUsingGET(parameters: {
-        'geneticProfileId': string,
+    getMolecularProfileUsingGET(parameters: {
+        'molecularProfileId': string,
         $queryParameters ? : any,
         $domain ? : string
-    }): Promise < GeneticProfile > {
+    }): Promise < MolecularProfile > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
-        let path = '/genetic-profiles/{geneticProfileId}';
+        let path = '/molecular-profiles/{molecularProfileId}';
         let body: any;
         let queryParameters: any = {};
         let headers: any = {};
@@ -1555,10 +1621,10 @@ export default class CBioPortalAPI {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
 
-            path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
+            path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
 
-            if (parameters['geneticProfileId'] === undefined) {
-                reject(new Error('Missing required  parameter: geneticProfileId'));
+            if (parameters['molecularProfileId'] === undefined) {
+                reject(new Error('Missing required  parameter: molecularProfileId'));
                 return;
             }
 
@@ -1576,17 +1642,17 @@ export default class CBioPortalAPI {
         });
     };
 
-    getDiscreteCopyNumbersInGeneticProfileUsingGETURL(parameters: {
-        'geneticProfileId': string,
+    getDiscreteCopyNumbersInMolecularProfileUsingGETURL(parameters: {
+        'molecularProfileId': string,
         'sampleListId': string,
         'discreteCopyNumberEventType' ? : "HOMDEL_AND_AMP" | "HOMDEL" | "AMP" | "GAIN" | "HETLOSS" | "DIPLOID" | "ALL",
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/genetic-profiles/{geneticProfileId}/discrete-copy-number';
+        let path = '/molecular-profiles/{molecularProfileId}/discrete-copy-number';
 
-        path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
+        path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
         if (parameters['sampleListId'] !== undefined) {
             queryParameters['sampleListId'] = parameters['sampleListId'];
         }
@@ -1610,16 +1676,16 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Get discrete copy number alterations in a genetic profile
+     * Get discrete copy number alterations in a molecular profile
      * @method
-     * @name CBioPortalAPI#getDiscreteCopyNumbersInGeneticProfileUsingGET
-     * @param {string} geneticProfileId - Genetic Profile ID e.g. acc_tcga_gistic
+     * @name CBioPortalAPI#getDiscreteCopyNumbersInMolecularProfileUsingGET
+     * @param {string} molecularProfileId - Molecular Profile ID e.g. acc_tcga_gistic
      * @param {string} sampleListId - Sample List ID e.g. acc_tcga_all
      * @param {string} discreteCopyNumberEventType - Type of the copy number event
      * @param {string} projection - Level of detail of the response
      */
-    getDiscreteCopyNumbersInGeneticProfileUsingGET(parameters: {
-            'geneticProfileId': string,
+    getDiscreteCopyNumbersInMolecularProfileUsingGET(parameters: {
+            'molecularProfileId': string,
             'sampleListId': string,
             'discreteCopyNumberEventType' ? : "HOMDEL_AND_AMP" | "HOMDEL" | "AMP" | "GAIN" | "HETLOSS" | "DIPLOID" | "ALL",
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
@@ -1630,7 +1696,7 @@ export default class CBioPortalAPI {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
             const request = this.request;
-            let path = '/genetic-profiles/{geneticProfileId}/discrete-copy-number';
+            let path = '/molecular-profiles/{molecularProfileId}/discrete-copy-number';
             let body: any;
             let queryParameters: any = {};
             let headers: any = {};
@@ -1639,10 +1705,10 @@ export default class CBioPortalAPI {
                 headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
-                path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
+                path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
 
-                if (parameters['geneticProfileId'] === undefined) {
-                    reject(new Error('Missing required  parameter: geneticProfileId'));
+                if (parameters['molecularProfileId'] === undefined) {
+                    reject(new Error('Missing required  parameter: molecularProfileId'));
                     return;
                 }
 
@@ -1678,14 +1744,14 @@ export default class CBioPortalAPI {
         };
 
     fetchCopyNumberCountsUsingPOSTURL(parameters: {
-        'geneticProfileId': string,
+        'molecularProfileId': string,
         'copyNumberCountIdentifiers': Array < CopyNumberCountIdentifier > ,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/genetic-profiles/{geneticProfileId}/discrete-copy-number-counts/fetch';
+        let path = '/molecular-profiles/{molecularProfileId}/discrete-copy-number-counts/fetch';
 
-        path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
+        path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -1698,14 +1764,14 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Get counts of specific genes and alterations within a CNA genetic profile
+     * Get counts of specific genes and alterations within a CNA molecular profile
      * @method
      * @name CBioPortalAPI#fetchCopyNumberCountsUsingPOST
-     * @param {string} geneticProfileId - Genetic Profile ID e.g. acc_tcga_mutations
+     * @param {string} molecularProfileId - Molecular Profile ID e.g. acc_tcga_mutations
      * @param {} copyNumberCountIdentifiers - List of copy number count identifiers
      */
     fetchCopyNumberCountsUsingPOST(parameters: {
-            'geneticProfileId': string,
+            'molecularProfileId': string,
             'copyNumberCountIdentifiers': Array < CopyNumberCountIdentifier > ,
             $queryParameters ? : any,
             $domain ? : string
@@ -1714,7 +1780,7 @@ export default class CBioPortalAPI {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
             const request = this.request;
-            let path = '/genetic-profiles/{geneticProfileId}/discrete-copy-number-counts/fetch';
+            let path = '/molecular-profiles/{molecularProfileId}/discrete-copy-number-counts/fetch';
             let body: any;
             let queryParameters: any = {};
             let headers: any = {};
@@ -1723,10 +1789,10 @@ export default class CBioPortalAPI {
                 headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
-                path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
+                path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
 
-                if (parameters['geneticProfileId'] === undefined) {
-                    reject(new Error('Missing required  parameter: geneticProfileId'));
+                if (parameters['molecularProfileId'] === undefined) {
+                    reject(new Error('Missing required  parameter: molecularProfileId'));
                     return;
                 }
 
@@ -1753,17 +1819,17 @@ export default class CBioPortalAPI {
             });
         };
 
-    fetchDiscreteCopyNumbersInGeneticProfileUsingPOSTURL(parameters: {
-        'geneticProfileId': string,
+    fetchDiscreteCopyNumbersInMolecularProfileUsingPOSTURL(parameters: {
+        'molecularProfileId': string,
         'discreteCopyNumberEventType' ? : "HOMDEL_AND_AMP" | "HOMDEL" | "AMP" | "GAIN" | "HETLOSS" | "DIPLOID" | "ALL",
         'discreteCopyNumberFilter': DiscreteCopyNumberFilter,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/genetic-profiles/{geneticProfileId}/discrete-copy-number/fetch';
+        let path = '/molecular-profiles/{molecularProfileId}/discrete-copy-number/fetch';
 
-        path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
+        path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
         if (parameters['discreteCopyNumberEventType'] !== undefined) {
             queryParameters['discreteCopyNumberEventType'] = parameters['discreteCopyNumberEventType'];
         }
@@ -1783,16 +1849,16 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Fetch discrete copy number alterations in a genetic profile by sample ID
+     * Fetch discrete copy number alterations in a molecular profile by sample ID
      * @method
-     * @name CBioPortalAPI#fetchDiscreteCopyNumbersInGeneticProfileUsingPOST
-     * @param {string} geneticProfileId - Genetic Profile ID e.g. acc_tcga_gistic
+     * @name CBioPortalAPI#fetchDiscreteCopyNumbersInMolecularProfileUsingPOST
+     * @param {string} molecularProfileId - Molecular Profile ID e.g. acc_tcga_gistic
      * @param {string} discreteCopyNumberEventType - Type of the copy number event
      * @param {} discreteCopyNumberFilter - List of Sample IDs/Sample List ID and Entrez Gene IDs
      * @param {string} projection - Level of detail of the response
      */
-    fetchDiscreteCopyNumbersInGeneticProfileUsingPOST(parameters: {
-            'geneticProfileId': string,
+    fetchDiscreteCopyNumbersInMolecularProfileUsingPOST(parameters: {
+            'molecularProfileId': string,
             'discreteCopyNumberEventType' ? : "HOMDEL_AND_AMP" | "HOMDEL" | "AMP" | "GAIN" | "HETLOSS" | "DIPLOID" | "ALL",
             'discreteCopyNumberFilter': DiscreteCopyNumberFilter,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
@@ -1803,7 +1869,7 @@ export default class CBioPortalAPI {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
             const request = this.request;
-            let path = '/genetic-profiles/{geneticProfileId}/discrete-copy-number/fetch';
+            let path = '/molecular-profiles/{molecularProfileId}/discrete-copy-number/fetch';
             let body: any;
             let queryParameters: any = {};
             let headers: any = {};
@@ -1812,10 +1878,10 @@ export default class CBioPortalAPI {
                 headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
-                path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
+                path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
 
-                if (parameters['geneticProfileId'] === undefined) {
-                    reject(new Error('Missing required  parameter: geneticProfileId'));
+                if (parameters['molecularProfileId'] === undefined) {
+                    reject(new Error('Missing required  parameter: molecularProfileId'));
                     return;
                 }
 
@@ -1851,14 +1917,14 @@ export default class CBioPortalAPI {
         };
 
     getGenePanelDataUsingPOSTURL(parameters: {
-        'geneticProfileId': string,
+        'molecularProfileId': string,
         'genePanelDataFilter': GenePanelDataFilter,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/genetic-profiles/{geneticProfileId}/gene-panel-data/fetch';
+        let path = '/molecular-profiles/{molecularProfileId}/gene-panel-data/fetch';
 
-        path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
+        path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -1874,11 +1940,11 @@ export default class CBioPortalAPI {
      * Get gene panel data
      * @method
      * @name CBioPortalAPI#getGenePanelDataUsingPOST
-     * @param {string} geneticProfileId - Genetic Profile ID e.g. nsclc_unito_2016_mutations
+     * @param {string} molecularProfileId - Molecular Profile ID e.g. nsclc_unito_2016_mutations
      * @param {} genePanelDataFilter - List of Sample IDs/Sample List ID and Entrez Gene IDs
      */
     getGenePanelDataUsingPOST(parameters: {
-            'geneticProfileId': string,
+            'molecularProfileId': string,
             'genePanelDataFilter': GenePanelDataFilter,
             $queryParameters ? : any,
             $domain ? : string
@@ -1887,7 +1953,7 @@ export default class CBioPortalAPI {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
             const request = this.request;
-            let path = '/genetic-profiles/{geneticProfileId}/gene-panel-data/fetch';
+            let path = '/molecular-profiles/{molecularProfileId}/gene-panel-data/fetch';
             let body: any;
             let queryParameters: any = {};
             let headers: any = {};
@@ -1896,10 +1962,10 @@ export default class CBioPortalAPI {
                 headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
-                path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
+                path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
 
-                if (parameters['geneticProfileId'] === undefined) {
-                    reject(new Error('Missing required  parameter: geneticProfileId'));
+                if (parameters['molecularProfileId'] === undefined) {
+                    reject(new Error('Missing required  parameter: molecularProfileId'));
                     return;
                 }
 
@@ -1926,17 +1992,17 @@ export default class CBioPortalAPI {
             });
         };
 
-    getAllGeneticDataInGeneticProfileUsingGETURL(parameters: {
-        'geneticProfileId': string,
+    getAllMolecularDataInMolecularProfileUsingGETURL(parameters: {
+        'molecularProfileId': string,
         'sampleListId': string,
         'entrezGeneId': number,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/genetic-profiles/{geneticProfileId}/genetic-data';
+        let path = '/molecular-profiles/{molecularProfileId}/molecular-data';
 
-        path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
+        path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
         if (parameters['sampleListId'] !== undefined) {
             queryParameters['sampleListId'] = parameters['sampleListId'];
         }
@@ -1960,27 +2026,27 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Get all genetic data in a genetic profile
+     * Get all molecular data in a molecular profile
      * @method
-     * @name CBioPortalAPI#getAllGeneticDataInGeneticProfileUsingGET
-     * @param {string} geneticProfileId - Genetic Profile ID e.g. acc_tcga_rna_seq_v2_mrna
+     * @name CBioPortalAPI#getAllMolecularDataInMolecularProfileUsingGET
+     * @param {string} molecularProfileId - Molecular Profile ID e.g. acc_tcga_rna_seq_v2_mrna
      * @param {string} sampleListId - Sample List ID e.g. acc_tcga_all
      * @param {integer} entrezGeneId - Entrez Gene ID e.g. 1
      * @param {string} projection - Level of detail of the response
      */
-    getAllGeneticDataInGeneticProfileUsingGET(parameters: {
-            'geneticProfileId': string,
+    getAllMolecularDataInMolecularProfileUsingGET(parameters: {
+            'molecularProfileId': string,
             'sampleListId': string,
             'entrezGeneId': number,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             $queryParameters ? : any,
             $domain ? : string
-        }): Promise < Array < GeneGeneticData >
+        }): Promise < Array < GeneMolecularData >
         > {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
             const request = this.request;
-            let path = '/genetic-profiles/{geneticProfileId}/genetic-data';
+            let path = '/molecular-profiles/{molecularProfileId}/molecular-data';
             let body: any;
             let queryParameters: any = {};
             let headers: any = {};
@@ -1989,10 +2055,10 @@ export default class CBioPortalAPI {
                 headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
-                path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
+                path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
 
-                if (parameters['geneticProfileId'] === undefined) {
-                    reject(new Error('Missing required  parameter: geneticProfileId'));
+                if (parameters['molecularProfileId'] === undefined) {
+                    reject(new Error('Missing required  parameter: molecularProfileId'));
                     return;
                 }
 
@@ -2032,16 +2098,16 @@ export default class CBioPortalAPI {
             });
         };
 
-    fetchAllGeneticDataInGeneticProfileUsingPOSTURL(parameters: {
-        'geneticProfileId': string,
-        'geneticDataFilter': GeneticDataFilter,
+    fetchAllMolecularDataInMolecularProfileUsingPOSTURL(parameters: {
+        'molecularProfileId': string,
+        'molecularDataFilter': MolecularDataFilter,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/genetic-profiles/{geneticProfileId}/genetic-data/fetch';
+        let path = '/molecular-profiles/{molecularProfileId}/molecular-data/fetch';
 
-        path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
+        path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
 
         if (parameters['projection'] !== undefined) {
             queryParameters['projection'] = parameters['projection'];
@@ -2058,25 +2124,25 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Fetch discrete copy number alterations in a genetic profile by sample ID
+     * Fetch molecular data by sample ID(s)
      * @method
-     * @name CBioPortalAPI#fetchAllGeneticDataInGeneticProfileUsingPOST
-     * @param {string} geneticProfileId - Genetic Profile ID e.g. acc_tcga_rna_seq_v2_mrna
-     * @param {} geneticDataFilter - List of Sample IDs/Sample List ID and Entrez Gene IDs
+     * @name CBioPortalAPI#fetchAllMolecularDataInMolecularProfileUsingPOST
+     * @param {string} molecularProfileId - Molecular Profile ID e.g. acc_tcga_rna_seq_v2_mrna
+     * @param {} molecularDataFilter - List of Sample IDs/Sample List ID and Entrez Gene IDs
      * @param {string} projection - Level of detail of the response
      */
-    fetchAllGeneticDataInGeneticProfileUsingPOST(parameters: {
-            'geneticProfileId': string,
-            'geneticDataFilter': GeneticDataFilter,
+    fetchAllMolecularDataInMolecularProfileUsingPOST(parameters: {
+            'molecularProfileId': string,
+            'molecularDataFilter': MolecularDataFilter,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             $queryParameters ? : any,
             $domain ? : string
-        }): Promise < Array < GeneGeneticData >
+        }): Promise < Array < GeneMolecularData >
         > {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
             const request = this.request;
-            let path = '/genetic-profiles/{geneticProfileId}/genetic-data/fetch';
+            let path = '/molecular-profiles/{molecularProfileId}/molecular-data/fetch';
             let body: any;
             let queryParameters: any = {};
             let headers: any = {};
@@ -2085,19 +2151,19 @@ export default class CBioPortalAPI {
                 headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
-                path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
+                path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
 
-                if (parameters['geneticProfileId'] === undefined) {
-                    reject(new Error('Missing required  parameter: geneticProfileId'));
+                if (parameters['molecularProfileId'] === undefined) {
+                    reject(new Error('Missing required  parameter: molecularProfileId'));
                     return;
                 }
 
-                if (parameters['geneticDataFilter'] !== undefined) {
-                    body = parameters['geneticDataFilter'];
+                if (parameters['molecularDataFilter'] !== undefined) {
+                    body = parameters['molecularDataFilter'];
                 }
 
-                if (parameters['geneticDataFilter'] === undefined) {
-                    reject(new Error('Missing required  parameter: geneticDataFilter'));
+                if (parameters['molecularDataFilter'] === undefined) {
+                    reject(new Error('Missing required  parameter: molecularDataFilter'));
                     return;
                 }
 
@@ -2119,15 +2185,15 @@ export default class CBioPortalAPI {
             });
         };
 
-    getMutationCountsInGeneticProfileBySampleListIdUsingGETURL(parameters: {
-        'geneticProfileId': string,
+    getMutationCountsInMolecularProfileBySampleListIdUsingGETURL(parameters: {
+        'molecularProfileId': string,
         'sampleListId': string,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/genetic-profiles/{geneticProfileId}/mutation-counts';
+        let path = '/molecular-profiles/{molecularProfileId}/mutation-counts';
 
-        path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
+        path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
         if (parameters['sampleListId'] !== undefined) {
             queryParameters['sampleListId'] = parameters['sampleListId'];
         }
@@ -2143,14 +2209,14 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Get mutation counts in a genetic profile by Sample List ID
+     * Get mutation counts in a molecular profile by Sample List ID
      * @method
-     * @name CBioPortalAPI#getMutationCountsInGeneticProfileBySampleListIdUsingGET
-     * @param {string} geneticProfileId - Genetic Profile ID e.g. acc_tcga_mutations
+     * @name CBioPortalAPI#getMutationCountsInMolecularProfileBySampleListIdUsingGET
+     * @param {string} molecularProfileId - Molecular Profile ID e.g. acc_tcga_mutations
      * @param {string} sampleListId - Sample List ID e.g. acc_tcga_all
      */
-    getMutationCountsInGeneticProfileBySampleListIdUsingGET(parameters: {
-            'geneticProfileId': string,
+    getMutationCountsInMolecularProfileBySampleListIdUsingGET(parameters: {
+            'molecularProfileId': string,
             'sampleListId': string,
             $queryParameters ? : any,
             $domain ? : string
@@ -2159,7 +2225,7 @@ export default class CBioPortalAPI {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
             const request = this.request;
-            let path = '/genetic-profiles/{geneticProfileId}/mutation-counts';
+            let path = '/molecular-profiles/{molecularProfileId}/mutation-counts';
             let body: any;
             let queryParameters: any = {};
             let headers: any = {};
@@ -2168,10 +2234,10 @@ export default class CBioPortalAPI {
                 headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
-                path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
+                path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
 
-                if (parameters['geneticProfileId'] === undefined) {
-                    reject(new Error('Missing required  parameter: geneticProfileId'));
+                if (parameters['molecularProfileId'] === undefined) {
+                    reject(new Error('Missing required  parameter: molecularProfileId'));
                     return;
                 }
 
@@ -2198,15 +2264,15 @@ export default class CBioPortalAPI {
             });
         };
 
-    fetchMutationCountsInGeneticProfileUsingPOSTURL(parameters: {
-        'geneticProfileId': string,
+    fetchMutationCountsInMolecularProfileUsingPOSTURL(parameters: {
+        'molecularProfileId': string,
         'sampleIds': Array < string > ,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/genetic-profiles/{geneticProfileId}/mutation-counts/fetch';
+        let path = '/molecular-profiles/{molecularProfileId}/mutation-counts/fetch';
 
-        path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
+        path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -2219,14 +2285,14 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Fetch mutation counts in a genetic profile by sample IDs
+     * Fetch mutation counts in a molecular profile by sample IDs
      * @method
-     * @name CBioPortalAPI#fetchMutationCountsInGeneticProfileUsingPOST
-     * @param {string} geneticProfileId - Genetic Profile ID e.g. acc_tcga_mutations
+     * @name CBioPortalAPI#fetchMutationCountsInMolecularProfileUsingPOST
+     * @param {string} molecularProfileId - Molecular Profile ID e.g. acc_tcga_mutations
      * @param {} sampleIds - List of Sample IDs
      */
-    fetchMutationCountsInGeneticProfileUsingPOST(parameters: {
-            'geneticProfileId': string,
+    fetchMutationCountsInMolecularProfileUsingPOST(parameters: {
+            'molecularProfileId': string,
             'sampleIds': Array < string > ,
             $queryParameters ? : any,
             $domain ? : string
@@ -2235,7 +2301,7 @@ export default class CBioPortalAPI {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
             const request = this.request;
-            let path = '/genetic-profiles/{geneticProfileId}/mutation-counts/fetch';
+            let path = '/molecular-profiles/{molecularProfileId}/mutation-counts/fetch';
             let body: any;
             let queryParameters: any = {};
             let headers: any = {};
@@ -2244,10 +2310,10 @@ export default class CBioPortalAPI {
                 headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
-                path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
+                path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
 
-                if (parameters['geneticProfileId'] === undefined) {
-                    reject(new Error('Missing required  parameter: geneticProfileId'));
+                if (parameters['molecularProfileId'] === undefined) {
+                    reject(new Error('Missing required  parameter: molecularProfileId'));
                     return;
                 }
 
@@ -2274,8 +2340,8 @@ export default class CBioPortalAPI {
             });
         };
 
-    getMutationsInGeneticProfileBySampleListIdUsingGETURL(parameters: {
-        'geneticProfileId': string,
+    getMutationsInMolecularProfileBySampleListIdUsingGETURL(parameters: {
+        'molecularProfileId': string,
         'sampleListId': string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
@@ -2285,9 +2351,9 @@ export default class CBioPortalAPI {
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/genetic-profiles/{geneticProfileId}/mutations';
+        let path = '/molecular-profiles/{molecularProfileId}/mutations';
 
-        path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
+        path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
         if (parameters['sampleListId'] !== undefined) {
             queryParameters['sampleListId'] = parameters['sampleListId'];
         }
@@ -2323,10 +2389,10 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Get mutations in a genetic profile by Sample List ID
+     * Get mutations in a molecular profile by Sample List ID
      * @method
-     * @name CBioPortalAPI#getMutationsInGeneticProfileBySampleListIdUsingGET
-     * @param {string} geneticProfileId - Genetic Profile ID e.g. acc_tcga_mutations
+     * @name CBioPortalAPI#getMutationsInMolecularProfileBySampleListIdUsingGET
+     * @param {string} molecularProfileId - Molecular Profile ID e.g. acc_tcga_mutations
      * @param {string} sampleListId - Sample List ID e.g. acc_tcga_all
      * @param {string} projection - Level of detail of the response
      * @param {integer} pageSize - Page size of the result list
@@ -2334,8 +2400,8 @@ export default class CBioPortalAPI {
      * @param {string} sortBy - Name of the property that the result list is sorted by
      * @param {string} direction - Direction of the sort
      */
-    getMutationsInGeneticProfileBySampleListIdUsingGET(parameters: {
-            'geneticProfileId': string,
+    getMutationsInMolecularProfileBySampleListIdUsingGET(parameters: {
+            'molecularProfileId': string,
             'sampleListId': string,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
@@ -2349,7 +2415,7 @@ export default class CBioPortalAPI {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
             const request = this.request;
-            let path = '/genetic-profiles/{geneticProfileId}/mutations';
+            let path = '/molecular-profiles/{molecularProfileId}/mutations';
             let body: any;
             let queryParameters: any = {};
             let headers: any = {};
@@ -2358,10 +2424,10 @@ export default class CBioPortalAPI {
                 headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
-                path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
+                path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
 
-                if (parameters['geneticProfileId'] === undefined) {
-                    reject(new Error('Missing required  parameter: geneticProfileId'));
+                if (parameters['molecularProfileId'] === undefined) {
+                    reject(new Error('Missing required  parameter: molecularProfileId'));
                     return;
                 }
 
@@ -2408,8 +2474,8 @@ export default class CBioPortalAPI {
             });
         };
 
-    fetchMutationsInGeneticProfileUsingPOSTURL(parameters: {
-        'geneticProfileId': string,
+    fetchMutationsInMolecularProfileUsingPOSTURL(parameters: {
+        'molecularProfileId': string,
         'mutationFilter': MutationFilter,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
@@ -2419,9 +2485,9 @@ export default class CBioPortalAPI {
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/genetic-profiles/{geneticProfileId}/mutations/fetch';
+        let path = '/molecular-profiles/{molecularProfileId}/mutations/fetch';
 
-        path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
+        path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
 
         if (parameters['projection'] !== undefined) {
             queryParameters['projection'] = parameters['projection'];
@@ -2454,10 +2520,10 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Fetch mutations in a genetic profile by sample IDs
+     * Fetch mutations in a molecular profile by sample IDs
      * @method
-     * @name CBioPortalAPI#fetchMutationsInGeneticProfileUsingPOST
-     * @param {string} geneticProfileId - Genetic Profile ID e.g. acc_tcga_mutations
+     * @name CBioPortalAPI#fetchMutationsInMolecularProfileUsingPOST
+     * @param {string} molecularProfileId - Molecular Profile ID e.g. acc_tcga_mutations
      * @param {} mutationFilter - List of Sample IDs/Sample List ID and Entrez Gene IDs
      * @param {string} projection - Level of detail of the response
      * @param {integer} pageSize - Page size of the result list
@@ -2465,8 +2531,8 @@ export default class CBioPortalAPI {
      * @param {string} sortBy - Name of the property that the result list is sorted by
      * @param {string} direction - Direction of the sort
      */
-    fetchMutationsInGeneticProfileUsingPOST(parameters: {
-            'geneticProfileId': string,
+    fetchMutationsInMolecularProfileUsingPOST(parameters: {
+            'molecularProfileId': string,
             'mutationFilter': MutationFilter,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
@@ -2480,7 +2546,7 @@ export default class CBioPortalAPI {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
             const request = this.request;
-            let path = '/genetic-profiles/{geneticProfileId}/mutations/fetch';
+            let path = '/molecular-profiles/{molecularProfileId}/mutations/fetch';
             let body: any;
             let queryParameters: any = {};
             let headers: any = {};
@@ -2489,10 +2555,10 @@ export default class CBioPortalAPI {
                 headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
-                path = path.replace('{geneticProfileId}', parameters['geneticProfileId'] + '');
+                path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
 
-                if (parameters['geneticProfileId'] === undefined) {
-                    reject(new Error('Missing required  parameter: geneticProfileId'));
+                if (parameters['molecularProfileId'] === undefined) {
+                    reject(new Error('Missing required  parameter: molecularProfileId'));
                     return;
                 }
 
@@ -2603,7 +2669,7 @@ export default class CBioPortalAPI {
             });
         };
 
-    fetchMutationsInMultipleGeneticProfilesUsingPOSTURL(parameters: {
+    fetchMutationsInMultipleMolecularProfilesUsingPOSTURL(parameters: {
         'mutationMultipleStudyFilter': MutationMultipleStudyFilter,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
@@ -2646,17 +2712,17 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Fetch mutations in multiple genetic profiles by sample IDs
+     * Fetch mutations in multiple molecular profiles by sample IDs
      * @method
-     * @name CBioPortalAPI#fetchMutationsInMultipleGeneticProfilesUsingPOST
-     * @param {} mutationMultipleStudyFilter - List of Genetic Profile ID and Sample ID pairs and Entrez Gene IDs
+     * @name CBioPortalAPI#fetchMutationsInMultipleMolecularProfilesUsingPOST
+     * @param {} mutationMultipleStudyFilter - List of Molecular Profile ID and Sample ID pairs and Entrez Gene IDs
      * @param {string} projection - Level of detail of the response
      * @param {integer} pageSize - Page size of the result list
      * @param {integer} pageNumber - Page number of the result list
      * @param {string} sortBy - Name of the property that the result list is sorted by
      * @param {string} direction - Direction of the sort
      */
-    fetchMutationsInMultipleGeneticProfilesUsingPOST(parameters: {
+    fetchMutationsInMultipleMolecularProfilesUsingPOST(parameters: {
             'mutationMultipleStudyFilter': MutationMultipleStudyFilter,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
@@ -3318,7 +3384,7 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Get all clinical attributes in a study
+     * Get all clinical attributes in the specified study
      * @method
      * @name CBioPortalAPI#getAllClinicalAttributesInStudyUsingGET
      * @param {string} studyId - Study ID e.g. acc_tcga
@@ -3415,7 +3481,7 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Get all clinical attributes in a study
+     * Get specified clinical attribute
      * @method
      * @name CBioPortalAPI#getClinicalAttributeInStudyUsingGET
      * @param {string} studyId - Study ID e.g. acc_tcga
@@ -3637,7 +3703,7 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Fetch all clinical data in a study
+     * Fetch clinical data by patient IDs or sample IDs (specific study)
      * @method
      * @name CBioPortalAPI#fetchAllClinicalDataInStudyUsingPOST
      * @param {string} studyId - Study ID e.g. acc_tcga
@@ -3704,17 +3770,17 @@ export default class CBioPortalAPI {
             });
         };
 
-    getAllGeneticProfilesInStudyUsingGETURL(parameters: {
+    getAllMolecularProfilesInStudyUsingGETURL(parameters: {
         'studyId': string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "geneticProfileId" | "geneticAlterationType" | "datatype" | "name" | "description" | "showProfileInAnalysisTab",
+        'sortBy' ? : "molecularProfileId" | "molecularAlterationType" | "datatype" | "name" | "description" | "showProfileInAnalysisTab",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/studies/{studyId}/genetic-profiles';
+        let path = '/studies/{studyId}/molecular-profiles';
 
         path = path.replace('{studyId}', parameters['studyId'] + '');
         if (parameters['projection'] !== undefined) {
@@ -3748,9 +3814,9 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Get all genetic profiles in a study
+     * Get all molecular profiles in a study
      * @method
-     * @name CBioPortalAPI#getAllGeneticProfilesInStudyUsingGET
+     * @name CBioPortalAPI#getAllMolecularProfilesInStudyUsingGET
      * @param {string} studyId - Study ID e.g. acc_tcga
      * @param {string} projection - Level of detail of the response
      * @param {integer} pageSize - Page size of the result list
@@ -3758,21 +3824,21 @@ export default class CBioPortalAPI {
      * @param {string} sortBy - Name of the property that the result list is sorted by
      * @param {string} direction - Direction of the sort
      */
-    getAllGeneticProfilesInStudyUsingGET(parameters: {
+    getAllMolecularProfilesInStudyUsingGET(parameters: {
             'studyId': string,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "geneticProfileId" | "geneticAlterationType" | "datatype" | "name" | "description" | "showProfileInAnalysisTab",
+            'sortBy' ? : "molecularProfileId" | "molecularAlterationType" | "datatype" | "name" | "description" | "showProfileInAnalysisTab",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
             $domain ? : string
-        }): Promise < Array < GeneticProfile >
+        }): Promise < Array < MolecularProfile >
         > {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
             const request = this.request;
-            let path = '/studies/{studyId}/genetic-profiles';
+            let path = '/studies/{studyId}/molecular-profiles';
             let body: any;
             let queryParameters: any = {};
             let headers: any = {};
