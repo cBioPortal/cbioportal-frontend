@@ -476,7 +476,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                 {controls}
                 <SummaryBarGraph data={this.chartData} yAxis={this.yAxis} xAxis={this.xAxis} gene={this.props.gene} width={this.props.width}
                                  setPdfProperties={this.setPdfProperties} setPngAnchor={this.setPngAnchor} legend={this.showGenomicAlt}
-                                 orderedLabels={orderedLabels}
+                                 orderedLabels={orderedLabels} altCasesMax={this.altCasesMax}
                 />
 
                     </div>
