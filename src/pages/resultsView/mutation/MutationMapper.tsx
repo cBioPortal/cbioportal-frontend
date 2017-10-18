@@ -195,8 +195,8 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                                 hotspots={this.props.store.indexedHotspotData}
                                 cosmicData={this.props.store.cosmicData.result}
                                 oncoKbData={this.props.store.oncoKbData}
-                                civicGenes={this.props.store.civicGenes.result}
-                                civicVariants={this.props.store.civicVariants.result}
+                                civicGenes={this.props.store.civicGenes}
+                                civicVariants={this.props.store.civicVariants}
                                 enableOncoKb={this.props.config.showOncoKB}
                                 enableGenomeNexus={this.props.config.showGenomeNexus}
                                 enableHotspot={this.props.config.showHotspot}
