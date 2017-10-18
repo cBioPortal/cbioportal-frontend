@@ -323,8 +323,13 @@ export class PatientViewPageStore {
         )
     }, {});
 
-    readonly sequencedSampleIdsInStudy = remoteData(async() => {
-        return stringListToSet(await client.getAllSampleIdsInSampleListUsingGET({sampleListId:`${this.studyId}_sequenced`}));
+    readonly sequencedSampleIdsInStudy = remoteData({
+        invoke: async () => {
+            return stringListToSet(await client.getAllSampleIdsInSampleListUsingGET({sampleListId:`${this.studyId}_sequenced`}));
+        },
+        onError: (err: Error) => {
+            // fail silently, leave the error handling responsibility to the data consumer
+        }
     }, {});
 
     readonly molecularProfilesInStudy = remoteData(() => {
