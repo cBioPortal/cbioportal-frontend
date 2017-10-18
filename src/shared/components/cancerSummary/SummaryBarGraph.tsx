@@ -20,6 +20,7 @@ interface ISummaryBarGraphProps {
     setPdfProperties:(anchor:string, width: number, height: number) => void;
     gene: string;
     width: number;
+    altCasesMax:number;
     orderedLabels: {
         [key:string]: string;
     };
@@ -149,9 +150,15 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
     }
 
     private get chartOptions() {
-        const {data, yAxis} = this.props;
+        const {data, yAxis, altCasesMax} = this.props;
 
         const orderedAltNames = _.values(this.props.orderedLabels);
+
+        let yAxisMax;
+
+        if (altCasesMax > 90 && yAxis === "alt-freq") {
+            yAxisMax = {max: 100};
+        }
 
         return {
             title: {
@@ -202,6 +209,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
                     display:true,
                     ticks: {
                         fontSize: 11,
+                        ...yAxisMax,
                         callback: (value:number) => {
                             return _.round(value, 1) + (this.props.yAxis === "abs-count" ? '': '%');
                         }
