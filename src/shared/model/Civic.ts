@@ -25,3 +25,15 @@ export interface ICivicEntry {
     url: string;
     variants: {[name: string]: ICivicVariantData};
 };
+
+export type MobXStatus = "pending" | "error" | "complete";
+
+export interface ICivicGeneDataWrapper {
+    status: MobXStatus;
+    result?: ICivicGene;
+}
+
+export interface ICivicVariantDataWrapper {
+    status: MobXStatus;
+    result?: ICivicVariant;
+}

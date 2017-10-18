@@ -16,7 +16,7 @@ import PubMedCache from "shared/cache/PubMedCache";
 import MrnaExprRankCache from "shared/cache/MrnaExprRankCache";
 import {IGisticData} from "shared/model/Gistic";
 import CopyNumberCountCache from "../clinicalInformation/CopyNumberCountCache";
-import {ICivicGene, ICivicVariant} from "shared/model/Civic.ts";
+import {ICivicGeneDataWrapper, ICivicVariantDataWrapper} from "shared/model/Civic.ts";
 
 class CNATableComponent extends LazyMobXTable<DiscreteCopyNumberData[]> {
 
@@ -28,8 +28,8 @@ type ICopyNumberTableWrapperProps = {
     sampleIds:string[];
     sampleManager:SampleManager|null;
     cnaOncoKbData?: IOncoKbDataWrapper;
-    cnaCivicGenes?: ICivicGene;
-    cnaCivicVariants?: ICivicVariant,
+    cnaCivicGenes?: ICivicGeneDataWrapper;
+    cnaCivicVariants?: ICivicVariantDataWrapper;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
     oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean};
     enableOncoKb?:boolean;
