@@ -4,6 +4,19 @@ var WebpackFailPlugin = require('webpack-fail-plugin');
 var ProgressBarPlugin = require('progress-bar-webpack-plugin');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
 
+var commit = '"unknown"';
+var version = '"unknown"';
+// Don't show COMMIT/VERSION on Heroku (crashes, because no git dir)
+if (process.env.PATH.indexOf('heroku') === -1) {
+    // show full git version
+    var GitRevisionPlugin = require('git-revision-webpack-plugin');
+    var gitRevisionPlugin = new GitRevisionPlugin({
+        versionCommand: 'describe --always --tags --dirty'
+    });
+    commit = JSON.stringify(gitRevisionPlugin.commithash())
+    version = JSON.stringify(gitRevisionPlugin.version())
+}
+
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
 
@@ -65,6 +78,10 @@ var config = {
 
 
     plugins: [
+        new webpack.DefinePlugin({
+            'VERSION': version,
+            'COMMIT': commit,
+        }),
         new HtmlWebpackPlugin({cache: false, template: 'my-index.ejs'}),
         new webpack.optimize.DedupePlugin(),
         WebpackFailPlugin,
@@ -135,7 +152,7 @@ var config = {
 
         ],
 
-        noParse:[/3Dmol-nojquery/],
+        noParse:[/3Dmol-nojquery/,/jspdf/],
 
         preLoaders: [
             // All output '.js' files will have any sourcemaps re-processed by 'source-map-loader'.

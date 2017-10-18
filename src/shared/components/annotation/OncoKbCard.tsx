@@ -9,7 +9,7 @@ import {ICache} from "shared/lib/SimpleCache";
 import "./styles/oncoKbCard.scss";
 import "./styles/oncoKbCard.custom.scss";
 
-export interface IOncoKbCardProps {
+type OncoKbCardPropsBase = {
     title: string;
     gene: string;
     oncogenicity: string;
@@ -23,14 +23,18 @@ export interface IOncoKbCardProps {
     treatments: any[];
     pmidData: ICache<any>;
     handleFeedbackOpen?: React.EventHandler<any>;
-}
+};
+
+export type OncoKbCardProps =
+    (OncoKbCardPropsBase & { geneNotExist:false}) |
+    (Partial<OncoKbCardPropsBase> & {geneNotExist: true});
 
 export interface IOncoKbCardState {
     activeTab: "oncogenicity" | "mutationEffect";
     levelsCollapsed: boolean;
 }
 
-export default class OncoKbCard extends React.Component<IOncoKbCardProps, IOncoKbCardState>
+export default class OncoKbCard extends React.Component<OncoKbCardProps, IOncoKbCardState>
 {
     public static get LEVELS(): string[]
     {
@@ -147,25 +151,27 @@ export default class OncoKbCard extends React.Component<IOncoKbCardProps, IOncoK
         );
     }
 
-    public pmidList(pmids:number[], pmidData:ICache<any>)
+    public pmidList(pmids:number[], pmidData?:ICache<any>)
     {
         const list:JSX.Element[] = [];
 
-        pmids.forEach((uid:number) => {
-            const cacheData = pmidData[uid.toString()];
-            const articleContent = cacheData ? cacheData.data : null;
+        if (pmidData) {
+            pmids.forEach((uid:number) => {
+                const cacheData = pmidData[uid.toString()];
+                const articleContent = cacheData ? cacheData.data : null;
 
-            if (articleContent)
-            {
-                list.push(
-                    this.pmidItem(articleContent.title,
-                        (_.isArray(articleContent.authors) && articleContent.authors.length > 0) ? (articleContent.authors[0].name + ' et al.') : 'Unknown',
-                        articleContent.source,
-                        (new Date(articleContent.pubdate)).getFullYear().toString(),
-                        articleContent.uid)
-                );
-            }
-        });
+                if (articleContent)
+                {
+                    list.push(
+                        this.pmidItem(articleContent.title,
+                            (_.isArray(articleContent.authors) && articleContent.authors.length > 0) ? (articleContent.authors[0].name + ' et al.') : 'Unknown',
+                            articleContent.source,
+                            (new Date(articleContent.pubdate)).getFullYear().toString(),
+                            articleContent.uid)
+                    );
+                }
+            });
+        }
 
 
         return list;
@@ -255,8 +261,7 @@ export default class OncoKbCard extends React.Component<IOncoKbCardProps, IOncoK
         return (
             <div className="oncokb-card" data-test='oncokb-card'>
                 <div className="z-depth-2">
-                    <If condition={this.props.gene.length > 0}>
-                        <Then>
+                    {!this.props.geneNotExist && (
                             <span>
                                 <div className="item tabs-wrapper">
                                     <div className="col s12 tip-header">
@@ -388,11 +393,10 @@ export default class OncoKbCard extends React.Component<IOncoKbCardProps, IOncoK
                                     </Collapse>
                                 </div>
                             </span>
-                        </Then>
-                        <Else>
+                    )}
+                    {this.props.geneNotExist && (
                             <div className="additional-info">There is currently no information about this gene in OncoKB.</div>
-                        </Else>
-                    </If>
+                    )}
 
                     <div className="item footer">
                         <a href="http://oncokb.org/#/gene/{{gene}}" target="_blank">

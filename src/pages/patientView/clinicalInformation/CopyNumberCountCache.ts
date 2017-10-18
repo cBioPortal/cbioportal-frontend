@@ -6,13 +6,13 @@ function getKey<T extends { entrezGeneId: number, alteration: number}>(obj:T):st
     return obj.entrezGeneId + "~" + obj.alteration;
 }
 
-function fetch(queries:CopyNumberCountIdentifier[], geneticProfileIdDiscrete:string|undefined):Promise<CopyNumberCount[]> {
-    if (!geneticProfileIdDiscrete) {
-        return Promise.reject("No discrete CNA genetic profile id given");
+function fetch(queries:CopyNumberCountIdentifier[], molecularProfileIdDiscrete:string|undefined):Promise<CopyNumberCount[]> {
+    if (!molecularProfileIdDiscrete) {
+        return Promise.reject("No discrete CNA molecular profile id given");
     } else {
         if (queries.length) {
             return client.fetchCopyNumberCountsUsingPOST({
-                geneticProfileId: geneticProfileIdDiscrete,
+                molecularProfileId: molecularProfileIdDiscrete,
                 copyNumberCountIdentifiers: queries
             });
         } else {
@@ -22,8 +22,8 @@ function fetch(queries:CopyNumberCountIdentifier[], geneticProfileIdDiscrete:str
 }
 
 export default class CopyNumberCountCache extends LazyMobXCache<CopyNumberCount, CopyNumberCountIdentifier> {
-    constructor(geneticProfileIdDiscrete:string|undefined) {
+    constructor(molecularProfileIdDiscrete:string|undefined) {
         super(getKey, getKey,
-            fetch, geneticProfileIdDiscrete);
+            fetch, molecularProfileIdDiscrete);
     }
 }

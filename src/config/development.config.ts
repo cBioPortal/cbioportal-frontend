@@ -10,6 +10,8 @@ const config:IAppConfig = {
     showMyCancerGenome: (window as any).showMyCancerGenome,
     showOncoKB: (window as any).showOncoKB,
     oncoKBApiUrl: (window as any).oncoKBApiUrl,
+    showGenomeNexus: (window as any).showGenomeNexus,
+    genomeNexusApiUrl: (window as any).genomeNexusApiUrl,
     enableDarwin: (window as any).enableDarwin,
     appVersion: (window as any).appVersion,
     historyType: (window as any).historyType,
@@ -19,7 +21,9 @@ const config:IAppConfig = {
     skinRightNavShowDatasets: (window as any).skinRightNavShowDatasets,
     skinRightNavShowExamples: (window as any).skinRightNavShowExamples, 
     skinRightNavShowTestimonials: (window as any).skinRightNavShowTestimonials,
-    skinRightNavExamplesHTML: (window as any).skinRightNavExamplesHTML
+    skinRightNavExamplesHTML: (window as any).skinRightNavExamplesHTML,
+    skinRightNavWhatsNewBlurb: (window as any).skinRightNavWhatsNewBlurb,
+    querySetsOfGenes: (window as any).querySetsOfGenes
 };
 
 export default config;

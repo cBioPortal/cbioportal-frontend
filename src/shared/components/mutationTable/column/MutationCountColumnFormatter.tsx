@@ -11,7 +11,7 @@ export default class MutationCountColumnFormatter {
             (d:Mutation[])=>{
                 const mutationCountCache:MutationCountCache|undefined = table.props.mutationCountCache;
                 if (mutationCountCache) {
-                    return mutationCountCache.get(d[0].sampleId);
+                    return mutationCountCache.get({sampleId:d[0].sampleId, molecularProfileId:d[0].molecularProfileId});
                 } else {
                     return {
                         status: "error",
@@ -27,7 +27,7 @@ export default class MutationCountColumnFormatter {
     public static sortBy(d:Mutation[], mutationCountCache?:MutationCountCache) {
         let ret;
         if (mutationCountCache) {
-            const cacheDatum = mutationCountCache.get(d[0].sampleId);
+            const cacheDatum = mutationCountCache.get({sampleId:d[0].sampleId, molecularProfileId:d[0].molecularProfileId});
             if (cacheDatum && cacheDatum.data) {
                 ret = cacheDatum.data.mutationCount;
             } else {

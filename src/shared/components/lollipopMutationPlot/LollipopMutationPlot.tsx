@@ -12,6 +12,7 @@ import {computed, observable, action} from "mobx";
 import _ from "lodash";
 import {longestCommonStartingSubstring} from "shared/lib/StringUtils";
 import {getColorForProteinImpactType, IProteinImpactTypeColors} from "shared/lib/MutationUtils";
+import {getMutationAlignerUrl} from "shared/api/urls";
 import ReactDOM from "react-dom";
 import {Form, Button, FormGroup, InputGroup} from "react-bootstrap";
 import fileDownload from "react-file-download";
@@ -52,7 +53,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                 // have to do a for loop because seamlessImmutable will make result of .map immutable,
                 // and that causes infinite loop here
                 responsePromises.push(
-                    request.get(`http://www.cbioportal.org/getMutationAligner.json?pfamAccession=${regions[i].metadata.accession}`)
+                    request.get(`${getMutationAlignerUrl()}?pfamAccession=${regions[i].metadata.accession}`)
                 );
             }
             const allResponses = Promise.all(responsePromises);
@@ -211,7 +212,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
     }
 
     @computed private get domains():DomainSpec[] {
-        if (!this.props.store.pfamGeneData.isComplete) {
+        if (!this.props.store.pfamGeneData.isComplete || !this.props.store.pfamGeneData.result.regions) {
             return [];
         } else {
             return this.props.store.pfamGeneData.result.regions.map((region:any)=>{
@@ -292,7 +293,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
 
     public downloadAsPDF(filename:string) {
         const svgelement = "<?xml version='1.0'?>"+this.toSVGDOMNode().outerHTML;
-        const servletURL = "http://www.cbioportal.org/svgtopdf.do";
+        const servletURL = "svgtopdf.do";
         const filetype = "pdf_data";
         request.post(servletURL)
             .type('form')
@@ -305,7 +306,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
     }
 
     @computed get hugoGeneSymbol() {
-        return this.props.store.gene.result && this.props.store.gene.result.hugoGeneSymbol;
+        return this.props.store.gene.hugoGeneSymbol;
     }
 
     @computed get countRange() {
@@ -365,7 +366,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
     private get legend() {
         return (
             <div style={{maxWidth: 700, marginTop: 5}}>
-                <span style={{color: "#2153AA", fontWeight:"bold", fontSize:"14px", fontFamily:"verdana, arial, sans-serif"}}>
+                <span style={{color: "#2153AA", fontWeight:"bold", fontSize:"14px", fontFamily:"verdana, arial"}}>
                     Color Codes
                 </span>
                 <p>
@@ -378,24 +379,24 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                     Mutation types and corresponding color codes are as follows:
                     <ul>
                         <li>
-                            <span style={{color:this.props.missenseColor, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial, sans-serif"}}>
+                            <span style={{color:this.props.missenseColor, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial"}}>
                                 Missense Mutations
                             </span>
                         </li>
                         <li>
-                            <span style={{color:this.props.truncatingColor, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial, sans-serif"}}>
+                            <span style={{color:this.props.truncatingColor, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial"}}>
                                 Truncating Mutations
                             </span>
                             : Nonsense, Nonstop, Frameshift deletion, Frameshift insertion, Splice site
                         </li>
                         <li>
-                            <span style={{color:this.props.inframeColor, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial, sans-serif"}}>
+                            <span style={{color:this.props.inframeColor, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial"}}>
                                 Inframe Mutations
                             </span>
                             : Inframe deletion, Inframe insertion
                         </li>
                         <li>
-                            <span style={{color:this.props.otherColor, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial, sans-serif"}}>
+                            <span style={{color:this.props.otherColor, fontWeight: "bold", fontSize: "14px", fontFamily:"verdana, arial"}}>
                                 Other Mutations
                             </span>
                             : All other types of mutations
@@ -448,9 +449,6 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                         </div>
                         {'  '}
                 </span>
-                <Collapse isOpened={this.legendShown}>
-                    {this.legend}
-                </Collapse>
             </div>
         );
     }
@@ -460,6 +458,9 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
             return (
                 <div style={{display: "inline-block"}} onMouseEnter={this.handlers.onMouseEnterPlot} onMouseLeave={this.handlers.onMouseLeavePlot}>
                     {this.controls}
+                    <Collapse isOpened={this.legendShown}>
+                        {this.legend}
+                    </Collapse>
                     <LollipopPlot
                         ref={this.handlers.ref}
                         sequence={this.sequence}
@@ -468,7 +469,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                         dataStore={this.props.store.dataStore}
                         vizWidth={this.props.geneWidth}
                         vizHeight={130}
-                        xMax={this.props.store.pfamGeneData.result.length}
+                        xMax={this.props.store.pfamGeneData.result.length || (this.props.store.gene.length / 3)}
                         yMax={this.yMax}
                         onXAxisOffset={this.props.onXAxisOffset}
                     />

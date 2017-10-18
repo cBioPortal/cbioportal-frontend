@@ -1,0 +1,86 @@
+.cancer-summary-chart-container {
+    padding:0px 0px;
+    margin-top:10px;
+    position: relative;
+    width: 100%;
+    height: 600px;
+}
+
+.cancer-summary-error-message {
+    background-color: #eeeeee;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    text-align: center !important;
+    box-sizing: border-box;
+    padding-top: 265px;
+    font-size: 16px;
+    text-align: center;}
+
+.cancer-type-summary-tab-tooltip {
+    background-color: white !important;
+    border: 1px solid $borderColor !important;
+    box-shadow:1px 1px 1px 1px rgba(0,0,0,.15);
+    border-radius:5px;
+    position: absolute;
+    display: block;
+    padding: 8px !important;
+    min-width: 300px;
+    max-width: 500px;
+    .table {
+        margin-bottom: 0px !important;
+        > thead > tr > th {
+            font-size: 12px;
+            line-height: 1; }}
+    th:first-child, td:first-child {
+          border-right: 2px solid #ddd;} }
+
+.cancer-study-form-controls {
+
+  .form-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 5px;
+    > div {
+      margin-right:25px;
+      flex:1 1 100%}
+  }
+
+  .slider-holder {
+    display: flex;
+    align-items: flex-start;
+    >div:first-child {
+      flex: 1 1 100%;
+      margin-bottom: 0px;}
+    >div:last-child {margin-left: 25px;}
+  }
+
+  .rangeslider-horizontal .rangeslider__fill {
+    background-image: -webkit-linear-gradient(top,#89cdef 0,#81bfde 100%);
+    background-image: -o-linear-gradient(top,#89cdef 0,#81bfde 100%);
+    background-image: linear-gradient(to bottom,#89cdef 0,#81bfde 100%);
+    background-repeat: repeat-x;
+  }
+
+  .rangeslider__label-list .rangeslider__label {top: 20px;  }
+
+  .rangeslider { margin: 8px 0 20px;}
+
+  .slider {width:100%}
+
+  .rangeslider-horizontal .rangeslider__handle {
+    width: 20px;
+    height: 20px;
+    border-radius: 20px;
+    &:after {
+      width: 12px;
+      height: 12px;
+      top: 3px;
+      left: 3px;}}
+
+
+}
+

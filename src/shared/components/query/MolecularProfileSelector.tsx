@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import * as React from 'react';
-import {GeneticProfile} from "../../api/generated/CBioPortalAPI";
+import {MolecularProfile} from "../../api/generated/CBioPortalAPI";
 import FontAwesome from "react-fontawesome";
 import * as styles_any from './styles.module.scss';
 import {observer} from "mobx-react";
@@ -11,7 +11,7 @@ import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
 import SectionHeader from "../sectionHeader/SectionHeader";
 
 const styles = styles_any as {
-	GeneticProfileSelector: string,
+	MolecularProfileSelector: string,
 	group: string,
 	altType: string,
 	radio: string,
@@ -24,7 +24,7 @@ const styles = styles_any as {
 };
 
 @observer
-export default class GeneticProfileSelector extends QueryStoreComponent<{}, {}>
+export default class MolecularProfileSelector extends QueryStoreComponent<{}, {}>
 {
 	render()
 	{
@@ -32,8 +32,8 @@ export default class GeneticProfileSelector extends QueryStoreComponent<{}, {}>
 			return null;
 
 		return (
-			<FlexRow padded className={styles.GeneticProfileSelector}>
-				<SectionHeader className="sectionLabel" promises={[this.store.geneticProfiles]}>
+			<FlexRow padded className={styles.MolecularProfileSelector}>
+				<SectionHeader className="sectionLabel" promises={[this.store.molecularProfiles]}>
 					Select Genomic Profiles:
 				</SectionHeader>
 				<div className={styles.group}>
@@ -43,7 +43,7 @@ export default class GeneticProfileSelector extends QueryStoreComponent<{}, {}>
 					{this.renderGroup("METHYLATION", "DNA Methylation")}
 					{this.renderGroup("METHYLATION_BINARY", "DNA Methylation")}
 					{this.renderGroup("PROTEIN_LEVEL", "Protein/phosphoprotein level")}
-					{!!(this.store.geneticProfiles.isComplete && !this.store.geneticProfiles.result.length) && (
+					{!!(this.store.molecularProfiles.isComplete && !this.store.molecularProfiles.result.length) && (
 						<strong>No Genomic Profiles available for this Cancer Study</strong>
 					)}
 				</div>
@@ -52,7 +52,7 @@ export default class GeneticProfileSelector extends QueryStoreComponent<{}, {}>
 	}
 
 	ProfileToggle = ({profile, type, label, checked, isGroupToggle}: {
-		profile:GeneticProfile,
+		profile:MolecularProfile,
 		type:'radio' | 'checkbox',
 		label:string,
 		checked:boolean,
@@ -68,7 +68,7 @@ export default class GeneticProfileSelector extends QueryStoreComponent<{}, {}>
 			<input
 				type={type}
 				checked={checked}
-				onChange={event => this.store.selectGeneticProfile(profile, (event.target as HTMLInputElement).checked)}
+				onChange={event => this.store.selectMolecularProfile(profile, (event.target as HTMLInputElement).checked)}
 			/>
 			<span className={isGroupToggle ? styles.groupName : styles.profileName}>
 				{label}
@@ -85,20 +85,20 @@ export default class GeneticProfileSelector extends QueryStoreComponent<{}, {}>
 		</label>
 	)
 
-	renderGroup(geneticAlterationType:GeneticProfile['geneticAlterationType'], groupLabel:string)
+	renderGroup(molecularAlterationType:MolecularProfile['molecularAlterationType'], groupLabel:string)
 	{
-		let profiles = this.store.getFilteredProfiles(geneticAlterationType);
+		let profiles = this.store.getFilteredProfiles(molecularAlterationType);
 		if (!profiles.length)
 			return null;
 
-		let groupProfileIds = profiles.map(profile => profile.geneticProfileId);
+		let groupProfileIds = profiles.map(profile => profile.molecularProfileId);
 		let groupIsSelected = _.intersection(this.store.selectedProfileIds, groupProfileIds).length > 0;
 		let output:JSX.Element[] = [];
 
 		if (profiles.length > 1 && !this.store.forDownloadTab)
 			output.push(
 				<this.ProfileToggle
-					key={'altTypeCheckbox:' + geneticAlterationType}
+					key={'altTypeCheckbox:' + molecularAlterationType}
 					profile={profiles[0]}
 					type='checkbox'
 					label={`${groupLabel}. Select one of the profiles below:`}
@@ -109,11 +109,11 @@ export default class GeneticProfileSelector extends QueryStoreComponent<{}, {}>
 
 		let profileToggles = profiles.map(profile => (
 			<this.ProfileToggle
-				key={'profile:' + profile.geneticProfileId}
+				key={'profile:' + profile.molecularProfileId}
 				profile={profile}
 				type={this.store.forDownloadTab || profiles.length > 1 ? 'radio' : 'checkbox'}
 				label={profile.name}
-				checked={_.includes(this.store.selectedProfileIds, profile.geneticProfileId)}
+				checked={_.includes(this.store.selectedProfileIds, profile.molecularProfileId)}
 				isGroupToggle={false}
 			/>
 		));
@@ -122,7 +122,7 @@ export default class GeneticProfileSelector extends QueryStoreComponent<{}, {}>
 			output.push(...profileToggles);
 		else
 			output.push(
-				<div key={'group:' + geneticAlterationType} className={styles.group}>
+				<div key={'group:' + molecularAlterationType} className={styles.group}>
 					{profileToggles}
 				</div>
 			);
@@ -130,7 +130,7 @@ export default class GeneticProfileSelector extends QueryStoreComponent<{}, {}>
 		if (this.store.forDownloadTab)
 			return output;
 
-		if (groupIsSelected && geneticAlterationType == 'MRNA_EXPRESSION')
+		if (groupIsSelected && molecularAlterationType == 'MRNA_EXPRESSION')
 		{
 			output.push(
 				<div key={output.length} className={styles.zScore}>
@@ -146,7 +146,7 @@ export default class GeneticProfileSelector extends QueryStoreComponent<{}, {}>
 			);
 		}
 
-		if (groupIsSelected && geneticAlterationType == 'PROTEIN_LEVEL')
+		if (groupIsSelected && molecularAlterationType == 'PROTEIN_LEVEL')
 		{
 			output.push(
 				<div key={output.length} className={styles.zScore}>
