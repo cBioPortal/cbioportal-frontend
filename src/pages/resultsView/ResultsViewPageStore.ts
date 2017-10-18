@@ -1,7 +1,7 @@
 import {
     DiscreteCopyNumberFilter, DiscreteCopyNumberData, ClinicalData, ClinicalDataMultiStudyFilter, Sample,
     SampleIdentifier, MolecularProfile, Mutation, GeneMolecularData, MolecularDataFilter, Gene,
-    ClinicalDataSingleStudyFilter
+    ClinicalDataSingleStudyFilter, CancerStudy
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {computed, observable, action} from "mobx";
@@ -37,6 +37,7 @@ import {
     ICancerTypeAlterationCounts,
     ICancerTypeAlterationData
 } from "../../shared/components/cancerSummary/CancerSummaryContent";
+import {writeTest} from "../../shared/lib/writeTest";
 
 export type SamplesSpecificationElement = {studyId: string, sampleId: string, sampleListId: undefined} |
     {studyId: string, sampleId: undefined, sampleListId: string};
@@ -49,12 +50,12 @@ export const AlterationTypeConstants = {
     FUSION: 'FUSION'
 }
 
-interface ExtendedAlteration extends Mutation, GeneMolecularData {
+export interface ExtendedAlteration extends Mutation, GeneMolecularData {
     alterationType: string
     alterationSubType: string
 };
 
-interface ExtendedSample extends Sample {
+export interface ExtendedSample extends Sample {
     cancerType: string;
     cancerTypeDetailed: string;
 }
@@ -174,6 +175,55 @@ export function countAlterationOccurences(samplesByCancerType: {[cancerType: str
     });
 
 }
+
+export function extendSamplesWithCancerType(samples:Sample[], clinicalDataForSamples:ClinicalData[], studies:CancerStudy[]){
+
+    const clinicalDataGroupedBySampleId = _.groupBy(clinicalDataForSamples, (clinicalData:ClinicalData)=>clinicalData.uniqueSampleKey);
+    // note that this table is actually mutating underlying sample.  it's not worth it to clone samples just
+    // for purity
+    const extendedSamples = samples.map((sample: ExtendedSample)=>{
+        const clinicalData = clinicalDataGroupedBySampleId[sample.uniqueSampleKey];
+        if (clinicalData) {
+            clinicalData.forEach((clinicalDatum:ClinicalData)=>{
+                switch (clinicalDatum.clinicalAttributeId) {
+                    case 'CANCER_TYPE_DETAILED':
+                        sample.cancerTypeDetailed = clinicalDatum.value;
+                        break;
+                    case 'CANCER_TYPE':
+                        sample.cancerType = clinicalDatum.value;
+                        break;
+                    default:
+                        break;
+                }
+            });
+        }
+        return sample;
+    });
+
+    //make a map by studyId for easy access in following loop
+    const studyMap = _.keyBy(studies,(study:CancerStudy)=>study.studyId);
+
+    // now we need to fix any samples which do not have both cancerType and cancerTypeDetailed
+    extendedSamples.forEach((sample:ExtendedSample)=>{
+        //if we have no cancer subtype, then make the subtype the parent type
+        if (!sample.cancerType) {
+            // we need to fall back to studies cancerType
+            const study = studyMap[sample.studyId];
+            if (study) {
+                sample.cancerType = study.cancerType.name;
+            } else {
+                sample.cancerType = "Unknown";
+            }
+        }
+        if (sample.cancerType && !sample.cancerTypeDetailed) {
+            sample.cancerTypeDetailed = sample.cancerType;
+        }
+    });
+
+    return extendedSamples;
+
+}
+
 
 
 export class ResultsViewPageStore {
@@ -304,42 +354,13 @@ export class ResultsViewPageStore {
     readonly samplesExtendedWithClinicalData = remoteData<ExtendedSample[]>({
         await: () => [
             this.samples,
-            this.clinicalDataForSamples
+            this.clinicalDataForSamples,
+            this.studies
         ],
         invoke: () => {
-            const clinicalDataGroupedBySampleId = _.groupBy(this.clinicalDataForSamples.result, (clinicalData:ClinicalData)=>clinicalData.uniqueSampleKey);
-            const extendedSamples = this.samples.result.map((sample: ExtendedSample)=>{
-                const clinicalData = clinicalDataGroupedBySampleId[sample.uniqueSampleKey];
-                if (clinicalData) {
-                    clinicalData.forEach((clinicalDatum:ClinicalData)=>{
-                        switch (clinicalDatum.clinicalAttributeId) {
-                            case 'CANCER_TYPE_DETAILED':
-                                sample.cancerTypeDetailed = clinicalDatum.value;
-                                break;
-                            case 'CANCER_TYPE':
-                                sample.cancerType = clinicalDatum.value;
-                                break;
-                            default:
-                                break;
-                        }
-                    });
-                }
-                return sample;
-            });
-
-            extendedSamples.forEach((sample:ExtendedSample)=>{
-                if (sample.cancerType && !sample.cancerTypeDetailed) {
-                    sample.cancerTypeDetailed = sample.cancerType;
-                }
-                if (!sample.cancerType) {
-                    // we need to fall back to studyies cancerType
-                }
-            });
-
-            return Promise.resolve(extendedSamples);
+            return Promise.resolve(extendSamplesWithCancerType(this.samples.result, this.clinicalDataForSamples.result,this.studies.result));
         }
     });
-
 
     public groupSamplesByCancerType(clinicalDataForSamples: ClinicalData[], samples: Sample[], cancerTypeLevel:'CANCER_TYPE' | 'CANCER_TYPE_DETAILED') {
 
@@ -373,7 +394,7 @@ export class ResultsViewPageStore {
         }, {} as { [cancerType:string]:Sample[] });
 
         return samplesGroupedByCancerType;
-
+//
     }
 
     readonly alterationsBySampleIdByGene = remoteData({
