@@ -14,14 +14,14 @@ const styles = styles_any as {
 	icon: string,
 };
 
-interface ISectionHeaderProps extends React.HTMLProps<HTMLDivElement>
+interface ISectionHeaderProps extends React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>
 {
 	promises?: MobxPromise<any>[];
 	secondaryComponent?:ReactElement<any>;
 }
 
 @observer
-export default class SectionHeader extends React.Component<ISectionHeaderProps, void>
+export default class SectionHeader extends React.Component<ISectionHeaderProps, {}>
 {
 	render()
 	{

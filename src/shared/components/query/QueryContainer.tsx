@@ -4,7 +4,7 @@ import CancerStudySelector from "./CancerStudySelector";
 import {FlexRow, FlexCol} from "../flexbox/FlexBox";
 import * as styles_any from './styles.module.scss';
 import classNames from 'classnames';
-import GeneticProfileSelector from "./GeneticProfileSelector";
+import MolecularProfileSelector from "./MolecularProfileSelector";
 import {observable, computed, action} from 'mobx';
 import {observer} from "mobx-react";
 import DataTypePrioritySelector from "./DataTypePrioritySelector";
@@ -19,6 +19,7 @@ const styles = styles_any as {
 	QueryContainer: string,
 	queryContainerContent: string,
 	errorMessage: string,
+	oqlMessage: string,
 	downloadSubmitExplanation: string,
 	transposeDataMatrix: string,
 	submitRow: string,
@@ -63,7 +64,7 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
 				<CancerStudySelector/>
 
 				{!!(this.store.singleSelectedStudyId) && (
-					<GeneticProfileSelector/>
+					<MolecularProfileSelector/>
 				)}
 
 				{!!(this.store.singleSelectedStudyId) && (
@@ -101,12 +102,22 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
 							Send to GenomeSpace
 						</button>
 					)}
+					<FlexCol>
+						{!!(this.store.submitError) && (
+							<span className={styles.errorMessage}>
+							{this.store.submitError}
+						</span>
+						)}
 
-					{!!(this.store.submitError) && (
-						<span className={styles.errorMessage}>
-						{this.store.submitError}
-					</span>
-					)}
+						{this.store.oqlMessages.map(msg=>{
+							return (
+								<span className={styles.oqlMessage}>
+									<i className='fa fa-info-circle' style={{marginRight: 5}}/>
+									{msg}
+								</span>
+							);
+						})}
+					</FlexCol>
 
 				</FlexRow>
 			</FlexCol>

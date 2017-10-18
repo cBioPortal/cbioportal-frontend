@@ -69,6 +69,7 @@ export default class CancerTypeColumnFormatter {
         if (data) {
             return (
                 <TruncatedText
+                    maxLength={30}
                     text={data || ""}
                     tooltip={<div style={{maxWidth: 300}}>{data}</div>}
                 />

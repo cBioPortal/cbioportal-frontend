@@ -5,6 +5,14 @@
   line-height: 24px;
   display: inline-block;
   margin-top: -4px;
+  margin-bottom: -4px;
+}
+
+.annotation-item-text {
+  display: inline-block;
+  font-size: 9px;
+  width: 22px;
+  cursor: default;
 }
 
 .annotation-item-error {

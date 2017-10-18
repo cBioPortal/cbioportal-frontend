@@ -1,0 +1,1755 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "Genome Nexus Variant Annotation API",
+    "version": "2.0",
+    "title": "Genome Nexus API",
+    "contact": {
+      "name": "CMO, MSKCC"
+    },
+    "license": {
+      "name": "GNU AFFERO GENERAL PUBLIC LICENSE Version 3",
+      "url": "https://github.com/cBioPortal/genome-nexus/blob/master/LICENSE"
+    }
+  },
+  "basePath": "/",
+  "tags": [
+    {
+      "name": "annotation-controller",
+      "description": "Annotation Controller"
+    },
+    {
+      "name": "pfam-controller",
+      "description": "PFAM Controller"
+    },
+    {
+      "name": "basic-error-controller",
+      "description": "Basic Error Controller"
+    }
+  ],
+  "paths": {
+    "/cancer_hotspots": {
+      "post": {
+        "tags": [
+          "annotation-controller"
+        ],
+        "summary": "Retrieves hotspot annotation for the provided list of variants",
+        "operationId": "postHotspotAnnotation",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "variants",
+            "in": "query",
+            "description": "Comma separated list of variants. For example 7:g.140453136A>T,12:g.25398285C>A",
+            "required": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Hotspot"
+              }
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/cancer_hotspots/{variants}": {
+      "get": {
+        "tags": [
+          "annotation-controller"
+        ],
+        "summary": "Retrieves hotspot annotation for the provided list of variants",
+        "operationId": "getHotspotAnnotation",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "variants",
+            "in": "path",
+            "description": "Comma separated list of variants. For example 7:g.140453136A>T,12:g.25398285C>A",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Hotspot"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/error": {
+      "get": {
+        "tags": [
+          "basic-error-controller"
+        ],
+        "summary": "error",
+        "operationId": "errorUsingGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "head": {
+        "tags": [
+          "basic-error-controller"
+        ],
+        "summary": "error",
+        "operationId": "errorUsingHEAD",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object"
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "basic-error-controller"
+        ],
+        "summary": "error",
+        "operationId": "errorUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object"
+              }
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "basic-error-controller"
+        ],
+        "summary": "error",
+        "operationId": "errorUsingPUT",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object"
+              }
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "basic-error-controller"
+        ],
+        "summary": "error",
+        "operationId": "errorUsingDELETE",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object"
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      },
+      "options": {
+        "tags": [
+          "basic-error-controller"
+        ],
+        "summary": "error",
+        "operationId": "errorUsingOPTIONS",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object"
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "basic-error-controller"
+        ],
+        "summary": "error",
+        "operationId": "errorUsingPATCH",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object"
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/hgvs": {
+      "post": {
+        "tags": [
+          "annotation-controller"
+        ],
+        "summary": "Retrieves VEP annotation for the provided list of variants",
+        "operationId": "postVariantAnnotation",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "variants",
+            "in": "query",
+            "description": "Comma separated list of variants. For example X:g.66937331T>A,17:g.41242962->GA",
+            "required": true,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "isoformOverrideSource",
+            "in": "query",
+            "description": "Isoform override source. For example uniprot",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi",
+            "default": "hotspots,mutation_assessor"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/VariantAnnotation"
+              }
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/hgvs/{variants}": {
+      "get": {
+        "tags": [
+          "annotation-controller"
+        ],
+        "summary": "Retrieves VEP annotation for the provided list of variants",
+        "operationId": "getVariantAnnotation",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "variants",
+            "in": "path",
+            "description": "Comma separated list of variants. For example X:g.66937331T>A,17:g.41242962->GA",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "isoformOverrideSource",
+            "in": "query",
+            "description": "Isoform override source. For example uniprot",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi",
+            "default": "hotspots,mutation_assessor"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/VariantAnnotation"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/isoform_override": {
+      "post": {
+        "tags": [
+          "annotation-controller"
+        ],
+        "summary": "Gets the isoform override information for the specified source and the list of transcript ids",
+        "operationId": "postIsoformOverride",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "source",
+            "in": "query",
+            "description": "Override source. For example uniprot",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "transcriptIds",
+            "in": "query",
+            "description": "Comma separated list of transcript ids. For example ENST00000361125,ENST00000443649. If no transcript id provided, all available isoform overrides returned.",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/IsoformOverride"
+              }
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/isoform_override/sources": {
+      "get": {
+        "tags": [
+          "annotation-controller"
+        ],
+        "summary": "Gets a list of available isoform override data sources",
+        "operationId": "getIsoformOverrideSources",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/IsoformOverride"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "annotation-controller"
+        ],
+        "summary": "Gets a list of available isoform override data sources",
+        "operationId": "postIsoformOverrideSources",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/isoform_override/{source}": {
+      "get": {
+        "tags": [
+          "annotation-controller"
+        ],
+        "summary": "Gets the isoform override information for the specified source",
+        "operationId": "getAllIsoformOverrides",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "source",
+            "in": "path",
+            "description": "Override source. For example uniprot",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/IsoformOverride"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/isoform_override/{source}/{transcriptIds}": {
+      "get": {
+        "tags": [
+          "annotation-controller"
+        ],
+        "summary": "Gets the isoform override information for the specified source and the list of transcript ids",
+        "operationId": "getIsoformOverride",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "source",
+            "in": "path",
+            "description": "Override source. For example uniprot.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "transcriptIds",
+            "in": "path",
+            "description": "Comma separated list of transcript ids. For example ENST00000361125,ENST00000443649.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/IsoformOverride"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/mutation_assessor": {
+      "post": {
+        "tags": [
+          "annotation-controller"
+        ],
+        "summary": "Retrieves mutation assessor information for the provided list of variants",
+        "operationId": "postMutationAssessorAnnotation",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "variants",
+            "description": "List of variants. For example [\"7:g.140453136A>T\",\"12:g.25398285C>A\"]",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MutationAssessor"
+              }
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/mutation_assessor/{variants}": {
+      "get": {
+        "tags": [
+          "annotation-controller"
+        ],
+        "summary": "Retrieves mutation assessor information for the provided list of variants",
+        "operationId": "getMutationAssessorAnnotation",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "variants",
+            "in": "path",
+            "description": "Comma separated list of variants. For example 7:g.140453136A>T,12:g.25398285C>A",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MutationAssessor"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/pfam/domain": {
+      "get": {
+        "tags": [
+          "pfam-controller"
+        ],
+        "summary": "Retrieves all PFAM domains",
+        "operationId": "fetchAllPfamDomainsGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PfamDomain"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/pfam/domain/gene": {
+      "post": {
+        "tags": [
+          "pfam-controller"
+        ],
+        "summary": "Retrieves PFAM domains by Ensembl gene IDs",
+        "operationId": "fetchPfamDomainsByGeneIdsPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "geneIds",
+            "description": "List of Ensembl gene IDs. For example [\"ENSG00000136999\",\"ENSG00000272398\",\"ENSG00000198695\"]",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PfamDomain"
+              }
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/pfam/domain/gene/{geneId}": {
+      "get": {
+        "tags": [
+          "pfam-controller"
+        ],
+        "summary": "Retrieves PFAM domains by an Ensembl gene ID",
+        "operationId": "fetchPfamDomainsByGeneIdGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "geneId",
+            "in": "path",
+            "description": "An Ensembl gene ID. For example ENSG00000136999",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PfamDomain"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/pfam/domain/pfam": {
+      "post": {
+        "tags": [
+          "pfam-controller"
+        ],
+        "summary": "Retrieves PFAM domains by PFAM domain IDs",
+        "operationId": "fetchPfamDomainsByPfamIdsPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "pfamDomainIds",
+            "description": "List of PFAM domain IDs. For example [\"PF02827\",\"PF00093\",\"PF15276\"]",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PfamDomain"
+              }
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/pfam/domain/pfam/{pfamDomainId}": {
+      "get": {
+        "tags": [
+          "pfam-controller"
+        ],
+        "summary": "Retrieves PFAM domains by a PFAM domain ID",
+        "operationId": "fetchPfamDomainsByPfamIdGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "pfamDomainId",
+            "in": "path",
+            "description": "A PFAM domain ID. For example PF02827",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PfamDomain"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/pfam/domain/protein": {
+      "post": {
+        "tags": [
+          "pfam-controller"
+        ],
+        "summary": "Retrieves PFAM domains by Ensembl protein IDs",
+        "operationId": "fetchPfamDomainsByProteinIdsPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "proteinIds",
+            "description": "List of Ensembl protein IDs. For example [\"ENSP00000439985\",\"ENSP00000478460\",\"ENSP00000346196\"]",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PfamDomain"
+              }
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/pfam/domain/protein/{proteinId}": {
+      "get": {
+        "tags": [
+          "pfam-controller"
+        ],
+        "summary": "Retrieves PFAM domains by an Ensembl protein ID",
+        "operationId": "fetchPfamDomainsByProteinIdGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "proteinId",
+            "in": "path",
+            "description": "An Ensembl protein ID. For example ENSP00000439985",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PfamDomain"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/pfam/domain/transcript": {
+      "post": {
+        "tags": [
+          "pfam-controller"
+        ],
+        "summary": "Retrieves PFAM domains by Ensembl transcript IDs",
+        "operationId": "fetchPfamDomainsByTranscriptIdsPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "transcriptIds",
+            "description": "List of Ensembl transcript IDs. For example [\"ENST00000361390\",\"ENST00000361453\",\"ENST00000361624\"]",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PfamDomain"
+              }
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/pfam/domain/transcript/{transcriptId}": {
+      "get": {
+        "tags": [
+          "pfam-controller"
+        ],
+        "summary": "Retrieves PFAM domains by an Ensembl transcript ID",
+        "operationId": "fetchPfamDomainsByTranscriptIdGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "transcriptId",
+            "in": "path",
+            "description": "An Ensembl transcript ID. For example ENST00000361390",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PfamDomain"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/xrefs/{accession}": {
+      "get": {
+        "tags": [
+          "annotation-controller"
+        ],
+        "summary": "Perform lookups of Ensembl identifiers and retrieve their external referenes in other databases",
+        "operationId": "getGeneXrefs",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "accession",
+            "in": "path",
+            "description": "Ensembl gene accession. For example ENSG00000169083",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GeneXref"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "GeneXref": {
+      "type": "object",
+      "required": [
+        "db_display_name",
+        "dbname",
+        "description",
+        "display_id",
+        "primary_id",
+        "version"
+      ],
+      "properties": {
+        "db_display_name": {
+          "type": "string",
+          "description": "Database display name"
+        },
+        "dbname": {
+          "type": "string",
+          "description": "Database name"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description"
+        },
+        "display_id": {
+          "type": "string",
+          "description": "Display id"
+        },
+        "info_text": {
+          "type": "string",
+          "description": "Database info text"
+        },
+        "info_types": {
+          "type": "string",
+          "description": "Database info type"
+        },
+        "primary_id": {
+          "type": "string",
+          "description": "Primary id"
+        },
+        "synonyms": {
+          "type": "array",
+          "description": "Synonyms",
+          "items": {
+            "type": "string"
+          }
+        },
+        "version": {
+          "type": "string",
+          "description": "Version"
+        }
+      }
+    },
+    "Hotspot": {
+      "type": "object",
+      "required": [
+        "transcriptId"
+      ],
+      "properties": {
+        "geneId": {
+          "type": "string",
+          "description": "Ensembl gene id"
+        },
+        "hugoSymbol": {
+          "type": "string",
+          "description": "Hugo gene symbol"
+        },
+        "proteinEnd": {
+          "type": "string",
+          "description": "Protein end position"
+        },
+        "proteinStart": {
+          "type": "string",
+          "description": "Protein start position"
+        },
+        "residue": {
+          "type": "string",
+          "description": "Hotspot Residue"
+        },
+        "transcriptId": {
+          "type": "string",
+          "description": "Transcript id"
+        }
+      }
+    },
+    "IsoformOverride": {
+      "type": "object",
+      "required": [
+        "transcriptId"
+      ],
+      "properties": {
+        "ccdsId": {
+          "type": "string",
+          "description": "CCDS ID"
+        },
+        "geneSymbol": {
+          "type": "string",
+          "description": "Hugo gene symbol"
+        },
+        "refseqId": {
+          "type": "string",
+          "description": "RefSeq ID"
+        },
+        "transcriptId": {
+          "type": "string",
+          "description": "Ensembl transcript id"
+        }
+      }
+    },
+    "ModelAndView": {
+      "type": "object",
+      "properties": {
+        "empty": {
+          "type": "boolean"
+        },
+        "model": {
+          "type": "object"
+        },
+        "modelMap": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object"
+          }
+        },
+        "reference": {
+          "type": "boolean"
+        },
+        "view": {
+          "$ref": "#/definitions/View"
+        },
+        "viewName": {
+          "type": "string"
+        }
+      }
+    },
+    "MutationAssessor": {
+      "type": "object",
+      "required": [
+        "input"
+      ],
+      "properties": {
+        "codonStartPosition": {
+          "type": "string",
+          "description": "Codon start position"
+        },
+        "cosmicCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Number of mutations in COSMIC for this protein"
+        },
+        "functionalImpact": {
+          "type": "string",
+          "description": "Functional impact"
+        },
+        "functionalImpactScore": {
+          "type": "number",
+          "format": "double",
+          "description": "Functional impact score"
+        },
+        "hugoSymbol": {
+          "type": "string",
+          "description": "Hugo gene symbol"
+        },
+        "input": {
+          "type": "string",
+          "description": "User-input variants"
+        },
+        "mappingIssue": {
+          "type": "string",
+          "description": "Mapping issue info"
+        },
+        "msaGaps": {
+          "type": "number",
+          "format": "double",
+          "description": "Portion of gaps in variant position in multiple sequence alignment"
+        },
+        "msaHeight": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Number of diverse sequences in multiple sequence alignment (identical or highly similar sequences filtered out)"
+        },
+        "msaLink": {
+          "type": "string",
+          "description": "Link to multiple sequence alignment"
+        },
+        "pdbLink": {
+          "type": "string",
+          "description": "Link to 3d structure browser"
+        },
+        "referenceGenomeVariant": {
+          "type": "string",
+          "description": "Reference genome variant"
+        },
+        "referenceGenomeVariantType": {
+          "type": "string",
+          "description": "Reference genome variant type"
+        },
+        "refseqId": {
+          "type": "string",
+          "description": "Refseq protein ID"
+        },
+        "refseqPosition": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Variant position in Refseq protein, can be different from the one in Uniprot"
+        },
+        "refseqResidue": {
+          "type": "string",
+          "description": "Reference residue in Refseq protein, can be different from the one in Uniprot"
+        },
+        "snpCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Number of SNPs in dbSNP for this protein"
+        },
+        "uniprotId": {
+          "type": "string",
+          "description": "Uniprot protein accession ID"
+        },
+        "uniprotPosition": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Variant position in Uniprot protein, can be different from the one in Refseq"
+        },
+        "uniprotResidue": {
+          "type": "string",
+          "description": "Reference residue in Uniprot protein, can be different from the one in Refseq"
+        },
+        "variant": {
+          "type": "string",
+          "description": "Amino acid substitution"
+        },
+        "variantConservationScore": {
+          "type": "number",
+          "format": "double",
+          "description": "Variant conservation score"
+        },
+        "variantSpecificityScore": {
+          "type": "number",
+          "format": "double",
+          "description": "Variant specificity score"
+        }
+      }
+    },
+    "PfamDomain": {
+      "type": "object",
+      "required": [
+        "geneId",
+        "proteinId",
+        "transcriptId"
+      ],
+      "properties": {
+        "geneId": {
+          "type": "string",
+          "description": "Ensembl gene id"
+        },
+        "geneSymbol": {
+          "type": "string",
+          "description": "Hugo gene symbol"
+        },
+        "getPfamDomainEnd": {
+          "type": "string",
+          "description": "PFAM domain end"
+        },
+        "pfamDomainDescription": {
+          "type": "string",
+          "description": "PFAM domain description"
+        },
+        "pfamDomainId": {
+          "type": "string",
+          "description": "PFAM domain id"
+        },
+        "pfamDomainName": {
+          "type": "string",
+          "description": "PFAM domain name"
+        },
+        "pfamDomainStart": {
+          "type": "string",
+          "description": "PFAM domain start"
+        },
+        "proteinId": {
+          "type": "string",
+          "description": "Ensembl translation id"
+        },
+        "transcriptId": {
+          "type": "string",
+          "description": "Ensembl transcript id"
+        }
+      }
+    },
+    "TranscriptConsequence": {
+      "type": "object",
+      "required": [
+        "transcript_id"
+      ],
+      "properties": {
+        "amino_acids": {
+          "type": "string",
+          "description": "Amino acids"
+        },
+        "canonical": {
+          "type": "string",
+          "description": "Canonical transcript indicator"
+        },
+        "codons": {
+          "type": "string",
+          "description": "Codons"
+        },
+        "consequence_terms": {
+          "type": "array",
+          "description": "List of consequence terms",
+          "items": {
+            "type": "string"
+          }
+        },
+        "gene_id": {
+          "type": "string",
+          "description": "Ensembl gene id"
+        },
+        "gene_symbol": {
+          "type": "string",
+          "description": "Hugo gene symbol"
+        },
+        "hgnc_id": {
+          "type": "string",
+          "description": "HGNC id"
+        },
+        "hgvsc": {
+          "type": "string",
+          "description": "HGVSc"
+        },
+        "hgvsp": {
+          "type": "string",
+          "description": "HGVSp"
+        },
+        "polyphen_prediction": {
+          "type": "string",
+          "description": "Polyphen Prediction"
+        },
+        "polyphen_score": {
+          "type": "string",
+          "description": "Polyphen Score"
+        },
+        "protein_end": {
+          "type": "string",
+          "description": "Protein end position"
+        },
+        "protein_id": {
+          "type": "string",
+          "description": "Ensembl protein id"
+        },
+        "protein_start": {
+          "type": "string",
+          "description": "Protein start position"
+        },
+        "refseq_transcript_ids": {
+          "type": "array",
+          "description": "List of RefSeq transcript ids",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sift_prediction": {
+          "type": "string",
+          "description": "Sift Prediction"
+        },
+        "sift_score": {
+          "type": "string",
+          "description": "Sift Score"
+        },
+        "transcript_id": {
+          "type": "string",
+          "description": "Ensembl transcript id"
+        },
+        "variant_allele": {
+          "type": "string",
+          "description": "Variant allele"
+        }
+      }
+    },
+    "VariantAnnotation": {
+      "type": "object",
+      "required": [
+        "annotationJSON",
+        "id",
+        "variant"
+      ],
+      "properties": {
+        "allele_string": {
+          "type": "string",
+          "description": "Allele string (e.g: A/T)"
+        },
+        "annotationJSON": {
+          "type": "string",
+          "description": "Annotation data as JSON string"
+        },
+        "assembly_name": {
+          "type": "string",
+          "description": "NCBI build number"
+        },
+        "end": {
+          "type": "integer",
+          "format": "int32",
+          "description": "End position"
+        },
+        "id": {
+          "type": "string",
+          "description": "Variant id"
+        },
+        "most_severe_consequence": {
+          "type": "string",
+          "description": "Most severe consequence"
+        },
+        "seq_region_name": {
+          "type": "string",
+          "description": "Chromosome"
+        },
+        "start": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Start position"
+        },
+        "strand": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Strand (negative or positive)"
+        },
+        "transcript_consequences": {
+          "type": "array",
+          "description": "List of transcripts",
+          "items": {
+            "$ref": "#/definitions/TranscriptConsequence"
+          }
+        },
+        "variant": {
+          "type": "string",
+          "description": "Variant key"
+        }
+      }
+    },
+    "View": {
+      "type": "object",
+      "properties": {
+        "contentType": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
