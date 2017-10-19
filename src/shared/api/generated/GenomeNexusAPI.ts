@@ -21,92 +21,6 @@ export type GeneXref = {
         'version': string
 
 };
-export type Hotspot = {
-    'geneId': string
-
-        'hugoSymbol': string
-
-        'proteinEnd': string
-
-        'proteinStart': string
-
-        'residue': string
-
-        'transcriptId': string
-
-};
-export type IsoformOverride = {
-    'ccdsId': string
-
-        'geneSymbol': string
-
-        'refseqId': string
-
-        'transcriptId': string
-
-};
-export type ModelAndView = {
-    'empty': boolean
-
-        'model': {}
-
-        'modelMap': {}
-
-        'reference': boolean
-
-        'view': View
-
-        'viewName': string
-
-};
-export type MutationAssessor = {
-    'codonStartPosition': string
-
-        'cosmicCount': number
-
-        'functionalImpact': string
-
-        'functionalImpactScore': number
-
-        'hugoSymbol': string
-
-        'input': string
-
-        'mappingIssue': string
-
-        'msaGaps': number
-
-        'msaHeight': number
-
-        'msaLink': string
-
-        'pdbLink': string
-
-        'referenceGenomeVariant': string
-
-        'referenceGenomeVariantType': string
-
-        'refseqId': string
-
-        'refseqPosition': number
-
-        'refseqResidue': string
-
-        'snpCount': number
-
-        'uniprotId': string
-
-        'uniprotPosition': number
-
-        'uniprotResidue': string
-
-        'variant': string
-
-        'variantConservationScore': number
-
-        'variantSpecificityScore': number
-
-};
 export type PfamDomain = {
     'geneId': string
 
@@ -191,10 +105,6 @@ export type VariantAnnotation = {
         'variant': string
 
 };
-export type View = {
-    'contentType': string
-
-};
 
 /**
  * Genome Nexus Variant Annotation API
@@ -250,505 +160,14 @@ export default class GenomeNexusAPI {
         });
     }
 
-    postHotspotAnnotationURL(parameters: {
-        'variants': Array < string > ,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/cancer_hotspots';
-        if (parameters['variants'] !== undefined) {
-            queryParameters['variants'] = parameters['variants'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Retrieves hotspot annotation for the provided list of variants
-     * @method
-     * @name GenomeNexusAPI#postHotspotAnnotation
-     * @param {array} variants - Comma separated list of variants. For example 7:g.140453136A>T,12:g.25398285C>A
-     */
-    postHotspotAnnotation(parameters: {
-            'variants': Array < string > ,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < Hotspot >
-        > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/cancer_hotspots';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
-
-                if (parameters['variants'] !== undefined) {
-                    queryParameters['variants'] = parameters['variants'];
-                }
-
-                if (parameters['variants'] === undefined) {
-                    reject(new Error('Missing required  parameter: variants'));
-                    return;
-                }
-
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
-
-                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-            }).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-
-    getHotspotAnnotationURL(parameters: {
-        'variants': string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/cancer_hotspots/{variants}';
-
-        path = path.replace('{variants}', parameters['variants'] + '');
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Retrieves hotspot annotation for the provided list of variants
-     * @method
-     * @name GenomeNexusAPI#getHotspotAnnotation
-     * @param {string} variants - Comma separated list of variants. For example 7:g.140453136A>T,12:g.25398285C>A
-     */
-    getHotspotAnnotation(parameters: {
-            'variants': string,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < Hotspot >
-        > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/cancer_hotspots/{variants}';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
-
-                path = path.replace('{variants}', parameters['variants'] + '');
-
-                if (parameters['variants'] === undefined) {
-                    reject(new Error('Missing required  parameter: variants'));
-                    return;
-                }
-
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
-
-                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-            }).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-
-    errorUsingGETURL(parameters: {
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/error';
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * error
-     * @method
-     * @name GenomeNexusAPI#errorUsingGET
-     */
-    errorUsingGET(parameters: {
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < {} > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/error';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = '*/*';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        }).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
-
-    errorUsingHEADURL(parameters: {
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/error';
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * error
-     * @method
-     * @name GenomeNexusAPI#errorUsingHEAD
-     */
-    errorUsingHEAD(parameters: {
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < {} > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/error';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = '*/*';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('HEAD', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        }).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
-
-    errorUsingPOSTURL(parameters: {
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/error';
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * error
-     * @method
-     * @name GenomeNexusAPI#errorUsingPOST
-     */
-    errorUsingPOST(parameters: {
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < {} > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/error';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = '*/*';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        }).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
-
-    errorUsingPUTURL(parameters: {
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/error';
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * error
-     * @method
-     * @name GenomeNexusAPI#errorUsingPUT
-     */
-    errorUsingPUT(parameters: {
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < {} > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/error';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = '*/*';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('PUT', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        }).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
-
-    errorUsingDELETEURL(parameters: {
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/error';
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * error
-     * @method
-     * @name GenomeNexusAPI#errorUsingDELETE
-     */
-    errorUsingDELETE(parameters: {
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < {} > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/error';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = '*/*';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('DELETE', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        }).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
-
-    errorUsingOPTIONSURL(parameters: {
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/error';
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * error
-     * @method
-     * @name GenomeNexusAPI#errorUsingOPTIONS
-     */
-    errorUsingOPTIONS(parameters: {
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < {} > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/error';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = '*/*';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('OPTIONS', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        }).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
-
-    errorUsingPATCHURL(parameters: {
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/error';
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * error
-     * @method
-     * @name GenomeNexusAPI#errorUsingPATCH
-     */
-    errorUsingPATCH(parameters: {
-        $queryParameters ? : any,
-            $domain ? : string
-    }): Promise < {} > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/error';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = '*/*';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('PATCH', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        }).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
-
-    postVariantAnnotationURL(parameters: {
+    fetchVariantAnnotationPOSTURL(parameters: {
         'variants': Array < string > ,
         'isoformOverrideSource' ? : string,
         'fields' ? : Array < string > ,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/hgvs';
-        if (parameters['variants'] !== undefined) {
-            queryParameters['variants'] = parameters['variants'];
-        }
+        let path = '/annotation';
 
         if (parameters['isoformOverrideSource'] !== undefined) {
             queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
@@ -771,12 +190,12 @@ export default class GenomeNexusAPI {
     /**
      * Retrieves VEP annotation for the provided list of variants
      * @method
-     * @name GenomeNexusAPI#postVariantAnnotation
-     * @param {array} variants - Comma separated list of variants. For example X:g.66937331T>A,17:g.41242962->GA
+     * @name GenomeNexusAPI#fetchVariantAnnotationPOST
+     * @param {} variants - List of variants. For example ["X:g.66937331T>A","17:g.41242962->GA"]
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
      * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor
      */
-    postVariantAnnotation(parameters: {
+    fetchVariantAnnotationPOST(parameters: {
             'variants': Array < string > ,
             'isoformOverrideSource' ? : string,
             'fields' ? : Array < string > ,
@@ -787,486 +206,7 @@ export default class GenomeNexusAPI {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
             const request = this.request;
-            let path = '/hgvs';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
-
-                if (parameters['variants'] !== undefined) {
-                    queryParameters['variants'] = parameters['variants'];
-                }
-
-                if (parameters['variants'] === undefined) {
-                    reject(new Error('Missing required  parameter: variants'));
-                    return;
-                }
-
-                if (parameters['isoformOverrideSource'] !== undefined) {
-                    queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
-                }
-
-                if (parameters['fields'] !== undefined) {
-                    queryParameters['fields'] = parameters['fields'];
-                }
-
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
-
-                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-            }).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-
-    getVariantAnnotationURL(parameters: {
-        'variants': string,
-        'isoformOverrideSource' ? : string,
-        'fields' ? : Array < string > ,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/hgvs/{variants}';
-
-        path = path.replace('{variants}', parameters['variants'] + '');
-        if (parameters['isoformOverrideSource'] !== undefined) {
-            queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
-        }
-
-        if (parameters['fields'] !== undefined) {
-            queryParameters['fields'] = parameters['fields'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Retrieves VEP annotation for the provided list of variants
-     * @method
-     * @name GenomeNexusAPI#getVariantAnnotation
-     * @param {string} variants - Comma separated list of variants. For example X:g.66937331T>A,17:g.41242962->GA
-     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
-     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor
-     */
-    getVariantAnnotation(parameters: {
-            'variants': string,
-            'isoformOverrideSource' ? : string,
-            'fields' ? : Array < string > ,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < VariantAnnotation >
-        > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/hgvs/{variants}';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
-
-                path = path.replace('{variants}', parameters['variants'] + '');
-
-                if (parameters['variants'] === undefined) {
-                    reject(new Error('Missing required  parameter: variants'));
-                    return;
-                }
-
-                if (parameters['isoformOverrideSource'] !== undefined) {
-                    queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
-                }
-
-                if (parameters['fields'] !== undefined) {
-                    queryParameters['fields'] = parameters['fields'];
-                }
-
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
-
-                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-            }).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-
-    postIsoformOverrideURL(parameters: {
-        'source': string,
-        'transcriptIds' ? : Array < string > ,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/isoform_override';
-        if (parameters['source'] !== undefined) {
-            queryParameters['source'] = parameters['source'];
-        }
-
-        if (parameters['transcriptIds'] !== undefined) {
-            queryParameters['transcriptIds'] = parameters['transcriptIds'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Gets the isoform override information for the specified source and the list of transcript ids
-     * @method
-     * @name GenomeNexusAPI#postIsoformOverride
-     * @param {string} source - Override source. For example uniprot
-     * @param {array} transcriptIds - Comma separated list of transcript ids. For example ENST00000361125,ENST00000443649. If no transcript id provided, all available isoform overrides returned.
-     */
-    postIsoformOverride(parameters: {
-            'source': string,
-            'transcriptIds' ? : Array < string > ,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < IsoformOverride >
-        > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/isoform_override';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
-
-                if (parameters['source'] !== undefined) {
-                    queryParameters['source'] = parameters['source'];
-                }
-
-                if (parameters['source'] === undefined) {
-                    reject(new Error('Missing required  parameter: source'));
-                    return;
-                }
-
-                if (parameters['transcriptIds'] !== undefined) {
-                    queryParameters['transcriptIds'] = parameters['transcriptIds'];
-                }
-
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
-
-                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-            }).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-
-    getIsoformOverrideSourcesURL(parameters: {
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/isoform_override/sources';
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Gets a list of available isoform override data sources
-     * @method
-     * @name GenomeNexusAPI#getIsoformOverrideSources
-     */
-    getIsoformOverrideSources(parameters: {
-            $queryParameters ? : any,
-                $domain ? : string
-        }): Promise < Array < IsoformOverride >
-        > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/isoform_override/sources';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
-
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
-
-                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-            }).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-
-    postIsoformOverrideSourcesURL(parameters: {
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/isoform_override/sources';
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Gets a list of available isoform override data sources
-     * @method
-     * @name GenomeNexusAPI#postIsoformOverrideSources
-     */
-    postIsoformOverrideSources(parameters: {
-            $queryParameters ? : any,
-                $domain ? : string
-        }): Promise < Array < string >
-        > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/isoform_override/sources';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
-
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
-
-                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-            }).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-
-    getAllIsoformOverridesURL(parameters: {
-        'source': string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/isoform_override/{source}';
-
-        path = path.replace('{source}', parameters['source'] + '');
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Gets the isoform override information for the specified source
-     * @method
-     * @name GenomeNexusAPI#getAllIsoformOverrides
-     * @param {string} source - Override source. For example uniprot
-     */
-    getAllIsoformOverrides(parameters: {
-            'source': string,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < IsoformOverride >
-        > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/isoform_override/{source}';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
-
-                path = path.replace('{source}', parameters['source'] + '');
-
-                if (parameters['source'] === undefined) {
-                    reject(new Error('Missing required  parameter: source'));
-                    return;
-                }
-
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
-
-                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-            }).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-
-    getIsoformOverrideURL(parameters: {
-        'source': string,
-        'transcriptIds': string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/isoform_override/{source}/{transcriptIds}';
-
-        path = path.replace('{source}', parameters['source'] + '');
-
-        path = path.replace('{transcriptIds}', parameters['transcriptIds'] + '');
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Gets the isoform override information for the specified source and the list of transcript ids
-     * @method
-     * @name GenomeNexusAPI#getIsoformOverride
-     * @param {string} source - Override source. For example uniprot.
-     * @param {string} transcriptIds - Comma separated list of transcript ids. For example ENST00000361125,ENST00000443649.
-     */
-    getIsoformOverride(parameters: {
-            'source': string,
-            'transcriptIds': string,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < IsoformOverride >
-        > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/isoform_override/{source}/{transcriptIds}';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
-
-                path = path.replace('{source}', parameters['source'] + '');
-
-                if (parameters['source'] === undefined) {
-                    reject(new Error('Missing required  parameter: source'));
-                    return;
-                }
-
-                path = path.replace('{transcriptIds}', parameters['transcriptIds'] + '');
-
-                if (parameters['transcriptIds'] === undefined) {
-                    reject(new Error('Missing required  parameter: transcriptIds'));
-                    return;
-                }
-
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
-
-                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-            }).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-
-    postMutationAssessorAnnotationURL(parameters: {
-        'variants': Array < string > ,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/mutation_assessor';
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Retrieves mutation assessor information for the provided list of variants
-     * @method
-     * @name GenomeNexusAPI#postMutationAssessorAnnotation
-     * @param {} variants - List of variants. For example ["7:g.140453136A>T","12:g.25398285C>A"]
-     */
-    postMutationAssessorAnnotation(parameters: {
-            'variants': Array < string > ,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < MutationAssessor >
-        > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/mutation_assessor';
+            let path = '/annotation';
             let body: any;
             let queryParameters: any = {};
             let headers: any = {};
@@ -1284,6 +224,14 @@ export default class GenomeNexusAPI {
                     return;
                 }
 
+                if (parameters['isoformOverrideSource'] !== undefined) {
+                    queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
+                }
+
+                if (parameters['fields'] !== undefined) {
+                    queryParameters['fields'] = parameters['fields'];
+                }
+
                 if (parameters.$queryParameters) {
                     Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                         var parameter = parameters.$queryParameters[parameterName];
@@ -1298,14 +246,23 @@ export default class GenomeNexusAPI {
             });
         };
 
-    getMutationAssessorAnnotationURL(parameters: {
-        'variants': string,
+    fetchVariantAnnotationGETURL(parameters: {
+        'variant': string,
+        'isoformOverrideSource' ? : string,
+        'fields' ? : Array < string > ,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/mutation_assessor/{variants}';
+        let path = '/annotation/{variant}';
 
-        path = path.replace('{variants}', parameters['variants'] + '');
+        path = path.replace('{variant}', parameters['variant'] + '');
+        if (parameters['isoformOverrideSource'] !== undefined) {
+            queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
+        }
+
+        if (parameters['fields'] !== undefined) {
+            queryParameters['fields'] = parameters['fields'];
+        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -1318,49 +275,60 @@ export default class GenomeNexusAPI {
     };
 
     /**
-     * Retrieves mutation assessor information for the provided list of variants
+     * Retrieves VEP annotation for the provided variant
      * @method
-     * @name GenomeNexusAPI#getMutationAssessorAnnotation
-     * @param {string} variants - Comma separated list of variants. For example 7:g.140453136A>T,12:g.25398285C>A
+     * @name GenomeNexusAPI#fetchVariantAnnotationGET
+     * @param {string} variant - Variant. For example 17:g.41242962->GA
+     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor
      */
-    getMutationAssessorAnnotation(parameters: {
-            'variants': string,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < MutationAssessor >
-        > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/mutation_assessor/{variants}';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
+    fetchVariantAnnotationGET(parameters: {
+        'variant': string,
+        'isoformOverrideSource' ? : string,
+        'fields' ? : Array < string > ,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < VariantAnnotation > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/annotation/{variant}';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
 
-                path = path.replace('{variants}', parameters['variants'] + '');
+            path = path.replace('{variant}', parameters['variant'] + '');
 
-                if (parameters['variants'] === undefined) {
-                    reject(new Error('Missing required  parameter: variants'));
-                    return;
-                }
+            if (parameters['variant'] === undefined) {
+                reject(new Error('Missing required  parameter: variant'));
+                return;
+            }
 
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
+            if (parameters['isoformOverrideSource'] !== undefined) {
+                queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
+            }
 
-                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+            if (parameters['fields'] !== undefined) {
+                queryParameters['fields'] = parameters['fields'];
+            }
 
-            }).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        }).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
 
     fetchAllPfamDomainsGETURL(parameters: {
         $queryParameters ? : any

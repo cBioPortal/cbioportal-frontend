@@ -1,0 +1,497 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "Genome Nexus Variant Annotation API",
+    "version": "2.0",
+    "title": "Genome Nexus API",
+    "contact": {
+      "name": "CMO, MSKCC"
+    },
+    "license": {
+      "name": "GNU AFFERO GENERAL PUBLIC LICENSE Version 3",
+      "url": "https://github.com/cBioPortal/genome-nexus/blob/master/LICENSE"
+    }
+  },
+  "basePath": "/",
+  "tags": [
+    {
+      "name": "cancer-hotspots-controller",
+      "description": "Cancer Hotspots Controller"
+    },
+    {
+      "name": "mutation-assessor-controller",
+      "description": "Mutation Assessor Controller"
+    },
+    {
+      "name": "isoform-override-controller",
+      "description": "Isoform Override Controller"
+    }
+  ],
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "paths": {
+    "/cancer_hotspots": {
+      "post": {
+        "tags": [
+          "cancer-hotspots-controller"
+        ],
+        "summary": "Retrieves hotspot annotation for the provided list of variants",
+        "operationId": "fetchHotspotAnnotationPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "variants",
+            "description": "List of variants. For example [\"7:g.140453136A>T\",\"12:g.25398285C>A\"]",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Hotspot"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cancer_hotspots/{variant}": {
+      "get": {
+        "tags": [
+          "cancer-hotspots-controller"
+        ],
+        "summary": "Retrieves hotspot annotation for a specific variant",
+        "operationId": "fetchHotspotAnnotationGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "variant",
+            "in": "path",
+            "description": "A variant. For example 7:g.140453136A>T",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Hotspot"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/isoform_override": {
+      "post": {
+        "tags": [
+          "isoform-override-controller"
+        ],
+        "summary": "Gets the isoform override information for the specified source and the list of transcript ids",
+        "operationId": "fetchIsoformOverridePOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "source",
+            "in": "query",
+            "description": "Override source. For example uniprot",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "transcriptIds",
+            "description": "List of transcript ids. For example [\"ENST00000361125\",\"ENST00000443649\"]. ",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/IsoformOverride"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/isoform_override/sources": {
+      "get": {
+        "tags": [
+          "isoform-override-controller"
+        ],
+        "summary": "Gets a list of available isoform override data sources",
+        "operationId": "fetchIsoformOverrideSourcesGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/isoform_override/{source}": {
+      "get": {
+        "tags": [
+          "isoform-override-controller"
+        ],
+        "summary": "Gets the isoform override information for the specified source",
+        "operationId": "fetchAllIsoformOverridesGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "source",
+            "in": "path",
+            "description": "Override source. For example uniprot",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/IsoformOverride"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/isoform_override/{source}/{transcriptId}": {
+      "get": {
+        "tags": [
+          "isoform-override-controller"
+        ],
+        "summary": "Gets the isoform override information for the specified source and transcript id",
+        "operationId": "fetchIsoformOverrideGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "source",
+            "in": "path",
+            "description": "Override source. For example uniprot.",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "transcriptId",
+            "in": "path",
+            "description": "Transcript id. For example ENST00000361125.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/IsoformOverride"
+            }
+          }
+        }
+      }
+    },
+    "/mutation_assessor": {
+      "post": {
+        "tags": [
+          "mutation-assessor-controller"
+        ],
+        "summary": "Retrieves mutation assessor information for the provided list of variants",
+        "operationId": "postMutationAssessorAnnotation",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "variants",
+            "description": "List of variants. For example [\"7:g.140453136A>T\",\"12:g.25398285C>A\"]",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MutationAssessor"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mutation_assessor/{variant}": {
+      "get": {
+        "tags": [
+          "mutation-assessor-controller"
+        ],
+        "summary": "Retrieves mutation assessor information for the provided list of variants",
+        "operationId": "fetchMutationAssessorAnnotationGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "variant",
+            "in": "path",
+            "description": "A variants. For example 7:g.140453136A>T",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/MutationAssessor"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Hotspot": {
+      "type": "object",
+      "required": [
+        "transcriptId"
+      ],
+      "properties": {
+        "geneId": {
+          "type": "string",
+          "description": "Ensembl gene id"
+        },
+        "hugoSymbol": {
+          "type": "string",
+          "description": "Hugo gene symbol"
+        },
+        "proteinEnd": {
+          "type": "string",
+          "description": "Protein end position"
+        },
+        "proteinStart": {
+          "type": "string",
+          "description": "Protein start position"
+        },
+        "residue": {
+          "type": "string",
+          "description": "Hotspot Residue"
+        },
+        "transcriptId": {
+          "type": "string",
+          "description": "Transcript id"
+        }
+      }
+    },
+    "IsoformOverride": {
+      "type": "object",
+      "required": [
+        "transcriptId"
+      ],
+      "properties": {
+        "ccdsId": {
+          "type": "string",
+          "description": "CCDS ID"
+        },
+        "geneSymbol": {
+          "type": "string",
+          "description": "Hugo gene symbol"
+        },
+        "refseqId": {
+          "type": "string",
+          "description": "RefSeq ID"
+        },
+        "transcriptId": {
+          "type": "string",
+          "description": "Ensembl transcript id"
+        }
+      }
+    },
+    "MutationAssessor": {
+      "type": "object",
+      "required": [
+        "input"
+      ],
+      "properties": {
+        "codonStartPosition": {
+          "type": "string",
+          "description": "Codon start position"
+        },
+        "cosmicCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Number of mutations in COSMIC for this protein"
+        },
+        "functionalImpact": {
+          "type": "string",
+          "description": "Functional impact"
+        },
+        "functionalImpactScore": {
+          "type": "number",
+          "format": "double",
+          "description": "Functional impact score"
+        },
+        "hugoSymbol": {
+          "type": "string",
+          "description": "Hugo gene symbol"
+        },
+        "input": {
+          "type": "string",
+          "description": "User-input variants"
+        },
+        "mappingIssue": {
+          "type": "string",
+          "description": "Mapping issue info"
+        },
+        "msaGaps": {
+          "type": "number",
+          "format": "double",
+          "description": "Portion of gaps in variant position in multiple sequence alignment"
+        },
+        "msaHeight": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Number of diverse sequences in multiple sequence alignment (identical or highly similar sequences filtered out)"
+        },
+        "msaLink": {
+          "type": "string",
+          "description": "Link to multiple sequence alignment"
+        },
+        "pdbLink": {
+          "type": "string",
+          "description": "Link to 3d structure browser"
+        },
+        "referenceGenomeVariant": {
+          "type": "string",
+          "description": "Reference genome variant"
+        },
+        "referenceGenomeVariantType": {
+          "type": "string",
+          "description": "Reference genome variant type"
+        },
+        "refseqId": {
+          "type": "string",
+          "description": "Refseq protein ID"
+        },
+        "refseqPosition": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Variant position in Refseq protein, can be different from the one in Uniprot"
+        },
+        "refseqResidue": {
+          "type": "string",
+          "description": "Reference residue in Refseq protein, can be different from the one in Uniprot"
+        },
+        "snpCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Number of SNPs in dbSNP for this protein"
+        },
+        "uniprotId": {
+          "type": "string",
+          "description": "Uniprot protein accession ID"
+        },
+        "uniprotPosition": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Variant position in Uniprot protein, can be different from the one in Refseq"
+        },
+        "uniprotResidue": {
+          "type": "string",
+          "description": "Reference residue in Uniprot protein, can be different from the one in Refseq"
+        },
+        "variant": {
+          "type": "string",
+          "description": "Amino acid substitution"
+        },
+        "variantConservationScore": {
+          "type": "number",
+          "format": "double",
+          "description": "Variant conservation score"
+        },
+        "variantSpecificityScore": {
+          "type": "number",
+          "format": "double",
+          "description": "Variant specificity score"
+        }
+      }
+    }
+  }
+}
