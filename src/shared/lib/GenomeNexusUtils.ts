@@ -1,6 +1,7 @@
 import * as _ from 'lodash';
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
-import {VariantAnnotation, MutationAssessor} from "shared/api/generated/GenomeNexusAPI";
+import {VariantAnnotation} from "shared/api/generated/GenomeNexusAPI";
+import {MutationAssessor} from 'shared/api/generated/GenomeNexusAPIInternal';
 
 export function generateGenomeNexusQuery(data:Mutation)
 {
