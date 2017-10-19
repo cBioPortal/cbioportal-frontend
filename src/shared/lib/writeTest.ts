@@ -1,24 +1,24 @@
 import $ from 'jquery';
 
-export function writeTest(fn:Function): void {
-    const ret = fn.apply(this,arguments);
+export function writeTest(name:string, argJSON:string[], retJSON:string): void {
 
-    showTest(formatTest(fn.name,Array.slice(arguments),ret));
+    showTest(formatTest(name,argJSON,retJSON));
 
-    return ret;
 }
 
-function formatTest(functionName, args, retVal){
-    const argString = args.join(', ');
+function formatTest(functionName:string, argMap:string[], retJSON:string){
+
 return (
 `
-define('${functionName}', ()=>{
+describe('${functionName}', ()=>{
 
     it('###should do something###',()=>{
         
-        const ret = ${functionName}(${argString});
+        ${argMap.reduce((s,a)=>s+=a+'\n\n','')}
         
-        const expectedResult = ${JSON.stringify(retVal)};
+        const ret = ${functionName}(${argMap.map((n,i)=>'arg'+i).join(', ')});
+        
+        const expectedResult = ${retJSON};
         
         assert.equal(ret, expectedResult);
     
