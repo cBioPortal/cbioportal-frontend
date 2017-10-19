@@ -4,7 +4,7 @@ import annotationStyles from "./../styles/annotation.module.scss";
 import classNames from 'classnames';
 import tooltipStyles from "./styles/mutationAssessorTooltip.module.scss";
 import {GenomeNexusCacheDataType} from "shared/cache/GenomeNexusEnrichment";
-import {MutationAssessor as MutationAssessorData} from 'shared/api/generated/GenomeNexusAPI';
+import {MutationAssessor as MutationAssessorData} from 'shared/api/generated/GenomeNexusAPIInternal';
 import mutationAssessorColumn from "./styles/mutationAssessorColumn.module.scss";
 
 export interface IMutationAssessorProps {
