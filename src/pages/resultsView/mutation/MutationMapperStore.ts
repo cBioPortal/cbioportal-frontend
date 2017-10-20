@@ -70,10 +70,11 @@ export class MutationMapperStore {
     });
 
     readonly mutationData = remoteData({
-        invoke: () => {
-            console.log("getting mutation data", this.gene.entrezGeneId);
-            const cacheData = this.getMutationDataCache().get({entrezGeneId: this.gene.entrezGeneId});
-            return Promise.resolve((cacheData && cacheData.data) || []);
+        invoke: async () => {
+            // Don't do debouncingPopulate while getting the mutation data, get it immediately for this gene
+            // debouncing causes double rendering (first for the default empty data, and then for the actual data)
+            const cacheData = await this.getMutationDataCache().getImmediately({entrezGeneId: this.gene.entrezGeneId});
+            return cacheData && cacheData.data || [];
         }
     }, []);
 

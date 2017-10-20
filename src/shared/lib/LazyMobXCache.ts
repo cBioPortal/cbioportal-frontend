@@ -82,6 +82,11 @@ export default class LazyMobXCache<Data, Query, Metadata = any> {
         return this.peek(query);
     }
 
+    public async getImmediately(query:Query) {
+        await this.populate([query]);
+        return this.peek(query);
+    }
+
     public addData(data:Data[]):void {
         const toMerge:Cache<Data, Metadata> = {};
         for (const datum of data) {
