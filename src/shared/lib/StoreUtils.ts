@@ -838,3 +838,10 @@ export function groupBy<T>(data:T[], keyFn:(d:T)=>string, defaultKeys:string[]=[
     }
     return ret;
 }
+
+export async function getHierarchyData(
+        geneticProfileId: string, percentile: number, scoreThreshold: number, pvalueThreshold: number,
+        sampleListId: string|undefined,  client:CBioPortalAPIInternal = internalClient) {
+    return await client.fetchGenesetHierarchyInfoUsingPOST({geneticProfileId, percentile, scoreThreshold,
+        pvalueThreshold, sampleListId});
+}
