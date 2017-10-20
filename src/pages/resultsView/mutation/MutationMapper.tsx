@@ -114,8 +114,9 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                     )
                 }
 
+                <LoadingIndicator isLoading={this.props.store.mutationData.isPending} />
                 {
-
+                    (!this.props.store.mutationData.isPending) && (
                     <div>
                         <LoadingIndicator isLoading={this.props.store.pfamGeneData.isPending} />
                         { (!this.props.store.pfamGeneData.isPending) && (
@@ -205,6 +206,7 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                             />
                         )}
                     </div>
+                    )
                 }
             </div>
         );
