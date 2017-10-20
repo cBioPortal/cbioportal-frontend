@@ -38,9 +38,6 @@ export function getMyGeneUrl(entrezGeneId: number) {
 export function getUniprotIdUrl(swissProtAccession: string) {
     return cbioUrl(`proxy/uniprot.org/uniprot/?query=accession:${swissProtAccession}&format=tab&columns=entry+name`);
 }
-export function getPfamGeneDataUrl(swissProtAccession: string) {
-    return cbioUrl(`proxy/pfam.xfam.org/protein/${swissProtAccession}/graphic`);
-}
 export function getMutationAlignerUrl() {
     return cbioUrl(`getMutationAligner.json`);
 }
