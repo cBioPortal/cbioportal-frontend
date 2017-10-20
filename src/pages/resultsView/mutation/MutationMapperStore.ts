@@ -18,13 +18,15 @@ import {
     indexHotspotData, fetchHotspotsData, fetchCosmicData, fetchOncoKbData,
     fetchMutationData, generateSampleIdToTumorTypeMap, generateDataQueryFilter,
     ONCOKB_DEFAULT, fetchPdbAlignmentData, fetchSwissProtAccession, fetchUniprotId, indexPdbAlignmentData,
-    fetchPfamGeneData, fetchCivicGenes, fetchCivicVariants, IDataQueryFilter
+    fetchPfamDomainData, fetchCivicGenes, fetchCivicVariants, IDataQueryFilter, fetchCanonicalTranscript,
 } from "shared/lib/StoreUtils";
 import MutationMapperDataStore from "./MutationMapperDataStore";
 import PdbChainDataStore from "./PdbChainDataStore";
 import {IMutationMapperConfig} from "./MutationMapper";
 import MutationDataCache from "../../../shared/cache/MutationDataCache";
 import {Gene as OncoKbGene} from "../../../shared/api/generated/OncoKbAPI";
+import {EnsemblTranscript} from "shared/api/generated/GenomeNexusAPIInternal";
+import {PfamDomain} from "shared/api/generated/GenomeNexusAPI";
 
 export class MutationMapperStore {
 
@@ -146,18 +148,28 @@ export class MutationMapperStore {
         }
     }, ONCOKB_DEFAULT);
 
-    readonly pfamGeneData = remoteData({
+    readonly pfamDomainData = remoteData<PfamDomain[] | undefined>({
         await: ()=>[
-            this.swissProtId
+            this.canonicalTranscript
         ],
         invoke: async()=>{
-            if (this.swissProtId.result) {
-                return fetchPfamGeneData(this.swissProtId.result);
+            if (this.canonicalTranscript.result) {
+                return fetchPfamDomainData(this.canonicalTranscript.result.transcriptId);
             } else {
-                return {};
+                return undefined;
             }
         }
-    }, {});
+    }, undefined);
+
+    readonly canonicalTranscript = remoteData<EnsemblTranscript | undefined>({
+        invoke: async()=>{
+            if (this.gene) {
+                return fetchCanonicalTranscript(this.gene.hugoGeneSymbol, this.isoformOverrideSource);
+            } else {
+                return undefined;
+            }
+        }
+    }, undefined);
 
     readonly civicGenes = remoteData<ICivicGene | undefined>({
         await: () => [
@@ -187,6 +199,10 @@ export class MutationMapperStore {
             // fail silently
         }
     }, undefined);
+
+    @computed get isoformOverrideSource(): string {
+        return this.config.isoformOverrideSource || "uniprot";
+    }
 
     @computed get processedMutationData(): Mutation[][] {
         // just convert Mutation[] to Mutation[][]
