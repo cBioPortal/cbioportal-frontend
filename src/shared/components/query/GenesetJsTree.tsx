@@ -1,0 +1,244 @@
+import React from 'react';
+import $ from 'jquery';
+import {getHierarchyData} from "shared/lib/StoreUtils";
+//Import jstree.min and style for jstree to work
+import 'jstree/dist/jstree.min'; // tslint:disable-line
+import 'shared/components/query/styles/jstree/style.css'; // tslint:disable-line
+import * as _ from "lodash";
+import { remoteData } from "shared/api/remoteData";
+import CBioPortalAPIInternal, { GenesetHierarchyInfo } from "shared/api/generated/CBioPortalAPIInternal";
+import { observer } from "mobx-react";
+import { observable } from "mobx";
+import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
+import { QueryStoreComponent } from "shared/components/query/QueryStore";
+
+export interface GenesetJsTreeProps
+{
+    scoreThreshold: string;
+    pvalueThreshold: string;
+    percentile: string;
+    gsvaProfile: string;
+    sampleListId: string|undefined;
+    searchValue: string;
+}
+
+type JSNode = {
+    original: {description: string, geneset: boolean};
+};
+
+@observer
+export default class GenesetJsTree extends QueryStoreComponent<GenesetJsTreeProps, {}>
+{
+    tree: Element|null;
+    @observable isLoading = true;
+    promisedTree: Promise<Element>;
+
+    componentDidMount(){
+        this.promisedTree = this.initTree(this.tree as Element); //React only sets the div to null when the component unmounts
+        this.promisedTree.then(tree => (this.isLoading = false, tree));
+    }
+    
+    componentDidUpdate(prevProps: GenesetJsTreeProps){
+        if (this.props.scoreThreshold !== prevProps.scoreThreshold ||
+            this.props.pvalueThreshold !== prevProps.pvalueThreshold ||
+            this.props.percentile !== prevProps.percentile) {
+            this.promisedTree = this.promisedTree
+                .then(tree => (this.isLoading = true, this.replaceTree(tree)))
+                .then(tree => (this.isLoading = false, tree));
+        }
+        if (this.props.searchValue !== prevProps.searchValue) {
+            this.promisedTree = this.promisedTree
+                .then(tree => this.searchTree(tree, this.props.searchValue));
+        }
+    }
+    
+    /**
+     * Transform hierarchy data to the correct format accepted by jsTree
+     * 
+     * @param result_data
+     * @return flatData
+     */
+    transformHierarchyData(result_data: GenesetHierarchyInfo[]) {
+          const data = result_data;
+          const flatData = [];
+          
+          // Leafs can be non-unique, therefore a unique ID is necessary,
+          // because selecting a duplicate leaf results in a visualization issue.
+          let leafId = 0;
+        
+          for (const node of data) {
+              const nodeName = node.nodeName;
+              const nodeParent = node.parentNodeName ? node.parentNodeName : "#";
+              
+              flatData.push({
+                  id : nodeName,
+                  parent : nodeParent,
+                  text: nodeName,
+                  li_attr: {
+                      name: nodeName,
+                  },
+                  geneset : false,
+                  state : {
+                      opened : true,
+                      selected : false,
+                  }
+              });
+              
+              // Check if node has any gene sets, and if so, iterate over them
+              if (_.has(node, 'genesets')) {
+                  for (const geneSet of node.genesets) {
+                      const genesetId = leafId ++;
+                      const genesetName = geneSet.genesetId;
+                      const genesetDescription = geneSet.description;
+                      const genesetRepresentativeScore = geneSet.representativeScore;
+                      let genesetRepresentativePvalue: number|string = geneSet.representativePvalue;
+                      const genesetRefLink = geneSet.refLink;
+                      let genesetInfo = '';
+        
+                      // Add score to leaf
+                      genesetInfo = genesetInfo + 'score = ' +  genesetRepresentativeScore.toFixed(2);
+                      
+                      // Round pvalue if necessary
+                      // 0.005 is rounded to 0.01 and 0.0049 to 0.00, so below 0.005 should be exponential (5e-3)
+                      if (genesetRepresentativePvalue < 0.005) {
+                          genesetRepresentativePvalue = genesetRepresentativePvalue.toExponential(0);
+                      } else {
+                          genesetRepresentativePvalue = genesetRepresentativePvalue.toFixed(2);
+                      }
+                      
+                      // Add pvalue to leaf 
+                      genesetInfo = genesetInfo + ', p-value = ' +  genesetRepresentativePvalue;
+          
+                      // Build label and add styling
+                      const genesetNameText = genesetName + '<span style="font-weight:normal;font-style:italic;"> ' + genesetInfo + '</span>';
+                      
+                      flatData.push({
+                          // Add compulsory information
+                          id : genesetId.toString(),
+                          parent : nodeName,
+                          text: genesetNameText, 
+                          state : {
+                              selected : false
+                          },
+                          li_attr : {
+                              name: genesetName,
+                          },
+                      
+                          // Also add additional data which might be useful later
+                          description : genesetDescription,
+                          representativeScore : genesetRepresentativeScore,
+                          representativePvalue : genesetRepresentativePvalue,
+                          refLink : genesetRefLink,
+                          geneset : true,
+                          
+                      });
+                  }
+              }
+          }
+          return flatData;
+      }
+    
+    async initTree(tree: Element): Promise<Element>{
+        const hierarchyData = await getHierarchyData(
+                this.props.gsvaProfile, Number(this.props.percentile),Number(this.props.scoreThreshold), 
+                Number(this.props.pvalueThreshold), this.props.sampleListId);
+        $(tree).jstree({
+            "search": {
+                'show_only_matches': true,
+                'show_only_matches_children': true
+            },
+            'core' : {
+                'themes': {
+                    'icons': false
+                },
+                'check_callback' : true,
+                'data' : this.transformHierarchyData(hierarchyData)
+            },
+            "plugins" : ["checkbox", "search"]
+        });
+        return tree;
+    }
+    
+    destroyTree(tree: Element){
+        $(tree).jstree(true).destroy();
+    }
+    
+    async replaceTree(tree:Element): Promise<Element> {
+        this.destroyTree(tree);
+        return await this.initTree(tree);
+    }
+    
+    addGeneSets(selectedGeneSets: JSNode[], genesetQuery: string) {
+        if (genesetQuery === "") 
+        {
+            const genesetList: string[] = [];
+            for (const geneSet of selectedGeneSets) 
+            {
+                if (geneSet.original.geneset) 
+                {
+                    genesetList.push(geneSet.original.description);
+                }
+            }
+            genesetQuery = genesetList.join(" ");
+        }
+        else
+        {
+            // look for the selected genesets in gene_list
+            // if they're not there, append them
+            for (const geneSet of selectedGeneSets) 
+            {
+                if (geneSet.original.geneset) 
+                {
+                    let checked = geneSet.original.description;
+                    if ( genesetQuery.search(new RegExp(checked, "i")) === -1 )
+                    {
+                        genesetQuery = $.trim(genesetQuery);
+                        checked = " " + checked;
+                        genesetQuery += checked;
+                    }
+                }
+            }
+        }
+        
+        // remove spaces around gene_list
+        genesetQuery = $.trim(genesetQuery);
+        
+        // replace 2 or more spaces in a row by 1 space
+        genesetQuery = genesetQuery.replace(/\s{1,}/, " ");
+        
+        // Update the gene set list in the query box
+        this.store.genesetQuery = genesetQuery;
+
+    }
+    
+    submitGeneSets(tree:Element|null) {
+        if (tree) {
+            const selectedNodes = $(tree).jstree("get_selected", true);
+            this.addGeneSets(selectedNodes, this.store.genesetQuery);
+        }
+    }
+    
+    searchTree(tree:Element, searchValue: string) {
+        $(tree).jstree(true).search(searchValue);
+        return tree;
+    }
+    
+    render(){
+        return (
+                <div>
+                <LoadingIndicator isLoading={this.isLoading} />
+                <div ref={tree => this.tree = tree} style={{maxHeight: "380px", overflowY: "scroll"}}></div>
+                <div style={{padding: "10px 0px"}}>
+                <button className="btn btn-primary btn-sm pull-right" 
+                    style={{margin: "2px"}} 
+                    disabled={this.isLoading}
+                    onClick={() => {this.submitGeneSets(this.tree);
+                                    this.store.showGenesetsHierarchyPopup = false; }}>
+                Select
+                </button>
+                </div>
+                </div>
+        );
+    }
+}
+

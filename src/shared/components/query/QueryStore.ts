@@ -5,6 +5,7 @@ import {
 	TypeOfCancer as CancerType, MolecularProfile, CancerStudy, SampleList, Gene,
 	Sample, SampleIdentifier
 } from "../../api/generated/CBioPortalAPI";
+import {Geneset} from "../../api/generated/CBioPortalAPIInternal";
 import CancerStudyTreeData from "./CancerStudyTreeData";
 import {remoteData} from "../../api/remoteData";
 import {labelMobxPromises, cached, debounceAsync} from "mobxpromise";
@@ -13,7 +14,7 @@ import oql_parser, {MUTCommand} from "../../lib/oql/oql-parser";
 import memoize from "memoize-weak-decorator";
 import AppConfig from 'appConfig';
 import {gsUploadByGet} from "../../api/gsuploadwindow";
-import {OQLQuery} from "../../lib/oql/oql-parser";
+import {OQLQuery, OQLGenesetQuery} from "../../lib/oql/oql-parser";
 import {ComponentGetsStoreContext} from "../../lib/ContextUtils";
 import URL from 'url';
 import {buildCBioPortalUrl, BuildUrlParams, getHost, openStudySummaryFormSubmit} from "../../api/urls";
@@ -42,12 +43,14 @@ export type CancerStudyQueryUrlParams = {
 	genetic_profile_ids_PROFILE_MRNA_EXPRESSION: string,
 	genetic_profile_ids_PROFILE_METHYLATION: string,
 	genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION: string,
+	genetic_profile_ids_PROFILE_GENESET_SCORE: string,
 	Z_SCORE_THRESHOLD: string,
 	RPPA_SCORE_THRESHOLD: string,
 	data_priority: '0'|'1'|'2',
 	case_set_id: string,
 	case_ids: string,
 	gene_list: string,
+	geneset_list?: string,
 	tab_index: 'tab_download'|'tab_visualize',
 	transpose_matrix?: 'on',
 	Action: 'Submit',
@@ -79,7 +82,8 @@ export type CancerStudyQueryParams = Pick<
 	'selectedSampleListId' |
 	'caseIds' |
 	'caseIdsMode' |
-	'geneQuery'
+	'geneQuery' |
+	'genesetQuery'
 >;
 export const QueryParamsKeys:(keyof CancerStudyQueryParams)[] = [
 	'searchText',
@@ -92,6 +96,7 @@ export const QueryParamsKeys:(keyof CancerStudyQueryParams)[] = [
 	'caseIds',
 	'caseIdsMode',
 	'geneQuery',
+	'genesetQuery',
 ];
 
 // mobx observable
@@ -384,14 +389,28 @@ export class QueryStore
 		this.geneQueryErrorDisplayStatus = 'unfocused';
 		this._geneQuery = value;
 	}
+	
+	@observable _genesetQuery = '';
+    get genesetQuery()
+    {
+        return this._genesetQuery.toUpperCase();
+    }
+    set genesetQuery(value:string) //TODO: Comment out and test
+    {
+        // clear error when gene query is modified
+        this.genesetQueryErrorDisplayStatus = 'unfocused';
+        this._genesetQuery = value;
+    }
 
 	////////////////////////////////////////////////////////////////////////////////
 	// VISUAL OPTIONS
 	////////////////////////////////////////////////////////////////////////////////
 
 	@observable geneQueryErrorDisplayStatus:'unfocused'|'shouldFocus'|'focused' = 'unfocused';
+    @observable genesetQueryErrorDisplayStatus: 'unfocused'|'shouldFocus'|'focused' = 'unfocused';
 	@observable showMutSigPopup = false;
 	@observable showGisticPopup = false;
+	@observable showGenesetsHierarchyPopup = false;
 	@observable.ref searchTextPresets:ReadonlyArray<string> = AppConfig.skinExampleStudyQueries;
 	@observable priorityStudies = AppConfig.priorityStudies;
 	@observable showSelectedStudiesOnly:boolean = false;
@@ -506,7 +525,12 @@ export class QueryStore
 		invoke: () => this.invokeGenesLater(this.geneIds),
 		default: {found: [], suggestions: []}
 	});
-
+	
+	readonly genesets = remoteData({
+	    invoke: () => this.invokeGenesetsLater(this.genesetIds),
+	    default: {found: [], invalid: []}
+	});
+	
 	private invokeGenesLater = debounceAsync(
 		async (geneIds:string[]):Promise<{found: Gene[], suggestions: GeneReplacement[]}> =>
 		{
@@ -544,6 +568,32 @@ export class QueryStore
 		},
 		500
 	);
+	
+	private invokeGenesetsLater = debounceAsync(
+	        async (genesetIds:string[]):Promise<{found: Geneset[], invalid: string[]}> =>
+	        {
+	            let getGenesetResults = async () => {
+	                let found:Geneset[] = [];
+	                let invalid: string[] = [];
+	                for (let genesetId in genesetIds) {
+	                    try {
+	                        let retrievedGeneset = await internalClient.getGenesetUsingGET({genesetId: genesetIds[genesetId]});
+	                        found.push(retrievedGeneset);
+	                    } catch (error) {
+	                        invalid.push(genesetIds[genesetId]);
+	                    }
+	                }
+	                return {found, invalid};
+	            };
+	            
+	            let [genesetResults] = await Promise.all([getGenesetResults()]);
+	            return {
+	                found: [...genesetResults.found],
+	                invalid: [...genesetResults.invalid]
+	            };
+	        },
+	        500
+	    );
 
 	@memoize
 	async getGeneSuggestions(alias:string):Promise<GeneReplacement>
@@ -868,6 +918,19 @@ export class QueryStore
 		}
 		return '';
 	}
+	
+	get isGenesetProfileSelected() 
+	{
+        let result = false;
+        if (this.getFilteredProfiles("GENESET_SCORE")[0]) {
+            for (var selectedProfileId in this.selectedProfileIds) {
+                if (this.selectedProfileIds[selectedProfileId] === this.getFilteredProfiles("GENESET_SCORE")[0].molecularProfileId) {
+                    result = true;
+                }
+            }
+        }
+        return result;
+    }
 
 	// SAMPLE LIST
 
@@ -975,6 +1038,57 @@ export class QueryStore
 			return [];
 		}
 	}
+	
+	// GENE SETS
+	@computed get genesetIdsOQL():{ query: OQLGenesetQuery, error?: { start: number, end: number, message: string } }
+    {
+        try
+        {
+            let result:{geneset:string, alterations:false}[] = [];
+            let queriedGenesets: string[] = this.genesetQuery ? this.genesetQuery.split(/[ \n]+/) : [];
+            for (let geneset in queriedGenesets) {
+                result.push({'geneset': queriedGenesets[geneset], 'alterations': false});
+            }
+            return {
+                query: result,
+                error: undefined
+            };
+        }
+        catch (error)
+        {
+            if (error.name !== 'SyntaxError')
+                return {
+                    query: [],
+                    error: {start: 0, end: 0, message: `Unexpected ${error}`}
+                };
+
+            let {offset} = error as SyntaxError;
+            let near, start, end;
+            if (offset === this.geneQuery.length)
+                [near, start, end] = ['after', offset - 1, offset];
+            else if (offset === 0)
+                [near, start, end] = ['before', offset, offset + 1];
+            else
+                [near, start, end] = ['at', offset, offset + 1];
+            let message = `OQL syntax error ${near} selected character; please fix and submit again.`;
+            return {
+                query: [],
+                error: {start, end, message}
+            };
+        }
+    }
+    
+    @computed get genesetIds():string[]
+    {
+            try
+            {
+                return this.genesetIdsOQL.query.map(line => line.geneset).filter(geneset => geneset && geneset !== 'DATATYPES');
+            }
+            catch (e)
+            {
+                return [];
+            }
+    }
 
 	// SUBMIT
 
@@ -982,9 +1096,9 @@ export class QueryStore
 	{
 		return (
 			!this.submitError &&
-			this.genes.isComplete &&
+			(this.genes.isComplete || this.genesets.isComplete) &&
 			this.asyncUrlParams.isComplete
-		) || !!this.oql.error; // to make "Please click 'Submit' to see location of error." possible
+		) || (!!this.oql.error || !!this.genesetIdsOQL.error); // to make "Please click 'Submit' to see location of error." possible
 	}
 
 	@computed get summaryEnabled() {
@@ -1031,8 +1145,53 @@ export class QueryStore
 			return "Expression filtering in the gene list is not supported when doing cross cancer queries.";
 		}
 
-		if (!this.oql.query.length)
-			return "Please enter one or more gene symbols.";
+		if (this.selectedProfileIds.length != 0) {
+		    if (this.selectedProfileIds.length == 1) 
+            {
+	            if (this.isGenesetProfileSelected)
+                { //Only geneset profile selected
+                    if (!this.genesetQuery.length) 
+                    {
+                        return "Please enter one or more gene sets or deselect gene set profiles.";
+                    }
+                    if (this.oql.query.length)
+                    {
+                        return "Please select genetic profiles or remove the genes from the query.";
+                    }
+                }
+                else
+                { 
+                    if (!this.oql.query.length) 
+                    {
+                        return "Please enter one or more gene symbols.";
+                    }
+                }
+            }
+	        else
+	        {
+                //Geneset and other genetic profiles selected
+	            if (this.isGenesetProfileSelected)
+	            {
+	                if (!this.genesetQuery.length && !this.oql.query.length)
+	                {
+	                    return "Please enter one or more gene symbols and gene sets.";
+	                }
+	                else if (!this.oql.query.length && this.genesetQuery.length)
+	                {
+	                    return "Please enter one or more gene symbols or deselect genetic profiles.";
+	                }
+	                else if (!this.genesetQuery.length && this.oql.query.length) {
+	                    return "Please enter one or more gene sets or deselect gene set profiles.";
+	                }
+	            }
+	            else if (!this.oql.query.length)
+	            {
+	                return "Please enter one or more gene symbols.";
+	            }
+            }
+        }
+		
+		
 
 		if (this.genes.result.suggestions.length)
 			return "Please edit the gene symbols.";
@@ -1140,6 +1299,7 @@ export class QueryStore
 			params.genetic_profile_ids_PROFILE_MRNA_EXPRESSION,
 			params.genetic_profile_ids_PROFILE_METHYLATION,
 			params.genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION,
+			params.genetic_profile_ids_PROFILE_GENESET_SCORE,
 		];
 
 		this.selectedStudyIds = params.cancer_study_list ? params.cancer_study_list.split(",") : (params.cancer_study_id ? [params.cancer_study_id] : []);
@@ -1209,6 +1369,11 @@ export class QueryStore
 	{
 		this.geneQuery = normalizeQuery(this.geneQuery.toUpperCase().replace(new RegExp(`\\b${oldSymbol.toUpperCase()}\\b`, 'g'), () => newSymbol.toUpperCase()));
 	}
+	
+	@action replaceGeneset(oldGeneset:string, newGeneset:string)
+    {
+        this.genesetQuery = normalizeQuery(this.genesetQuery.toUpperCase().replace(new RegExp(`\\b${oldGeneset.toUpperCase()}\\b`, 'g'), () => newGeneset.toUpperCase()));
+    }
 
 	@action applyGeneSelection(map_geneSymbol_selected:ObservableMap<boolean>)
 	{
@@ -1225,6 +1390,7 @@ export class QueryStore
 		if (this.oql.error)
 		{
 			this.geneQueryErrorDisplayStatus = 'shouldFocus';
+			this.genesetQueryErrorDisplayStatus = 'shouldFocus';
 			return;
 		}
 
@@ -1285,3 +1451,6 @@ export class QueryStore
 }
 
 export const QueryStoreComponent = ComponentGetsStoreContext(QueryStore);
+
+let selectedGeneSets = '';
+export default selectedGeneSets;
