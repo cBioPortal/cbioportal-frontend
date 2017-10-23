@@ -26,15 +26,15 @@ export type PfamDomain = {
 
         'geneSymbol': string
 
-        'getPfamDomainEnd': string
-
         'pfamDomainDescription': string
+
+        'pfamDomainEnd': number
 
         'pfamDomainId': string
 
         'pfamDomainName': string
 
-        'pfamDomainStart': string
+        'pfamDomainStart': number
 
         'proteinId': string
 

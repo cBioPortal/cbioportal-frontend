@@ -573,13 +573,13 @@
           "type": "string",
           "description": "Hugo gene symbol"
         },
-        "getPfamDomainEnd": {
-          "type": "string",
-          "description": "PFAM domain end"
-        },
         "pfamDomainDescription": {
           "type": "string",
           "description": "PFAM domain description"
+        },
+        "pfamDomainEnd": {
+          "type": "integer",
+          "format": "int32"
         },
         "pfamDomainId": {
           "type": "string",
@@ -590,7 +590,8 @@
           "description": "PFAM domain name"
         },
         "pfamDomainStart": {
-          "type": "string",
+          "type": "integer",
+          "format": "int32",
           "description": "PFAM domain start"
         },
         "proteinId": {
