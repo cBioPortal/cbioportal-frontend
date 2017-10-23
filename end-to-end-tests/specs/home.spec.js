@@ -87,7 +87,7 @@ describe('patient page', function(){
 
         oncokbCard.waitForExist(30000);
         
-        assert.equal(browser.getText('.tip-header'), 'PPP2R1A S256F in Uterine Serous Carcinoma/Uterine Papillary Serous Carcinoma');
+        assert.equal(browser.getText('.tip-header').toLowerCase(), 'PPP2R1A S256F in Uterine Serous Carcinoma/Uterine Papillary Serous Carcinoma'.toLowerCase());
 
     });
 
