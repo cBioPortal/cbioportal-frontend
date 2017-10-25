@@ -5,7 +5,6 @@ import {
 } from "shared/components/mutationTable/MutationTable";
 import CancerTypeColumnFormatter from "shared/components/mutationTable/column/CancerTypeColumnFormatter";
 import TumorAlleleFreqColumnFormatter from "shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter";
-import AppConfig from 'appConfig';
 
 export interface IResultsViewMutationTableProps extends IMutationTableProps {
     // add results view specific props here if needed
@@ -25,9 +24,7 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
             MutationTableColumnType.SAMPLE_ID,
             MutationTableColumnType.COPY_NUM,
             MutationTableColumnType.ANNOTATION,
-        ].concat(
-            AppConfig.showGenomeNexus? [MutationTableColumnType.FUNCTIONAL_IMPACT] : []
-        ).concat([
+            MutationTableColumnType.FUNCTIONAL_IMPACT,
             MutationTableColumnType.REF_READS_N,
             MutationTableColumnType.VAR_READS_N,
             MutationTableColumnType.REF_READS,
@@ -47,7 +44,7 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
             MutationTableColumnType.NORMAL_ALLELE_FREQ,
             MutationTableColumnType.CANCER_TYPE,
             MutationTableColumnType.NUM_MUTATIONS
-        ])
+        ]
     };
 
     protected generateColumns() {
@@ -65,9 +62,7 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
         this._columns[MutationTableColumnType.CANCER_TYPE].order = 15;
         this._columns[MutationTableColumnType.PROTEIN_CHANGE].order = 20;
         this._columns[MutationTableColumnType.ANNOTATION].order = 30;
-        if (AppConfig.showGenomeNexus) {
-            this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT].order = 35;
-        }
+        this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT].order = 38;
         this._columns[MutationTableColumnType.MUTATION_TYPE].order = 40;
         this._columns[MutationTableColumnType.COPY_NUM].order = 50;
         this._columns[MutationTableColumnType.COSMIC].order = 60;
