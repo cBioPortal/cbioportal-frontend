@@ -1,4 +1,5 @@
 export interface IAppConfig {
+    apiRoot?: string;
     genomespaceEnabled: boolean;
     cancerStudySearchPresets: string[]; // in query the example searches
     priorityStudies: PriorityStudies;
