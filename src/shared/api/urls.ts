@@ -1,7 +1,8 @@
 import {default as URL, QueryParams} from "url";
+import AppConfig from "appConfig";
 
 export function getHost(){
-    return (window as any).__API_ROOT__;
+    return AppConfig.apiRoot;
 }
 
 export type BuildUrlParams = {pathname:string, query?:QueryParams, hash?:string};
@@ -53,7 +54,7 @@ export function getHotspots3DApiUrl() {
     return cbioUrl('proxy/3dhotspots.org/3d');
 }
 export function getOncoKbApiUrl() {
-    let url = (window as any).oncoKBApiUrl;
+    let url = AppConfig.oncoKBApiUrl;
 
     if (typeof url === 'string') {
         // we need to support legacy configuration values
@@ -66,7 +67,7 @@ export function getOncoKbApiUrl() {
 
 }
 export function getGenomeNexusApiUrl() {
-    let url = (window as any).genomeNexusApiUrl;
+    let url = AppConfig.genomeNexusApiUrl;
     if (typeof url === 'string') {
         // we need to support legacy configuration values
         url = url.replace(/^http[s]?:\/\//,''); // get rid of protocol

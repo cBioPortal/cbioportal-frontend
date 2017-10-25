@@ -17,7 +17,7 @@ const config:IAppConfig = {
     priorityStudies: {
         'Shared institutional Data Sets': ['mskimpact', 'cellline_mskcc'],
         'Priority Studies': ['blca_tcga_pub', 'coadread_tcga_pub', 'brca_tcga_pub2015'], // for demo
-    },
+    }
 };
 
 export default config;
