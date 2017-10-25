@@ -20,7 +20,9 @@ import ProteinChainPanel from "../../../shared/components/proteinChainPanel/Prot
 import {computed, action, observable} from "mobx";
 import MutationRateSummary from "pages/resultsView/mutation/MutationRateSummary";
 
+// Anything from App config will be included in mutation mapper config
 export interface IMutationMapperConfig {
+    userEmailAddress?:string;
     showCivic?: boolean;
     showHotspot?: boolean;
     showMyCancerGenome?: boolean;
@@ -198,6 +200,7 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                                 oncoKbData={this.props.store.oncoKbData}
                                 civicGenes={this.props.store.civicGenes}
                                 civicVariants={this.props.store.civicVariants}
+                                userEmailAddress={this.props.config.userEmailAddress}
                                 enableOncoKb={this.props.config.showOncoKB}
                                 enableFunctionalImpact={this.props.config.showGenomeNexus}
                                 enableHotspot={this.props.config.showHotspot}

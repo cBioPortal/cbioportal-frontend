@@ -28,6 +28,7 @@ export interface IAnnotationColumnProps {
     oncoKbEvidenceCache?: OncoKbEvidenceCache;
     oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean};
     pubMedCache?: OncokbPubMedCache;
+    userEmailAddress?:string;
     civicGenes?: ICivicGeneDataWrapper;
     civicVariants?: ICivicVariantDataWrapper;
 }
@@ -270,6 +271,7 @@ export default class AnnotationColumnFormatter
                         evidenceCache={evidenceCache}
                         evidenceQuery={evidenceQuery}
                         pubMedCache={pubMedCache}
+                        userEmailAddress={columnProps.userEmailAddress}
                     />
                 </If>
                 <If condition={columnProps.enableCivic || false}>
