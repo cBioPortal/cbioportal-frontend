@@ -515,7 +515,7 @@ export default class GenomeNexusAPI {
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/pfam/domain/pfam';
+        let path = '/pfam/domain/id';
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -542,7 +542,7 @@ export default class GenomeNexusAPI {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
             const request = this.request;
-            let path = '/pfam/domain/pfam';
+            let path = '/pfam/domain/id';
             let body: any;
             let queryParameters: any = {};
             let headers: any = {};
@@ -579,7 +579,7 @@ export default class GenomeNexusAPI {
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/pfam/domain/pfam/{pfamDomainId}';
+        let path = '/pfam/domain/id/{pfamDomainId}';
 
         path = path.replace('{pfamDomainId}', parameters['pfamDomainId'] + '');
 
@@ -608,7 +608,7 @@ export default class GenomeNexusAPI {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
             const request = this.request;
-            let path = '/pfam/domain/pfam/{pfamDomainId}';
+            let path = '/pfam/domain/id/{pfamDomainId}';
             let body: any;
             let queryParameters: any = {};
             let headers: any = {};
