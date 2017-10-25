@@ -1,6 +1,16 @@
 import * as request from "superagent";
 
 type CallbackHandler = (err: any, res ? : request.Response) => void;
+export type EnsemblTranscript = {
+    'geneId': string
+
+        'proteinId': string
+
+        'proteinLength': number
+
+        'transcriptId': string
+
+};
 export type Hotspot = {
     'geneId': string
 
@@ -239,6 +249,590 @@ export default class GenomeNexusAPIInternal {
 
                 if (parameters['variant'] === undefined) {
                     reject(new Error('Missing required  parameter: variant'));
+                    return;
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    fetchAllEnsemblTranscriptsGETURL(parameters: {
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/ensembl/transcript';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves all Ensembl Transcripts
+     * @method
+     * @name GenomeNexusAPIInternal#fetchAllEnsemblTranscriptsGET
+     */
+    fetchAllEnsemblTranscriptsGET(parameters: {
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < EnsemblTranscript >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/ensembl/transcript';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    fetchEnsemblTranscriptsByGeneIdsPOSTURL(parameters: {
+        'geneIds': Array < string > ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/ensembl/transcript/gene';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves Ensembl transcripts by Ensembl gene IDs
+     * @method
+     * @name GenomeNexusAPIInternal#fetchEnsemblTranscriptsByGeneIdsPOST
+     * @param {} geneIds - List of Ensembl gene IDs. For example ["ENSG00000136999","ENSG00000272398","ENSG00000198695"]
+     */
+    fetchEnsemblTranscriptsByGeneIdsPOST(parameters: {
+            'geneIds': Array < string > ,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < EnsemblTranscript >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/ensembl/transcript/gene';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                if (parameters['geneIds'] !== undefined) {
+                    body = parameters['geneIds'];
+                }
+
+                if (parameters['geneIds'] === undefined) {
+                    reject(new Error('Missing required  parameter: geneIds'));
+                    return;
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    fetchEnsemblTranscriptsByGeneIdGETURL(parameters: {
+        'geneId': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/ensembl/transcript/gene/{geneId}';
+
+        path = path.replace('{geneId}', parameters['geneId'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves Ensembl transcripts by an Ensembl gene ID
+     * @method
+     * @name GenomeNexusAPIInternal#fetchEnsemblTranscriptsByGeneIdGET
+     * @param {string} geneId - An Ensembl gene ID. For example ENSG00000136999
+     */
+    fetchEnsemblTranscriptsByGeneIdGET(parameters: {
+            'geneId': string,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < EnsemblTranscript >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/ensembl/transcript/gene/{geneId}';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                path = path.replace('{geneId}', parameters['geneId'] + '');
+
+                if (parameters['geneId'] === undefined) {
+                    reject(new Error('Missing required  parameter: geneId'));
+                    return;
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    fetchEnsemblTranscriptsByHugoSymbolsPOSTURL(parameters: {
+        'hugoSymbols': Array < string > ,
+        'isoformOverrideSource' ? : string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/ensembl/transcript/hgnc';
+
+        if (parameters['isoformOverrideSource'] !== undefined) {
+            queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves Ensembl transcripts by Hugo Symbols
+     * @method
+     * @name GenomeNexusAPIInternal#fetchEnsemblTranscriptsByHugoSymbolsPOST
+     * @param {} hugoSymbols - List of Hugo Symbols. For example ["TP53","PIK3CA","BRCA1"]
+     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     */
+    fetchEnsemblTranscriptsByHugoSymbolsPOST(parameters: {
+            'hugoSymbols': Array < string > ,
+            'isoformOverrideSource' ? : string,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < EnsemblTranscript >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/ensembl/transcript/hgnc';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                if (parameters['hugoSymbols'] !== undefined) {
+                    body = parameters['hugoSymbols'];
+                }
+
+                if (parameters['hugoSymbols'] === undefined) {
+                    reject(new Error('Missing required  parameter: hugoSymbols'));
+                    return;
+                }
+
+                if (parameters['isoformOverrideSource'] !== undefined) {
+                    queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    fetchEnsemblTranscriptsByHugoSymbolGETURL(parameters: {
+        'hugoSymbol': string,
+        'isoformOverrideSource' ? : string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/ensembl/transcript/hgnc/{hugoSymbol}';
+
+        path = path.replace('{hugoSymbol}', parameters['hugoSymbol'] + '');
+        if (parameters['isoformOverrideSource'] !== undefined) {
+            queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves Ensembl transcripts by an Ensembl gene ID
+     * @method
+     * @name GenomeNexusAPIInternal#fetchEnsemblTranscriptsByHugoSymbolGET
+     * @param {string} hugoSymbol - A Hugo Symbol. For example TP53
+     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     */
+    fetchEnsemblTranscriptsByHugoSymbolGET(parameters: {
+        'hugoSymbol': string,
+        'isoformOverrideSource' ? : string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < EnsemblTranscript > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/ensembl/transcript/hgnc/{hugoSymbol}';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            path = path.replace('{hugoSymbol}', parameters['hugoSymbol'] + '');
+
+            if (parameters['hugoSymbol'] === undefined) {
+                reject(new Error('Missing required  parameter: hugoSymbol'));
+                return;
+            }
+
+            if (parameters['isoformOverrideSource'] !== undefined) {
+                queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        }).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+
+    fetchEnsemblTranscriptsByTranscriptIdsPOSTURL(parameters: {
+        'transcriptIds': Array < string > ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/ensembl/transcript/id';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves Ensembl Transcripts by Ensembl transcript IDs
+     * @method
+     * @name GenomeNexusAPIInternal#fetchEnsemblTranscriptsByTranscriptIdsPOST
+     * @param {} transcriptIds - List of Ensembl transcript IDs. For example ["ENST00000361390","ENST00000361453","ENST00000361624"]
+     */
+    fetchEnsemblTranscriptsByTranscriptIdsPOST(parameters: {
+            'transcriptIds': Array < string > ,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < EnsemblTranscript >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/ensembl/transcript/id';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                if (parameters['transcriptIds'] !== undefined) {
+                    body = parameters['transcriptIds'];
+                }
+
+                if (parameters['transcriptIds'] === undefined) {
+                    reject(new Error('Missing required  parameter: transcriptIds'));
+                    return;
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    fetchEnsemblTranscriptsByTranscriptIdGETURL(parameters: {
+        'transcriptId': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/ensembl/transcript/id/{transcriptId}';
+
+        path = path.replace('{transcriptId}', parameters['transcriptId'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves Transcripts by an Ensembl transcript ID
+     * @method
+     * @name GenomeNexusAPIInternal#fetchEnsemblTranscriptsByTranscriptIdGET
+     * @param {string} transcriptId - An Ensembl transcript ID. For example ENST00000361390
+     */
+    fetchEnsemblTranscriptsByTranscriptIdGET(parameters: {
+            'transcriptId': string,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < EnsemblTranscript >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/ensembl/transcript/id/{transcriptId}';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                path = path.replace('{transcriptId}', parameters['transcriptId'] + '');
+
+                if (parameters['transcriptId'] === undefined) {
+                    reject(new Error('Missing required  parameter: transcriptId'));
+                    return;
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    fetchEnsemblTranscriptsByProteinIdsPOSTURL(parameters: {
+        'proteinIds': Array < string > ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/ensembl/transcript/protein';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves Ensembl transcripts by Ensembl protein IDs
+     * @method
+     * @name GenomeNexusAPIInternal#fetchEnsemblTranscriptsByProteinIdsPOST
+     * @param {} proteinIds - List of Ensembl protein IDs. For example ["ENSP00000439985","ENSP00000478460","ENSP00000346196"]
+     */
+    fetchEnsemblTranscriptsByProteinIdsPOST(parameters: {
+            'proteinIds': Array < string > ,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < EnsemblTranscript >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/ensembl/transcript/protein';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                if (parameters['proteinIds'] !== undefined) {
+                    body = parameters['proteinIds'];
+                }
+
+                if (parameters['proteinIds'] === undefined) {
+                    reject(new Error('Missing required  parameter: proteinIds'));
+                    return;
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    fetchEnsemblTranscriptsByProteinIdGETURL(parameters: {
+        'proteinId': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/ensembl/transcript/protein/{proteinId}';
+
+        path = path.replace('{proteinId}', parameters['proteinId'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves Ensembl transcripts by an Ensembl protein ID
+     * @method
+     * @name GenomeNexusAPIInternal#fetchEnsemblTranscriptsByProteinIdGET
+     * @param {string} proteinId - An Ensembl protein ID. For example ENSP00000439985
+     */
+    fetchEnsemblTranscriptsByProteinIdGET(parameters: {
+            'proteinId': string,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < EnsemblTranscript >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/ensembl/transcript/protein/{proteinId}';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                path = path.replace('{proteinId}', parameters['proteinId'] + '');
+
+                if (parameters['proteinId'] === undefined) {
+                    reject(new Error('Missing required  parameter: proteinId'));
                     return;
                 }
 
