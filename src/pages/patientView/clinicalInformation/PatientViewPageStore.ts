@@ -481,7 +481,10 @@ export class PatientViewPageStore {
     }, []);
 
     readonly oncoKbAnnotatedGenes = remoteData({
-        invoke:()=>fetchOncoKbAnnotatedGenes()
+        invoke:()=>fetchOncoKbAnnotatedGenes(),
+        onError: (err: Error) => {
+            // fail silently, leave the error handling responsibility to the data consumer
+        }
     }, {});
 
     readonly oncoKbData = remoteData<IOncoKbData>({
@@ -494,7 +497,7 @@ export class PatientViewPageStore {
             this.studies
         ],
         invoke: () => {
-            return fetchOncoKbData(this.sampleIdToTumorType, this.oncoKbAnnotatedGenes.result!, this.mutationData, this.uncalledMutationData);
+            return fetchOncoKbData(this.sampleIdToTumorType, this.oncoKbAnnotatedGenes.result || {}, this.mutationData, this.uncalledMutationData);
         },
         onError: (err: Error) => {
             // fail silently, leave the error handling responsibility to the data consumer
@@ -541,7 +544,7 @@ export class PatientViewPageStore {
             this.clinicalDataForSamples,
             this.studies
         ],
-        invoke: async() => fetchCnaOncoKbData(this.sampleIdToTumorType, this.oncoKbAnnotatedGenes.result!, this.discreteCNAData),
+        invoke: async() => fetchCnaOncoKbData(this.sampleIdToTumorType, this.oncoKbAnnotatedGenes.result || {}, this.discreteCNAData),
         onError: (err: Error) => {
             // fail silently, leave the error handling responsibility to the data consumer
         }
