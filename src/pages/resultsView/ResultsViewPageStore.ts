@@ -542,7 +542,7 @@ export class ResultsViewPageStore {
                     map[gene.hugoGeneSymbol] = new MutationMapperStore(AppConfig,
                         gene,
                         this.samples,
-                        this.oncoKbAnnotatedGenes.result!,
+                        this.oncoKbAnnotatedGenes.result || {},
                         () => (this.mutationDataCache),
                         this.molecularProfileIdToMolecularProfile,
                         this.clinicalDataForSamples,
@@ -562,7 +562,10 @@ export class ResultsViewPageStore {
     }
 
     readonly oncoKbAnnotatedGenes = remoteData({
-        invoke:()=>fetchOncoKbAnnotatedGenes()
+        invoke:()=>fetchOncoKbAnnotatedGenes(),
+        onError: (err: Error) => {
+            // fail silently, leave the error handling responsibility to the data consumer
+        }
     }, {});
 
     readonly clinicalDataForSamples = remoteData<ClinicalData[]>({
