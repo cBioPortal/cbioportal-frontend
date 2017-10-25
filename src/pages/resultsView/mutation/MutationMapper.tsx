@@ -199,7 +199,7 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                                 civicGenes={this.props.store.civicGenes}
                                 civicVariants={this.props.store.civicVariants}
                                 enableOncoKb={this.props.config.showOncoKB}
-                                enableGenomeNexus={this.props.config.showGenomeNexus}
+                                enableFunctionalImpact={this.props.config.showGenomeNexus}
                                 enableHotspot={this.props.config.showHotspot}
                                 enableMyCancerGenome={this.props.config.showMyCancerGenome}
                                 enableCivic={this.props.config.showCivic}
