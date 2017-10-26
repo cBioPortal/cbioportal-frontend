@@ -183,7 +183,8 @@ export default class ProteinChainPanel extends React.Component<ProteinChainPanel
     }
 
     @computed get proteinLength() {
-        return Math.max(this.props.store.pfamGeneData.result.length, 1);
+        const proteinLength = (this.props.store.canonicalTranscript.result && this.props.store.canonicalTranscript.result.proteinLength) || 0;
+        return Math.max(proteinLength, 1);
     }
 
     @computed get tooltipVisible() {
