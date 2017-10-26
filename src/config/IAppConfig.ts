@@ -14,18 +14,19 @@ export interface IAppConfig {
     oncoKBApiUrl?: string;
     showGenomeNexus?: boolean;
     genomeNexusApiUrl?: string;
+    isoformOverrideSource?: string;
     enableDarwin?: boolean;
     appVersion?: string;
     historyType?: string;
-    skinBlurb?: string, // text on main page
-    skinDatasetHeader?: string, // header on dataset page
-    skinDatasetFooter?: string,
-    skinRightNavShowDatasets?: boolean,
-    skinRightNavShowExamples?: boolean, 
-    skinRightNavShowTestimonials?: boolean,
-    skinRightNavExamplesHTML?: string,
-    skinRightNavWhatsNewBlurb?: string,
-    querySetsOfGenes?: {"id": string, "genes":string[]}[]
+    skinBlurb?: string; // text on main page
+    skinDatasetHeader?: string; // header on dataset page
+    skinDatasetFooter?: string;
+    skinRightNavShowDatasets?: boolean;
+    skinRightNavShowExamples?: boolean;
+    skinRightNavShowTestimonials?: boolean;
+    skinRightNavExamplesHTML?: string;
+    skinRightNavWhatsNewBlurb?: string;
+    querySetsOfGenes?: {"id": string, "genes":string[]}[];
 }
 
 export type PriorityStudies = {

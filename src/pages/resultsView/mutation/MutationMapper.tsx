@@ -26,6 +26,7 @@ export interface IMutationMapperConfig {
     showMyCancerGenome?: boolean;
     showOncoKB?: boolean;
     showGenomeNexus?: boolean;
+    isoformOverrideSource?: string;
 }
 
 export interface IMutationMapperProps {
@@ -66,12 +67,32 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
     }
 
     @computed get geneSummary():JSX.Element {
+        const hugoGeneSymbol = this.props.store.gene.hugoGeneSymbol;
+        const uniprotId = this.props.store.uniprotId.result;
+        const transcriptId = this.props.store.canonicalTranscript.result &&
+            this.props.store.canonicalTranscript.result.transcriptId;
+
         return (
             <div style={{'paddingBottom':10}}>
-                <h4>{this.props.store.gene.hugoGeneSymbol}</h4>
-                {this.props.store.uniprotId.result && (
-                    <span>UniProt: <a href={`http://www.uniprot.org/uniprot/${this.props.store.uniprotId.result}`}>{this.props.store.uniprotId.result}</a></span>
-                )}
+                <h4>{hugoGeneSymbol}</h4>
+                <div className={this.props.store.uniprotId.result ? '' : 'invisible'}>
+                    <span>UniProt: </span>
+                    <a
+                        href={`http://www.uniprot.org/uniprot/${uniprotId}`}
+                        target="_blank"
+                    >
+                        {uniprotId}
+                    </a>
+                </div>
+                <div className={this.props.store.canonicalTranscript.result ? '' : 'invisible'}>
+                    <span>Transcript: </span>
+                    <a
+                        href={`http://grch37.ensembl.org/homo_sapiens/Transcript/Summary?t=${transcriptId}`}
+                        target="_blank"
+                    >
+                        {transcriptId}
+                    </a>
+                </div>
             </div>
         );
     }
@@ -118,8 +139,8 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                 {
                     (!this.props.store.mutationData.isPending) && (
                     <div>
-                        <LoadingIndicator isLoading={this.props.store.pfamGeneData.isPending} />
-                        { (!this.props.store.pfamGeneData.isPending) && (
+                        <LoadingIndicator isLoading={this.props.store.pfamDomainData.isPending} />
+                        { (!this.props.store.pfamDomainData.isPending) && (
                         <div style={{ display:'flex' }}>
                             <div className="borderedChart" style={{ marginRight:10 }}>
 
