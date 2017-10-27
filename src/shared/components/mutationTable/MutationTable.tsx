@@ -71,6 +71,7 @@ export interface IMutationTableProps {
     initialItemsPerPage?:number;
     itemsLabel?:string;
     itemsLabelPlural?:string;
+    userEmailAddress?:string;
     initialSortColumn?:string;
     initialSortDirection?:SortDirection;
     paginationProps?:IPaginationControlsProps;
@@ -427,7 +428,8 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 enableCivic: this.props.enableCivic as boolean,
                 enableOncoKb: this.props.enableOncoKb as boolean,
                 enableMyCancerGenome: this.props.enableMyCancerGenome as boolean,
-                enableHotspot: this.props.enableHotspot as boolean
+                enableHotspot: this.props.enableHotspot as boolean,
+                userEmailAddress: this.props.userEmailAddress
             })),
             sortBy:(d:Mutation[])=>{
                 return AnnotationColumnFormatter.sortValue(d,
