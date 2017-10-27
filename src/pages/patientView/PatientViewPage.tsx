@@ -358,6 +358,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         oncoKbAnnotatedGenes={patientViewPageStore.oncoKbAnnotatedGenes.result}
                                         civicGenes={patientViewPageStore.civicGenes}
                                         civicVariants={patientViewPageStore.civicVariants}
+                                        userEmailAddress={AppConfig.userEmailAddress}
                                         enableOncoKb={AppConfig.showOncoKB}
                                         enableFunctionalImpact={AppConfig.showGenomeNexus}
                                         enableHotspot={AppConfig.showHotspot}
@@ -381,6 +382,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 oncoKbAnnotatedGenes={patientViewPageStore.oncoKbAnnotatedGenes.result}
                                 enableOncoKb={AppConfig.showOncoKB}
                                 enableCivic={AppConfig.showCivic}
+                                userEmailAddress={AppConfig.userEmailAddress}
                                 pubMedCache={patientViewPageStore.pubMedCache}
                                 data={patientViewPageStore.mergedDiscreteCNAData}
                                 copyNumberCountCache={patientViewPageStore.copyNumberCountCache}
