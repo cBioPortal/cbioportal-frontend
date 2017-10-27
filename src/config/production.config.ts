@@ -23,6 +23,7 @@ const config:IAppConfig = {
     skinRightNavShowTestimonials: (window as any).skinRightNavShowTestimonials,
     skinRightNavExamplesHTML: (window as any).skinRightNavExamplesHTML,
     skinRightNavWhatsNewBlurb: (window as any).skinRightNavWhatsNewBlurb,
+    userEmailAddress: (window as any).userEmailAddress,
     querySetsOfGenes: (window as any).querySetsOfGenes
 };
 
