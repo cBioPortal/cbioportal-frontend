@@ -14,7 +14,11 @@ declare module "oncoprintjs"
     export type TrackGroupIndex = number;
     export type TrackSortDirection = 0|1|-1;
     export type TrackSortComparator<D> = (d1:D, d2:D)=>(0|1|2|-1|-2);
-    export type TrackTooltipFn<D> = (cell_datum:D)=>HTMLElement|string;
+    export type TrackTooltipFn<D> = (cell_datum:D)=>HTMLElement|string|any;
+    export type TrackSortSpecification<D> = TrackSortComparator<D> | {
+        mandatory:TrackSortComparator<D>;
+        preferred:TrackSortComparator<D>;
+    };
 
     export type RuleSetParams = ICategoricalRuleSetParams |
                                 IGradientRuleSetParams |
@@ -37,7 +41,7 @@ declare module "oncoprintjs"
     export interface IGradientRuleSetParams extends IGeneralRuleSetParams {
         type: "gradient"
         // either `colormap_name` or `colors` needs to be present
-        colors?: string[]; // hex, rgb, rgba
+        colors?: string[]|number[][]; // hex, rgb, rgba | [r,g,b,a][]
         colormap_name?: string; // name of a colormap found in src/js/heatmapcolors.js
         null_color?: string;
 
@@ -93,10 +97,7 @@ declare module "oncoprintjs"
         label?:string;
         description?:string;
         track_info?:string;
-        sortCmpFn?:TrackSortComparator<D> | {
-            mandatory:TrackSortComparator<D>;
-            preferred:TrackSortComparator<D>;
-        };
+        sortCmpFn?:TrackSortSpecification<D>;
         sort_direction_changeable?:boolean;
         init_sort_direction?:TrackSortDirection;
         data?:D[];
@@ -118,6 +119,7 @@ declare module "oncoprintjs"
         removeAllTracks:()=>void;
         setHorzZoomToFit:(ids:string[])=>void;
         updateHorzZoomToFitIds:(ids:string[])=>void;
+        getMinHorzZoom:()=>number;
         getHorzZoom:()=>number;
         setHorzZoom:(z:number, still_keep_horz_zoomed_to_fit?:boolean)=>number;
         getVertZoom:()=>number;
@@ -132,10 +134,10 @@ declare module "oncoprintjs"
         setTrackData:(track_id:TrackId, data:D[], data_id_key:string)=>void;
         setTrackGroupSortPriority:(priority:TrackGroupIndex[])=>void;
         setTrackSortDirection:(track_id:TrackId, dir:TrackSortDirection)=>TrackSortDirection;
-        setTrackSortComparator:(track_id:TrackId, sortCmpFn:TrackSortComparator<D>)=>void;
+        setTrackSortComparator:(track_id:TrackId, sortCmpFn:TrackSortSpecification<any>)=>void;
         getTrackSortDirection:(track_id:TrackId)=>TrackSortDirection;
         setTrackInfo:(track_id:TrackId, msg:string)=>void;
-        setTrackTooltipFn:(track_id:TrackId, tooltipFn:TrackTooltipFn<D>)=>void;
+        setTrackTooltipFn:(track_id:TrackId, tooltipFn:TrackTooltipFn<any>)=>void;
         sort:()=>void;
         shareRuleSet:(source_track_id:TrackId, target_track_id:TrackId)=>void;
         setRuleSet:(track_id:TrackId, rule_set_params:RuleSetParams)=>void;
