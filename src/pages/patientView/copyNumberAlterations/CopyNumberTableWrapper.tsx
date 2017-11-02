@@ -39,6 +39,7 @@ type ICopyNumberTableWrapperProps = {
     copyNumberCountCache?:CopyNumberCountCache;
     mrnaExprRankCache?:MrnaExprRankCache;
     gisticData:IGisticData;
+    userEmailAddress?:string;
     mrnaExprRankMolecularProfileId?:string;
     status:"loading"|"available"|"unavailable";
 };
@@ -102,7 +103,8 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
                 civicVariants: this.props.cnaCivicVariants,
                 enableCivic: this.props.enableCivic as boolean,
                 enableMyCancerGenome: false,
-                enableHotspot: false
+                enableHotspot: false,
+                userEmailAddress: this.props.userEmailAddress
             })),
             sortBy:(d:DiscreteCopyNumberData[])=>{
                 return AnnotationColumnFormatter.sortValue(d,

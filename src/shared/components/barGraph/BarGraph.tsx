@@ -46,8 +46,10 @@ export default class BarGraph extends React.Component<IBarGraphProps, {}> {
         };
     }
 
-    lightenDarkenColor(col:string, amt:number) {
-        const num = parseInt(col,16);
+    lightenDarkenColor(color:string, amt:number):string {
+        const hexColor = convertCssColorNameToHex(color).slice(1);
+
+        const num = parseInt(hexColor,16);
 
         let r = (num >> 16) + amt;
 
@@ -63,6 +65,11 @@ export default class BarGraph extends React.Component<IBarGraphProps, {}> {
 
         if (g > 255) g = 255;
         else if (g < 0) g = 0;
+
+        const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        if (luma >= 254 && color !== 'White' && amt > 1) {
+            return this.lightenDarkenColor(color, amt/2);
+        }
 
         return "#" + (g | (b << 8) | (r << 16)).toString(16);
     }
@@ -94,7 +101,7 @@ export default class BarGraph extends React.Component<IBarGraphProps, {}> {
                     lightenColorConstant = 18;
                 } else if (cancerColor === "Yellow") {
                     lightenColorConstant = 11;
-                } else if (cancerColor === "LightBlue" || cancerColor === "LightSkyBlue" || cancerColor === "PeachPuff" || cancerColor === "LightYellow" ) {
+                } else if (_.includes(["LightBlue", "LightSkyBlue", "PeachPuff", "LightYellow"], cancerColor)) {
                     lightenColorConstant = 0;
                 } else if (cancerColor === "Teal") {
                     lightenColorConstant = 1;
@@ -103,10 +110,10 @@ export default class BarGraph extends React.Component<IBarGraphProps, {}> {
                 } else if (cancerColor === "Black") {
                     lightenColorConstant = 6;
                 }
-                const color = this.lightenDarkenColor(convertCssColorNameToHex(cancerColor).slice(1), (j + lightenColorConstant)/max * 90);
+                const color = this.lightenDarkenColor(cancerColor, (j + lightenColorConstant)/max * 90);
                 return {
                     studyId,
-                    borderColor: '#F1F6FE',
+                    borderColor: _.includes(['Gainsboro', 'White', 'LightYellow'], cancerColor) ? '#dddddd' : '#F1F6FE',
                     backgroundColor: color,
                     borderWidth: 1,
                     label: name,
