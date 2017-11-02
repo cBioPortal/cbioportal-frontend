@@ -17,6 +17,7 @@ import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import OncoKbTooltip from "./OncoKbTooltip";
 import OncokbPubMedCache from "shared/cache/PubMedCache";
 import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
+import AppConfig from "appConfig";
 
 export interface IOncoKbProps {
     status: "pending" | "error" | "complete";
@@ -26,6 +27,7 @@ export interface IOncoKbProps {
     pubMedCache?: OncokbPubMedCache;
     geneNotExist:boolean;
     hugoGeneSymbol?:string;
+    userEmailAddress?:string;
 }
 
 export function hideArrow(tooltipEl: any) {
@@ -154,7 +156,7 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
         const url = "https://docs.google.com/forms/d/1lt6TtecxHrhIE06gAKVF_JW4zKFoowNFzxn6PJv4g7A/viewform";
         const geneParam = `entry.1744186665=${hugoSymbol || ''}`;
         const alterationParam = `entry.1671960263=${alteration || ''}`;
-        const userParam = `entry.1381123986=`; // TODO get username from session?
+        const userParam = `entry.1381123986=${this.props.userEmailAddress || ''}`;
         const uriParam = `entry.1083850662=${encodeURIComponent(window.location.href)}`;
 
         return (
