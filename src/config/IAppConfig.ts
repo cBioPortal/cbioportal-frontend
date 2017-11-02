@@ -1,8 +1,10 @@
 export interface IAppConfig {
     apiRoot?: string;
+    frontendUrl?: string;
     genomespaceEnabled: boolean;
     cancerStudySearchPresets: string[]; // in query the example searches
     priorityStudies: PriorityStudies;
+    maxTreeDepth: number;
     //priorityStudies: {
     //    'Shared institutional Data Sets': ['mskimpact', 'cellline_mskcc'],
     //    'Priority Studies': ['blca_tcga_pub', 'coadread_tcga_pub', 'brca_tcga_pub2015'], // for demo
