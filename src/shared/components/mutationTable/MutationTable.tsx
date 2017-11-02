@@ -445,6 +445,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
         this._columns[MutationTableColumnType.CANCER_TYPE] = {
             name: "Cancer Type",
             render: (d:Mutation[]) => CancerTypeColumnFormatter.render(d, this.props.sampleIdToTumorType),
+            download: (d:Mutation[]) => CancerTypeColumnFormatter.download(d, this.props.sampleIdToTumorType),
             sortBy: (d:Mutation[]) => CancerTypeColumnFormatter.sortBy(d, this.props.sampleIdToTumorType),
             filter: (d:Mutation[], filterString:string, filterStringUpper:string) =>
                 CancerTypeColumnFormatter.filter(d, filterStringUpper, this.props.sampleIdToTumorType),
