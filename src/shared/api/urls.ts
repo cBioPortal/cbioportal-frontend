@@ -64,34 +64,29 @@ export function getMutationAlignerUrl() {
 export function getOncoQueryDocUrl() {
     return cbioUrl('onco_query_lang_desc.jsp');
 }
-export function getOncoKbApiUrl() {
-    let url = AppConfig.oncoKBApiUrl;
-
-    if (typeof url === 'string') {
-        // we need to support legacy configuration values
-        url = url.replace(/^http[s]?:\/\//,''); // get rid of protocol
-        url = url.replace(/\/$/,""); // get rid of trailing slashes
-        return cbioUrl(`proxy/${url}`)
-    } else {
-        return undefined;
-    }
-
-}
-export function getGenomeNexusApiUrl() {
-    let url = AppConfig.genomeNexusApiUrl;
+function cbioUrlProxyForLegacyConfig(url:any) {
     if (typeof url === 'string') {
         // use url if https, otherwise use proxy
         if (url.startsWith('https://')) {
-            return url
+            return url;
         } else {
             // we need to support legacy configuration values
             url = url.replace(/^http[s]?:\/\//,''); // get rid of protocol
             url = url.replace(/\/$/,""); // get rid of trailing slashes
-            return cbioUrl(`proxy/${url}`)
+            return cbioUrl(`proxy/${url}`);
         }
     } else {
         return undefined;
     }
+}
+export function getOncoKbApiUrl() {
+    return cbioUrlProxyForLegacyConfig(AppConfig.oncoKBApiUrl);
+}
+export function getGenomeNexusApiUrl() {
+    return cbioUrlProxyForLegacyConfig(AppConfig.genomeNexusApiUrl);
+}
+export function getGenomeDrivenDiagnosisUrl() {
+    return cbioUrlProxyForLegacyConfig(AppConfig.genomeDrivenDiagnosisUrl);
 }
 export function getPdbAnnotationApiUrl() {
     return 'https://cbioportal.mskcc.org/pdb-annotation';

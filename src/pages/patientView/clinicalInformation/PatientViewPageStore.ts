@@ -16,7 +16,7 @@ import {labelMobxPromises, cached} from "mobxpromise";
 import MrnaExprRankCache from 'shared/cache/MrnaExprRankCache';
 import request from 'superagent';
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
-import {getTissueImageCheckUrl, getDarwinUrl} from "../../../shared/api/urls";
+import {getTissueImageCheckUrl, getDarwinUrl, getGenomeDrivenDiagnosisUrl} from "../../../shared/api/urls";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import GenomeNexusEnrichmentCache from "shared/cache/GenomeNexusEnrichment";
 import PubMedCache from "shared/cache/PubMedCache";
@@ -248,6 +248,32 @@ export class PatientViewPageStore {
             } else {
                 return [];
             }
+        },
+        onError: (err: Error) => {
+            // fail silently
+        }
+
+    }, []);
+
+    readonly genomeDrivenDiagnosis = remoteData({
+        await: () => [
+            this.samples
+        ],
+        invoke: async() => {
+            let genomeDrivenDiagnosisUrl = getGenomeDrivenDiagnosisUrl();
+
+            if (genomeDrivenDiagnosisUrl) {
+                let resp: any = await Promise.all(this.samples.result.map(s => request.get(`${genomeDrivenDiagnosisUrl}/${s.sampleId}`)));
+
+                const parsedResp: any = _.keyBy(resp.map((r:any) => JSON.parse(r.text)), 'Tumor_Sample_Barcode');
+                // remove undefined keys
+                delete parsedResp["undefined"];
+
+                return parsedResp;
+            } else {
+                return [];
+            }
+
         },
         onError: (err: Error) => {
             // fail silently
@@ -621,6 +647,7 @@ export class PatientViewPageStore {
         return mergeMutationsIncludingUncalled(this.mutationData, this.uncalledMutationData);
     }
 
+    /* Get CANCER_TYPE_DETAILED of sample, use study's cancer type otherwise */
     @computed get uniqueSampleKeyToTumorType(): {[sampleId: string]: string} {
         return generateUniqueSampleKeyToTumorTypeMap(this.clinicalDataForSamples,
             this.studiesForSamplesWithoutCancerTypeClinicalData,

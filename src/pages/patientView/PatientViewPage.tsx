@@ -12,6 +12,7 @@ import SampleManager from './sampleManager';
 import SelectCallback = ReactBootstrap.SelectCallback;
 import {ThreeBounce} from 'better-react-spinkit';
 import PatientHeader from './patientHeader/PatientHeader';
+import GenomeDrivenDiagnosis from './patientHeader/GenomeDrivenDiagnosis';
 import {PaginationControls} from "../../shared/components/paginationControls/PaginationControls";
 import { PatientViewPageStore } from './clinicalInformation/PatientViewPageStore';
 import ClinicalInformationPatientTable from "./clinicalInformation/ClinicalInformationPatientTable";
@@ -200,6 +201,18 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     sampleManager.clinicalDataLegacyCleanAndDerived[sample.id] &&
                     sampleManager.clinicalDataLegacyCleanAndDerived[sample.id].DERIVED_NORMALIZED_CASE_TYPE === 'Xenograft'
                 );
+                // check whether the sample has a Genomic Driven Diagnosis
+                // prediction
+                const hasGDDPred:boolean = (
+                    AppConfig.genomeDrivenDiagnosisUrl &&
+                    AppConfig.genomeDrivenDiagnosisUrl.length > 0 &&
+                    patientViewPageStore.genomeDrivenDiagnosis.isComplete &&
+                    patientViewPageStore.genomeDrivenDiagnosis.result &&
+                    patientViewPageStore.genomeDrivenDiagnosis.result[sample.id] &&
+                    _.every(["Pred1","Pred2","Pred3","Conf1","Conf2","Conf3"]
+                        .map(key => patientViewPageStore.genomeDrivenDiagnosis.result[sample.id].hasOwnProperty(key))
+                    )
+                );
                 return (
                     <div className="patientSample">
                         <span className='clinical-spans'>
@@ -223,6 +236,10 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 )
                             }
                         </span>
+                        {hasGDDPred &&
+                            <GenomeDrivenDiagnosis prediction={patientViewPageStore.genomeDrivenDiagnosis.result[sample.id]}
+                             />
+                        }
                     </div>
                 );
             });

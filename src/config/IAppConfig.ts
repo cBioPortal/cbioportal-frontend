@@ -15,6 +15,7 @@ export interface IAppConfig {
     showOncoKB?: boolean;
     showTwitter?: boolean;
     oncoKBApiUrl?: string;
+    genomeDrivenDiagnosisUrl?: string;
     showGenomeNexus?: boolean;
     genomeNexusApiUrl?: string;
     studiesWithGermlineConsentedSamples?:string[];
