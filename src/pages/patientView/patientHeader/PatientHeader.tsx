@@ -29,7 +29,7 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
     }
 
     private getDarwinUrl(darwinUrl: string | null | undefined) {
-        // use JSP injected Darwin URL window.darwinAccessUrl
+        // use JSP injected Darwin URL window.frontendConfig.darwinAccessUrl
         // TODO: use internal API service instead, once this exists
         if (darwinUrl !== undefined && darwinUrl !== null && darwinUrl !== '') {
             // add link to darwin
