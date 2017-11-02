@@ -62,6 +62,11 @@ export default class CancerTypeColumnFormatter {
         return _.keys(tumorTypeToSampleId).length > 1;
     }
 
+    public static download(d: Mutation[], sampleIdToTumorType?: {[sampleId: string]: string})
+    {
+        return CancerTypeColumnFormatter.getData(d, sampleIdToTumorType) || "";
+    }
+
     public static render(d: Mutation[], sampleIdToTumorType?: {[sampleId: string]: string})
     {
         const data = CancerTypeColumnFormatter.getData(d, sampleIdToTumorType);
