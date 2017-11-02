@@ -253,7 +253,7 @@ export class QueryStore
 	@observable clickAgainToDeselectSingle:boolean = true;
 	@observable searchExampleMessage = "";
 
-	@observable private _maxTreeDepth:number = (window as any).maxTreeDepth;
+	@observable private _maxTreeDepth:number = AppConfig.maxTreeDepth;
 	@computed get maxTreeDepth()
 	{
 		return (this.forDownloadTab && this._maxTreeDepth > 0) ? 1 : this._maxTreeDepth;
