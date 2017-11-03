@@ -11,7 +11,6 @@ import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
 import TumorColumnFormatter from "./column/TumorColumnFormatter";
 import {isUncalled} from "shared/lib/MutationUtils";
 import TumorAlleleFreqColumnFormatter from "shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter";
-import AppConfig from 'appConfig';
 
 export interface IPatientViewMutationTableProps extends IMutationTableProps {
     sampleManager:SampleManager | null;
@@ -50,13 +49,11 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             MutationTableColumnType.CHROMOSOME,
             MutationTableColumnType.PROTEIN_CHANGE,
             MutationTableColumnType.MUTATION_TYPE,
-        ].concat(
-            AppConfig.showGenomeNexus? [MutationTableColumnType.FUNCTIONAL_IMPACT] : []
-        ).concat([
+            MutationTableColumnType.FUNCTIONAL_IMPACT,
             MutationTableColumnType.COSMIC,
             MutationTableColumnType.TUMOR_ALLELE_FREQ,
             MutationTableColumnType.TUMORS
-        ])
+        ]
     };
 
     protected getSamples():string[] {
@@ -116,9 +113,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         this._columns[MutationTableColumnType.GENE].order = 20;
         this._columns[MutationTableColumnType.PROTEIN_CHANGE].order = 30;
         this._columns[MutationTableColumnType.ANNOTATION].order = 35;
-        if (AppConfig.showGenomeNexus) {
-            this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT].order = 36;
-        }
+        this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT].order = 38;
         this._columns[MutationTableColumnType.CHROMOSOME].order = 40;
         this._columns[MutationTableColumnType.START_POS].order = 50;
         this._columns[MutationTableColumnType.END_POS].order = 60;

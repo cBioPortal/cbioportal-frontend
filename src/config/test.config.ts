@@ -3,7 +3,7 @@ import {IAppConfig} from "./IAppConfig";
 const config:IAppConfig = {
     //host: 'cbioportal-rc.herokuapp.com',
     genomespaceEnabled: false,
-    cancerStudySearchPresets: [
+    skinExampleStudyQueries: [
         'tcga',
         'tcga -provisional',
         'tcga -moratorium',
@@ -18,6 +18,7 @@ const config:IAppConfig = {
         'Shared institutional Data Sets': ['mskimpact', 'cellline_mskcc'],
         'Priority Studies': ['blca_tcga_pub', 'coadread_tcga_pub', 'brca_tcga_pub2015'], // for demo
     },
+    maxTreeDepth: 3
 };
 
 export default config;

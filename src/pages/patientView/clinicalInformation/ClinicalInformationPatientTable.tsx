@@ -3,6 +3,7 @@ import {ClinicalData} from "../../../shared/api/generated/CBioPortalAPI";
 import LazyMobXTable from "shared/components/lazyMobXTable/LazyMobXTable";
 
 import styles from './style/patientTable.module.scss';
+import {SHOW_ALL_PAGE_SIZE} from "../../../shared/components/paginationControls/PaginationControls";
 
 export interface IClinicalInformationPatientTableProps {
     data: ClinicalData[];
@@ -47,18 +48,24 @@ export default class ClinicalInformationPatientTable extends React.Component<ICl
                   columns={[
                       {   name:'Attribute',
                           render:(data)=><span>{data.attribute}</span>,
+                          download: (data) => data.attribute,
                           filter: (data:IPatientRow, filterString:string, filterStringUpper:string) =>
-                            data.attribute.toString().toUpperCase().indexOf(filterStringUpper) > -1
+                            data.attribute.toString().toUpperCase().indexOf(filterStringUpper) > -1,
+                          sortBy: (data)=>data.attribute
                       },
                       {
                           name:'Value',
                           render: (data)=><span>{this.getDisplayValue(data)}</span>,
+                          download: (data) => this.getDisplayValue(data),
                           filter: (data:IPatientRow, filterString:string, filterStringUpper:string) =>
                             data.value.toString().toUpperCase().indexOf(filterStringUpper) > -1
                       }]}
                   showPagination={false}
                   showColumnVisibility={false}
                   className={styles.patientTable}
+                  initialItemsPerPage={SHOW_ALL_PAGE_SIZE}
+                  initialSortColumn="Attribute"
+                  initialSortDirection="asc"
                   showFilter={(this.props.showFilter === false) ? false : true }
                   showCopyDownload={(this.props.showCopyDownload === false) ? false : true }
             />

@@ -50,7 +50,7 @@ export default class Lollipop extends React.Component<LollipopProps, {}> {
                     fill="#2E3436"
                     style={{
                         fontSize: "10px",
-                        fontFamily: "sans-serif",
+                        fontFamily: "arial",
                     }}
                     textAnchor="middle"
                     x={this.props.x}

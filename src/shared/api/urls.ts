@@ -1,8 +1,9 @@
 import {default as URL, QueryParams} from "url";
+import AppConfig from "appConfig";
 import formSubmit from "shared/lib/formSubmit";
 
 export function getHost(){
-    return (window as any).__API_ROOT__;
+    return AppConfig.apiRoot;
 }
 
 export type BuildUrlParams = {pathname:string, query?:QueryParams, hash?:string};
@@ -43,7 +44,7 @@ export function openStudySummaryFormSubmit(studyIds: string | ReadonlyArray<stri
     formSubmit(params.pathname, params.query, "_blank", method);
 }
 export function getPubMedUrl(pmid:string) {
-    return `http://www.ncbi.nlm.nih.gov/pubmed/${pmid}`;
+    return `https://www.ncbi.nlm.nih.gov/pubmed/${pmid}`;
 }
 export function getMyGeneUrl(entrezGeneId: number) {
     return `https://mygene.info/v3/gene/${entrezGeneId}?fields=uniprot`;
@@ -51,8 +52,8 @@ export function getMyGeneUrl(entrezGeneId: number) {
 export function getUniprotIdUrl(swissProtAccession: string) {
     return cbioUrl(`proxy/uniprot.org/uniprot/?query=accession:${swissProtAccession}&format=tab&columns=entry+name`);
 }
-export function getPfamGeneDataUrl(swissProtAccession: string) {
-    return cbioUrl(`proxy/pfam.xfam.org/protein/${swissProtAccession}/graphic`);
+export function getMutationAlignerUrl() {
+    return cbioUrl(`getMutationAligner.json`);
 }
 export function getOncoQueryDocUrl() {
     return cbioUrl('onco_query_lang_desc.jsp');
@@ -64,7 +65,7 @@ export function getHotspots3DApiUrl() {
     return cbioUrl('proxy/3dhotspots.org/3d');
 }
 export function getOncoKbApiUrl() {
-    let url = (window as any).oncoKBApiUrl;
+    let url = AppConfig.oncoKBApiUrl;
 
     if (typeof url === 'string') {
         // we need to support legacy configuration values
@@ -77,7 +78,7 @@ export function getOncoKbApiUrl() {
 
 }
 export function getGenomeNexusApiUrl() {
-    let url = (window as any).genomeNexusApiUrl;
+    let url = AppConfig.genomeNexusApiUrl;
     if (typeof url === 'string') {
         // we need to support legacy configuration values
         url = url.replace(/^http[s]?:\/\//,''); // get rid of protocol

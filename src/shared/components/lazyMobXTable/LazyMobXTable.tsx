@@ -55,6 +55,7 @@ type LazyMobXTableProps<T> = {
     columnVisibilityProps?:IColumnVisibilityControlsProps;
     highlightColor?:"yellow"|"bluegray";
     pageToHighlight?:boolean;
+    showCountHeader?:boolean;
 };
 
 function compareValues<U extends number|string>(a:U|null, b:U|null, asc:boolean):number {
@@ -393,7 +394,6 @@ class LazyMobXTableStore<T> {
     {
         let firstVisibleItemDisp;
         let lastVisibleItemDisp;
-        let itemsLabel:string = "";
 
         if (this.rows.length === 0) {
             firstVisibleItemDisp = 0;
@@ -410,21 +410,14 @@ class LazyMobXTableStore<T> {
             );
         }
 
-        if (this._itemsLabel) {
-            // use itemsLabel for plural in case no itemsLabelPlural provided
-            if (!this._itemsLabelPlural || this.displayData.length === 1) {
-                itemsLabel = this._itemsLabel;
-            }
-            else {
-                itemsLabel = this._itemsLabelPlural;
-            }
-
+        let itemsLabel:string = this.itemsLabel;
+        if (itemsLabel.length) {
             // we need to prepend the space here instead of within the actual return value
             // to avoid unnecessary white-space at the end of the string
             itemsLabel = ` ${itemsLabel}`;
         }
 
-        return `${firstVisibleItemDisp}-${lastVisibleItemDisp} of ${this.displayData.length}${itemsLabel}`;
+        return `Showing ${firstVisibleItemDisp}-${lastVisibleItemDisp} of ${this.displayData.length}${itemsLabel}`;
     }
 
     @computed get tds():JSX.Element[][] {
@@ -480,6 +473,20 @@ class LazyMobXTableStore<T> {
             }
             return match;
         });
+    }
+
+    @computed get itemsLabel() {
+        if (this._itemsLabel) {
+            // use itemsLabel for plural in case no itemsLabelPlural provided
+            if (!this._itemsLabelPlural || this.displayData.length === 1) {
+                return this._itemsLabel;
+            }
+            else {
+                return this._itemsLabelPlural;
+            }
+        } else {
+            return "";
+        }
     }
 
     @action setProps(props:LazyMobXTableProps<T>) {
@@ -567,7 +574,8 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
         showPagination: true,
         showColumnVisibility: true,
         highlightColor: "yellow",
-		showPaginationAtTop: false
+		showPaginationAtTop: false,
+        showCountHeader: false
     };
 
     public getDownloadData(): string
@@ -657,7 +665,8 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
 				previousPageDisabled:this.store.page === 0,
 				nextPageDisabled:this.store.page === this.store.maxPage,
 				textBeforeButtons:this.store.paginationStatusText,
-                groupButtons: false
+                groupButtons: false,
+                bsStyle:"primary"
 			};
 			// override with given paginationProps if they exist
 			if (this.props.paginationProps) {
@@ -678,8 +687,17 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
         // }
     }
 
-    private getTopToolbar() {
+    private get countHeader() {
         return (
+            <span style={{float:"left", color:"black", fontSize: "16px", fontWeight: "bold"}}>
+                {this.store.displayData.length} {this.store.itemsLabel} (page {this.store.page + 1} of {this.store.maxPage + 1})
+            </span>
+        );
+    }
+
+    private getTopToolbar() {
+        return (<div>
+            { this.props.showCountHeader && this.countHeader }
             <ButtonToolbar style={{marginLeft:0}} className="tableMainToolbar">
                 { this.props.showFilter ? (
                     <div className={`pull-right form-group has-feedback input-group-sm tableFilter`} style={{ display:'inline-block', marginLeft: 5}}>
@@ -698,7 +716,7 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
                     <CopyDownloadControls
                         className="pull-right"
                         downloadData={this.getDownloadData}
-                        downloadFilename="table.csv"
+                        downloadFilename="table.tsv"
                         {...this.props.copyDownloadProps}
                     />) : ""}
                 {this.props.showPagination && this.props.showPaginationAtTop ? (
@@ -707,6 +725,7 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
                     </Observer>
                 ) : null}
             </ButtonToolbar>
+            </div>
         );
     }
 
