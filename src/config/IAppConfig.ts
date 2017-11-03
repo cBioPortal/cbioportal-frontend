@@ -2,7 +2,7 @@ export interface IAppConfig {
     apiRoot?: string;
     frontendUrl?: string;
     genomespaceEnabled: boolean;
-    cancerStudySearchPresets: string[]; // in query the example searches
+    skinExampleStudyQueries: string[]; // in query the example searches
     priorityStudies: PriorityStudies;
     maxTreeDepth: number;
     //priorityStudies: {
@@ -28,6 +28,7 @@ export interface IAppConfig {
     skinRightNavShowTestimonials?: boolean;
     skinRightNavExamplesHTML?: string;
     skinRightNavWhatsNewBlurb?: string;
+    userEmailAddress?: string;
     querySetsOfGenes?: {"id": string, "genes":string[]}[];
 }
 
