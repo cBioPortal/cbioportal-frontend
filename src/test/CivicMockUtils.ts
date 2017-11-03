@@ -39,7 +39,7 @@ export function getCivicGenes(): ICivicGene
 export function getCnaCivicVariants(): ICivicVariant
 {
     return {
-        "RAF1": { "AMPLIFICATION": {
+        "RAF1": {"AMPLIFICATION": {
                                    id: 591,
                                    name: "AMPLIFICATION",
                                    geneId: 4767,
@@ -73,7 +73,7 @@ export function getMutationCivicVariants(): ICivicVariant
 
 export function getCnaData(): Array<DiscreteCopyNumberData>
 {
-    return [{alteration: -2, entrezGeneId: 5894, gene: {chromosome: "3", cytoband:"3p25", entrezGeneId: 5894, hugoGeneSymbol: "RAF1", length: 7847, 
+    return [{alteration: 2, entrezGeneId: 5894, gene: {chromosome: "3", cytoband:"3p25", entrezGeneId: 5894, hugoGeneSymbol: "RAF1", length: 7847, 
            type: "protein-coding"}, molecularProfileId: "ccle_gistic", sampleId: "NCIH508_LARGE_INTESTINE", patientId:"PATIENT1", studyId: "STUDY1",
            uniquePatientKey: "", uniqueSampleKey: ""}];
 }
@@ -81,14 +81,15 @@ export function getCnaData(): Array<DiscreteCopyNumberData>
 export function getMutationData(): Mutation
 {
     return {
-           center: "broad.mit.edu", endPosition: 178936091, entrezGeneId: 5290, fisValue: 1.4013e-45, functionalImpactScore:"", 
-           gene: {chromosome: "3", cytoband: "3q26.3", entrezGeneId: 5290, hugoGeneSymbol: "PIK3CA", length: 9411, type: "protein-coding"},
-           molecularProfileId: "ccle_mutations", keyword: "PIK3CA E545 missense", linkMsa:"", linkPdb: "", linkXvar: "", mutationStatus: "NA",
-           mutationType: "Missense_Mutation", ncbiBuild: "GRCh37", normalAltCount: -1, normalRefCount: -1, proteinChange: "E545K", proteinPosEnd: 545, 
-           proteinPosStart: 545, referenceAllele: "G", refseqMrnaId: "NM_006218.2", sampleId: "NCIH508_LARGE_INTESTINE", patientId: "PATIENT1",
-           studyId: "STUDY1", uniquePatientKey: "", uniqueSampleKey: "", startPosition: 178936091, tumorAltCount: -1, tumorRefCount: -1,
-           validationStatus: "NA", variantAllele: "A", variantType: "SNP", aminoAcidChange: ""
-           };
+       center: "broad.mit.edu", endPosition: 178936091, entrezGeneId: 5290, fisValue: 1.4013e-45, functionalImpactScore:"", 
+       gene: {chromosome: "3", cytoband: "3q26.3", entrezGeneId: 5290, hugoGeneSymbol: "PIK3CA", length: 9411, type: "protein-coding"},
+       molecularProfileId: "ccle_mutations", keyword: "PIK3CA E545 missense", linkMsa:"", linkPdb: "", linkXvar: "", mutationStatus: "NA",
+       mutationType: "Missense_Mutation", ncbiBuild: "GRCh37", normalAltCount: -1, normalRefCount: -1, proteinChange: "E545K", proteinPosEnd: 545, 
+       proteinPosStart: 545, referenceAllele: "G", refseqMrnaId: "NM_006218.2", sampleId: "NCIH508_LARGE_INTESTINE", patientId: "PATIENT1",
+       studyId: "STUDY1", uniquePatientKey: "", uniqueSampleKey: "", startPosition: 178936091, tumorAltCount: -1, tumorRefCount: -1,
+       validationStatus: "NA", variantAllele: "A", variantType: "SNP", aminoAcidChange: "", driverFilter: "", driverFilterAnnotation: "", driverTiersFilter: "",
+       driverTiersFilterAnnotation: ""
+   };
 }
 
 export function getExpectedCivicEntry(): ICivicEntry
@@ -115,7 +116,7 @@ export function getExpectedCnaCivicEntry(): ICivicEntry
            name: "RAF1",
            description: "",
            url: "https://civic.genome.wustl.edu/#/events/genes/4767/summary",
-           variants: {"AMPLIFICATION": {
+           variants: {"RAF1": {
                                        id: 591,
                                        name: "AMPLIFICATION",
                                        geneId: 4767,

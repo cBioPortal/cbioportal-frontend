@@ -6,7 +6,7 @@ import {
     DiscreteCopyNumberFilter, ClinicalData, Sample, CancerStudy, CopyNumberCountIdentifier,
     ClinicalDataSingleStudyFilter, ClinicalDataMultiStudyFilter
 } from "shared/api/generated/CBioPortalAPI";
-import {getMyGeneUrl, getPfamGeneDataUrl, getUniprotIdUrl} from "shared/api/urls";
+import {getMyGeneUrl, getUniprotIdUrl} from "shared/api/urls";
 import defaultClient from "shared/api/cbioportalClientInstance";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import hotspot3DClient from 'shared/api/3DhotspotClientInstance';
@@ -20,13 +20,14 @@ import {
 import oncokbClient from "shared/api/oncokbClientInstance";
 import civicClient from "shared/api/civicClientInstance";
 import genomeNexusClient from "shared/api/genomeNexusClientInstance";
+import genomeNexusInternalClient from "shared/api/genomeNexusInternalClientInstance";
 import {
     generateIdToIndicatorMap, generateQueryVariant, generateEvidenceQuery
 } from "shared/lib/OncoKbUtils";
 import {
     getCivicVariants, getCivicGenes
 } from "shared/lib/CivicUtils";
-import {Query, default as OncoKbAPI} from "shared/api/generated/OncoKbAPI";
+import {Query, default as OncoKbAPI, Gene} from "shared/api/generated/OncoKbAPI";
 import {getAlterationString} from "shared/lib/CopyNumberUtils";
 import {MobxPromise} from "mobxpromise";
 import {keywordToCosmic, indexHotspots, geneToMyCancerGenome} from "shared/lib/AnnotationUtils";
@@ -39,6 +40,8 @@ import {IHotspotData, ICancerHotspotData} from "shared/model/CancerHotspots";
 import {ICivicGeneData, ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
 import CancerHotspotsAPI from "shared/api/generated/CancerHotspotsAPI";
 import {MOLECULAR_PROFILE_MUTATIONS_SUFFIX, MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
+import GenomeNexusAPI from "shared/api/generated/GenomeNexusAPI";
+import GenomeNexusAPIInternal from "shared/api/generated/GenomeNexusAPIInternal";
 
 export const ONCOKB_DEFAULT: IOncoKbData = {
     sampleToTumorMap : {},
@@ -97,10 +100,21 @@ export async function fetchUniprotId(swissProtAccession: string)
     return uniprotData.text.split("\n")[1];
 }
 
-export async function fetchPfamGeneData(swissProtAccession: string)
+export async function fetchPfamDomainData(ensemblTranscriptId: string,
+                                          client:GenomeNexusAPI = genomeNexusClient)
 {
-    const pfamData:Response = await request.get(getPfamGeneDataUrl(swissProtAccession));
-    return JSON.parse(pfamData.text)[0];
+    return await client.fetchPfamDomainsByTranscriptIdGET({
+        transcriptId: ensemblTranscriptId
+    });
+}
+
+export async function fetchCanonicalTranscript(hugoSymbol: string,
+                                               isoformOverrideSource: string,
+                                               client:GenomeNexusAPIInternal = genomeNexusInternalClient)
+{
+    return await client.fetchEnsemblTranscriptsByHugoSymbolGET({
+        hugoSymbol, isoformOverrideSource
+    });
 }
 
 export async function fetchClinicalData(clinicalDataMultiStudyFilter:ClinicalDataMultiStudyFilter,
@@ -399,7 +413,16 @@ export function fetchMyCancerGenomeData(): IMyCancerGenomeData
     return geneToMyCancerGenome(data);
 }
 
+export async function fetchOncoKbAnnotatedGenes(client: OncoKbAPI = oncokbClient): Promise<{[entrezGeneId:number]:boolean}>
+{
+    return _.reduce(await client.genesGetUsingGET({}), (map:{[entrezGeneId:number]:boolean}, next:Gene)=>{
+            map[next.entrezGeneId] = true;
+            return map;
+        }, {});
+}
+
 export async function fetchOncoKbData(sampleIdToTumorType:{[sampleId: string]: string},
+                                      annotatedGenes:{[entrezGeneId:number]:boolean},
                                       mutationData:MobxPromise<Mutation[]>,
                                       uncalledMutationData?:MobxPromise<Mutation[]>,
                                       client: OncoKbAPI = oncokbClient)
@@ -410,7 +433,8 @@ export async function fetchOncoKbData(sampleIdToTumorType:{[sampleId: string]: s
         return ONCOKB_DEFAULT;
     }
 
-    const queryVariants = _.uniqBy(_.map(mutationDataResult, (mutation: Mutation) => {
+    const mutationsToQuery = _.filter(mutationDataResult, m=>!!annotatedGenes[m.entrezGeneId]);
+    const queryVariants = _.uniqBy(_.map(mutationsToQuery, (mutation: Mutation) => {
         return generateQueryVariant(mutation.gene.entrezGeneId,
             cancerTypeForOncoKb(mutation.sampleId, sampleIdToTumorType),
             mutation.proteinChange,
@@ -422,6 +446,7 @@ export async function fetchOncoKbData(sampleIdToTumorType:{[sampleId: string]: s
 }
 
 export async function fetchCnaOncoKbData(sampleIdToTumorType:{[sampleId: string]: string},
+                                         annotatedGenes:{[entrezGeneId:number]:boolean},
                                          discreteCNAData:MobxPromise<DiscreteCopyNumberData[]>,
                                          client: OncoKbAPI = oncokbClient)
 {
@@ -430,7 +455,8 @@ export async function fetchCnaOncoKbData(sampleIdToTumorType:{[sampleId: string]
     }
     else
     {
-        const queryVariants = _.uniqBy(_.map(discreteCNAData.result, (copyNumberData: DiscreteCopyNumberData) => {
+        const alterationsToQuery = _.filter(discreteCNAData.result, d=>!!annotatedGenes[d.gene.entrezGeneId]);
+        const queryVariants = _.uniqBy(_.map(alterationsToQuery, (copyNumberData: DiscreteCopyNumberData) => {
             return generateQueryVariant(copyNumberData.gene.entrezGeneId,
                 cancerTypeForOncoKb(copyNumberData.sampleId, sampleIdToTumorType),
                 getAlterationString(copyNumberData.alteration));

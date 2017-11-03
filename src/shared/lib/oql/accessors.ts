@@ -99,7 +99,7 @@ export default class accessors {
         if (this.alterationType(d.molecularProfileId) === 'MUTATION_EXTENDED') {
             if (d.mutationType === "fusion") {
                 return null;
-            } else if (d.aminoAcidChange && d.aminoAcidChange.toLowerCase() === "promoter") {
+            } else if (d.proteinChange && d.proteinChange.toLowerCase() === "promoter") {
                 return "promoter";
             } else {
                 return getSimplifiedMutationType(d.mutationType);
@@ -125,7 +125,7 @@ export default class accessors {
 
     public mut_amino_acid_change(d: Mutation) {
         if (this.alterationType(d.molecularProfileId) === 'MUTATION_EXTENDED') {
-            return d.aminoAcidChange;
+            return d.proteinChange;
         } else {
             return null;
         }

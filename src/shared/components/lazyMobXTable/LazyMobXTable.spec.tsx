@@ -1064,45 +1064,45 @@ describe('LazyMobXTable', ()=>{
         it("gives just the column names when theres no data in the table", ()=>{
             let table = mount(<Table columns={columns} data={[]}/>);
             assert.deepEqual((table.instance() as LazyMobXTable<any>).getDownloadData(),
-                "Name,Number,String,Number List,Initially invisible column,Initially invisible column with no download,String without filter function\r\n");
+                "Name\tNumber\tString\tNumber List\tInitially invisible column\tInitially invisible column with no download\tString without filter function\r\n");
         });
         it("gives one row of data when theres one row. data given for every column, including hidden, and without download def'n. if no data, gives empty string for that cell.", ()=>{
             let table = mount(<Table columns={columns} data={[data[0]]}/>);
             assert.deepEqual((table.instance() as LazyMobXTable<any>).getDownloadData(),
-                "Name,Number,String,Number List,Initially invisible column,Initially invisible column with no download,String without filter function\r\n"+
-                "0,0,asdfj,,0HELLO123456,,\r\n");
+                "Name\tNumber\tString\tNumber List\tInitially invisible column\tInitially invisible column with no download\tString without filter function\r\n"+
+                "0\t0\tasdfj\t\t0HELLO123456\t\t\r\n");
         });
         it("gives data for all rows. data given for every column, including hidden, and without download def'n. if no data, gives empty string for that cell", ()=>{
             let table = mount(<Table columns={columns} data={data}/>)
             assert.deepEqual((table.instance() as LazyMobXTable<any>).getDownloadData(),
-                "Name,Number,String,Number List,Initially invisible column,Initially invisible column with no download,String without filter function\r\n"+
-                "0,0,asdfj,,0HELLO123456,,\r\n"+
-                "1,6,kdfjpo,,1HELLO123456,,\r\n"+
-                "2,null,null,,2HELLO123456,,\r\n"+
-                "3,-1,zijxcpo,,3HELLO123456,,\r\n"+
-                "4,90,zkzxc,,4HELLO123456,,\r\n");
+                "Name\tNumber\tString\tNumber List\tInitially invisible column\tInitially invisible column with no download\tString without filter function\r\n"+
+                "0\t0\tasdfj\t\t0HELLO123456\t\t\r\n"+
+                "1\t6\tkdfjpo\t\t1HELLO123456\t\t\r\n"+
+                "2\tnull\tnull\t\t2HELLO123456\t\t\r\n"+
+                "3\t-1\tzijxcpo\t\t3HELLO123456\t\t\r\n"+
+                "4\t90\tzkzxc\t\t4HELLO123456\t\t\r\n");
         });
         it("gives data back in sorted order according to initially selected sort column and direction", ()=>{
             let table = mount(<Table columns={columns} data={data} initialSortColumn="Number" initialSortDirection="asc"/>);
 
             assert.deepEqual((table.instance() as LazyMobXTable<any>).getDownloadData(),
-                "Name,Number,String,Number List,Initially invisible column,Initially invisible column with no download,String without filter function\r\n"+
-                "3,-1,zijxcpo,,3HELLO123456,,\r\n"+
-                "0,0,asdfj,,0HELLO123456,,\r\n"+
-                "1,6,kdfjpo,,1HELLO123456,,\r\n"+
-                "4,90,zkzxc,,4HELLO123456,,\r\n" +
-                "2,null,null,,2HELLO123456,,\r\n");
+                "Name\tNumber\tString\tNumber List\tInitially invisible column\tInitially invisible column with no download\tString without filter function\r\n"+
+                "3\t-1\tzijxcpo\t\t3HELLO123456\t\t\r\n"+
+                "0\t0\tasdfj\t\t0HELLO123456\t\t\r\n"+
+                "1\t6\tkdfjpo\t\t1HELLO123456\t\t\r\n"+
+                "4\t90\tzkzxc\t\t4HELLO123456\t\t\r\n" +
+                "2\tnull\tnull\t\t2HELLO123456\t\t\r\n");
         });
         
         it("gives data for data with multiple elements", ()=>{
             let table = mount(<Table columns={columns} data={multiData}/>)
             assert.deepEqual((table.instance() as LazyMobXTable<any>).getDownloadData(),
-                "Name,Number,String,Number List,Initially invisible column,Initially invisible column with no download,String without filter function\r\n"+
-                "0,0,asdfj,,0HELLO123456,,\r\n"+
-                "1,6,kdfjpo,,1HELLO123456,,\r\n"+
-                "2,null,null,,2HELLO123456,,\r\n"+
-                "3,-1,zijxcpo,,3HELLO123456,,\r\n"+
-                "4,90,zkzxc,,4HELLO123456,,\r\n");
+                "Name\tNumber\tString\tNumber List\tInitially invisible column\tInitially invisible column with no download\tString without filter function\r\n"+
+                "0\t0\tasdfj\t\t0HELLO123456\t\t\r\n"+
+                "1\t6\tkdfjpo\t\t1HELLO123456\t\t\r\n"+
+                "2\tnull\tnull\t\t2HELLO123456\t\t\r\n"+
+                "3\t-1\tzijxcpo\t\t3HELLO123456\t\t\r\n"+
+                "4\t90\tzkzxc\t\t4HELLO123456\t\t\r\n");
         });
     });
     describe('pagination', ()=>{
@@ -1240,26 +1240,26 @@ describe('LazyMobXTable', ()=>{
         it("shows the right text before the paging buttons", ()=>{
             let table = mount(<Table columns={simpleColumns} data={[]}/>);
             assert.equal(getItemsPerPage(table), 50, "confirm 50 items per page");
-            assert.equal(getTextBeforeButtons(table), "0-0 of 0");
+            assert.equal(getTextBeforeButtons(table), "Showing 0-0 of 0");
 
             table.setProps({columns:simpleColumns, data:[simpleData[0]]});
-            assert.equal(getTextBeforeButtons(table), "1-1 of 1");
+            assert.equal(getTextBeforeButtons(table), "Showing 1-1 of 1");
 
             table.setProps({columns:simpleColumns, data:simpleData.slice(0, 40)});
-            assert.equal(getTextBeforeButtons(table), "1-40 of 40");
+            assert.equal(getTextBeforeButtons(table), "Showing 1-40 of 40");
 
             table.setProps({columns:simpleColumns, data:simpleData});
             assert.equal(simpleData.length, 120, "confirm we're working with 120 data");
-            assert.equal(getTextBeforeButtons(table), "1-50 of 120");
+            assert.equal(getTextBeforeButtons(table), "Showing 1-50 of 120");
             clickNextPage(table);
             assert.equal(getCurrentPage(table), 1);
-            assert.equal(getTextBeforeButtons(table), "51-100 of 120");
+            assert.equal(getTextBeforeButtons(table), "Showing 51-100 of 120");
             clickNextPage(table);
             assert.equal(getCurrentPage(table), 2);
-            assert.equal(getTextBeforeButtons(table), "101-120 of 120");
+            assert.equal(getTextBeforeButtons(table), "Showing 101-120 of 120");
 
             selectItemsPerPage(table, -1);
-            assert.equal(getTextBeforeButtons(table), "1-120 of 120");
+            assert.equal(getTextBeforeButtons(table), "Showing 1-120 of 120");
         });
     });
 });

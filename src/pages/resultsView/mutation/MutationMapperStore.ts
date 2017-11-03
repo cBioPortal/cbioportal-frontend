@@ -18,18 +18,22 @@ import {
     indexHotspotData, fetchHotspotsData, fetchCosmicData, fetchOncoKbData,
     fetchMutationData, generateSampleIdToTumorTypeMap, generateDataQueryFilter,
     ONCOKB_DEFAULT, fetchPdbAlignmentData, fetchSwissProtAccession, fetchUniprotId, indexPdbAlignmentData,
-    fetchPfamGeneData, fetchCivicGenes, fetchCivicVariants, IDataQueryFilter
+    fetchPfamDomainData, fetchCivicGenes, fetchCivicVariants, IDataQueryFilter, fetchCanonicalTranscript,
 } from "shared/lib/StoreUtils";
 import MutationMapperDataStore from "./MutationMapperDataStore";
 import PdbChainDataStore from "./PdbChainDataStore";
 import {IMutationMapperConfig} from "./MutationMapper";
 import MutationDataCache from "../../../shared/cache/MutationDataCache";
+import {Gene as OncoKbGene} from "../../../shared/api/generated/OncoKbAPI";
+import {EnsemblTranscript} from "shared/api/generated/GenomeNexusAPIInternal";
+import {PfamDomain} from "shared/api/generated/GenomeNexusAPI";
 
 export class MutationMapperStore {
 
     constructor(protected config: IMutationMapperConfig,
                 public gene:Gene,
                 public samples:MobxPromise<SampleIdentifier[]>,
+                public oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean},
                 // getMutationDataCache needs to be a getter for the following reason:
                 // when the input parameters to the mutationDataCache change, the cache
                 // is recomputed. Mobx needs to respond to this. But if we pass the mutationDataCache
@@ -69,10 +73,11 @@ export class MutationMapperStore {
     });
 
     readonly mutationData = remoteData({
-        invoke: () => {
-            console.log("getting mutation data", this.gene.entrezGeneId);
-            const cacheData = this.getMutationDataCache().get({entrezGeneId: this.gene.entrezGeneId});
-            return Promise.resolve((cacheData && cacheData.data) || []);
+        invoke: async () => {
+            // Don't do debouncingPopulate while getting the mutation data, get it immediately for this gene
+            // debouncing causes double rendering (first for the default empty data, and then for the actual data)
+            const cacheData = await this.getMutationDataCache().getImmediately({entrezGeneId: this.gene.entrezGeneId});
+            return cacheData && cacheData.data || [];
         }
     }, []);
 
@@ -95,6 +100,12 @@ export class MutationMapperStore {
 
     readonly swissProtId = remoteData({
         invoke: async() => {
+            // do not try fetching swissprot data for invalid entrez gene ids,
+            // just return the default value
+            if (this.gene.entrezGeneId < 1) {
+                return "";
+            }
+
             const accession:string|string[] = await fetchSwissProtAccession(this.gene.entrezGeneId);
 
             if (_.isArray(accession)) {
@@ -132,24 +143,34 @@ export class MutationMapperStore {
             this.clinicalDataForSamples,
             this.studiesForSamplesWithoutCancerTypeClinicalData
         ],
-        invoke: async () => fetchOncoKbData(this.sampleIdToTumorType, this.mutationData),
+        invoke: async () => fetchOncoKbData(this.sampleIdToTumorType, this.oncoKbAnnotatedGenes, this.mutationData),
         onError: (err: Error) => {
             // fail silently, leave the error handling responsibility to the data consumer
         }
     }, ONCOKB_DEFAULT);
 
-    readonly pfamGeneData = remoteData({
+    readonly pfamDomainData = remoteData<PfamDomain[] | undefined>({
         await: ()=>[
-            this.swissProtId
+            this.canonicalTranscript
         ],
         invoke: async()=>{
-            if (this.swissProtId.result) {
-                return fetchPfamGeneData(this.swissProtId.result);
+            if (this.canonicalTranscript.result) {
+                return fetchPfamDomainData(this.canonicalTranscript.result.transcriptId);
             } else {
-                return {};
+                return undefined;
             }
         }
-    }, {});
+    }, undefined);
+
+    readonly canonicalTranscript = remoteData<EnsemblTranscript | undefined>({
+        invoke: async()=>{
+            if (this.gene) {
+                return fetchCanonicalTranscript(this.gene.hugoGeneSymbol, this.isoformOverrideSource);
+            } else {
+                return undefined;
+            }
+        }
+    }, undefined);
 
     readonly civicGenes = remoteData<ICivicGene | undefined>({
         await: () => [
@@ -179,6 +200,10 @@ export class MutationMapperStore {
             // fail silently
         }
     }, undefined);
+
+    @computed get isoformOverrideSource(): string {
+        return this.config.isoformOverrideSource || "uniprot";
+    }
 
     @computed get processedMutationData(): Mutation[][] {
         // just convert Mutation[] to Mutation[][]

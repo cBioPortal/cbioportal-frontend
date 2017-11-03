@@ -15,6 +15,8 @@ export function hideArrow(tooltipEl: any) {
 }
 
 export default class Sift extends React.Component<ISiftProps, {}> {
+    static SIFT_URL:string = "http://sift.bii.a-star.edu.sg/";
+
     constructor(props: ISiftProps) {
         super(props);
         this.tooltipContent = this.tooltipContent.bind(this);
@@ -25,13 +27,13 @@ export default class Sift extends React.Component<ISiftProps, {}> {
             <span className={`${annotationStyles["annotation-item-text"]}`}/>
         );
 
-        if (this.props.siftPrediction === null || this.props.siftPrediction === undefined || this.props.siftPrediction.length === 0) {
-            //do not show any icon...
-        } else {
+        if (this.props.siftPrediction && this.props.siftPrediction.length > 0) {
             siftContent = (
-                <span className={classNames(annotationStyles["annotation-item-text"], tooltipStyles[`sift-${this.props.siftPrediction}`])}>{this.props.siftPrediction.substring(0,1).toUpperCase()}</span>
+                <span className={classNames(annotationStyles["annotation-item-text"], tooltipStyles[`sift-${this.props.siftPrediction}`])}>
+                    <i className='fa fa-circle' aria-hidden="true"></i>
+                </span>
             );
-			const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
+            const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
             siftContent = (
                 <DefaultTooltip
                     overlay={this.tooltipContent}
@@ -43,21 +45,22 @@ export default class Sift extends React.Component<ISiftProps, {}> {
                 >
                     {siftContent}
                 </DefaultTooltip>
-			);
+            );
         }
 
         return siftContent;
     }
 
     private tooltipContent() {
-		const impact = this.props.siftPrediction? (
-			<div>
-				<table className={tooltipStyles['sift-tooltip-table']}>
-					<tr><td>Impact</td><td><span className={tooltipStyles[`sift-${this.props.siftPrediction}`]}>{this.props.siftPrediction}</span></td></tr>
-					{this.props.siftScore !== undefined && this.props.siftScore !== null? <tr><td>Score</td><td><b>{this.props.siftScore.toFixed(2)}</b></td></tr> : null}
-				</table>
-			</div>
-		) : null;
+        const impact = this.props.siftPrediction? (
+            <div>
+                <table className={tooltipStyles['sift-tooltip-table']}>
+                    <tr><td>Source</td><td><a href="http://sift.bii.a-star.edu.sg/">SIFT</a></td></tr>
+                    <tr><td>Impact</td><td><span className={tooltipStyles[`sift-${this.props.siftPrediction}`]}>{this.props.siftPrediction}</span></td></tr>
+                    {(this.props.siftScore || this.props.siftScore === 0) && (<tr><td>Score</td><td><b>{this.props.siftScore.toFixed(2)}</b></td></tr>)}
+                </table>
+            </div>
+        ) : null;
 
         return (
             <span>
