@@ -26,7 +26,7 @@ import AnnotationColumnFormatter from "./column/AnnotationColumnFormatter";
 import {IMyCancerGenomeData} from "shared/model/MyCancerGenome";
 import {IHotspotData} from "shared/model/CancerHotspots";
 import {IOncoKbDataWrapper} from "shared/model/OncoKB";
-import {ICivicVariant, ICivicGene} from "shared/model/Civic";
+import {ICivicVariantDataWrapper, ICivicGeneDataWrapper} from "shared/model/Civic";
 import {IMutSigData} from "shared/model/MutSig";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
@@ -42,7 +42,7 @@ import {IPaginationControlsProps} from "../paginationControls/PaginationControls
 import StudyColumnFormatter from "./column/StudyColumnFormatter";
 
 export interface IMutationTableProps {
-    sampleIdToTumorType?: {[sampleId: string]: string}
+    sampleIdToTumorType?: {[sampleId: string]: string};
     studyIdToStudy?: {[studyId:string]:CancerStudy};
     molecularProfileIdToMolecularProfile?: {[molecularProfileId:string]:MolecularProfile};
     discreteCNACache?:DiscreteCNACache;
@@ -50,20 +50,21 @@ export interface IMutationTableProps {
     genomeNexusEnrichmentCache?:GenomeNexusEnrichmentCache;
     mrnaExprRankCache?:MrnaExprRankCache;
     variantCountCache?:VariantCountCache;
-    pubMedCache?:PubMedCache
+    pubMedCache?:PubMedCache;
     mutationCountCache?:MutationCountCache;
     mutSigData?:IMutSigData;
     enableOncoKb?: boolean;
     enableMyCancerGenome?: boolean;
     enableHotspot?: boolean;
     enableCivic?: boolean;
-    enableGenomeNexus?: boolean;
+    enableFunctionalImpact?: boolean;
     myCancerGenomeData?: IMyCancerGenomeData;
     hotspots?: IHotspotData;
     cosmicData?:ICosmicData;
     oncoKbData?: IOncoKbDataWrapper;
-    civicGenes?: ICivicGene;
-    civicVariants?: ICivicVariant;
+    oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean};
+    civicGenes?: ICivicGeneDataWrapper;
+    civicVariants?: ICivicVariantDataWrapper;
     mrnaExprRankMolecularProfileId?:string;
     discreteCNAMolecularProfileId?:string;
     columns?:MutationTableColumnType[];
@@ -72,9 +73,11 @@ export interface IMutationTableProps {
     initialItemsPerPage?:number;
     itemsLabel?:string;
     itemsLabelPlural?:string;
+    userEmailAddress?:string;
     initialSortColumn?:string;
-    initialSortDirection?:SortDirection,
-    paginationProps?:IPaginationControlsProps
+    initialSortDirection?:SortDirection;
+    paginationProps?:IPaginationControlsProps;
+    showCountHeader?:boolean;
 }
 
 export enum MutationTableColumnType {
@@ -147,6 +150,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
 
     public static defaultProps = {
         initialItemsPerPage: 25,
+        showCountHeader: true,
         paginationProps:{ itemsPerPageOptions:[25,50,100] },
         initialSortColumn: "Annotation",
         initialSortDirection: "desc",
@@ -404,16 +408,15 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 MutationTypeColumnFormatter.getDisplayValue(d).toUpperCase().indexOf(filterStringUpper) > -1
         };
 
-        if (this.props.enableGenomeNexus) {
-            this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT] = {
-                name:"Functional Impact",
-                render:(d:Mutation[])=>(this.props.genomeNexusEnrichmentCache
-                    ? FunctionalImpactColumnFormatter.renderFunction(d, this.props.genomeNexusEnrichmentCache as GenomeNexusEnrichmentCache)
-                    : (<span></span>)),
-                headerRender: FunctionalImpactColumnFormatter.headerRender,
-                visible: false,
-            };
-        }
+        this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT] = {
+            name:"Functional Impact",
+            render:(d:Mutation[])=>(this.props.genomeNexusEnrichmentCache
+                ? FunctionalImpactColumnFormatter.renderFunction(d, this.props.genomeNexusEnrichmentCache as GenomeNexusEnrichmentCache)
+                : (<span></span>)),
+            headerRender: FunctionalImpactColumnFormatter.headerRender,
+            visible: false,
+            shouldExclude: () => !this.props.enableFunctionalImpact
+        };
 
         this._columns[MutationTableColumnType.COSMIC] = {
             name: "COSMIC",
@@ -432,16 +435,19 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 myCancerGenomeData: this.props.myCancerGenomeData,
                 oncoKbData: this.props.oncoKbData,
                 oncoKbEvidenceCache: this.props.oncoKbEvidenceCache,
+                oncoKbAnnotatedGenes: this.props.oncoKbAnnotatedGenes,
                 pubMedCache: this.props.pubMedCache,
                 civicGenes: this.props.civicGenes,
                 civicVariants: this.props.civicVariants,
                 enableCivic: this.props.enableCivic as boolean,
                 enableOncoKb: this.props.enableOncoKb as boolean,
                 enableMyCancerGenome: this.props.enableMyCancerGenome as boolean,
-                enableHotspot: this.props.enableHotspot as boolean
+                enableHotspot: this.props.enableHotspot as boolean,
+                userEmailAddress: this.props.userEmailAddress
             })),
             sortBy:(d:Mutation[])=>{
                 return AnnotationColumnFormatter.sortValue(d,
+                    this.props.oncoKbAnnotatedGenes,
                     this.props.hotspots,
                     this.props.myCancerGenomeData,
                     this.props.oncoKbData,
@@ -453,6 +459,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
         this._columns[MutationTableColumnType.CANCER_TYPE] = {
             name: "Cancer Type",
             render: (d:Mutation[]) => CancerTypeColumnFormatter.render(d, this.props.sampleIdToTumorType),
+            download: (d:Mutation[]) => CancerTypeColumnFormatter.download(d, this.props.sampleIdToTumorType),
             sortBy: (d:Mutation[]) => CancerTypeColumnFormatter.sortBy(d, this.props.sampleIdToTumorType),
             filter: (d:Mutation[], filterString:string, filterStringUpper:string) =>
                 CancerTypeColumnFormatter.filter(d, filterStringUpper, this.props.sampleIdToTumorType),
@@ -510,6 +517,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 itemsLabel={this.props.itemsLabel}
                 itemsLabelPlural={this.props.itemsLabelPlural}
                 paginationProps={this.props.paginationProps}
+                showCountHeader={this.props.showCountHeader}
             />
         );
     }

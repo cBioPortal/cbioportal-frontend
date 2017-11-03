@@ -8,9 +8,8 @@ body {
 }
 
 //get rid of blue border around active button
-button:active {
-  outline: none;
-  border: none;
+button:active, button:focus, div:focus, div:active {
+  outline: none !important;
 }
 
 /* importants are necessary for override of legacy style */
@@ -130,8 +129,19 @@ th.reactable-header-sort-asc:after {
         }
       }
     }
-
   }
+
+  li a {
+    font-size: 12px;
+    padding: 10px 6px !important;
+    cursor: pointer;
+    line-height: 0.8px;
+  }
+
+  .msk-tab {
+    margin-top:10px;
+  }
+
 }
 
 .mainTabs {

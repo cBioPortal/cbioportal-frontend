@@ -7,14 +7,28 @@ import Slider from 'react-rangeslider';
 import Select from 'react-select';
 import {FormGroup, ControlLabel, FormControl} from 'react-bootstrap';
 import jsPDF from 'jspdf';
+import { If, Then, Else } from 'react-if';
 
 import 'react-select/dist/react-select.css';
 import 'react-rangeslider/lib/index.css';
 
 import SummaryBarGraph from './SummaryBarGraph';
 
+const orderedLabels:Record<keyof ICancerTypeAlterationCounts, string> = {
+    multiple: "Multiple Alterations",
+    protExpressionDown: "Protein Downregulation",
+    protExpressionUp: "Protein Upregulation",
+    mrnaExpressionDown: "mRNA Downregulation",
+    mrnaExpressionUp: "mRNA Upregulation",
+    hetloss: "Shallow Deletion",
+    homdel: "Deep Deletion",
+    gain: "Gain",
+    amp: "Amplification",
+    fusion: "Fusion",
+    mutated: "Mutation"
+};
 
-export interface ICancerTypeAlterationPlotData {
+export interface ICancerTypeAlterationCounts {
     mutated: number;
     amp:number;
     homdel:number;
@@ -27,6 +41,16 @@ export interface ICancerTypeAlterationPlotData {
     protExpressionDown:number;
     multiple:number;
 };
+
+
+export interface ICancerTypeAlterationData {
+    alterationTotal:number;
+    sampleTotal:number;
+    alterationTypeCounts:ICancerTypeAlterationCounts;
+    alteredSampleCount:number;
+    parentCancerType:string;
+
+}
 
 export interface IBarGraphDataset {
     label: string;
@@ -51,12 +75,11 @@ export interface IBarGraphConfigOptions {
     datasets: IBarGraphDataset[];
 }
 
-export interface ICancerTypeAlterationData extends ICancerTypeAlterationPlotData {
-    total:number;
-}
-
 interface ICancerSummaryContentProps {
-    data: {
+    dataByCancerSubType: {
+        [cancerType:string]:ICancerTypeAlterationData
+    };
+    dataByCancerType: {
         [cancerType:string]:ICancerTypeAlterationData
     };
     gene:string;
@@ -69,8 +92,10 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
 
     private inputYAxisEl:any;
     private inputXAxisEl:any;
+    @observable private tempAltCasesInputValue = 0;
+    @observable private tempTotalCasesInputValue = 0;
     @observable private pngAnchor = '';
-    @observable private pdfAnchor = '';
+    @observable private pdf:{anchor:string;width:number;height:number} = {anchor:'',width: 0,height:0};
     @observable private showControls = false;
     @observable private showGenomicAlt = true;
     @observable private yAxis: 'alt-freq' | 'abs-count' = 'alt-freq';
@@ -81,6 +106,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
     @observable private totalCasesValue = 0;
     @observable private tempTotalCasesValue = 0;
     @observable private tempAltCasesValue = 0;
+    @observable private viewCountsByCancerSubType = false;
 
     constructor(props:ICancerSummaryContentProps) {
         super(props);
@@ -88,35 +114,50 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
         this.handleYAxisChange = this.handleYAxisChange.bind(this);
         this.handleXAxisChange = this.handleXAxisChange.bind(this);
         this.handleGenomicCheckboxChange = this.handleGenomicCheckboxChange.bind(this);
+        this.handleCancerTypeCheckboxChange = this.handleCancerTypeCheckboxChange.bind(this);
         this.handleSelectChange = this.handleSelectChange.bind(this);
         this.handleAltSliderChange = this.handleAltSliderChange.bind(this);
         this.handleTotalSliderChange = this.handleTotalSliderChange.bind(this);
         this.handleAltSliderChangeComplete = this.handleAltSliderChangeComplete.bind(this);
         this.handleTotalSliderChangeComplete = this.handleTotalSliderChangeComplete.bind(this);
+        this.handleAltInputChange = this.handleAltInputChange.bind(this);
+        this.handleAltInputKeyPress = this.handleAltInputKeyPress.bind(this);
+        this.handleTotalInputChange = this.handleTotalInputChange.bind(this);
+        this.handleTotalInputKeyPress = this.handleTotalInputKeyPress.bind(this);
         this.toggleShowControls = this.toggleShowControls.bind(this);
         this.setPngAnchor = this.setPngAnchor.bind(this);
-        this.setPdfAnchor = this.setPdfAnchor.bind(this);
+        this.setPdfProperties = this.setPdfProperties.bind(this);
         this.downloadPdf = this.downloadPdf.bind(this);
         this.resetSliders = this.resetSliders.bind(this);
     }
 
+    public componentWillMount() {
+        //if there is only one cancer type, then we want to default to show cancer sub types
+        this.viewCountsByCancerSubType = (_.size(this.props.dataByCancerType) === 1);
+    }
+
+    @computed get onlyOneSelected() {
+        return this.multiSelectValue !== "all";
+    }
+
+    @computed get countsData() {
+        return (this.viewCountsByCancerSubType || this.onlyOneSelected)? this.props.dataByCancerSubType : this.props.dataByCancerType;
+    }
+
     @computed get barChartDatasets():IBarChartSortedData[] {
-        const {data} = this.props;
-        const {yAxis} = this;
-        return _.reduce(data, (accum, cancer:ICancerTypeAlterationData, cancerType:string) => {
-            const totalCases = cancer.total;
-            const cancerAlterations:Partial<ICancerTypeAlterationPlotData> = _.omit(cancer, ['total']);
-            const altTotalCount = _.reduce(cancerAlterations, (total:number, value:number) => total + value, 0);
-            let altTotalPercent = altTotalCount / totalCases * 100;
-            altTotalPercent = altTotalPercent > 100 ? 100 : altTotalPercent;
-            if (this.selectedCancerTypes[cancerType] && totalCases >= this.totalCasesValue) {
-                const datasets = _.reduce(cancerAlterations, (memo, count:number, altType: string) => {
-                    let percent = count / totalCases * 100;
-                    percent = percent > 100 ? 100 : percent;
-                    const total = yAxis === "abs-count" ? count : percent;
+        return _.reduce(this.countsData, (accum, alterationData, cancerType:string) => {
+            const cancerAlterations = alterationData.alterationTypeCounts;
+            let altTotalPercent = (alterationData.alteredSampleCount / alterationData.sampleTotal) * 100;
+            ///altTotalPercent = altTotalPercent > 100 ? 100 : altTotalPercent;
+
+            if ((this.selectedCancerTypes[cancerType] || this.selectedCancerTypes[alterationData.parentCancerType]) && alterationData.sampleTotal >= this.totalCasesValue) {
+                const datasets = _.reduce(cancerAlterations as any, (memo, count:number, altType: string) => {
+                    let percent = (count / alterationData.sampleTotal) * 100;
+                    //percent = percent > 100 ? 100 : percent;
+                    const total = (this.yAxis === "abs-count") ? count : percent;
                     memo.push({
-                        label: altType === 'deleted' ? 'hetloss': altType,
-                        totalCases,
+                        label: altType,
+                        totalCases: alterationData.sampleTotal,
                         altTotalPercent,
                         total,
                         count,
@@ -125,16 +166,15 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                     });
                     return memo;
                 }, [] as IBarGraphDataset[]);
+                const orderedAlts = _.keys(orderedLabels);
                 const sortedDatasets = datasets.sort((a:IBarGraphDataset,b:IBarGraphDataset) => {
-                    const orderedAlts = ['multiple', 'mutated', 'fusion', 'amplified', 'gain', 'homdel', 'hetloss',
-                        'mrnaExpressionUp', 'mrnaExpressionDown', 'protExpressionUp', 'protExpressionDown'];
                     return orderedAlts.indexOf(a.label) - orderedAlts.indexOf(b.label);
                 });
                 accum.push({
                     label: cancerType,
-                    sortBy: yAxis,
-                    symbol: yAxis === "abs-count" ? '' : "%",
-                    sortCount: yAxis === "abs-count" ? altTotalCount : altTotalPercent,
+                    sortBy: this.yAxis,
+                    symbol: this.yAxis === "abs-count" ? '' : "%",
+                    sortCount: this.yAxis === "abs-count" ? alterationData.alteredSampleCount : altTotalPercent,
                     data: sortedDatasets
                 });
             }
@@ -155,6 +195,12 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
     private resetSliders() {
         this.altCasesValue = 0;
         this.totalCasesValue = 0;
+        this.handleAltSliderChange(0);
+        this.handleTotalSliderChange(0);
+    }
+
+    private handleCancerTypeCheckboxChange() {
+        this.viewCountsByCancerSubType = (this.viewCountsByCancerSubType === false);
     }
 
     private handleGenomicCheckboxChange() {
@@ -163,10 +209,46 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
 
     private handleAltSliderChange(value:number) {
         this.tempAltCasesValue = value;
+        this.tempAltCasesInputValue = value;
     }
 
     private handleTotalSliderChange(value:number) {
         this.tempTotalCasesValue = value;
+        this.tempTotalCasesInputValue = value;
+    }
+
+    private handleAltInputKeyPress(target:any) {
+        if (target.charCode === 13){
+            if (isNaN(this.tempAltCasesInputValue)) {
+                this.tempAltCasesInputValue = 0;
+                return;
+            }
+            //removes leading 0s
+            this.tempAltCasesInputValue = Number(this.tempAltCasesInputValue);
+            this.tempAltCasesValue = this.tempAltCasesInputValue;
+            this.handleAltSliderChangeComplete();
+        }
+    }
+
+    private handleTotalInputKeyPress(target:any) {
+        if (target.charCode === 13){
+            if (isNaN(this.tempTotalCasesInputValue)) {
+                this.tempTotalCasesInputValue = 0;
+                return;
+            }
+            //removes leading 0s
+            this.tempTotalCasesInputValue = Number(this.tempTotalCasesInputValue);
+            this.tempTotalCasesValue = this.tempTotalCasesInputValue;
+            this.handleTotalSliderChangeComplete();
+        }
+    }
+
+    private handleAltInputChange(e:any) {
+        this.tempAltCasesInputValue = e.target.value.replace(/[^0-9\.]/g, '');
+    }
+
+    private handleTotalInputChange(e:any) {
+        this.tempTotalCasesInputValue = e.target.value.replace(/[^0-9\.]/g, '');
     }
 
     private handleAltSliderChangeComplete() {
@@ -182,7 +264,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
     }
 
     private getColors(color:string) {
-        const alterationToColor: Record<keyof ICancerTypeAlterationPlotData, string> = {
+        const alterationToColor: Record<keyof ICancerTypeAlterationCounts, string> = {
             mutated:"#008000",
             amp:"#ff0000",
             homdel:"rgb(0,0,255)",
@@ -200,9 +282,8 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
     }
 
     @computed private get cancerTypes() {
-
         // build array of cancer type options and sort alphabetically
-        const sortedCancerTypes = Object.keys(this.props.data).map(point => (
+        const sortedCancerTypes = Object.keys(this.countsData).map(point => (
             {label: point, value: point}
         )).sort();
 
@@ -212,12 +293,12 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
     }
 
     @computed private get altCasesMax() {
-        return Math.floor(Math.max(...this.barChartDatasets.map(data => data.sortCount)));
+        return Math.max(...this.barChartDatasets.map(data => data.sortCount));
     }
 
     @computed private get selectedCancerTypes() {
         const multiSelectValuesArray = this.multiSelectValue.toLowerCase().split(",");
-        return _.reduce(this.props.data, (accum, value, key) => {
+        return _.reduce(this.props.dataByCancerType, (accum, value, key) => {
                 accum[key] = !!_.intersection(["all", "", key.toLowerCase()], multiSelectValuesArray).length;
                 return accum;
             }, {} as any);
@@ -226,8 +307,8 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
     @computed private get totalCasesMax() {
         return Math.max(
                 ..._.map(
-                    _.filter(this.props.data, (unusedData, label) => this.selectedCancerTypes[label]),
-                    (cancer:ICancerTypeAlterationData) => cancer.total));
+                    _.filter(this.countsData, (unusedData: ICancerTypeAlterationData, label) => this.selectedCancerTypes[unusedData.parentCancerType]),
+                    (cancer:ICancerTypeAlterationData) => cancer.sampleTotal));
     }
 
     @computed private get chartData() {
@@ -258,6 +339,12 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
         };
     }
 
+    @computed private get hasAlterations() {
+        return _.reduce(this.countsData,(count, alterationData:ICancerTypeAlterationData)=>{
+            return count + alterationData.alterationTotal;
+        },0) > 0;
+    }
+
     private handleSelectChange (value: any) {
         const values = value.split(",");
         if (_.last(values) === "all") {
@@ -274,17 +361,23 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
         this.pngAnchor = href;
     }
 
-    public setPdfAnchor(dataURL:string) {
-        this.pdfAnchor = dataURL;
+    public setPdfProperties(anchor:string, width: number = 1100, height: number = 600) {
+        this.pdf = {anchor, width, height};
     }
 
     private downloadPdf() {
-        const pdf = new jsPDF('l')
-            .addImage(this.pdfAnchor, 'JPEG', 0, 0)
+        const {anchor, width, height} = this.pdf;
+        let orientation = 'p';
+        if  (width > height) {
+            orientation = 'l';
+        }
+        const pdf = new jsPDF({orientation, unit:'mm', format:[width * 0.264583 , height * 0.264583 ]});
+        pdf.addImage(anchor, 'JPEG', 0,0, pdf.internal.pageSize.width , pdf.internal.pageSize.height)
             .save("cBioPortalCancerSummary.pdf");
     }
 
     public render() {
+
         const {totalCasesMax, altCasesMax, yAxis} = this;
         const altMax = altCasesMax;
         const symbol = yAxis === 'alt-freq' ? '%' : '';
@@ -293,7 +386,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                 <div className="form-section">
                     <FormGroup>
                         <ControlLabel>Cancer Type(s):</ControlLabel>
-                        <Select multi simpleValue
+                        <Select simpleValue
                                 value={this.multiSelectValue} placeholder="Select cancer types"
                                 options={this.multiSelectOptions} onChange={this.handleSelectChange} />
                     </FormGroup>
@@ -312,7 +405,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                                     min={0}
                                     max={altMax}
                                     value={this.tempAltCasesValue}
-                                    labels={{0:0 + symbol, [altMax]:altMax + symbol}}
+                                    labels={{0:0 + symbol, [altMax]:Math.ceil(altMax) + symbol}}
                                     format={(val:string) => val + symbol}
                                     onChange={this.handleAltSliderChange}
                                     onChangeComplete={this.handleAltSliderChangeComplete}
@@ -320,7 +413,9 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                             </div>
                         </FormGroup>
                         <FormGroup>
-                            <FormControl type="text" value={this.tempAltCasesValue + symbol}/>
+                            <ControlLabel className="invisible">Hidden</ControlLabel>
+                            <FormControl type="text" value={this.tempAltCasesInputValue + symbol} onChange={this.handleAltInputChange}
+                                         onKeyPress={this.handleAltInputKeyPress}/>
                         </FormGroup>
                     </div>
                 </div>
@@ -352,29 +447,45 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                             </div>
                         </FormGroup>
                         <FormGroup>
-                            <FormControl type="text" value={this.tempTotalCasesValue}/>
+                            <ControlLabel className="invisible">Hidden</ControlLabel>
+                            <FormControl type="text" value={this.tempTotalCasesInputValue} onChange={this.handleTotalInputChange}
+                                         onKeyPress={this.handleTotalInputKeyPress}/>
                         </FormGroup>
                     </div>
                 </div>
             </div>
         ) : null;
         return (
-            <div>
-                <div role="group" className="btn-group">
+
+                <If condition={this.hasAlterations}>
+                    <Then>
+                    <div>
+                    <div role="group" className="btn-group">
                     <button onClick={this.toggleShowControls} className="btn btn-default btn-xs">Customize <i className="fa fa-cog" aria-hidden="true"></i></button>
                     <a className={`btn btn-default btn-xs ${this.pngAnchor ? '': ' disabled'}`}
-                        href={this.pngAnchor} download="cBioPortalCancerSummary.png" style={{color: 'white'}}>
+                        href={this.pngAnchor} download="cBioPortalCancerSummary.png">
                         PNG <i className="fa fa-cloud-download" aria-hidden="true"></i>
                     </a>
-                    <button className={`btn btn-default btn-xs ${this.pdfAnchor ? '': ' disabled'}`}
+                    {/*
+                    <button className={`btn btn-default btn-xs ${this.pdf.anchor ? '': ' disabled'}`}
                        onClick={this.downloadPdf}>
                         PDF <i className="fa fa-cloud-download" aria-hidden="true"></i>
                     </button>
+                   */}
                 </div>
                 {controls}
                 <SummaryBarGraph data={this.chartData} yAxis={this.yAxis} xAxis={this.xAxis} gene={this.props.gene} width={this.props.width}
-                                 setPdfAnchor={this.setPdfAnchor} setPngAnchor={this.setPngAnchor} legend={this.showGenomicAlt}/>
-            </div>
+                                 setPdfProperties={this.setPdfProperties} setPngAnchor={this.setPngAnchor} legend={this.showGenomicAlt}
+                                 orderedLabels={orderedLabels} altCasesMax={this.altCasesMax}
+                />
+
+                    </div>
+                    </Then>
+                    <Else>
+                        <div className="alert alert-info">There are no alterations in this gene.</div>
+                    </Else>
+                </If>
+
         );
     }
 }

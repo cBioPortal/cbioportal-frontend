@@ -20,19 +20,22 @@
     text-align: center;}
 
 .cancer-type-summary-tab-tooltip {
-    background-color: white;
+    background-color: white !important;
+    border: 1px solid $borderColor !important;
+    box-shadow:1px 1px 1px 1px rgba(0,0,0,.15);
+    border-radius:5px;
     position: absolute;
     display: block;
-    padding: 10px;
-    max-width: 300px;
+    padding: 8px !important;
+    min-width: 300px;
+    max-width: 500px;
     .table {
-        margin-bottom: 0;
+        margin-bottom: 0px !important;
         > thead > tr > th {
             font-size: 12px;
             line-height: 1; }}
     th:first-child, td:first-child {
-          border-right: 2px solid #ddd;
-          text-transform: capitalize;} }
+          border-right: 2px solid #ddd;} }
 
 .cancer-study-form-controls {
 
@@ -48,7 +51,7 @@
 
   .slider-holder {
     display: flex;
-    align-items: flex-end;
+    align-items: flex-start;
     >div:first-child {
       flex: 1 1 100%;
       margin-bottom: 0px;}
@@ -72,7 +75,6 @@
     width: 20px;
     height: 20px;
     border-radius: 20px;
-    top: -4px;
     &:after {
       width: 12px;
       height: 12px;
