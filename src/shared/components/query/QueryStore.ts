@@ -390,14 +390,14 @@ export class QueryStore
 	@observable geneQueryErrorDisplayStatus:'unfocused'|'shouldFocus'|'focused' = 'unfocused';
 	@observable showMutSigPopup = false;
 	@observable showGisticPopup = false;
-	@observable.ref searchTextPresets:ReadonlyArray<string> = AppConfig.cancerStudySearchPresets;
+	@observable.ref searchTextPresets:ReadonlyArray<string> = AppConfig.skinExampleStudyQueries;
 	@observable priorityStudies = AppConfig.priorityStudies;
 	@observable showSelectedStudiesOnly:boolean = false;
 	@observable.shallow selectedCancerTypeIds:string[] = [];
 	@observable clickAgainToDeselectSingle:boolean = true;
 	@observable searchExampleMessage = "";
 
-	@observable private _maxTreeDepth:number = (window as any).maxTreeDepth;
+	@observable private _maxTreeDepth:number = AppConfig.maxTreeDepth;
 	@computed get maxTreeDepth()
 	{
 		return (this.forDownloadTab && this._maxTreeDepth > 0) ? 1 : this._maxTreeDepth;

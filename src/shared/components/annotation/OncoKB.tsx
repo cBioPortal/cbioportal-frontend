@@ -17,6 +17,7 @@ import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import OncoKbTooltip from "./OncoKbTooltip";
 import OncokbPubMedCache from "shared/cache/PubMedCache";
 import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
+import AppConfig from "appConfig";
 
 export interface IOncoKbProps {
     status: "pending" | "error" | "complete";
@@ -24,6 +25,9 @@ export interface IOncoKbProps {
     evidenceCache?: OncoKbEvidenceCache;
     evidenceQuery?: Query;
     pubMedCache?: OncokbPubMedCache;
+    geneNotExist:boolean;
+    hugoGeneSymbol?:string;
+    userEmailAddress?:string;
 }
 
 export function hideArrow(tooltipEl: any) {
@@ -85,7 +89,7 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
         else if (this.props.status === "pending") {
             oncoKbContent = this.loaderIcon();
         }
-        else if (this.props.indicator)
+        else
         {
             oncoKbContent = (
                 <span className={`${annotationStyles["annotation-item"]}`}>
@@ -96,13 +100,12 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
                     />
                 </span>
             );
-
             if (this.showFeedback)
             {
                 oncoKbContent = (
                     <span>
                         {oncoKbContent}
-                        {this.feedbackModal(this.props.indicator)}
+                        {this.feedbackModal(this.props.hugoGeneSymbol, this.props.evidenceQuery && this.props.evidenceQuery.alteration)}
                     </span>
                 );
             }
@@ -148,12 +151,12 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
         );
     }
 
-    public feedbackModal(indicator:IndicatorQueryResp)
+    public feedbackModal(hugoSymbol?:string, alteration?:string)
     {
         const url = "https://docs.google.com/forms/d/1lt6TtecxHrhIE06gAKVF_JW4zKFoowNFzxn6PJv4g7A/viewform";
-        const geneParam = `entry.1744186665=${indicator.query.hugoSymbol}`;
-        const alterationParam = `entry.1671960263=${indicator.query.alteration}`;
-        const userParam = `entry.1381123986=`; // TODO get username from session?
+        const geneParam = `entry.1744186665=${hugoSymbol || ''}`;
+        const alterationParam = `entry.1671960263=${alteration || ''}`;
+        const userParam = `entry.1381123986=${this.props.userEmailAddress || ''}`;
         const uriParam = `entry.1083850662=${encodeURIComponent(window.location.href)}`;
 
         return (
@@ -179,6 +182,7 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
     {
         return (
             <OncoKbTooltip
+                geneNotExist={this.props.geneNotExist}
                 indicator={this.props.indicator || undefined}
                 evidenceCache={this.props.evidenceCache}
                 evidenceQuery={this.props.evidenceQuery}
@@ -206,11 +210,11 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
         this.showFeedback = false;
     }
 
-    public oncogenicImageClassNames(indicator:IndicatorQueryResp):string
+    public oncogenicImageClassNames(indicator?:IndicatorQueryResp):string
     {
         let classNames:string[];
 
-        if (indicator.oncogenic != null)
+        if (indicator && indicator.oncogenic != null)
         {
             classNames = oncogenicImageClassNames(
                 indicator.oncogenic,

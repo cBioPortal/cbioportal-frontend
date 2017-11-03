@@ -114,7 +114,7 @@ npm run start
 In another terminal run the e2e tests
 ```bash
 # get CBIOPORTAL backend url from my-index.ejs
-export CBIOPORTAL_URL=http://$(grep '__API_ROOT__' my-index.ejs | cut -d= -f2 | tr -d "'" | tr -d [:space:] | tr -d ';')
+eval "$(./scripts/env_vars.sh)"
 cd end-to-end-tests
 npm install
 npm run test-webdriver-manager

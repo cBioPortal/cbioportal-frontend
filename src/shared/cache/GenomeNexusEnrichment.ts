@@ -1,6 +1,7 @@
 import genomeNexusClient from "shared/api/genomeNexusClientInstance";
 import {generateGenomeNexusQuery} from "shared/lib/GenomeNexusUtils";
-import {VariantAnnotation, Hotspot, MutationAssessor} from "shared/api/generated/GenomeNexusAPI";
+import {VariantAnnotation} from "shared/api/generated/GenomeNexusAPI";
+import {Hotspot, MutationAssessor} from "shared/api/generated/GenomeNexusAPIInternal";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import LazyMobXCache, {CacheData} from "shared/lib/LazyMobXCache";
 
@@ -17,14 +18,14 @@ export type GenomeNexusCacheDataType = CacheData<VariantAnnotationEnriched>;
 
 function fetch(queries: Mutation[]):Promise<VariantAnnotationEnriched[]> {
     if (queries.length > 0) {
-        return genomeNexusClient.postVariantAnnotation(
+        return genomeNexusClient.fetchVariantAnnotationPOST(
             {
                 variants: queries.map((m) => generateGenomeNexusQuery(m)),
                 // TODO: update genome nexus API to return all fields by
                 // default
                 fields: ['hotspots', 'mutation_assessor']
             }
-        ); 
+        ) as Promise<VariantAnnotationEnriched[]>; 
     } else {
         return Promise.resolve([]);
     }

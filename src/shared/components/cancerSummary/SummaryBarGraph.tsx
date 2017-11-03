@@ -5,7 +5,7 @@ import { ChartTooltipItem } from 'chart.js';
 import Chart, {ChartLegendItem} from 'chart.js';
 import {
     IBarGraphConfigOptions, IBarGraphDataset,
-    ICancerTypeAlterationPlotData
+    // ICancerTypeAlterationPlotData
 } from './CancerSummaryContent';
 import {observer} from "mobx-react";
 import classnames from 'classnames';
@@ -16,10 +16,14 @@ interface ISummaryBarGraphProps {
     yAxis: 'alt-freq' | 'abs-count';
     xAxis: 'y-axis' | 'can-types';
     legend: boolean;
-    setPngAnchor:any;
-    setPdfAnchor:any;
+    setPngAnchor:(href:string) => void;
+    setPdfProperties:(anchor:string, width: number, height: number) => void;
     gene: string;
     width: number;
+    altCasesMax:number;
+    orderedLabels: {
+        [key:string]: string;
+    };
 }
 
 @observer
@@ -35,6 +39,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
         super();
 
         this.updateChart = this.updateChart.bind(this);
+        this.getLegendNames = this.getLegendNames.bind(this);
     }
 
     private getTooltipOptions(tooltipModel: any, data:IBarGraphConfigOptions, chartOptions:any, sumBarGraph:any) {
@@ -55,7 +60,8 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
 
         // Hide if no tooltip
         if (tooltipModel.opacity === 0) {
-            tooltipEl.style.opacity = '0';
+            //tooltipEl.style.opacity = '0';
+            tooltipEl.style.display = 'none';
             return;
         }
 
@@ -91,7 +97,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
                         <tbody>`
             );
 
-            bodyLines.forEach(body => {
+            bodyLines.reverse().forEach(body => {
                 innerHtml += (
                     `<tr>
                         <td> ${sumBarGraph.getLegendNames(body.label)} </td>
@@ -109,9 +115,9 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
         // const position = chartOptions._chart.canvas.getBoundingClientRect();
 
         // Display, position, and set styles for font
-        tooltipEl.style.opacity = '1';
+        tooltipEl.style.display ='block';
         tooltipEl.style.left =  tooltipModel.caretX + 35 + 'px';
-        tooltipEl.style.top = tooltipModel.caretY + 5 + 'px';
+        tooltipEl.style.top =  tooltipModel.y + 'px';
     }
 
     public componentDidMount() {
@@ -125,37 +131,34 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
     }
 
     private updateChart() {
+
+        // we need to start over
+        this.chart.destroy();
         this.chartConfig.data = this.props.data;
-        this.chartConfig.options = {};
         this.chartConfig.options = this.chartOptions;
-        this.chart.update();
+        this.chart = new Chart(this.chartTarget, this.chartConfig);
+
     }
 
     private hasAlterations() {
-        return _.sumBy(this.props.data.datasets, function(dataset) { return dataset.count }) > 0;
+        return _.sumBy(this.props.data.datasets, function(dataset) { return dataset.count; }) > 0;
     }
 
     private getLegendNames(id:string) {
-        const names: Record<keyof ICancerTypeAlterationPlotData, string> = {
-            mutated: "Mutation",
-            amp: "Amplification",
-            homdel: "Deep Deletion",
-            hetloss: "Shallow Deletion",
-            gain: "Gain",
-            fusion: "Fusion",
-            mrnaExpressionUp: "mRNA Upregulation",
-            mrnaExpressionDown: "mRNA Downregulation",
-            protExpressionUp: "Protein Upregulation",
-            protExpressionDown: "Protein Downregulation",
-            multiple: "Multiple Alterations"
-        };
         //TODO: figure out ts issue with index signature.
-        return (names as any)[id] || id;
+        return this.props.orderedLabels[id] || id;
     }
 
     private get chartOptions() {
-        const {data} = this.props;
-        const that = this;
+        const {data, yAxis, altCasesMax} = this.props;
+
+        const orderedAltNames = _.values(this.props.orderedLabels);
+
+        let yAxisMax;
+
+        if (altCasesMax > 90 && yAxis === "alt-freq") {
+            yAxisMax = {max: 100};
+        }
 
         return {
             title: {
@@ -166,23 +169,33 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
             },
             maintainAspectRatio: false,
             responsive: true,
+            layout: {
+              padding:{
+                  top:5,
+                  left:20,
+                  right:20,
+                  bottom:5
+              }
+            },
             tooltips: {
                 enabled: false,
-                mode: 'x',
-                filter(tooltipItem:ChartTooltipItem) {
+                position:'nearest',
+                mode:'x',
+                filter:(tooltipItem:ChartTooltipItem)=>{
                     if (tooltipItem) return Number(tooltipItem.yLabel) > 0;
                     return false;
                 },
-                custom(tooltipModel: any){
-                    return that.getTooltipOptions(tooltipModel, data, this, that);}
+                custom:(tooltipModel: any)=>{
+                    return this.getTooltipOptions(tooltipModel, data, this, this);
+                }
             },
             scales: {
                 xAxes: [{
                     gridLines: {display: false},
                     stacked: true,
-                    maxBarThickness:30,
+                    barThickness:(this.props.data.labels.length > 15) ? 14 : 25,
                     ticks: {
-                        maxRotation: 90,
+                        maxRotation: 70,
                         autoSkip: false
                     }
                 }],
@@ -191,26 +204,25 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
                     scaleLabel: {
                         display: true,
                         fontSize: 13,
-                        labelString: 'Alteration Frequency'
+                        labelString: yAxis === 'abs-count' ? 'Absolute Counts': 'Alteration Frequency'
                     },
                     display:true,
                     ticks: {
                         fontSize: 11,
-                        callback: function(value:number) {
-                            return _.round(value, 1) + (that.props.yAxis === "abs-count" ? '': '%');
-                        },
-
+                        ...yAxisMax,
+                        callback: (value:number) => {
+                            return _.round(value, 1) + (this.props.yAxis === "abs-count" ? '': '%');
+                        }
                     }
                 }]
             },
             legend: {
                 position: 'right',
-                display: this.props.legend,
                 labels: {
                     generateLabels:(chart:any) => {
-                        let counter = 0;
                         const {data:chartData} = chart;
-                        if (chartData.labels.length && chartData.datasets.length) {
+                        if (!this.props.legend) return [];
+                        else if (chartData.labels.length && chartData.datasets.length) {
                             const alterationCounts = _.reduce(chartData.datasets, (obj, dataset:IBarGraphDataset) => {
                                 if (obj[dataset.label]) {
                                     obj[dataset.label].count = obj[dataset.label].count + dataset.total;
@@ -219,16 +231,18 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
                                 }
                                 return obj;
                             }, {} as any)
-                            return _.reduce(alterationCounts, (arr, value:{count:number, backgroundColor: string}, label) => {
+                            const alterationLabels = _.reduce(alterationCounts, (arr, value:{count:number, backgroundColor: string}, label) => {
                                 if (value.count) {
                                     arr.push({
                                         text: this.getLegendNames(label),
-                                        fillStyle: value.backgroundColor,
-                                        index: counter ++
+                                        fillStyle: value.backgroundColor
                                     });
                                 }
                                 return arr;
-                            }, [] as any);
+                            }, [] as {text: string, fillStyle: string}[]);
+                            return alterationLabels.sort((a, b) => {
+                                return orderedAltNames.indexOf(b.text) - orderedAltNames.indexOf(a.text);
+                            });
                         } else {
                             return [];
                         }
@@ -250,27 +264,24 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
         }
         if (this.chartTarget) {
             const pdf = this.chartTarget.toDataURL();
-            this.props.setPdfAnchor(pdf);
+            this.props.setPdfProperties(pdf, this.width, this.chartTarget.offsetHeight);
         }
     }
 
     private get width() {
-        const maxWidth = 220 + this.props.data.labels.length * 45;
+        const maxWidth = 300 + this.props.data.labels.length * 45;
         const conWidth = (this.props.width || 1159);
         return maxWidth > conWidth ? conWidth : maxWidth;
     }
 
     public render() {
         let errorMessage = null;
-        if (!this.hasAlterations()) {
-            errorMessage = <div className="alert alert-info">No alteration plot data.</div>;
-        }
         return (
             <div style={{width:this.width}} ref={(el: HTMLDivElement) => this.chartContainer = el}
-                 className="cancer-summary-chart-container">
+                 className="cancer-summary-chart-container borderedChart">
                 {errorMessage}
                 <canvas ref={(el:HTMLCanvasElement) => this.chartTarget = el}
-                        className={classnames({ hidden:!this.hasAlterations() })} height="400"/>
+                        className={classnames({ hidden:!this.hasAlterations() })}/>
             </div>
         );
     }

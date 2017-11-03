@@ -1,6 +1,7 @@
 import * as _ from 'lodash';
 import {ICivicGene, ICivicGeneData, ICivicVariant, ICivicVariantData} from "shared/model/Civic.ts";
 import civicClient from "shared/api/civicClientInstance";
+import { DiscreteCopyNumberData } from "shared/api/generated/CBioPortalAPI";
 
 type MutationSpec = {gene:{hugoGeneSymbol: string}, proteinChange: string};
 
@@ -28,28 +29,29 @@ export function getCivicGenes(geneSymbols: Array<string>): Promise<ICivicGene> {
 
     // Assemble a list of promises, each of which will retrieve a batch of genes
     let promises: Array<Promise<Array<ICivicGeneData>>> = [];
-    let ids = '';
+    let ids: Array<String> = [];
     geneSymbols.forEach(function(geneSymbol: string) {
+        //Encode "/" characters
+        geneSymbol = geneSymbol.replace(/\//g,'%2F');
         // Check if we already have it in the cache
         if (civicGenes.hasOwnProperty(geneSymbol)) {
             return;
         }
 
         // Add the symbol to the list
-        if (ids.length > 0) {
-            ids += ',';
-        }
-        ids += geneSymbol;
+        ids.push(geneSymbol);
 
         // To prevent the request from growing too large, we send it off
         // when it reaches this limit and start a new one
-        if (ids.length >= 1900) {
-            promises.push(civicClient.getCivicGenesBatch(ids));
-            ids = '';
+        if (ids.length >= 400) {
+            let requestIds = ids.join();
+            promises.push(civicClient.getCivicGenesBatch(requestIds));
+            ids = [];
         }
     });
     if (ids.length > 0) {
-        promises.push(civicClient.getCivicGenesBatch(ids));
+        let requestIds = ids.join();
+        promises.push(civicClient.getCivicGenesBatch(requestIds));
     }
 
     // We're waiting for all promises to finish, then return civicGenes
@@ -133,4 +135,22 @@ export function buildCivicEntry(geneEntry: ICivicGeneData, geneVariants: {[name:
         url: geneEntry.url,
         variants: geneVariants
     };
+}
+
+export function getCivicCNAVariants(copyNumberData:DiscreteCopyNumberData[], geneSymbol: string, civicVariants:ICivicVariant): {[name: string]: ICivicVariantData} {
+    let geneVariants: {[name: string]: ICivicVariantData} = {};
+    if (copyNumberData[0].alteration === 2) {
+        for (let alteration in civicVariants[geneSymbol]) {
+            if (alteration === "AMPLIFICATION") {
+                geneVariants = {[geneSymbol]: civicVariants[geneSymbol][alteration]};
+            }
+        }
+    } else if (copyNumberData[0].alteration === -2) {
+        for (let alteration in civicVariants[geneSymbol]) {
+            if (alteration === "DELETION") {
+                geneVariants = {[geneSymbol]: civicVariants[geneSymbol][alteration]};
+            }
+        }
+    }
+    return geneVariants;
 }

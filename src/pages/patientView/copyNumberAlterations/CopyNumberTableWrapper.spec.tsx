@@ -13,6 +13,7 @@ function getTable(samples:string[], mrnaMolecularProfileId?:string):ReactWrapper
     return mount(<CopyNumberTableWrapper
         sampleManager={null}
         sampleIds={samples}
+        oncoKbAnnotatedGenes={{}}
         gisticData={{}}
         status="available"
         data={[]}

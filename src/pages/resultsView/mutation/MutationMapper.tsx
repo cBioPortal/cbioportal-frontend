@@ -1,6 +1,5 @@
 import * as React from 'react';
 import {observer} from "mobx-react";
-import {Button, ButtonGroup} from 'react-bootstrap';
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import StructureViewerPanel from "shared/components/structureViewer/StructureViewerPanel";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
@@ -20,12 +19,15 @@ import ProteinChainPanel from "../../../shared/components/proteinChainPanel/Prot
 import {computed, action, observable} from "mobx";
 import MutationRateSummary from "pages/resultsView/mutation/MutationRateSummary";
 
+// Anything from App config will be included in mutation mapper config
 export interface IMutationMapperConfig {
+    userEmailAddress?:string;
     showCivic?: boolean;
     showHotspot?: boolean;
     showMyCancerGenome?: boolean;
     showOncoKB?: boolean;
     showGenomeNexus?: boolean;
+    isoformOverrideSource?: string;
 }
 
 export interface IMutationMapperProps {
@@ -66,9 +68,32 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
     }
 
     @computed get geneSummary():JSX.Element {
+        const hugoGeneSymbol = this.props.store.gene.hugoGeneSymbol;
+        const uniprotId = this.props.store.uniprotId.result;
+        const transcriptId = this.props.store.canonicalTranscript.result &&
+            this.props.store.canonicalTranscript.result.transcriptId;
+
         return (
-            <div>
-                <h4>{this.props.store.gene.hugoGeneSymbol}</h4>
+            <div style={{'paddingBottom':10}}>
+                <h4>{hugoGeneSymbol}</h4>
+                <div className={this.props.store.uniprotId.result ? '' : 'invisible'}>
+                    <span>UniProt: </span>
+                    <a
+                        href={`http://www.uniprot.org/uniprot/${uniprotId}`}
+                        target="_blank"
+                    >
+                        {uniprotId}
+                    </a>
+                </div>
+                <div className={this.props.store.canonicalTranscript.result ? '' : 'invisible'}>
+                    <span>Transcript: </span>
+                    <a
+                        href={`http://grch37.ensembl.org/homo_sapiens/Transcript/Summary?t=${transcriptId}`}
+                        target="_blank"
+                    >
+                        {transcriptId}
+                    </a>
+                </div>
             </div>
         );
     }
@@ -94,8 +119,6 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
 
     public render() {
 
-        console.log("rendering mapper");
-
         return (
             <div>
                 {
@@ -115,51 +138,51 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
 
                 <LoadingIndicator isLoading={this.props.store.mutationData.isPending} />
                 {
-                    (this.props.store.mutationData.isComplete) && (
-                        <div>
-                            <LoadingIndicator isLoading={this.props.store.pfamGeneData.isPending} />
-                            { (!this.props.store.pfamGeneData.isPending) && (
-                            <div style={{ display:'flex' }}>
-                                <div className="borderedChart" style={{ marginRight:10 }}>
+                    (!this.props.store.mutationData.isPending) && (
+                    <div>
+                        <LoadingIndicator isLoading={this.props.store.pfamDomainData.isPending} />
+                        { (!this.props.store.pfamDomainData.isPending) && (
+                        <div style={{ display:'flex' }}>
+                            <div className="borderedChart" style={{ marginRight:10 }}>
 
-                                    <LollipopMutationPlot
-                                        store={this.props.store}
-                                        onXAxisOffset={this.handlers.onXAxisOffset}
-                                        geneWidth={this.geneWidth}
+                                <LollipopMutationPlot
+                                    store={this.props.store}
+                                    onXAxisOffset={this.handlers.onXAxisOffset}
+                                    geneWidth={this.geneWidth}
+                                    {...DEFAULT_PROTEIN_IMPACT_TYPE_COLORS}
+                                />
+                                <ProteinChainPanel
+                                    store={this.props.store}
+                                    pdbHeaderCache={this.props.pdbHeaderCache}
+                                    geneWidth={this.geneWidth}
+                                    geneXOffset={this.lollipopPlotGeneX}
+                                    maxChainsHeight={200}
+                                />
+                            </div>
+
+                            <div className="mutationMapperMetaColumn">
+                                {this.geneSummary}
+
+                                {this.mutationRateSummary}
+
+                                <div>
+                                    <ProteinImpactTypePanel
+                                        dataStore={this.props.store.dataStore}
                                         {...DEFAULT_PROTEIN_IMPACT_TYPE_COLORS}
                                     />
-                                    <ProteinChainPanel
-                                        store={this.props.store}
-                                        pdbHeaderCache={this.props.pdbHeaderCache}
-                                        geneWidth={this.geneWidth}
-                                        geneXOffset={this.lollipopPlotGeneX}
-                                        maxChainsHeight={200}
-                                    />
                                 </div>
 
-                                <div className="mutationMapperMetaColumn">
-                                    {this.geneSummary}
-
-                                    {this.mutationRateSummary}
-
-                                    <div>
-                                        <ProteinImpactTypePanel
-                                            dataStore={this.props.store.dataStore}
-                                            {...DEFAULT_PROTEIN_IMPACT_TYPE_COLORS}
-                                        />
-                                    </div>
-
-                                    <button
-                                        className="btn btn-default btn-sm"
-                                        disabled={this.props.store.pdbChainDataStore.allData.length === 0}
-                                        onClick={this.toggle3dPanel}
-                                    >
-                                        View 3D Structure
-                                    </button>
-                                </div>
+                                <button
+                                    className="btn btn-default btn-sm"
+                                    disabled={this.props.store.pdbChainDataStore.allData.length === 0}
+                                    onClick={this.toggle3dPanel}
+                                >
+                                    View 3D Structure
+                                </button>
                             </div>
-                            ) }
-                            <hr style={{ marginTop:20 }} />
+                        </div>
+                        ) }
+                        <hr style={{ marginTop:20 }} />
 
                             {!this.props.store.dataStore.showingAllData &&
                                 (<div style={{
@@ -183,6 +206,7 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                             !this.props.store.studiesForSamplesWithoutCancerTypeClinicalData.isPending && (
                                 <ResultsViewMutationTable
                                     sampleIdToTumorType={this.props.store.sampleIdToTumorType}
+                                    oncoKbAnnotatedGenes={this.props.store.oncoKbAnnotatedGenes}
                                     discreteCNACache={this.props.discreteCNACache}
                                     studyIdToStudy={this.props.store.studyIdToStudy.result}
                                     genomeNexusEnrichmentCache={this.props.genomeNexusEnrichmentCache}
@@ -195,10 +219,11 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                                     hotspots={this.props.store.indexedHotspotData}
                                     cosmicData={this.props.store.cosmicData.result}
                                     oncoKbData={this.props.store.oncoKbData}
-                                    civicGenes={this.props.store.civicGenes.result}
-                                    civicVariants={this.props.store.civicVariants.result}
+                                    civicGenes={this.props.store.civicGenes}
+                                    civicVariants={this.props.store.civicVariants}
+                                    userEmailAddress={this.props.config.userEmailAddress}
                                     enableOncoKb={this.props.config.showOncoKB}
-                                    enableGenomeNexus={this.props.config.showGenomeNexus}
+                                    enableFunctionalImpact={this.props.config.showGenomeNexus}
                                     enableHotspot={this.props.config.showHotspot}
                                     enableMyCancerGenome={this.props.config.showMyCancerGenome}
                                     enableCivic={this.props.config.showCivic}
