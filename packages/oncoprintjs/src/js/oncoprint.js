@@ -394,20 +394,20 @@ var Oncoprint = (function () {
 	this.track_info_view.moveTrack(this.model);
 	this.minimap_view.moveTrack(this.model, this.cell_view);
 	
-	if (this.keep_sorted) {
+	if (this.keep_sorted && this.model.isSortAffected([target_track, new_previous_track], "track")) {
 	    this.sort();
 	}
 	
 	resizeAndOrganizeAfterTimeout(this);
     }
-    Oncoprint.prototype.setTrackGroupOrder = function(index, track_order) {
+    Oncoprint.prototype.setTrackGroupOrder = function(index, track_order, dont_sort) {
 	this.model.setTrackGroupOrder(index, track_order);
 	this.cell_view.setTrackGroupOrder(this.model);
 	this.label_view.setTrackGroupOrder(this.model);
 	this.track_options_view.setTrackGroupOrder(this.model);
 	this.track_info_view.setTrackGroupOrder(this.model);
 	
-	if (this.keep_sorted) {
+	if (!dont_sort && this.keep_sorted && this.model.isSortAffected(index, "group")) {
 	    this.sort();
 	}
 	
@@ -440,7 +440,7 @@ var Oncoprint = (function () {
 	this.legend_view.addTracks(this.model);
 	this.minimap_view.addTracks(this.model, this.cell_view);
 	
-	if (this.keep_sorted) {
+	if (this.keep_sorted && this.model.isSortAffected(track_ids, "track")) {
 	    this.sort();
 	}
 	resizeAndOrganizeAfterTimeout(this);
@@ -458,7 +458,7 @@ var Oncoprint = (function () {
 	this.legend_view.removeTrack(this.model);
 	this.minimap_view.removeTrack(this.model, this.cell_view);
 	
-	if (this.keep_sorted) {
+	if (this.keep_sorted && this.model.isSortAffected(track_id, "track")) {
 	    this.sort();
 	}
 	resizeAndOrganizeAfterTimeout(this);
@@ -661,7 +661,7 @@ var Oncoprint = (function () {
 	this.legend_view.setTrackData(this.model);
 	this.minimap_view.setTrackData(this.model, this.cell_view);
 	
-	if (this.keep_sorted) {
+	if (this.keep_sorted && this.model.isSortAffected(track_id, "track")) {
 	    this.sort();
 	}
 	resizeAndOrganizeAfterTimeout(this);
@@ -681,7 +681,7 @@ var Oncoprint = (function () {
 	if (this.model.isTrackSortDirectionChangeable(track_id)) {
 	    this.model.setTrackSortDirection(track_id, dir);
 	    
-	    if (this.keep_sorted) {
+	    if (this.keep_sorted && this.model.isSortAffected(track_id, "track")) {
 		this.sort();
 	    }
 	}
@@ -690,7 +690,7 @@ var Oncoprint = (function () {
     
     Oncoprint.prototype.setTrackSortComparator = function(track_id, sortCmpFn) {
 	this.model.setTrackSortComparator(track_id, sortCmpFn);
-	if (this.keep_sorted) {
+	if (this.keep_sorted && this.model.isSortAffected(track_id, "track")) {
 	    this.sort();
 	}
     }
@@ -709,9 +709,19 @@ var Oncoprint = (function () {
     }
     
     Oncoprint.prototype.sort = function() {
-	this.model.sort();
-	this.cell_view.sort(this.model);
-	this.minimap_view.sort(this.model, this.cell_view);
+    	var self = this;
+	this.model.sort().then(function(x) {;
+		self.cell_view.sort(self.model);
+		self.minimap_view.sort(self.model, self.cell_view);
+
+		if (x) {
+			self.setTrackGroupOrder(
+				x.track_group_index,
+				x.track_id_order,
+				true
+			);
+		}
+	});
     }
     
     Oncoprint.prototype.shareRuleSet = function(source_track_id, target_track_id) {
@@ -732,6 +742,7 @@ var Oncoprint = (function () {
     Oncoprint.prototype.setSortConfig = function(params) {
 	this.model.setSortConfig(params);
 	this.cell_view.setSortConfig(this.model);
+	this.track_options_view.setSortConfig(this.model);
 	
 	if (this.keep_sorted) {
 	    this.sort();
