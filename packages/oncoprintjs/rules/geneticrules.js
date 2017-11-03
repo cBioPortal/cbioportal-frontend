@@ -10,6 +10,9 @@ var MUT_COLOR_TRUNC_PASSENGER = '#708090';
 var MUT_COLOR_FUSION = '#8B00C9';
 var MUT_COLOR_PROMOTER = '#FFA942';
 
+var PROT_COLOR_UP = "#9224A6";
+var PROT_COLOR_DOWN = "#00BCD4";
+
 var non_mutation_rule_params = {
     // Default: gray rectangle
     '*': {
@@ -110,32 +113,28 @@ var non_mutation_rule_params = {
     },
     // protein expression regulation
     'disp_prot': {
-	// small up arrow for upregulated
+	// small top rectangle for upregulated
 	'up': {
 	    shapes: [{
-		    'type': 'triangle',
-		    'x1': '50%',
-		    'y1': '0%',
-		    'x2': '100%',
-		    'y2': '33.33%',
-		    'x3': '0%',
-		    'y3': '33.33%',
-		    'fill': 'rgba(0,0,0,1)',
+		    'type': 'rectangle',
+                    'fill': PROT_COLOR_UP,
+                    'x':"0%",
+                    'y':"0%",
+                    'width':"100%",
+                    'height':"20%",
 		    'z': 4,
 		}],
 	    legend_label: 'Protein Upregulation',
 	},
-	// small down arrow for upregulated
+	// small bottom rectangle for upregulated
 	'down': {
 	    shapes: [{
-		    'type': 'triangle',
-		    'x1': '50%',
-		    'y1': '100%',
-		    'x2': '100%',
-		    'y2': '66.66%',
-		    'x3': '0%',
-		    'y3': '66.66%',
-		    'fill': 'rgba(0,0,0,1)',
+		    'type': 'rectangle',
+                    'fill': PROT_COLOR_DOWN,
+                    'x':"0%",
+                    'y':"80%",
+                    'width':"100%",
+                    'height':"20%",
 		    'z': 4,
 		}],
 	    legend_label: 'Protein Downregulation',

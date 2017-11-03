@@ -2,10 +2,9 @@
   "name": "oncoprintjs",
   "description": "A data visualization for cancer genomic data.",
   "types": "./index.d.ts",
-  "main": "./src/js/oncoprint.js",
+  "main": "./dist/oncoprint.bundle.js",
   "scripts": {
-    "clean": "rm -rf dist",
-    "build": "npm run clean && gulp",
+    "build": "webpack",
     "test": "karma start karma.conf.js",
     "test:watch": "npm run test -- --watch"
   },
@@ -44,16 +43,22 @@
     "gulp-shell": "^0.6.3",
     "jasmine-core": "^2.8.0",
     "karma": "^1.7.1",
+    "karma-commonjs": "^1.0.0",
     "karma-jasmine": "^1.1.0",
     "karma-phantomjs-launcher": "^1.0.4",
     "phantomjs-polyfill": "0.0.2",
     "phantomjs-prebuilt": "^2.1.15",
+    "webpack": "^3.0.0",
+    "webpack-shell-plugin": "^0.5.0",
+    "worker-loader": "^1.1.0",
     "yargs": "^9.0.1"
   },
   "dependencies": {
     "express": "^4.15.3",
-    "gl-matrix": "^2.3.2",
+    "gl-matrix": "2.3.2",
     "jquery": "^1.11.3",
+    "jstat": "^1.7.1",
+    "tayden-clusterfck": "^0.7.0",
     "underscore": "^1.7.0"
   }
 }

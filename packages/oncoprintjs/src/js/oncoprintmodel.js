@@ -1,6 +1,8 @@
 var binarysearch = require('./binarysearch.js');
 var hasElementsInInterval = require('./haselementsininterval.js');
 var CachedProperty = require('./CachedProperty.js');
+var clustering = require('./clustering.js');
+var $ = require('jquery');
 
 function ifndef(x, val) {
     return (typeof x === "undefined" ? val : x);
@@ -619,6 +621,21 @@ var OncoprintModel = (function () {
 	});
     }
 
+    OncoprintModel.prototype.isSortAffected = function(modified_ids, group_or_track) {
+    	modified_ids = [].concat(modified_ids);
+    	var group_indexes;
+    	var self = this;
+    	if (group_or_track === "track") {
+    		group_indexes = modified_ids.map(function(id) {
+    			return self.getContainingTrackGroupIndex(id);
+			});
+		} else {
+    		group_indexes = modified_ids;
+		}
+		return (this.sort_config.type !== "cluster" ||
+			(group_indexes.indexOf(this.sort_config.track_group_index) > -1));
+	}
+
     OncoprintModel.prototype.setIdOrder = function (ids) {
 	this.id_order = ids.slice();
 	Object.freeze(this.id_order);
@@ -733,17 +750,22 @@ var OncoprintModel = (function () {
 	model.setIdOrder(Object.keys(model.present_ids.get()));
     }
 
-    var _getContainingTrackGroup = function (oncoprint_model, track_id, return_reference) {
+    var _getContainingTrackGroup = function (oncoprint_model, track_id, return_reference, return_index) {
 	var group;
 	track_id = parseInt(track_id);
-	for (var i = 0; i < oncoprint_model.track_groups.length; i++) {
+	var i;
+	for (i = 0; i < oncoprint_model.track_groups.length; i++) {
 	    if (oncoprint_model.track_groups[i].indexOf(track_id) > -1) {
 		group = oncoprint_model.track_groups[i];
 		break;
 	    }
 	}
 	if (group) {
-	    return (return_reference ? group : group.slice());
+		if (return_index) {
+			return i;
+		} else {
+	    	return (return_reference ? group : group.slice());
+		}
 	} else {
 	    return null;
 	}
@@ -875,6 +897,10 @@ var OncoprintModel = (function () {
     OncoprintModel.prototype.getContainingTrackGroup = function (track_id) {
 	return _getContainingTrackGroup(this, track_id, false);
     }
+
+    OncoprintModel.prototype.getContainingTrackGroupIndex = function(track_id) {
+    	return _getContainingTrackGroup(this, track_id, false, true);
+	}
 
     OncoprintModel.prototype.setTrackGroupHeader = function(track_group_id, text) {
 	this.track_group_header[track_group_id] = text;
@@ -1047,6 +1073,40 @@ var OncoprintModel = (function () {
     OncoprintModel.prototype.getTrackData = function (track_id) {
 	return this.track_data[track_id];
     }
+
+    OncoprintModel.prototype.clusterTrackGroup = function(track_group_index, clusterValueFn) {
+    	// Prepare input
+		var def = new $.Deferred();
+		var cluster_input = {};
+
+    	var track_ids = this.getTrackGroups()[track_group_index];
+    	for (var i=0; i<track_ids.length; i++) {
+    		var track_id = track_ids[i];
+    		var data_id_key = this.getTrackDataIdKey(track_id);
+    		var data = this.getTrackData(track_id);
+			for (var j=0; j<data.length; j++) {
+				var id = data[j][data_id_key];
+				var value = clusterValueFn(data[j]);
+				cluster_input[id] = cluster_input[id] || {};
+				cluster_input[id][track_id] = value;
+			}
+		}
+		//do hierarchical clustering in background:
+		var self = this;
+
+        $.when(clustering.hclusterColumns(cluster_input), clustering.hclusterTracks(cluster_input)).then(
+            function (columnClusterOrder, trackClusterOrder) {
+            	// set clustered order
+				self.setIdOrder(columnClusterOrder.map(function(c) { return c.caseId; }));
+                def.resolve({
+                    track_group_index: track_group_index,
+					track_id_order: trackClusterOrder.map(function(entity){ return parseInt(entity.entityId, 10);})
+				});
+		}).fail(function() {
+            	def.reject();
+		});
+		return def.promise();
+    }
     
     /**
      * Sets the data for an Oncoprint track.
@@ -1130,19 +1190,34 @@ var OncoprintModel = (function () {
 	model.setIdOrder(id_order);
     };
     OncoprintModel.prototype.sort = function() {
+    	var def = new $.Deferred();
 	this.sort_config = this.sort_config || {};
 	if (this.sort_config.type === "alphabetical") {
 	    sortAlphabetical(this);
+	    def.resolve();
 	} else if (this.sort_config.type === "order") {
 	    this.setIdOrder(this.sort_config.order);
+	    def.resolve();
+	} else if (this.sort_config.type === "cluster") {
+		this.clusterTrackGroup(this.sort_config.track_group_index,
+								this.sort_config.clusterValueFn).then(function(x) {
+			def.resolve(x);
+		});
 	} else {
 	    sortByTracks(this);
+	    def.resolve();
 	}
+	return def.promise();
     }
     
     OncoprintModel.prototype.setSortConfig = function(params) {
 	this.sort_config = params;
     }
+
+    OncoprintModel.prototype.isTrackInClusteredGroup = function(track_id) {
+    	return this.sort_config.type === "cluster" &&
+			(this.sort_config.track_group_index === this.getContainingTrackGroupIndex(track_id));
+	}
 
     return OncoprintModel;
 })();

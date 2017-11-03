@@ -6,7 +6,11 @@ declare module "oncoprintjs"
     } | {
         type: "order";
         order: string[];
-    } | {};
+    } | {
+        type: "cluster";
+        track_group_index: number;
+        clusterValueFn: (datum:any)=>number;
+    } | {type?:""};
 
     // track properties
     export type TrackId = number;
