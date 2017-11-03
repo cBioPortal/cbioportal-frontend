@@ -91,7 +91,9 @@ export interface IOncoprintProps {
     showTiersCustomDriverAnnotation?:boolean;
 
     sortConfig?:{
-        order?:string[]; // overrides other options if present
+        order?:string[]; // overrides below options if present
+
+        clusterHeatmapTrackGroupIndex?: number; // overrides below options if present
 
         sortByMutationType?:boolean;
         sortByDrivers?:boolean;

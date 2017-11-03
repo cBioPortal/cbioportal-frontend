@@ -85,7 +85,8 @@ type HeatmapTrackGroupRecord = {
 @observer
 export default class ResultsViewOncoprint extends React.Component<IResultsViewOncoprintProps, {}> {
     @observable columnMode:"sample"|"patient" = "sample";
-    @observable sortMode:"data"|"alphabetical"|"caseList"|"heatmap" = "data";
+    @observable sortMode:{type:"data"|"alphabetical"|"caseList"|"heatmap", clusteredHeatmapProfile?:string} = {type:"data"};
+
     @observable distinguishMutationType:boolean = true;
     @observable distinguishDrivers:boolean = true;
     @observable sortByMutationType:boolean = true;
@@ -269,13 +270,13 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             },
             onSelectSortByMutationType:(s:boolean)=>{this.sortByMutationType = s;},
             onClickSortAlphabetical:()=>{
-                this.sortMode = "alphabetical";
+                this.sortMode = {type:"alphabetical"};
             },
             onClickSortCaseListOrder:()=>{
-                this.sortMode = "caseList";
+                this.sortMode = {type:"caseList"};
             },
             onSelectSortByDrivers:(sort:boolean)=>{this.sortByDrivers=sort;},
-            onClickSortByData:()=>{this.sortMode="data";},
+            onClickSortByData:()=>{this.sortMode={type:"data"};},
             onSelectClinicalTrack: this.onSelectClinicalTrack,
             onChangeHeatmapGeneInputValue:(s:string)=>{
                 this.heatmapGeneInputValue = s;
@@ -289,10 +290,10 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 this.molecularProfileIdToHeatmapTracks.clear();
             },
             onClickClusterHeatmap:()=>{
-                if (this.sortMode === "heatmap") {
-                    this.sortMode = "data";
+                if (this.sortMode.type === "heatmap") {
+                    this.sortMode = {type:"data"};
                 } else {
-                    this.sortMode = "heatmap";
+                    this.sortMode = {type: "heatmap", clusteredHeatmapProfile: this.selectedHeatmapProfile};
                 }
             },
             onClickDownload:(type:string)=>{
@@ -412,7 +413,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 return self.unselectedClinicalAttributes;
             },
             get sortMode() {
-                return self.sortMode;
+                return self.sortMode.type;
             },
             get sortByDrivers() {
                 return self.sortByDrivers;
@@ -522,7 +523,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     private oncoprintRef(oncoprint:OncoprintJS<any>) {
         this.oncoprint = oncoprint;
-        this.oncoprint.onHorzZoom(z=>(this.horzZoom = z))
+        this.oncoprint.onHorzZoom(z=>(this.horzZoom = z));
         this.horzZoom = this.oncoprint.getHorzZoom();
         onMobxPromise([this.alteredSampleUIDs, this.alteredPatientUIDs],
             (sampleUIDs:string[], patientUIDs:string[])=>{
@@ -614,9 +615,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }
 
     @computed get sortOrder() {
-        if (this.sortMode === "alphabetical") {
+        if (this.sortMode.type === "alphabetical") {
             return this.columnMode === "sample" ? this.alphabeticalSampleOrder : this.alphabeticalPatientOrder;
-        } else if (this.sortMode === "caseList") {
+        } else if (this.sortMode.type === "caseList") {
             return this.columnMode === "sample" ? this.sampleUIDs.result : this.patientUIDs.result;
         } else {
             return undefined;
@@ -759,11 +760,20 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         default: []
     });
 
+    @computed get clusterHeatmapTrackGroupIndex() {
+        if (this.sortMode.type === "heatmap") {
+            return this.molecularProfileIdToHeatmapTracks.get(this.sortMode.clusteredHeatmapProfile!)!.trackGroupIndex;
+        } else {
+            return undefined;
+        }
+    }
+
     @computed get sortConfig() {
         return {
             sortByMutationType:this.sortByMutationType,
             sortByDrivers:this.sortByDrivers,
-            order: this.sortOrder
+            order: this.sortOrder,
+            clusterHeatmapTrackGroupIndex: this.clusterHeatmapTrackGroupIndex
         };
     }
 

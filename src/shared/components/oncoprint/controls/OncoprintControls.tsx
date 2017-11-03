@@ -264,6 +264,10 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                 this.props.handlers.onSelectHidePutativePassengers &&
                 this.props.handlers.onSelectHidePutativePassengers(!this.props.state.hidePutativePassengers);
                 break;
+            case EVENT_KEY.sortByHeatmapClustering:
+                this.props.handlers.onClickClusterHeatmap &&
+                this.props.handlers.onClickClusterHeatmap();
+                break;
         }
     }
 
@@ -426,7 +430,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                          <div className="checkbox"><label style={{cursor:"pointer"}}>
                              <input
                                  type="checkbox"
-                                 name={EVENT_KEY.sortByHeatmapClustering}
+                                 value={EVENT_KEY.sortByHeatmapClustering}
                                  onClick={this.onInputClick}
                              /> Cluster Heatmap
                          </label></div>

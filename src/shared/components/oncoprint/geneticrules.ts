@@ -23,7 +23,7 @@ let non_mutation_rule_params = {
 		'fill': 'rgba(190, 190, 190, 1)',
 		'z': 1
 	    }],
-	exclude_from_legend: true,
+	legend_label: "No alterations"
     },
     // Copy number alteration
     'disp_cna': {

@@ -1,8 +1,8 @@
 import {
     IOncoprintProps, default as Oncoprint, GeneticTrackSpec, HeatmapTrackSpec,
-    ClinicalTrackSpec
+    ClinicalTrackSpec, HeatmapTrackDatum
 } from "./Oncoprint";
-import OncoprintJS, {TrackId} from "oncoprintjs";
+import OncoprintJS, {TrackId, SortConfig} from "oncoprintjs";
 import {ObservableMap} from "mobx";
 import _ from "lodash";
 import {getClinicalTrackRuleSetParams, getGeneticTrackRuleSetParams} from "./OncoprintUtils";
@@ -23,7 +23,7 @@ export function transition(
     if (notKeepingSorted) {
         oncoprint.keepSorted(false);
     }
-    transitionSortConfig(nextProps, oncoprint);
+    transitionSortConfig(nextProps, prevProps, oncoprint);
     transitionWhitespaceBetweenColumns(nextProps, prevProps, oncoprint);
     transitionShowMinimap(nextProps, prevProps, oncoprint);
     transitionOnMinimapCloseCallback(nextProps, prevProps, oncoprint);
@@ -132,19 +132,45 @@ function shouldSuppressRendering(nextProps: IOncoprintProps, prevProps: Partial<
     return false;
 }
 
-function sortOrder(props:IOncoprintProps):string[]|undefined {
+function sortOrder(props:Partial<IOncoprintProps>):string[]|undefined {
     return props.sortConfig && props.sortConfig.order;
 };
 
+function createSortConfig(props:Partial<IOncoprintProps>):SortConfig {
+    let config = {};
+    const newSortOrder = sortOrder(props);
+    if (newSortOrder) {
+        config = {
+            type: "order",
+            order: newSortOrder
+        };
+    } else if (props.sortConfig &&
+        typeof props.sortConfig.clusterHeatmapTrackGroupIndex !== "undefined") {
+        config = {
+            type: "cluster",
+            track_group_index: props.sortConfig.clusterHeatmapTrackGroupIndex,
+            clusterValueFn: (d:HeatmapTrackDatum)=>(d.profile_data)
+        };
+    }
+    return config;
+}
 function transitionSortConfig(
     nextProps: IOncoprintProps,
+    prevProps: Partial<IOncoprintProps>,
     oncoprint: OncoprintJS<any>
 ) {
-    const newSortOrder = sortOrder(nextProps);
-    oncoprint.setSortConfig(newSortOrder ? {
-        type: "order",
-        order: newSortOrder
-    } : {});
+    const prevSortConfig = createSortConfig(prevProps);
+    const nextSortConfig = createSortConfig(nextProps);
+
+    // do shallow comparison on "order" types, otherwise deep comparison
+    // this is because order could potentially be very long and so deep comparison would be too expensive
+    if ((prevSortConfig.type === "order" &&
+        nextSortConfig.type === "order" &&
+        (prevSortConfig.order !== nextSortConfig.order))
+        ||
+        !_.isEqual(prevSortConfig, nextSortConfig)) {
+        oncoprint.setSortConfig(nextSortConfig);
+    }
 }
 
 function transitionHiddenIds(
