@@ -1,12 +1,12 @@
 import * as React from "react";
 import * as _ from 'lodash';
-import {computed, observable} from "mobx";
+import {action, computed, observable} from "mobx";
 import {observer} from "mobx-react";
 import {MSKTabs, MSKTab} from "shared/components/MSKTabs/MSKTabs";
 import {If, Then, Else} from 'react-if';
 import {ThreeBounce} from 'better-react-spinkit';
-import {CancerSummaryContent, ICancerTypeAlterationData} from './CancerSummaryContent';
-import {ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
+import {CancerSummaryContent, IAlterationData} from './CancerSummaryContent';
+import {ExtendedSample, ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
 import Loader from "../loadingIndicator/LoadingIndicator";
 
 @observer
@@ -14,11 +14,14 @@ export default class CancerSummaryContainer extends React.Component<{ store: Res
 
     @observable private activeTab: string = "all";
     @observable private resultsViewPageWidth: number = 1150;
+    @observable private groupAlterationsBy: keyof ExtendedSample = 'studyId';
+
     private resultsViewPageContent: HTMLElement;
 
     constructor() {
         super();
         this.handleTabClick = this.handleTabClick.bind(this);
+        this.pivotData = this.pivotData.bind(this);
     }
 
     private handleTabClick(id: string) {
@@ -29,21 +32,25 @@ export default class CancerSummaryContainer extends React.Component<{ store: Res
         return 'all';
     }
 
+    public pivotData(str: keyof ExtendedSample){
+        this.groupAlterationsBy = str;
+    }
+
     @computed
     private get tabs() {
 
         const alterationCountsForCancerTypesByGene =
             this.props.store.getAlterationCountsForCancerTypesByGene(this.props.store.alterationsBySampleIdByGene.result!,
-                this.props.store.samplesExtendedWithClinicalData.result!, false);
+                this.props.store.samplesExtendedWithClinicalData.result!, this.groupAlterationsBy);
 
         const alterationCountsForCancerSubTypesByGene =
             this.props.store.getAlterationCountsForCancerTypesByGene(this.props.store.alterationsBySampleIdByGene.result!,
-                this.props.store.samplesExtendedWithClinicalData.result!, true);
+                this.props.store.samplesExtendedWithClinicalData.result!, this.groupAlterationsBy);
 
         const geneTabs = _.map(alterationCountsForCancerTypesByGene, (geneData, geneName: string) => {
 
             // count how many alterations there are across all cancer types for this gene
-            const alterationCountAcrossCancerType = _.reduce(geneData,(count, alterationData:ICancerTypeAlterationData)=>{
+            const alterationCountAcrossCancerType = _.reduce(geneData,(count, alterationData:IAlterationData)=>{
                 return count + alterationData.alterationTotal;
             },0);
 
@@ -53,9 +60,10 @@ export default class CancerSummaryContainer extends React.Component<{ store: Res
             return (
                 <MSKTab key={geneName} id={"summaryTab" + geneName} linkText={geneName} anchorStyle={anchorStyle}>
                     <CancerSummaryContent
-                        dataByCancerSubType={alterationCountsForCancerSubTypesByGene[geneName]}
-                        dataByCancerType={alterationCountsForCancerTypesByGene[geneName]}
+                        groupedAlterationData={alterationCountsForCancerTypesByGene[geneName]}
+                        groupAlterationsBy={this.groupAlterationsBy}
                         gene={geneName}
+                        handlePivotChange={this.pivotData}
                         width={this.resultsViewPageWidth}/>
                 </MSKTab>
             )
@@ -63,11 +71,16 @@ export default class CancerSummaryContainer extends React.Component<{ store: Res
 
         // only add combined gene tab if there's more than one gene
         if (geneTabs.length > 1) {
+            const groupedAlterationDataForAllGenes = this.props.store.getAlterationCountsForCancerTypesForAllGenes(
+                this.props.store.alterationsBySampleIdByGene.result!,
+                this.props.store.samplesExtendedWithClinicalData.result!,
+                this.groupAlterationsBy);
             geneTabs.unshift(<MSKTab key="all" id="allGenes" linkText="All Queried Genes">
-                <CancerSummaryContent gene={'all'} width={this.resultsViewPageWidth}
-                                      dataByCancerSubType={this.props.store.getAlterationCountsForCancerTypesForAllGenes(this.props.store.alterationsBySampleIdByGene.result!, this.props.store.samplesExtendedWithClinicalData.result!, true)}
-                                      dataByCancerType={this.props.store.getAlterationCountsForCancerTypesForAllGenes(this.props.store.alterationsBySampleIdByGene.result!, this.props.store.samplesExtendedWithClinicalData.result!, false)}
-
+                <CancerSummaryContent gene={'all'}
+                                      width={this.resultsViewPageWidth}
+                                      groupedAlterationData={groupedAlterationDataForAllGenes}
+                                      handlePivotChange={this.pivotData}
+                                      groupAlterationsBy={this.groupAlterationsBy}
                 />
             </MSKTab>)
         }
@@ -79,7 +92,6 @@ export default class CancerSummaryContainer extends React.Component<{ store: Res
 
         const isComplete = this.props.store.samplesExtendedWithClinicalData.isComplete && this.props.store.alterationsBySampleIdByGene.isComplete;
         const isPending = this.props.store.samplesExtendedWithClinicalData.isPending && this.props.store.alterationsBySampleIdByGene.isPending;
-
 
         if (isComplete) {
             return (
