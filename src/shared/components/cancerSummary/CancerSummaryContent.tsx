@@ -14,7 +14,7 @@ import 'react-rangeslider/lib/index.css';
 
 import SummaryBarGraph from './SummaryBarGraph';
 
-const orderedLabels:Record<keyof ICancerTypeAlterationCounts, string> = {
+const orderedLabels:Record<keyof IAlterationCountMap, string> = {
     multiple: "Multiple Alterations",
     protExpressionDown: "Protein Downregulation",
     protExpressionUp: "Protein Upregulation",
@@ -28,7 +28,7 @@ const orderedLabels:Record<keyof ICancerTypeAlterationCounts, string> = {
     mutated: "Mutation"
 };
 
-export interface ICancerTypeAlterationCounts {
+export interface IAlterationCountMap {
     mutated: number;
     amp:number;
     homdel:number;
@@ -46,7 +46,7 @@ export interface ICancerTypeAlterationCounts {
 export interface ICancerTypeAlterationData {
     alterationTotal:number;
     sampleTotal:number;
-    alterationTypeCounts:ICancerTypeAlterationCounts;
+    alterationTypeCounts:IAlterationCountMap;
     alteredSampleCount:number;
     parentCancerType:string;
 
@@ -264,7 +264,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
     }
 
     private getColors(color:string) {
-        const alterationToColor: Record<keyof ICancerTypeAlterationCounts, string> = {
+        const alterationToColor: Record<keyof IAlterationCountMap, string> = {
             mutated:"#008000",
             amp:"#ff0000",
             homdel:"rgb(0,0,255)",
