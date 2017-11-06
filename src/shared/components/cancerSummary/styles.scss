@@ -37,17 +37,32 @@
     th:first-child, td:first-child {
           border-right: 2px solid #ddd;} }
 
-.cancer-study-form-controls {
+.cancer-summary-main-options {
+  margin-bottom:$standardMargin;
+}
 
-  .form-section {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 5px;
-    > div {
-      margin-right:25px;
-      flex:1 1 100%}
+.cancer-summary-secondary-options {
+  margin-top:$standardMargin;
+}
+
+.cancer--summary-form-controls {
+
+  > div {
+    padding:0 15;
+    border-left:1px dashed $borderColor;
+    &:first-child {
+      border:none;
+    }
   }
+  //.form-section {
+  //  display: flex;
+  //  justify-content: space-between;
+  //  align-items: flex-start;
+  //  margin-bottom: 5px;
+  //  > div {
+  //    margin-right:25px;
+  //    flex:1 1 100%}
+  //}
 
   .slider-holder {
     display: flex;
