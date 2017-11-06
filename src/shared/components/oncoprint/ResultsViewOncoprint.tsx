@@ -200,7 +200,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         );
 
         this.controlsHandlers = observable({
-            onSelectColumnType:(type:"sample"|"patient")=>{this.columnMode = type;},
+            onSelectColumnType:(type:"sample"|"patient")=>{this.setColumnMode(type);},
             onSelectShowUnalteredColumns:(show:boolean)=>{this.showUnalteredColumns = show;},
             onSelectShowWhitespaceBetweenColumns:(show:boolean)=>{this.showWhitespaceBetweenColumns = show;},
             onSelectShowClinicalTrackLegends:(show:boolean)=>{this.showClinicalTrackLegends = show; },
@@ -490,7 +490,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     
     @computed get heatmapTrackGroupsUrlParam() {
         return _.sortBy(this.molecularProfileIdToHeatmapTracks.values(), (x:HeatmapTrackGroupRecord)=>x.trackGroupIndex)
-            .filter((x:HeatmapTrackGroupRecord)=>x.genes.size)
+            .filter((x:HeatmapTrackGroupRecord)=>!!x.genes.size)
             .map((x:HeatmapTrackGroupRecord)=>`${x.molecularProfileId},${x.genes.keys().join(",")}`);
     }
 
@@ -556,6 +556,12 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             return this.alteredPatientUIDs.result;
         } else {
             return [];
+        }
+    }
+
+    private setColumnMode(type:"sample"|"patient") {
+        if (this.columnMode !== type) {
+            this.columnMode = type;
         }
     }
 
@@ -681,7 +687,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             });
         },
         default: [],
-        onResult:x=>console.log(x)
     });
 
     readonly clinicalTracks = remoteData<ClinicalTrackSpec<any>[]>({
@@ -746,7 +751,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                     molecularAlterationType: track.genetic_alteration_type as MolecularProfile["molecularAlterationType"],
                     datatype: track.datatype as MolecularProfile["datatype"],
                     data: track.oncoprint_data,
-                    valueKey: "profile_data",
                     trackGroupIndex: this.molecularProfileIdToHeatmapTracks.get(molecularProfileId)!.trackGroupIndex,
                     onRemove:()=>{
                         const trackGroup = this.molecularProfileIdToHeatmapTracks.get(molecularProfileId);

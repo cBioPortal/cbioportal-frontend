@@ -15,6 +15,18 @@ export function doWithRenderingSuppressedAndSortingOff(oncoprint:OncoprintJS<any
     oncoprint.releaseRendering();
 }
 
+export function getHeatmapTrackRuleSetParams() {
+    return {
+        type: 'gradient' as 'gradient',
+        legend_label: 'Heatmap',
+        value_key: "profile_data",
+        value_range: [-3,3] as [number, number],
+        colors: [[0,0,255,1], [0,0,0,1], [255,0,0,1]],
+        value_stop_points: [-3, 0, 3],
+        null_color: 'rgba(224,224,224,1)'
+    };
+}
+
 export function getGeneticTrackRuleSetParams(distinguishMutationType?:boolean, distinguishDrivers?:boolean):RuleSetParams {
     if (!distinguishMutationType && !distinguishDrivers) {
         return genetic_rule_set_same_color_for_all_no_recurrence;

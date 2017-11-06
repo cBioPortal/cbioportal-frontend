@@ -7,6 +7,7 @@ import {computed, observable} from "mobx";
 import {doWithRenderingSuppressedAndSortingOff, getClinicalTrackRuleSetParams, getGeneticTrackRuleSetParams} from "./OncoprintUtils";
 import {getClinicalTrackSortComparator, getGeneticTrackSortComparator, heatmapTrackSortComparator} from "./SortUtils";
 import {transition} from "./DeltaUtils";
+import _ from "lodash";
 
 export type ClinicalTrackSpec<D> = {
     key: string; // for efficient diffing, just like in React. must be unique
@@ -66,7 +67,6 @@ export type HeatmapTrackSpec = {
     molecularAlterationType: MolecularProfile["molecularAlterationType"];
     datatype: MolecularProfile["datatype"];
     data: HeatmapTrackDatum[];
-    valueKey: string;
     trackGroupIndex: number;
     onRemove:()=>void;
 };
@@ -104,6 +104,8 @@ export interface IOncoprintProps {
 
     onMinimapClose?:()=>void;
     onDeleteClinicalTrack?:(key:string)=>void;
+
+    suppressRendering?:boolean;
 }
 
 @observer
@@ -111,12 +113,14 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
     private div:HTMLDivElement;
     public oncoprint:OncoprintJS<any>;
     private trackSpecKeyToTrackId:{[key:string]:TrackId};
+    private lastTransitionProps:IOncoprintProps;
 
     constructor() {
         super();
 
         this.trackSpecKeyToTrackId = {};
         this.divRefHandler = this.divRefHandler.bind(this);
+        this.refreshOncoprint = _.debounce(this.refreshOncoprint, 50);
     }
 
     private divRefHandler(div:HTMLDivElement) {
@@ -135,7 +139,7 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
                 this.props.sortConfig.sortByDrivers;
     }
 
-    private refreshOncoprint(props:IOncoprintProps, firstRender?:boolean) {
+    private refreshOncoprint(props:IOncoprintProps) {
         if (!this.oncoprint) {
             // instantiate new one
             this.oncoprint = new OncoprintJS(`#${props.divId}`, props.width);
@@ -144,7 +148,8 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
                 props.oncoprintRef(this.oncoprint);
             }
         }
-        transition(props, (firstRender ? {} : this.props), this.oncoprint, ()=>this.trackSpecKeyToTrackId);
+        transition(props, this.lastTransitionProps || {}, this.oncoprint, ()=>this.trackSpecKeyToTrackId);
+        this.lastTransitionProps = _.clone(this.props);
     }
 
     componentWillReceiveProps(nextProps:IOncoprintProps) {
@@ -156,16 +161,10 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
     }
 
     componentDidMount() {
-        this.refreshOncoprint(this.props, true);
+        this.refreshOncoprint(this.props);
     }
 
     render() {
         return (<div id={this.props.divId} ref={this.divRefHandler}/>);
     }
 }
-
-// DEVELOPMENT NOTES:
-// This class is a general oncoprint class, without specific things like "patient mode" and "sample mode"
-// (First pass) Get working with constant refresh
-// (Second pass) Get working with efficient/smart updates
-// (Third pass)
