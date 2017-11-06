@@ -7,6 +7,7 @@ import {
 } from "../../lib/QuerySession";
 import {observer} from "mobx-react";
 import {
+    action,
     autorun,
     computed, IObservableObject, IObservableValue, IReactionDisposer, observable, ObservableMap,
     reaction
@@ -45,6 +46,8 @@ interface IResultsViewOncoprintProps {
 
 export type OncoprintClinicalAttribute =
     Pick<ClinicalAttribute, "clinicalAttributeId"|"datatype"|"description"|"displayName"|"patientAttribute">;
+
+export type SortMode = {type:"data"|"alphabetical"|"caseList"|"heatmap", clusteredHeatmapProfile?:string};
 
 type OncoprintTrackData = OncoprintSampleGeneticTrackData | OncoprintPatientGeneticTrackData;
 
@@ -85,7 +88,7 @@ type HeatmapTrackGroupRecord = {
 @observer
 export default class ResultsViewOncoprint extends React.Component<IResultsViewOncoprintProps, {}> {
     @observable columnMode:"sample"|"patient" = "sample";
-    @observable sortMode:{type:"data"|"alphabetical"|"caseList"|"heatmap", clusteredHeatmapProfile?:string} = {type:"data"};
+    @observable sortMode:SortMode = {type:"data"};
 
     @observable distinguishMutationType:boolean = true;
     @observable distinguishDrivers:boolean = true;
@@ -206,7 +209,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             onSelectShowClinicalTrackLegends:(show:boolean)=>{this.showClinicalTrackLegends = show; },
             onSelectShowMinimap:(show:boolean)=>{this.showMinimap = show;},
             onSelectDistinguishMutationType:(s:boolean)=>{this.distinguishMutationType = s;},
-            onSelectDistinguishDrivers:(s:boolean)=>{
+            onSelectDistinguishDrivers:action((s:boolean)=>{
                 this.distinguishDrivers = s;
                 if (!this.distinguishDrivers) {
                     this.annotateDriversOncoKb = false;
@@ -220,51 +223,51 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                     this.annotateDriversCBioPortal = true;
                     this.annotateDriversCOSMIC = true;
                 }
-            },
-            onSelectAnnotateOncoKb:(s:boolean)=>{
+            }),
+            onSelectAnnotateOncoKb:action((s:boolean)=>{
                 this.annotateDriversOncoKb = s;
                 if (this.annotateDriversOncoKb) {
                     this.distinguishDrivers = true;
                 }
-            },
-            onSelectAnnotateHotspots:(s:boolean)=>{
+            }),
+            onSelectAnnotateHotspots:action((s:boolean)=>{
                 this.annotateDriversHotspots = s;
                 if (this.annotateDriversHotspots) {
                     this.distinguishDrivers = true;
                 }
-            },
-            onSelectAnnotateCBioPortal:(s:boolean)=>{
+            }),
+            onSelectAnnotateCBioPortal:action((s:boolean)=>{
                 this.annotateDriversCBioPortal = s;
                 if (this.annotateDriversCBioPortal) {
                     this.distinguishDrivers = true;
                 }
-            },
-            onSelectAnnotateCOSMIC:(s:boolean)=>{
+            }),
+            onSelectAnnotateCOSMIC:action((s:boolean)=>{
                 this.annotateDriversCOSMIC = s;
                 if (this.annotateDriversCOSMIC) {
                     this.distinguishDrivers = true;
                 }
-            },
-            onChangeAnnotateCBioPortalInputValue:(s:string)=>{
+            }),
+            onChangeAnnotateCBioPortalInputValue:action((s:string)=>{
                 this.annotateDriversCBioPortalThreshold = s;
                 this.controlsHandlers.onSelectAnnotateCBioPortal && this.controlsHandlers.onSelectAnnotateCBioPortal(true);
-            },
-            onChangeAnnotateCOSMICInputValue:(s:string)=>{
+            }),
+            onChangeAnnotateCOSMICInputValue:action((s:string)=>{
                 this.annotateDriversCOSMICThreshold = s;
                 this.controlsHandlers.onSelectAnnotateCOSMIC && this.controlsHandlers.onSelectAnnotateCOSMIC(true);
-            },
-            onSelectCustomDriverAnnotationBinary:(s:boolean)=>{
+            }),
+            onSelectCustomDriverAnnotationBinary:action((s:boolean)=>{
                 this.annotateCustomDriverBinary = s;
                 if (this.annotateCustomDriverBinary) {
                     this.distinguishDrivers = true;
                 }
-            },
-            onSelectCustomDriverAnnotationTier:(value:string, checked:boolean)=>{
+            }),
+            onSelectCustomDriverAnnotationTier:action((value:string, checked:boolean)=>{
                 this.selectedCustomDriverAnnotationTiers.set(value, checked);
                 if (checked) {
                     this.distinguishDrivers = true;
                 }
-            },
+            }),
             onSelectHidePutativePassengers:(s:boolean)=>{
                 this.hidePutativePassengers = s;
             },
@@ -278,23 +281,22 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             onSelectSortByDrivers:(sort:boolean)=>{this.sortByDrivers=sort;},
             onClickSortByData:()=>{this.sortMode={type:"data"};},
             onSelectClinicalTrack: this.onSelectClinicalTrack,
-            onChangeHeatmapGeneInputValue:(s:string)=>{
+            onChangeHeatmapGeneInputValue:action((s:string)=>{
                 this.heatmapGeneInputValue = s;
                 this.heatmapGeneInputValueUpdater(); // stop updating heatmap input if user has typed
-            },
+            }),
             onSelectHeatmapProfile:(id:string)=>{this.selectedHeatmapProfile = id;},
             onClickAddGenesToHeatmap:()=>{
                 this.addHeatmapTracks(this.selectedHeatmapProfile, this.heatmapGeneInputValue.toUpperCase().trim().split(/\s+/));
             },
-            onClickRemoveHeatmap:()=>{
+            onClickRemoveHeatmap:action(()=>{
                 this.molecularProfileIdToHeatmapTracks.clear();
-            },
-            onClickClusterHeatmap:()=>{
                 if (this.sortMode.type === "heatmap") {
-                    this.sortMode = {type:"data"};
-                } else {
-                    this.sortMode = {type: "heatmap", clusteredHeatmapProfile: this.selectedHeatmapProfile};
+                    this.sortByData();
                 }
+            }),
+            onClickClusterHeatmap:()=>{
+                this.sortMode = {type: "heatmap", clusteredHeatmapProfile: this.selectedHeatmapProfile};
             },
             onClickDownload:(type:string)=>{
                 if (type === "pdf") {
@@ -413,7 +415,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 return self.unselectedClinicalAttributes;
             },
             get sortMode() {
-                return self.sortMode.type;
+                return self.sortMode;
             },
             get sortByDrivers() {
                 return self.sortByDrivers;
@@ -423,6 +425,13 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             },
             get selectedHeatmapProfile() {
                 return self.selectedHeatmapProfile;
+            },
+            get clusterHeatmapButtonDisabled() {
+                return (self.sortMode.type === "heatmap" &&
+                    self.selectedHeatmapProfile === self.sortMode.clusteredHeatmapProfile);
+            },
+            get hideClusterHeatmapButton() {
+                return !self.molecularProfileIdToHeatmapTracks.get(self.selectedHeatmapProfile);
             },
             get heatmapGeneInputValue() {
                 return self.heatmapGeneInputValue;
@@ -486,6 +495,10 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             const attrIds = paramsMap[CLINICAL_TRACKS_URL_PARAM].split(",");
             attrIds.map((attrId:string)=>this.onSelectClinicalTrack(attrId));
         }
+    }
+
+    @action private sortByData() {
+        this.sortMode = {type:"data"};
     }
     
     @computed get heatmapTrackGroupsUrlParam() {
@@ -752,12 +765,18 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                     datatype: track.datatype as MolecularProfile["datatype"],
                     data: track.oncoprint_data,
                     trackGroupIndex: this.molecularProfileIdToHeatmapTracks.get(molecularProfileId)!.trackGroupIndex,
-                    onRemove:()=>{
+                    onRemove:action(()=>{
                         const trackGroup = this.molecularProfileIdToHeatmapTracks.get(molecularProfileId);
                         if (trackGroup) {
                             trackGroup.genes.delete(gene);
+                            if (!trackGroup.genes.size) {
+                                this.molecularProfileIdToHeatmapTracks.delete(molecularProfileId);
+                                if (this.sortMode.type === "heatmap" && this.sortMode.clusteredHeatmapProfile === molecularProfileId) {
+                                    this.sortByData();
+                                }
+                            }
                         }
-                    }
+                    })
                 };
             });
         },

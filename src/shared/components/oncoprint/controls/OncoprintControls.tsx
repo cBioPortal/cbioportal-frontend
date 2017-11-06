@@ -10,7 +10,7 @@ import ReactSelect from "react-select";
 import {MobxPromise} from "mobxpromise";
 import {computed, IObservableObject, IObservableValue, observable, ObservableMap, reaction} from "mobx";
 import _ from "lodash";
-import {OncoprintClinicalAttribute} from "../ResultsViewOncoprint";
+import {OncoprintClinicalAttribute, SortMode} from "../ResultsViewOncoprint";
 import {MolecularProfile} from "shared/api/generated/CBioPortalAPI";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
@@ -74,11 +74,13 @@ export interface IOncoprintControlsState {
     annotateCBioPortalInputValue?:string,
     annotateCOSMICInputValue?:string,
 
-    sortMode:"heatmap"|"data"|"alphabetical"|"caseList",
+    sortMode:SortMode,
     clinicalAttributesPromise?:MobxPromise<OncoprintClinicalAttribute[]>,
     heatmapProfilesPromise?:MobxPromise<MolecularProfile[]>,
     selectedHeatmapProfile?:string;
     heatmapGeneInputValue?: string;
+    clusterHeatmapButtonDisabled?:boolean;
+    hideClusterHeatmapButton?:boolean;
 
     customDriverAnnotationBinaryMenuLabel?:string;
     customDriverAnnotationTiersMenuLabel?:string;
@@ -264,10 +266,6 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                 this.props.handlers.onSelectHidePutativePassengers &&
                 this.props.handlers.onSelectHidePutativePassengers(!this.props.state.hidePutativePassengers);
                 break;
-            case EVENT_KEY.sortByHeatmapClustering:
-                this.props.handlers.onClickClusterHeatmap &&
-                this.props.handlers.onClickClusterHeatmap();
-                break;
         }
     }
 
@@ -317,6 +315,10 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
             case EVENT_KEY.downloadTabular:
                 this.props.handlers.onClickDownload &&
                 this.props.handlers.onClickDownload("tabular");
+                break;
+            case EVENT_KEY.sortByHeatmapClustering:
+                this.props.handlers.onClickClusterHeatmap &&
+                this.props.handlers.onClickClusterHeatmap();
                 break;
         }
     }
@@ -427,13 +429,14 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                             onClick={this.onButtonClick}
                         >Remove Heatmap</button>
                         <br/>
-                         <div className="checkbox"><label style={{cursor:"pointer"}}>
-                             <input
-                                 type="checkbox"
-                                 value={EVENT_KEY.sortByHeatmapClustering}
-                                 onClick={this.onInputClick}
-                             /> Cluster Heatmap
-                         </label></div>
+                        {!this.props.state.hideClusterHeatmapButton &&
+                            (<button
+                                 style={{fontSize:"13px"}}
+                                 name={EVENT_KEY.sortByHeatmapClustering}
+                                 onClick={this.onButtonClick}
+                                 disabled={this.props.state.clusterHeatmapButtonDisabled}
+                             >Cluster Heatmap</button>)
+                        }
                     </div>
                 );
             }
@@ -457,7 +460,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                                 type="radio"
                                 name="sortBy"
                                 value={EVENT_KEY.sortByData}
-                                checked={this.props.state.sortMode === "data"}
+                                checked={this.props.state.sortMode.type === "data"}
                                 onClick={this.onInputClick}
                             /> Sort by data
                         </label></div>
@@ -468,7 +471,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                                     value={EVENT_KEY.sortByMutationType}
                                     checked={this.props.state.sortByMutationType}
                                     onClick={this.onInputClick}
-                                    disabled={this.props.state.sortMode !== "data" || !this.props.state.distinguishMutationType}
+                                    disabled={this.props.state.sortMode.type !== "data" || !this.props.state.distinguishMutationType}
                                 /> Mutation Type
                             </label></div>
                             <div className="checkbox"><label>
@@ -477,7 +480,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                                     value={EVENT_KEY.sortByDrivers}
                                     checked={this.props.state.sortByDrivers}
                                     onClick={this.onInputClick}
-                                    disabled={this.props.state.sortMode !== "data" || !this.props.state.distinguishDrivers}
+                                    disabled={this.props.state.sortMode.type !== "data" || !this.props.state.distinguishDrivers}
                                 /> Driver/Passenger
                             </label></div>
                         </div>
@@ -486,7 +489,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                                 type="radio"
                                 name="sortBy"
                                 value={EVENT_KEY.sortAlphabetical}
-                                checked={this.props.state.sortMode === "alphabetical"}
+                                checked={this.props.state.sortMode.type === "alphabetical"}
                                 onClick={this.onInputClick}
                             /> Sort by case id (alphabetical)
                         </label></div>
@@ -495,7 +498,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                                 type="radio"
                                 name="sortBy"
                                 value={EVENT_KEY.sortCaseListOrder}
-                                checked={this.props.state.sortMode === "caseList"}
+                                checked={this.props.state.sortMode.type === "caseList"}
                                 onClick={this.onInputClick}
                             /> Sort by case list order
                         </label></div>
@@ -506,7 +509,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                             <input
                                 type="radio"
                                 name="sortBy"
-                                checked={this.props.state.sortMode === "heatmap"}
+                                checked={this.props.state.sortMode.type === "heatmap"}
                                 disabled
                             /> Sorted by heatmap clustering order
                         </label></div>)}
