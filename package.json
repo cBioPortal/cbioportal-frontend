@@ -155,6 +155,7 @@
     "react-height": "^2.2.0",
     "react-if": "^2.1.0",
     "react-motion": "^0.4.7",
+    "react-plotly.js": "^1.0.3",
     "react-rangeslider": "^2.1.0",
     "react-redux": "^5.0.2",
     "react-renderif": "^1.0.2",
