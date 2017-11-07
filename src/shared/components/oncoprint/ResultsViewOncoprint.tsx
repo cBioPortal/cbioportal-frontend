@@ -504,7 +504,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     @computed get heatmapTrackGroupsUrlParam() {
         return _.sortBy(this.molecularProfileIdToHeatmapTracks.values(), (x:HeatmapTrackGroupRecord)=>x.trackGroupIndex)
             .filter((x:HeatmapTrackGroupRecord)=>!!x.genes.size)
-            .map((x:HeatmapTrackGroupRecord)=>`${x.molecularProfileId},${x.genes.keys().join(",")}`);
+            .map((x:HeatmapTrackGroupRecord)=>`${x.molecularProfileId},${x.genes.keys().join(",")}`)
+            .join(";");
     }
 
     private addHeatmapTracks(molecularProfileId:string, genes:string[]) {

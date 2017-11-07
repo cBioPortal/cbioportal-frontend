@@ -76,7 +76,7 @@ function tracksWhoseDataChanged(nextTracks:{key:string, data:any}[], prevTracks:
     const prevTracksMap = _.keyBy(prevTracks, x=>x.key);
     for (const nextTrack of nextTracks) {
         const prevTrack = prevTracksMap[nextTrack.key];
-        if (prevTrack && (prevTrack.data !== nextTrack.data)) {
+        if (!prevTrack || (prevTrack.data !== nextTrack.data)) {
             ret.push(nextTrack);
         }
     }
@@ -152,8 +152,8 @@ function allTracks(props:Partial<IOncoprintProps>) {
 function shouldSuppressRenderingForTransition(nextProps: IOncoprintProps, prevProps: Partial<IOncoprintProps>) {
     // If cost of rerendering everything less than cost of all the rerenders that would happen in the process
     //  of incrementally changing the oncoprint state.
-    return !nextProps.suppressRendering &&
-        (hasGeneticTrackRuleSetChanged(nextProps, prevProps)
+    return !nextProps.suppressRendering && // dont add suppress if already suppressing
+        (hasGeneticTrackRuleSetChanged(nextProps, prevProps) // will need to rerender all genetic tracks if genetic rule set has changed
         || (tracksWhoseDataChanged(allTracks(nextProps), allTracks(prevProps)).length > 1));
 }
 
