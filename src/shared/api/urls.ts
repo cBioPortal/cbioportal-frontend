@@ -26,6 +26,12 @@ export function getCbioPortalApiUrl() {
 export function getStudyViewUrl(studyId:string) {
     return cbioUrl('study', {id: studyId});
 }
+export function getSampleViewUrl(studyId:string, sampleId:string) {
+    return cbioUrl('patient', { studyId, sampleId });
+}
+export function getPatientViewUrl(studyId:string, patientId:string) {
+    return cbioUrl('patient', { studyId, caseId:patientId });
+}
 export function getStudySummaryUrl(studyId:string) {
     return cbioUrl('study', {id: studyId}, 'summary');
 }

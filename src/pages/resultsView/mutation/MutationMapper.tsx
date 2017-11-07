@@ -1,6 +1,5 @@
 import * as React from 'react';
 import {observer} from "mobx-react";
-import {Button, ButtonGroup} from 'react-bootstrap';
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import StructureViewerPanel from "shared/components/structureViewer/StructureViewerPanel";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";

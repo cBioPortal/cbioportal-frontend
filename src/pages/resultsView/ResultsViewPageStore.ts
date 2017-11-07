@@ -265,6 +265,16 @@ export class ResultsViewPageStore {
         }
     });
 
+    readonly clinicalAttributes = remoteData({
+        invoke:async()=>{
+            return _.flatten(await Promise.all(this.studyIds.map(studyId=>{
+                return client.getAllClinicalAttributesInStudyUsingGET({
+                    studyId
+                });
+            })));
+        }
+    });
+
     readonly molecularData = remoteData({
         await: () => [
             this.studyToDataQueryFilter,
@@ -703,6 +713,37 @@ export class ResultsViewPageStore {
             return ret;
         }
     }, {});
+
+    readonly heatmapMolecularProfiles = remoteData<MolecularProfile[]>({
+        await: ()=>[
+            this.molecularProfilesInStudies
+        ],
+        invoke:()=>{
+            const MRNA_EXPRESSION = "MRNA_EXPRESSION";
+            const PROTEIN_LEVEL = "PROTEIN_LEVEL";
+            const selectedMolecularProfileIds = stringListToSet(this.selectedMolecularProfileIds);
+
+            return Promise.resolve(_.sortBy(_.filter(this.molecularProfilesInStudies.result!, profile=>{
+                return (profile.molecularAlterationType === MRNA_EXPRESSION ||
+                        profile.molecularAlterationType === PROTEIN_LEVEL) && profile.showProfileInAnalysisTab;
+            }), profile=>{
+                // Sort order: selected and mrna, selected and protein, unselected and mrna, unselected and protein
+                if (profile.molecularProfileId in selectedMolecularProfileIds) {
+                    if (profile.molecularAlterationType === MRNA_EXPRESSION) {
+                        return 0;
+                    } else if (profile.molecularAlterationType === PROTEIN_LEVEL) {
+                        return 1;
+                    }
+                } else {
+                    if (profile.molecularAlterationType === MRNA_EXPRESSION) {
+                        return 2;
+                    } else if (profile.molecularAlterationType === PROTEIN_LEVEL) {
+                        return 3;
+                    }
+                }
+            }));
+        }
+    });
 
     readonly discreteCNAData = remoteData<DiscreteCopyNumberData[]>({
         await: () => [
