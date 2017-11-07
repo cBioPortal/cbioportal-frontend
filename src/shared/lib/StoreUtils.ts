@@ -825,3 +825,16 @@ export function groupBySampleId(sampleIds: Array<string>, clinicalDataArray: Arr
         })
     );
 }
+
+export function groupBy<T>(data:T[], keyFn:(d:T)=>string, defaultKeys:string[]=[]):{[key:string]:T[]} {
+    const ret:{[key:string]:T[]} = {};
+    for (const key of defaultKeys) {
+        ret[key] = [];
+    }
+    for (const datum of data) {
+        const key = keyFn(datum);
+        ret[key] = ret[key] || [];
+        ret[key].push(datum);
+    }
+    return ret;
+}
