@@ -14,8 +14,8 @@ import {OncoprintClinicalAttribute, SortMode} from "../ResultsViewOncoprint";
 import {MolecularProfile} from "shared/api/generated/CBioPortalAPI";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
-import Slider from "rc-slider";
-import 'rc-slider/assets/index.css';
+import Slider from "react-rangeslider";
+import 'react-rangeslider/lib/index.css';
 import EditableSpan from "shared/components/editableSpan/EditableSpan";
 import FadeInteraction from "shared/components/fadeInteraction/FadeInteraction";
 
@@ -782,10 +782,11 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                         <Slider
                             value={this.horzZoomSliderState}
                             onChange={this.onHorzZoomSliderChange}
-                            onAfterChange={this.onHorzZoomSliderSet}
+                            onChangeComplete={this.onHorzZoomSliderSet}
                             step={0.01}
                             max={1}
                             min={0}
+                            tooltip={false}
                         />
                     </div>
                 </DefaultTooltip>
