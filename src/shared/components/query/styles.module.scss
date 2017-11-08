@@ -1,3 +1,5 @@
+@import "mixins.modules";
+
 .QueryAndDownloadTabs {
 
   :global(ul.nav) {
@@ -465,6 +467,14 @@ div.SelectedStudiesWindow {
   }
 }
 
+.summaryButton {
+  .summaryButtonIcon {
+    @include study-view-icon("./study-view.svg");
+  }
+  .summaryButtonText {
+    margin-left: 5px;
+  }
+}
 div.MutSigGeneSelectorWindow {
   div:global(.modal-dialog) {
     width: 650px;

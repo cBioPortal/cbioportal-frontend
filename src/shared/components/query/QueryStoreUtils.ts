@@ -19,7 +19,7 @@ export function currentQueryParams(store:QueryStore) {
 
 export function queryUrl(store:QueryStore, nonMolecularProfileParams:NonMolecularProfileQueryParams) {
 
-    if (store.selectedStudyIds.length != 1)
+    /*if (store.selectedStudyIds.length != 1)
     {
         let studyIds = store.selectedStudyIds;
         if (!studyIds.length) {
@@ -30,7 +30,8 @@ export function queryUrl(store:QueryStore, nonMolecularProfileParams:NonMolecula
         return `cross_cancer.do?#${hash}`;
     } else {
         return 'index.do';
-    }
+    }*/
+    return 'index.do';
 }
 
 export function queryParams(nonMolecularProfileParams:NonMolecularProfileQueryParams,
