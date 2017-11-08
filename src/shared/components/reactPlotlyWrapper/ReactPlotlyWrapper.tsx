@@ -13,8 +13,9 @@ export interface IReactPlotlyWrapperProps {
 export default class ReactPlotlyWrapper extends React.Component<IReactPlotlyWrapperProps, {}>
 {
 
-    private wrapper:any;
+    private wrapper:HTMLDivElement;
     private tooltipTriggeredRender = false;
+    private tooltipEl:HTMLDivElement;
     @observable.ref private tooltipModel:any = null;
     @observable private showTooltip = false;
     @observable private tooltipPosition:any = { top:0, left:0 };
@@ -46,17 +47,46 @@ export default class ReactPlotlyWrapper extends React.Component<IReactPlotlyWrap
             runInAction(()=>{
                 that.tooltipTriggeredRender = true;
                 this.tooltipModel = data;
-                this.tooltipPosition = { top:data.event.y, left:data.event.x  };
+                this.tooltipPosition = { top:data.event.layerY +10, left:data.event.layerX + 10  };
                 that.showTooltip = true;
             });
         }.bind(this))
             .on('plotly_unhover', function(data: any){
-                runInAction(()=> {
-                    that.tooltipTriggeredRender = true;
-                    that.showTooltip = false;
-                });
+                if (data.event.toElement !== this.tooltipEl) {
+                    runInAction(()=> {
+                        that.tooltipTriggeredRender = true;
+                        that.showTooltip = false;
+                    });
+                }
+
             }.bind(this));
 
+
+        // this.plotlyContainer.on('plotly_hover', (data) => {
+        //     const offset = $(this.plotlyContainer).offset();
+        //     const cancerTypeData = data.points[0].data.customdata.alterationData[data.points[0].x];
+        //     const alterationTypeMap = data.points[0].data.customdata.alterationTypeMap;
+        //     $(this.tooltip)
+        //         .html(this.makeTooltip(data.points[0].x, cancerTypeData, alterationTypeMap))
+        //         .css({
+        //             left: data.event.layerX + 10,
+        //             top: data.event.layerY + 10
+        //         })
+        //         .show()
+        //         .on('mouseleave',()=>$(this.tooltip).hide())
+        // });
+        //
+        // this.plotlyContainer.on('plotly_unhover', (data) => {
+        //     if (data.event.toElement !== this.tooltip) {
+        //         $(this.tooltip).hide();
+        //     }
+        // });
+
+
+    }
+
+    triggerMouseLeave(){
+        Plotly.Fx.unhover(this.wrapper);
     }
 
     render(){
@@ -67,11 +97,17 @@ export default class ReactPlotlyWrapper extends React.Component<IReactPlotlyWrap
             position:'absolute',
             zIndex:100,
             left:this.tooltipPosition.left,
-            top:this.tooltipPosition.top
+            top:this.tooltipPosition.top,
+            padding:10,
+            background:'#fff',
+            border:'1px solid #eee'
         };
 
         return (<div style={{position:'relative'}}>
-                <div style={tooltipStyle} className={ classNames({ 'hidden':!this.showTooltip }) }>
+                <div onMouseLeave={this.triggerMouseleave}
+                     style={tooltipStyle}
+                     ref={(el:HTMLDivElement)=>this.tooltipEl=el}
+                     className={ classNames({ 'hidden':!this.showTooltip }) }>
                     {
                         (this.tooltipModel) && (this.props.buildTooltip(this.tooltipModel))
                     }
