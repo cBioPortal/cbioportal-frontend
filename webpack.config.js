@@ -53,7 +53,7 @@ var config = {
 
     'entry': [
         `babel-polyfill`,
-        `${path.join(src, 'appBootstrapper.jsx')}`
+         `${path.join(src, 'appBootstrapper.jsx')}`
     ],
     'output': {
         path: './dist/',
@@ -72,6 +72,13 @@ var config = {
             '.json',
             '.ts',
             '.tsx',
+        ]
+    },
+
+    resolveLoader: {
+        fallback: [
+            path.resolve(__dirname, 'loaders'),
+            path.join(process.cwd(), 'node_modules')
         ]
     },
 
@@ -147,8 +154,7 @@ var config = {
                 test: /\.pdf$/,
                 loader: `url-loader?name=${imgPath}&limit=1`,
             },
-            { test: /lodash/, loader: 'imports?define=>false'}
-
+            { test: /lodash/, loader: 'imports?define=>false'},
 
         ],
 
@@ -160,6 +166,10 @@ var config = {
                 test: /\.js$/,
                 loader: "source-map-loader"
             }
+        ],
+
+        postLoaders: [
+
         ]
     },
     'postcss': [require('autoprefixer')],
@@ -220,6 +230,11 @@ config.module.loaders.push(
     }
 );
 
+if (isDev) {
+    // add for testwriter
+    config.module.postLoaders.push({ test: /\.ts|tsx/, loader: 'testwriter'});
+    config.entry.push(`${path.join(src, 'testWriter.js')}`);
+}
 
 if (isDev || isTest) {
 
