@@ -34,11 +34,11 @@ export default class CancerSummaryContainer extends React.Component<{ store: Res
 
         const alterationCountsForCancerTypesByGene =
             this.props.store.getAlterationCountsForCancerTypesByGene(this.props.store.alterationsBySampleIdByGene.result!,
-                this.props.store.samplesExtendedWithClinicalData.result!, false);
+                this.props.store.samplesExtendedWithClinicalData.result!, 'studyId');
 
         const alterationCountsForCancerSubTypesByGene =
             this.props.store.getAlterationCountsForCancerTypesByGene(this.props.store.alterationsBySampleIdByGene.result!,
-                this.props.store.samplesExtendedWithClinicalData.result!, true);
+                this.props.store.samplesExtendedWithClinicalData.result!, 'studyId');
 
         const geneTabs = _.map(alterationCountsForCancerTypesByGene, (geneData, geneName: string) => {
 
@@ -65,8 +65,8 @@ export default class CancerSummaryContainer extends React.Component<{ store: Res
         if (geneTabs.length > 1) {
             geneTabs.unshift(<MSKTab key="all" id="allGenes" linkText="All Queried Genes">
                 <CancerSummaryContent gene={'all'} width={this.resultsViewPageWidth}
-                                      dataByCancerSubType={this.props.store.getAlterationCountsForCancerTypesForAllGenes(this.props.store.alterationsBySampleIdByGene.result!, this.props.store.samplesExtendedWithClinicalData.result!, true)}
-                                      dataByCancerType={this.props.store.getAlterationCountsForCancerTypesForAllGenes(this.props.store.alterationsBySampleIdByGene.result!, this.props.store.samplesExtendedWithClinicalData.result!, false)}
+                                      dataByCancerSubType={this.props.store.getAlterationCountsForCancerTypesForAllGenes(this.props.store.alterationsBySampleIdByGene.result!, this.props.store.samplesExtendedWithClinicalData.result!, 'studyId')}
+                                      dataByCancerType={this.props.store.getAlterationCountsForCancerTypesForAllGenes(this.props.store.alterationsBySampleIdByGene.result!, this.props.store.samplesExtendedWithClinicalData.result!, 'studyId')}
 
                 />
             </MSKTab>)
