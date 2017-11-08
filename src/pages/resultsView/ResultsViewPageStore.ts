@@ -34,8 +34,8 @@ import MutationMapper from "./mutation/MutationMapper";
 import {CacheData} from "../../shared/lib/LazyMobXCache";
 import {Dictionary} from "lodash";
 import {
-    ICancerTypeAlterationCounts,
-    ICancerTypeAlterationData
+    IAlterationCountMap,
+    IAlterationData
 } from "../../shared/components/cancerSummary/CancerSummaryContent";
 import {writeTest} from "../../shared/lib/writeTest";
 
@@ -88,11 +88,11 @@ export function buildDefaultOQLProfile(profilesTypes: string[], zScoreThreshold:
 
 }
 
-export function countAlterationOccurences(samplesByCancerType: {[cancerType: string]: ExtendedSample[]}, alterationsBySampleId: {[id: string]: ExtendedAlteration[]}):{ [entrezGeneId:string]:ICancerTypeAlterationData } {
+export function countAlterationOccurences(groupedSamples: {[groupingProperty: string]: ExtendedSample[]}, alterationsBySampleId: {[id: string]: ExtendedAlteration[]}):{ [entrezGeneId:string]:IAlterationData } {
 
-    return _.mapValues(samplesByCancerType, (samples: ExtendedSample[], cancerType: string) => {
+    return _.mapValues(groupedSamples, (samples: ExtendedSample[], cancerType: string) => {
 
-        const counts: ICancerTypeAlterationCounts = {
+        const counts: IAlterationCountMap = {
             mutated: 0,
             amp: 0, // 2
             homdel: 0, // -2
@@ -106,7 +106,7 @@ export function countAlterationOccurences(samplesByCancerType: {[cancerType: str
             multiple: 0,
         };
 
-        const ret: ICancerTypeAlterationData = {
+        const ret: IAlterationData = {
             sampleTotal:samples.length,
             alterationTotal:0,
             alterationTypeCounts:counts,
@@ -143,7 +143,7 @@ export function countAlterationOccurences(samplesByCancerType: {[cancerType: str
                         switch (alteration.alterationType) {
                             case AlterationTypeConstants.COPY_NUMBER_ALTERATION:
                                 // to do: type oqlfilter so that we can be sure alterationSubType is truly key of interface
-                                counts[(alteration.alterationSubType as keyof ICancerTypeAlterationCounts)]++;
+                                counts[(alteration.alterationSubType as keyof IAlterationCountMap)]++;
                                 break;
                             case AlterationTypeConstants.MRNA_EXPRESSION:
                                 if (alteration.alterationSubType === 'up') counts.mrnaExpressionUp++;
@@ -265,16 +265,16 @@ export class ResultsViewPageStore {
         }
     });
 
-    readonly molecularData = remoteData({
+    readonly molecularData = remoteData<GeneMolecularData[]>({
         await: () => [
             this.studyToDataQueryFilter,
             this.genes,
             this.selectedMolecularProfiles
         ],
-        invoke: async() => {
+        invoke: () => {
             // we get mutations with mutations endpoint, all other alterations with this one, so filter out mutation genetic profile
             const profilesWithoutMutationProfile = _.filter(this.selectedMolecularProfiles.result, (profile: MolecularProfile) => profile.molecularAlterationType !== 'MUTATION_EXTENDED');
-            if (profilesWithoutMutationProfile) {
+            if (profilesWithoutMutationProfile.length) {
                 const promises: Promise<GeneMolecularData[]>[] = profilesWithoutMutationProfile.map((profile: MolecularProfile) => {
                     const filter: MolecularDataFilter = (Object.assign(
                             {},
@@ -292,7 +292,7 @@ export class ResultsViewPageStore {
                 });
                 return Promise.all(promises).then((arrs: GeneMolecularData[][]) => _.concat([], ...arrs));
             } else {
-                return [];
+                return Promise.resolve([]);
             }
         }
     });
@@ -411,10 +411,10 @@ export class ResultsViewPageStore {
 
     public getAlterationCountsForCancerTypesByGene(alterationsBySampleIdByGene:{ [geneName:string]: {[sampleId: string]: ExtendedAlteration[]} },
                                                    samplesExtendedWithClinicalData:ExtendedSample[],
-                                                   detailed: boolean){
+                                                   discrimininator: keyof ExtendedSample){
         const ret = _.mapValues(alterationsBySampleIdByGene, (alterationsBySampleId: {[sampleId: string]: ExtendedAlteration[]}, gene: string) => {
             const samplesByCancerType = _.groupBy(samplesExtendedWithClinicalData,(sample:ExtendedSample)=>{
-                return (detailed) ? sample.cancerTypeDetailed : sample.cancerType;
+                return sample[discrimininator];
             });
             return countAlterationOccurences(samplesByCancerType, alterationsBySampleId);
         });
@@ -423,10 +423,10 @@ export class ResultsViewPageStore {
 
     public getAlterationCountsForCancerTypesForAllGenes(alterationsBySampleIdByGene:{ [geneName:string]: {[sampleId: string]: ExtendedAlteration[]} },
                                                    samplesExtendedWithClinicalData:ExtendedSample[],
-                                                   detailed: boolean){
+                                                   discriminator: keyof ExtendedSample){
 
         const samplesByCancerType = _.groupBy(samplesExtendedWithClinicalData,(sample:ExtendedSample)=>{
-            return (detailed) ? sample.cancerTypeDetailed : sample.cancerType;
+            return sample[discriminator];
         });
         const flattened = _.flatMap(alterationsBySampleIdByGene, (map) => map);
 
@@ -447,7 +447,7 @@ export class ResultsViewPageStore {
             this.filteredAlterations
         ],
         invoke: async() => {
-            return _.mapValues(this.filteredAlterations.result, (mutations: Mutation[]) => _.map(mutations, 'sampleId'));
+            return _.mapValues(this.filteredAlterations.result, (mutations: Mutation[]) => _.map(mutations, mutation=>mutation.uniqueSampleKey));
         }
     });
 
@@ -456,7 +456,7 @@ export class ResultsViewPageStore {
         invoke: async() => {
             return _.mapValues(this.filteredAlterationsAsSampleIdArrays.result, (sampleIds: string[]) => {
                 return this.samples.result.map((sample: Sample) => {
-                    return _.includes(sampleIds, sample.sampleId);
+                    return _.includes(sampleIds, sample.uniqueSampleKey);
                 });
             });
         }
@@ -544,6 +544,7 @@ export class ResultsViewPageStore {
                         this.samples,
                         this.oncoKbAnnotatedGenes.result || {},
                         () => (this.mutationDataCache),
+                        this.studyIdToStudy,
                         this.molecularProfileIdToMolecularProfile,
                         this.clinicalDataForSamples,
                         this.studiesForSamplesWithoutCancerTypeClinicalData,
@@ -665,7 +666,12 @@ export class ResultsViewPageStore {
         invoke: () => Promise.all(this.studyIds.map(studyId => client.getStudyUsingGET({studyId})))
     }, []);
 
-    private getGermlineSampleListId(studyId: string): string {
+    readonly studyIdToStudy = remoteData({
+        await: ()=>[this.studies],
+        invoke:()=>Promise.resolve(_.keyBy(this.studies.result, x=>x.studyId))
+    }, {});
+
+    private getGermlineSampleListId(studyId:string):string {
         return `${studyId}_germline`;
     }
 
@@ -759,7 +765,7 @@ export class ResultsViewPageStore {
         }
     });
 
-    readonly geneToMutData = remoteData({
+    readonly geneToMutData = remoteData<{[hugoGeneSymbol:string]: Mutation[]}>({
         await: () => [
             this.selectedMolecularProfiles,
             this.genes,
@@ -767,34 +773,36 @@ export class ResultsViewPageStore {
         ],
         invoke: async () => {
 
-            const mutationMolecularProfile = _.find(this.selectedMolecularProfiles.result,
+            const mutationMolecularProfiles = _.filter(this.selectedMolecularProfiles.result,
                 (molecularProfile: MolecularProfile) => {
                     return molecularProfile.molecularAlterationType === AlterationTypeConstants.MUTATION_EXTENDED;
                 });
 
-            if (mutationMolecularProfile) {
-                const mutationFilter: MolecularDataFilter = (Object.assign(
-                        {},
-                        {
-                            entrezGeneIds: this.genes.result!.map(gene => gene.entrezGeneId)
-                        },
-                        this.studyToDataQueryFilter.result![mutationMolecularProfile.studyId]
-                    ) as MolecularDataFilter
-                );
-                return client.fetchMutationsInMolecularProfileUsingPOST({
-                    molecularProfileId: mutationMolecularProfile.molecularProfileId,
-                    mutationFilter,
-                    projection: "DETAILED"
-                }).then((mutations) => {
-                    const groupedByGene = _.groupBy(mutations, (mutation: Mutation) => mutation.gene.hugoGeneSymbol);
-                    return _.reduce(this.genes.result, (memo, gene: Gene) => {
-                        // a gene may have no mutations
-                        memo[gene.hugoGeneSymbol] = groupedByGene[gene.hugoGeneSymbol] || [];
-                        return memo;
-                    },{} as { [hugoGeneSymbol:string] : Mutation[] });
-                })
+            if (mutationMolecularProfiles.length) {
+                const promises: Promise<Mutation[]>[] = mutationMolecularProfiles.map((mutationMolecularProfile:MolecularProfile)=>{
+                    const mutationFilter: MolecularDataFilter = (Object.assign(
+                            {},
+                            {
+                                entrezGeneIds: this.genes.result!.map(gene => gene.entrezGeneId)
+                            },
+                            this.studyToDataQueryFilter.result![mutationMolecularProfile.studyId]
+                        ) as MolecularDataFilter
+                    );
+                    return client.fetchMutationsInMolecularProfileUsingPOST({
+                        molecularProfileId: mutationMolecularProfile.molecularProfileId,
+                        mutationFilter,
+                        projection: "DETAILED"
+                    });
+                });
+                const mutations:Mutation[] = _.flatten(await Promise.all(promises));
+                const groupedByGene = _.groupBy(mutations, (mutation: Mutation) => mutation.gene.hugoGeneSymbol);
+                return _.reduce(this.genes.result, (memo, gene: Gene) => {
+                    // a gene may have no mutations
+                    memo[gene.hugoGeneSymbol] = groupedByGene[gene.hugoGeneSymbol] || [];
+                    return memo;
+                },{} as { [hugoGeneSymbol:string] : Mutation[] });
             } else {
-                return {}
+                return {};
             }
         }
     });
