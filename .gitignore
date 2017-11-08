@@ -18,3 +18,7 @@ test/
 .settings
 .classpath
 .project
+.vscode
+node
+target
+bin

@@ -135,7 +135,7 @@ export default class BarGraph extends React.Component<IBarGraphProps, {}> {
                 fontSize: 14,
                 fontStyle: 'normal'
             },
-            onClick: function (e: Event) {
+            onClick: function (e: Event | undefined) {
                 if (this.getElementAtEvent(e)[0]) {
                     const {studyId} = datasets[this.getElementAtEvent(e)[0]._datasetIndex];
                     window.location.href = 'study?id=' + studyId + '#summary';

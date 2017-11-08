@@ -448,7 +448,7 @@ export class ResultsViewPageStore {
             this.filteredAlterations
         ],
         invoke: async() => {
-            return _.mapValues(this.filteredAlterations.result, (mutations: Mutation[]) => _.map(mutations, 'sampleId'));
+            return _.mapValues(this.filteredAlterations.result, (mutations: Mutation[]) => _.map(mutations, mutation => mutation.sampleId));
         }
     });
 
@@ -457,7 +457,7 @@ export class ResultsViewPageStore {
             this.filteredAlterations
         ],
         invoke: async() => {
-            return _.mapValues(this.filteredAlterations.result, (mutations: Mutation[]) => _.map(mutations, 'uniquePatientKey'));
+            return _.mapValues(this.filteredAlterations.result, (mutations: Mutation[]) => _.map(mutations, mutation => mutation.uniquePatientKey));
         }
     });
 
@@ -654,8 +654,9 @@ export class ResultsViewPageStore {
         }
     });
 
-    private getPatientSurvivals(targetUniquePatientKeys: string[], statusAttributeId: string, monthsAttributeId: string,
-                                statusFilter: (s: string) => boolean): PatientSurvival[] {
+    private getPatientSurvivals(survivalClinicalDataGroupByUniquePatientKey: _.Dictionary<ClinicalData[]> | undefined, 
+        patients: Patient[], targetUniquePatientKeys: string[], statusAttributeId: string, 
+        monthsAttributeId: string, statusFilter: (s: string) => boolean): PatientSurvival[] {
 
         let patientSurvivals: PatientSurvival[] = [];
         if (targetUniquePatientKeys) {
@@ -671,7 +672,7 @@ export class ResultsViewPageStore {
                             patientId: patient.patientId,
                             studyId: patient.studyId,
                             status: statusFilter(statusClinicalData[0].value),
-                            months: Number.parseFloat(monthsClinicalData[0].value)
+                            months: parseFloat(monthsClinicalData[0].value)
                         });
                     }
                 }
@@ -687,8 +688,8 @@ export class ResultsViewPageStore {
             this.patients
         ],
         invoke: async() => {
-            return this.getPatientSurvivals(this.alteredUniquePatientKeys.result, 'OS_STATUS', 'OS_MONTHS',
-                s => s === 'DECEASED');
+            return this.getPatientSurvivals(this.survivalClinicalDataGroupByUniquePatientKey.result, this.patients.result,
+                this.alteredUniquePatientKeys.result, 'OS_STATUS', 'OS_MONTHS', s => s === 'DECEASED');
         }
     }, []);
 
@@ -699,8 +700,8 @@ export class ResultsViewPageStore {
             this.patients
         ],
         invoke: async() => {
-            return this.getPatientSurvivals(this.unalteredUniquePatientKeys.result!, 'OS_STATUS', 'OS_MONTHS',
-                s => s === 'DECEASED');
+            return this.getPatientSurvivals(this.survivalClinicalDataGroupByUniquePatientKey.result, this.patients.result,
+                this.unalteredUniquePatientKeys.result!, 'OS_STATUS', 'OS_MONTHS', s => s === 'DECEASED');
         }
     }, []);
 
@@ -711,8 +712,8 @@ export class ResultsViewPageStore {
             this.patients
         ],
         invoke: async() => {
-            return this.getPatientSurvivals(this.alteredUniquePatientKeys.result, 'DFS_STATUS', 'DFS_MONTHS',
-                s => s === 'Recurred/Progressed' || s === 'Recurred');
+            return this.getPatientSurvivals(this.survivalClinicalDataGroupByUniquePatientKey.result, this.patients.result,
+                this.alteredUniquePatientKeys.result, 'DFS_STATUS', 'DFS_MONTHS', s => s === 'Recurred/Progressed' || s === 'Recurred');
         }
     }, []);
 
@@ -723,8 +724,8 @@ export class ResultsViewPageStore {
             this.patients
         ],
         invoke: async() => {
-            return this.getPatientSurvivals(this.unalteredUniquePatientKeys.result!, 'DFS_STATUS', 'DFS_MONTHS',
-                s => s === 'Recurred/Progressed' || s === 'Recurred');
+            return this.getPatientSurvivals(this.survivalClinicalDataGroupByUniquePatientKey.result, this.patients.result,
+                this.unalteredUniquePatientKeys.result!, 'DFS_STATUS', 'DFS_MONTHS', s => s === 'Recurred/Progressed' || s === 'Recurred');
         }
     }, []);
 

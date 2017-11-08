@@ -1,14 +1,11 @@
 import * as React from 'react';
 import {observer} from "mobx-react";
 import {PatientSurvival} from "../../../shared/model/PatientSurvival";
-import {Line} from 'react-chartjs-2';
 import {computed, observable} from "mobx";
-import {Popover, Table} from 'react-bootstrap';
+import {Table} from 'react-bootstrap';
 import styles from "./styles.module.scss";
-import {ChartPoint} from "chart.js";
 import jStat from 'jStat';
-import {sleep} from "../../../shared/lib/TimeUtils";
-import Plot from 'react-plotly.js';
+import ReactPlotlyWrapper from '../../../shared/components/reactPlotlyWrapper/ReactPlotlyWrapper';
 
 export interface ISurvivalChartProps {
     alteredPatientSurvivals: PatientSurvival[];
@@ -130,17 +127,8 @@ export function getMarkerOpacities(estimates: number[]): number[] {
 @observer
 export default class SurvivalChart extends React.Component<ISurvivalChartProps, {}> {
 
-    @observable tooltipModel: any;
-    private isTooltipHovered: boolean;
-    @observable private pngAnchor = '';
     private alteredLegendText = 'Cases with Alteration(s) in Query Gene(s)';
     private unalteredLegendText = 'Cases without Alteration(s) in Query Gene(s)';
-
-    constructor(props: ISurvivalChartProps) {
-        super(props);
-        this.tooltipMouseEnter = this.tooltipMouseEnter.bind(this);
-        this.tooltipMouseLeave = this.tooltipMouseLeave.bind(this);
-    }
 
     @computed get sortedAlteredPatientSurvivals(): PatientSurvival[] {
         return this.props.alteredPatientSurvivals.sort((a, b) => a.months - b.months);
@@ -170,62 +158,92 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         return getMarkerOpacities(this.unalteredEstimates);
     }
 
-    private tooltipMouseEnter(): void {
-        this.isTooltipHovered = true;
-    }
-
-    private tooltipMouseLeave(): void {
-        this.isTooltipHovered = false;
-        this.tooltipModel = null;
-    }
-
-    private onHover(data: any): void {
-
-        console.log(data);
-    }
-
     public render() {
 
+        const data = [
+            {
+                type: 'scatter',
+                mode: 'lines+markers',
+                x: [0].concat(this.sortedAlteredPatientSurvivals.map(p => p.months)),
+                y: [100].concat(this.alteredEstimates.map(a => a*100)),
+                line: {shape: 'hv', width: 1},
+                marker: {color: 'red', symbol: 'cross', opacity: this.alteredMarkerOpacities},
+                name: this.alteredLegendText,
+                hoverinfo: 'none'
+            },
+            {
+                type: 'scatter',
+                line: {shape: 'hv', width: 1},
+                mode: 'lines+markers',
+                x: [0].concat(this.sortedUnalteredPatientSurvivals.map(p => p.months)),
+                y: [100].concat(this.unalteredEstimates.map(a => a*100)),
+                marker: {color: 'blue', symbol: 'cross', opacity: this.unalteredMarkerOpacities},
+                name: this.unalteredLegendText,
+                hoverinfo: 'none'
+            }
+        ];
+    
+        const layout = {
+            width: 1159,
+            height: 579,
+            title: this.props.title,
+            hovermode: 'closest',
+            xaxis: {
+                showgrid: false,
+                ticks: 'outside',
+                rangemode: 'tozero'
+            },
+            yaxis: {
+                showgrid: false,
+                ticks: 'outside',
+                rangemode: 'tozero',
+                ticksuffix: '%',
+                dtick: 10
+            },
+            annotations: [{
+                text: 'Logrank Test P-Value: ' + this.logRank.toPrecision(3),
+                showarrow: false,
+                xshift: 744,
+                xanchor: 'left',
+                y: 92
+            }]
+        };
+
         return (
-            <div className={styles.SurvivalChart}>
-                <Plot
-                    data={[
-                        {
-                            type: 'scatter',
-                            mode: 'lines+markers',
-                            x: [0].concat(this.sortedAlteredPatientSurvivals.map(p => p.months)),
-                            y: [100].concat(this.alteredEstimates.map(a => a*100)),
-                            line: {shape: 'hv', width: 1},
-                            marker: {color: 'red', symbol: 'cross', opacity: this.alteredMarkerOpacities},
-                            name: this.alteredLegendText
-                        },
-                        {
-                            type: 'scatter',
-                            line: {shape: 'hv', width: 1},
-                            mode: 'lines+markers',
-                            x: [0].concat(this.sortedUnalteredPatientSurvivals.map(p => p.months)),
-                            y: [100].concat(this.unalteredEstimates.map(a => a*100)),
-                            marker: {color: 'blue', symbol: 'cross', opacity: this.unalteredMarkerOpacities},
-                            name: this.unalteredLegendText
-                        }
-                    ]}
+            <div>
+                <ReactPlotlyWrapper data={data} layout={layout} buildTooltip={(tooltipModel) => {
 
-                    layout={{
-                        width: 1159,
-                        height: 579,
-                        title: this.props.title,
-                        hovermode: 'closest',
-                        xaxis: {
-                            showgrid: false
-                        },
-                        yaxis: {
-                            showgrid: false
-                        }
-                    }}
+                        let hoveredPatientSurvival: PatientSurvival | null = null;
+                        let hoveredEstimate: number = 0;
 
-                    onHover={this.onHover}
-                />
-                <div className={styles.LogRank}>Logrank Test P-Value: {this.logRank.toPrecision(3)}</div>
+                        if (tooltipModel) {
+                            const dataPoint:any = tooltipModel.points[0];
+                            if (dataPoint.pointNumber > 0) {
+                                if (dataPoint.curveNumber === 0) {
+                                    hoveredPatientSurvival = this.sortedAlteredPatientSurvivals[dataPoint.pointNumber - 1];
+                                    hoveredEstimate = this.alteredEstimates[dataPoint.pointNumber - 1];
+                                } else {
+                                    hoveredPatientSurvival = this.sortedUnalteredPatientSurvivals[dataPoint.pointNumber - 1];
+                                    hoveredEstimate = this.unalteredEstimates[dataPoint.pointNumber - 1];
+                                }
+                            } else {
+                                return null;
+                            }
+                        }
+
+                        return (
+                            <div className={styles.Tooltip}>
+                                Patient ID: <a href={'/case.do#/patient?caseId=' + hoveredPatientSurvival!.patientId + '&studyId=' +
+                                hoveredPatientSurvival!.studyId} target="_blank">{hoveredPatientSurvival!.patientId}</a><br/>
+                                {this.props.yLabelTooltip}: {(hoveredEstimate * 100).toFixed(2)}%<br/>
+                                {hoveredPatientSurvival!.status ? this.props.xLabelWithEventTooltip :
+                                this.props.xLabelWithoutEventTooltip}
+                                : {hoveredPatientSurvival!.months.toFixed(2)} months {hoveredPatientSurvival!.status ? "" :
+                                "(censored)"}
+                            </div>
+                        );
+                    }
+                }/>
                 <div className={styles.SurvivalTable}>
                     <Table bordered condensed striped>
                         <thead>
