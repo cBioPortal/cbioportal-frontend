@@ -14,13 +14,14 @@ import './styles.scss';
 interface ISummaryBarGraphProps {
     data: IBarGraphConfigOptions;
     yAxis: 'alt-freq' | 'abs-count';
-    xAxis: 'y-axis' | 'can-types';
+    xAxis: 'y-axis' | 'x-axis';
     legend: boolean;
     setPngAnchor:(href:string) => void;
     setPdfProperties:(anchor:string, width: number, height: number) => void;
     gene: string;
     width: number;
     altCasesMax:number;
+    title:string;
     orderedLabels: {
         [key:string]: string;
     };
@@ -163,7 +164,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
         return {
             title: {
                 display: true,
-                text: 'Cancer Type Summary',
+                text: this.props.title,
                 fontSize: 14,
                 fontStyle: 'normal'
             },
