@@ -1,6 +1,6 @@
-export default function formSubmit(path:string, params:{[s:string]:any}, target?:string) {
+export default function formSubmit(path:string, params:{[s:string]:any}, target?:string, method:"get"|"post"="post") {
     const form = document.createElement('form');
-    form.setAttribute('method', 'post');
+    form.setAttribute('method', method);
     form.setAttribute('action', path);
     if (target) {
         form.setAttribute('target', target);

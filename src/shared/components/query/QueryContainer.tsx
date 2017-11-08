@@ -42,7 +42,6 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
 		super();
 
 		this.handleSubmit = this.handleSubmit.bind(this);
-
 	}
 
 	get store()
@@ -63,16 +62,13 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
 			<FlexCol padded overflow className={styles.QueryContainer}>
 				<CancerStudySelector/>
 
-				{!!(this.store.singleSelectedStudyId) && (
-					<MolecularProfileSelector/>
-				)}
+				{this.store.isVirtualCohortQuery ?
+					(<DataTypePrioritySelector/>) :
+					(<MolecularProfileSelector/>)
+				}
 
-				{!!(this.store.singleSelectedStudyId) && (
+				{(this.store.selectedStudyIds.length > 0) && (
 					<CaseSetSelector/>
-				)}
-
-				{!!(!this.store.singleSelectedStudyId) && (
-					<DataTypePrioritySelector/>
 				)}
 
 				<GeneSetSelector/>
