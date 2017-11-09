@@ -2,7 +2,7 @@ import * as _ from "lodash";
 import * as React from "react";
 import CancerStudySelector from "./CancerStudySelector";
 import {FlexRow, FlexCol} from "../flexbox/FlexBox";
-import * as styles_any from './styles.module.scss';
+import * as styles_any from './styles/styles.module.scss';
 import classNames from 'classnames';
 import MolecularProfileSelector from "./MolecularProfileSelector";
 import {observable, computed, action} from 'mobx';
