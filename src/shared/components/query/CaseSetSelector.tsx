@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as styles_any from './styles.module.scss';
+import * as styles_any from './styles/styles.module.scss';
 import * as _ from 'lodash';
 import ReactSelect from 'react-select';
 import {observer} from "mobx-react";
