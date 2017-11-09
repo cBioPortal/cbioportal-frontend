@@ -112,11 +112,13 @@ describe('cross cancer query', function() {
         browser.waitForEnabled('[data-test="queryButton"]', 30000);
         browser.click('[data-test="queryButton"]');
 
-        // make sure cross cancer title appears
-        $('.cctitle').waitForExist(60000);
+        // go to cancer types summary
+        $('#ui-id-1').waitForExist(60000);
+        $('#ui-id-1').click();
 
-        // check if TP53 is in the title of the bar chart
-        var text = browser.getText('.cctitle')
+        // check if TP53 is in the navigation above the plots
+        $('.nav-pills').waitForExist(30000);
+        var text = browser.getText('.nav-pills')
         assert(text.search('TP53') > -1);
     });
 });
