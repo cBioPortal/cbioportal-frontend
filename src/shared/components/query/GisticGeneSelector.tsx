@@ -1,5 +1,5 @@
 import * as React from 'react';
-import * as styles_any from './styles.module.scss';
+import * as styles_any from './styles/styles.module.scss';
 import {ObservableMap, expr, toJS, computed, observable} from "mobx";
 import {observer, Observer} from "mobx-react";
 import {Gistic} from "../../api/generated/CBioPortalAPIInternal";

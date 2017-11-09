@@ -277,7 +277,7 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}>
 						}
 						children={
 							<span onClick={()=>openStudySummaryFormSubmit(study.studyId)}
-							  className={styles.summaryIcon}></span>
+							  className={ classNames(styles.summaryIcon, 'ci ci-pie-chart')}></span>
 						}
 					/>
 				)}
