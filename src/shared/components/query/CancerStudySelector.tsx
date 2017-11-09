@@ -3,7 +3,7 @@ import * as React from "react";
 import Dictionary = _.Dictionary;
 import {TypeOfCancer as CancerType, CancerStudy} from "../../api/generated/CBioPortalAPI";
 import {FlexCol, FlexRow} from "../flexbox/FlexBox";
-import * as styles_any from './styles.module.scss';
+import * as styles_any from './styles/styles.module.scss';
 import classNames from 'classnames';
 import ReactSelect from 'react-select';
 import StudyList from "./studyList/StudyList";
@@ -163,19 +163,6 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 						</Observer>
 					)}
 
-					{ (!!(!this.store.forDownloadTab) && !!(!this.store.cancerTypes.isPending && !this.store.cancerStudies.isPending)) && (
-						<Observer>
-							{() => {
-								let selectAllChecked = expr(() => this.logic.mainView.getCheckboxProps(this.store.treeData.rootCancerType).checked);
-								return (
-									<a onClick={() => this.logic.mainView.onCheck(this.store.treeData.rootCancerType, !selectAllChecked)}>
-										{selectAllChecked ? "Deselect all" : "Select all"}
-									</a>
-								);
-							}}
-						</Observer>
-					)}
-
 					{!!(!this.store.cancerTypes.isPending && !this.store.cancerStudies.isPending) && (
 						<Observer>
 							{() => {
@@ -195,11 +182,10 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 													}}
 											onClick={this.handlers.onSummaryClick}
 										>
-											<Button bsSize="xs" bsStyle="default"
+											<Button bsSize="xs" bsStyle="primary"
 												className={styles.summaryButtonClass}
 											>
-												<span className={styles.summaryButtonIconClass}></span>
-												<span className={styles.summaryButtonTextClass}>Summary</span>
+												<i className='ci ci-pie-chart'></i> Summary
 											</Button>
 										</div>
 									</DefaultTooltip>
@@ -207,6 +193,20 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 							}}
 						</Observer>
 					)}
+
+                    { (!!(!this.store.forDownloadTab) && !!(!this.store.cancerTypes.isPending && !this.store.cancerStudies.isPending)) && (
+                        <Observer>
+                            {() => {
+                                let selectAllChecked = expr(() => this.logic.mainView.getCheckboxProps(this.store.treeData.rootCancerType).checked);
+                                return (
+                                    <a  style={{ marginLeft:20 }} onClick={() => this.logic.mainView.onCheck(this.store.treeData.rootCancerType, !selectAllChecked)}>
+                                        {selectAllChecked ? "Deselect all" : "Select all"}
+                                    </a>
+                                );
+                            }}
+                        </Observer>
+                    )}
+
 					</div>
 
 					<Observer>
