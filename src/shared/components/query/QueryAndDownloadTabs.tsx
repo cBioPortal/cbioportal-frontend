@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {Tabs, Tab, default as ReactBootstrap} from 'react-bootstrap';
-import * as styles_any from './styles.module.scss';
+import * as styles_any from './styles/styles.module.scss';
 import {observer} from 'mobx-react';
 import QueryContainer from "./QueryContainer";
 import { QueryStore} from "./QueryStore";
