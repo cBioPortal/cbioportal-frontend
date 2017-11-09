@@ -384,7 +384,7 @@ var filterData = function (oql_query, data, _accessors, opt_default_oql, opt_by_
 
 
 
-export function filterCBioPortalWebServiceData(oql_query, data, accessors, opt_default_oql, opt_by_oql_line, opt_mark_oql_regulation_direction) {
+export function filterCBioPortalWebServiceData(oql_query, data, accessors, opt_default_oql, opt_mark_oql_regulation_direction) {
     /* Wrapper method for filterData that has the cBioPortal default accessor functions
      * Note that for use, the input data must have the field 'genetic_alteration_type,' which
      * takes one of the following values:
@@ -393,15 +393,21 @@ export function filterCBioPortalWebServiceData(oql_query, data, accessors, opt_d
      *	- MRNA_EXPRESSION
      *	- PROTEIN_LEVEL
      */
-    var cna_profile_data_to_string = {
-        "-2": "homdel",
-        "-1": "hetloss",
-        "0": null,
-        "1": "gain",
-        "2": "amp"
-    };
 
-    return filterData(oql_query, data, accessors, opt_default_oql, opt_by_oql_line, opt_mark_oql_regulation_direction);
+    return filterData(oql_query, data, accessors, opt_default_oql, false, opt_mark_oql_regulation_direction);
+}
+
+export function filterCBioPortalWebServiceDataByOQLLine(oql_query, data, accessors, opt_default_oql, opt_mark_oql_regulation_direction) {
+    /* Wrapper method for filterData that has the cBioPortal default accessor functions
+     * Note that for use, the input data must have the field 'genetic_alteration_type,' which
+     * takes one of the following values:
+     *	- MUTATION_EXTENDED
+     *	- COPY_NUMBER_ALTERATION
+     *	- MRNA_EXPRESSION
+     *	- PROTEIN_LEVEL
+     */
+
+    return filterData(oql_query, data, accessors, opt_default_oql, true, opt_mark_oql_regulation_direction);
 }
 
 
