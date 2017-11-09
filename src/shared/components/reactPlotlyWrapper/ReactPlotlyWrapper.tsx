@@ -26,6 +26,7 @@ export default class ReactPlotlyWrapper extends React.Component<IReactPlotlyWrap
 
     componentDidMount(){
         this.renderPlotly();
+        this.triggerMouseLeave = this.triggerMouseLeave.bind(this);
     }
 
     componentDidUpdate(){
@@ -42,7 +43,7 @@ export default class ReactPlotlyWrapper extends React.Component<IReactPlotlyWrap
 
         const that = this;
 
-        this.wrapper.on('plotly_hover', function(data: any){
+        (this.wrapper as any).on('plotly_hover', function(data: any){
             console.log(data);
             runInAction(()=>{
                 that.tooltipTriggeredRender = true;
@@ -104,7 +105,7 @@ export default class ReactPlotlyWrapper extends React.Component<IReactPlotlyWrap
         };
 
         return (<div style={{position:'relative'}}>
-                <div onMouseLeave={this.triggerMouseleave}
+                <div onMouseLeave={this.triggerMouseLeave}
                      style={tooltipStyle}
                      ref={(el:HTMLDivElement)=>this.tooltipEl=el}
                      className={ classNames({ 'hidden':!this.showTooltip }) }>
