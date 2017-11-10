@@ -96,7 +96,7 @@ interface ICancerSummaryContentProps {
 const GroupByOptions = [
     {value: 'studyId', label: 'Cancer Study'},
     {value: 'cancerType', label: 'Cancer Type'},
-    {value: 'cancerTypeDetailed', label: 'Detailed Cancer Type'}
+    {value: 'cancerTypeDetailed', label: 'Cancer Type Detailed'}
 ];
 
 @observer
