@@ -78,12 +78,7 @@ export interface IBarGraphConfigOptions {
 }
 
 interface ICancerSummaryContentProps {
-    dataByCancerSubType?: {
-        [cancerType: string]: IAlterationData
-    };
-    dataByCancerType?: {
-        [cancerType: string]: IAlterationData
-    };
+    labelTransformer?:(key:string)=>string;
     groupedAlterationData: {
         [groupType: string]: IAlterationData
     }
@@ -189,7 +184,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                     return orderedAlts.indexOf(a.label) - orderedAlts.indexOf(b.label);
                 });
                 accum.push({
-                    label: groupKey,
+                    label: this.transformLabel(groupKey),
                     sortBy: this.yAxis,
                     symbol: this.yAxis === "abs-count" ? '' : "%",
                     sortCount: this.yAxis === "abs-count" ? alterationData.alteredSampleCount : altTotalPercent,
@@ -198,6 +193,15 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
             }
             return accum;
         }, [] as IBarChartSortedData[]);
+    }
+
+    private transformLabel(str:string){
+        if (this.props.labelTransformer) {
+            return this.props.labelTransformer(str);
+        } else {
+            return str;
+        }
+
     }
 
     private handleYAxisChange(e: any) {
