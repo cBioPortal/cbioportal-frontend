@@ -352,11 +352,13 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                 ))
         );
 
+        const labels = _.reduce(orderedDatasets, (accum, data) => {
+            if (data.sortCount >= this.altCasesValue) accum.push(data.label);
+            return accum;
+        }, [] as string[]);
+
         return {
-            labels: _.reduce(orderedDatasets, (accum, data) => {
-                if (data.sortCount && data.sortCount >= this.altCasesValue) accum.push(data.label);
-                return accum;
-            }, [] as string[]),
+            labels: labels,
             datasets: flattenedDatasets
         };
     }
@@ -427,7 +429,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                     </FormGroup>
                 </div>
 
-                <div>
+                <div style={{width:400}}>
                     <div className="slider-holder">
                         <FormGroup>
                             <ControlLabel>{`Min. ${yAxis === 'alt-freq' ? '%' : '#'} Altered Cases:`}</ControlLabel>
