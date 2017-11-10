@@ -43,9 +43,9 @@ export default class CancerSummaryContainer extends React.Component<{ store: Res
             this.props.store.getAlterationCountsForCancerTypesByGene(this.props.store.alterationsBySampleIdByGene.result!,
                 this.props.store.samplesExtendedWithClinicalData.result!, this.groupAlterationsBy);
 
-        const alterationCountsForCancerSubTypesByGene =
-            this.props.store.getAlterationCountsForCancerTypesByGene(this.props.store.alterationsBySampleIdByGene.result!,
-                this.props.store.samplesExtendedWithClinicalData.result!, this.groupAlterationsBy);
+        // const alterationCountsForCancerSubTypesByGene =
+        //     this.props.store.getAlterationCountsForCancerTypesByGene(this.props.store.alterationsBySampleIdByGene.result!,
+        //         this.props.store.samplesExtendedWithClinicalData.result!, this.groupAlterationsBy);
 
         const geneTabs = _.map(alterationCountsForCancerTypesByGene, (geneData, geneName: string) => {
 
@@ -94,6 +94,20 @@ export default class CancerSummaryContainer extends React.Component<{ store: Res
         const isPending = this.props.store.samplesExtendedWithClinicalData.isPending && this.props.store.alterationsBySampleIdByGene.isPending;
 
         if (isComplete) {
+
+            // if we have no groupby value, then we need to choose a default
+            if (this.groupAlterationsBy === undefined) {
+                if (this.props.store.studies.result.length > 1) {
+                    this.groupAlterationsBy = 'studyId';
+                } else {
+                    const cancerTypes = _.chain(this.props.store.samplesExtendedWithClinicalData.result)
+                        .map((sample:ExtendedSample)=>sample.cancerType)
+                        .uniq().value();
+                    this.groupAlterationsBy = (cancerTypes.length === 1) ? 'cancerTypeDetailed' : 'cancerType';
+                }
+            }
+
+
             return (
                 <div ref={(el: HTMLDivElement) => this.resultsViewPageContent = el}>
                     <MSKTabs onTabClick={this.handleTabClick}
