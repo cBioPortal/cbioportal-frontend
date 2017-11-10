@@ -78,12 +78,7 @@ export interface IBarGraphConfigOptions {
 }
 
 interface ICancerSummaryContentProps {
-    dataByCancerSubType?: {
-        [cancerType: string]: IAlterationData
-    };
-    dataByCancerType?: {
-        [cancerType: string]: IAlterationData
-    };
+    labelTransformer?:(key:string)=>string;
     groupedAlterationData: {
         [groupType: string]: IAlterationData
     }
@@ -96,7 +91,7 @@ interface ICancerSummaryContentProps {
 const GroupByOptions = [
     {value: 'studyId', label: 'Cancer Study'},
     {value: 'cancerType', label: 'Cancer Type'},
-    {value: 'cancerTypeDetailed', label: 'Detailed Cancer Type'}
+    {value: 'cancerTypeDetailed', label: 'Cancer Type Detailed'}
 ];
 
 @observer
@@ -189,7 +184,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                     return orderedAlts.indexOf(a.label) - orderedAlts.indexOf(b.label);
                 });
                 accum.push({
-                    label: groupKey,
+                    label: this.transformLabel(groupKey),
                     sortBy: this.yAxis,
                     symbol: this.yAxis === "abs-count" ? '' : "%",
                     sortCount: this.yAxis === "abs-count" ? alterationData.alteredSampleCount : altTotalPercent,
@@ -198,6 +193,15 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
             }
             return accum;
         }, [] as IBarChartSortedData[]);
+    }
+
+    private transformLabel(str:string){
+        if (this.props.labelTransformer) {
+            return this.props.labelTransformer(str);
+        } else {
+            return str;
+        }
+
     }
 
     private handleYAxisChange(e: any) {
@@ -352,11 +356,13 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                 ))
         );
 
+        const labels = _.reduce(orderedDatasets, (accum, data) => {
+            if (data.sortCount >= this.altCasesValue) accum.push(data.label);
+            return accum;
+        }, [] as string[]);
+
         return {
-            labels: _.reduce(orderedDatasets, (accum, data) => {
-                if (data.sortCount && data.sortCount >= this.altCasesValue) accum.push(data.label);
-                return accum;
-            }, [] as string[]),
+            labels: labels,
             datasets: flattenedDatasets
         };
     }
@@ -427,7 +433,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                     </FormGroup>
                 </div>
 
-                <div>
+                <div style={{width:400}}>
                     <div className="slider-holder">
                         <FormGroup>
                             <ControlLabel>{`Min. ${yAxis === 'alt-freq' ? '%' : '#'} Altered Cases:`}</ControlLabel>
@@ -506,7 +512,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                                             onChange={(e)=>{  this.props.handlePivotChange($(e.target).attr("data-value"))  }}
                                             inline
                                             data-value={option.value}
-                                            name="groupOptions">{option.label}</Radio>
+                                            >{option.label}</Radio>
                                     })
                                 }
                             </ButtonGroup>

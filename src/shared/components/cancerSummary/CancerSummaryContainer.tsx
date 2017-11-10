@@ -8,13 +8,14 @@ import {ThreeBounce} from 'better-react-spinkit';
 import {CancerSummaryContent, IAlterationData} from './CancerSummaryContent';
 import {ExtendedSample, ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
 import Loader from "../loadingIndicator/LoadingIndicator";
+import {CancerStudy} from "../../api/generated/CBioPortalAPI";
 
 @observer
 export default class CancerSummaryContainer extends React.Component<{ store: ResultsViewPageStore }, {}> {
 
     @observable private activeTab: string = "all";
     @observable private resultsViewPageWidth: number = 1150;
-    @observable private groupAlterationsBy: keyof ExtendedSample = 'studyId';
+    @observable private groupAlterationsBy: keyof ExtendedSample;
 
     private resultsViewPageContent: HTMLElement;
 
@@ -22,6 +23,7 @@ export default class CancerSummaryContainer extends React.Component<{ store: Res
         super();
         this.handleTabClick = this.handleTabClick.bind(this);
         this.pivotData = this.pivotData.bind(this);
+        this.mapStudyIdToShortName = this.mapStudyIdToShortName.bind(this);
     }
 
     private handleTabClick(id: string) {
@@ -36,14 +38,22 @@ export default class CancerSummaryContainer extends React.Component<{ store: Res
         this.groupAlterationsBy = str;
     }
 
+    // this is used to map study id to study shortname
+    private mapStudyIdToShortName(str: string){
+            if (str in this.props.store.studyMap) {
+                return this.props.store.studyMap[str].shortName;
+            } else {
+                return str;
+            }
+    }
+
     @computed
     private get tabs() {
 
-        const alterationCountsForCancerTypesByGene =
-            this.props.store.getAlterationCountsForCancerTypesByGene(this.props.store.alterationsBySampleIdByGene.result!,
-                this.props.store.samplesExtendedWithClinicalData.result!, this.groupAlterationsBy);
+        // if we're grouping by cancer study, we need to use study shortName property instead of studyId
+        const labelTransformer = (this.groupAlterationsBy === 'studyId') ? this.mapStudyIdToShortName : undefined;
 
-        const alterationCountsForCancerSubTypesByGene =
+        const alterationCountsForCancerTypesByGene =
             this.props.store.getAlterationCountsForCancerTypesByGene(this.props.store.alterationsBySampleIdByGene.result!,
                 this.props.store.samplesExtendedWithClinicalData.result!, this.groupAlterationsBy);
 
@@ -63,6 +73,7 @@ export default class CancerSummaryContainer extends React.Component<{ store: Res
                         groupedAlterationData={alterationCountsForCancerTypesByGene[geneName]}
                         groupAlterationsBy={this.groupAlterationsBy}
                         gene={geneName}
+                        labelTransformer={labelTransformer}
                         handlePivotChange={this.pivotData}
                         width={this.resultsViewPageWidth}/>
                 </MSKTab>
@@ -80,6 +91,7 @@ export default class CancerSummaryContainer extends React.Component<{ store: Res
                                       width={this.resultsViewPageWidth}
                                       groupedAlterationData={groupedAlterationDataForAllGenes}
                                       handlePivotChange={this.pivotData}
+                                      labelTransformer={labelTransformer}
                                       groupAlterationsBy={this.groupAlterationsBy}
                 />
             </MSKTab>)
@@ -94,6 +106,20 @@ export default class CancerSummaryContainer extends React.Component<{ store: Res
         const isPending = this.props.store.samplesExtendedWithClinicalData.isPending && this.props.store.alterationsBySampleIdByGene.isPending;
 
         if (isComplete) {
+
+            // if we have no groupby value, then we need to choose a default
+            if (this.groupAlterationsBy === undefined) {
+                if (this.props.store.studies.result.length > 1) {
+                    this.groupAlterationsBy = 'studyId';
+                } else {
+                    const cancerTypes = _.chain(this.props.store.samplesExtendedWithClinicalData.result)
+                        .map((sample:ExtendedSample)=>sample.cancerType)
+                        .uniq().value();
+                    this.groupAlterationsBy = (cancerTypes.length === 1) ? 'cancerTypeDetailed' : 'cancerType';
+                }
+            }
+
+
             return (
                 <div ref={(el: HTMLDivElement) => this.resultsViewPageContent = el}>
                     <MSKTabs onTabClick={this.handleTabClick}
