@@ -409,6 +409,10 @@ export class ResultsViewPageStore {
         }
     });
 
+    public get studyMap():{ [studyId:string]:CancerStudy } {
+        return _.keyBy(this.studies.result, (study:CancerStudy)=>study.studyId);
+    }
+
     public getAlterationCountsForCancerTypesByGene(alterationsBySampleIdByGene:{ [geneName:string]: {[sampleId: string]: ExtendedAlteration[]} },
                                                    samplesExtendedWithClinicalData:ExtendedSample[],
                                                    discrimininator: keyof ExtendedSample){
