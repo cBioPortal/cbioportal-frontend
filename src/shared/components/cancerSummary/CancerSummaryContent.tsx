@@ -508,7 +508,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                                             onChange={(e)=>{  this.props.handlePivotChange($(e.target).attr("data-value"))  }}
                                             inline
                                             data-value={option.value}
-                                            name="groupOptions">{option.label}</Radio>
+                                            >{option.label}</Radio>
                                     })
                                 }
                             </ButtonGroup>
