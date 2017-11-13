@@ -251,6 +251,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
                 }
             },
             animation: {
+                duration:0,
                 onComplete: () => {
                     this.toImagePdf();
                 }
