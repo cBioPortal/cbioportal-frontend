@@ -1,7 +1,7 @@
 import {
     DiscreteCopyNumberFilter, DiscreteCopyNumberData, ClinicalData, ClinicalDataMultiStudyFilter, Sample,
     SampleIdentifier, MolecularProfile, Mutation, GeneMolecularData, MolecularDataFilter, Gene,
-    ClinicalDataSingleStudyFilter, CancerStudy
+    ClinicalDataSingleStudyFilter, CancerStudy, Patient
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {computed, observable, action} from "mobx";
@@ -38,6 +38,7 @@ import {
     ICancerTypeAlterationData
 } from "../../shared/components/cancerSummary/CancerSummaryContent";
 import {writeTest} from "../../shared/lib/writeTest";
+import {PatientSurvival} from "../../shared/model/PatientSurvival";
 
 export type SamplesSpecificationElement = {studyId: string, sampleId: string, sampleListId: undefined} |
     {studyId: string, sampleId: undefined, sampleListId: string};
@@ -447,7 +448,16 @@ export class ResultsViewPageStore {
             this.filteredAlterations
         ],
         invoke: async() => {
-            return _.mapValues(this.filteredAlterations.result, (mutations: Mutation[]) => _.map(mutations, 'sampleId'));
+            return _.mapValues(this.filteredAlterations.result, (mutations: Mutation[]) => _.map(mutations, mutation => mutation.sampleId));
+        }
+    });
+
+    readonly filteredAlterationsAsUniquePatientKeyArrays = remoteData({
+        await: () => [
+            this.filteredAlterations
+        ],
+        invoke: async() => {
+            return _.mapValues(this.filteredAlterations.result, (mutations: Mutation[]) => _.map(mutations, mutation => mutation.uniquePatientKey));
         }
     });
 
@@ -461,6 +471,28 @@ export class ResultsViewPageStore {
             });
         }
     });
+
+    readonly alteredUniquePatientKeys = remoteData({
+        await: () => [
+            this.filteredAlterationsAsUniquePatientKeyArrays
+        ],
+        invoke: async() => {
+            return _.uniq(_.reduce(this.filteredAlterationsAsUniquePatientKeyArrays.result,
+                (arr, value) =>  [...arr, ...value], []));
+        }
+    }, []);
+
+    readonly unalteredUniquePatientKeys  = remoteData({
+        await: () => [
+            this.alteredUniquePatientKeys,
+            this.samples
+        ],
+        invoke: async() => {
+            if (this.alteredUniquePatientKeys.result) {
+                return _.difference(this.samples.result.map(sample => sample.uniquePatientKey), this.alteredUniquePatientKeys.result);
+            }
+        }
+    }, []);
 
     // readonly genes = remoteData(async() => {
     //     if (this.hugoGeneSymbols) {
@@ -573,32 +605,127 @@ export class ResultsViewPageStore {
             this.studies,
             this.samples
         ],
-        invoke: () => {
-            // single study query endpoint is optimal so we should use it
-            // when there's only one study
-            const clinicalDataTypes: string[] = ["CANCER_TYPE", "CANCER_TYPE_DETAILED"];
+        invoke: () => this.getClinicalData("SAMPLE", this.samples.result, ["CANCER_TYPE", "CANCER_TYPE_DETAILED"])
+    }, []);
 
-            if (this.studies.result.length === 1) {
-                const study = this.studies.result[0];
-                const filter: ClinicalDataSingleStudyFilter = {
-                    attributeIds: clinicalDataTypes,
-                    ids: this.samples.result.map((s: Sample) =>s.sampleId)
-                };
-                return client.fetchAllClinicalDataInStudyUsingPOST({
-                    studyId:study.studyId,
-                    clinicalDataSingleStudyFilter: filter,
-                    clinicalDataType: "SAMPLE"
-                });
-            } else {
-                const filter: ClinicalDataMultiStudyFilter = {
-                    attributeIds: clinicalDataTypes,
-                    identifiers: this.samples.result.map((s: Sample) => ({entityId: s.sampleId, studyId: s.studyId}))
-                };
-                return client.fetchClinicalDataUsingPOST({
-                    clinicalDataType: "SAMPLE",
-                    clinicalDataMultiStudyFilter: filter
-                });
-            }
+    private getClinicalData(clinicalDataType: "SAMPLE" | "PATIENT", entities: any[], attributeIds: string[]):
+    Promise<Array<ClinicalData>> {
+
+        // single study query endpoint is optimal so we should use it
+        // when there's only one study
+        if (this.studies.result.length === 1) {
+            const study = this.studies.result[0];
+            const filter: ClinicalDataSingleStudyFilter = {
+                attributeIds: attributeIds,
+                ids: _.map(entities, clinicalDataType === "SAMPLE" ? 'sampleId' : 'patientId')
+            };
+            return client.fetchAllClinicalDataInStudyUsingPOST({
+                studyId:study.studyId,
+                clinicalDataSingleStudyFilter: filter,
+                clinicalDataType: clinicalDataType
+            });
+        } else {
+            const filter: ClinicalDataMultiStudyFilter = {
+                attributeIds: attributeIds,
+                identifiers: entities.map((s: any) => clinicalDataType === "SAMPLE" ?
+                    ({entityId: s.sampleId, studyId: s.studyId}) : ({entityId: s.patientId, studyId: s.studyId}))
+            };
+            return client.fetchClinicalDataUsingPOST({
+                clinicalDataType: clinicalDataType,
+                clinicalDataMultiStudyFilter: filter
+            });
+        }
+    }
+
+    readonly survivalClinicalData = remoteData<ClinicalData[]>({
+        await: () => [
+            this.studies,
+            this.patients
+        ],
+        invoke: () => this.getClinicalData("PATIENT", this.patients.result, ["OS_STATUS", "OS_MONTHS", "DFS_STATUS", "DFS_MONTHS"])
+    }, []);
+
+    readonly survivalClinicalDataGroupByUniquePatientKey = remoteData<Dictionary<ClinicalData[]>>({
+        await: () => [
+            this.survivalClinicalData,
+        ],
+        invoke: async() => {
+            return _.groupBy(this.survivalClinicalData.result, 'uniquePatientKey');
+        }
+    });
+
+    private getPatientSurvivals(survivalClinicalDataGroupByUniquePatientKey: _.Dictionary<ClinicalData[]> | undefined, 
+        patients: Patient[], targetUniquePatientKeys: string[], statusAttributeId: string, 
+        monthsAttributeId: string, statusFilter: (s: string) => boolean): PatientSurvival[] {
+
+        let patientSurvivals: PatientSurvival[] = [];
+        if (targetUniquePatientKeys) {
+            targetUniquePatientKeys.forEach((uniquePatientKey: string) => {
+                const clinicalData: ClinicalData[] = this.survivalClinicalDataGroupByUniquePatientKey.result![uniquePatientKey];
+                if (clinicalData) {
+                    const statusClinicalData: ClinicalData[] = clinicalData.filter(c => c.clinicalAttributeId === statusAttributeId);
+                    const monthsClinicalData: ClinicalData[] = clinicalData.filter(c => c.clinicalAttributeId === monthsAttributeId);
+                    if (statusClinicalData[0] && monthsClinicalData[0] && statusClinicalData[0].value != 'NA' &&
+                        monthsClinicalData[0].value != 'NA') {
+                        const patient: Patient = this.patients.result.filter(p => p.uniquePatientKey === uniquePatientKey)[0];
+                        patientSurvivals.push({
+                            patientId: patient.patientId,
+                            studyId: patient.studyId,
+                            status: statusFilter(statusClinicalData[0].value),
+                            months: parseFloat(monthsClinicalData[0].value)
+                        });
+                    }
+                }
+            });
+        }
+        return patientSurvivals;
+    }
+
+    readonly overallAlteredPatientSurvivals = remoteData<PatientSurvival[]>({
+        await: () => [
+            this.survivalClinicalDataGroupByUniquePatientKey,
+            this.alteredUniquePatientKeys,
+            this.patients
+        ],
+        invoke: async() => {
+            return this.getPatientSurvivals(this.survivalClinicalDataGroupByUniquePatientKey.result, this.patients.result,
+                this.alteredUniquePatientKeys.result, 'OS_STATUS', 'OS_MONTHS', s => s === 'DECEASED');
+        }
+    }, []);
+
+    readonly overallUnalteredPatientSurvivals = remoteData<PatientSurvival[]>({
+        await: () => [
+            this.survivalClinicalDataGroupByUniquePatientKey,
+            this.unalteredUniquePatientKeys,
+            this.patients
+        ],
+        invoke: async() => {
+            return this.getPatientSurvivals(this.survivalClinicalDataGroupByUniquePatientKey.result, this.patients.result,
+                this.unalteredUniquePatientKeys.result!, 'OS_STATUS', 'OS_MONTHS', s => s === 'DECEASED');
+        }
+    }, []);
+
+    readonly diseaseFreeAlteredPatientSurvivals = remoteData<PatientSurvival[]>({
+        await: () => [
+            this.survivalClinicalDataGroupByUniquePatientKey,
+            this.alteredUniquePatientKeys,
+            this.patients
+        ],
+        invoke: async() => {
+            return this.getPatientSurvivals(this.survivalClinicalDataGroupByUniquePatientKey.result, this.patients.result,
+                this.alteredUniquePatientKeys.result, 'DFS_STATUS', 'DFS_MONTHS', s => s === 'Recurred/Progressed' || s === 'Recurred');
+        }
+    }, []);
+
+    readonly diseaseFreeUnalteredPatientSurvivals = remoteData<PatientSurvival[]>({
+        await: () => [
+            this.survivalClinicalDataGroupByUniquePatientKey,
+            this.unalteredUniquePatientKeys,
+            this.patients
+        ],
+        invoke: async() => {
+            return this.getPatientSurvivals(this.survivalClinicalDataGroupByUniquePatientKey.result, this.patients.result,
+                this.unalteredUniquePatientKeys.result!, 'DFS_STATUS', 'DFS_MONTHS', s => s === 'Recurred/Progressed' || s === 'Recurred');
         }
     }, []);
 
@@ -635,6 +762,25 @@ export class ResultsViewPageStore {
             return client.fetchSamplesUsingPOST({
                 sampleIdentifiers
             });
+        }
+    }, []);
+
+    readonly patients = remoteData({
+        await: () => [
+            this.samples
+        ],
+        invoke: async() => {
+            let patients: Patient[] = [];
+            this.samples.result.forEach(sample => {
+                patients.push({
+                    patientId: sample.patientId,
+                    studyId: sample.studyId,
+                    uniqueSampleKey: sample.uniqueSampleKey,
+                    uniquePatientKey: sample.uniquePatientKey
+                });
+            });
+
+            return _.uniqBy(patients, 'patientId');
         }
     }, []);
 

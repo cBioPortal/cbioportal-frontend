@@ -1,35 +1,37 @@
-import React, {ReactElement} from 'react';
-import {observer} from "mobx-react";
-import {observable, runInAction} from "mobx";
+import React, { ReactElement } from 'react';
+import { observer } from "mobx-react";
+import { observable, runInAction } from "mobx";
 import Plotly from 'plotly.js';
 import classNames from 'classnames';
+import {sleep} from "../../../shared/lib/TimeUtils";
+import {Popover} from 'react-bootstrap';
 
 export interface IReactPlotlyWrapperProps {
-    layout:any;
-    data:any; buildTooltip:(tooltipModel:any)=>JSX.Element
+    layout: any;
+    data: any;
+    buildTooltip: (tooltipModel: any) => JSX.Element | null
 }
 
 @observer
 export default class ReactPlotlyWrapper extends React.Component<IReactPlotlyWrapperProps, {}>
 {
-
-    private wrapper:HTMLDivElement;
+    private wrapper: any;
     private tooltipTriggeredRender = false;
-    private tooltipEl:HTMLDivElement;
-    @observable.ref private tooltipModel:any = null;
-    @observable private showTooltip = false;
-    @observable private tooltipPosition:any = { top:0, left:0 };
+    private isTooltipHovered: boolean;
+    private tooltipCounter: number = 0;
+    @observable.ref private tooltipModel: any = null;
 
-    constructor(){
+    constructor() {
         super();
+        this.onMouseEnter = this.onMouseEnter.bind(this);
+        this.onMouseLeave = this.onMouseLeave.bind(this);
     }
 
-    componentDidMount(){
+    componentDidMount() {
         this.renderPlotly();
-        this.triggerMouseLeave = this.triggerMouseLeave.bind(this);
     }
 
-    componentDidUpdate(){
+    componentDidUpdate() {
         if (!this.tooltipTriggeredRender) {
             this.renderPlotly();
         } else {
@@ -37,85 +39,57 @@ export default class ReactPlotlyWrapper extends React.Component<IReactPlotlyWrap
         }
     }
 
-    renderPlotly(){
-
+    renderPlotly() {
         Plotly.newPlot(this.wrapper, this.props.data, this.props.layout);
 
         const that = this;
 
-        (this.wrapper as any).on('plotly_hover', function(data: any){
-            console.log(data);
-            runInAction(()=>{
+        this.wrapper.on('plotly_hover', function (data: any) {
+            that.tooltipTriggeredRender = true;
+            that.tooltipModel = data;
+            that.tooltipCounter++;
+        }.bind(this)).on('plotly_unhover', async function (data: any) {
+            await sleep(100);
+            if (!that.isTooltipHovered && this.tooltipCounter === 1) {
                 that.tooltipTriggeredRender = true;
-                this.tooltipModel = data;
-                this.tooltipPosition = { top:data.event.layerY +10, left:data.event.layerX + 10  };
-                that.showTooltip = true;
-            });
-        }.bind(this))
-            .on('plotly_unhover', function(data: any){
-                if (data.event.toElement !== this.tooltipEl) {
-                    runInAction(()=> {
-                        that.tooltipTriggeredRender = true;
-                        that.showTooltip = false;
-                    });
-                }
-
-            }.bind(this));
-
-
-        // this.plotlyContainer.on('plotly_hover', (data) => {
-        //     const offset = $(this.plotlyContainer).offset();
-        //     const cancerTypeData = data.points[0].data.customdata.alterationData[data.points[0].x];
-        //     const alterationTypeMap = data.points[0].data.customdata.alterationTypeMap;
-        //     $(this.tooltip)
-        //         .html(this.makeTooltip(data.points[0].x, cancerTypeData, alterationTypeMap))
-        //         .css({
-        //             left: data.event.layerX + 10,
-        //             top: data.event.layerY + 10
-        //         })
-        //         .show()
-        //         .on('mouseleave',()=>$(this.tooltip).hide())
-        // });
-        //
-        // this.plotlyContainer.on('plotly_unhover', (data) => {
-        //     if (data.event.toElement !== this.tooltip) {
-        //         $(this.tooltip).hide();
-        //     }
-        // });
-
-
+                that.tooltipModel = null;
+            }
+            this.tooltipCounter--;
+        }.bind(this));
     }
 
-    triggerMouseLeave(){
-        Plotly.Fx.unhover(this.wrapper);
+    private onMouseLeave() {
+        this.tooltipTriggeredRender = true;
+        this.tooltipModel = null;
+        this.isTooltipHovered = false;
     }
 
-    render(){
+    private onMouseEnter() {
+        this.tooltipTriggeredRender = true;
+        this.isTooltipHovered = true;
+    }
 
-        console.log('render', this.tooltipModel);
+    render() {
 
-        const tooltipStyle:any = {
-            position:'absolute',
-            zIndex:100,
-            left:this.tooltipPosition.left,
-            top:this.tooltipPosition.top,
-            padding:10,
-            background:'#fff',
-            border:'1px solid #eee'
-        };
+        let positionLeft: number = 0;
+        let positionTop: number = 0;
+        if (this.tooltipModel) {
+            const point = this.tooltipModel.points[0];
+            positionLeft = point.xaxis.l2p(point.x) + 100;
+            positionTop = point.yaxis.l2p(point.y) + 86;
+        }
 
-        return (<div style={{position:'relative'}}>
-                <div onMouseLeave={this.triggerMouseLeave}
-                     style={tooltipStyle}
-                     ref={(el:HTMLDivElement)=>this.tooltipEl=el}
-                     className={ classNames({ 'hidden':!this.showTooltip }) }>
+        return (<div style={{ position: 'relative' }}>
+            {this.tooltipModel &&
+                <Popover arrowOffsetTop={14} onMouseEnter={this.onMouseEnter} onMouseLeave={this.onMouseLeave}
+                positionLeft={positionLeft} positionTop={positionTop}>
                     {
-                        (this.tooltipModel) && (this.props.buildTooltip(this.tooltipModel))
+                        this.props.buildTooltip(this.tooltipModel)
                     }
-                </div>
-                <div ref={(el:HTMLDivElement)=>this.wrapper=el}></div>
-            </div>
+                </Popover>
+            }
+            <div ref={(el: HTMLDivElement) => this.wrapper = el}></div>
+        </div>
         )
     }
-
 }

@@ -22,3 +22,4 @@ declare module 'react-text-truncate';
 declare module 'react-resize-detector';
 declare module 'react-rangeslider';
 declare module 'plotly.js';
+declare module 'jStat';
