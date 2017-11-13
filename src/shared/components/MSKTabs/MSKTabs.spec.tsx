@@ -40,7 +40,7 @@ describe('MSKTabs', () => {
         assert.isTrue(tabs.find('li').at(1).hasClass('active'));
     });
 
-    it('switch tab causes mounting, switching again causes hide/show', ()=>{
+    it('if unMountOnHide = false (or not set), switch tab causes mounting, switching again causes hide/show', ()=>{
         assert.equal(tabs.find('.msk-tab').length, 1);
         tabs.setProps({ activeTabId:"two" });
         assert.equal(tabs.find('.msk-tab').length, 2);
@@ -48,6 +48,14 @@ describe('MSKTabs', () => {
         tabs.setProps({ activeTabId:"one" });
         assert.isTrue(tabs.find(MSKTab).at(1).hasClass('hiddenByPosition'));
         assert.isFalse(tabs.find(MSKTab).at(0).hasClass('hiddenByPosition'));
+    });
+
+    it('if unMountOnHide = true, switch tab causes mounting, switching again causes hide/show', ()=>{
+        tabs.setProps({ unmountOnHide:true });
+        assert.equal(tabs.find('.msk-tab').length, 1);
+        tabs.setProps({ activeTabId:"two" });
+        assert.equal(tabs.find('.msk-tab').length, 1);
+        tabs.setProps({ activeTabId:"one" });
     });
 
     it('does not display tabs that have hide={true}', ()=>{
