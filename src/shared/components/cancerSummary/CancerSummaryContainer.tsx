@@ -124,6 +124,7 @@ export default class CancerSummaryContainer extends React.Component<{ store: Res
                 <div ref={(el: HTMLDivElement) => this.resultsViewPageContent = el}>
                     <MSKTabs onTabClick={this.handleTabClick}
                              enablePagination={true}
+                             unmountOnHide={true}
                              arrowStyle={{'line-height': .8}}
                              tabButtonStyle="pills"
                              activeTabId={this.activeTab} className="secondaryTabs">
