@@ -16,6 +16,8 @@ import 'react-rangeslider/lib/index.css';
 import SummaryBarGraph from './SummaryBarGraph';
 import {ExtendedSample} from "../../../pages/resultsView/ResultsViewPageStore";
 
+const CANCER_SUMMARY_BARLIMIT = 50;
+
 const orderedLabels: Record<keyof IAlterationCountMap, string> = {
     multiple: "Multiple Alterations",
     protExpressionDown: "Protein Downregulation",
@@ -161,10 +163,12 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
 
     @computed
     get barChartDatasets(): IBarChartSortedData[] {
-        return _.reduce(this.countsData, (accum, alterationData, groupKey) => {
+        const ret =  _.reduce(this.countsData, (accum, alterationData, groupKey) => {
             const cancerAlterations = alterationData.alterationTypeCounts;
             let altTotalPercent = (alterationData.alteredSampleCount / alterationData.sampleTotal) * 100;
+            // if we meet the cases cut off
             if (alterationData.sampleTotal >= this.totalCasesValue) {
+                // lets look at alterations by alteration type
                 const datasets = _.reduce(cancerAlterations as any, (memo, count: number, altType: string) => {
                     let percent = (count / alterationData.sampleTotal) * 100;
                     const total = (this.yAxis === "abs-count") ? count : percent;
@@ -193,6 +197,9 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
             }
             return accum;
         }, [] as IBarChartSortedData[]);
+
+        return _.chain(ret).orderBy(i=>i.sortCount,['desc']).value().slice(0,CANCER_SUMMARY_BARLIMIT);
+
     }
 
     private transformLabel(str:string){
