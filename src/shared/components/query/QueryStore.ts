@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import client from "../../api/cbioportalClientInstance";
-import {ObservableMap, toJS, observable, reaction, action, computed, whyRun, expr} from "mobx";
+import {ObservableMap, toJS, observable, reaction, action, computed, whyRun, expr, isObservableMap} from "mobx";
 import {
 	TypeOfCancer as CancerType, MolecularProfile, CancerStudy, SampleList, Gene,
 	Sample, SampleIdentifier
@@ -16,18 +16,21 @@ import {gsUploadByGet} from "../../api/gsuploadwindow";
 import {OQLQuery} from "../../lib/oql/oql-parser";
 import {ComponentGetsStoreContext} from "../../lib/ContextUtils";
 import URL from 'url';
-import {buildCBioPortalUrl, BuildUrlParams} from "../../api/urls";
+import {buildCBioPortalUrl, BuildUrlParams, getHost, openStudySummaryFormSubmit} from "../../api/urls";
 import {SyntaxError} from "../../lib/oql/oql-parser";
 import StudyListLogic from "./StudyListLogic";
 import {QuerySession} from "../../lib/QuerySession";
 import {stringListToIndexSet, stringListToSet} from "../../lib/StringUtils";
 import chunkMapReduce from "shared/lib/chunkMapReduce";
+import {VirtualCohort} from "../../../config/IAppConfig";
+import request, {Response} from "superagent";
 import formSubmit from "shared/lib/formSubmit";
 import {
 	MolecularProfileQueryParams, NonMolecularProfileQueryParams, queryUrl,
 	nonMolecularProfileParams, currentQueryParams, molecularProfileParams, queryParams
 } from "./QueryStoreUtils";
 import onMobxPromise from "shared/lib/onMobxPromise";
+import VirtualCohorts, {LocalStorageVirtualCohort} from "../../lib/VirtualCohorts";
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -51,7 +54,8 @@ export type CancerStudyQueryUrlParams = {
 
 export type GeneReplacement = {alias: string, genes: Gene[]};
 
-export const CUSTOM_CASE_LIST_ID = '';
+export const CUSTOM_CASE_LIST_ID = '-1';
+export const ALL_CASES_LIST_ID = 'all';
 
 function isInteger(str:string)
 {
@@ -100,6 +104,8 @@ export class QueryStore
 
 	constructor(urlWithInitialParams?:string)
 	{
+		this.loadSavedVirtualCohorts();
+
 		labelMobxPromises(this);
 		if (urlWithInitialParams)
 			this.setParamsFromUrl(urlWithInitialParams);
@@ -115,6 +121,127 @@ export class QueryStore
 			molecularProfileIds: this._selectedProfileIds || []
 		};
 	}
+
+	@observable userHasClickedOnAStudy:boolean = false;
+	@observable savedVirtualCohorts:VirtualCohort[] = [];
+
+	@action public deleteVirtualCohort(id:string) {
+		VirtualCohorts.delete(id);
+
+		this.loadSavedVirtualCohorts();
+	}
+
+	@action private loadSavedVirtualCohorts() {
+		let localStorageVirtualCohorts:LocalStorageVirtualCohort[] = VirtualCohorts.get();
+		this.savedVirtualCohorts = localStorageVirtualCohorts.map((x:any)=>{
+			let samples:{studyId:string, sampleId:string}[] = [];
+			const constituentStudyIds:string[] = [];
+			for (const selectedCasesObj of x.selectedCases) {
+				samples = samples.concat(selectedCasesObj.samples.map((sampleId:string)=>({studyId:selectedCasesObj.studyID, sampleId})));
+				constituentStudyIds.push(selectedCasesObj.studyID);
+			}
+			return {
+				id: x.virtualCohortID,
+				name: x.studyName,
+				description: x.description,
+				samples,
+				constituentStudyIds
+			};
+		});
+	}
+
+	@computed get virtualCohorts():VirtualCohort[] {
+		const ret:VirtualCohort[] = [];
+		if (this.temporaryVirtualCohort.result) {
+			ret.push(this.temporaryVirtualCohort.result);
+		}
+		for (let i=0; i<this.savedVirtualCohorts.length; i++) {
+			ret.push(this.savedVirtualCohorts[i]);
+		}
+		return ret;
+	}
+
+	@computed get virtualCohortsSet():{[id:string]:VirtualCohort} {
+		return this.virtualCohorts.reduce((acc:{[id:string]:VirtualCohort}, next:VirtualCohort)=>{
+			acc[next.id] = next;
+			return acc;
+		}, {});
+	}
+
+	@computed get studyIdsInSelection():string[] {
+		// Gives selected study ids and study ids that are in selected virtual cohorts
+		const virtualCohortsSet = this.virtualCohortsSet;
+		const ret:{[id:string]:boolean} = {};
+		for (const studyId of this.selectedStudyIds) {
+			const vc = virtualCohortsSet[studyId];
+			if (vc) {
+				for (const constStudyId of vc.constituentStudyIds) {
+					ret[constStudyId] = true;
+				}
+			} else {
+				ret[studyId] = true;
+			}
+		}
+		return Object.keys(ret);
+	}
+
+	readonly temporaryVirtualCohortId = remoteData({
+		await:()=>[this.cancerStudies],
+		invoke: async ()=>{
+			const knownStudies:{[studyId:string]:boolean} = {};
+			for (const study of this.cancerStudies.result) {
+				knownStudies[study.studyId] = true;
+			}
+			for (const study of this.savedVirtualCohorts) {
+				knownStudies[study.id] = true;
+			}
+			const candidates = ((window as any).cohortIdsList as string[]) || [];
+			const temporary = candidates.filter(x=>!knownStudies[x]);
+			if (temporary.length === 0) {
+				return undefined;
+			} else {
+				return temporary[0];
+			}
+		}
+	});
+
+	readonly temporaryVirtualCohort = remoteData<VirtualCohort|undefined>({
+		await: ()=>[this.temporaryVirtualCohortId],
+		invoke: async ()=>{
+			if (!this.temporaryVirtualCohortId.result) {
+				return undefined;
+			}
+			try {
+				const virtualCohortData:Response = await request.get(`${window.location.protocol}//${getHost()}/api-legacy/proxy/session-service/virtual_cohort/${this.temporaryVirtualCohortId.result}`);
+				const virtualCohortJSON = JSON.parse(virtualCohortData.text);
+				const name:string = virtualCohortJSON.data.studyName as string;
+				const description:string = virtualCohortJSON.data.description as string;
+				let samples:{sampleId:string, studyId:string}[] = [];
+				const constituentStudyIds:string[] = [];
+				for (const selectedCasesObj of virtualCohortJSON.data.selectedCases) {
+					samples = samples.concat(selectedCasesObj.samples.map((sampleId:string)=>({studyId:selectedCasesObj.studyID, sampleId})));
+					constituentStudyIds.push(selectedCasesObj.studyID);
+				}
+				return {
+					id: this.temporaryVirtualCohortId.result,
+					name,
+					description,
+					samples,
+					constituentStudyIds
+				};
+			} catch (e) {
+				// In case anything related to fetching this data fails
+				return undefined;
+			}
+		},
+		onResult:(vc?:VirtualCohort)=>{
+			if (vc) {
+				this.selectedSampleListId = CUSTOM_CASE_LIST_ID;
+				this.caseIdsMode = "sample";
+				this.caseIds = vc.samples.map(sample=>`${sample.studyId}:${sample.sampleId}`).join("\n");
+			}
+		}
+	});
 
 	copyFrom(other:CancerStudyQueryParams)
 	{
@@ -140,21 +267,38 @@ export class QueryStore
 
 	@observable searchText:string = '';
 
-	@observable.ref private _selectedStudyIds:ReadonlyArray<string> = [];
-	@computed get selectedStudyIds()
+	@observable private _selectedStudyIds:ObservableMap<boolean> = observable.map<boolean>();
+	@computed get selectedStudyIds():string[]
 	{
-		let ids = this._selectedStudyIds;
+		let ids:string[] = this._selectedStudyIds.keys();
+		const selectableStudies = this.selectableStudiesSet;
+		ids = ids.filter(id=>!!selectableStudies[id]);
 		return this.forDownloadTab ? ids.slice(-1) : ids;
 	}
-	set selectedStudyIds(ids)
-	{
-		this._selectedStudyIds = this.forDownloadTab ? ids.slice(-1) : ids;
+	set selectedStudyIds(val:string[]) {
+		this._selectedStudyIds = observable.map(stringListToSet(val));
 	}
 
-	@computed get selectedStudyIdsSet():{[studyId:string]:boolean}
-	{
-		return stringListToSet(this.selectedStudyIds);
+	@action public setStudyIdSelected(studyId:string, selected:boolean) {
+		if (this.forDownloadTab) {
+			// only one can be selected at a time
+			let newMap:{[studyId:string]:boolean} = {};
+			if (selected) {
+				newMap[studyId] = selected;
+			}
+			this._selectedStudyIds = observable.map(newMap);
+		} else {
+			if (selected) {
+				this._selectedStudyIds.set(studyId, true);
+			} else {
+				this._selectedStudyIds.delete(studyId);
+			}
+		}
 	}
+	private isStudyIdSelected(studyId:string):boolean {
+		return !!this._selectedStudyIds.get(studyId);
+	}
+
 	@observable dataTypePriority = {mutation: true, cna: true};
 
 	// molecular profile ids
@@ -281,6 +425,21 @@ export class QueryStore
 	}, []);
 
 	readonly cancerStudies = remoteData(client.getAllStudiesUsingGET({}), []);
+	readonly cancerStudyIdsSet = remoteData<{[studyId:string]:boolean}>({
+		await: ()=>[this.cancerStudies],
+		invoke: async ()=>{
+			return stringListToSet(this.cancerStudies.result.map(x=>x.studyId));
+		},
+		default: {},
+	});
+
+	@computed get selectableStudiesSet():{[studyId:string]:boolean} {
+		const ret = Object.assign({}, this.cancerStudyIdsSet.result);
+		for (const cohort of this.virtualCohorts) {
+			ret[cohort.id] = true;
+		}
+		return ret;
+	}
 
 	readonly molecularProfiles = remoteData<MolecularProfile[]>({
 		invoke: async () => {
@@ -292,38 +451,38 @@ export class QueryStore
 		},
 		default: [],
 		onResult: () => {
-			if (this._isFromUrlParams.selectedProfileIds)
-				this._isFromUrlParams.selectedProfileIds = false;
-			else
+			if (!this.initiallySelected.profileIds || this.userHasClickedOnAStudy) {
 				this._selectedProfileIds = undefined;
+			}
 		}
 	});
 
 	readonly sampleLists = remoteData({
 		invoke: async () => {
-			if (!this.singleSelectedStudyId)
+			if (!this.isSingleNonVirtualStudySelected) {
 				return [];
+			}
 			let sampleLists = await client.getAllSampleListsInStudyUsingGET({
-				studyId: this.singleSelectedStudyId,
+				studyId: this.selectedStudyIds[0],
 				projection: 'DETAILED'
 			});
 			return _.sortBy(sampleLists, sampleList => sampleList.name);
 		},
 		default: [],
 		onResult: () => {
-			if (this._isFromUrlParams.selectedSampleListId)
-				this._isFromUrlParams.selectedSampleListId = false;
-			else
+			if (!this.initiallySelected.sampleListId || this.userHasClickedOnAStudy) {
 				this._selectedSampleListId = undefined;
+			}
 		}
 	});
 
 	readonly mutSigForSingleStudy = remoteData({
 		invoke: async () => {
-			if (!this.singleSelectedStudyId)
+			if (!this.isSingleNonVirtualStudySelected) {
 				return [];
+			}
 			return await internalClient.getSignificantlyMutatedGenesUsingGET({
-				studyId: this.singleSelectedStudyId
+				studyId: this.selectedStudyIds[0]
 			});
 		},
 		default: []
@@ -331,10 +490,11 @@ export class QueryStore
 
 	readonly gisticForSingleStudy = remoteData({
 		invoke: async () => {
-			if (!this.singleSelectedStudyId)
+			if (!this.isSingleNonVirtualStudySelected) {
 				return [];
+			}
 			return await internalClient.getSignificantCopyNumberRegionsUsingGET({
-				studyId: this.singleSelectedStudyId
+				studyId: this.selectedStudyIds[0]
 			});
 		},
 		default: []
@@ -402,12 +562,21 @@ export class QueryStore
 			);
 	}
 
-	readonly asyncCustomCaseSet = remoteData({
+	readonly asyncCustomCaseSetUrlParam = remoteData({
+		await: ()=>[this.asyncCustomCaseSet],
+		invoke: async ()=>{
+			return this.asyncCustomCaseSet.result.map(x=>`${x.studyId}\t${x.sampleId}`).join('\r\n');
+		},
+		default: ''
+	});
+
+	readonly asyncCustomCaseSet = remoteData<{sampleId:string, studyId:string}[]>({
 		invoke: async () => {
-			if (this.selectedSampleListId !== CUSTOM_CASE_LIST_ID || !this.singleSelectedStudyId)
+			if (this.selectedSampleListId !== CUSTOM_CASE_LIST_ID || (this.caseIds.trim().length === 0))
 				return [];
 			return this.invokeCustomCaseSetLater({
 				singleSelectedStudyId: this.singleSelectedStudyId,
+				isVirtualCohortSelected: this.isVirtualCohortSelected,
 				caseIds: this.caseIds,
 				caseIdsMode: this.caseIdsMode,
 			})
@@ -416,59 +585,112 @@ export class QueryStore
 	});
 
 	private invokeCustomCaseSetLater = debounceAsync(
-		async (params:Pick<this, 'singleSelectedStudyId' | 'caseIds' | 'caseIdsMode'>) => {
-			const studyId = params.singleSelectedStudyId as string || '';
-			const caseIds = params.caseIds.match(/\b\S+\b/g) || [];
-			const sampleIds:string[] = [];
-			const invalidIds:string[] = [];
-			if (!studyId)
-				return [];
-
-			const inputOrder = stringListToIndexSet(caseIds);
-
+		async (params:Pick<this, 'singleSelectedStudyId' | 'isVirtualCohortSelected' | 'caseIds' | 'caseIdsMode'>) => {
+			let singleSelectedStudyId = '';
+			if (this.isSingleNonVirtualStudySelected) {
+				singleSelectedStudyId = this.selectedStudyIds[0];
+			}
+			let entities = params.caseIds.trim().split(/\s+/g);
+			const studyIdsInSelectionSet = stringListToSet(this.studyIdsInSelection);
+			const cases:{id:string, study:string}[] = entities.map(entity=>{
+				let splitEntity = entity.split(':');
+				if (splitEntity.length === 1) {
+					// no study specified
+					if (singleSelectedStudyId) {
+						// if only one study selected, fill it in
+						return {
+							id: entity,
+							study: singleSelectedStudyId
+						};
+					} else {
+						// otherwise, throw error
+						throw new Error(`No study specified for ${this.caseIdsMode} id: ${entity}, and more than one study selected for query.`);
+					}
+				} else if (splitEntity.length === 2) {
+					const study = splitEntity[0];
+					const id = splitEntity[1];
+					if (!studyIdsInSelectionSet[study]) {
+						let virtualCohortMessagePart = '';
+						if (this.isVirtualCohortSelected) {
+							virtualCohortMessagePart = ', nor part of a selected Saved Cohort';
+						}
+						throw new Error(`Study ${study} is not selected${virtualCohortMessagePart}.`);
+					}
+					return {
+						id,
+						study
+					};
+				} else {
+					throw new Error(`Input error for entity: ${entity}.`);
+				}
+			});
+			const caseOrder = stringListToIndexSet(cases.map(x=>`${x.study}:${x.id}`));
+			let retSamples:{sampleId:string, studyId:string}[] = [];
+			const validIds:{[studyColonId:string]:boolean} = {};
+			let invalidIds:{id:string, study:string}[] = [];
 			if (params.caseIdsMode === 'sample')
 			{
-				if (caseIds.length)
+				const sampleIdentifiers = cases.map(c => ({studyId: c.study, sampleId: c.id}));
+				if (sampleIdentifiers.length)
 				{
-					const sampleIdentifiers = caseIds.map(sampleId => ({studyId, sampleId}));
-					let sampleObjs = await chunkMapReduce(sampleIdentifiers, chunk=>client.fetchSamplesUsingPOST({sampleIdentifiers:chunk, projection: "ID"}), 990);
+					let sampleObjs = await chunkMapReduce(sampleIdentifiers, chunk=>client.fetchSamplesUsingPOST({sampleIdentifiers:chunk, projection: "SUMMARY"}), 990);
 					// sort by input order
-					sampleObjs = _.sortBy(sampleObjs, sampleObj=>inputOrder[sampleObj.sampleId]);
+					sampleObjs = _.sortBy(sampleObjs, sampleObj=>caseOrder[`${sampleObj.studyId}:${sampleObj.sampleId}`]);
 
-					for (const sample of sampleObjs)
-						sampleIds.push(sample.sampleId);
+					for (const sample of sampleObjs) {
+						retSamples.push({studyId: sample.studyId, sampleId: sample.sampleId});
+						validIds[`${sample.studyId}:${sample.sampleId}`] = true;
+					}
 				}
-				invalidIds.push(..._.difference(caseIds, sampleIds));
 			}
 			else
 			{
 				// convert patient IDs to sample IDs
-				const samplesPromises = caseIds.map(patientId => this.getSamplesForStudyAndPatient(studyId, patientId));
+				const samplesPromises = cases.map(c => this.getSamplesForStudyAndPatient(c.study, c.id));
 				let result:{studyId:string, patientId:string, samples:Sample[], error?:Error}[] = await Promise.all(samplesPromises);
 				// sort by input order
-				result = _.sortBy(result, obj=>inputOrder[obj.patientId]);
+				result = _.sortBy(result, obj=>caseOrder[`${obj.studyId}:${obj.patientId}`]);
 
 				for (const {studyId, patientId, samples, error} of result)
 				{
-					if (error || !samples.length)
-						invalidIds.push(patientId);
-					else
-						sampleIds.push(...samples.map(sample => sample.sampleId));
+					if (!error && samples.length) {
+						retSamples = retSamples.concat(samples.map(sample=>{
+							validIds[`${sample.studyId}:${sample.patientId}`] = true;
+							return {
+								studyId:sample.studyId,
+								sampleId:sample.sampleId
+							};
+						}));
+					}
 				}
 			}
 
-			if (invalidIds.length)
-				throw new Error(
-					`Invalid ${
-						params.caseIdsMode
-					}${
-						invalidIds.length > 1 ? 's' : ''
-					} for the selected cancer study: ${
-						invalidIds.join(' ')
-					}`
-				);
+			invalidIds = invalidIds.concat(cases.filter(x=>(!validIds[`${x.study}:${x.id}`])));
 
-			return sampleIds;
+			if (invalidIds.length) {
+				if (this.isSingleNonVirtualStudySelected) {
+					throw new Error(
+						`Invalid ${
+							params.caseIdsMode
+						}${
+							invalidIds.length > 1 ? 's' : ''
+						} for the selected cancer study: ${
+							invalidIds.map(x=>x.id).join(', ')
+						}`
+					);
+				} else {
+					throw new Error(
+						`Invalid (study, ${
+							params.caseIdsMode
+						}) pair${
+						invalidIds.length > 1 ? 's' : ''
+						}: ${invalidIds.map(x=>`(${x.study}, ${x.id})`).join(', ')}
+						`
+					);
+				}
+			}
+
+			return retSamples;
 		},
 		500
 	);
@@ -486,6 +708,7 @@ export class QueryStore
 			cancerTypes: this.cancerTypes.result,
 			studies: this.cancerStudies.result,
 			priorityStudies: this.priorityStudies,
+			virtualCohorts: this.virtualCohorts
 		});
 	}
 
@@ -509,6 +732,53 @@ export class QueryStore
 	@computed get selectedStudies_totalSampleCount()
 	{
 		return this.selectedStudies.reduce((sum:number, study:CancerStudy) => sum + study.allSampleCount, 0);
+	}
+
+	public isVirtualCohort(studyId:string):boolean {
+		// if the study id doesn't correspond to one in this.cancerStudies, then its a virtual cohort
+		return !this.cancerStudyIdsSet.result[studyId];
+	}
+
+	public isTemporaryVirtualCohort(studyId:string):boolean {
+		return this.temporaryVirtualCohortId.isComplete && this.temporaryVirtualCohortId.result === studyId;
+	}
+
+	private isSingleStudySelected(shouldBeVirtualCohort:boolean) {
+		if (this.selectedStudyIds.length !== 1) {
+			return false;
+		}
+		const selectedStudyId = this.selectedStudyIds[0];
+		return (this.isVirtualCohort(selectedStudyId) === shouldBeVirtualCohort);
+	}
+
+	@computed public get isSingleVirtualCohortSelected() {
+		return this.isSingleStudySelected(true);
+	}
+
+	@computed public get isSingleNonVirtualStudySelected() {
+		return this.isSingleStudySelected(false);
+	}
+
+	@computed public get isVirtualCohortSelected() {
+		let ret = false;
+		const virtualCohorts = this.virtualCohortsSet;
+		for (const studyId of this.selectedStudyIds) {
+			if (virtualCohorts[studyId]) {
+				ret = true;
+				break;
+			}
+		}
+		return ret;
+	}
+
+	@computed public get isVirtualCohortQuery() {
+		if (this.selectedStudyIds.length === 0) {
+			return false;
+		} else if (this.selectedStudyIds.length > 1) {
+			return true;
+		} else {
+			return this.isSingleVirtualCohortSelected;
+		}
 	}
 
 	// DATA TYPE PRIORITY
@@ -585,6 +855,10 @@ export class QueryStore
 
 	@computed get defaultSelectedSampleListId()
 	{
+		if (this.isVirtualCohortQuery) {
+			return ALL_CASES_LIST_ID;
+		}
+
 		let studyId = this.singleSelectedStudyId;
 		if (!studyId)
 			return undefined;
@@ -695,6 +969,10 @@ export class QueryStore
 		) || !!this.oql.error; // to make "Please click 'Submit' to see location of error." possible
 	}
 
+	@computed get summaryEnabled() {
+		return this.selectedStudyIds.length > 0;
+	}
+
 	@computed get oqlMessages():string[] {
 		let unrecognizedMutations = _.flatten(this.oql.query.map(result => {
 			return (result.alterations || []).filter(alt => (alt.alteration_type === 'mut' && (alt.info as any).unrecognized)) as MUTCommand<any>[];
@@ -713,7 +991,7 @@ export class QueryStore
 		if (!this.selectedStudyIds.length)
 			return "Please select one or more cancer studies.";
 
-		if (this.singleSelectedStudyId)
+		if (this.isSingleNonVirtualStudySelected)
 		{
 			if (!this.selectedProfileIds.length)
 				return "Please select one or more molecular profiles.";
@@ -722,13 +1000,13 @@ export class QueryStore
 			if (haveExpInQuery && !expProfileSelected)
 				return "Expression specified in the list of genes, but not selected in the Molecular Profile Checkboxes.";
 
-			if (this.selectedSampleListId === CUSTOM_CASE_LIST_ID)
-			{
-				if (this.asyncCustomCaseSet.isComplete && !this.asyncCustomCaseSet.result.length)
-					return "Please enter at least one ID in your custom case set.";
-				if (this.asyncCustomCaseSet.error)
-					return "Error in custom case set.";
-			}
+		}
+		if (this.selectedStudyIds.length && this.selectedSampleListId === CUSTOM_CASE_LIST_ID)
+		{
+			if (this.asyncCustomCaseSet.isComplete && !this.asyncCustomCaseSet.result.length)
+				return "Please enter at least one ID in your custom case set.";
+			if (this.asyncCustomCaseSet.error)
+				return "Error in custom case set.";
 		}
 		else if (haveExpInQuery)
 		{
@@ -787,16 +1065,32 @@ export class QueryStore
 			this.caseIds = querySession.getSampleIds().join("\n");
 			this.caseIdsMode = 'sample'; // url always contains sample IDs
 			this.geneQuery = normalizeQuery(querySession.getOQLQuery());
-			this._isFromUrlParams.selectedProfileIds = true;
-			this._isFromUrlParams.selectedSampleListId = true;
+			this.initiallySelected.profileIds = true;
+			this.initiallySelected.sampleListId = true;
 		}
 	}
 
+	/**
+	 * This is used to prevent selections from being cleared automatically when new data is downloaded.
+	 */
+	private readonly initiallySelected = {
+		profileIds: false,
+		sampleListId: false
+	};
+
 	@action addParamsFromWindow()
 	{
+		// Select studies from window
 		const windowStudyId = (window as any).selectedCancerStudyId;
-		if (windowStudyId && !this.selectedStudyIdsSet[windowStudyId]) {
-			this.selectedStudyIds = this.selectedStudyIds.concat(windowStudyId);
+		if (windowStudyId) {
+			this.setStudyIdSelected(windowStudyId, true);
+		}
+
+		const cohortIdsList:string[] = ((window as any).cohortIdsList as string[]) || [];
+		for (const studyId of cohortIdsList) {
+			if (studyId !== "null") {
+				this.setStudyIdSelected(studyId, true);
+			}
 		}
 
 		const windowSampleIds:string = (window as any).selectedSampleIds;
@@ -804,46 +1098,14 @@ export class QueryStore
 			this.selectedSampleListId = CUSTOM_CASE_LIST_ID;
 			this.caseIdsMode = 'sample';
 			this.caseIds = windowSampleIds.split(/\s+/).join("\n");
+			this.initiallySelected.sampleListId = true;
 		}
 	}
-
-	/**
-	 * This is used to prevent selections from being cleared automatically when new data is downloaded.
-	 */
-	private readonly _isFromUrlParams = {
-		selectedProfileIds: false,
-		selectedSampleListId: false,
-	};
 
 	@action setParamsFromUrl(url:string)
 	{
 		let urlParts = URL.parse(url, true);
 		let params = urlParts.query as Partial<CancerStudyQueryUrlParams>;
-		let hashParams;
-		{
-			// hack to contend with #/home#/crosscancer/...
-			let hash = urlParts.hash || '';
-			hash = hash.substr(hash.indexOf('crosscancer/'));
-
-			let [crosscancer, tab, priority, genes, study_list] = hash.split('/');
-			if (crosscancer === 'crosscancer')
-			{
-				hashParams = {
-					data_priority: priority as typeof params.data_priority,
-					gene_list: genes && decodeURIComponent(genes),
-					cancer_study_list: study_list && decodeURIComponent(study_list).split(','),
-				};
-			}
-			else
-			{
-				// unexpected hash format
-				hashParams = {
-					data_priority: undefined,
-					gene_list: undefined,
-					cancer_study_list: undefined,
-				};
-			}
-		}
 		let profileIds = [
 			params.genetic_profile_ids_PROFILE_MUTATION_EXTENDED,
 			params.genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION,
@@ -852,18 +1114,18 @@ export class QueryStore
 			params.genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION,
 		];
 
-		this.selectedStudyIds = hashParams.cancer_study_list || (params.cancer_study_id ? [params.cancer_study_id] : []);
+		this.selectedStudyIds = params.cancer_study_list ? params.cancer_study_list.split(",") : (params.cancer_study_id ? [params.cancer_study_id] : []);
 		this._selectedProfileIds = profileIds.every(id => id === undefined) ? undefined : profileIds.filter(_.identity) as string[];
 		this.zScoreThreshold = params.Z_SCORE_THRESHOLD || '2.0';
 		this.rppaScoreThreshold = params.RPPA_SCORE_THRESHOLD || '2.0';
-		this.dataTypePriorityCode = hashParams.data_priority || params.data_priority || '0';
+		this.dataTypePriorityCode = params.data_priority || '0';
 		this.selectedSampleListId = params.case_set_id !== "-1" ? params.case_set_id : '';
 		this.caseIds = params.case_ids || '';
 		this.caseIdsMode = 'sample'; // url always contains sample IDs
-		this.geneQuery = normalizeQuery(hashParams.gene_list || params.gene_list || '');
+		this.geneQuery = normalizeQuery(params.gene_list || '');
 		this.forDownloadTab = params.tab_index === 'tab_download';
-		this._isFromUrlParams.selectedProfileIds = true;
-		this._isFromUrlParams.selectedSampleListId = true;
+		this.initiallySelected.profileIds = true;
+		this.initiallySelected.sampleListId = true;
 	}
 
 	@action selectCancerType(cancerType:CancerType, multiSelect?:boolean)
@@ -955,7 +1217,16 @@ export class QueryStore
 		if (historyUrl != newUrl)
 			window.history.pushState(null, window.document.title, historyUrl);*/
 
-		formSubmit(urlParams.pathname, urlParams.query)
+		formSubmit(urlParams.pathname, urlParams.query);
+	}
+
+	@action openSummary() {
+
+		if (!this.summaryEnabled) {
+			return;
+		}
+
+		openStudySummaryFormSubmit(this.selectedStudyIds);
 	}
 
 	@action addGenesAndSubmit(genes:string[]) {

@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import * as React from 'react';
-import * as styles_any from './styles.module.scss';
+import * as styles_any from './styles/styles.module.scss';
 import {QueryStore, QueryStoreComponent} from "./QueryStore";
 import {toJS} from "mobx";
 import {observer} from "mobx-react";
@@ -17,7 +17,7 @@ export default class DataTypePrioritySelector extends QueryStoreComponent<{}, {}
 {
 	render()
 	{
-		if (this.store.singleSelectedStudyId)
+		if (!this.store.isVirtualCohortQuery)
 			return null;
 
 		return (
