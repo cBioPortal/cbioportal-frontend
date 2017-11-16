@@ -1,12 +1,12 @@
 import * as React from 'react';
-import * as styles_any from './styles.module.scss';
+import * as styles_any from './styles/styles.module.scss';
 import * as _ from 'lodash';
 import ReactSelect from 'react-select';
 import {observer} from "mobx-react";
 import {computed} from 'mobx';
 import {FlexCol, FlexRow} from "../flexbox/FlexBox";
-import {QueryStore, QueryStoreComponent, CUSTOM_CASE_LIST_ID} from "./QueryStore";
-import {getStudyViewUrl} from "../../api/urls";
+import {QueryStore, QueryStoreComponent, CUSTOM_CASE_LIST_ID, ALL_CASES_LIST_ID} from './QueryStore';
+import {getStudySummaryUrl} from '../../api/urls';
 import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
 import SectionHeader from "../sectionHeader/SectionHeader";
 import {ReactSelectOption} from "react-select";
@@ -30,7 +30,7 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 {
 	@computed get caseSetOptions() : ReactSelectOptionWithName[]
 	{
-		return [
+		let ret = [
 			...this.store.sampleLists.result.map(sampleList => {
 				return {
 					label: (
@@ -60,17 +60,33 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 				textLabel:'User-defined Case List'
 			}
 		];
+		if (this.store.isVirtualCohortQuery) {
+			ret = [{
+				value: ALL_CASES_LIST_ID,
+				label: (
+					<DefaultTooltip
+						placement="right"
+						mouseEnterDelay={0}
+						overlay={<div className={styles.tooltip}>All cases in the selected cohorts</div>}
+					>
+						<span>All</span>
+					</DefaultTooltip>
+				),
+				textLabel:'All'
+			}].concat(ret);
+		}
+		return ret;
 	}
 
 	render()
 	{
-		if (!this.store.singleSelectedStudyId)
+		if (!this.store.selectedStudyIds.length)
 			return null;
 		return (
 			<FlexRow padded overflow className={styles.CaseSetSelector} data-test='CaseSetSelector'>
 				<div>
 				<SectionHeader className="sectionLabel"
-							   secondaryComponent={<a href={getStudyViewUrl(this.store.singleSelectedStudyId)}>To build your own case set, try out our enhanced Study View.</a>}
+							   secondaryComponent={<a href={getStudySummaryUrl(this.store.selectedStudyIds)} target="_blank">To build your own case set, try out our enhanced Study View.</a>}
 							   promises={[this.store.sampleLists, this.store.asyncCustomCaseSet]}>
 					Select Patient/Case Set:
 				</SectionHeader>

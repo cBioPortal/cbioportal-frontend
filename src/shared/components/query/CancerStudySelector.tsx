@@ -3,7 +3,7 @@ import * as React from "react";
 import Dictionary = _.Dictionary;
 import {TypeOfCancer as CancerType, CancerStudy} from "../../api/generated/CBioPortalAPI";
 import {FlexCol, FlexRow} from "../flexbox/FlexBox";
-import * as styles_any from './styles.module.scss';
+import * as styles_any from './styles/styles.module.scss';
 import classNames from 'classnames';
 import ReactSelect from 'react-select';
 import StudyList from "./studyList/StudyList";
@@ -13,9 +13,11 @@ import memoize from "memoize-weak-decorator";
 import {If, Then} from 'react-if';
 import {QueryStoreComponent} from "./QueryStore";
 import SectionHeader from "../sectionHeader/SectionHeader";
-import {Modal} from 'react-bootstrap';
+import {Modal, Button} from 'react-bootstrap';
 import Autosuggest from 'react-bootstrap-autosuggest'
 import ReactElement = React.ReactElement;
+import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
+import FontAwesome from "react-fontawesome";
 
 const styles = styles_any as {
 	SelectedStudiesWindow: string,
@@ -43,6 +45,11 @@ const styles = styles_any as {
 	cancerTypeListItemLabel: string,
 	cancerTypeListItemCount: string,
 	cancerStudyListContainer: string,
+	submit:string,
+
+	summaryButtonClass: string,
+	summaryButtonIconClass: string,
+	summaryButtonTextClass: string,
 };
 
 export interface ICancerStudySelectorProps
@@ -53,6 +60,12 @@ export interface ICancerStudySelectorProps
 @observer
 export default class CancerStudySelector extends QueryStoreComponent<ICancerStudySelectorProps, {}>
 {
+	private handlers = {
+		onSummaryClick:()=>{
+			this.store.openSummary();
+		}
+	};
+
 	constructor(props: ICancerStudySelectorProps)
 	{
 		super(props);
@@ -150,18 +163,50 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 						</Observer>
 					)}
 
-					{ (!!(!this.store.forDownloadTab) && !!(!this.store.cancerTypes.isPending && !this.store.cancerStudies.isPending)) && (
+					{!!(!this.store.cancerTypes.isPending && !this.store.cancerStudies.isPending) && (
 						<Observer>
 							{() => {
-								let selectAllChecked = expr(() => this.logic.mainView.getCheckboxProps(this.store.treeData.rootCancerType).checked);
 								return (
-									<a onClick={() => this.logic.mainView.onCheck(this.store.treeData.rootCancerType, !selectAllChecked)}>
-										{selectAllChecked ? "Deselect all" : "Select all"}
-									</a>
+									<DefaultTooltip
+										placement="top"
+										overlay={<span>Open summary of selected studies in a new window.</span>}
+										disabled={!this.store.summaryEnabled}
+										mouseEnterDelay={0}
+									>
+										<div
+											style={{
+													marginLeft:10,
+													display: this.store.summaryEnabled ? 'inline-block' : 'none',
+													cursor: 'pointer',
+													color: '#1982b8'
+													}}
+											onClick={this.handlers.onSummaryClick}
+										>
+											<Button bsSize="xs" bsStyle="primary"
+												className={styles.summaryButtonClass}
+											>
+												<i className='ci ci-pie-chart'></i> Summary
+											</Button>
+										</div>
+									</DefaultTooltip>
 								);
 							}}
 						</Observer>
 					)}
+
+                    { (!!(!this.store.forDownloadTab) && !!(!this.store.cancerTypes.isPending && !this.store.cancerStudies.isPending)) && (
+                        <Observer>
+                            {() => {
+                                let selectAllChecked = expr(() => this.logic.mainView.getCheckboxProps(this.store.treeData.rootCancerType).checked);
+                                return (
+                                    <a  style={{ marginLeft:20 }} onClick={() => this.logic.mainView.onCheck(this.store.treeData.rootCancerType, !selectAllChecked)}>
+                                        {selectAllChecked ? "Deselect all" : "Select all"}
+                                    </a>
+                                );
+                            }}
+                        </Observer>
+                    )}
+
 					</div>
 
 					<Observer>
