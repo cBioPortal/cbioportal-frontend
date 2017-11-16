@@ -3,7 +3,7 @@ import {observer} from "mobx-react";
 import {observable, computed} from "mobx";
 import * as _ from "lodash";
 import {default as LazyMobXTable, Column, SortDirection} from "shared/components/lazyMobXTable/LazyMobXTable";
-import {MolecularProfile, Mutation} from "shared/api/generated/CBioPortalAPI";
+import {CancerStudy, MolecularProfile, Mutation} from "shared/api/generated/CBioPortalAPI";
 import SampleColumnFormatter from "./column/SampleColumnFormatter";
 import TumorAlleleFreqColumnFormatter from "./column/TumorAlleleFreqColumnFormatter";
 import NormalAlleleFreqColumnFormatter from "./column/NormalAlleleFreqColumnFormatter";
@@ -39,9 +39,11 @@ import {IMobXApplicationDataStore} from "shared/lib/IMobXApplicationDataStore";
 import generalStyles from "./column/styles.module.scss";
 import classnames from 'classnames';
 import {IPaginationControlsProps} from "../paginationControls/PaginationControls";
+import StudyColumnFormatter from "./column/StudyColumnFormatter";
 
 export interface IMutationTableProps {
     sampleIdToTumorType?: {[sampleId: string]: string};
+    studyIdToStudy?: {[studyId:string]:CancerStudy};
     molecularProfileIdToMolecularProfile?: {[molecularProfileId:string]:MolecularProfile};
     discreteCNACache?:DiscreteCNACache;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
@@ -79,6 +81,7 @@ export interface IMutationTableProps {
 }
 
 export enum MutationTableColumnType {
+    STUDY,
     SAMPLE_ID,
     TUMORS,
     GENE,
@@ -168,6 +171,17 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
 
     protected generateColumns() {
         this._columns = {};
+
+        this._columns[MutationTableColumnType.STUDY] = {
+            name: "Study",
+            render: (d:Mutation[])=> StudyColumnFormatter.renderFunction(d, this.props.molecularProfileIdToMolecularProfile, this.props.studyIdToStudy),
+            download: (d:Mutation[])=>StudyColumnFormatter.getTextValue(d, this.props.molecularProfileIdToMolecularProfile, this.props.studyIdToStudy),
+            sortBy: (d:Mutation[])=>StudyColumnFormatter.getTextValue(d, this.props.molecularProfileIdToMolecularProfile, this.props.studyIdToStudy),
+            filter: (d:Mutation[], filterString:string, filterStringUpper:string)=>{
+                return StudyColumnFormatter.filter(d, filterStringUpper, this.props.molecularProfileIdToMolecularProfile, this.props.studyIdToStudy);
+            },
+            visible: false
+        };
 
         this._columns[MutationTableColumnType.SAMPLE_ID] = {
             name: "Sample ID",
