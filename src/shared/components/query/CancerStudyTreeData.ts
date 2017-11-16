@@ -1,6 +1,6 @@
 import {CancerStudy, TypeOfCancer as CancerType} from "../../api/generated/CBioPortalAPI";
 import * as _ from 'lodash';
-import {PriorityStudies} from "config/IAppConfig";
+import {PriorityStudies, VirtualCohort} from "config/IAppConfig";
 
 export const CANCER_TYPE_ROOT = 'tissue';
 
@@ -39,7 +39,7 @@ export default class CancerStudyTreeData
 	map_cancerTypeId_cancerType = new Map<string, CancerType>();
 	map_studyId_cancerStudy = new Map<string, CancerStudy>();
 
-	constructor({cancerTypes = [], studies = [], priorityStudies = {}}: {cancerTypes: CancerType[], studies: CancerStudy[], priorityStudies?:PriorityStudies})
+	constructor({cancerTypes = [], studies = [], priorityStudies = {}, virtualCohorts=[]}: {cancerTypes: CancerType[], studies: CancerStudy[], priorityStudies?:PriorityStudies, virtualCohorts?:VirtualCohort[]})
 	{
 		let nodes:CancerTreeNode[];
 		let node:CancerTreeNode;
@@ -49,6 +49,30 @@ export default class CancerStudyTreeData
 		cancerTypes = CancerStudyTreeData.sortNodes(cancerTypes);
 		studies = CancerStudyTreeData.sortNodes(studies);
 
+		// add virtual cohort category, and studies
+		// disabled, for now
+		/*const virtualCohortsName = "My Virtual Studies";
+		const virtualCohortsCategory = {
+			clinicalTrialKeywords: '',
+			dedicatedColor: '',
+			name: virtualCohortsName,
+			parent: CANCER_TYPE_ROOT,
+			shortName: virtualCohortsName,
+			cancerTypeId: virtualCohortsName
+		};
+		const virtualCohortStudies = [];
+		for (let virtualCohort of virtualCohorts) {
+			let study = {
+				allSampleCount: virtualCohort.samples.length,
+				studyId: virtualCohort.id,
+				name: virtualCohort.name,
+				description: virtualCohort.description,
+				cancerTypeId: virtualCohortsName
+			} as CancerStudy;
+			virtualCohortStudies.push(study);
+		}*/
+
+		// add priority categories
 		for (let name in priorityStudies)
 		{
 			this.priorityCategories.push({
@@ -60,6 +84,8 @@ export default class CancerStudyTreeData
 				cancerTypeId: name
 			});
 		}
+		//cancerTypes = [virtualCohortsCategory].concat(this.priorityCategories).concat(this.rootCancerType, cancerTypes);
+		//studies = virtualCohortStudies.concat(studies);
 		cancerTypes = this.priorityCategories.concat(this.rootCancerType, cancerTypes);
 
 		// initialize lookups and metadata entries
