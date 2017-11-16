@@ -42,6 +42,7 @@ export class MutationMapperStore {
                 // (which will be done in the getter thats passed in here) so that the cache itself is observable
                 // and we will react when it changes to a new object.
                 private getMutationDataCache: ()=>MutationDataCache,
+                public studyIdToStudy:MobxPromise<{[studyId:string]:CancerStudy}>,
                 public molecularProfileIdToMolecularProfile:MobxPromise<{[molecularProfileId:string]:MolecularProfile}>,
                 public clinicalDataForSamples: MobxPromise<ClinicalData[]>,
                 public studiesForSamplesWithoutCancerTypeClinicalData: MobxPromise<CancerStudy[]>,
