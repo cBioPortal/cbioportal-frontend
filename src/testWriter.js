@@ -11,9 +11,9 @@ testObj.prototype.writeTest = function(){
     console.log(_formatTest(this));
 }
 
-window._handleTestReports = function(args,func,params,context){
+window._handleTestReports = function(args,func,params,context,funcName){
     window._tr=window._tr||{};
-    const name = func.name;
+    var name = funcName || func.name;
     var paramArr = (/\(/.test(params)) ? params.replace(/[()]/g,'').split(',') : null;
     var argArr = Array.from(args);
     var argMap = argArr.map((a,i)=>JSON.stringify(a));
@@ -27,7 +27,7 @@ window._handleTestReports = function(args,func,params,context){
             argMap: argMap,
             args: args,
             ret: ret,
-            name: func.name,
+            name: funcName || func.name,
             fn: func,
             argNames: func.toString().match(/\((.*)\)/)[1].split(', ')
         }));

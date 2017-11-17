@@ -6,16 +6,34 @@ import {MSKTabs, MSKTab} from "shared/components/MSKTabs/MSKTabs";
 import {If, Then, Else} from 'react-if';
 import {ThreeBounce} from 'better-react-spinkit';
 import {CancerSummaryContent, IAlterationData} from './CancerSummaryContent';
-import {ExtendedSample, ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
-import Loader from "../loadingIndicator/LoadingIndicator";
-import {CancerStudy} from "../../api/generated/CBioPortalAPI";
+import {
+    ExtendedAlteration, ExtendedSample,
+    ResultsViewPageStore
+} from "../ResultsViewPageStore";
+import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator";
+import {CancerStudy} from "../../../shared/api/generated/CBioPortalAPI";
+import './styles.scss';
+import {
+    getAlterationCountsForCancerTypesByGene,
+    getAlterationCountsForCancerTypesForAllGenes
+} from "../../../shared/lib/alterationCountHelpers";
+
+interface ICancerSummaryContainerProps {
+
+    samplesExtendedWithClinicalData:ExtendedSample[];
+    alterationsByGeneBySampleKey:{[hugoGeneSymbol:string]:{ [uniquSampleKey:string]:ExtendedAlteration[] }};
+    studies:CancerStudy[];
+    studyMap:{ [studyId:string]:CancerStudy };
+
+};
+
 
 @observer
-export default class CancerSummaryContainer extends React.Component<{ store: ResultsViewPageStore }, {}> {
+export default class CancerSummaryContainer extends React.Component<ICancerSummaryContainerProps, {}> {
 
     @observable private activeTab: string = "all";
     @observable private resultsViewPageWidth: number = 1150;
-    @observable private groupAlterationsBy: keyof ExtendedSample;
+    @observable private groupAlterationsBy_userSelection: keyof ExtendedSample;
 
     private resultsViewPageContent: HTMLElement;
 
@@ -35,13 +53,28 @@ export default class CancerSummaryContainer extends React.Component<{ store: Res
     }
 
     public pivotData(str: keyof ExtendedSample){
-        this.groupAlterationsBy = str;
+        this.groupAlterationsBy_userSelection = str;
+    }
+
+    public get groupAlterationsBy(): keyof ExtendedSample {
+        if (this.groupAlterationsBy_userSelection === undefined) {
+            if (this.props.studies.length > 1) {
+                return 'studyId';
+            } else {
+                const cancerTypes = _.chain(this.props.samplesExtendedWithClinicalData)
+                    .map((sample:ExtendedSample)=>sample.cancerType)
+                    .uniq().value();
+                return (cancerTypes.length === 1) ? 'cancerTypeDetailed' : 'cancerType';
+            }
+        } else {
+            return this.groupAlterationsBy_userSelection;
+        }
     }
 
     // this is used to map study id to study shortname
     private mapStudyIdToShortName(str: string){
-            if (str in this.props.store.studyMap) {
-                return this.props.store.studyMap[str].shortName;
+            if (str in this.props.studyMap) {
+                return this.props.studyMap[str].shortName;
             } else {
                 return str;
             }
@@ -54,8 +87,8 @@ export default class CancerSummaryContainer extends React.Component<{ store: Res
         const labelTransformer = (this.groupAlterationsBy === 'studyId') ? this.mapStudyIdToShortName : undefined;
 
         const alterationCountsForCancerTypesByGene =
-            this.props.store.getAlterationCountsForCancerTypesByGene(this.props.store.alterationsByGeneBySampleKey.result!,
-                this.props.store.samplesExtendedWithClinicalData.result!, this.groupAlterationsBy);
+            getAlterationCountsForCancerTypesByGene(this.props.alterationsByGeneBySampleKey,
+                this.props.samplesExtendedWithClinicalData, this.groupAlterationsBy);
 
         const geneTabs = _.map(alterationCountsForCancerTypesByGene, (geneData, geneName: string) => {
 
@@ -82,9 +115,9 @@ export default class CancerSummaryContainer extends React.Component<{ store: Res
 
         // only add combined gene tab if there's more than one gene
         if (geneTabs.length > 1) {
-            const groupedAlterationDataForAllGenes = this.props.store.getAlterationCountsForCancerTypesForAllGenes(
-                this.props.store.alterationsByGeneBySampleKey.result!,
-                this.props.store.samplesExtendedWithClinicalData.result!,
+            const groupedAlterationDataForAllGenes = getAlterationCountsForCancerTypesForAllGenes(
+                this.props.alterationsByGeneBySampleKey,
+                this.props.samplesExtendedWithClinicalData,
                 this.groupAlterationsBy);
             geneTabs.unshift(<MSKTab key="all" id="allGenes" linkText="All Queried Genes">
                 <CancerSummaryContent gene={'all'}
@@ -101,42 +134,15 @@ export default class CancerSummaryContainer extends React.Component<{ store: Res
     }
 
     public render() {
-
-        const isComplete = this.props.store.samplesExtendedWithClinicalData.isComplete && this.props.store.alterationsByGeneBySampleKey.isComplete;
-        const isPending = this.props.store.samplesExtendedWithClinicalData.isPending && this.props.store.alterationsByGeneBySampleKey.isPending;
-
-        if (isComplete) {
-
-            // if we have no groupby value, then we need to choose a default
-            if (this.groupAlterationsBy === undefined) {
-                if (this.props.store.studies.result.length > 1) {
-                    this.groupAlterationsBy = 'studyId';
-                } else {
-                    const cancerTypes = _.chain(this.props.store.samplesExtendedWithClinicalData.result)
-                        .map((sample:ExtendedSample)=>sample.cancerType)
-                        .uniq().value();
-                    this.groupAlterationsBy = (cancerTypes.length === 1) ? 'cancerTypeDetailed' : 'cancerType';
-                }
-            }
-
-
-            return (
-                <div ref={(el: HTMLDivElement) => this.resultsViewPageContent = el}>
-                    <MSKTabs onTabClick={this.handleTabClick}
-                             enablePagination={true}
-                             unmountOnHide={true}
-                             arrowStyle={{'line-height': .8}}
-                             tabButtonStyle="pills"
-                             activeTabId={this.activeTab} className="secondaryTabs">
-                        {this.tabs}
-                    </MSKTabs>
-                </div>
-            );
-        } else if (isPending) {
-            return <Loader isLoading={true}/>
-        } else {
-            // TODO: error!
-            return null;
-        }
+        return <div ref={(el: HTMLDivElement) => this.resultsViewPageContent = el} data-test="cancerTypeSummaryWrapper">
+                <MSKTabs onTabClick={this.handleTabClick}
+                         enablePagination={true}
+                         unmountOnHide={true}
+                         arrowStyle={{'line-height': .8}}
+                         tabButtonStyle="pills"
+                         activeTabId={this.activeTab} className="secondaryTabs">
+                    {this.tabs}
+                </MSKTabs>
+            </div>
     }
 };
