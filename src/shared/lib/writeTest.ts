@@ -6,6 +6,14 @@ export function writeTest(name:string, argJSON:string[], retJSON:string): void {
 
 }
 
+// this is decorator for method
+export function testIt(obj:any, methodname:string, des:any) {
+   var old = des.value;
+   des.value = function(...args:any[]){
+       return (window as any)._handleTestReports(args,old,'fdsa,fdas',this, methodname);
+   }
+}
+
 function formatTest(functionName:string, argMap:string[], retJSON:string){
 
 return (
