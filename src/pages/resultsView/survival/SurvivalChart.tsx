@@ -1,13 +1,14 @@
 import * as React from 'react';
 import {observer} from "mobx-react";
 import {PatientSurvival} from "../../../shared/model/PatientSurvival";
-import {Line} from 'react-chartjs-2';
 import {computed, observable} from "mobx";
 import {Popover, Table} from 'react-bootstrap';
 import styles from "./styles.module.scss";
-import {ChartPoint} from "chart.js";
 import jStat from 'jStat';
 import {sleep} from "../../../shared/lib/TimeUtils";
+import {VictoryChart, VictoryContainer, VictoryLine, VictoryTooltip,
+    VictoryAxis, VictoryLegend, VictoryLabel, VictoryScatter, VictoryTheme} from 'victory';
+import SvgSaver from 'svgsaver';
 
 export interface ISurvivalChartProps {
     alteredPatientSurvivals: PatientSurvival[];
@@ -21,6 +22,7 @@ export interface ISurvivalChartProps {
     yLabelTooltip: string;
     xLabelWithEventTooltip: string;
     xLabelWithoutEventTooltip: string;
+    fileName: string;
 }
 
 export function getEstimates(patientSurvivals: PatientSurvival[]): number[] {
@@ -52,9 +54,9 @@ export function getMedian(patientSurvivals: PatientSurvival[], estimates: number
     return median;
 }
 
-export function getChartData(patientSurvivals: PatientSurvival[], estimates: number[]): ChartPoint[] {
+export function getLineData(patientSurvivals: PatientSurvival[], estimates: number[]): any[] {
 
-    let chartData: ChartPoint[] = [];
+    let chartData: any[] = [];
 
     chartData.push({x: 0, y: 100});
     patientSurvivals.forEach((patientSurvival, index) => {
@@ -63,6 +65,38 @@ export function getChartData(patientSurvivals: PatientSurvival[], estimates: num
 
     return chartData;
 }
+
+export function getScatterData(patientSurvivals: PatientSurvival[], estimates: number[]): any[] {
+    
+        let chartData: any[] = [];
+
+        patientSurvivals.forEach((patientSurvival, index) => {
+            chartData.push({x: patientSurvival.months, y: estimates[index] * 100,
+                patientId: patientSurvival.patientId, studyId: patientSurvival.studyId,
+            status: patientSurvival.status});
+        });
+    
+        return chartData;
+    }
+
+export function getScatterDataWithOpacity(patientSurvivals: PatientSurvival[], estimates: number[]): any[] {
+    
+        let scatterData = getScatterData(patientSurvivals, estimates);
+        let chartData: any[] = [];
+        let previousEstimate: number;
+
+        patientSurvivals.forEach((patientSurvival, index) => {
+            const estimate = estimates[index];
+            let opacity: number = 1;
+            if (previousEstimate && estimate !== previousEstimate) {
+                opacity = 0;
+            }
+            previousEstimate = estimate;
+            chartData.push({...scatterData[index], opacity: opacity});
+        });
+    
+        return chartData;
+    }
 
 export function getStats(patientSurvivals: PatientSurvival[], estimates: number[]): [number, number, string] {
 
@@ -126,15 +160,19 @@ export function calculateLogRank(alteredPatientSurvivals: PatientSurvival[],
 export default class SurvivalChart extends React.Component<ISurvivalChartProps, {}> {
 
     @observable tooltipModel: any;
-    private isTooltipHovered: boolean;
-    @observable private pngAnchor = '';
+    private isTooltipHovered: boolean = false;
+    private tooltipCounter: number = 0;
     private alteredLegendText = 'Cases with Alteration(s) in Query Gene(s)';
     private unalteredLegendText = 'Cases without Alteration(s) in Query Gene(s)';
+    private svgContainer:any;
+    private svgsaver = new SvgSaver();
 
     constructor(props: ISurvivalChartProps) {
         super(props);
         this.tooltipMouseEnter = this.tooltipMouseEnter.bind(this);
         this.tooltipMouseLeave = this.tooltipMouseLeave.bind(this);
+        this.downloadSvg = this.downloadSvg.bind(this);
+        this.downloadPng = this.downloadPng.bind(this);
     }
 
     @computed get sortedAlteredPatientSurvivals(): PatientSurvival[] {
@@ -166,152 +204,107 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         this.tooltipModel = null;
     }
 
-    data = {
-        datasets: [
-            {
-                label: this.alteredLegendText,
-                fill: false,
-                borderColor: 'rgba(255, 0, 0, 1)',
-                backgroundColor: 'rgba(255, 0, 0, 1)',
-                pointBorderColor: 'rgba(255, 0, 0, 1)',
-                data: getChartData(this.sortedAlteredPatientSurvivals, this.alteredEstimates)
-            },
-            {
-                label: this.unalteredLegendText,
-                fill: false,
-                borderColor: 'rgba(0, 0, 255, 1)',
-                backgroundColor: 'rgba(0, 0, 255, 1)',
-                pointBorderColor: 'rgba(0, 0, 255, 1)',
-                data: getChartData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)
-            }
-        ]
-    };
+    private downloadSvg() {
+        this.svgsaver.asSvg(this.svgContainer.firstChild, this.props.fileName + '.svg');
+    }
 
-    options = {
-        elements: {
-            line: {
-                stepped: true,
-                borderWidth: 1
-            },
-            point: {
-                pointStyle: 'cross',
-                radius: 4,
-                hoverRadius: 6,
-                borderWidth: 2
-            }
-        },
-        legend: {
-            position: 'right',
-            labels: {
-                generateLabels:() => {
-                    return [
-                        {text: this.alteredLegendText, fillStyle: 'rgba(255, 0, 0, 1)', lineWidth: 0},
-                        {text: this.unalteredLegendText, fillStyle: 'rgba(0, 0, 255, 1)', lineWidth: 0},
-                        {text: 'Logrank Test P-Value: ' + this.logRank.toPrecision(3), fillStyle: 'rgba(0, 0, 0, 0)', lineWidth: 0}
-                    ];
-                }
-            }
-        },
-        scales: {
-            yAxes: [{
-                ticks: {
-                    beginAtZero: true,
-                    max: 100,
-                    stepSize: 10,
-                    callback: function(value: any) {
-                        return value + '%';
-                    }
-                },
-                scaleLabel: {
-                    display: true,
-                    labelString: this.props.yAxisLabel,
-                    fontSize: 16
-                },
-                gridLines: {
-                    drawOnChartArea: false
-                }
-            }],
-            xAxes: [{
-                type: 'linear',
-                scaleLabel: {
-                    display: true,
-                    labelString: this.props.xAxisLabel,
-                    fontSize: 16
-                },
-                gridLines: {
-                    drawOnChartArea: false
-                }
-            }]
-        },
-        tooltips: {
-            enabled: false,
-            mode: 'nearest',
-            custom: async (tooltipModel: any) => {
-                if (tooltipModel.opacity === 0) {
-                    await sleep(100);
-                    if (!this.isTooltipHovered) {
-                        this.tooltipModel = null;
-                    }
-                    return;
-                }
-                this.tooltipModel = tooltipModel;
-            }
-        },
-        hover: {
-            mode: 'nearest'
-        },
-        title: {
-            display: true,
-            text: this.props.title,
-            fontSize: 24
-        },
-        animation: {
-            onComplete: (animation: any) => {
-                this.pngAnchor = animation.chart.toBase64Image();
-            }
-        }
-    };
+    private downloadPng() {
+        this.svgsaver.asPng(this.svgContainer.firstChild, this.props.fileName + '.png');
+    }
 
     public render() {
 
-        let hoveredPatientSurvival: PatientSurvival | null = null;
-        let hoveredEstimate: number | null = null;
-
-        if (this.tooltipModel) {
-            const dataPoint:any = this.tooltipModel.dataPoints[0];
-            if (dataPoint.index > 0) {
-                if (dataPoint.datasetIndex === 0) {
-                    hoveredPatientSurvival = this.sortedAlteredPatientSurvivals[dataPoint.index - 1];
-                    hoveredEstimate = this.alteredEstimates[dataPoint.index - 1];
-                } else {
-                    hoveredPatientSurvival = this.sortedUnalteredPatientSurvivals[dataPoint.index - 1];
-                    hoveredEstimate = this.unalteredEstimates[dataPoint.index - 1];
-                }
+        const events = [{
+            target: "data",
+            eventHandlers: {
+              onMouseOver: () => {
+                return [
+                  {
+                    target: "data",
+                    mutation: () => ({ active: true })
+                  },
+                  {
+                    target: "labels",
+                    mutation: (props:any) => { 
+                        this.tooltipModel = props;
+                        this.tooltipCounter++;
+                    }
+                  }
+                ];
+              },
+              onMouseOut: () => {
+                return [
+                  {
+                    target: "data",
+                    mutation: () => ({ active: false })
+                  },
+                  {
+                    target: "labels",
+                    mutation: async () => {
+                        await sleep(100);
+                        if (!this.isTooltipHovered && this.tooltipCounter === 1) {
+                            this.tooltipModel = null;
+                        }
+                        this.tooltipCounter--;
+                    }
+                  }
+                ];
+              }
             }
-        }
+          }];
 
         return (
+            
             <div className={styles.SurvivalChart}>
-                <Line data={this.data} options={this.options}/>
-                {this.tooltipModel && hoveredPatientSurvival && hoveredEstimate &&
-                <Popover arrowOffsetTop={48} positionLeft={this.tooltipModel.caretX + 15}
-                         positionTop={this.tooltipModel.caretY - 72}
+                <VictoryChart containerComponent={<VictoryContainer responsive={false} containerRef={(ref:any) => this.svgContainer = ref}/>}
+                height={650} width={1150} padding={{top: 50, bottom: 50, left: 60, right: 300}} theme={VictoryTheme.material}>
+                    <VictoryLabel x={50} y={15} text={this.props.title} style={{fontSize: 24}}/>
+                    <VictoryAxis style={{ticks: {size: 8}, tickLabels: {padding: 2}, axisLabel: {padding: 35}, grid: {opacity: 0}}} 
+                    crossAxis={false} tickCount={11} label={this.props.xAxisLabel}/>
+                    <VictoryAxis label={this.props.yAxisLabel} dependentAxis={true} tickFormat={(t:any) => `${t}%`} tickCount={11}
+                    style={{ticks: {size: 8}, tickLabels: {padding: 2}, axisLabel: {padding: 45}, grid: {opacity: 0}}} domain={[0, 100]} crossAxis={false}/>
+                    <VictoryScatter data={getScatterDataWithOpacity(this.sortedAlteredPatientSurvivals, this.alteredEstimates)}
+                    symbol="plus" style={{data: {fill: "red", pointerEvents: "none"}}} size={3} events={events}/>
+                    <VictoryScatter data={getScatterDataWithOpacity(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)}
+                    symbol="plus" style={{data: {fill: "blue", pointerEvents: "none"}}} size={3} events={events}/>
+                    <VictoryScatter data={getScatterData(this.sortedAlteredPatientSurvivals, this.alteredEstimates)}
+                    symbol="circle" style={{data: {fill: "red", fillOpacity: (datum:any, active:any) => active ? 0.3 : 0}}} size={10} events={events}/>
+                    <VictoryScatter data={getScatterData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)}
+                    symbol="circle" style={{data: {fill: "blue", fillOpacity: (datum:any, active:any) => active ? 0.3 : 0}}} size={10} events={events}/>
+                    <VictoryLine interpolation="stepAfter" data={getLineData(this.sortedAlteredPatientSurvivals, this.alteredEstimates)}
+                    style={{data: {stroke: "red", strokeWidth: 1}}}/>
+                    <VictoryLine interpolation="stepAfter" data={getLineData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)}
+                    style={{data: {stroke: "blue", strokeWidth: 1}}}/>
+                    <VictoryLegend x={850} y={40}
+                    data={[
+                        {name: this.alteredLegendText, symbol: { fill: "red", type: "plus" }}, 
+                        {name: this.unalteredLegendText, symbol: { fill: "blue", type: "plus" }},
+                        {name: `Logrank Test P-Value: ${this.logRank.toPrecision(3)}`, symbol: {opacity: 0}}]}/>
+                </VictoryChart>
+                {this.tooltipModel &&
+                <Popover arrowOffsetTop={48} positionLeft={this.tooltipModel.x + 15}
+                         positionTop={this.tooltipModel.y - 60}
                          onMouseEnter={this.tooltipMouseEnter} onMouseLeave={this.tooltipMouseLeave}>
                     <div className={styles.Tooltip}>
-                        Patient ID: <a href={'/case.do#/patient?caseId=' + hoveredPatientSurvival.patientId + '&studyId=' +
-                    hoveredPatientSurvival.studyId} target="_blank">{hoveredPatientSurvival.patientId}</a><br/>
-                        {this.props.yLabelTooltip}: {(hoveredEstimate * 100).toFixed(2)}%<br/>
-                        {hoveredPatientSurvival.status ? this.props.xLabelWithEventTooltip :
+                        Patient ID: <a href={'/case.do#/patient?caseId=' + this.tooltipModel.datum.patientId + '&studyId=' +
+                    this.tooltipModel.datum.studyId} target="_blank">{this.tooltipModel.datum.patientId}</a><br/>
+                        {this.props.yLabelTooltip}: {(this.tooltipModel.datum.y).toFixed(2)}%<br/>
+                        {this.tooltipModel.datum.status ? this.props.xLabelWithEventTooltip :
                             this.props.xLabelWithoutEventTooltip}
-                            : {hoveredPatientSurvival.months.toFixed(2)} months {hoveredPatientSurvival.status ? "" :
+                            : {this.tooltipModel.datum.x.toFixed(2)} months {this.tooltipModel.datum.status ? "" :
                         "(censored)"}
                     </div>
 
                 </Popover>
                 }
+                <div className={styles.SVG + ' cbioportal-frontend'}>
+                    <a className={`btn btn-default btn-xs`} onClick={this.downloadSvg}>
+                    SVG <i className="fa fa-cloud-download"/>
+                    </a>
+                </div>
                 <div className={styles.PNG + ' cbioportal-frontend'}>
-                    <a className={`btn btn-default btn-xs ${this.pngAnchor ? '': ' disabled'}`}
-                       href={this.pngAnchor} download="cBioPortalSurvival.png">PNG <i className="fa fa-cloud-download"/>
+                    <a className={`btn btn-default btn-xs`} onClick={this.downloadPng}>
+                    PNG <i className="fa fa-cloud-download"/>
                     </a>
                 </div>
                 <div className={styles.SurvivalTable}>
