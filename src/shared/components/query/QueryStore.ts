@@ -136,13 +136,13 @@ export class QueryStore
 		this.savedVirtualCohorts = localStorageVirtualCohorts.map((x:any)=>{
 			let samples:{studyId:string, sampleId:string}[] = [];
 			const constituentStudyIds:string[] = [];
-			for (const selectedCasesObj of x.selectedCases) {
-				samples = samples.concat(selectedCasesObj.samples.map((sampleId:string)=>({studyId:selectedCasesObj.studyID, sampleId})));
-				constituentStudyIds.push(selectedCasesObj.studyID);
+			for (const studyObj of x.selectedCases) {
+				samples = samples.concat(studyObj.samples.map((sampleId:string)=>({studyId:studyObj.id, sampleId})));
+				constituentStudyIds.push(studyObj.id);
 			}
 			return {
-				id: x.virtualCohortID,
-				name: x.studyName,
+				id: x.id,
+				name: x.name,
 				description: x.description,
 				samples,
 				constituentStudyIds
@@ -212,15 +212,15 @@ export class QueryStore
 				return undefined;
 			}
 			try {
-				const virtualCohortData:Response = await request.get(`${window.location.protocol}//${getHost()}/api-legacy/proxy/session-service/virtual_cohort/${this.temporaryVirtualCohortId.result}`);
+				const virtualCohortData:Response = await request.get(`${window.location.protocol}//${getHost()}/api-legacy/proxy/session-service/virtual_study/${this.temporaryVirtualCohortId.result}`);
 				const virtualCohortJSON = JSON.parse(virtualCohortData.text);
-				const name:string = virtualCohortJSON.data.studyName as string;
+				const name:string = virtualCohortJSON.data.name as string;
 				const description:string = virtualCohortJSON.data.description as string;
 				let samples:{sampleId:string, studyId:string}[] = [];
 				const constituentStudyIds:string[] = [];
-				for (const selectedCasesObj of virtualCohortJSON.data.selectedCases) {
-					samples = samples.concat(selectedCasesObj.samples.map((sampleId:string)=>({studyId:selectedCasesObj.studyID, sampleId})));
-					constituentStudyIds.push(selectedCasesObj.studyID);
+				for (const studyObj of virtualCohortJSON.data.studies) {
+					samples = samples.concat(studyObj.samples.map((sampleId:string)=>({studyId:studyObj.id, sampleId})));
+					constituentStudyIds.push(studyObj.id);
 				}
 				return {
 					id: this.temporaryVirtualCohortId.result,
