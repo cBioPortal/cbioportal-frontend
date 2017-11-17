@@ -152,12 +152,12 @@ export class QueryStore
 
 	@computed get virtualCohorts():VirtualCohort[] {
 		const ret:VirtualCohort[] = [];
-		if (this.temporaryVirtualCohort.result) {
-			ret.push(this.temporaryVirtualCohort.result);
-		}
-		for (let i=0; i<this.savedVirtualCohorts.length; i++) {
-			ret.push(this.savedVirtualCohorts[i]);
-		}
+		// if (this.temporaryVirtualCohort.result) {
+		// 	ret.push(this.temporaryVirtualCohort.result);
+		// }
+		// for (let i=0; i<this.savedVirtualCohorts.length; i++) {
+		// 	ret.push(this.savedVirtualCohorts[i]);
+		// }
 		return ret;
 	}
 
