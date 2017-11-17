@@ -68,7 +68,8 @@ export default class SurvivalTab extends React.Component<ISurvivalTabProps, {}> 
                                medianMonthsHeader="median months survival"
                                yLabelTooltip="Survival estimate"
                                xLabelWithEventTooltip="Time of death"
-                               xLabelWithoutEventTooltip="Time of last observation"/>);
+                               xLabelWithoutEventTooltip="Time of last observation"
+                               fileName="Overall_Survival"/>);
         } else {
             content.push(<div className={styles.NotAvailable}>{this.overallSurvivalTitleText} not available</div>);
         }
@@ -88,7 +89,8 @@ export default class SurvivalTab extends React.Component<ISurvivalTabProps, {}> 
                            medianMonthsHeader="median months disease free"
                            yLabelTooltip="Disease free estimate"
                            xLabelWithEventTooltip="Time of relapse"
-                           xLabelWithoutEventTooltip="Time of last observation"/>);
+                           xLabelWithoutEventTooltip="Time of last observation"
+                           fileName="Disease_Free_Survival"/>);
         } else {
             content.push(<div className={styles.NotAvailable}>{this.diseaseFreeSurvivalTitleText} not available</div>);
         }
