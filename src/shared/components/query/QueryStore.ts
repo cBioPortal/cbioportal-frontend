@@ -31,6 +31,7 @@ import {
 } from "./QueryStoreUtils";
 import onMobxPromise from "shared/lib/onMobxPromise";
 import VirtualCohorts, {LocalStorageVirtualCohort} from "../../lib/VirtualCohorts";
+import getOverlappingStudies from "../../lib/getOverlappingStudies";
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
