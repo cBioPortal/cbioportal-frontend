@@ -760,6 +760,14 @@ export class QueryStore
 		return this.isSingleStudySelected(false);
 	}
 
+	@computed public get getOverlappingStudiesMap() {
+		const overlappingStudyGroups = getOverlappingStudies(this.selectedStudies);
+		return _.chain(overlappingStudyGroups)
+			.flatten()
+			.keyBy((study:CancerStudy)=>study.studyId)
+			.value();
+	}
+
 	@computed public get isVirtualCohortSelected() {
 		let ret = false;
 		const virtualCohorts = this.virtualCohortsSet;
