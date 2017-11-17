@@ -1062,7 +1062,17 @@ export class QueryStore
 				// legacy compatibility
 				this.selectedSampleListId = CUSTOM_CASE_LIST_ID;
 			}
-			this.caseIds = querySession.getSampleIds().join("\n");
+
+			let studySamplesMap:Object = (<any>querySession).getStudySampleMap();
+			let studySamplesList:string[] = [];
+
+			Object.keys(studySamplesMap).map(studyId => {
+				let sampleIds:Array<string> = (<any>studySamplesMap)[studyId];
+				let _studySamplesList:string[] = sampleIds.map((sampleId) => { return studyId + ":" + sampleId});
+				studySamplesList = studySamplesList.concat(_studySamplesList);
+			})
+			
+			this.caseIds = studySamplesList.join("\n");
 			this.caseIdsMode = 'sample'; // url always contains sample IDs
 			this.geneQuery = normalizeQuery(querySession.getOQLQuery());
 			this.initiallySelected.profileIds = true;
