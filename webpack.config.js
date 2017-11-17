@@ -74,11 +74,11 @@ loader:'sass-resources-loader',
 
 var config = {
 
-    'entry': [
+    entry: [
         `babel-polyfill`,
         `${path.join(src, 'appBootstrapper.jsx')}`
     ],
-    'output': {
+    output: {
         path: path.resolve(__dirname, 'dist'),
         filename: 'reactapp/[name].app.js',
         chunkFilename: 'reactapp/[name].[chunkhash].chunk.js',
@@ -87,14 +87,26 @@ var config = {
         publicPath: '/',
     },
 
-    'resolve': {
+    resolve: {
         'extensions': [
             '.js',
             '.jsx',
             '.json',
             '.ts',
             '.tsx',
-        ]
+        ],
+
+        alias: {
+            css: join(src, 'styles'),
+            containers: join(src, 'containers'),
+            components: join(src, 'components'),
+            utils: join(src, 'utils'),
+            styles: join(src, 'styles'),
+            reducers: join(src, 'redux/modules'),
+            pages: join(src, 'pages'),
+            shared: join(src, 'shared'),
+            appConfig: path.join(__dirname + '/src', 'config', ((process.env.NODE_ENV === 'test')? 'test.' : '') + 'config')
+        }
     },
 
     resolveLoader: {
@@ -103,7 +115,6 @@ var config = {
             path.join(process.cwd(), 'node_modules')
         ]
     },
-
 
     plugins: [
         new webpack.DefinePlugin({
@@ -275,6 +286,9 @@ var config = {
 
 };
 
+
+
+
 // ENV variables
 const dotEnvVars = dotenv.config();
 const environmentEnv = dotenv.config({
@@ -343,6 +357,9 @@ if (isDev) {
 if (isDev || isTest) {
 
     config.devtool = 'source-map';
+
+    // in dev we don't want to load the twitter widget b/c it can block load of site
+    config.resolve.alias['react-twitter-widgets'] = join(src, 'shared/Empty.tsx');
 
     config.plugins.push(new ForkTsCheckerWebpackPlugin());
 
@@ -479,17 +496,6 @@ config.resolve.modules = [
     modules
 ];
 
-config.resolve.alias = {
-    css: join(src, 'styles'),
-    containers: join(src, 'containers'),
-    components: join(src, 'components'),
-    utils: join(src, 'utils'),
-    styles: join(src, 'styles'),
-    reducers: join(src, 'redux/modules'),
-    pages: join(src, 'pages'),
-    shared: join(src, 'shared'),
-    appConfig: path.join(__dirname + '/src', 'config', ((process.env.NODE_ENV === 'test')? 'test.' : '') + 'config')
-};
 // end Roots
 
 // Testing
