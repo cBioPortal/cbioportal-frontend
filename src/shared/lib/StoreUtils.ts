@@ -100,19 +100,19 @@ export async function fetchUniprotId(swissProtAccession: string)
     return uniprotData.text.split("\n")[1];
 }
 
-export async function fetchPfamDomainData(ensemblTranscriptId: string,
+export async function fetchPfamDomainData(pfamAccessions: string[],
                                           client:GenomeNexusAPI = genomeNexusClient)
 {
-    return await client.fetchPfamDomainsByTranscriptIdGET({
-        transcriptId: ensemblTranscriptId
+    return await client.fetchPfamDomainsByPfamAccessionPOST({
+        pfamAccessions: pfamAccessions
     });
 }
 
 export async function fetchCanonicalTranscript(hugoSymbol: string,
                                                isoformOverrideSource: string,
-                                               client:GenomeNexusAPIInternal = genomeNexusInternalClient)
+                                               client:GenomeNexusAPI = genomeNexusClient)
 {
-    return await client.fetchEnsemblTranscriptsByHugoSymbolGET({
+    return await client.fetchCanonicalEnsemblTranscriptByHugoSymbolGET({
         hugoSymbol, isoformOverrideSource
     });
 }
