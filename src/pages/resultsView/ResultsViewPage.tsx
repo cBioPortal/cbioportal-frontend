@@ -1,16 +1,12 @@
 import * as React from 'react';
-import * as _ from 'lodash';
-import {observer, inject, Observer} from "mobx-react";
-import {reaction, computed} from "mobx";
-import validateParameters from 'shared/lib/validateParameters';
-import ValidationAlert from "shared/components/ValidationAlert";
+import {observer, inject} from "mobx-react";
 import AjaxErrorModal from "shared/components/AjaxErrorModal";
 import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
 import {ResultsViewPageStore, SamplesSpecificationElement} from "./ResultsViewPageStore";
 import CancerSummaryContainer from "shared/components/cancerSummary/CancerSummaryContainer";
 import Mutations from "./mutation/Mutations";
-import {stringListToSet} from "../../shared/lib/StringUtils";
 import MutualExclusivityTab from "./mutualExclusivity/MutualExclusivityTab";
+import SurvivalTab from "./survival/SurvivalTab";
 import Chart from 'chart.js';
 
 (Chart as any).plugins.register({
@@ -21,24 +17,24 @@ import Chart from 'chart.js';
     }
 });
 
-function initStore(){
+function initStore() {
 
     const resultsViewPageStore = new ResultsViewPageStore();
 
     // following is a bunch of dirty stuff necessary to read state from jsp page
     // ultimate we will phase this out and this information will be stored in router etc.
-    const qSession:any = (window as any).QuerySession;
+    const qSession: any = (window as any).QuerySession;
     var props = {
         genes: qSession.getQueryGenes()
     };
-    var samplesSpecification:any = [];
+    var samplesSpecification: any = [];
     if (["-1", "all"].indexOf(qSession.getCaseSetId()) > -1) {
         // "-1" means custom case id, "all" means all cases in the queried stud(y/ies). Neither is an actual case set that could eg be queried
         var studyToSampleMap = qSession.getStudySampleMap();
         var studies = Object.keys(studyToSampleMap);
-        for (var i=0; i<studies.length; i++) {
+        for (var i = 0; i < studies.length; i++) {
             var study = studies[i];
-            samplesSpecification = samplesSpecification.concat(studyToSampleMap[study].map(function(sampleId:string) {
+            samplesSpecification = samplesSpecification.concat(studyToSampleMap[study].map(function (sampleId: string) {
                 return {
                     sampleId: sampleId,
                     studyId: study
@@ -48,7 +44,7 @@ function initStore(){
     } else {
         var studyToSampleListIdMap = qSession.getStudySampleListMap();
         var studies = Object.keys(studyToSampleListIdMap);
-        for (var i=0; i<studies.length; i++) {
+        for (var i = 0; i < studies.length; i++) {
             samplesSpecification.push({
                 sampleListId: studyToSampleListIdMap[studies[i]],
                 studyId: studies[i]
@@ -77,7 +73,7 @@ export interface IResultsViewPageProps {
 
 type MutationsTabInitProps = {
     genes: string[];
-    samplesSpecification:SamplesSpecificationElement[]
+    samplesSpecification: SamplesSpecificationElement[]
 };
 
 @inject('routing')
@@ -89,35 +85,33 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         this.exposeComponentRenderersToParentScript();
     }
 
-    componentDidMount(){
-
-
-    }
-
-    public exposeComponentRenderersToParentScript(){
+    public exposeComponentRenderersToParentScript() {
 
         exposeComponentRenderer('renderMutationsTab',
-            (props:MutationsTabInitProps)=>{
+            (props: MutationsTabInitProps) => {
                 return <div>
                     <AjaxErrorModal
                         show={(resultsViewPageStore.ajaxErrors.length > 0)}
-                        onHide={()=>{ resultsViewPageStore.clearErrors() }}
+                        onHide={() => {
+                            resultsViewPageStore.clearErrors()
+                        }}
                     />
                     <Mutations genes={props.genes} store={resultsViewPageStore}/>
                 </div>
-        });
+            });
 
         exposeComponentRenderer('renderCancerTypeSummary',
-            (props:MutationsTabInitProps)=>{
+            (props: MutationsTabInitProps) => {
                 return <div>
                     <AjaxErrorModal
                         show={(resultsViewPageStore.ajaxErrors.length > 0)}
-                        onHide={()=>{ resultsViewPageStore.clearErrors() }}
+                        onHide={() => {
+                            resultsViewPageStore.clearErrors()
+                        }}
                     />
-                    <CancerSummaryContainer store={resultsViewPageStore} />
+                    <CancerSummaryContainer store={resultsViewPageStore}/>
                 </div>
             });
-
 
         exposeComponentRenderer('renderMutExTab', () => {
 
@@ -126,13 +120,16 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             </div>)
         });
 
+        exposeComponentRenderer('renderSurvivalTab', () => {
 
-
+            return (<div>
+                <SurvivalTab store={resultsViewPageStore}/>
+            </div>)
+        });
     }
 
     public render() {
 
         return null;
-
     }
 }
