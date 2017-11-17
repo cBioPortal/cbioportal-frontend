@@ -6,4 +6,5 @@ export type QuerySession = {
     getCaseSetId:()=>string;
     getSampleIds:()=>string[];
     getOQLQuery:()=>string;
+    getStudySampleMap:()=>Object;
 };
