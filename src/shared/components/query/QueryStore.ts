@@ -31,6 +31,7 @@ import {
 } from "./QueryStoreUtils";
 import onMobxPromise from "shared/lib/onMobxPromise";
 import VirtualCohorts, {LocalStorageVirtualCohort} from "../../lib/VirtualCohorts";
+import getOverlappingStudies from "../../lib/getOverlappingStudies";
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -757,6 +758,14 @@ export class QueryStore
 
 	@computed public get isSingleNonVirtualStudySelected() {
 		return this.isSingleStudySelected(false);
+	}
+
+	@computed public get getOverlappingStudiesMap() {
+		const overlappingStudyGroups = getOverlappingStudies(this.selectedStudies);
+		return _.chain(overlappingStudyGroups)
+			.flatten()
+			.keyBy((study:CancerStudy)=>study.studyId)
+			.value();
 	}
 
 	@computed public get isVirtualCohortSelected() {
