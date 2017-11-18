@@ -25,8 +25,7 @@ import PdbChainDataStore from "./PdbChainDataStore";
 import {IMutationMapperConfig} from "./MutationMapper";
 import MutationDataCache from "../../../shared/cache/MutationDataCache";
 import {Gene as OncoKbGene} from "../../../shared/api/generated/OncoKbAPI";
-import {EnsemblTranscript} from "shared/api/generated/GenomeNexusAPIInternal";
-import {PfamDomain} from "shared/api/generated/GenomeNexusAPI";
+import {EnsemblTranscript, PfamDomain, PfamDomainRange} from "shared/api/generated/GenomeNexusAPI";
 
 export class MutationMapperStore {
 
@@ -149,23 +148,23 @@ export class MutationMapperStore {
         }
     }, ONCOKB_DEFAULT);
 
-    readonly pfamDomainData = remoteData<PfamDomain[] | undefined>({
-        await: ()=>[
-            this.canonicalTranscript
-        ],
+    readonly canonicalTranscript = remoteData<EnsemblTranscript | undefined>({
         invoke: async()=>{
-            if (this.canonicalTranscript.result) {
-                return fetchPfamDomainData(this.canonicalTranscript.result.transcriptId);
+            if (this.gene) {
+                return fetchCanonicalTranscript(this.gene.hugoGeneSymbol, this.isoformOverrideSource);
             } else {
                 return undefined;
             }
         }
     }, undefined);
 
-    readonly canonicalTranscript = remoteData<EnsemblTranscript | undefined>({
+    readonly pfamDomainData = remoteData<PfamDomain[] | undefined>({
+        await: ()=>[
+            this.canonicalTranscript
+        ],
         invoke: async()=>{
-            if (this.gene) {
-                return fetchCanonicalTranscript(this.gene.hugoGeneSymbol, this.isoformOverrideSource);
+            if (this.canonicalTranscript.result && this.canonicalTranscript.result.pfamDomains && this.canonicalTranscript.result.pfamDomains.length > 0) {
+                return fetchPfamDomainData(this.canonicalTranscript.result.pfamDomains.map((x: PfamDomainRange) => x.pfamDomainId));
             } else {
                 return undefined;
             }
