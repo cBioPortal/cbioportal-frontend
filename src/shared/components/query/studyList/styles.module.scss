@@ -158,6 +158,14 @@ li.Study {
     background-color:#F8F8F8;
   }
 
+  :global(.overlappingStudy) {
+
+    color:$state-danger-text !important;
+    i {
+      margin-left:5px;
+    }
+  }
+
   label {
     font-weight: 400;
     margin: 0;
