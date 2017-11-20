@@ -251,7 +251,7 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
                 }
             },
             animation: {
-                duration:0,
+                duration:50,
                 onComplete: () => {
                     this.toImagePdf();
                 }
@@ -271,7 +271,14 @@ export default class SummaryBarGraph extends React.Component<ISummaryBarGraphPro
     }
 
     private get width() {
-        const maxWidth = 300 + this.props.data.labels.length * 45;
+
+        const longest = _.maxBy(this.props.data.labels,(label:string)=>{
+           return label.length;
+        });
+
+        const extra = (longest && longest.length > 20) ? (longest.length - 20) * 5 : 0;
+
+        const maxWidth = 300 + extra + this.props.data.labels.length * 45;
         const conWidth = (this.props.width || 1159);
         return maxWidth > conWidth ? conWidth : maxWidth;
     }
