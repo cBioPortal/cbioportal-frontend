@@ -169,7 +169,7 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 
 								const studyLimitReached = (this.store.selectedStudyIds.length > 20);
 								const tooltipMessage = studyLimitReached ?
-									<span>Too many studies selected (limit: 20)</span> :
+									<span>Too many studies selected for study summary (limit: 20)</span> :
 									<span>Open summary of selected studies in a new window.</span>
 
 								return (
@@ -191,7 +191,7 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 											<Button bsSize="xs" disabled={studyLimitReached} bsStyle="primary"
 												className={styles.summaryButtonClass}
 											>
-												<i className='ci ci-pie-chart'></i> Summary
+												<i className='ci ci-pie-chart'></i> View summary
 											</Button>
 										</div>
 									</DefaultTooltip>
