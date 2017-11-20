@@ -295,7 +295,7 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}>
 						placement="top"
 						overlay={
 							<div className={styles.tooltip}
-							>View study details</div>
+							>View study summary</div>
 						}
 						children={
 							<span onClick={()=>openStudySummaryFormSubmit(study.studyId)}
