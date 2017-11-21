@@ -7,23 +7,23 @@ import {MutSig} from "../../api/generated/CBioPortalAPIInternal";
 import ReactSelect from 'react-select';
 import GenesetJsTree from "./GenesetJsTree";
 import { InputHTMLAttributes, FormEvent } from "react";
-import { QueryStoreComponent } from "shared/components/query/QueryStore";
 
 const styles = styles_any as {
     GenesetsSelectorWindow: string,
-    GenesetsSelectionArea: string,
     selectionColumnHeader: string,
     selectionColumnCell: string,
 };
 
 export interface GenesetsHierarchySelectorProps
 {
-gsvaProfile: string;
-sampleListId: string|undefined;
+    initialSelection: string[];
+    gsvaProfile: string;
+    sampleListId: string|undefined;
+    onSelect: (map_geneSet_selected:ObservableMap<boolean>) => void;
 }
 
 @observer
-export default class GenesetsHierarchySelector extends QueryStoreComponent<GenesetsHierarchySelectorProps, {}>
+export default class GenesetsHierarchySelector extends React.Component<GenesetsHierarchySelectorProps, {}>
 {
     @observable appliedPercentile: string;
     @observable appliedPvalueThreshold: string;
@@ -32,6 +32,7 @@ export default class GenesetsHierarchySelector extends QueryStoreComponent<Genes
     @observable pvalueThreshold: string;
     @observable scoreThreshold: string;
     @observable searchValue: string;
+    @observable triggerGeneSetSelection: boolean;
     readonly percentileOptions = [{label: '50%', value: '50'}, {label: '75%', value: '75'}, {label: '100%', value: '100'}];
     constructor(props:GenesetsHierarchySelectorProps)
     {
@@ -61,8 +62,7 @@ export default class GenesetsHierarchySelector extends QueryStoreComponent<Genes
     render()
     {
         return (
-                <div className={styles.GenesetsSelectorWindow}>
-                <div className={styles.GenesetsSelectionArea}>
+                <div>
                 <text>Search hierarchy</text>
                 <div className={`form-group has-feedback input-group-sm`} style={{ display:'inline-block'}}>
                 <input id="geneset-hierarchy-search" type="text" className="form-control tableSearchInput" 
@@ -83,10 +83,10 @@ export default class GenesetsHierarchySelector extends QueryStoreComponent<Genes
                 <div className="form-group" style={{ padding: "10px 15px"}}>
                 <label htmlFor="PercentileScoreCalculation">Percentile for score calculation</label>
                 <ReactSelect addLabelText="Percentile for score calculation" style={ {width:160} }
-                name="PercentileScoreCalculation"
-                value={this.percentileSelectOptions}
-                options={this.percentileOptions}
-                onChange={this.percentileChange}
+                    name="PercentileScoreCalculation"
+                        value={this.percentileSelectOptions}
+                    options={this.percentileOptions}
+                    onChange={this.percentileChange}
                 />
                 </div>
                 <div style={{display:"inline-block", padding: "10px 15px"}}>
@@ -97,15 +97,15 @@ export default class GenesetsHierarchySelector extends QueryStoreComponent<Genes
                 </div>
                 </div>
                 <GenesetJsTree
-                    initialSelection={this.store.genesetIds}
+                    initialSelection={this.props.initialSelection}
                     scoreThreshold={this.appliedScoreThreshold}
                     pvalueThreshold={this.appliedPvalueThreshold}
                     percentile={this.appliedPercentile}
                     gsvaProfile={this.props.gsvaProfile}
                     sampleListId={this.props.sampleListId}
                     searchValue={this.searchValue}
+                    onSelect={this.props.onSelect}
                 />
-                </div>
                 </div>
         );
     }
