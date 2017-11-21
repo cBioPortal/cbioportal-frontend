@@ -1384,6 +1384,37 @@ export class QueryStore
 			this.replaceGene(geneSymbol, '');
 		this.geneQuery = normalizeQuery([this.geneQuery, ...toAppend].join(' '));
 	}
+	
+	@action applyGeneSetSelection(map_geneSet_selected:ObservableMap<boolean>)
+    {
+        let [toAppend, toRemove] = _.partition(map_geneSet_selected.keys(), geneSet => map_geneSet_selected.get(geneSet));
+        let genesetQuery = this.genesetQuery;
+        if (toAppend.length > 0) {
+            let genesetList: string[] = [];
+            for (const geneSet of toAppend) 
+            {
+                genesetList.push(geneSet);
+            }
+            genesetQuery = genesetList.join(" ");
+        }
+        if (toRemove.length > 0) {
+            let genesetList = genesetQuery.split(" ");
+            for (const removeGeneSet of toRemove) {
+                for (const geneSet of genesetList) {
+                    if (removeGeneSet === geneSet) {
+                        const index = genesetList.indexOf(geneSet);
+                        if (index >= 0) {
+                          genesetList.splice( index, 1 );
+                        }
+                    }
+                }
+            }
+            genesetQuery = genesetList.join(" ");
+        }
+        genesetQuery = normalizeQuery(genesetQuery);
+        this.genesetQuery = genesetQuery;
+    }
+
 
 	@action submit()
 	{
