@@ -1017,7 +1017,7 @@ export class QueryStore
 			if (this.asyncCustomCaseSet.error)
 				return "Error in custom case set.";
 		}
-		else if (haveExpInQuery)
+		else if (haveExpInQuery && this.selectedStudyIds.length > 1)
 		{
 			return "Expression filtering in the gene list is not supported when doing cross cancer queries.";
 		}
