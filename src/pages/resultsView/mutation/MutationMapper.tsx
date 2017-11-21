@@ -20,7 +20,9 @@ import ProteinChainPanel from "../../../shared/components/proteinChainPanel/Prot
 import {computed, action, observable} from "mobx";
 import MutationRateSummary from "pages/resultsView/mutation/MutationRateSummary";
 
+// Anything from App config will be included in mutation mapper config
 export interface IMutationMapperConfig {
+    userEmailAddress?:string;
     showCivic?: boolean;
     showHotspot?: boolean;
     showMyCancerGenome?: boolean;
@@ -114,8 +116,9 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                     )
                 }
 
+                <LoadingIndicator isLoading={this.props.store.mutationData.isPending} />
                 {
-
+                    (!this.props.store.mutationData.isPending) && (
                     <div>
                         <LoadingIndicator isLoading={this.props.store.pfamGeneData.isPending} />
                         { (!this.props.store.pfamGeneData.isPending) && (
@@ -197,14 +200,16 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                                 oncoKbData={this.props.store.oncoKbData}
                                 civicGenes={this.props.store.civicGenes}
                                 civicVariants={this.props.store.civicVariants}
+                                userEmailAddress={this.props.config.userEmailAddress}
                                 enableOncoKb={this.props.config.showOncoKB}
-                                enableGenomeNexus={this.props.config.showGenomeNexus}
+                                enableFunctionalImpact={this.props.config.showGenomeNexus}
                                 enableHotspot={this.props.config.showHotspot}
                                 enableMyCancerGenome={this.props.config.showMyCancerGenome}
                                 enableCivic={this.props.config.showCivic}
                             />
                         )}
                     </div>
+                    )
                 }
             </div>
         );
