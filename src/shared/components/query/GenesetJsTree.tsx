@@ -8,12 +8,13 @@ import * as _ from "lodash";
 import { remoteData } from "shared/api/remoteData";
 import CBioPortalAPIInternal, { GenesetHierarchyInfo } from "shared/api/generated/CBioPortalAPIInternal";
 import { observer } from "mobx-react";
-import { observable } from "mobx";
+import { observable, ObservableMap } from "mobx";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import { QueryStoreComponent } from "shared/components/query/QueryStore";
 
 export interface GenesetJsTreeProps
 {
+    initialSelection: string[];
     scoreThreshold: string;
     pvalueThreshold: string;
     percentile: string;
@@ -32,7 +33,14 @@ export default class GenesetJsTree extends QueryStoreComponent<GenesetJsTreeProp
     tree: Element|null;
     @observable isLoading = true;
     promisedTree: Promise<Element>;
+    private readonly map_geneSets_selected = new ObservableMap<boolean>();
 
+    constructor(props: GenesetJsTreeProps)
+    {
+        super(props);
+        this.map_geneSets_selected.replace(props.initialSelection.map(geneSet => [geneSet, true]));
+    }
+    
     componentDidMount(){
         this.promisedTree = this.initTree(this.tree as Element); //React only sets the div to null when the component unmounts
         this.promisedTree.then(tree => (this.isLoading = false, tree));
@@ -168,53 +176,16 @@ export default class GenesetJsTree extends QueryStoreComponent<GenesetJsTreeProp
         return await this.initTree(tree);
     }
     
-    addGeneSets(selectedGeneSets: JSNode[], genesetQuery: string) {
-        if (genesetQuery === "") 
-        {
-            const genesetList: string[] = [];
-            for (const geneSet of selectedGeneSets) 
-            {
-                if (geneSet.original.geneset) 
-                {
-                    genesetList.push(geneSet.original.description);
-                }
-            }
-            genesetQuery = genesetList.join(" ");
-        }
-        else
-        {
-            // look for the selected genesets in gene_list
-            // if they're not there, append them
-            for (const geneSet of selectedGeneSets) 
-            {
-                if (geneSet.original.geneset) 
-                {
-                    let checked = geneSet.original.description;
-                    if ( genesetQuery.search(new RegExp(checked, "i")) === -1 )
-                    {
-                        genesetQuery = $.trim(genesetQuery);
-                        checked = " " + checked;
-                        genesetQuery += checked;
-                    }
-                }
-            }
-        }
-        
-        // remove spaces around gene_list
-        genesetQuery = $.trim(genesetQuery);
-        
-        // replace 2 or more spaces in a row by 1 space
-        genesetQuery = genesetQuery.replace(/\s{1,}/, " ");
-        
-        // Update the gene set list in the query box
-        this.store.genesetQuery = genesetQuery;
-
-    }
-    
     submitGeneSets(tree:Element|null) {
         if (tree) {
             const selectedNodes = $(tree).jstree("get_selected", true);
-            this.addGeneSets(selectedNodes, this.store.genesetQuery);
+            for (let geneSet of selectedNodes) {
+                if (geneSet.original.geneset) 
+                {
+                    this.map_geneSets_selected.set(geneSet.original.description, true);
+                }
+            }
+            this.store.applyGeneSetSelection(this.map_geneSets_selected);
         }
     }
     

@@ -7,6 +7,7 @@ import {MutSig} from "../../api/generated/CBioPortalAPIInternal";
 import ReactSelect from 'react-select';
 import GenesetJsTree from "./GenesetJsTree";
 import { InputHTMLAttributes, FormEvent } from "react";
+import { QueryStoreComponent } from "shared/components/query/QueryStore";
 
 const styles = styles_any as {
     GenesetsSelectorWindow: string,
@@ -22,7 +23,7 @@ sampleListId: string|undefined;
 }
 
 @observer
-export default class GenesetsHierarchySelector extends React.Component<GenesetsHierarchySelectorProps, {}>
+export default class GenesetsHierarchySelector extends QueryStoreComponent<GenesetsHierarchySelectorProps, {}>
 {
     @observable appliedPercentile: string;
     @observable appliedPvalueThreshold: string;
@@ -95,13 +96,14 @@ export default class GenesetsHierarchySelector extends React.Component<GenesetsH
                 </button>
                 </div>
                 </div>
-                <GenesetJsTree 
-                scoreThreshold={this.appliedScoreThreshold}
-                pvalueThreshold={this.appliedPvalueThreshold}
-                percentile={this.appliedPercentile}
-                gsvaProfile={this.props.gsvaProfile}
-                sampleListId={this.props.sampleListId}
-                searchValue={this.searchValue}
+                <GenesetJsTree
+                    initialSelection={this.store.genesetIds}
+                    scoreThreshold={this.appliedScoreThreshold}
+                    pvalueThreshold={this.appliedPvalueThreshold}
+                    percentile={this.appliedPercentile}
+                    gsvaProfile={this.props.gsvaProfile}
+                    sampleListId={this.props.sampleListId}
+                    searchValue={this.searchValue}
                 />
                 </div>
                 </div>
