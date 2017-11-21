@@ -108,11 +108,16 @@ export default class GeneSetSelector extends QueryStoreComponent<GeneSetSelector
                     <Modal.Header closeButton>
                     <Modal.Title>Select Gene Sets From Hierarchy</Modal.Title>
                     </Modal.Header>
+                    <Modal.Body>
                     <GenesetsHierarchySelector
+                        initialSelection={this.store.genesetIds}
                         gsvaProfile={this.store.getFilteredProfiles("GENESET_SCORE")[0].molecularProfileId}
                         sampleListId={this.store.defaultSelectedSampleListId}
+                        onSelect={map_geneSet_selected => {
+                            this.store.applyGeneSetSelection(map_geneSet_selected);
+                            this.store.showGenesetsHierarchyPopup = false;
+                        }}
                     />
-                    <Modal.Body>
                     </Modal.Body>
                     </Modal>
 

@@ -10,7 +10,6 @@ import CBioPortalAPIInternal, { GenesetHierarchyInfo } from "shared/api/generate
 import { observer } from "mobx-react";
 import { observable, ObservableMap } from "mobx";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
-import { QueryStoreComponent } from "shared/components/query/QueryStore";
 
 export interface GenesetJsTreeProps
 {
@@ -21,6 +20,7 @@ export interface GenesetJsTreeProps
     gsvaProfile: string;
     sampleListId: string|undefined;
     searchValue: string;
+    onSelect: (map_geneSet_selected:ObservableMap<boolean>) => void;
 }
 
 type JSNode = {
@@ -28,7 +28,7 @@ type JSNode = {
 };
 
 @observer
-export default class GenesetJsTree extends QueryStoreComponent<GenesetJsTreeProps, {}>
+export default class GenesetJsTree extends React.Component<GenesetJsTreeProps, {}>
 {
     tree: Element|null;
     @observable isLoading = true;
@@ -185,8 +185,8 @@ export default class GenesetJsTree extends QueryStoreComponent<GenesetJsTreeProp
                     this.map_geneSets_selected.set(geneSet.original.description, true);
                 }
             }
-            this.store.applyGeneSetSelection(this.map_geneSets_selected);
         }
+        return this.map_geneSets_selected;
     }
     
     searchTree(tree:Element, searchValue: string) {
@@ -199,15 +199,16 @@ export default class GenesetJsTree extends QueryStoreComponent<GenesetJsTreeProp
                 <div>
                 <LoadingIndicator isLoading={this.isLoading} />
                 <div ref={tree => this.tree = tree} style={{maxHeight: "380px", overflowY: "scroll"}}></div>
-                <div style={{padding: "10px 0px"}}>
-                <button className="btn btn-primary btn-sm pull-right" 
-                    style={{margin: "2px"}} 
+                <div style={{padding: "30px 0px"}}>
+                <button className="btn btn-primary btn-sm pull-right"
+                    style={{margin: "2px"}}
                     disabled={this.isLoading}
-                    onClick={() => {this.submitGeneSets(this.tree);
-                                    this.store.showGenesetsHierarchyPopup = false; }}>
+                    onClick={() => {const geneSetsselected = this.submitGeneSets(this.tree);
+                                    this.props.onSelect(geneSetsselected);}
+                    }>
                 Select
                 </button>
-                </div>
+            </div>
                 </div>
         );
     }
