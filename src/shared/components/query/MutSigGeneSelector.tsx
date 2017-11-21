@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import * as React from 'react';
 import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
-import * as styles_any from './styles.module.scss';
+import * as styles_any from './styles/styles.module.scss';
 import {action, ObservableMap, expr, toJS, computed, observable} from "mobx";
 import {observer, Observer} from "mobx-react";
 import EnhancedReactTable from "../enhancedReactTable/EnhancedReactTable";

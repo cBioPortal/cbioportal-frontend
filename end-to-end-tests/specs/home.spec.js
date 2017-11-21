@@ -17,14 +17,14 @@ describe('homepage', function() {
         assert(browser.getText('.alert-warning').indexOf('dev mode') > 0);
     });
 
-    it('it should have 27 (small test db) or 31 studies (production) in list', function () {
+    it('it should have 27 (small test db), 29 (public test db) or 31 studies (production) in list', function () {
         browser.url(CBIOPORTAL_URL);
 
         var studies = $('[data-test="cancerTypeListContainer"] > ul > ul');
         
         studies.waitForExist(10000); // same as `browser.waitForExist('.notification', 10000)`
 
-        expect([27, 31]).to.include(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length);
+        expect([27, 29, 31]).to.include(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length);
         
     });
 
@@ -112,11 +112,13 @@ describe('cross cancer query', function() {
         browser.waitForEnabled('[data-test="queryButton"]', 30000);
         browser.click('[data-test="queryButton"]');
 
-        // make sure cross cancer title appears
-        $('.cctitle').waitForExist(60000);
+        // go to cancer types summary
+        $('#ui-id-1').waitForExist(60000);
+        $('#ui-id-1').click();
 
-        // check if TP53 is in the title of the bar chart
-        var text = browser.getText('.cctitle')
+        // check if TP53 is in the navigation above the plots
+        $('.nav-pills').waitForExist(30000);
+        var text = browser.getText('.nav-pills')
         assert(text.search('TP53') > -1);
     });
 });

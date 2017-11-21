@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import * as React from 'react';
 import {MolecularProfile} from "../../api/generated/CBioPortalAPI";
 import FontAwesome from "react-fontawesome";
-import * as styles_any from './styles.module.scss';
+import * as styles_any from './styles/styles.module.scss';
 import {observer} from "mobx-react";
 import classNames from 'classnames';
 import { FlexRow } from "../flexbox/FlexBox";
