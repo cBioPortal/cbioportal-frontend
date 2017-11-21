@@ -15,732 +15,30 @@
   "basePath": "/",
   "tags": [
     {
+      "name": "cross-reference-controller",
+      "description": "Cross Reference Controller"
+    },
+    {
       "name": "annotation-controller",
       "description": "Annotation Controller"
     },
     {
       "name": "pfam-controller",
       "description": "PFAM Controller"
-    },
-    {
-      "name": "basic-error-controller",
-      "description": "Basic Error Controller"
     }
   ],
+  "schemes": [
+    "http",
+    "https"
+  ],
   "paths": {
-    "/cancer_hotspots": {
-      "post": {
-        "tags": [
-          "annotation-controller"
-        ],
-        "summary": "Retrieves hotspot annotation for the provided list of variants",
-        "operationId": "postHotspotAnnotation",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "variants",
-            "in": "query",
-            "description": "Comma separated list of variants. For example 7:g.140453136A>T,12:g.25398285C>A",
-            "required": true,
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "collectionFormat": "multi"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/Hotspot"
-              }
-            }
-          },
-          "201": {
-            "description": "Created"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
-          }
-        }
-      }
-    },
-    "/cancer_hotspots/{variants}": {
-      "get": {
-        "tags": [
-          "annotation-controller"
-        ],
-        "summary": "Retrieves hotspot annotation for the provided list of variants",
-        "operationId": "getHotspotAnnotation",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "variants",
-            "in": "path",
-            "description": "Comma separated list of variants. For example 7:g.140453136A>T,12:g.25398285C>A",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/Hotspot"
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
-          }
-        }
-      }
-    },
-    "/error": {
-      "get": {
-        "tags": [
-          "basic-error-controller"
-        ],
-        "summary": "error",
-        "operationId": "errorUsingGET",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "*/*"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "object"
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
-          }
-        }
-      },
-      "head": {
-        "tags": [
-          "basic-error-controller"
-        ],
-        "summary": "error",
-        "operationId": "errorUsingHEAD",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "*/*"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "object"
-              }
-            }
-          },
-          "204": {
-            "description": "No Content"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "basic-error-controller"
-        ],
-        "summary": "error",
-        "operationId": "errorUsingPOST",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "*/*"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "object"
-              }
-            }
-          },
-          "201": {
-            "description": "Created"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
-          }
-        }
-      },
-      "put": {
-        "tags": [
-          "basic-error-controller"
-        ],
-        "summary": "error",
-        "operationId": "errorUsingPUT",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "*/*"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "object"
-              }
-            }
-          },
-          "201": {
-            "description": "Created"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "basic-error-controller"
-        ],
-        "summary": "error",
-        "operationId": "errorUsingDELETE",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "*/*"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "object"
-              }
-            }
-          },
-          "204": {
-            "description": "No Content"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          }
-        }
-      },
-      "options": {
-        "tags": [
-          "basic-error-controller"
-        ],
-        "summary": "error",
-        "operationId": "errorUsingOPTIONS",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "*/*"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "object"
-              }
-            }
-          },
-          "204": {
-            "description": "No Content"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          }
-        }
-      },
-      "patch": {
-        "tags": [
-          "basic-error-controller"
-        ],
-        "summary": "error",
-        "operationId": "errorUsingPATCH",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "*/*"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "object"
-              }
-            }
-          },
-          "204": {
-            "description": "No Content"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          }
-        }
-      }
-    },
-    "/hgvs": {
+    "/annotation": {
       "post": {
         "tags": [
           "annotation-controller"
         ],
         "summary": "Retrieves VEP annotation for the provided list of variants",
-        "operationId": "postVariantAnnotation",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "variants",
-            "in": "query",
-            "description": "Comma separated list of variants. For example X:g.66937331T>A,17:g.41242962->GA",
-            "required": true,
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "collectionFormat": "multi"
-          },
-          {
-            "name": "isoformOverrideSource",
-            "in": "query",
-            "description": "Isoform override source. For example uniprot",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "fields",
-            "in": "query",
-            "description": "Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "collectionFormat": "multi",
-            "default": "hotspots,mutation_assessor"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/VariantAnnotation"
-              }
-            }
-          },
-          "201": {
-            "description": "Created"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
-          }
-        }
-      }
-    },
-    "/hgvs/{variants}": {
-      "get": {
-        "tags": [
-          "annotation-controller"
-        ],
-        "summary": "Retrieves VEP annotation for the provided list of variants",
-        "operationId": "getVariantAnnotation",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "variants",
-            "in": "path",
-            "description": "Comma separated list of variants. For example X:g.66937331T>A,17:g.41242962->GA",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "isoformOverrideSource",
-            "in": "query",
-            "description": "Isoform override source. For example uniprot",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "fields",
-            "in": "query",
-            "description": "Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "collectionFormat": "multi",
-            "default": "hotspots,mutation_assessor"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/VariantAnnotation"
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
-          }
-        }
-      }
-    },
-    "/isoform_override": {
-      "post": {
-        "tags": [
-          "annotation-controller"
-        ],
-        "summary": "Gets the isoform override information for the specified source and the list of transcript ids",
-        "operationId": "postIsoformOverride",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "source",
-            "in": "query",
-            "description": "Override source. For example uniprot",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "transcriptIds",
-            "in": "query",
-            "description": "Comma separated list of transcript ids. For example ENST00000361125,ENST00000443649. If no transcript id provided, all available isoform overrides returned.",
-            "required": false,
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "collectionFormat": "multi"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/IsoformOverride"
-              }
-            }
-          },
-          "201": {
-            "description": "Created"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
-          }
-        }
-      }
-    },
-    "/isoform_override/sources": {
-      "get": {
-        "tags": [
-          "annotation-controller"
-        ],
-        "summary": "Gets a list of available isoform override data sources",
-        "operationId": "getIsoformOverrideSources",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/IsoformOverride"
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "annotation-controller"
-        ],
-        "summary": "Gets a list of available isoform override data sources",
-        "operationId": "postIsoformOverrideSources",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          },
-          "201": {
-            "description": "Created"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
-          }
-        }
-      }
-    },
-    "/isoform_override/{source}": {
-      "get": {
-        "tags": [
-          "annotation-controller"
-        ],
-        "summary": "Gets the isoform override information for the specified source",
-        "operationId": "getAllIsoformOverrides",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "source",
-            "in": "path",
-            "description": "Override source. For example uniprot",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/IsoformOverride"
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
-          }
-        }
-      }
-    },
-    "/isoform_override/{source}/{transcriptIds}": {
-      "get": {
-        "tags": [
-          "annotation-controller"
-        ],
-        "summary": "Gets the isoform override information for the specified source and the list of transcript ids",
-        "operationId": "getIsoformOverride",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "source",
-            "in": "path",
-            "description": "Override source. For example uniprot.",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "transcriptIds",
-            "in": "path",
-            "description": "Comma separated list of transcript ids. For example ENST00000361125,ENST00000443649.",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/IsoformOverride"
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
-          }
-        }
-      }
-    },
-    "/mutation_assessor": {
-      "post": {
-        "tags": [
-          "annotation-controller"
-        ],
-        "summary": "Retrieves mutation assessor information for the provided list of variants",
-        "operationId": "postMutationAssessorAnnotation",
+        "operationId": "fetchVariantAnnotationPOST",
         "consumes": [
           "application/json"
         ],
@@ -751,7 +49,7 @@
           {
             "in": "body",
             "name": "variants",
-            "description": "List of variants. For example [\"7:g.140453136A>T\",\"12:g.25398285C>A\"]",
+            "description": "List of variants. For example [\"X:g.66937331T>A\",\"17:g.41242962->GA\"]",
             "required": true,
             "schema": {
               "type": "array",
@@ -759,43 +57,47 @@
                 "type": "string"
               }
             }
+          },
+          {
+            "name": "isoformOverrideSource",
+            "in": "query",
+            "description": "Isoform override source. For example uniprot",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi",
+            "default": "hotspots,mutation_assessor"
           }
         ],
         "responses": {
           "200": {
-            "description": "Success",
+            "description": "OK",
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/MutationAssessor"
+                "$ref": "#/definitions/VariantAnnotation"
               }
             }
-          },
-          "201": {
-            "description": "Created"
-          },
-          "400": {
-            "description": "Bad Request"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
           }
         }
       }
     },
-    "/mutation_assessor/{variants}": {
+    "/annotation/{variant}": {
       "get": {
         "tags": [
           "annotation-controller"
         ],
-        "summary": "Retrieves mutation assessor information for the provided list of variants",
-        "operationId": "getMutationAssessorAnnotation",
+        "summary": "Retrieves VEP annotation for the provided variant",
+        "operationId": "fetchVariantAnnotationGET",
         "consumes": [
           "application/json"
         ],
@@ -804,34 +106,38 @@
         ],
         "parameters": [
           {
-            "name": "variants",
+            "name": "variant",
             "in": "path",
-            "description": "Comma separated list of variants. For example 7:g.140453136A>T,12:g.25398285C>A",
+            "description": "Variant. For example 17:g.41242962->GA",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "isoformOverrideSource",
+            "in": "query",
+            "description": "Isoform override source. For example uniprot",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi",
+            "default": "hotspots,mutation_assessor"
           }
         ],
         "responses": {
           "200": {
-            "description": "Success",
+            "description": "OK",
             "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/MutationAssessor"
-              }
+              "$ref": "#/definitions/VariantAnnotation"
             }
-          },
-          "400": {
-            "description": "Bad Request"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
           }
         }
       }
@@ -858,15 +164,6 @@
                 "$ref": "#/definitions/PfamDomain"
               }
             }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
           }
         }
       }
@@ -907,18 +204,6 @@
                 "$ref": "#/definitions/PfamDomain"
               }
             }
-          },
-          "201": {
-            "description": "Created"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
           }
         }
       }
@@ -954,20 +239,11 @@
                 "$ref": "#/definitions/PfamDomain"
               }
             }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
           }
         }
       }
     },
-    "/pfam/domain/pfam": {
+    "/pfam/domain/id": {
       "post": {
         "tags": [
           "pfam-controller"
@@ -1003,23 +279,11 @@
                 "$ref": "#/definitions/PfamDomain"
               }
             }
-          },
-          "201": {
-            "description": "Created"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
           }
         }
       }
     },
-    "/pfam/domain/pfam/{pfamDomainId}": {
+    "/pfam/domain/id/{pfamDomainId}": {
       "get": {
         "tags": [
           "pfam-controller"
@@ -1050,15 +314,6 @@
                 "$ref": "#/definitions/PfamDomain"
               }
             }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
           }
         }
       }
@@ -1099,18 +354,6 @@
                 "$ref": "#/definitions/PfamDomain"
               }
             }
-          },
-          "201": {
-            "description": "Created"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
           }
         }
       }
@@ -1146,15 +389,6 @@
                 "$ref": "#/definitions/PfamDomain"
               }
             }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
           }
         }
       }
@@ -1195,18 +429,6 @@
                 "$ref": "#/definitions/PfamDomain"
               }
             }
-          },
-          "201": {
-            "description": "Created"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
           }
         }
       }
@@ -1242,15 +464,6 @@
                 "$ref": "#/definitions/PfamDomain"
               }
             }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
           }
         }
       }
@@ -1258,7 +471,7 @@
     "/xrefs/{accession}": {
       "get": {
         "tags": [
-          "annotation-controller"
+          "cross-reference-controller"
         ],
         "summary": "Perform lookups of Ensembl identifiers and retrieve their external referenes in other databases",
         "operationId": "getGeneXrefs",
@@ -1279,25 +492,13 @@
         ],
         "responses": {
           "200": {
-            "description": "Success",
+            "description": "OK",
             "schema": {
               "type": "array",
               "items": {
                 "$ref": "#/definitions/GeneXref"
               }
             }
-          },
-          "400": {
-            "description": "Bad Request"
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
           }
         }
       }
@@ -1356,197 +557,6 @@
         }
       }
     },
-    "Hotspot": {
-      "type": "object",
-      "required": [
-        "transcriptId"
-      ],
-      "properties": {
-        "geneId": {
-          "type": "string",
-          "description": "Ensembl gene id"
-        },
-        "hugoSymbol": {
-          "type": "string",
-          "description": "Hugo gene symbol"
-        },
-        "proteinEnd": {
-          "type": "string",
-          "description": "Protein end position"
-        },
-        "proteinStart": {
-          "type": "string",
-          "description": "Protein start position"
-        },
-        "residue": {
-          "type": "string",
-          "description": "Hotspot Residue"
-        },
-        "transcriptId": {
-          "type": "string",
-          "description": "Transcript id"
-        }
-      }
-    },
-    "IsoformOverride": {
-      "type": "object",
-      "required": [
-        "transcriptId"
-      ],
-      "properties": {
-        "ccdsId": {
-          "type": "string",
-          "description": "CCDS ID"
-        },
-        "geneSymbol": {
-          "type": "string",
-          "description": "Hugo gene symbol"
-        },
-        "refseqId": {
-          "type": "string",
-          "description": "RefSeq ID"
-        },
-        "transcriptId": {
-          "type": "string",
-          "description": "Ensembl transcript id"
-        }
-      }
-    },
-    "ModelAndView": {
-      "type": "object",
-      "properties": {
-        "empty": {
-          "type": "boolean"
-        },
-        "model": {
-          "type": "object"
-        },
-        "modelMap": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "object"
-          }
-        },
-        "reference": {
-          "type": "boolean"
-        },
-        "view": {
-          "$ref": "#/definitions/View"
-        },
-        "viewName": {
-          "type": "string"
-        }
-      }
-    },
-    "MutationAssessor": {
-      "type": "object",
-      "required": [
-        "input"
-      ],
-      "properties": {
-        "codonStartPosition": {
-          "type": "string",
-          "description": "Codon start position"
-        },
-        "cosmicCount": {
-          "type": "integer",
-          "format": "int32",
-          "description": "Number of mutations in COSMIC for this protein"
-        },
-        "functionalImpact": {
-          "type": "string",
-          "description": "Functional impact"
-        },
-        "functionalImpactScore": {
-          "type": "number",
-          "format": "double",
-          "description": "Functional impact score"
-        },
-        "hugoSymbol": {
-          "type": "string",
-          "description": "Hugo gene symbol"
-        },
-        "input": {
-          "type": "string",
-          "description": "User-input variants"
-        },
-        "mappingIssue": {
-          "type": "string",
-          "description": "Mapping issue info"
-        },
-        "msaGaps": {
-          "type": "number",
-          "format": "double",
-          "description": "Portion of gaps in variant position in multiple sequence alignment"
-        },
-        "msaHeight": {
-          "type": "integer",
-          "format": "int32",
-          "description": "Number of diverse sequences in multiple sequence alignment (identical or highly similar sequences filtered out)"
-        },
-        "msaLink": {
-          "type": "string",
-          "description": "Link to multiple sequence alignment"
-        },
-        "pdbLink": {
-          "type": "string",
-          "description": "Link to 3d structure browser"
-        },
-        "referenceGenomeVariant": {
-          "type": "string",
-          "description": "Reference genome variant"
-        },
-        "referenceGenomeVariantType": {
-          "type": "string",
-          "description": "Reference genome variant type"
-        },
-        "refseqId": {
-          "type": "string",
-          "description": "Refseq protein ID"
-        },
-        "refseqPosition": {
-          "type": "integer",
-          "format": "int32",
-          "description": "Variant position in Refseq protein, can be different from the one in Uniprot"
-        },
-        "refseqResidue": {
-          "type": "string",
-          "description": "Reference residue in Refseq protein, can be different from the one in Uniprot"
-        },
-        "snpCount": {
-          "type": "integer",
-          "format": "int32",
-          "description": "Number of SNPs in dbSNP for this protein"
-        },
-        "uniprotId": {
-          "type": "string",
-          "description": "Uniprot protein accession ID"
-        },
-        "uniprotPosition": {
-          "type": "integer",
-          "format": "int32",
-          "description": "Variant position in Uniprot protein, can be different from the one in Refseq"
-        },
-        "uniprotResidue": {
-          "type": "string",
-          "description": "Reference residue in Uniprot protein, can be different from the one in Refseq"
-        },
-        "variant": {
-          "type": "string",
-          "description": "Amino acid substitution"
-        },
-        "variantConservationScore": {
-          "type": "number",
-          "format": "double",
-          "description": "Variant conservation score"
-        },
-        "variantSpecificityScore": {
-          "type": "number",
-          "format": "double",
-          "description": "Variant specificity score"
-        }
-      }
-    },
     "PfamDomain": {
       "type": "object",
       "required": [
@@ -1563,13 +573,13 @@
           "type": "string",
           "description": "Hugo gene symbol"
         },
-        "getPfamDomainEnd": {
-          "type": "string",
-          "description": "PFAM domain end"
-        },
         "pfamDomainDescription": {
           "type": "string",
           "description": "PFAM domain description"
+        },
+        "pfamDomainEnd": {
+          "type": "integer",
+          "format": "int32"
         },
         "pfamDomainId": {
           "type": "string",
@@ -1580,7 +590,8 @@
           "description": "PFAM domain name"
         },
         "pfamDomainStart": {
-          "type": "string",
+          "type": "integer",
+          "format": "int32",
           "description": "PFAM domain start"
         },
         "proteinId": {
@@ -1740,14 +751,6 @@
         "variant": {
           "type": "string",
           "description": "Variant key"
-        }
-      }
-    },
-    "View": {
-      "type": "object",
-      "properties": {
-        "contentType": {
-          "type": "string"
         }
       }
     }
