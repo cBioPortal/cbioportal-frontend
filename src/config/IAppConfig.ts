@@ -24,6 +24,7 @@ export interface IAppConfig {
     skinRightNavShowTestimonials?: boolean,
     skinRightNavExamplesHTML?: string,
     skinRightNavWhatsNewBlurb?: string,
+    userEmailAddress?: string,
     querySetsOfGenes?: {"id": string, "genes":string[]}[]
 }
 

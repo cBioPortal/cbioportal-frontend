@@ -1,117 +1,95 @@
 import * as request from "superagent";
 
 type CallbackHandler = (err: any, res ? : request.Response) => void;
-export type GeneXref = {
-    'db_display_name': string
-
-        'dbname': string
-
-        'description': string
-
-        'display_id': string
-
-        'info_text': string
-
-        'info_types': string
-
-        'primary_id': string
-
-        'synonyms': Array < string >
-
-        'version': string
-
-};
-export type PfamDomain = {
+export type EnsemblTranscript = {
     'geneId': string
 
-        'geneSymbol': string
-
-        'pfamDomainDescription': string
-
-        'pfamDomainEnd': number
-
-        'pfamDomainId': string
-
-        'pfamDomainName': string
-
-        'pfamDomainStart': number
-
         'proteinId': string
+
+        'proteinLength': number
 
         'transcriptId': string
 
 };
-export type TranscriptConsequence = {
-    'amino_acids': string
+export type Hotspot = {
+    'geneId': string
 
-        'canonical': string
+        'hugoSymbol': string
 
-        'codons': string
+        'proteinEnd': string
 
-        'consequence_terms': Array < string >
+        'proteinStart': string
 
-        'gene_id': string
+        'residue': string
 
-        'gene_symbol': string
-
-        'hgnc_id': string
-
-        'hgvsc': string
-
-        'hgvsp': string
-
-        'polyphen_prediction': string
-
-        'polyphen_score': string
-
-        'protein_end': string
-
-        'protein_id': string
-
-        'protein_start': string
-
-        'refseq_transcript_ids': Array < string >
-
-        'sift_prediction': string
-
-        'sift_score': string
-
-        'transcript_id': string
-
-        'variant_allele': string
+        'transcriptId': string
 
 };
-export type VariantAnnotation = {
-    'allele_string': string
+export type IsoformOverride = {
+    'ccdsId': string
 
-        'annotationJSON': string
+        'geneSymbol': string
 
-        'assembly_name': string
+        'refseqId': string
 
-        'end': number
+        'transcriptId': string
 
-        'id': string
+};
+export type MutationAssessor = {
+    'codonStartPosition': string
 
-        'most_severe_consequence': string
+        'cosmicCount': number
 
-        'seq_region_name': string
+        'functionalImpact': string
 
-        'start': number
+        'functionalImpactScore': number
 
-        'strand': number
+        'hugoSymbol': string
 
-        'transcript_consequences': Array < TranscriptConsequence >
+        'input': string
+
+        'mappingIssue': string
+
+        'msaGaps': number
+
+        'msaHeight': number
+
+        'msaLink': string
+
+        'pdbLink': string
+
+        'referenceGenomeVariant': string
+
+        'referenceGenomeVariantType': string
+
+        'refseqId': string
+
+        'refseqPosition': number
+
+        'refseqResidue': string
+
+        'snpCount': number
+
+        'uniprotId': string
+
+        'uniprotPosition': number
+
+        'uniprotResidue': string
 
         'variant': string
+
+        'variantConservationScore': number
+
+        'variantSpecificityScore': number
 
 };
 
 /**
  * Genome Nexus Variant Annotation API
- * @class GenomeNexusAPI
+ * @class GenomeNexusAPIInternal
  * @param {(string)} [domainOrOptions] - The project domain.
  */
-export default class GenomeNexusAPI {
+export default class GenomeNexusAPIInternal {
 
     private domain: string = "";
     private errorHandlers: CallbackHandler[] = [];
@@ -160,22 +138,12 @@ export default class GenomeNexusAPI {
         });
     }
 
-    fetchVariantAnnotationPOSTURL(parameters: {
+    fetchHotspotAnnotationPOSTURL(parameters: {
         'variants': Array < string > ,
-        'isoformOverrideSource' ? : string,
-        'fields' ? : Array < string > ,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/annotation';
-
-        if (parameters['isoformOverrideSource'] !== undefined) {
-            queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
-        }
-
-        if (parameters['fields'] !== undefined) {
-            queryParameters['fields'] = parameters['fields'];
-        }
+        let path = '/cancer_hotspots';
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -188,25 +156,21 @@ export default class GenomeNexusAPI {
     };
 
     /**
-     * Retrieves VEP annotation for the provided list of variants
+     * Retrieves hotspot annotation for the provided list of variants
      * @method
-     * @name GenomeNexusAPI#fetchVariantAnnotationPOST
-     * @param {} variants - List of variants. For example ["X:g.66937331T>A","17:g.41242962->GA"]
-     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
-     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor
+     * @name GenomeNexusAPIInternal#fetchHotspotAnnotationPOST
+     * @param {} variants - List of variants. For example ["7:g.140453136A>T","12:g.25398285C>A"]
      */
-    fetchVariantAnnotationPOST(parameters: {
+    fetchHotspotAnnotationPOST(parameters: {
             'variants': Array < string > ,
-            'isoformOverrideSource' ? : string,
-            'fields' ? : Array < string > ,
             $queryParameters ? : any,
             $domain ? : string
-        }): Promise < Array < VariantAnnotation >
+        }): Promise < Array < Hotspot >
         > {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
             const request = this.request;
-            let path = '/annotation';
+            let path = '/cancer_hotspots';
             let body: any;
             let queryParameters: any = {};
             let headers: any = {};
@@ -224,14 +188,6 @@ export default class GenomeNexusAPI {
                     return;
                 }
 
-                if (parameters['isoformOverrideSource'] !== undefined) {
-                    queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
-                }
-
-                if (parameters['fields'] !== undefined) {
-                    queryParameters['fields'] = parameters['fields'];
-                }
-
                 if (parameters.$queryParameters) {
                     Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
                         var parameter = parameters.$queryParameters[parameterName];
@@ -246,23 +202,14 @@ export default class GenomeNexusAPI {
             });
         };
 
-    fetchVariantAnnotationGETURL(parameters: {
+    fetchHotspotAnnotationGETURL(parameters: {
         'variant': string,
-        'isoformOverrideSource' ? : string,
-        'fields' ? : Array < string > ,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/annotation/{variant}';
+        let path = '/cancer_hotspots/{variant}';
 
         path = path.replace('{variant}', parameters['variant'] + '');
-        if (parameters['isoformOverrideSource'] !== undefined) {
-            queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
-        }
-
-        if (parameters['fields'] !== undefined) {
-            queryParameters['fields'] = parameters['fields'];
-        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -275,91 +222,80 @@ export default class GenomeNexusAPI {
     };
 
     /**
-     * Retrieves VEP annotation for the provided variant
+     * Retrieves hotspot annotation for a specific variant
      * @method
-     * @name GenomeNexusAPI#fetchVariantAnnotationGET
-     * @param {string} variant - Variant. For example 17:g.41242962->GA
-     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
-     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor
+     * @name GenomeNexusAPIInternal#fetchHotspotAnnotationGET
+     * @param {string} variant - A variant. For example 7:g.140453136A>T
      */
-    fetchVariantAnnotationGET(parameters: {
-        'variant': string,
-        'isoformOverrideSource' ? : string,
-        'fields' ? : Array < string > ,
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < VariantAnnotation > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/annotation/{variant}';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            path = path.replace('{variant}', parameters['variant'] + '');
-
-            if (parameters['variant'] === undefined) {
-                reject(new Error('Missing required  parameter: variant'));
-                return;
-            }
-
-            if (parameters['isoformOverrideSource'] !== undefined) {
-                queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
-            }
-
-            if (parameters['fields'] !== undefined) {
-                queryParameters['fields'] = parameters['fields'];
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        }).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
-
-    fetchAllPfamDomainsGETURL(parameters: {
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/pfam/domain';
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Retrieves all PFAM domains
-     * @method
-     * @name GenomeNexusAPI#fetchAllPfamDomainsGET
-     */
-    fetchAllPfamDomainsGET(parameters: {
+    fetchHotspotAnnotationGET(parameters: {
+            'variant': string,
             $queryParameters ? : any,
-                $domain ? : string
-        }): Promise < Array < PfamDomain >
+            $domain ? : string
+        }): Promise < Array < Hotspot >
         > {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
             const request = this.request;
-            let path = '/pfam/domain';
+            let path = '/cancer_hotspots/{variant}';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                path = path.replace('{variant}', parameters['variant'] + '');
+
+                if (parameters['variant'] === undefined) {
+                    reject(new Error('Missing required  parameter: variant'));
+                    return;
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    fetchAllEnsemblTranscriptsGETURL(parameters: {
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/ensembl/transcript';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves all Ensembl Transcripts
+     * @method
+     * @name GenomeNexusAPIInternal#fetchAllEnsemblTranscriptsGET
+     */
+    fetchAllEnsemblTranscriptsGET(parameters: {
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < EnsemblTranscript >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/ensembl/transcript';
             let body: any;
             let queryParameters: any = {};
             let headers: any = {};
@@ -382,12 +318,12 @@ export default class GenomeNexusAPI {
             });
         };
 
-    fetchPfamDomainsByGeneIdsPOSTURL(parameters: {
+    fetchEnsemblTranscriptsByGeneIdsPOSTURL(parameters: {
         'geneIds': Array < string > ,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/pfam/domain/gene';
+        let path = '/ensembl/transcript/gene';
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -400,21 +336,21 @@ export default class GenomeNexusAPI {
     };
 
     /**
-     * Retrieves PFAM domains by Ensembl gene IDs
+     * Retrieves Ensembl transcripts by Ensembl gene IDs
      * @method
-     * @name GenomeNexusAPI#fetchPfamDomainsByGeneIdsPOST
+     * @name GenomeNexusAPIInternal#fetchEnsemblTranscriptsByGeneIdsPOST
      * @param {} geneIds - List of Ensembl gene IDs. For example ["ENSG00000136999","ENSG00000272398","ENSG00000198695"]
      */
-    fetchPfamDomainsByGeneIdsPOST(parameters: {
+    fetchEnsemblTranscriptsByGeneIdsPOST(parameters: {
             'geneIds': Array < string > ,
             $queryParameters ? : any,
             $domain ? : string
-        }): Promise < Array < PfamDomain >
+        }): Promise < Array < EnsemblTranscript >
         > {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
             const request = this.request;
-            let path = '/pfam/domain/gene';
+            let path = '/ensembl/transcript/gene';
             let body: any;
             let queryParameters: any = {};
             let headers: any = {};
@@ -446,12 +382,12 @@ export default class GenomeNexusAPI {
             });
         };
 
-    fetchPfamDomainsByGeneIdGETURL(parameters: {
+    fetchEnsemblTranscriptsByGeneIdGETURL(parameters: {
         'geneId': string,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/pfam/domain/gene/{geneId}';
+        let path = '/ensembl/transcript/gene/{geneId}';
 
         path = path.replace('{geneId}', parameters['geneId'] + '');
 
@@ -466,21 +402,21 @@ export default class GenomeNexusAPI {
     };
 
     /**
-     * Retrieves PFAM domains by an Ensembl gene ID
+     * Retrieves Ensembl transcripts by an Ensembl gene ID
      * @method
-     * @name GenomeNexusAPI#fetchPfamDomainsByGeneIdGET
+     * @name GenomeNexusAPIInternal#fetchEnsemblTranscriptsByGeneIdGET
      * @param {string} geneId - An Ensembl gene ID. For example ENSG00000136999
      */
-    fetchPfamDomainsByGeneIdGET(parameters: {
+    fetchEnsemblTranscriptsByGeneIdGET(parameters: {
             'geneId': string,
             $queryParameters ? : any,
             $domain ? : string
-        }): Promise < Array < PfamDomain >
+        }): Promise < Array < EnsemblTranscript >
         > {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
             const request = this.request;
-            let path = '/pfam/domain/gene/{geneId}';
+            let path = '/ensembl/transcript/gene/{geneId}';
             let body: any;
             let queryParameters: any = {};
             let headers: any = {};
@@ -510,12 +446,17 @@ export default class GenomeNexusAPI {
             });
         };
 
-    fetchPfamDomainsByPfamIdsPOSTURL(parameters: {
-        'pfamDomainIds': Array < string > ,
+    fetchEnsemblTranscriptsByHugoSymbolsPOSTURL(parameters: {
+        'hugoSymbols': Array < string > ,
+        'isoformOverrideSource' ? : string,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/pfam/domain/id';
+        let path = '/ensembl/transcript/hgnc';
+
+        if (parameters['isoformOverrideSource'] !== undefined) {
+            queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
+        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -528,21 +469,23 @@ export default class GenomeNexusAPI {
     };
 
     /**
-     * Retrieves PFAM domains by PFAM domain IDs
+     * Retrieves Ensembl transcripts by Hugo Symbols
      * @method
-     * @name GenomeNexusAPI#fetchPfamDomainsByPfamIdsPOST
-     * @param {} pfamDomainIds - List of PFAM domain IDs. For example ["PF02827","PF00093","PF15276"]
+     * @name GenomeNexusAPIInternal#fetchEnsemblTranscriptsByHugoSymbolsPOST
+     * @param {} hugoSymbols - List of Hugo Symbols. For example ["TP53","PIK3CA","BRCA1"]
+     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
      */
-    fetchPfamDomainsByPfamIdsPOST(parameters: {
-            'pfamDomainIds': Array < string > ,
+    fetchEnsemblTranscriptsByHugoSymbolsPOST(parameters: {
+            'hugoSymbols': Array < string > ,
+            'isoformOverrideSource' ? : string,
             $queryParameters ? : any,
             $domain ? : string
-        }): Promise < Array < PfamDomain >
+        }): Promise < Array < EnsemblTranscript >
         > {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
             const request = this.request;
-            let path = '/pfam/domain/id';
+            let path = '/ensembl/transcript/hgnc';
             let body: any;
             let queryParameters: any = {};
             let headers: any = {};
@@ -551,13 +494,17 @@ export default class GenomeNexusAPI {
                 headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
-                if (parameters['pfamDomainIds'] !== undefined) {
-                    body = parameters['pfamDomainIds'];
+                if (parameters['hugoSymbols'] !== undefined) {
+                    body = parameters['hugoSymbols'];
                 }
 
-                if (parameters['pfamDomainIds'] === undefined) {
-                    reject(new Error('Missing required  parameter: pfamDomainIds'));
+                if (parameters['hugoSymbols'] === undefined) {
+                    reject(new Error('Missing required  parameter: hugoSymbols'));
                     return;
+                }
+
+                if (parameters['isoformOverrideSource'] !== undefined) {
+                    queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
                 }
 
                 if (parameters.$queryParameters) {
@@ -574,14 +521,18 @@ export default class GenomeNexusAPI {
             });
         };
 
-    fetchPfamDomainsByPfamIdGETURL(parameters: {
-        'pfamDomainId': string,
+    fetchEnsemblTranscriptsByHugoSymbolGETURL(parameters: {
+        'hugoSymbol': string,
+        'isoformOverrideSource' ? : string,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/pfam/domain/id/{pfamDomainId}';
+        let path = '/ensembl/transcript/hgnc/{hugoSymbol}';
 
-        path = path.replace('{pfamDomainId}', parameters['pfamDomainId'] + '');
+        path = path.replace('{hugoSymbol}', parameters['hugoSymbol'] + '');
+        if (parameters['isoformOverrideSource'] !== undefined) {
+            queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
+        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -594,184 +545,61 @@ export default class GenomeNexusAPI {
     };
 
     /**
-     * Retrieves PFAM domains by a PFAM domain ID
+     * Retrieves Ensembl transcripts by an Ensembl gene ID
      * @method
-     * @name GenomeNexusAPI#fetchPfamDomainsByPfamIdGET
-     * @param {string} pfamDomainId - A PFAM domain ID. For example PF02827
+     * @name GenomeNexusAPIInternal#fetchEnsemblTranscriptsByHugoSymbolGET
+     * @param {string} hugoSymbol - A Hugo Symbol. For example TP53
+     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
      */
-    fetchPfamDomainsByPfamIdGET(parameters: {
-            'pfamDomainId': string,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < PfamDomain >
-        > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/pfam/domain/id/{pfamDomainId}';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
-
-                path = path.replace('{pfamDomainId}', parameters['pfamDomainId'] + '');
-
-                if (parameters['pfamDomainId'] === undefined) {
-                    reject(new Error('Missing required  parameter: pfamDomainId'));
-                    return;
-                }
-
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
-
-                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-            }).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-
-    fetchPfamDomainsByProteinIdsPOSTURL(parameters: {
-        'proteinIds': Array < string > ,
-        $queryParameters ? : any
-    }): string {
+    fetchEnsemblTranscriptsByHugoSymbolGET(parameters: {
+        'hugoSymbol': string,
+        'isoformOverrideSource' ? : string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < EnsemblTranscript > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/ensembl/transcript/hgnc/{hugoSymbol}';
+        let body: any;
         let queryParameters: any = {};
-        let path = '/pfam/domain/protein';
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
 
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+            path = path.replace('{hugoSymbol}', parameters['hugoSymbol'] + '');
+
+            if (parameters['hugoSymbol'] === undefined) {
+                reject(new Error('Missing required  parameter: hugoSymbol'));
+                return;
+            }
+
+            if (parameters['isoformOverrideSource'] !== undefined) {
+                queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        }).then(function(response: request.Response) {
+            return response.body;
+        });
     };
 
-    /**
-     * Retrieves PFAM domains by Ensembl protein IDs
-     * @method
-     * @name GenomeNexusAPI#fetchPfamDomainsByProteinIdsPOST
-     * @param {} proteinIds - List of Ensembl protein IDs. For example ["ENSP00000439985","ENSP00000478460","ENSP00000346196"]
-     */
-    fetchPfamDomainsByProteinIdsPOST(parameters: {
-            'proteinIds': Array < string > ,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < PfamDomain >
-        > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/pfam/domain/protein';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
-
-                if (parameters['proteinIds'] !== undefined) {
-                    body = parameters['proteinIds'];
-                }
-
-                if (parameters['proteinIds'] === undefined) {
-                    reject(new Error('Missing required  parameter: proteinIds'));
-                    return;
-                }
-
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
-
-                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-            }).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-
-    fetchPfamDomainsByProteinIdGETURL(parameters: {
-        'proteinId': string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/pfam/domain/protein/{proteinId}';
-
-        path = path.replace('{proteinId}', parameters['proteinId'] + '');
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Retrieves PFAM domains by an Ensembl protein ID
-     * @method
-     * @name GenomeNexusAPI#fetchPfamDomainsByProteinIdGET
-     * @param {string} proteinId - An Ensembl protein ID. For example ENSP00000439985
-     */
-    fetchPfamDomainsByProteinIdGET(parameters: {
-            'proteinId': string,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < PfamDomain >
-        > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/pfam/domain/protein/{proteinId}';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
-
-                path = path.replace('{proteinId}', parameters['proteinId'] + '');
-
-                if (parameters['proteinId'] === undefined) {
-                    reject(new Error('Missing required  parameter: proteinId'));
-                    return;
-                }
-
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
-
-                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-            }).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-
-    fetchPfamDomainsByTranscriptIdsPOSTURL(parameters: {
+    fetchEnsemblTranscriptsByTranscriptIdsPOSTURL(parameters: {
         'transcriptIds': Array < string > ,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/pfam/domain/transcript';
+        let path = '/ensembl/transcript/id';
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -784,21 +612,21 @@ export default class GenomeNexusAPI {
     };
 
     /**
-     * Retrieves PFAM domains by Ensembl transcript IDs
+     * Retrieves Ensembl Transcripts by Ensembl transcript IDs
      * @method
-     * @name GenomeNexusAPI#fetchPfamDomainsByTranscriptIdsPOST
+     * @name GenomeNexusAPIInternal#fetchEnsemblTranscriptsByTranscriptIdsPOST
      * @param {} transcriptIds - List of Ensembl transcript IDs. For example ["ENST00000361390","ENST00000361453","ENST00000361624"]
      */
-    fetchPfamDomainsByTranscriptIdsPOST(parameters: {
+    fetchEnsemblTranscriptsByTranscriptIdsPOST(parameters: {
             'transcriptIds': Array < string > ,
             $queryParameters ? : any,
             $domain ? : string
-        }): Promise < Array < PfamDomain >
+        }): Promise < Array < EnsemblTranscript >
         > {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
             const request = this.request;
-            let path = '/pfam/domain/transcript';
+            let path = '/ensembl/transcript/id';
             let body: any;
             let queryParameters: any = {};
             let headers: any = {};
@@ -830,12 +658,12 @@ export default class GenomeNexusAPI {
             });
         };
 
-    fetchPfamDomainsByTranscriptIdGETURL(parameters: {
+    fetchEnsemblTranscriptsByTranscriptIdGETURL(parameters: {
         'transcriptId': string,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/pfam/domain/transcript/{transcriptId}';
+        let path = '/ensembl/transcript/id/{transcriptId}';
 
         path = path.replace('{transcriptId}', parameters['transcriptId'] + '');
 
@@ -850,21 +678,21 @@ export default class GenomeNexusAPI {
     };
 
     /**
-     * Retrieves PFAM domains by an Ensembl transcript ID
+     * Retrieves Transcripts by an Ensembl transcript ID
      * @method
-     * @name GenomeNexusAPI#fetchPfamDomainsByTranscriptIdGET
+     * @name GenomeNexusAPIInternal#fetchEnsemblTranscriptsByTranscriptIdGET
      * @param {string} transcriptId - An Ensembl transcript ID. For example ENST00000361390
      */
-    fetchPfamDomainsByTranscriptIdGET(parameters: {
+    fetchEnsemblTranscriptsByTranscriptIdGET(parameters: {
             'transcriptId': string,
             $queryParameters ? : any,
             $domain ? : string
-        }): Promise < Array < PfamDomain >
+        }): Promise < Array < EnsemblTranscript >
         > {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
             const request = this.request;
-            let path = '/pfam/domain/transcript/{transcriptId}';
+            let path = '/ensembl/transcript/id/{transcriptId}';
             let body: any;
             let queryParameters: any = {};
             let headers: any = {};
@@ -894,14 +722,12 @@ export default class GenomeNexusAPI {
             });
         };
 
-    getGeneXrefsURL(parameters: {
-        'accession': string,
+    fetchEnsemblTranscriptsByProteinIdsPOSTURL(parameters: {
+        'proteinIds': Array < string > ,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/xrefs/{accession}';
-
-        path = path.replace('{accession}', parameters['accession'] + '');
+        let path = '/ensembl/transcript/protein';
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -914,21 +740,21 @@ export default class GenomeNexusAPI {
     };
 
     /**
-     * Perform lookups of Ensembl identifiers and retrieve their external referenes in other databases
+     * Retrieves Ensembl transcripts by Ensembl protein IDs
      * @method
-     * @name GenomeNexusAPI#getGeneXrefs
-     * @param {string} accession - Ensembl gene accession. For example ENSG00000169083
+     * @name GenomeNexusAPIInternal#fetchEnsemblTranscriptsByProteinIdsPOST
+     * @param {} proteinIds - List of Ensembl protein IDs. For example ["ENSP00000439985","ENSP00000478460","ENSP00000346196"]
      */
-    getGeneXrefs(parameters: {
-            'accession': string,
+    fetchEnsemblTranscriptsByProteinIdsPOST(parameters: {
+            'proteinIds': Array < string > ,
             $queryParameters ? : any,
             $domain ? : string
-        }): Promise < Array < GeneXref >
+        }): Promise < Array < EnsemblTranscript >
         > {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
             const request = this.request;
-            let path = '/xrefs/{accession}';
+            let path = '/ensembl/transcript/protein';
             let body: any;
             let queryParameters: any = {};
             let headers: any = {};
@@ -937,10 +763,76 @@ export default class GenomeNexusAPI {
                 headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
-                path = path.replace('{accession}', parameters['accession'] + '');
+                if (parameters['proteinIds'] !== undefined) {
+                    body = parameters['proteinIds'];
+                }
 
-                if (parameters['accession'] === undefined) {
-                    reject(new Error('Missing required  parameter: accession'));
+                if (parameters['proteinIds'] === undefined) {
+                    reject(new Error('Missing required  parameter: proteinIds'));
+                    return;
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    fetchEnsemblTranscriptsByProteinIdGETURL(parameters: {
+        'proteinId': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/ensembl/transcript/protein/{proteinId}';
+
+        path = path.replace('{proteinId}', parameters['proteinId'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves Ensembl transcripts by an Ensembl protein ID
+     * @method
+     * @name GenomeNexusAPIInternal#fetchEnsemblTranscriptsByProteinIdGET
+     * @param {string} proteinId - An Ensembl protein ID. For example ENSP00000439985
+     */
+    fetchEnsemblTranscriptsByProteinIdGET(parameters: {
+            'proteinId': string,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < EnsemblTranscript >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/ensembl/transcript/protein/{proteinId}';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                path = path.replace('{proteinId}', parameters['proteinId'] + '');
+
+                if (parameters['proteinId'] === undefined) {
+                    reject(new Error('Missing required  parameter: proteinId'));
                     return;
                 }
 
@@ -957,5 +849,402 @@ export default class GenomeNexusAPI {
                 return response.body;
             });
         };
+
+    fetchIsoformOverridePOSTURL(parameters: {
+        'source': string,
+        'transcriptIds': Array < string > ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/isoform_override';
+        if (parameters['source'] !== undefined) {
+            queryParameters['source'] = parameters['source'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Gets the isoform override information for the specified source and the list of transcript ids
+     * @method
+     * @name GenomeNexusAPIInternal#fetchIsoformOverridePOST
+     * @param {string} source - Override source. For example uniprot
+     * @param {} transcriptIds - List of transcript ids. For example ["ENST00000361125","ENST00000443649"]. 
+     */
+    fetchIsoformOverridePOST(parameters: {
+            'source': string,
+            'transcriptIds': Array < string > ,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < IsoformOverride >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/isoform_override';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                if (parameters['source'] !== undefined) {
+                    queryParameters['source'] = parameters['source'];
+                }
+
+                if (parameters['source'] === undefined) {
+                    reject(new Error('Missing required  parameter: source'));
+                    return;
+                }
+
+                if (parameters['transcriptIds'] !== undefined) {
+                    body = parameters['transcriptIds'];
+                }
+
+                if (parameters['transcriptIds'] === undefined) {
+                    reject(new Error('Missing required  parameter: transcriptIds'));
+                    return;
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    fetchIsoformOverrideSourcesGETURL(parameters: {
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/isoform_override/sources';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Gets a list of available isoform override data sources
+     * @method
+     * @name GenomeNexusAPIInternal#fetchIsoformOverrideSourcesGET
+     */
+    fetchIsoformOverrideSourcesGET(parameters: {
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < string >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/isoform_override/sources';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    fetchAllIsoformOverridesGETURL(parameters: {
+        'source': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/isoform_override/{source}';
+
+        path = path.replace('{source}', parameters['source'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Gets the isoform override information for the specified source
+     * @method
+     * @name GenomeNexusAPIInternal#fetchAllIsoformOverridesGET
+     * @param {string} source - Override source. For example uniprot
+     */
+    fetchAllIsoformOverridesGET(parameters: {
+            'source': string,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < IsoformOverride >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/isoform_override/{source}';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                path = path.replace('{source}', parameters['source'] + '');
+
+                if (parameters['source'] === undefined) {
+                    reject(new Error('Missing required  parameter: source'));
+                    return;
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    fetchIsoformOverrideGETURL(parameters: {
+        'source': string,
+        'transcriptId': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/isoform_override/{source}/{transcriptId}';
+
+        path = path.replace('{source}', parameters['source'] + '');
+
+        path = path.replace('{transcriptId}', parameters['transcriptId'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Gets the isoform override information for the specified source and transcript id
+     * @method
+     * @name GenomeNexusAPIInternal#fetchIsoformOverrideGET
+     * @param {string} source - Override source. For example uniprot.
+     * @param {string} transcriptId - Transcript id. For example ENST00000361125.
+     */
+    fetchIsoformOverrideGET(parameters: {
+        'source': string,
+        'transcriptId': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < IsoformOverride > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/isoform_override/{source}/{transcriptId}';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            path = path.replace('{source}', parameters['source'] + '');
+
+            if (parameters['source'] === undefined) {
+                reject(new Error('Missing required  parameter: source'));
+                return;
+            }
+
+            path = path.replace('{transcriptId}', parameters['transcriptId'] + '');
+
+            if (parameters['transcriptId'] === undefined) {
+                reject(new Error('Missing required  parameter: transcriptId'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        }).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+
+    postMutationAssessorAnnotationURL(parameters: {
+        'variants': Array < string > ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/mutation_assessor';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves mutation assessor information for the provided list of variants
+     * @method
+     * @name GenomeNexusAPIInternal#postMutationAssessorAnnotation
+     * @param {} variants - List of variants. For example ["7:g.140453136A>T","12:g.25398285C>A"]
+     */
+    postMutationAssessorAnnotation(parameters: {
+            'variants': Array < string > ,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < MutationAssessor >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/mutation_assessor';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                if (parameters['variants'] !== undefined) {
+                    body = parameters['variants'];
+                }
+
+                if (parameters['variants'] === undefined) {
+                    reject(new Error('Missing required  parameter: variants'));
+                    return;
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    fetchMutationAssessorAnnotationGETURL(parameters: {
+        'variant': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/mutation_assessor/{variant}';
+
+        path = path.replace('{variant}', parameters['variant'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves mutation assessor information for the provided list of variants
+     * @method
+     * @name GenomeNexusAPIInternal#fetchMutationAssessorAnnotationGET
+     * @param {string} variant - A variants. For example 7:g.140453136A>T
+     */
+    fetchMutationAssessorAnnotationGET(parameters: {
+        'variant': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < MutationAssessor > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/mutation_assessor/{variant}';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            path = path.replace('{variant}', parameters['variant'] + '');
+
+            if (parameters['variant'] === undefined) {
+                reject(new Error('Missing required  parameter: variant'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        }).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
 
 }
