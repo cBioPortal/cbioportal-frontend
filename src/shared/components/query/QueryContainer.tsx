@@ -2,7 +2,7 @@ import * as _ from "lodash";
 import * as React from "react";
 import CancerStudySelector from "./CancerStudySelector";
 import {FlexRow, FlexCol} from "../flexbox/FlexBox";
-import * as styles_any from './styles.module.scss';
+import * as styles_any from './styles/styles.module.scss';
 import classNames from 'classnames';
 import MolecularProfileSelector from "./MolecularProfileSelector";
 import {observable, computed, action} from 'mobx';
@@ -14,6 +14,7 @@ import {QueryStore} from "./QueryStore";
 import {providesStoreContext} from "../../lib/ContextUtils";
 import AppConfig from "appConfig";
 import CaseSetSelector from "./CaseSetSelector";
+import OverlappingStudiesWarning from "../overlappingStudiesWarning/OverlappingStudiesWarning";
 
 const styles = styles_any as {
 	QueryContainer: string,
@@ -42,7 +43,6 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
 		super();
 
 		this.handleSubmit = this.handleSubmit.bind(this);
-
 	}
 
 	get store()
@@ -61,18 +61,20 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
     {
         return (
 			<FlexCol padded overflow className={styles.QueryContainer}>
+
+                {
+                    <OverlappingStudiesWarning studies={this.store.selectedStudies}/>
+                }
+
 				<CancerStudySelector/>
 
-				{!!(this.store.singleSelectedStudyId) && (
-					<MolecularProfileSelector/>
-				)}
+				{this.store.isVirtualCohortQuery ?
+					(<DataTypePrioritySelector/>) :
+					(<MolecularProfileSelector/>)
+				}
 
-				{!!(this.store.singleSelectedStudyId) && (
+				{(this.store.selectedStudyIds.length > 0) && (
 					<CaseSetSelector/>
-				)}
-
-				{!!(!this.store.singleSelectedStudyId) && (
-					<DataTypePrioritySelector/>
 				)}
 
 				<GeneSetSelector/>

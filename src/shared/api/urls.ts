@@ -1,7 +1,9 @@
 import {default as URL, QueryParams} from "url";
+import AppConfig from "appConfig";
+import formSubmit from "shared/lib/formSubmit";
 
 export function getHost(){
-    return (window as any).__API_ROOT__;
+    return AppConfig.apiRoot;
 }
 
 export type BuildUrlParams = {pathname:string, query?:QueryParams, hash?:string};
@@ -22,11 +24,24 @@ const cbioUrl = buildCBioPortalUrl;
 export function getCbioPortalApiUrl() {
     return cbioUrl('api');
 }
-export function getStudyViewUrl(studyId:string) {
-    return cbioUrl('study', {id: studyId});
+function getStudySummaryUrlParams(studyIds:string | ReadonlyArray<string>) {
+    let cohortsArray:ReadonlyArray<string>;
+    if (typeof studyIds === "string") {
+        cohortsArray = [studyIds];
+    } else {
+        cohortsArray = studyIds;
+    }
+    return {pathname:'study', query: {id: cohortsArray.join(",")}};
 }
-export function getStudySummaryUrl(studyId:string) {
-    return cbioUrl('study', {id: studyId}, 'summary');
+
+export function getStudySummaryUrl(studyIds:string | ReadonlyArray<string>) {
+    const params = getStudySummaryUrlParams(studyIds);
+    return cbioUrl(params.pathname, params.query);
+}
+export function openStudySummaryFormSubmit(studyIds: string | ReadonlyArray<string>) {
+    const params = getStudySummaryUrlParams(studyIds);
+    const method:"get"|"post" = params.query.id.length > 1800 ? "post" : "get";
+    formSubmit(params.pathname, params.query, "_blank", method);
 }
 export function getPubMedUrl(pmid:string) {
     return `https://www.ncbi.nlm.nih.gov/pubmed/${pmid}`;
@@ -36,9 +51,6 @@ export function getMyGeneUrl(entrezGeneId: number) {
 }
 export function getUniprotIdUrl(swissProtAccession: string) {
     return cbioUrl(`proxy/uniprot.org/uniprot/?query=accession:${swissProtAccession}&format=tab&columns=entry+name`);
-}
-export function getPfamGeneDataUrl(swissProtAccession: string) {
-    return cbioUrl(`proxy/pfam.xfam.org/protein/${swissProtAccession}/graphic`);
 }
 export function getMutationAlignerUrl() {
     return cbioUrl(`getMutationAligner.json`);
@@ -53,7 +65,7 @@ export function getHotspots3DApiUrl() {
     return cbioUrl('proxy/3dhotspots.org/3d');
 }
 export function getOncoKbApiUrl() {
-    let url = (window as any).oncoKBApiUrl;
+    let url = AppConfig.oncoKBApiUrl;
 
     if (typeof url === 'string') {
         // we need to support legacy configuration values
@@ -66,7 +78,7 @@ export function getOncoKbApiUrl() {
 
 }
 export function getGenomeNexusApiUrl() {
-    let url = (window as any).genomeNexusApiUrl;
+    let url = AppConfig.genomeNexusApiUrl;
     if (typeof url === 'string') {
         // we need to support legacy configuration values
         url = url.replace(/^http[s]?:\/\//,''); // get rid of protocol

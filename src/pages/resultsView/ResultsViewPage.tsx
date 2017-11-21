@@ -1,5 +1,7 @@
 import * as React from 'react';
+import * as ReactDOM from 'react-dom';
 import * as _ from 'lodash';
+import $ from 'jquery';
 import {observer, inject, Observer} from "mobx-react";
 import {reaction, computed} from "mobx";
 import validateParameters from 'shared/lib/validateParameters';
@@ -12,6 +14,9 @@ import Mutations from "./mutation/Mutations";
 import {stringListToSet} from "../../shared/lib/StringUtils";
 import MutualExclusivityTab from "./mutualExclusivity/MutualExclusivityTab";
 import Chart from 'chart.js';
+import {CancerStudy} from "../../shared/api/generated/CBioPortalAPI";
+import getOverlappingStudies from "../../shared/lib/getOverlappingStudies";
+import OverlappingStudiesWarning from "../../shared/components/overlappingStudiesWarning/OverlappingStudiesWarning";
 
 (Chart as any).plugins.register({
     beforeDraw: function(chartInstance:any) {
@@ -91,6 +96,29 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
     componentDidMount(){
 
+        this.mountOverlappingStudiesWarning();
+
+    }
+
+    private mountOverlappingStudiesWarning(){
+
+        const target = $('<div class="cbioportal-frontend"></div>').insertBefore("#tabs");
+
+        ReactDOM.render(
+            <Observer>
+                {
+                    ()=> {
+                        if (resultsViewPageStore.studies.isComplete) {
+                            return <OverlappingStudiesWarning studies={resultsViewPageStore.studies.result!}/>
+                        } else {
+                            return <span></span>;
+                        }
+                    }
+                }
+            </Observer>
+            ,
+            target[0]
+        );
 
     }
 

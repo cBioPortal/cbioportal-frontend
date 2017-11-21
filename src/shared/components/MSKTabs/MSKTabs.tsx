@@ -54,6 +54,7 @@ interface IMSKTabsProps {
     // only used when pagination is true to style arrows
     arrowStyle?:{[k:string]:string|number|boolean};
     tabButtonStyle?:string;
+    unmountOnHide?:boolean;
 }
 
 export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
@@ -148,7 +149,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
                         effectiveActiveTab = this.props.activeTabId;
                         this.shownTabs.push(child.props.id);
                         memo.push(this.cloneTab(child, false, !!child.props.loading));
-                    } else if (_.includes(this.shownTabs, child.props.id) && !child.props.loading) {
+                    } else if (!this.props.unmountOnHide && _.includes(this.shownTabs, child.props.id) && !child.props.loading) {
                         memo.push(this.cloneTab(child, true, !!child.props.loading));
                     }
                 }

@@ -1840,6 +1840,60 @@
         }
       }
     },
+    "/sample-lists/fetch": {
+      "post": {
+        "tags": [
+          "Sample Lists"
+        ],
+        "summary": "Fetch sample lists by ID",
+        "operationId": "fetchSampleListsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "sampleListIds",
+            "description": "List of sample list IDs",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/SampleList"
+              }
+            }
+          }
+        }
+      }
+    },
     "/sample-lists/{sampleListId}": {
       "get": {
         "tags": [
@@ -3715,6 +3769,12 @@
         "sampleCount": {
           "type": "integer",
           "format": "int32"
+        },
+        "sampleIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
         "sampleListId": {
           "type": "string"
