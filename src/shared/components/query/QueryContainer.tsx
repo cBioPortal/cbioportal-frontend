@@ -14,6 +14,7 @@ import {QueryStore} from "./QueryStore";
 import {providesStoreContext} from "../../lib/ContextUtils";
 import AppConfig from "appConfig";
 import CaseSetSelector from "./CaseSetSelector";
+import OverlappingStudiesWarning from "../overlappingStudiesWarning/OverlappingStudiesWarning";
 
 const styles = styles_any as {
 	QueryContainer: string,
@@ -60,6 +61,11 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
     {
         return (
 			<FlexCol padded overflow className={styles.QueryContainer}>
+
+                {
+                    <OverlappingStudiesWarning studies={this.store.selectedStudies}/>
+                }
+
 				<CancerStudySelector/>
 
 				{this.store.isVirtualCohortQuery ?
