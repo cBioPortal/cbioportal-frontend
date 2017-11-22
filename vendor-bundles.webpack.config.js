@@ -14,9 +14,13 @@ let config = {
     },
 
     module: {
-        loaders: [
-            { test: /lodash/, loader: 'imports-loader?define=>false'}
+        rules: [
+            { test: /lodash/, use: 'imports-loader?define=>false'},
         ]
+    },
+
+    node: {
+        fs: "empty"
     },
 
     output: {

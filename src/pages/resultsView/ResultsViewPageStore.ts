@@ -42,7 +42,10 @@ import {
 } from "../../shared/components/cancerSummary/CancerSummaryContent";
 import {writeTest} from "../../shared/lib/writeTest";
 import {PatientSurvival} from "../../shared/model/PatientSurvival";
-import {filterCBioPortalWebServiceDataByOQLLine, OQLLineFilterOutput} from "../../shared/lib/oql/oqlfilter";
+import {
+    filterCBioPortalWebServiceDataByOQLLine, OQLLineFilterOutput,
+    parseOQLQuery
+} from "../../shared/lib/oql/oqlfilter";
 import GeneMolecularDataCache from "../../shared/cache/GeneMolecularDataCache";
 import GeneCache from "../../shared/cache/GeneCache";
 import ClinicalDataCache from "../../shared/cache/ClinicalDataCache";
@@ -234,6 +237,15 @@ export function countAlterationOccurences(groupedSamples: {[groupingProperty: st
 
 }
 
+interface QuerySpecification {
+    sampleSpecification: { studyId:string, sampleListId:string }[]
+    hugoGeneSymbols: string[],
+    selectedMolecularProfileIds: string[],
+    rppaScoreThreshold:number;
+    zScoreThreshold:number;
+    oqlQuery:string,
+}
+
 export function extendSamplesWithCancerType(samples:Sample[], clinicalDataForSamples:ClinicalData[], studies:CancerStudy[]){
 
     const clinicalDataGroupedBySampleId = _.groupBy(clinicalDataForSamples, (clinicalData:ClinicalData)=>clinicalData.uniqueSampleKey);
@@ -300,7 +312,7 @@ export class ResultsViewPageStore {
     @observable ajaxErrors: Error[] = [];
 
     @observable hugoGeneSymbols: string[];
-    @observable samplesSpecification: SamplesSpecificationElement[] = [];
+    @observable.ref samplesSpecification: SamplesSpecificationElement[] = [];
 
     @observable zScoreThreshold: number;
 
@@ -308,6 +320,8 @@ export class ResultsViewPageStore {
 
     @observable oqlQuery: string = '';
     @observable public sessionIdURL = '';
+
+    @observable currentQuery: any = null;
 
     @observable selectedMolecularProfileIds: string[] = [];
 
@@ -322,6 +336,10 @@ export class ResultsViewPageStore {
         driverFilter: AppConfig.oncoprintCustomDriverAnnotationDefault,
         driverTiers: observable.map<boolean>()
     };
+
+    @action setQuery(querySpecification:QuerySpecification){
+        
+    }
 
     private getURL() {
         const shareURL = window.location.href;
@@ -400,6 +418,19 @@ export class ResultsViewPageStore {
             }
         }
     });
+
+    readonly parsedOQL = remoteData({
+        await: ()=> [
+            this.defaultOQLQuery
+        ],
+        invoke:() => {
+            return Promise.resolve(parseOQLQuery(this.oqlQuery, this.defaultOQLQuery.result!));
+        }
+    });
+
+    @action setOQL(oqlStr:string){
+        this.oqlQuery = oqlStr;
+    }
 
     readonly unfilteredAlterations = remoteData<(Mutation|GeneMolecularData)[]>({
         await: ()=>[
@@ -854,16 +885,6 @@ export class ResultsViewPageStore {
             });
         }
     });
-
-    // readonly genes = remoteData(async() => {
-    //     if (this.hugoGeneSymbols) {
-    //         return client.fetchGenesUsingPOST({
-    //             geneIds: this.hugoGeneSymbols.slice(),
-    //             geneIdType: "HUGO_GENE_SYMBOL"
-    //         });
-    //     }
-    //     return undefined;
-    // });
 
     readonly studyToSampleIds = remoteData<{ [studyId: string]: { [sampleId: string]: boolean } }>(async () => {
         const sampleListsToQuery: { studyId: string, sampleListId: string }[] = [];
@@ -1340,12 +1361,17 @@ export class ResultsViewPageStore {
     });
 
     readonly genes = remoteData<Gene[]>({
+        await: ()=> [
+            this.parsedOQL
+        ],
         invoke: async () => {
-            if (this.hugoGeneSymbols && this.hugoGeneSymbols.length) {
+            //
+            const geneIds = this.parsedOQL.result!.map((gene:any)=>gene.gene);
+            if (geneIds && geneIds.length) {
                 const order = stringListToIndexSet(this.hugoGeneSymbols);
                 return _.sortBy(await client.fetchGenesUsingPOST({
                     geneIdType: "HUGO_GENE_SYMBOL",
-                    geneIds: this.hugoGeneSymbols.slice(),
+                    geneIds: geneIds,
                     projection: "SUMMARY"
                 }), (gene: Gene) => order[gene.hugoGeneSymbol]);
             } else {

@@ -45,7 +45,7 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
         return <div>
             <h4><StudyLink study={this.props.store.studies.result[0]}/></h4>
             <span>
-                {(window as any).serverVars.caseSetProperties.case_set_name}&nbsp;
+                { 'RESTORE THIS' }&nbsp;
                 (<strong>{this.props.store.samples.result.length}</strong> samples)
                  / <strong data-test='QuerySummaryGeneCount'>{this.props.store.hugoGeneSymbols.length}</strong> Genes
             </span>

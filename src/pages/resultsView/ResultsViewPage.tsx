@@ -15,7 +15,7 @@ import {stringListToSet} from "../../shared/lib/StringUtils";
 import MutualExclusivityTab from "./mutualExclusivity/MutualExclusivityTab";
 import SurvivalTab from "./survival/SurvivalTab";
 import Chart from 'chart.js';
-import {CancerStudy, Sample} from "../../shared/api/generated/CBioPortalAPI";
+import {CancerStudy, Gene, Sample} from "../../shared/api/generated/CBioPortalAPI";
 import AppConfig from 'appConfig';
 import AddThisBookmark from 'shared/components/addThis/AddThisBookmark';
 import getOverlappingStudies from "../../shared/lib/getOverlappingStudies";
@@ -35,6 +35,7 @@ import {QuerySession} from "../../shared/lib/QuerySession";
 import ResultsViewOncoprint from "shared/components/oncoprint/ResultsViewOncoprint";
 import QuerySummary from "./querySummary/QuerySummary";
 import {QueryStore} from "../../shared/components/query/QueryStore";
+import ExpressionWrapper from "./expression/ExpressionWrapper";
 
 
 const win = (window as any);
@@ -102,6 +103,29 @@ type OncoprintTabInitProps = {
     divId: string;
 };
 
+
+class OQLEditor extends React.Component<{oqlQuery:string, onChange:(newOQL:string)=>void},{}> {
+
+    public oqlInput: HTMLInputElement;
+
+
+    render(){
+
+        return (
+            <div>
+                <form className="form-inline" style={{marginBottom:0}} onSubmit={(e)=>{  e.preventDefault();this.props.onChange(this.oqlInput.value)  }} >
+                    <div className="form-group form-group-sm" style={{marginRight:10}}>
+                        <input type="text" defaultValue={this.props.oqlQuery} ref={(el:HTMLInputElement)=>this.oqlInput=el} className="form-control" />
+                    </div>
+                    <button type="submit" className="btn btn-default btn-sm">Go</button>
+                </form>
+            </div>
+        );
+
+    }
+
+}
+
 @inject('routing')
 @inject('queryStore')
 @observer
@@ -126,6 +150,52 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
         this.mountOverlappingStudiesWarning();
 
+        this.mountOQLTextEditor();
+
+        this.mountExpressionTab();
+
+
+    }
+
+    private mountOQLTextEditor(){
+
+        const target = $('<div class="cbioportal-frontend"></div>').insertBefore("#tabs");
+
+        ReactDOM.render(
+            <Observer>
+                {
+                    ()=> {
+                       return <OQLEditor
+                           oqlQuery={this.resultsViewPageStore.oqlQuery}
+                           onChange={(oql:string)=>this.resultsViewPageStore.setOQL(oql)}
+                       />
+                    }
+                }
+            </Observer>
+            ,
+            target[0]
+        );
+
+    }
+
+    private mountExpressionTab(){
+        const target = $('<div class="cbioportal-frontend"></div>').insertBefore("#tabs");
+
+        ReactDOM.render(
+            (<Observer>
+            {
+                ()=> {
+                    if (this.resultsViewPageStore.studies.isComplete && this.resultsViewPageStore.genes.isComplete) {
+                        return <ExpressionWrapper genes={this.resultsViewPageStore.genes.result.map((gene:Gene)=>gene.hugoGeneSymbol)} studyIds={this.resultsViewPageStore.studyIds.result!}></ExpressionWrapper>
+                    } else {
+                        return <span>Loading Expression</span>;
+                    }
+                }
+                }
+            </Observer>)
+            ,
+            target[0]
+        );
     }
 
     private mountOverlappingStudiesWarning(){

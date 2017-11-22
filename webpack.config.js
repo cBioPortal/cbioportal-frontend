@@ -63,11 +63,11 @@ loader:'sass-resources-loader',
 
 var config = {
 
-    'entry': [
+    entry: [
         `babel-polyfill`,
         `${path.join(src, 'appBootstrapper.jsx')}`
     ],
-    'output': {
+    output: {
         path: path.resolve(__dirname, 'dist'),
         filename: 'reactapp/[name].app.js',
         chunkFilename: 'reactapp/[name].[chunkhash].chunk.js',
@@ -75,9 +75,12 @@ var config = {
        // hash: false,
         publicPath: '/',
     },
+    node: {
+        fs: "empty"
+    },
 
-    'resolve': {
-        'extensions': [
+    resolve: {
+        extensions: [
             '.js',
             '.jsx',
             '.json',
@@ -290,7 +293,8 @@ config.plugins = [
     }),
     new webpack.ProvidePlugin({
         $: "jquery",
-        jQuery: "jquery"
+        jQuery: "jquery",
+        Plotly: "plotly.js"
     })
 ].concat(config.plugins);
 // END ENV variables

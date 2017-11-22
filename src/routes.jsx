@@ -16,6 +16,7 @@ import { restoreRouteAfterRedirect } from './shared/lib/redirectHelpers';
 // see article http://henleyedition.com/implicit-code-splitting-with-react-router-and-webpack/
 import PatientViewPage from 'bundle-loader?lazy!babel-loader!./pages/patientView/PatientViewPage';
 import ResultsViewPage from 'bundle-loader?lazy!babel-loader!./pages/resultsView/ResultsViewPage';
+import NewResultsViewPage from 'bundle-loader?lazy!babel-loader!./pages/resultsView/NewResultsViewPage';
 import HomePage from 'bundle-loader?lazy!babel-loader!./pages/home/HomePage';
 import TestimonialsPage from 'pages/staticPages/testimonialsPage/TestimonialsPage';
 import DatasetPage from 'bundle-loader?lazy!babel-loader!./pages/datasetView/DatasetPage';
@@ -56,6 +57,7 @@ export const makeRoutes = (routing) => {
         <Route path="/testimonials" component={TestimonialsPage}/>
         <Route path="/blank" component={getBlankPage}/>
         <Route path="/results" getComponent={lazyLoadComponent(ResultsViewPage)} />
+        <Route path="/newresult" getComponent={lazyLoadComponent(NewResultsViewPage)} />
         <IndexRedirect to={defaultRoute}/>
     </Route>)
 };
