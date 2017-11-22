@@ -162,9 +162,31 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}>
 			styles.Study,
 			this.logic.isHighlighted(study) && styles.highlighted,
 		);
+
+		const isOverlap = study.studyId in this.store.getOverlappingStudiesMap;
+		const classes = classNames({ [styles.StudyName]:true, 'overlappingStudy':isOverlap  });
+        const overlapWarning = isOverlap ?
+            <DefaultTooltip
+                mouseEnterDelay={0}
+                placement="top"
+                overlay={<div>This study may share samples with another selected study.</div>}
+            >
+                <i className="fa fa-exclamation-triangle"></i>
+            </DefaultTooltip>
+            : null;
+
 		return (
 			<li key={arrayIndex} className={liClassName} data-test='StudySelect'>
-				{this.renderStudyName(study)}
+
+                <CancerTreeCheckbox view={this.view} node={study}>
+                    <span className={classes}>
+                        {study.name}
+                        {overlapWarning}
+                    </span>
+
+                </CancerTreeCheckbox>
+
+
 				<div className={styles.StudyMeta}>
 					{this.renderSamples(study)}
 					{this.renderStudyLinks(study)}
@@ -173,16 +195,16 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}>
 		);
 	}
 
-	renderStudyName = (study:CancerStudy) =>
-	{
-		return (
-			<CancerTreeCheckbox view={this.view} node={study}>
-				<span className={styles.StudyName}>
-					{study.name}
-				</span>
-			</CancerTreeCheckbox>
-		);
-	}
+	// renderStudyName = (study:CancerStudy, afterName?:any) =>
+	// {
+	// 	return (
+	// 		<CancerTreeCheckbox view={this.view} node={study}>
+	// 			<span className={styles.StudyName}>
+	// 				{study.name} {afterName || null}
+	// 			</span>
+	// 		</CancerTreeCheckbox>
+	// 	);
+	// }
 
 	renderSamples = (study:CancerStudy) =>
 	{
@@ -273,7 +295,7 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}>
 						placement="top"
 						overlay={
 							<div className={styles.tooltip}
-							>View study details</div>
+							>View study summary</div>
 						}
 						children={
 							<span onClick={()=>openStudySummaryFormSubmit(study.studyId)}
