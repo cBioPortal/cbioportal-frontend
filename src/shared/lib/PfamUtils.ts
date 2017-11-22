@@ -1,6 +1,6 @@
-import {PfamDomain} from "shared/api/generated/GenomeNexusAPI";
+import {PfamDomainRange} from "shared/api/generated/GenomeNexusAPI";
 
-export function generatePfamDomainColorMap(pfamDomains: PfamDomain[]): {[pfamAccession:string]: string}
+export function generatePfamDomainColorMap(pfamDomains: PfamDomainRange[]): {[pfamAccession:string]: string}
 {
     const colors: string[] = [
         "#2dcf00", "#ff5353", "#5b5bff", "#ebd61d", "#ba21e0",
@@ -15,9 +15,9 @@ export function generatePfamDomainColorMap(pfamDomains: PfamDomain[]): {[pfamAcc
     // sort domains by start position,
     // then assign a different color for each unique domain id.
     pfamDomains.sort(
-        (a: PfamDomain, b: PfamDomain): number =>
+        (a: PfamDomainRange, b: PfamDomainRange): number =>
             a.pfamDomainStart - b.pfamDomainStart
-    ).forEach((domain:PfamDomain) => {
+    ).forEach((domain:PfamDomainRange) => {
         if (map[domain.pfamDomainId] === undefined)
         {
             map[domain.pfamDomainId] = colors[colorIdx % colors.length];

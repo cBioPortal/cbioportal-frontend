@@ -31,6 +31,7 @@ import {
 } from "./QueryStoreUtils";
 import onMobxPromise from "shared/lib/onMobxPromise";
 import VirtualCohorts, {LocalStorageVirtualCohort} from "../../lib/VirtualCohorts";
+import getOverlappingStudies from "../../lib/getOverlappingStudies";
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -152,12 +153,12 @@ export class QueryStore
 
 	@computed get virtualCohorts():VirtualCohort[] {
 		const ret:VirtualCohort[] = [];
-		if (this.temporaryVirtualCohort.result) {
-			ret.push(this.temporaryVirtualCohort.result);
-		}
-		for (let i=0; i<this.savedVirtualCohorts.length; i++) {
-			ret.push(this.savedVirtualCohorts[i]);
-		}
+		// if (this.temporaryVirtualCohort.result) {
+		// 	ret.push(this.temporaryVirtualCohort.result);
+		// }
+		// for (let i=0; i<this.savedVirtualCohorts.length; i++) {
+		// 	ret.push(this.savedVirtualCohorts[i]);
+		// }
 		return ret;
 	}
 
@@ -759,6 +760,14 @@ export class QueryStore
 		return this.isSingleStudySelected(false);
 	}
 
+	@computed public get getOverlappingStudiesMap() {
+		const overlappingStudyGroups = getOverlappingStudies(this.selectedStudies);
+		return _.chain(overlappingStudyGroups)
+			.flatten()
+			.keyBy((study:CancerStudy)=>study.studyId)
+			.value();
+	}
+
 	@computed public get isVirtualCohortSelected() {
 		let ret = false;
 		const virtualCohorts = this.virtualCohortsSet;
@@ -1008,7 +1017,7 @@ export class QueryStore
 			if (this.asyncCustomCaseSet.error)
 				return "Error in custom case set.";
 		}
-		else if (haveExpInQuery)
+		else if (haveExpInQuery && this.selectedStudyIds.length > 1)
 		{
 			return "Expression filtering in the gene list is not supported when doing cross cancer queries.";
 		}
@@ -1062,7 +1071,17 @@ export class QueryStore
 				// legacy compatibility
 				this.selectedSampleListId = CUSTOM_CASE_LIST_ID;
 			}
-			this.caseIds = querySession.getSampleIds().join("\n");
+
+			let studySamplesMap:Object = (<any>querySession).getStudySampleMap();
+			let studySamplesList:string[] = [];
+
+			Object.keys(studySamplesMap).map(studyId => {
+				let sampleIds:Array<string> = (<any>studySamplesMap)[studyId];
+				let _studySamplesList:string[] = sampleIds.map((sampleId) => { return studyId + ":" + sampleId});
+				studySamplesList = studySamplesList.concat(_studySamplesList);
+			})
+			
+			this.caseIds = studySamplesList.join("\n");
 			this.caseIdsMode = 'sample'; // url always contains sample IDs
 			this.geneQuery = normalizeQuery(querySession.getOQLQuery());
 			this.initiallySelected.profileIds = true;
