@@ -38,6 +38,10 @@ jobs:
 
       - run: npm install
 
+      - run:
+          name: "Make sure lock file is still the same"
+          command: "git diff --quiet package-lock.json"
+
       - save_cache:
           paths:
             - node_modules

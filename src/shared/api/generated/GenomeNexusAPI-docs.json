@@ -15,8 +15,8 @@
   "basePath": "/",
   "tags": [
     {
-      "name": "cross-reference-controller",
-      "description": "Cross Reference Controller"
+      "name": "pdb-controller",
+      "description": "PDB Controller"
     },
     {
       "name": "annotation-controller",
@@ -25,6 +25,10 @@
     {
       "name": "pfam-controller",
       "description": "PFAM Controller"
+    },
+    {
+      "name": "ensembl-controller",
+      "description": "Ensembl Controller"
     }
   ],
   "schemes": [
@@ -142,39 +146,13 @@
         }
       }
     },
-    "/pfam/domain": {
-      "get": {
-        "tags": [
-          "pfam-controller"
-        ],
-        "summary": "Retrieves all PFAM domains",
-        "operationId": "fetchAllPfamDomainsGET",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/PfamDomain"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/pfam/domain/gene": {
+    "/ensembl/canonical-transcript/hgnc": {
       "post": {
         "tags": [
-          "pfam-controller"
+          "ensembl-controller"
         ],
-        "summary": "Retrieves PFAM domains by Ensembl gene IDs",
-        "operationId": "fetchPfamDomainsByGeneIdsPOST",
+        "summary": "Retrieves Ensembl canonical transcripts by Hugo Symbols",
+        "operationId": "fetchCanonicalEnsemblTranscriptsByHugoSymbolsPOST",
         "consumes": [
           "application/json"
         ],
@@ -184,8 +162,8 @@
         "parameters": [
           {
             "in": "body",
-            "name": "geneIds",
-            "description": "List of Ensembl gene IDs. For example [\"ENSG00000136999\",\"ENSG00000272398\",\"ENSG00000198695\"]",
+            "name": "hugoSymbols",
+            "description": "List of Hugo Symbols. For example [\"TP53\",\"PIK3CA\",\"BRCA1\"]",
             "required": true,
             "schema": {
               "type": "array",
@@ -193,6 +171,14 @@
                 "type": "string"
               }
             }
+          },
+          {
+            "name": "isoformOverrideSource",
+            "in": "query",
+            "description": "Isoform override source. For example uniprot",
+            "required": false,
+            "type": "string",
+            "default": "uniprot"
           }
         ],
         "responses": {
@@ -201,20 +187,60 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/PfamDomain"
+                "$ref": "#/definitions/EnsemblTranscript"
               }
             }
           }
         }
       }
     },
-    "/pfam/domain/gene/{geneId}": {
+    "/ensembl/canonical-transcript/hgnc/{hugoSymbol}": {
       "get": {
         "tags": [
-          "pfam-controller"
+          "ensembl-controller"
         ],
-        "summary": "Retrieves PFAM domains by an Ensembl gene ID",
-        "operationId": "fetchPfamDomainsByGeneIdGET",
+        "summary": "Retrieves Ensembl canonical transcript by Hugo Symbol",
+        "operationId": "fetchCanonicalEnsemblTranscriptByHugoSymbolGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "hugoSymbol",
+            "in": "path",
+            "description": "A Hugo Symbol. For example TP53",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "isoformOverrideSource",
+            "in": "query",
+            "description": "Isoform override source. For example uniprot",
+            "required": false,
+            "type": "string",
+            "default": "uniprot"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/EnsemblTranscript"
+            }
+          }
+        }
+      }
+    },
+    "/ensembl/transcript": {
+      "get": {
+        "tags": [
+          "ensembl-controller"
+        ],
+        "summary": "Retrieves Ensembl Transcripts by protein ID, and gene ID. Retrieves all transcripts in case no query parameter provided",
+        "operationId": "fetchEnsemblTranscriptsGET",
         "consumes": [
           "application/json"
         ],
@@ -224,159 +250,16 @@
         "parameters": [
           {
             "name": "geneId",
-            "in": "path",
+            "in": "query",
             "description": "An Ensembl gene ID. For example ENSG00000136999",
-            "required": true,
+            "required": false,
             "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/PfamDomain"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/pfam/domain/id": {
-      "post": {
-        "tags": [
-          "pfam-controller"
-        ],
-        "summary": "Retrieves PFAM domains by PFAM domain IDs",
-        "operationId": "fetchPfamDomainsByPfamIdsPOST",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "in": "body",
-            "name": "pfamDomainIds",
-            "description": "List of PFAM domain IDs. For example [\"PF02827\",\"PF00093\",\"PF15276\"]",
-            "required": true,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/PfamDomain"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/pfam/domain/id/{pfamDomainId}": {
-      "get": {
-        "tags": [
-          "pfam-controller"
-        ],
-        "summary": "Retrieves PFAM domains by a PFAM domain ID",
-        "operationId": "fetchPfamDomainsByPfamIdGET",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "pfamDomainId",
-            "in": "path",
-            "description": "A PFAM domain ID. For example PF02827",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/PfamDomain"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/pfam/domain/protein": {
-      "post": {
-        "tags": [
-          "pfam-controller"
-        ],
-        "summary": "Retrieves PFAM domains by Ensembl protein IDs",
-        "operationId": "fetchPfamDomainsByProteinIdsPOST",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "in": "body",
-            "name": "proteinIds",
-            "description": "List of Ensembl protein IDs. For example [\"ENSP00000439985\",\"ENSP00000478460\",\"ENSP00000346196\"]",
-            "required": true,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/PfamDomain"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/pfam/domain/protein/{proteinId}": {
-      "get": {
-        "tags": [
-          "pfam-controller"
-        ],
-        "summary": "Retrieves PFAM domains by an Ensembl protein ID",
-        "operationId": "fetchPfamDomainsByProteinIdGET",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
+          },
           {
             "name": "proteinId",
-            "in": "path",
+            "in": "query",
             "description": "An Ensembl protein ID. For example ENSP00000439985",
-            "required": true,
+            "required": false,
             "type": "string"
           }
         ],
@@ -386,20 +269,18 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/PfamDomain"
+                "$ref": "#/definitions/EnsemblTranscript"
               }
             }
           }
         }
-      }
-    },
-    "/pfam/domain/transcript": {
+      },
       "post": {
         "tags": [
-          "pfam-controller"
+          "ensembl-controller"
         ],
-        "summary": "Retrieves PFAM domains by Ensembl transcript IDs",
-        "operationId": "fetchPfamDomainsByTranscriptIdsPOST",
+        "summary": "Retrieves Ensembl Transcripts by Ensembl transcript IDs, protein IDs, or gene IDs",
+        "operationId": "fetchEnsemblTranscriptsByEnsemblFilterPOST",
         "consumes": [
           "application/json"
         ],
@@ -409,14 +290,11 @@
         "parameters": [
           {
             "in": "body",
-            "name": "transcriptIds",
-            "description": "List of Ensembl transcript IDs. For example [\"ENST00000361390\",\"ENST00000361453\",\"ENST00000361624\"]",
+            "name": "ensemblFilter",
+            "description": "List of Ensembl transcript IDs. For example [\"ENST00000361390\", \"ENST00000361453\", \"ENST00000361624\"]<br>OR<br>List of Ensembl protein IDs. For example [\"ENSP00000439985\", \"ENSP00000478460\", \"ENSP00000346196\"]<br>OR<br>List of Ensembl gene IDs. For example [\"ENSG00000136999\", \"ENSG00000272398\", \"ENSG00000198695\"]",
             "required": true,
             "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
+              "$ref": "#/definitions/EnsemblFilter"
             }
           }
         ],
@@ -426,20 +304,20 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/PfamDomain"
+                "$ref": "#/definitions/EnsemblTranscript"
               }
             }
           }
         }
       }
     },
-    "/pfam/domain/transcript/{transcriptId}": {
+    "/ensembl/transcript/{transcriptId}": {
       "get": {
         "tags": [
-          "pfam-controller"
+          "ensembl-controller"
         ],
-        "summary": "Retrieves PFAM domains by an Ensembl transcript ID",
-        "operationId": "fetchPfamDomainsByTranscriptIdGET",
+        "summary": "Retrieves the transcript by an Ensembl transcript ID",
+        "operationId": "fetchEnsemblTranscriptByTranscriptIdGET",
         "consumes": [
           "application/json"
         ],
@@ -459,22 +337,19 @@
           "200": {
             "description": "OK",
             "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/PfamDomain"
-              }
+              "$ref": "#/definitions/EnsemblTranscript"
             }
           }
         }
       }
     },
-    "/xrefs/{accession}": {
+    "/ensembl/xrefs": {
       "get": {
         "tags": [
-          "cross-reference-controller"
+          "ensembl-controller"
         ],
-        "summary": "Perform lookups of Ensembl identifiers and retrieve their external referenes in other databases",
-        "operationId": "getGeneXrefs",
+        "summary": "Perform lookups of Ensembl identifiers and retrieve their external references in other databases",
+        "operationId": "fetchGeneXrefsGET",
         "consumes": [
           "application/json"
         ],
@@ -484,7 +359,7 @@
         "parameters": [
           {
             "name": "accession",
-            "in": "path",
+            "in": "query",
             "description": "Ensembl gene accession. For example ENSG00000169083",
             "required": true,
             "type": "string"
@@ -502,9 +377,237 @@
           }
         }
       }
+    },
+    "/pdb/header": {
+      "post": {
+        "tags": [
+          "pdb-controller"
+        ],
+        "summary": "Retrieves PDB header info by a PDB id",
+        "operationId": "fetchPdbHeaderPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "pdbIds",
+            "description": "List of pdb ids, for example [\"1a37\",\"1a4o\"]",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PdbHeader"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pdb/header/{pdbId}": {
+      "get": {
+        "tags": [
+          "pdb-controller"
+        ],
+        "summary": "Retrieves PDB header info by a PDB id",
+        "operationId": "fetchPdbHeaderGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "pdbId",
+            "in": "path",
+            "description": "PDB id, for example 1a37",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/PdbHeader"
+            }
+          }
+        }
+      }
+    },
+    "/pfam/domain": {
+      "get": {
+        "tags": [
+          "pfam-controller"
+        ],
+        "summary": "Retrieves all PFAM domains",
+        "operationId": "fetchPfamDomainsGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PfamDomain"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "pfam-controller"
+        ],
+        "summary": "Retrieves PFAM domains by PFAM domain accession IDs",
+        "operationId": "fetchPfamDomainsByPfamAccessionPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "pfamAccessions",
+            "description": "List of PFAM domain accession IDs. For example [\"PF02827\",\"PF00093\",\"PF15276\"]",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PfamDomain"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pfam/domain/{pfamAccession}": {
+      "get": {
+        "tags": [
+          "pfam-controller"
+        ],
+        "summary": "Retrieves a PFAM domain by a PFAM domain ID",
+        "operationId": "fetchPfamDomainsByAccessionGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "pfamAccession",
+            "in": "path",
+            "description": "A PFAM domain accession ID. For example PF02827",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/PfamDomain"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
+    "EnsemblFilter": {
+      "type": "object",
+      "properties": {
+        "geneIds": {
+          "type": "array",
+          "description": "List of Ensembl gene IDs. For example [\"ENSG00000136999\", \"ENSG00000272398\", \"ENSG00000198695\"]",
+          "items": {
+            "type": "string"
+          }
+        },
+        "proteinIds": {
+          "type": "array",
+          "description": "List of Ensembl protein IDs. For example [\"ENSP00000439985\", \"ENSP00000478460\", \"ENSP00000346196\"]",
+          "items": {
+            "type": "string"
+          }
+        },
+        "transcriptIds": {
+          "type": "array",
+          "description": "List of Ensembl transcript IDs. For example [\"ENST00000361390\", \"ENST00000361453\", \"ENST00000361624\"]",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "EnsemblTranscript": {
+      "type": "object",
+      "required": [
+        "geneId",
+        "proteinId",
+        "transcriptId"
+      ],
+      "properties": {
+        "transcriptId": {
+          "type": "string",
+          "description": "Ensembl transcript id"
+        },
+        "geneId": {
+          "type": "string",
+          "description": "Ensembl gene id"
+        },
+        "proteinId": {
+          "type": "string",
+          "description": "Ensembl protein id"
+        },
+        "proteinLength": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Length of protein"
+        },
+        "pfamDomains": {
+          "type": "array",
+          "description": "Pfam domains",
+          "items": {
+            "$ref": "#/definitions/PfamDomainRange"
+          }
+        }
+      }
+    },
     "GeneXref": {
       "type": "object",
       "required": [
@@ -557,50 +660,71 @@
         }
       }
     },
+    "PdbHeader": {
+      "type": "object",
+      "required": [
+        "pdbId",
+        "title"
+      ],
+      "properties": {
+        "compound": {
+          "type": "object"
+        },
+        "pdbId": {
+          "type": "string",
+          "description": "PDB id"
+        },
+        "source": {
+          "type": "object"
+        },
+        "title": {
+          "type": "string",
+          "description": "PDB description"
+        }
+      }
+    },
     "PfamDomain": {
       "type": "object",
       "required": [
-        "geneId",
-        "proteinId",
-        "transcriptId"
+        "name",
+        "pfamAccession"
       ],
       "properties": {
-        "geneId": {
-          "type": "string",
-          "description": "Ensembl gene id"
-        },
-        "geneSymbol": {
-          "type": "string",
-          "description": "Hugo gene symbol"
-        },
-        "pfamDomainDescription": {
+        "description": {
           "type": "string",
           "description": "PFAM domain description"
         },
-        "pfamDomainEnd": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "pfamDomainId": {
-          "type": "string",
-          "description": "PFAM domain id"
-        },
-        "pfamDomainName": {
+        "name": {
           "type": "string",
           "description": "PFAM domain name"
+        },
+        "pfamAccession": {
+          "type": "string",
+          "description": "PFAM domain accession"
+        }
+      }
+    },
+    "PfamDomainRange": {
+      "type": "object",
+      "required": [
+        "pfamDomainEnd",
+        "pfamDomainId",
+        "pfamDomainStart"
+      ],
+      "properties": {
+        "pfamDomainId": {
+          "type": "string",
+          "description": "Pfam domain id"
         },
         "pfamDomainStart": {
           "type": "integer",
           "format": "int32",
-          "description": "PFAM domain start"
+          "description": "Pfam domain start amino acid"
         },
-        "proteinId": {
-          "type": "string",
-          "description": "Ensembl translation id"
-        },
-        "transcriptId": {
-          "type": "string",
-          "description": "Ensembl transcript id"
+        "pfamDomainEnd": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Pfam domain end amino acid"
         }
       }
     },
