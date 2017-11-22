@@ -166,10 +166,16 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 					{!!(!this.store.cancerTypes.isPending && !this.store.cancerStudies.isPending) && (
 						<Observer>
 							{() => {
+
+								const studyLimitReached = (this.store.selectedStudyIds.length > 20);
+								const tooltipMessage = studyLimitReached ?
+									<span>Too many studies selected for study summary (limit: 20)</span> :
+									<span>Open summary of selected studies in a new window.</span>
+
 								return (
 									<DefaultTooltip
 										placement="top"
-										overlay={<span>Open summary of selected studies in a new window.</span>}
+										overlay={tooltipMessage}
 										disabled={!this.store.summaryEnabled}
 										mouseEnterDelay={0}
 									>
@@ -182,10 +188,10 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 													}}
 											onClick={this.handlers.onSummaryClick}
 										>
-											<Button bsSize="xs" bsStyle="primary"
+											<Button bsSize="xs" disabled={studyLimitReached} bsStyle="primary"
 												className={styles.summaryButtonClass}
 											>
-												<i className='ci ci-pie-chart'></i> Summary
+												<i className='ci ci-pie-chart'></i> View summary
 											</Button>
 										</div>
 									</DefaultTooltip>
