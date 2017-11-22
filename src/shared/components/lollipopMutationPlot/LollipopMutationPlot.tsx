@@ -1,7 +1,7 @@
 import * as React from "react";
 import LollipopPlot from "./LollipopPlot";
 import {Mutation} from "../../api/generated/CBioPortalAPI";
-import {PfamDomain} from "shared/api/generated/GenomeNexusAPI";
+import {PfamDomain, PfamDomainRange} from "shared/api/generated/GenomeNexusAPI";
 import {LollipopSpec, DomainSpec, SequenceSpec} from "./LollipopPlotNoTooltip";
 import {remoteData} from "../../api/remoteData";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
@@ -46,10 +46,10 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
 
     readonly mutationAlignerLinks = remoteData<{[pfamAccession:string]:string}>({
         await: ()=>[
-            this.props.store.pfamDomainData
+            this.props.store.canonicalTranscript
         ],
         invoke: ()=>(new Promise((resolve,reject)=>{
-            const regions = this.props.store.pfamDomainData.result;
+            const regions = this.props.store.canonicalTranscript.result? this.props.store.canonicalTranscript.result.pfamDomains : undefined;
             const responsePromises:Promise<Response>[] = [];
             for (let i=0; regions && i<regions.length; i++) {
                 // have to do a for loop because seamlessImmutable will make result of .map immutable,
@@ -180,8 +180,8 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
         return ret;
     }
 
-    private domainTooltip(domain:PfamDomain):JSX.Element {
-        const pfamAccession = domain.pfamDomainId;
+    private domainTooltip(range:PfamDomainRange, domain:PfamDomain):JSX.Element {
+        const pfamAccession = domain.pfamAccession;
         const mutationAlignerLink = this.mutationAlignerLinks.result[pfamAccession];
         const mutationAlignerA = mutationAlignerLink ?
             (<a href={mutationAlignerLink} target="_blank">Mutation Aligner</a>) : null;
@@ -189,7 +189,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
         return (
             <div style={{maxWidth: 200}}>
                 <div>
-                    {domain.pfamDomainName}: {domain.pfamDomainDescription} ({domain.pfamDomainStart} - {domain.pfamDomainEnd})
+                    {domain.name}: {domain.description} ({range.pfamDomainStart} - {range.pfamDomainEnd})
                 </div>
                 <div>
                     <a
@@ -208,17 +208,21 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
     @computed private get domains():DomainSpec[] {
         if (!this.props.store.pfamDomainData.isComplete ||
             !this.props.store.pfamDomainData.result ||
-            this.props.store.pfamDomainData.result.length === 0)
+            this.props.store.pfamDomainData.result.length === 0 ||
+            !this.props.store.canonicalTranscript.isComplete ||
+            !this.props.store.canonicalTranscript.result ||
+            this.props.store.canonicalTranscript.result.pfamDomains.length === 0)
         {
             return [];
         } else {
-            return this.props.store.pfamDomainData.result.map((domain:PfamDomain)=>{
+            return this.props.store.canonicalTranscript.result.pfamDomains.map((range:PfamDomainRange)=>{
+                const domain = this.domainMap[range.pfamDomainId];
                 return {
-                    startCodon: domain.pfamDomainStart,
-                    endCodon: domain.pfamDomainEnd,
-                    label: domain.pfamDomainName,
-                    color: this.domainColorMap[domain.pfamDomainId],
-                    tooltip: this.domainTooltip(domain)
+                    startCodon: range.pfamDomainStart,
+                    endCodon: range.pfamDomainEnd,
+                    label: domain.name,
+                    color: this.domainColorMap[range.pfamDomainId],
+                    tooltip: this.domainTooltip(range, domain)
                 };
             });
         }
@@ -226,8 +230,23 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
 
     @computed private get domainColorMap(): {[pfamAccession:string]: string}
     {
-        if (!this.props.store.pfamDomainData.isPending && this.props.store.pfamDomainData.result) {
-            return generatePfamDomainColorMap(this.props.store.pfamDomainData.result);
+        if (!this.props.store.canonicalTranscript.isPending && 
+            this.props.store.canonicalTranscript.result && 
+            this.props.store.canonicalTranscript.result.pfamDomains && 
+            this.props.store.canonicalTranscript.result.pfamDomains.length > 0) {
+            return generatePfamDomainColorMap(this.props.store.canonicalTranscript.result.pfamDomains);
+        }
+        else {
+            return {};
+        }
+    }
+
+    @computed private get domainMap(): {[pfamAccession:string]: PfamDomain}
+    {
+        if (!this.props.store.pfamDomainData.isPending && 
+            this.props.store.pfamDomainData.result && 
+            this.props.store.pfamDomainData.result.length > 0) {
+            return _.keyBy(this.props.store.pfamDomainData.result, 'pfamAccession');
         }
         else {
             return {};

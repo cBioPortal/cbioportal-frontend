@@ -15,6 +15,10 @@
   "basePath": "/",
   "tags": [
     {
+      "name": "cross-reference-controller",
+      "description": "Cross Reference Controller"
+    },
+    {
       "name": "cancer-hotspots-controller",
       "description": "Cancer Hotspots Controller"
     },
@@ -25,10 +29,6 @@
     {
       "name": "isoform-override-controller",
       "description": "Isoform Override Controller"
-    },
-    {
-      "name": "ensembl-controller",
-      "description": "Ensembl Controller"
     }
   ],
   "schemes": [
@@ -105,345 +105,6 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/Hotspot"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/ensembl/transcript": {
-      "get": {
-        "tags": [
-          "ensembl-controller"
-        ],
-        "summary": "Retrieves all Ensembl Transcripts",
-        "operationId": "fetchAllEnsemblTranscriptsGET",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/EnsemblTranscript"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/ensembl/transcript/gene": {
-      "post": {
-        "tags": [
-          "ensembl-controller"
-        ],
-        "summary": "Retrieves Ensembl transcripts by Ensembl gene IDs",
-        "operationId": "fetchEnsemblTranscriptsByGeneIdsPOST",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "in": "body",
-            "name": "geneIds",
-            "description": "List of Ensembl gene IDs. For example [\"ENSG00000136999\",\"ENSG00000272398\",\"ENSG00000198695\"]",
-            "required": true,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/EnsemblTranscript"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/ensembl/transcript/gene/{geneId}": {
-      "get": {
-        "tags": [
-          "ensembl-controller"
-        ],
-        "summary": "Retrieves Ensembl transcripts by an Ensembl gene ID",
-        "operationId": "fetchEnsemblTranscriptsByGeneIdGET",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "geneId",
-            "in": "path",
-            "description": "An Ensembl gene ID. For example ENSG00000136999",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/EnsemblTranscript"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/ensembl/transcript/hgnc": {
-      "post": {
-        "tags": [
-          "ensembl-controller"
-        ],
-        "summary": "Retrieves Ensembl transcripts by Hugo Symbols",
-        "operationId": "fetchEnsemblTranscriptsByHugoSymbolsPOST",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "in": "body",
-            "name": "hugoSymbols",
-            "description": "List of Hugo Symbols. For example [\"TP53\",\"PIK3CA\",\"BRCA1\"]",
-            "required": true,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          },
-          {
-            "name": "isoformOverrideSource",
-            "in": "query",
-            "description": "Isoform override source. For example uniprot",
-            "required": false,
-            "type": "string",
-            "default": "uniprot"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/EnsemblTranscript"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/ensembl/transcript/hgnc/{hugoSymbol}": {
-      "get": {
-        "tags": [
-          "ensembl-controller"
-        ],
-        "summary": "Retrieves Ensembl transcripts by an Ensembl gene ID",
-        "operationId": "fetchEnsemblTranscriptsByHugoSymbolGET",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "hugoSymbol",
-            "in": "path",
-            "description": "A Hugo Symbol. For example TP53",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "isoformOverrideSource",
-            "in": "query",
-            "description": "Isoform override source. For example uniprot",
-            "required": false,
-            "type": "string",
-            "default": "uniprot"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/EnsemblTranscript"
-            }
-          }
-        }
-      }
-    },
-    "/ensembl/transcript/id": {
-      "post": {
-        "tags": [
-          "ensembl-controller"
-        ],
-        "summary": "Retrieves Ensembl Transcripts by Ensembl transcript IDs",
-        "operationId": "fetchEnsemblTranscriptsByTranscriptIdsPOST",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "in": "body",
-            "name": "transcriptIds",
-            "description": "List of Ensembl transcript IDs. For example [\"ENST00000361390\",\"ENST00000361453\",\"ENST00000361624\"]",
-            "required": true,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/EnsemblTranscript"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/ensembl/transcript/id/{transcriptId}": {
-      "get": {
-        "tags": [
-          "ensembl-controller"
-        ],
-        "summary": "Retrieves Transcripts by an Ensembl transcript ID",
-        "operationId": "fetchEnsemblTranscriptsByTranscriptIdGET",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "transcriptId",
-            "in": "path",
-            "description": "An Ensembl transcript ID. For example ENST00000361390",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/EnsemblTranscript"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/ensembl/transcript/protein": {
-      "post": {
-        "tags": [
-          "ensembl-controller"
-        ],
-        "summary": "Retrieves Ensembl transcripts by Ensembl protein IDs",
-        "operationId": "fetchEnsemblTranscriptsByProteinIdsPOST",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "in": "body",
-            "name": "proteinIds",
-            "description": "List of Ensembl protein IDs. For example [\"ENSP00000439985\",\"ENSP00000478460\",\"ENSP00000346196\"]",
-            "required": true,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/EnsemblTranscript"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/ensembl/transcript/protein/{proteinId}": {
-      "get": {
-        "tags": [
-          "ensembl-controller"
-        ],
-        "summary": "Retrieves Ensembl transcripts by an Ensembl protein ID",
-        "operationId": "fetchEnsemblTranscriptsByProteinIdGET",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "proteinId",
-            "in": "path",
-            "description": "An Ensembl protein ID. For example ENSP00000439985",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/EnsemblTranscript"
               }
             }
           }
@@ -668,33 +329,94 @@
           }
         }
       }
+    },
+    "/xrefs/{accession}": {
+      "get": {
+        "tags": [
+          "cross-reference-controller"
+        ],
+        "summary": "Perform lookups of Ensembl identifiers and retrieve their external references in other databases",
+        "operationId": "fetchGeneXrefsGET_1",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "accession",
+            "in": "path",
+            "description": "Ensembl gene accession. For example ENSG00000169083",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GeneXref"
+              }
+            }
+          }
+        },
+        "deprecated": true
+      }
     }
   },
   "definitions": {
-    "EnsemblTranscript": {
+    "GeneXref": {
       "type": "object",
       "required": [
-        "geneId",
-        "proteinId",
-        "transcriptId"
+        "db_display_name",
+        "dbname",
+        "description",
+        "display_id",
+        "primary_id",
+        "version"
       ],
       "properties": {
-        "geneId": {
+        "db_display_name": {
           "type": "string",
-          "description": "Ensembl gene id"
+          "description": "Database display name"
         },
-        "proteinId": {
+        "dbname": {
           "type": "string",
-          "description": "Ensembl protein id"
+          "description": "Database name"
         },
-        "proteinLength": {
-          "type": "integer",
-          "format": "int32",
-          "description": "Length of protein"
-        },
-        "transcriptId": {
+        "description": {
           "type": "string",
-          "description": "Ensembl transcript id"
+          "description": "Description"
+        },
+        "display_id": {
+          "type": "string",
+          "description": "Display id"
+        },
+        "info_text": {
+          "type": "string",
+          "description": "Database info text"
+        },
+        "info_types": {
+          "type": "string",
+          "description": "Database info type"
+        },
+        "primary_id": {
+          "type": "string",
+          "description": "Primary id"
+        },
+        "synonyms": {
+          "type": "array",
+          "description": "Synonyms",
+          "items": {
+            "type": "string"
+          }
+        },
+        "version": {
+          "type": "string",
+          "description": "Version"
         }
       }
     },
