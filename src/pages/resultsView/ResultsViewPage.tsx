@@ -15,11 +15,13 @@ import {stringListToSet} from "../../shared/lib/StringUtils";
 import MutualExclusivityTab from "./mutualExclusivity/MutualExclusivityTab";
 import SurvivalTab from "./survival/SurvivalTab";
 import Chart from 'chart.js';
+import {CancerStudy, Sample} from "../../shared/api/generated/CBioPortalAPI";
 import AppConfig from 'appConfig';
 import AddThisBookmark from 'shared/components/addThis/AddThisBookmark';
 import {CancerStudy} from "../../shared/api/generated/CBioPortalAPI";
 import getOverlappingStudies from "../../shared/lib/getOverlappingStudies";
 import OverlappingStudiesWarning from "../../shared/components/overlappingStudiesWarning/OverlappingStudiesWarning";
+import CNSegments from "./cnSegments/CNSegments";
 
 (Chart as any).plugins.register({
     beforeDraw: function(chartInstance:any) {
@@ -174,6 +176,13 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     />
                 );
             });
+
+        exposeComponentRenderer('renderCNSegments',
+            ()=>{
+                return <CNSegments store={resultsViewPageStore}/>
+            }
+        );
+
         exposeComponentRenderer('renderMutationsTab',
              ()=>{
                 return <div>
