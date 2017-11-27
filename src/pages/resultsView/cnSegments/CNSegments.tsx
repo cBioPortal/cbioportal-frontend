@@ -91,6 +91,7 @@ import {observer} from "mobx-react";
 import {MSKTabs, MSKTab} from "../../../shared/components/MSKTabs/MSKTabs";
 import {Gene, Sample} from "../../../shared/api/generated/CBioPortalAPI";
 import {ResultsViewPageStore} from "../ResultsViewPageStore";
+import {observable} from "mobx";
 
 interface CNSegmentsIframeProps {
     sampleIds:string[];
@@ -149,9 +150,12 @@ class CNASegmentIframe extends React.Component<CNSegmentsIframeProps,{}>{
 @observer
 export default class CNSegments extends React.Component<{ store: ResultsViewPageStore}, {}> {
 
-    activeTabId:string;
+    @observable activeTabId:string;
 
     render(){
+
+
+
         return (<MSKTabs activeTabId={this.activeTabId} onTabClick={(id:string)=>{
             this.activeTabId = id;
         }}>

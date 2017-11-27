@@ -126,7 +126,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
     private mountCNSegmentsTab(){
 
-        const target = $('<div class="cbioportal-frontend"></div>').appendTo("body");
+        const target = $('<div class="cbioportal-frontend"></div>').insertBefore("#segment_tabs");
 
         ReactDOM.render(
             <Observer>
