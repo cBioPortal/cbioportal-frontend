@@ -128,7 +128,7 @@ var isDatumWantedByOQL = function (parsed_oql_query, datum, accessors) {
         }, false);
 };
 
-var isDatumWantedByOQLLine = function(query_line, datum, datum_gene, accessors, opt_mark_oql_regulation_direction) {
+var isDatumWantedByOQLLine = function(query_line, datum, datum_gene, accessors) {
     /*  Helper method for isDatumWantedByOQL
      *  In: - query_line, one element of a parseOQLQuery output array
      *	- datum, see isDatumWantedByOQL
@@ -146,7 +146,7 @@ var isDatumWantedByOQLLine = function(query_line, datum, datum_gene, accessors, 
     }
     return (query_line.alterations
         .map(function(alteration_cmd) {
-            return isDatumWantedByOQLAlterationCommand(alteration_cmd, datum, accessors, opt_mark_oql_regulation_direction);
+            return isDatumWantedByOQLAlterationCommand(alteration_cmd, datum, accessors);
         })
         .reduce(function(acc, next) {
             if (next === 1) {
@@ -168,7 +168,7 @@ var isDatumWantedByOQLLine = function(query_line, datum, datum_gene, accessors, 
     === 1);
 };
 
-var isDatumWantedByOQLAlterationCommand = function(alt_cmd, datum, accessors, opt_mark_oql_regulation_direction) {
+var isDatumWantedByOQLAlterationCommand = function(alt_cmd, datum, accessors) {
     /*  Helper method for isDatumWantedByOQLLine
      *  In: - alt_cmd, a parsed oql alteration
      *	- datum, see isDatumWantedByOQL
@@ -182,7 +182,7 @@ var isDatumWantedByOQLAlterationCommand = function(alt_cmd, datum, accessors, op
     } else if (alt_cmd.alteration_type === 'mut') {
         return isDatumWantedByOQLMUTCommand(alt_cmd, datum, accessors);
     } else if (alt_cmd.alteration_type === 'exp' || alt_cmd.alteration_type === 'prot') {
-        return isDatumWantedByOQLEXPOrPROTCommand(alt_cmd, datum, accessors, opt_mark_oql_regulation_direction);
+        return isDatumWantedByOQLEXPOrPROTCommand(alt_cmd, datum, accessors);
     } else if (alt_cmd.alteration_type === 'fusion') {
         return isDatumWantedByFUSIONCommand(alt_cmd, datum, accessors);
     }
@@ -296,7 +296,7 @@ var isDatumWantedByOQLMUTCommand = function(alt_cmd, datum, accessors) {
     }
 
 };
-var isDatumWantedByOQLEXPOrPROTCommand = function(alt_cmd, datum, accessors, opt_mark_oql_regulation_direction) {
+var isDatumWantedByOQLEXPOrPROTCommand = function(alt_cmd, datum, accessors) {
     /*  Helper method for isDatumWantedByOQLAlterationCommand
      *  In/Out: See isDatumWantedByOQLAlterationCommand
      */
@@ -322,16 +322,13 @@ var isDatumWantedByOQLEXPOrPROTCommand = function(alt_cmd, datum, accessors, opt
 
         datum.alterationType = (match) ? ((alt_cmd.alteration_type === 'prot') ? 'PROTEIN_LEVEL' :'MRNA_EXPRESSION') : undefined;
 
-        datum.alterationSubType = direction > 0 ? 'up' : 'down';
+        datum.alterationSubType = (direction && direction > 0) ? 'up' : 'down';
 
-        if (opt_mark_oql_regulation_direction) {
-            datum.oql_regulation_direction = (typeof datum.oql_regulation_direction === "undefined" ? direction : datum.oql_regulation_direction);
-        }
         return match;
     }
 };
 
-var filterData = function (oql_query, data, _accessors, opt_default_oql, opt_by_oql_line, opt_mark_oql_regulation_direction) {
+var filterData = function (oql_query, data, _accessors, opt_default_oql, opt_by_oql_line) {
     /* In:	- oql_query, a string
      *	- data, a list of data
      *	- accessors, accessors as defined above,
@@ -357,6 +354,10 @@ var filterData = function (oql_query, data, _accessors, opt_default_oql, opt_by_
     //     accessors[required_accessors[i]] = _accessors[required_accessors[i]] || null_fn;
     // }
 
+    for (var i=0; i<data.length; i++) {
+        data[i].molecularProfileAlterationType = accessors.molecularAlterationType(data[i].molecularProfileId);
+    }
+
     opt_default_oql = opt_default_oql || "";
     var parsed_query = parseOQLQuery(oql_query, opt_default_oql)
         .map(function (q_line) {
@@ -371,7 +372,7 @@ var filterData = function (oql_query, data, _accessors, opt_default_oql, opt_by_
                 'parsed_oql_line': query_line,
                 'oql_line': unparseOQLQueryLine(query_line),
                 'data': data.filter(function (datum) {
-                    return isDatumWantedByOQLLine(query_line, datum, accessors.gene(datum).toUpperCase(), accessors, opt_mark_oql_regulation_direction);
+                    return isDatumWantedByOQLLine(query_line, datum, accessors.gene(datum).toUpperCase(), accessors);
                 })
             };
         });
@@ -384,7 +385,7 @@ var filterData = function (oql_query, data, _accessors, opt_default_oql, opt_by_
 
 
 
-export function filterCBioPortalWebServiceData(oql_query, data, accessors, opt_default_oql, opt_by_oql_line, opt_mark_oql_regulation_direction) {
+export function filterCBioPortalWebServiceData(oql_query, data, accessors, opt_default_oql) {
     /* Wrapper method for filterData that has the cBioPortal default accessor functions
      * Note that for use, the input data must have the field 'genetic_alteration_type,' which
      * takes one of the following values:
@@ -393,15 +394,21 @@ export function filterCBioPortalWebServiceData(oql_query, data, accessors, opt_d
      *	- MRNA_EXPRESSION
      *	- PROTEIN_LEVEL
      */
-    var cna_profile_data_to_string = {
-        "-2": "homdel",
-        "-1": "hetloss",
-        "0": null,
-        "1": "gain",
-        "2": "amp"
-    };
 
-    return filterData(oql_query, data, accessors, opt_default_oql, opt_by_oql_line, opt_mark_oql_regulation_direction);
+    return filterData(oql_query, data, accessors, opt_default_oql, false);
+}
+
+export function filterCBioPortalWebServiceDataByOQLLine(oql_query, data, accessors, opt_default_oql) {
+    /* Wrapper method for filterData that has the cBioPortal default accessor functions
+     * Note that for use, the input data must have the field 'genetic_alteration_type,' which
+     * takes one of the following values:
+     *	- MUTATION_EXTENDED
+     *	- COPY_NUMBER_ALTERATION
+     *	- MRNA_EXPRESSION
+     *	- PROTEIN_LEVEL
+     */
+
+    return filterData(oql_query, data, accessors, opt_default_oql, true);
 }
 
 
