@@ -139,7 +139,7 @@ class CNASegmentIframe extends React.Component<CNSegmentsIframeProps,{}>{
     
     render(){
         
-        return <iframe ref={(el:HTMLIFrameElement)=>this.iframeEl = el}/>
+        return <iframe style={{width:'100%', height:800, marginTop:20, border:'1px solid #d3d3d3'}} ref={(el:HTMLIFrameElement)=>this.iframeEl = el}/>
         
     }
     
