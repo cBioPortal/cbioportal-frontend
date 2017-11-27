@@ -465,7 +465,7 @@ export async function fetchCnaOncoKbData(uniqueSampleKeyToTumorType:{[uniqueSamp
     }
 }
 
-function cancerTypeForOncoKb(uniqueSampleKey: string,
+export function cancerTypeForOncoKb(uniqueSampleKey: string,
                              uniqueSampleKeyToTumorType:{[uniqueSampleKey: string]: string}): string
 {
     // first priority is sampleIdToTumorType map (derived either from the clinical data or from the study cancer type).

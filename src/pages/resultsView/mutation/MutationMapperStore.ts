@@ -6,7 +6,7 @@ import client from "shared/api/cbioportalClientInstance";
 import {computed, observable} from "mobx";
 import {remoteData} from "shared/api/remoteData";
 import {labelMobxPromises, MobxPromise, cached} from "mobxpromise";
-import {IOncoKbData} from "shared/model/OncoKB";
+import {IOncoKbData, IOncoKbDataWrapper} from "shared/model/OncoKB";
 import {IHotspotData} from "shared/model/CancerHotspots";
 import {IPdbChain, PdbAlignmentIndex} from "shared/model/Pdb";
 import {ICivicGene, ICivicVariant} from "shared/model/Civic";
@@ -47,7 +47,10 @@ export class MutationMapperStore {
                 public studiesForSamplesWithoutCancerTypeClinicalData: MobxPromise<CancerStudy[]>,
                 private samplesWithoutCancerTypeClinicalData: MobxPromise<Sample[]>,
                 public germlineConsentedSamples:MobxPromise<SampleIdentifier[]>,
-                public indexedHotspotData:MobxPromise<IHotspotData|undefined>)
+                public indexedHotspotData:MobxPromise<IHotspotData|undefined>,
+                public uniqueSampleKeyToTumorType:{[uniqueSampleKey:string]:string},
+                public oncoKbData:IOncoKbDataWrapper
+    )
     {
         labelMobxPromises(this);
     }
@@ -124,28 +127,6 @@ export class MutationMapperStore {
         }
     }, "");
 
-    readonly oncoKbData = remoteData<IOncoKbData>({
-        await: () => [
-            this.mutationData,
-            this.clinicalDataForSamples,
-            this.studiesForSamplesWithoutCancerTypeClinicalData
-        ],
-        invoke: async () => fetchOncoKbData(this.uniqueSampleKeyToTumorType, this.oncoKbAnnotatedGenes, this.mutationData),
-        onError: (err: Error) => {
-            // fail silently, leave the error handling responsibility to the data consumer
-        }
-    }, ONCOKB_DEFAULT);
-
-    readonly canonicalTranscript = remoteData<EnsemblTranscript | undefined>({
-        invoke: async()=>{
-            if (this.gene) {
-                return fetchCanonicalTranscript(this.gene.hugoGeneSymbol, this.isoformOverrideSource);
-            } else {
-                return undefined;
-            }
-        }
-    }, undefined);
-
     readonly pfamDomainData = remoteData<PfamDomain[] | undefined>({
         await: ()=>[
             this.canonicalTranscript
@@ -153,6 +134,16 @@ export class MutationMapperStore {
         invoke: async()=>{
             if (this.canonicalTranscript.result && this.canonicalTranscript.result.pfamDomains && this.canonicalTranscript.result.pfamDomains.length > 0) {
                 return fetchPfamDomainData(this.canonicalTranscript.result.pfamDomains.map((x: PfamDomainRange) => x.pfamDomainId));
+            } else {
+                return undefined;
+            }
+        }
+    }, undefined);
+
+    readonly canonicalTranscript = remoteData<EnsemblTranscript | undefined>({
+        invoke: async()=>{
+            if (this.gene) {
+                return fetchCanonicalTranscript(this.gene.hugoGeneSymbol, this.isoformOverrideSource);
             } else {
                 return undefined;
             }
@@ -216,12 +207,6 @@ export class MutationMapperStore {
         ];
 
         return lazyMobXTableSort(this.mergedAlignmentData, sortMetric, false);
-    }
-
-    @computed get uniqueSampleKeyToTumorType(): {[uniqueSampleKey: string]: string} {
-        return generateUniqueSampleKeyToTumorTypeMap(this.clinicalDataForSamples,
-            this.studiesForSamplesWithoutCancerTypeClinicalData,
-            this.samplesWithoutCancerTypeClinicalData);
     }
 
     @cached get dataStore():MutationMapperDataStore {

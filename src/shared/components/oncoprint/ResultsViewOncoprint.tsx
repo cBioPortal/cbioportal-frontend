@@ -637,7 +637,11 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     };
 
     public getPutativeDriverInfo(mutation:Mutation) {
-        const oncoKb = "";
+        const oncoKb =
+            (this.props.store.mutationAnnotationSettings.oncoKb &&
+                this.props.store.getOncoKbAnnotation.isComplete &&
+                this.props.store.getOncoKbAnnotation.result(mutation).oncogenic) || "";
+
         const hotspots:boolean =
             (this.props.store.mutationAnnotationSettings.hotspots &&
                 this.props.store.isHotspot.isComplete &&

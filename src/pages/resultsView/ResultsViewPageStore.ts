@@ -21,7 +21,7 @@ import {
     fetchSamples, fetchClinicalDataInStudy, generateDataQueryFilter,
     fetchSamplesWithoutCancerTypeClinicalData, fetchStudiesForSamplesWithoutCancerTypeClinicalData, IDataQueryFilter,
     isMutationProfile, fetchOncoKbAnnotatedGenes, groupBy, fetchHotspotsData, indexHotspotData, fetchOncoKbData,
-    ONCOKB_DEFAULT
+    ONCOKB_DEFAULT, generateUniqueSampleKeyToTumorTypeMap, cancerTypeForOncoKb
 } from "shared/lib/StoreUtils";
 import {MutationMapperStore} from "./mutation/MutationMapperStore";
 import AppConfig from "appConfig";
@@ -47,6 +47,7 @@ import ClinicalDataCache from "../../shared/cache/ClinicalDataCache";
 import {IHotspotData} from "../../shared/model/CancerHotspots";
 import {isHotspot} from "../../shared/lib/AnnotationUtils";
 import {IOncoKbData} from "../../shared/model/OncoKB";
+import {generateQueryVariantId} from "../../shared/lib/OncoKbUtils";
 
 export type SamplesSpecificationElement = {studyId: string, sampleId: string, sampleListId: undefined} |
     {studyId: string, sampleId: undefined, sampleListId: string};
@@ -807,7 +808,7 @@ export class ResultsViewPageStore {
     });
 
     readonly mutationMapperStores = remoteData<{ [hugoGeneSymbol: string]: MutationMapperStore }>({
-        await: () => [this.genes, this.oncoKbAnnotatedGenes, this.indexedHotspotData],
+        await: () => [this.genes, this.oncoKbAnnotatedGenes, this.indexedHotspotData, this.uniqueSampleKeyToTumorType],
         invoke: () => {
             if (this.genes.result) {
                 // we have to use _.reduce, otherwise this.genes.result (Immutable, due to remoteData) will return
@@ -825,7 +826,9 @@ export class ResultsViewPageStore {
                         this.studiesForSamplesWithoutCancerTypeClinicalData,
                         this.samplesWithoutCancerTypeClinicalData,
                         this.germlineConsentedSamples,
-                        this.indexedHotspotData
+                        this.indexedHotspotData,
+                        this.uniqueSampleKeyToTumorType.result!,
+                        this.oncoKbData
                     );
                     return map;
                 }, {}));
@@ -1187,6 +1190,7 @@ export class ResultsViewPageStore {
     });
 
     // Mutation annotation
+    // Hotspots
     readonly hotspotData = remoteData({
         await:()=>[
             this.mutations
@@ -1216,6 +1220,51 @@ export class ResultsViewPageStore {
                 } else {
                     return isHotspot(mutation, indexedHotspotData.result!.single);
                 }
+            });
+        }
+    });
+    //OncoKb
+    readonly uniqueSampleKeyToTumorType = remoteData<{[uniqueSampleKey: string]: string}>({
+        await:()=>[
+            this.clinicalDataForSamples,
+            this.studiesForSamplesWithoutCancerTypeClinicalData,
+            this.samplesWithoutCancerTypeClinicalData
+        ],
+        invoke: ()=>{
+            return Promise.resolve(generateUniqueSampleKeyToTumorTypeMap(this.clinicalDataForSamples,
+                this.studiesForSamplesWithoutCancerTypeClinicalData,
+                this.samplesWithoutCancerTypeClinicalData));
+        }
+    });
+
+    readonly oncoKbData = remoteData<IOncoKbData>({
+        await: () => [
+            this.mutations,
+            this.clinicalDataForSamples,
+            this.studiesForSamplesWithoutCancerTypeClinicalData,
+            this.uniqueSampleKeyToTumorType
+        ],
+        invoke: async () => fetchOncoKbData(this.uniqueSampleKeyToTumorType.result!, this.oncoKbAnnotatedGenes, this.mutations),
+        onError: (err: Error) => {
+            // fail silently, leave the error handling responsibility to the data consumer
+        }
+    }, ONCOKB_DEFAULT);
+
+    public readonly getOncoKbAnnotation = remoteData({
+        await: ()=>[
+            this.oncoKbData
+        ],
+        invoke: ()=>{
+            return Promise.resolve((mutation:Mutation)=>{
+                const uniqueSampleKeyToTumorType = this.oncoKbData.result.uniqueSampleKeyToTumorType!;
+                const tumorType = uniqueSampleKeyToTumorType[mutation.uniqueSampleKey];
+                const id = generateQueryVariantId(
+                    mutation.entrezGeneId,
+                    cancerTypeForOncoKb(mutation.uniqueSampleKey, uniqueSampleKeyToTumorType),
+                    mutation.proteinChange,
+                    mutation.mutationType
+                );
+                return this.oncoKbData.result!.indicatorMap![id]; // currently running into trouble
             });
         }
     });
