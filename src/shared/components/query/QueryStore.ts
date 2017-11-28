@@ -1385,24 +1385,24 @@ export class QueryStore
 		this.geneQuery = normalizeQuery([this.geneQuery, ...toAppend].join(' '));
 	}
 	
-	@action applyGeneSetSelection(map_geneSet_selected:ObservableMap<boolean>)
+	@action applyGenesetsSelection(map_geneset_selected:ObservableMap<boolean>)
     {
-        let [toAppend, toRemove] = _.partition(map_geneSet_selected.keys(), geneSet => map_geneSet_selected.get(geneSet));
+        let [toAppend, toRemove] = _.partition(map_geneset_selected.keys(), geneSet => map_geneset_selected.get(geneSet));
         let genesetQuery = this.genesetQuery;
         if (toAppend.length > 0) {
             let genesetList: string[] = [];
-            for (const geneSet of toAppend) 
+            for (const geneset of toAppend) 
             {
-                genesetList.push(geneSet);
+                genesetList.push(geneset);
             }
             genesetQuery = genesetList.join(" ");
         }
         if (toRemove.length > 0) {
             let genesetList = genesetQuery.split(" ");
-            for (const removeGeneSet of toRemove) {
-                for (const geneSet of genesetList) {
-                    if (removeGeneSet === geneSet) {
-                        const index = genesetList.indexOf(geneSet);
+            for (const removeGeneset of toRemove) {
+                for (const geneset of genesetList) {
+                    if (removeGeneset === geneset) {
+                        const index = genesetList.indexOf(geneset);
                         if (index >= 0) {
                           genesetList.splice( index, 1 );
                         }
