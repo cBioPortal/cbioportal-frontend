@@ -276,6 +276,7 @@ export class QueryStore
 		ids = ids.filter(id=>!!selectableStudies[id]);
 		return this.forDownloadTab ? ids.slice(-1) : ids;
 	}
+
 	set selectedStudyIds(val:string[]) {
 		this._selectedStudyIds = observable.map(stringListToSet(val));
 	}
@@ -728,6 +729,14 @@ export class QueryStore
 	@computed get selectedStudies()
 	{
 		return this.selectedStudyIds.map(id => this.treeData.map_studyId_cancerStudy.get(id) as CancerStudy).filter(_.identity);
+	}
+
+	@computed get unknownStudyIds()
+	{
+		let ids:string[] = this._selectedStudyIds.keys();
+		const selectableStudies = this.selectableStudiesSet;
+		ids = ids.filter(id=>!(id in selectableStudies));
+		return ids;
 	}
 
 	@computed get selectedStudies_totalSampleCount()
