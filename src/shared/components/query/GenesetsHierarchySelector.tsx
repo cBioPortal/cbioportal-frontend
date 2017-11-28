@@ -5,7 +5,7 @@ import {action, ObservableMap, expr, toJS, computed, observable} from "mobx";
 import {observer, Observer} from "mobx-react";
 import {MutSig} from "../../api/generated/CBioPortalAPIInternal";
 import ReactSelect from 'react-select';
-import GenesetJsTree from "./GenesetJsTree";
+import GenesetsJsTree from "./GenesetsJsTree";
 import { InputHTMLAttributes, FormEvent } from "react";
 
 const styles = styles_any as {
@@ -96,7 +96,7 @@ export default class GenesetsHierarchySelector extends React.Component<GenesetsH
                 </button>
                 </div>
                 </div>
-                <GenesetJsTree
+                <GenesetsJsTree
                     initialSelection={this.props.initialSelection}
                     scoreThreshold={this.appliedScoreThreshold}
                     pvalueThreshold={this.appliedPvalueThreshold}

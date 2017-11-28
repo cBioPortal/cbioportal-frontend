@@ -19,7 +19,7 @@ const styles = styles_any as {
 };
 
 @observer
-export default class GenesetValidator extends QueryStoreComponent<{}, {}>
+export default class GenesetsValidator extends QueryStoreComponent<{}, {}>
 {
     render()
     {
