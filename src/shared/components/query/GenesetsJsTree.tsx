@@ -11,7 +11,7 @@ import { observer } from "mobx-react";
 import { observable, ObservableMap } from "mobx";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 
-export interface GenesetJsTreeProps
+export interface GenesetsJsTreeProps
 {
     initialSelection: string[];
     scoreThreshold: string;
@@ -28,14 +28,14 @@ type JSNode = {
 };
 
 @observer
-export default class GenesetJsTree extends React.Component<GenesetJsTreeProps, {}>
+export default class GenesetsJsTree extends React.Component<GenesetsJsTreeProps, {}>
 {
     tree: Element|null;
     @observable isLoading = true;
     promisedTree: Promise<Element>;
     private readonly map_geneSets_selected = new ObservableMap<boolean>();
 
-    constructor(props: GenesetJsTreeProps)
+    constructor(props: GenesetsJsTreeProps)
     {
         super(props);
         this.map_geneSets_selected.replace(props.initialSelection.map(geneSet => [geneSet, true]));
@@ -46,7 +46,7 @@ export default class GenesetJsTree extends React.Component<GenesetJsTreeProps, {
         this.promisedTree.then(tree => (this.isLoading = false, tree));
     }
     
-    componentDidUpdate(prevProps: GenesetJsTreeProps){
+    componentDidUpdate(prevProps: GenesetsJsTreeProps){
         if (this.props.scoreThreshold !== prevProps.scoreThreshold ||
             this.props.pvalueThreshold !== prevProps.pvalueThreshold ||
             this.props.percentile !== prevProps.percentile) {
