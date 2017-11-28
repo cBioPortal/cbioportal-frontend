@@ -15,6 +15,7 @@ import {providesStoreContext} from "../../lib/ContextUtils";
 import AppConfig from "appConfig";
 import CaseSetSelector from "./CaseSetSelector";
 import OverlappingStudiesWarning from "../overlappingStudiesWarning/OverlappingStudiesWarning";
+import UnknownStudiesWarning from "../unknownStudies/UnknownStudiesWarning"
 
 const styles = styles_any as {
 	QueryContainer: string,
@@ -64,6 +65,9 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
 
                 {
                     <OverlappingStudiesWarning studies={this.store.selectedStudies}/>
+                }
+                {
+                    <UnknownStudiesWarning ids={this.store.unknownStudyIds} />
                 }
 
 				<CancerStudySelector/>
