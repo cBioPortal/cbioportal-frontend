@@ -90,7 +90,7 @@ export default class GenesetsHierarchySelector extends React.Component<GenesetsH
                 />
                 </div>
                 <div style={{display:"inline-block", padding: "10px 15px"}}>
-                <button id= "filterButton" className="btn btn-primary btn-sm" style={{ display:'block', padding: "20px 18px" }}
+                <button id="filterButton" className="btn btn-primary btn-sm" style={{ display:'block', padding: "20px 18px" }}
                     onClick={this.applyFilter}>
                 Apply Filter
                 </button>
