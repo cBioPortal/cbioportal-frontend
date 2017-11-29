@@ -14,9 +14,9 @@ import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicato
 export interface GenesetsJsTreeProps
 {
     initialSelection: string[];
-    scoreThreshold: string;
-    pvalueThreshold: string;
-    percentile: string;
+    scoreThreshold: number;
+    pvalueThreshold: number;
+    percentile: number;
     gsvaProfile: string;
     sampleListId: string|undefined;
     searchValue: string;
@@ -148,8 +148,8 @@ export default class GenesetsJsTree extends React.Component<GenesetsJsTreeProps,
     
     async initTree(tree: Element): Promise<Element>{
         const hierarchyData = await getHierarchyData(
-                this.props.gsvaProfile, Number(this.props.percentile),Number(this.props.scoreThreshold), 
-                Number(this.props.pvalueThreshold), this.props.sampleListId);
+                this.props.gsvaProfile, this.props.percentile, this.props.scoreThreshold, 
+                this.props.pvalueThreshold, this.props.sampleListId);
         $(tree).jstree({
             "search": {
                 'show_only_matches': true,
@@ -179,7 +179,7 @@ export default class GenesetsJsTree extends React.Component<GenesetsJsTreeProps,
     submitGeneSets(tree:Element|null) {
         if (tree) {
             const selectedNodes = $(tree).jstree("get_selected", true);
-            for (let geneSet of selectedNodes) {
+            for (const geneSet of selectedNodes) {
                 if (geneSet.original.geneset) 
                 {
                     this.map_geneSets_selected.set(geneSet.original.description, true);
