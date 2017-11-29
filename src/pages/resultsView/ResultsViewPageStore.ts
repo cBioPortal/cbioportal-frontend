@@ -1,7 +1,7 @@
 import {
     DiscreteCopyNumberFilter, DiscreteCopyNumberData, ClinicalData, ClinicalDataMultiStudyFilter, Sample,
     SampleIdentifier, MolecularProfile, Mutation, GeneMolecularData, MolecularDataFilter, Gene,
-    ClinicalDataSingleStudyFilter, CancerStudy
+    ClinicalDataSingleStudyFilter, CancerStudy, SampleList
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {computed, observable, action} from "mobx";
@@ -608,17 +608,23 @@ export class ResultsViewPageStore {
     }, []);
 
     readonly germlineConsentedSamples = remoteData<SampleIdentifier[]>({
+        await: () => [this.germlineSampleLists],
         invoke: async () => {
-            const studies: string[] = this.studyIds;
-            const ids: string[][] = await Promise.all(studies.map(studyId => {
-                return client.getAllSampleIdsInSampleListUsingGET({
-                    sampleListId: this.getGermlineSampleListId(studyId)
-                });
-            }));
-            return _.flatten(ids.map((sampleIds: string[], index: number) => {
-                const studyId = studies[index];
-                return sampleIds.map(sampleId => ({sampleId, studyId}));
-            }));
+            if (this.germlineSampleLists.result) {
+                const ids: string[][] = await Promise.all(this.germlineSampleLists.result.map(sampleList => {
+                    return client.getAllSampleIdsInSampleListUsingGET({
+                        sampleListId: sampleList.sampleListId
+                    });
+                }));
+
+                return _.flatten(ids.map((sampleIds: string[], index: number) => {
+                    const studyId = this.germlineSampleLists.result[index].studyId;
+                    return sampleIds.map(sampleId => ({sampleId, studyId}));
+                }));
+            }
+            else {
+                return [];
+            }
         },
         onError: () => {
             // fail silently
@@ -675,9 +681,33 @@ export class ResultsViewPageStore {
         invoke:()=>Promise.resolve(_.keyBy(this.studies.result, x=>x.studyId))
     }, {});
 
-    private getGermlineSampleListId(studyId:string):string {
-        return `${studyId}_germline`;
-    }
+    readonly sampleLists = remoteData({
+        await: () => [this.studies],
+        invoke: async () => {
+            const studies: string[] = this.studyIds;
+
+            return _.flatten(await Promise.all(studies.map(studyId => {
+                return client.getAllSampleListsInStudyUsingGET({
+                    studyId
+                });
+            })));
+        }
+    });
+
+    readonly germlineSampleLists = remoteData({
+        await: () => [this.sampleLists],
+        invoke: async () => {
+            if (this.sampleLists.result)
+            {
+                return this.sampleLists.result.filter(
+                    (sampleList: SampleList) => sampleList.sampleListId.toLowerCase().includes("germline")
+                );
+            }
+            else {
+                return [];
+            }
+        }
+    }, []);
 
     readonly molecularProfilesInStudies = remoteData<MolecularProfile[]>({
         invoke: async () => {
