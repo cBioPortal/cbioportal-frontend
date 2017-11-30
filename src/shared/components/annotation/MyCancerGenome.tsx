@@ -23,6 +23,11 @@ export default class MyCancerGenome extends React.Component<IMyCancerGenomeProps
         return (links.length > 0) ? 1 : 0;
     }
 
+    public static download(links: string[]): string
+    {
+        return (links.length > 0) ? "present" : "not present";
+    }
+
     public static myCancerGenomeLinks(linksHTML:string[])
     {
         const links:any[] = [];
