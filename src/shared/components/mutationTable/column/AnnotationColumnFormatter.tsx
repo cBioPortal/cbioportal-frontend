@@ -230,6 +230,26 @@ export default class AnnotationColumnFormatter
         ]);
     }
 
+    public static download(data:Mutation[]|undefined,
+                           oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean},
+                           hotspotsData?:IHotspotData,
+                           myCancerGenomeData?:IMyCancerGenomeData,
+                           oncoKbData?:IOncoKbDataWrapper,
+                           civicGenes?:ICivicGeneDataWrapper,
+                           civicVariants?:ICivicVariantDataWrapper)
+    {
+        const annotationData:IAnnotation = AnnotationColumnFormatter.getData(
+            data, oncoKbAnnotatedGenes, hotspotsData, myCancerGenomeData, oncoKbData, civicGenes, civicVariants);
+
+        return [
+            `OncoKB: ${OncoKB.download(annotationData.oncoKbIndicator)}`,
+            `CIViC: ${Civic.download(annotationData.civicEntry)}`,
+            `MyCancerGenome: ${MyCancerGenome.download(annotationData.myCancerGenomeLinks)}`,
+            `CancerHotspot: ${annotationData.isHotspot ? 'yes' : 'no'}`,
+            `3DHotspot: ${annotationData.is3dHotspot ? 'yes' : 'no'}`,
+        ].join(";");
+    }
+
     public static renderFunction(data:Mutation[], columnProps:IAnnotationColumnProps)
     {
         const annotation:IAnnotation = AnnotationColumnFormatter.getData(
