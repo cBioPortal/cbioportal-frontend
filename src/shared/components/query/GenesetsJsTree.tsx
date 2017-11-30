@@ -60,12 +60,6 @@ export default class GenesetsJsTree extends React.Component<GenesetsJsTreeProps,
         }
     }
     
-    /**
-     * Transform hierarchy data to the correct format accepted by jsTree
-     * 
-     * @param result_data
-     * @return flatData
-     */
     transformHierarchyData(result_data: GenesetHierarchyInfo[]) {
           const data = result_data;
           const flatData = [];
