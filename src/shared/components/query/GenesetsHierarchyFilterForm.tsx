@@ -4,12 +4,14 @@ import {observable} from "mobx";
 import {observer} from "mobx-react";
 import ReactSelect from 'react-select';
 
+export type validPercentile = 50|75|100;
+
 interface GenesetsHierarchyFilterFormProps
 {
-    percentile: {label: string, value: number};
+    percentile: validPercentile;
     pvalueThreshold: number;
     scoreThreshold: number;
-    onApply: (percentile: {label: string, value: number}, pvalueThreshold: number, scoreThreshold: number) => void;
+    onApply: (percentile: validPercentile, pvalueThreshold: number, scoreThreshold: number) => void;
 }
 
 @observer
@@ -26,9 +28,9 @@ export default class GenesetsHierarchyFilterForm extends React.Component<Geneset
         this.applyFilter = this.applyFilter.bind(this);
     }
     
-    percentileChange(val: {label: string, value: number} | null)
+    percentileChange(val: {label: string, value: validPercentile} | null)
     {
-        this.percentile = val || {label: '75%', value: 75};
+        this.percentile = val ? val.value : 75;
     }
     
     applyFilter() {
@@ -58,6 +60,7 @@ export default class GenesetsHierarchyFilterForm extends React.Component<Geneset
                     <ReactSelect
                         addLabelText="Percentile for score calculation"
                         style={ {width:160} }
+                        clearable={false}
                         name="PercentileScoreCalculation"
                         value={this.percentile}
                         options={this.percentileOptions}

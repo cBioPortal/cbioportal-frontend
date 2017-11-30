@@ -2,7 +2,7 @@ import * as React from 'react';
 import {ObservableMap, observable} from "mobx";
 import {observer} from "mobx-react";
 import GenesetsJsTree from "./GenesetsJsTree";
-import GenesetsHierarchyFilterForm from "./GenesetsHierarchyFilterForm";
+import GenesetsHierarchyFilterForm, {validPercentile} from "./GenesetsHierarchyFilterForm";
 
 export interface GenesetsHierarchySelectorProps
 {
@@ -15,7 +15,7 @@ export interface GenesetsHierarchySelectorProps
 @observer
 export default class GenesetsHierarchySelector extends React.Component<GenesetsHierarchySelectorProps, {}>
 {
-    @observable percentile = {label: '75%', value: 75};
+    @observable percentile: validPercentile = 75;
     @observable pvalueThreshold = 0.05;
     @observable scoreThreshold = 0.5;
     @observable searchValue = "";
@@ -26,7 +26,7 @@ export default class GenesetsHierarchySelector extends React.Component<GenesetsH
         this.updateSelectionParameters = this.updateSelectionParameters.bind(this);
     }
     
-    updateSelectionParameters(percentile: {label: string, value: number}, pvalueThreshold: number, scoreThreshold: number) {
+    updateSelectionParameters(percentile: validPercentile, pvalueThreshold: number, scoreThreshold: number) {
         this.percentile = percentile;
         this.pvalueThreshold = pvalueThreshold;
         this.scoreThreshold = scoreThreshold;
@@ -58,7 +58,7 @@ export default class GenesetsHierarchySelector extends React.Component<GenesetsH
                         initialSelection={this.props.initialSelection}
                         scoreThreshold={this.scoreThreshold}
                         pvalueThreshold={this.pvalueThreshold}
-                        percentile={this.percentile.value}
+                        percentile={this.percentile}
                         gsvaProfile={this.props.gsvaProfile}
                         sampleListId={this.props.sampleListId}
                         searchValue={this.searchValue}
