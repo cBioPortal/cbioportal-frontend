@@ -1,5 +1,4 @@
 import * as React from 'react';
-import * as styles_any from './styles/styles.module.scss';
 import {observable} from "mobx";
 import {observer} from "mobx-react";
 import ReactSelect from 'react-select';
@@ -44,22 +43,23 @@ export default class GenesetsHierarchyFilterForm extends React.Component<Geneset
     render()
     {
         return (
-                <div className="form-inline" style={{width:"100%", background:"#eee", padding:"1px 10px"}}>
-                <div className="form-group" style={{display:"inline-block", padding: "10px 15px"}}>
-                    <label htmlFor="GSVAScore" style={{display:"inline-block"}}>GSVA score</label>
-                    <input id="GSVAScore" type="number" className="form-control" value={this.scoreThreshold} 
-                        onChange={event => this.scoreThreshold = event.target.value} style={ {display: "block", width:160} } step="0.1"/>
+            <div style={{display: "flex", flexDirection: "row", justifyContent: "space-evenly", alignItems: "center",
+                width:"100%", background:"#eee", padding:"10px 10px"}}>
+                <div style={{display: "flex", flexDirection: "column"}}>
+                    <label htmlFor="GSVAScore">GSVA score</label>
+                    <input id="GSVAScore" type="number" value={this.scoreThreshold} style={{width:160, height:36, padding:10}}
+                        onChange={event => this.scoreThreshold = event.target.value} step="0.1"/>
                 </div>
-                <div className="form-group" style={{display:"inline-block", padding: "10px 15px"}}>
-                    <label htmlFor="Pvalue" style={{display:"inline-block"}}>P-value</label>
-                    <input id="Pvalue" type="number" className="form-control tableSearchInput" value={this.pvalueThreshold} 
-                        onChange={event => this.pvalueThreshold = event.target.value} style={ {display: "block", width:160} } step="0.01" min="0"/>
+                <div style={{display: "flex", flexDirection: "column"}}>
+                    <label htmlFor="Pvalue">P-value</label>
+                    <input id="Pvalue" type="number" value={this.pvalueThreshold} style={{width:160, height:36, padding:10}}
+                        onChange={event => this.pvalueThreshold = event.target.value} step="0.01" min="0"/>
                 </div>
-                <div className="form-group" style={{ padding: "10px 15px"}}>
+                <div>
                     <label htmlFor="PercentileScoreCalculation">Percentile for score calculation</label>
                     <ReactSelect
                         addLabelText="Percentile for score calculation"
-                        style={ {width:160} }
+                        style={{width:160, borderRadius: "2px"}}
                         clearable={false}
                         name="PercentileScoreCalculation"
                         value={this.percentile}
@@ -67,17 +67,17 @@ export default class GenesetsHierarchyFilterForm extends React.Component<Geneset
                         onChange={this.percentileChange}
                     />
                 </div>
-                <div style={{display:"inline-block", padding: "10px 15px"}}>
+                <div>
                     <button
                         id="filterButton"
                         className="btn btn-primary btn-sm"
-                        style={{ display:'block', padding: "20px 18px" }}
+                        style={{padding: "20px 18px"}}
                         onClick={this.applyFilter}
                     >
                         Apply Filter
                     </button>
                 </div>
             </div>
-            );
+        );
     }
 }
