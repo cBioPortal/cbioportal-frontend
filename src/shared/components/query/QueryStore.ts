@@ -572,12 +572,12 @@ export class QueryStore
 	private invokeGenesetsLater = debounceAsync(
 	        async (genesetIds:string[]):Promise<{found: Geneset[], invalid: string[]}> =>
 	        {
-	            let getGenesetResults = async () => {
-	                let found:Geneset[] = [];
-	                let invalid: string[] = [];
-	                for (let genesetId in genesetIds) {
+	            const getGenesetResults = async () => {
+	                const found:Geneset[] = [];
+	                const invalid: string[] = [];
+	                for (const genesetId in genesetIds) {
 	                    try {
-	                        let retrievedGeneset = await internalClient.getGenesetUsingGET({genesetId: genesetIds[genesetId]});
+	                        const retrievedGeneset = await internalClient.getGenesetUsingGET({genesetId: genesetIds[genesetId]});
 	                        found.push(retrievedGeneset);
 	                    } catch (error) {
 	                        invalid.push(genesetIds[genesetId]);
@@ -586,7 +586,7 @@ export class QueryStore
 	                return {found, invalid};
 	            };
 	            
-	            let [genesetResults] = await Promise.all([getGenesetResults()]);
+	            const [genesetResults] = await Promise.all([getGenesetResults()]);
 	            return {
 	                found: [...genesetResults.found],
 	                invalid: [...genesetResults.invalid]
@@ -913,7 +913,7 @@ export class QueryStore
 		for (let profileId of (selectedProfileIds || this.selectedProfileIds))
 		{
 			let profile = this.dict_molecularProfileId_molecularProfile[profileId];
-			if (profile && profile.molecularAlterationType == molecularAlterationType)
+			if (profile && profile.molecularAlterationType === molecularAlterationType)
 				return profile.molecularProfileId;
 		}
 		return '';
@@ -923,7 +923,7 @@ export class QueryStore
 	{
         let result = false;
         if (this.getFilteredProfiles("GENESET_SCORE")[0]) {
-            for (var selectedProfileId in this.selectedProfileIds) {
+            for (const selectedProfileId in this.selectedProfileIds) {
                 if (this.selectedProfileIds[selectedProfileId] === this.getFilteredProfiles("GENESET_SCORE")[0].molecularProfileId) {
                     result = true;
                 }
@@ -1044,11 +1044,8 @@ export class QueryStore
     {
         try
         {
-            let result:{geneset:string, alterations:false}[] = [];
-            let queriedGenesets: string[] = this.genesetQuery ? this.genesetQuery.split(/[ \n]+/) : [];
-            for (let geneset in queriedGenesets) {
-                result.push({'geneset': queriedGenesets[geneset], 'alterations': false});
-            }
+            const queriedGenesets: string[] = this.genesetQuery ? this.genesetQuery.split(/[ \n]+/) : [];
+            const result = queriedGenesets.map(geneset => ({geneset: geneset, alterations:false as false}));
             return {
                 query: result,
                 error: undefined
@@ -1070,7 +1067,7 @@ export class QueryStore
                 [near, start, end] = ['before', offset, offset + 1];
             else
                 [near, start, end] = ['at', offset, offset + 1];
-            let message = `OQL syntax error ${near} selected character; please fix and submit again.`;
+            const message = `OQL syntax error ${near} selected character; please fix and submit again.`;
             return {
                 query: [],
                 error: {start, end, message}
@@ -1145,8 +1142,8 @@ export class QueryStore
 			return "Expression filtering in the gene list is not supported when doing cross cancer queries.";
 		}
 
-		if (this.selectedProfileIds.length != 0) {
-		    if (this.selectedProfileIds.length == 1) 
+		if (this.selectedProfileIds.length !== 0) {
+		    if (this.selectedProfileIds.length === 1) 
             {
 	            if (this.isGenesetProfileSelected)
                 { //Only geneset profile selected
@@ -1387,7 +1384,7 @@ export class QueryStore
 	
 	@action applyGenesetsSelection(map_geneset_selected:ObservableMap<boolean>)
     {
-        let [toAppend, toRemove] = _.partition(map_geneset_selected.keys(), geneSet => map_geneset_selected.get(geneSet));
+        const [toAppend, toRemove] = _.partition(map_geneset_selected.keys(), geneSet => map_geneset_selected.get(geneSet));
         let genesetQuery = this.genesetQuery;
         if (toAppend.length > 0) {
             let genesetList: string[] = [];
@@ -1483,5 +1480,5 @@ export class QueryStore
 
 export const QueryStoreComponent = ComponentGetsStoreContext(QueryStore);
 
-let selectedGeneSets = '';
+const selectedGeneSets = '';
 export default selectedGeneSets;
