@@ -315,4 +315,97 @@ describe("LazyMobXCache", ()=>{
                 assert.equal(getFn.callCount, 1);
         });
     });
+    describe("#getPromise", ()=>{
+        it("resolves immediately if the selected queries are already there", async()=>{
+            let callback = sinon.spy((data:number[])=>{});
+            await cache.getPromise([]).then(callback);
+            assert.equal(callback.callCount, 1); // immediately called
+            assert.equal(cache.activePromisesCount, 0);
+            assert.deepEqual(callback.args[0], [[]]);
+            cache.get({ numAsString:"3" });
+            await cache.getPromise([{numAsString:"3"}]).then(callback);
+            assert.equal(callback.callCount, 2); // immediately called
+            assert.equal(cache.activePromisesCount, 0);
+            assert.deepEqual(callback.args[1][0].map((x:any)=>x.data), [78]);
+            cache.get({ numAsString:"2" });
+            cache.get({ numAsString:"1" });
+            await cache.getPromise([{numAsString:"3"}, {numAsString:"2"},{numAsString:"1"}]).then(callback);
+            assert.equal(callback.callCount, 3);
+            assert.equal(cache.activePromisesCount, 0);
+            assert.deepEqual(callback.args[2][0].map((x:any)=>x.data), [78, 53, 28]);
+            return true;
+        });
+        it("resolves when the selected queries become available: request made", (done)=>{
+            let callback = sinon.spy((data:CacheData<number, string>[])=>{
+                assert.equal(callback.callCount, 1);
+                assert.deepEqual(data.map(x=>x.data), [28, 103]);
+                done();
+            });
+            cache.getPromise([{numAsString:"1"}, {numAsString:"4"}], true).then(callback);
+        });
+        it("resolves when the selected queries become available: request not made", (done)=>{
+            let callback = sinon.spy((data:CacheData<number, string>[])=>{
+                assert.equal(callback.callCount, 1);
+                assert.deepEqual(data.map(x=>x.data), [28, 103]);
+                done();
+            });
+            cache.getPromise([{numAsString:"1"}, {numAsString:"4"}]).then(callback);
+            assert.equal(callback.callCount, 0);
+            cache.get({numAsString:"1"});
+            assert.equal(callback.callCount, 0);
+            cache.get({numAsString:"4"});
+            assert.equal(callback.callCount, 0);
+        });
+        it("errors if there is an error", (done)=>{
+            let callback = sinon.spy(()=>{
+                assert.equal(callback.callCount, 1);
+                done();
+            });
+            cache.getPromise([{numAsString:"1"}, {numAsString:"4"}]).catch(callback);
+            assert.equal(callback.callCount, 0);
+            cache.get({numAsString:"1"});
+            assert.equal(callback.callCount, 0);
+            cache.get({numAsString:"4", shouldFail: true});
+            assert.equal(callback.callCount, 0);
+        });
+        it("can handle multiple pending listeners", (done)=>{
+            let callbackCount = 0;
+            assert.equal(cache.activePromisesCount, 0);
+            cache.getPromise([{numAsString:"1"}]).then(()=>{
+                callbackCount += 1;
+                assert.equal(callbackCount, 1);
+            });
+            assert.equal(cache.activePromisesCount, 1);
+            cache.getPromise({numAsString:"2"}).then(()=>{
+                callbackCount += 1;
+                assert.equal(callbackCount, 2);
+            });
+            assert.equal(cache.activePromisesCount, 2);
+            cache.getPromise({numAsString:"3"}).then(()=>{
+                callbackCount += 1;
+                assert.equal(callbackCount, 3);
+                done();
+            });
+            assert.equal(cache.activePromisesCount, 3);
+            cache.get({numAsString:"1"});
+            cache.get({numAsString:"2"});
+            cache.get({numAsString:"3"});
+        });
+        it("unregisters the listener once it has been triggered: resolve", (done)=>{
+            cache.getPromise([{numAsString:"1"}]).then(()=>{
+                assert.equal(cache.activePromisesCount, 0);
+                done();
+            });
+            assert.equal(cache.activePromisesCount, 1);
+            cache.get({numAsString:"1"});
+        });
+        it("unregisters the listener once it has been triggered: error", (done)=>{
+            cache.getPromise([{numAsString:"1"}]).catch(()=>{
+                assert.equal(cache.activePromisesCount, 0);
+                done();
+            });
+            assert.equal(cache.activePromisesCount, 1);
+            cache.get({numAsString:"1", shouldFail: true});
+        });
+    });
 });
