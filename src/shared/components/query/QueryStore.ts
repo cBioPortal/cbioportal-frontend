@@ -395,7 +395,7 @@ export class QueryStore
     {
         return this._genesetQuery.toUpperCase();
     }
-    set genesetQuery(value:string) //TODO: Comment out and test
+    set genesetQuery(value:string)
     {
         // clear error when gene query is modified
         this.genesetQueryErrorDisplayStatus = 'unfocused';
@@ -1249,6 +1249,7 @@ export class QueryStore
 			this.caseIds = studySamplesList.join("\n");
 			this.caseIdsMode = 'sample'; // url always contains sample IDs
 			this.geneQuery = normalizeQuery(querySession.getOQLQuery());
+			this.genesetQuery = normalizeQuery(querySession.getGenesetQuery());
 			this.initiallySelected.profileIds = true;
 			this.initiallySelected.sampleListId = true;
 		}
@@ -1455,6 +1456,7 @@ export class QueryStore
 		onMobxPromise(this.molecularProfiles, ()=>{
 			const nonProfileParams = _.cloneDeep(this.initialQueryParams.nonMolecularProfileParams);
 			nonProfileParams.gene_list = normalizeQuery(nonProfileParams.gene_list + "\n" + genes.join(" "));
+			nonProfileParams.geneset_list = normalizeQuery(nonProfileParams.geneset_list ? nonProfileParams.geneset_list : "");
 
 			const profileParams = molecularProfileParams(this, this.initialQueryParams.molecularProfileIds);
 
