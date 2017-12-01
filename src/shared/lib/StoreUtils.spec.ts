@@ -293,7 +293,7 @@ describe('StoreUtils', () => {
     describe('fetchOncoKbData', () => {
         it("won't fetch onkokb data if there are no mutations", (done) => {
             fetchOncoKbData({}, [], emptyMutationData).then((data: any) => {
-                assert.deepEqual(data, {sampleToTumorMap: {}, indicatorMap: {}});
+                assert.deepEqual(data, {uniqueSampleKeyToTumorType: {}, indicatorMap: {}});
                 done();
             });
         });
@@ -325,10 +325,10 @@ describe('StoreUtils', () => {
         const studyId: string = "study";
         let samples: MobxPromise<Sample[]> = {
             result: [
-                {sampleId: "Sample1"},
-                {sampleId: "Sample2"},
-                {sampleId: "Sample3"},
-                {sampleId: "Sample4"}
+                {sampleId: "Sample1", uniqueSampleKey: "Sample1"},
+                {sampleId: "Sample2", uniqueSampleKey: "Sample2"},
+                {sampleId: "Sample3", uniqueSampleKey: "Sample3"},
+                {sampleId: "Sample4", uniqueSampleKey: "Sample4"}
             ] as Sample[],
             status: 'complete' as 'complete',
             isPending: false,
@@ -339,7 +339,7 @@ describe('StoreUtils', () => {
 
         let samplesWithoutCancerTypeClinicalData: MobxPromise<Sample[]> = {
             result: [
-                {sampleId: "Sample4", studyId: "study4"}
+                {sampleId: "Sample4", studyId: "study4", uniqueSampleKey: "Sample4"}
             ] as Sample[],
             status: 'complete' as 'complete',
             isPending: false,
@@ -359,10 +359,10 @@ describe('StoreUtils', () => {
 
         let clinicalDataForSamples: MobxPromise<ClinicalData[]> = {
             result: [
-                {clinicalAttributeId: 'CANCER_TYPE_DETAILED', sampleId: 'Sample1', value: "Invasive Breast Carcinoma"},
-                {clinicalAttributeId: 'CANCER_TYPE', sampleId: 'Sample1', value: "Breast"},
-                {clinicalAttributeId: 'CANCER_TYPE_DETAILED', sampleId: 'Sample2', value: "Prostate Adenocarcinoma"},
-                {clinicalAttributeId: 'CANCER_TYPE', sampleId: 'Sample3', value: "Skin"}
+                {clinicalAttributeId: 'CANCER_TYPE_DETAILED', sampleId: 'Sample1', value: "Invasive Breast Carcinoma", uniqueSampleKey: "Sample1"},
+                {clinicalAttributeId: 'CANCER_TYPE', sampleId: 'Sample1', value: "Breast", uniqueSampleKey: "Sample1"},
+                {clinicalAttributeId: 'CANCER_TYPE_DETAILED', sampleId: 'Sample2', value: "Prostate Adenocarcinoma", uniqueSampleKey: "Sample2"},
+                {clinicalAttributeId: 'CANCER_TYPE', sampleId: 'Sample3', value: "Skin", uniqueSampleKey: "Sample3"}
             ] as ClinicalData[],
             status: 'complete' as 'complete',
             isPending: false,
@@ -374,7 +374,7 @@ describe('StoreUtils', () => {
         it('finds samples without cancer type clinical data', () => {
             const samplesWithoutCancerType = findSamplesWithoutCancerTypeClinicalData(samples, clinicalDataForSamples);
 
-            assert.deepEqual(samplesWithoutCancerType, [{sampleId: "Sample4"}]);
+            assert.deepEqual(samplesWithoutCancerType, [{sampleId: "Sample4", uniqueSampleKey: "Sample4"}]);
         });
 
         const fetchSamplesStub = sinon.stub();
