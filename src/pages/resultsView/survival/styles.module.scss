@@ -1,0 +1,42 @@
+.SurvivalTable {
+  margin: 30px auto;
+  width: 65%;
+}
+
+table {
+  border-collapse: collapse !important;
+}
+
+.SurvivalTable td, .SurvivalTable th {
+  border: 1px solid black;
+  padding: 0 10px;
+  text-align: center;
+  font-size: 12px;
+  background-color: #f8f8f8;
+}
+
+.SurvivalChart {
+  position: relative;
+}
+
+.Tooltip {
+  font-size: 10px;
+}
+
+.SVG {
+  position: absolute;
+  left: 858px;
+  top: 6px;
+}
+
+.PNG {
+  position: absolute;
+  left: 918px;
+  top: 6px;
+}
+
+.NotAvailable {
+  font-size: 18px;
+  text-align: center;
+  margin: 20px 0;
+}
