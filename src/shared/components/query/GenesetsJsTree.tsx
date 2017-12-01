@@ -149,6 +149,10 @@ export default class GenesetsJsTree extends React.Component<GenesetsJsTreeProps,
                 'show_only_matches': true,
                 'show_only_matches_children': true
             },
+            'checkbox': {
+                'cascade_to_disabled': false,
+                'cascade_to_hidden': false
+            },
             'core' : {
                 'themes': {
                     'icons': false
