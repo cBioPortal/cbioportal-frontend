@@ -1210,12 +1210,16 @@ export class ResultsViewPageStore {
     readonly discreteCNAData = remoteData<DiscreteCopyNumberData[]>({
         await: () => [
             this.studyToMolecularProfileDiscrete,
-            this.studyToDataQueryFilter
+            this.studyToDataQueryFilter,
+            this.genes
         ],
         invoke: async () => {
             const studies = this.studyIds;
             const results: DiscreteCopyNumberData[][] = await Promise.all(studies.map(studyId => {
-                const filter = this.studyToDataQueryFilter.result[studyId];
+                const filter = {
+                    entrezGeneIds: this.genes.result!.map(g=>g.entrezGeneId),
+                    ...this.studyToDataQueryFilter.result[studyId]
+                };
                 const profile = this.studyToMolecularProfileDiscrete.result[studyId];
                 if (filter && profile) {
                     return client.fetchDiscreteCopyNumbersInMolecularProfileUsingPOST({
