@@ -1,5 +1,4 @@
 import * as React from 'react';
-import {Chart} from 'chart.js';
 import SurvivalChart from "./SurvivalChart";
 import {ResultsViewPageStore} from "../ResultsViewPageStore";
 import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator";
@@ -10,37 +9,11 @@ export interface ISurvivalTabProps {
     store: ResultsViewPageStore
 }
 
-export function hideEventPoints(chart: any): void {
-
-    chart.config.data.datasets.map((dataset: any) => {
-        let previousData: number;
-        dataset.data.map((data: any, index: number) => {
-            if (previousData && data.y !== previousData) {
-                let meta = dataset._meta[0] == null ? dataset._meta[1] : dataset._meta[0];
-                meta.data[index]._model.borderColor = 'rgba(0, 0, 0, 0)';
-            }
-            previousData = data.y;
-        });
-    });
-}
-
 @observer
 export default class SurvivalTab extends React.Component<ISurvivalTabProps, {}> {
 
     private overallSurvivalTitleText = 'Overall Survival Kaplan-Meier Estimate';
     private diseaseFreeSurvivalTitleText = 'Disease Free Survival Kaplan-Meier Estimate';
-
-    componentWillMount() {
-        Chart.pluginService.register({
-            beforeDraw: (chart: any) => {
-                //https://github.com/jerairrest/react-chartjs-2/issues/146
-                if (chart.options.title.text === this.overallSurvivalTitleText ||
-                    chart.options.title.text === this.diseaseFreeSurvivalTitleText) {
-                    hideEventPoints(chart);
-                }
-            }
-        });
-    }
 
     public render() {
 
