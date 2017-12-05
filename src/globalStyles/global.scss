@@ -35,6 +35,10 @@ div {
   text-align:left;
 }
 
+a {
+  cursor:pointer;
+}
+
 /* Buttons */
 
 .cta { // "Call To Action"
@@ -418,4 +422,5 @@ th.reactable-header-sort-asc:after {
   border-radius:$cornerBorderRadius;
   border:1px dashed $borderColor;
 }
+
 
