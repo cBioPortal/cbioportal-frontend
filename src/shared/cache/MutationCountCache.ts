@@ -11,7 +11,7 @@ type Query = {
 function key(d:{molecularProfileId:string, sampleId:string}) {
     return `${d.molecularProfileId}~${d.sampleId}`;
 }
-async function fetch(queries:Query[]):Promise<MutationCount[]> {
+export async function fetch(queries:Query[]):Promise<MutationCount[]> {
     const groupedQueries = _.groupBy(queries, x=>x.molecularProfileId);
     const molecularProfileIds = Object.keys(groupedQueries);
     const results:MutationCount[][] = await Promise.all(molecularProfileIds.map(molecularProfileId=>{

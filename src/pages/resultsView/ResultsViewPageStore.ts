@@ -974,6 +974,8 @@ export class ResultsViewPageStore {
                         this.oncoKbAnnotatedGenes.result || {},
                         this.mutationsByGene[gene.hugoGeneSymbol],
                         () => (this.mutationDataCache),
+                        () => (this.genomeNexusEnrichmentCache),
+                        () => (this.mutationCountCache),
                         this.studyIdToStudy,
                         this.molecularProfileIdToMolecularProfile,
                         this.clinicalDataForSamples,
