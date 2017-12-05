@@ -33,6 +33,11 @@ import CNSegments from "./cnSegments/CNSegments";
 import Oncoprint, {GeneticTrackDatum} from "shared/components/oncoprint/Oncoprint";
 import {QuerySession} from "../../shared/lib/QuerySession";
 import ResultsViewOncoprint from "shared/components/oncoprint/ResultsViewOncoprint";
+import QuerySummary from "./querySummary/QuerySummary";
+import {QueryStore} from "../../shared/components/query/QueryStore";
+
+
+const win = (window as any);
 
 function initStore(){
 
@@ -88,6 +93,7 @@ const resultsViewPageStore = initStore();
 
 export interface IResultsViewPageProps {
     routing: any;
+    queryStore: QueryStore
 }
 
 type MutationsTabInitProps = {
@@ -104,14 +110,18 @@ type OncoprintTabInitProps = {
 };
 
 @inject('routing')
+@inject('queryStore')
 @observer
 export default class ResultsViewPage extends React.Component<IResultsViewPageProps, {}> {
 
     private showTwitter = AppConfig.showTwitter === true;
 
     constructor(props: IResultsViewPageProps) {
-        super();
-        this.exposeComponentRenderersToParentScript();
+        super(props);
+        this.exposeComponentRenderersToParentScript(props);
+
+        win.renderQuerySummary(document.getElementById('main_smry_info_div'));
+
     }
 
     componentDidMount(){
@@ -163,7 +173,8 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
     }
 
-    public exposeComponentRenderersToParentScript(){
+    public exposeComponentRenderersToParentScript(props: IResultsViewPageProps){
+
 
         exposeComponentRenderer('renderOncoprint',
             (props:OncoprintTabInitProps)=>{
@@ -180,6 +191,12 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         exposeComponentRenderer('renderCNSegments',
             ()=>{
                 return <CNSegments store={resultsViewPageStore}/>
+            }
+        );
+
+        exposeComponentRenderer('renderQuerySummary',
+            ()=>{
+                return <QuerySummary queryStore={props.queryStore} store={resultsViewPageStore}/>
             }
         );
 
