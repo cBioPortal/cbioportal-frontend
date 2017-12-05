@@ -350,6 +350,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         mrnaExprRankMolecularProfileId={patientViewPageStore.mrnaRankMolecularProfileId.result || undefined}
                                         discreteCNAMolecularProfileId={patientViewPageStore.molecularProfileIdDiscrete.result}
                                         data={patientViewPageStore.mergedMutationDataIncludingUncalled}
+                                        downloadStore={patientViewPageStore.downloadStore}
                                         mutSigData={patientViewPageStore.mutSigData.result}
                                         myCancerGenomeData={patientViewPageStore.myCancerGenomeData}
                                         hotspots={patientViewPageStore.indexedHotspotData}

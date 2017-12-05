@@ -22,6 +22,11 @@ export default class PolyPhen2 extends React.Component<IPolyPhen2Props, {}> {
         this.tooltipContent = this.tooltipContent.bind(this);
     }
 
+    public static download(polyPhenScore: number, polyPhenPrediction: string): string
+    {
+        return `impact: ${polyPhenPrediction}, score: ${polyPhenScore}`;
+    }
+
     public render() {
         let content: JSX.Element = (
             <span className={`${annotationStyles["annotation-item-text"]}`}/>
