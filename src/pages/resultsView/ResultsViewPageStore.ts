@@ -54,6 +54,7 @@ import {CosmicMutation} from "../../shared/api/generated/CBioPortalAPIInternal";
 import internalClient from "../../shared/api/cbioportalInternalClientInstance";
 import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
 import {getAlterationString} from "../../shared/lib/CopyNumberUtils";
+import memoize from "memoize-weak-decorator";
 import request from 'superagent';
 
 export type SamplesSpecificationElement = {studyId: string, sampleId: string, sampleListId: undefined} |
@@ -749,6 +750,27 @@ export class ResultsViewPageStore {
         }
     });
 
+    readonly totalAlterationStats = remoteData<{ alteredSampleCount:number, sampleCount:number }>({
+       await:() => [
+           this.alterationsByGeneBySampleKey,
+           this.samplesExtendedWithClinicalData
+       ],
+       invoke: async ()=>{
+           const countsByGroup = this.getAlterationCountsForCancerTypesForAllGenes(
+               this.alterationsByGeneBySampleKey.result!,
+               this.samplesExtendedWithClinicalData.result!,
+               'cancerType');
+
+           const ret = _.reduce(countsByGroup, (memo, alterationData:IAlterationData)=>{
+                memo.alteredSampleCount += alterationData.alteredSampleCount;
+                memo.sampleCount += alterationData.sampleTotal;
+                return memo;
+           }, { alteredSampleCount: 0, sampleCount:0 } as any);
+
+           return ret;
+       }
+    });
+
     public get studyMap():{ [studyId:string]:CancerStudy } {
         return _.keyBy(this.studies.result, (study:CancerStudy)=>study.studyId);
     }
@@ -765,7 +787,7 @@ export class ResultsViewPageStore {
         return ret;
     }
 
-    public getAlterationCountsForCancerTypesForAllGenes(alterationsByGeneBySampleKey:{ [geneName:string]: {[sampleId: string]: ExtendedAlteration[]} },
+    @memoize public getAlterationCountsForCancerTypesForAllGenes(alterationsByGeneBySampleKey:{ [geneName:string]: {[sampleId: string]: ExtendedAlteration[]} },
                                                    samplesExtendedWithClinicalData:ExtendedSample[],
                                                    discriminator: keyof ExtendedSample){
 
@@ -1359,42 +1381,6 @@ export class ResultsViewPageStore {
         }
     });
 
-    // readonly mutations = remoteData<Mutation[]>({
-    //     await: () => [
-    //         this.selectedMolecularProfiles,
-    //         this.genes,
-    //         this.studyToDataQueryFilter,
-    //     ],
-    //     invoke: async () => {
-    //
-    //         const mutationMolecularProfiles = _.filter(this.selectedMolecularProfiles.result,
-    //             (molecularProfile: MolecularProfile) => {
-    //                 return molecularProfile.molecularAlterationType === AlterationTypeConstants.MUTATION_EXTENDED;
-    //             });
-    //
-    //         if (mutationMolecularProfiles.length) {
-    //             const promises: Promise<Mutation[]>[] = mutationMolecularProfiles.map((mutationMolecularProfile:MolecularProfile)=>{
-    //                 const mutationFilter: MolecularDataFilter = (Object.assign(
-    //                         {},
-    //                         {
-    //                             entrezGeneIds: this.genes.result!.map(gene => gene.entrezGeneId)
-    //                         },
-    //                         this.studyToDataQueryFilter.result![mutationMolecularProfile.studyId]
-    //                     ) as MolecularDataFilter
-    //                 );
-    //                 return client.fetchMutationsInMolecularProfileUsingPOST({
-    //                     molecularProfileId: mutationMolecularProfile.molecularProfileId,
-    //                     mutationFilter,
-    //                     projection: "DETAILED"
-    //                 });
-    //             });
-    //             return _.flatten(await Promise.all(promises));
-    //         } else {
-    //             return [];
-    //         }
-    //     }
-    // });
-
     readonly putativeDriverAnnotatedMutations = remoteData<AnnotatedMutation[]>({
         await:()=>[
             this.mutations
@@ -1476,26 +1462,6 @@ export class ResultsViewPageStore {
             cosmicCount
         };
     }
-
-    // readonly geneToMutData = remoteData<{[hugoGeneSymbol:string]: Mutation[]}>({
-    //     await: () => [
-    //         this.mutations,
-    //         this.genes
-    //     ],
-    //     invoke: async () => {
-    //         const groupedByGene = _.groupBy(this.mutations.result!, (mutation: Mutation) => mutation.gene.hugoGeneSymbol);
-    //         return _.reduce(this.genes.result!, (memo, gene: Gene) => {
-    //             // a gene may have no mutations
-    //             memo[gene.hugoGeneSymbol] = groupedByGene[gene.hugoGeneSymbol] || [];
-    //             return memo;
-    //         },{} as { [hugoGeneSymbol:string] : Mutation[] });
-    //     },
-    //     onResult: (result:{[hugoGeneSymbol: string]: Mutation[]})=>{
-    //         for (const gene of Object.keys(result)) {
-    //             this.mutationDataCache.addData([result[gene]]);
-    //         }
-    //     }
-    // });
 
     // Mutation annotation
     // Hotspots
