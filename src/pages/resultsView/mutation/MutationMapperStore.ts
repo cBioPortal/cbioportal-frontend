@@ -23,9 +23,11 @@ import {
 import MutationMapperDataStore from "./MutationMapperDataStore";
 import PdbChainDataStore from "./PdbChainDataStore";
 import {IMutationMapperConfig} from "./MutationMapper";
-import MutationDataCache from "../../../shared/cache/MutationDataCache";
-import {Gene as OncoKbGene} from "../../../shared/api/generated/OncoKbAPI";
+import MutationDataCache from "shared/cache/MutationDataCache";
+import GenomeNexusEnrichmentCache from "shared/cache/GenomeNexusEnrichment";
+import MutationCountCache from "shared/cache/MutationCountCache";
 import {EnsemblTranscript, PfamDomain, PfamDomainRange} from "shared/api/generated/GenomeNexusAPI";
+import {MutationTableDownloadStore} from "shared/lib/MutationTableDownloadStore";
 
 export class MutationMapperStore {
 
@@ -42,6 +44,8 @@ export class MutationMapperStore {
                 // and we will react when it changes to a new object.
                 public mutations:Mutation[],
                 private getMutationDataCache: ()=>MutationDataCache,
+                private genomeNexusEnrichmentCache: ()=>GenomeNexusEnrichmentCache,
+                private getMutationCountCache: ()=>MutationCountCache,
                 public studyIdToStudy:MobxPromise<{[studyId:string]:CancerStudy}>,
                 public molecularProfileIdToMolecularProfile:MobxPromise<{[molecularProfileId:string]:MolecularProfile}>,
                 public clinicalDataForSamples: MobxPromise<ClinicalData[]>,
@@ -209,6 +213,10 @@ export class MutationMapperStore {
 
     @cached get dataStore():MutationMapperDataStore {
         return new MutationMapperDataStore(this.processedMutationData);
+    }
+
+    @cached get downloadStore():MutationTableDownloadStore {
+        return new MutationTableDownloadStore(this.mutationData, this.genomeNexusEnrichmentCache, this.getMutationCountCache);
     }
 
     @cached get pdbChainDataStore(): PdbChainDataStore {
