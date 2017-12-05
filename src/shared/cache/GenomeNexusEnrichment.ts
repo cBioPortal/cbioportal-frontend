@@ -16,7 +16,7 @@ export type VariantAnnotationEnriched = (
 export type GenomeNexusCacheDataType = CacheData<VariantAnnotationEnriched>;
 
 
-function fetch(queries: Mutation[]):Promise<VariantAnnotationEnriched[]> {
+export function fetch(queries: Mutation[]):Promise<VariantAnnotationEnriched[]> {
     if (queries.length > 0) {
         return genomeNexusClient.fetchVariantAnnotationPOST(
             {

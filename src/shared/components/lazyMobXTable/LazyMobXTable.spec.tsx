@@ -1061,20 +1061,20 @@ describe('LazyMobXTable', ()=>{
         });
     });
     describe('downloading data', ()=>{
-        it("gives just the column names when theres no data in the table", ()=>{
+        it("gives just the column names when theres no data in the table", async ()=>{
             let table = mount(<Table columns={columns} data={[]}/>);
-            assert.deepEqual((table.instance() as LazyMobXTable<any>).getDownloadData(),
+            assert.deepEqual(await (table.instance() as LazyMobXTable<any>).getDownloadData(),
                 "Name\tNumber\tString\tNumber List\tInitially invisible column\tInitially invisible column with no download\tString without filter function\r\n");
         });
-        it("gives one row of data when theres one row. data given for every column, including hidden, and without download def'n. if no data, gives empty string for that cell.", ()=>{
+        it("gives one row of data when theres one row. data given for every column, including hidden, and without download def'n. if no data, gives empty string for that cell.", async ()=>{
             let table = mount(<Table columns={columns} data={[data[0]]}/>);
-            assert.deepEqual((table.instance() as LazyMobXTable<any>).getDownloadData(),
+            assert.deepEqual(await (table.instance() as LazyMobXTable<any>).getDownloadData(),
                 "Name\tNumber\tString\tNumber List\tInitially invisible column\tInitially invisible column with no download\tString without filter function\r\n"+
                 "0\t0\tasdfj\t\t0HELLO123456\t\t\r\n");
         });
-        it("gives data for all rows. data given for every column, including hidden, and without download def'n. if no data, gives empty string for that cell", ()=>{
+        it("gives data for all rows. data given for every column, including hidden, and without download def'n. if no data, gives empty string for that cell", async ()=>{
             let table = mount(<Table columns={columns} data={data}/>)
-            assert.deepEqual((table.instance() as LazyMobXTable<any>).getDownloadData(),
+            assert.deepEqual(await (table.instance() as LazyMobXTable<any>).getDownloadData(),
                 "Name\tNumber\tString\tNumber List\tInitially invisible column\tInitially invisible column with no download\tString without filter function\r\n"+
                 "0\t0\tasdfj\t\t0HELLO123456\t\t\r\n"+
                 "1\t6\tkdfjpo\t\t1HELLO123456\t\t\r\n"+
@@ -1082,10 +1082,10 @@ describe('LazyMobXTable', ()=>{
                 "3\t-1\tzijxcpo\t\t3HELLO123456\t\t\r\n"+
                 "4\t90\tzkzxc\t\t4HELLO123456\t\t\r\n");
         });
-        it("gives data back in sorted order according to initially selected sort column and direction", ()=>{
+        it("gives data back in sorted order according to initially selected sort column and direction", async ()=>{
             let table = mount(<Table columns={columns} data={data} initialSortColumn="Number" initialSortDirection="asc"/>);
 
-            assert.deepEqual((table.instance() as LazyMobXTable<any>).getDownloadData(),
+            assert.deepEqual(await (table.instance() as LazyMobXTable<any>).getDownloadData(),
                 "Name\tNumber\tString\tNumber List\tInitially invisible column\tInitially invisible column with no download\tString without filter function\r\n"+
                 "3\t-1\tzijxcpo\t\t3HELLO123456\t\t\r\n"+
                 "0\t0\tasdfj\t\t0HELLO123456\t\t\r\n"+
@@ -1094,9 +1094,9 @@ describe('LazyMobXTable', ()=>{
                 "2\tnull\tnull\t\t2HELLO123456\t\t\r\n");
         });
         
-        it("gives data for data with multiple elements", ()=>{
+        it("gives data for data with multiple elements", async ()=>{
             let table = mount(<Table columns={columns} data={multiData}/>)
-            assert.deepEqual((table.instance() as LazyMobXTable<any>).getDownloadData(),
+            assert.deepEqual(await (table.instance() as LazyMobXTable<any>).getDownloadData(),
                 "Name\tNumber\tString\tNumber List\tInitially invisible column\tInitially invisible column with no download\tString without filter function\r\n"+
                 "0\t0\tasdfj\t\t0HELLO123456\t\t\r\n"+
                 "1\t6\tkdfjpo\t\t1HELLO123456\t\t\r\n"+

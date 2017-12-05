@@ -16,6 +16,7 @@ import {ButtonToolbar} from "react-bootstrap";
 import { If } from 'react-if';
 import {SortMetric} from "../../lib/ISortMetric";
 import {IMobXApplicationDataStore, SimpleMobXApplicationDataStore} from "../../lib/IMobXApplicationDataStore";
+import {IMobXApplicationDataDownloadStore} from "../../lib/IMobXApplicationDataDownloadStore";
 import {maxPage} from "./utils";
 
 export type SortDirection = 'asc' | 'desc';
@@ -39,6 +40,7 @@ type LazyMobXTableProps<T> = {
     columns:Column<T>[];
     data?:T[];
     dataStore?:IMobXApplicationDataStore<T>;
+    downloadStore?:IMobXApplicationDataDownloadStore;
     initialSortColumn?: string;
     initialSortDirection?:SortDirection;
     initialItemsPerPage?:number;
@@ -192,6 +194,7 @@ class LazyMobXTableStore<T> {
     @observable.ref public columns:Column<T>[];
     @observable private _columnVisibility:{[columnId: string]: boolean};
     @observable public dataStore:IMobXApplicationDataStore<T>;
+    @observable public downloadStore:IMobXApplicationDataDownloadStore|undefined;
     @observable private highlightColor:string;
 
     @computed public get itemsPerPage() {
@@ -495,6 +498,7 @@ class LazyMobXTableStore<T> {
         this._itemsLabelPlural = props.itemsLabelPlural;
         this._columnVisibility = this.resolveColumnVisibility(props.columns);
         this.highlightColor = props.highlightColor!;
+        this.downloadStore = props.downloadStore;
 
         if (props.dataStore) {
             this.dataStore = props.dataStore;
@@ -578,9 +582,23 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
         showCountHeader: false
     };
 
-    public getDownloadData(): string
+    public getDownloadData(): Promise<string>
     {
-        return serializeData(this.store.downloadData);
+        return new Promise<string>((resolve, reject) => {
+            if (this.store.downloadStore) {
+                this.store.downloadStore.loadAllData().then(isLoaded => {
+                    if (isLoaded) {
+                        resolve(serializeData(this.store.downloadData));
+                    }
+                    else {
+                        reject();
+                    }
+                }).catch(reject);
+            }
+            else {
+                resolve(serializeData(this.store.downloadData));
+            }
+        });
     }
 
     constructor(props:LazyMobXTableProps<T>) {

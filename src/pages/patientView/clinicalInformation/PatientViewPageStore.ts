@@ -42,6 +42,7 @@ import {
 } from "shared/lib/StoreUtils";
 import {stringListToSet} from "../../../shared/lib/StringUtils";
 import {Gene as OncoKbGene} from "../../../shared/api/generated/OncoKbAPI";
+import {MutationTableDownloadStore} from "shared/lib/MutationTableDownloadStore";
 
 type PageMode = 'patient' | 'sample';
 
@@ -657,6 +658,10 @@ export class PatientViewPageStore {
 
     @cached get mutationCountCache() {
         return new MutationCountCache();
+    }
+
+    @cached get downloadStore() {
+        return new MutationTableDownloadStore(this.mutationData, () => this.genomeNexusEnrichmentCache);
     }
 
     @action setActiveTabId(id: string) {
