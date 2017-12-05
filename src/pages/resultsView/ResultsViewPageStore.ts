@@ -290,7 +290,7 @@ export class ResultsViewPageStore {
 
     @observable ajaxErrors: Error[] = [];
 
-    @observable hugoGeneSymbols: string[]|null = null;
+    @observable hugoGeneSymbols: string[];
     @observable samplesSpecification: SamplesSpecificationElement[] = [];
 
     @observable zScoreThreshold: number;
