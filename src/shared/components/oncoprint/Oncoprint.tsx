@@ -121,6 +121,7 @@ export interface IOncoprintProps {
 
     onMinimapClose?:()=>void;
     onDeleteClinicalTrack?:(key:string)=>void;
+    onTrackSortDirectionChange?: (trackId:TrackId, dir:number)=>void;
 
     suppressRendering?:boolean;
 }
