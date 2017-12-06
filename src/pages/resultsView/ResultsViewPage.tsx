@@ -15,7 +15,7 @@ import MutualExclusivityTab from "./mutualExclusivity/MutualExclusivityTab";
 import SurvivalTab from "./survival/SurvivalTab";
 import Chart from 'chart.js';
 import AppConfig from 'appConfig';
-import AddThisBookmark from 'shared/components/addThis/addThisBookmark';
+import AddThisBookmark from 'shared/components/addThis/AddThisBookmark';
 import {CancerStudy} from "../../shared/api/generated/CBioPortalAPI";
 import getOverlappingStudies from "../../shared/lib/getOverlappingStudies";
 import OverlappingStudiesWarning from "../../shared/components/overlappingStudiesWarning/OverlappingStudiesWarning";
