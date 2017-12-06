@@ -19,6 +19,8 @@ import 'react-rangeslider/lib/index.css';
 import EditableSpan from "shared/components/editableSpan/EditableSpan";
 import FadeInteraction from "shared/components/fadeInteraction/FadeInteraction";
 import './styles.scss';
+import {SpecialAttribute} from "../../../cache/ClinicalDataCache";
+const CheckedSelect = require("react-select-checked").CheckedSelect;
 
 export interface IOncoprintControlsHandlers {
     onSelectColumnType?:(type:"sample"|"patient")=>void,
@@ -45,7 +47,7 @@ export interface IOncoprintControlsHandlers {
     onClickSortAlphabetical?:()=>void;
     onClickSortCaseListOrder?:()=>void;
     onClickDownload?:(type:string)=>void; // type is "pdf", "png", "svg", "order", or "tabular"
-    onSelectClinicalTrack?:(attributeId:string)=>void;
+    onChangeSelectedClinicalTracks?:(attributeIds:(string|SpecialAttribute)[])=>void;
 
     onClickAddGenesToHeatmap?:()=>void;
     onClickRemoveHeatmap?:()=>void;
@@ -77,6 +79,7 @@ export interface IOncoprintControlsState {
 
     sortMode:SortMode,
     clinicalAttributesPromise?:MobxPromise<OncoprintClinicalAttribute[]>,
+    selectedClinicalAttributeIds?:string[],
     heatmapProfilesPromise?:MobxPromise<MolecularProfile[]>,
     selectedHeatmapProfile?:string;
     heatmapGeneInputValue?: string;
@@ -150,7 +153,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
         this.getMutationColorMenu = this.getMutationColorMenu.bind(this);
         this.getHorzZoomControls = this.getHorzZoomControls.bind(this);
         this.onSelect = this.onSelect.bind(this);
-        this.onClinicalTrackClick = this.onClinicalTrackClick.bind(this);
+        this.onChangeSelectedClinicalTracks = this.onChangeSelectedClinicalTracks.bind(this);
         this.toggleShowMinimap = this.toggleShowMinimap.bind(this);
         this.onType = this.onType.bind(this);
         this.onHeatmapProfileSelect = this.onHeatmapProfileSelect.bind(this);
@@ -188,9 +191,9 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
             this.props.handlers.onSelectDistinguishMutationType(!this.props.state.distinguishMutationType);
         }
     }
-    private onClinicalTrackClick(option:{label:string, value:string}) {
-        this.props.handlers.onSelectClinicalTrack &&
-        this.props.handlers.onSelectClinicalTrack(option.value);
+    private onChangeSelectedClinicalTracks(options:{label:string, value:string|SpecialAttribute}[]) {
+        this.props.handlers.onChangeSelectedClinicalTracks &&
+        this.props.handlers.onChangeSelectedClinicalTracks(options.map(o=>o.value));
     }
     private onHeatmapProfileSelect(option:{label:string, value:string}) {
         this.props.handlers.onSelectHeatmapProfile &&
@@ -374,16 +377,26 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
     }
 
     private getClinicalTracksMenu() {
-        if (this.props.handlers.onSelectClinicalTrack &&
+        if (this.props.handlers.onChangeSelectedClinicalTracks &&
             this.props.state.clinicalAttributesPromise) {
-            return (<ReactSelect
-                placeholder="Add clinical tracks.."
-                isLoading={this.clinicalTracksMenuLoading}
-                noResultsText={this.clinicalTracksMenuLoading ? "Loading..." : "No matching clinical tracks found"}
-                onChange={this.onClinicalTrackClick}
-                options={this.clinicalTrackOptions}
-                onFocus={this.onClinicalTracksMenuFocus}
-            />);
+            // TODO: put onFocus handler on CheckedSelect when possible
+            // TODO: pass unmodified string array as value prop when possible
+            // TODO: remove labelKey specification, leave to default prop, when possible
+            return (
+                <div
+                    onFocus={this.onClinicalTracksMenuFocus}
+                >
+                    <CheckedSelect
+                        placeholder="Add clinical tracks.."
+                        isLoading={this.clinicalTracksMenuLoading}
+                        noResultsText={this.clinicalTracksMenuLoading ? "Loading..." : "No matching clinical tracks found"}
+                        onChange={this.onChangeSelectedClinicalTracks}
+                        options={this.clinicalTrackOptions}
+                        value={(this.props.state.selectedClinicalAttributeIds || []).map(x=>({value:x}))}
+                        labelKey="label"
+                    />
+                </div>
+            );
         } else {
             return <span/>;
         }
