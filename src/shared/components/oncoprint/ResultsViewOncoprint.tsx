@@ -129,7 +129,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         
         const self = this;
 
-        this.onSelectClinicalTrack = this.onSelectClinicalTrack.bind(this);
+        this.onChangeSelectedClinicalTracks = this.onChangeSelectedClinicalTracks.bind(this);
         this.onDeleteClinicalTrack = this.onDeleteClinicalTrack.bind(this);
         this.onMinimapClose = this.onMinimapClose.bind(this);
         this.oncoprintRef = this.oncoprintRef.bind(this);
@@ -176,6 +176,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         this.controlsHandlers = this.buildControlsHandlers();
 
         this.controlsState = observable({
+            get selectedClinicalAttributeIds() {
+                return self.selectedClinicalAttributeIds.keys();
+            },
             get selectedColumnType() {
                 return self.columnMode;
             },
@@ -222,7 +225,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 return self.props.store.mutationAnnotationSettings.cosmicCountThreshold + "";
             },
             get clinicalAttributesPromise() {
-                return self.unselectedClinicalAttributes;
+                return self.clinicalAttributes;
             },
             get sortMode() {
                 return self.sortMode;
@@ -374,7 +377,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             },
             onSelectSortByDrivers:(sort:boolean)=>{this.sortByDrivers=sort;},
             onClickSortByData:()=>{this.sortMode={type:"data"};},
-            onSelectClinicalTrack: this.onSelectClinicalTrack,
+            onChangeSelectedClinicalTracks: this.onChangeSelectedClinicalTracks,
             onChangeHeatmapGeneInputValue:action((s:string)=>{
                 this.heatmapGeneInputValue = s;
                 this.heatmapGeneInputValueUpdater(); // stop updating heatmap input if user has typed
@@ -476,7 +479,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         };
     }
     
-    private initFromUrlParams(paramsMap:any) {
+    @action private initFromUrlParams(paramsMap:any) {
         if (paramsMap[SAMPLE_MODE_URL_PARAM]) {
             this.columnMode = paramsMap[SAMPLE_MODE_URL_PARAM] ? "sample" : "patient";
         }
@@ -488,7 +491,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         }
         if (paramsMap[CLINICAL_TRACKS_URL_PARAM]) {
             const attrIds = paramsMap[CLINICAL_TRACKS_URL_PARAM].split(",");
-            attrIds.map((attrId:string)=>this.onSelectClinicalTrack(attrId));
+            attrIds.map((attrId:string)=>this.selectedClinicalAttributeIds.set(attrId, true));
         }
     }
 
@@ -590,8 +593,11 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         return `${CLINICAL_TRACK_KEY_PREFIX}${clinicalAttributeId}`;
     }
 
-    private onSelectClinicalTrack(clinicalAttributeId:string|SpecialAttribute) {
-        this.selectedClinicalAttributeIds.set(clinicalAttributeId, true);
+    @action private onChangeSelectedClinicalTracks(clinicalAttributeIds:(string|SpecialAttribute)[]) {
+        this.selectedClinicalAttributeIds.clear();
+        for (const clinicalAttributeId of clinicalAttributeIds) {
+            this.selectedClinicalAttributeIds.set(clinicalAttributeId, true);
+        }
     }
 
     private onDeleteClinicalTrack(clinicalTrackKey:string) {
@@ -606,15 +612,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 x=>x.displayName
             ));
             return Promise.resolve(clinicalAttributes);
-        }
-    });
-
-    readonly unselectedClinicalAttributes = remoteData({
-        await:()=>[this.clinicalAttributes],
-        invoke:()=>{
-            return Promise.resolve(this.clinicalAttributes.result!.filter(attr=>{
-                return !this.selectedClinicalAttributeIds.has(attr.clinicalAttributeId);
-            }));
         }
     });
 
