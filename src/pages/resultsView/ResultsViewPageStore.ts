@@ -53,6 +53,7 @@ import {CosmicMutation} from "../../shared/api/generated/CBioPortalAPIInternal";
 import internalClient from "../../shared/api/cbioportalInternalClientInstance";
 import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
 import {getAlterationString} from "../../shared/lib/CopyNumberUtils";
+import request from 'superagent';
 
 export type SamplesSpecificationElement = {studyId: string, sampleId: string, sampleListId: undefined} |
     {studyId: string, sampleId: undefined, sampleListId: string};
@@ -281,6 +282,7 @@ export class ResultsViewPageStore {
         // addErrorHandler((error: any) => {
         //     this.ajaxErrors.push(error);
         // });
+        this.getURL();
     }
 
     @observable public urlValidationError: string | null = null;
@@ -295,6 +297,7 @@ export class ResultsViewPageStore {
     @observable rppaScoreThreshold: number;
 
     @observable oqlQuery: string = '';
+    @observable public sessionIdURL = '';
 
     @observable selectedMolecularProfileIds: string[] = [];
 
@@ -309,6 +312,26 @@ export class ResultsViewPageStore {
         driverFilter: false, // todo fetch from app config
         driverTiers: observable.map<boolean>() // todo fetch from app config
     };
+
+    private getURL() {
+        const shareURL = window.location.href;
+
+        if (!shareURL.includes("session_id")) return;
+
+        const showSamples = shareURL.indexOf("&show");
+        if (showSamples > -1) {
+            this.sessionIdURL = shareURL.slice(0, showSamples);
+        }
+    }
+
+    readonly bitlyShortenedURL = remoteData({
+        invoke: () => {
+            return request.get('http://' + location.host + "/api/url-shortener?url=" + this.sessionIdURL);
+        },
+        onError: () => {
+            //
+        }
+    });
 
     readonly selectedMolecularProfiles = remoteData<MolecularProfile[]>(() => {
         return Promise.all(this.selectedMolecularProfileIds.map((id) => client.getMolecularProfileUsingGET({molecularProfileId: id})));

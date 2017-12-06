@@ -3,7 +3,7 @@ import * as ReactDOM from 'react-dom';
 import * as _ from 'lodash';
 import $ from 'jquery';
 import {observer, inject, Observer} from "mobx-react";
-import {reaction, computed} from "mobx";
+import {reaction, computed, observable} from "mobx";
 import validateParameters from 'shared/lib/validateParameters';
 import ValidationAlert from "shared/components/ValidationAlert";
 import AjaxErrorModal from "shared/components/AjaxErrorModal";
@@ -14,6 +14,8 @@ import Mutations from "./mutation/Mutations";
 import MutualExclusivityTab from "./mutualExclusivity/MutualExclusivityTab";
 import SurvivalTab from "./survival/SurvivalTab";
 import Chart from 'chart.js';
+import AppConfig from 'appConfig';
+import AddThisBookmark from 'shared/components/addThis/addThisBookmark';
 import {CancerStudy} from "../../shared/api/generated/CBioPortalAPI";
 import getOverlappingStudies from "../../shared/lib/getOverlappingStudies";
 import OverlappingStudiesWarning from "../../shared/components/overlappingStudiesWarning/OverlappingStudiesWarning";
@@ -101,6 +103,8 @@ type OncoprintTabInitProps = {
 @observer
 export default class ResultsViewPage extends React.Component<IResultsViewPageProps, {}> {
 
+    private showTwitter = AppConfig.showTwitter === true;
+
     constructor(props: IResultsViewPageProps) {
         super();
         this.exposeComponentRenderersToParentScript();
@@ -131,6 +135,24 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             ,
             target[0]
         );
+
+    }
+
+    get addThisParameters() {
+        const passthrough = this.showTwitter ? {
+            twitter: {
+                hashtags: "cbioportal"
+            }
+        } : {};
+        return {
+            setup: function(url:string){
+                return {
+                    url,
+                    passthrough
+                };
+            },
+            className:"addthis_inline_share_toolbox" + (!this.showTwitter ? '_ubww' : '')
+        };
 
     }
 
@@ -178,6 +200,14 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             return (<div>
                 <MutualExclusivityTab store={resultsViewPageStore}/>
             </div>)
+        });
+
+        exposeComponentRenderer('renderBookmark', () => {
+            return (
+                <div>
+                    <AddThisBookmark store={resultsViewPageStore} getParameters={this.addThisParameters}/>
+                </div>
+            );
         });
 
         exposeComponentRenderer('renderSurvivalTab', () => {
