@@ -72,15 +72,17 @@ function transitionHorzZoomToFit(
     }
 }
 
-function tracksWhoseDataChanged(nextTracks:{key:string, data:any}[], prevTracks:{key:string, data:any}[]) {
-    const ret = [];
+function numTracksWhoseDataChanged(nextTracks:{key:string, data:any}[], prevTracks:{key:string, data:any}[]) {
+    let ret = 0;
     const prevTracksMap = _.keyBy(prevTracks, x=>x.key);
     for (const nextTrack of nextTracks) {
         const prevTrack = prevTracksMap[nextTrack.key];
         if (!prevTrack || (prevTrack.data !== nextTrack.data)) {
-            ret.push(nextTrack);
+            ret += 1;
+            delete prevTracksMap[nextTrack.key];
         }
     }
+    ret += Object.keys(prevTracksMap).length;
     return ret;
 }
 
@@ -92,7 +94,7 @@ function differentTracksOrChangedData(nextTracks:{key:string, data:any}[], prevT
     if (nextTracks.length !== prevTracks.length) {
         ret = true;
     } else {
-        ret = (tracksWhoseDataChanged(nextTracks, prevTracks).length > 0);
+        ret = (numTracksWhoseDataChanged(nextTracks, prevTracks) > 0);
     }
     return ret;
 }
@@ -155,7 +157,7 @@ function shouldSuppressRenderingForTransition(nextProps: IOncoprintProps, prevPr
     //  of incrementally changing the oncoprint state.
     return !nextProps.suppressRendering && // dont add suppress if already suppressing
         (hasGeneticTrackRuleSetChanged(nextProps, prevProps) // will need to rerender all genetic tracks if genetic rule set has changed
-        || (tracksWhoseDataChanged(allTracks(nextProps), allTracks(prevProps)).length > 1));
+        || (numTracksWhoseDataChanged(allTracks(nextProps), allTracks(prevProps)) > 1));
 }
 
 function sortOrder(props:Partial<IOncoprintProps>):string[]|undefined {
