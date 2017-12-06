@@ -14,9 +14,10 @@ import Mutations from "./mutation/Mutations";
 import MutualExclusivityTab from "./mutualExclusivity/MutualExclusivityTab";
 import SurvivalTab from "./survival/SurvivalTab";
 import Chart from 'chart.js';
-import {CancerStudy} from "../../shared/api/generated/CBioPortalAPI";
+import {CancerStudy, Sample} from "../../shared/api/generated/CBioPortalAPI";
 import getOverlappingStudies from "../../shared/lib/getOverlappingStudies";
 import OverlappingStudiesWarning from "../../shared/components/overlappingStudiesWarning/OverlappingStudiesWarning";
+import CNSegments from "./cnSegments/CNSegments";
 
 (Chart as any).plugins.register({
     beforeDraw: function(chartInstance:any) {
@@ -109,6 +110,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
     componentDidMount(){
 
         this.mountOverlappingStudiesWarning();
+        this.mountCNSegmentsTab();
 
     }
 
@@ -122,6 +124,29 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     ()=> {
                         if (resultsViewPageStore.studies.isComplete) {
                             return <OverlappingStudiesWarning studies={resultsViewPageStore.studies.result!}/>
+                        } else {
+                            return <span></span>;
+                        }
+                    }
+                }
+            </Observer>
+            ,
+            target[0]
+        );
+
+    }
+
+    private mountCNSegmentsTab(){
+
+        const target = $('<div class="cbioportal-frontend"></div>').insertBefore("#segment_tabs");
+
+        ReactDOM.render(
+            <Observer>
+                {
+                    ()=> {
+                        if (resultsViewPageStore.samples.isComplete && resultsViewPageStore.genes.isComplete) {
+                            return (<CNSegments store={resultsViewPageStore}
+                            />)
                         } else {
                             return <span></span>;
                         }
