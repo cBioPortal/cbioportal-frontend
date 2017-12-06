@@ -76,6 +76,7 @@
     "@types/seamless-immutable": "^6.1.2",
     "@types/sinon": "^1.16.35",
     "@types/superagent": "^2.0.36",
+    "addthis-snippet": "^1.0.1",
     "autoprefixer": "^6.7.0",
     "babel-core": "^6.22.1",
     "babel-loader": "^6.2.10",
