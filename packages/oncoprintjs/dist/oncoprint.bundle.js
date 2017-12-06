@@ -14861,6 +14861,7 @@ var OncoprintModel = (function () {
 	this.track_sort_cmp_fn = {};
 	this.track_sort_direction_changeable = {};
 	this.track_sort_direction = {}; // 1: ascending, -1: descending, 0: not
+	this.track_sort_direction_change_callback = {};
 	this.track_data = {};
 	this.track_rule_set_id = {}; // track id -> rule set id
 	this.track_active_rules = {}; // from track id to active rule map (map with rule ids as keys)
@@ -15314,6 +15315,7 @@ var OncoprintModel = (function () {
     OncoprintModel.prototype.setTrackSortDirection = function(track_id, dir) {
 	// see above for dir options
 	this.track_sort_direction[track_id] = dir;
+	this.track_sort_direction_change_callback[track_id](track_id, dir);
 	this.precomputed_comparator.update(this, track_id);
     }
     
@@ -15409,7 +15411,7 @@ var OncoprintModel = (function () {
 		    params.cell_height, params.track_padding, params.has_column_spacing,
 		    params.data_id_key, params.tooltipFn,
 		    params.removable, params.removeCallback, params.label, params.description, params.track_info,
-		    params.sortCmpFn, params.sort_direction_changeable, params.init_sort_direction,
+		    params.sortCmpFn, params.sort_direction_changeable, params.init_sort_direction, params.onSortDirectionChange,
 		    params.data, params.rule_set);
 	}
 	this.track_tops.update();
@@ -15419,7 +15421,7 @@ var OncoprintModel = (function () {
 	    cell_height, track_padding, has_column_spacing,
 	    data_id_key, tooltipFn,
 	    removable, removeCallback, label, description, track_info,
-	    sortCmpFn, sort_direction_changeable, init_sort_direction,
+	    sortCmpFn, sort_direction_changeable, init_sort_direction, onSortDirectionChange,
 	    data, rule_set) {
 	model.track_label[track_id] = ifndef(label, "Label");
 	model.track_description[track_id] = ifndef(description, "");
@@ -15438,6 +15440,7 @@ var OncoprintModel = (function () {
 	});
 	
 	model.track_sort_direction_changeable[track_id] = ifndef(sort_direction_changeable, false);
+	model.track_sort_direction_change_callback[track_id] = ifndef(onSortDirectionChange, function() {});
 	model.track_data[track_id] = ifndef(data, []);
 	model.track_data_id_key[track_id] = ifndef(data_id_key, 'id');
 	

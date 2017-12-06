@@ -103,6 +103,7 @@ declare module "oncoprintjs"
         track_info?:string;
         sortCmpFn?:TrackSortSpecification<D>;
         sort_direction_changeable?:boolean;
+        onSortDirectionChange?:(track_id:TrackId, dir:number)=>void;
         init_sort_direction?:TrackSortDirection;
         data?:D[];
         rule_set_params?:RuleSetParams;
