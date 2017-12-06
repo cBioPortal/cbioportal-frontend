@@ -320,14 +320,14 @@ function transitionTracks(
     const prevHeatmapTracks = _.keyBy(prevProps.heatmapTracks || [], track=>track.key);
     for (const track of nextProps.heatmapTracks) {
         transitionHeatmapTrack(track, prevHeatmapTracks[track.key], getTrackSpecKeyToTrackId,
-                                oncoprint, trackIdForRuleSetSharing);
+                                oncoprint, nextProps, trackIdForRuleSetSharing);
         delete prevHeatmapTracks[track.key];
     }
     for (const track of (prevProps.heatmapTracks || [])) {
         if (prevHeatmapTracks.hasOwnProperty(track.key)) {
             // if its still there, then this track no longer exists
             transitionHeatmapTrack(undefined, prevHeatmapTracks[track.key], getTrackSpecKeyToTrackId,
-                                oncoprint, trackIdForRuleSetSharing);
+                                oncoprint, nextProps, trackIdForRuleSetSharing);
         }
     }
 }
@@ -459,7 +459,8 @@ function transitionClinicalTrack(
             //track_info: "\u23f3",
             sortCmpFn: getClinicalTrackSortComparator(nextSpec),
             init_sort_direction: 0 as 0,
-            target_group: 0
+            target_group: 0,
+            onSortDirectionChange: nextProps.onTrackSortDirectionChange
         };
         trackSpecKeyToTrackId[nextSpec.key] = oncoprint.addTracks([clinicalTrackParams])[0];
     } else if (nextSpec && prevSpec) {
@@ -478,6 +479,7 @@ function transitionHeatmapTrack(
     prevSpec:HeatmapTrackSpec|undefined,
     getTrackSpecKeyToTrackId:()=>{[key:string]:TrackId},
     oncoprint:OncoprintJS<any>,
+    nextProps:IOncoprintProps,
     trackIdForRuleSetSharing:{heatmap?:TrackId}
 ) {
     const trackSpecKeyToTrackId = getTrackSpecKeyToTrackId();
@@ -502,7 +504,8 @@ function transitionHeatmapTrack(
             sortCmpFn: heatmapTrackSortComparator,
             init_sort_direction: 0 as 0,
             description: `${nextSpec.label} data from ${nextSpec.molecularProfileId}`,
-            tooltipFn: makeHeatmapTrackTooltip(nextSpec.molecularAlterationType, true)
+            tooltipFn: makeHeatmapTrackTooltip(nextSpec.molecularAlterationType, true),
+            onSortDirectionChange: nextProps.onTrackSortDirectionChange
         };
         const newTrackId = oncoprint.addTracks([heatmapTrackParams])[0];
         trackSpecKeyToTrackId[nextSpec.key] = newTrackId;
