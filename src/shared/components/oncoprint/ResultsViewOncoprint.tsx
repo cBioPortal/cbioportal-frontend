@@ -88,7 +88,7 @@ type HeatmapTrackGroupRecord = {
 
 @observer
 export default class ResultsViewOncoprint extends React.Component<IResultsViewOncoprintProps, {}> {
-    @observable columnMode:"sample"|"patient" = "sample";
+    @observable columnMode:"sample"|"patient" = "patient";
     @observable sortMode:SortMode = {type:"data"};
 
     @observable distinguishMutationType:boolean = true;
