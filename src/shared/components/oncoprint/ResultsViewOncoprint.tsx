@@ -23,7 +23,7 @@ import _ from "lodash";
 import onMobxPromise from "shared/lib/onMobxPromise";
 import AppConfig from "appConfig";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
-import OncoprintJS from "oncoprintjs";
+import OncoprintJS, {TrackId} from "oncoprintjs";
 import fileDownload from 'react-file-download';
 import svgToPdfDownload from "shared/lib/svgToPdfDownload";
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
@@ -134,6 +134,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         this.onMinimapClose = this.onMinimapClose.bind(this);
         this.oncoprintRef = this.oncoprintRef.bind(this);
         this.toggleColumnMode = this.toggleColumnMode.bind(this);
+        this.onTrackSortDirectionChange = this.onTrackSortDirectionChange.bind(this);
 
         onMobxPromise(this.props.store.heatmapMolecularProfiles, (profiles:MolecularProfile[])=>{
             // select first initially
@@ -604,6 +605,13 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         this.selectedClinicalAttributeIds.delete(this.clinicalTrackKeyToAttributeId(clinicalTrackKey));
     }
 
+    private onTrackSortDirectionChange(trackId:TrackId, dir:number) {
+        // called when a clinical or heatmap track is sorted a-Z or Z-a, selected from within oncoprintjs UI
+        if (dir === 1 || dir === -1) {
+            this.sortByData();
+        }
+    }
+
     readonly clinicalAttributes = remoteData({
         await:()=>[this.props.store.clinicalAttributes],
         invoke:()=>{
@@ -804,6 +812,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
                     onMinimapClose={this.onMinimapClose}
                     onDeleteClinicalTrack={this.onDeleteClinicalTrack}
+                    onTrackSortDirectionChange={this.onTrackSortDirectionChange}
                 />
             </div>
         );
