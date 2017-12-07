@@ -217,7 +217,7 @@ export default class GenomeNexusAPI {
      * Retrieves VEP annotation for the provided list of variants
      * @method
      * @name GenomeNexusAPI#fetchVariantAnnotationPOST
-     * @param {} variants - List of variants. For example ["X:g.66937331T>A","17:g.41242962->GA"]
+     * @param {} variants - List of variants. For example ["X:g.66937331T>A","17:g.41242962_41242963insGA"]
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
      * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor
      */
@@ -304,7 +304,7 @@ export default class GenomeNexusAPI {
      * Retrieves VEP annotation for the provided variant
      * @method
      * @name GenomeNexusAPI#fetchVariantAnnotationGET
-     * @param {string} variant - Variant. For example 17:g.41242962->GA
+     * @param {string} variant - Variant. For example 17:g.41242962_41242963insGA
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
      * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor
      */

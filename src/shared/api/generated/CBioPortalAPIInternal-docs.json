@@ -477,7 +477,7 @@
             "name": "threshold",
             "in": "query",
             "description": "Threshold",
-            "required": true,
+            "required": false,
             "type": "number",
             "default": 0.3,
             "format": "double"
@@ -856,7 +856,7 @@
             "name": "cutoff",
             "in": "query",
             "description": "Cutoff",
-            "required": true,
+            "required": false,
             "type": "number",
             "default": 0.2,
             "format": "double"
