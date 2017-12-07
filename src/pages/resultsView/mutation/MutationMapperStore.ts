@@ -40,6 +40,7 @@ export class MutationMapperStore {
                 // so that when it changes we won't react. Thus we need to access it as store.mutationDataCache
                 // (which will be done in the getter thats passed in here) so that the cache itself is observable
                 // and we will react when it changes to a new object.
+                public mutations:Mutation[],
                 private getMutationDataCache: ()=>MutationDataCache,
                 public studyIdToStudy:MobxPromise<{[studyId:string]:CancerStudy}>,
                 public molecularProfileIdToMolecularProfile:MobxPromise<{[molecularProfileId:string]:MolecularProfile}>,
@@ -64,10 +65,7 @@ export class MutationMapperStore {
 
     readonly mutationData = remoteData({
         invoke: async () => {
-            // Don't do debouncingPopulate while getting the mutation data, get it immediately for this gene
-            // debouncing causes double rendering (first for the default empty data, and then for the actual data)
-            const cacheData = await this.getMutationDataCache().getImmediately({entrezGeneId: this.gene.entrezGeneId});
-            return cacheData && cacheData.data || [];
+            return this.mutations;
         }
     }, []);
 
