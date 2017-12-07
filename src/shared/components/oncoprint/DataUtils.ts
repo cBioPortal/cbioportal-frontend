@@ -379,6 +379,27 @@ function fillClinicalTrackDatum(
     return trackDatum;
 }
 
+function makeGetDataForCase(
+    attribute: ClinicalAttribute,
+    queryBy:"sample"|"patient",
+    data: (ClinicalData|MutationCount|FractionGenomeAltered|MutationSpectrum)[]
+):(case_:Sample|Patient)=>(ClinicalData|MutationCount|FractionGenomeAltered|MutationSpectrum)[] {
+    if (attribute.patientAttribute) {
+        const uniqueKeyToData = _.groupBy(data, datum=>datum.uniquePatientKey);
+        return function(case_:Sample|Patient) {
+            return uniqueKeyToData[case_.uniquePatientKey];
+        };
+    } else {
+        const getKey = queryBy === "sample" ?
+            (x:{uniqueSampleKey:string, uniquePatientKey:string})=>x.uniqueSampleKey :
+            (x:{uniqueSampleKey:string, uniquePatientKey:string})=>x.uniquePatientKey;
+        const uniqueKeyToData:any = _.groupBy(data, getKey);
+        return function (case_:Sample|Patient) {
+            return uniqueKeyToData[getKey(case_)];
+        }
+    }
+}
+
 export function makeClinicalTrackData(
     attribute:ClinicalAttribute,
     cases:Sample[]|Patient[],
@@ -389,9 +410,13 @@ export function makeClinicalTrackData(
         = _.groupBy(data,
         isSampleList(cases) ?
             datum=>datum.uniqueSampleKey :
-            datum=>datum.uniquePatientKey);// TS error will be gone when ersin updates API
+            datum=>datum.uniquePatientKey);
 
     // Create oncoprint data
+    const getDataForCase = makeGetDataForCase(
+        attribute, ((isSampleList(cases)) ? "sample" : "patient"), data
+    );
+
     let ret:ClinicalTrackDatum[];
     if (isSampleList(cases)) {
         ret = cases.map(sample=>{
@@ -402,7 +427,7 @@ export function makeClinicalTrackData(
                 trackDatum,
                 attribute,
                 sample,
-                uniqueKeyToData[sample.uniqueSampleKey]
+                getDataForCase(sample)
             );
             return trackDatum as ClinicalTrackDatum;
         });
@@ -415,7 +440,7 @@ export function makeClinicalTrackData(
                 trackDatum,
                 attribute,
                 patient,
-                uniqueKeyToData[patient.uniquePatientKey]
+                getDataForCase(patient)
             );
             return trackDatum as ClinicalTrackDatum;
         });
