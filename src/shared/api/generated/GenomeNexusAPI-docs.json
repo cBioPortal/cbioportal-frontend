@@ -53,7 +53,7 @@
           {
             "in": "body",
             "name": "variants",
-            "description": "List of variants. For example [\"X:g.66937331T>A\",\"17:g.41242962->GA\"]",
+            "description": "List of variants. For example [\"X:g.66937331T>A\",\"17:g.41242962_41242963insGA\"]",
             "required": true,
             "schema": {
               "type": "array",
@@ -112,7 +112,7 @@
           {
             "name": "variant",
             "in": "path",
-            "description": "Variant. For example 17:g.41242962->GA",
+            "description": "Variant. For example 17:g.41242962_41242963insGA",
             "required": true,
             "type": "string"
           },
