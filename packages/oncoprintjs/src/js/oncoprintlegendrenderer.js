@@ -138,7 +138,7 @@ var OncoprintLegendView = (function() {
             linear_gradient.appendChild(svgfactory.stop(offset, config.negative_color));
             linear_gradient.appendChild(svgfactory.stop(offset, config.positive_color));
         }
-        root.appendChild(linear_gradient);
+        target_defs.appendChild(linear_gradient);
 	    points.push([5, 20]);
 	    for (var i=0; i<mesh; i++) {
 		var t = i/mesh;
