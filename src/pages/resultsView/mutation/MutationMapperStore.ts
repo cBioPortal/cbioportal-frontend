@@ -31,6 +31,7 @@ export class MutationMapperStore {
 
     constructor(protected config: IMutationMapperConfig,
                 public gene:Gene,
+                public mutations:Mutation[],
                 public samples:MobxPromise<SampleIdentifier[]>,
                 public oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean},
                 // getMutationDataCache needs to be a getter for the following reason:
@@ -73,10 +74,7 @@ export class MutationMapperStore {
 
     readonly mutationData = remoteData({
         invoke: async () => {
-            // Don't do debouncingPopulate while getting the mutation data, get it immediately for this gene
-            // debouncing causes double rendering (first for the default empty data, and then for the actual data)
-            const cacheData = await this.getMutationDataCache().getImmediately({entrezGeneId: this.gene.entrezGeneId});
-            return cacheData && cacheData.data || [];
+            return this.mutations;
         }
     }, []);
 
