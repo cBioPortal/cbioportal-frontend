@@ -114,11 +114,12 @@ module.exports = {
 	    'fill-opacity': linearGradient ? 1 : fill.opacity
 	});
     },
-    stop: function (offset, stop_color, stop_opacity) {
+    stop: function (offset, color) {
+        var extracted = extractColor(color);
 		return makeSVGElement('stop', {
 			'offset': offset + '%',
-			'stop-color': stop_color,
-			'stop-opacity': stop_opacity
+			'stop-color': extracted.rgb,
+			'stop-opacity': extracted.opacity
 	});
 	},
 	linearGradient: function () {
@@ -136,9 +137,8 @@ module.exports = {
 	    'y2':0
 	});
 	for (var i=0; i<=100; i++) {
-	    var color = extractColor(colorFn(i/100));
 	    gradient.appendChild(
-	    	this.stop(i, color.rgb, color.opacity)
+	    	this.stop(i, colorFn(i/100))
 		);
 	}
 	return gradient;
