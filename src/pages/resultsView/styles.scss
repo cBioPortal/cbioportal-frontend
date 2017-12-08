@@ -1,0 +1,29 @@
+#oncoprint {
+  border:none !important;
+  padding:0 !important;
+
+
+  #oncoprint-inner {
+    .noselect > div {
+      overflow:auto !important;
+    }
+  }
+
+}
+
+.oncoprintLoadingIndicator {
+  height:200px;
+  border-radius:4px;
+  background-color:#eee;
+  display:flex;
+  justify-content: center;
+  align-items:center;
+  margin-top:10px;
+  flex-direction:column;
+
+  div {
+    margin-bottom:5px;
+  }
+
+
+}
