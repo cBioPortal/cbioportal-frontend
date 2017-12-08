@@ -11,14 +11,16 @@ import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
 import {ResultsViewPageStore, SamplesSpecificationElement} from "./ResultsViewPageStore";
 import CancerSummaryContainer from "shared/components/cancerSummary/CancerSummaryContainer";
 import Mutations from "./mutation/Mutations";
+import {stringListToSet} from "../../shared/lib/StringUtils";
 import MutualExclusivityTab from "./mutualExclusivity/MutualExclusivityTab";
 import SurvivalTab from "./survival/SurvivalTab";
 import Chart from 'chart.js';
+import {CancerStudy, Sample} from "../../shared/api/generated/CBioPortalAPI";
 import AppConfig from 'appConfig';
 import AddThisBookmark from 'shared/components/addThis/AddThisBookmark';
-import {CancerStudy} from "../../shared/api/generated/CBioPortalAPI";
 import getOverlappingStudies from "../../shared/lib/getOverlappingStudies";
 import OverlappingStudiesWarning from "../../shared/components/overlappingStudiesWarning/OverlappingStudiesWarning";
+import CNSegments from "./cnSegments/CNSegments";
 
 (Chart as any).plugins.register({
     beforeDraw: function(chartInstance:any) {
@@ -30,25 +32,33 @@ import OverlappingStudiesWarning from "../../shared/components/overlappingStudie
 import Oncoprint, {GeneticTrackDatum} from "shared/components/oncoprint/Oncoprint";
 import {QuerySession} from "../../shared/lib/QuerySession";
 import ResultsViewOncoprint from "shared/components/oncoprint/ResultsViewOncoprint";
+import QuerySummary from "./querySummary/QuerySummary";
+import {QueryStore} from "../../shared/components/query/QueryStore";
 
-function initStore() {
+
+const win = (window as any);
+
+function initStore(){
+
+    const serverVars: any = (window as any).serverVars;
+
+    const oqlQuery = serverVars.theQuery;
+
+    const parsedOQL = (window as any).oql_parser.parse(oqlQuery);
 
     const resultsViewPageStore = new ResultsViewPageStore();
 
     // following is a bunch of dirty stuff necessary to read state from jsp page
     // ultimate we will phase this out and this information will be stored in router etc.
-    const qSession: any = (window as any).QuerySession;
-    var props = {
-        genes: qSession.getQueryGenes()
-    };
-    var samplesSpecification: any = [];
-    if (["-1", "all"].indexOf(qSession.getCaseSetId()) > -1) {
+    //const qSession:any = (window as any).QuerySession;
+    var samplesSpecification:any = [];
+    if (["-1", "all"].indexOf(serverVars.caseSetProperties.case_set_id) > -1) {
         // "-1" means custom case id, "all" means all cases in the queried stud(y/ies). Neither is an actual case set that could eg be queried
-        var studyToSampleMap = qSession.getStudySampleMap();
+        var studyToSampleMap = serverVars.studySampleObj;
         var studies = Object.keys(studyToSampleMap);
-        for (var i = 0; i < studies.length; i++) {
+        for (var i=0; i<studies.length; i++) {
             var study = studies[i];
-            samplesSpecification = samplesSpecification.concat(studyToSampleMap[study].map(function (sampleId: string) {
+            samplesSpecification = samplesSpecification.concat(studyToSampleMap[study].map(function(sampleId:string) {
                 return {
                     sampleId: sampleId,
                     studyId: study
@@ -56,22 +66,21 @@ function initStore() {
             }));
         }
     } else {
-        var studyToSampleListIdMap = qSession.getStudySampleListMap();
-        var studies = Object.keys(studyToSampleListIdMap);
-        for (var i = 0; i < studies.length; i++) {
+        var studies = Object.keys(serverVars.studySampleListMap);
+        for (var i=0; i<studies.length; i++) {
             samplesSpecification.push({
-                sampleListId: studyToSampleListIdMap[studies[i]],
+                sampleListId: serverVars.studySampleListMap[studies[i]],
                 studyId: studies[i]
             });
         }
     }
 
     resultsViewPageStore.samplesSpecification = samplesSpecification;
-    resultsViewPageStore.hugoGeneSymbols = qSession.getQueryGenes();
-    resultsViewPageStore.selectedMolecularProfileIds = qSession.getGeneticProfileIds();
-    resultsViewPageStore.rppaScoreThreshold = qSession.getRppaScoreThreshold();
-    resultsViewPageStore.zScoreThreshold = qSession.getZScoreThreshold();
-    resultsViewPageStore.oqlQuery = qSession.oql_query;
+    resultsViewPageStore.hugoGeneSymbols = _.map(parsedOQL,(o:any)=>o.gene); //qSession.getQueryGenes();
+    resultsViewPageStore.selectedMolecularProfileIds = serverVars.molecularProfiles; // qSession.getGeneticProfileIds();
+    resultsViewPageStore.rppaScoreThreshold = serverVars.rppaScoreThreshold; // FIX!
+    resultsViewPageStore.zScoreThreshold = serverVars.zScoreThreshold;
+    resultsViewPageStore.oqlQuery = oqlQuery;
 
     return resultsViewPageStore;
 
@@ -83,16 +92,16 @@ const resultsViewPageStore = initStore();
 
 export interface IResultsViewPageProps {
     routing: any;
+    queryStore: QueryStore
 }
 
 type MutationsTabInitProps = {
     genes: string[];
-    samplesSpecification: SamplesSpecificationElement[]
+    samplesSpecification:SamplesSpecificationElement[]
 };
 
 type OncoprintTabInitProps = {
     divId: string;
-    querySession:QuerySession;
     customDriverMetadata:{
         hasDriverAnnotations: boolean,
         customDriverTiers: string[]
@@ -100,14 +109,18 @@ type OncoprintTabInitProps = {
 };
 
 @inject('routing')
+@inject('queryStore')
 @observer
 export default class ResultsViewPage extends React.Component<IResultsViewPageProps, {}> {
 
     private showTwitter = AppConfig.showTwitter === true;
 
     constructor(props: IResultsViewPageProps) {
-        super();
-        this.exposeComponentRenderersToParentScript();
+        super(props);
+        this.exposeComponentRenderersToParentScript(props);
+
+        win.renderQuerySummary(document.getElementById('main_smry_info_div'));
+
     }
 
     componentDidMount(){
@@ -159,7 +172,8 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
     }
 
-    public exposeComponentRenderersToParentScript(){
+    public exposeComponentRenderersToParentScript(props: IResultsViewPageProps){
+
 
         exposeComponentRenderer('renderOncoprint',
             (props:OncoprintTabInitProps)=>{
@@ -172,8 +186,21 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     />
                 );
             });
+
+        exposeComponentRenderer('renderCNSegments',
+            ()=>{
+                return <CNSegments store={resultsViewPageStore}/>
+            }
+        );
+
+        exposeComponentRenderer('renderQuerySummary',
+            ()=>{
+                return <QuerySummary queryStore={props.queryStore} store={resultsViewPageStore}/>
+            }
+        );
+
         exposeComponentRenderer('renderMutationsTab',
-            (props: MutationsTabInitProps) => {
+             ()=>{
                 return <div>
                     <AjaxErrorModal
                         show={(resultsViewPageStore.ajaxErrors.length > 0)}
@@ -181,7 +208,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                             resultsViewPageStore.clearErrors()
                         }}
                     />
-                    <Mutations genes={props.genes} store={resultsViewPageStore}/>
+                    <Mutations store={resultsViewPageStore}/>
                 </div>
             });
 
@@ -197,6 +224,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     <CancerSummaryContainer store={resultsViewPageStore}/>
                 </div>
             });
+
 
         exposeComponentRenderer('renderMutExTab', () => {
 
