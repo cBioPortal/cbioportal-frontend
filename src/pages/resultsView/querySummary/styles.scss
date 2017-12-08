@@ -1,9 +1,9 @@
-.results-summary {
+.query-summary {
   display:flex;
   justify-content: space-between;
   align-items: center;
 
-  .results-summary__leftItems {
+  .query-summary__leftItems {
     display:flex;
     align-items:center;
 
@@ -12,12 +12,12 @@
     }
 
     h4 {
-      margin-bottom:5px !important;
+      margin-bottom:3px !important;
     }
 
   }
 
-  .results-summary__alterationData {
+  .query-summary__alterationData {
     h4 {
       color:$text-color !important;
     }

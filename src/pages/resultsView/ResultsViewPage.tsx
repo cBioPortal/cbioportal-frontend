@@ -21,6 +21,7 @@ import AddThisBookmark from 'shared/components/addThis/AddThisBookmark';
 import getOverlappingStudies from "../../shared/lib/getOverlappingStudies";
 import OverlappingStudiesWarning from "../../shared/components/overlappingStudiesWarning/OverlappingStudiesWarning";
 import CNSegments from "./cnSegments/CNSegments";
+import './styles.scss';
 
 (Chart as any).plugins.register({
     beforeDraw: function(chartInstance:any) {
