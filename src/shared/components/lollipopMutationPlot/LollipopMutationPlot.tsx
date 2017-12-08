@@ -353,17 +353,19 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
 
         this.handlers = {
             handleYAxisMaxSliderChange: action((event:any)=>{
-                let inputValue:string = (event.target as HTMLInputElement).value;
-                this._yMaxInput = _.clamp(parseInt(inputValue, 10), this.countRange[0], this.countRange[1]);
+                const inputValue:string = (event.target as HTMLInputElement).value;
+                const value = parseInt(inputValue, 10);
+                this._yMaxInput = value < this.countRange[0] ? this.countRange[0] : value;
             }),
-            handleYAxisMaxChange: action((val:string)=>{
-                this._yMaxInput = _.clamp(parseInt(val, 10), this.countRange[0], this.countRange[1]);
+            handleYAxisMaxChange: action((inputValue:string)=>{
+                const value = parseInt(inputValue, 10);
+                this._yMaxInput = value < this.countRange[0] ? this.countRange[0] : value;
             }),
             handleSVGClick:()=>{
                 fileDownload(this.toSVGDOMNode().outerHTML,`${this.hugoGeneSymbol}_lollipop.svg`);
             },
             handlePDFClick:()=>{
-                this.downloadAsPDF(`${this.hugoGeneSymbol}_lollipop.pdf`)
+                this.downloadAsPDF(`${this.hugoGeneSymbol}_lollipop.pdf`);
             },
             onYMaxInputFocused:()=>{
                 this.yMaxInputFocused = true;
@@ -380,8 +382,14 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
         };
     }
 
-    @computed get yMax() {
+    @computed get yMaxSlider() {
+        // we don't want max slider value to go over the actual max, even if the user input goes over it
         return Math.min(this.countRange[1], this._yMaxInput || this.countRange[1]);
+    }
+
+    @computed get yMaxInput() {
+        // allow the user input value to go over the actual count rage
+        return this._yMaxInput || this.countRange[1];
     }
 
     private get legend() {
@@ -457,11 +465,11 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                                         max={this.countRange[1]}
                                         step="1"
                                         onChange={this.handlers.handleYAxisMaxSliderChange}
-                                        value={this.yMax}
+                                        value={this.yMaxSlider}
                                     />
                                     <EditableSpan
                                         className={styles["ymax-number-input"]}
-                                        value={this.yMax + ""}
+                                        value={`${this.yMaxInput}`}
                                         setValue={this.handlers.handleYAxisMaxChange}
                                         numericOnly={true}
                                         onFocus={this.handlers.onYMaxInputFocused}
@@ -495,7 +503,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                                 this.props.store.canonicalTranscript.result.proteinLength) ||
                             (this.props.store.gene.length / 3)
                         }
-                        yMax={this.yMax}
+                        yMax={this.yMaxInput}
                         onXAxisOffset={this.props.onXAxisOffset}
                     />
                 </div>
