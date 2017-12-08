@@ -241,6 +241,14 @@ export type GenePanel = {
         'genes': Array < GenePanelToGene >
 
 };
+export type MolecularDataMultipleStudyFilter = {
+    'entrezGeneIds': Array < number >
+
+        'molecularProfileIds': Array < string >
+
+        'sampleMolecularIdentifiers': Array < SampleMolecularIdentifier >
+
+};
 export type SampleIdentifier = {
     'sampleId': string
 
@@ -1483,6 +1491,81 @@ export default class CBioPortalAPI {
             });
         };
 
+    fetchMolecularDataInMultipleMolecularProfilesUsingPOSTURL(parameters: {
+        'molecularDataMultipleStudyFilter': MolecularDataMultipleStudyFilter,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/molecular-data/fetch';
+
+        if (parameters['projection'] !== undefined) {
+            queryParameters['projection'] = parameters['projection'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch molecular data
+     * @method
+     * @name CBioPortalAPI#fetchMolecularDataInMultipleMolecularProfilesUsingPOST
+     * @param {} molecularDataMultipleStudyFilter - List of Molecular Profile ID and Sample ID pairs and Entrez Gene IDs
+     * @param {string} projection - Level of detail of the response
+     */
+    fetchMolecularDataInMultipleMolecularProfilesUsingPOST(parameters: {
+            'molecularDataMultipleStudyFilter': MolecularDataMultipleStudyFilter,
+            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < GeneMolecularData >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/molecular-data/fetch';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                if (parameters['molecularDataMultipleStudyFilter'] !== undefined) {
+                    body = parameters['molecularDataMultipleStudyFilter'];
+                }
+
+                if (parameters['molecularDataMultipleStudyFilter'] === undefined) {
+                    reject(new Error('Missing required  parameter: molecularDataMultipleStudyFilter'));
+                    return;
+                }
+
+                if (parameters['projection'] !== undefined) {
+                    queryParameters['projection'] = parameters['projection'];
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
     getAllMolecularProfilesUsingGETURL(parameters: {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
@@ -2134,7 +2217,7 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Fetch molecular data by sample ID(s)
+     * Fetch molecular data in a molecular profile
      * @method
      * @name CBioPortalAPI#fetchAllMolecularDataInMolecularProfileUsingPOST
      * @param {string} molecularProfileId - Molecular Profile ID e.g. acc_tcga_rna_seq_v2_mrna
@@ -2530,7 +2613,7 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Fetch mutations in a molecular profile by sample IDs
+     * Fetch mutations in a molecular profile
      * @method
      * @name CBioPortalAPI#fetchMutationsInMolecularProfileUsingPOST
      * @param {string} molecularProfileId - Molecular Profile ID e.g. acc_tcga_mutations
