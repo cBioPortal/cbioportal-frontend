@@ -285,7 +285,11 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 return self.columnMode;
             },
             get horzZoom() {
-                return self.horzZoom;
+                if (isNaN(self.horzZoom)) {
+                    return 1;
+                } else {
+                    return self.horzZoom;
+                }
             },
         });
     }
