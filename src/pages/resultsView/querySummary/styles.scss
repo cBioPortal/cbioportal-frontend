@@ -1,0 +1,25 @@
+.results-summary {
+  display:flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .results-summary__leftItems {
+    display:flex;
+    align-items:center;
+
+    > div {
+      margin-right:10px;
+    }
+
+    h4 {
+      margin-bottom:5px !important;
+    }
+
+  }
+
+  .results-summary__alterationData {
+    h4 {
+      color:$text-color !important;
+    }
+  }
+}
