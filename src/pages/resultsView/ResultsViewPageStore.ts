@@ -1383,12 +1383,13 @@ export class ResultsViewPageStore {
 
     readonly putativeDriverAnnotatedMutations = remoteData<AnnotatedMutation[]>({
         await:()=>[
-            this.mutations
+            this.mutations,
+            this.getPutativeDriverInfo
         ],
         invoke:()=>{
             return Promise.resolve(this.mutations.result!.reduce((annotated:AnnotatedMutation[], mutation:Mutation)=>{
                 // annotate
-                const putativeDriverInfo = this.getPutativeDriverInfo(mutation);
+                const putativeDriverInfo = this.getPutativeDriverInfo.result!(mutation);
                 const putativeDriver =
                     !!(putativeDriverInfo.oncoKb ||
                     putativeDriverInfo.hotspots ||
@@ -1429,39 +1430,59 @@ export class ResultsViewPageStore {
         }
     });
 
-    public getPutativeDriverInfo(mutation:Mutation) {
-        const oncoKbDatum:IndicatorQueryResp | undefined | null | false = this.mutationAnnotationSettings.oncoKb &&
-            this.getOncoKbMutationAnnotation.isComplete &&
-            this.getOncoKbMutationAnnotation.result(mutation);
+    readonly getPutativeDriverInfo = remoteData({
+        await:()=>{
+            const toAwait = [];
+            if (this.mutationAnnotationSettings.oncoKb) {
+                toAwait.push(this.getOncoKbMutationAnnotation);
+            }
+            if (this.mutationAnnotationSettings.hotspots) {
+                toAwait.push(this.isHotspot);
+            }
+            if (this.mutationAnnotationSettings.cbioportalCount) {
+                toAwait.push(this.getCBioportalCount);
+            }
+            if (this.mutationAnnotationSettings.cosmicCount) {
+                toAwait.push(this.getCosmicCount);
+            }
+            return toAwait;
+        },
+        invoke:()=>{
+            return Promise.resolve((mutation:Mutation):{oncoKb:string, hotspots:boolean, cbioportalCount:boolean, cosmicCount:boolean}=>{
+                const oncoKbDatum:IndicatorQueryResp | undefined | null | false = this.mutationAnnotationSettings.oncoKb &&
+                    this.getOncoKbMutationAnnotation.isComplete &&
+                    this.getOncoKbMutationAnnotation.result(mutation);
 
-        let oncoKb:string = ((oncoKbDatum && oncoKbDatum.oncogenic) || "").toLowerCase();
-        if (ONCOKB_ONCOGENIC_LOWERCASE.indexOf(oncoKb) === -1) {
-            oncoKb = "";
+                let oncoKb:string = ((oncoKbDatum && oncoKbDatum.oncogenic) || "").toLowerCase();
+                if (ONCOKB_ONCOGENIC_LOWERCASE.indexOf(oncoKb) === -1) {
+                    oncoKb = "";
+                }
+
+                const hotspots:boolean =
+                    (this.mutationAnnotationSettings.hotspots &&
+                    this.isHotspot.isComplete &&
+                    this.isHotspot.result(mutation));
+
+                const cbioportalCount:boolean =
+                    (this.mutationAnnotationSettings.cbioportalCount &&
+                    this.getCBioportalCount.isComplete &&
+                    this.getCBioportalCount.result!(mutation) >=
+                    this.mutationAnnotationSettings.cbioportalCountThreshold);
+
+                const cosmicCount:boolean =
+                    (this.mutationAnnotationSettings.cosmicCount &&
+                    this.getCosmicCount.isComplete &&
+                    this.getCosmicCount.result!(mutation) >= this.mutationAnnotationSettings.cosmicCountThreshold);
+
+                return {
+                    oncoKb,
+                    hotspots,
+                    cbioportalCount,
+                    cosmicCount
+                }
+            });
         }
-
-        const hotspots:boolean =
-            (this.mutationAnnotationSettings.hotspots &&
-            this.isHotspot.isComplete &&
-            this.isHotspot.result(mutation));
-
-        const cbioportalCount:boolean =
-            (this.mutationAnnotationSettings.cbioportalCount &&
-            this.getCBioportalCount.isComplete &&
-            this.getCBioportalCount.result!(mutation) >=
-            this.mutationAnnotationSettings.cbioportalCountThreshold);
-
-        const cosmicCount:boolean =
-            (this.mutationAnnotationSettings.cosmicCount &&
-            this.getCosmicCount.isComplete &&
-            this.getCosmicCount.result!(mutation) >= this.mutationAnnotationSettings.cosmicCountThreshold);
-
-        return {
-            oncoKb,
-            hotspots,
-            cbioportalCount,
-            cosmicCount
-        };
-    }
+    });
 
     // Mutation annotation
     // Hotspots
