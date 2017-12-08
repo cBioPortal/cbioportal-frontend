@@ -180,16 +180,19 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
         return ret;
     }
 
-    private domainTooltip(range:PfamDomainRange, domain:PfamDomain):JSX.Element {
-        const pfamAccession = domain.pfamAccession;
+    private domainTooltip(range:PfamDomainRange, domain:PfamDomain|undefined, pfamAcc:string):JSX.Element {
+        const pfamAccession = domain ? domain.pfamAccession : pfamAcc;
         const mutationAlignerLink = this.mutationAlignerLinks.result[pfamAccession];
         const mutationAlignerA = mutationAlignerLink ?
             (<a href={mutationAlignerLink} target="_blank">Mutation Aligner</a>) : null;
 
+        // if no domain info, then just display the accession
+        const domainInfo = domain ? `${domain.name}: ${domain.description}` : pfamAccession;
+
         return (
             <div style={{maxWidth: 200}}>
                 <div>
-                    {domain.name}: {domain.description} ({range.pfamDomainStart} - {range.pfamDomainEnd})
+                    {domainInfo} ({range.pfamDomainStart} - {range.pfamDomainEnd})
                 </div>
                 <div>
                     <a
@@ -220,9 +223,9 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                 return {
                     startCodon: range.pfamDomainStart,
                     endCodon: range.pfamDomainEnd,
-                    label: domain.name,
+                    label: domain ? domain.name : range.pfamDomainId,
                     color: this.domainColorMap[range.pfamDomainId],
-                    tooltip: this.domainTooltip(range, domain)
+                    tooltip: this.domainTooltip(range, domain, range.pfamDomainId)
                 };
             });
         }
