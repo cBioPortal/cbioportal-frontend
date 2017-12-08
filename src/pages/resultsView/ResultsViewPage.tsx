@@ -109,7 +109,10 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                 {
                     ()=> {
                         if (resultsViewPageStore.studies.isComplete) {
-                            return <OverlappingStudiesWarning studies={resultsViewPageStore.studies.result!}/>
+                            //return <OverlappingStudiesWarning studies={resultsViewPageStore.studies.result!}/>
+                            // disable overlapping studies warning until #3395
+                            // is implemented
+                            return <span></span>;
                         } else {
                             return <span></span>;
                         }
