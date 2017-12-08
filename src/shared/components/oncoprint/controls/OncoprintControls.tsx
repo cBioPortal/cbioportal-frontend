@@ -848,7 +848,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
     render() {
         return (
             <div className="oncoprint__controls">
-                <div style={{float:"left", width:"220px"}}>
+                <div style={{width:220}}>
                     <Observer>
                         {this.getClinicalTracksMenu}
                     </Observer>
