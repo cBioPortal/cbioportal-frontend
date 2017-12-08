@@ -1,0 +1,12 @@
+#oncoprint {
+  border:none !important;
+  padding:0 !important;
+
+
+  #oncoprint-inner {
+    .noselect > div {
+      overflow:auto !important;
+    }
+  }
+
+}
