@@ -18,7 +18,6 @@ import Chart from 'chart.js';
 import {CancerStudy, Sample} from "../../shared/api/generated/CBioPortalAPI";
 import AppConfig from 'appConfig';
 import AddThisBookmark from 'shared/components/addThis/AddThisBookmark';
-import {CancerStudy} from "../../shared/api/generated/CBioPortalAPI";
 import getOverlappingStudies from "../../shared/lib/getOverlappingStudies";
 import OverlappingStudiesWarning from "../../shared/components/overlappingStudiesWarning/OverlappingStudiesWarning";
 import CNSegments from "./cnSegments/CNSegments";
