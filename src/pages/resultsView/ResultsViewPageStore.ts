@@ -312,7 +312,7 @@ export function extendSamplesWithCancerType(samples:Sample[], clinicalDataForSam
 
 }
 
-type MutationAnnotationSettings = {
+export type MutationAnnotationSettings = {
     ignoreUnknown: boolean;
     cbioportalCount:boolean;
     cbioportalCountThreshold:number;
@@ -2425,7 +2425,6 @@ export class ResultsViewPageStore {
     readonly oncoKbDataForOncoprint = remoteData<IOncoKbData|Error>({
         await: () => [
             this.mutations,
-            this.uniqueSampleKeyToTumorType,
             this.oncoKbAnnotatedGenes
         ],
         invoke: async() => {
