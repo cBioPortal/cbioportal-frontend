@@ -4,6 +4,7 @@ import {IMyCancerGenome, IMyCancerGenomeData} from "shared/model/MyCancerGenome"
 import {IHotspotIndex} from "shared/model/CancerHotspots";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {isHotspot} from "./CancerHotspotsUtils";
+import {Hotspot} from "../api/generated/GenomeNexusAPI";
 
 /**
  * Utility functions related to annotation data.
@@ -47,11 +48,15 @@ export function geneToMyCancerGenome(myCancerGenomes:IMyCancerGenome[]):IMyCance
     return map;
 }
 
+export function recurrentHotspotFilter(hotspot:Hotspot) {
+    // only single and indel mutations are regular hotspots
+    return (hotspot.type.toLowerCase().includes("single") ||
+        hotspot.type.toLowerCase().includes("indel"));
+}
+
 export function isRecurrentHotspot(mutation:Mutation, index:IHotspotIndex)
 {
-    // only single and indel mutations are regular hotspots
-    return isHotspot(mutation, index, hotspot =>
-        (hotspot.type.toLowerCase().includes("single") || hotspot.type.toLowerCase().includes("indel")));
+    return isHotspot(mutation, index, recurrentHotspotFilter);
 }
 
 export function is3dHotspot(mutation:Mutation, index:IHotspotIndex):boolean
