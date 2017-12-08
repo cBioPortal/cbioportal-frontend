@@ -131,6 +131,10 @@ export type VariantAnnotation = {
         'variant': string
 
 };
+export type Version = {
+    'version': string
+
+};
 
 /**
  * Genome Nexus Variant Annotation API
@@ -1062,6 +1066,57 @@ export default class GenomeNexusAPI {
                 reject(new Error('Missing required  parameter: pfamAccession'));
                 return;
             }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        }).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+
+    fetchVersionGETURL(parameters: {
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/version';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieve Genome Nexus Version
+     * @method
+     * @name GenomeNexusAPI#fetchVersionGET
+     */
+    fetchVersionGET(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < Version > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/version';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
 
             if (parameters.$queryParameters) {
                 Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
