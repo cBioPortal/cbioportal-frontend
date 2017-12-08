@@ -96,27 +96,38 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
 
     render() {
 
-        if (this.props.store.totalAlterationStats.isComplete && this.props.store.studies.isComplete) {
+        if (!this.props.store.totalAlterationStats.isError && !this.props.store.studies.isError) {
 
-            let alterationPercentage = this.props.store.totalAlterationStats.result!.alteredSampleCount / this.props.store.totalAlterationStats.result!.sampleCount * 100;
+
+            const loadingComplete = this.props.store.totalAlterationStats.isComplete && this.props.store.studies.isComplete;
+
+            let alterationPercentage = (loadingComplete) ?
+                (this.props.store.totalAlterationStats.result!.alteredSampleCount / this.props.store.totalAlterationStats.result!.sampleCount * 100) : 0;
 
             return (
                 <div>
-                    <div className="results-summary">
-                        <div className="results-summary__leftItems">
+                    <div className="query-summary">
+                        <div className="query-summary__leftItems">
                             <div>
-                                <button onClick={this.handleModifyQueryClick} className={classNames('btn btn-primary')}>
+                                <button onClick={this.handleModifyQueryClick} className={classNames('btn btn-primary' , { disabled:!loadingComplete  })}>
                                     {(this.queryFormVisible) ? 'Cancel Modify Query' : 'Modify Query'}
                                 </button>
                             </div>
+
+
+                            <Loader isLoading={loadingComplete === false}/>
+
+
                             {
-                                (this.props.store.studies.result.length === 1) ? this.singleStudyUI : this.multipleStudyUI
+                                (loadingComplete) && ((this.props.store.studies.result.length === 1) ? this.singleStudyUI : this.multipleStudyUI)
                             }
                         </div>
-                        <div className="results-summary__alterationData">
-                            <h4>Gene Set / Pathway is altered
-                            in {_.round(alterationPercentage, 2)}% of queried samples</h4>
-                        </div>
+                        {
+                            (loadingComplete) && (<div className="query-summary__alterationData">
+                                <h4>Gene Set / Pathway is altered
+                                in {_.round(alterationPercentage, 2)}% of queried samples</h4>
+                            </div>)
+                        }
                     </div>
 
                     {
@@ -128,9 +139,6 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
                     }
                 </div>
             )
-        } 
-        else if (this.props.store.totalAlterationStats.isPending || this.props.store.studies.isPending) {
-            return <Loader isLoading={true}/>
         } else {
             return null;
         }
