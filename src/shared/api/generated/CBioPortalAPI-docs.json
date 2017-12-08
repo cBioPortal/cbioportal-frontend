@@ -746,6 +746,57 @@
         }
       }
     },
+    "/molecular-data/fetch": {
+      "post": {
+        "tags": [
+          "Molecular Data"
+        ],
+        "summary": "Fetch molecular data",
+        "operationId": "fetchMolecularDataInMultipleMolecularProfilesUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "molecularDataMultipleStudyFilter",
+            "description": "List of Molecular Profile ID and Sample ID pairs and Entrez Gene IDs",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/MolecularDataMultipleStudyFilter"
+            }
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GeneMolecularData"
+              }
+            }
+          }
+        }
+      }
+    },
     "/molecular-profiles": {
       "get": {
         "tags": [
@@ -1173,7 +1224,7 @@
         "tags": [
           "Molecular Data"
         ],
-        "summary": "Fetch molecular data by sample ID(s)",
+        "summary": "Fetch molecular data in a molecular profile",
         "operationId": "fetchAllMolecularDataInMolecularProfileUsingPOST",
         "consumes": [
           "application/json"
@@ -1436,7 +1487,7 @@
         "tags": [
           "Mutations"
         ],
-        "summary": "Fetch mutations in a molecular profile by sample IDs",
+        "summary": "Fetch mutations in a molecular profile",
         "operationId": "fetchMutationsInMolecularProfileUsingPOST",
         "consumes": [
           "application/json"
@@ -3869,6 +3920,30 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/GenePanelToGene"
+          }
+        }
+      }
+    },
+    "MolecularDataMultipleStudyFilter": {
+      "type": "object",
+      "properties": {
+        "entrezGeneIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "molecularProfileIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sampleMolecularIdentifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SampleMolecularIdentifier"
           }
         }
       }
