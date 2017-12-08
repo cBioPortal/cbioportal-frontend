@@ -59,13 +59,19 @@ export interface IGenesetHeatmapTrackDatum extends IBaseHeatmapTrackDatum {
     geneset_id: string;
 }
 
+export type GeneticTrackDatum_Data =
+    Pick<ExtendedAlteration&AnnotatedMutation&AnnotatedNumericGeneMolecularData,
+        "hugoGeneSymbol" | "molecularProfileAlterationType" | "proteinChange" | "driverFilter" |
+        "driverFilterAnnotation" | "driverTiersFilter" | "driverTiersFilterAnnotation" | "oncoKbOncogenic" |
+        "alterationSubType" | "value" | "mutationType" | "isHotspot" | "entrezGeneId" | "putativeDriver" | "mutationStatus">;
+
 export type GeneticTrackDatum = {
     trackLabel: string;
     sample?:string;
     patient?:string;
     study_id:string;
     uid:string;
-    data:(ExtendedAlteration&AnnotatedMutation&AnnotatedNumericGeneMolecularData)[];
+    data:GeneticTrackDatum_Data[];
     profiled_in?: GenePanelData[];
     not_profiled_in?:GenePanelData[];
     na?: boolean;
@@ -81,7 +87,7 @@ export type GeneticTrackSpec = {
     key: string; // for efficient diffing, just like in React. must be unique
     label: string;
     sublabel?: string;
-    oql: string; // OQL corresponding to the track
+    oql?: string; // OQL corresponding to the track
     info: string;
     infoTooltip?:string;
     data: GeneticTrackDatum[];
@@ -121,6 +127,7 @@ export interface IOncoprintProps {
 
     clinicalTracks: ClinicalTrackSpec[];
     geneticTracks: GeneticTrackSpec[];
+    geneticTracksOrder?:string[]; // track keys
     genesetHeatmapTracks: IGenesetHeatmapTrackSpec[];
     heatmapTracks: IGeneHeatmapTrackSpec[];
     divId:string;

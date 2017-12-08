@@ -12,7 +12,7 @@ describe("Oncoprint TooltipUtils", ()=>{
     describe("makeGeneticTrackTooltip", ()=>{
         let tooltip:(d:any)=>JQuery;
         before(()=>{
-            tooltip = makeGeneticTrackTooltip(false);
+            tooltip = makeGeneticTrackTooltip();
         });
 
         function makeMutation(props:Partial<AnnotatedExtendedAlteration>):AnnotatedExtendedAlteration {
@@ -25,7 +25,7 @@ describe("Oncoprint TooltipUtils", ()=>{
         describe("custom driver annotations", ()=>{
             it("should show a binary custom driver icon with descriptive title, if theres a binary custom driver annotation", ()=>{
                 const datum = {
-                    sample: "sample",
+                    sample: "sample", study_id:"",
                     data: [makeMutation({
                         driverFilter:"Putative_Driver",
                         driverFilterAnnotation: "annotation here"
@@ -39,7 +39,7 @@ describe("Oncoprint TooltipUtils", ()=>{
 
             it("should show multiple binary custom driver icons with corresponding titles, if there are multiple annotated mutations", ()=>{
                 const datum = {
-                    sample: "sample",
+                    sample: "sample", study_id:"",
                     data: [makeMutation({
                         driverFilter:"Putative_Driver",
                         driverFilterAnnotation: "annotation 1"
@@ -61,7 +61,7 @@ describe("Oncoprint TooltipUtils", ()=>{
 
             it("should not show a binary custom driver icon with descriptive title, if theres a binary annotation of non-driver", ()=>{
                 const datum = {
-                    sample: "sample",
+                    sample: "sample", study_id:"",
                     data: [makeMutation({
                         driverFilter:"Putative_Passenger",
                         driverFilterAnnotation: "paosidjp"
@@ -77,7 +77,7 @@ describe("Oncoprint TooltipUtils", ()=>{
 
             it("should show a tiers custom driver icon with descriptive title, if theres a tiers custom driver annotation", ()=>{
                 const datum = {
-                    sample: "sample",
+                    sample: "sample", study_id:"",
                     data: [makeMutation({
                         driverTiersFilter:"tier1",
                         driverTiersFilterAnnotation: "tier1 mutation"
@@ -91,7 +91,7 @@ describe("Oncoprint TooltipUtils", ()=>{
 
             it("should show multiple tiers icons with corresponding titles, if there are multiple annotated mutations", ()=>{
                 const datum = {
-                    sample: "sample",
+                    sample: "sample", study_id:"",
                     data: [makeMutation({
                         driverTiersFilter:"tier2",
                         driverTiersFilterAnnotation: "tier2 mutation"
@@ -113,7 +113,7 @@ describe("Oncoprint TooltipUtils", ()=>{
 
             it("should show both binary and tiers custom driver icons, with descriptive titles, if there are both annotations", ()=>{
                 const datum = {
-                    sample: "sample",
+                    sample: "sample", study_id:"",
                     data: [makeMutation({
                         driverFilter:"Putative_Driver",
                         driverFilterAnnotation: "annotation 1"
@@ -154,7 +154,7 @@ describe("Oncoprint TooltipUtils", ()=>{
 
             it("should show neither icon if theres no custom driver annotations", ()=>{
                 const datum = {
-                    sample: "sample",
+                    sample: "sample", study_id:"",
                     data: [makeMutation({
                         driverFilter:"Putative_Passenger",
                         driverFilterAnnotation: "paosidjp"
@@ -172,7 +172,7 @@ describe("Oncoprint TooltipUtils", ()=>{
         describe("profiled and not profiled", ()=>{
             it("should say 'Not profiled' if 'profiled_in' is empty and 'not_profiled_in' is not", ()=>{
                 const datum = {
-                    sample: "sample",
+                    sample: "sample", study_id:"",
                     data: [] as AnnotatedExtendedAlteration[],
                     na:true,
                     coverage: [],
@@ -184,7 +184,7 @@ describe("Oncoprint TooltipUtils", ()=>{
             });
             it("should say 'profiled' if 'not_profiled_in' is empty and 'profiled_in' is not", ()=>{
                 const datum = {
-                    sample: "sample",
+                    sample: "sample", study_id:"",
                     data: [] as AnnotatedExtendedAlteration[],
                     na:true,
                     coverage: [],
