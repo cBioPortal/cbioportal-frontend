@@ -15,6 +15,7 @@ import {providesStoreContext} from "../../lib/ContextUtils";
 import AppConfig from "appConfig";
 import CaseSetSelector from "./CaseSetSelector";
 import OverlappingStudiesWarning from "../overlappingStudiesWarning/OverlappingStudiesWarning";
+import UnknownStudiesWarning from "../unknownStudies/UnknownStudiesWarning"
 
 const styles = styles_any as {
 	QueryContainer: string,
@@ -59,11 +60,14 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
 
     render():JSX.Element
     {
+        // {Remove until #3395 is implemented
+        //
+        //    <OverlappingStudiesWarning studies={this.store.selectedStudies}/>
+        //}
         return (
 			<FlexCol padded overflow className={styles.QueryContainer}>
-
                 {
-                    <OverlappingStudiesWarning studies={this.store.selectedStudies}/>
+                    <UnknownStudiesWarning ids={this.store.unknownStudyIds} />
                 }
 
 				<CancerStudySelector/>
