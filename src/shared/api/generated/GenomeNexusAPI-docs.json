@@ -15,6 +15,10 @@
   "basePath": "/",
   "tags": [
     {
+      "name": "info-controller",
+      "description": "Info Controller"
+    },
+    {
       "name": "pdb-controller",
       "description": "PDB Controller"
     },
@@ -545,6 +549,29 @@
           }
         }
       }
+    },
+    "/version": {
+      "get": {
+        "tags": [
+          "info-controller"
+        ],
+        "summary": "Retrieve Genome Nexus Version",
+        "operationId": "fetchVersionGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/Version"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -875,6 +902,14 @@
         "variant": {
           "type": "string",
           "description": "Variant key"
+        }
+      }
+    },
+    "Version": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string"
         }
       }
     }
