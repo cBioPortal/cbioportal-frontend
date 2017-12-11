@@ -16,7 +16,7 @@ import {ButtonToolbar} from "react-bootstrap";
 import { If } from 'react-if';
 import {SortMetric} from "../../lib/ISortMetric";
 import {IMobXApplicationDataStore, SimpleMobXApplicationDataStore} from "../../lib/IMobXApplicationDataStore";
-import {IMobXApplicationDataDownloadStore} from "../../lib/IMobXApplicationDataDownloadStore";
+import {IMobXApplicationLazyDownloadDataFetcher} from "../../lib/IMobXApplicationLazyDownloadDataFetcher";
 import {maxPage} from "./utils";
 
 export type SortDirection = 'asc' | 'desc';
@@ -40,7 +40,7 @@ type LazyMobXTableProps<T> = {
     columns:Column<T>[];
     data?:T[];
     dataStore?:IMobXApplicationDataStore<T>;
-    downloadStore?:IMobXApplicationDataDownloadStore;
+    downloadDataFetcher?:IMobXApplicationLazyDownloadDataFetcher;
     initialSortColumn?: string;
     initialSortDirection?:SortDirection;
     initialItemsPerPage?:number;
@@ -194,7 +194,7 @@ class LazyMobXTableStore<T> {
     @observable.ref public columns:Column<T>[];
     @observable private _columnVisibility:{[columnId: string]: boolean};
     @observable public dataStore:IMobXApplicationDataStore<T>;
-    @observable public downloadStore:IMobXApplicationDataDownloadStore|undefined;
+    @observable public downloadDataFetcher:IMobXApplicationLazyDownloadDataFetcher|undefined;
     @observable private highlightColor:string;
 
     @computed public get itemsPerPage() {
@@ -498,7 +498,7 @@ class LazyMobXTableStore<T> {
         this._itemsLabelPlural = props.itemsLabelPlural;
         this._columnVisibility = this.resolveColumnVisibility(props.columns);
         this.highlightColor = props.highlightColor!;
-        this.downloadStore = props.downloadStore;
+        this.downloadDataFetcher = props.downloadDataFetcher;
 
         if (props.dataStore) {
             this.dataStore = props.dataStore;
@@ -584,10 +584,16 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
 
     public getDownloadData(): Promise<string>
     {
+        // returning a promise instead of a string allows us to prevent triggering fetchAndCacheAllLazyData
+        // until the copy/download button is clicked.
         return new Promise<string>((resolve, reject) => {
-            if (this.store.downloadStore) {
-                this.store.downloadStore.loadAllData().then(isLoaded => {
-                    if (isLoaded) {
+            // we need to download all the lazy data before initiating the download process.
+            if (this.store.downloadDataFetcher) {
+                // populate the cache instances with all available data for the lazy loaded columns
+                this.store.downloadDataFetcher.fetchAndCacheAllLazyData().then(allLazyData => {
+                    // we don't use allData directly,
+                    // we rely on the data cached by the download data fetcher
+                    if (allLazyData) {
                         resolve(serializeData(this.store.downloadData));
                     }
                     else {

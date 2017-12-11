@@ -1,13 +1,12 @@
 import MobxPromise from "mobxpromise";
-import {IMobXApplicationDataDownloadStore} from "shared/lib/IMobXApplicationDataDownloadStore";
+import {IMobXApplicationLazyDownloadDataFetcher} from "shared/lib/IMobXApplicationLazyDownloadDataFetcher";
 import LazyMobXCache from "shared/lib/LazyMobXCache";
 import {default as GenomeNexusEnrichmentCache, fetch as fetchGenomeNexusData} from "shared/cache/GenomeNexusEnrichment";
 import {default as MutationCountCache, fetch as fetchMutationCountData} from "shared/cache/MutationCountCache";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 
-export class MutationTableDownloadStore implements IMobXApplicationDataDownloadStore {
-
-    // TODO we don't use allData directly, only using this as a boolean indicator that data is loaded
+export class MutationTableDownloadDataFetcher implements IMobXApplicationLazyDownloadDataFetcher
+{
     private allData:any[]|undefined = undefined;
 
     constructor(private mutationData: MobxPromise<Mutation[]>,
@@ -16,13 +15,13 @@ export class MutationTableDownloadStore implements IMobXApplicationDataDownloadS
         // TODO labelMobxPromises(this); ?
     }
 
-    public loadAllData(): Promise<boolean>
+    public fetchAndCacheAllLazyData(): Promise<any[]>
     {
         if (this.allData) {
-            return Promise.resolve(true);
+            return Promise.resolve(this.allData);
         }
 
-        return new Promise<boolean>((resolve, reject) => {
+        return new Promise<any[]>((resolve, reject) => {
             const promiseCachePairs = this.availablePromiseCachePairs();
 
             Promise.all(promiseCachePairs.promises).then((allData: any[]) => {
@@ -33,7 +32,7 @@ export class MutationTableDownloadStore implements IMobXApplicationDataDownloadS
                     promiseCachePairs.caches[i].addData(allData[i]);
                 }
 
-                resolve(true);
+                resolve(allData);
             }).catch(reject);
         });
     }

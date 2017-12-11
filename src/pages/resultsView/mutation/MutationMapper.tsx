@@ -216,7 +216,7 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                                     pubMedCache={this.props.pubMedCache}
                                     mutationCountCache={this.props.mutationCountCache}
                                     dataStore={this.props.store.dataStore}
-                                    downloadStore={this.props.store.downloadStore}
+                                    downloadDataFetcher={this.props.store.downloadDataFetcher}
                                     myCancerGenomeData={this.props.myCancerGenomeData}
                                     hotspots={this.props.store.indexedHotspotData.result}
                                     cosmicData={this.props.store.cosmicData.result}

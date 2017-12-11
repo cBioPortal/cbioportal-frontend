@@ -36,7 +36,7 @@ import VariantCountCache from "shared/cache/VariantCountCache";
 import PubMedCache from "shared/cache/PubMedCache";
 import MutationCountCache from "shared/cache/MutationCountCache";
 import {IMobXApplicationDataStore} from "shared/lib/IMobXApplicationDataStore";
-import {IMobXApplicationDataDownloadStore} from "shared/lib/IMobXApplicationDataDownloadStore";
+import {IMobXApplicationLazyDownloadDataFetcher} from "shared/lib/IMobXApplicationLazyDownloadDataFetcher";
 import generalStyles from "./column/styles.module.scss";
 import classnames from 'classnames';
 import {IPaginationControlsProps} from "../paginationControls/PaginationControls";
@@ -71,7 +71,7 @@ export interface IMutationTableProps {
     columns?:MutationTableColumnType[];
     data?:Mutation[][];
     dataStore?:IMobXApplicationDataStore<Mutation[]>;
-    downloadStore?:IMobXApplicationDataDownloadStore;
+    downloadDataFetcher?:IMobXApplicationLazyDownloadDataFetcher;
     initialItemsPerPage?:number;
     itemsLabel?:string;
     itemsLabelPlural?:string;
@@ -525,7 +525,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 columns={this.columns}
                 data={this.props.data}
                 dataStore={this.props.dataStore}
-                downloadStore={this.props.downloadStore}
+                downloadDataFetcher={this.props.downloadDataFetcher}
                 initialItemsPerPage={this.props.initialItemsPerPage}
                 initialSortColumn={this.props.initialSortColumn}
                 initialSortDirection={this.props.initialSortDirection}
