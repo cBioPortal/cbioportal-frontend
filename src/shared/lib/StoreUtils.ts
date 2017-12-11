@@ -466,11 +466,11 @@ export async function fetchCnaOncoKbData(uniqueSampleKeyToTumorType:{[uniqueSamp
 }
 
 export function cancerTypeForOncoKb(uniqueSampleKey: string,
-                             uniqueSampleKeyToTumorType:{[uniqueSampleKey: string]: string}): string
+                             uniqueSampleKeyToTumorType:{[uniqueSampleKey: string]: string}): string | null
 {
     // first priority is sampleIdToTumorType map (derived either from the clinical data or from the study cancer type).
     // if it is not valid, then we return an empty string and let OncoKB API figure out what to do
-    return uniqueSampleKeyToTumorType[uniqueSampleKey] || "";
+    return uniqueSampleKeyToTumorType[uniqueSampleKey] || null;
 }
 
 export async function queryOncoKbData(queryVariants: Query[],
@@ -685,13 +685,13 @@ export function generateUniqueSampleKeyToTumorTypeMap(clinicalDataForSamples: Mo
             }
         });
 
-        // second priority is CANCER_TYPE in clinical data
-        _.each(clinicalDataForSamples.result, (clinicalData: ClinicalData) => {
-            // update map with CANCER_TYPE value only if it is not already updated
-            if (clinicalData.clinicalAttributeId === "CANCER_TYPE" && map[clinicalData.uniqueSampleKey] === undefined) {
-                map[clinicalData.uniqueSampleKey] = clinicalData.value;
-            }
-        });
+        // // second priority is CANCER_TYPE in clinical data
+        // _.each(clinicalDataForSamples.result, (clinicalData: ClinicalData) => {
+        //     // update map with CANCER_TYPE value only if it is not already updated
+        //     if (clinicalData.clinicalAttributeId === "CANCER_TYPE" && map[clinicalData.uniqueSampleKey] === undefined) {
+        //         map[clinicalData.uniqueSampleKey] = clinicalData.value;
+        //     }
+        // });
     }
 
     // last resort: fall back to the study cancer type
