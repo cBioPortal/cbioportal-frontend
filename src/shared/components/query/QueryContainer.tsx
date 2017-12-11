@@ -8,6 +8,7 @@ import MolecularProfileSelector from "./MolecularProfileSelector";
 import {observable, computed, action} from 'mobx';
 import {observer} from "mobx-react";
 import DataTypePrioritySelector from "./DataTypePrioritySelector";
+import GenesetsSelector from "./GenesetsSelector";
 import GeneSetSelector from "./GeneSetSelector";
 import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
 import {QueryStore} from "./QueryStore";
@@ -57,6 +58,7 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
 			this.props.onSubmit();
 		}
 	}
+	
 
     render():JSX.Element
     {
@@ -82,6 +84,13 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
 				)}
 
 				<GeneSetSelector/>
+				
+				{!! (this.store.isGenesetProfileSelected) && (
+				    <GenesetsSelector/>
+				)}
+
+				
+				
 
 				{!!(this.store.forDownloadTab) && (
 					<span className={styles.downloadSubmitExplanation}>
