@@ -108,7 +108,7 @@ export function generateEvidenceQuery(queryVariants:Query[]): EvidenceQueries
 }
 
 export function generateQueryVariant(entrezGeneId:number,
-                                     tumorType:string,
+                                     tumorType:string | null,
                                      alteration?:string,
                                      mutationType?:string,
                                      proteinPosStart?:number,
@@ -118,7 +118,7 @@ export function generateQueryVariant(entrezGeneId:number,
     return {
         id: generateQueryVariantId(entrezGeneId, tumorType, alteration, mutationType),
         hugoSymbol: '',
-        tumorType,
+        tumorType:(tumorType as string), // generated api typings are wrong, it can accept null
         alterationType: alterationType || AlterationTypes[AlterationTypes.Mutation],
         entrezGeneId: entrezGeneId,
         alteration: alteration || "",
@@ -131,11 +131,11 @@ export function generateQueryVariant(entrezGeneId:number,
 }
 
 export function generateQueryVariantId(entrezGeneId:number,
-                                       tumorType:string,
+                                       tumorType:string | null,
                                        alteration?:string,
                                        mutationType?:string): string
 {
-    let id = `${entrezGeneId}_${tumorType}`;
+    let id = (tumorType) ? `${entrezGeneId}_${tumorType}` : `${entrezGeneId}`;
 
     if (alteration) {
         id = `${id}_${alteration}`;
