@@ -67,6 +67,7 @@ export type QuerySession = {
     getCaseSetId:()=>string;
     getSampleIds:()=>string[];
     getOQLQuery:()=>string;
+    getGenesetQuery:()=>string;
     getOncoprintSampleGenomicEventData:(use_session_filters?:boolean)=>Promise<OncoprintSampleGeneticTrackData[]>;
     getOncoprintPatientGenomicEventData:(use_session_filters?:boolean)=>Promise<OncoprintPatientGeneticTrackData[]>;
     getSampleClinicalData:(attribute_ids:string[])=>Promise<OncoprintSampleClinicalDatum[]>;
