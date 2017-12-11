@@ -27,7 +27,7 @@ import MutationDataCache from "shared/cache/MutationDataCache";
 import GenomeNexusEnrichmentCache from "shared/cache/GenomeNexusEnrichment";
 import MutationCountCache from "shared/cache/MutationCountCache";
 import {EnsemblTranscript, PfamDomain, PfamDomainRange} from "shared/api/generated/GenomeNexusAPI";
-import {MutationTableDownloadStore} from "shared/lib/MutationTableDownloadStore";
+import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
 
 export class MutationMapperStore {
 
@@ -215,8 +215,8 @@ export class MutationMapperStore {
         return new MutationMapperDataStore(this.processedMutationData);
     }
 
-    @cached get downloadStore():MutationTableDownloadStore {
-        return new MutationTableDownloadStore(this.mutationData, this.genomeNexusEnrichmentCache, this.getMutationCountCache);
+    @cached get downloadDataFetcher(): MutationTableDownloadDataFetcher {
+        return new MutationTableDownloadDataFetcher(this.mutationData, this.genomeNexusEnrichmentCache, this.getMutationCountCache);
     }
 
     @cached get pdbChainDataStore(): PdbChainDataStore {
