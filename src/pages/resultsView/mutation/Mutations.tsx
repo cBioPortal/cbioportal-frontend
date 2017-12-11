@@ -45,6 +45,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
                         enablePagination={true}
                         arrowStyle={{'line-height':.8}}
                         tabButtonStyle="pills"
+                        unmountOnHide={true}
                     >
                         {this.generateTabs(this.props.genes)}
                     </MSKTabs>
