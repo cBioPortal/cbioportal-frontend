@@ -838,8 +838,9 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                 <Button
                     active={this.showMinimap}
                     onClick={this.toggleShowMinimap}
+                    className="oncoprint__controls__minimap_button"
                 >
-                    <i className="fa fa-expand"></i>&thinsp;
+                    <img src={require("./toggle-minimap.svg")} alt="icon" width="20" height="20"/>&thinsp;
                 </Button>
             </DefaultTooltip>
         );
