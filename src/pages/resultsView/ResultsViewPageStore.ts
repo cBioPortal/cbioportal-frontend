@@ -340,8 +340,9 @@ export class ResultsViewPageStore {
     });
 
     readonly clinicalAttributes = remoteData({
+        await:()=>[this.studyIds],
         invoke:async()=>{
-            return _.flatten(await Promise.all(this.studyIds.map(studyId=>{
+            return _.flatten(await Promise.all(this.studyIds.result!.map(studyId=>{
                 return client.getAllClinicalAttributesInStudyUsingGET({
                     studyId
                 });
@@ -480,10 +481,11 @@ export class ResultsViewPageStore {
             this.studyToDataQueryFilter,
             this.genes,
             this.samples,
-            this.patients
+            this.patients,
+            this.studyIds
         ],
         invoke:async()=>{
-            const studies = this.studyIds;
+            const studies = this.studyIds.result!;
             const results:GenePanelData[] = _.flatten(await Promise.all(studies.map(studyId=>{
                 const mutationMolecularProfile = this.studyToMutationMolecularProfile.result![studyId];
                 const dataQueryFilter = this.studyToDataQueryFilter.result![studyId];
@@ -898,9 +900,12 @@ export class ResultsViewPageStore {
         }
     }, {});
 
-    @computed get studyIds(): string[] {
-        return Object.keys(this.studyToSampleIds.result);
-    }
+    readonly studyIds = remoteData({
+        await: ()=>[this.studyToSampleIds],
+        invoke: ()=>{
+            return Promise.resolve(Object.keys(this.studyToSampleIds.result));
+        }
+    });
 
     @computed get myCancerGenomeData() {
         return fetchMyCancerGenomeData();
@@ -1128,8 +1133,9 @@ export class ResultsViewPageStore {
     }, []);
 
     readonly germlineConsentedSamples = remoteData<SampleIdentifier[]>({
+        await:()=>[this.studyIds],
         invoke: async () => {
-            const studies: string[] = this.studyIds;
+            const studies: string[] = this.studyIds.result!;
             const ids: string[][] = await Promise.all(studies.map(studyId => {
                 return client.getAllSampleIdsInSampleListUsingGET({
                     sampleListId: this.getGermlineSampleListId(studyId)
@@ -1224,7 +1230,8 @@ export class ResultsViewPageStore {
     }, []);
 
     readonly studies = remoteData({
-        invoke: () => Promise.all(this.studyIds.map(studyId => client.getStudyUsingGET({studyId})))
+        await: ()=>[this.studyIds],
+        invoke: () => Promise.all(this.studyIds.result!.map(studyId => client.getStudyUsingGET({studyId})))
     }, []);
 
     readonly studyIdToStudy = remoteData({
@@ -1237,8 +1244,9 @@ export class ResultsViewPageStore {
     }
 
     readonly molecularProfilesInStudies = remoteData<MolecularProfile[]>({
+        await:()=>[this.studyIds],
         invoke: async () => {
-            return _.flatten(await Promise.all(this.studyIds.map(studyId => {
+            return _.flatten(await Promise.all(this.studyIds.result!.map(studyId => {
                 return client.getAllMolecularProfilesInStudyUsingGET({
                     studyId
                 });
@@ -1306,10 +1314,11 @@ export class ResultsViewPageStore {
         await: () => [
             this.studyToMolecularProfileDiscrete,
             this.studyToDataQueryFilter,
-            this.genes
+            this.genes,
+            this.studyIds
         ],
         invoke: async () => {
-            const studies = this.studyIds;
+            const studies = this.studyIds.result!;
             const results: DiscreteCopyNumberData[][] = await Promise.all(studies.map(studyId => {
                 const filter = {
                     entrezGeneIds: this.genes.result!.map(g=>g.entrezGeneId),
@@ -1337,9 +1346,9 @@ export class ResultsViewPageStore {
     }, []);
 
     readonly studyToDataQueryFilter = remoteData<{ [studyId: string]: IDataQueryFilter }>({
-        await: () => [this.studyToSampleIds],
+        await: () => [this.studyToSampleIds, this.studyIds],
         invoke: () => {
-            const studies = this.studyIds;
+            const studies = this.studyIds.result!;
             const ret: { [studyId: string]: IDataQueryFilter } = {};
             for (const studyId of studies) {
                 ret[studyId] = generateDataQueryFilter(this.studyToSampleListId[studyId] || null, Object.keys(this.studyToSampleIds.result[studyId] || {}))
@@ -1748,7 +1757,7 @@ export class ResultsViewPageStore {
     }
 
     @cached get clinicalDataCache() {
-        return new ClinicalDataCache(this.samples.result, this.patients.result, this.studyToMutationMolecularProfile.result);
+        return new ClinicalDataCache(this.samples.result, this.patients.result, this.studyToMutationMolecularProfile.result, this.studyIdToStudy.result);
     }
 
     @action clearErrors() {
