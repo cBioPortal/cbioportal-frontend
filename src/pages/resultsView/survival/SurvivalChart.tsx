@@ -309,15 +309,13 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                 </div>
                 <div className={styles.SurvivalTable}>
                     <Table bordered condensed striped>
-                        <thead>
-                            <tr>
-                                <th/>
-                                <th>{this.props.totalCasesHeader}</th>
-                                <th>{this.props.statusCasesHeader}</th>
-                                <th>{this.props.medianMonthsHeader}</th>
-                            </tr>
-                        </thead>
                         <tbody>
+                            <tr>
+                                <td/>
+                                <td>{this.props.totalCasesHeader}</td>
+                                <td>{this.props.statusCasesHeader}</td>
+                                <td>{this.props.medianMonthsHeader}</td>
+                            </tr>
                             <tr>
                                 <td>{this.alteredLegendText}</td>
                                 {
