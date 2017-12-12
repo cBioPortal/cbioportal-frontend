@@ -107,14 +107,14 @@ export default class CNSegments extends React.Component<{ store: ResultsViewPage
 
     render(){
 
-        if (this.props.store.samples.isComplete && this.props.store.genes.isComplete) {
+        if (this.props.store.samples.isComplete && this.props.store.genes.isComplete && this.props.store.studyIds.isComplete) {
             return (<MSKTabs tabButtonStyle="pills" activeTabId={this.activeTabId} className="secondaryTabs" onTabClick={(id:string)=>{
                 this.activeTabId = id;
             }}>
                 {
                     this.props.store.genes.result!.map((gene:Gene)=>{
                         return <MSKTab key={gene.hugoGeneSymbol} id={`CNSegmentsTab${gene.hugoGeneSymbol}`} linkText={gene.hugoGeneSymbol}>
-                            <CNASegmentIframe studyId={this.props.store.studyIds[0]}
+                            <CNASegmentIframe studyId={this.props.store.studyIds.result![0]}
                                               sampleIds={this.props.store.samples.result!.map((sample:Sample)=>sample.sampleId)}
                                               gene={gene}
                             />

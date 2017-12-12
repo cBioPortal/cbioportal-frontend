@@ -67,6 +67,13 @@ const specialClinicalAttributes:OncoprintClinicalAttribute[] = [
         patientAttribute: false
     },
     {
+        clinicalAttributeId: SpecialAttribute.StudyOfOrigin,
+        datatype: "STRING",
+        description: "Study which the sample is a part of.",
+        displayName: "Study of origin",
+        patientAttribute: false
+    },
+    {
         clinicalAttributeId: SpecialAttribute.MutationSpectrum,
         datatype: "COUNTS_MAP",
         description: "Number of point mutations in the sample counted by different types of nucleotide changes.",
@@ -127,6 +134,12 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         (window as any).resultsViewOncoprint = this;
 
         this.initFromUrlParams(URL.parse(window.location.href, true).query);
+
+        onMobxPromise(props.store.studyIds, (studyIds:string[])=>{
+            if (studyIds.length > 1) {
+                this.selectedClinicalAttributeIds.set(SpecialAttribute.StudyOfOrigin, true);
+            }
+        });
         
         const self = this;
 
