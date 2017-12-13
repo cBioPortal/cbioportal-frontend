@@ -38,4 +38,10 @@ export default class MutationCountColumnFormatter {
         }
         return ret;
     }
+
+    public static download(d:Mutation[], mutationCountCache?:MutationCountCache) {
+        const sortValue = MutationCountColumnFormatter.sortBy(d, mutationCountCache);
+
+        return sortValue ? `${sortValue}` : "";
+    }
 }

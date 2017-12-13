@@ -185,52 +185,53 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                         ) }
                         <hr style={{ marginTop:20 }} />
 
-                        {!this.props.store.dataStore.showingAllData &&
-                            (<div style={{
-                                marginTop:"5px",
-                                marginBottom:"5px"
-                            }}>
-                                <span style={{color:"red", fontSize:"14px", fontFamily:"verdana,arial,sans-serif"}}>
-                                    <span>Current view shows filtered results. Click </span>
-                                    <a style={{cursor:"pointer"}} onClick={this.handlers.resetDataStore}>here</a>
-                                    <span> to reset all filters.</span>
-                                </span>
-                            </div>)
-                        }
-                        <LoadingIndicator
-                            isLoading={
-                                this.props.store.clinicalDataForSamples.isPending ||
-                                this.props.store.studiesForSamplesWithoutCancerTypeClinicalData.isPending
+                            {!this.props.store.dataStore.showingAllData &&
+                                (<div style={{
+                                    marginTop:"5px",
+                                    marginBottom:"5px"
+                                }}>
+                                    <span style={{color:"red", fontSize:"14px", fontFamily:"verdana,arial,sans-serif"}}>
+                                        <span>Current view shows filtered results. Click </span>
+                                        <a style={{cursor:"pointer"}} onClick={this.handlers.resetDataStore}>here</a>
+                                        <span> to reset all filters.</span>
+                                    </span>
+                                </div>)
                             }
-                        />
-                        {!this.props.store.clinicalDataForSamples.isPending &&
-                        !this.props.store.studiesForSamplesWithoutCancerTypeClinicalData.isPending && (
-                            <ResultsViewMutationTable
-                                uniqueSampleKeyToTumorType={this.props.store.uniqueSampleKeyToTumorType}
-                                oncoKbAnnotatedGenes={this.props.store.oncoKbAnnotatedGenes}
-                                discreteCNACache={this.props.discreteCNACache}
-                                studyIdToStudy={this.props.store.studyIdToStudy.result}
-                                genomeNexusEnrichmentCache={this.props.genomeNexusEnrichmentCache}
-                                molecularProfileIdToMolecularProfile={this.props.store.molecularProfileIdToMolecularProfile.result}
-                                oncoKbEvidenceCache={this.props.oncoKbEvidenceCache}
-                                pubMedCache={this.props.pubMedCache}
-                                mutationCountCache={this.props.mutationCountCache}
-                                dataStore={this.props.store.dataStore}
-                                myCancerGenomeData={this.props.myCancerGenomeData}
-                                hotspots={this.props.store.indexedHotspotData.result}
-                                cosmicData={this.props.store.cosmicData.result}
-                                oncoKbData={this.props.store.oncoKbData}
-                                civicGenes={this.props.store.civicGenes}
-                                civicVariants={this.props.store.civicVariants}
-                                userEmailAddress={this.props.config.userEmailAddress}
-                                enableOncoKb={this.props.config.showOncoKB}
-                                enableFunctionalImpact={this.props.config.showGenomeNexus}
-                                enableHotspot={this.props.config.showHotspot}
-                                enableMyCancerGenome={this.props.config.showMyCancerGenome}
-                                enableCivic={this.props.config.showCivic}
+                            <LoadingIndicator
+                                isLoading={
+                                    this.props.store.clinicalDataForSamples.isPending ||
+                                    this.props.store.studiesForSamplesWithoutCancerTypeClinicalData.isPending
+                                }
                             />
-                        )}
-                    </div>
+                            {!this.props.store.clinicalDataForSamples.isPending &&
+                            !this.props.store.studiesForSamplesWithoutCancerTypeClinicalData.isPending && (
+                                <ResultsViewMutationTable
+                                    uniqueSampleKeyToTumorType={this.props.store.uniqueSampleKeyToTumorType}
+                                    oncoKbAnnotatedGenes={this.props.store.oncoKbAnnotatedGenes}
+                                    discreteCNACache={this.props.discreteCNACache}
+                                    studyIdToStudy={this.props.store.studyIdToStudy.result}
+                                    genomeNexusEnrichmentCache={this.props.genomeNexusEnrichmentCache}
+                                    molecularProfileIdToMolecularProfile={this.props.store.molecularProfileIdToMolecularProfile.result}
+                                    oncoKbEvidenceCache={this.props.oncoKbEvidenceCache}
+                                    pubMedCache={this.props.pubMedCache}
+                                    mutationCountCache={this.props.mutationCountCache}
+                                    dataStore={this.props.store.dataStore}
+                                    downloadDataFetcher={this.props.store.downloadDataFetcher}
+                                    myCancerGenomeData={this.props.myCancerGenomeData}
+                                    hotspots={this.props.store.indexedHotspotData.result}
+                                    cosmicData={this.props.store.cosmicData.result}
+                                    oncoKbData={this.props.store.oncoKbData}
+                                    civicGenes={this.props.store.civicGenes}
+                                    civicVariants={this.props.store.civicVariants}
+                                    userEmailAddress={this.props.config.userEmailAddress}
+                                    enableOncoKb={this.props.config.showOncoKB}
+                                    enableFunctionalImpact={this.props.config.showGenomeNexus}
+                                    enableHotspot={this.props.config.showHotspot}
+                                    enableMyCancerGenome={this.props.config.showMyCancerGenome}
+                                    enableCivic={this.props.config.showCivic}
+                                />
+                            )}
+                        </div>
                     )
                 }
             </div>
