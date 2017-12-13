@@ -117,7 +117,6 @@ export class QueryStore
 			this.setParamsFromUrl(urlWithInitialParams);
 
 		this.addParamsFromWindow();
-		this.setParamsFromQuerySession();
 
 
 		let initialNonMolecularProfileParams = nonMolecularProfileParams(this);
@@ -1224,37 +1223,6 @@ export class QueryStore
 	// ACTIONS
 	////////////////////////////////////////////////////////////////////////////////
 
-	@action setParamsFromQuerySession() {
-		const querySession:QuerySession|undefined = (window as any).QuerySession;
-		if (querySession) {
-			this.selectedStudyIds = querySession.getCancerStudyIds();
-			this._selectedProfileIds = querySession.getGeneticProfileIds();
-			this.zScoreThreshold = (querySession.getZScoreThreshold()+"") || "2.0";
-			this.rppaScoreThreshold = (querySession.getRppaScoreThreshold()+"") || "2.0";
-			this.selectedSampleListId = querySession.getCaseSetId();
-			if (this.selectedSampleListId === "-1") {
-				// legacy compatibility
-				this.selectedSampleListId = CUSTOM_CASE_LIST_ID;
-			}
-
-			let studySamplesMap:Object = (<any>querySession).getStudySampleMap();
-			let studySamplesList:string[] = [];
-
-			Object.keys(studySamplesMap).map(studyId => {
-				let sampleIds:Array<string> = (<any>studySamplesMap)[studyId];
-				let _studySamplesList:string[] = sampleIds.map((sampleId) => { return studyId + ":" + sampleId});
-				studySamplesList = studySamplesList.concat(_studySamplesList);
-			})
-			
-			this.caseIds = studySamplesList.join("\n");
-			this.caseIdsMode = 'sample'; // url always contains sample IDs
-			this.geneQuery = normalizeQuery(querySession.getOQLQuery());
-			this.genesetQuery = normalizeQuery(querySession.getGenesetQuery());
-			this.initiallySelected.profileIds = true;
-			this.initiallySelected.sampleListId = true;
-		}
-	}
-
 	/**
 	 * This is used to prevent selections from being cleared automatically when new data is downloaded.
 	 */
@@ -1265,6 +1233,9 @@ export class QueryStore
 
 	@action addParamsFromWindow()
 	{
+		// Populate OQL
+		this.geneQuery = normalizeQuery((window as any).serverVars.theQuery);
+
 		// Select studies from window
 		const windowStudyId = (window as any).selectedCancerStudyId;
 		if (windowStudyId) {
