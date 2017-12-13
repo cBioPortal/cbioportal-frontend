@@ -4,7 +4,7 @@ import Response = request.Response;
 import {
     default as CBioPortalAPI, MolecularProfile, Mutation, MutationFilter, DiscreteCopyNumberData,
     DiscreteCopyNumberFilter, ClinicalData, Sample, CancerStudy, CopyNumberCountIdentifier,
-    ClinicalDataSingleStudyFilter, ClinicalDataMultiStudyFilter
+    ClinicalDataSingleStudyFilter, ClinicalDataMultiStudyFilter, GeneMolecularData
 } from "shared/api/generated/CBioPortalAPI";
 import {getMyGeneUrl, getUniprotIdUrl} from "shared/api/urls";
 import defaultClient from "shared/api/cbioportalClientInstance";
@@ -42,6 +42,7 @@ import CancerHotspotsAPI from "shared/api/generated/CancerHotspotsAPI";
 import {MOLECULAR_PROFILE_MUTATIONS_SUFFIX, MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
 import GenomeNexusAPI from "shared/api/generated/GenomeNexusAPI";
 import GenomeNexusAPIInternal from "shared/api/generated/GenomeNexusAPIInternal";
+import {AlterationTypeConstants} from "../../pages/resultsView/ResultsViewPageStore";
 
 export const ONCOKB_DEFAULT: IOncoKbData = {
     uniqueSampleKeyToTumorType : {},
@@ -461,6 +462,30 @@ export async function fetchCnaOncoKbData(uniqueSampleKeyToTumorType:{[uniqueSamp
                 cancerTypeForOncoKb(copyNumberData.uniqueSampleKey, uniqueSampleKeyToTumorType),
                 getAlterationString(copyNumberData.alteration));
         }), "id");
+        return queryOncoKbData(queryVariants, uniqueSampleKeyToTumorType, client);
+    }
+}
+
+export async function fetchCnaOncoKbDataWithGeneMolecularData(uniqueSampleKeyToTumorType:{[uniqueSampleKey: string]: string},
+                                         annotatedGenes:{[entrezGeneId:number]:boolean},
+                                         geneMolecularData:MobxPromise<GeneMolecularData[]>,
+                                          molecularProfileIdToMolecularProfile:{[molecularProfileId:string]:MolecularProfile},
+                                         client: OncoKbAPI = oncokbClient)
+{
+    if (!geneMolecularData.result || geneMolecularData.result.length === 0) {
+        return ONCOKB_DEFAULT;
+    }
+    else
+    {
+        const alterationsToQuery = _.filter(geneMolecularData.result, molecularDatum=>{
+            return molecularProfileIdToMolecularProfile[molecularDatum.molecularProfileId].molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
+                !!annotatedGenes[molecularDatum.entrezGeneId];
+        });
+        const queryVariants = _.uniqBy(_.map(alterationsToQuery, (datum: GeneMolecularData) => {
+            return generateQueryVariant(datum.entrezGeneId,
+                cancerTypeForOncoKb(datum.uniqueSampleKey, uniqueSampleKeyToTumorType),
+                getAlterationString(parseInt(datum.value, 10)));
+        }), (query:Query)=>query.id);
         return queryOncoKbData(queryVariants, uniqueSampleKeyToTumorType, client);
     }
 }
