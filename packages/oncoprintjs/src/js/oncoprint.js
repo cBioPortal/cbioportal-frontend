@@ -81,7 +81,7 @@ var Oncoprint = (function () {
 				    'top':'0', 
 				    'left':'0px', 
 				    'height':'1px',
-				});
+				}).addClass('oncoprintjs__scroll_div');
 	
 	var $dummy_scroll_div_contents = $('<div>').appendTo($dummy_scroll_div);
 				

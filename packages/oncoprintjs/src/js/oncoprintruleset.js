@@ -727,27 +727,35 @@ var BarRuleSet = (function () {
 		});
     };
     BarRuleSet.prototype.getYPosPercentagesFn = function () {
-    	return function (t) {
-        if (this.getValueRangeType() === this.rangeTypes.NON_POSITIVE) {
-                return 0 + "%";
-		} else if (this.getValueRangeType() === this.rangeTypes.NON_NEGATIVE) {
-                return (1 - t) * 100 + "%";
-        } else if (this.getValueRangeType() === this.rangeTypes.ALL) {
-                return 50 + "%";
-            }
-		}.bind(this);
+        var ret;
+        switch (this.getValueRangeType()) {
+            case this.rangeTypes.NON_POSITIVE:
+                ret = (function(t) { return "0%"; });
+                break;
+            case this.rangeTypes.NON_NEGATIVE:
+                ret = (function(t) { return (1 - t) * 100 + "%"; });
+                break;
+            case this.rangeTypes.ALL:
+                ret = (function(t) { return Math.min(1-t, 1)*50 + "%"; });
+                break;
+        }
+        return ret;
 	};
 
     BarRuleSet.prototype.getCellHeightPercentagesFn = function () {
-    	return function (t) {
-            if (this.getValueRangeType() === this.rangeTypes.NON_POSITIVE) {
-                return -t * 100 + "%";
-            } else if (this.getValueRangeType() === this.rangeTypes.NON_NEGATIVE) {
-                return t * 100 + "%";
-            } else if (this.getValueRangeType() === this.rangeTypes.ALL) {
-                return -t * 50 + "%";
+    	var ret;
+    	switch (this.getValueRangeType()) {
+			case this.rangeTypes.NON_POSITIVE:
+				ret = (function(t) { return -t * 100 + "%"; });
+				break;
+			case this.rangeTypes.NON_NEGATIVE:
+				ret = (function(t) { return t * 100 + "%"; });
+				break;
+			case this.rangeTypes.ALL:
+				ret = (function(t) { return Math.abs(t) * 50 + "%"; });
+				break;
 		}
-		}.bind(this);
+		return ret;
     };
 
     return BarRuleSet;
