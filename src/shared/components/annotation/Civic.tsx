@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {Modal} from 'react-bootstrap';
+import * as _ from 'lodash';
 import {observer} from "mobx-react";
 import {Circle} from "better-react-spinkit";
 import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
@@ -33,6 +33,30 @@ export default class Civic extends React.Component<ICivicProps, {}>
         }
 
         return score;
+    }
+
+    public static download(civicEntry:ICivicEntry | null | undefined): string
+    {
+        if (!civicEntry) {
+            return "NA";
+        }
+
+        const variants = _.values(civicEntry.variants);
+        const values: string[] = [];
+
+        if (variants && variants.length > 0 && variants[0].evidence)
+        {
+            _.toPairs(variants[0].evidence).forEach(pair => {
+                values.push(`${pair[0]}: ${pair[1]}`);
+            });
+        }
+
+        // TODO actually this indicates that we have an entry but the evidence is empty
+        if (values.length === 0) {
+            return "NA";
+        }
+
+        return values.join(", ");
     }
 
     constructor(props: ICivicProps)
