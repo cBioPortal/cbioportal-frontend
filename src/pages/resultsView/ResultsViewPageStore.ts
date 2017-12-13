@@ -22,7 +22,8 @@ import {
     fetchSamples, fetchClinicalDataInStudy, generateDataQueryFilter,
     fetchSamplesWithoutCancerTypeClinicalData, fetchStudiesForSamplesWithoutCancerTypeClinicalData, IDataQueryFilter,
     isMutationProfile, fetchOncoKbAnnotatedGenes, groupBy, fetchHotspotsData, indexHotspotData, fetchOncoKbData,
-    ONCOKB_DEFAULT, generateUniqueSampleKeyToTumorTypeMap, cancerTypeForOncoKb, fetchCnaOncoKbData
+    ONCOKB_DEFAULT, generateUniqueSampleKeyToTumorTypeMap, cancerTypeForOncoKb, fetchCnaOncoKbData,
+    fetchCnaOncoKbDataWithGeneMolecularData
 } from "shared/lib/StoreUtils";
 import {MutationMapperStore} from "./mutation/MutationMapperStore";
 import AppConfig from "appConfig";
@@ -1312,41 +1313,6 @@ export class ResultsViewPageStore {
         }
     });
 
-    readonly discreteCNAData = remoteData<DiscreteCopyNumberData[]>({
-        await: () => [
-            this.studyToMolecularProfileDiscrete,
-            this.studyToDataQueryFilter,
-            this.genes,
-            this.studyIds
-        ],
-        invoke: async () => {
-            const studies = this.studyIds.result!;
-            const results: DiscreteCopyNumberData[][] = await Promise.all(studies.map(studyId => {
-                const filter = {
-                    entrezGeneIds: this.genes.result!.map(g=>g.entrezGeneId),
-                    ...this.studyToDataQueryFilter.result[studyId]
-                };
-                const profile = this.studyToMolecularProfileDiscrete.result[studyId];
-                if (filter && profile) {
-                    return client.fetchDiscreteCopyNumbersInMolecularProfileUsingPOST({
-                        projection: "DETAILED",
-                        discreteCopyNumberFilter: filter as DiscreteCopyNumberFilter,
-                        molecularProfileId: profile.molecularProfileId
-                    });
-                } else {
-                    return Promise.resolve([]);
-                }
-            }));
-            return _.flatten(results);
-        },
-        onResult: (result: DiscreteCopyNumberData[]) => {
-            // We want to take advantage of this loaded data, and not redownload the same data
-            //  for users of the cache
-            this.discreteCNACache.addData(result);
-        }
-
-    }, []);
-
     readonly studyToDataQueryFilter = remoteData<{ [studyId: string]: IDataQueryFilter }>({
         await: () => [this.studyToSampleIds, this.studyIds],
         invoke: () => {
@@ -1575,9 +1541,15 @@ export class ResultsViewPageStore {
         await: ()=> [
             this.uniqueSampleKeyToTumorType,
             this.oncoKbAnnotatedGenes,
-            this.discreteCNAData
+            this.molecularData,
+            this.molecularProfileIdToMolecularProfile
         ],
-        invoke: () => fetchCnaOncoKbData(this.uniqueSampleKeyToTumorType.result!, this.oncoKbAnnotatedGenes.result!, this.discreteCNAData)
+        invoke: () => fetchCnaOncoKbDataWithGeneMolecularData(
+            this.uniqueSampleKeyToTumorType.result!,
+            this.oncoKbAnnotatedGenes.result!,
+            this.molecularData,
+            this.molecularProfileIdToMolecularProfile.result!
+        )
     }, ONCOKB_DEFAULT);
 
     //we need seperate oncokb data because oncoprint requires onkb queries across cancertype
@@ -1586,9 +1558,15 @@ export class ResultsViewPageStore {
         await: ()=> [
             this.uniqueSampleKeyToTumorType,
             this.oncoKbAnnotatedGenes,
-            this.discreteCNAData
+            this.molecularData,
+            this.molecularProfileIdToMolecularProfile
         ],
-        invoke: () => fetchCnaOncoKbData({}, this.oncoKbAnnotatedGenes.result!, this.discreteCNAData)
+        invoke: () => fetchCnaOncoKbDataWithGeneMolecularData(
+            {},
+            this.oncoKbAnnotatedGenes.result!,
+            this.molecularData,
+            this.molecularProfileIdToMolecularProfile.result!
+        )
     }, ONCOKB_DEFAULT);
 
     readonly getOncoKbMutationAnnotationForOncoprint = remoteData({
