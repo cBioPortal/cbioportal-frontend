@@ -633,10 +633,12 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     readonly clinicalAttributes = remoteData({
         await:()=>[this.props.store.clinicalAttributes],
         invoke:()=>{
-            const clinicalAttributes = specialClinicalAttributes.concat(_.sortBy(
+            let clinicalAttributes:OncoprintClinicalAttribute[] = _.sortBy(
                 this.props.store.clinicalAttributes.result!,
                 x=>x.displayName
-            ));
+            ); // sort server clinical attrs by display name
+            clinicalAttributes = specialClinicalAttributes.concat(clinicalAttributes); // put special clinical attrs at beginning
+            clinicalAttributes = _.uniqBy(clinicalAttributes, x=>x.clinicalAttributeId); // remove duplicates in case of multiple studies w same attr
             return Promise.resolve(clinicalAttributes);
         }
     });
