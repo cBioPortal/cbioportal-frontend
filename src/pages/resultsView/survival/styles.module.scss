@@ -1,18 +1,19 @@
 .SurvivalTable {
   margin: 30px auto;
-  width: 65%;
+  width: 70%;
 }
 
 .SurvivalTable table {
   border-collapse: collapse !important;
 }
 
-.SurvivalTable td, .SurvivalTable th {
+.SurvivalTable td {
   border: 1px solid black;
   padding: 0 10px;
   text-align: center;
   font-size: 12px;
   background-color: #f8f8f8;
+  white-space: nowrap;
 }
 
 .SurvivalChart {
