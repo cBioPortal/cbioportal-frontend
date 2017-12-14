@@ -41,6 +41,7 @@ interface IResultsViewOncoprintProps {
         hasDriverAnnotations: boolean,
         customDriverTiers: string[]
     };
+    addOnBecomeVisibleListener?:(callback:()=>void)=>void;
 }
 
 export type OncoprintClinicalAttribute =
@@ -558,6 +559,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     private oncoprintRef(oncoprint:OncoprintJS<any>) {
         this.oncoprint = oncoprint;
+        this.props.addOnBecomeVisibleListener && this.props.addOnBecomeVisibleListener(()=>this.oncoprint.triggerPendingResizeAndOrganize());
+
         this.oncoprint.onHorzZoom(z=>(this.horzZoom = z));
         this.horzZoom = this.oncoprint.getHorzZoom();
         onMobxPromise([this.props.store.alteredSampleKeys, this.props.store.alteredPatientKeys],
