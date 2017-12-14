@@ -225,22 +225,27 @@ export class PatientViewPageStore {
     readonly pathologyReport = remoteData({
         await: () => [this.derivedPatientId],
         invoke: () => {
-            const pathLinkUrl = "https://raw.githubusercontent.com/inodb/datahub/a0d36d77b242e32cda3175127de73805b028f595/tcga/pathology_reports/symlink_by_patient";
-            const rawPdfUrl = "https://github.com/cBioPortal/datahub/raw/master/tcga/pathology_reports";
-            const reports: PathologyReportPDF[] = [];
+            // only check path report for tcga studies
+            if (this.studyId.toLowerCase().indexOf('tcga') > -1) {
+                const pathLinkUrl = "https://raw.githubusercontent.com/inodb/datahub/a0d36d77b242e32cda3175127de73805b028f595/tcga/pathology_reports/symlink_by_patient";
+                const rawPdfUrl = "https://github.com/cBioPortal/datahub/raw/master/tcga/pathology_reports";
+                const reports: PathologyReportPDF[] = [];
 
-            // keep checking if patient has more reports recursively
-            function getPathologyReport(patientId:string, i:number):any {
-                return request.get(`${pathLinkUrl}/${patientId}.${i}`).then(function(resp){
-                        // add report
-                        let pdfName: string = resp.text.split('/')[1];
-                        reports.push({name: `${pdfName}`, url: `${rawPdfUrl}/${pdfName}`});
-                        // check if patient has more reports
-                        return getPathologyReport(patientId, i+1);
-                    }, () => reports);
+                // keep checking if patient has more reports recursively
+                function getPathologyReport(patientId:string, i:number):any {
+                    return request.get(`${pathLinkUrl}/${patientId}.${i}`).then(function(resp){
+                            // add report
+                            let pdfName: string = resp.text.split('/')[1];
+                            reports.push({name: `${pdfName}`, url: `${rawPdfUrl}/${pdfName}`});
+                            // check if patient has more reports
+                            return getPathologyReport(patientId, i+1);
+                        }, () => reports);
+                }
+                
+               return getPathologyReport(this.patientId, 0);
+            } else {
+                return [];
             }
-            
-           return getPathologyReport(this.patientId, 0);
         },
         onError: (err: Error) => {
             // fail silently
