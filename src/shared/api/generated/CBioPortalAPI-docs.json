@@ -884,6 +884,57 @@
         }
       }
     },
+    "/molecular-profiles/fetch": {
+      "post": {
+        "tags": [
+          "Molecular Profiles"
+        ],
+        "summary": "Fetch molecular profiles",
+        "operationId": "fetchMolecularProfilesUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "molecularProfileFilter",
+            "description": "List of Molecular Profile IDs or List of Study IDs",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/MolecularProfileFilter"
+            }
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MolecularProfile"
+              }
+            }
+          }
+        }
+      }
+    },
     "/molecular-profiles/{molecularProfileId}": {
       "get": {
         "tags": [
@@ -2028,14 +2079,11 @@
         "parameters": [
           {
             "in": "body",
-            "name": "sampleIdentifiers",
+            "name": "sampleFilter",
             "description": "List of sample identifiers",
             "required": true,
             "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/SampleIdentifier"
-              }
+              "$ref": "#/definitions/SampleFilter"
             }
           },
           {
@@ -3533,6 +3581,23 @@
         }
       }
     },
+    "MolecularProfileFilter": {
+      "type": "object",
+      "properties": {
+        "molecularProfileIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "studyIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "GenePanelDataFilter": {
       "type": "object",
       "properties": {
@@ -3802,6 +3867,23 @@
         },
         "studyId": {
           "type": "string"
+        }
+      }
+    },
+    "SampleFilter": {
+      "type": "object",
+      "properties": {
+        "sampleIdentifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SampleIdentifier"
+          }
+        },
+        "sampleListIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
