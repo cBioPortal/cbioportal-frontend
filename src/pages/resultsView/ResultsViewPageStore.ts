@@ -931,6 +931,10 @@ export class ResultsViewPageStore {
 
             const mutationProfiles = _.filter(this.selectedMolecularProfiles.result,(profile:MolecularProfile)=>profile.molecularAlterationType==='MUTATION_EXTENDED');
 
+            if (mutationProfiles.length === 0) {
+                return [];
+            }
+
             const studyIdToProfileMap:{ [studyId:string] : MolecularProfile } = _.keyBy(mutationProfiles,(profile:MolecularProfile)=>profile.studyId);
 
             const filters = this.samples.result.reduce((memo, sample:Sample)=>{
