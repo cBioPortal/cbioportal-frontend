@@ -4,7 +4,7 @@ import Response = request.Response;
 import {
     default as CBioPortalAPI, MolecularProfile, Mutation, MutationFilter, DiscreteCopyNumberData,
     DiscreteCopyNumberFilter, ClinicalData, Sample, CancerStudy, CopyNumberCountIdentifier,
-    ClinicalDataSingleStudyFilter, ClinicalDataMultiStudyFilter, GeneMolecularData
+    ClinicalDataSingleStudyFilter, ClinicalDataMultiStudyFilter, GeneMolecularData, SampleFilter
 } from "shared/api/generated/CBioPortalAPI";
 import {getMyGeneUrl, getUniprotIdUrl} from "shared/api/urls";
 import defaultClient from "shared/api/cbioportalClientInstance";
@@ -226,7 +226,9 @@ export async function fetchSamples(sampleIds:MobxPromise<string[]>,
         );
 
         return await client.fetchSamplesUsingPOST({
-            sampleIdentifiers
+            sampleFilter: {
+                sampleIdentifiers
+            } as SampleFilter
         });
     }
     else {
@@ -291,7 +293,9 @@ export async function fetchSamplesWithoutCancerTypeClinicalData(sampleIds:MobxPr
 
         if (sampleIdentifierForSamplesWithoutClinicalData.length > 0) {
             samples = await client.fetchSamplesUsingPOST({
-                sampleIdentifiers: sampleIdentifierForSamplesWithoutClinicalData
+                sampleFilter: {
+                    sampleIdentifiers: sampleIdentifierForSamplesWithoutClinicalData
+                } as SampleFilter
             });
         }
     }
