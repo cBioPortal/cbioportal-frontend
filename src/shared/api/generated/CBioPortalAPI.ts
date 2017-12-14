@@ -45,6 +45,12 @@ export type ClinicalDataSingleStudyFilter = {
         'ids': Array < string >
 
 };
+export type MolecularProfileFilter = {
+    'molecularProfileIds': Array < string >
+
+        'studyIds': Array < string >
+
+};
 export type GenePanelDataFilter = {
     'entrezGeneIds': Array < number >
 
@@ -175,6 +181,12 @@ export type CancerStudy = {
         'status': number
 
         'studyId': string
+
+};
+export type SampleFilter = {
+    'sampleIdentifiers': Array < SampleIdentifier >
+
+        'sampleListIds': Array < string >
 
 };
 export type SampleList = {
@@ -1666,6 +1678,81 @@ export default class CBioPortalAPI {
                 }
 
                 request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    fetchMolecularProfilesUsingPOSTURL(parameters: {
+        'molecularProfileFilter': MolecularProfileFilter,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/molecular-profiles/fetch';
+
+        if (parameters['projection'] !== undefined) {
+            queryParameters['projection'] = parameters['projection'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch molecular profiles
+     * @method
+     * @name CBioPortalAPI#fetchMolecularProfilesUsingPOST
+     * @param {} molecularProfileFilter - List of Molecular Profile IDs or List of Study IDs
+     * @param {string} projection - Level of detail of the response
+     */
+    fetchMolecularProfilesUsingPOST(parameters: {
+            'molecularProfileFilter': MolecularProfileFilter,
+            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < MolecularProfile >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/molecular-profiles/fetch';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                if (parameters['molecularProfileFilter'] !== undefined) {
+                    body = parameters['molecularProfileFilter'];
+                }
+
+                if (parameters['molecularProfileFilter'] === undefined) {
+                    reject(new Error('Missing required  parameter: molecularProfileFilter'));
+                    return;
+                }
+
+                if (parameters['projection'] !== undefined) {
+                    queryParameters['projection'] = parameters['projection'];
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
 
             }).then(function(response: request.Response) {
                 return response.body;
@@ -3265,7 +3352,7 @@ export default class CBioPortalAPI {
         };
 
     fetchSamplesUsingPOSTURL(parameters: {
-        'sampleIdentifiers': Array < SampleIdentifier > ,
+        'sampleFilter': SampleFilter,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         $queryParameters ? : any
     }): string {
@@ -3290,11 +3377,11 @@ export default class CBioPortalAPI {
      * Fetch samples by ID
      * @method
      * @name CBioPortalAPI#fetchSamplesUsingPOST
-     * @param {} sampleIdentifiers - List of sample identifiers
+     * @param {} sampleFilter - List of sample identifiers
      * @param {string} projection - Level of detail of the response
      */
     fetchSamplesUsingPOST(parameters: {
-            'sampleIdentifiers': Array < SampleIdentifier > ,
+            'sampleFilter': SampleFilter,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             $queryParameters ? : any,
             $domain ? : string
@@ -3312,12 +3399,12 @@ export default class CBioPortalAPI {
                 headers['Accept'] = 'application/json';
                 headers['Content-Type'] = 'application/json';
 
-                if (parameters['sampleIdentifiers'] !== undefined) {
-                    body = parameters['sampleIdentifiers'];
+                if (parameters['sampleFilter'] !== undefined) {
+                    body = parameters['sampleFilter'];
                 }
 
-                if (parameters['sampleIdentifiers'] === undefined) {
-                    reject(new Error('Missing required  parameter: sampleIdentifiers'));
+                if (parameters['sampleFilter'] === undefined) {
+                    reject(new Error('Missing required  parameter: sampleFilter'));
                     return;
                 }
 
