@@ -3,7 +3,7 @@ import {
     SampleIdentifier, MolecularProfile, Mutation, GeneMolecularData, MolecularDataFilter, Gene,
     ClinicalDataSingleStudyFilter, CancerStudy, PatientIdentifier, Patient, GenePanelData, GenePanelDataFilter,
     SampleList, MutationCountByPosition, MutationMultipleStudyFilter, SampleMolecularIdentifier,
-    MolecularDataMultipleStudyFilter
+    MolecularDataMultipleStudyFilter, SampleFilter
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {computed, observable, action} from "mobx";
@@ -1156,19 +1156,37 @@ export class ResultsViewPageStore {
 
     readonly samples = remoteData({
         await: () => [
-            this.studyToSampleIds
+            this.studyToDataQueryFilter
         ],
-        invoke: () => {
+        invoke: async() => {
             let sampleIdentifiers: SampleIdentifier[] = [];
-            _.each(this.studyToSampleIds.result, (sampleIds: { [sampleId: string]: boolean }, studyId: string) => {
-                sampleIdentifiers = sampleIdentifiers.concat(Object.keys(sampleIds).map(sampleId => ({
-                    sampleId,
-                    studyId
-                })));
+            let sampleListIds: string[] = [];
+            _.each(this.studyToDataQueryFilter.result, (dataQueryFilter: IDataQueryFilter, studyId: string) => {
+                if (dataQueryFilter.sampleIds) {
+                    sampleIdentifiers = sampleIdentifiers.concat(dataQueryFilter.sampleIds.map(sampleId => ({
+                        sampleId,
+                        studyId
+                    })));
+                } else if (dataQueryFilter.sampleListId) {
+                    sampleListIds.push(dataQueryFilter.sampleListId);
+                }
             });
-            return client.fetchSamplesUsingPOST({
-                sampleIdentifiers
-            });
+            let promises:Promise<Sample[]>[] = [];
+            if (sampleIdentifiers.length) {
+                promises.push(client.fetchSamplesUsingPOST({
+                    sampleFilter: {
+                        sampleIdentifiers
+                    } as SampleFilter
+                }));
+            }
+            if (sampleListIds.length) {
+                promises.push(client.fetchSamplesUsingPOST({
+                    sampleFilter: {
+                        sampleListIds
+                    } as SampleFilter
+                }));
+            }
+            return _.flatten(await Promise.all(promises));
         }
     }, []);
 
