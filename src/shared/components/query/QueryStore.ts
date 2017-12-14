@@ -1234,7 +1234,9 @@ export class QueryStore
 	@action addParamsFromWindow()
 	{
 		// Populate OQL
-		this.geneQuery = normalizeQuery((window as any).serverVars.theQuery);
+		if ((window as any).serverVars) {
+			this.geneQuery = normalizeQuery((window as any).serverVars.theQuery);
+		}
 
 		// Select studies from window
 		const windowStudyId = (window as any).selectedCancerStudyId;
