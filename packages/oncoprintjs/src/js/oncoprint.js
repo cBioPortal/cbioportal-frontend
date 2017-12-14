@@ -297,6 +297,8 @@ var Oncoprint = (function () {
 	
 	this.id_clipboard = [];
 	this.clipboard_change_callbacks = [];
+
+	this.pending_resize_and_organize = false;
     }
 
     var _SetLegendTop = function (oncoprint) {
@@ -324,6 +326,11 @@ var Oncoprint = (function () {
 	    return;
 	}
 	var ctr_width = $(oncoprint.ctr_selector).width();
+	if (ctr_width === 0) {
+		// dont make any adjustments while oncoprint is offscreen, DOM size calculations would be messed up
+		oncoprint.pending_resize_and_organize = true;
+		return;
+	}
 	oncoprint.$track_options_div.css({'left': oncoprint.label_view.getWidth()});
 	oncoprint.$track_info_div.css({'left': oncoprint.label_view.getWidth() + oncoprint.track_options_view.getWidth()});
 	var cell_div_left = oncoprint.label_view.getWidth() + oncoprint.track_options_view.getWidth() + oncoprint.track_info_view.getWidth();
@@ -797,6 +804,13 @@ var Oncoprint = (function () {
 	    resizeAndOrganizeAfterTimeout(this);
 	}
     }
+
+    Oncoprint.prototype.triggerPendingResizeAndOrganize = function() {
+    	if (this.pending_resize_and_organize) {
+    		this.pending_resize_and_organize = false;
+    		resizeAndOrganizeAfterTimeout(this);
+		}
+	}
     
     Oncoprint.prototype.hideIds = function(to_hide, show_others) {
 	this.model.hideIds(to_hide, show_others);
