@@ -3,7 +3,7 @@ import client from "../../api/cbioportalClientInstance";
 import {ObservableMap, toJS, observable, reaction, action, computed, whyRun, expr, isObservableMap} from "mobx";
 import {
 	TypeOfCancer as CancerType, MolecularProfile, CancerStudy, SampleList, Gene,
-	Sample, SampleIdentifier
+	Sample, SampleIdentifier, SampleFilter
 } from "../../api/generated/CBioPortalAPI";
 import {Geneset} from "../../api/generated/CBioPortalAPIInternal";
 import CancerStudyTreeData from "./CancerStudyTreeData";
@@ -684,7 +684,12 @@ export class QueryStore
 				const sampleIdentifiers = cases.map(c => ({studyId: c.study, sampleId: c.id}));
 				if (sampleIdentifiers.length)
 				{
-					let sampleObjs = await chunkMapReduce(sampleIdentifiers, chunk=>client.fetchSamplesUsingPOST({sampleIdentifiers:chunk, projection: "SUMMARY"}), 990);
+					let sampleObjs = await chunkMapReduce(sampleIdentifiers, chunk=>client.fetchSamplesUsingPOST({
+						sampleFilter: {
+							sampleIdentifiers:chunk
+						} as SampleFilter,
+						projection: "SUMMARY"
+					}), 990);
 					// sort by input order
 					sampleObjs = _.sortBy(sampleObjs, sampleObj=>caseOrder[`${sampleObj.studyId}:${sampleObj.sampleId}`]);
 
