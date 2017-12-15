@@ -157,6 +157,10 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         }
     }
 
+    private shouldShowPathologyReport(patientViewPageStore: PatientViewPageStore): boolean {
+        return patientViewPageStore.pathologyReport.isComplete && patientViewPageStore.pathologyReport.result.length > 0;
+    }
+
     public render() {
 
         let sampleManager: SampleManager | null = null;
@@ -426,7 +430,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
 
                     <MSKTab key={3} id="pathologyReportTab" linkText="Pathology Report"
-                            hide={(patientViewPageStore.pathologyReport.isComplete && patientViewPageStore.pathologyReport.result.length === 0)}
+                            hide={!this.shouldShowPathologyReport(patientViewPageStore)}
                             loading={patientViewPageStore.pathologyReport.isPending}
                     >
                         <div>
