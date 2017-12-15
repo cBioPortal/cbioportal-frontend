@@ -1241,6 +1241,10 @@ export class QueryStore
 		// Populate OQL
 		if ((window as any).serverVars) {
 			this.geneQuery = normalizeQuery((window as any).serverVars.theQuery);
+			const dataPriority = (window as any).serverVars.dataPriority;
+			if (typeof dataPriority !== "undefined") {
+				this.dataTypePriorityCode = (dataPriority + '') as '0'|'1'|'2';
+			}
 		}
 
 		// Select studies from window
