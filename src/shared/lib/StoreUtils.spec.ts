@@ -390,9 +390,14 @@ describe('StoreUtils', () => {
                 sampleIds, studyId, clinicalDataForSamples, client as any);
 
             assert.isTrue(fetchSamplesStub.called, "fetchSamples should be called");
-            assert.isTrue(fetchSamplesStub.calledWith({
-                sampleIdentifiers: [{sampleId: "Sample4", studyId: "study"}]
-            }), "fetchSamples should be called with the correct sample id (Sample4)");
+            console.log(fetchSamplesStub.args);
+            assert.isTrue(fetchSamplesStub.calledWith(
+                {
+                    sampleFilter: {
+                        sampleIdentifiers: [{sampleId: "Sample4", studyId: "study"}]
+                    }
+                }
+            ), "fetchSamples should be called with the correct sample id (Sample4)");
         });
 
         it('fetches studies for samples without cancer type clinical data', () => {
