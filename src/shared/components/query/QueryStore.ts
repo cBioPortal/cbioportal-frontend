@@ -1245,6 +1245,18 @@ export class QueryStore
 			if (typeof dataPriority !== "undefined") {
 				this.dataTypePriorityCode = (dataPriority + '') as '0'|'1'|'2';
 			}
+
+            const selectedMolecularProfiles = (window as any).serverVars.molecularProfiles;
+            if (selectedMolecularProfiles !== undefined) {
+                this.selectedProfileIds = selectedMolecularProfiles;
+            }
+
+            const zScoreThreshold =  (window as any).serverVars.zScoreThreshold;
+            if (selectedMolecularProfiles !== undefined) {
+                this.zScoreThreshold = zScoreThreshold;
+            }
+
+
 		}
 
 		// Select studies from window
