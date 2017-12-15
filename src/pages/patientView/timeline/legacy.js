@@ -53,9 +53,6 @@ function plotCaseLabelsInTimeline(caseIds, clinicalDataMap, caseMetaData) {
             window.pvTimeline.addDataPointTooltip(g);
         }
     }
-
-    // hack to keep axis visible (somehow visibility is set to hidden)
-    $("#timeline .axis").css({"visibility":"visible"});
 }
 
 export function buildTimeline(params, caseIds, patientInfo, clinicalDataMap, caseMetaData, data, width) {
