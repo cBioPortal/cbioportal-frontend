@@ -3,7 +3,7 @@ import {
     SampleIdentifier, MolecularProfile, Mutation, GeneMolecularData, MolecularDataFilter, Gene,
     ClinicalDataSingleStudyFilter, CancerStudy, PatientIdentifier, Patient, GenePanelData, GenePanelDataFilter,
     SampleList, MutationCountByPosition, MutationMultipleStudyFilter, SampleMolecularIdentifier,
-    MolecularDataMultipleStudyFilter, SampleFilter
+    MolecularDataMultipleStudyFilter, SampleFilter, MolecularProfileFilter
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {computed, observable, action} from "mobx";
@@ -337,7 +337,16 @@ export class ResultsViewPageStore {
     });
 
     readonly selectedMolecularProfiles = remoteData<MolecularProfile[]>(() => {
-        return Promise.all(this.selectedMolecularProfileIds.map((id) => client.getMolecularProfileUsingGET({molecularProfileId: id})));
+
+        const molecularProfileFilter = {
+            "molecularProfileIds": this.selectedMolecularProfileIds
+        } as MolecularProfileFilter;
+
+        return client.fetchMolecularProfilesUsingPOST({
+            projection: 'DETAILED',
+            molecularProfileFilter: molecularProfileFilter
+        });
+
     });
 
     readonly clinicalAttributes = remoteData({
