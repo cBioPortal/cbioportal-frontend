@@ -13786,7 +13786,7 @@ var Oncoprint = (function () {
 	
 	var $ctr = $('<span></span>').css({'position':'relative', 'display':'inline-block'}).appendTo(ctr_selector);
 	var $oncoprint_ctr = $('<div></div>')
-			    .css({'position':'relative', 'display':'inline-block'})
+			    .css({'position':'absolute', 'display':'inline-block'})
 			    .appendTo($ctr);
 		    
 	var $tooltip_ctr = $('<span></span>').css({'position':'absolute'}).appendTo(ctr_selector);
@@ -23522,6 +23522,10 @@ module.exports = {
 
 var $ = __webpack_require__(0);
 
+var TOGGLE_BTN_CLASS = "oncoprintjs__track_options__toggle_btn_img";
+var TOGGLE_BTN_OPEN_CLASS = "oncoprintjs__track_options__open";
+var DROPDOWN_CLASS = "oncoprintjs__track_options__dropdown";
+
 var OncoprintTrackOptionsView = (function () {
     function OncoprintTrackOptionsView($div, moveUpCallback, moveDownCallback, removeCallback, sortChangeCallback) {
 	// removeCallback: function(track_id)
@@ -23675,7 +23679,7 @@ var OncoprintTrackOptionsView = (function () {
 			'float': 'left',
 			'cursor': 'pointer',
 			'border': '1px solid rgba(125,125,125,0)'
-		}).addClass("oncoprintjs__track_options__toggle_btn_img");
+		}).addClass(TOGGLE_BTN_CLASS);
 	$sortarrow = $('<span>').appendTo($div).css({'position': 'absolute', 'top': Math.floor(view.img_size / 4) + 'px'});
 	$dropdown = $('<ul>').appendTo(view.$dropdown_ctr)
 		.css({
@@ -23688,7 +23692,7 @@ var OncoprintTrackOptionsView = (function () {
 			'float': 'right',
 			'background-color': 'rgb(255,255,255)',
 			'left':'0px', 'top': top + view.img_size + 'px'
-		}).addClass("oncoprintjs__track_options__dropdown");
+		}).addClass(DROPDOWN_CLASS);
 	view.track_options_$elts[track_id] = {'$div': $div, '$img': $img, '$dropdown': $dropdown};
 
 	renderSortArrow($sortarrow, model, track_id);
@@ -23705,8 +23709,10 @@ var OncoprintTrackOptionsView = (function () {
 	$img.click(function (evt) {
 	    evt.stopPropagation();
 	    if ($dropdown.is(":visible")) {
+		$img.addClass(TOGGLE_BTN_OPEN_CLASS);
 		hideTrackMenu(view, track_id);
 	    } else {
+		$img.removeClass(TOGGLE_BTN_OPEN_CLASS);
 		showTrackMenu(view, track_id);
 	    }
 	    hideMenusExcept(view, track_id);

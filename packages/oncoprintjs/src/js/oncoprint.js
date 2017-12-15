@@ -33,7 +33,7 @@ var Oncoprint = (function () {
 	
 	var $ctr = $('<span></span>').css({'position':'relative', 'display':'inline-block'}).appendTo(ctr_selector);
 	var $oncoprint_ctr = $('<div></div>')
-			    .css({'position':'relative', 'display':'inline-block'})
+			    .css({'position':'absolute', 'display':'inline-block'})
 			    .appendTo($ctr);
 		    
 	var $tooltip_ctr = $('<span></span>').css({'position':'absolute'}).appendTo(ctr_selector);
