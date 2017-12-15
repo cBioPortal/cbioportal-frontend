@@ -225,14 +225,28 @@ export class PatientViewPageStore {
 
     readonly pathologyReport = remoteData({
         await: () => [this.derivedPatientId],
-        invoke: async() => {
+        invoke: () => {
+            // only check path report for tcga studies
+            if (this.studyId.toLowerCase().indexOf('tcga') > -1) {
+                const pathLinkUrl = "https://raw.githubusercontent.com/inodb/datahub/a0d36d77b242e32cda3175127de73805b028f595/tcga/pathology_reports/symlink_by_patient";
+                const rawPdfUrl = "https://github.com/cBioPortal/datahub/raw/master/tcga/pathology_reports";
+                const reports: PathologyReportPDF[] = [];
 
-            let resp: any = await request.get(`https://api.github.com/search/code?q=${this.patientId}+extension:pdf+in:path+repo:cBioPortal/datahub`);
-
-            const parsedResp: any = JSON.parse(resp.text);
-
-            return handlePathologyReportCheckResponse(this.patientId, parsedResp);
-
+                // keep checking if patient has more reports recursively
+                function getPathologyReport(patientId:string, i:number):any {
+                    return request.get(`${pathLinkUrl}/${patientId}.${i}`).then(function(resp){
+                            // add report
+                            let pdfName: string = resp.text.split('/')[1];
+                            reports.push({name: `${pdfName}`, url: `${rawPdfUrl}/${pdfName}`});
+                            // check if patient has more reports
+                            return getPathologyReport(patientId, i+1);
+                        }, () => reports);
+                }
+                
+               return getPathologyReport(this.patientId, 0);
+            } else {
+                return [];
+            }
         },
         onError: (err: Error) => {
             // fail silently
