@@ -773,17 +773,17 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }
 
     @computed get caseSetInfo() {
+        let caseSetText = null;
         if (this.caseSetName.isComplete && this.props.store.patients.isComplete && this.props.store.samples.isComplete &&
             this.caseSetName.result) {
-            return (
-                <div>
-                    <span>Case Set: {this.caseSetName.result} ({this.props.store.patients.result.length} patients / {this.props.store.samples.result.length} samples)</span>
-                    {this.headerColumnModeButton}
-                </div>
-            );
-        } else {
-            return null;
+            caseSetText = (<span>Case Set: {this.caseSetName.result} ({this.props.store.patients.result.length} patients / {this.props.store.samples.result.length} samples)</span>);
         }
+        return (
+            <div>
+                {caseSetText}
+                {this.headerColumnModeButton}
+            </div>
+        );
     }
 
     @computed get alterationInfo() {
