@@ -3,7 +3,7 @@ import * as styles_any from './styles/styles.module.scss';
 import {Modal} from 'react-bootstrap';
 import ReactSelect from 'react-select';
 import {observer} from "mobx-react";
-import {computed} from 'mobx';
+import {computed, ObservableMap} from 'mobx';
 import {FlexRow, FlexCol} from "../flexbox/FlexBox";
 import gene_lists from './gene_lists';
 import GenesetsValidator from "./GenesetsValidator";
@@ -11,12 +11,14 @@ import classNames from 'classnames';
 import {getOncoQueryDocUrl} from "../../api/urls";
 import {QueryStoreComponent} from "./QueryStore";
 import GenesetsHierarchySelector from "./GenesetsHierarchySelector";
+import GenesetsVolcanoSelector from "./GenesetsVolcanoSelector";
 import SectionHeader from "../sectionHeader/SectionHeader";
 import AppConfig from "appConfig";
 
 const styles = styles_any as {
     GeneSetSelector: string,
     GenesetsSelectorWindow: string,
+    GenesetsVolcanoSelectorWindow: string,
     buttonRow: string,
     geneSet: string,
     empty: string,
@@ -82,7 +84,10 @@ export default class GenesetsSelector extends QueryStoreComponent<GenesetsSelect
 
                     <FlexRow padded className={styles.buttonRow}>
                     <button className="btn btn-default btn-sm" onClick={() => this.store.showGenesetsHierarchyPopup = true}>
-                        Select Gene Sets
+                        Select Gene Sets from Hierarchy
+                    </button>
+                    <button className="btn btn-default btn-sm" onClick={() => this.store.showGenesetsVolcanoPopup = true}>
+                        Select Gene Sets from Volcano Plot
                     </button>
                     </FlexRow>
 
@@ -114,12 +119,36 @@ export default class GenesetsSelector extends QueryStoreComponent<GenesetsSelect
                         gsvaProfile={this.store.getFilteredProfiles("GENESET_SCORE")[0].molecularProfileId}
                         sampleListId={this.store.defaultSelectedSampleListId}
                         onSelect={map_geneset_selected => {
-                            this.store.applyGenesetsSelection(map_geneset_selected);
+                            this.store.applyGenesetSelection(map_geneset_selected);
                             this.store.showGenesetsHierarchyPopup = false;
                         }}
                     />
                     </Modal.Body>
                     </Modal>
+                    
+                    <Modal
+                        className={classNames('cbioportal-frontend',styles.GenesetsVolcanoSelectorWindow)}
+                        show={this.store.showGenesetsVolcanoPopup}
+                        onHide={() => this.store.showGenesetsVolcanoPopup = false }
+                        onShow={() => this.store.map_genesets_selected_volcano.replace(this.store.genesetIds.map(geneset => [geneset, true]))}
+                    >
+                    <Modal.Header closeButton>
+                    <Modal.Title>Select Gene Sets From Volcano Plot</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                    <GenesetsVolcanoSelector
+                        initialSelection={this.store.genesetIds}
+                        data={this.store.volcanoPlotTableData.result}
+                        plotData={this.store.volcanoPlotGraphData}
+                        maxY={this.store.maxYVolcanoPlot ? -(Math.log(this.store.maxYVolcanoPlot)/Math.log(10)) : undefined}
+                        onSelect={map_genesets_selected => {
+                            this.store.addToGenesetSelection(map_genesets_selected);
+                            this.store.showGenesetsVolcanoPopup = false;
+                        }}
+                    />
+                    </Modal.Body>
+                    </Modal>
+                    
 
                     </FlexCol>
                 </FlexRow>
