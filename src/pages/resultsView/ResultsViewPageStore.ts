@@ -3,7 +3,7 @@ import {
     SampleIdentifier, MolecularProfile, Mutation, GeneMolecularData, MolecularDataFilter, Gene,
     ClinicalDataSingleStudyFilter, CancerStudy, PatientIdentifier, Patient, GenePanelData, GenePanelDataFilter,
     SampleList, MutationCountByPosition, MutationMultipleStudyFilter, SampleMolecularIdentifier,
-    MolecularDataMultipleStudyFilter, SampleFilter, MolecularProfileFilter
+    MolecularDataMultipleStudyFilter, SampleFilter, MolecularProfileFilter, GenePanelMultipleStudyFilter
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {computed, observable, action} from "mobx";
@@ -483,43 +483,47 @@ export class ResultsViewPageStore {
     readonly genePanelInformation = remoteData<GenePanelInformation>({
         await:()=>[
             this.studyToMutationMolecularProfile,
-            this.studyToDataQueryFilter,
             this.genes,
             this.samples,
-            this.patients,
-            this.studyIds
+            this.patients
         ],
         invoke:async()=>{
-            const studies = this.studyIds.result!;
-            const results:GenePanelData[] = _.flatten(await Promise.all(studies.map(studyId=>{
-                const mutationMolecularProfile = this.studyToMutationMolecularProfile.result![studyId];
-                const dataQueryFilter = this.studyToDataQueryFilter.result![studyId];
-                if (mutationMolecularProfile && dataQueryFilter) {
-                    return client.getGenePanelDataUsingPOST({
-                        molecularProfileId: mutationMolecularProfile.molecularProfileId,
-                        genePanelDataFilter:{
-                            entrezGeneIds: this.genes.result!.map(x=>x.entrezGeneId),
-                            sampleIds: dataQueryFilter.sampleIds,
-                            sampleListId: dataQueryFilter.sampleListId
-                        } as GenePanelDataFilter
+            const studyToMutationMolecularProfile = this.studyToMutationMolecularProfile.result!;
+            const sampleMolecularIdentifiers:SampleMolecularIdentifier[] = [];
+            this.samples.result!.forEach(sample=>{
+                const profile = studyToMutationMolecularProfile[sample.studyId];
+                if (profile) {
+                    sampleMolecularIdentifiers.push({
+                        molecularProfileId: profile.molecularProfileId,
+                        sampleId: sample.sampleId
                     });
-                } else {
-                    return Promise.resolve([]);
                 }
-            })));
+            });
+            const entrezGeneIds = this.genes.result!.map(gene=>gene.entrezGeneId);
+            let results:GenePanelData[];
+            if (sampleMolecularIdentifiers.length && entrezGeneIds.length) {
+                results = await client.fetchGenePanelDataInMultipleMolecularProfilesUsingPOST({
+                    genePanelMultipleStudyFilter:{
+                        entrezGeneIds,
+                        sampleMolecularIdentifiers
+                    } as GenePanelMultipleStudyFilter
+                });
+            } else {
+                results = [];
+            }
             const entrezToGene = _.keyBy(this.genes.result, gene=>gene.entrezGeneId);
             const samples:GenePanelInformation["samples"] = {};
             const patients:GenePanelInformation["patients"] = {};
             for (const sample of this.samples.result!) {
                 samples[sample.uniqueSampleKey] = {
                     sequencedGenes: {},
-                    wholeExomeSequenced: true
+                    wholeExomeSequenced: !!studyToMutationMolecularProfile[sample.studyId] // only assume WXS if theres a mutation profile to query for this sample
                 };
             }
             for (const patient of this.patients.result!) {
                 patients[patient.uniquePatientKey] = {
                     sequencedGenes: {},
-                    wholeExomeSequenced: true
+                    wholeExomeSequenced: !!studyToMutationMolecularProfile[patient.studyId] // only assume WXS if theres a mutation profile to query for this patient
                 };
             }
             for (const gpData of results) {
