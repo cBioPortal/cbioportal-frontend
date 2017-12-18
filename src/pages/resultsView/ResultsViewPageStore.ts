@@ -1264,7 +1264,11 @@ export class ResultsViewPageStore {
 
     readonly studies = remoteData({
         await: ()=>[this.studyIds],
-        invoke: () => Promise.all(this.studyIds.result!.map(studyId => client.getStudyUsingGET({studyId})))
+        invoke: async () => {
+            return client.fetchStudiesUsingPOST({
+                studyIds:this.studyIds.result!
+            })
+        }
     }, []);
 
     readonly studyIdToStudy = remoteData({
