@@ -67,7 +67,6 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
 
     private get multipleStudyUI() {
         return <div>
-            <h4><a onClick={this.goToStudySummary}>Combined Study</a></h4>
             <span>
                 This combined study contains samples from {this.props.store.studies.result.length} studies
                  &nbsp;
