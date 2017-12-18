@@ -336,27 +336,22 @@ export class ResultsViewPageStore {
         }
     });
 
-    readonly selectedMolecularProfiles = remoteData<MolecularProfile[]>(() => {
-
-        const molecularProfileFilter = {
-            "molecularProfileIds": this.selectedMolecularProfileIds
-        } as MolecularProfileFilter;
-
-        return client.fetchMolecularProfilesUsingPOST({
-            projection: 'DETAILED',
-            molecularProfileFilter: molecularProfileFilter
-        });
-
+    readonly selectedMolecularProfiles = remoteData<MolecularProfile[]>({
+        await: ()=>[
+          this.molecularProfilesInStudies
+        ],
+        invoke: () => {
+            const idLookupMap = _.keyBy(this.selectedMolecularProfileIds,(id:string)=>id); // optimization
+            return Promise.resolve(this.molecularProfilesInStudies.result!.filter((profile:MolecularProfile)=>(profile.molecularProfileId in idLookupMap)));
+        }
     });
 
     readonly clinicalAttributes = remoteData({
         await:()=>[this.studyIds],
         invoke:async()=>{
-            return _.flatten(await Promise.all(this.studyIds.result!.map(studyId=>{
-                return client.getAllClinicalAttributesInStudyUsingGET({
-                    studyId
-                });
-            })));
+            return client.fetchClinicalAttributesUsingPOST({
+                studyIds:this.studyIds.result!
+            });
         }
     });
 
@@ -1172,6 +1167,7 @@ export class ResultsViewPageStore {
             this.studyToDataQueryFilter
         ],
         invoke: async() => {
+
             let sampleIdentifiers: SampleIdentifier[] = [];
             let sampleListIds: string[] = [];
             _.each(this.studyToDataQueryFilter.result, (dataQueryFilter: IDataQueryFilter, studyId: string) => {
@@ -1265,7 +1261,11 @@ export class ResultsViewPageStore {
 
     readonly studies = remoteData({
         await: ()=>[this.studyIds],
-        invoke: () => Promise.all(this.studyIds.result!.map(studyId => client.getStudyUsingGET({studyId})))
+        invoke: async () => {
+            return client.fetchStudiesUsingPOST({
+                studyIds:this.studyIds.result!
+            })
+        }
     }, []);
 
     readonly studyIdToStudy = remoteData({
@@ -1280,11 +1280,9 @@ export class ResultsViewPageStore {
     readonly molecularProfilesInStudies = remoteData<MolecularProfile[]>({
         await:()=>[this.studyIds],
         invoke: async () => {
-            return _.flatten(await Promise.all(this.studyIds.result!.map(studyId => {
-                return client.getAllMolecularProfilesInStudyUsingGET({
-                    studyId
-                });
-            })));
+            return client.fetchMolecularProfilesUsingPOST({
+                molecularProfileFilter: { studyIds:this.studyIds.result! } as MolecularProfileFilter
+            })
         }
     }, []);
 
