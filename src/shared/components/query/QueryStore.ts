@@ -1190,7 +1190,11 @@ export class QueryStore
 	                return "Please enter one or more gene symbols.";
 	            }
             }
-        }
+        } else {
+			if (!this.oql.query.length) {
+				return "Please enter one or more gene symbols.";
+			}
+		}
 		
 		
 
