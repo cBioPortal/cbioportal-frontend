@@ -288,6 +288,60 @@
         }
       }
     },
+    "/clinical-attributes/fetch": {
+      "post": {
+        "tags": [
+          "Clinical Attributes"
+        ],
+        "summary": "Fetch clinical attributes",
+        "operationId": "fetchClinicalAttributesUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "studyIds",
+            "description": "List of Study IDs",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ClinicalAttribute"
+              }
+            }
+          }
+        }
+      }
+    },
     "/clinical-data/fetch": {
       "post": {
         "tags": [
@@ -2190,6 +2244,60 @@
             "enum": [
               "ASC",
               "DESC"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CancerStudy"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/studies/fetch": {
+      "post": {
+        "tags": [
+          "Studies"
+        ],
+        "summary": "Fetch studies by IDs",
+        "operationId": "fetchStudiesUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "studyIds",
+            "description": "List of Study IDs",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
             ]
           }
         ],
