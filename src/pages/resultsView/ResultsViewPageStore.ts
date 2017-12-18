@@ -896,11 +896,11 @@ export class ResultsViewPageStore {
 
     readonly studyToMutationMolecularProfile = remoteData<{[studyId: string]: MolecularProfile}>({
         await: () => [
-            this.molecularProfilesInStudies
+            this.selectedMolecularProfiles
         ],
         invoke: () => {
             const ret: {[studyId: string]: MolecularProfile} = {};
-            for (const profile of this.molecularProfilesInStudies.result) {
+            for (const profile of this.selectedMolecularProfiles.result!) {
                 const studyId = profile.studyId;
                 if (!ret[studyId] && isMutationProfile(profile)) {
                     ret[studyId] = profile;
@@ -1277,21 +1277,10 @@ export class ResultsViewPageStore {
         return `${studyId}_germline`;
     }
 
-    readonly molecularProfilesInStudies = remoteData<MolecularProfile[]>({
-        await:()=>[this.studyIds],
-        invoke: async () => {
-            return _.flatten(await Promise.all(this.studyIds.result!.map(studyId => {
-                return client.getAllMolecularProfilesInStudyUsingGET({
-                    studyId
-                });
-            })));
-        }
-    }, []);
-
     readonly molecularProfileIdToMolecularProfile = remoteData<{ [molecularProfileId: string]: MolecularProfile }>({
-        await: () => [this.molecularProfilesInStudies],
+        await: () => [this.selectedMolecularProfiles],
         invoke: () => {
-            return Promise.resolve(this.molecularProfilesInStudies.result.reduce((map: { [molecularProfileId: string]: MolecularProfile }, next: MolecularProfile) => {
+            return Promise.resolve(this.selectedMolecularProfiles.result!.reduce((map: { [molecularProfileId: string]: MolecularProfile }, next: MolecularProfile) => {
                 map[next.molecularProfileId] = next;
                 return map;
             }, {}));
@@ -1300,11 +1289,11 @@ export class ResultsViewPageStore {
 
     readonly studyToMolecularProfileDiscrete = remoteData<{ [studyId: string]: MolecularProfile }>({
         await: () => [
-            this.molecularProfilesInStudies
+            this.selectedMolecularProfiles
         ],
         invoke: async () => {
             const ret: { [studyId: string]: MolecularProfile } = {};
-            for (const molecularProfile of this.molecularProfilesInStudies.result) {
+            for (const molecularProfile of this.selectedMolecularProfiles.result!) {
                 if (molecularProfile.datatype === "DISCRETE") {
                     ret[molecularProfile.studyId] = molecularProfile;
                 }
@@ -1315,14 +1304,14 @@ export class ResultsViewPageStore {
 
     readonly heatmapMolecularProfiles = remoteData<MolecularProfile[]>({
         await: ()=>[
-            this.molecularProfilesInStudies
+            this.selectedMolecularProfiles
         ],
         invoke:()=>{
             const MRNA_EXPRESSION = "MRNA_EXPRESSION";
             const PROTEIN_LEVEL = "PROTEIN_LEVEL";
             const selectedMolecularProfileIds = stringListToSet(this.selectedMolecularProfileIds);
 
-            return Promise.resolve(_.sortBy(_.filter(this.molecularProfilesInStudies.result!, profile=>{
+            return Promise.resolve(_.sortBy(_.filter(this.selectedMolecularProfiles.result!, profile=>{
                 return (profile.molecularAlterationType === MRNA_EXPRESSION ||
                         profile.molecularAlterationType === PROTEIN_LEVEL) && profile.showProfileInAnalysisTab;
             }), profile=>{
@@ -1358,12 +1347,12 @@ export class ResultsViewPageStore {
 
     readonly molecularProfileIdToDataQueryFilter = remoteData<{[molecularProfileId:string]:IDataQueryFilter}>({
         await: ()=>[
-            this.molecularProfilesInStudies,
+            this.selectedMolecularProfiles,
             this.studyToDataQueryFilter
         ],
         invoke: ()=>{
             const ret:{[molecularProfileId:string]:IDataQueryFilter} = {};
-            for (const molecularProfile of this.molecularProfilesInStudies.result!) {
+            for (const molecularProfile of this.selectedMolecularProfiles.result!) {
                 ret[molecularProfile.molecularProfileId] = this.studyToDataQueryFilter.result![molecularProfile.studyId];
             }
             return Promise.resolve(ret);
