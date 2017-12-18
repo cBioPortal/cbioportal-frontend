@@ -352,11 +352,9 @@ export class ResultsViewPageStore {
     readonly clinicalAttributes = remoteData({
         await:()=>[this.studyIds],
         invoke:async()=>{
-            return _.flatten(await Promise.all(this.studyIds.result!.map(studyId=>{
-                return client.getAllClinicalAttributesInStudyUsingGET({
-                    studyId
-                });
-            })));
+            return client.fetchClinicalAttributesUsingPOST({
+                studyIds:this.studyIds.result!
+            });
         }
     });
 
@@ -1172,6 +1170,7 @@ export class ResultsViewPageStore {
             this.studyToDataQueryFilter
         ],
         invoke: async() => {
+
             let sampleIdentifiers: SampleIdentifier[] = [];
             let sampleListIds: string[] = [];
             _.each(this.studyToDataQueryFilter.result, (dataQueryFilter: IDataQueryFilter, studyId: string) => {
