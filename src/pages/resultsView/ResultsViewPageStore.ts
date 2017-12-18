@@ -336,17 +336,14 @@ export class ResultsViewPageStore {
         }
     });
 
-    readonly selectedMolecularProfiles = remoteData<MolecularProfile[]>(() => {
-
-        const molecularProfileFilter = {
-            "molecularProfileIds": this.selectedMolecularProfileIds
-        } as MolecularProfileFilter;
-
-        return client.fetchMolecularProfilesUsingPOST({
-            projection: 'DETAILED',
-            molecularProfileFilter: molecularProfileFilter
-        });
-
+    readonly selectedMolecularProfiles = remoteData<MolecularProfile[]>({
+        await: ()=>[
+          this.molecularProfilesInStudies
+        ],
+        invoke: () => {
+            const idLookupMap = _.keyBy(this.selectedMolecularProfileIds,(id:string)=>id); // optimization
+            return Promise.resolve(this.molecularProfilesInStudies.result!.filter((profile:MolecularProfile)=>(profile.molecularProfileId in idLookupMap)));
+        }
     });
 
     readonly clinicalAttributes = remoteData({
@@ -1283,11 +1280,9 @@ export class ResultsViewPageStore {
     readonly molecularProfilesInStudies = remoteData<MolecularProfile[]>({
         await:()=>[this.studyIds],
         invoke: async () => {
-            return _.flatten(await Promise.all(this.studyIds.result!.map(studyId => {
-                return client.getAllMolecularProfilesInStudyUsingGET({
-                    studyId
-                });
-            })));
+            return client.fetchMolecularProfilesUsingPOST({
+                molecularProfileFilter: { studyIds:this.studyIds.result! } as MolecularProfileFilter
+            })
         }
     }, []);
 
