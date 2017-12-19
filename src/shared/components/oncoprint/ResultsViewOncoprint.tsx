@@ -32,6 +32,7 @@ import tabularDownload from "./tabularDownload";
 import {SpecialAttribute} from "shared/cache/ClinicalDataCache";
 import * as URL from "url";
 import classNames from 'classnames';
+import FadeInteraction from "shared/components/fadeInteraction/FadeInteraction";
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -814,10 +815,12 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
                 {this.caseSetInfo}
 
-                <OncoprintControls
-                    handlers={this.controlsHandlers}
-                    state={this.controlsState}
-                />
+                <FadeInteraction>
+                    <OncoprintControls
+                        handlers={this.controlsHandlers}
+                        state={this.controlsState}
+                    />
+                </FadeInteraction>
 
                 <div className={classNames({ hidden:isLoading })}>
                 {this.alterationInfo}
