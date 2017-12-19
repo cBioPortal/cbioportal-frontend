@@ -97,18 +97,25 @@ var preRankedSpearmanDist = function(item1, item2) {
  */
 var _prepareForDistanceFunction = function(inputItems) {
     //pre-calculate ranks and configure to use last step of SPEARMAN as distance function:
+    // and put all NaNs items at the end
+    var allNaN = [];
+    var notAllNaN = [];
     for (var i = 0; i < inputItems.length; i++) {
         var inputItem = inputItems[i];
         //check if all NaNs:
         inputItem.isAllNaNs = isAllNaNs(inputItem.orderedValueList);
         if (inputItem.isAllNaNs) {
+            allNaN.push(inputItem);
             continue;
+        } else {
+            notAllNaN.push(inputItem);
         }
         //rank using fractional ranking:
         var ranks = jStat.rank(inputItem.orderedValueList);
         //calculate deviation:
         inputItem.preProcessedValueList = ranks;
     }
+    return notAllNaN.concat(allNaN);
 }
 
 /**
@@ -169,7 +176,7 @@ var hclusterCases = function(casesAndEntitites) {
         return inputItems;
     }
     //else, normal clustering:
-    _prepareForDistanceFunction(inputItems);
+    inputItems = _prepareForDistanceFunction(inputItems);
     var clusters = clusterfck.hcluster(inputItems, preRankedSpearmanDist);
     return clusters.clusters(1)[0];
 }
