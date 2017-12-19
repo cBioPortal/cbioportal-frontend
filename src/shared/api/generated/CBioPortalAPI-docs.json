@@ -459,6 +459,43 @@
         }
       }
     },
+    "/gene-panel-data/fetch": {
+      "post": {
+        "tags": [
+          "Gene Panels"
+        ],
+        "summary": "Fetch gene panel data",
+        "operationId": "fetchGenePanelDataInMultipleMolecularProfilesUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "genePanelMultipleStudyFilter",
+            "description": "List of Molecular Profile ID and Sample ID pairs or List of MolecularProfile IDs and Entrez Gene IDs",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GenePanelMultipleStudyFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GenePanelData"
+              }
+            }
+          }
+        }
+      }
+    },
     "/gene-panels": {
       "get": {
         "tags": [
@@ -817,7 +854,7 @@
           {
             "in": "body",
             "name": "molecularDataMultipleStudyFilter",
-            "description": "List of Molecular Profile ID and Sample ID pairs and Entrez Gene IDs",
+            "description": "List of Molecular Profile ID and Sample ID pairs or List of MolecularProfile IDs and Entrez Gene IDs",
             "required": true,
             "schema": {
               "$ref": "#/definitions/MolecularDataMultipleStudyFilter"
@@ -3991,6 +4028,30 @@
           "type": "array",
           "items": {
             "type": "string"
+          }
+        }
+      }
+    },
+    "GenePanelMultipleStudyFilter": {
+      "type": "object",
+      "properties": {
+        "entrezGeneIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "molecularProfileIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sampleMolecularIdentifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SampleMolecularIdentifier"
           }
         }
       }
