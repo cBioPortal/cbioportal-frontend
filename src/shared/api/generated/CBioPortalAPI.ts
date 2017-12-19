@@ -189,6 +189,14 @@ export type SampleFilter = {
         'sampleListIds': Array < string >
 
 };
+export type GenePanelMultipleStudyFilter = {
+    'entrezGeneIds': Array < number >
+
+        'molecularProfileIds': Array < string >
+
+        'sampleMolecularIdentifiers': Array < SampleMolecularIdentifier >
+
+};
 export type SampleList = {
     'category': string
 
@@ -1080,6 +1088,70 @@ export default class CBioPortalAPI {
             });
         };
 
+    fetchGenePanelDataInMultipleMolecularProfilesUsingPOSTURL(parameters: {
+        'genePanelMultipleStudyFilter': GenePanelMultipleStudyFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/gene-panel-data/fetch';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch gene panel data
+     * @method
+     * @name CBioPortalAPI#fetchGenePanelDataInMultipleMolecularProfilesUsingPOST
+     * @param {} genePanelMultipleStudyFilter - List of Molecular Profile ID and Sample ID pairs or List of MolecularProfile IDs and Entrez Gene IDs
+     */
+    fetchGenePanelDataInMultipleMolecularProfilesUsingPOST(parameters: {
+            'genePanelMultipleStudyFilter': GenePanelMultipleStudyFilter,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < GenePanelData >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/gene-panel-data/fetch';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                if (parameters['genePanelMultipleStudyFilter'] !== undefined) {
+                    body = parameters['genePanelMultipleStudyFilter'];
+                }
+
+                if (parameters['genePanelMultipleStudyFilter'] === undefined) {
+                    reject(new Error('Missing required  parameter: genePanelMultipleStudyFilter'));
+                    return;
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
     getAllGenePanelsUsingGETURL(parameters: {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
@@ -1604,7 +1676,7 @@ export default class CBioPortalAPI {
      * Fetch molecular data
      * @method
      * @name CBioPortalAPI#fetchMolecularDataInMultipleMolecularProfilesUsingPOST
-     * @param {} molecularDataMultipleStudyFilter - List of Molecular Profile ID and Sample ID pairs and Entrez Gene IDs
+     * @param {} molecularDataMultipleStudyFilter - List of Molecular Profile ID and Sample ID pairs or List of MolecularProfile IDs and Entrez Gene IDs
      * @param {string} projection - Level of detail of the response
      */
     fetchMolecularDataInMultipleMolecularProfilesUsingPOST(parameters: {
