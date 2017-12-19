@@ -1256,10 +1256,19 @@ export class QueryStore
             }
 
             const zScoreThreshold =  (window as any).serverVars.zScoreThreshold;
-            if (selectedMolecularProfiles !== undefined) {
+            if (zScoreThreshold !== undefined) {
                 this.zScoreThreshold = zScoreThreshold;
             }
 
+			const rppaScoreThreshold =  (window as any).serverVars.rppaScoreThreshold;
+			if (rppaScoreThreshold !== undefined) {
+				this.rppaScoreThreshold = rppaScoreThreshold;
+			}
+
+			const caseSetId =  (window as any).serverVars.caseSetProperties.case_set_id;
+			if (caseSetId !== undefined) {
+				this.selectedSampleListId = caseSetId;
+			}
 
 		}
 
