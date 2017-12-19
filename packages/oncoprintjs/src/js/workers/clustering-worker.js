@@ -96,8 +96,8 @@ var preRankedSpearmanDist = function(item1, item2) {
  * This pre-calculation significantly improves the performance of the clustering step itself.
  */
 var _prepareForDistanceFunction = function(inputItems) {
-    //pre-calculate ranks and configure to use last step of SPEARMAN as distance function:
-    // and put all NaNs items at the end
+    //pre-calculate ranks and configure to use last step of SPEARMAN as distance function, and
+    // split up into allNaN and notAllNaN
     var allNaN = [];
     var notAllNaN = [];
     for (var i = 0; i < inputItems.length; i++) {
@@ -115,7 +115,10 @@ var _prepareForDistanceFunction = function(inputItems) {
         //calculate deviation:
         inputItem.preProcessedValueList = ranks;
     }
-    return notAllNaN.concat(allNaN);
+    return {
+        notAllNaN: notAllNaN,
+        allNaN: allNaN
+    };
 }
 
 /**
@@ -177,8 +180,8 @@ var hclusterCases = function(casesAndEntitites) {
     }
     //else, normal clustering:
     inputItems = _prepareForDistanceFunction(inputItems);
-    var clusters = clusterfck.hcluster(inputItems, preRankedSpearmanDist);
-    return clusters.clusters(1)[0];
+    var clusters = clusterfck.hcluster(inputItems.notAllNaN, preRankedSpearmanDist);
+    return clusters.clusters(1)[0].concat(inputItems.allNaN); // add all nan elements to the end post-sorting
 }
 
 var getRefList = function(caseItem) {
@@ -226,7 +229,7 @@ var hclusterGeneticEntities = function(casesAndEntitites) {
         }
         inputItems.push(inputItem);
     }
-    _prepareForDistanceFunction(inputItems);
-    var clusters = clusterfck.hcluster(inputItems, preRankedSpearmanDist);
-    return clusters.clusters(1)[0];
+    inputItems = _prepareForDistanceFunction(inputItems);
+    var clusters = clusterfck.hcluster(inputItems.notAllNaN, preRankedSpearmanDist);
+    return clusters.clusters(1)[0].concat(inputItems.allNaN); // add all nan elements to the end post-sorting
 }
