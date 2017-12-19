@@ -832,6 +832,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
 
     private get minimapButton() {
         return (
+            <div className="btn-group">
             <DefaultTooltip
                 overlay={<span>Toggle minimap panel.</span>}
             >
@@ -840,9 +841,10 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                     onClick={this.toggleShowMinimap}
                     className="oncoprint__controls__minimap_button"
                 >
-                    <img src={require("./toggle-minimap.svg")} alt="icon" width="20" height="20"/>&thinsp;
+                    <img src={require("./toggle-minimap.svg")} alt="icon" style={{width:15, height:15, margin:2}}/>
                 </Button>
             </DefaultTooltip>
+            </div>
         );
     }
 
