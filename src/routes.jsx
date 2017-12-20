@@ -14,11 +14,11 @@ import { restoreRouteAfterRedirect } from './shared/lib/redirectHelpers';
 // which are invoked at run time by the routes
 // webpack knows to 'split' the code into seperate bundles accordingly
 // see article http://henleyedition.com/implicit-code-splitting-with-react-router-and-webpack/
-import PatientViewPage from 'bundle?lazy!babel!./pages/patientView/PatientViewPage';
-import ResultsViewPage from 'bundle?lazy!babel!./pages/resultsView/ResultsViewPage';
-import HomePage from 'bundle?lazy!babel!./pages/home/HomePage';
+import PatientViewPage from 'bundle-loader?lazy!babel-loader!./pages/patientView/PatientViewPage';
+import ResultsViewPage from 'bundle-loader?lazy!babel-loader!./pages/resultsView/ResultsViewPage';
+import HomePage from 'bundle-loader?lazy!babel-loader!./pages/home/HomePage';
 import TestimonialsPage from 'pages/staticPages/testimonialsPage/TestimonialsPage';
-import DatasetPage from 'bundle?lazy!babel!./pages/datasetView/DatasetPage';
+import DatasetPage from 'bundle-loader?lazy!babel-loader!./pages/datasetView/DatasetPage';
 import './globalComponents';
 
 // accepts bundle-loader's deferred loader function and defers execution of route's render
