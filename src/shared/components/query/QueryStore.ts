@@ -33,6 +33,8 @@ import {
 import onMobxPromise from "shared/lib/onMobxPromise";
 import VirtualCohorts, {LocalStorageVirtualCohort} from "../../lib/VirtualCohorts";
 import getOverlappingStudies from "../../lib/getOverlappingStudies";
+import MolecularProfilesInStudyCache from "../../cache/MolecularProfilesInStudyCache";
+import {CacheData} from "../../lib/LazyMobXCache";
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -474,6 +476,14 @@ export class QueryStore
 			if (!this.initiallySelected.profileIds || this.userHasClickedOnAStudy) {
 				this._selectedProfileIds = undefined;
 			}
+		}
+	});
+
+	readonly molecularProfilesInSelectedStudies = remoteData<MolecularProfile[]>({
+		invoke: async()=>{
+			const profiles:CacheData<MolecularProfile[], string>[] =
+				await this.molecularProfilesInStudyCache.getPromise(this.selectedStudyIds, true);
+			return _.flatten(profiles.map(d=>(d.data ? d.data : [])));
 		}
 	});
 
@@ -1484,6 +1494,10 @@ export class QueryStore
 			successCallback: savePath => alert('Saved to GenomeSpace as ' + savePath),
 			errorCallback: savePath => alert('ERROR saving to GenomeSpace as ' + savePath),
 		});
+	}
+
+	@cached get molecularProfilesInStudyCache() {
+		return new MolecularProfilesInStudyCache();
 	}
 }
 
