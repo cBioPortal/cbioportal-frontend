@@ -228,9 +228,7 @@ describe("MutualExclusivityTab", () => {
 
     describe("#getData()", () => {
         it("should return correct data", () => {
-
             const result = getData(isSampleAlteredMap);
-            console.log(result);
             assert.deepEqual(result, exampleData);
         });
     });
