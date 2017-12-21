@@ -50,7 +50,8 @@ if (/cbioportal\.mskcc\.org|www.cbioportal\.org/.test(window.location.hostname) 
         tags:{
           fullUrl:window.location.href
         },
-        release:window.appVersion || '',
+        release:window.FRONTEND_COMMIT || '',
+        ignoreErrors: ['_germline', 'symlink_by_patient'],
         serverName: window.location.hostname
     }).install();
 }
