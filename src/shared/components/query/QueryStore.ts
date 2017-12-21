@@ -3,7 +3,7 @@ import client from "../../api/cbioportalClientInstance";
 import {ObservableMap, toJS, observable, reaction, action, computed, whyRun, expr, isObservableMap} from "mobx";
 import {
 	TypeOfCancer as CancerType, MolecularProfile, CancerStudy, SampleList, Gene,
-	Sample, SampleIdentifier
+	Sample, SampleIdentifier, SampleFilter
 } from "../../api/generated/CBioPortalAPI";
 import {Geneset} from "../../api/generated/CBioPortalAPIInternal";
 import CancerStudyTreeData from "./CancerStudyTreeData";
@@ -684,7 +684,12 @@ export class QueryStore
 				const sampleIdentifiers = cases.map(c => ({studyId: c.study, sampleId: c.id}));
 				if (sampleIdentifiers.length)
 				{
-					let sampleObjs = await chunkMapReduce(sampleIdentifiers, chunk=>client.fetchSamplesUsingPOST({sampleIdentifiers:chunk, projection: "SUMMARY"}), 990);
+					let sampleObjs = await chunkMapReduce(sampleIdentifiers, chunk=>client.fetchSamplesUsingPOST({
+						sampleFilter: {
+							sampleIdentifiers:chunk
+						} as SampleFilter,
+						projection: "SUMMARY"
+					}), 990);
 					// sort by input order
 					sampleObjs = _.sortBy(sampleObjs, sampleObj=>caseOrder[`${sampleObj.studyId}:${sampleObj.sampleId}`]);
 
@@ -1185,7 +1190,11 @@ export class QueryStore
 	                return "Please enter one or more gene symbols.";
 	            }
             }
-        }
+        } else {
+			if (!this.oql.query.length) {
+				return "Please enter one or more gene symbols.";
+			}
+		}
 		
 		
 
@@ -1234,7 +1243,34 @@ export class QueryStore
 	@action addParamsFromWindow()
 	{
 		// Populate OQL
-		this.geneQuery = normalizeQuery((window as any).serverVars.theQuery);
+		if ((window as any).serverVars) {
+			this.geneQuery = normalizeQuery((window as any).serverVars.theQuery);
+			const dataPriority = (window as any).serverVars.dataPriority;
+			if (typeof dataPriority !== "undefined") {
+				this.dataTypePriorityCode = (dataPriority + '') as '0'|'1'|'2';
+			}
+
+            const selectedMolecularProfiles = (window as any).serverVars.molecularProfiles;
+            if (selectedMolecularProfiles !== undefined) {
+                this.selectedProfileIds = selectedMolecularProfiles;
+            }
+
+            const zScoreThreshold =  (window as any).serverVars.zScoreThreshold;
+            if (zScoreThreshold !== undefined) {
+                this.zScoreThreshold = zScoreThreshold;
+            }
+
+			const rppaScoreThreshold =  (window as any).serverVars.rppaScoreThreshold;
+			if (rppaScoreThreshold !== undefined) {
+				this.rppaScoreThreshold = rppaScoreThreshold;
+			}
+
+			const caseSetId =  (window as any).serverVars.caseSetProperties.case_set_id;
+			if (caseSetId !== undefined) {
+				this.selectedSampleListId = caseSetId;
+			}
+
+		}
 
 		// Select studies from window
 		const windowStudyId = (window as any).selectedCancerStudyId;
