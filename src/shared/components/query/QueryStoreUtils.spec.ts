@@ -1,11 +1,26 @@
 import { assert } from 'chai';
 import {QueryStore, normalizeQuery} from "./QueryStore";
 import {nonMolecularProfileParams} from "./QueryStoreUtils";
+import Sinon from 'sinon';
 
 describe('QueryStoreUtils', ()=>{
     describe('nonMolecularProfileParams', ()=>{
+
+        let addParamStub: any
+
+        before(()=>{
+            addParamStub = Sinon.stub(QueryStore.prototype, "addParamsFromWindow");
+        });
+
+        after(()=>{
+            addParamStub.restore();
+        });
+
         it("returns normalized query for gene_list parameter", ()=>{
+
+
             let store = new QueryStore();
+
             let queries = [
                 "TP53:MUT",
                 "tp53:mut",

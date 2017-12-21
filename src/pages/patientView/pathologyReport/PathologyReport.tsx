@@ -3,6 +3,7 @@ import {PathologyReportPDF} from "../clinicalInformation/PatientViewPageStore";
 import { If, Then, Else } from 'react-if';
 import * as _ from 'lodash';
 import IFrameLoader from "../../../shared/components/iframeLoader/IFrameLoader";
+import {observer} from "mobx-react";
 
 export type IPathologyReportProps = {
 
@@ -12,6 +13,7 @@ export type IPathologyReportProps = {
 }
 
 
+@observer
 export default class PathologyReport extends React.Component<IPathologyReportProps,{ pdfUrl:string; }> {
 
     pdfSelectList:any;
@@ -21,15 +23,15 @@ export default class PathologyReport extends React.Component<IPathologyReportPro
 
         super();
 
-        this.state = { pdfUrl: this.buildPDFUrl(props.pdfs[0].name) }
+        this.state = { pdfUrl: this.buildPDFUrl(props.pdfs[0].url) }
 
         this.handleSelection = this.handleSelection.bind(this);
 
     }
 
-    buildPDFUrl(name: string):string {
+    buildPDFUrl(url: string):string {
 
-        return `https://drive.google.com/viewerng/viewer?url=https://github.com/cBioPortal/datahub/raw/master/tcga/pathology_reports/${name}?pid=explorer&efh=false&a=v&chrome=false&embedded=true`;
+        return `https://drive.google.com/viewerng/viewer?url=${url}?pid=explorer&efh=false&a=v&chrome=false&embedded=true`;
 
     }
 
@@ -47,7 +49,7 @@ export default class PathologyReport extends React.Component<IPathologyReportPro
 
             <If condition={this.props.pdfs.length > 1}>
                 <select ref={(el)=>this.pdfSelectList = el} style={{ marginBottom:15 }} onChange={ this.handleSelection }>{  _.map(this.props.pdfs, (pdf: PathologyReportPDF)=>
-                    <option value={pdf.name}>{pdf.name}</option>)    }
+                    <option value={pdf.url}>{pdf.name}</option>)    }
                 </select>
             </If>
 
