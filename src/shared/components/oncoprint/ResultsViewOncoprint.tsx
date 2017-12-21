@@ -32,6 +32,7 @@ import tabularDownload from "./tabularDownload";
 import {SpecialAttribute} from "shared/cache/ClinicalDataCache";
 import * as URL from "url";
 import classNames from 'classnames';
+import FadeInteraction from "shared/components/fadeInteraction/FadeInteraction";
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -41,6 +42,7 @@ interface IResultsViewOncoprintProps {
         hasDriverAnnotations: boolean,
         customDriverTiers: string[]
     };
+    addOnBecomeVisibleListener?:(callback:()=>void)=>void;
 }
 
 export type OncoprintClinicalAttribute =
@@ -558,6 +560,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     private oncoprintRef(oncoprint:OncoprintJS<any>) {
         this.oncoprint = oncoprint;
+        this.props.addOnBecomeVisibleListener && this.props.addOnBecomeVisibleListener(()=>this.oncoprint.triggerPendingResizeAndOrganize());
+
         this.oncoprint.onHorzZoom(z=>(this.horzZoom = z));
         this.horzZoom = this.oncoprint.getHorzZoom();
         onMobxPromise([this.props.store.alteredSampleKeys, this.props.store.alteredPatientKeys],
@@ -770,17 +774,17 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }
 
     @computed get caseSetInfo() {
+        let caseSetText = null;
         if (this.caseSetName.isComplete && this.props.store.patients.isComplete && this.props.store.samples.isComplete &&
             this.caseSetName.result) {
-            return (
-                <div>
-                    <span>Case Set: {this.caseSetName.result} ({this.props.store.patients.result.length} patients / {this.props.store.samples.result.length} samples)</span>
-                    {this.headerColumnModeButton}
-                </div>
-            );
-        } else {
-            return null;
+            caseSetText = (<span>Case Set: {this.caseSetName.result} ({this.props.store.patients.result.length} patients / {this.props.store.samples.result.length} samples)</span>);
         }
+        return (
+            <div>
+                {caseSetText}
+                {this.headerColumnModeButton}
+            </div>
+        );
     }
 
     @computed get alterationInfo() {
@@ -811,10 +815,12 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
                 {this.caseSetInfo}
 
-                <OncoprintControls
-                    handlers={this.controlsHandlers}
-                    state={this.controlsState}
-                />
+                <FadeInteraction>
+                    <OncoprintControls
+                        handlers={this.controlsHandlers}
+                        state={this.controlsState}
+                    />
+                </FadeInteraction>
 
                 <div className={classNames({ hidden:isLoading })}>
                 {this.alterationInfo}

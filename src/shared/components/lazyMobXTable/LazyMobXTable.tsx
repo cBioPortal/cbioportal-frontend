@@ -9,7 +9,9 @@ import {
 import {
     ColumnVisibilityControls, IColumnVisibilityDef, IColumnVisibilityControlsProps
 } from "../columnVisibilityControls/ColumnVisibilityControls";
-import {CopyDownloadControls, ICopyDownloadControlsProps} from "../copyDownloadControls/CopyDownloadControls";
+import {
+    CopyDownloadControls, ICopyDownloadControlsProps, ICopyDownloadData
+} from "../copyDownloadControls/CopyDownloadControls";
 import {serializeData} from "shared/lib/Serializer";
 import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
 import {ButtonToolbar} from "react-bootstrap";
@@ -582,27 +584,35 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
         showCountHeader: false
     };
 
-    public getDownloadData(): Promise<string>
+    public getDownloadData(): Promise<ICopyDownloadData>
     {
         // returning a promise instead of a string allows us to prevent triggering fetchAndCacheAllLazyData
         // until the copy/download button is clicked.
-        return new Promise<string>((resolve, reject) => {
+        return new Promise<ICopyDownloadData>((resolve) => {
             // we need to download all the lazy data before initiating the download process.
             if (this.store.downloadDataFetcher) {
                 // populate the cache instances with all available data for the lazy loaded columns
                 this.store.downloadDataFetcher.fetchAndCacheAllLazyData().then(allLazyData => {
                     // we don't use allData directly,
                     // we rely on the data cached by the download data fetcher
-                    if (allLazyData) {
-                        resolve(serializeData(this.store.downloadData));
-                    }
-                    else {
-                        reject();
-                    }
-                }).catch(reject);
+                    resolve({
+                        status: "complete",
+                        text: serializeData(this.store.downloadData)
+                    });
+                }).catch(() => {
+                    // even if loading of all lazy data fails, resolve with partial data
+                    resolve({
+                        status: "incomplete",
+                        text: serializeData(this.store.downloadData)
+                    });
+                });
             }
+            // no lazy data to preload, just return the current download data
             else {
-                resolve(serializeData(this.store.downloadData));
+                resolve({
+                    status: "complete",
+                    text: serializeData(this.store.downloadData)
+                });
             }
         });
     }
