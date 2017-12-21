@@ -1,29 +1,54 @@
 #oncoprint {
-  border:none !important;
-  padding:0 !important;
-
+  border: none !important;
+  padding: 0 !important;
 
   #oncoprint-inner {
     .oncoprintjs__scroll_div {
-      overflow:auto !important;
+      overflow: auto !important;
     }
-  }
 
+    .oncoprintjs__track_options__toggle_btn_img {
+      border-width:0px !important;
+      border-radius:$cornerBorderRadius;
+      position:relative;
+      top:4px;
+      &:hover {
+        background-color:#eee;
+      }
+    }
+
+    .oncoprintjs__track_options__dropdown {
+      border: 1px solid rgba(0, 0, 0, 0.15) !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+      border-radius:$cornerBorderRadius;
+      li {
+        border-width: 0 !important;
+        padding: 2px 5px;
+        &:hover {
+          background: #fff !important;
+          text-decoration: underline;
+        }
+
+      }
+    }
+
+  }
 }
 
 .oncoprintLoadingIndicator {
-  height:200px;
-  border-radius:4px;
-  background-color:#eee;
-  display:flex;
+  height: 200px;
+  border-radius: 4px;
+  background-color: #eee;
+  display: flex;
   justify-content: center;
-  align-items:center;
-  margin-top:10px;
-  flex-direction:column;
+  align-items: center;
+  margin-top: 10px;
+  flex-direction: column;
 
   div {
-    margin-bottom:5px;
+    margin-bottom: 5px;
   }
-
 
 }

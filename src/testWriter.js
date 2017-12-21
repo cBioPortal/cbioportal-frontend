@@ -2,8 +2,18 @@ import $ from 'jquery';
 
 window._trCountMap = {};
 
+
+function testObj(me){
+    Object.assign(this,me);
+}
+
+testObj.prototype.writeTest = function(){
+    console.log(_formatTest(this));
+}
+
 window._handleTestReports = function(args,func,params,context){
     window._tr=window._tr||{};
+    const name = func.name;
     var paramArr = (/\(/.test(params)) ? params.replace(/[()]/g,'').split(',') : null;
     var argArr = Array.from(args);
     var argMap = argArr.map((a,i)=>JSON.stringify(a));
@@ -13,14 +23,14 @@ window._handleTestReports = function(args,func,params,context){
     // if there are no constraints or we asre within constraints
     window._tr[name] = window._tr[name] || [];
     if (paramArr === null || (window._trCountMap[name] >= paramArr[0] && window._trCountMap[name] <= paramArr[1])) {
-        window._tr[name].push({
+        window._tr[name].push(new testObj({
             argMap: argMap,
             args: args,
             ret: ret,
             name: func.name,
             fn: func,
             argNames: func.toString().match(/\((.*)\)/)[1].split(', ')
-        });
+        }));
     }
     return ret;
 }

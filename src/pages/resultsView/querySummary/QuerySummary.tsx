@@ -16,7 +16,7 @@ import QueryAndDownloadTabs from "../../../shared/components/query/QueryAndDownl
 
 class StudyLink extends React.Component<{ study: CancerStudy, onClick?: () => void, href?:string }, {}> {
     render() {
-        return (<a href={this.props.href || 'javascript:void(0)'} target="_blank" style={{cursor:'pointer'}} onClick={this.props.onClick || (()=>{})}>{this.props.study.name}</a>);
+        return (<a href={this.props.href || `study?id=${this.props.study.studyId}`} target="_blank" style={{cursor:'pointer'}} onClick={this.props.onClick || (()=>{})}>{this.props.study.name}</a>);
     }
 }
 
@@ -67,7 +67,6 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
 
     private get multipleStudyUI() {
         return <div>
-            <h4><a onClick={this.goToStudySummary}>Combined Study</a></h4>
             <span>
                 This combined study contains samples from {this.props.store.studies.result.length} studies
                  &nbsp;
