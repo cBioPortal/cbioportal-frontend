@@ -14662,6 +14662,12 @@ var Oncoprint = (function () {
 	img.src = svg_data_uri;
 	return img;
     }
+
+    Oncoprint.prototype.toDataUrl = function(callback) {
+        this.toCanvas(function(canvas) {
+            callback(canvas.toDataURL());
+        }); 
+    }
     
     Oncoprint.prototype.highlightTrack = function(track_id) {
 	this.label_view.highlightTrack(track_id, this.model);
