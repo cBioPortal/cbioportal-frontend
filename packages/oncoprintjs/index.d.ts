@@ -157,6 +157,7 @@ declare module "oncoprintjs"
         setCellPaddingOn:(cell_padding_on:boolean)=>void;
         toSVG:(with_background:boolean)=>SVGElement;
         toCanvas:(callback:(canvas:HTMLCanvasElement, truncated:boolean)=>void, resolution:number)=>HTMLImageElement;
+        toDataUrl:(callback:(dataURL:string)=>void)=>void;
         highlightTrack:(track_id:TrackId|null)=>void;
         getIdOrder:(all?:boolean)=>string[];
         setIdClipboardContents:(array:string[])=>void;
