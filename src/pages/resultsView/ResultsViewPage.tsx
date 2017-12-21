@@ -178,12 +178,17 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
         exposeComponentRenderer('renderOncoprint',
             (props:OncoprintTabInitProps)=>{
+                function addOnBecomeVisibleListener(callback:()=>void) {
+                    $('#oncoprint-result-tab').click(callback);
+                }
+
                 return (
                     <ResultsViewOncoprint
                         divId={props.divId}
                         store={resultsViewPageStore}
                         routing={this.props.routing}
                         customDriverMetadata={props.customDriverMetadata}
+                        addOnBecomeVisibleListener={addOnBecomeVisibleListener}
                     />
                 );
             });

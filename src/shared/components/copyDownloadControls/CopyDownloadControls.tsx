@@ -4,7 +4,7 @@ import {ThreeBounce} from 'better-react-spinkit';
 import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import {If} from 'react-if';
 import fileDownload from 'react-file-download';
-import {observable} from "mobx";
+import {action, observable} from "mobx";
 import {observer} from "mobx-react";
 const Clipboard = require('clipboard');
 
@@ -14,8 +14,13 @@ export interface ICopyDownloadControlsProps {
     className?: string;
     showCopy?: boolean;
     showDownload?: boolean;
-    downloadData?: () => Promise<string>;
+    downloadData?: () => Promise<ICopyDownloadData>;
     downloadFilename?: string;
+}
+
+export interface ICopyDownloadData {
+    status: 'complete'|'incomplete';
+    text: string;
 }
 
 /**
@@ -47,6 +52,7 @@ export class CopyDownloadControls extends React.Component<ICopyDownloadControlsP
         super();
         this.handleDownload = this.handleDownload.bind(this);
         this.handleCopy = this.handleCopy.bind(this);
+        this.handleModalClose = this.handleModalClose.bind(this);
     }
 
     componentDidMount() {
@@ -132,10 +138,11 @@ export class CopyDownloadControls extends React.Component<ICopyDownloadControlsP
                     className={`${copyDownloadStyles["centered-modal-dialog"]}`}
                 >
                     <Modal.Header>
-                        Download Complete!
+                        {this.showErrorMessage ? "Download Error!" : "Download Complete!"}
                     </Modal.Header>
                     <Modal.Body>
-                        Please click on Copy to copy downloaded data to clipboard.
+                        {this.showErrorMessage && "An error occurred while downloading the data. "}
+                        Please click on Copy to copy the data to clipboard.
                     </Modal.Body>
                     <Modal.Footer>
                         <span
@@ -143,7 +150,7 @@ export class CopyDownloadControls extends React.Component<ICopyDownloadControlsP
                         >
                             <button
                                 ref={(el:HTMLButtonElement) => {this._modalCopyButton = el;}}
-                                onClick={() => {this.copyingData = false;}}
+                                onClick={this.handleModalClose}
                                 className="btn btn-primary"
                                 data-clipboard-text="NA"
                                 id="modalCopyButton"
@@ -154,14 +161,25 @@ export class CopyDownloadControls extends React.Component<ICopyDownloadControlsP
                     </Modal.Footer>
                 </Modal>
                 <Modal
-                    show={this.showErrorMessage}
-                    onHide={() => {this.showErrorMessage = false;}}
+                    show={!this.copyingData && this.showErrorMessage}
+                    onHide={this.handleModalClose}
                     bsSize="sm"
                     className={`${copyDownloadStyles["centered-modal-dialog"]}`}
                 >
+                    <Modal.Header>
+                        Download Error!
+                    </Modal.Header>
                     <Modal.Body>
-                        Oops, an error occurred while downloading the data.
+                        An error occurred while downloading the data. Downloaded file may contain incomplete data.
                     </Modal.Body>
+                    <Modal.Footer>
+                        <Button
+                            onClick={this.handleModalClose}
+                            className="btn btn-primary"
+                        >
+                            Close
+                        </Button>
+                    </Modal.Footer>
                 </Modal>
             </span>
         );
@@ -192,23 +210,42 @@ export class CopyDownloadControls extends React.Component<ICopyDownloadControlsP
         });
     }
 
+    @action
+    private handleModalClose()
+    {
+        // need to set both flags to false,
+        // in order to not show multiple modals in case of a download error during copy action
+        this.copyingData = false;
+        this.showErrorMessage = false;
+    }
+
+    @action
+    private triggerDownloadError()
+    {
+        // promise is rejected: we need to hide the download indicator and show an error message
+        this.downloadingData = false;
+        this.showErrorMessage = true;
+    }
+
     private initDownloadProcess(callback: (text: string) => void)
     {
         if (this.props.downloadData) {
             // mark downloading data true, so that we can show a loading message
             this.downloadingData = true;
 
-            this.props.downloadData().then(text => {
-                this._downloadText = text;
-                callback(text);
-                // promise is resolved, we need to hide the download indicator
-                this.downloadingData = false;
-            }).catch((reason: string) => {
-                // promise is rejected, we need to hide the download indicator in this case too
-                this.downloadingData = false;
+            this.props.downloadData().then(copyDownloadData => {
+                // save the downloaded text so that we won't download it again
+                this._downloadText = copyDownloadData.text;
 
-                // in case of an error, show an error message
-                this.showErrorMessage = true;
+                if (copyDownloadData.status === "complete") {
+                    // promise is resolved, we need to hide the download indicator
+                    this.downloadingData = false;
+                }
+                else {
+                    this.triggerDownloadError();
+                }
+
+                callback(this._downloadText);
             });
         }
     }
