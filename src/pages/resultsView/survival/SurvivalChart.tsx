@@ -264,21 +264,17 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                     <VictoryAxis label={this.props.yAxisLabel} dependentAxis={true} tickFormat={(t:any) => `${t}%`} tickCount={11}
                     style={{ticks: {size: 8}, tickLabels: {padding: 2}, axisLabel: {padding: 45}, grid: {opacity: 0}}} domain={[0, 100]} crossAxis={false}/>
                     <VictoryScatter data={getScatterDataWithOpacity(this.sortedAlteredPatientSurvivals, this.alteredEstimates)}
-                    symbol="plus" style={{data: {fill: "red", pointerEvents: "none"}}} size={3} events={events}/>
+                    symbol="plus" style={{data: {fill: "red"}}} size={3}/>
                     <VictoryScatter data={getScatterDataWithOpacity(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)}
-                    symbol="plus" style={{data: {fill: "blue", pointerEvents: "none"}}} size={3} events={events}/>
-                    <VictoryScatter data={getScatterData(this.sortedAlteredPatientSurvivals, this.alteredEstimates)}
-                    symbol="circle" style={{data: {fill: "red", fillOpacity: (datum:any, active:any) => active ? 0.3 : 0}}} size={10} events={events}/>
-                    <VictoryScatter data={getScatterData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)}
-                    symbol="circle" style={{data: {fill: "blue", fillOpacity: (datum:any, active:any) => active ? 0.3 : 0}}} size={10} events={events}/>
+                    symbol="plus" style={{data: {fill: "blue"}}} size={3}/>
                     <VictoryLine interpolation="stepAfter" data={getLineData(this.sortedAlteredPatientSurvivals, this.alteredEstimates)}
                     style={{data: {stroke: "red", strokeWidth: 1}}}/>
                     <VictoryLine interpolation="stepAfter" data={getLineData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)}
                     style={{data: {stroke: "blue", strokeWidth: 1}}}/>
                     <VictoryLegend x={850} y={40}
                     data={[
-                        {name: this.alteredLegendText, symbol: { fill: "red", type: "plus" }}, 
-                        {name: this.unalteredLegendText, symbol: { fill: "blue", type: "plus" }},
+                        {name: this.alteredLegendText, symbol: { fill: "red", type: "square" }}, 
+                        {name: this.unalteredLegendText, symbol: { fill: "blue", type: "square" }},
                         {name: `Logrank Test P-Value: ${this.logRank.toPrecision(3)}`, symbol: {opacity: 0}}]}/>
                 </VictoryChart>
                 {this.tooltipModel &&

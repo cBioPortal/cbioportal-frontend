@@ -266,6 +266,46 @@
         }
       }
     },
+    "/genesets/fetch": {
+      "post": {
+        "tags": [
+          "Gene Sets"
+        ],
+        "summary": "Fetch gene sets by ID",
+        "operationId": "fetchGenesetsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "genesetIds",
+            "description": "List of Gene set IDs",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Geneset"
+              }
+            }
+          }
+        }
+      }
+    },
     "/genesets/{genesetId}": {
       "get": {
         "tags": [
