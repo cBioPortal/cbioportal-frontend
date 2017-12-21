@@ -16,6 +16,7 @@ import {getSimplifiedMutationType, SimplifiedMutationType} from "../../lib/oql/a
 import _ from "lodash";
 import {FractionGenomeAltered, MutationSpectrum} from "../../api/generated/CBioPortalAPIInternal";
 import {SpecialAttribute} from "../../cache/ClinicalDataCache";
+import {OncoprintClinicalAttribute} from "./ResultsViewOncoprint";
 
 const cnaDataToString:{[integerCNA:string]:string|undefined} = {
     "-2": "homdel",
@@ -57,7 +58,7 @@ export function getOncoprintMutationType(type:SimplifiedMutationType):OncoprintM
     }
 }
 
-function selectDisplayValue(counts:{[value:string]:number}, priority:{[value:string]:number}) {
+export function selectDisplayValue(counts:{[value:string]:number}, priority:{[value:string]:number}) {
     const options = Object.keys(counts).map(k=>({key:k, value:counts[k]}));
     if (options.length > 0) {
         options.sort(function (kv1, kv2) {
@@ -82,11 +83,11 @@ function selectDisplayValue(counts:{[value:string]:number}, priority:{[value:str
     }
 };
 
-function fillGeneticTrackDatum(
+export function fillGeneticTrackDatum(
     newDatum:Partial<GeneticTrackDatum>,
     hugoGeneSymbol:string,
     data:AnnotatedExtendedAlteration[]
-):void {
+):GeneticTrackDatum {
     newDatum.gene = hugoGeneSymbol;
     newDatum.data = data;
 
@@ -142,6 +143,8 @@ function fillGeneticTrackDatum(
     newDatum.disp_mrna = selectDisplayValue(dispMrnaCounts, mrnaRenderPriority);
     newDatum.disp_prot = selectDisplayValue(dispProtCounts, protRenderPriority);
     newDatum.disp_mut = selectDisplayValue(dispMutCounts, mutRenderPriority);
+
+    return newDatum as GeneticTrackDatum; // return for convenience, even though changes made in place
 }
 
 export function makeGeneticTrackData(
@@ -223,7 +226,7 @@ export function makeGeneticTrackData(
 }
 
 
-function fillHeatmapTrackDatum(
+export function fillHeatmapTrackDatum(
     trackDatum: Partial<HeatmapTrackDatum>,
     hugoGeneSymbol: string,
     case_:Sample|Patient,
@@ -291,7 +294,7 @@ export function makeHeatmapTrackData(
 
 function fillNoDataValue(
     trackDatum:Partial<ClinicalTrackDatum>,
-    attribute:ClinicalAttribute,
+    attribute:OncoprintClinicalAttribute,
 ) {
     if (attribute.clinicalAttributeId === SpecialAttribute.MutationCount) {
         trackDatum.attr_val = 0;
@@ -299,9 +302,9 @@ function fillNoDataValue(
         trackDatum.na = true;
     }
 }
-function fillClinicalTrackDatum(
+export function fillClinicalTrackDatum(
     trackDatum:Partial<ClinicalTrackDatum>,
-    attribute:ClinicalAttribute,
+    attribute:OncoprintClinicalAttribute,
     case_:Sample|Patient,
     data?:(ClinicalData|MutationCount|FractionGenomeAltered|MutationSpectrum)[],
 ) {
