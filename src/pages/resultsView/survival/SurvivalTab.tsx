@@ -1,8 +1,8 @@
 import * as React from 'react';
 import SurvivalChart from "./SurvivalChart";
-import {ResultsViewPageStore} from "../ResultsViewPageStore";
+import { ResultsViewPageStore } from "../ResultsViewPageStore";
 import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator";
-import {observer} from "mobx-react";
+import { observer } from "mobx-react";
 import styles from "./styles.module.scss";
 
 export interface ISurvivalTabProps {
@@ -21,10 +21,12 @@ export default class SurvivalTab extends React.Component<ISurvivalTabProps, {}> 
             this.props.store.overallUnalteredPatientSurvivals.isPending ||
             this.props.store.diseaseFreeAlteredPatientSurvivals.isPending ||
             this.props.store.diseaseFreeUnalteredPatientSurvivals.isPending) {
-            return <Loader isLoading={true}/>;
+            return <Loader isLoading={true} />;
         }
 
-        let content:any = [];
+        let content: any = [];
+        let overallNotAvailable: boolean = false;
+        let diseaseFreeNotAvailable: boolean = false;
 
         if (this.props.store.overallAlteredPatientSurvivals.isComplete &&
             this.props.store.overallUnalteredPatientSurvivals.isComplete &&
@@ -32,19 +34,19 @@ export default class SurvivalTab extends React.Component<ISurvivalTabProps, {}> 
             this.props.store.overallUnalteredPatientSurvivals.result.length > 0) {
             content.push(
                 <SurvivalChart alteredPatientSurvivals={this.props.store.overallAlteredPatientSurvivals.result}
-                               unalteredPatientSurvivals={this.props.store.overallUnalteredPatientSurvivals.result}
-                               title={this.overallSurvivalTitleText}
-                               xAxisLabel="Months Survival"
-                               yAxisLabel="Surviving"
-                               totalCasesHeader="Number of Cases, Total"
-                               statusCasesHeader="Number of Cases, Deceased"
-                               medianMonthsHeader="Median Months Survival"
-                               yLabelTooltip="Survival estimate"
-                               xLabelWithEventTooltip="Time of death"
-                               xLabelWithoutEventTooltip="Time of last observation"
-                               fileName="Overall_Survival"/>);
+                    unalteredPatientSurvivals={this.props.store.overallUnalteredPatientSurvivals.result}
+                    title={this.overallSurvivalTitleText}
+                    xAxisLabel="Months Survival"
+                    yAxisLabel="Surviving"
+                    totalCasesHeader="Number of Cases, Total"
+                    statusCasesHeader="Number of Cases, Deceased"
+                    medianMonthsHeader="Median Months Survival"
+                    yLabelTooltip="Survival estimate"
+                    xLabelWithEventTooltip="Time of death"
+                    xLabelWithoutEventTooltip="Time of last observation"
+                    fileName="Overall_Survival" />);
         } else {
-            content.push(<div className={styles.NotAvailable}>{this.overallSurvivalTitleText} not available</div>);
+            overallNotAvailable = true;
         }
 
         if (this.props.store.diseaseFreeAlteredPatientSurvivals.isComplete &&
@@ -53,18 +55,23 @@ export default class SurvivalTab extends React.Component<ISurvivalTabProps, {}> 
             this.props.store.diseaseFreeUnalteredPatientSurvivals.result.length > 0) {
             content.push(
                 <SurvivalChart alteredPatientSurvivals={this.props.store.diseaseFreeAlteredPatientSurvivals.result}
-                           unalteredPatientSurvivals={this.props.store.diseaseFreeUnalteredPatientSurvivals.result}
-                           title={this.diseaseFreeSurvivalTitleText}
-                           xAxisLabel="Months Disease Free"
-                           yAxisLabel="Disease Free"
-                           totalCasesHeader="Number of Cases, Total"
-                           statusCasesHeader="Number of Cases, Relapsed"
-                           medianMonthsHeader="Median Months Disease Free"
-                           yLabelTooltip="Disease free estimate"
-                           xLabelWithEventTooltip="Time of relapse"
-                           xLabelWithoutEventTooltip="Time of last observation"
-                           fileName="Disease_Free_Survival"/>);
+                    unalteredPatientSurvivals={this.props.store.diseaseFreeUnalteredPatientSurvivals.result}
+                    title={this.diseaseFreeSurvivalTitleText}
+                    xAxisLabel="Months Disease Free"
+                    yAxisLabel="Disease Free"
+                    totalCasesHeader="Number of Cases, Total"
+                    statusCasesHeader="Number of Cases, Relapsed"
+                    medianMonthsHeader="Median Months Disease Free"
+                    yLabelTooltip="Disease free estimate"
+                    xLabelWithEventTooltip="Time of relapse"
+                    xLabelWithoutEventTooltip="Time of last observation"
+                    fileName="Disease_Free_Survival" />);
         } else {
+            diseaseFreeNotAvailable = true;
+        }
+
+        if (overallNotAvailable && diseaseFreeNotAvailable) {
+            content.push(<div className={styles.NotAvailable}>{this.overallSurvivalTitleText} not available</div>);
             content.push(<div className={styles.NotAvailable}>{this.diseaseFreeSurvivalTitleText} not available</div>);
         }
 
