@@ -38,6 +38,7 @@ export default class MolecularProfileSelector extends QueryStoreComponent<{}, {}
 				</SectionHeader>
 				<div className={styles.group} data-test="molecularProfileSelector">
 					{this.renderGroup("MUTATION_EXTENDED", "Mutation")}
+					{this.renderGroup("STRUCTURAL_VARIANT", "Structural Variant")}
 					{this.renderGroup("COPY_NUMBER_ALTERATION", "Copy Number")}
 					{this.renderGroup("GENESET_SCORE", "GSVA scores")}
 					{this.renderGroup("MRNA_EXPRESSION", "mRNA Expression")}

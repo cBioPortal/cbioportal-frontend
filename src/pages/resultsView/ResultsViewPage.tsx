@@ -21,6 +21,7 @@ import AppConfig from 'appConfig';
 import getOverlappingStudies from "../../shared/lib/getOverlappingStudies";
 import OverlappingStudiesWarning from "../../shared/components/overlappingStudiesWarning/OverlappingStudiesWarning";
 import CNSegments from "./cnSegments/CNSegments";
+import Fusion from './fusion/Fusions';
 import './styles.scss';
 import {genes, parseOQLQuery} from "shared/lib/oql/oqlfilter.js";
 import Network from "./network/Network";
@@ -307,6 +308,20 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         exposeComponentRenderer('renderQuerySummary',
             ()=>{
                 return <QuerySummary queryStore={props.queryStore} store={this.resultsViewPageStore}/>
+            }
+        );
+
+        exposeComponentRenderer('renderFusionTab',() => {
+            const pageStore = this.resultsViewPageStore;
+            return <div>
+                    <AjaxErrorModal
+                        show={(pageStore.ajaxErrors.length > 0)}
+                        onHide={() => {
+                           pageStore.clearErrors()
+                        }}
+                    />
+                    <Fusion store={pageStore}/>
+                </div>
             }
         );
 

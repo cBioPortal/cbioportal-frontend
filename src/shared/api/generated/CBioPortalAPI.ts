@@ -295,6 +295,9 @@ export type MolecularProfileFilter = {
         'studyIds': Array < string >
 
 };
+
+export interface StructuralVariant {[index: string]: any}
+
 export type Mutation = {
     'aminoAcidChange': string
 
@@ -5747,5 +5750,33 @@ export default class CBioPortalAPI {
                 return response.body;
             });
         };
+
+    /**
+     * Ajax call to get fusion data
+     * @param {{geneticProfileStableIds?: any; hugoGeneSymbols?: any; sampleIdentifiers?: any}} parameters
+     * @returns {Promise<Array<StructuralVariant>>}
+     */
+    fetchStructuralVariantsPOST(parameters: {
+        entrezGeneIds?: any,
+        molecularProfileIds?: any,
+        sampleMolecularIdentifiers?: any
+    }): Promise<Array<StructuralVariant>> {
+        let path = '/structuralvariant/fetch';
+        let body: any = parameters;
+        let headers: any = {};
+        let queryParameters: any;
+        let form: any = {};
+        return new Promise(
+            (resolve, reject) => {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                this.request('POST', this.domain + path, body, headers, queryParameters, form, reject, resolve,
+                    this.errorHandlers);
+            },
+        ).then((response: request.Response) => {
+            return response.body;
+        });
+    }
 
 }

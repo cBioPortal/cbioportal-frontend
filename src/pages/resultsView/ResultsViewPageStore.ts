@@ -4,7 +4,7 @@ import {
     ClinicalDataSingleStudyFilter, CancerStudy, PatientIdentifier, Patient, GenePanelData, GenePanelDataFilter,
     SampleList, MutationCountByPosition, MutationMultipleStudyFilter, SampleMolecularIdentifier,
     MolecularDataMultipleStudyFilter, SampleFilter, MolecularProfileFilter, GenePanelMultipleStudyFilter, PatientFilter, MutationFilter,
-    GenePanel, ClinicalAttributeFilter, ClinicalAttribute
+    GenePanel, ClinicalAttributeFilter, ClinicalAttribute, StructuralVariant
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {computed, observable, action, reaction, IObservable, IObservableValue, ObservableMap} from "mobx";
@@ -95,7 +95,8 @@ export const AlterationTypeConstants = {
     PROTEIN_LEVEL: 'PROTEIN_LEVEL',
     FUSION: 'FUSION',
     GENESET_SCORE: 'GENESET_SCORE',
-    METHYLATION: 'METHYLATION'
+    METHYLATION: 'METHYLATION',
+    STRUCTURAL_VARIANT: 'STRUCTURAL_VARIANT'
 }
 
 export interface ExtendedAlteration extends Mutation, NumericGeneMolecularData {
@@ -1071,6 +1072,116 @@ export class ResultsViewPageStore {
             });
         }))
     });
+
+    /**
+     * Fusion data
+     * @type {MobxPromiseUnionType<StructuralVariant[]>}
+     */
+    readonly fusions = remoteData<StructuralVariant[]>({
+        await: () => [
+            this.genes,
+            this.selectedMolecularProfiles,
+            this.samples,
+            this.studyIdToStudy
+        ],
+        invoke: async () => {
+            let _molecularProfiles: Array<string> = [];
+            let _samples: Array<{ molecularProfileId: string, sampleId: string }> = [];
+            let _params: any = {};
+
+            if (this.selectedMolecularProfiles.result) {
+                _molecularProfiles = this.selectedMolecularProfiles.result.filter( profile => {
+                    return profile.molecularAlterationType === AlterationTypeConstants.STRUCTURAL_VARIANT;
+                }).map( profile => {
+                    return profile.molecularProfileId;
+                });
+            }
+
+            if (this.genes.result) {
+                _params.entrezGeneIds = _.map(this.genes.result,(gene:Gene)=>gene.entrezGeneId);
+            }
+
+            // map according what's expected by backend
+            if (this.samples.result) {
+                _samples = this.samples.result.map(sample => {
+                    return {
+                        molecularProfileId: sample.studyId + '_structural_variants',
+                        sampleId: sample.sampleId
+                    };
+                });
+                _params.sampleMolecularIdentifiers = _samples;
+            } else {
+                _params.molecularProfileIds = _molecularProfiles;
+            }
+
+            return await client.fetchStructuralVariantsPOST(_params);
+        }
+    });
+
+    /**
+     * Group fusion data by genes.
+     * @returns {{[p: string]: StructuralVariant[]}}
+     */
+    @computed
+    get fusionsByGene(): { [hugeGeneSymbol: string]: StructuralVariant[] } {
+        let _genes: Array<string> = [],
+            _fusionsByGene = {},
+            hugoSymbolsAttrs = ['site1HugoSymbol', 'site2HugoSymbol']; // will check in these two attributes
+
+        // get string values of genes from input query
+        if (this.genes.result) {
+            _genes = this.genes.result.map(gene => gene.hugoGeneSymbol);
+        }
+
+        // group fusion data by the genes from input query
+        _genes.forEach(gene => {
+            hugoSymbolsAttrs.forEach( hugoSymbolsAttr => {
+                let _tmp = _.groupBy(this.fusions.result, (fusion: StructuralVariant) => {
+                    if (fusion[hugoSymbolsAttr] === gene) return  gene;
+                });
+                _fusionsByGene = Object.assign(_fusionsByGene, _tmp);
+            });
+        });
+        return _fusionsByGene;
+    }
+
+    /**
+     * Assign a FusionMapperStore per genes
+     * @type {MobxPromiseUnionTypeWithDefault<{[p: string]: FusionMapperStore}>}
+     */
+    readonly fusionMapperStores = remoteData<{[hugoGeneSymbol: string]: FusionMapperStore}>({
+        invoke: () => {
+            if (this.genes.result) {
+                return Promise.resolve(
+                    _.reduce(
+                        this.genes.result,
+                        (map: { [hugoGeneSymbol: string]: FusionMapperStore }, gene: Gene) => {
+                            map[gene.hugoGeneSymbol] = new FusionMapperStore(
+                                gene,
+                                this.studyIdToStudy,
+                                this.molecularProfileIdToMolecularProfile,
+                                this.samples,
+                                this.fusionsByGene[gene.hugoGeneSymbol]
+                            );
+                            return map;
+                        }, {}
+                    )
+                );
+
+            } else {
+                return Promise.resolve({});
+            }
+        }
+    }, {});
+
+    /**
+     * Get fusion mapper store by gene
+     * @param {string} hugoGeneSymbol
+     * @returns {FusionMapperStore}
+     */
+    public getFusionMapperStore(hugoGeneSymbol: string): FusionMapperStore | undefined {
+        return this.fusionMapperStores.result[hugoGeneSymbol];
+    }
 
     readonly mutations = remoteData<Mutation[]>({
         await:()=>[
