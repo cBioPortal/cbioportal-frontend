@@ -3,6 +3,7 @@ var HtmlWebpackPlugin = require('html-webpack-plugin');
 var WebpackFailPlugin = require('webpack-fail-plugin');
 var ProgressBarPlugin = require('progress-bar-webpack-plugin');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
+var ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 var commit = '"unknown"';
 var version = '"unknown"';
@@ -49,24 +50,34 @@ const imgPath = 'reactapp/images/[hash].[ext]';
 
 var routeComponentRegex = /routes\/([^\/]+\/?[^\/]+).js$/;
 
+var sassResourcesLoader =  {
+loader:'sass-resources-loader',
+    options: {
+    resources:[
+        path.resolve(__dirname, 'node_modules/bootstrap-sass/assets/stylesheets/bootstrap/_variables.scss'),
+        path.resolve(__dirname, 'node_modules/bootstrap-sass/assets/stylesheets/bootstrap/_mixins'),
+        './src/globalStyles/variables.scss'
+    ]
+    }
+};
+
 var config = {
 
     'entry': [
         `babel-polyfill`,
-         `${path.join(src, 'appBootstrapper.jsx')}`
+        `${path.join(src, 'appBootstrapper.jsx')}`
     ],
     'output': {
-        path: './dist/',
+        path: path.resolve(__dirname, 'dist'),
         filename: 'reactapp/[name].app.js',
         chunkFilename: 'reactapp/[name].[chunkhash].chunk.js',
-        cssFilename: 'reactapp/app.css',
-        hash: false,
+       // cssFilename: 'reactapp/app.css',
+       // hash: false,
         publicPath: '/',
     },
 
     'resolve': {
         'extensions': [
-            '',
             '.js',
             '.jsx',
             '.json',
@@ -76,21 +87,19 @@ var config = {
     },
 
     resolveLoader: {
-        fallback: [
+        modules: [
             path.resolve(__dirname, 'loaders'),
             path.join(process.cwd(), 'node_modules')
         ]
     },
 
 
-
     plugins: [
         new webpack.DefinePlugin({
             'VERSION': version,
-            'COMMIT': commit,
+            'COMMIT': commit
         }),
         new HtmlWebpackPlugin({cache: false, template: 'my-index.ejs'}),
-        new webpack.optimize.DedupePlugin(),
         WebpackFailPlugin,
         new ProgressBarPlugin(),
         new webpack.DllReferencePlugin({
@@ -98,94 +107,157 @@ var config = {
             manifest: require('./common-dist/common-manifest.json')
         }),
         new CopyWebpackPlugin([
-            { from: './common-dist', to: 'reactapp' },
-            { from: './src/globalStyles/prefixed-bootstrap.min.css', to:'reactapp/prefixed-bootstrap.min.css' },
-            { from: './src/globalStyles/prefixed-bootstrap.min.css.map', to:'reactapp/prefixed-bootstrap.min.css.map' }
+            {from: './common-dist', to: 'reactapp'},
+            {from: './src/globalStyles/prefixed-bootstrap.min.css', to: 'reactapp/prefixed-bootstrap.min.css'},
+            {from: './src/globalStyles/prefixed-bootstrap.min.css.map', to: 'reactapp/prefixed-bootstrap.min.css.map'}
         ]) // destination is relative to dist directory
     ],
 
-    'module': {
-        'loaders': [
+    module: {
+        rules: [
             {
                 test: /\.tsx?$/,
-                loaders: [
-                    "babel-loader",
-                    "ts-loader"
+                use: [
+                    {
+                        loader: "babel-loader"
+                    },
+                    {
+                        loader: "ts-loader",
+                        options:{
+                            transpileOnly: (isDev || isTest)
+                        }
+                    }
                 ]
             },
             {
                 test: /\.(js|jsx|babel)$/,
+                use: [{
+                    loader: "babel-loader"
+                }],
                 exclude: /node_modules/,
-                loader: 'babel-loader',
-            },
-            {
-                test: /\.json$/,
-                loaders: ['json'],
             },
             {
                 test: /\.otf(\?\S*)?$/,
-                loader: `url-loader?name=${fontPath}&limit=10000`,
+                use: [{
+                    loader: `url-loader`,
+                    options: {
+                        name:fontPath,
+                        limit:10000
+                    }
+                }]
             },
             {
                 test: /\.eot(\?\S*)?$/,
-                loader: `url-loader?name=${fontPath}&limit=10000`,
+                use: [{
+                    loader: `url-loader`,
+                    options: {
+                        name:fontPath,
+                        limit: 10000
+                    }
+                }],
             },
             {
                 test: /\.svg(\?\S*)?$/,
-                loader: `url-loader?name=${fontPath}&mimetype=image/svg+xml&limit=10000`,
+                use: [
+                    {
+                        loader: `url-loader`,
+                        options: {
+                            name:fontPath,
+                            mimetype:'image/svg+xml',
+                            limit:10000
+                        }
+                    }
+                ],
             },
             {
                 test: /\.ttf(\?\S*)?$/,
-                loader: `url-loader?name=${fontPath}&mimetype=application/octet-stream&limit=10000`,
+                use: [{
+                    loader: `url-loader`,
+                    options: {
+                        name:fontPath,
+                        mimetype:'application/octet-stream',
+                        limit:10000
+                    }
+                }],
             },
             {
                 test: /\.woff2?(\?\S*)?$/,
-                loader: `url-loader?name=${fontPath}&mimetype=application/font-woff&limit=10000`,
+                use: [{
+                    loader: `url-loader`,
+                    options: {
+                        name:fontPath,
+                        mimetype:'application/font-woff',
+                        limit:10000
+                    }
+                }],
             },
             {
                 test: /\.(jpe?g|png|gif)$/,
-                loader: `url-loader?name=${imgPath}&limit=10000`,
+                use: [{
+                    loader: `url-loader`,
+                    options:{
+                        name:imgPath,
+                        limit:10000
+                    }
+                }],
             },
             {
                 test: /\.swf$/,
-                loader: `file-loader?name=${imgPath}`,
+                use: [
+                        {
+                            loader: `file-loader`,
+                            options:{
+                                name:imgPath
+                            }
+                        }
+                    ],
             },
             {
                 test: /\.pdf$/,
-                loader: `url-loader?name=${imgPath}&limit=1`,
+                use: [
+                    {
+                        loader: `url-loader`,
+                        options:{
+                            name:imgPath,
+                            limit:1
+                        }
+                    }
+                    ],
             },
-            { test: /lodash/, loader: 'imports?define=>false'},
+            {
+                test: /lodash/,
+                use: [
+                    {loader: 'imports-loader?define=>false'}
+                    ]
+            },
 
-        ],
-
-        noParse:[/3Dmol-nojquery.js/,/jspdf/],
-
-        preLoaders: [
-            // All output '.js' files will have any sourcemaps re-processed by 'source-map-loader'.
             {
                 test: /\.js$/,
-                loader: "source-map-loader"
+                enforce:"pre",
+                use: [{
+                    loader: "source-map-loader",
+                }]
             }
+
+
         ],
 
-        postLoaders: [
+        noParse: [/3Dmol-nojquery.js/, /jspdf/],
 
-        ]
     },
-    'postcss': [require('autoprefixer')],
-    'devServer': {
-        'historyApiFallback': false,
-        'hot': false,
-        'noInfo': false,
-        'quiet': false,
-        'lazy': false,
-        'publicPath': '/',
-        'contentBase': 'dist',
-        'https': false,
-        'hostname': 'localhost',
-        'headers': {"Access-Control-Allow-Origin": "*"},
-        'stats':'errors-only'
-    }
+    devServer: {
+        contentBase: './dist',
+        hot: true,
+        historyApiFallback:false,
+        noInfo:false,
+        quiet:false,
+        lazy:false,
+        publicPath:'/',
+        https:false,
+        host:'localhost',
+        headers: {"Access-Control-Allow-Origin": "*"},
+        stats:'errors-only'
+    },
 
 
 };
@@ -212,7 +284,10 @@ const defines =
 
 config.plugins = [
     new webpack.DefinePlugin(defines),
-    new ExtractTextPlugin('reactapp/styles.css',{ allChunks:true }),
+    new ExtractTextPlugin({
+        filename:'reactapp/styles.css',
+        allChunks: true
+    }),
     new webpack.ProvidePlugin({
         $: "jquery",
         jQuery: "jquery"
@@ -220,134 +295,152 @@ config.plugins = [
 ].concat(config.plugins);
 // END ENV variables
 
-config.module.loaders.push.apply(this);
+//config.module.loaders.push.apply(this);
 
 // include jquery when we load boostrap-sass
-config.module.loaders.push(
+config.module.rules.push(
     {
         test: /bootstrap-sass[\/\\]assets[\/\\]javascripts[\/\\]/,
-        loader: 'imports?jQuery=jquery'
+        use: [{
+            loader:'imports-loader',
+            options:{
+                'jQuery':'jquery'
+            }
+        }]
     }
 );
 
 if (isDev) {
     // add for testwriter
-    config.module.postLoaders.push({ test: /\.ts|tsx/, loader: 'testwriter'});
+    config.module.rules.push(
+        {
+            test: /\.ts|tsx/,
+            use:[{loader: 'testwriter'}]
+        }
+    );
     config.entry.push(`${path.join(src, 'testWriter.js')}`);
+
+    config.plugins.push(
+        new webpack.NamedModulesPlugin(),
+        new webpack.HotModuleReplacementPlugin()
+    );
+
 }
 
 if (isDev || isTest) {
 
     config.devtool = 'source-map';
 
+    config.plugins.push(new ForkTsCheckerWebpackPlugin());
 
     // css modules for any scss matching test
-    config.module.loaders.push(
+    config.module.rules.push(
         {
             test: /\.module\.scss$/,
-            loaders: [
-                'style',
-                'css?modules&importLoaders=2&localIdentName=[name]__[local]__[hash:base64:5]' +
-                '!sass' +
-                '!sass-resources'
+            use:[
+                'style-loader',
+                {
+                    loader:'css-loader',
+                    options: {
+                        modules:true,
+                        importLoaders:2,
+                        localIdentName:'[name]__[local]__[hash:base64:5]'
+                    }
+                },
+                'sass-loader',
+                sassResourcesLoader
             ]
+
         }
     );
 
     // IN DEV WE WANT TO LOAD CSS AND SCSS BUT NOT USE EXTRACT TEXT PLUGIN
     // STYLES WILL BE IN JS BUNDLE AND APPENDED TO DOM IN <STYLE> TAGS
 
-    config.module.loaders.push({test: /\.css$/, loader: 'style-loader!css-loader'});
+    config.module.rules.push(
+        {
+            test: /\.css$/,
+            use: ['style-loader','css-loader']
+        }
+    );
 
-    config.module.loaders.push(
+    config.module.rules.push(
         {
             test: /\.scss$/,
-            exclude:/\.module\.scss/,
-            loaders: [
-                'style',
-                'css?' +
-                '!sass' +
-                '!sass-resources'
+            exclude: /\.module\.scss/,
+            use:[
+                'style-loader',
+                'css-loader',
+                'sass-loader',
+                sassResourcesLoader
             ]
         }
     );
 
     config.devServer.port = devPort;
-    config.devServer.hostname = devHost;
+    //config.devServer.hostname = devHost;
 
     // force hot module reloader to hit absolute path so it can load
     // from dev server
     config.output.publicPath = '//localhost:3000/';
 
-    // Get rid of Dedupe for non-production environments - it messes with scss with duplicate names
-    config.plugins = config.plugins.filter(p => {
-        const name = p.constructor.toString();
-        const fnName = name.match(/^function (.*)\((.*\))/);
-
-        const idx = [
-            'DedupePlugin',
-        ].indexOf(fnName[1]);
-        return idx < 0;
-    });
-
-    // Get rid of Dedupe for non-production environments - it messes with scss with duplicate names
-    config.plugins = config.plugins.filter(p => {
-        const name = p.constructor.toString();
-        const fnName = name.match(/^function (.*)\((.*\))/);
-
-        const idx = [
-            'DedupePlugin',
-        ].indexOf(fnName[1]);
-        return idx < 0;
-    });
 
 } else {
 
 
     config.devtool = 'cheap-module-source-map',
-    config.output.publicPath = '';
+        config.output.publicPath = '';
 
     // css modules for any scss matching test
-    config.module.loaders.push(
+    config.module.rules.push(
         {
             test: /\.module\.scss$/,
-            loader: ExtractTextPlugin.extract(
-                'style',
-                'css?modules&importLoaders=2&localIdentName=[name]__[local]__[hash:base64:5]' +
-                '!sass' +
-                '!sass-resources'
-            )
+            use: ExtractTextPlugin.extract({
+                fallback:'style-loader',
+                use:[
+                    {
+                        loader: 'css-loader',
+                        options:{
+                            modules:true,
+                            importLoaders:2,
+                            localIdentName:'[name]__[local]__[hash:base64:5]'
+                        }
+                    },
+                    'sass-loader',
+                    sassResourcesLoader
+                ]
+            })
         }
     );
 
-    config.module.loaders.push(
+    config.module.rules.push(
         {
-            'test': /\.scss$/,
-            'exclude':/\.module\.scss/,
-            'loader': ExtractTextPlugin.extract(
-                'style',
-                'css?' +
-                '!sass' +
-                '!sass-resources'
-            )
-
+            test: /\.scss$/,
+            exclude: /\.module\.scss/,
+            use: ExtractTextPlugin.extract({
+                fallback:'style-loader',
+                use:[
+                    'css-loader',
+                    'sass-loader',
+                    sassResourcesLoader
+                ]
+            })
         }
     );
 
-    config.module.loaders.push(
+    config.module.rules.push(
         {
-            'test': /\.css/,
-            'loader': ExtractTextPlugin.extract(
-                'style',
-                'css?'
-            )
-
+            test: /\.css/,
+            loader: ExtractTextPlugin.extract({
+                fallback:'style-loader',
+                use:'css-loader'
+            })
         }
     );
 
     config.plugins.push(
         new webpack.DefinePlugin({
-            'process.env':{
+            'process.env': {
                 'NODE_ENV': `"${process.env.NODE_ENV || 'production'}"`
             }
         }),
@@ -355,16 +448,12 @@ if (isDev || isTest) {
             compress: {
                 warnings: false
             },
-            sourceMap:true,
-            comments:false
+            sourceMap: true,
+            comments: false
         })
     );
 
 }
-
-
-config.sassResources = './sass-resources.scss';
-
 
 //config.entry.push('bootstrap-loader');
 // END BOOTSTRAP LOADER
@@ -372,7 +461,11 @@ config.sassResources = './sass-resources.scss';
 config.entry.push('font-awesome-webpack');
 
 // Roots
-config.resolve.root = [src, modules];
+config.resolve.modules = [
+    src,
+    modules
+];
+
 config.resolve.alias = {
     css: join(src, 'styles'),
     containers: join(src, 'containers'),
@@ -381,7 +474,7 @@ config.resolve.alias = {
     styles: join(src, 'styles'),
     reducers: join(src, 'redux/modules'),
     pages: join(src, 'pages'),
-    shared: join(src,'shared'),
+    shared: join(src, 'shared'),
     appConfig: path.join(__dirname + '/src', 'config', process.env.NODE_ENV + '.config')
 };
 // end Roots
@@ -396,21 +489,6 @@ if (isTest) {
 
     config.module.noParse = /[/\\]sinon\.js/;
     config.resolve.alias.sinon = 'sinon/pkg/sinon';
-
-    config.plugins = config.plugins.filter(p => {
-        const name = p.constructor.toString();
-        const fnName = name.match(/^function (.*)\((.*\))/);
-
-        const idx = [
-            'ExtractTextPlugin',
-            'DedupePlugin',
-            'UglifyJsPlugin'
-        ].indexOf(fnName[1]);
-        return idx < 0;
-    });
-
-    config.devTool = 'cheap-module-eval-source-map';
-
 }
 // End Testing
 
