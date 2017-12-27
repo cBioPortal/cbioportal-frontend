@@ -12,6 +12,7 @@ import SurvivalTab from './survival/SurvivalTab';
 import DownloadTab from './download/DownloadTab';
 import AppConfig from 'appConfig';
 import CNSegments from './cnSegments/CNSegments';
+import Fusion from './fusion/Fusions';
 import './styles.scss';
 import ResultsViewOncoprint from 'shared/components/oncoprint/ResultsViewOncoprint';
 import QuerySummary from './querySummary/QuerySummary';
@@ -266,7 +267,26 @@ export default class ResultsViewPage extends React.Component<
                     );
                 },
             },
-
+            {
+                id: ResultsViewTab.FUSION,
+                hide: () => {
+                    return (
+                        !this.resultsViewPageStore.fusions.isComplete ||
+                        this.resultsViewPageStore.fusions.result.length === 0
+                    );
+                },
+                getTab: () => {
+                    return (
+                        <MSKTab
+                            key={13}
+                            id={ResultsViewTab.FUSION}
+                            linkText="Fusion"
+                        >
+                            <Fusion store={store} />
+                        </MSKTab>
+                    );
+                },
+            },
             {
                 id: ResultsViewTab.COEXPRESSION,
                 hide: () => {

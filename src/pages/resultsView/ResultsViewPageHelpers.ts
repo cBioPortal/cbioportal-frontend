@@ -9,6 +9,7 @@ export enum ResultsViewTab {
     MUTUAL_EXCLUSIVITY = 'mutualExclusivity',
     PLOTS = 'plots',
     MUTATIONS = 'mutations',
+    FUSION = 'fusions',
     COEXPRESSION = 'coexpression',
     ENRICHMENTS = 'enrichments',
     SURVIVAL = 'survival',
