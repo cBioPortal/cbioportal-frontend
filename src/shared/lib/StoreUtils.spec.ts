@@ -390,7 +390,6 @@ describe('StoreUtils', () => {
                 sampleIds, studyId, clinicalDataForSamples, client as any);
 
             assert.isTrue(fetchSamplesStub.called, "fetchSamples should be called");
-            console.log(fetchSamplesStub.args);
             assert.isTrue(fetchSamplesStub.calledWith(
                 {
                     sampleFilter: {
