@@ -12,7 +12,8 @@ import SurvivalTab from "./survival/SurvivalTab";
 import DownloadTab from "./download/DownloadTab";
 import AppConfig from "appConfig";
 import CNSegments from "./cnSegments/CNSegments";
-import "./styles.scss";
+import Fusion from './fusion/Fusions';
+import './styles.scss';
 import Network from "./network/Network";
 import ResultsViewOncoprint from "shared/components/oncoprint/ResultsViewOncoprint";
 import QuerySummary from "./querySummary/QuerySummary";
@@ -224,6 +225,19 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                 getTab: () => {
                     return <MSKTab key={3} id={ResultsViewTab.MUTATIONS} linkText="Mutations">
                         <Mutations store={store} appStore={ this.props.appStore } />
+                    </MSKTab>
+                }
+            },
+
+            {
+                id:ResultsViewTab.FUSION,
+                hide: () => {
+                    return !this.resultsViewPageStore.fusions.isComplete ||
+                        this.resultsViewPageStore.fusions.result.length === 0;
+                },
+                getTab: () => {
+                    return <MSKTab key={13} id={ResultsViewTab.FUSION} linkText="Fusion">
+                        <Fusion store={store}/>
                     </MSKTab>
                 }
             },

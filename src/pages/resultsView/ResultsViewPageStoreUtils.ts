@@ -1,7 +1,7 @@
 import {
     Gene, NumericGeneMolecularData, GenePanel, GenePanelData, MolecularProfile,
     Mutation, Patient, Sample, CancerStudy, ClinicalAttribute, PatientIdentifier,
-    PatientFilter, ReferenceGenomeGene
+    PatientFilter, SampleMolecularIdentifier, StructuralVariantFilter, ReferenceGenomeGene
 } from "../../shared/api/generated/CBioPortalAPI";
 import {action, computed} from "mobx";
 import AccessorsForOqlFilter, {getSimplifiedMutationType} from "../../shared/lib/oql/AccessorsForOqlFilter";
@@ -35,6 +35,8 @@ import { isSampleProfiled } from "shared/lib/isSampleProfiled";
 import { AlteredStatus } from "./mutualExclusivity/MutualExclusivityUtil";
 import {Group} from "../../shared/api/ComparisonGroupClient";
 import {isNotGermlineMutation} from "../../shared/lib/MutationUtils";
+import { StructuralVariantFilterExt } from '../../shared/model/Fusion';
+import { AlterationTypeConstants } from './ResultsViewPageStore';
 
 type CustomDriverAnnotationReport = {
     hasBinary: boolean,
@@ -599,4 +601,37 @@ export function fetchPatients(samples:Sample[]) {
     return client.fetchPatientsUsingPOST({
         patientFilter
     });
+}
+
+export function getStructuralVariantProfile(studyId: string) {
+    return studyId + '_structural_variants';
+}
+
+export function getParamsForStructuralVariants(genes: Gene[]|undefined, selectedMolecularProfiles: MolecularProfile[]|undefined, samples: Sample[]|undefined) {
+    const params: StructuralVariantFilterExt = {entrezGeneIds:[]};
+    if (genes) {
+        params.entrezGeneIds = _.map(genes, (gene: Gene) => gene.entrezGeneId);
+    }
+    // compose request parameters
+    if (samples) {
+        // get sample molecular identifiers
+        const sampleMolecularIds = samples.map(sample => {
+            return {
+                molecularProfileId: getStructuralVariantProfile(sample.studyId),
+                sampleId: sample.sampleId
+            };
+        });
+        params.sampleMolecularIdentifiers = sampleMolecularIds;
+    } else {
+        // get molecular profile ids
+        if (selectedMolecularProfiles) {
+            const molecularProfiles = selectedMolecularProfiles.filter(profile => {
+                return profile.molecularAlterationType === AlterationTypeConstants.STRUCTURAL_VARIANT;
+            }).map(profile => {
+                return profile.molecularProfileId;
+            });
+            params.molecularProfileIds = molecularProfiles;
+        }
+    }
+    return params as StructuralVariantFilter;
 }

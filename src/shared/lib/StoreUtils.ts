@@ -51,6 +51,7 @@ import {IMutationalSignature, IMutationalSignatureMeta} from "shared/model/Mutat
 import {ICivicGeneData, ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
 import {MOLECULAR_PROFILE_MUTATIONS_SUFFIX, MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
 import GenomeNexusAPI from "public-lib/api/generated/GenomeNexusAPI";
+import {EnsemblFilter} from "public-lib/api/generated/GenomeNexusAPI";
 import {AlterationTypeConstants} from "../../pages/resultsView/ResultsViewPageStore";
 import {stringListToIndexSet} from "public-lib/lib/StringUtils";
 import {GeneticTrackDatum_Data} from "../components/oncoprint/Oncoprint";
@@ -152,6 +153,14 @@ export async function fetchPdbAlignmentData(ensemblId: string,
     }
 }
 
+export async function fetchPfamDomainData(pfamAccessions: string[],
+                                          client:GenomeNexusAPI = genomeNexusClient)
+{
+    return await client.fetchPfamDomainsByPfamAccessionPOST({
+        pfamAccessions: pfamAccessions
+    });
+}
+
 export async function fetchCanonicalTranscripts(hugoSymbols: string[],
                                                 isoformOverrideSource: string,
                                                 client:GenomeNexusAPI = genomeNexusClient)
@@ -176,6 +185,20 @@ export async function fetchCanonicalEnsemblGeneIds(hugoSymbols: string[],
     // TODO: this endpoint should accept isoformOverrideSource
     return await client.fetchCanonicalEnsemblGeneIdByHugoSymbolsPOST({
         hugoSymbols});
+}
+
+export async function fetchEnsemblTranscriptsByEnsemblFilter(ensemblFilter: Partial<EnsemblFilter>,
+                                                             client:GenomeNexusAPI = genomeNexusClient)
+{
+
+    return await client.fetchEnsemblTranscriptsByEnsemblFilterPOST({ensemblFilter: Object.assign(
+        // set default to empty array
+        {
+            'geneIds': [],
+            'hugoSymbols': [],
+            'proteinIds': [],
+            'transcriptIds': [],
+        }, ensemblFilter)});
 }
 
 export async function fetchClinicalData(clinicalDataMultiStudyFilter:ClinicalDataMultiStudyFilter,
