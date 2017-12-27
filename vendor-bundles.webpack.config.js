@@ -2,25 +2,26 @@
 /* eslint-disable */
 
 let webpack = require('webpack');
+const path = require('path');
 
 
 let config = {
     entry: {
         // create two library bundles, one with jQuery and
         // another with Angular and related libraries
-        common: ['jquery','imports?jquery=jquery!jquery-migrate', 'react', 'react-dom', 'react-redux', 'react-bootstrap', 'seamless-immutable', 'lodash',
-            'mobx', 'mobx-react', 'chart.js', 'react-select', 'react-rangeslider', 'mobx-react-devtools', 'mobx-utils', 'd3', 'datatables.net', 'webpack-raphael']
+        common: ['jquery','imports-loader?jquery=jquery!jquery-migrate', 'react', 'react-dom', 'react-redux', 'react-bootstrap', 'seamless-immutable', 'lodash',
+            'mobx', 'mobx-react', 'chart.js', 'victory', 'react-select', 'react-rangeslider', 'mobx-react-devtools', 'mobx-utils', 'd3', 'datatables.net', 'webpack-raphael']
     },
 
     module: {
         loaders: [
-            { test: /lodash/, loader: 'imports?define=>false'}
+            { test: /lodash/, loader: 'imports-loader?define=>false'}
         ]
     },
 
     output: {
         filename: '[name].bundle.js',
-        path: 'common-dist',
+        path:  path.resolve(__dirname, 'common-dist'),
 
         // The name of the global variable which the library's
         // require() function will be assigned to
