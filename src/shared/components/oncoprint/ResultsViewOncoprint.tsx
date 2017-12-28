@@ -16,7 +16,7 @@ import OncoprintControls, {
 import {ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
 import {ClinicalAttribute, Gene, MolecularProfile, Mutation, Sample} from "../../api/generated/CBioPortalAPI";
 import {
-    percentAltered, getPercentAltered, makeGeneticTracksMobxPromise,
+    percentAltered, makeGeneticTracksMobxPromise,
     makeHeatmapTracksMobxPromise, makeClinicalTracksMobxPromise
 } from "./OncoprintUtils";
 import _ from "lodash";
