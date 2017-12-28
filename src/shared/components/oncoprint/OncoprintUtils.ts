@@ -92,16 +92,6 @@ export function percentAltered(altered:number, sequenced:number) {
     return fixed+"%";
 }
 
-export function getPercentAltered(oncoprintTrackData:OncoprintSampleGeneticTrackData|OncoprintPatientGeneticTrackData):string {
-    if (oncoprintTrackData.hasOwnProperty("altered_samples")) {
-        return percentAltered((oncoprintTrackData as OncoprintSampleGeneticTrackData).altered_sample_uids.length,
-                            (oncoprintTrackData as OncoprintSampleGeneticTrackData).sequenced_samples.length);
-    } else {
-        return percentAltered((oncoprintTrackData as OncoprintPatientGeneticTrackData).altered_patient_uids.length,
-            (oncoprintTrackData as OncoprintPatientGeneticTrackData).sequenced_patients.length);
-    }
-}
-
 export function makeGeneticTracksMobxPromise(oncoprint:ResultsViewOncoprint, sampleMode:boolean) {
     return remoteData<GeneticTrackSpec[]>({
         await:()=>[
