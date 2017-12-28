@@ -158,7 +158,8 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                 codon < 0 ||
                 (this.props.store.canonicalTranscript.isComplete &&
                     this.props.store.canonicalTranscript.result &&
-                    (codon > this.props.store.canonicalTranscript.result.proteinLength)))
+                    // we want to show the stop codon too (so we allow proteinLength +1 as well)
+                    (codon > this.props.store.canonicalTranscript.result.proteinLength + 1)))
             {
                 // invalid position
                 continue;
