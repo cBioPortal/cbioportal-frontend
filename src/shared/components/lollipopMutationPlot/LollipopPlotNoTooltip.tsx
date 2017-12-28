@@ -483,7 +483,10 @@ export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotN
                         x={this.geneX}
                         y={this.geneY}
                         height={this.geneHeight}
-                        width={this.props.vizWidth}
+                        width={
+                            // the x-axis start from 0, so the rectangle size should be (width + 1)
+                            this.props.vizWidth + 1
+                        }
                     />
                     {this.lollipops}
                     {this.domains}
