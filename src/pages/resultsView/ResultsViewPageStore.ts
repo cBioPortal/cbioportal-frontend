@@ -1267,7 +1267,8 @@ export class ResultsViewPageStore {
         await: ()=>[this.studyIds],
         invoke: async () => {
             return client.fetchStudiesUsingPOST({
-                studyIds:this.studyIds.result!
+                studyIds:this.studyIds.result!,
+                projection:'DETAILED'
             })
         }
     }, []);
