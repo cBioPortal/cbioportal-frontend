@@ -56,6 +56,7 @@ import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
 import {getAlterationString} from "../../shared/lib/CopyNumberUtils";
 import memoize from "memoize-weak-decorator";
 import request from 'superagent';
+import {countMutations, mutationCountByPositionKey} from "./mutationCountHelpers";
 import {getPatientSurvivals} from "./SurvivalStoreHelper";
 import {QueryStore} from "shared/components/query/QueryStore";
 
@@ -1614,28 +1615,14 @@ export class ResultsViewPageStore {
         }
     });
 
-    //CBio count
-    private mutationCountByPositionKey(obj:{entrezGeneId:number, proteinPosStart:number, proteinPosEnd:number}) {
-        return `${obj.entrezGeneId}_${obj.proteinPosStart}_${obj.proteinPosEnd}`;
-    }
-
     readonly cbioportalMutationCountData = remoteData<MutationCountByPosition[]>({
         await: ()=>[
             this.mutations
         ],
         invoke: ()=>{
-            const mutationPositionIdentifiers:any = {};
-            for (const mutation of this.mutations.result!) {
-                const simplifiedMutationType = getSimplifiedMutationType(mutation.mutationType);
-                if (simplifiedMutationType === "missense" || simplifiedMutationType === "inframe") {
-                    const key = this.mutationCountByPositionKey(mutation);
-                    mutationPositionIdentifiers[key] = {
-                        entrezGeneId: mutation.entrezGeneId,
-                        proteinPosStart: mutation.proteinPosStart,
-                        proteinPosEnd: mutation.proteinPosEnd
-                    };
-                }
-            }
+
+            const mutationPositionIdentifiers = countMutations(this.mutations.result!);
+
             return client.fetchMutationCountsByPositionUsingPOST({
                 mutationPositionIdentifiers: _.values(mutationPositionIdentifiers)
             });
@@ -1647,9 +1634,9 @@ export class ResultsViewPageStore {
             this.cbioportalMutationCountData
         ],
         invoke: ()=>{
-            const countsMap = _.groupBy(this.cbioportalMutationCountData.result!, count=>this.mutationCountByPositionKey(count));
+            const countsMap = _.groupBy(this.cbioportalMutationCountData.result!, count=>mutationCountByPositionKey(count));
             return Promise.resolve((mutation:Mutation):number=>{
-                const key = this.mutationCountByPositionKey(mutation);
+                const key = mutationCountByPositionKey(mutation);
                 const counts = countsMap[key];
                 if (counts) {
                     return counts.reduce((count, next)=>{
