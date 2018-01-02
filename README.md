@@ -48,6 +48,11 @@ To run unit/integration tests in watch mode
 npm run test:watch
 ```
 
+To run unit/integration tests in watch mode (where specName is a fragment of the name of the spec file (before .spec.))
+```
+npm run test:watch -- --grep=#specName#
+```
+
 To run linting
 ```
 npm run lint
