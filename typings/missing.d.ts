@@ -26,3 +26,4 @@ declare module 'jStat';
 declare module 'victory';
 declare module 'svgsaver';
 declare module 'addthis-snippet';
+declare module 'd3-dsv';
