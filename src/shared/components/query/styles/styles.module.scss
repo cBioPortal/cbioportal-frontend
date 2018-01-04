@@ -119,6 +119,11 @@ div.SelectedStudiesWindow {
 
   :global(.autosuggest) {
     width:200px;
+
+    input {
+      padding-right:20px !important;
+    }
+
   }
 
   :global(.Select-placeholder),
