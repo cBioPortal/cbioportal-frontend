@@ -81,17 +81,10 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     }
 
                     let patientIdsInCohort = ('navCaseIds' in query ? (query.navCaseIds as string).split(",") : []);
-                    
-                    let multiStudyCohorts: string[] = patientIdsInCohort
-                    .filter(entity=> entity.split(':').length == 2);
 
-                    if(multiStudyCohorts.length > 0) {
-                        patientViewPageStore.patientIdsInCohort = multiStudyCohorts;
-                    } else {
-                        patientViewPageStore.patientIdsInCohort = patientIdsInCohort.map(entityId=>{
-                            return patientViewPageStore.studyId + ':' + entityId;
-                        });
-                    }
+                    patientViewPageStore.patientIdsInCohort = patientIdsInCohort.map(entityId=>{
+                        return entityId.includes(':') ? entityId : patientViewPageStore.studyId + ':' + entityId;
+                    });
                 } else {
                     patientViewPageStore.urlValidationError = validationResult.message;
                 }
