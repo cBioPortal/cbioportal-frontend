@@ -115,12 +115,11 @@ function derive(clinicalData) {
                     caseTypeNormalized = 'Recurrence';
                 } else if (caseTypeLower.indexOf('progr') >= 0) {
                     caseTypeNormalized = 'Progressed';
-                } else if (caseTypeLower.indexOf('xeno') >= 0) {
+                } else if (caseTypeLower.indexOf('xeno') >= 0 || caseTypeLower.indexOf('pdx') >= 0) {
                     caseTypeNormalized = 'Xenograft';
                 } else if (caseTypeLower.indexOf('cfdna') >= 0) {
                     caseTypeNormalized = 'cfDNA';
-                } else if (caseTypeLower.indexOf('prim') >= 0 ||
-                                    caseTypeLower.indexOf('prim') >= 0) {
+                } else if (caseTypeLower.indexOf('prim') >= 0) {
                     caseTypeNormalized = 'Primary';
                 }
                 if (caseTypeNormalized !== null && typeof caseTypeNormalized !== 'undefined') {
