@@ -596,6 +596,70 @@ export default class CBioPortalAPIInternal {
             });
         };
 
+    fetchGenesetsUsingPOSTURL(parameters: {
+        'genesetIds': Array < string > ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/genesets/fetch';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch gene sets by ID
+     * @method
+     * @name CBioPortalAPIInternal#fetchGenesetsUsingPOST
+     * @param {} genesetIds - List of Gene set IDs
+     */
+    fetchGenesetsUsingPOST(parameters: {
+            'genesetIds': Array < string > ,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < Geneset >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/genesets/fetch';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                if (parameters['genesetIds'] !== undefined) {
+                    body = parameters['genesetIds'];
+                }
+
+                if (parameters['genesetIds'] === undefined) {
+                    reject(new Error('Missing required  parameter: genesetIds'));
+                    return;
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
     getGenesetUsingGETURL(parameters: {
         'genesetId': string,
         $queryParameters ? : any
