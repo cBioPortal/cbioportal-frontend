@@ -40,7 +40,7 @@ jobs:
 
       - run:
           name: "Make sure lock file is still the same"
-          command: "git diff --quiet package-lock.json"
+          command: "git diff --exit-code package-lock.json"
 
       - save_cache:
           paths:
