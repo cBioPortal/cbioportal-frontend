@@ -46,6 +46,8 @@ export type Query = {
 
         'proteinStart': number
 
+        'svType': "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION"
+
         'tumorType': string
 
         'type': string
@@ -142,7 +144,11 @@ export type MainType = {
 
 };
 export type AnnotatedVariant = {
-    'gene': string
+    'entrezGeneId': number
+
+        'gene': string
+
+        'isoform': string
 
         'mutationEffect': string
 
@@ -151,6 +157,8 @@ export type AnnotatedVariant = {
         'mutationEffectPmids': string
 
         'oncogenicity': string
+
+        'refSeq': string
 
         'variant': string
 
@@ -392,11 +400,17 @@ export type ActionableGene = {
 
         'drugs': string
 
+        'entrezGeneId': number
+
         'gene': string
+
+        'isoform': string
 
         'level': string
 
         'pmids': string
+
+        'refSeq': string
 
         'variant': string
 
@@ -1479,6 +1493,7 @@ export default class OncoKbAPI {
         'hugoSymbol' ? : string,
         'entrezGeneId' ? : number,
         'variant' ? : string,
+        'svType' ? : "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION",
         'consequence' ? : string,
         'proteinStart' ? : number,
         'proteinEnd' ? : number,
@@ -1506,6 +1521,10 @@ export default class OncoKbAPI {
 
         if (parameters['variant'] !== undefined) {
             queryParameters['variant'] = parameters['variant'];
+        }
+
+        if (parameters['svType'] !== undefined) {
+            queryParameters['svType'] = parameters['svType'];
         }
 
         if (parameters['consequence'] !== undefined) {
@@ -1562,6 +1581,7 @@ export default class OncoKbAPI {
      * @param {string} hugoSymbol - The gene symbol used in Human Genome Organisation.
      * @param {integer} entrezGeneId - The entrez gene ID.
      * @param {string} variant - Variant name.
+     * @param {string} svType - Structural Variant Type.
      * @param {string} consequence - Consequence
      * @param {integer} proteinStart - Protein Start
      * @param {integer} proteinEnd - Protein End
@@ -1577,6 +1597,7 @@ export default class OncoKbAPI {
         'hugoSymbol' ? : string,
         'entrezGeneId' ? : number,
         'variant' ? : string,
+        'svType' ? : "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION",
         'consequence' ? : string,
         'proteinStart' ? : number,
         'proteinEnd' ? : number,
@@ -1615,6 +1636,10 @@ export default class OncoKbAPI {
 
             if (parameters['variant'] !== undefined) {
                 queryParameters['variant'] = parameters['variant'];
+            }
+
+            if (parameters['svType'] !== undefined) {
+                queryParameters['svType'] = parameters['svType'];
             }
 
             if (parameters['consequence'] !== undefined) {

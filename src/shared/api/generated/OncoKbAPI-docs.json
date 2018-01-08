@@ -675,6 +675,20 @@
             "type": "string"
           },
           {
+            "name": "svType",
+            "in": "query",
+            "description": "Structural Variant Type.",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "DELETION",
+              "TRANSLOCATION",
+              "DUPLICATION",
+              "INSERTION",
+              "INVERSION"
+            ]
+          },
+          {
             "name": "consequence",
             "in": "query",
             "description": "Consequence",
@@ -1209,6 +1223,16 @@
           "type": "integer",
           "format": "int32"
         },
+        "svType": {
+          "type": "string",
+          "enum": [
+            "DELETION",
+            "TRANSLOCATION",
+            "DUPLICATION",
+            "INSERTION",
+            "INVERSION"
+          ]
+        },
         "tumorType": {
           "type": "string"
         },
@@ -1372,7 +1396,14 @@
     "AnnotatedVariant": {
       "type": "object",
       "properties": {
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
         "gene": {
+          "type": "string"
+        },
+        "isoform": {
           "type": "string"
         },
         "mutationEffect": {
@@ -1385,6 +1416,9 @@
           "type": "string"
         },
         "oncogenicity": {
+          "type": "string"
+        },
+        "refSeq": {
           "type": "string"
         },
         "variant": {
@@ -2121,13 +2155,23 @@
         "drugs": {
           "type": "string"
         },
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
         "gene": {
+          "type": "string"
+        },
+        "isoform": {
           "type": "string"
         },
         "level": {
           "type": "string"
         },
         "pmids": {
+          "type": "string"
+        },
+        "refSeq": {
           "type": "string"
         },
         "variant": {
