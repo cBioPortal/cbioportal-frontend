@@ -61,7 +61,107 @@ describe('homepage', function() {
         assert.equal(browser.isExisting(caseSetSelectorClass), true);
         
     });
-    
+
+
+    describe('select all/deselect all functionality in study selector',function(){
+
+        beforeEach(function(){
+            browser.url(CBIOPORTAL_URL);
+            browser.localStorage('POST', {key: 'localdev', value: 'true'});
+            browser.refresh();
+        });
+
+
+        function getVisibleCheckboxes(){
+            var checkboxes = browser.elements('[data-test="studyList"] input[type=checkbox]');
+
+            checkboxes.waitForExist(10000);
+
+            return checkboxes.value.filter(function(el){
+                return el.isVisible();
+            });
+        }
+
+        it('clicking select all studies checkbox selects all studies',function(){
+
+            var visibleCheckboxes = getVisibleCheckboxes();
+
+            var selectedStudies = visibleCheckboxes.filter(function(el){
+                return el.isSelected();
+            });
+
+            var allStudies = visibleCheckboxes.length;
+
+            assert.equal(allStudies, 174, 'we have 174 visible checkboxes');
+            assert.equal(selectedStudies.length, 0, 'no studies selected');
+
+            browser.element('[data-test=selectAllStudies]').click();
+
+            selectedStudies = visibleCheckboxes.filter(function(el){
+                return el.isSelected();
+            });
+
+            assert.equal(selectedStudies.length, allStudies, 'all studies are selected');
+
+            browser.element('[data-test=selectAllStudies]').click();
+
+            selectedStudies = visibleCheckboxes.filter(function(el){
+                return el.isSelected();
+            });
+
+            assert.equal(selectedStudies.length, 0, 'no studies are selected');
+
+
+        });
+
+
+        it('global deselect button clears all selected studies, even during filter',function(){
+
+            var visibleCheckboxes = getVisibleCheckboxes();
+
+
+            assert.equal($('[data-test=globalDeselectAllStudiesButton]').isExisting(), false, 'global deselect button does not exist');
+
+            visibleCheckboxes[10].click();
+
+            assert.equal($('[data-test=globalDeselectAllStudiesButton]').isExisting(), true, 'global deselect button DOES exist');
+
+            var input = $(".autosuggest input[type=text]");
+
+            var selectedStudies = visibleCheckboxes.filter(function(el){
+                return el.isSelected();
+            });
+
+            assert.equal(selectedStudies.length,1, 'we selected one study');
+
+
+
+            // add a filter
+            input.setValue('breast');
+
+            browser.pause(500);
+
+            // click global deselect all while filtered
+            $('[data-test=globalDeselectAllStudiesButton]').click();
+
+            // click unfilter button
+            $('[data-test=clearStudyFilter]').click();
+
+            browser.pause(500);
+
+            // we have to reselect elements b/c react has re-rendered them
+            selectedStudies = checkboxes = getVisibleCheckboxes().filter(function(el){
+                return el.isSelected();
+            });
+
+            assert.equal(selectedStudies.length,0, 'no selected studies are selected after deselect all clicked');
+
+
+        });
+
+
+    });
+
 });
 
 describe('patient page', function(){
