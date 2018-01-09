@@ -79,8 +79,12 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     {
                         patientViewPageStore.setSampleId(query.sampleId as string);
                     }
-                    patientViewPageStore.patientIdsInCohort = ('navCaseIds' in query ? (query.navCaseIds as string).split(",") : []);
 
+                    let patientIdsInCohort = ('navCaseIds' in query ? (query.navCaseIds as string).split(",") : []);
+
+                    patientViewPageStore.patientIdsInCohort = patientIdsInCohort.map(entityId=>{
+                        return entityId.includes(':') ? entityId : patientViewPageStore.studyId + ':' + entityId;
+                    });
                 } else {
                     patientViewPageStore.urlValidationError = validationResult.message;
                 }
@@ -139,7 +143,12 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     private handlePatientClick(id: string) {
 
-        this.props.routing.updateRoute({ caseId: id, sampleId: undefined });
+        let values = id.split(":");
+        if(values.length == 2){
+            this.props.routing.updateRoute({ studyId: values[0], caseId: values[1], sampleId: undefined });
+        } else {
+            this.props.routing.updateRoute({ caseId: id, sampleId: undefined });
+        }
 
     }
 
@@ -226,7 +235,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         }
 
         if (patientViewPageStore.patientIdsInCohort && patientViewPageStore.patientIdsInCohort.length > 0) {
-            const indexInCohort = patientViewPageStore.patientIdsInCohort.indexOf(patientViewPageStore.patientId);
+            const indexInCohort = patientViewPageStore.patientIdsInCohort.indexOf(patientViewPageStore.studyId + ':' + patientViewPageStore.patientId);
             cohortNav = (
                 <PaginationControls
                     currentPage={indexInCohort + 1}
