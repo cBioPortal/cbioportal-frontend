@@ -38,10 +38,6 @@ interface IResultsViewOncoprintProps {
     divId: string;
     store:ResultsViewPageStore;
     routing:any;
-    customDriverMetadata:{
-        hasDriverAnnotations: boolean,
-        customDriverTiers: string[]
-    };
     addOnBecomeVisibleListener?:(callback:()=>void)=>void;
 }
 
@@ -271,27 +267,28 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             },
             get customDriverAnnotationBinaryMenuLabel() {
                 const label = AppConfig.oncoprintCustomDriverAnnotationBinaryMenuLabel;
-                if (!label || !self.props.customDriverMetadata.hasDriverAnnotations) {
-                    return undefined;
-                } else {
+                const customDriverReport = self.props.store.customDriverAnnotationReport.result;
+                if (label && customDriverReport && customDriverReport.hasBinary) {
                     return label;
+                } else {
+                    return undefined;
                 }
             },
             get customDriverAnnotationTiersMenuLabel() {
                 const label = AppConfig.oncoprintCustomDriverAnnotationTiersMenuLabel;
-                if (!label || !self.props.customDriverMetadata.customDriverTiers
-                        || !self.props.customDriverMetadata.customDriverTiers.length) {
-                    return undefined;
-                } else {
+                const customDriverReport = self.props.store.customDriverAnnotationReport.result;
+                if (label && customDriverReport && customDriverReport.tiers.length) {
                     return label;
+                } else {
+                    return undefined;
                 }
             },
             get customDriverAnnotationTiers() {
-                const tiers = self.props.customDriverMetadata.customDriverTiers;
-                if (!tiers || !tiers.length) {
-                    return undefined;
+                const customDriverReport = self.props.store.customDriverAnnotationReport.result;
+                if (customDriverReport && customDriverReport.tiers.length) {
+                    return customDriverReport.tiers;
                 } else {
-                    return tiers;
+                    return undefined;
                 }
             },
             get annotateCustomDriverBinary() {
@@ -323,7 +320,11 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             if (!this.props.store.mutationAnnotationSettings.oncoKb &&
                 !this.props.store.mutationAnnotationSettings.hotspots &&
                 !this.props.store.mutationAnnotationSettings.cbioportalCount &&
-                !this.props.store.mutationAnnotationSettings.cosmicCount) {
+                !this.props.store.mutationAnnotationSettings.cosmicCount &&
+                !this.props.store.mutationAnnotationSettings.driverFilter &&
+                !this.props.store.mutationAnnotationSettings.driverTiers.entries().reduce((oneSelected, nextEntry)=>{
+                    return oneSelected || nextEntry[1];
+                }, false)) {
                 this.distinguishDrivers = false;
                 this.props.store.mutationAnnotationSettings.ignoreUnknown = false;
             } else {
@@ -345,12 +346,20 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                     this.props.store.mutationAnnotationSettings.hotspots = false;
                     this.props.store.mutationAnnotationSettings.cbioportalCount = false;
                     this.props.store.mutationAnnotationSettings.cosmicCount = false;
+                    this.props.store.mutationAnnotationSettings.driverFilter = false;
+                    this.props.store.mutationAnnotationSettings.driverTiers.forEach((value, key)=>{
+                        this.props.store.mutationAnnotationSettings.driverTiers.set(key, false);
+                    });
                     this.props.store.mutationAnnotationSettings.ignoreUnknown = false;
                 } else {
                     this.props.store.mutationAnnotationSettings.oncoKb = true;
                     this.props.store.mutationAnnotationSettings.hotspots = true;
                     this.props.store.mutationAnnotationSettings.cbioportalCount = true;
                     this.props.store.mutationAnnotationSettings.cosmicCount = true;
+                    this.props.store.mutationAnnotationSettings.driverFilter = true;
+                    this.props.store.mutationAnnotationSettings.driverTiers.forEach((value, key)=>{
+                        this.props.store.mutationAnnotationSettings.driverTiers.set(key, true);
+                    });
                 }
             }),
             onSelectAnnotateOncoKb:action((s:boolean)=>{

@@ -387,7 +387,7 @@ function transitionGeneticTrack(
             description: nextSpec.oql,
             data_id_key: "uid",
             data: nextSpec.data,
-            tooltipFn: makeGeneticTrackTooltip(nextProps.showBinaryCustomDriverAnnotation, nextProps.showTiersCustomDriverAnnotation, true),
+            tooltipFn: makeGeneticTrackTooltip(true),
             track_info: nextSpec.info
         };
         const newTrackId = oncoprint.addTracks([geneticTrackParams])[0];
@@ -410,8 +410,7 @@ function transitionGeneticTrack(
             // shallow equality check
             oncoprint.setTrackData(trackId, nextSpec.data, "uid");
         }
-        // set tooltip no matter what, its cheap
-        oncoprint.setTrackTooltipFn(trackId, makeGeneticTrackTooltip(nextProps.showBinaryCustomDriverAnnotation, nextProps.showTiersCustomDriverAnnotation, true));
+
         if (nextSpec.info !== prevSpec.info) {
             oncoprint.setTrackInfo(trackId, nextSpec.info);
         }
