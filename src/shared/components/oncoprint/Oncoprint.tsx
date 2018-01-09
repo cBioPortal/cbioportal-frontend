@@ -104,9 +104,6 @@ export interface IOncoprintProps {
     distinguishMutationType?:boolean;
     distinguishDrivers?:boolean;
 
-    showBinaryCustomDriverAnnotation?:boolean;
-    showTiersCustomDriverAnnotation?:boolean;
-
     sortConfig?:{
         order?:string[]; // overrides below options if present
 
