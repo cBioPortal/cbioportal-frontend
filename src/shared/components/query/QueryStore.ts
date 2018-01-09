@@ -1252,8 +1252,8 @@ export class QueryStore
 
 	@action addParamsFromWindow()
 	{
-		// Populate OQL
 		if ((window as any).serverVars) {
+			// Populate OQL
 			this.geneQuery = normalizeQuery((window as any).serverVars.theQuery);
 			const dataPriority = (window as any).serverVars.dataPriority;
 			if (typeof dataPriority !== "undefined") {
@@ -1278,8 +1278,18 @@ export class QueryStore
 			const caseSetId =  (window as any).serverVars.caseSetProperties.case_set_id;
 			if (caseSetId !== undefined) {
 				this.selectedSampleListId = caseSetId;
+				this.initiallySelected.sampleListId = true;
 			}
 
+			const studySampleMap = (window as any).serverVars.studySampleObj;
+			if (studySampleMap) {
+				if (caseSetId === CUSTOM_CASE_LIST_ID) {
+					this.caseIdsMode = 'sample';
+					this.caseIds = _.flatten<string>(Object.keys(studySampleMap).map(studyId=>{
+						return studySampleMap[studyId].map((sampleId:string)=>`${studyId}:${sampleId}`);
+					})).join("\n");
+				}
+			}
 		}
 
 		// Select studies from window
