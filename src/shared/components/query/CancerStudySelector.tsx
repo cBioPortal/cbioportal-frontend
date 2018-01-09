@@ -250,7 +250,7 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
                                                       position: 'relative',
                                                       left: 164,
                                                       zIndex: 10
-                                                  }}>×</span>
+                                                  }}>x</span>
                                         )
                                     }
                                     <Autosuggest
