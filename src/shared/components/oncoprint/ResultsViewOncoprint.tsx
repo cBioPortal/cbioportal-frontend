@@ -211,6 +211,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             get showMinimap() {
                 return self.showMinimap;
             },
+            get hideHeatmapMenu() {
+                return self.props.store.queryStore.isVirtualCohortQuery;
+            },
             get sortByMutationType() {
                 return self.sortByMutationType;
             },
