@@ -818,7 +818,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
                 {this.caseSetInfo}
 
-                <FadeInteraction>
+                <FadeInteraction showByDefault={true}>
                     <OncoprintControls
                         handlers={this.controlsHandlers}
                         state={this.controlsState}
