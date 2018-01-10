@@ -190,12 +190,6 @@ describe("SurvivalUtil", () => {
         });
 
         it("returns correct download data for the example data", () => {
-            console.error(convertScatterDataToDownloadData(getScatterData(examplePatientSurvivals, exampleEstimates))[0]);
-            console.error(convertScatterDataToDownloadData(getScatterData(examplePatientSurvivals, exampleEstimates))[1]);
-            console.error(convertScatterDataToDownloadData(getScatterData(examplePatientSurvivals, exampleEstimates))[2]);
-            console.error(convertScatterDataToDownloadData(getScatterData(examplePatientSurvivals, exampleEstimates))[3]);
-            console.error(convertScatterDataToDownloadData(getScatterData(examplePatientSurvivals, exampleEstimates))[4]);
-            console.error(convertScatterDataToDownloadData(getScatterData(examplePatientSurvivals, exampleEstimates))[5]);
             assert.deepEqual(convertScatterDataToDownloadData(getScatterData(examplePatientSurvivals, exampleEstimates)), [
                 { "Time (months)": 5.09, "Survival Rate": 1, "Case ID": "TCGA-OR-A5J1", "Study ID": "acc_tcga", "Status": "censored", "Number at Risk": 6 },
                 { "Time (months)": 0.09, "Survival Rate": 0.8, "Case ID": "TCGA-OR-A5J2", "Study ID": "acc_tcga", "Status": "deceased", "Number at Risk": 5 },
