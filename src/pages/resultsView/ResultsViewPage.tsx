@@ -251,7 +251,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
         exposeComponentRenderer('renderSurvivalTab', () => {
 
-            return (<div>
+            return (<div className="cbioportal-frontend">
                 <SurvivalTab store={this.resultsViewPageStore}/>
             </div>)
         });
