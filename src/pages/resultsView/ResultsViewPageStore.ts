@@ -36,7 +36,6 @@ import {filterCBioPortalWebServiceData} from "../../shared/lib/oql/oqlfilter.js"
 import {keepAlive} from "mobx-utils";
 import MutationMapper from "./mutation/MutationMapper";
 import {CacheData} from "../../shared/lib/LazyMobXCache";
-import {Dictionary} from "lodash";
 import {
     IAlterationCountMap,
     IAlterationData
@@ -57,6 +56,8 @@ import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
 import {getAlterationString} from "../../shared/lib/CopyNumberUtils";
 import memoize from "memoize-weak-decorator";
 import request from 'superagent';
+import {getPatientSurvivals} from "./SurvivalStoreHelper";
+import {QueryStore} from "shared/components/query/QueryStore";
 
 export type SamplesSpecificationElement = {studyId: string, sampleId: string, sampleListId: undefined} |
     {studyId: string, sampleId: undefined, sampleListId: string};
@@ -287,6 +288,8 @@ export class ResultsViewPageStore {
         // });
         this.getURL();
     }
+
+    public queryStore: QueryStore;
 
     @observable public urlValidationError: string | null = null;
 
@@ -1063,7 +1066,7 @@ export class ResultsViewPageStore {
         invoke: () => this.getClinicalData("PATIENT", this.patients.result, ["OS_STATUS", "OS_MONTHS", "DFS_STATUS", "DFS_MONTHS"])
     }, []);
 
-    readonly survivalClinicalDataGroupByUniquePatientKey = remoteData<Dictionary<ClinicalData[]>>({
+    readonly survivalClinicalDataGroupByUniquePatientKey = remoteData<{[key: string]: ClinicalData[]}>({
         await: () => [
             this.survivalClinicalData,
         ],
@@ -1072,33 +1075,6 @@ export class ResultsViewPageStore {
         }
     });
 
-    private getPatientSurvivals(survivalClinicalDataGroupByUniquePatientKey: _.Dictionary<ClinicalData[]> | undefined,
-        patients: Patient[], targetUniquePatientKeys: string[], statusAttributeId: string,
-        monthsAttributeId: string, statusFilter: (s: string) => boolean): PatientSurvival[] {
-
-        let patientSurvivals: PatientSurvival[] = [];
-        if (targetUniquePatientKeys) {
-            targetUniquePatientKeys.forEach((uniquePatientKey: string) => {
-                const clinicalData: ClinicalData[] = survivalClinicalDataGroupByUniquePatientKey![uniquePatientKey];
-                if (clinicalData) {
-                    const statusClinicalData: ClinicalData[] = clinicalData.filter(c => c.clinicalAttributeId === statusAttributeId);
-                    const monthsClinicalData: ClinicalData[] = clinicalData.filter(c => c.clinicalAttributeId === monthsAttributeId);
-                    if (statusClinicalData[0] && monthsClinicalData[0] && statusClinicalData[0].value != 'NA' &&
-                        monthsClinicalData[0].value != 'NA') {
-                        const patient: Patient = patients.filter(p => p.uniquePatientKey === uniquePatientKey)[0];
-                        patientSurvivals.push({
-                            patientId: patient.patientId,
-                            studyId: patient.studyId,
-                            status: statusFilter(statusClinicalData[0].value),
-                            months: parseFloat(monthsClinicalData[0].value)
-                        });
-                    }
-                }
-            });
-        }
-        return patientSurvivals;
-    }
-
     readonly overallAlteredPatientSurvivals = remoteData<PatientSurvival[]>({
         await: () => [
             this.survivalClinicalDataGroupByUniquePatientKey,
@@ -1106,7 +1082,7 @@ export class ResultsViewPageStore {
             this.patients
         ],
         invoke: async() => {
-            return this.getPatientSurvivals(this.survivalClinicalDataGroupByUniquePatientKey.result, this.patients.result,
+            return getPatientSurvivals(this.survivalClinicalDataGroupByUniquePatientKey.result, this.patients.result,
                 this.alteredPatientKeys.result!, 'OS_STATUS', 'OS_MONTHS', s => s === 'DECEASED');
         }
     }, []);
@@ -1118,7 +1094,7 @@ export class ResultsViewPageStore {
             this.patients
         ],
         invoke: async() => {
-            return this.getPatientSurvivals(this.survivalClinicalDataGroupByUniquePatientKey.result, this.patients.result,
+            return getPatientSurvivals(this.survivalClinicalDataGroupByUniquePatientKey.result, this.patients.result,
                 this.unalteredPatientKeys.result!, 'OS_STATUS', 'OS_MONTHS', s => s === 'DECEASED');
         }
     }, []);
@@ -1130,7 +1106,7 @@ export class ResultsViewPageStore {
             this.patients
         ],
         invoke: async() => {
-            return this.getPatientSurvivals(this.survivalClinicalDataGroupByUniquePatientKey.result, this.patients.result,
+            return getPatientSurvivals(this.survivalClinicalDataGroupByUniquePatientKey.result, this.patients.result,
                 this.alteredPatientKeys.result!, 'DFS_STATUS', 'DFS_MONTHS', s => s === 'Recurred/Progressed' || s === 'Recurred');
         }
     }, []);
@@ -1142,7 +1118,7 @@ export class ResultsViewPageStore {
             this.patients
         ],
         invoke: async() => {
-            return this.getPatientSurvivals(this.survivalClinicalDataGroupByUniquePatientKey.result, this.patients.result,
+            return getPatientSurvivals(this.survivalClinicalDataGroupByUniquePatientKey.result, this.patients.result,
                 this.unalteredPatientKeys.result!, 'DFS_STATUS', 'DFS_MONTHS', s => s === 'Recurred/Progressed' || s === 'Recurred');
         }
     }, []);

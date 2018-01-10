@@ -26,7 +26,8 @@ export function emptyQueryIndicator(): IndicatorQueryResp
             proteinStart: -1,
             tumorType: "",
             type: "web",
-            hgvs: ""
+            hgvs: "",
+            svType: "DELETION" // TODO: hack because svType is not optional
         },
         treatments: [],
         tumorTypeSummary: "",
