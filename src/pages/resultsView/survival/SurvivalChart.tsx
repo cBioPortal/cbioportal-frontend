@@ -137,32 +137,50 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
 
         return (
 
-            <div className={styles.SurvivalChart}>
-                <VictoryChart containerComponent={<VictoryContainer responsive={false} containerRef={(ref: any) => this.svgContainer = ref} />}
-                    height={650} width={1150} padding={{ top: 50, bottom: 50, left: 60, right: 300 }} theme={VictoryTheme.material}>
-                    <VictoryLabel x={50} y={15} text={this.props.title} style={{ fontSize: 24, fontFamily: "inherit" }} />
-                    <VictoryAxis style={{ ticks: { size: 8 }, tickLabels: { padding: 2 }, axisLabel: { padding: 35 }, grid: { opacity: 0 } }}
-                        crossAxis={false} tickCount={11} label={this.props.xAxisLabel} />
-                    <VictoryAxis label={this.props.yAxisLabel} dependentAxis={true} tickFormat={(t: any) => `${t}%`} tickCount={11}
-                        style={{ ticks: { size: 8 }, tickLabels: { padding: 2 }, axisLabel: { padding: 45 }, grid: { opacity: 0 } }} domain={[0, 100]} crossAxis={false} />
-                    <VictoryLine interpolation="stepAfter" data={getLineData(this.sortedAlteredPatientSurvivals, this.alteredEstimates)}
-                        style={{ data: { stroke: "red", strokeWidth: 1 } }} />
-                    <VictoryLine interpolation="stepAfter" data={getLineData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)}
-                        style={{ data: { stroke: "blue", strokeWidth: 1 } }} />
-                    <VictoryScatter data={getScatterDataWithOpacity(this.sortedAlteredPatientSurvivals, this.alteredEstimates)}
-                        symbol="plus" style={{ data: { fill: "red" } }} size={3} />
-                    <VictoryScatter data={getScatterDataWithOpacity(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)}
-                        symbol="plus" style={{ data: { fill: "blue" } }} size={3} />
-                    <VictoryScatter data={getScatterData(this.sortedAlteredPatientSurvivals, this.alteredEstimates)}
-                        symbol="circle" style={{ data: { fill: "red", fillOpacity: (datum: any, active: any) => active ? 0.3 : 0 } }} size={10} events={events} />
-                    <VictoryScatter data={getScatterData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)}
-                        symbol="circle" style={{ data: { fill: "blue", fillOpacity: (datum: any, active: any) => active ? 0.3 : 0 } }} size={10} events={events} />
-                    <VictoryLegend x={850} y={40}
-                        data={[
-                            { name: this.alteredLegendText, symbol: { fill: "red", type: "square" } },
-                            { name: this.unalteredLegendText, symbol: { fill: "blue", type: "square" } },
-                            { name: `Logrank Test P-Value: ${this.logRank.toPrecision(3)}`, symbol: { opacity: 0 } }]} />
-                </VictoryChart>
+            <div>
+
+
+
+                <div className="borderedChart" style={{position:'relative'}}>
+
+                    <div className="btn-group" style={{position:'absolute', right:10 }} role="group">
+                        <button className={`btn btn-default btn-xs`} onClick={this.downloadSvg}>
+                            SVG <i className="fa fa-cloud-download" />
+                        </button>
+                        <button className={`btn btn-default btn-xs`} onClick={this.downloadPng}>
+                            PNG <i className="fa fa-cloud-download" />
+                        </button>
+                        <button className={`btn btn-default btn-xs`} onClick={this.downloadData}>
+                            Data <i className="fa fa-cloud-download" />
+                        </button>
+                    </div>
+
+                    <VictoryChart containerComponent={<VictoryContainer responsive={false} containerRef={(ref: any) => this.svgContainer = ref} />}
+                        height={620} width={1150} padding={{ top: 20, bottom: 50, left: 60, right: 300 }} theme={VictoryTheme.material}>
+                        <VictoryLabel x={50} y={15} text={this.props.title} style={{ fontSize: 18, fontFamily: "inherit" }} />
+                        <VictoryAxis style={{ ticks: { size: 8 }, tickLabels: { padding: 2 }, axisLabel: { padding: 35 }, grid: { opacity: 0 } }}
+                            crossAxis={false} tickCount={11} label={this.props.xAxisLabel} />
+                        <VictoryAxis label={this.props.yAxisLabel} dependentAxis={true} tickFormat={(t: any) => `${t}%`} tickCount={11}
+                            style={{ ticks: { size: 8 }, tickLabels: { padding: 2 }, axisLabel: { padding: 45 }, grid: { opacity: 0 } }} domain={[0, 100]} crossAxis={false} />
+                        <VictoryLine interpolation="stepAfter" data={getLineData(this.sortedAlteredPatientSurvivals, this.alteredEstimates)}
+                            style={{ data: { stroke: "red", strokeWidth: 1 } }} />
+                        <VictoryLine interpolation="stepAfter" data={getLineData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)}
+                            style={{ data: { stroke: "blue", strokeWidth: 1 } }} />
+                        <VictoryScatter data={getScatterDataWithOpacity(this.sortedAlteredPatientSurvivals, this.alteredEstimates)}
+                            symbol="plus" style={{ data: { fill: "red" } }} size={3} />
+                        <VictoryScatter data={getScatterDataWithOpacity(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)}
+                            symbol="plus" style={{ data: { fill: "blue" } }} size={3} />
+                        <VictoryScatter data={getScatterData(this.sortedAlteredPatientSurvivals, this.alteredEstimates)}
+                            symbol="circle" style={{ data: { fill: "red", fillOpacity: (datum: any, active: any) => active ? 0.3 : 0 } }} size={10} events={events} />
+                        <VictoryScatter data={getScatterData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)}
+                            symbol="circle" style={{ data: { fill: "blue", fillOpacity: (datum: any, active: any) => active ? 0.3 : 0 } }} size={10} events={events} />
+                        <VictoryLegend x={850} y={40}
+                            data={[
+                                { name: this.alteredLegendText, symbol: { fill: "red", type: "square" } },
+                                { name: this.unalteredLegendText, symbol: { fill: "blue", type: "square" } },
+                                { name: `Logrank Test P-Value: ${this.logRank.toPrecision(3)}`, symbol: { opacity: 0 } }]} />
+                    </VictoryChart>
+                </div>
                 {this.tooltipModel &&
                     <Popover arrowOffsetTop={48} positionLeft={this.tooltipModel.x + 15}
                         positionTop={this.tooltipModel.y - 60}
@@ -179,47 +197,32 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
 
                     </Popover>
                 }
-                <div className={styles.SVG + ' cbioportal-frontend'}>
-                    <a className={`btn btn-default btn-xs`} onClick={this.downloadSvg}>
-                        SVG <i className="fa fa-cloud-download" />
-                    </a>
-                </div>
-                <div className={styles.PNG + ' cbioportal-frontend'}>
-                    <a className={`btn btn-default btn-xs`} onClick={this.downloadPng}>
-                        PNG <i className="fa fa-cloud-download" />
-                    </a>
-                </div>
-                <div className={styles.Data + ' cbioportal-frontend'}>
-                    <a className={`btn btn-default btn-xs`} onClick={this.downloadData}>
-                        Data <i className="fa fa-cloud-download" />
-                    </a>
-                </div>
-                <div className={styles.SurvivalTable}>
-                    <Table bordered condensed striped>
-                        <tbody>
-                            <tr>
-                                <td />
-                                <td>{this.props.totalCasesHeader}</td>
-                                <td>{this.props.statusCasesHeader}</td>
-                                <td>{this.props.medianMonthsHeader}</td>
-                            </tr>
-                            <tr>
-                                <td>{this.alteredLegendText}</td>
-                                {
-                                    getStats(this.sortedAlteredPatientSurvivals, this.alteredEstimates).map(stat =>
-                                        <td><b>{stat}</b></td>)
-                                }
-                            </tr>
-                            <tr>
-                                <td>{this.unalteredLegendText}</td>
-                                {
-                                    getStats(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates).map(stat =>
-                                        <td><b>{stat}</b></td>)
-                                }
-                            </tr>
-                        </tbody>
-                    </Table>
-                </div>
+
+                <table className="table table-striped" style={{marginTop:20}}>
+                    <tbody>
+                        <tr>
+                            <td />
+                            <td>{this.props.totalCasesHeader}</td>
+                            <td>{this.props.statusCasesHeader}</td>
+                            <td>{this.props.medianMonthsHeader}</td>
+                        </tr>
+                        <tr>
+                            <td>{this.alteredLegendText}</td>
+                            {
+                                getStats(this.sortedAlteredPatientSurvivals, this.alteredEstimates).map(stat =>
+                                    <td><b>{stat}</b></td>)
+                            }
+                        </tr>
+                        <tr>
+                            <td>{this.unalteredLegendText}</td>
+                            {
+                                getStats(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates).map(stat =>
+                                    <td><b>{stat}</b></td>)
+                            }
+                        </tr>
+                    </tbody>
+                </table>
+
             </div>
         );
     }

@@ -33,18 +33,22 @@ export default class SurvivalTab extends React.Component<ISurvivalTabProps, {}> 
             this.props.store.overallAlteredPatientSurvivals.result.length > 0 &&
             this.props.store.overallUnalteredPatientSurvivals.result.length > 0) {
             content.push(
-                <SurvivalChart alteredPatientSurvivals={this.props.store.overallAlteredPatientSurvivals.result}
-                    unalteredPatientSurvivals={this.props.store.overallUnalteredPatientSurvivals.result}
-                    title={this.overallSurvivalTitleText}
-                    xAxisLabel="Months Survival"
-                    yAxisLabel="Surviving"
-                    totalCasesHeader="Number of Cases, Total"
-                    statusCasesHeader="Number of Cases, Deceased"
-                    medianMonthsHeader="Median Months Survival"
-                    yLabelTooltip="Survival estimate"
-                    xLabelWithEventTooltip="Time of death"
-                    xLabelWithoutEventTooltip="Time of last observation"
-                    fileName="Overall_Survival" />);
+                <div style={{marginBottom:40}}>
+                    <h4 className='forceHeaderStyle h4'>Overall Survival Kaplan-Meier Estimate</h4>
+                    <SurvivalChart alteredPatientSurvivals={this.props.store.overallAlteredPatientSurvivals.result}
+                        unalteredPatientSurvivals={this.props.store.overallUnalteredPatientSurvivals.result}
+                        title={''}
+                        xAxisLabel="Months Survival"
+                        yAxisLabel="Overall Survival"
+                        totalCasesHeader="Number of Cases, Total"
+                        statusCasesHeader="Number of Cases, Deceased"
+                        medianMonthsHeader="Median Months Survival"
+                        yLabelTooltip="Survival estimate"
+                        xLabelWithEventTooltip="Time of death"
+                        xLabelWithoutEventTooltip="Time of last observation"
+                        fileName="Overall_Survival" />
+                </div>
+            );
         } else {
             overallNotAvailable = true;
         }
@@ -54,18 +58,22 @@ export default class SurvivalTab extends React.Component<ISurvivalTabProps, {}> 
             this.props.store.diseaseFreeAlteredPatientSurvivals.result.length > 0 &&
             this.props.store.diseaseFreeUnalteredPatientSurvivals.result.length > 0) {
             content.push(
-                <SurvivalChart alteredPatientSurvivals={this.props.store.diseaseFreeAlteredPatientSurvivals.result}
+                <div>
+                    <h4 className='forceHeaderStyle h4'>Disease Free Survival Kaplan-Meier Estimate</h4>
+                    <SurvivalChart alteredPatientSurvivals={this.props.store.diseaseFreeAlteredPatientSurvivals.result}
                     unalteredPatientSurvivals={this.props.store.diseaseFreeUnalteredPatientSurvivals.result}
-                    title={this.diseaseFreeSurvivalTitleText}
+                    title={""}
                     xAxisLabel="Months Disease Free"
-                    yAxisLabel="Disease Free"
+                    yAxisLabel="Disease/Progression-free survival"
                     totalCasesHeader="Number of Cases, Total"
                     statusCasesHeader="Number of Cases, Relapsed"
                     medianMonthsHeader="Median Months Disease Free"
                     yLabelTooltip="Disease free estimate"
                     xLabelWithEventTooltip="Time of relapse"
                     xLabelWithoutEventTooltip="Time of last observation"
-                    fileName="Disease_Free_Survival" />);
+                    fileName="Disease_Free_Survival" />
+                </div>
+            );
         } else {
             diseaseFreeNotAvailable = true;
         }
