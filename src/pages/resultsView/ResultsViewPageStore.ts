@@ -23,7 +23,7 @@ import {
     fetchSamplesWithoutCancerTypeClinicalData, fetchStudiesForSamplesWithoutCancerTypeClinicalData, IDataQueryFilter,
     isMutationProfile, fetchOncoKbAnnotatedGenes, groupBy, fetchHotspotsData, indexHotspotData, fetchOncoKbData,
     ONCOKB_DEFAULT, generateUniqueSampleKeyToTumorTypeMap, cancerTypeForOncoKb, fetchCnaOncoKbData,
-    fetchCnaOncoKbDataWithGeneMolecularData
+    fetchCnaOncoKbDataWithGeneMolecularData, fetchGermlineConsentedSamples
 } from "shared/lib/StoreUtils";
 import {MutationMapperStore} from "./mutation/MutationMapperStore";
 import AppConfig from "appConfig";
@@ -1126,18 +1126,7 @@ export class ResultsViewPageStore {
 
     readonly germlineConsentedSamples = remoteData<SampleIdentifier[]>({
         await:()=>[this.studyIds],
-        invoke: async () => {
-            const studies: string[] = this.studyIds.result!;
-            const ids: string[][] = await Promise.all(studies.map(studyId => {
-                return client.getAllSampleIdsInSampleListUsingGET({
-                    sampleListId: this.getGermlineSampleListId(studyId)
-                });
-            }));
-            return _.flatten(ids.map((sampleIds: string[], index: number) => {
-                const studyId = studies[index];
-                return sampleIds.map(sampleId => ({sampleId, studyId}));
-            }));
-        },
+        invoke: async() => await fetchGermlineConsentedSamples(this.studyIds, AppConfig.studiesWithGermlineConsentedSamples),
         onError: () => {
             // fail silently
         }
@@ -1254,10 +1243,6 @@ export class ResultsViewPageStore {
         await: ()=>[this.studies],
         invoke:()=>Promise.resolve(_.keyBy(this.studies.result, x=>x.studyId))
     }, {});
-
-    private getGermlineSampleListId(studyId:string):string {
-        return `${studyId}_germline`;
-    }
 
     readonly molecularProfilesInStudies = remoteData<MolecularProfile[]>({
         await:()=>[this.studyIds],
