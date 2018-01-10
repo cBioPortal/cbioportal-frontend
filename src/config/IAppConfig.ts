@@ -17,6 +17,7 @@ export interface IAppConfig {
     oncoKBApiUrl?: string;
     showGenomeNexus?: boolean;
     genomeNexusApiUrl?: string;
+    studiesWithGermlineConsentedSamples?:string[];
     isoformOverrideSource?: string;
     enableDarwin?: boolean;
     appVersion?: string;
