@@ -85,6 +85,7 @@ export interface IOncoprintControlsState {
     heatmapGeneInputValue?: string;
     clusterHeatmapButtonDisabled?:boolean;
     hideClusterHeatmapButton?:boolean;
+    hideHeatmapMenu?:boolean;
 
     customDriverAnnotationBinaryMenuLabel?:string;
     customDriverAnnotationTiersMenuLabel?:string;
@@ -403,7 +404,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
     }
 
     private getHeatmapMenu() {
-        if (!this.props.state.heatmapProfilesPromise) {
+        if (this.props.state.hideHeatmapMenu || !this.props.state.heatmapProfilesPromise) {
             return <span/>;
         }
         let menu = <LoadingIndicator isLoading={true}/>;
