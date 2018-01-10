@@ -97,7 +97,8 @@ export function generateQueryVariant(entrezGeneId:number,
         proteinStart: proteinPosStart === undefined ? -1 : proteinPosStart,
         proteinEnd: proteinPosEnd === undefined ? -1 : proteinPosEnd,
         type: "web",
-        hgvs: ""
+        hgvs: "",
+        svType: "DELETION" // TODO: hack because svType is not optional
     };
 }
 
