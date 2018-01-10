@@ -57,6 +57,7 @@ import {getAlterationString} from "../../shared/lib/CopyNumberUtils";
 import memoize from "memoize-weak-decorator";
 import request from 'superagent';
 import {getPatientSurvivals} from "./SurvivalStoreHelper";
+import {QueryStore} from "shared/components/query/QueryStore";
 
 export type SamplesSpecificationElement = {studyId: string, sampleId: string, sampleListId: undefined} |
     {studyId: string, sampleId: undefined, sampleListId: string};
@@ -287,6 +288,8 @@ export class ResultsViewPageStore {
         // });
         this.getURL();
     }
+
+    public queryStore: QueryStore;
 
     @observable public urlValidationError: string | null = null;
 
