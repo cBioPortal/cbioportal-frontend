@@ -293,6 +293,15 @@ th.reactable-header-sort-asc:after {
   //}
 }
 
+.forceHeaderStyle {
+  margin-top:30px !important;
+  font-family:Helvetica Neue, Helvetica, Arial, sans-serif !important;
+  margin-bottom:10px !important;
+  color:$headerColor !important;
+  &:first-child {
+    margin-top:0 !important;
+  }
+}
 
 .contentWrapper {
 
@@ -301,12 +310,7 @@ th.reactable-header-sort-asc:after {
 
   //header styles
   h1, h2, h3, h4 {
-    margin-top:30;
-    margin-bottom:20px;
-    color:$headerColor;
-    &:first-child {
-      margin-top:0;
-    }
+    @extend .forceHeaderStyle;
   }
 
   h1 {
