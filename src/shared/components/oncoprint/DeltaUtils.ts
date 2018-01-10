@@ -448,7 +448,7 @@ function transitionClinicalTrack(
             data: nextSpec.data,
             data_id_key: "uid",
             label: nextSpec.label,
-            description: nextSpec.description,
+            description: ((nextSpec.label || "").trim() === (nextSpec.description || "").trim()) ? undefined : nextSpec.description,
             removable: true,
             removeCallback: ()=>{
                 delete getTrackSpecKeyToTrackId()[nextSpec.key];
