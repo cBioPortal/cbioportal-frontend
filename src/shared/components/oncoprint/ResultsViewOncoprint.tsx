@@ -16,7 +16,7 @@ import OncoprintControls, {
 import {ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
 import {ClinicalAttribute, Gene, MolecularProfile, Mutation, Sample} from "../../api/generated/CBioPortalAPI";
 import {
-    percentAltered, getPercentAltered, makeGeneticTracksMobxPromise,
+    percentAltered, makeGeneticTracksMobxPromise,
     makeHeatmapTracksMobxPromise, makeClinicalTracksMobxPromise
 } from "./OncoprintUtils";
 import _ from "lodash";
@@ -210,6 +210,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             },
             get showMinimap() {
                 return self.showMinimap;
+            },
+            get hideHeatmapMenu() {
+                return self.props.store.queryStore.isVirtualCohortQuery;
             },
             get sortByMutationType() {
                 return self.sortByMutationType;
@@ -815,7 +818,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
                 {this.caseSetInfo}
 
-                <FadeInteraction>
+                <FadeInteraction showByDefault={true}>
                     <OncoprintControls
                         handlers={this.controlsHandlers}
                         state={this.controlsState}

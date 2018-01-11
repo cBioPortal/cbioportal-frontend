@@ -29,7 +29,6 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
     constructor() {
         super();
         this.handleModifyQueryClick = this.handleModifyQueryClick.bind(this);
-        this.goToStudySummary = this.goToStudySummary.bind(this);
     }
 
     private handleModifyQueryClick() {
@@ -42,11 +41,6 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
 
     }
 
-    private get cohortsList():string[]{
-        console.log("AARON MAKE THIS RIGHT");
-        return (window as any).cohortIdsList;
-    }
-
     private get singleStudyUI() {
         return <div>
             <h4><StudyLink study={this.props.store.studies.result[0]}/></h4>
@@ -56,13 +50,6 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
                  / <strong>{this.props.store.hugoGeneSymbols.length}</strong> Genes
             </span>
         </div>
-    }
-
-    private goToStudySummary(){
-        // try to use formSubmit, it exists if the new frontend code has been loaded
-        // if not, just navigate in the standard way
-        var cohortsParam = this.cohortsList.join(",");
-        formSubmit("study", {id:cohortsParam}, "_blank", (cohortsParam.length > 1800 ? "post" : "get"));
     }
 
     private get multipleStudyUI() {

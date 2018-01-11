@@ -131,17 +131,9 @@ export default class AlleleFreqColumnFormatter {
             map[next.sampleId] = next;
             return map;
         }, {} as {[s:string]:Mutation});
-        return sampleManager.getSampleIdsInOrder().map(sampleId=>sampleToMutation[sampleId]).map(mutation=>{
-            if (!mutation) {
-                return null;
-            }
-            const altReads = mutation.tumorAltCount;
-            const refReads = mutation.tumorRefCount;
-            if ((altReads < 0) || (refReads < 0)) {
-                return null;
-            }
-            return (altReads / (altReads + refReads));
-        });
+        return sampleManager.getSampleIdsInOrder().map(sampleId=>sampleToMutation[sampleId]).map(mutation=>
+            AlleleFreqColumnFormatter.calcFrequency(mutation)
+        );
     }
 
     public static isVisible(sampleManager:SampleManager|null, allMutations?: Mutation[][]): boolean {
@@ -161,18 +153,37 @@ export default class AlleleFreqColumnFormatter {
 
 
     public static getFrequency(data:Mutation[]): string|string[] {
-        let result = [];
+        const result: string[] = [];
+
         if (data) {
-            for (let mutation of data) {
-                let frequency = mutation.tumorAltCount/(mutation.tumorAltCount+mutation.tumorRefCount);
-                if (frequency) {
-                    result.push(String(frequency));
-                }
+            for (const mutation of data) {
+                const frequency = AlleleFreqColumnFormatter.calcFrequency(mutation);
+                const value = frequency === null ? "" : String(frequency);
+
+                result.push(value);
             }
         }
-        if (result.length == 1) {
+
+        if (result.length === 1) {
             return result[0];
         }
+
         return result;
+    }
+
+    protected static calcFrequency(mutation: Mutation): number|null
+    {
+        if (!mutation) {
+            return null;
+        }
+
+        const altReads = mutation.tumorAltCount;
+        const refReads = mutation.tumorRefCount;
+
+        if ((altReads < 0) || (refReads < 0)) {
+            return null;
+        }
+
+        return (altReads / (altReads + refReads));
     }
 }
