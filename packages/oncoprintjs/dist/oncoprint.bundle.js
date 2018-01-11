@@ -14173,6 +14173,12 @@ var Oncoprint = (function () {
 	
 	resizeAndOrganizeAfterTimeout(this);
     }
+	Oncoprint.prototype.setTrackGroupLegendOrder = function(group_order) {
+    	this.model.setTrackGroupLegendOrder(group_order);
+    	this.legend_view.setTrackGroupLegendOrder(this.model);
+
+    	resizeAndOrganizeAfterTimeout(this);
+	}
     
     Oncoprint.prototype.keepSorted = function(keep_sorted) {
 	this.keep_sorted = (typeof keep_sorted === 'undefined' ? true : keep_sorted);
@@ -14868,6 +14874,7 @@ var OncoprintModel = (function () {
 	this.cell_padding_off_because_of_zoom = (this.getCellWidth() < this.cell_padding_off_cell_width_threshold);
 	this.id_order = [];
 	this.hidden_ids = {};
+	this.track_group_legend_order = [];
 	
 	// Track Properties
 	this.track_label = {};
@@ -15287,9 +15294,24 @@ var OncoprintModel = (function () {
     }
     
     OncoprintModel.prototype.getRuleSets = function() {
-	// return rule sets, sorted by associating each with the lowest track id its on
+	// return rule sets, in track group legend order
 	var self = this;
-	var sorted_tracks = this.getTracks().sort();
+	var legend_order = this.getTrackGroupLegendOrder();
+	var used_track_groups = {};
+	var track_groups = this.getTrackGroups();
+	var sorted_track_groups = [];
+	for (var i=0; i<legend_order.length; i++) {
+		// add track groups in legend order
+		used_track_groups[legend_order[i]] = true;
+		sorted_track_groups.push(track_groups[legend_order[i]]);
+	}
+	for (var i=0; i<track_groups.length; i++) {
+		// add groups not in legend order to end
+		if (!used_track_groups[i]) {
+			sorted_track_groups.push(track_groups[i]);
+		}
+	}
+	var sorted_tracks = sorted_track_groups.reduce(function(acc, next) { return acc.concat(next); }, []);
 	var rule_set_ids = sorted_tracks.map(function(track_id) {
 	    return self.track_rule_set_id[track_id];
 	});
@@ -15878,7 +15900,15 @@ var OncoprintModel = (function () {
 	    this.track_id_to_datum[track_id][track_data[i][track_id_key]] = track_data[i];
 	}
     }
-    
+
+    OncoprintModel.prototype.setTrackGroupLegendOrder = function(group_order) {
+    	this.track_group_legend_order = group_order.slice();
+	}
+
+	OncoprintModel.prototype.getTrackGroupLegendOrder = function() {
+    	return this.track_group_legend_order;
+	}
+
     OncoprintModel.prototype.setTrackGroupSortPriority = function(priority) {
 	this.track_group_sort_priority = priority;
 	this.sort();
@@ -21779,7 +21809,7 @@ var OncoprintLabelView = (function () {
 			var $tooltip_div = $('<div>');
 			var offset = view.$canvas.offset();   
 			if (isNecessaryToShortenLabel(view, view.labels[hovered_track])) {
-			    $tooltip_div.append($('<b>'+view.labels[hovered_track]+'</b>'));
+			    $tooltip_div.append($('<b>'+view.labels[hovered_track]+'</b><br>'));
 			}
 			var track_description = view.track_descriptions[hovered_track].replace("<", "&lt;").replace(">", "&gt;");
 			if (track_description.length > 0) {
@@ -23922,6 +23952,20 @@ var OncoprintLegendView = (function() {
 	    var in_group_y_offset = 0;
 	    
 	    var rules = model.getActiveRules(rule_sets[i].rule_set_id);
+	    rules.sort(function(ruleA, ruleB) {
+	    	// sort alphabetically
+	    	var labelA = ruleA.rule.legend_label;
+	    	var labelB = ruleB.rule.legend_label;
+	    	if (labelA && labelB) {
+	    		return labelA.localeCompare(labelB);
+			} else if (!labelA && !labelB) {
+	    		return 0;
+			} else if (!labelA) {
+	    		return -1;
+			} else if (!labelB) {
+	    		return 1;
+			}
+		});
 	    for (var j=0; j<rules.length; j++) {
 		var rule = rules[j].rule;
 		if (rule.exclude_from_legend) {
@@ -24032,7 +24076,11 @@ var OncoprintLegendView = (function() {
     OncoprintLegendView.prototype.setRuleSet = function(model) {
 	renderLegend(this, model);
     }
-    
+
+    OncoprintLegendView.prototype.setTrackGroupLegendOrder = function(model) {
+    	renderLegend(this, model);
+	}
+
     OncoprintLegendView.prototype.hideTrackLegends = function(model) {
 	renderLegend(this, model);
     }

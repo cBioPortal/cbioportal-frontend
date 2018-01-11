@@ -77,6 +77,20 @@ var OncoprintLegendView = (function() {
 	    var in_group_y_offset = 0;
 	    
 	    var rules = model.getActiveRules(rule_sets[i].rule_set_id);
+	    rules.sort(function(ruleA, ruleB) {
+	    	// sort alphabetically
+	    	var labelA = ruleA.rule.legend_label;
+	    	var labelB = ruleB.rule.legend_label;
+	    	if (labelA && labelB) {
+	    		return labelA.localeCompare(labelB);
+			} else if (!labelA && !labelB) {
+	    		return 0;
+			} else if (!labelA) {
+	    		return -1;
+			} else if (!labelB) {
+	    		return 1;
+			}
+		});
 	    for (var j=0; j<rules.length; j++) {
 		var rule = rules[j].rule;
 		if (rule.exclude_from_legend) {
@@ -187,7 +201,11 @@ var OncoprintLegendView = (function() {
     OncoprintLegendView.prototype.setRuleSet = function(model) {
 	renderLegend(this, model);
     }
-    
+
+    OncoprintLegendView.prototype.setTrackGroupLegendOrder = function(model) {
+    	renderLegend(this, model);
+	}
+
     OncoprintLegendView.prototype.hideTrackLegends = function(model) {
 	renderLegend(this, model);
     }
