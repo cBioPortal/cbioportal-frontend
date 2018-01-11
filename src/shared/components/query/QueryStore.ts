@@ -33,6 +33,8 @@ import {
 import onMobxPromise from "shared/lib/onMobxPromise";
 import VirtualCohorts, {LocalStorageVirtualCohort} from "../../lib/VirtualCohorts";
 import getOverlappingStudies from "../../lib/getOverlappingStudies";
+import MolecularProfilesInStudyCache from "../../cache/MolecularProfilesInStudyCache";
+import {CacheData} from "../../lib/LazyMobXCache";
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -474,6 +476,14 @@ export class QueryStore
 			if (!this.initiallySelected.profileIds || this.userHasClickedOnAStudy) {
 				this._selectedProfileIds = undefined;
 			}
+		}
+	});
+
+	readonly molecularProfilesInSelectedStudies = remoteData<MolecularProfile[]>({
+		invoke: async()=>{
+			const profiles:CacheData<MolecularProfile[], string>[] =
+				await this.molecularProfilesInStudyCache.getPromise(this.selectedStudyIds, true);
+			return _.flatten(profiles.map(d=>(d.data ? d.data : [])));
 		}
 	});
 
@@ -1242,8 +1252,8 @@ export class QueryStore
 
 	@action addParamsFromWindow()
 	{
-		// Populate OQL
 		if ((window as any).serverVars) {
+			// Populate OQL
 			this.geneQuery = normalizeQuery((window as any).serverVars.theQuery);
 			const dataPriority = (window as any).serverVars.dataPriority;
 			if (typeof dataPriority !== "undefined") {
@@ -1268,8 +1278,18 @@ export class QueryStore
 			const caseSetId =  (window as any).serverVars.caseSetProperties.case_set_id;
 			if (caseSetId !== undefined) {
 				this.selectedSampleListId = caseSetId;
+				this.initiallySelected.sampleListId = true;
 			}
 
+			const studySampleMap = (window as any).serverVars.studySampleObj;
+			if (studySampleMap) {
+				if (caseSetId === CUSTOM_CASE_LIST_ID) {
+					this.caseIdsMode = 'sample';
+					this.caseIds = _.flatten<string>(Object.keys(studySampleMap).map(studyId=>{
+						return studySampleMap[studyId].map((sampleId:string)=>`${studyId}:${sampleId}`);
+					})).join("\n");
+				}
+			}
 		}
 
 		// Select studies from window
@@ -1484,6 +1504,10 @@ export class QueryStore
 			successCallback: savePath => alert('Saved to GenomeSpace as ' + savePath),
 			errorCallback: savePath => alert('ERROR saving to GenomeSpace as ' + savePath),
 		});
+	}
+
+	@cached get molecularProfilesInStudyCache() {
+		return new MolecularProfilesInStudyCache();
 	}
 }
 

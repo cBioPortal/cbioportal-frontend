@@ -1,10 +1,11 @@
 import * as React from "react";
 import {observer} from "mobx-react";
-import {computed, observable} from "mobx";
+import {action, computed, observable} from "mobx";
 
 export interface IFadeInteractionProps {
     fadeInSeconds?: number;
     fadeOutSeconds?: number;
+    showByDefault?: boolean;
 }
 
 @observer
@@ -15,9 +16,9 @@ export default class FadeInteraction extends React.Component<IFadeInteractionPro
         fadeOutSeconds: 0.6
     };
 
-    constructor() {
+    constructor(props: IFadeInteractionProps) {
         super();
-
+        this.initialShow = props.showByDefault === true;
         this.onFocus = this.onFocus.bind(this);
         this.onBlur = this.onBlur.bind(this);
         this.onMouseEnter = this.onMouseEnter.bind(this);
@@ -26,6 +27,7 @@ export default class FadeInteraction extends React.Component<IFadeInteractionPro
 
     @observable focused = false;
     @observable mouseInside = false;
+    public initialShow = false;
 
     @computed get fadeInStyle() {
         return {
@@ -55,8 +57,8 @@ export default class FadeInteraction extends React.Component<IFadeInteractionPro
         }
     }
 
-    @computed get show() {
-        return this.focused || this.mouseInside;
+    get show() {
+        return this.focused || this.mouseInside || this.initialShow;
     }
 
     private onFocus() {
@@ -67,11 +69,15 @@ export default class FadeInteraction extends React.Component<IFadeInteractionPro
         this.focused = false;
     }
 
-    private onMouseEnter() {
+    @action
+    onMouseEnter() {
+        this.initialShow = false;
         this.mouseInside = true;
     }
 
-    private onMouseLeave() {
+    @action
+    onMouseLeave() {
+        this.initialShow = false;
         this.mouseInside = false;
     }
 

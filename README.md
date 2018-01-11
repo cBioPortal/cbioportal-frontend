@@ -1,4 +1,5 @@
 # cbioportal-frontend
+[![Join the chat at https://gitter.im/cBioPortal/public-chat](https://badges.gitter.im/cBioPortal/public-chat.svg)](https://gitter.im/cBioPortal/public-chat?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 ## Live demo
 Development: http://cbioportal-frontend-demo.herokuapp.com/#/patient?studyId=prad_fhcrc&caseId=00-090
 Master: http://cbioportal-frontend.herokuapp.com/#/patient?studyId=prad_fhcrc&caseId=00-090
@@ -46,6 +47,11 @@ npm run test
 To run unit/integration tests in watch mode
 ```
 npm run test:watch
+```
+
+To run unit/integration tests in watch mode (where specName is a fragment of the name of the spec file (before .spec.))
+```
+npm run test:watch -- --grep=#specName#
 ```
 
 To run linting

@@ -23,14 +23,14 @@ export default function onMobxPromise<T>(promise:MobxPromise<T>|Array<MobxPromis
     } else {
         promiseArray = [promise];
     }
-    disposer = autorun(()=>{
+    disposer = autorun((reaction)=>{
         if (promiseArray.reduce((acc, next)=>(acc && next.isComplete), true)) {
             // if all complete
             onComplete(...promiseArray.map(x=>(x.result as T)));
             count += 1;
         }
         if (count >= times) {
-            disposer();
+            reaction.dispose();
             onDispose && onDispose();
         }
     });
