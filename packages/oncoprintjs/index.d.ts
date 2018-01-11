@@ -138,6 +138,7 @@ declare module "oncoprintjs"
         getTrackDataIdKey:(track_id:TrackId)=>string;
         setTrackData:(track_id:TrackId, data:D[], data_id_key:string)=>void;
         setTrackGroupSortPriority:(priority:TrackGroupIndex[])=>void;
+        setTrackGroupLegendOrder:(group_order:TrackGroupIndex[])=>void;
         setTrackSortDirection:(track_id:TrackId, dir:TrackSortDirection)=>TrackSortDirection;
         setTrackSortComparator:(track_id:TrackId, sortCmpFn:TrackSortSpecification<any>)=>void;
         getTrackSortDirection:(track_id:TrackId)=>TrackSortDirection;

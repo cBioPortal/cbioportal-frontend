@@ -420,6 +420,12 @@ var Oncoprint = (function () {
 	
 	resizeAndOrganizeAfterTimeout(this);
     }
+	Oncoprint.prototype.setTrackGroupLegendOrder = function(group_order) {
+    	this.model.setTrackGroupLegendOrder(group_order);
+    	this.legend_view.setTrackGroupLegendOrder(this.model);
+
+    	resizeAndOrganizeAfterTimeout(this);
+	}
     
     Oncoprint.prototype.keepSorted = function(keep_sorted) {
 	this.keep_sorted = (typeof keep_sorted === 'undefined' ? true : keep_sorted);
