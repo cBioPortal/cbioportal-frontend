@@ -227,6 +227,12 @@ export class FilteredCancerTreeView
 		}
 	}
 
+	@action clearAllSelection(): void
+	{
+        this.store.selectedStudyIds = []
+	}
+
+
 	@action onCheck(node:CancerTreeNode, checked:boolean): void
 	{
 		let clickedStudyIds;
@@ -245,6 +251,34 @@ export class FilteredCancerTreeView
 		if (clickedStudyIds)
 			this.handleCheckboxStudyIds(clickedStudyIds, checked);
 	}
+
+	getSelectionReport(){
+
+        let selectedStudyIds = this.store.selectedStudyIds || [];
+        let selectedStudies = selectedStudyIds.map(studyId => this.store.treeData.map_studyId_cancerStudy.get(studyId) as CancerStudy);
+        let shownStudies = this.getDescendantCancerStudies(this.store.treeData.rootCancerType);
+        let shownAndSelectedStudies = _.intersection(shownStudies, selectedStudies) as CancerStudy[];
+
+		return {
+            selectedStudyIds,
+			selectedStudies,
+			shownStudies,
+			shownAndSelectedStudies
+		}
+
+    }
+
+    @action toggleAllFiltered(){
+
+        const {selectedStudyIds, selectedStudies, shownStudies, shownAndSelectedStudies} = this.getSelectionReport();
+
+        if (shownStudies.length === shownAndSelectedStudies.length) { // deselect
+            this.store.selectedStudyIds = _.without(this.store.selectedStudyIds, ... shownStudies.map((study:CancerStudy)=>study.studyId));
+        } else {
+            this.store.selectedStudyIds = _.union(this.store.selectedStudyIds, shownStudies.map((study:CancerStudy)=>study.studyId));
+        }
+
+    }
 
 	private handleCheckboxStudyIds(clickedStudyIds:string[], checked:boolean)
 	{

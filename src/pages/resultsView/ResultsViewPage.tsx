@@ -39,7 +39,7 @@ import {QueryStore} from "../../shared/components/query/QueryStore";
 
 const win = (window as any);
 
-function initStore(){
+function initStore(queryStore: QueryStore) {
 
     const serverVars: any = (window as any).serverVars;
 
@@ -82,14 +82,11 @@ function initStore(){
     resultsViewPageStore.rppaScoreThreshold = serverVars.rppaScoreThreshold; // FIX!
     resultsViewPageStore.zScoreThreshold = serverVars.zScoreThreshold;
     resultsViewPageStore.oqlQuery = oqlQuery;
+    resultsViewPageStore.queryStore = queryStore;
 
     return resultsViewPageStore;
 
 }
-
-const resultsViewPageStore = initStore();
-(window as any).resultsViewPageStore = resultsViewPageStore;
-
 
 export interface IResultsViewPageProps {
     routing: any;
@@ -115,13 +112,18 @@ type OncoprintTabInitProps = {
 export default class ResultsViewPage extends React.Component<IResultsViewPageProps, {}> {
 
     private showTwitter = AppConfig.showTwitter === true;
+    private resultsViewPageStore: ResultsViewPageStore;
 
     constructor(props: IResultsViewPageProps) {
         super(props);
+
+        const resultsViewPageStore = initStore(props.queryStore);
+        this.resultsViewPageStore = resultsViewPageStore;
+        (window as any).resultsViewPageStore = resultsViewPageStore;
+
         this.exposeComponentRenderersToParentScript(props);
 
         win.renderQuerySummary(document.getElementById('main_smry_info_div'));
-
     }
 
     componentDidMount(){
@@ -138,7 +140,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             <Observer>
                 {
                     ()=> {
-                        if (resultsViewPageStore.studies.isComplete) {
+                        if (this.resultsViewPageStore.studies.isComplete) {
                             //return <OverlappingStudiesWarning studies={resultsViewPageStore.studies.result!}/>
                             // disable overlapping studies warning until #3395
                             // is implemented
@@ -185,7 +187,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                 return (
                     <ResultsViewOncoprint
                         divId={props.divId}
-                        store={resultsViewPageStore}
+                        store={this.resultsViewPageStore}
                         routing={this.props.routing}
                         customDriverMetadata={props.customDriverMetadata}
                         addOnBecomeVisibleListener={addOnBecomeVisibleListener}
@@ -195,13 +197,13 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
         exposeComponentRenderer('renderCNSegments',
             ()=>{
-                return <CNSegments store={resultsViewPageStore}/>
+                return <CNSegments store={this.resultsViewPageStore}/>
             }
         );
 
         exposeComponentRenderer('renderQuerySummary',
             ()=>{
-                return <QuerySummary queryStore={props.queryStore} store={resultsViewPageStore}/>
+                return <QuerySummary queryStore={props.queryStore} store={this.resultsViewPageStore}/>
             }
         );
 
@@ -209,12 +211,12 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
              ()=>{
                 return <div>
                     <AjaxErrorModal
-                        show={(resultsViewPageStore.ajaxErrors.length > 0)}
+                        show={(this.resultsViewPageStore.ajaxErrors.length > 0)}
                         onHide={() => {
-                            resultsViewPageStore.clearErrors()
+                            this.resultsViewPageStore.clearErrors();
                         }}
                     />
-                    <Mutations store={resultsViewPageStore}/>
+                    <Mutations store={this.resultsViewPageStore}/>
                 </div>
             });
 
@@ -222,12 +224,12 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             (props: MutationsTabInitProps) => {
                 return <div>
                     <AjaxErrorModal
-                        show={(resultsViewPageStore.ajaxErrors.length > 0)}
+                        show={(this.resultsViewPageStore.ajaxErrors.length > 0)}
                         onHide={() => {
-                            resultsViewPageStore.clearErrors()
+                            this.resultsViewPageStore.clearErrors();
                         }}
                     />
-                    <CancerSummaryContainer store={resultsViewPageStore}/>
+                    <CancerSummaryContainer store={this.resultsViewPageStore}/>
                 </div>
             });
 
@@ -235,22 +237,22 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         exposeComponentRenderer('renderMutExTab', () => {
 
             return (<div>
-                <MutualExclusivityTab store={resultsViewPageStore}/>
+                <MutualExclusivityTab store={this.resultsViewPageStore}/>
             </div>)
         });
 
         exposeComponentRenderer('renderBookmark', () => {
             return (
                 <div>
-                    <AddThisBookmark store={resultsViewPageStore} getParameters={this.addThisParameters}/>
+                    <AddThisBookmark store={this.resultsViewPageStore} getParameters={this.addThisParameters}/>
                 </div>
             );
         });
 
         exposeComponentRenderer('renderSurvivalTab', () => {
 
-            return (<div>
-                <SurvivalTab store={resultsViewPageStore}/>
+            return (<div className="cbioportal-frontend">
+                <SurvivalTab store={this.resultsViewPageStore}/>
             </div>)
         });
     }
