@@ -34,10 +34,10 @@ export default class SurvivalTab extends React.Component<ISurvivalTabProps, {}> 
             this.props.store.overallUnalteredPatientSurvivals.result.length > 0) {
             content.push(
                 <div style={{marginBottom:40}}>
-                    <h4 className='forceHeaderStyle h4'>Overall Survival Kaplan-Meier Estimate</h4>
+                    <h4 className='forceHeaderStyle h4'>{this.overallSurvivalTitleText}</h4>
                     <SurvivalChart alteredPatientSurvivals={this.props.store.overallAlteredPatientSurvivals.result}
                         unalteredPatientSurvivals={this.props.store.overallUnalteredPatientSurvivals.result}
-                        title={''}
+                        title={this.overallSurvivalTitleText}
                         xAxisLabel="Months Survival"
                         yAxisLabel="Overall Survival"
                         totalCasesHeader="Number of Cases, Total"
@@ -59,10 +59,10 @@ export default class SurvivalTab extends React.Component<ISurvivalTabProps, {}> 
             this.props.store.diseaseFreeUnalteredPatientSurvivals.result.length > 0) {
             content.push(
                 <div>
-                    <h4 className='forceHeaderStyle h4'>Disease Free Survival Kaplan-Meier Estimate</h4>
+                    <h4 className='forceHeaderStyle h4'>{ this.diseaseFreeSurvivalTitleText }</h4>
                     <SurvivalChart alteredPatientSurvivals={this.props.store.diseaseFreeAlteredPatientSurvivals.result}
                     unalteredPatientSurvivals={this.props.store.diseaseFreeUnalteredPatientSurvivals.result}
-                    title={""}
+                    title={this.diseaseFreeSurvivalTitleText}
                     xAxisLabel="Months Disease Free"
                     yAxisLabel="Disease/Progression-free survival"
                     totalCasesHeader="Number of Cases, Total"
