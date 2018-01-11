@@ -137,13 +137,11 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
 
         return (
 
-            <div>
+            <div className="posRelative">
 
+                <div className="borderedChart">
 
-
-                <div className="borderedChart" style={{position:'relative'}}>
-
-                    <div className="btn-group" style={{position:'absolute', right:10 }} role="group">
+                    <div className="btn-group" style={{position:'absolute', zIndex:10, right:10 }} role="group">
                         <button className={`btn btn-default btn-xs`} onClick={this.downloadSvg}>
                             SVG <i className="fa fa-cloud-download" />
                         </button>
@@ -157,7 +155,6 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
 
                     <VictoryChart containerComponent={<VictoryContainer responsive={false} containerRef={(ref: any) => this.svgContainer = ref} />}
                         height={620} width={1150} padding={{ top: 20, bottom: 50, left: 60, right: 300 }} theme={VictoryTheme.material}>
-                        <VictoryLabel x={50} y={15} text={this.props.title} style={{ fontSize: 18, fontFamily: "inherit" }} />
                         <VictoryAxis style={{ ticks: { size: 8 }, tickLabels: { padding: 2 }, axisLabel: { padding: 35 }, grid: { opacity: 0 } }}
                             crossAxis={false} tickCount={11} label={this.props.xAxisLabel} />
                         <VictoryAxis label={this.props.yAxisLabel} dependentAxis={true} tickFormat={(t: any) => `${t}%`} tickCount={11}
@@ -183,6 +180,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                 </div>
                 {this.tooltipModel &&
                     <Popover arrowOffsetTop={48} positionLeft={this.tooltipModel.x + 15}
+                             { ...{container:this} }
                         positionTop={this.tooltipModel.y - 60}
                         onMouseEnter={this.tooltipMouseEnter} onMouseLeave={this.tooltipMouseLeave}>
                         <div className={styles.Tooltip}>

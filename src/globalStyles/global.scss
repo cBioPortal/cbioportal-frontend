@@ -13,6 +13,10 @@ button:active, button:focus, div:focus, div:active {
   outline: none !important;
 }
 
+.posRelative {
+  position:relative;
+}
+
 /* importants are necessary for override of legacy style */
 .btn-default {
   background-image: linear-gradient(to bottom,#fff 0,#eee 100%) !important;
