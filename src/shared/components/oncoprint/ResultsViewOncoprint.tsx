@@ -836,7 +836,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                     divId={this.props.divId}
                     width={1050}
                     suppressRendering={this.clinicalTracks.isPending || this.geneticTracks.isPending || this.heatmapTracks.isPending}
-                    hiddenIds={!this.showUnalteredColumns ? this.unalteredKeys.result : []}
+                    hiddenIds={!this.showUnalteredColumns ? this.unalteredKeys.result : undefined}
 
                     horzZoomToFitIds={this.horzZoomToFitIds}
                     distinguishMutationType={this.distinguishMutationType}
