@@ -1,6 +1,6 @@
 import {
     IOncoprintProps, default as Oncoprint, GeneticTrackSpec, HeatmapTrackSpec,
-    ClinicalTrackSpec, HeatmapTrackDatum
+    ClinicalTrackSpec, HeatmapTrackDatum, CLINICAL_TRACK_GROUP_INDEX, GENETIC_TRACK_GROUP_INDEX
 } from "./Oncoprint";
 import OncoprintJS, {TrackId, SortConfig} from "oncoprintjs";
 import {ObservableMap} from "mobx";
@@ -382,7 +382,7 @@ function transitionGeneticTrack(
         const geneticTrackParams = {
             rule_set_params: getGeneticTrackRuleSetParams(nextProps.distinguishMutationType, nextProps.distinguishDrivers),
             label: nextSpec.label,
-            target_group: 1,
+            target_group: GENETIC_TRACK_GROUP_INDEX,
             sortCmpFn: getGeneticTrackSortComparator(sortByMutationType(nextProps), sortByDrivers(nextProps)),
             description: nextSpec.oql,
             data_id_key: "uid",
@@ -462,7 +462,7 @@ function transitionClinicalTrack(
             //track_info: "\u23f3",
             sortCmpFn: getClinicalTrackSortComparator(nextSpec),
             init_sort_direction: 0 as 0,
-            target_group: 0,
+            target_group: CLINICAL_TRACK_GROUP_INDEX,
             onSortDirectionChange: nextProps.onTrackSortDirectionChange
         };
         trackSpecKeyToTrackId[nextSpec.key] = oncoprint.addTracks([clinicalTrackParams])[0];
