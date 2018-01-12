@@ -32,10 +32,21 @@ export interface IAppConfig {
     skinRightNavWhatsNewBlurb?: string;
     userEmailAddress?: string;
     querySetsOfGenes?: {"id": string, "genes":string[]}[];
+    // labels to be displayed in oncoprint "Mutation color" menu for custom annotation of driver and passenger mutations in the oncoprint.
+    // Set any of these properties to enable the respective menu options in oncoprint:
     oncoprintCustomDriverAnnotationBinaryMenuLabel?:string;
     oncoprintCustomDriverAnnotationTiersMenuLabel?:string;
-    oncoprintCustomDriverAnnotationDefault?:string;
-    oncoprintCustomDriverTiersAnnotationDefault?:string;
+    // set this to false to disable the automatic selection of the custom driver/passenger mutations annotation (binary) in the oncoprint
+    // when custom annotation data is present.
+    oncoprintCustomDriverAnnotationDefault?:boolean;
+    // set this to false to disable the automatic selection of the custom tiers in the oncoprint when custom annotation data is present. By default
+    // this property is true.
+    oncoprintCustomDriverTiersAnnotationDefault?:boolean;
+    // OncoKB and Hotspots are automatically selected as annotation source. If you want to disable them, set the following property to "disable". If you
+    // want them to be selected only if there are no custom annotation driver and passenger mutations, type "custom".
+    oncoprintOncoKbHotspotsDefault?:"disable"|"custom";
+    // Select hide VUS by default
+    oncoprintHideVUSDefault?:boolean;
 }
 
 export type PriorityStudies = {
