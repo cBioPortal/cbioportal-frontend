@@ -72,19 +72,26 @@ function transitionHorzZoomToFit(
     }
 }
 
-function numTracksWhoseDataChanged(nextTracks:{key:string, data:any}[], prevTracks:{key:string, data:any}[]) {
+export function numTracksWhoseDataChanged(nextTracks:{key:string, data:any}[], prevTracks:{key:string, data:any}[]) {
     let ret = 0;
     const prevTracksMap = _.keyBy(prevTracks, x=>x.key);
+    const tracksInBothPrevAndNext:{[key:string]:boolean} = {};
+    let numTracksAdded = 0;
+    let numTracksInBothPrevAndNext = 0;
+    let numTracksDataChanged = 0;
     for (const nextTrack of nextTracks) {
         const prevTrack = prevTracksMap[nextTrack.key];
-        if (!prevTrack || (prevTrack.data !== nextTrack.data)) {
-            ret += 1;
+        if (!prevTrack) {
+            numTracksAdded += 1;
         } else {
-            delete prevTracksMap[nextTrack.key];
+            numTracksInBothPrevAndNext += 1;
+            if (prevTrack.data !== nextTrack.data) {
+                numTracksDataChanged += 1;
+            }
         }
     }
-    ret += Object.keys(prevTracksMap).length;
-    return ret;
+    const numTracksDeleted = prevTracks.length - numTracksInBothPrevAndNext;
+    return numTracksAdded + numTracksDeleted + numTracksDataChanged;
 }
 
 function differentTracksOrChangedData(nextTracks:{key:string, data:any}[], prevTracks:{key:string, data:any}[]) {
