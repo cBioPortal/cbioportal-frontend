@@ -271,6 +271,10 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                 this.props.handlers.onSelectHidePutativePassengers &&
                 this.props.handlers.onSelectHidePutativePassengers(!this.props.state.hidePutativePassengers);
                 break;
+            case EVENT_KEY.customDriverBinaryAnnotation:
+                this.props.handlers.onSelectCustomDriverAnnotationBinary &&
+                this.props.handlers.onSelectCustomDriverAnnotationBinary(!this.props.state.annotateCustomDriverBinary);
+                break;
         }
     }
 
@@ -645,23 +649,23 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                                         value={EVENT_KEY.customDriverBinaryAnnotation}
                                         onClick={this.onInputClick}
                                     /> {this.props.state.customDriverAnnotationBinaryMenuLabel}
-                                    <img src="images/driver.png" alt="driver filter" style={{height:"15px", width:"15px", cursor:"pointer"}}/>
+                                    <img src="images/driver.png" alt="driver filter" style={{height:"15px", width:"15px", cursor:"pointer", marginLeft:"5px"}}/>
                                 </label></div>
                             )}
                             {!!this.props.state.customDriverAnnotationTiersMenuLabel && (
                                 <span>
                                     <span className="caret"/>&nbsp;&nbsp;
                                     <span>{this.props.state.customDriverAnnotationTiersMenuLabel}</span>&nbsp;
-                                    <img src="images/driver_tiers.png" alt="driver tiers filter" style={{height:"15px", width:"15px", cursor:"pointer"}}/>
+                                    <img src="images/driver_tiers.png" alt="driver tiers filter" style={{height:"15px", width:"15px", cursor:"pointer", marginLeft:"5px"}}/>
                                     <div style={{marginLeft:"30px"}}>
-                                        {(this.props.state.customDriverAnnotationTiers || []).map((tierLabel, index)=>(
+                                        {(this.props.state.customDriverAnnotationTiers || []).map((tier)=>(
                                             <div className="checkbox"><label>
                                                 <input
                                                     type="checkbox"
-                                                    value={`driver_tiers_filter_${index}`}
-                                                    checked={!!(this.props.state.selectedCustomDriverAnnotationTiers && this.props.state.selectedCustomDriverAnnotationTiers.get(`driver_tiers_filter_${index}`))}
+                                                    value={tier}
+                                                    checked={!!(this.props.state.selectedCustomDriverAnnotationTiers && this.props.state.selectedCustomDriverAnnotationTiers.get(tier))}
                                                     onClick={this.onCustomDriverTierCheckboxClick}
-                                                /> {tierLabel}
+                                                /> {tier}
                                             </label></div>
                                         ))
                                         }
