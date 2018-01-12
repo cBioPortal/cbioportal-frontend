@@ -79,6 +79,7 @@ function numTracksWhoseDataChanged(nextTracks:{key:string, data:any}[], prevTrac
         const prevTrack = prevTracksMap[nextTrack.key];
         if (!prevTrack || (prevTrack.data !== nextTrack.data)) {
             ret += 1;
+        } else {
             delete prevTracksMap[nextTrack.key];
         }
     }
@@ -415,13 +416,15 @@ function transitionGeneticTrack(
             oncoprint.setTrackInfo(trackId, nextSpec.info);
         }
 
-        // update ruleset
-        if (typeof trackIdForRuleSetSharing.genetic !== "undefined") {
-            // if theres a track to share, share its ruleset
-            oncoprint.shareRuleSet(trackIdForRuleSetSharing.genetic, trackId);
-        } else {
-            // otherwise, update ruleset
-            oncoprint.setRuleSet(trackId, getGeneticTrackRuleSetParams(nextProps.distinguishMutationType, nextProps.distinguishDrivers));
+        // update ruleset if its changed
+        if (hasGeneticTrackRuleSetChanged(nextProps, prevProps)) {
+            if (typeof trackIdForRuleSetSharing.genetic !== "undefined") {
+                // if theres a track to share, share its ruleset
+                oncoprint.shareRuleSet(trackIdForRuleSetSharing.genetic, trackId);
+            } else {
+                // otherwise, update ruleset
+                oncoprint.setRuleSet(trackId, getGeneticTrackRuleSetParams(nextProps.distinguishMutationType, nextProps.distinguishDrivers));
+            }
         }
         // either way, use this one now
         trackIdForRuleSetSharing.genetic = trackId;
