@@ -166,7 +166,7 @@ describe('patient page', function(){
 
         browser.waitUntil( function(){
             let el = $('.tab-content table td span');
-            return (browser.elementIdText(el.value.ELEMENT).value === 'PPP2R1A')
+            return (el.value && browser.elementIdText(el.value.ELEMENT).value === 'PPP2R1A')
         });
 
         // find oncokb image
