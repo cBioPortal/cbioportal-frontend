@@ -1467,7 +1467,7 @@ export class QueryStore
 		if (historyUrl != newUrl)
 			window.history.pushState(null, window.document.title, historyUrl);*/
 
-		formSubmit(urlParams.pathname, urlParams.query);
+		formSubmit(urlParams.pathname, urlParams.query, undefined, "smart");
 	}
 
 	@action openSummary() {
