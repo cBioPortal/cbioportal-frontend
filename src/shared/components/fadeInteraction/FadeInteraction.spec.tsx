@@ -7,6 +7,9 @@ import FadeInteraction from './FadeInteraction';
 
 describe('FadeInteraction',function(){
 
+
+
+
     it('showByDefault prop sets initialShow state properly', function(){
         const instance = shallow(<FadeInteraction showByDefault={true} />).instance() as FadeInteraction;
         assert.isTrue(instance.initialShow, 'showByDefault results in initialshow=true');
@@ -29,5 +32,14 @@ describe('FadeInteraction',function(){
         assert.isFalse(instance.initialShow, 'calling onMouseLeave sets initialShow to false');
         assert.isFalse(instance.mouseInside, 'calling onMouseLeave sets mouseIndie to false');
     });
-//
+
+    it('componentWillUpdate updates show property', function(){
+        const wrapper =  shallow(<FadeInteraction show={true} showByDefault={true} />);
+        const instance = wrapper.instance() as FadeInteraction;
+        assert.isTrue(instance.initialShow);
+        wrapper.setProps({ show:false });
+        assert.isFalse(instance.initialShow);
+    });
+
+
 });

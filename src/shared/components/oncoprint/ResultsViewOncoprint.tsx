@@ -112,6 +112,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     @observable horzZoom:number = 0.5;
 
+    @observable mouseInsideBounds:boolean = false;
+
     private heatmapGeneInputValueUpdater:IReactionDisposer;
 
     public selectedClinicalAttributeIds = observable.shallowMap<boolean>();
@@ -158,6 +160,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         this.heatmapGeneInputValueUpdater = onMobxPromise(this.props.store.genes, (genes:Gene[])=>{
             this.heatmapGeneInputValue = genes.map(g=>g.hugoGeneSymbol).join(" ");
         }, Number.POSITIVE_INFINITY);
+
+        this.onMouseEnter = this.onMouseEnter.bind(this);
+        this.onMouseLeave = this.onMouseLeave.bind(this);
 
         this.urlParamsReaction = reaction(
             ()=>[
@@ -308,6 +313,14 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 }
             },
         });
+    }
+
+    onMouseEnter(){
+        this.mouseInsideBounds = true;
+    }
+
+    onMouseLeave(){
+        this.mouseInsideBounds = false;
     }
 
     componentWillUnmount() {
@@ -823,11 +836,14 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         const isLoading = (this.clinicalTracks.isPending || this.geneticTracks.isPending || this.heatmapTracks.isPending);
 
         return (
-            <div className="cbioportal-frontend">
+            <div className="cbioportal-frontend"
+                 onMouseEnter={this.onMouseEnter}
+                 onMouseLeave={this.onMouseLeave}
+            >
 
                 {this.caseSetInfo}
 
-                <FadeInteraction showByDefault={true}>
+                <FadeInteraction showByDefault={true} show={this.mouseInsideBounds}>
                     <OncoprintControls
                         handlers={this.controlsHandlers}
                         state={this.controlsState}
