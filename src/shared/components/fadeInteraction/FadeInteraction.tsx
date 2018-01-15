@@ -1,11 +1,12 @@
 import * as React from "react";
 import {observer} from "mobx-react";
-import {action, computed, observable} from "mobx";
+import {action, computed, observable, reaction} from "mobx";
 
 export interface IFadeInteractionProps {
     fadeInSeconds?: number;
     fadeOutSeconds?: number;
     showByDefault?: boolean;
+    show?: boolean;
 }
 
 @observer
@@ -28,6 +29,12 @@ export default class FadeInteraction extends React.Component<IFadeInteractionPro
     @observable focused = false;
     @observable mouseInside = false;
     public initialShow = false;
+
+    componentWillUpdate(nextProps:IFadeInteractionProps){
+        if (nextProps.show !== this.props.show) {
+            this.initialShow = false;
+        }
+    }
 
     @computed get fadeInStyle() {
         return {
@@ -57,8 +64,8 @@ export default class FadeInteraction extends React.Component<IFadeInteractionPro
         }
     }
 
-    get show() {
-        return this.focused || this.mouseInside || this.initialShow;
+    @computed get show() {
+        return this.props.show || this.focused || this.mouseInside || this.initialShow;
     }
 
     private onFocus() {
@@ -82,6 +89,7 @@ export default class FadeInteraction extends React.Component<IFadeInteractionPro
     }
 
     render() {
+
         return (
             <div
                 style={this.style}
