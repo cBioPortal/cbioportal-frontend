@@ -38,7 +38,7 @@ export class CopyDownloadControls extends React.Component<ICopyDownloadControlsP
     private _modalCopyButton: HTMLButtonElement|null = null;
     private _modalCopyButtonContainer: HTMLElement|null = null;
 
-    private _downloadText = "";
+    private _copyText: string|null = null;
 
     public static defaultProps:ICopyDownloadControlsProps = {
         className: "",
@@ -63,16 +63,14 @@ export class CopyDownloadControls extends React.Component<ICopyDownloadControlsP
         }
     }
 
-    public bindCopyButton(button: HTMLButtonElement|null, cotainer?: HTMLElement|null)
+    public bindCopyButton(button: HTMLButtonElement|null, container?: HTMLElement|null)
     {
         if (button) {
             new Clipboard(button, {
-                text: function() {
-                    return this.getText();
-                }.bind(this),
+                text: this.getText.bind(this),
                 // we need to pass a container to the clipboard when we use it in a Modal element
                 // see https://stackoverflow.com/questions/38398070/bootstrap-modal-does-not-work-with-clipboard-js-on-firefox
-                container: cotainer
+                container: container
             });
         }
     }
@@ -97,6 +95,7 @@ export class CopyDownloadControls extends React.Component<ICopyDownloadControlsP
                                 className="btn btn-sm btn-default"
                                 data-clipboard-text="NA"
                                 id="copyButton"
+                                onClick={this.handleCopy}
                             >
                                 <i className='fa fa-clipboard'/>
                             </button>
@@ -105,7 +104,7 @@ export class CopyDownloadControls extends React.Component<ICopyDownloadControlsP
 
                     <If condition={this.props.showDownload}>
                         <DefaultTooltip
-                            overlay={<span>Download CSV</span>}
+                            overlay={<span>Download TSV</span>}
                             mouseLeaveDelay={0}
                             mouseEnterDelay={0.5}
                             placement="top"
@@ -117,97 +116,154 @@ export class CopyDownloadControls extends React.Component<ICopyDownloadControlsP
                         </DefaultTooltip>
                     </If>
                 </ButtonGroup>
-                <Modal
-                    show={this.downloadingData}
-                    onHide={() => undefined}
-                    bsSize="sm"
-                    className={`${copyDownloadStyles["centered-modal-dialog"]}`}
-                >
-                    <Modal.Body>
-                        <ThreeBounce style={{ display:'inline-block', marginRight:10 }} />
-                        <span>Downloading Table Data...</span>
-                    </Modal.Body>
-                </Modal>
-                <Modal
-                    show={this.copyingData}
-                    onHide={() => undefined}
-                    onEntered={() => {
-                        this.bindCopyButton(this._modalCopyButton, this._modalCopyButtonContainer);
-                    }}
-                    bsSize="sm"
-                    className={`${copyDownloadStyles["centered-modal-dialog"]}`}
-                >
-                    <Modal.Header>
-                        {this.showErrorMessage ? "Download Error!" : "Download Complete!"}
-                    </Modal.Header>
-                    <Modal.Body>
-                        {this.showErrorMessage && "An error occurred while downloading the data. "}
-                        Please click on Copy to copy the data to clipboard.
-                    </Modal.Body>
-                    <Modal.Footer>
-                        <span
-                            ref={(el: HTMLElement|null) => {this._modalCopyButtonContainer = el;}}
-                        >
-                            <button
-                                ref={(el:HTMLButtonElement) => {this._modalCopyButton = el;}}
-                                onClick={this.handleModalClose}
-                                className="btn btn-primary"
-                                data-clipboard-text="NA"
-                                id="modalCopyButton"
-                            >
-                                Copy
-                            </button>
-                        </span>
-                    </Modal.Footer>
-                </Modal>
-                <Modal
-                    show={!this.copyingData && this.showErrorMessage}
-                    onHide={this.handleModalClose}
-                    bsSize="sm"
-                    className={`${copyDownloadStyles["centered-modal-dialog"]}`}
-                >
-                    <Modal.Header>
-                        Download Error!
-                    </Modal.Header>
-                    <Modal.Body>
-                        An error occurred while downloading the data. Downloaded file may contain incomplete data.
-                    </Modal.Body>
-                    <Modal.Footer>
-                        <Button
-                            onClick={this.handleModalClose}
-                            className="btn btn-primary"
-                        >
-                            Close
-                        </Button>
-                    </Modal.Footer>
-                </Modal>
+                {this.downloadIndicatorModal()}
+                {this.copyIndicatorModal()}
+                {this.downloadErrorModal()}
             </span>
         );
     }
 
-    public getText()
+    public downloadIndicatorModal(): JSX.Element
     {
-        // if the download text is already there just return it
-        // else initiate an async download process
-        if (!this._downloadText) {
-            this.handleCopy();
-        }
+        return (
+            <Modal
+                show={this.downloadingData}
+                onHide={() => undefined}
+                bsSize="sm"
+                className={`${copyDownloadStyles["centered-modal-dialog"]}`}
+            >
+                <Modal.Body>
+                    <ThreeBounce style={{ display:'inline-block', marginRight:10 }} />
+                    <span>Downloading Table Data...</span>
+                </Modal.Body>
+            </Modal>
+        );
+    }
 
-        return this._downloadText;
+    public copyIndicatorModal(): JSX.Element
+    {
+        return (
+            <Modal
+                show={this.copyingData}
+                onHide={() => undefined}
+                onEntered={() => {this.bindCopyButton(this._modalCopyButton, this._modalCopyButtonContainer);}}
+                bsSize="sm"
+                className={`${copyDownloadStyles["centered-modal-dialog"]}`}
+            >
+                <Modal.Header>
+                    {this.showErrorMessage ? "Copy Error!" : "Copy Ready!"}
+                </Modal.Header>
+                <Modal.Body>
+                    {this.showErrorMessage && "An error occurred while copying the data. Data may be incomplete."}
+                    Please click on Copy to copy the data to clipboard.
+                </Modal.Body>
+                <Modal.Footer>
+                    <span
+                        ref={(el: HTMLElement|null) => {this._modalCopyButtonContainer = el;}}
+                    >
+                        <button
+                            ref={(el:HTMLButtonElement) => {this._modalCopyButton = el;}}
+                            onClick={this.handleModalClose}
+                            className="btn btn-primary"
+                            data-clipboard-text="NA"
+                            id="modalCopyButton"
+                        >
+                            Copy
+                        </button>
+                    </span>
+                </Modal.Footer>
+            </Modal>
+        );
+    }
+
+    public downloadErrorModal(): JSX.Element
+    {
+        return (
+            <Modal
+                show={!this.copyingData && this.showErrorMessage}
+                onHide={this.handleModalClose}
+                bsSize="sm"
+                className={`${copyDownloadStyles["centered-modal-dialog"]}`}
+            >
+                <Modal.Header>
+                    Download Error!
+                </Modal.Header>
+                <Modal.Body>
+                    An error occurred while downloading the data. Downloaded file may contain incomplete data.
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button
+                        onClick={this.handleModalClose}
+                        className="btn btn-primary"
+                    >
+                        Close
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+        );
+    }
+
+    public getText(): string
+    {
+        return this._copyText || "";
     }
 
     public handleCopy()
     {
+        // async update of the copy text, if the copy text ends up to be different than the previous one,
+        // we show a modal to force a second copy action.
+        setTimeout(this.initCopyProcess(), 1);
+    }
+
+    public initCopyProcess()
+    {
+        // this makes sure that copy data and the download data are the same/consistent
         this.initDownloadProcess(text => {
-            this.copyingData = true;
+            // do not update if the copy text is not updated since the last copy request
+            // (also do not update the observable "copyingData" otherwise prompting unnecessary copy modal)
+            if (this._copyText !== text) {
+                this._copyText = text;
+                this.copyingData = true;
+            }
         });
     }
 
     public handleDownload()
     {
         this.initDownloadProcess(text => {
-            fileDownload(text, this.props.downloadFilename);
+            // save the text so that we won't prompt it again for copy action
+            this._copyText = text;
+
+            // init file download
+            this.download(text);
         });
+    }
+
+    public initDownloadProcess(callback: (text: string) => void)
+    {
+        if (this.props.downloadData) {
+            // mark downloading data true, so that we can show a loading message
+            this.downloadingData = true;
+
+            this.props.downloadData().then(copyDownloadData => {
+                if (copyDownloadData.status === "complete") {
+                    // promise is resolved, we need to hide the download indicator
+                    this.downloadingData = false;
+                }
+                else {
+                    this.triggerDownloadError();
+                }
+
+                callback(copyDownloadData.text);
+            }).catch(() => {
+                this.triggerDownloadError();
+            });
+        }
+    }
+
+    public download(text: string)
+    {
+        fileDownload(text, this.props.downloadFilename);
     }
 
     @action
@@ -225,28 +281,5 @@ export class CopyDownloadControls extends React.Component<ICopyDownloadControlsP
         // promise is rejected: we need to hide the download indicator and show an error message
         this.downloadingData = false;
         this.showErrorMessage = true;
-    }
-
-    private initDownloadProcess(callback: (text: string) => void)
-    {
-        if (this.props.downloadData) {
-            // mark downloading data true, so that we can show a loading message
-            this.downloadingData = true;
-
-            this.props.downloadData().then(copyDownloadData => {
-                // save the downloaded text so that we won't download it again
-                this._downloadText = copyDownloadData.text;
-
-                if (copyDownloadData.status === "complete") {
-                    // promise is resolved, we need to hide the download indicator
-                    this.downloadingData = false;
-                }
-                else {
-                    this.triggerDownloadError();
-                }
-
-                callback(this._downloadText);
-            });
-        }
     }
 }
