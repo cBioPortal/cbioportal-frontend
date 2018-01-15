@@ -775,7 +775,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                         fontSize:"11px",
                         display:"inline-block",
                         color:"white",
-                        backgroundColor:"#2986e2",
                         marginLeft:"5px"
                     }}
                     onClick={this.toggleColumnMode}
