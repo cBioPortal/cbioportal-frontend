@@ -13,7 +13,7 @@ export interface ISurvivalTabProps {
 export default class SurvivalTab extends React.Component<ISurvivalTabProps, {}> {
 
     private overallSurvivalTitleText = 'Overall Survival Kaplan-Meier Estimate';
-    private diseaseFreeSurvivalTitleText = 'Disease Free Survival Kaplan-Meier Estimate';
+    private diseaseFreeSurvivalTitleText = 'Disease/Progression-free Kaplan-Meier Estimate';
 
     public render() {
 
@@ -63,14 +63,14 @@ export default class SurvivalTab extends React.Component<ISurvivalTabProps, {}> 
                     <SurvivalChart alteredPatientSurvivals={this.props.store.diseaseFreeAlteredPatientSurvivals.result}
                     unalteredPatientSurvivals={this.props.store.diseaseFreeUnalteredPatientSurvivals.result}
                     title={this.diseaseFreeSurvivalTitleText}
-                    xAxisLabel="Months Disease Free"
-                    yAxisLabel="Disease/Progression-free survival"
+                    xAxisLabel="Months Disease/Progression-free"
+                    yAxisLabel="Disease/Progression-free Survival"
                     totalCasesHeader="Number of Cases, Total"
-                    statusCasesHeader="Number of Cases, Relapsed"
-                    medianMonthsHeader="Median Months Disease Free"
-                    yLabelTooltip="Disease free estimate"
-                    xLabelWithEventTooltip="Time of relapse"
-                    xLabelWithoutEventTooltip="Time of last observation"
+                    statusCasesHeader="Number of Cases, Relapsed/Progressed"
+                    medianMonthsHeader="Median Months Disease-free"
+                    yLabelTooltip="Disease-free Estimate"
+                    xLabelWithEventTooltip="Time of Relapse"
+                    xLabelWithoutEventTooltip="Time of Last Observation"
                     fileName="Disease_Free_Survival" />
                 </div>
             );
