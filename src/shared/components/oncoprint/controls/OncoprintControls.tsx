@@ -814,9 +814,11 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                         border:'none',
                         padding:0,
                         marginTop:0,
-                        marginBottom:0
+                        marginBottom:0,
+                        marginRight:2
                     }}
                 />
+                <div>%</div>
 
                 <DefaultTooltip
                     overlay={<span>Zoom in to oncoprint.</span>}
