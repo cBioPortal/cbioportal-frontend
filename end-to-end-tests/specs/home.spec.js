@@ -63,7 +63,7 @@ describe('homepage', function() {
     });
 
 
-    describe.skip('select all/deselect all functionality in study selector',function(){
+    describe('select all/deselect all functionality in study selector',function(){
 
         beforeEach(function(){
             browser.url(CBIOPORTAL_URL);
@@ -73,13 +73,7 @@ describe('homepage', function() {
 
 
         function getVisibleCheckboxes(){
-            var checkboxes = browser.elements('[data-test="studyList"] input[type=checkbox]');
-
-            checkboxes.waitForExist(10000);
-
-            return checkboxes.value.filter(function(el){
-                return el.isVisible();
-            });
+            return browser.elements('[data-test="StudySelect"] input[type=checkbox]').value;
         }
 
         it('clicking select all studies checkbox selects all studies',function(){
@@ -92,7 +86,7 @@ describe('homepage', function() {
 
             var allStudies = visibleCheckboxes.length;
 
-            assert.equal(allStudies, 174, 'we have 174 visible checkboxes');
+            assert.equal(allStudies, 173, 'we have 173 visible checkboxes');
             assert.equal(selectedStudies.length, 0, 'no studies selected');
 
             browser.element('[data-test=selectAllStudies]').click();
@@ -170,10 +164,10 @@ describe('patient page', function(){
 
         browser.url(`${CBIOPORTAL_URL}/case.do#/patient?studyId=ucec_tcga_pub&caseId=TCGA-BK-A0CC`);
 
-        // wait for mutation to exist
-        $('span*=PPP2R1A').waitForExist(60000);
-
-        browser.pause(500);
+        browser.waitUntil( function(){
+            let el = $('.tab-content table td span');
+            return (el.value && browser.elementIdText(el.value.ELEMENT).value === 'PPP2R1A')
+        });
 
         // find oncokb image
         var oncokbIndicator = $('[data-test="oncogenic-icon-image"]');
@@ -186,7 +180,7 @@ describe('patient page', function(){
         var oncokbCard = $('[data-test="oncokb-card"]');
 
         oncokbCard.waitForExist(30000);
-        
+
         assert.equal(browser.getText('.tip-header').toLowerCase(), 'PPP2R1A S256F in Uterine Serous Carcinoma/Uterine Papillary Serous Carcinoma'.toLowerCase());
 
     });
