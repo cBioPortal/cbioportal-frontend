@@ -236,6 +236,43 @@ export async function fetchSamples(sampleIds:MobxPromise<string[]>,
     }
 }
 
+export async function fetchGermlineConsentedSamples(studyIds: MobxPromise<string[]>,
+                                                    studiesWithGermlineConsentedSamples?: string[],
+                                                    client: CBioPortalAPI = defaultClient)
+{
+    // no valid config param => feature disabled
+    if (!studiesWithGermlineConsentedSamples || !studyIds.result) {
+        return [];
+    }
+
+    // query API only for the studies provided with the config param
+
+    const studies: string[] = studyIds.result.filter(
+        studyId => _.find(studiesWithGermlineConsentedSamples, (element) => element === studyId));
+
+    if (studies.length > 0)
+    {
+        const ids: string[][] = await Promise.all(studies.map(studyId => {
+            return client.getAllSampleIdsInSampleListUsingGET({
+                sampleListId: getGermlineSampleListId(studyId)
+            });
+        }));
+
+        return _.flatten(ids.map((sampleIds: string[], index: number) => {
+            const studyId = studies[index];
+            return sampleIds.map(sampleId => ({sampleId, studyId}));
+        }));
+    }
+    else {
+        return [];
+    }
+}
+
+export function getGermlineSampleListId(studyId:string): string
+{
+    return `${studyId}_germline`;
+}
+
 export function findSampleIdsWithCancerTypeClinicalData(clinicalDataForSamples:MobxPromise<ClinicalData[]>): {[uniqueSampleKey: string]: boolean}
 {
     const samplesWithClinicalData: {[sampleId: string]: boolean} = {};
