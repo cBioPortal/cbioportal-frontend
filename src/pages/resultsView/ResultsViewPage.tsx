@@ -100,10 +100,6 @@ type MutationsTabInitProps = {
 
 type OncoprintTabInitProps = {
     divId: string;
-    customDriverMetadata:{
-        hasDriverAnnotations: boolean,
-        customDriverTiers: string[]
-    }
 };
 
 @inject('routing')
@@ -189,7 +185,6 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                         divId={props.divId}
                         store={this.resultsViewPageStore}
                         routing={this.props.routing}
-                        customDriverMetadata={props.customDriverMetadata}
                         addOnBecomeVisibleListener={addOnBecomeVisibleListener}
                     />
                 );

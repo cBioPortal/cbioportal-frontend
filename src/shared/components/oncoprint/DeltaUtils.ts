@@ -1,6 +1,6 @@
 import {
     IOncoprintProps, default as Oncoprint, GeneticTrackSpec, HeatmapTrackSpec,
-    ClinicalTrackSpec, HeatmapTrackDatum
+    ClinicalTrackSpec, HeatmapTrackDatum, CLINICAL_TRACK_GROUP_INDEX, GENETIC_TRACK_GROUP_INDEX
 } from "./Oncoprint";
 import OncoprintJS, {TrackId, SortConfig} from "oncoprintjs";
 import {ObservableMap} from "mobx";
@@ -72,18 +72,26 @@ function transitionHorzZoomToFit(
     }
 }
 
-function numTracksWhoseDataChanged(nextTracks:{key:string, data:any}[], prevTracks:{key:string, data:any}[]) {
+export function numTracksWhoseDataChanged(nextTracks:{key:string, data:any}[], prevTracks:{key:string, data:any}[]) {
     let ret = 0;
     const prevTracksMap = _.keyBy(prevTracks, x=>x.key);
+    const tracksInBothPrevAndNext:{[key:string]:boolean} = {};
+    let numTracksAdded = 0;
+    let numTracksInBothPrevAndNext = 0;
+    let numTracksDataChanged = 0;
     for (const nextTrack of nextTracks) {
         const prevTrack = prevTracksMap[nextTrack.key];
-        if (!prevTrack || (prevTrack.data !== nextTrack.data)) {
-            ret += 1;
-            delete prevTracksMap[nextTrack.key];
+        if (!prevTrack) {
+            numTracksAdded += 1;
+        } else {
+            numTracksInBothPrevAndNext += 1;
+            if (prevTrack.data !== nextTrack.data) {
+                numTracksDataChanged += 1;
+            }
         }
     }
-    ret += Object.keys(prevTracksMap).length;
-    return ret;
+    const numTracksDeleted = prevTracks.length - numTracksInBothPrevAndNext;
+    return numTracksAdded + numTracksDeleted + numTracksDataChanged;
 }
 
 function differentTracksOrChangedData(nextTracks:{key:string, data:any}[], prevTracks:{key:string, data:any}[]) {
@@ -381,12 +389,12 @@ function transitionGeneticTrack(
         const geneticTrackParams = {
             rule_set_params: getGeneticTrackRuleSetParams(nextProps.distinguishMutationType, nextProps.distinguishDrivers),
             label: nextSpec.label,
-            target_group: 1,
+            target_group: GENETIC_TRACK_GROUP_INDEX,
             sortCmpFn: getGeneticTrackSortComparator(sortByMutationType(nextProps), sortByDrivers(nextProps)),
             description: nextSpec.oql,
             data_id_key: "uid",
             data: nextSpec.data,
-            tooltipFn: makeGeneticTrackTooltip(nextProps.showBinaryCustomDriverAnnotation, nextProps.showTiersCustomDriverAnnotation, true),
+            tooltipFn: makeGeneticTrackTooltip(true),
             track_info: nextSpec.info
         };
         const newTrackId = oncoprint.addTracks([geneticTrackParams])[0];
@@ -409,19 +417,20 @@ function transitionGeneticTrack(
             // shallow equality check
             oncoprint.setTrackData(trackId, nextSpec.data, "uid");
         }
-        // set tooltip no matter what, its cheap
-        oncoprint.setTrackTooltipFn(trackId, makeGeneticTrackTooltip(nextProps.showBinaryCustomDriverAnnotation, nextProps.showTiersCustomDriverAnnotation, true));
+
         if (nextSpec.info !== prevSpec.info) {
             oncoprint.setTrackInfo(trackId, nextSpec.info);
         }
 
-        // update ruleset
-        if (typeof trackIdForRuleSetSharing.genetic !== "undefined") {
-            // if theres a track to share, share its ruleset
-            oncoprint.shareRuleSet(trackIdForRuleSetSharing.genetic, trackId);
-        } else {
-            // otherwise, update ruleset
-            oncoprint.setRuleSet(trackId, getGeneticTrackRuleSetParams(nextProps.distinguishMutationType, nextProps.distinguishDrivers));
+        // update ruleset if its changed
+        if (hasGeneticTrackRuleSetChanged(nextProps, prevProps)) {
+            if (typeof trackIdForRuleSetSharing.genetic !== "undefined") {
+                // if theres a track to share, share its ruleset
+                oncoprint.shareRuleSet(trackIdForRuleSetSharing.genetic, trackId);
+            } else {
+                // otherwise, update ruleset
+                oncoprint.setRuleSet(trackId, getGeneticTrackRuleSetParams(nextProps.distinguishMutationType, nextProps.distinguishDrivers));
+            }
         }
         // either way, use this one now
         trackIdForRuleSetSharing.genetic = trackId;
@@ -459,7 +468,7 @@ function transitionClinicalTrack(
             //track_info: "\u23f3",
             sortCmpFn: getClinicalTrackSortComparator(nextSpec),
             init_sort_direction: 0 as 0,
-            target_group: 0,
+            target_group: CLINICAL_TRACK_GROUP_INDEX,
             onSortDirectionChange: nextProps.onTrackSortDirectionChange
         };
         trackSpecKeyToTrackId[nextSpec.key] = oncoprint.addTracks([clinicalTrackParams])[0];
