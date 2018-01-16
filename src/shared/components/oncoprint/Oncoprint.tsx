@@ -88,6 +88,9 @@ export type HeatmapTrackSpec = {
     onRemove:()=>void;
 };
 
+export const GENETIC_TRACK_GROUP_INDEX = 1;
+export const CLINICAL_TRACK_GROUP_INDEX = 0;
+
 export interface IOncoprintProps {
     oncoprintRef?:(oncoprint:OncoprintJS<any>)=>void;
 
@@ -103,9 +106,6 @@ export interface IOncoprintProps {
 
     distinguishMutationType?:boolean;
     distinguishDrivers?:boolean;
-
-    showBinaryCustomDriverAnnotation?:boolean;
-    showTiersCustomDriverAnnotation?:boolean;
 
     sortConfig?:{
         order?:string[]; // overrides below options if present
@@ -161,6 +161,7 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
         if (!this.oncoprint) {
             // instantiate new one
             this.oncoprint = new OncoprintJS(`#${props.divId}`, props.width);
+            this.oncoprint.setTrackGroupLegendOrder([GENETIC_TRACK_GROUP_INDEX, CLINICAL_TRACK_GROUP_INDEX]);
             (window as any).frontendOnc = this.oncoprint;
             if (props.oncoprintRef) {
                 props.oncoprintRef(this.oncoprint);

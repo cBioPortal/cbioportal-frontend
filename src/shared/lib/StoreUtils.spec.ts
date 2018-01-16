@@ -2,7 +2,8 @@ import {
     fetchCosmicData, fetchOncoKbData, makeStudyToCancerTypeMap,
     mergeMutationsIncludingUncalled, generateMutationIdByEvent, generateMutationIdByGeneAndProteinChangeAndEvent,
     fetchCivicGenes, fetchCnaCivicGenes, fetchCivicVariants, findSamplesWithoutCancerTypeClinicalData,
-    fetchSamplesWithoutCancerTypeClinicalData, fetchStudiesForSamplesWithoutCancerTypeClinicalData
+    fetchSamplesWithoutCancerTypeClinicalData, fetchStudiesForSamplesWithoutCancerTypeClinicalData,
+    fetchGermlineConsentedSamples
 } from "./StoreUtils";
 import * as _ from 'lodash';
 import { assert } from 'chai';
@@ -296,6 +297,80 @@ describe('StoreUtils', () => {
                 assert.deepEqual(data, {uniqueSampleKeyToTumorType: {}, indicatorMap: {}});
                 done();
             });
+        });
+    });
+
+    describe('fetchGermlineConsentedSamples', () => {
+        const studyIdsWithoutGermlineData: MobxPromise<string[]> = {
+            result: [
+                "study_with_no_germline_data"
+            ],
+            status: 'complete' as 'complete',
+            isPending: false,
+            isError: false,
+            isComplete: true,
+            error: undefined
+        };
+
+        const studyIdsWithSomeGermlineData: MobxPromise<string[]> = {
+            result: [
+                "study_with_no_germline_data",
+                "mskimpact"
+            ],
+            status: 'complete' as 'complete',
+            isPending: false,
+            isError: false,
+            isComplete: true,
+            error: undefined
+        };
+
+        const studiesWithGermlineConsentedSamples = ["mskimpact"];
+
+
+        it("won't fetch germline consented samples for studies with no germline data", (done) => {
+            const getAllSampleIdsInSampleListStub = sinon.stub();
+            const client = {
+                getAllSampleIdsInSampleListUsingGET: getAllSampleIdsInSampleListStub,
+            };
+
+            fetchGermlineConsentedSamples(studyIdsWithoutGermlineData, studiesWithGermlineConsentedSamples, client as any)
+                .then((data: any) => {
+                    assert.deepEqual(data, []);
+                    assert.isTrue(getAllSampleIdsInSampleListStub.notCalled, "getAllSampleIdsInSample should NOT be called");
+                    done();
+                }).catch(done);
+        });
+
+        it("will fetch germline consented samples for only the studies with germline data", (done) => {
+            const getAllSampleIdsInSampleListStub = sinon.stub();
+            getAllSampleIdsInSampleListStub.returns(Promise.resolve([
+                {
+                    sampleId: "mskimpact_sample_0",
+                    studyId: "mskimpact"
+                },
+                {
+                    sampleId: "mskimpact_sample_1",
+                    studyId: "mskimpact"
+                },
+                {
+                    sampleId: "mskimpact_sample_2",
+                    studyId: "mskimpact"
+                }
+            ]));
+
+            const client = {
+                getAllSampleIdsInSampleListUsingGET: getAllSampleIdsInSampleListStub,
+            };
+
+            fetchGermlineConsentedSamples(studyIdsWithSomeGermlineData, studiesWithGermlineConsentedSamples, client as any)
+                .then((data: any) => {
+                    assert.isTrue(getAllSampleIdsInSampleListStub.calledOnce,
+                        "getAllSampleIdsInSample should be called only once");
+                    assert.isTrue(getAllSampleIdsInSampleListStub.calledWith({sampleListId: "mskimpact_germline"}),
+                        "getAllSampleIdsInSample should be called with the correct sample list id (mskimpact_germline)");
+                    assert.equal(data.length, 3, "getAllSampleIdsInSample should return an array of size 3");
+                    done();
+                }).catch(done);
         });
     });
 
