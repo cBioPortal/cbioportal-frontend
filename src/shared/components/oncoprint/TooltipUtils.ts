@@ -45,17 +45,19 @@ export function makeClinicalTrackTooltip(track:ClinicalTrackSpec, link_id?:boole
         } else {
             const attr_vals = ((d.attr_val_counts && Object.keys(d.attr_val_counts)) || []);
             if (attr_vals.length > 1) {
-                ret += 'values:<br>';
+                ret += track.label+':<br>';
                 for (let i = 0; i < attr_vals.length; i++) {
                     const val = attr_vals[i];
                     ret += '<b>' + val + '</b>: ' + d.attr_val_counts[val] + '<br>';
                 }
             } else if (attr_vals.length === 1) {
-                ret += 'value: <b>' + attr_vals[0] + '</b><br>';
+                ret += track.label+': <b>' + attr_vals[0] + '</b><br>';
             }
         }
+        ret += '<span>'+(d.sample ? "Sample" : "Patient")+": ";
         ret += (link_id ? (d.sample? sampleViewAnchorTag(d.study_id, d.sample) : patientViewAnchorTag(d.study_id, d.patient))
             : (d.sample ? d.sample : d.patient));
+        ret += '</span>';
         return ret;
     };
 }
