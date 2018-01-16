@@ -1,7 +1,8 @@
 import {assert} from "chai";
-import {makeGeneticTrackTooltip} from "./TooltipUtils";
+import {makeClinicalTrackTooltip, makeGeneticTrackTooltip} from "./TooltipUtils";
 import {GeneticTrackDatum} from "./Oncoprint";
 import {AnnotatedExtendedAlteration, AnnotatedMutation} from "../../../pages/resultsView/ResultsViewPageStore";
+import $ from "jquery";
 
 describe("Oncoprint TooltipUtils", ()=>{
     describe("makeGeneticTrackTooltip", ()=>{
@@ -155,6 +156,61 @@ describe("Oncoprint TooltipUtils", ()=>{
                 const tooltipOutput = tooltip(datum as GeneticTrackDatum);
                 assert.equal(tooltipOutput.find("img[src$='driver.png']").length, 0, "should be no binary icons");
                 assert.equal(tooltipOutput.find("img[src$='driver_tiers.png']").length, 0, "should be no tiers icons");
+            });
+        });
+
+        describe("makeClinicalTrackTooltip", ()=>{
+            it("should show the given sample id", ()=>{
+                const trackLabel = "label1234";
+                const trackSpec = {
+                    key: "",
+                    label: trackLabel,
+                    description: "",
+                    data: [],
+                    datatype: "string" as "string"
+                };
+                const tooltip = makeClinicalTrackTooltip(trackSpec, false);
+                const sampleTooltipResult = tooltip({ attr_val_counts: {"a":1}, attr_val:"a", sample:"sampleID" });
+                assert.isTrue(sampleTooltipResult.indexOf("<span>Sample: sampleID</span>") > -1 );
+            });
+            it("should show the given patient id", ()=>{
+                const trackLabel = "label1234";
+                const trackSpec = {
+                    key: "",
+                    label: trackLabel,
+                    description: "",
+                    data: [],
+                    datatype: "string" as "string"
+                };
+                const tooltip = makeClinicalTrackTooltip(trackSpec, false);
+                const patientTooltipResult = tooltip({ attr_val_counts: {"a":1}, attr_val:"a", patient:"patientID" });
+                assert.isTrue(patientTooltipResult.indexOf("<span>Patient: patientID</span>") > -1 );
+            });
+            it("should show the correct output for a single value", ()=>{
+                const trackLabel = "label1234";
+                const trackSpec = {
+                    key: "",
+                    label: trackLabel,
+                    description: "",
+                    data: [],
+                    datatype: "string" as "string"
+                };
+                const tooltip = makeClinicalTrackTooltip(trackSpec, false);
+                const tooltipResult = tooltip({ attr_val_counts: {"a":1}, attr_val:"a", sample:"sampleID" });
+                assert.isTrue(tooltipResult.indexOf("label1234: <b>a</b>") > -1);
+            });
+            it("should show the correct output for multiple values", ()=>{
+                const trackLabel = "label1234";
+                const trackSpec = {
+                    key: "",
+                    label: trackLabel,
+                    description: "",
+                    data: [],
+                    datatype: "string" as "string"
+                };
+                const tooltip = makeClinicalTrackTooltip(trackSpec, false);
+                const tooltipResult = tooltip({ attr_val_counts: {"a":1, "b":3}, attr_val:"a", sample:"sampleID" });
+                assert.isTrue(tooltipResult.indexOf("label1234:<br><b>a</b>: 1<br><b>b</b>: 3") > -1);
             });
         });
     });
