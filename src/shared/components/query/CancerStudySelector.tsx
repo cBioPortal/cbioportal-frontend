@@ -325,23 +325,21 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 
                         <div className="checkbox" style={{marginLeft: 19}}>
                             <If condition={shownStudies.length > 0}>
-                                <Then>
-                                    <label>
-                                        <input type="checkbox"
-                                               data-test="selectAllStudies"
-                                               style={{top: -2}}
-                                               onClick={this.handlers.onCheckAllFiltered}
-                                               checked={shownAndSelectedStudies.length === shownStudies.length}
-                                        />
-                                        <strong>{(shownAndSelectedStudies.length === shownStudies.length) ?
-                                            `Deselect all listed studies ${(shownStudies.length < this.store.cancerStudies.result.length) ? "matching filter" : ""} (${shownStudies.length})` :
-                                            `Select all listed studies ${(shownStudies.length < this.store.cancerStudies.result.length) ? "matching filter" : ""}  (${shownStudies.length})`}
-                                        </strong>
-                                    </label>
-                                </Then>
-                                <Else>
-                                    <p>There are no studies matching your filter.</p>
-                                </Else>
+                                <label>
+                                    <input type="checkbox"
+                                           data-test="selectAllStudies"
+                                           style={{top: -2}}
+                                           onClick={this.handlers.onCheckAllFiltered}
+                                           checked={shownAndSelectedStudies.length === shownStudies.length}
+                                    />
+                                    <strong>{(shownAndSelectedStudies.length === shownStudies.length) ?
+                                        `Deselect all listed studies ${(shownStudies.length < this.store.cancerStudies.result.length) ? "matching filter" : ""} (${shownStudies.length})` :
+                                        `Select all listed studies ${(shownStudies.length < this.store.cancerStudies.result.length) ? "matching filter" : ""}  (${shownStudies.length})`}
+                                    </strong>
+                                </label>
+                            </If>
+                            <If condition={this.store.cancerStudies.isComplete && this.store.cancerTypes.isComplete && shownStudies.length === 0}>
+                                <p>There are no studies matching your filter.</p>
                             </If>
                         </div>
 
