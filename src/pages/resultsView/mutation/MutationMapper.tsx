@@ -1,5 +1,6 @@
 import * as React from 'react';
 import {observer} from "mobx-react";
+import {Button, ButtonGroup} from 'react-bootstrap';
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import StructureViewerPanel from "shared/components/structureViewer/StructureViewerPanel";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
@@ -205,7 +206,7 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                             {!this.props.store.clinicalDataForSamples.isPending &&
                             !this.props.store.studiesForSamplesWithoutCancerTypeClinicalData.isPending && (
                                 <ResultsViewMutationTable
-                                    sampleIdToTumorType={this.props.store.sampleIdToTumorType}
+                                    uniqueSampleKeyToTumorType={this.props.store.uniqueSampleKeyToTumorType}
                                     oncoKbAnnotatedGenes={this.props.store.oncoKbAnnotatedGenes}
                                     discreteCNACache={this.props.discreteCNACache}
                                     studyIdToStudy={this.props.store.studyIdToStudy.result}
@@ -215,8 +216,9 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                                     pubMedCache={this.props.pubMedCache}
                                     mutationCountCache={this.props.mutationCountCache}
                                     dataStore={this.props.store.dataStore}
+                                    downloadDataFetcher={this.props.store.downloadDataFetcher}
                                     myCancerGenomeData={this.props.myCancerGenomeData}
-                                    hotspots={this.props.store.indexedHotspotData}
+                                    hotspots={this.props.store.indexedHotspotData.result}
                                     cosmicData={this.props.store.cosmicData.result}
                                     oncoKbData={this.props.store.oncoKbData}
                                     civicGenes={this.props.store.civicGenes}

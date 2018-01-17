@@ -962,7 +962,7 @@ export default class CBioPortalAPIInternal {
         'molecularProfileId': string,
         'coExpressionFilter': CoExpressionFilter,
         'entrezGeneId': number,
-        'threshold': number,
+        'threshold' ? : number,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -1001,7 +1001,7 @@ export default class CBioPortalAPIInternal {
             'molecularProfileId': string,
             'coExpressionFilter': CoExpressionFilter,
             'entrezGeneId': number,
-            'threshold': number,
+            'threshold' ? : number,
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < CoExpression >
@@ -1045,11 +1045,6 @@ export default class CBioPortalAPIInternal {
 
                 if (parameters['threshold'] !== undefined) {
                     queryParameters['threshold'] = parameters['threshold'];
-                }
-
-                if (parameters['threshold'] === undefined) {
-                    reject(new Error('Missing required  parameter: threshold'));
-                    return;
                 }
 
                 if (parameters.$queryParameters) {
@@ -1581,7 +1576,7 @@ export default class CBioPortalAPIInternal {
     fetchFractionGenomeAlteredUsingPOSTURL(parameters: {
         'studyId': string,
         'fractionGenomeAlteredFilter': FractionGenomeAlteredFilter,
-        'cutoff': number,
+        'cutoff' ? : number,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -1614,7 +1609,7 @@ export default class CBioPortalAPIInternal {
     fetchFractionGenomeAlteredUsingPOST(parameters: {
             'studyId': string,
             'fractionGenomeAlteredFilter': FractionGenomeAlteredFilter,
-            'cutoff': number,
+            'cutoff' ? : number,
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < FractionGenomeAltered >
@@ -1649,11 +1644,6 @@ export default class CBioPortalAPIInternal {
 
                 if (parameters['cutoff'] !== undefined) {
                     queryParameters['cutoff'] = parameters['cutoff'];
-                }
-
-                if (parameters['cutoff'] === undefined) {
-                    reject(new Error('Missing required  parameter: cutoff'));
-                    return;
                 }
 
                 if (parameters.$queryParameters) {

@@ -1,0 +1,27 @@
+.SurvivalTable {
+  margin: 30px auto;
+  width: 70%;
+}
+
+.SurvivalTable table {
+  border-collapse: collapse !important;
+}
+
+.SurvivalTable td {
+  border: 1px solid black;
+  padding: 0 10px;
+  text-align: center;
+  font-size: 12px;
+  background-color: #f8f8f8;
+  white-space: nowrap;
+}
+
+.Tooltip {
+  font-size: 10px;
+}
+
+.NotAvailable {
+  font-size: 18px;
+  text-align: center;
+  margin: 20px 0;
+}

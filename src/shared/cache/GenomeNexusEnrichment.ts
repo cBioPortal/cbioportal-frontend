@@ -1,3 +1,4 @@
+import * as _ from "lodash";
 import genomeNexusClient from "shared/api/genomeNexusClientInstance";
 import {generateGenomeNexusQuery} from "shared/lib/GenomeNexusUtils";
 import {VariantAnnotation} from "shared/api/generated/GenomeNexusAPI";
@@ -16,13 +17,14 @@ export type VariantAnnotationEnriched = (
 export type GenomeNexusCacheDataType = CacheData<VariantAnnotationEnriched>;
 
 
-function fetch(queries: Mutation[]):Promise<VariantAnnotationEnriched[]> {
+export function fetch(queries: Mutation[]):Promise<VariantAnnotationEnriched[]> {
     if (queries.length > 0) {
         return genomeNexusClient.fetchVariantAnnotationPOST(
             {
-                variants: queries.map((m) => generateGenomeNexusQuery(m)),
-                // TODO: update genome nexus API to return all fields by
-                // default
+                variants: _.uniq(queries.map(
+                    mutation => generateGenomeNexusQuery(mutation)).filter(
+                        query => query.length > 0)),
+                // TODO: update genome nexus API to return all fields by default
                 fields: ['hotspots', 'mutation_assessor']
             }
         ) as Promise<VariantAnnotationEnriched[]>; 

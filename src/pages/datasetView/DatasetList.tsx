@@ -176,7 +176,19 @@ export default class DataSetsPageTable extends React.Component <IDataSetsTablePr
                                 {name:'All', type: 'all'},
                                 {name:'Sequenced', type: 'sequenced'},
                                 {name:'CNA', type: 'cna'},
-                                {name:'RNA-Seq', type: 'mrnaRnaSeq'},
+                                {
+                                    name:'RNA-Seq',
+                                    type: 'mrnaRnaSeq',
+                                    render: (data:IDataTableRow) => {
+                                        return (
+                                            <span>
+                                                {Number(data.mrnaRnaSeqV2) || Number(data.mrnaRnaSeq) || 0}
+                                            </span>
+                                        );
+                                    },
+                                    sortBy: (data:IDataTableRow) =>
+                                        Number(data.mrnaRnaSeqV2) || Number(data.mrnaRnaSeq) || 0
+                                },
                                 {name:'Tumor mRNA (microarray)', type: 'mrnaMicroarray', visible:false},
                                 {name:'Tumor miRNA', type: 'miRna', visible:false },
                                 {name:'Methylation (HM27)', type: 'methylation', visible:false },
@@ -191,15 +203,7 @@ export default class DataSetsPageTable extends React.Component <IDataSetsTablePr
                                     sortBy: (column.hasOwnProperty('sortBy')) ? column.sortBy : ((data:any)=>(data[column.type])),
                                     render: column.hasOwnProperty('render') ? column.render : (data:any) => {
                                         const style = {};// {textAlign: 'center', width: '100%', display: 'block'}
-                                        if(column.type === 'mrnaRnaSeq') {
-                                            return (
-                                                <span style={style}>
-                                                    {Number(data.mrnaRnaSeqV2) || Number(data.mrnaRnaSeq) || 0}
-                                                </span>
-                                            );
-                                        } else {
-                                            return <span style={{style}}>{data[column.type] || 0}</span>;
-                                        }
+                                        return <span style={{style}}>{data[column.type] || 0}</span>;
                                     },
                                     download: column.hasOwnProperty('download') ? column.download : false,
                                     filter: column.filter || undefined

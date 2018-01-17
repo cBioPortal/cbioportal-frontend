@@ -54,7 +54,7 @@ export default class CancerSummaryContainer extends React.Component<{ store: Res
         const labelTransformer = (this.groupAlterationsBy === 'studyId') ? this.mapStudyIdToShortName : undefined;
 
         const alterationCountsForCancerTypesByGene =
-            this.props.store.getAlterationCountsForCancerTypesByGene(this.props.store.alterationsBySampleIdByGene.result!,
+            this.props.store.getAlterationCountsForCancerTypesByGene(this.props.store.alterationsByGeneBySampleKey.result!,
                 this.props.store.samplesExtendedWithClinicalData.result!, this.groupAlterationsBy);
 
         const geneTabs = _.map(alterationCountsForCancerTypesByGene, (geneData, geneName: string) => {
@@ -83,7 +83,7 @@ export default class CancerSummaryContainer extends React.Component<{ store: Res
         // only add combined gene tab if there's more than one gene
         if (geneTabs.length > 1) {
             const groupedAlterationDataForAllGenes = this.props.store.getAlterationCountsForCancerTypesForAllGenes(
-                this.props.store.alterationsBySampleIdByGene.result!,
+                this.props.store.alterationsByGeneBySampleKey.result!,
                 this.props.store.samplesExtendedWithClinicalData.result!,
                 this.groupAlterationsBy);
             geneTabs.unshift(<MSKTab key="all" id="allGenes" linkText="All Queried Genes">
@@ -102,8 +102,8 @@ export default class CancerSummaryContainer extends React.Component<{ store: Res
 
     public render() {
 
-        const isComplete = this.props.store.samplesExtendedWithClinicalData.isComplete && this.props.store.alterationsBySampleIdByGene.isComplete;
-        const isPending = this.props.store.samplesExtendedWithClinicalData.isPending && this.props.store.alterationsBySampleIdByGene.isPending;
+        const isComplete = this.props.store.samplesExtendedWithClinicalData.isComplete && this.props.store.alterationsByGeneBySampleKey.isComplete;
+        const isPending = this.props.store.samplesExtendedWithClinicalData.isPending && this.props.store.alterationsByGeneBySampleKey.isPending;
 
         if (isComplete) {
 
