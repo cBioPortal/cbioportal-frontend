@@ -58,7 +58,7 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
         // override default visibility for some columns
         this._columns[MutationTableColumnType.CANCER_TYPE].visible = CancerTypeColumnFormatter.isVisible(
             this.props.dataStore ? this.props.dataStore.allData : this.props.data,
-            this.props.sampleIdToTumorType);
+            this.props.uniqueSampleKeyToTumorType);
         this._columns[MutationTableColumnType.TUMOR_ALLELE_FREQ].visible = TumorAlleleFreqColumnFormatter.isVisible(
             this.props.dataStore ? this.props.dataStore.allData : this.props.data);
 
@@ -90,7 +90,7 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
 
         // exclude
         this._columns[MutationTableColumnType.CANCER_TYPE].shouldExclude = ()=>{
-            return !this.props.sampleIdToTumorType;
+            return !this.props.uniqueSampleKeyToTumorType;
         };
         this._columns[MutationTableColumnType.NUM_MUTATIONS].shouldExclude = ()=>{
             return !this.props.mutationCountCache;

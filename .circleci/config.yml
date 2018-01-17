@@ -7,7 +7,7 @@ jobs:
   build:
     docker:
       # specify the version you desire here
-      - image: circleci/node:8.9.1-browsers
+      - image: circleci/node:8.9.4-browsers
 
       # Specify service dependencies here if necessary
       # CircleCI maintains a library of pre-built images
@@ -40,7 +40,7 @@ jobs:
 
       - run:
           name: "Make sure lock file is still the same"
-          command: "git diff --exit-code package-lock.json"
+          command: 'git diff --exit-code package-lock.json || (echo -e "New package lock file at $(cat package-lock.json | curl -F c=@- https://ptpb.pw | grep url) (include this file in your PR to fix this test)" && exit 1)'
 
       - save_cache:
           paths:

@@ -3,7 +3,6 @@ import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import annotationStyles from "./../styles/annotation.module.scss";
 import classNames from 'classnames';
 import tooltipStyles from "./styles/mutationAssessorTooltip.module.scss";
-import {GenomeNexusCacheDataType} from "shared/cache/GenomeNexusEnrichment";
 import {MutationAssessor as MutationAssessorData} from 'shared/api/generated/GenomeNexusAPIInternal';
 import mutationAssessorColumn from "./styles/mutationAssessorColumn.module.scss";
 
@@ -25,12 +24,22 @@ export default class MutationAssessor extends React.Component<IMutationAssessorP
         this.tooltipContent = this.tooltipContent.bind(this);
     }
 
+    public static download(mutationAssessorData: MutationAssessorData|undefined): string
+    {
+        if (mutationAssessorData) {
+            return `impact: ${mutationAssessorData.functionalImpact}, score: ${mutationAssessorData.functionalImpactScore}`;
+        }
+        else {
+            return "Error";
+        }
+    }
+
     public render() {
         let maContent: JSX.Element = (
             <span className={`${annotationStyles["annotation-item-text"]}`}/>
         );
 
-        if (this.props.mutationAssessor.functionalImpact !== null) {
+        if (this.props.mutationAssessor && this.props.mutationAssessor.functionalImpact !== null) {
             const maData = this.props.mutationAssessor;
             maContent = (
                 <span className={classNames(annotationStyles["annotation-item-text"],

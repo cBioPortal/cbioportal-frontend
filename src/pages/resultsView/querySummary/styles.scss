@@ -1,0 +1,25 @@
+.query-summary {
+  display:flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .query-summary__leftItems {
+    display:flex;
+    align-items:center;
+
+    > div {
+      margin-right:10px;
+    }
+
+    h4 {
+      margin-bottom:3px !important;
+    }
+
+  }
+
+  .query-summary__alterationData {
+    h4 {
+      color:$text-color !important;
+    }
+  }
+}
