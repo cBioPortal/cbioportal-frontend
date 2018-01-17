@@ -58,7 +58,7 @@ export function nonMolecularProfileParams(store:QueryStore):NonMolecularProfileQ
         data_priority: store.dataTypePriorityCode,
         case_set_id: store.selectedSampleListId || '-1', // empty string won't work
         case_ids: store.asyncCustomCaseSet.result.map(caseRow => (caseRow.studyId + ':' + caseRow.sampleId)).join('\r\n'),
-        gene_list: normalizeQuery(store.geneQuery) || ' ', // empty string won't work
+        gene_list: encodeURIComponent(normalizeQuery(store.geneQuery) || ' '), // empty string won't work
         geneset_list: normalizeQuery(store.genesetQuery) || ' ', //empty string won't work
         tab_index: store.forDownloadTab ? 'tab_download' : 'tab_visualize' as any,
         transpose_matrix: store.transposeDataMatrix ? 'on' : undefined,
