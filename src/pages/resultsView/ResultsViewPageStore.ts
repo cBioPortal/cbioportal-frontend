@@ -23,7 +23,7 @@ import {
     fetchSamplesWithoutCancerTypeClinicalData, fetchStudiesForSamplesWithoutCancerTypeClinicalData, IDataQueryFilter,
     isMutationProfile, fetchOncoKbAnnotatedGenes, groupBy, fetchHotspotsData, indexHotspotData, fetchOncoKbData,
     ONCOKB_DEFAULT, generateUniqueSampleKeyToTumorTypeMap, cancerTypeForOncoKb, fetchCnaOncoKbData,
-    fetchCnaOncoKbDataWithGeneMolecularData
+    fetchCnaOncoKbDataWithGeneMolecularData, fetchGermlineConsentedSamples
 } from "shared/lib/StoreUtils";
 import {MutationMapperStore} from "./mutation/MutationMapperStore";
 import AppConfig from "appConfig";
@@ -56,8 +56,13 @@ import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
 import {getAlterationString} from "../../shared/lib/CopyNumberUtils";
 import memoize from "memoize-weak-decorator";
 import request from 'superagent';
+import {countMutations, mutationCountByPositionKey} from "./mutationCountHelpers";
 import {getPatientSurvivals} from "./SurvivalStoreHelper";
 import {QueryStore} from "shared/components/query/QueryStore";
+import {
+    computeCustomDriverAnnotationReport, computePutativeDriverAnnotatedMutations,
+    initializeCustomDriverAnnotationSettings
+} from "./ResultsViewPageStoreUtils";
 
 export type SamplesSpecificationElement = {studyId: string, sampleId: string, sampleListId: undefined} |
     {studyId: string, sampleId: undefined, sampleListId: string};
@@ -308,15 +313,15 @@ export class ResultsViewPageStore {
     @observable selectedMolecularProfileIds: string[] = [];
 
     @observable mutationAnnotationSettings = {
-        ignoreUnknown: false,
+        ignoreUnknown: AppConfig.oncoprintHideVUSDefault,
         cbioportalCount: false,
         cbioportalCountThreshold: 10,
         cosmicCount: false,
         cosmicCountThreshold: 10,
-        hotspots:true,
-        oncoKb:true,
-        driverFilter: false, // todo fetch from app config
-        driverTiers: observable.map<boolean>() // todo fetch from app config
+        hotspots:!AppConfig.oncoprintOncoKbHotspotsDefault,
+        oncoKb:!AppConfig.oncoprintOncoKbHotspotsDefault,
+        driverFilter: AppConfig.oncoprintCustomDriverAnnotationDefault,
+        driverTiers: observable.map<boolean>()
     };
 
     private getURL() {
@@ -1125,18 +1130,7 @@ export class ResultsViewPageStore {
 
     readonly germlineConsentedSamples = remoteData<SampleIdentifier[]>({
         await:()=>[this.studyIds],
-        invoke: async () => {
-            const studies: string[] = this.studyIds.result!;
-            const ids: string[][] = await Promise.all(studies.map(studyId => {
-                return client.getAllSampleIdsInSampleListUsingGET({
-                    sampleListId: this.getGermlineSampleListId(studyId)
-                });
-            }));
-            return _.flatten(ids.map((sampleIds: string[], index: number) => {
-                const studyId = studies[index];
-                return sampleIds.map(sampleId => ({sampleId, studyId}));
-            }));
-        },
+        invoke: async() => await fetchGermlineConsentedSamples(this.studyIds, AppConfig.studiesWithGermlineConsentedSamples),
         onError: () => {
             // fail silently
         }
@@ -1254,10 +1248,6 @@ export class ResultsViewPageStore {
         invoke:()=>Promise.resolve(_.keyBy(this.studies.result, x=>x.studyId))
     }, {});
 
-    private getGermlineSampleListId(studyId:string):string {
-        return `${studyId}_germline`;
-    }
-
     readonly molecularProfilesInStudies = remoteData<MolecularProfile[]>({
         await:()=>[this.studyIds],
         invoke: async () => {
@@ -1368,30 +1358,30 @@ export class ResultsViewPageStore {
         }
     });
 
+    readonly customDriverAnnotationReport = remoteData<{ hasBinary:boolean, tiers:string[] }>({
+        await:()=>[
+            this.mutations
+        ],
+        invoke:()=>{
+            return Promise.resolve(computeCustomDriverAnnotationReport(this.mutations.result!));
+        },
+        onResult:result=>{
+            initializeCustomDriverAnnotationSettings(
+                result!,
+                this.mutationAnnotationSettings,
+                !!AppConfig.oncoprintCustomDriverTiersAnnotationDefault,
+                AppConfig.oncoprintOncoKbHotspotsDefault === "custom"
+            );
+        }
+    });
+
     readonly putativeDriverAnnotatedMutations = remoteData<AnnotatedMutation[]>({
         await:()=>[
             this.mutations,
             this.getPutativeDriverInfo
         ],
         invoke:()=>{
-            return Promise.resolve(this.mutations.result!.reduce((annotated:AnnotatedMutation[], mutation:Mutation)=>{
-                // annotate
-                const putativeDriverInfo = this.getPutativeDriverInfo.result!(mutation);
-                const putativeDriver =
-                    !!(putativeDriverInfo.oncoKb ||
-                    putativeDriverInfo.hotspots ||
-                    putativeDriverInfo.cbioportalCount ||
-                    putativeDriverInfo.cosmicCount);
-                if (putativeDriver || !this.mutationAnnotationSettings.ignoreUnknown) {
-                    annotated.push(Object.assign({
-                        putativeDriver,
-                        isHotspot: putativeDriverInfo.hotspots,
-                        oncoKbOncogenic: putativeDriverInfo.oncoKb,
-                        simplifiedMutationType: getSimplifiedMutationType(mutation.mutationType)
-                    }, mutation) as AnnotatedMutation);
-                }
-                return annotated;
-            }, []));
+            return Promise.resolve(computePutativeDriverAnnotatedMutations(this.mutations.result!, this.getPutativeDriverInfo.result!, !!this.mutationAnnotationSettings.ignoreUnknown));
         }
     });
 
@@ -1435,7 +1425,7 @@ export class ResultsViewPageStore {
             return toAwait;
         },
         invoke:()=>{
-            return Promise.resolve((mutation:Mutation):{oncoKb:string, hotspots:boolean, cbioportalCount:boolean, cosmicCount:boolean}=>{
+            return Promise.resolve((mutation:Mutation):{oncoKb:string, hotspots:boolean, cbioportalCount:boolean, cosmicCount:boolean, customDriverBinary:boolean, customDriverTier?:string}=>{
                 const oncoKbDatum:IndicatorQueryResp | undefined | null | false = this.mutationAnnotationSettings.oncoKb &&
                     this.getOncoKbMutationAnnotationForOncoprint.isComplete &&
                     this.getOncoKbMutationAnnotationForOncoprint.result(mutation);
@@ -1461,11 +1451,21 @@ export class ResultsViewPageStore {
                     this.getCosmicCount.isComplete &&
                     this.getCosmicCount.result!(mutation) >= this.mutationAnnotationSettings.cosmicCountThreshold);
 
+                const customDriverBinary:boolean =
+                    (this.mutationAnnotationSettings.driverFilter &&
+                        mutation.driverFilter === "Putative_Driver") || false;
+
+                const customDriverTier:string|undefined =
+                    (mutation.driverTiersFilter && this.mutationAnnotationSettings.driverTiers.get(mutation.driverTiersFilter)) ?
+                    mutation.driverTiersFilter : undefined;
+
                 return {
                     oncoKb,
                     hotspots,
                     cbioportalCount,
-                    cosmicCount
+                    cosmicCount,
+                    customDriverBinary,
+                    customDriverTier
                 }
             });
         }
@@ -1614,28 +1614,14 @@ export class ResultsViewPageStore {
         }
     });
 
-    //CBio count
-    private mutationCountByPositionKey(obj:{entrezGeneId:number, proteinPosStart:number, proteinPosEnd:number}) {
-        return `${obj.entrezGeneId}_${obj.proteinPosStart}_${obj.proteinPosEnd}`;
-    }
-
     readonly cbioportalMutationCountData = remoteData<MutationCountByPosition[]>({
         await: ()=>[
             this.mutations
         ],
         invoke: ()=>{
-            const mutationPositionIdentifiers:any = {};
-            for (const mutation of this.mutations.result!) {
-                const simplifiedMutationType = getSimplifiedMutationType(mutation.mutationType);
-                if (simplifiedMutationType === "missense" || simplifiedMutationType === "inframe") {
-                    const key = this.mutationCountByPositionKey(mutation);
-                    mutationPositionIdentifiers[key] = {
-                        entrezGeneId: mutation.entrezGeneId,
-                        proteinPosStart: mutation.proteinPosStart,
-                        proteinPosEnd: mutation.proteinPosEnd
-                    };
-                }
-            }
+
+            const mutationPositionIdentifiers = countMutations(this.mutations.result!);
+
             return client.fetchMutationCountsByPositionUsingPOST({
                 mutationPositionIdentifiers: _.values(mutationPositionIdentifiers)
             });
@@ -1647,9 +1633,9 @@ export class ResultsViewPageStore {
             this.cbioportalMutationCountData
         ],
         invoke: ()=>{
-            const countsMap = _.groupBy(this.cbioportalMutationCountData.result!, count=>this.mutationCountByPositionKey(count));
+            const countsMap = _.groupBy(this.cbioportalMutationCountData.result!, count=>mutationCountByPositionKey(count));
             return Promise.resolve((mutation:Mutation):number=>{
-                const key = this.mutationCountByPositionKey(mutation);
+                const key = mutationCountByPositionKey(mutation);
                 const counts = countsMap[key];
                 if (counts) {
                     return counts.reduce((count, next)=>{
