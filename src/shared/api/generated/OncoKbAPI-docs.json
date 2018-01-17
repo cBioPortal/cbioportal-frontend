@@ -685,7 +685,8 @@
               "TRANSLOCATION",
               "DUPLICATION",
               "INSERTION",
-              "INVERSION"
+              "INVERSION",
+              "FUSION"
             ]
           },
           {
@@ -1230,7 +1231,8 @@
             "TRANSLOCATION",
             "DUPLICATION",
             "INSERTION",
-            "INVERSION"
+            "INVERSION",
+            "FUSION"
           ]
         },
         "tumorType": {
