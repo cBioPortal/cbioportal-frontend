@@ -12,7 +12,6 @@ import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator
 
 export interface IMutationsPageProps {
     routing?: any;
-    genes: string[];
     store: ResultsViewPageStore;
 }
 
@@ -24,7 +23,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
     constructor(props: IMutationsPageProps) {
         super(props);
         this.handleTabChange.bind(this);
-        this.mutationsGeneTab = props.genes[0];
+        this.mutationsGeneTab = this.props.store.hugoGeneSymbols![0];
     }
 
 
@@ -47,7 +46,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
                         tabButtonStyle="pills"
                         unmountOnHide={true}
                     >
-                        {this.generateTabs(this.props.genes)}
+                        {this.generateTabs(this.props.store.hugoGeneSymbols!)}
                     </MSKTabs>
                 )}
             </div>

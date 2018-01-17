@@ -6,7 +6,7 @@ import client from "shared/api/cbioportalClientInstance";
 import {computed, observable} from "mobx";
 import {remoteData} from "shared/api/remoteData";
 import {labelMobxPromises, MobxPromise, cached} from "mobxpromise";
-import {IOncoKbData} from "shared/model/OncoKB";
+import {IOncoKbData, IOncoKbDataWrapper} from "shared/model/OncoKB";
 import {IHotspotData} from "shared/model/CancerHotspots";
 import {IPdbChain, PdbAlignmentIndex} from "shared/model/Pdb";
 import {ICivicGene, ICivicVariant} from "shared/model/Civic";
@@ -16,16 +16,18 @@ import {calcPdbIdNumericalValue, mergeIndexedPdbAlignments} from "shared/lib/Pdb
 import {lazyMobXTableSort} from "shared/components/lazyMobXTable/LazyMobXTable";
 import {
     indexHotspotData, fetchHotspotsData, fetchCosmicData, fetchOncoKbData,
-    fetchMutationData, generateSampleIdToTumorTypeMap, generateDataQueryFilter,
+    fetchMutationData, generateUniqueSampleKeyToTumorTypeMap, generateDataQueryFilter,
     ONCOKB_DEFAULT, fetchPdbAlignmentData, fetchSwissProtAccession, fetchUniprotId, indexPdbAlignmentData,
     fetchPfamDomainData, fetchCivicGenes, fetchCivicVariants, IDataQueryFilter, fetchCanonicalTranscript,
 } from "shared/lib/StoreUtils";
 import MutationMapperDataStore from "./MutationMapperDataStore";
 import PdbChainDataStore from "./PdbChainDataStore";
 import {IMutationMapperConfig} from "./MutationMapper";
-import MutationDataCache from "../../../shared/cache/MutationDataCache";
-import {Gene as OncoKbGene} from "../../../shared/api/generated/OncoKbAPI";
+import MutationDataCache from "shared/cache/MutationDataCache";
+import GenomeNexusEnrichmentCache from "shared/cache/GenomeNexusEnrichment";
+import MutationCountCache from "shared/cache/MutationCountCache";
 import {EnsemblTranscript, PfamDomain, PfamDomainRange} from "shared/api/generated/GenomeNexusAPI";
+import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
 
 export class MutationMapperStore {
 
@@ -40,13 +42,20 @@ export class MutationMapperStore {
                 // so that when it changes we won't react. Thus we need to access it as store.mutationDataCache
                 // (which will be done in the getter thats passed in here) so that the cache itself is observable
                 // and we will react when it changes to a new object.
+                public mutations:Mutation[],
                 private getMutationDataCache: ()=>MutationDataCache,
+                private genomeNexusEnrichmentCache: ()=>GenomeNexusEnrichmentCache,
+                private getMutationCountCache: ()=>MutationCountCache,
                 public studyIdToStudy:MobxPromise<{[studyId:string]:CancerStudy}>,
                 public molecularProfileIdToMolecularProfile:MobxPromise<{[molecularProfileId:string]:MolecularProfile}>,
                 public clinicalDataForSamples: MobxPromise<ClinicalData[]>,
                 public studiesForSamplesWithoutCancerTypeClinicalData: MobxPromise<CancerStudy[]>,
                 private samplesWithoutCancerTypeClinicalData: MobxPromise<Sample[]>,
-                public germlineConsentedSamples:MobxPromise<SampleIdentifier[]>)
+                public germlineConsentedSamples:MobxPromise<SampleIdentifier[]>,
+                public indexedHotspotData:MobxPromise<IHotspotData|undefined>,
+                public uniqueSampleKeyToTumorType:{[uniqueSampleKey:string]:string},
+                public oncoKbData:IOncoKbDataWrapper
+    )
     {
         labelMobxPromises(this);
     }
@@ -58,25 +67,9 @@ export class MutationMapperStore {
         invoke: () => fetchCosmicData(this.mutationData)
     });
 
-
-    readonly hotspotData = remoteData({
-        await: ()=> [
-            this.mutationData
-        ],
-        invoke: async () => {
-            return fetchHotspotsData(this.mutationData);
-        },
-        onError: () => {
-            // fail silently
-        }
-    });
-
     readonly mutationData = remoteData({
         invoke: async () => {
-            // Don't do debouncingPopulate while getting the mutation data, get it immediately for this gene
-            // debouncing causes double rendering (first for the default empty data, and then for the actual data)
-            const cacheData = await this.getMutationDataCache().getImmediately({entrezGeneId: this.gene.entrezGeneId});
-            return cacheData && cacheData.data || [];
+            return this.mutations;
         }
     }, []);
 
@@ -136,28 +129,6 @@ export class MutationMapperStore {
         }
     }, "");
 
-    readonly oncoKbData = remoteData<IOncoKbData>({
-        await: () => [
-            this.mutationData,
-            this.clinicalDataForSamples,
-            this.studiesForSamplesWithoutCancerTypeClinicalData
-        ],
-        invoke: async () => fetchOncoKbData(this.sampleIdToTumorType, this.oncoKbAnnotatedGenes, this.mutationData),
-        onError: (err: Error) => {
-            // fail silently, leave the error handling responsibility to the data consumer
-        }
-    }, ONCOKB_DEFAULT);
-
-    readonly canonicalTranscript = remoteData<EnsemblTranscript | undefined>({
-        invoke: async()=>{
-            if (this.gene) {
-                return fetchCanonicalTranscript(this.gene.hugoGeneSymbol, this.isoformOverrideSource);
-            } else {
-                return undefined;
-            }
-        }
-    }, undefined);
-
     readonly pfamDomainData = remoteData<PfamDomain[] | undefined>({
         await: ()=>[
             this.canonicalTranscript
@@ -165,6 +136,16 @@ export class MutationMapperStore {
         invoke: async()=>{
             if (this.canonicalTranscript.result && this.canonicalTranscript.result.pfamDomains && this.canonicalTranscript.result.pfamDomains.length > 0) {
                 return fetchPfamDomainData(this.canonicalTranscript.result.pfamDomains.map((x: PfamDomainRange) => x.pfamDomainId));
+            } else {
+                return undefined;
+            }
+        }
+    }, undefined);
+
+    readonly canonicalTranscript = remoteData<EnsemblTranscript | undefined>({
+        invoke: async()=>{
+            if (this.gene) {
+                return fetchCanonicalTranscript(this.gene.hugoGeneSymbol, this.isoformOverrideSource);
             } else {
                 return undefined;
             }
@@ -230,18 +211,12 @@ export class MutationMapperStore {
         return lazyMobXTableSort(this.mergedAlignmentData, sortMetric, false);
     }
 
-    @computed get indexedHotspotData(): IHotspotData|undefined {
-        return indexHotspotData(this.hotspotData);
-    }
-
-    @computed get sampleIdToTumorType(): {[sampleId: string]: string} {
-        return generateSampleIdToTumorTypeMap(this.clinicalDataForSamples,
-            this.studiesForSamplesWithoutCancerTypeClinicalData,
-            this.samplesWithoutCancerTypeClinicalData);
-    }
-
     @cached get dataStore():MutationMapperDataStore {
         return new MutationMapperDataStore(this.processedMutationData);
+    }
+
+    @cached get downloadDataFetcher(): MutationTableDownloadDataFetcher {
+        return new MutationTableDownloadDataFetcher(this.mutationData, this.genomeNexusEnrichmentCache, this.getMutationCountCache);
     }
 
     @cached get pdbChainDataStore(): PdbChainDataStore {

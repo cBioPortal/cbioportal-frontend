@@ -13,6 +13,10 @@ button:active, button:focus, div:focus, div:active {
   outline: none !important;
 }
 
+.posRelative {
+  position:relative;
+}
+
 /* importants are necessary for override of legacy style */
 .btn-default {
   background-image: linear-gradient(to bottom,#fff 0,#eee 100%) !important;
@@ -33,6 +37,15 @@ button:active, button:focus, div:focus, div:active {
 
 div {
   text-align:left;
+}
+
+a {
+  cursor:pointer;
+  text-decoration:none !important;
+}
+
+a:hover {
+  text-decoration:underline !important;
 }
 
 /* Buttons */
@@ -284,6 +297,15 @@ th.reactable-header-sort-asc:after {
   //}
 }
 
+.forceHeaderStyle {
+  margin-top:30px !important;
+  font-family:Helvetica Neue, Helvetica, Arial, sans-serif !important;
+  margin-bottom:10px !important;
+  color:$headerColor !important;
+  &:first-child {
+    margin-top:0 !important;
+  }
+}
 
 .contentWrapper {
 
@@ -292,12 +314,7 @@ th.reactable-header-sort-asc:after {
 
   //header styles
   h1, h2, h3, h4 {
-    margin-top:30;
-    margin-bottom:20px;
-    color:$headerColor;
-    &:first-child {
-      margin-top:0;
-    }
+    @extend .forceHeaderStyle;
   }
 
   h1 {
@@ -418,4 +435,5 @@ th.reactable-header-sort-asc:after {
   border-radius:$cornerBorderRadius;
   border:1px dashed $borderColor;
 }
+
 

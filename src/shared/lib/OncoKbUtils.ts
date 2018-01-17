@@ -70,7 +70,7 @@ export function generateIdToIndicatorMap(data:IndicatorQueryResp[]): {[queryId:s
 export function generateEvidenceQuery(queryVariants:Query[]): EvidenceQueries
 {
     return {
-        evidenceTypes: "GENE_SUMMARY,GENE_BACKGROUND,ONCOGENIC,MUTATION_EFFECT,VUS,STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY,STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE,INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY",
+        evidenceTypes: "GENE_SUMMARY,ONCOGENIC,MUTATION_SUMMARY,TUMOR_TYPE_SUMMARY,STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY,STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE,INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY,INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE",
         highestLevelOnly: false,
         levels: ['LEVEL_1', 'LEVEL_2A', 'LEVEL_2B', 'LEVEL_3A', 'LEVEL_3B', 'LEVEL_4', 'LEVEL_R1'],
         queries: queryVariants,
@@ -79,7 +79,7 @@ export function generateEvidenceQuery(queryVariants:Query[]): EvidenceQueries
 }
 
 export function generateQueryVariant(entrezGeneId:number,
-                                     tumorType:string,
+                                     tumorType:string | null,
                                      alteration?:string,
                                      mutationType?:string,
                                      proteinPosStart?:number,
@@ -89,7 +89,7 @@ export function generateQueryVariant(entrezGeneId:number,
     return {
         id: generateQueryVariantId(entrezGeneId, tumorType, alteration, mutationType),
         hugoSymbol: '',
-        tumorType,
+        tumorType:(tumorType as string), // generated api typings are wrong, it can accept null
         alterationType: alterationType || AlterationTypes[AlterationTypes.Mutation],
         entrezGeneId: entrezGeneId,
         alteration: alteration || "",
@@ -103,11 +103,11 @@ export function generateQueryVariant(entrezGeneId:number,
 }
 
 export function generateQueryVariantId(entrezGeneId:number,
-                                       tumorType:string,
+                                       tumorType:string | null,
                                        alteration?:string,
                                        mutationType?:string): string
 {
-    let id = `${entrezGeneId}_${tumorType}`;
+    let id = (tumorType) ? `${entrezGeneId}_${tumorType}` : `${entrezGeneId}`;
 
     if (alteration) {
         id = `${id}_${alteration}`;

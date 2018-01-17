@@ -4,6 +4,7 @@ import { If, Else, Then } from 'react-if';
 
 export interface ILoader {
     isLoading:Boolean;
+    style?:any;
 }
 
 export default class Loader extends React.Component<ILoader, {}> {
@@ -14,7 +15,7 @@ export default class Loader extends React.Component<ILoader, {}> {
             <If condition={this.props.isLoading}>
                 <Then>
                     <div>
-                        <ThreeBounce style={{ display:'inline-block', marginLeft:10 }} />
+                        <ThreeBounce style={this.props.style || { display:'inline-block', marginLeft:10 }} />
                     </div>
                 </Then>
             </If>
