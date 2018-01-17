@@ -11,12 +11,12 @@ import Response = request.Response;
 import {observer, Observer} from "mobx-react";
 import {computed, observable, action} from "mobx";
 import _ from "lodash";
+import svgToPdfDownload from "shared/lib/svgToPdfDownload";
 import {longestCommonStartingSubstring} from "shared/lib/StringUtils";
 import {getColorForProteinImpactType, IProteinImpactTypeColors} from "shared/lib/MutationUtils";
 import {generatePfamDomainColorMap} from "shared/lib/PfamUtils";
 import {getMutationAlignerUrl} from "shared/api/urls";
 import ReactDOM from "react-dom";
-import {Form, Button, FormGroup, InputGroup} from "react-bootstrap";
 import fileDownload from "react-file-download";
 import styles from "./lollipopMutationPlot.module.scss";
 import Collapse from "react-collapse";
@@ -158,7 +158,8 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                 codon < 0 ||
                 (this.props.store.canonicalTranscript.isComplete &&
                     this.props.store.canonicalTranscript.result &&
-                    (codon > this.props.store.canonicalTranscript.result.proteinLength)))
+                    // we want to show the stop codon too (so we allow proteinLength +1 as well)
+                    (codon > this.props.store.canonicalTranscript.result.proteinLength + 1)))
             {
                 // invalid position
                 continue;
@@ -304,31 +305,6 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
         // Add label to top
     }
 
-    private base64ToArrayBuffer(base64:string) {
-        var binaryString = window.atob(base64);
-        var binaryLen = binaryString.length;
-        var bytes = new Uint8Array(binaryLen);
-        for (var i = 0; i < binaryLen; i++) {
-            var ascii = binaryString.charCodeAt(i);
-            bytes[i] = ascii;
-        }
-        return bytes;
-    }
-
-    public downloadAsPDF(filename:string) {
-        const svgelement = "<?xml version='1.0'?>"+this.toSVGDOMNode().outerHTML;
-        const servletURL = "svgtopdf.do";
-        const filetype = "pdf_data";
-        request.post(servletURL)
-            .type('form')
-            .send({ filetype, svgelement})
-            .end((err, res)=>{
-                if (!err && res.ok) {
-                    fileDownload(this.base64ToArrayBuffer(res.text), filename);
-                }
-            });
-    }
-
     @computed get hugoGeneSymbol() {
         return this.props.store.gene.hugoGeneSymbol;
     }
@@ -356,17 +332,19 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
 
         this.handlers = {
             handleYAxisMaxSliderChange: action((event:any)=>{
-                let inputValue:string = (event.target as HTMLInputElement).value;
-                this._yMaxInput = _.clamp(parseInt(inputValue, 10), this.countRange[0], this.countRange[1]);
+                const inputValue:string = (event.target as HTMLInputElement).value;
+                const value = parseInt(inputValue, 10);
+                this._yMaxInput = value < this.countRange[0] ? this.countRange[0] : value;
             }),
-            handleYAxisMaxChange: action((val:string)=>{
-                this._yMaxInput = _.clamp(parseInt(val, 10), this.countRange[0], this.countRange[1]);
+            handleYAxisMaxChange: action((inputValue:string)=>{
+                const value = parseInt(inputValue, 10);
+                this._yMaxInput = value < this.countRange[0] ? this.countRange[0] : value;
             }),
             handleSVGClick:()=>{
-                fileDownload(this.toSVGDOMNode().outerHTML,`${this.hugoGeneSymbol}_lollipop.svg`);
+                fileDownload((new XMLSerializer()).serializeToString(this.toSVGDOMNode()), `${this.hugoGeneSymbol}_lollipop.svg`);
             },
             handlePDFClick:()=>{
-                this.downloadAsPDF(`${this.hugoGeneSymbol}_lollipop.pdf`)
+                svgToPdfDownload(`${this.hugoGeneSymbol}_lollipop.pdf`, this.toSVGDOMNode());
             },
             onYMaxInputFocused:()=>{
                 this.yMaxInputFocused = true;
@@ -383,8 +361,14 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
         };
     }
 
-    @computed get yMax() {
+    @computed get yMaxSlider() {
+        // we don't want max slider value to go over the actual max, even if the user input goes over it
         return Math.min(this.countRange[1], this._yMaxInput || this.countRange[1]);
+    }
+
+    @computed get yMaxInput() {
+        // allow the user input value to go over the actual count rage
+        return this._yMaxInput || this.countRange[1];
     }
 
     private get legend() {
@@ -460,11 +444,11 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                                         max={this.countRange[1]}
                                         step="1"
                                         onChange={this.handlers.handleYAxisMaxSliderChange}
-                                        value={this.yMax}
+                                        value={this.yMaxSlider}
                                     />
                                     <EditableSpan
                                         className={styles["ymax-number-input"]}
-                                        value={this.yMax + ""}
+                                        value={`${this.yMaxInput}`}
                                         setValue={this.handlers.handleYAxisMaxChange}
                                         numericOnly={true}
                                         onFocus={this.handlers.onYMaxInputFocused}
@@ -498,7 +482,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                                 this.props.store.canonicalTranscript.result.proteinLength) ||
                             (this.props.store.gene.length / 3)
                         }
-                        yMax={this.yMax}
+                        yMax={this.yMaxInput}
                         onXAxisOffset={this.props.onXAxisOffset}
                     />
                 </div>

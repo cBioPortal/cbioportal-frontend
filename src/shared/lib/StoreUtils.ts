@@ -4,7 +4,7 @@ import Response = request.Response;
 import {
     default as CBioPortalAPI, MolecularProfile, Mutation, MutationFilter, DiscreteCopyNumberData,
     DiscreteCopyNumberFilter, ClinicalData, Sample, CancerStudy, CopyNumberCountIdentifier,
-    ClinicalDataSingleStudyFilter, ClinicalDataMultiStudyFilter
+    ClinicalDataSingleStudyFilter, ClinicalDataMultiStudyFilter, GeneMolecularData, SampleFilter
 } from "shared/api/generated/CBioPortalAPI";
 import {getMyGeneUrl, getUniprotIdUrl} from "shared/api/urls";
 import defaultClient from "shared/api/cbioportalClientInstance";
@@ -42,9 +42,10 @@ import CancerHotspotsAPI from "shared/api/generated/CancerHotspotsAPI";
 import {MOLECULAR_PROFILE_MUTATIONS_SUFFIX, MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
 import GenomeNexusAPI from "shared/api/generated/GenomeNexusAPI";
 import GenomeNexusAPIInternal from "shared/api/generated/GenomeNexusAPIInternal";
+import {AlterationTypeConstants} from "../../pages/resultsView/ResultsViewPageStore";
 
 export const ONCOKB_DEFAULT: IOncoKbData = {
-    sampleToTumorMap : {},
+    uniqueSampleKeyToTumorType : {},
     indicatorMap : {}
 };
 
@@ -225,7 +226,9 @@ export async function fetchSamples(sampleIds:MobxPromise<string[]>,
         );
 
         return await client.fetchSamplesUsingPOST({
-            sampleIdentifiers
+            sampleFilter: {
+                sampleIdentifiers
+            } as SampleFilter
         });
     }
     else {
@@ -233,7 +236,44 @@ export async function fetchSamples(sampleIds:MobxPromise<string[]>,
     }
 }
 
-export function findSampleIdsWithCancerTypeClinicalData(clinicalDataForSamples:MobxPromise<ClinicalData[]>): {[sampleId: string]: boolean}
+export async function fetchGermlineConsentedSamples(studyIds: MobxPromise<string[]>,
+                                                    studiesWithGermlineConsentedSamples?: string[],
+                                                    client: CBioPortalAPI = defaultClient)
+{
+    // no valid config param => feature disabled
+    if (!studiesWithGermlineConsentedSamples || !studyIds.result) {
+        return [];
+    }
+
+    // query API only for the studies provided with the config param
+
+    const studies: string[] = studyIds.result.filter(
+        studyId => _.find(studiesWithGermlineConsentedSamples, (element) => element === studyId));
+
+    if (studies.length > 0)
+    {
+        const ids: string[][] = await Promise.all(studies.map(studyId => {
+            return client.getAllSampleIdsInSampleListUsingGET({
+                sampleListId: getGermlineSampleListId(studyId)
+            });
+        }));
+
+        return _.flatten(ids.map((sampleIds: string[], index: number) => {
+            const studyId = studies[index];
+            return sampleIds.map(sampleId => ({sampleId, studyId}));
+        }));
+    }
+    else {
+        return [];
+    }
+}
+
+export function getGermlineSampleListId(studyId:string): string
+{
+    return `${studyId}_germline`;
+}
+
+export function findSampleIdsWithCancerTypeClinicalData(clinicalDataForSamples:MobxPromise<ClinicalData[]>): {[uniqueSampleKey: string]: boolean}
 {
     const samplesWithClinicalData: {[sampleId: string]: boolean} = {};
 
@@ -242,7 +282,7 @@ export function findSampleIdsWithCancerTypeClinicalData(clinicalDataForSamples:M
         _.each(clinicalDataForSamples.result, (clinicalData: ClinicalData) => {
             if (clinicalData.clinicalAttributeId === "CANCER_TYPE_DETAILED" ||
                 clinicalData.clinicalAttributeId === "CANCER_TYPE") {
-                samplesWithClinicalData[clinicalData.sampleId] = true;
+                samplesWithClinicalData[clinicalData.uniqueSampleKey] = true;
             }
         });
     }
@@ -260,7 +300,7 @@ export function findSamplesWithoutCancerTypeClinicalData(samples:MobxPromise<Sam
         const samplesWithClinicalData = findSampleIdsWithCancerTypeClinicalData(clinicalDataForSamples);
 
         return _.filter(samples.result, (sample: Sample) => {
-            return samplesWithClinicalData[sample.sampleId] !== true;
+            return samplesWithClinicalData[sample.uniqueSampleKey] !== true;
         });
     }
     else {
@@ -290,7 +330,9 @@ export async function fetchSamplesWithoutCancerTypeClinicalData(sampleIds:MobxPr
 
         if (sampleIdentifierForSamplesWithoutClinicalData.length > 0) {
             samples = await client.fetchSamplesUsingPOST({
-                sampleIdentifiers: sampleIdentifierForSamplesWithoutClinicalData
+                sampleFilter: {
+                    sampleIdentifiers: sampleIdentifierForSamplesWithoutClinicalData
+                } as SampleFilter
             });
         }
     }
@@ -421,7 +463,7 @@ export async function fetchOncoKbAnnotatedGenes(client: OncoKbAPI = oncokbClient
         }, {});
 }
 
-export async function fetchOncoKbData(sampleIdToTumorType:{[sampleId: string]: string},
+export async function fetchOncoKbData(uniqueSampleKeyToTumorType:{[uniqueSampleKey: string]: string},
                                       annotatedGenes:{[entrezGeneId:number]:boolean},
                                       mutationData:MobxPromise<Mutation[]>,
                                       uncalledMutationData?:MobxPromise<Mutation[]>,
@@ -436,16 +478,16 @@ export async function fetchOncoKbData(sampleIdToTumorType:{[sampleId: string]: s
     const mutationsToQuery = _.filter(mutationDataResult, m=>!!annotatedGenes[m.entrezGeneId]);
     const queryVariants = _.uniqBy(_.map(mutationsToQuery, (mutation: Mutation) => {
         return generateQueryVariant(mutation.gene.entrezGeneId,
-            cancerTypeForOncoKb(mutation.sampleId, sampleIdToTumorType),
+            cancerTypeForOncoKb(mutation.uniqueSampleKey, uniqueSampleKeyToTumorType),
             mutation.proteinChange,
             mutation.mutationType,
             mutation.proteinPosStart,
             mutation.proteinPosEnd);
     }), "id");
-    return queryOncoKbData(queryVariants, sampleIdToTumorType, client);
+    return queryOncoKbData(queryVariants, uniqueSampleKeyToTumorType, client);
 }
 
-export async function fetchCnaOncoKbData(sampleIdToTumorType:{[sampleId: string]: string},
+export async function fetchCnaOncoKbData(uniqueSampleKeyToTumorType:{[uniqueSampleKey: string]: string},
                                          annotatedGenes:{[entrezGeneId:number]:boolean},
                                          discreteCNAData:MobxPromise<DiscreteCopyNumberData[]>,
                                          client: OncoKbAPI = oncokbClient)
@@ -458,30 +500,54 @@ export async function fetchCnaOncoKbData(sampleIdToTumorType:{[sampleId: string]
         const alterationsToQuery = _.filter(discreteCNAData.result, d=>!!annotatedGenes[d.gene.entrezGeneId]);
         const queryVariants = _.uniqBy(_.map(alterationsToQuery, (copyNumberData: DiscreteCopyNumberData) => {
             return generateQueryVariant(copyNumberData.gene.entrezGeneId,
-                cancerTypeForOncoKb(copyNumberData.sampleId, sampleIdToTumorType),
+                cancerTypeForOncoKb(copyNumberData.uniqueSampleKey, uniqueSampleKeyToTumorType),
                 getAlterationString(copyNumberData.alteration));
         }), "id");
-        return queryOncoKbData(queryVariants, sampleIdToTumorType, client);
+        return queryOncoKbData(queryVariants, uniqueSampleKeyToTumorType, client);
     }
 }
 
-function cancerTypeForOncoKb(sampleId: string,
-                             sampleIdToTumorType:{[sampleId: string]: string}): string
+export async function fetchCnaOncoKbDataWithGeneMolecularData(uniqueSampleKeyToTumorType:{[uniqueSampleKey: string]: string},
+                                         annotatedGenes:{[entrezGeneId:number]:boolean},
+                                         geneMolecularData:MobxPromise<GeneMolecularData[]>,
+                                          molecularProfileIdToMolecularProfile:{[molecularProfileId:string]:MolecularProfile},
+                                         client: OncoKbAPI = oncokbClient)
+{
+    if (!geneMolecularData.result || geneMolecularData.result.length === 0) {
+        return ONCOKB_DEFAULT;
+    }
+    else
+    {
+        const alterationsToQuery = _.filter(geneMolecularData.result, molecularDatum=>{
+            return molecularProfileIdToMolecularProfile[molecularDatum.molecularProfileId].molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
+                !!annotatedGenes[molecularDatum.entrezGeneId];
+        });
+        const queryVariants = _.uniqBy(_.map(alterationsToQuery, (datum: GeneMolecularData) => {
+            return generateQueryVariant(datum.entrezGeneId,
+                cancerTypeForOncoKb(datum.uniqueSampleKey, uniqueSampleKeyToTumorType),
+                getAlterationString(parseInt(datum.value, 10)));
+        }), (query:Query)=>query.id);
+        return queryOncoKbData(queryVariants, uniqueSampleKeyToTumorType, client);
+    }
+}
+
+export function cancerTypeForOncoKb(uniqueSampleKey: string,
+                             uniqueSampleKeyToTumorType:{[uniqueSampleKey: string]: string}): string | null
 {
     // first priority is sampleIdToTumorType map (derived either from the clinical data or from the study cancer type).
     // if it is not valid, then we return an empty string and let OncoKB API figure out what to do
-    return sampleIdToTumorType[sampleId] || "";
+    return uniqueSampleKeyToTumorType[uniqueSampleKey] || null;
 }
 
 export async function queryOncoKbData(queryVariants: Query[],
-                                      sampleIdToTumorType: {[sampleId: string]: string},
+                                      uniqueSampleKeyToTumorType: {[sampleId: string]: string},
                                       client: OncoKbAPI = oncokbClient)
 {
     const onkokbSearch = await client.searchPostUsingPOST(
         {body: generateEvidenceQuery(queryVariants)});
 
     const oncoKbData: IOncoKbData = {
-        sampleToTumorMap: sampleIdToTumorType,
+        uniqueSampleKeyToTumorType: uniqueSampleKeyToTumorType,
         indicatorMap: generateIdToIndicatorMap(onkokbSearch)
     };
 
@@ -669,7 +735,7 @@ export function indexHotspotData(hotspotData:MobxPromise<ICancerHotspotData>): I
     }
 }
 
-export function generateSampleIdToTumorTypeMap(clinicalDataForSamples: MobxPromise<ClinicalData[]>,
+export function generateUniqueSampleKeyToTumorTypeMap(clinicalDataForSamples: MobxPromise<ClinicalData[]>,
                                                studies?: MobxPromise<CancerStudy[]>,
                                                samples?: MobxPromise<Sample[]>): {[sampleId: string]: string}
 
@@ -681,17 +747,17 @@ export function generateSampleIdToTumorTypeMap(clinicalDataForSamples: MobxPromi
         // first priority is CANCER_TYPE_DETAILED in clinical data
         _.each(clinicalDataForSamples.result, (clinicalData: ClinicalData) => {
             if (clinicalData.clinicalAttributeId === "CANCER_TYPE_DETAILED") {
-                map[clinicalData.sampleId] = clinicalData.value;
+                map[clinicalData.uniqueSampleKey] = clinicalData.value;
             }
         });
 
-        // second priority is CANCER_TYPE in clinical data
-        _.each(clinicalDataForSamples.result, (clinicalData: ClinicalData) => {
-            // update map with CANCER_TYPE value only if it is not already updated
-            if (clinicalData.clinicalAttributeId === "CANCER_TYPE" && map[clinicalData.sampleId] === undefined) {
-                map[clinicalData.sampleId] = clinicalData.value;
-            }
-        });
+        // // second priority is CANCER_TYPE in clinical data
+        // _.each(clinicalDataForSamples.result, (clinicalData: ClinicalData) => {
+        //     // update map with CANCER_TYPE value only if it is not already updated
+        //     if (clinicalData.clinicalAttributeId === "CANCER_TYPE" && map[clinicalData.uniqueSampleKey] === undefined) {
+        //         map[clinicalData.uniqueSampleKey] = clinicalData.value;
+        //     }
+        // });
     }
 
     // last resort: fall back to the study cancer type
@@ -700,8 +766,8 @@ export function generateSampleIdToTumorTypeMap(clinicalDataForSamples: MobxPromi
         const studyIdToCancerType = makeStudyToCancerTypeMap(studies.result);
 
         _.each(samples.result, (sample: Sample) => {
-            if (map[sample.sampleId] === undefined) {
-                map[sample.sampleId] = studyIdToCancerType[sample.studyId];
+            if (map[sample.uniqueSampleKey] === undefined) {
+                map[sample.uniqueSampleKey] = studyIdToCancerType[sample.studyId];
             }
         });
     }
@@ -824,4 +890,24 @@ export function groupBySampleId(sampleIds: Array<string>, clinicalDataArray: Arr
             clinicalData: clinicalDataArray.filter((cd: ClinicalData) => cd.sampleId === k)
         })
     );
+}
+
+export function groupBy<T>(data:T[], keyFn:(d:T)=>string, defaultKeys:string[]=[]):{[key:string]:T[]} {
+    const ret:{[key:string]:T[]} = {};
+    for (const key of defaultKeys) {
+        ret[key] = [];
+    }
+    for (const datum of data) {
+        const key = keyFn(datum);
+        ret[key] = ret[key] || [];
+        ret[key].push(datum);
+    }
+    return ret;
+}
+
+export async function getHierarchyData(
+        geneticProfileId: string, percentile: number, scoreThreshold: number, pvalueThreshold: number,
+        sampleListId: string|undefined,  client:CBioPortalAPIInternal = internalClient) {
+    return await client.fetchGenesetHierarchyInfoUsingPOST({geneticProfileId, percentile, scoreThreshold,
+        pvalueThreshold, sampleListId});
 }

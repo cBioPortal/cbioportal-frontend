@@ -154,12 +154,12 @@ export default class AnnotationColumnFormatter
 
     public static getIndicatorData(mutation:Mutation, oncoKbData:IOncoKbData): IndicatorQueryResp|undefined
     {
-        if (oncoKbData.sampleToTumorMap === null || oncoKbData.indicatorMap === null) {
+        if (oncoKbData.uniqueSampleKeyToTumorType === null || oncoKbData.indicatorMap === null) {
             return undefined;
         }
 
         const id = generateQueryVariantId(mutation.gene.entrezGeneId,
-            oncoKbData.sampleToTumorMap[mutation.sampleId],
+            oncoKbData.uniqueSampleKeyToTumorType[mutation.uniqueSampleKey],
             mutation.proteinChange,
             mutation.mutationType);
 
@@ -169,8 +169,8 @@ export default class AnnotationColumnFormatter
     public static getEvidenceQuery(mutation:Mutation, oncoKbData:IOncoKbData): Query|undefined
     {
         // return null in case sampleToTumorMap is null
-        return oncoKbData.sampleToTumorMap ? generateQueryVariant(mutation.gene.entrezGeneId,
-            oncoKbData.sampleToTumorMap[mutation.sampleId],
+        return oncoKbData.uniqueSampleKeyToTumorType ? generateQueryVariant(mutation.gene.entrezGeneId,
+            oncoKbData.uniqueSampleKeyToTumorType[mutation.uniqueSampleKey],
             mutation.proteinChange,
             mutation.mutationType,
             mutation.proteinPosStart,
@@ -228,6 +228,26 @@ export default class AnnotationColumnFormatter
             MyCancerGenome.sortValue(annotationData.myCancerGenomeLinks),
             CancerHotspots.sortValue(annotationData.isHotspot, annotationData.is3dHotspot)
         ]);
+    }
+
+    public static download(data:Mutation[]|undefined,
+                           oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean},
+                           hotspotsData?:IHotspotData,
+                           myCancerGenomeData?:IMyCancerGenomeData,
+                           oncoKbData?:IOncoKbDataWrapper,
+                           civicGenes?:ICivicGeneDataWrapper,
+                           civicVariants?:ICivicVariantDataWrapper)
+    {
+        const annotationData:IAnnotation = AnnotationColumnFormatter.getData(
+            data, oncoKbAnnotatedGenes, hotspotsData, myCancerGenomeData, oncoKbData, civicGenes, civicVariants);
+
+        return [
+            `OncoKB: ${OncoKB.download(annotationData.oncoKbIndicator)}`,
+            `CIViC: ${Civic.download(annotationData.civicEntry)}`,
+            `MyCancerGenome: ${MyCancerGenome.download(annotationData.myCancerGenomeLinks)}`,
+            `CancerHotspot: ${annotationData.isHotspot ? 'yes' : 'no'}`,
+            `3DHotspot: ${annotationData.is3dHotspot ? 'yes' : 'no'}`,
+        ].join(";");
     }
 
     public static renderFunction(data:Mutation[], columnProps:IAnnotationColumnProps)

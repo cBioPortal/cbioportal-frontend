@@ -352,7 +352,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                     <PatientViewMutationTable
                                         sampleManager={sampleManager}
                                         sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
-                                        sampleIdToTumorType={patientViewPageStore.sampleIdToTumorType}
+                                        uniqueSampleKeyToTumorType={patientViewPageStore.uniqueSampleKeyToTumorType}
                                         molecularProfileIdToMolecularProfile={patientViewPageStore.molecularProfileIdToMolecularProfile.result}
                                         variantCountCache={patientViewPageStore.variantCountCache}
                                         genomeNexusEnrichmentCache={patientViewPageStore.genomeNexusEnrichmentCache}
@@ -363,6 +363,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         mrnaExprRankMolecularProfileId={patientViewPageStore.mrnaRankMolecularProfileId.result || undefined}
                                         discreteCNAMolecularProfileId={patientViewPageStore.molecularProfileIdDiscrete.result}
                                         data={patientViewPageStore.mergedMutationDataIncludingUncalled}
+                                        downloadDataFetcher={patientViewPageStore.downloadDataFetcher}
                                         mutSigData={patientViewPageStore.mutSigData.result}
                                         myCancerGenomeData={patientViewPageStore.myCancerGenomeData}
                                         hotspots={patientViewPageStore.indexedHotspotData}

@@ -6,5 +6,6 @@ var chaiEnzyme = require('chai-enzyme');
 
 chai.use(chaiEnzyme());
 
-var context = require.context('./src', true, /\.spec\.(jsx*|tsx*)$/);
+// NOTE: SPEC_REGEXP is injected using webpack define
+var context = require.context('./src', true, SPEC_REGEXP);
 context.keys().forEach(context);

@@ -1,19 +1,36 @@
 import {MobxPromise} from "mobxpromise";
 import {autorun, IReactionDisposer} from "mobx";
 
-export default function onMobxPromise<T>(promise:MobxPromise<T>,
-                                         onComplete:(result:T)=>void,
+export function onMobxPromise<T>(promise:MobxPromise<T>,
+                          onComplete:(result:T)=>void,
+                          times:number,
+                          onDispose?:()=>void):IReactionDisposer;
+
+export function onMobxPromise<T>(promise:Array<MobxPromise<T>>,
+                          onComplete:(...results:T[])=>void,
+                          times:number,
+                          onDispose?:()=>void):IReactionDisposer;
+
+export default function onMobxPromise<T>(promise:MobxPromise<T>|Array<MobxPromise<T>>,
+                                         onComplete:(...results:T[])=>void,
                                          times:number = 1,
-                                        onDispose?:()=>void) {
+                                        onDispose?:()=>void):IReactionDisposer {
     let disposer:IReactionDisposer;
     let count:number = 0;
-    disposer = autorun(()=>{
-        if (promise.isComplete) {
-            onComplete(promise.result as T);
+    let promiseArray:Array<MobxPromise<T>>;
+    if (promise instanceof Array) {
+        promiseArray = promise;
+    } else {
+        promiseArray = [promise];
+    }
+    disposer = autorun((reaction)=>{
+        if (promiseArray.reduce((acc, next)=>(acc && next.isComplete), true)) {
+            // if all complete
+            onComplete(...promiseArray.map(x=>(x.result as T)));
             count += 1;
         }
         if (count >= times) {
-            disposer();
+            reaction.dispose();
             onDispose && onDispose();
         }
     });

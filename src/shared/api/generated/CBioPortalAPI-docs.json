@@ -288,6 +288,60 @@
         }
       }
     },
+    "/clinical-attributes/fetch": {
+      "post": {
+        "tags": [
+          "Clinical Attributes"
+        ],
+        "summary": "Fetch clinical attributes",
+        "operationId": "fetchClinicalAttributesUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "studyIds",
+            "description": "List of Study IDs",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ClinicalAttribute"
+              }
+            }
+          }
+        }
+      }
+    },
     "/clinical-data/fetch": {
       "post": {
         "tags": [
@@ -399,6 +453,43 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/CopyNumberSeg"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/gene-panel-data/fetch": {
+      "post": {
+        "tags": [
+          "Gene Panels"
+        ],
+        "summary": "Fetch gene panel data",
+        "operationId": "fetchGenePanelDataInMultipleMolecularProfilesUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "genePanelMultipleStudyFilter",
+            "description": "List of Molecular Profile ID and Sample ID pairs or List of MolecularProfile IDs and Entrez Gene IDs",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GenePanelMultipleStudyFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GenePanelData"
               }
             }
           }
@@ -746,6 +837,57 @@
         }
       }
     },
+    "/molecular-data/fetch": {
+      "post": {
+        "tags": [
+          "Molecular Data"
+        ],
+        "summary": "Fetch molecular data",
+        "operationId": "fetchMolecularDataInMultipleMolecularProfilesUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "molecularDataMultipleStudyFilter",
+            "description": "List of Molecular Profile ID and Sample ID pairs or List of MolecularProfile IDs and Entrez Gene IDs",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/MolecularDataMultipleStudyFilter"
+            }
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GeneMolecularData"
+              }
+            }
+          }
+        }
+      }
+    },
     "/molecular-profiles": {
       "get": {
         "tags": [
@@ -817,6 +959,57 @@
             "enum": [
               "ASC",
               "DESC"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MolecularProfile"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/molecular-profiles/fetch": {
+      "post": {
+        "tags": [
+          "Molecular Profiles"
+        ],
+        "summary": "Fetch molecular profiles",
+        "operationId": "fetchMolecularProfilesUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "molecularProfileFilter",
+            "description": "List of Molecular Profile IDs or List of Study IDs",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/MolecularProfileFilter"
+            }
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
             ]
           }
         ],
@@ -1173,7 +1366,7 @@
         "tags": [
           "Molecular Data"
         ],
-        "summary": "Fetch molecular data by sample ID(s)",
+        "summary": "Fetch molecular data in a molecular profile",
         "operationId": "fetchAllMolecularDataInMolecularProfileUsingPOST",
         "consumes": [
           "application/json"
@@ -1436,7 +1629,7 @@
         "tags": [
           "Mutations"
         ],
-        "summary": "Fetch mutations in a molecular profile by sample IDs",
+        "summary": "Fetch mutations in a molecular profile",
         "operationId": "fetchMutationsInMolecularProfileUsingPOST",
         "consumes": [
           "application/json"
@@ -1977,14 +2170,11 @@
         "parameters": [
           {
             "in": "body",
-            "name": "sampleIdentifiers",
+            "name": "sampleFilter",
             "description": "List of sample identifiers",
             "required": true,
             "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/SampleIdentifier"
-              }
+              "$ref": "#/definitions/SampleFilter"
             }
           },
           {
@@ -2091,6 +2281,60 @@
             "enum": [
               "ASC",
               "DESC"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CancerStudy"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/studies/fetch": {
+      "post": {
+        "tags": [
+          "Studies"
+        ],
+        "summary": "Fetch studies by IDs",
+        "operationId": "fetchStudiesUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "studyIds",
+            "description": "List of Study IDs",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
             ]
           }
         ],
@@ -3482,6 +3726,23 @@
         }
       }
     },
+    "MolecularProfileFilter": {
+      "type": "object",
+      "properties": {
+        "molecularProfileIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "studyIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "GenePanelDataFilter": {
       "type": "object",
       "properties": {
@@ -3754,6 +4015,47 @@
         }
       }
     },
+    "SampleFilter": {
+      "type": "object",
+      "properties": {
+        "sampleIdentifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SampleIdentifier"
+          }
+        },
+        "sampleListIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "GenePanelMultipleStudyFilter": {
+      "type": "object",
+      "properties": {
+        "entrezGeneIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "molecularProfileIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sampleMolecularIdentifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SampleMolecularIdentifier"
+          }
+        }
+      }
+    },
     "SampleList": {
       "type": "object",
       "properties": {
@@ -3794,7 +4096,19 @@
           "type": "integer",
           "format": "int32"
         },
+        "patientId": {
+          "type": "string"
+        },
         "sampleId": {
+          "type": "string"
+        },
+        "studyId": {
+          "type": "string"
+        },
+        "uniquePatientKey": {
+          "type": "string"
+        },
+        "uniqueSampleKey": {
           "type": "string"
         }
       }
@@ -3857,6 +4171,30 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/GenePanelToGene"
+          }
+        }
+      }
+    },
+    "MolecularDataMultipleStudyFilter": {
+      "type": "object",
+      "properties": {
+        "entrezGeneIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "molecularProfileIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sampleMolecularIdentifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SampleMolecularIdentifier"
           }
         }
       }
