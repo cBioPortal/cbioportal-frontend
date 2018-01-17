@@ -46,7 +46,7 @@ export type Query = {
 
         'proteinStart': number
 
-        'svType': "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION"
+        'svType': "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION" | "FUSION"
 
         'tumorType': string
 
@@ -1493,7 +1493,7 @@ export default class OncoKbAPI {
         'hugoSymbol' ? : string,
         'entrezGeneId' ? : number,
         'variant' ? : string,
-        'svType' ? : "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION",
+        'svType' ? : "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION" | "FUSION",
         'consequence' ? : string,
         'proteinStart' ? : number,
         'proteinEnd' ? : number,
@@ -1597,7 +1597,7 @@ export default class OncoKbAPI {
         'hugoSymbol' ? : string,
         'entrezGeneId' ? : number,
         'variant' ? : string,
-        'svType' ? : "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION",
+        'svType' ? : "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION" | "FUSION",
         'consequence' ? : string,
         'proteinStart' ? : number,
         'proteinEnd' ? : number,
