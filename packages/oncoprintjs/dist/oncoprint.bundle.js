@@ -15354,10 +15354,12 @@ var OncoprintModel = (function () {
     OncoprintModel.prototype.getTrackSortDirection = function(track_id) {
 	return this.track_sort_direction[track_id];
     }
-    OncoprintModel.prototype.setTrackSortDirection = function(track_id, dir) {
+    OncoprintModel.prototype.setTrackSortDirection = function(track_id, dir, no_callback) {
 	// see above for dir options
 	this.track_sort_direction[track_id] = dir;
-	this.track_sort_direction_change_callback[track_id](track_id, dir);
+	if (!no_callback) {
+		this.track_sort_direction_change_callback[track_id](track_id, dir);
+	}
 	this.precomputed_comparator.update(this, track_id);
     }
     
@@ -15986,6 +15988,13 @@ var OncoprintModel = (function () {
     
     OncoprintModel.prototype.setSortConfig = function(params) {
 	this.sort_config = params;
+	if (this.sort_config.type === "cluster") {
+		// if sort config is cluster, do not sort by tracks in that group
+		var trackGroup = this.getTrackGroups()[this.sort_config.track_group_index];
+		for (var i=0; i<trackGroup.length; i++) {
+			this.setTrackSortDirection(trackGroup[i], 0, true);
+		}
+	}
     }
 
     OncoprintModel.prototype.isTrackInClusteredGroup = function(track_id) {
