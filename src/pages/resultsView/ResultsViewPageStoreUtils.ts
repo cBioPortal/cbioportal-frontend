@@ -1,7 +1,8 @@
-import {Mutation} from "../../shared/api/generated/CBioPortalAPI";
+import {GeneMolecularData, MolecularProfile, Mutation} from "../../shared/api/generated/CBioPortalAPI";
 import {action} from "mobx";
 import {getSimplifiedMutationType} from "../../shared/lib/oql/accessors";
-import {AnnotatedMutation} from "./ResultsViewPageStore";
+import {AnnotatedGeneMolecularData, AnnotatedMutation} from "./ResultsViewPageStore";
+import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
 
 type CustomDriverAnnotationReport = {
     hasBinary: boolean,
@@ -72,4 +73,30 @@ export function computePutativeDriverAnnotatedMutations(
         }
         return annotated;
     }, []);
+}
+
+export const ONCOKB_ONCOGENIC_LOWERCASE = ["likely oncogenic", "predicted oncogenic", "oncogenic"];
+
+export function getOncoKbOncogenic(response:IndicatorQueryResp):string {
+    if (ONCOKB_ONCOGENIC_LOWERCASE.indexOf((response.oncogenic || "").toLowerCase()) > -1) {
+        return response.oncogenic;
+    } else {
+        return "";
+    }
+}
+
+export function annotateMolecularDatum(
+    molecularDatum:GeneMolecularData,
+    getOncoKbCnaAnnotationForOncoprint:(datum:GeneMolecularData)=>IndicatorQueryResp,
+    molecularProfileIdToMolecularProfile:{[molecularProfileId:string]:MolecularProfile}
+):AnnotatedGeneMolecularData {
+    let oncogenic = "";
+    if (molecularProfileIdToMolecularProfile[molecularDatum.molecularProfileId].molecularAlterationType
+        === "COPY_NUMBER_ALTERATION") {
+        const oncoKbDatum = getOncoKbCnaAnnotationForOncoprint(molecularDatum);
+        if (oncoKbDatum) {
+            oncogenic = getOncoKbOncogenic(oncoKbDatum);
+        }
+    }
+    return Object.assign({oncoKbOncogenic: oncogenic}, molecularDatum);
 }
