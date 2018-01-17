@@ -42,15 +42,20 @@ export type ClinicalTrackSpec = {
     datatype: "string";
 });
 
-export type HeatmapTrackDatum = {
-    hugo_gene_symbol: string;
+export interface IBaseHeatmapTrackDatum {
     profile_data: number|null;
     sample?: string;
     patient?: string;
     study: string;
     uid: string;
     na?:boolean;
-};
+}
+export interface IGeneHeatmapTrackDatum extends IBaseHeatmapTrackDatum {
+    hugo_gene_symbol: string;
+}
+export interface IGenesetHeatmapTrackDatum extends IBaseHeatmapTrackDatum {
+    geneset_id: string;
+}
 
 export type GeneticTrackDatum = {
     gene: string;
@@ -77,16 +82,22 @@ export type GeneticTrackSpec = {
     data: GeneticTrackDatum[];
 };
 
-export type HeatmapTrackSpec = {
+interface IBaseHeatmapTrackSpec {
     key: string; // for efficient diffing, just like in React. must be unique
     label: string;
     molecularProfileId: string; // source
     molecularAlterationType: MolecularProfile["molecularAlterationType"];
     datatype: MolecularProfile["datatype"];
-    data: HeatmapTrackDatum[];
+    data: IBaseHeatmapTrackDatum[];
     trackGroupIndex: number;
-    onRemove:()=>void;
-};
+}
+export interface IGeneHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
+    data: IGeneHeatmapTrackDatum[];
+    onRemove: () => void;
+}
+export interface IGenesetHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
+    data: IGenesetHeatmapTrackDatum[];
+}
 
 export const GENETIC_TRACK_GROUP_INDEX = 1;
 export const CLINICAL_TRACK_GROUP_INDEX = 0;
@@ -96,7 +107,8 @@ export interface IOncoprintProps {
 
     clinicalTracks: ClinicalTrackSpec[];
     geneticTracks: GeneticTrackSpec[];
-    heatmapTracks: HeatmapTrackSpec[];
+    genesetHeatmapTracks: IGenesetHeatmapTrackSpec[];
+    heatmapTracks: IGeneHeatmapTrackSpec[];
     divId:string;
     width:number;
 
