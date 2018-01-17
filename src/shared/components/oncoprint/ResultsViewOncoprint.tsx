@@ -38,10 +38,6 @@ interface IResultsViewOncoprintProps {
     divId: string;
     store:ResultsViewPageStore;
     routing:any;
-    customDriverMetadata:{
-        hasDriverAnnotations: boolean,
-        customDriverTiers: string[]
-    };
     addOnBecomeVisibleListener?:(callback:()=>void)=>void;
 }
 
@@ -116,6 +112,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     @observable horzZoom:number = 0.5;
 
+    @observable mouseInsideBounds:boolean = false;
+
     private heatmapGeneInputValueUpdater:IReactionDisposer;
 
     public selectedClinicalAttributeIds = observable.shallowMap<boolean>();
@@ -162,6 +160,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         this.heatmapGeneInputValueUpdater = onMobxPromise(this.props.store.genes, (genes:Gene[])=>{
             this.heatmapGeneInputValue = genes.map(g=>g.hugoGeneSymbol).join(" ");
         }, Number.POSITIVE_INFINITY);
+
+        this.onMouseEnter = this.onMouseEnter.bind(this);
+        this.onMouseLeave = this.onMouseLeave.bind(this);
 
         this.urlParamsReaction = reaction(
             ()=>[
@@ -271,27 +272,28 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             },
             get customDriverAnnotationBinaryMenuLabel() {
                 const label = AppConfig.oncoprintCustomDriverAnnotationBinaryMenuLabel;
-                if (!label || !self.props.customDriverMetadata.hasDriverAnnotations) {
-                    return undefined;
-                } else {
+                const customDriverReport = self.props.store.customDriverAnnotationReport.result;
+                if (label && customDriverReport && customDriverReport.hasBinary) {
                     return label;
+                } else {
+                    return undefined;
                 }
             },
             get customDriverAnnotationTiersMenuLabel() {
                 const label = AppConfig.oncoprintCustomDriverAnnotationTiersMenuLabel;
-                if (!label || !self.props.customDriverMetadata.customDriverTiers
-                        || !self.props.customDriverMetadata.customDriverTiers.length) {
-                    return undefined;
-                } else {
+                const customDriverReport = self.props.store.customDriverAnnotationReport.result;
+                if (label && customDriverReport && customDriverReport.tiers.length) {
                     return label;
+                } else {
+                    return undefined;
                 }
             },
             get customDriverAnnotationTiers() {
-                const tiers = self.props.customDriverMetadata.customDriverTiers;
-                if (!tiers || !tiers.length) {
-                    return undefined;
+                const customDriverReport = self.props.store.customDriverAnnotationReport.result;
+                if (customDriverReport && customDriverReport.tiers.length) {
+                    return customDriverReport.tiers;
                 } else {
-                    return tiers;
+                    return undefined;
                 }
             },
             get annotateCustomDriverBinary() {
@@ -313,6 +315,14 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         });
     }
 
+    onMouseEnter(){
+        this.mouseInsideBounds = true;
+    }
+
+    onMouseLeave(){
+        this.mouseInsideBounds = false;
+    }
+
     componentWillUnmount() {
         this.putativeDriverSettingsReaction();
         this.urlParamsReaction();
@@ -323,7 +333,11 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             if (!this.props.store.mutationAnnotationSettings.oncoKb &&
                 !this.props.store.mutationAnnotationSettings.hotspots &&
                 !this.props.store.mutationAnnotationSettings.cbioportalCount &&
-                !this.props.store.mutationAnnotationSettings.cosmicCount) {
+                !this.props.store.mutationAnnotationSettings.cosmicCount &&
+                !this.props.store.mutationAnnotationSettings.driverFilter &&
+                !this.props.store.mutationAnnotationSettings.driverTiers.entries().reduce((oneSelected, nextEntry)=>{
+                    return oneSelected || nextEntry[1];
+                }, false)) {
                 this.distinguishDrivers = false;
                 this.props.store.mutationAnnotationSettings.ignoreUnknown = false;
             } else {
@@ -345,12 +359,20 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                     this.props.store.mutationAnnotationSettings.hotspots = false;
                     this.props.store.mutationAnnotationSettings.cbioportalCount = false;
                     this.props.store.mutationAnnotationSettings.cosmicCount = false;
+                    this.props.store.mutationAnnotationSettings.driverFilter = false;
+                    this.props.store.mutationAnnotationSettings.driverTiers.forEach((value, key)=>{
+                        this.props.store.mutationAnnotationSettings.driverTiers.set(key, false);
+                    });
                     this.props.store.mutationAnnotationSettings.ignoreUnknown = false;
                 } else {
                     this.props.store.mutationAnnotationSettings.oncoKb = true;
                     this.props.store.mutationAnnotationSettings.hotspots = true;
                     this.props.store.mutationAnnotationSettings.cbioportalCount = true;
                     this.props.store.mutationAnnotationSettings.cosmicCount = true;
+                    this.props.store.mutationAnnotationSettings.driverFilter = true;
+                    this.props.store.mutationAnnotationSettings.driverTiers.forEach((value, key)=>{
+                        this.props.store.mutationAnnotationSettings.driverTiers.set(key, true);
+                    });
                 }
             }),
             onSelectAnnotateOncoKb:action((s:boolean)=>{
@@ -766,7 +788,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                         fontSize:"11px",
                         display:"inline-block",
                         color:"white",
-                        backgroundColor:"#2986e2",
                         marginLeft:"5px"
                     }}
                     onClick={this.toggleColumnMode}
@@ -778,10 +799,18 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     @computed get caseSetInfo() {
         let caseSetText = null;
-        if (this.caseSetName.isComplete && this.props.store.patients.isComplete && this.props.store.samples.isComplete &&
-            this.caseSetName.result) {
-            caseSetText = (<span>Case Set: {this.caseSetName.result} ({this.props.store.patients.result.length} patients / {this.props.store.samples.result.length} samples)</span>);
+
+        if (this.props.store.patients.isComplete &&
+            this.props.store.samples.isComplete &&
+            this.caseSetName.isComplete)
+        {
+            const caseSetName = this.caseSetName.result || "User-defined Patient List";
+            const patientCount = this.props.store.patients.result.length;
+            const sampleCount = this.props.store.samples.result.length;
+
+            caseSetText = <span>Case Set: {caseSetName} ({patientCount} patients / {sampleCount} samples)</span>;
         }
+
         return (
             <div>
                 {caseSetText}
@@ -814,11 +843,14 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         const isLoading = (this.clinicalTracks.isPending || this.geneticTracks.isPending || this.heatmapTracks.isPending);
 
         return (
-            <div className="cbioportal-frontend">
+            <div className="cbioportal-frontend"
+                 onMouseEnter={this.onMouseEnter}
+                 onMouseLeave={this.onMouseLeave}
+            >
 
                 {this.caseSetInfo}
 
-                <FadeInteraction showByDefault={true}>
+                <FadeInteraction showByDefault={true} show={this.mouseInsideBounds}>
                     <OncoprintControls
                         handlers={this.controlsHandlers}
                         state={this.controlsState}
@@ -836,7 +868,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                     divId={this.props.divId}
                     width={1050}
                     suppressRendering={this.clinicalTracks.isPending || this.geneticTracks.isPending || this.heatmapTracks.isPending}
-                    hiddenIds={!this.showUnalteredColumns ? this.unalteredKeys.result : []}
+                    hiddenIds={!this.showUnalteredColumns ? this.unalteredKeys.result : undefined}
 
                     horzZoomToFitIds={this.horzZoomToFitIds}
                     distinguishMutationType={this.distinguishMutationType}

@@ -6,7 +6,10 @@ import {
 } from "../../api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {ClinicalTrackSpec, GeneticTrackDatum} from "./Oncoprint";
-import {ExtendedAlteration} from "../../../pages/resultsView/ResultsViewPageStore";
+import {
+    AnnotatedExtendedAlteration, AnnotatedMutation,
+    ExtendedAlteration
+} from "../../../pages/resultsView/ResultsViewPageStore";
 
 function sampleViewAnchorTag(study_id:string, sample_id:string) {
     return `<a href="${getSampleViewUrl(study_id, sample_id)}" target="_blank">${sample_id}</a>`;
@@ -74,8 +77,6 @@ export function makeHeatmapTrackTooltip(genetic_alteration_type:MolecularProfile
     };
 };
 export function makeGeneticTrackTooltip(
-    showBinaryCustomDriverAnnotation?:boolean,
-    showTiersCustomDriverAnnotation?:boolean,
     link_id?:boolean
 ) {
     // TODO: all the data here is old API data
@@ -90,11 +91,11 @@ export function makeGeneticTrackTooltip(
                 ret.append('<img src="images/oncokb-oncogenic-1.svg" title="'+d.oncokb_oncogenic+'" style="height:11px; width:11px;margin-left:3px"/>');
             }
             //If we have data for the binary custom driver annotations, append an icon to the tooltip with the annotation information
-            if (d.driver_filter && showBinaryCustomDriverAnnotation) {
+            if (d.driver_filter && d.driver_filter === "Putative_Driver") {
                 ret.append('<img src="images/driver.png" title="'+d.driver_filter+': '+d.driver_filter_annotation+'" alt="driver filter" style="height:11px; width:11px;margin-left:3px"/>');
             }
             //If we have data for the class custom driver annotations, append an icon to the tooltip with the annotation information
-            if (d.driver_tiers_filter && showTiersCustomDriverAnnotation) {
+            if (d.driver_tiers_filter) {
                 ret.append('<img src="images/driver_tiers.png" title="'+d.driver_tiers_filter+': '+d.driver_tiers_filter_annotation+'" alt="driver tiers filter" style="height:11px; width:11px;margin-left:3px"/>');
             }
             return ret;
@@ -124,13 +125,12 @@ export function makeGeneticTrackTooltip(
             const molecularAlterationType = datum.molecularProfileAlterationType;
             switch (molecularAlterationType) {
                 case "MUTATION_EXTENDED":
-                    const tooltip_datum:any = {
-                        'amino_acid_change': (datum as Mutation).proteinChange,
-                        'driver_filter': (datum as Mutation).driverFilter,
-                        'driver_filter_annotation': (datum as Mutation).driverFilterAnnotation,
-                        'driver_tiers_filter': (datum as Mutation).driverTiersFilter,
-                        'driver_tiers_filter_annotation': (datum as Mutation).driverTiersFilterAnnotation
-                    };
+                    const tooltip_datum:any = {};
+                    tooltip_datum.amino_acid_change = datum.proteinChange;
+                    tooltip_datum.driver_filter = datum.driverFilter;
+                    tooltip_datum.driver_filter_annotation = datum.driverFilterAnnotation;
+                    tooltip_datum.driver_tiers_filter = datum.driverTiersFilter;
+                    tooltip_datum.driver_tiers_filter_annotation = datum.driverTiersFilterAnnotation;
                     if (datum.isHotspot) {
                         tooltip_datum.cancer_hotspots_hotspot = true;
                     }

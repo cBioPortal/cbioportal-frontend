@@ -55,7 +55,7 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
     private get multipleStudyUI() {
         return <div>
             <span>
-                This combined study contains samples from {this.props.store.studies.result.length} studies
+                Querying {this.props.store.samples.result.length} samples in {this.props.store.studies.result.length} studies
                  &nbsp;
                  <DefaultTooltip
                      placement='bottom'
@@ -111,7 +111,7 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
                         {
                             (loadingComplete) && (<div className="query-summary__alterationData">
                                 <h4>Gene Set / Pathway is altered
-                                in {_.round(alterationPercentage, 2)}% of queried samples</h4>
+                                in {this.props.store.totalAlterationStats.result!.alteredSampleCount} ({_.round(alterationPercentage, 1)}%) of queried samples</h4>
                             </div>)
                         }
                     </div>
