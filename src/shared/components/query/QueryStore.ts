@@ -1254,7 +1254,7 @@ export class QueryStore
 	{
 		if ((window as any).serverVars) {
 			// Populate OQL
-			this.geneQuery = normalizeQuery((window as any).serverVars.theQuery);
+			this.geneQuery = normalizeQuery(decodeURIComponent((window as any).serverVars.theQuery));
 			const dataPriority = (window as any).serverVars.dataPriority;
 			if (typeof dataPriority !== "undefined") {
 				this.dataTypePriorityCode = (dataPriority + '') as '0'|'1'|'2';
