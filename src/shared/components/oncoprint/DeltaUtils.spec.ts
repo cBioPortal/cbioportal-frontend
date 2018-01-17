@@ -5,7 +5,7 @@ import {
 } from "./DeltaUtils";
 import {spy} from "sinon";
 import OncoprintJS from "oncoprintjs";
-import {CLINICAL_TRACK_GROUP_INDEX, GENETIC_TRACK_GROUP_INDEX, HeatmapTrackSpec} from "./Oncoprint";
+import {CLINICAL_TRACK_GROUP_INDEX, GENETIC_TRACK_GROUP_INDEX, IGeneHeatmapTrackSpec} from "./Oncoprint";
 
 describe("Oncoprint DeltaUtils", ()=>{
     describe("numTracksWhoseDataChanged", ()=>{
@@ -43,24 +43,24 @@ describe("Oncoprint DeltaUtils", ()=>{
         });
         it("should not do anything if the heatmap tracks are the same", ()=>{
             transitionTrackGroupSortPriority(
-                {heatmapTracks:[{ trackGroupIndex: 2}, {trackGroupIndex: 3}] as HeatmapTrackSpec[]},
-                {heatmapTracks:[{ trackGroupIndex: 2}, {trackGroupIndex: 3}] as HeatmapTrackSpec[]},
+                {heatmapTracks:[{ trackGroupIndex: 2}, {trackGroupIndex: 3}] as IGeneHeatmapTrackSpec[]},
+                {heatmapTracks:[{ trackGroupIndex: 2}, {trackGroupIndex: 3}] as IGeneHeatmapTrackSpec[]},
                 oncoprint
             );
             assert.equal(oncoprint.setTrackGroupSortPriority.callCount, 0);
         });
         it("should not do anything if the heatmap tracks are different but same groups", ()=>{
             transitionTrackGroupSortPriority(
-                {heatmapTracks:[{ trackGroupIndex: 2}, {trackGroupIndex: 3}, {trackGroupIndex: 3}, {trackGroupIndex: 3}] as HeatmapTrackSpec[]},
-                {heatmapTracks:[{ trackGroupIndex: 2}, {trackGroupIndex: 2}, { trackGroupIndex: 2}, {trackGroupIndex: 3}] as HeatmapTrackSpec[]},
+                {heatmapTracks:[{ trackGroupIndex: 2}, {trackGroupIndex: 3}, {trackGroupIndex: 3}, {trackGroupIndex: 3}] as IGeneHeatmapTrackSpec[]},
+                {heatmapTracks:[{ trackGroupIndex: 2}, {trackGroupIndex: 2}, { trackGroupIndex: 2}, {trackGroupIndex: 3}] as IGeneHeatmapTrackSpec[]},
                 oncoprint
             );
             assert.equal(oncoprint.setTrackGroupSortPriority.callCount, 0);
         });
         it("should set the track group sort priority if the heatmap track groups have changed", ()=>{
             transitionTrackGroupSortPriority(
-                {heatmapTracks:[{ trackGroupIndex: 2}, {trackGroupIndex: 4}, { trackGroupIndex: 2}, {trackGroupIndex: 3}] as HeatmapTrackSpec[]},
-                {heatmapTracks:[{ trackGroupIndex: 2}, {trackGroupIndex: 3}, {trackGroupIndex: 3}, {trackGroupIndex: 3}] as HeatmapTrackSpec[]},
+                {heatmapTracks:[{ trackGroupIndex: 2}, {trackGroupIndex: 4}, { trackGroupIndex: 2}, {trackGroupIndex: 3}] as IGeneHeatmapTrackSpec[]},
+                {heatmapTracks:[{ trackGroupIndex: 2}, {trackGroupIndex: 3}, {trackGroupIndex: 3}, {trackGroupIndex: 3}] as IGeneHeatmapTrackSpec[]},
                 oncoprint
             );
             assert.equal(oncoprint.setTrackGroupSortPriority.callCount, 1, "called once");

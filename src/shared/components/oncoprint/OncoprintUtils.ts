@@ -1,5 +1,12 @@
 import OncoprintJS, {RuleSetParams, TrackSortComparator} from "oncoprintjs";
-import {ClinicalTrackSpec, GeneticTrackDatum, GeneticTrackSpec, HeatmapTrackSpec} from "./Oncoprint";
+import {
+    ClinicalTrackSpec,
+    GeneticTrackSpec,
+    IGeneHeatmapTrackDatum,
+    IGeneHeatmapTrackSpec,
+    IGenesetHeatmapTrackDatum,
+    IGenesetHeatmapTrackSpec
+} from "./Oncoprint";
 import {ClinicalAttribute} from "../../api/generated/CBioPortalAPI";
 import {genetic_rule_set_same_color_for_all_no_recurrence,
     genetic_rule_set_same_color_for_all_recurrence,
@@ -12,7 +19,11 @@ import {
     ResultsViewPageStore
 } from "../../../pages/resultsView/ResultsViewPageStore";
 import {remoteData} from "../../api/remoteData";
-import {makeGeneticTrackData, makeHeatmapTrackData, makeClinicalTrackData} from "./DataUtils";
+import {
+    makeClinicalTrackData,
+    makeGeneticTrackData,
+    makeHeatmapTrackData
+} from "./DataUtils";
 import ResultsViewOncoprint from "./ResultsViewOncoprint";
 import _ from "lodash";
 import {action} from "mobx";
@@ -31,11 +42,44 @@ export function doWithRenderingSuppressedAndSortingOff(oncoprint:OncoprintJS<any
 export function getHeatmapTrackRuleSetParams() {
     return {
         type: 'gradient' as 'gradient',
-        legend_label: 'Heatmap',
-        value_key: "profile_data",
+        legend_label: 'Expression Heatmap',
+        value_key: 'profile_data',
         value_range: [-3,3] as [number, number],
         colors: [[0,0,255,1], [0,0,0,1], [255,0,0,1]],
         value_stop_points: [-3, 0, 3],
+        null_color: 'rgba(224,224,224,1)'
+    };
+}
+
+export function getGenesetHeatmapTrackRuleSetParams() {
+    return {
+        type: 'gradient' as 'gradient',
+        legend_label: 'Gene Set Heatmap',
+        value_key: 'profile_data',
+        value_range: [-1,1] as [number, number],
+        /*
+         * The PiYG colormap is based on color specifications and designs
+         * developed by Cynthia Brewer (http://colorbrewer.org).
+         * The palette has been included under the terms
+         * of an Apache-style license.
+         */
+        colors: [
+            [ 39, 100,  25, 1],
+            [ 77, 146,  33, 1],
+            [127, 188,  65, 1],
+            [184, 225, 134, 1],
+            [230, 245, 208, 1],
+            [247, 247, 247, 1],
+            [253, 224, 239, 1],
+            [241, 182, 218, 1],
+            [222, 119, 174, 1],
+            [197,  27, 125, 1],
+            [142,   1,  82, 1]
+        ],
+        value_stop_points: [
+            -1, -0.8, -0.6, -0.4, -0.2,
+            0, 0.2, 0.4, 0.6, 0.8, 1
+        ],
         null_color: 'rgba(224,224,224,1)'
     };
 }
@@ -191,8 +235,49 @@ export function makeClinicalTracksMobxPromise(oncoprint:ResultsViewOncoprint, sa
     });
 }
 
+export function makeGenesetHeatmapTracksMobxPromise(
+    oncoprint:ResultsViewOncoprint, sampleMode:boolean
+) {
+    return remoteData<IGenesetHeatmapTrackSpec[]>({
+        await: () => [
+            oncoprint.props.store.samples,
+            oncoprint.props.store.patients,
+            oncoprint.props.store.genesetMolecularProfile,
+            oncoprint.props.store.genesetMolecularDataCache
+        ],
+        invoke: async () => {
+            const samples = oncoprint.props.store.samples.result!;
+            const patients = oncoprint.props.store.patients.result!;
+            const molecularProfile = oncoprint.props.store.genesetMolecularProfile.result!;
+            const dataCache = oncoprint.props.store.genesetMolecularDataCache.result!;
+
+            const genesetIds = oncoprint.props.store.genesetIds;
+            const molecularProfileId = molecularProfile.molecularProfileId;
+
+            const cacheQueries = genesetIds.map((genesetId) => ({molecularProfileId, genesetId}));
+            await dataCache.getPromise(cacheQueries, true);
+
+            return genesetIds.map((genesetId) => ({
+                key: `GENESETHEATMAPTRACK_${molecularProfileId},${genesetId}`,
+                label: genesetId,
+                molecularProfileId,
+                molecularAlterationType: molecularProfile.molecularAlterationType,
+                datatype: molecularProfile.datatype,
+                data: makeHeatmapTrackData<IGenesetHeatmapTrackDatum, 'geneset_id'>(
+                    'geneset_id',
+                    genesetId,
+                    sampleMode ? samples : patients,
+                    dataCache.get({molecularProfileId, genesetId})!.data!
+                ),
+                trackGroupIndex: 30
+            }));
+        },
+        default: []
+    });
+}
+
 export function makeHeatmapTracksMobxPromise(oncoprint:ResultsViewOncoprint, sampleMode:boolean) {
-    return remoteData<HeatmapTrackSpec[]>({
+    return remoteData<IGeneHeatmapTrackSpec[]>({
         await:()=>[
             oncoprint.props.store.samples,
             oncoprint.props.store.patients,
@@ -228,7 +313,12 @@ export function makeHeatmapTracksMobxPromise(oncoprint:ResultsViewOncoprint, sam
                     molecularProfileId: molecularProfileId,
                     molecularAlterationType: molecularProfileIdToMolecularProfile[molecularProfileId].molecularAlterationType,
                     datatype: molecularProfileIdToMolecularProfile[molecularProfileId].datatype,
-                    data: makeHeatmapTrackData(gene, sampleMode? samples : patients, data),
+                    data: makeHeatmapTrackData<IGeneHeatmapTrackDatum, 'hugo_gene_symbol'>(
+                        'hugo_gene_symbol',
+                        gene,
+                        sampleMode ? samples : patients,
+                        data
+                    ),
                     trackGroupIndex: molecularProfileIdToHeatmapTracks.get(molecularProfileId)!.trackGroupIndex,
                     onRemove:action(()=>{
                         const trackGroup = molecularProfileIdToHeatmapTracks.get(molecularProfileId);
