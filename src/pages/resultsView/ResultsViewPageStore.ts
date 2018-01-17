@@ -44,6 +44,7 @@ import {writeTest} from "../../shared/lib/writeTest";
 import {PatientSurvival} from "../../shared/model/PatientSurvival";
 import {filterCBioPortalWebServiceDataByOQLLine, OQLLineFilterOutput} from "../../shared/lib/oql/oqlfilter";
 import GeneMolecularDataCache from "../../shared/cache/GeneMolecularDataCache";
+import GenesetMolecularDataCache from "../../shared/cache/GenesetMolecularDataCache";
 import GeneCache from "../../shared/cache/GeneCache";
 import ClinicalDataCache from "../../shared/cache/ClinicalDataCache";
 import {IHotspotData} from "../../shared/model/CancerHotspots";
@@ -282,6 +283,9 @@ export function extendSamplesWithCancerType(samples:Sample[], clinicalDataForSam
 
 }
 
+/* fields and methods in the class below are ordered based on roughly
+/* chronological setup concerns, rather than on encapsulation and public API */
+/* tslint:disable: member-ordering */
 export class ResultsViewPageStore {
 
     constructor() {
@@ -300,6 +304,7 @@ export class ResultsViewPageStore {
     @observable ajaxErrors: Error[] = [];
 
     @observable hugoGeneSymbols: string[];
+    @observable genesetIds: string[];
     @observable samplesSpecification: SamplesSpecificationElement[] = [];
 
     @observable zScoreThreshold: number;
@@ -1284,6 +1289,26 @@ export class ResultsViewPageStore {
         }
     });
 
+    readonly genesetMolecularProfile = remoteData<MolecularProfile | undefined>({
+        await: () => [
+            this.molecularProfilesInStudies
+        ],
+        invoke: () => {
+            const GENESET_SCORE = "GENESET_SCORE";
+            const applicableProfiles = _.filter(
+                this.molecularProfilesInStudies.result!,
+                profile => (
+                    profile.molecularAlterationType === GENESET_SCORE
+                    && profile.showProfileInAnalysisTab
+                )
+            );
+            if (applicableProfiles.length > 1) {
+                return Promise.reject("Queried more than one gene set score profile");
+            }
+            return Promise.resolve(applicableProfiles.pop());
+        }
+    });
+
     readonly studyToDataQueryFilter = remoteData<{ [studyId: string]: IDataQueryFilter }>({
         await: () => [this.studyToSampleIds, this.studyIds],
         invoke: () => {
@@ -1690,6 +1715,17 @@ export class ResultsViewPageStore {
                 )
             );
         }
+    });
+
+    readonly genesetMolecularDataCache = remoteData({
+        await:() => [
+            this.molecularProfileIdToDataQueryFilter
+        ],
+        invoke: () => Promise.resolve(
+            new GenesetMolecularDataCache(
+                this.molecularProfileIdToDataQueryFilter.result!
+            )
+        )
     });
 
     @cached get geneCache() {

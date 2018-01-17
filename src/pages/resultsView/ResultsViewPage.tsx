@@ -48,6 +48,11 @@ function initStore(queryStore: QueryStore) {
 
     const parsedOQL = (window as any).oql_parser.parse(oqlQuery);
 
+    const genesetIds = (serverVars.genesetIds.length
+        ? serverVars.genesetIds.split(/\s+/)
+        : []
+    );
+
     const resultsViewPageStore = new ResultsViewPageStore();
 
     // following is a bunch of dirty stuff necessary to read state from jsp page
@@ -78,7 +83,8 @@ function initStore(queryStore: QueryStore) {
     }
 
     resultsViewPageStore.samplesSpecification = samplesSpecification;
-    resultsViewPageStore.hugoGeneSymbols = _.map(parsedOQL,(o:any)=>o.gene); //qSession.getQueryGenes();
+    resultsViewPageStore.hugoGeneSymbols = _.map(parsedOQL, (o: any) => o.gene); //qSession.getQueryGenes();
+    resultsViewPageStore.genesetIds = genesetIds;
     resultsViewPageStore.selectedMolecularProfileIds = serverVars.molecularProfiles; // qSession.getGeneticProfileIds();
     resultsViewPageStore.rppaScoreThreshold = serverVars.rppaScoreThreshold; // FIX!
     resultsViewPageStore.zScoreThreshold = serverVars.zScoreThreshold;
