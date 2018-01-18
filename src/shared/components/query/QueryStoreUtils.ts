@@ -67,7 +67,7 @@ export function nonMolecularProfileParams(store:QueryStore):NonMolecularProfileQ
     };
 
     if (selectedStudyIds.length !== 1) {
-        ret = Object.assign(ret, { cancer_study_list: selectedStudyIds.join(",") });
+        ret.cancer_study_list = selectedStudyIds.join(",");
     }
 
     return ret;

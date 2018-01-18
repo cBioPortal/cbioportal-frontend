@@ -270,7 +270,6 @@ describe('single study query', function() {
 
             // wait for plot to show
             $('#ov_tcga_pub_mutations_plot_div').waitForExist(60000);
-            assert(true);
         });
 
         it('should be possible to add genes to query', function() {
