@@ -77,9 +77,15 @@ function initStore(queryStore: QueryStore) {
             }];
         }
 
-        const profs = _.values(molecularProfileParams(queryStore));
 
+        let profs:string[];
 
+        if (queryStore.selectedStudyIds.length === 1) {
+            profs = _.values(molecularProfileParams(queryStore));
+        } else {
+            const profiles = _.filter(queryStore.molecularProfilesInSelectedStudies.result,(profile:MolecularProfile)=>/MUTATION_EXTENDED|COPY/.test(profile.molecularAlterationType))
+            profs = profiles.map((profile:MolecularProfile)=>profile.molecularProfileId);
+        }
 
         resultsViewPageStore.hugoGeneSymbols = queryStore.oql.query.map((gene) => gene.gene);
         resultsViewPageStore.selectedMolecularProfileIds = profs;

@@ -21,7 +21,7 @@ class StudyLink extends React.Component<{ study: CancerStudy, onClick?: () => vo
 }
 
 @observer
-export default class QuerySummary extends React.Component<{ queryStore:QueryStore, className?:string, store: ResultsViewPageStore }, {}> {
+export default class QuerySummary extends React.Component<{ queryStore:QueryStore, onSubmit?:()=>void, className?:string, store: ResultsViewPageStore }, {}> {
 
     @observable private queryFormVisible = false;
     @observable private queryStoreInitialized = false;
@@ -33,11 +33,15 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
 
     private handleModifyQueryClick() {
 
-        // this will have no functional impact after initial invocation of this method
-        this.queryStoreInitialized = true;
+        if (this.props.onSubmit) {
+            this.props.onSubmit();
+        } else {
+            // this will have no functional impact after initial invocation of this method
+            this.queryStoreInitialized = true;
 
-        // toggle visibility
-        this.queryFormVisible = !this.queryFormVisible;
+            // toggle visibility
+            this.queryFormVisible = !this.queryFormVisible;
+        }
 
     }
 
@@ -84,7 +88,6 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
 
         if (!this.props.store.totalAlterationStats.isError && !this.props.store.studies.isError) {
 
-
             const loadingComplete = this.props.store.totalAlterationStats.isComplete && this.props.store.studies.isComplete;
 
             let alterationPercentage = (loadingComplete) ?
@@ -102,8 +105,6 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
 
 
                             <Loader isLoading={loadingComplete === false}/>
-
-
                             {
                                 (loadingComplete) && ((this.props.store.studies.result.length === 1) ? this.singleStudyUI : this.multipleStudyUI)
                             }
