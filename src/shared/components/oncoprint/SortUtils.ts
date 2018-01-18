@@ -1,5 +1,7 @@
 import {TrackSortComparator} from "oncoprintjs";
 import {ClinicalTrackSpec, GeneticTrackDatum} from "./Oncoprint";
+import naturalSort from 'javascript-natural-sort';
+
 function makeComparatorMetric(array_spec:(string|string[]|undefined|boolean)[]) {
     let metric:{[s:string]:number} = {};
     for (let i=0; i<array_spec.length; i++) {
@@ -87,8 +89,8 @@ export function getGeneticTrackSortComparator(sortByMutationType?: boolean, sort
         return mandatory(d1, d2);
     };
     return {
-        preferred: preferred,
-        mandatory: mandatory
+        preferred: alphabeticalDefault(preferred),
+        mandatory: alphabeticalDefault(mandatory)
     };
 }
 
@@ -105,7 +107,7 @@ function makeNumericalComparator(value_key:string) {
         }
     };
 }
-function stringClinicalComparator(d1:any, d2:any) {
+export function stringClinicalComparator(d1:any, d2:any) {
     if (d1.na && d2.na) {
         return 0;
     } else if (d1.na && !d2.na) {
@@ -113,7 +115,7 @@ function stringClinicalComparator(d1:any, d2:any) {
     } else if (!d1.na && d2.na) {
         return -2;
     } else {
-        return d1.attr_val.localeCompare(d2.attr_val);
+        return naturalSort(d1.attr_val, d2.attr_val);
     }
 }
 function makeCountsMapClinicalComparator(categories:string[]) {
@@ -163,14 +165,29 @@ function makeCountsMapClinicalComparator(categories:string[]) {
     }
 }
 
+export function alphabeticalDefault(comparator:(d1:any, d2:any)=>number) {
+    return function(d1:any, d2:any) {
+        const cmp = comparator(d1, d2);
+        if (cmp === 0) {
+            if (d1.sample) {
+                return naturalSort(d1.sample, d2.sample);
+            } else {
+                return naturalSort(d1.patient, d2.patient);
+            }
+        } else {
+            return cmp;
+        }
+    };
+}
+
 export function getClinicalTrackSortComparator(track:ClinicalTrackSpec) {
     if (track.datatype === "number") {
-        return makeNumericalComparator("attr_val");
+        return alphabeticalDefault(makeNumericalComparator("attr_val"));
     } else if (track.datatype === "string") {
-        return stringClinicalComparator;
+        return alphabeticalDefault(stringClinicalComparator);
     } else if (track.datatype === "counts") {
-        return makeCountsMapClinicalComparator(track.countsCategoryLabels);
+        return alphabeticalDefault(makeCountsMapClinicalComparator(track.countsCategoryLabels));
     }
 }
 
-export const heatmapTrackSortComparator = makeNumericalComparator("profile_data");
+export const heatmapTrackSortComparator = alphabeticalDefault(makeNumericalComparator("profile_data"));
