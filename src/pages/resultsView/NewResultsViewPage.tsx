@@ -39,6 +39,7 @@ import {QueryStore} from "../../shared/components/query/QueryStore";
 import ExpressionWrapper from "./expression/ExpressionWrapper";
 import QueryAndDownloadTabs from "../../shared/components/query/QueryAndDownloadTabs";
 import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
+import {molecularProfileParams} from "../../shared/components/query/QueryStoreUtils";
 
 
 const win = (window as any);
@@ -76,14 +77,12 @@ function initStore(queryStore: QueryStore) {
             }];
         }
 
-        const profiles = _.filter(queryStore.molecularProfilesInSelectedStudies.result,(profile:MolecularProfile)=>/MUTATION_EXTENDED|COPY/.test(profile.molecularAlterationType))
+        const profs = _.values(molecularProfileParams(queryStore));
 
-        const profileArr: string[] = profiles.map((profile:MolecularProfile)=>profile.molecularProfileId);
 
-        console.log(profileArr);
 
         resultsViewPageStore.hugoGeneSymbols = queryStore.oql.query.map((gene) => gene.gene);
-        resultsViewPageStore.selectedMolecularProfileIds = profileArr;
+        resultsViewPageStore.selectedMolecularProfileIds = profs;
         resultsViewPageStore.rppaScoreThreshold = parseFloat(queryStore.rppaScoreThreshold);
         resultsViewPageStore.zScoreThreshold = parseFloat(queryStore.zScoreThreshold);
         resultsViewPageStore.oqlQuery = queryStore.geneQuery
@@ -147,6 +146,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
     private showTwitter = AppConfig.showTwitter === true;
     private resultsViewPageStore: ResultsViewPageStore;
+    @observable showQuerySelector = true;
 
     constructor(props: IResultsViewPageProps) {
         super(props);
@@ -268,11 +268,12 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
             <div>
 
-
-
                 <If condition={this.resultsViewPageStore.currentQuery}>
                     <div>
-                    <QuerySummary queryStore={this.props.queryStore} store={this.resultsViewPageStore}/>
+
+                        <div style={{marginBottom:8}}>
+                            <QuerySummary queryStore={this.props.queryStore} className={'contentWidth'} onSubmit={()=>alert('nora')} store={this.resultsViewPageStore}/>
+                        </div>
 
                     <MSKTabs activeTabId={this.props.routing.location.query.tab}  onTabClick={(id:string)=>this.handleTabChange(id)} className="mainTabs">
                         <MSKTab key={0} id="oncoprintTab" linkText="Oncoprint">
@@ -301,7 +302,9 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     </div>
                 </If>
 
-                <QueryAndDownloadTabs store={this.props.queryStore}/>
+                <If condition={this.showQuerySelector}>
+                    <QueryAndDownloadTabs onSubmit={()=>this.showQuerySelector = false} store={this.props.queryStore}/>
+                </If>
 
             </div>
         )

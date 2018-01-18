@@ -21,7 +21,7 @@ class StudyLink extends React.Component<{ study: CancerStudy, onClick?: () => vo
 }
 
 @observer
-export default class QuerySummary extends React.Component<{ queryStore:QueryStore, store: ResultsViewPageStore }, {}> {
+export default class QuerySummary extends React.Component<{ queryStore:QueryStore, className?:string, store: ResultsViewPageStore }, {}> {
 
     @observable private queryFormVisible = false;
     @observable private queryStoreInitialized = false;
@@ -92,7 +92,7 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
 
             return (
                 <div>
-                    <div className="query-summary">
+                    <div className={ classNames('query-summary', this.props.className) }>
                         <div className="query-summary__leftItems">
                             <div>
                                 <button id="modifyQueryBtn" onClick={this.handleModifyQueryClick} className={classNames('btn btn-primary' , { disabled:!loadingComplete  })}>

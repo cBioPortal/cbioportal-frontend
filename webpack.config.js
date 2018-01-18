@@ -111,6 +111,7 @@ var config = {
         }),
         new CopyWebpackPlugin([
             {from: './common-dist', to: 'reactapp'},
+            {from: './menudots.svg', to: 'images/menudots.svg'},
             {from: './src/globalStyles/prefixed-bootstrap.min.css', to: 'reactapp/prefixed-bootstrap.min.css'},
             {from: './src/globalStyles/prefixed-bootstrap.min.css.map', to: 'reactapp/prefixed-bootstrap.min.css.map'}
         ]) // destination is relative to dist directory
