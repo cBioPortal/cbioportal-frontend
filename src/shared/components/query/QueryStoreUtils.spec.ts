@@ -39,7 +39,9 @@ describe('QueryStoreUtils', ()=>{
         it("correctly sets study parameters in case of single study", ()=>{
             let store = new QueryStore();
             store.selectedStudyIds = ["a"];
-            Sinon.stub(store, "get").withArgs("selectableStudiesSet").returns({"a":true, "b":true});
+            Sinon.stub(store, "selectableStudiesSet").get(() => {
+                return {"a":true, "b":true};
+            });
             assert.equal(nonMolecularProfileParams(store).cancer_study_id, "a");
             assert.equal(nonMolecularProfileParams(store).cancer_study_list, undefined);
         });
