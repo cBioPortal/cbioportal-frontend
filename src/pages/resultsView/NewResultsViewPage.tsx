@@ -72,7 +72,7 @@ function initStore(queryStore: QueryStore) {
         } else {
             resultsViewPageStore.samplesSpecification = [{
                 studyId:queryStore.selectedStudyIds[0],
-                sampleListId:queryStore.selectedSampleListId,
+                sampleListId:queryStore.selectedSampleListId!,
                 sampleId:undefined
             }];
         }
@@ -280,6 +280,17 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                         <div style={{marginBottom:8}}>
                             <QuerySummary queryStore={this.props.queryStore} className={'contentWidth'} onSubmit={()=>alert('nora')} store={this.resultsViewPageStore}/>
                         </div>
+
+                        <Observer>
+                            {
+                                () => {
+                                    return <div className={"contentWidth"} style={{marginBottom:8}}><OQLEditor
+                                        oqlQuery={this.resultsViewPageStore.oqlQuery}
+                                        onChange={(oql: string) => this.resultsViewPageStore.setOQL(oql)}
+                                    /></div>
+                                }
+                            }
+                        </Observer>
 
                     <MSKTabs activeTabId={this.props.routing.location.query.tab}  onTabClick={(id:string)=>this.handleTabChange(id)} className="mainTabs">
                         <MSKTab key={0} id="oncoprintTab" linkText="Oncoprint">
