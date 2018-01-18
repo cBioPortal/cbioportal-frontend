@@ -43,7 +43,7 @@ function initStore(queryStore: QueryStore) {
 
     const serverVars: any = (window as any).serverVars;
 
-    const oqlQuery = decodeURIComponent(serverVars.theQuery);
+    const oqlQuery = serverVars.theQuery;
 
     const parsedOQL = (window as any).oql_parser.parse(oqlQuery);
 
