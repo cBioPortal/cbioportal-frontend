@@ -76,6 +76,7 @@ class CNASegmentIframe extends React.Component<CNSegmentsIframeProps,{}>{
     
     componentDidMount(){
         const iframe: HTMLIFrameElement = document.createElement('iframe');
+        iframe.id = "cnSegmentsFrame";
         $(iframe).css({
            width:'100%',
            height:630,
