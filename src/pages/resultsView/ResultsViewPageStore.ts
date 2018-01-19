@@ -74,8 +74,9 @@ export const AlterationTypeConstants = {
     COPY_NUMBER_ALTERATION: 'COPY_NUMBER_ALTERATION',
     MRNA_EXPRESSION: 'MRNA_EXPRESSION',
     PROTEIN_LEVEL: 'PROTEIN_LEVEL',
-    FUSION: 'FUSION'
-}
+    FUSION: 'FUSION',
+    GENESET_SCORE: 'GENESET_SCORE'
+};
 
 export interface ExtendedAlteration extends Mutation, GeneMolecularData {
     molecularProfileAlterationType: MolecularProfile["molecularAlterationType"];
@@ -1294,11 +1295,10 @@ export class ResultsViewPageStore {
             this.molecularProfilesInStudies
         ],
         invoke: () => {
-            const GENESET_SCORE = "GENESET_SCORE";
             const applicableProfiles = _.filter(
                 this.molecularProfilesInStudies.result!,
                 profile => (
-                    profile.molecularAlterationType === GENESET_SCORE
+                    profile.molecularAlterationType === AlterationTypeConstants.GENESET_SCORE
                     && profile.showProfileInAnalysisTab
                 )
             );
