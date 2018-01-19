@@ -1,5 +1,10 @@
 var browserstack = require('browserstack-local');
 
+var path = require('path');
+var VisualRegressionCompare = require('wdio-visual-regression-service/compare');
+
+var getScreenshotName = require('./getScreenshotName');
+
 exports.config = {
     //
     // ==================
@@ -11,7 +16,7 @@ exports.config = {
     // directory is where your package.json resides, so `wdio` will be called from there.
     //
     specs: [
-        './specs/**/*.js'
+        './specs/**/screenshot.spec.js'
     ],
     // Patterns to exclude.
     exclude: [
@@ -44,9 +49,11 @@ exports.config = {
         // grid with only 5 firefox instances available you can make sure that not more than
         // 5 instances get started at a time.
         maxInstances: 5,
-        //
-        browserName: 'chrome',
-        build: 'webdriver-browserstack',
+        'os': 'OS X',
+        'os_version': 'El Capitan',
+        'browser': 'Chrome',
+        'browser_version': '63.0',
+         build: 'webdriver-browserstack',
         'browserstack.local': true
     }],
     //
@@ -109,9 +116,22 @@ exports.config = {
     // Services take over a specific job you don't want to take care of. They enhance
     // your test setup with almost no effort. Unlike plugins, they don't add new
     // commands. Instead, they hook themselves up into the test process.
-    services: ['browserstack'],
-    user: process.env.BROWSERSTACK_USERNAME,
-    key: process.env.BROWSERSTACK_ACCESS_KEY,
+    services: ['browserstack','visual-regression'],
+
+    visualRegression: {
+        compare: new VisualRegressionCompare.LocalCompare({
+            referenceName: getScreenshotName(path.join(process.cwd(), 'screenshots/reference')),
+            screenshotName: getScreenshotName(path.join(process.cwd(), 'screenshots/screen')),
+            diffName: getScreenshotName(path.join(process.cwd(), 'screenshots/diff')),
+            misMatchTolerance:1
+        }),
+        viewportChangePause: 300,
+        viewports: [{ width: 1600, height: 1000 }],
+        orientations: ['landscape', 'portrait'],
+    },
+
+    user: 'aaronlisman2',
+    key: 'SR7V7KzpDxrBfL9pNZUy',
     // Framework you want to run your specs with.
     // The following are supported: Mocha, Jasmine, and Cucumber
     // see also: http://webdriver.io/guide/testrunner/frameworks.html

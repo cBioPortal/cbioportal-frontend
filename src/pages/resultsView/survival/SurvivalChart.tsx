@@ -139,7 +139,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
 
             <div className="posRelative">
 
-                <div className="borderedChart">
+                <div className="borderedChart" data-test={'SurvivalChart'}>
 
                     <div className="btn-group" style={{position:'absolute', zIndex:10, right:10 }} role="group">
                         <button className={`btn btn-default btn-xs`} onClick={this.downloadSvg}>
