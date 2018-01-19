@@ -19,19 +19,27 @@ First, clone the repo:
 
 	git clone https://github.com/cBioPortal/oncoprintjs.git
 
-Install the necessary NPM packages defined in `package.json`, create the output folder, `gulp` the files:
+Install the necessary NPM packages defined in `package.json` by running:
 
-	cd oncoprintjs
 	npm install
-	gulp
+	
+Next, execute
 
-You should now have a folder `dist/` with the oncoprint files in it, including `oncoprint-bundle.js`. This is the original library file. The directory `rules/` contains glyph styling specifications that are specific to the genomic alterations use case of Oncoprint, so it is separate for the library file. 
+	webpack
+	
+Which will write `dist/oncoprint.bundle.js`, which is a CommonJS module and can be included using `require`.	
+
+The directory `rules/` contains glyph styling specifications that are specific to the genomic alterations use case of Oncoprint, which you may want to use.
 
 ### Changes to Oncoprint
-If you make changes to the Oncoprint code base and want to load it into the examples, do not modify `oncoprint-bundle.js`, since all of your code will get overwritten when gulped. Instead, modify the files in `src/` and then re-run `gulp`.
+If you make changes to the Oncoprint code base and want to load it into the examples, do not modify `oncoprint.bundle.js`, since all of your code will get overwritten when compiled using `webpack`. Instead, modify the files in `src/` and then re-run `webpack`.
 
 ### Minimum Working Example
-The `test/` folder holds the code that runs the examples. All examples are mounted in `index.html`, which contains one JS file per example. The file `server.js` starts the basic node server, serving files from `dist/`, `rules/`, and `test/` on port 3000. To see the examples, execute the following:
+The `test/` folder holds the code that runs the examples. All examples are mounted in `index.html`, which contains one JS file per example. 
+
+WARNING: THESE MAY NOT BE UP TO DATE AND MAY NOT WORK. 
+
+The file `server.js` starts the basic node server, serving files from `dist/`, `rules/`, and `test/` on port 3000. To see the examples, execute the following:
 
 	node server.js
 
