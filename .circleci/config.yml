@@ -2,50 +2,98 @@
 #
 # Check https://circleci.com/docs/2.0/language-javascript/ for more details
 #
+defaults: &defaults
+  working_directory: ~/repo
+  docker:
+    # specify the version you desire here
+    - image: circleci/node:8.9.4-browsers
+
 version: 2
 jobs:
-  build:
-    docker:
-      # specify the version you desire here
-      - image: circleci/node:8.9.4-browsers
-
-      # Specify service dependencies here if necessary
-      # CircleCI maintains a library of pre-built images
-      # documented at https://circleci.com/docs/2.0/circleci-images/
-      # - image: circleci/mongo:3.4.4
-
-    working_directory: ~/repo
-
+  install:
+    <<: *defaults
     steps:
       - run:
           name: "Show npm and node versions"
           command: |
             node --version
             npm --version
-
       - checkout
-
-      # - run:
-      #     name: Update npm
-      #     command: 'sudo npm install -g npm@3 && npm update -g'
-
       # Download and cache dependencies
       - restore_cache:
           keys:
           - v1-dependencies-{{ checksum "package.json" }}
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
-
       - run: npm install
-
       - run:
           name: "Make sure lock file is still the same"
           command: 'git diff --exit-code package-lock.json || (echo -e "New package lock file at $(cat package-lock.json | curl -F c=@- https://ptpb.pw | grep url) (include this file in your PR to fix this test)" && exit 1)'
-
       - save_cache:
           paths:
             - node_modules
           key: v1-dependencies-{{ checksum "package.json" }}
-        
+
+  build_tests:
+      - checkout
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "package.json" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+      - run: "npm run build"
+  unit_tests:
+    <<: *defaults
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "package.json" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
       # run tests!
-      - run: "npm run build && npm test"
+      - run: "npm test"
+  end_to_end_tests:
+    <<: *defaults
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "package.json" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+      - run:
+          name: "Build DLL files"
+          command: "npm run buildDLL:dev"
+      - run:
+          name: "Spin up frontend repo and run end to end tests"
+          command: |
+            npm run start & \
+            export CBIOPORTAL_URL=http://www.cbioportal.org$((test "$TRAVIS_BRANCH" != master && test "$TRAVIS_BRANCH" != hotfix) && echo /beta) && \
+            curl $CBIOPORTAL_URL > /dev/null && \
+            sleep 5s && \
+            curl $CBIOPORTAL_URL > /dev/null && \
+            sleep 5s && \
+            curl $CBIOPORTAL_URL > /dev/null && \
+            sleep 20s && \
+            curl http://localhost:3000 > /dev/null && \
+            sleep 20s && \
+            cd end-to-end-tests && \
+            npm install && \
+            npm run test-travis
+
+
+workflows:
+    version: 2
+    install_and_test:
+        jobs:
+            - install
+            - unit_tests:
+                requires:
+                    - install
+            - end_to_end_tests:
+                requires:
+                    - install
+            - build_tests:
+                requires:
+                    - install
