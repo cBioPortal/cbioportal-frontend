@@ -139,7 +139,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
 
             <div className="posRelative">
 
-                <div className="borderedChart" style={{width: 910}}>
+                <div className="borderedChart" data-test={'SurvivalChart'} style={{width: 910}}>
 
                     <div className="btn-group" style={{position:'absolute', zIndex:10, right:260 }} role="group">
                         <button className={`btn btn-default btn-xs`} onClick={this.downloadSvg}>
@@ -155,10 +155,10 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
 
                     <VictoryChart containerComponent={<VictoryContainer responsive={false} containerRef={(ref: any) => this.svgContainer = ref} />}
                         height={500} width={900} padding={{ top: 20, bottom: 50, left: 60, right: 300 }} theme={VictoryTheme.material}>
-                        <VictoryAxis style={{ ticks: { size: 8, stroke: "black" }, tickLabels: { padding: 2, fill: "black" }, axisLabel: { padding: 35, fill: "black" }, 
+                        <VictoryAxis style={{ ticks: { size: 8, stroke: "black" }, tickLabels: { padding: 2, fill: "black" }, axisLabel: { padding: 35, fill: "black" },
                             grid: { opacity: 0 }, axis: {stroke: "black", strokeWidth: 1} }} crossAxis={false} tickCount={11} label={this.props.xAxisLabel} />
                         <VictoryAxis label={this.props.yAxisLabel} dependentAxis={true} tickFormat={(t: any) => `${t}%`} tickCount={11}
-                            style={{ ticks: { size: 8, stroke: "black" }, tickLabels: { padding: 2, fill: "black" }, axisLabel: { padding: 45, fill: "black" }, 
+                            style={{ ticks: { size: 8, stroke: "black" }, tickLabels: { padding: 2, fill: "black" }, axisLabel: { padding: 45, fill: "black" },
                             grid: { opacity: 0 }, axis: {stroke: "black", strokeWidth: 1} }} domain={[0, 100]} crossAxis={false} />
                         <VictoryLine interpolation="stepAfter" data={getLineData(this.sortedAlteredPatientSurvivals, this.alteredEstimates)}
                             style={{ data: { stroke: "red", strokeWidth: 1 } }} />
