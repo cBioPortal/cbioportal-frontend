@@ -275,6 +275,11 @@ export class QueryStore
 	@observable searchText:string = '';
 
 	@observable private _selectedStudyIds:ObservableMap<boolean> = observable.map<boolean>();
+
+	@computed get allSelectedStudyIds():string[] {
+		return this._selectedStudyIds.keys();
+	}
+
 	@computed get selectedStudyIds():string[]
 	{
 		let ids:string[] = this._selectedStudyIds.keys();

@@ -51,8 +51,9 @@ export function queryParams(nonMolecularProfileParams:NonMolecularProfileQueryPa
 }
 
 export function nonMolecularProfileParams(store:QueryStore):NonMolecularProfileQueryParams {
+    const selectedStudyIds = store.allSelectedStudyIds;
     let ret:NonMolecularProfileQueryParams = {
-        cancer_study_id: store.singleSelectedStudyId || 'all',
+        cancer_study_id: selectedStudyIds.length === 1 ? selectedStudyIds[0] : 'all',
         Z_SCORE_THRESHOLD: store.zScoreThreshold,
         RPPA_SCORE_THRESHOLD: store.rppaScoreThreshold,
         data_priority: store.dataTypePriorityCode,
@@ -65,8 +66,8 @@ export function nonMolecularProfileParams(store:QueryStore):NonMolecularProfileQ
         Action: 'Submit',
     };
 
-    if (store.selectedStudyIds.length !== 1) {
-        ret = Object.assign(ret, { cancer_study_list: store.selectedStudyIds.join(",") });
+    if (selectedStudyIds.length !== 1) {
+        ret.cancer_study_list = selectedStudyIds.join(",");
     }
 
     return ret;
