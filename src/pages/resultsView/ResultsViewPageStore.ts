@@ -60,6 +60,7 @@ import {countMutations, mutationCountByPositionKey} from "./mutationCountHelpers
 import {getPatientSurvivals} from "./SurvivalStoreHelper";
 import {QueryStore} from "shared/components/query/QueryStore";
 import {
+    annotateMolecularDatum, getOncoKbOncogenic,
     computeCustomDriverAnnotationReport, computePutativeDriverAnnotatedMutations,
     initializeCustomDriverAnnotationSettings
 } from "./ResultsViewPageStoreUtils";
@@ -280,8 +281,6 @@ export function extendSamplesWithCancerType(samples:Sample[], clinicalDataForSam
     return extendedSamples;
 
 }
-
-export const ONCOKB_ONCOGENIC_LOWERCASE = ["likely oncogenic", "predicted oncogenic", "oncogenic"];
 
 export class ResultsViewPageStore {
 
@@ -1392,18 +1391,16 @@ export class ResultsViewPageStore {
             this.molecularProfileIdToMolecularProfile
         ],
         invoke:()=>{
-            const molecularProfileIdToMolecularProfile = this.molecularProfileIdToMolecularProfile.result!;
+            const getOncoKbAnnotation = this.getOncoKbCnaAnnotationForOncoprint.result!;
+            const profileIdToProfile = this.molecularProfileIdToMolecularProfile.result!;
             return Promise.resolve(this.molecularData.result!.map(d=>{
-                let oncogenic = "";
-                if (molecularProfileIdToMolecularProfile[d.molecularProfileId].molecularAlterationType === "COPY_NUMBER_ALTERATION") {
-                    const oncoKbDatum = this.getOncoKbCnaAnnotationForOncoprint.result!(d);
-                    const datumOncogenic = ((oncoKbDatum && oncoKbDatum.oncogenic) || "").toLowerCase();
-                    if (ONCOKB_ONCOGENIC_LOWERCASE.indexOf(datumOncogenic) > -1) {
-                        oncogenic = datumOncogenic;
-                    }
-                }
-                return Object.assign({oncoKbOncogenic: oncogenic}, d);
-            }));
+                    return annotateMolecularDatum(
+                        d,
+                        getOncoKbAnnotation,
+                        profileIdToProfile
+                    );
+                })
+            );
         }
     });
 
@@ -1430,9 +1427,9 @@ export class ResultsViewPageStore {
                     this.getOncoKbMutationAnnotationForOncoprint.isComplete &&
                     this.getOncoKbMutationAnnotationForOncoprint.result(mutation);
 
-                let oncoKb:string = ((oncoKbDatum && oncoKbDatum.oncogenic) || "").toLowerCase();
-                if (ONCOKB_ONCOGENIC_LOWERCASE.indexOf(oncoKb) === -1) {
-                    oncoKb = "";
+                let oncoKb:string = "";
+                if (oncoKbDatum) {
+                    oncoKb = getOncoKbOncogenic(oncoKbDatum);
                 }
 
                 const hotspots:boolean =
@@ -1491,17 +1488,12 @@ export class ResultsViewPageStore {
 
     public readonly isHotspot = remoteData({
         await:()=>[
-            this.hotspotData,
-            this.indexedHotspotData
+            this.getOncoKbMutationAnnotationForOncoprint
         ],
         invoke:()=>{
             return Promise.resolve((mutation:Mutation)=>{
-                const indexedHotspotData = this.indexedHotspotData;
-                if (!indexedHotspotData.isComplete) {
-                    return false;
-                } else {
-                    return isHotspot(mutation, indexedHotspotData.result!.single);
-                }
+                const oncokbAnnotation = this.getOncoKbMutationAnnotationForOncoprint.result!(mutation);
+                return !!oncokbAnnotation.hotspot;
             });
         }
     });
