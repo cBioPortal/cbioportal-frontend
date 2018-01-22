@@ -10,6 +10,9 @@ import {
     AnnotatedExtendedAlteration, AnnotatedMutation,
     ExtendedAlteration
 } from "../../../pages/resultsView/ResultsViewPageStore";
+import "./TooltipUtils.scss";
+
+export const TOOLTIP_DIV_CLASS = "oncoprint__tooltip";
 
 function sampleViewAnchorTag(study_id:string, sample_id:string) {
     return `<a href="${getSampleViewUrl(study_id, sample_id)}" target="_blank">${sample_id}</a>`;
@@ -45,18 +48,20 @@ export function makeClinicalTrackTooltip(track:ClinicalTrackSpec, link_id?:boole
         } else {
             const attr_vals = ((d.attr_val_counts && Object.keys(d.attr_val_counts)) || []);
             if (attr_vals.length > 1) {
-                ret += 'values:<br>';
+                ret += track.label+':<br>';
                 for (let i = 0; i < attr_vals.length; i++) {
                     const val = attr_vals[i];
                     ret += '<b>' + val + '</b>: ' + d.attr_val_counts[val] + '<br>';
                 }
             } else if (attr_vals.length === 1) {
-                ret += 'value: <b>' + attr_vals[0] + '</b><br>';
+                ret += track.label+': <b>' + attr_vals[0] + '</b><br>';
             }
         }
+        ret += '<span>'+(d.sample ? "Sample" : "Patient")+": ";
         ret += (link_id ? (d.sample? sampleViewAnchorTag(d.study_id, d.sample) : patientViewAnchorTag(d.study_id, d.patient))
             : (d.sample ? d.sample : d.patient));
-        return ret;
+        ret += '</span>';
+        return $('<div>').addClass(TOOLTIP_DIV_CLASS).append(ret);
     };
 }
 export function makeHeatmapTrackTooltip(genetic_alteration_type:MolecularProfile["molecularAlterationType"], link_id?:boolean) {
@@ -73,7 +78,7 @@ export function makeHeatmapTrackTooltip(genetic_alteration_type:MolecularProfile
         }
         let ret = data_header + '<b>' + profile_data + '</b><br>';
         ret += (d.sample ? (link_id ? sampleViewAnchorTag(d.study, d.sample) : d.sample) : (link_id ? patientViewAnchorTag(d.study, d.patient) : d.patient));
-        return ret;
+        return $('<div>').addClass(TOOLTIP_DIV_CLASS).append(ret);
     };
 };
 export function makeGeneticTrackTooltip(
@@ -114,7 +119,7 @@ export function makeGeneticTrackTooltip(
 
     const disp_cna:{[integerCN:string]:string} = {'-2': 'HOMODELETED', '-1': 'HETLOSS', '1': 'GAIN', '2': 'AMPLIFIED'};
     return function (d:GeneticTrackDatum) {
-        const ret = $('<div>');
+        const ret = $('<div>').addClass(TOOLTIP_DIV_CLASS);
         let mutations:any[] = [];
         let cna:any[] = [];
         const mrna:("UPREGULATED"|"DOWNREGULATED")[] = [];
