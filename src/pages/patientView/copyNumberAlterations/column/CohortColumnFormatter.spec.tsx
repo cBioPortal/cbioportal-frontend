@@ -95,7 +95,7 @@ describe('CohortColumnFormatter', () => {
         tooltips.push(mount(CohortColumnFormatter.tooltipContent([copyNumberData[0]], copyNumberCountData[0])));
         tooltips.push(mount(CohortColumnFormatter.tooltipContent([copyNumberData[1]], copyNumberCountData[1])));
 
-        sinon.stub(fakeCache, 'get', (query:CopyNumberCountIdentifier):CacheData<CopyNumberCount>|null=>{
+        sinon.stub(fakeCache, 'get').callsFake((query:CopyNumberCountIdentifier):CacheData<CopyNumberCount>|null=>{
             let cnc:CopyNumberCount|undefined = copyNumberCountData.find(x=>{
                 return x.entrezGeneId === query.entrezGeneId && x.alteration === query.alteration;
             });

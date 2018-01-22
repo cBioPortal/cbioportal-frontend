@@ -259,4 +259,35 @@ describe('single study query', function() {
 
         });
     });
+
+    describe('enrichments', function() {
+        it('should show mutations plot', function() {
+            browser.url(`${CBIOPORTAL_URL}/index.do?cancer_study_id=ov_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=ov_tcga_pub_cna_seq&gene_list=BRCA1+BRCA2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=ov_tcga_pub_gistic`);
+
+            // click enrichments tab
+            $('#enrichments-result-tab').waitForExist(30000);
+            $('#enrichments-result-tab').click();
+
+            // wait for plot to show
+            $('#ov_tcga_pub_mutations_plot_div').waitForExist(60000);
+        });
+
+        it('should be possible to add genes to query', function() {
+
+            var checkBoxes = $('.ov_tcga_pub_mutations_datatable_table_gene_checkbox_class');
+
+            checkBoxes.waitForExist(10000);
+            
+            // select one gene and click add checked genes to query
+            browser.click('.ov_tcga_pub_mutations_datatable_table_gene_checkbox_class');
+            browser.click('#ov_tcga_pub_mutations_datatable_table_update_query_btn');
+
+            // wait for page to load
+            $('[data-test="QuerySummaryGeneCount"]').waitForExist(60000);
+            var text = browser.getText('[data-test="QuerySummaryGeneCount"]')
+            
+            // there should be one more gene queried now
+            assert(text.search('3' > -1));
+        });
+    });
 });
