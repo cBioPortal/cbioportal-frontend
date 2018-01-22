@@ -1,6 +1,10 @@
 import { assert } from 'chai';
 import {fillClinicalTrackDatum, fillGeneticTrackDatum, fillHeatmapTrackDatum, selectDisplayValue} from "./DataUtils";
-import {GeneticTrackDatum, IGeneHeatmapTrackDatum} from "shared/components/oncoprint/Oncoprint";
+import {
+    GeneticTrackDatum,
+    IGeneHeatmapTrackDatum,
+    IGenesetHeatmapTrackDatum
+} from "shared/components/oncoprint/Oncoprint";
 import {AlterationTypeConstants, AnnotatedExtendedAlteration} from "../../../pages/resultsView/ResultsViewPageStore";
 import {ClinicalAttribute, GeneMolecularData, Sample} from "../../api/generated/CBioPortalAPI";
 import {SpecialAttribute} from "../../cache/ClinicalDataCache";
@@ -631,6 +635,20 @@ describe("DataUtils", ()=>{
                    data
                ),
                {hugo_gene_symbol:"gene", study:"study", profile_data:-10}
+           );
+       });
+       it("fills data for a gene set if that's requested", ()=>{
+           const partialTrackDatum = {};
+           fillHeatmapTrackDatum<IGenesetHeatmapTrackDatum, "geneset_id">(
+               partialTrackDatum,
+               "geneset_id",
+               "MY_FAVORITE_GENE_SET-3",
+               {sampleId:"sample", studyId:"study"} as Sample,
+               [{value: "7"}]
+           );
+           assert.deepEqual(
+               partialTrackDatum,
+               {geneset_id:"MY_FAVORITE_GENE_SET-3", study:"study", profile_data:7}
            );
        });
    });
