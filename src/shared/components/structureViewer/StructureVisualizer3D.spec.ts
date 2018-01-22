@@ -138,7 +138,7 @@ describe('StructureVisualizer3D', () => {
         let chainColor = "N/A";
         let chainOpacity = -1;
 
-        sinon.stub(viewer, "setStyle", (selector: AtomSelectionSpec, style: AtomStyleSpec) => {
+        sinon.stub(viewer, "setStyle").callsFake((selector: AtomSelectionSpec, style: AtomStyleSpec) => {
             if (selector && _.isEqual(selector, {chain: "B"}))
             {
                 if(style.cartoon && style.cartoon.color) {
@@ -162,7 +162,7 @@ describe('StructureVisualizer3D', () => {
         let baseColor = "N/A";
         let baseOpacity = -1;
 
-        sinon.stub(viewer, "setStyle", (selector: AtomSelectionSpec, style: AtomStyleSpec) => {
+        sinon.stub(viewer, "setStyle").callsFake((selector: AtomSelectionSpec, style: AtomStyleSpec) => {
             if (selector && _.isEqual(selector, {}))
             {
                 if(style.cartoon && style.cartoon.color) {
@@ -221,7 +221,7 @@ describe('StructureVisualizer3D', () => {
         let defaultColors: string[] = [];
         let isColoredWithSpectrum = false;
 
-        sinon.stub(viewer, "setStyle", (selector: AtomSelectionSpec, style: AtomStyleSpec) => {
+        sinon.stub(viewer, "setStyle").callsFake((selector: AtomSelectionSpec, style: AtomStyleSpec) => {
             if (selector.ss && style.cartoon && style.cartoon.color) {
                 structureToColor[selector.ss] = style.cartoon.color;
             }
