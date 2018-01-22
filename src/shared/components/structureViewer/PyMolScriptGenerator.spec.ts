@@ -86,9 +86,10 @@ describe('PyMolScriptGenerator', () => {
     it("properly generates the initializer script", () => {
         const scriptGenerator = new PyMolScriptGenerator();
 
-        const reinitStub = sinon.stub(scriptGenerator, "reinitialize");
-        const bgColorStub = sinon.stub(scriptGenerator, "bgColor");
-        const loadPdbStub = sinon.stub(scriptGenerator, "loadPdb");
+        // can't stub private methods so need to cast to any
+        const reinitStub = sinon.stub((scriptGenerator as any), "reinitialize");
+        const bgColorStub = sinon.stub((scriptGenerator as any), "bgColor");
+        const loadPdbStub = sinon.stub((scriptGenerator as any), "loadPdb");
 
         scriptGenerator.generateScript("3pxe", "B", residues, props);
 
@@ -105,8 +106,8 @@ describe('PyMolScriptGenerator', () => {
     it("sets color and the opacity properly for the base structure and the chain", () => {
         const scriptGenerator = new PyMolScriptGenerator();
 
-        const setTransparencyStub = sinon.stub(scriptGenerator, "setTransparency");
-        const setColorStub = sinon.stub(scriptGenerator, "setColor");
+        const setTransparencyStub = sinon.stub((scriptGenerator as any), "setTransparency");
+        const setColorStub = sinon.stub((scriptGenerator as any), "setColor");
 
         scriptGenerator.generateScript("3pxe", "B", residues, props);
 
@@ -152,7 +153,7 @@ describe('PyMolScriptGenerator', () => {
 
     it("applies correct protein colors wrt the corresponding prop", () => {
         const scriptGenerator = new PyMolScriptGenerator();
-        const setColorStub = sinon.stub(scriptGenerator, "setColor");
+        const setColorStub = sinon.stub((scriptGenerator as any), "setColor");
         let script: string = "";
 
 
@@ -187,8 +188,8 @@ describe('PyMolScriptGenerator', () => {
     it("colors residues with correct colors", () => {
         const scriptGenerator = new PyMolScriptGenerator();
 
-        const setColorStub = sinon.stub(scriptGenerator, "setColor");
-        const selectResiduesStub = sinon.stub(scriptGenerator, "selectResidues");
+        const setColorStub = sinon.stub((scriptGenerator as any), "setColor");
+        const selectResiduesStub = sinon.stub((scriptGenerator as any), "selectResidues");
         scriptGenerator.generateScript("3pxe", "B", residues, props);
 
         assert.isTrue(selectResiduesStub.calledWith(["122", "1815"], "B"));
@@ -239,7 +240,7 @@ describe('PyMolScriptGenerator', () => {
     it("displays side chain atoms wrt the corresponding props", () => {
         const scriptGenerator = new PyMolScriptGenerator();
 
-        const selectSideChainsStub = sinon.stub(scriptGenerator, "selectSideChains");
+        const selectSideChainsStub = sinon.stub((scriptGenerator as any), "selectSideChains");
 
         // only selected residues should have visible side chains if sideChain is set to SELECTED
 
