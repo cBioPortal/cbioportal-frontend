@@ -22,3 +22,6 @@ test/
 node
 bin
 target
+end-to-end-tests/screenshots/diff
+end-to-end-tests/screenshots/screen
+
