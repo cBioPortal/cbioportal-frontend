@@ -30,6 +30,7 @@ export function transition(
     transitionShowMinimap(nextProps, prevProps, oncoprint);
     transitionOnMinimapCloseCallback(nextProps, prevProps, oncoprint);
     transitionTracks(nextProps, prevProps, oncoprint, getTrackSpecKeyToTrackId);
+    transitionTrackGroupSortPriority(nextProps, prevProps, oncoprint);
     transitionHiddenIds(nextProps, prevProps, oncoprint);
     transitionHorzZoomToFit(nextProps, prevProps, oncoprint);
     transitionShowClinicalTrackLegends(nextProps, prevProps, oncoprint, getTrackSpecKeyToTrackId);
@@ -39,6 +40,19 @@ export function transition(
     }
     if (suppressingRendering) {
         oncoprint.releaseRendering();
+    }
+}
+
+export function transitionTrackGroupSortPriority(
+    nextProps:{ heatmapTracks:IOncoprintProps["heatmapTracks"]},
+    prevProps:{ heatmapTracks?:IOncoprintProps["heatmapTracks"]},
+    oncoprint:OncoprintJS<any>
+) {
+    const prevHeatmapTrackGroups = _.sortBy(_.uniq((prevProps.heatmapTracks || []).map(x=>x.trackGroupIndex)));
+    const nextHeatmapTrackGroups = _.sortBy(_.uniq(nextProps.heatmapTracks.map(x=>x.trackGroupIndex)));
+    if (_.xor(nextHeatmapTrackGroups, prevHeatmapTrackGroups).length) {
+        // if track groups have changed
+        oncoprint.setTrackGroupSortPriority([CLINICAL_TRACK_GROUP_INDEX].concat(nextHeatmapTrackGroups).concat(GENETIC_TRACK_GROUP_INDEX));
     }
 }
 
@@ -168,11 +182,15 @@ function shouldSuppressRenderingForTransition(nextProps: IOncoprintProps, prevPr
         || (numTracksWhoseDataChanged(allTracks(nextProps), allTracks(prevProps)) > 1));
 }
 
-function sortOrder(props:Partial<IOncoprintProps>):string[]|undefined {
+function sortOrder(props:Partial<Pick<IOncoprintProps, "sortConfig">>):string[]|undefined {
     return props.sortConfig && props.sortConfig.order;
 };
 
-function createSortConfig(props:Partial<IOncoprintProps>):SortConfig {
+export function heatmapClusterValueFn(d:HeatmapTrackDatum) {
+    return d.profile_data;
+}
+
+function createSortConfig(props:Partial<Pick<IOncoprintProps, "sortConfig">>):SortConfig {
     let config = {};
     const newSortOrder = sortOrder(props);
     if (newSortOrder) {
@@ -185,14 +203,14 @@ function createSortConfig(props:Partial<IOncoprintProps>):SortConfig {
         config = {
             type: "cluster",
             track_group_index: props.sortConfig.clusterHeatmapTrackGroupIndex,
-            clusterValueFn: (d:HeatmapTrackDatum)=>(d.profile_data)
+            clusterValueFn: heatmapClusterValueFn
         };
     }
     return config;
 }
-function transitionSortConfig(
-    nextProps: IOncoprintProps,
-    prevProps: Partial<IOncoprintProps>,
+export function transitionSortConfig(
+    nextProps: Pick<IOncoprintProps, "sortConfig">,
+    prevProps: Partial<Pick<IOncoprintProps, "sortConfig">>,
     oncoprint: OncoprintJS<any>
 ) {
     const prevSortConfig = createSortConfig(prevProps);

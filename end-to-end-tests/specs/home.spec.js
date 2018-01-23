@@ -347,6 +347,38 @@ describe('oncoprint', function() {
         });
     });
     describe("sorting", ()=>{
+        function topCmp(eltA, eltB) {
+            return eltA.top - eltB.top;
+        }
+        function getNthTrackOptionsElements(n) {
+            // n is one-indexed, to cohere with CSS nth-child
+
+            var buttons = $$('#oncoprint-inner .oncoprintjs__track_options__toggle_btn_img');
+            buttons = buttons.map(function(btn, i) {
+                return {
+                    btn: btn,
+                    top: parseFloat(btn.$('..').getCssProperty('top').value),
+                    index: i
+                };
+            });
+            buttons.sort(topCmp);
+
+            var dropdowns = $$('#oncoprint-inner .oncoprintjs__track_options__dropdown');
+            dropdowns = dropdowns.map(function(dropdown, i) {
+                return {
+                    dropdown: dropdown,
+                    top: parseFloat(dropdown.getCssProperty('top').value),
+                    index: i
+                };
+            });
+            dropdowns.sort(topCmp);
+
+            return {
+                button: buttons[n-1].btn,
+                dropdown: dropdowns[n-1].dropdown
+            };
+        }
+
         it("should sort patients and samples correctly in coadread_tcga_pub", ()=>{
             browser.url(CBIOPORTAL_URL);
 
@@ -469,10 +501,10 @@ describe('oncoprint', function() {
 
             waitForOncoprint(10000);
 
-            $$('#oncoprint-inner .oncoprintjs__track_options__toggle_btn_img')[3].click(); // open Overall Survival clinical track menu
-            //browser.pause(100); // give time for menu to open
-            $('#oncoprint-inner .oncoprintjs__track_options__dropdown:nth-child(4)').waitForVisible();// wait for options menu to open
-            $$('#oncoprint-inner .oncoprintjs__track_options__dropdown:nth-child(4) li')[4].click(); // Click sort a-Z
+            var overallSurvivalElements = getNthTrackOptionsElements(4);
+            overallSurvivalElements.button.click();
+            browser.pause(300);// wait for menu to appear
+            overallSurvivalElements.dropdown.$('li:nth-child(5)').click(); // Click sort a-Z
             browser.pause(100); // give time to sort
 
             assert.equal(
@@ -481,7 +513,7 @@ describe('oncoprint', function() {
                 "new sorted patient order correct - 1"
             );
 
-            $$('#oncoprint-inner .oncoprintjs__track_options__dropdown:nth-child(4) li')[5].click(); // Click sort Z-a
+            overallSurvivalElements.dropdown.$('li:nth-child(6)').click(); // Click sort Z-a
             browser.pause(100); // give time to sort
 
             assert.equal(
@@ -490,9 +522,10 @@ describe('oncoprint', function() {
                 "new sorted patient order correct - 2"
             );
 
-            $$('#oncoprint-inner .oncoprintjs__track_options__toggle_btn_img')[2].click(); // open Karnofsky Performance clinical track menu
-            $('#oncoprint-inner .oncoprintjs__track_options__dropdown:nth-child(3)').waitForVisible();// wait for options menu to open
-            $$('#oncoprint-inner .oncoprintjs__track_options__dropdown:nth-child(3) li')[5].click(); // Click sort Z-a
+            var karnofskyPerformanceElements = getNthTrackOptionsElements(3);
+            karnofskyPerformanceElements.button.click(); // open Karnofsky Performance clinical track menu
+            browser.pause(300);// wait for menu to appear
+            karnofskyPerformanceElements.dropdown.$('li:nth-child(6)').click(); // Click sort Z-a
             browser.pause(100); // give time to sort
 
             assert.equal(
@@ -501,7 +534,7 @@ describe('oncoprint', function() {
                 "new sorted patient order correct - 3"
             );
 
-            $$('#oncoprint-inner .oncoprintjs__track_options__dropdown:nth-child(3) li')[4].click(); // Click sort a-Z
+            karnofskyPerformanceElements.dropdown.$('li:nth-child(5)').click(); // Click sort a-Z
             browser.pause(100); // give time to sort
 
             assert.equal(
@@ -520,9 +553,10 @@ describe('oncoprint', function() {
                 "new sorted sample order correct - 1"
             );
 
-            $$('#oncoprint-inner .oncoprintjs__track_options__toggle_btn_img')[1].click(); // open Disease Free (months) clinical track menu
-            $('#oncoprint-inner .oncoprintjs__track_options__dropdown:nth-child(2)').waitForVisible();// wait for options menu to open
-            $$('#oncoprint-inner .oncoprintjs__track_options__dropdown:nth-child(2) li')[4].click(); // Click sort a-Z
+            var diseaseFreeElements = getNthTrackOptionsElements(2);
+            diseaseFreeElements.button.click(); // open Disease Free (months) clinical track menu
+            browser.pause(300);// wait for menu to appear
+            diseaseFreeElements.dropdown.$('li:nth-child(5)').click(); // Click sort a-Z
             browser.pause(100); // give time to sort
 
             assert.equal(
@@ -531,7 +565,7 @@ describe('oncoprint', function() {
                 "new sorted sample order correct - 2"
             );
 
-            $$('#oncoprint-inner .oncoprintjs__track_options__dropdown:nth-child(2) li')[5].click(); // Click sort Z-a
+            diseaseFreeElements.dropdown.$('li:nth-child(6)').click(); // Click sort Z-a
             browser.pause(100); // give time to sort
 
             assert.equal(
@@ -540,9 +574,10 @@ describe('oncoprint', function() {
                 "new sorted sample order correct - 3"
             );
 
-            $$('#oncoprint-inner .oncoprintjs__track_options__toggle_btn_img')[0].click(); // open Fraction Genome Altered clinical track menu
-            $('#oncoprint-inner .oncoprintjs__track_options__dropdown:nth-child(1)').waitForVisible(1000); // wait for options menu to open
-            $$('#oncoprint-inner .oncoprintjs__track_options__dropdown:nth-child(1) li')[5].click(); // Click sort Z-a
+            var fractionGenomeAlteredElements = getNthTrackOptionsElements(1);
+            fractionGenomeAlteredElements.button.click(); // open Fraction Genome Altered clinical track menu
+            browser.pause(300);// wait for menu to appear
+            fractionGenomeAlteredElements.dropdown.$('li:nth-child(6)').click(); // Click sort Z-a
             browser.pause(100); // give time to sort
 
             assert.equal(
@@ -551,13 +586,117 @@ describe('oncoprint', function() {
                 "new sorted sample order correct - 4"
             );
 
-            $$('#oncoprint-inner .oncoprintjs__track_options__dropdown:nth-child(1) li')[4].click(); // Click sort a-Z
+            fractionGenomeAlteredElements.dropdown.$('li:nth-child(5)').click(); // Click sort a-Z
             browser.pause(100); // give time to sort
 
             assert.equal(
                 browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
                 "VENHQS0wNi0wMTQ3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTM5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTA3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTc4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDQ3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTc2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDgwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTMyLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDQ2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDg1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDgzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTY5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDYwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDUyLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTc0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTAyLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjEzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTM4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjA4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDcxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDAzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQ1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTM3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjEwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjAxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQ4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDg5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDA5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTE0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDI3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTczLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDMzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDEwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjQxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTkwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDY0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjE5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDIxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDQzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDM4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjIxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjA2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDM3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTk3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTE2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDA3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTIyLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDI4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjE0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDE0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDc0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDM0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjExLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTE1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDA2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTcxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDAxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTMwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTY4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDk5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjM3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTMzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDExLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDc1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDI0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTY2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDg2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDY5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjA5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTk1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTEzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU2LTAxOmdibV90Y2dhX3B1Yg",
                 "new sorted sample order correct - 5"
+            );
+
+            // Sort TP53 heatmap track
+            var TP53HeatmapElements = getNthTrackOptionsElements(8);
+            TP53HeatmapElements.button.click(); // open Fraction Genome Altered clinical track menu
+            browser.pause(300);// wait for menu to appear
+            TP53HeatmapElements.dropdown.$('li:nth-child(6)').click(); // Click sort Z-a
+            browser.pause(100); // give time to sort
+
+            assert.equal(
+                browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
+                "VENHQS0wNi0wMTQ3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTM5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTA3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTc4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDQ3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTc2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDgwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTMyLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDQ2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDg1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDgzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTY5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDYwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDUyLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTc0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTAyLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjEzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTM4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjA4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDcxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDAzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQ1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTM3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjEwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjAxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQ4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDg5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDA5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTE0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDI3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTczLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDMzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDEwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjQxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTkwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDY0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjE5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDIxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDQzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDM4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjIxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjA2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDM3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTk3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTE2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDA3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTIyLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDI4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjE0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDE0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDc0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDM0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjExLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTE1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDA2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTcxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDAxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTMwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTY4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDk5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjM3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTMzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDExLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDc1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDI0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTY2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDg2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDY5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjA5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTk1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTEzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU2LTAxOmdibV90Y2dhX3B1Yg",
+                "new sorted sample order correct - 6"
+            );
+
+            // Select 'dont sort' on all clinical tracks
+            // Doing it in this order so that menus dont hide buttons
+            // Have to re-retrieve elements, ones from above may be stale (detached from page) by now
+            overallSurvivalElements = getNthTrackOptionsElements(4);
+            overallSurvivalElements.button.click(); // open Fraction Genome Altered clinical track menu
+            browser.pause(300);// wait for menu to appear
+            overallSurvivalElements.dropdown.$('li:nth-child(7)').click(); // Click Don't sort
+
+            karnofskyPerformanceElements = getNthTrackOptionsElements(3);
+            karnofskyPerformanceElements.button.click(); // open Fraction Genome Altered clinical track menu
+            browser.pause(300);// wait for menu to appear
+            karnofskyPerformanceElements.dropdown.$('li:nth-child(7)').click(); // Click Don't sort
+
+            diseaseFreeElements = getNthTrackOptionsElements(2);
+            diseaseFreeElements.button.click(); // open Fraction Genome Altered clinical track menu
+            browser.pause(300);// wait for menu to appear
+            diseaseFreeElements.dropdown.$('li:nth-child(7)').click(); // Click Don't sort
+
+            fractionGenomeAlteredElements = getNthTrackOptionsElements(1);
+            fractionGenomeAlteredElements.button.click(); // open Fraction Genome Altered clinical track menu
+            browser.pause(300);// wait for menu to appear
+            fractionGenomeAlteredElements.dropdown.$('li:nth-child(7)').click(); // Click Don't sort
+            browser.pause(100);//give time to sort
+
+            // Sort heatmap tracks
+            TP53HeatmapElements = getNthTrackOptionsElements(8);
+            TP53HeatmapElements.button.click(); // open track menu
+            browser.pause(300);// wait for menu to appear
+            TP53HeatmapElements.dropdown.$('li:nth-child(6)').click(); // Click sort Z-a
+            browser.pause(100); // give time to sort
+
+            assert.equal(
+                browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
+                "VENHQS0wMi0wMTE0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDEwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDI4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDQzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTAyLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDIxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTczLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTE2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDY5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQ1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjExLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDAxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDk5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDA5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDc0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDQ3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDM4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDM3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDgzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQ4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDc1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTM3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDA2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDExLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDcxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDI3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTk1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTIyLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjEwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTY4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTY2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDUyLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTkwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDg5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDMzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDY0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDA3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjQxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTY5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDQ2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQ3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDg1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTMwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDAzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDg2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTc0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjE0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDgwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjE5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTk3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTc4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTcxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTEzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDM0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTE1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTM4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjA2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjM3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTM5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjA5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTA3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTMzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTMyLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjA4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDYwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDI0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDE0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTc2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjIxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjAxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjEzLTAxOmdibV90Y2dhX3B1Yg",
+                "new sorted sample order correct - 7"
+            );
+
+            TP53HeatmapElements.dropdown.$('li:nth-child(5)').click(); // Click sort a-Z
+            browser.pause(100); // give time to sort
+
+            assert.equal(
+                browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
+                "VENHQS0wNi0wMjEzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjAxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjIxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTc2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDE0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDI0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDYwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjA4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTMyLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTMzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTA3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjA5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTM5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjM3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjA2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTM4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTE1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDM0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTEzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTcxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTc4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTk3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjE5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDgwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjE0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTc0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDg2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDAzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTMwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDg1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQ3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDQ2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTY5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjQxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDA3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDY0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDMzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDg5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTkwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDUyLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTY2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTY4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjEwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTIyLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTk1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDI3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDcxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDExLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDA2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTM3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDc1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQ4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDgzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDM3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDM4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDQ3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDc0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDA5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDk5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDAxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjExLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQ1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDY5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTE2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTczLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDIxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTAyLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDQzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDI4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDEwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTE0LTAxOmdibV90Y2dhX3B1Yg",
+                "new sorted sample order correct - 8"
+            );
+
+            TP53HeatmapElements.button.click(); // close track menu
+            browser.pause(300); // wait for menu to disappear
+
+            var MDM4HeatmapElements = getNthTrackOptionsElements(13);
+            MDM4HeatmapElements.button.click(); // open track menu
+            browser.pause(300);// wait for menu to appear
+            MDM4HeatmapElements.dropdown.$('li:nth-child(5)').click(); // Click sort a-Z
+            browser.pause(100); // give time to sort
+
+            assert.equal(
+                browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
+                "VENHQS0wNi0wMjEzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjAxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjIxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTc2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDE0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDI0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDYwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjA4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTMyLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTMzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTA3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjA5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTM5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjM3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjA2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTM4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTE1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDM0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTEzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTcxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTc4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTk3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjE5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDgwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjE0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTc0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDg2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDAzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTMwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDg1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQ3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDQ2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTY5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjQxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDA3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDY0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDMzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDg5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTkwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDUyLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTY2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTY4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjEwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTIyLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTk1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDI3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDcxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDExLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDA2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTM3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDc1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQ4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDgzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDM3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDM4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDQ3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDc0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDA5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDk5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDAxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjExLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQ1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDY5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTE2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTczLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDIxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTAyLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDQzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDI4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDEwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTE0LTAxOmdibV90Y2dhX3B1Yg",
+                "new sorted sample order correct - 9"
+            );
+
+            MDM4HeatmapElements.dropdown.$('li:nth-child(6)').click(); // Click sort Z-a
+            browser.pause(100); // give time to sort
+
+            assert.equal(
+                browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
+                "VENHQS0wNi0wMjEzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjAxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjIxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTc2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDE0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDI0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDYwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjA4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTMyLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTMzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTA3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjA5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTM5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjM3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjA2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTM4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTE1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDM0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTEzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTcxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTc4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTk3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjE5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDgwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjE0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTc0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDg2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDAzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTMwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDg1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQ3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDQ2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTY5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjQxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDA3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDY0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDMzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDg5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTkwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDUyLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTY2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTY4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjEwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTIyLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTk1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDI3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDcxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDExLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDA2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTM3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDc1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQ4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDgzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDM3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDM4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDQ3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDc0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDA5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDk5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDAxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjExLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQ1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDY5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTE2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTczLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDIxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTAyLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDQzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDI4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDEwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTE0LTAxOmdibV90Y2dhX3B1Yg",
+                "new sorted sample order correct - 10"
+            );
+
+            TP53HeatmapElements = getNthTrackOptionsElements(8);
+            TP53HeatmapElements.button.click(); // open track menu
+            browser.pause(300);// wait for menu to appear
+            TP53HeatmapElements.dropdown.$('li:nth-child(7)').click(); // Click Don't sort
+            browser.pause(100); // give time to sort
+
+            assert.equal(
+                browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
+                "VENHQS0wNi0wMTU3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDcxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjEwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDM3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDA2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDA3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDI4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDY5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDEwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDE0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDExLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDc0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDQzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDA5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDI0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTE2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTAyLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTM3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTY5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTIyLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDgwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTE0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQ1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDY0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDI3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTk1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDQ2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTM4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDQ3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDMzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjQxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDc1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDM0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDM4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTc4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDgzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDYwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQ3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjExLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjE5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQ4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDAzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDIxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjM3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTE1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTM5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDAxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTMyLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTkwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDk5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTc0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTcxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjA4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTczLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTY4LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjIxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDg1LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTMwLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTMzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDUyLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTY2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTEzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjE0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDg5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTc2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg0LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg5LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTA3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTk3LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDg2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjAxLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjEzLTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjA2LTAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjA5LTAxOmdibV90Y2dhX3B1Yg",
+                "new sorted sample order correct - 11"
+            );
+
+            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="1"]').click(); // go to patient mode
+            waitForOncoprint(10000);
+
+            assert.equal(
+                browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
+                "VENHQS0wNi0wMTU3OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQzOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDcxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjEwOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDM3OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDA2OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDA3OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU1OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDI4OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDY5OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDEwOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI5OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDE0OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDExOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDc0OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDQzOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI4OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDA5OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDI0OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTE2OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU0OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTAyOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTM3OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI2OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTY5OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTIyOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDgwOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI1OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg1OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTE0OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU4OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQ1OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDY0OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDI3OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTk1OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDQ2OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU4OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTM4OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDQ3OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDMzOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU3OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjQxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDc1OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDM0OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDM4OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg4OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTc4OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU2OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDgzOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDYwOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQ3OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjExOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjE5OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQ4OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDAzOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDIxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjM3OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI0OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTE1OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTM5OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTMyOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTkwOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDk5OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTc0OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTcxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjA4OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTczOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTY4OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjIxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg3OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDg1OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTMwOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTMzOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDUyOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTY2OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU0OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTEzOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjE0OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDg5OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTc2OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg0OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg5OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTA3OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTk3OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDg2OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjEzOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjA2OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjA5OmdibV90Y2dhX3B1Yg",
+                "new sorted patient order correct - 5"
             );
         });
     });
