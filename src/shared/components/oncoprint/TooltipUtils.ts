@@ -137,7 +137,13 @@ export function makeGeneticTrackTooltip(
             }
             return ret;
         });
-    };
+    }
+
+    function generateGermlineLabel() {
+        const ret = $('<small style="color: #ff0000">');
+        ret.append('&nbsp;Germline');
+        return ret;
+    }
 
     const disp_cna:{[integerCN:string]:string} = {'-2': 'HOMODELETED', '-1': 'HETLOSS', '1': 'GAIN', '2': 'AMPLIFIED'};
     return function (d:GeneticTrackDatum) {
@@ -210,6 +216,9 @@ export function makeGeneticTrackTooltip(
                     ret.append(",");
                 }
                 ret.append(mutations[i]);
+            }
+            if (d.disp_germ) {
+                ret.append(generateGermlineLabel());
             }
             ret.append('<br>');
         }

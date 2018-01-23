@@ -110,6 +110,7 @@ export function fillGeneticTrackDatum(
     const dispMrnaCounts:{[mrnaEvent:string]:number} = {};
     const dispProtCounts:{[protEvent:string]:number} = {};
     const dispMutCounts:{[mutType:string]:number} = {};
+    const dispGermline:{[mutType:string]:boolean} = {};
 
     for (const event of data) {
         const molecularAlterationType = event.molecularProfileAlterationType;
@@ -144,6 +145,7 @@ export function fillGeneticTrackDatum(
                     if (event.putativeDriver) {
                         oncoprintMutationType += "_rec";
                     }
+                    dispGermline[oncoprintMutationType] = dispGermline[oncoprintMutationType] || (event.mutationStatus === 'Germline');
                     dispMutCounts[oncoprintMutationType] = dispMutCounts[oncoprintMutationType] || 0;
                     dispMutCounts[oncoprintMutationType] += 1;
                 }
@@ -157,6 +159,7 @@ export function fillGeneticTrackDatum(
     newDatum.disp_mrna = selectDisplayValue(dispMrnaCounts, mrnaRenderPriority);
     newDatum.disp_prot = selectDisplayValue(dispProtCounts, protRenderPriority);
     newDatum.disp_mut = selectDisplayValue(dispMutCounts, mutRenderPriority);
+    newDatum.disp_germ = newDatum.disp_mut ? dispGermline[newDatum.disp_mut] : undefined;
 
     return newDatum as GeneticTrackDatum; // return for convenience, even though changes made in place
 }
