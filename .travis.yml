@@ -55,7 +55,7 @@ script:
     sleep 20s && \
     cd end-to-end-tests && \
     npm install && \
-    npm run test-travis
+    (npm run test-travis || (bash screenshots/upload_failed_screenshots.sh; exit 1))
   fi
   # run webdriver-manager on PRs instead of using browserstack
   # not working atm

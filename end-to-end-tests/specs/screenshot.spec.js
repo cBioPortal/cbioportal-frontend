@@ -7,7 +7,7 @@ function ssAssert(result, message){
     assert(result[0].isWithinMisMatchTolerance);
 };
 
-describe('fdas', function(){
+describe('screenshot tests', function(){
     before(function(){
         var url = `${CBIOPORTAL_URL}/index.do?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&case_ids=&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list&Action=Submit&show_samples=false&`;
         browser.url(url);
@@ -16,8 +16,8 @@ describe('fdas', function(){
     });
 
     it('render the oncoprint', function(){
-        browser.waitForVisible('#oncoprint canvas');
-        browser.pause(1000);
+        browser.waitForVisible('#oncoprint canvas',10000);
+        browser.pause(5000);
         var res = browser.checkDocument();
         ssAssert(res);
     });
@@ -25,6 +25,7 @@ describe('fdas', function(){
     it('cancer type summary', function(){
         browser.click("[href='#pancancer_study_summary']");
         browser.waitForVisible('.cancer-summary-chart-container',10000);
+        browser.pause(3000);
         var res = browser.checkDocument({ hide:['.qtip'] });
         ssAssert(res);
     });
@@ -69,19 +70,22 @@ describe('fdas', function(){
     it('network tab', function(){
         browser.click("[href='#network']");
         browser.waitForVisible('#cytoscapeweb',20000);
+        browser.waitForVisible('#gene_list_area',20000);
+        browser.pause(3000); // wait for page to load
         var res = browser.checkDocument({hide:['.qtip'] });
         ssAssert(res);
     });
 
     it('igv_tab tab', function(){
         browser.click("[href='#igv_tab']");
-        browser.pause(4000); // wait for iframe to load
+        browser.pause(8000); // wait for iframe to load
         var res = browser.checkDocument({hide:['.qtip'] });
         ssAssert(res);
     });
 
     it('data_download tab', function(){
         browser.click("[href='#data_download']");
+        browser.pause(3000); // wait for page to load
         var res = browser.checkDocument({hide:['.qtip'] });
         ssAssert(res);
     });
@@ -92,11 +96,4 @@ describe('fdas', function(){
         ssAssert(res);
     });
 
-
-
-
 });
-
-
-
-
