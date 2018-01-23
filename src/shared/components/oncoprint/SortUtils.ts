@@ -90,7 +90,7 @@ export function getGeneticTrackSortComparator(sortByMutationType?: boolean, sort
     };
     return {
         preferred: alphabeticalDefault(preferred),
-        mandatory: alphabeticalDefault(mandatory)
+        mandatory: mandatory
     };
 }
 
@@ -182,12 +182,30 @@ export function alphabeticalDefault(comparator:(d1:any, d2:any)=>number) {
 
 export function getClinicalTrackSortComparator(track:ClinicalTrackSpec) {
     if (track.datatype === "number") {
-        return alphabeticalDefault(makeNumericalComparator("attr_val"));
+        const comparator = makeNumericalComparator("attr_val");
+        return {
+            preferred: alphabeticalDefault(comparator),
+            mandatory: comparator
+        };
     } else if (track.datatype === "string") {
-        return alphabeticalDefault(stringClinicalComparator);
+        return {
+            preferred: alphabeticalDefault(stringClinicalComparator),
+            mandatory: stringClinicalComparator
+        };
     } else if (track.datatype === "counts") {
-        return alphabeticalDefault(makeCountsMapClinicalComparator(track.countsCategoryLabels));
+        const comparator = makeCountsMapClinicalComparator(track.countsCategoryLabels);
+        return {
+            preferred: alphabeticalDefault(comparator),
+            mandatory: comparator
+        };
     }
 }
 
-export const heatmapTrackSortComparator = alphabeticalDefault(makeNumericalComparator("profile_data"));
+export const heatmapTrackSortComparator = (()=>{
+    const comparator = makeNumericalComparator("profile_data");
+    return {
+        preferred: alphabeticalDefault(comparator),
+        mandatory: comparator
+    };
+
+})();
