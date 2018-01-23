@@ -73,7 +73,7 @@ jobs:
             sleep 20s && \
             cd end-to-end-tests && \
             npm install && \
-            npm run test-travis
+            (npm run test-travis || (bash screenshots/upload_failed_screenshots.sh; exit 1))
 
 workflows:
     version: 2

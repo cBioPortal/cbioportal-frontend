@@ -2,20 +2,6 @@ var path = require('path');
 var VisualRegressionCompare = require('wdio-visual-regression-service/compare');
 var getScreenshotName = require('./getScreenshotName');
 
-// function getScreenshotName(basePath) {
-//     return function(context) {
-//         var type = context.type;
-//         var testName = context.test.title;
-//         var browserVersion = parseInt(context.browser.version, 10);
-//         var browserName = context.browser.name;
-//         var browserViewport = context.meta.viewport;
-//         var browserWidth = browserViewport.width;
-//         var browserHeight = browserViewport.height;
-//
-//         return path.join(basePath, `${testName}_${type}_${browserName}_v${browserVersion}_${browserWidth}x${browserHeight}.png`);
-//     };
-// }
-
 exports.config = {
     //
     // ==================
@@ -27,7 +13,7 @@ exports.config = {
     // directory is where your package.json resides, so `wdio` will be called from there.
     //
     specs: [
-        './specs/**/screenshot.spec.js'
+        './specs/**/*.spec.js'
     ],
     // Patterns to exclude.
     exclude: [
