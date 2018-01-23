@@ -347,6 +347,40 @@ describe('oncoprint', function() {
                 "sample id order"
             );
         });
+
+        it("should start successfully if a specified clinical track doesnt exist", ()=>{
+            browser.url(CBIOPORTAL_URL+'/index.do?cancer_study_id=acc_tcga&show_samples=true&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=acc_tcga_cnaseq&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=acc_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=acc_tcga_gistic&clinicallist=asodifjpaosidjfa');
+            waitForOncoprint(10000);
+
+            assert.equal(
+                browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
+                "VENHQS1PUi1BNUpZLTAxOmFjY190Y2dh,VENHQS1PUi1BNUo0LTAxOmFjY190Y2dh,VENHQS1PUi1BNUpCLTAxOmFjY190Y2dh,VENHQS1PUi1BNUoxLTAxOmFjY190Y2dh,VENHQS1PUi1BNUoyLTAxOmFjY190Y2dh,VENHQS1PUi1BNUozLTAxOmFjY190Y2dh,VENHQS1PUi1BNUo1LTAxOmFjY190Y2dh,VENHQS1PUi1BNUo2LTAxOmFjY190Y2dh,VENHQS1PUi1BNUo3LTAxOmFjY190Y2dh,VENHQS1PUi1BNUo4LTAxOmFjY190Y2dh,VENHQS1PUi1BNUo5LTAxOmFjY190Y2dh,VENHQS1PUi1BNUpBLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpDLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpELTAxOmFjY190Y2dh,VENHQS1PUi1BNUpFLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpGLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpHLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpILTAxOmFjY190Y2dh,VENHQS1PUi1BNUpJLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpKLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpLLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpMLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpNLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpPLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpQLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpRLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpSLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpTLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpULTAxOmFjY190Y2dh,VENHQS1PUi1BNUpVLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpWLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpXLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpYLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpaLTAxOmFjY190Y2dh,VENHQS1PUi1BNUswLTAxOmFjY190Y2dh,VENHQS1PUi1BNUsxLTAxOmFjY190Y2dh,VENHQS1PUi1BNUsyLTAxOmFjY190Y2dh,VENHQS1PUi1BNUszLTAxOmFjY190Y2dh,VENHQS1PUi1BNUs0LTAxOmFjY190Y2dh,VENHQS1PUi1BNUs1LTAxOmFjY190Y2dh,VENHQS1PUi1BNUs2LTAxOmFjY190Y2dh,VENHQS1PUi1BNUs4LTAxOmFjY190Y2dh,VENHQS1PUi1BNUs5LTAxOmFjY190Y2dh,VENHQS1PUi1BNUtCLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtPLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtQLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtRLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtTLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtULTAxOmFjY190Y2dh,VENHQS1PUi1BNUtVLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtWLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtXLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtYLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtZLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtaLTAxOmFjY190Y2dh,VENHQS1PUi1BNUwxLTAxOmFjY190Y2dh,VENHQS1PUi1BNUwyLTAxOmFjY190Y2dh,VENHQS1PUi1BNUwzLTAxOmFjY190Y2dh,VENHQS1PUi1BNUw0LTAxOmFjY190Y2dh,VENHQS1PUi1BNUw1LTAxOmFjY190Y2dh,VENHQS1PUi1BNUw2LTAxOmFjY190Y2dh,VENHQS1PUi1BNUw4LTAxOmFjY190Y2dh,VENHQS1PUi1BNUw5LTAxOmFjY190Y2dh,VENHQS1PUi1BNUxBLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxCLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxDLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxELTAxOmFjY190Y2dh,VENHQS1PUi1BNUxFLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxGLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxHLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxILTAxOmFjY190Y2dh,VENHQS1PUi1BNUxJLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxKLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxLLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxMLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxOLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxPLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxQLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxSLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxTLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxULTAxOmFjY190Y2dh,VENHQS1PVS1BNVBJLTAxOmFjY190Y2dh,VENHQS1QNi1BNU9ILTAxOmFjY190Y2dh,VENHQS1QQS1BNVlHLTAxOmFjY190Y2dh,VENHQS1QSy1BNUg5LTAxOmFjY190Y2dh,VENHQS1QSy1BNUhBLTAxOmFjY190Y2dh,VENHQS1QSy1BNUhCLTAxOmFjY190Y2dh,VENHQS1QSy1BNUhDLTAxOmFjY190Y2dh",
+                "sample id order"
+            );
+
+            assert.equal(
+                browser.execute(function() { return frontendOnc.model.getTracks().length; }).value,
+                3,
+                "gene tracks should exist"
+            )
+        });
+
+        it("should start successfully if a specified clinical track doesnt exist, but others do", ()=>{
+            browser.url(CBIOPORTAL_URL+'/index.do?cancer_study_id=acc_tcga&show_samples=true&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=acc_tcga_cnaseq&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=acc_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=acc_tcga_gistic&clinicallist=CANCER_TYPE,asodifjpaosidjfa,CANCER_TYPE_DETAILED,FRACTION_GENOME_ALTERED,aposdijfpoai,MUTATION_COUNT');
+            waitForOncoprint(10000);
+
+            assert.equal(
+                browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
+                "VENHQS1PUi1BNUpZLTAxOmFjY190Y2dh,VENHQS1PUi1BNUo0LTAxOmFjY190Y2dh,VENHQS1PUi1BNUpCLTAxOmFjY190Y2dh,VENHQS1PUi1BNUoxLTAxOmFjY190Y2dh,VENHQS1PUi1BNUoyLTAxOmFjY190Y2dh,VENHQS1PUi1BNUozLTAxOmFjY190Y2dh,VENHQS1PUi1BNUo1LTAxOmFjY190Y2dh,VENHQS1PUi1BNUo2LTAxOmFjY190Y2dh,VENHQS1PUi1BNUo3LTAxOmFjY190Y2dh,VENHQS1PUi1BNUo4LTAxOmFjY190Y2dh,VENHQS1PUi1BNUo5LTAxOmFjY190Y2dh,VENHQS1PUi1BNUpBLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpDLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpELTAxOmFjY190Y2dh,VENHQS1PUi1BNUpFLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpGLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpHLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpILTAxOmFjY190Y2dh,VENHQS1PUi1BNUpJLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpKLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpLLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpMLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpNLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpPLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpQLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpRLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpSLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpTLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpULTAxOmFjY190Y2dh,VENHQS1PUi1BNUpVLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpWLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpXLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpYLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpaLTAxOmFjY190Y2dh,VENHQS1PUi1BNUswLTAxOmFjY190Y2dh,VENHQS1PUi1BNUsxLTAxOmFjY190Y2dh,VENHQS1PUi1BNUsyLTAxOmFjY190Y2dh,VENHQS1PUi1BNUszLTAxOmFjY190Y2dh,VENHQS1PUi1BNUs0LTAxOmFjY190Y2dh,VENHQS1PUi1BNUs1LTAxOmFjY190Y2dh,VENHQS1PUi1BNUs2LTAxOmFjY190Y2dh,VENHQS1PUi1BNUs4LTAxOmFjY190Y2dh,VENHQS1PUi1BNUs5LTAxOmFjY190Y2dh,VENHQS1PUi1BNUtCLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtPLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtQLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtRLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtTLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtULTAxOmFjY190Y2dh,VENHQS1PUi1BNUtVLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtWLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtXLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtYLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtZLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtaLTAxOmFjY190Y2dh,VENHQS1PUi1BNUwxLTAxOmFjY190Y2dh,VENHQS1PUi1BNUwyLTAxOmFjY190Y2dh,VENHQS1PUi1BNUwzLTAxOmFjY190Y2dh,VENHQS1PUi1BNUw0LTAxOmFjY190Y2dh,VENHQS1PUi1BNUw1LTAxOmFjY190Y2dh,VENHQS1PUi1BNUw2LTAxOmFjY190Y2dh,VENHQS1PUi1BNUw4LTAxOmFjY190Y2dh,VENHQS1PUi1BNUw5LTAxOmFjY190Y2dh,VENHQS1PUi1BNUxBLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxCLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxDLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxELTAxOmFjY190Y2dh,VENHQS1PUi1BNUxFLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxGLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxHLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxILTAxOmFjY190Y2dh,VENHQS1PUi1BNUxJLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxKLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxLLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxMLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxOLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxPLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxQLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxSLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxTLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxULTAxOmFjY190Y2dh,VENHQS1PVS1BNVBJLTAxOmFjY190Y2dh,VENHQS1QNi1BNU9ILTAxOmFjY190Y2dh,VENHQS1QQS1BNVlHLTAxOmFjY190Y2dh,VENHQS1QSy1BNUg5LTAxOmFjY190Y2dh,VENHQS1QSy1BNUhBLTAxOmFjY190Y2dh,VENHQS1QSy1BNUhCLTAxOmFjY190Y2dh,VENHQS1QSy1BNUhDLTAxOmFjY190Y2dh",
+                "sample id order"
+            );
+
+            assert.equal(
+                browser.execute(function() { return frontendOnc.model.getTracks().length; }).value,
+                7,
+                "gene tracks and existing clinical tracks should exist"
+            )
+        });
     });
     describe("sorting", ()=>{
         function topCmp(eltA, eltB) {
@@ -478,7 +512,7 @@ describe('oncoprint', function() {
         });
 
         it("sorts correctly w/ clinical tracks and heatmap tracks, clinical tracks sorted", ()=>{
-            browser.url(CBIOPORTAL_URL+'/index.do?cancer_study_id=gbm_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=gbm_tcga_pub_cnaseq&gene_list=TP53%2520MDM2%2520MDM4&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_pub_cna_rae&clinicallist=1%2CDFS_MONTHS%2CKARNOFSKY_PERFORMANCE_SCORE%2COS_STATUS&heatmap_track_groups=gbm_tcga_pub_mrna_median_Zscores%2CTP53%2CMDM2%2CMDM4%3Bgbm_tcga_pub_mrna_merged_median_Zscores%2CTP53%2CMDM2%2CMDM4');
+            browser.url(CBIOPORTAL_URL+'/index.do?cancer_study_id=gbm_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=gbm_tcga_pub_cnaseq&gene_list=TP53%2520MDM2%2520MDM4&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_pub_cna_rae&clinicallist=FRACTION_GENOME_ALTERED%2CDFS_MONTHS%2CKARNOFSKY_PERFORMANCE_SCORE%2COS_STATUS&heatmap_track_groups=gbm_tcga_pub_mrna_median_Zscores%2CTP53%2CMDM2%2CMDM4%3Bgbm_tcga_pub_mrna_merged_median_Zscores%2CTP53%2CMDM2%2CMDM4');
             $('.alert-warning').$('button.close').click(); // close dev mode notification so it doesnt intercept clicks
 
             waitForOncoprint(10000);
@@ -615,7 +649,7 @@ describe('oncoprint', function() {
             );
         });
         it("sorts correctly w/ clinical tracks and heatmap tracks, heatmap tracks sorted", ()=>{
-            browser.url(CBIOPORTAL_URL+'/index.do?cancer_study_id=gbm_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=gbm_tcga_pub_cnaseq&gene_list=TP53%2520MDM2%2520MDM4&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_pub_cna_rae&clinicallist=1%2CDFS_MONTHS%2CKARNOFSKY_PERFORMANCE_SCORE%2COS_STATUS&heatmap_track_groups=gbm_tcga_pub_mrna_median_Zscores%2CTP53%2CMDM2%2CMDM4%3Bgbm_tcga_pub_mrna_merged_median_Zscores%2CTP53%2CMDM2%2CMDM4&show_samples=true');
+            browser.url(CBIOPORTAL_URL+'/index.do?cancer_study_id=gbm_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=gbm_tcga_pub_cnaseq&gene_list=TP53%2520MDM2%2520MDM4&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_pub_cna_rae&clinicallist=FRACTION_GENOME_ALTERED%2CDFS_MONTHS%2CKARNOFSKY_PERFORMANCE_SCORE%2COS_STATUS&heatmap_track_groups=gbm_tcga_pub_mrna_median_Zscores%2CTP53%2CMDM2%2CMDM4%3Bgbm_tcga_pub_mrna_merged_median_Zscores%2CTP53%2CMDM2%2CMDM4&show_samples=true');
             $('.alert-warning').$('button.close').click(); // close dev mode notification so it doesnt intercept clicks
 
             waitForOncoprint(10000);
