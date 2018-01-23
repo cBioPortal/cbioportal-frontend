@@ -127,9 +127,16 @@ export class QueryStore
 			pathname: queryUrl(this, initialNonMolecularProfileParams),
 			molecularProfileIds: this._selectedProfileIds || []
 		};
+
+		reaction(
+			()=>this.allSelectedStudyIds,
+			()=>{
+				this.studiesHaveChangedSinceInitialization = true;
+			}
+		);
 	}
 
-	@observable userHasClickedOnAStudy:boolean = false;
+	@observable studiesHaveChangedSinceInitialization:boolean = false;
 	@observable savedVirtualCohorts:VirtualCohort[] = [];
 
 	@action public deleteVirtualCohort(id:string) {
@@ -478,7 +485,7 @@ export class QueryStore
 		},
 		default: [],
 		onResult: () => {
-			if (!this.initiallySelected.profileIds || this.userHasClickedOnAStudy) {
+			if (!this.initiallySelected.profileIds || this.studiesHaveChangedSinceInitialization) {
 				this._selectedProfileIds = undefined;
 			}
 		}
@@ -505,7 +512,7 @@ export class QueryStore
 		},
 		default: [],
 		onResult: () => {
-			if (!this.initiallySelected.sampleListId || this.userHasClickedOnAStudy) {
+			if (!this.initiallySelected.sampleListId || this.studiesHaveChangedSinceInitialization) {
 				this._selectedSampleListId = undefined;
 			}
 		}
