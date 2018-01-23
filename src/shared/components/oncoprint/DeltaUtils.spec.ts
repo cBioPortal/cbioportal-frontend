@@ -1,5 +1,11 @@
 import {assert} from "chai";
-import {numTracksWhoseDataChanged} from "./DeltaUtils";
+import {
+    heatmapClusterValueFn, numTracksWhoseDataChanged, transitionSortConfig,
+    transitionTrackGroupSortPriority
+} from "./DeltaUtils";
+import {spy} from "sinon";
+import OncoprintJS from "oncoprintjs";
+import {CLINICAL_TRACK_GROUP_INDEX, GENETIC_TRACK_GROUP_INDEX, HeatmapTrackSpec} from "./Oncoprint";
 
 describe("Oncoprint DeltaUtils", ()=>{
     describe("numTracksWhoseDataChanged", ()=>{
@@ -23,6 +29,120 @@ describe("Oncoprint DeltaUtils", ()=>{
                 assert.equal(numTracksWhoseDataChanged(state1.slice(i), state2.slice(i)), state1.length - i);
                 assert.equal(numTracksWhoseDataChanged(state2.slice(i), state1.slice(i)), state1.length - i);
             }
+        });
+    });
+
+    describe("transitionTrackGroupSortPriority", ()=>{
+        let oncoprint:any;
+        beforeEach(()=>{
+            oncoprint = { setTrackGroupSortPriority:spy(()=>{}) };
+        });
+        it("should not do anything if the heatmap tracks are both empty", ()=>{
+           transitionTrackGroupSortPriority({heatmapTracks:[]}, {heatmapTracks:[]}, oncoprint);
+           assert.equal(oncoprint.setTrackGroupSortPriority.callCount, 0);
+        });
+        it("should not do anything if the heatmap tracks are the same", ()=>{
+            transitionTrackGroupSortPriority(
+                {heatmapTracks:[{ trackGroupIndex: 2}, {trackGroupIndex: 3}] as HeatmapTrackSpec[]},
+                {heatmapTracks:[{ trackGroupIndex: 2}, {trackGroupIndex: 3}] as HeatmapTrackSpec[]},
+                oncoprint
+            );
+            assert.equal(oncoprint.setTrackGroupSortPriority.callCount, 0);
+        });
+        it("should not do anything if the heatmap tracks are different but same groups", ()=>{
+            transitionTrackGroupSortPriority(
+                {heatmapTracks:[{ trackGroupIndex: 2}, {trackGroupIndex: 3}, {trackGroupIndex: 3}, {trackGroupIndex: 3}] as HeatmapTrackSpec[]},
+                {heatmapTracks:[{ trackGroupIndex: 2}, {trackGroupIndex: 2}, { trackGroupIndex: 2}, {trackGroupIndex: 3}] as HeatmapTrackSpec[]},
+                oncoprint
+            );
+            assert.equal(oncoprint.setTrackGroupSortPriority.callCount, 0);
+        });
+        it("should set the track group sort priority if the heatmap track groups have changed", ()=>{
+            transitionTrackGroupSortPriority(
+                {heatmapTracks:[{ trackGroupIndex: 2}, {trackGroupIndex: 4}, { trackGroupIndex: 2}, {trackGroupIndex: 3}] as HeatmapTrackSpec[]},
+                {heatmapTracks:[{ trackGroupIndex: 2}, {trackGroupIndex: 3}, {trackGroupIndex: 3}, {trackGroupIndex: 3}] as HeatmapTrackSpec[]},
+                oncoprint
+            );
+            assert.equal(oncoprint.setTrackGroupSortPriority.callCount, 1, "called once");
+            assert.deepEqual(
+                oncoprint.setTrackGroupSortPriority.args[0][0],
+                [CLINICAL_TRACK_GROUP_INDEX, 2, 3, 4, GENETIC_TRACK_GROUP_INDEX],
+                "right priority order"
+            );
+        });
+    });
+
+    describe("transitionSortConfig", ()=>{
+        let oncoprint:any;
+        beforeEach(()=>{
+            oncoprint = { setSortConfig:spy(()=>{}) };
+        });
+        it("should not do anything if no sortConfig specified", ()=>{
+            transitionSortConfig({}, {}, oncoprint);
+            assert.equal(oncoprint.setSortConfig.callCount, 0);
+        });
+        it("should not do anything if the given sort configs have no order or cluster heatmap group specified, regardless of changes", ()=>{
+            transitionSortConfig({sortConfig:{}}, {sortConfig:{}}, oncoprint);
+            transitionSortConfig({sortConfig:{sortByMutationType:true}}, {sortConfig:{sortByMutationType:false}}, oncoprint);
+            transitionSortConfig({sortConfig:{sortByMutationType:true}}, {sortConfig:{sortByMutationType:true}}, oncoprint);
+            transitionSortConfig({sortConfig:{sortByDrivers:true}}, {sortConfig:{sortByMutationType:false, sortByDrivers: false}}, oncoprint);
+            transitionSortConfig({sortConfig:{}}, {sortConfig:{sortByMutationType:false}}, oncoprint);
+            transitionSortConfig({}, {sortConfig:{sortByMutationType:false}}, oncoprint);
+            transitionSortConfig({sortConfig:{sortByMutationType:false}}, {}, oncoprint);
+            assert.equal(oncoprint.setSortConfig.callCount, 0);
+        });
+        it("should set the config to new order if order is specified, no sort config specified before", ()=>{
+            transitionSortConfig({sortConfig:{order:["5","3","2"]}},{}, oncoprint);
+            assert.equal(oncoprint.setSortConfig.callCount, 1, "called once");
+            assert.deepEqual(oncoprint.setSortConfig.args[0][0], {type:"order", order:["5","3","2"]}, "correct sort config used");
+        });
+        it("should set the config to new order if order is specified, no order specified before", ()=>{
+            transitionSortConfig({sortConfig:{order:["5","3","2"]}},{sortConfig:{}}, oncoprint);
+            assert.equal(oncoprint.setSortConfig.callCount, 1, "called once");
+            assert.deepEqual(oncoprint.setSortConfig.args[0][0], {type:"order", order:["5","3","2"]}, "correct sort config used");
+        });
+        it("should set the config to new order if order is specified, different order specified before", ()=>{
+            transitionSortConfig({sortConfig:{order:["6","4","0","2"]}},{sortConfig:{order:["1"]}}, oncoprint);
+            assert.equal(oncoprint.setSortConfig.callCount, 1, "called once");
+            assert.deepEqual(oncoprint.setSortConfig.args[0][0], {type:"order", order:["6","4","0","2"]}, "correct sort config used");
+        });
+        it("should not do anything if same order given (same object, shallow equality)", ()=>{
+            const order = "0,1,2,3,4".split(",");
+            transitionSortConfig({sortConfig:{order}},{sortConfig:{order}}, oncoprint);
+            assert.equal(oncoprint.setSortConfig.callCount, 0);
+        });
+        it("should set the config to order, if order and cluster heatmap group specified", ()=>{
+            const order = "0,1,2,3,4".split(",");
+            transitionSortConfig({sortConfig:{order, clusterHeatmapTrackGroupIndex:1}},{sortConfig:{order}}, oncoprint);
+            assert.equal(oncoprint.setSortConfig.callCount, 0, "no change registered bc order overrides heatmap");
+
+            transitionSortConfig({sortConfig:{order, clusterHeatmapTrackGroupIndex:1}}, {}, oncoprint);
+            assert.equal(oncoprint.setSortConfig.callCount, 1, "called once");
+            assert.deepEqual(oncoprint.setSortConfig.args[0][0], { type: "order", order}, "correct sort config used");
+        });
+        it("should set the config to heatmap if heatmap index specified, no sort config specified before", ()=>{
+            transitionSortConfig({sortConfig:{clusterHeatmapTrackGroupIndex:1}}, {}, oncoprint);
+            assert.equal(oncoprint.setSortConfig.callCount, 1, "called once");
+            assert.deepEqual(oncoprint.setSortConfig.args[0][0], {type:"cluster", track_group_index:1, clusterValueFn: heatmapClusterValueFn}, "correct sort config used");
+        });
+        it("should set the config to heatmap if heatmap index specified, no heatmap index or order specified before", ()=>{
+            transitionSortConfig({sortConfig:{clusterHeatmapTrackGroupIndex:1}}, {sortConfig:{}}, oncoprint);
+            assert.equal(oncoprint.setSortConfig.callCount, 1, "called once");
+            assert.deepEqual(oncoprint.setSortConfig.args[0][0], {type:"cluster", track_group_index:1, clusterValueFn: heatmapClusterValueFn}, "correct sort config used");
+        });
+        it("should set the config to heatmap if heatmap index specified, no heatmap index specified before, order specified before", ()=>{
+            transitionSortConfig({sortConfig:{clusterHeatmapTrackGroupIndex:1}}, {sortConfig:{order:["1"]}}, oncoprint);
+            assert.equal(oncoprint.setSortConfig.callCount, 1, "called once");
+            assert.deepEqual(oncoprint.setSortConfig.args[0][0], {type:"cluster", track_group_index:1, clusterValueFn: heatmapClusterValueFn}, "correct sort config used");
+        });
+        it("should set the config to heatmap if heatmap index specified, different heatmap index specified before", ()=>{
+            transitionSortConfig({sortConfig:{clusterHeatmapTrackGroupIndex:5}}, {sortConfig:{clusterHeatmapTrackGroupIndex:2}}, oncoprint);
+            assert.equal(oncoprint.setSortConfig.callCount, 1, "called once");
+            assert.deepEqual(oncoprint.setSortConfig.args[0][0], {type:"cluster", track_group_index:5, clusterValueFn: heatmapClusterValueFn}, "correct sort config used");
+        });
+        it("should not do anything if heatmap index specified, same heatmap index specified before", ()=>{
+            transitionSortConfig({sortConfig:{clusterHeatmapTrackGroupIndex:2}}, {sortConfig:{clusterHeatmapTrackGroupIndex:2}}, oncoprint);
+            assert.equal(oncoprint.setSortConfig.callCount, 0);
         });
     });
 });
