@@ -123,15 +123,15 @@ exports.config = {
             referenceName: getScreenshotName(path.join(process.cwd(), 'screenshots/reference')),
             screenshotName: getScreenshotName(path.join(process.cwd(), 'screenshots/screen')),
             diffName: getScreenshotName(path.join(process.cwd(), 'screenshots/diff')),
-            misMatchTolerance:1
+            misMatchTolerance:5
         }),
         viewportChangePause: 300,
         viewports: [{ width: 1600, height: 1000 }],
         orientations: ['landscape', 'portrait'],
     },
 
-    user: 'aaronlisman2',
-    key: 'SR7V7KzpDxrBfL9pNZUy',
+    user: process.env.BROWSERSTACK_USERNAME,
+    key: process.env.BROWSERSTACK_ACCESS_KEY,
     // Framework you want to run your specs with.
     // The following are supported: Mocha, Jasmine, and Cucumber
     // see also: http://webdriver.io/guide/testrunner/frameworks.html
