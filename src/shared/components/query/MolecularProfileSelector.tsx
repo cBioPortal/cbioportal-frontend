@@ -36,7 +36,7 @@ export default class MolecularProfileSelector extends QueryStoreComponent<{}, {}
 				<SectionHeader className="sectionLabel" promises={[this.store.molecularProfiles]}>
 					Select Genomic Profiles:
 				</SectionHeader>
-				<div className={styles.group}>
+				<div className={styles.group} data-test="molecularProfileSelector">
 					{this.renderGroup("MUTATION_EXTENDED", "Mutation")}
 					{this.renderGroup("COPY_NUMBER_ALTERATION", "Copy Number")}
 					{this.renderGroup("GENESET_SCORE", "GSVA scores")}
@@ -70,6 +70,7 @@ export default class MolecularProfileSelector extends QueryStoreComponent<{}, {}
 				type={type}
 				checked={checked}
 				onChange={event => this.store.selectMolecularProfile(profile, (event.target as HTMLInputElement).checked)}
+				data-test={profile.molecularAlterationType}
 			/>
 			<span className={isGroupToggle ? styles.groupName : styles.profileName}>
 				{label}
