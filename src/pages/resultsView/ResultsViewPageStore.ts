@@ -1493,7 +1493,7 @@ export class ResultsViewPageStore {
         invoke:()=>{
             return Promise.resolve((mutation:Mutation)=>{
                 const oncokbAnnotation = this.getOncoKbMutationAnnotationForOncoprint.result!(mutation);
-                return !!oncokbAnnotation.hotspot;
+                return (oncokbAnnotation ? !!oncokbAnnotation.hotspot : false);
             });
         }
     });
@@ -1571,7 +1571,7 @@ export class ResultsViewPageStore {
         )
     }, ONCOKB_DEFAULT);
 
-    readonly getOncoKbMutationAnnotationForOncoprint = remoteData({
+    readonly getOncoKbMutationAnnotationForOncoprint = remoteData<(mutation:Mutation)=>(IndicatorQueryResp|undefined)>({
         await: ()=>[
             this.oncoKbDataForOncoprint
         ],
