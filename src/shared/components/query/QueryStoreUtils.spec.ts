@@ -16,7 +16,7 @@ describe('QueryStoreUtils', ()=>{
             addParamStub.restore();
         });
 
-        it("returns normalized query for gene_list parameter", ()=>{
+        it("returns url-encoded, normalized query for gene_list parameter", ()=>{
 
 
             let store = new QueryStore();
@@ -32,8 +32,18 @@ describe('QueryStoreUtils', ()=>{
             ];
             for (let query of queries) {
                 store.geneQuery = query;
-                assert.equal(nonMolecularProfileParams(store).gene_list, normalizeQuery(query), `got normalized query for query ${query}`);
+                assert.equal(nonMolecularProfileParams(store).gene_list, encodeURIComponent(normalizeQuery(query)), `got encoded, normalized query for query ${query}`);
             }
+        });
+
+        it("correctly sets study parameters in case of single study", ()=>{
+            let store = new QueryStore();
+            store.selectedStudyIds = ["a"];
+            Sinon.stub(store, "selectableStudiesSet").get(() => {
+                return {"a":true, "b":true};
+            });
+            assert.equal(nonMolecularProfileParams(store).cancer_study_id, "a");
+            assert.equal(nonMolecularProfileParams(store).cancer_study_list, undefined);
         });
     });
 });
