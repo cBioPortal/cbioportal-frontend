@@ -51,22 +51,23 @@ export function queryParams(nonMolecularProfileParams:NonMolecularProfileQueryPa
 }
 
 export function nonMolecularProfileParams(store:QueryStore):NonMolecularProfileQueryParams {
+    const selectedStudyIds = store.allSelectedStudyIds;
     let ret:NonMolecularProfileQueryParams = {
-        cancer_study_id: store.singleSelectedStudyId || 'all',
+        cancer_study_id: selectedStudyIds.length === 1 ? selectedStudyIds[0] : 'all',
         Z_SCORE_THRESHOLD: store.zScoreThreshold,
         RPPA_SCORE_THRESHOLD: store.rppaScoreThreshold,
         data_priority: store.dataTypePriorityCode,
         case_set_id: store.selectedSampleListId || '-1', // empty string won't work
         case_ids: store.asyncCustomCaseSet.result.map(caseRow => (caseRow.studyId + ':' + caseRow.sampleId)).join('\r\n'),
-        gene_list: normalizeQuery(store.geneQuery) || ' ', // empty string won't work
+        gene_list: encodeURIComponent(normalizeQuery(store.geneQuery) || ' '), // empty string won't work
         geneset_list: normalizeQuery(store.genesetQuery) || ' ', //empty string won't work
         tab_index: store.forDownloadTab ? 'tab_download' : 'tab_visualize' as any,
         transpose_matrix: store.transposeDataMatrix ? 'on' : undefined,
         Action: 'Submit',
     };
 
-    if (store.selectedStudyIds.length !== 1) {
-        ret = Object.assign(ret, { cancer_study_list: store.selectedStudyIds.join(",") });
+    if (selectedStudyIds.length !== 1) {
+        ret.cancer_study_list = selectedStudyIds.join(",");
     }
 
     return ret;
