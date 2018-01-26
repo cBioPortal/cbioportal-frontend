@@ -110,6 +110,7 @@ declare module "oncoprintjs"
     };
 
     export default class OncoprintJS<D> {
+        webgl_unavailable: boolean;
         setMinimapVisible:(visible:boolean)=>void;
         scrollTo:(left:number)=>void;
         onHorzZoom:(callback:(newHorzZoom:number)=>void)=>void;
