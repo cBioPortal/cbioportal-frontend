@@ -44,7 +44,16 @@ jobs:
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
       # run tests!
-      - run: "npm run build && npm test"
+      - run:
+          command: "npm run build && npm test"
+          environment:
+            JUNIT_REPORT_PATH: ./junit/
+            JUNIT_REPORT_NAME: test-results.xml
+          when: always
+      - store_test_results:
+          path: ~/repo/junit
+      - store_artifacts:
+          path: ~/repo/junit
 
   end_to_end_tests:
     <<: *defaults
@@ -74,6 +83,13 @@ jobs:
             cd end-to-end-tests && \
             npm install && \
             npm run test-travis
+          environment:
+            JUNIT_REPORT_PATH: ./junit/
+          when: always
+      - store_test_results:
+          path: ~/repo/end-to-end-tests/junit
+      - store_artifacts:
+          path: ~/repo/end-to-end-tests/junit
 
 workflows:
     version: 2
