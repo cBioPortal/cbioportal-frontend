@@ -240,7 +240,7 @@
             "description": "Page size of the result list",
             "required": false,
             "type": "integer",
-            "default": 100000,
+            "default": 10000000,
             "format": "int32"
           },
           {
@@ -956,7 +956,7 @@
             "description": "Page size of the result list",
             "required": false,
             "type": "integer",
-            "default": 100000,
+            "default": 10000000,
             "format": "int32"
           },
           {
@@ -1050,7 +1050,7 @@
             "description": "Page size of the result list",
             "required": false,
             "type": "integer",
-            "default": 100000,
+            "default": 10000000,
             "format": "int32"
           },
           {
