@@ -134,6 +134,13 @@ describe("oncoprint screenshot tests", function() {
         var res = browser.checkElement("#oncoprint");
         assertScreenShotMatch(res);
     });
+    it("brca_tcga_pub with KRAS NRAS BRAF and methylation heatmap tracks", function() {
+        var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=brca_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=brca_tcga_pub_cnaseq&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=brca_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=brca_tcga_pub_gistic&show_samples=false&heatmap_track_groups=brca_tcga_pub_methylation_hm27%2CKRAS%2CNRAS%2CBRAF%2CTP53%2CBRCA1%2CBRCA2`;
+        goToUrlAndSetLocalStorage(url);
+        waitForOncoprint(10000);
+        var res = browser.checkElement("#oncoprint");
+        assertScreenShotMatch(res);
+    });
 });
 
 describe("download tab screenshot tests", function() {
