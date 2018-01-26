@@ -1,12 +1,12 @@
 # cbioportal-frontend
 [![Join the chat at https://gitter.im/cBioPortal/public-chat](https://badges.gitter.im/cBioPortal/public-chat.svg)](https://gitter.im/cBioPortal/public-chat?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 ## Live demo
-Development: http://cbioportal-frontend-demo.herokuapp.com/#/patient?studyId=prad_fhcrc&caseId=00-090
 Master: http://cbioportal-frontend.herokuapp.com/#/patient?studyId=prad_fhcrc&caseId=00-090
+Development: http://cbioportal-frontend-rc.herokuapp.com/#/patient?studyId=prad_fhcrc&caseId=00-090
 ## Test status & Code Quality
-| Branch | master | integration | rc |
-| --- | --- | --- | --- |
-| Status | [![Build Status](https://travis-ci.org/cBioPortal/cbioportal-frontend.svg?branch=master)](https://travis-ci.org/cBioPortal/cbioportal-frontend) | [![Build Status](https://travis-ci.org/cBioPortal/cbioportal-frontend.svg?branch=integration)](https://travis-ci.org/cBioPortal/cbioportal-frontend) | [![Build Status](https://travis-ci.org/cBioPortal/cbioportal-frontend.svg?branch=rc)](https://travis-ci.org/cBioPortal/cbioportal-frontend) |
+| Branch | master | rc |
+| --- | --- | --- |
+| Status | [![CircleCI](https://circleci.com/gh/cBioPortal/cbioportal-frontend/tree/master.svg?style=svg)](https://circleci.com/gh/cBioPortal/cbioportal-frontend/tree/master) | [![CircleCI](https://circleci.com/gh/cBioPortal/cbioportal-frontend/tree/rc.svg?style=svg)](https://circleci.com/gh/cBioPortal/cbioportal-frontend/tree/rc) |
 
 [![codecov](https://codecov.io/gh/cbioportal/cbioportal-frontend/branch/master/graph/badge.svg)](https://codecov.io/gh/cbioportal/cbioportal-frontend)
 
