@@ -2,7 +2,9 @@
 [![Join the chat at https://gitter.im/cBioPortal/public-chat](https://badges.gitter.im/cBioPortal/public-chat.svg)](https://gitter.im/cBioPortal/public-chat?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 ## Live demo
 Master: http://cbioportal-frontend.herokuapp.com/#/patient?studyId=prad_fhcrc&caseId=00-090
-Development: http://cbioportal-frontend-rc.herokuapp.com/#/patient?studyId=prad_fhcrc&caseId=00-090
+
+Rc: http://cbioportal-frontend-rc.herokuapp.com/#/patient?studyId=prad_fhcrc&caseId=00-090
+
 ## Test status & Code Quality
 | Branch | master | rc |
 | --- | --- | --- |
@@ -16,7 +18,7 @@ Development: http://cbioportal-frontend-rc.herokuapp.com/#/patient?studyId=prad_
 [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
 
 This is the frontend code for cBioPortal using React, MobX and TypeScript. The
-frontend for the new patient view is now completely in this repo. The 
+frontend for the new patient view is now completely in this repo. The results view page is currently being replaced one tab at a time by mounting certain React components to the results page (JSP) in [the backend repo](https://github.com/cbioportal/cbioportal)
 
 Make sure you have the latest stable node version installed:
 
