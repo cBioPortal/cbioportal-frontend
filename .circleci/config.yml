@@ -117,3 +117,25 @@ workflows:
             - end_to_end_tests:
                 requires:
                     - install
+
+    nightly:
+       triggers:
+           - schedule:
+               cron: "0 5 * * *"
+               filters:
+                   branches:
+                       only:
+                           - master
+                           - rc
+       jobs:
+           - install
+           - api_sync:
+               requires:
+                   - install
+           - unit_tests:
+               requires:
+                   - install
+           - end_to_end_tests:
+               requires:
+                   - install
+
