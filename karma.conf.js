@@ -67,7 +67,8 @@ module.exports = function (config) {
             'karma-spec-reporter',
             'karma-sourcemap-loader',
             'karma-coverage',
-            'karma-coverage-istanbul-reporter'
+            'karma-coverage-istanbul-reporter',
+            'karma-junit-reporter'
         ],
 
         coverageIstanbulReporter: {
@@ -75,7 +76,13 @@ module.exports = function (config) {
             dir: './test/fixtures/outputs'
         },
 
-        reporters: ['spec','coverage-istanbul'],
+        junitReporter: {
+            outputDir: process.env.JUNIT_REPORT_PATH,
+            outputFile: process.env.JUNIT_REPORT_NAME,
+            useBrowserName: false
+        },
+
+        reporters: ['spec','coverage-istanbul','junit'],
         port: 9876,
         colors: true,
         logLevel: config.LOG_DISABLE,
