@@ -850,12 +850,13 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
                 {this.caseSetInfo}
 
-                <FadeInteraction showByDefault={true} show={this.mouseInsideBounds}>
+                {(this.oncoprint && !this.oncoprint.webgl_unavailable) &&
+                (<FadeInteraction showByDefault={true} show={this.mouseInsideBounds}>
                     <OncoprintControls
                         handlers={this.controlsHandlers}
                         state={this.controlsState}
                     />
-                </FadeInteraction>
+                </FadeInteraction>)}
 
                 <div className={classNames({ hidden:isLoading })}>
                 {this.alterationInfo}
