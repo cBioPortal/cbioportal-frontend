@@ -527,7 +527,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     
     @action private initFromUrlParams(paramsMap:any) {
         if (paramsMap[SAMPLE_MODE_URL_PARAM]) {
-            this.columnMode = paramsMap[SAMPLE_MODE_URL_PARAM] ? "sample" : "patient";
+            this.columnMode = (paramsMap[SAMPLE_MODE_URL_PARAM] && paramsMap[SAMPLE_MODE_URL_PARAM]==="true") ? "sample" : "patient";
         }
         if (paramsMap[HEATMAP_TRACKS_URL_PARAM]) {
             const groups = paramsMap[HEATMAP_TRACKS_URL_PARAM].split(";").map((x:string)=>x.split(","));

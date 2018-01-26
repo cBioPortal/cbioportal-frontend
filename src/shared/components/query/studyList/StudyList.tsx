@@ -89,7 +89,6 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}>
 						onClick={() => {
 							this.view.onCheck(this.store.treeData.rootCancerType, false);
 							this.store.showSelectedStudiesOnly = false;
-							this.store.userHasClickedOnAStudy = true;
 						}}
 					>
 						Deselect all
@@ -329,7 +328,6 @@ export class CancerTreeCheckbox extends QueryStoreComponent<ICancerTreeCheckboxP
 				{...this.checkboxProps}
 				onChange={event => {
 					this.props.view.onCheck(this.props.node, (event.target as HTMLInputElement).checked);
-					this.store.userHasClickedOnAStudy = true;
 				}}
 			>
 				{this.props.children}
