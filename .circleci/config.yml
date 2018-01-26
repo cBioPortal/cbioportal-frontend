@@ -34,6 +34,18 @@ jobs:
             - node_modules
           key: v1-dependencies-{{ checksum "package.json" }}
 
+  api_sync:
+    <<: *defaults
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "package.json" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+      # check that all api responses are still the same
+      - run: "bash src/test/check_api_sync.sh"
+
   unit_tests:
     <<: *defaults
     steps:
@@ -80,6 +92,9 @@ workflows:
     install_and_test:
         jobs:
             - install
+            - api_sync:
+                requires:
+                    - install
             - unit_tests:
                 requires:
                     - install
