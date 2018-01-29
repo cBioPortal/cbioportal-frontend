@@ -264,7 +264,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
             assert.deepEqual(
                 annotateMutationPutativeDriver(
                     {
-                        mutationType: "in_frame_ins",
+                        mutationType: "asdfasdf",
                     } as Mutation,
                     {
                         hotspots: false,
@@ -277,8 +277,8 @@ describe("ResultsViewPageStoreUtils", ()=>{
                     putativeDriver: true,
                     isHotspot: false,
                     oncoKbOncogenic: "",
-                    simplifiedMutationType: getSimplifiedMutationType("in_frame_ins"),
-                    mutationType: "in_frame_ins",
+                    simplifiedMutationType: getSimplifiedMutationType("asdfasdf"),
+                    mutationType: "asdfasdf",
                 },
                 "tier"
             );
@@ -308,7 +308,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
             assert.deepEqual(
                 annotateMutationPutativeDriver(
                     {
-                        mutationType: "missense",
+                        mutationType: "asdfasdf",
                     } as Mutation,
                     {
                         hotspots: true,
@@ -323,8 +323,8 @@ describe("ResultsViewPageStoreUtils", ()=>{
                     putativeDriver: true,
                     isHotspot: true,
                     oncoKbOncogenic: "oncogenic",
-                    simplifiedMutationType: getSimplifiedMutationType("missense"),
-                    mutationType: "missense",
+                    simplifiedMutationType: getSimplifiedMutationType("asdfasdf"),
+                    mutationType: "asdfasdf",
                 }
             );
         });
@@ -332,7 +332,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
             assert.deepEqual(
                 annotateMutationPutativeDriver(
                     {
-                        mutationType: "missense",
+                        mutationType: "cvzxcv",
                     } as Mutation,
                     {
                         hotspots: false,
@@ -346,8 +346,8 @@ describe("ResultsViewPageStoreUtils", ()=>{
                     putativeDriver: false,
                     isHotspot: false,
                     oncoKbOncogenic: "",
-                    simplifiedMutationType: getSimplifiedMutationType("missense"),
-                    mutationType: "missense",
+                    simplifiedMutationType: getSimplifiedMutationType("cvzxcv"),
+                    mutationType: "cvzxcv",
                 }
             );
         });
