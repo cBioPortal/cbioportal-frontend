@@ -22498,8 +22498,10 @@ var RuleSet = (function () {
 	});
     }
 
-    RuleSet.prototype.addRule = function (params) {
-	var rule_id = getRuleId();
+    RuleSet.prototype.addRule = function (params, rule_id) {
+    	if (typeof rule_id === "undefined") {
+			rule_id = getRuleId();
+		}
 	this.rules_with_id.push({id: rule_id, rule: new Rule(params)});
 	return rule_id;
     }
@@ -22684,8 +22686,8 @@ var ConditionRuleSet = (function () {
 	return ret;
     }
 
-    ConditionRuleSet.prototype.addRule = function (condition, params) {
-	var rule_id = RuleSet.prototype.addRule.call(this, params);
+    ConditionRuleSet.prototype.addRule = function (condition, params, rule_id) {
+	rule_id = RuleSet.prototype.addRule.call(this, params, rule_id);
 	this.rule_id_to_condition[rule_id] = condition;
 	return rule_id;
     }
@@ -22941,7 +22943,9 @@ var GradientRuleSet = (function () {
     }
 
     GradientRuleSet.prototype.updateLinearRules = function () {
+    	var rule_id;
 	if (typeof this.gradient_rule !== "undefined") {
+		rule_id = this.gradient_rule;
 	    this.removeRule(this.gradient_rule);
 	}
 	var interpFn = this.makeInterpFn();
@@ -22965,7 +22969,8 @@ var GradientRuleSet = (function () {
 			}],
 		    exclude_from_legend: false,
 		    legend_config: {'type': 'gradient', 'range': this.getEffectiveValueRange(), 'colorFn':colorFn}
-		});
+		},
+		rule_id);
     };
 
     return GradientRuleSet;
@@ -22980,7 +22985,9 @@ var BarRuleSet = (function () {
     BarRuleSet.prototype = Object.create(LinearInterpRuleSet.prototype);
 
     BarRuleSet.prototype.updateLinearRules = function () {
+        var rule_id;
 	if (typeof this.bar_rule !== "undefined") {
+		rule_id = this.bar_rule;
 	    this.removeRule(this.bar_rule);
 	}
 	var interpFn = this.makeInterpFn();
@@ -23014,7 +23021,8 @@ var BarRuleSet = (function () {
                     'positive_color': positive_color,
                     'negative_color': negative_color,
 				    'interpFn': interpFn}
-		});
+		},
+		rule_id);
     };
     BarRuleSet.prototype.getYPosPercentagesFn = function () {
         var ret;
