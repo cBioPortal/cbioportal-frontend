@@ -569,6 +569,53 @@ describe('oncoprint', function() {
             });
         });
     });
+    describe("mutation annotation", ()=>{
+        let mutationColorMenuButton;
+        let mutationColorMenuDropdown;
+        let oncoKbCheckbox;
+        let hotspotsCheckbox;
+        let cbioportalCheckbox;
+        let cosmicCheckbox;
+
+        before(()=>{
+            browser.url(CBIOPORTAL_URL+'/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_cna_seq&gene_list=FBXW7&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations');
+            waitForOncoprint(10000);
+
+            mutationColorMenuButton = "#mutationColorDropdown";
+            mutationColorMenuDropdown = "div.oncoprint__controls__mutation_color_menu";
+
+            oncoKbCheckbox = mutationColorMenuDropdown + ' input[data-test="annotateOncoKb"]';
+            hotspotsCheckbox = mutationColorMenuDropdown + ' input[data-test="annotateHotspots"]';
+            cbioportalCheckbox = mutationColorMenuDropdown + ' input[data-test="annotateCBioPortalCount"]';
+            cosmicCheckbox = mutationColorMenuDropdown + ' input[data-test="annotateCOSMICCount"]';
+        });
+        it("annotates all types of mutations with cbioportal count and cosmic", ()=>{
+            browser.click(mutationColorMenuButton);
+            browser.waitForVisible(mutationColorMenuDropdown, 2000);
+            // select only mutation coloring by cbioportal count
+            browser.click(cbioportalCheckbox);
+            browser.click(oncoKbCheckbox);
+            browser.click(hotspotsCheckbox);
+            // set threshold 1
+            browser.execute(function() { resultsViewOncoprint.setAnnotateCBioPortalInputValue("1"); });
+            browser.pause(100); // give time to take effect
+            let legendText = browser.getText("#oncoprint-inner svg");
+            assert(legendText.indexOf("Inframe Mutation (putative driver)") > -1, "cbio count annotates inframe mutations");
+            assert(legendText.indexOf("Missense Mutation (putative driver)") > -1, "cbio count annotates missense mutations");
+            assert(legendText.indexOf("Truncating Mutation (putative driver)") > -1, "cbio count annotates truncating mutations");
+
+            // select only mutation coloring by cosmic count
+            browser.click(cosmicCheckbox);
+            browser.click(cbioportalCheckbox);
+            // set threshold 1
+            browser.execute(function() { resultsViewOncoprint.setAnnotateCOSMICInputValue("1"); });
+            browser.pause(100); // give time to take effect
+            legendText = browser.getText("#oncoprint-inner svg");
+            assert(legendText.indexOf("Inframe Mutation (putative driver)") > -1, "cosmic count annotates inframe mutations");
+            assert(legendText.indexOf("Missense Mutation (putative driver)") > -1, "cosmic count annotates missense mutations");
+            assert(legendText.indexOf("Truncating Mutation (putative driver)") > -1, "cosmic count annotates truncating mutations");
+        });
+    });
     describe("sorting", ()=>{
         function topCmp(eltA, eltB) {
             return eltA.top - eltB.top;
