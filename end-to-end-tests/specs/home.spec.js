@@ -348,7 +348,7 @@ describe('oncoprint', function() {
             );
         });
     });
-    describe.skip("sorting", ()=>{
+    describe("sorting", ()=>{
         function topCmp(eltA, eltB) {
             return eltA.top - eltB.top;
         }
@@ -604,7 +604,8 @@ describe('oncoprint', function() {
             var TP53HeatmapElements = getNthTrackOptionsElements(8);
             TP53HeatmapElements.button.click(); // open Fraction Genome Altered clinical track menu
             browser.waitForVisible(TP53HeatmapElements.dropdown_selector, 1000);// wait for menu to appear
-            TP53HeatmapElements.dropdown.$('li:nth-child(6)').click(); // Click sort Z-a
+            browser.scroll(0, 1000);// scroll down
+            browser.click(TP53HeatmapElements.dropdown_selector + ' li:nth-child(6)'); // Click sort Z-a
             browser.pause(100); // give time to sort
 
             assert.equal(
@@ -618,12 +619,13 @@ describe('oncoprint', function() {
             $('.alert-warning').$('button.close').click(); // close dev mode notification so it doesnt intercept clicks
 
             waitForOncoprint(10000);
+            browser.scroll(0,1000);//scroll down
 
             // Sort heatmap tracks
             var TP53HeatmapElements = getNthTrackOptionsElements(8);
             TP53HeatmapElements.button.click(); // open track menu
             browser.waitForVisible(TP53HeatmapElements.dropdown_selector, 1000);// wait for menu to appear
-            TP53HeatmapElements.dropdown.$('li:nth-child(6)').click(); // Click sort Z-a
+            browser.click(TP53HeatmapElements.dropdown_selector + ' li:nth-child(6)'); // Click sort Z-a
             browser.pause(100); // give time to sort
 
             assert.equal(
