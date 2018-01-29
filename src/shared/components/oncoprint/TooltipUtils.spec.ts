@@ -1,5 +1,5 @@
 import {assert} from "chai";
-import {makeClinicalTrackTooltip, makeGeneticTrackTooltip} from "./TooltipUtils";
+import {makeClinicalTrackTooltip, makeGeneticTrackTooltip, makeHeatmapTrackTooltip} from "./TooltipUtils";
 import {GeneticTrackDatum} from "./Oncoprint";
 import {AnnotatedExtendedAlteration, AnnotatedMutation} from "../../../pages/resultsView/ResultsViewPageStore";
 import $ from "jquery";
@@ -211,6 +211,43 @@ describe("Oncoprint TooltipUtils", ()=>{
             const tooltip = makeClinicalTrackTooltip(trackSpec, false);
             const tooltipResult = tooltip({ attr_val_counts: {"a":1, "b":3}, attr_val:"a", sample:"sampleID" });
             assert.isTrue(tooltipResult.html().indexOf("label1234:<br><b>a</b>: 1<br><b>b</b>: 3") > -1);
+        });
+        it("should show numerical data rounded to 2 decimal digits", ()=>{
+            const trackSpec = {
+                key: "",
+                label: "",
+                description: "",
+                data: [],
+                datatype: "number" as "number",
+                numberRange:[0,0] as [number, number],
+                numberLogScale:false
+            };
+            const tooltip = makeClinicalTrackTooltip(trackSpec, false);
+            let tooltipResult = tooltip({ attr_val_counts: {"0.13500013531":1}, attr_val:"0.13500013531", sample:"sampleID" });
+            assert.isTrue(tooltipResult.html().indexOf("<b>0.14</b>") > -1, "correct result with no integer part");
+            tooltipResult = tooltip({ attr_val_counts: {"6.100032":1}, attr_val:"6.100032", sample:"sampleID" });
+            assert.isTrue(tooltipResult.html().indexOf("<b>6.10</b>") > -1, "correct result with integer part");
+            tooltipResult = tooltip({ attr_val_counts: {"0":1}, attr_val:"0", sample:"sampleID" });
+            assert.isTrue(tooltipResult.html().indexOf("<b>0</b>") > -1, "correct result for zero")
+            tooltipResult = tooltip({ attr_val_counts: {"-0.13500013531":1}, attr_val:"-0.13500013531", sample:"sampleID" });
+            assert.isTrue(tooltipResult.html().indexOf("<b>-0.14</b>") > -1, "correct result with no integer part, negative");
+            tooltipResult = tooltip({ attr_val_counts: {"-6.100032":1}, attr_val:"-6.100032", sample:"sampleID" });
+            assert.isTrue(tooltipResult.html().indexOf("<b>-6.10</b>") > -1, "correct result with integer part, negative");
+        });
+    });
+    describe("makeHeatmapTrackTooltip", ()=>{
+        it("should show data rounded to 2 decimal digits", ()=>{
+            const tooltip = makeHeatmapTrackTooltip("MRNA_EXPRESSION", false);
+            let tooltipResult = tooltip({ profile_data:0.13500013531, sample:"sampleID" });
+            assert.isTrue(tooltipResult.html().indexOf("<b>0.14</b>") > -1, "correct result with no integer part");
+            tooltipResult = tooltip({ profile_data:6.100032, sample:"sampleID" });
+            assert.isTrue(tooltipResult.html().indexOf("<b>6.10</b>") > -1, "correct result with integer part");
+            tooltipResult = tooltip({ profile_data: 0, sample:"sampleID" });
+            assert.isTrue(tooltipResult.html().indexOf("<b>0.00</b>") > -1, "correct result for zero")
+            tooltipResult = tooltip({ profile_data:-0.13500013531, sample:"sampleID" });
+            assert.isTrue(tooltipResult.html().indexOf("<b>-0.14</b>") > -1, "correct result with no integer part, negative");
+            tooltipResult = tooltip({ profile_data:-6.100032, sample:"sampleID" });
+            assert.isTrue(tooltipResult.html().indexOf("<b>-6.10</b>") > -1, "correct result with integer part, negative");
         });
     });
 });
