@@ -19,7 +19,7 @@ describe('QueryStoreUtils', ()=>{
         it("returns url-encoded, normalized query for gene_list parameter", ()=>{
 
 
-            let store = new QueryStore();
+            let store = new QueryStore({} as Window);
 
             let queries = [
                 "TP53:MUT",
@@ -37,7 +37,7 @@ describe('QueryStoreUtils', ()=>{
         });
 
         it("correctly sets study parameters in case of single study", ()=>{
-            let store = new QueryStore();
+            let store = new QueryStore({} as Window);
             store.selectedStudyIds = ["a"];
             Sinon.stub(store, "selectableStudiesSet").get(() => {
                 return {"a":true, "b":true};
