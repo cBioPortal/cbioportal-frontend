@@ -16,8 +16,12 @@ export interface IMutualExclusivityTableProps {
 export enum MutualExclusivityTableColumnType {
     GENE_A,
     GENE_B,
-    P_VALUE,
+    NEITHER,
+    A_NOT_B,
+    B_NOT_A,
+    BOTH,
     LOG_ODDS_RATIO,
+    P_VALUE,
     ASSOCIATION
 }
 
@@ -41,8 +45,12 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
         columns: [
             MutualExclusivityTableColumnType.GENE_A,
             MutualExclusivityTableColumnType.GENE_B,
-            MutualExclusivityTableColumnType.P_VALUE,
+            MutualExclusivityTableColumnType.NEITHER,
+            MutualExclusivityTableColumnType.A_NOT_B,
+            MutualExclusivityTableColumnType.B_NOT_A,
+            MutualExclusivityTableColumnType.BOTH,
             MutualExclusivityTableColumnType.LOG_ODDS_RATIO,
+            MutualExclusivityTableColumnType.P_VALUE,
             MutualExclusivityTableColumnType.ASSOCIATION
         ],
         initialSortColumn: "p-Value"
@@ -71,12 +79,36 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
             download: (d: MutualExclusivity) => d.geneB
         };
 
-        this._columns[MutualExclusivityTableColumnType.P_VALUE] = {
-            name: "p-Value",
-            render: (d: MutualExclusivity) => formatPValueWithStyle(d.pValue),
-            tooltip: <span>Derived from Fisher Exact Test</span>,
-            sortBy: (d: MutualExclusivity) => d.pValue,
-            download: (d: MutualExclusivity) => formatPValue(d.pValue)
+        this._columns[MutualExclusivityTableColumnType.NEITHER] = {
+            name: "Neither",
+            render: (d: MutualExclusivity) => <span>{d.neitherCount}</span>,
+            tooltip: <span>Count of alterations in neither of genes</span>,
+            sortBy: (d: MutualExclusivity) => d.neitherCount,
+            download: (d: MutualExclusivity) => d.neitherCount.toString()
+        };
+
+        this._columns[MutualExclusivityTableColumnType.A_NOT_B] = {
+            name: "A Not B",
+            render: (d: MutualExclusivity) => <span>{d.aNotBCount}</span>,
+            tooltip: <span>Count of alterations in the Gene A but not in the Gene B</span>,
+            sortBy: (d: MutualExclusivity) => d.aNotBCount,
+            download: (d: MutualExclusivity) => d.aNotBCount.toString()
+        };
+
+        this._columns[MutualExclusivityTableColumnType.B_NOT_A] = {
+            name: "B Not A",
+            render: (d: MutualExclusivity) => <span>{d.bNotACount}</span>,
+            tooltip: <span>Count of alterations in the Gene B but not in the Gene A</span>,
+            sortBy: (d: MutualExclusivity) => d.bNotACount,
+            download: (d: MutualExclusivity) => d.bNotACount.toString()
+        };
+
+        this._columns[MutualExclusivityTableColumnType.BOTH] = {
+            name: "Both",
+            render: (d: MutualExclusivity) => <span>{d.bothCount}</span>,
+            tooltip: <span>Count of alterations in both genes</span>,
+            sortBy: (d: MutualExclusivity) => d.bothCount,
+            download: (d: MutualExclusivity) => d.bothCount.toString()
         };
 
         this._columns[MutualExclusivityTableColumnType.LOG_ODDS_RATIO] = {
@@ -89,8 +121,16 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
             download: (d: MutualExclusivity) => formatLogOddsRatio(d.logOddsRatio)
         };
 
+        this._columns[MutualExclusivityTableColumnType.P_VALUE] = {
+            name: "p-Value",
+            render: (d: MutualExclusivity) => formatPValueWithStyle(d.pValue),
+            tooltip: <span>Derived from Fisher Exact Test</span>,
+            sortBy: (d: MutualExclusivity) => d.pValue,
+            download: (d: MutualExclusivity) => formatPValue(d.pValue)
+        };
+
         this._columns[MutualExclusivityTableColumnType.ASSOCIATION] = {
-            name: "Association",
+            name: "Tendency",
             render: (d: MutualExclusivity) => <span>{d.association}&nbsp;&nbsp;&nbsp;{d.pValue < 0.05 ?
                 <Badge style={{ backgroundColor: '#58ACFA' }}>Significant</Badge> : ""}</span>,
             tooltip: <span>Log odds ratio > 0 &nbsp;&nbsp;: Tendency towards co-occurrence<br />
