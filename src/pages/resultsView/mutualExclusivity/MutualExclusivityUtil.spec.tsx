@@ -17,44 +17,68 @@ const exampleData = [
     {
         "geneA": "EGFR",
         "geneB": "KRAS",
+        "neitherCount": 0,
+        "aNotBCount": 5,
+        "bNotACount": 5,
+        "bothCount": 0,
         "pValue": 0.003968253968253951,
         "logOddsRatio": -Infinity,
-        "association": "Tendency towards mutual exclusivity"
+        "association": "Mutual exclusivity"
     },
     {
         "geneA": "EGFR",
         "geneB": "TP53",
+        "neitherCount": 2,
+        "aNotBCount": 5,
+        "bNotACount": 3,
+        "bothCount": 0,
         "pValue": 0.08333333333333293,
         "logOddsRatio": -Infinity,
-        "association": "Tendency towards mutual exclusivity"
+        "association": "Mutual exclusivity"
     },
     {
         "geneA": "KRAS",
         "geneB": "TP53",
+        "neitherCount": 5,
+        "aNotBCount": 2,
+        "bNotACount": 0,
+        "bothCount": 3,
         "pValue": 0.08333333333333293,
         "logOddsRatio": Infinity,
-        "association": "Tendency towards co-occurrence"
+        "association": "Co-occurrence"
     },
     {
         "geneA": "EGFR",
         "geneB": "BRAF",
+        "neitherCount": 2,
+        "aNotBCount": 4,
+        "bNotACount": 3,
+        "bothCount": 1,
         "pValue": 0.2619047619047609,
         "logOddsRatio": -1.791759469228055,
-        "association": "Tendency towards mutual exclusivity"
+        "association": "Mutual exclusivity"
     },
     {
         "geneA": "KRAS",
         "geneB": "BRAF",
+        "neitherCount": 4,
+        "aNotBCount": 2,
+        "bNotACount": 1,
+        "bothCount": 3,
         "pValue": 0.2619047619047609,
         "logOddsRatio": 1.791759469228055,
-        "association": "Tendency towards co-occurrence"
+        "association": "Co-occurrence"
     },
     {
         "geneA": "TP53",
         "geneB": "BRAF",
+        "neitherCount": 6,
+        "aNotBCount": 0,
+        "bNotACount": 1,
+        "bothCount": 3,
         "pValue": 0.03333333333333314,
         "logOddsRatio": Infinity,
-        "association": "Tendency towards co-occurrence"
+        "association": "Co-occurrence"
     }
 ];
 
@@ -67,16 +91,16 @@ const isSampleAlteredMap: any = {
 
 describe("MutualExclusivityUtil", () => {
     describe("#calculateAssociation()", () => {
-        it("returns Tendency towards co-occurrence if log odds ratio is positive", () => {
-            assert.equal(calculateAssociation(1), "Tendency towards co-occurrence");
+        it("returns Co-occurrence if log odds ratio is positive", () => {
+            assert.equal(calculateAssociation(1), "Co-occurrence");
         });
 
-        it("returns Tendency towards mutual exclusivity if log odds ratio is 0", () => {
-            assert.equal(calculateAssociation(0), "Tendency towards mutual exclusivity");
+        it("returns Mutual exclusivity if log odds ratio is 0", () => {
+            assert.equal(calculateAssociation(0), "Mutual exclusivity");
         });
 
-        it("returns Tendency towards mutual exclusivity if log odds ratio is negative", () => {
-            assert.equal(calculateAssociation(-1), "Tendency towards mutual exclusivity");
+        it("returns Mutual exclusivity if log odds ratio is negative", () => {
+            assert.equal(calculateAssociation(-1), "Mutual exclusivity");
         });
     });
 
@@ -131,9 +155,13 @@ describe("MutualExclusivityUtil", () => {
                 {
                     "geneA": "EGFR",
                     "geneB": "KRAS",
+                    "neitherCount": 0,
+                    "aNotBCount": 5,
+                    "bNotACount": 5,
+                    "bothCount": 0,
                     "pValue": 0.003968253968253968,
                     "logOddsRatio": Infinity,
-                    "association": "Tendency towards co-occurrence"
+                    "association": "Co-occurrence"
                 }
             ];
             const result = getMutuallyExclusiveCounts(data, n => n <= 0);
@@ -148,9 +176,13 @@ describe("MutualExclusivityUtil", () => {
                     {
                         "geneA": "EGFR",
                         "geneB": "KRAS",
+                        "neitherCount": 0,
+                        "aNotBCount": 5,
+                        "bNotACount": 5,
+                        "bothCount": 0,
                         "pValue": 0.06,
                         "logOddsRatio": -2.1,
-                        "association": "Tendency towards mutual exclusivity"
+                        "association": "Mutual exclusivity"
                     }
                 ];
                 const result = getMutuallyExclusiveCounts(data, n => n <= 0);
@@ -165,9 +197,13 @@ describe("MutualExclusivityUtil", () => {
                     {
                         "geneA": "EGFR",
                         "geneB": "KRAS",
+                        "neitherCount": 0,
+                        "aNotBCount": 5,
+                        "bNotACount": 5,
+                        "bothCount": 0,
                         "pValue": 0.04,
                         "logOddsRatio": -2.1,
-                        "association": "Tendency towards mutual exclusivity"
+                        "association": "Mutual exclusivity"
                     }
                 ];
                 const result = getMutuallyExclusiveCounts(data, n => n <= 0);
@@ -182,16 +218,24 @@ describe("MutualExclusivityUtil", () => {
                     {
                         "geneA": "EGFR",
                         "geneB": "KRAS",
+                        "neitherCount": 0,
+                        "aNotBCount": 5,
+                        "bNotACount": 5,
+                        "bothCount": 0,
                         "pValue": 0.04,
                         "logOddsRatio": -6.51,
-                        "association": "Tendency towards mutual exclusivity"
+                        "association": "Mutual exclusivity"
                     },
                     {
                         "geneA": "EGFR",
                         "geneB": "TP53",
+                        "neitherCount": 2,
+                        "aNotBCount": 5,
+                        "bNotACount": 3,
+                        "bothCount": 0,
                         "pValue": 0.001,
                         "logOddsRatio": -2.1,
-                        "association": "Tendency towards mutual exclusivity"
+                        "association": "Mutual exclusivity"
                     }
                 ];
                 const result = getMutuallyExclusiveCounts(data, n => n <= 0);
@@ -207,16 +251,24 @@ describe("MutualExclusivityUtil", () => {
                 {
                     "geneA": "EGFR",
                     "geneB": "KRAS",
+                    "neitherCount": 0,
+                    "aNotBCount": 5,
+                    "bNotACount": 5,
+                    "bothCount": 0,
                     "pValue": 0.04,
                     "logOddsRatio": -6.51,
-                    "association": "Tendency towards mutual exclusivity"
+                    "association": "Mutual exclusivity"
                 },
                 {
                     "geneA": "EGFR",
                     "geneB": "TP53",
+                    "neitherCount": 2,
+                    "aNotBCount": 5,
+                    "bNotACount": 3,
+                    "bothCount": 0,
                     "pValue": 0.001,
                     "logOddsRatio": -2.1,
-                    "association": "Tendency towards mutual exclusivity"
+                    "association": "Mutual exclusivity"
                 }
             ];
             const result = getCountsText(data);
@@ -243,9 +295,13 @@ describe("MutualExclusivityUtil", () => {
                     {
                         "geneA": "EGFR",
                         "geneB": "KRAS",
+                        "neitherCount": 0,
+                        "aNotBCount": 5,
+                        "bNotACount": 5,
+                        "bothCount": 0,
                         "pValue": 0.003968253968253951,
                         "logOddsRatio": -Infinity,
-                        "association": "Tendency towards mutual exclusivity"
+                        "association": "Mutual exclusivity"
                     }
                 ]
             );
@@ -309,16 +365,24 @@ describe("MutualExclusivityUtil", () => {
                 {
                     "geneA": "KRAS",
                     "geneB": "BRAF",
+                    "neitherCount": 4,
+                    "aNotBCount": 2,
+                    "bNotACount": 1,
+                    "bothCount": 3,
                     "pValue": 0.23809523809523808,
                     "logOddsRatio": 1.791759469228055,
-                    "association": "Tendency towards co-occurrence"
+                    "association": "Co-occurrence"
                 },
                 {
                     "geneA": "TP53",
                     "geneB": "BRAF",
+                    "neitherCount": 6,
+                    "aNotBCount": 0,
+                    "bNotACount": 1,
+                    "bothCount": 3,
                     "pValue": 0.03333333333333333,
                     "logOddsRatio": Infinity,
-                    "association": "Tendency towards co-occurrence"
+                    "association": "Co-occurrence"
                 }
             ];
 
@@ -326,12 +390,16 @@ describe("MutualExclusivityUtil", () => {
             let cells = wrapper.find('td');
             assert.equal(cells.at(0).html(), "<td><span><b>TP53</b></span></td>");
             assert.equal(cells.at(1).html(), "<td><span><b>BRAF</b></span></td>");
-            assert.equal(cells.at(2).html(), "<td><b><span>0.033</span></b></td>");
-            assert.equal(cells.at(3).html(), "<td><span>&gt;3</span></td>");
-            assert.equal(cells.at(4).html().replace(/<!--[^>]*-->/g, ""), "<td><span>Tendency towards co-occurrence" +
+            assert.equal(cells.at(2).html(), "<td><span>6</span></td>");
+            assert.equal(cells.at(3).html(), "<td><span>0</span></td>");
+            assert.equal(cells.at(4).html(), "<td><span>1</span></td>");
+            assert.equal(cells.at(5).html(), "<td><span>3</span></td>");
+            assert.equal(cells.at(6).html(), "<td><span>&gt;3</span></td>");
+            assert.equal(cells.at(7).html(), "<td><b><span>0.033</span></b></td>");
+            assert.equal(cells.at(8).html().replace(/<!--[^>]*-->/g, ""), "<td><span>Co-occurrence" +
                 "&nbsp;&nbsp;&nbsp;<span class=\"badge\" style=\"background-color: rgb(88, 172, 250);\">Significant" +
                 "</span></span></td>");
-            assert.equal(cells.at(9).html().replace(/<!--[^>]*-->/g, ""), "<td><span>Tendency towards co-occurrence" +
+            assert.equal(cells.at(17).html().replace(/<!--[^>]*-->/g, ""), "<td><span>Co-occurrence" +
                 "&nbsp;&nbsp;&nbsp;</span></td>");
         });
     });
