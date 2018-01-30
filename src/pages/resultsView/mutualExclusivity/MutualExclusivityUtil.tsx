@@ -5,7 +5,7 @@ import Combinatorics from 'js-combinatorics';
 import Dictionary = _.Dictionary;
 
 export function calculateAssociation(logOddsRatio: number): string {
-    return logOddsRatio > 0 ? "Tendency towards co-occurrence" : "Tendency towards mutual exclusivity";
+    return logOddsRatio > 0 ? "Co-occurrence" : "Mutual exclusivity";
 }
 
 export function countOccurences(valuesA: boolean[], valuesB: boolean[]): [number, number, number, number] {
@@ -96,7 +96,8 @@ export function getData(isSampleAlteredMap: Dictionary<boolean[]>): MutualExclus
         const pValue = calculatePValue(counts[0], counts[1], counts[2], counts[3]);
         const logOddsRatio = calculateLogOddsRatio(counts[0], counts[1], counts[2], counts[3]);
         const association = calculateAssociation(logOddsRatio);
-        data.push({ geneA, geneB, pValue, logOddsRatio, association });
+        data.push({ geneA, geneB, pValue, logOddsRatio, association, neitherCount: counts[0], bNotACount: counts[1], 
+            aNotBCount: counts[2], bothCount: counts[3] });
     });
     return data;
 }
