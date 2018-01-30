@@ -22,6 +22,7 @@ import getOverlappingStudies from "../../shared/lib/getOverlappingStudies";
 import OverlappingStudiesWarning from "../../shared/components/overlappingStudiesWarning/OverlappingStudiesWarning";
 import CNSegments from "./cnSegments/CNSegments";
 import './styles.scss';
+import {genes} from "shared/lib/oql/oqlfilter.js";
 
 (Chart as any).plugins.register({
     beforeDraw: function(chartInstance:any) {
@@ -120,6 +121,13 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         this.exposeComponentRenderersToParentScript(props);
 
         win.renderQuerySummary(document.getElementById('main_smry_info_div'));
+
+        // hide mutex tab
+        $(document).ready(()=>{
+            if (genes((window as any).serverVars.theQuery).length <= 1) {
+                $('li[aria-controls="mutex"]').remove();
+            }
+        });
     }
 
     componentDidMount(){
