@@ -13,7 +13,7 @@ exports.config = {
     // directory is where your package.json resides, so `wdio` will be called from there.
     //
     specs: [
-        './specs/**/screenshot.spec.js'
+        './specs/**/*.js'  // './specs/**/screenshot.spec.js'
     ],
     // Patterns to exclude.
     exclude: [
@@ -118,7 +118,7 @@ exports.config = {
             referenceName: getScreenshotName(path.join(process.cwd(), 'screenshots/reference')),
             screenshotName: getScreenshotName(path.join(process.cwd(), 'screenshots/screen')),
             diffName: getScreenshotName(path.join(process.cwd(), 'screenshots/diff')),
-            misMatchTolerance:5
+            misMatchTolerance:0.1
         }),
         viewportChangePause: 300,
         viewports: [{ width: 1600, height: 1000 }],
