@@ -19,6 +19,8 @@ var OncoprintLabelView = (function () {
 	this.cell_heights_view_space = {};
 	this.label_middles_view_space = {};
 	this.labels = {};
+	this.label_colors = {};
+	this.track_link_urls = {};
 	this.track_descriptions = {};
 	this.tracks = [];
 	this.minimum_track_height = Number.POSITIVE_INFINITY;
@@ -47,7 +49,8 @@ var OncoprintLabelView = (function () {
 	    view.$canvas.on("mousemove", function(evt) {
 		if (view.dragged_label_track_id !== null) {
 		    var track_group = model.getContainingTrackGroup(view.dragged_label_track_id);
-		    var max_drag_y = view.track_tops[track_group[track_group.length-1]] + model.getTrackHeight(track_group[track_group.length-1]) - view.scroll_y;
+		    var bottommost_track = model.getLastExpansion(track_group[track_group.length - 1]);
+		    var max_drag_y = view.track_tops[bottommost_track] + model.getTrackHeight(bottommost_track) - view.scroll_y;
 		    var min_drag_y = view.track_tops[track_group[0]] - 5 - view.scroll_y;
 		    view.drag_mouse_y = Math.min(evt.pageY - view.$canvas.offset().top, max_drag_y);
 		    view.drag_mouse_y = Math.max(view.drag_mouse_y, min_drag_y);
@@ -57,12 +60,15 @@ var OncoprintLabelView = (function () {
 		    if (hovered_track !== null) {
 			var $tooltip_div = $('<div>');
 			var offset = view.$canvas.offset();   
-			if (isNecessaryToShortenLabel(view, view.labels[hovered_track])) {
-			    $tooltip_div.append($('<b>'+view.labels[hovered_track]+'</b><br>'));
+			if (isNecessaryToShortenLabel(view, view.labels[hovered_track])
+				|| view.track_link_urls[hovered_track]) {
+			    $tooltip_div.append(formatTooltipHeader(
+				    view.labels[hovered_track],
+				    view.track_link_urls[hovered_track]));
 			}
-			var track_description = view.track_descriptions[hovered_track].replace("<", "&lt;").replace(">", "&gt;");
+			var track_description = view.track_descriptions[hovered_track];
 			if (track_description.length > 0) {
-			    $tooltip_div.append(track_description + "<br>");
+			    $tooltip_div.append($('<div>').text(track_description));
 			}
 			if (model.isTrackInClusteredGroup(hovered_track)) {
                 view.$canvas.css('cursor', 'not-allowed');
@@ -85,7 +91,7 @@ var OncoprintLabelView = (function () {
 		    var previous_track_id = getLabelAboveMouseSpace(view, track_group, evt.offsetY, view.dragged_label_track_id);
 		    stopDragging(view, previous_track_id);
 		}
-		view.tooltip.hide();
+		view.tooltip.hideIfNotAlreadyGoingTo(150);
 	    });
 	})(this);
 	
@@ -147,6 +153,18 @@ var OncoprintLabelView = (function () {
 	    return label;
 	}
     };
+    var formatTooltipHeader = function (label, link_url) {
+	var header_contents;
+	if (link_url) {
+	    header_contents = (
+		    $('<a target="_blank" rel="noopener noreferrer">')
+		    .attr('href', link_url));
+	} else {
+	    header_contents = $('<span>');
+	}
+	header_contents.append(label.html_content || document.createTextNode(label));
+	return $('<b style="display: block;">').append(header_contents);
+    };
     var renderAllLabels = function(view) {
 	if (view.rendering_suppressed) {
 	    return;
@@ -164,6 +182,10 @@ var OncoprintLabelView = (function () {
 	view.ctx.fillStyle = 'black';
 	var tracks = view.tracks;
 	for (var i=0; i<tracks.length; i++) {
+	    if (view.label_colors && view.label_colors[tracks[i]]) {
+		//override color, if set:
+		view.ctx.fillStyle = view.label_colors[tracks[i]];
+	    }
 	    view.ctx.fillText(shortenLabelIfNecessary(view, view.labels[tracks[i]]), 0, view.label_middles_view_space[tracks[i]]);
 	}
 	if (view.dragged_label_track_id !== null) {
@@ -171,7 +193,7 @@ var OncoprintLabelView = (function () {
 	    view.ctx.fillText(shortenLabelIfNecessary(view, view.labels[view.dragged_label_track_id]), 0, view.supersampling_ratio*view.drag_mouse_y);
 	    view.ctx.fillStyle = 'rgba(0,0,0,0.15)';
 	    var group = view.model.getContainingTrackGroup(view.dragged_label_track_id);
-	    var label_above_mouse = getLabelAboveMouseSpace(view, group, view.drag_mouse_y, null);
+	    var label_above_mouse = view.model.getLastExpansion(getLabelAboveMouseSpace(view, group, view.drag_mouse_y, null));
 	    var label_below_mouse = getLabelBelowMouseSpace(view, group, view.drag_mouse_y, null);
 	    var rect_y, rect_height;
 	    if (label_above_mouse === view.dragged_label_track_id || label_below_mouse === view.dragged_label_track_id) {
@@ -184,7 +206,7 @@ var OncoprintLabelView = (function () {
 		rect_y = view.cell_tops_view_space[group[0]] - view.ctx.measureText("m").width;
 		rect_height = view.ctx.measureText("m").width;
 	    } else if (label_below_mouse === null) {
-		rect_y = view.cell_tops_view_space[group[group.length-1]] + view.cell_heights_view_space[group[group.length-1]];
+		rect_y = view.cell_tops_view_space[label_above_mouse] + view.cell_heights_view_space[label_above_mouse];
 		rect_height = view.ctx.measureText("m").width;
 	    }
 	    
@@ -281,6 +303,8 @@ var OncoprintLabelView = (function () {
     OncoprintLabelView.prototype.addTracks = function (model, track_ids) {
 	for (var i=0; i<track_ids.length; i++) {
 	    this.labels[track_ids[i]] = model.getTrackLabel(track_ids[i]);
+	    this.label_colors[track_ids[i]] = model.getTrackLabelColor(track_ids[i]);
+	    this.track_link_urls[track_ids[i]] = model.getTrackLinkUrl(track_ids[i]);
 	}
 	updateFromModel(this, model);
 	resizeAndClear(this, model);
