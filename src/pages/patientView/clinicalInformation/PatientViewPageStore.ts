@@ -23,7 +23,7 @@ import PubMedCache from "shared/cache/PubMedCache";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {IHotspotData} from "shared/model/CancerHotspots";
 import {IMutSigData} from "shared/model/MutSig";
-import {ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
+import {ICivicVariant, ICivicGene} from "shared/model/Civic";
 import {ClinicalInformationData} from "shared/model/ClinicalInformation";
 import VariantCountCache from "shared/cache/VariantCountCache";
 import CopyNumberCountCache from "./CopyNumberCountCache";

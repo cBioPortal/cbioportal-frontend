@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import {ICivicGene, ICivicGeneData, ICivicVariant, ICivicVariantData} from "shared/model/Civic.ts";
+import {ICivicGene, ICivicGeneData, ICivicVariant, ICivicVariantData} from "shared/model/Civic";
 import civicClient from "shared/api/civicClientInstance";
 import { DiscreteCopyNumberData } from "shared/api/generated/CBioPortalAPI";
 

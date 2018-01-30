@@ -16,7 +16,7 @@ import PubMedCache from "shared/cache/PubMedCache";
 import MrnaExprRankCache from "shared/cache/MrnaExprRankCache";
 import {IGisticData} from "shared/model/Gistic";
 import CopyNumberCountCache from "../clinicalInformation/CopyNumberCountCache";
-import {ICivicGeneDataWrapper, ICivicVariantDataWrapper} from "shared/model/Civic.ts";
+import {ICivicGeneDataWrapper, ICivicVariantDataWrapper} from "shared/model/Civic";
 
 class CNATableComponent extends LazyMobXTable<DiscreteCopyNumberData[]> {
 
