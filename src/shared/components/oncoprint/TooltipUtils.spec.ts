@@ -213,4 +213,58 @@ describe("Oncoprint TooltipUtils", ()=>{
             assert.isTrue(tooltipResult.html().indexOf("label1234:<br><b>a</b>: 1<br><b>b</b>: 3") > -1);
         });
     });
+    describe("makeClinicalTrackTooltip", ()=>{
+        it("should show the given sample id", ()=>{
+            const trackLabel = "label1234";
+            const trackSpec = {
+                key: "",
+                label: trackLabel,
+                description: "",
+                data: [],
+                datatype: "string" as "string"
+            };
+            const tooltip = makeClinicalTrackTooltip(trackSpec, false);
+            const sampleTooltipResult = tooltip({ attr_val_counts: {"a":1}, attr_val:"a", sample:"sampleID" });
+            assert.isTrue(sampleTooltipResult.html().indexOf("<span>Sample: sampleID</span>") > -1 );
+        });
+        it("should show the given patient id", ()=>{
+            const trackLabel = "label1234";
+            const trackSpec = {
+                key: "",
+                label: trackLabel,
+                description: "",
+                data: [],
+                datatype: "string" as "string"
+            };
+            const tooltip = makeClinicalTrackTooltip(trackSpec, false);
+            const patientTooltipResult = tooltip({ attr_val_counts: {"a":1}, attr_val:"a", patient:"patientID" });
+            assert.isTrue(patientTooltipResult.html().indexOf("<span>Patient: patientID</span>") > -1 );
+        });
+        it("should show the correct output for a single value", ()=>{
+            const trackLabel = "label1234";
+            const trackSpec = {
+                key: "",
+                label: trackLabel,
+                description: "",
+                data: [],
+                datatype: "string" as "string"
+            };
+            const tooltip = makeClinicalTrackTooltip(trackSpec, false);
+            const tooltipResult = tooltip({ attr_val_counts: {"a":1}, attr_val:"a", sample:"sampleID" });
+            assert.isTrue(tooltipResult.html().indexOf("label1234: <b>a</b>") > -1);
+        });
+        it("should show the correct output for multiple values", ()=>{
+            const trackLabel = "label1234";
+            const trackSpec = {
+                key: "",
+                label: trackLabel,
+                description: "",
+                data: [],
+                datatype: "string" as "string"
+            };
+            const tooltip = makeClinicalTrackTooltip(trackSpec, false);
+            const tooltipResult = tooltip({ attr_val_counts: {"a":1, "b":3}, attr_val:"a", sample:"sampleID" });
+            assert.isTrue(tooltipResult.html().indexOf("label1234:<br><b>a</b>: 1<br><b>b</b>: 3") > -1);
+        });
+    });
 });
