@@ -4,8 +4,8 @@
   "description": "Dependencies for running tests with webdriverio and browserstack",
   "main": "index.js",
   "scripts": {
-    "test-travis": "wdio wdio/travis.conf.js",
-    "test-webdriver-manager": "wdio wdio/webdriver-manager.conf.js"
+    "test-travis": "wdio wdio/travis.conf.js || bash image-compare/upload_failed_screenshots.sh",
+    "test-webdriver-manager": "wdio wdio/webdriver-manager.conf.js|| bash image-compare/upload_failed_screenshots.sh"
   },
   "author": "",
   "license": "",
@@ -16,5 +16,8 @@
     "wdio-mocha-framework": "0.5.10",
     "wdio-spec-reporter": "0.1.0",
     "webdriverio": "4.8.0"
+  },
+  "devDependencies": {
+    "wdio-visual-regression-service": "^0.8.0"
   }
 }
