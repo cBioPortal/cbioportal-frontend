@@ -104,13 +104,13 @@ export const QueryParamsKeys:(keyof CancerStudyQueryParams)[] = [
 // mobx observable
 export class QueryStore
 {
-	private initialQueryParams:{
+	public initialQueryParams:{
 		pathname:string,
 		nonMolecularProfileParams:NonMolecularProfileQueryParams,
 		molecularProfileIds: ReadonlyArray<string>
 	};
 
-	constructor(urlWithInitialParams?:string)
+	constructor(_window:Window, urlWithInitialParams?:string)
 	{
 		this.loadSavedVirtualCohorts();
 
@@ -118,10 +118,16 @@ export class QueryStore
 		if (urlWithInitialParams)
 			this.setParamsFromUrl(urlWithInitialParams);
 
-		this.addParamsFromWindow();
+		this.addParamsFromWindow(_window);
 
+		// need to create initialNonMolecularProfileParams using caseIds obtained from page, because
+		//	at this point asyncCustomCaseSet may not have resolved, and we dont want to wait for it
+		//	to resolve to create the initial query record, because theres a (remote) chance the user
+		//	could have modified the custom case set before the promise initially resolved, thus
+		//	making it an imperfect record of the initial query. Using this.caseIds instead of
+		//	asyncCustomCaseSet is the only failsafe way to make a copy of the initial query state
+		let initialNonMolecularProfileParams = nonMolecularProfileParams(this, this.caseIds);
 
-		let initialNonMolecularProfileParams = nonMolecularProfileParams(this);
 		this.initialQueryParams = {
 			nonMolecularProfileParams: initialNonMolecularProfileParams,
 			pathname: queryUrl(this, initialNonMolecularProfileParams),
@@ -1262,38 +1268,38 @@ export class QueryStore
 		sampleListId: false
 	};
 
-	@action addParamsFromWindow()
+	@action addParamsFromWindow(_window:Window)
 	{
-		if ((window as any).serverVars) {
+		if ((_window as any).serverVars) {
 			// Populate OQL
-			this.geneQuery = normalizeQuery((window as any).serverVars.theQuery);
-			const dataPriority = (window as any).serverVars.dataPriority;
+			this.geneQuery = normalizeQuery((_window as any).serverVars.theQuery);
+			const dataPriority = (_window as any).serverVars.dataPriority;
 			if (typeof dataPriority !== "undefined") {
 				this.dataTypePriorityCode = (dataPriority + '') as '0'|'1'|'2';
 			}
 
-            const selectedMolecularProfiles = (window as any).serverVars.molecularProfiles;
+            const selectedMolecularProfiles = (_window as any).serverVars.molecularProfiles;
             if (selectedMolecularProfiles !== undefined) {
                 this.selectedProfileIds = selectedMolecularProfiles;
             }
 
-            const zScoreThreshold =  (window as any).serverVars.zScoreThreshold;
+            const zScoreThreshold =  (_window as any).serverVars.zScoreThreshold;
             if (zScoreThreshold !== undefined) {
                 this.zScoreThreshold = zScoreThreshold;
             }
 
-			const rppaScoreThreshold =  (window as any).serverVars.rppaScoreThreshold;
+			const rppaScoreThreshold =  (_window as any).serverVars.rppaScoreThreshold;
 			if (rppaScoreThreshold !== undefined) {
 				this.rppaScoreThreshold = rppaScoreThreshold;
 			}
 
-			const caseSetId =  (window as any).serverVars.caseSetProperties.case_set_id;
+			const caseSetId =  (_window as any).serverVars.caseSetProperties.case_set_id;
 			if (caseSetId !== undefined) {
 				this.selectedSampleListId = caseSetId;
 				this.initiallySelected.sampleListId = true;
 			}
 
-			const studySampleMap = (window as any).serverVars.studySampleObj;
+			const studySampleMap = (_window as any).serverVars.studySampleObj;
 			if (studySampleMap) {
 				if (caseSetId === CUSTOM_CASE_LIST_ID) {
 					this.caseIdsMode = 'sample';
@@ -1304,20 +1310,20 @@ export class QueryStore
 			}
 		}
 
-		// Select studies from window
-		const windowStudyId = (window as any).selectedCancerStudyId;
+		// Select studies from _window
+		const windowStudyId = (_window as any).selectedCancerStudyId;
 		if (windowStudyId) {
 			this.setStudyIdSelected(windowStudyId, true);
 		}
 
-		const cohortIdsList:string[] = ((window as any).cohortIdsList as string[]) || [];
+		const cohortIdsList:string[] = ((_window as any).cohortIdsList as string[]) || [];
 		for (const studyId of cohortIdsList) {
 			if (studyId !== "null") {
 				this.setStudyIdSelected(studyId, true);
 			}
 		}
 
-		const windowSampleIds:string = (window as any).selectedSampleIds;
+		const windowSampleIds:string = (_window as any).selectedSampleIds;
 		if (windowSampleIds) {
 			this.selectedSampleListId = CUSTOM_CASE_LIST_ID;
 			this.caseIdsMode = 'sample';
