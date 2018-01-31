@@ -54,7 +54,14 @@ export function makeClinicalTrackTooltip(track:ClinicalTrackSpec, link_id?:boole
                     ret += '<b>' + val + '</b>: ' + d.attr_val_counts[val] + '<br>';
                 }
             } else if (attr_vals.length === 1) {
-                ret += track.label+': <b>' + attr_vals[0] + '</b><br>';
+                let displayVal = attr_vals[0];
+                if (track.datatype === "number") {
+                    displayVal = parseFloat(attr_vals[0]).toFixed(2);
+                    if (displayVal.substring(displayVal.length-3) === ".00") {
+                        displayVal = displayVal.substring(0, displayVal.length-3);
+                    }
+                }
+                ret += track.label+': <b>' + displayVal + '</b><br>';
             }
         }
         ret += '<span>'+(d.sample ? "Sample" : "Patient")+": ";
@@ -74,7 +81,7 @@ export function makeHeatmapTrackTooltip(genetic_alteration_type:MolecularProfile
             data_header = 'PROT: ';
         }
         if ((d.profile_data !== null) && (typeof d.profile_data !== "undefined")) {
-            profile_data = d.profile_data.toString();
+            profile_data = d.profile_data.toFixed(2);
         }
         let ret = data_header + '<b>' + profile_data + '</b><br>';
         ret += (d.sample ? (link_id ? sampleViewAnchorTag(d.study, d.sample) : d.sample) : (link_id ? patientViewAnchorTag(d.study, d.patient) : d.patient));
