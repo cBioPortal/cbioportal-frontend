@@ -50,6 +50,7 @@ describe('result page screenshot tests', function(){
 
     it('plots tab', function(){
         browser.click("[href='#plots']");
+        browser.waitForExist('#plots-box svg',10000);
         var res = browser.checkElement('#plots', { hide:['.qtip'], misMatchTolerance:1 });
         ssAssert(res);
     });
