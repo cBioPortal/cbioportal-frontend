@@ -82,7 +82,7 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
         this._columns[MutualExclusivityTableColumnType.NEITHER] = {
             name: "Neither",
             render: (d: MutualExclusivity) => <span>{d.neitherCount}</span>,
-            tooltip: <span>Count of alterations in neither of genes</span>,
+            tooltip: <span>Number of samples with alterations in neither Gene A nor Gene B</span>,
             sortBy: (d: MutualExclusivity) => d.neitherCount,
             download: (d: MutualExclusivity) => d.neitherCount.toString()
         };
@@ -90,7 +90,7 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
         this._columns[MutualExclusivityTableColumnType.A_NOT_B] = {
             name: "A Not B",
             render: (d: MutualExclusivity) => <span>{d.aNotBCount}</span>,
-            tooltip: <span>Count of alterations in the Gene A but not in the Gene B</span>,
+            tooltip: <span>Number of samples with alterations in Gene A but not in Gene B</span>,
             sortBy: (d: MutualExclusivity) => d.aNotBCount,
             download: (d: MutualExclusivity) => d.aNotBCount.toString()
         };
@@ -98,7 +98,7 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
         this._columns[MutualExclusivityTableColumnType.B_NOT_A] = {
             name: "B Not A",
             render: (d: MutualExclusivity) => <span>{d.bNotACount}</span>,
-            tooltip: <span>Count of alterations in the Gene B but not in the Gene A</span>,
+            tooltip: <span>Number of samples with alterations in Gene B but not in Gene A</span>,
             sortBy: (d: MutualExclusivity) => d.bNotACount,
             download: (d: MutualExclusivity) => d.bNotACount.toString()
         };
@@ -106,7 +106,7 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
         this._columns[MutualExclusivityTableColumnType.BOTH] = {
             name: "Both",
             render: (d: MutualExclusivity) => <span>{d.bothCount}</span>,
-            tooltip: <span>Count of alterations in both genes</span>,
+            tooltip: <span>Number of samples with alterations in both Gene A and Gene B</span>,
             sortBy: (d: MutualExclusivity) => d.bothCount,
             download: (d: MutualExclusivity) => d.bothCount.toString()
         };
@@ -115,8 +115,8 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
             name: "Log Odds Ratio",
             render: (d: MutualExclusivity) => <span>{formatLogOddsRatio(d.logOddsRatio)}</span>,
             tooltip: <span style={{ display: 'inline-block', maxWidth: 300 }}>Quantifies how strongly the presence or
-                absence of alterations in gene A are associated with the presence or absence of alterations in gene B in
-                the selected tumors.</span>,
+                absence of alterations in Gene A are associated with the presence or absence of alterations in Gene B in
+                the selected samples.</span>,
             sortBy: (d: MutualExclusivity) => d.logOddsRatio,
             download: (d: MutualExclusivity) => formatLogOddsRatio(d.logOddsRatio)
         };
