@@ -221,6 +221,12 @@ describe('cross cancer query', function() {
 });
 
 describe('single study query', function() {
+    before(()=>{
+        browser.url(CBIOPORTAL_URL);
+
+        browser.localStorage('POST', {key: 'localdev', value: 'true'});
+        browser.refresh();
+    });
     describe('mutation mapper ', function() {
         it('should show somatic and germline mutation rate', function() {
             browser.url(`${CBIOPORTAL_URL}`);
@@ -292,6 +298,29 @@ describe('single study query', function() {
             
             // there should be one more gene queried now
             assert(text.search('3' > -1));
+        });
+
+        it('should be possible to add genes to query, with custom case list query in single study query', function() {
+            browser.url(`${CBIOPORTAL_URL}/index.do?cancer_study_id=ov_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=-1&case_ids=ov_tcga_pub%3ATCGA-24-1428-01%0D%0Aov_tcga_pub%3ATCGA-24-1928-01%0D%0Aov_tcga_pub%3ATCGA-29-1698-01%0D%0Aov_tcga_pub%3ATCGA-24-0980-01%0D%0Aov_tcga_pub%3ATCGA-24-0970-01%0D%0Aov_tcga_pub%3ATCGA-13-0725-01%0D%0Aov_tcga_pub%3ATCGA-23-1027-01%0D%0Aov_tcga_pub%3ATCGA-13-0755-01%0D%0Aov_tcga_pub%3ATCGA-25-1315-01&gene_list=BRCA1%2520BRCA2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=ov_tcga_pub_gistic`);
+
+            // click enrichments tab
+            $('#enrichments-result-tab').waitForExist(30000);
+            $('#enrichments-result-tab').click();
+
+            var checkBoxes = $('.ov_tcga_pub_mutations_datatable_table_gene_checkbox_class');
+
+            checkBoxes.waitForExist(10000);
+
+            // select one gene and click add checked genes to query
+            browser.click('.ov_tcga_pub_mutations_datatable_table_gene_checkbox_class');
+            browser.click('#ov_tcga_pub_mutations_datatable_table_update_query_btn');
+
+            // wait for page to load
+            $('[data-test="QuerySummaryGeneCount"]').waitForExist(60000);
+            var text = browser.getText('[data-test="QuerySummaryGeneCount"]')
+
+            // there should be one more gene queried now
+            assert(text.search('3' > -1), "one more gene queried");
         });
     });
 });

@@ -50,15 +50,18 @@ export function queryParams(nonMolecularProfileParams:NonMolecularProfileQueryPa
     return {pathname: path, query:params};
 }
 
-export function nonMolecularProfileParams(store:QueryStore):NonMolecularProfileQueryParams {
+export function nonMolecularProfileParams(store:QueryStore, case_ids?:string):NonMolecularProfileQueryParams {
     const selectedStudyIds = store.allSelectedStudyIds;
+
+    case_ids = case_ids || store.asyncCustomCaseSet.result.map(caseRow => (caseRow.studyId + ':' + caseRow.sampleId)).join('\r\n');
+
     let ret:NonMolecularProfileQueryParams = {
         cancer_study_id: selectedStudyIds.length === 1 ? selectedStudyIds[0] : 'all',
         Z_SCORE_THRESHOLD: store.zScoreThreshold,
         RPPA_SCORE_THRESHOLD: store.rppaScoreThreshold,
         data_priority: store.dataTypePriorityCode,
         case_set_id: store.selectedSampleListId || '-1', // empty string won't work
-        case_ids: store.asyncCustomCaseSet.result.map(caseRow => (caseRow.studyId + ':' + caseRow.sampleId)).join('\r\n'),
+        case_ids,
         gene_list: encodeURIComponent(normalizeQuery(store.geneQuery) || ' '), // empty string won't work
         geneset_list: normalizeQuery(store.genesetQuery) || ' ', //empty string won't work
         tab_index: store.forDownloadTab ? 'tab_download' : 'tab_visualize' as any,
