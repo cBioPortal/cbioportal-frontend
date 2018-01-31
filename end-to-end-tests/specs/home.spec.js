@@ -80,20 +80,19 @@ describe('homepage', function() {
 
         it('clicking select all studies checkbox selects all studies',function(){
 
-            var visibleCheckboxes = getVisibleCheckboxes();
+            var studyCheckboxes = getVisibleCheckboxes();
 
-            var selectedStudies = visibleCheckboxes.filter(function(el){
+            var selectedStudies = studyCheckboxes.filter(function(el){
                 return el.isSelected();
             });
 
-            var allStudies = visibleCheckboxes.length;
+            var allStudies = studyCheckboxes.length;
 
-            assert.equal(allStudies, 173, 'we have 173 visible checkboxes');
             assert.equal(selectedStudies.length, 0, 'no studies selected');
 
             browser.element('[data-test=selectAllStudies]').click();
 
-            selectedStudies = visibleCheckboxes.filter(function(el){
+            selectedStudies = studyCheckboxes.filter(function(el){
                 return el.isSelected();
             });
 
@@ -101,7 +100,7 @@ describe('homepage', function() {
 
             browser.element('[data-test=selectAllStudies]').click();
 
-            selectedStudies = visibleCheckboxes.filter(function(el){
+            selectedStudies = studyCheckboxes.filter(function(el){
                 return el.isSelected();
             });
 
