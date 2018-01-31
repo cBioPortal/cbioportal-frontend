@@ -32,7 +32,7 @@ export default class DataTypePrioritySelector extends QueryStoreComponent<{}, {}
 			flexRowContents = flexRowContents.concat(radioButtons(this.profileAvailability.result, this.store));
 		}
 		return (
-			<FlexRow padded className={styles.DataTypePrioritySelector}>
+			<FlexRow padded className={styles.DataTypePrioritySelector} data-test="dataTypePrioritySelector">
 				<SectionHeader className="sectionLabel">Select Data Type Priority:</SectionHeader>
 				<FlexRow>
 					{flexRowContents}
@@ -50,7 +50,7 @@ export default class DataTypePrioritySelector extends QueryStoreComponent<{}, {}
 }
 
 export const DataTypePriorityRadio = observer(
-	(props: {label: string, state:QueryStore['dataTypePriority'], store:QueryStore}) => (
+	(props: {label: string, state:QueryStore['dataTypePriority'], store:QueryStore, dataTest:string}) => (
 		<label className={styles.DataTypePriorityLabel}>
 			<input
 				type="radio"
@@ -59,6 +59,7 @@ export const DataTypePriorityRadio = observer(
 					if (event.currentTarget.checked)
 						props.store.dataTypePriority = props.state;
 				}}
+				data-test={props.dataTest}
 			/>
 			{props.label}
 		</label>
@@ -75,6 +76,7 @@ export function radioButtons(availability:{mutation:boolean, cna:boolean}, store
 				label='Mutation and CNA'
 				state={{mutation: true, cna: true}}
 				store={store}
+				dataTest="MC"
 			/>
 		);
 		hasBoth = true;
@@ -86,6 +88,7 @@ export function radioButtons(availability:{mutation:boolean, cna:boolean}, store
 				label={`${hasBoth ? 'Only ' : ''}Mutation`}
 				state={{mutation:true, cna:false}}
 				store={store}
+				dataTest="M"
 			/>
 		);
 	}
@@ -96,6 +99,7 @@ export function radioButtons(availability:{mutation:boolean, cna:boolean}, store
 				label={`${hasBoth ? 'Only ' : ''}CNA`}
 				state={{mutation:false, cna:true}}
 				store={store}
+				dataTest="C"
 			/>
 		);
 	}
