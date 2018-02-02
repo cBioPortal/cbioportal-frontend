@@ -843,11 +843,18 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         const isLoading = (this.clinicalTracks.isPending || this.geneticTracks.isPending || this.heatmapTracks.isPending);
 
         return (
-            <div className="cbioportal-frontend"
+            <div className="cbioportal-frontend posRelative"
+                 style={{ minHeight:400 }}
                  onMouseEnter={this.onMouseEnter}
                  onMouseLeave={this.onMouseLeave}
             >
 
+                <div className='oncoprintLoadingIndicator'>
+                    <div>Loading Oncoprint data</div>
+                    <LoadingIndicator style={{display:'block'}} isLoading={true}/>
+                </div>
+
+                <div className='oncoprintBody'>
                 {this.caseSetInfo}
 
                 {(this.oncoprint && !this.oncoprint.webgl_unavailable) &&
@@ -884,16 +891,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                     onTrackSortDirectionChange={this.onTrackSortDirectionChange}
                 />
                 </div>
-
-                {
-                    (isLoading) && (
-                        <div className='oncoprintLoadingIndicator'>
-                            <div>Loading Oncoprint data</div>
-                            <LoadingIndicator style={{display:'block'}} isLoading={true}/>
-                        </div>
-                    )
-                }
-
+                </div>
 
             </div>
         );
