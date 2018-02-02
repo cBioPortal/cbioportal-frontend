@@ -5,6 +5,7 @@ import {MSKTabs, MSKTab} from "../../../shared/components/MSKTabs/MSKTabs";
 import {Gene, Sample} from "../../../shared/api/generated/CBioPortalAPI";
 import {ResultsViewPageStore} from "../ResultsViewPageStore";
 import {observable} from "mobx";
+import { getHost} from "../../../shared/api/urls";
 
 interface CNSegmentsIframeProps {
     sampleIds:string[];
@@ -28,17 +29,19 @@ class CNASegmentIframe extends React.Component<CNSegmentsIframeProps,{}>{
         height = Math.min(height, 800);
         var headerContent = '<head>    <link rel="stylesheet" type="text/css"  href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/themes/smoothness/jquery-ui.css"/>'
             + '<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css">'
-            + '<link rel="stylesheet" type="text/css" href="css/igv.css">'
+            + '<link rel="stylesheet" type="text/css" href="http://www.cbioportal.org/css/igv.css">'
             + '<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"><\/script>'
             + '<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"><\/script>'
             + '<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"><\/script>'
             + '<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/es5-shim/4.5.7/es5-shim.min.js"><\/script>'
             + '<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/es6-shim/0.35.3/es6-shim.js"><\/script>'
-            + '<script type="text/javascript" src="js/lib/igv.min.js"><\/script></head>';
+            + '<script type="text/javascript">var apiUrl="' + getHost() +'";<\/script>'
+            + '<script type="text/javascript" src="http://www.cbioportal.org/js/lib/igv.min.js"><\/script></head>';
 
 
-        var bodyContent1 = '<body style="margin:0"><div id="igvDiv" style="padding-top: 10px;padding-bottom: 10px;"></div><script type="text/javascript">  $(document).ready(function () {    var div = $("#igvDiv"),   options = {'
-            + 'divId: "igvDiv", showNavigation: true, showRuler: true, genome: "hg19", divId: "igvDiv", locus: "' + this.props.gene.hugoGeneSymbol + '", tracks: [  { url: "api-legacy/copynumbersegments", indexed: false, isLog: true, contentType: "application/x-www-form-urlencoded", name: "Alt click to sort", type:"seg", json: true, method: "POST", ';
+
+        var bodyContent1 = '<body style="margin:0"><div id="igvDiv" style="padding-top: 10px;padding-bottom: 10px;"></div><script type="text/javascript">$(document).ready(function () {    var div = $("#igvDiv"),   options = {'
+            + 'divId: "igvDiv", showNavigation: true, showRuler: true, genome: "hg19", divId: "igvDiv", locus: "' + this.props.gene.hugoGeneSymbol + '", tracks: [  { url: "http://" + apiUrl + "/api-legacy/copynumbersegments", indexed: false, isLog: true, contentType: "application/x-www-form-urlencoded", name: "Alt click to sort", type:"seg", json: true, method: "POST", ';
 
         var bodyContent2 = 'height: ' + segmentTrackHeight + ', sendData: "cancerStudyId=' + this.props.studyId + '&chromosome=' + this.props.gene.chromosome +'&sampleIds=' + this.props.sampleIds.join(',') + '"},{name: "Genes", url: "https://s3.amazonaws.com/igv.broadinstitute.org/annotations/hg19/genes/gencode.v18.collapsed.bed", order: Number.MAX_VALUE,  displayMode: "EXPANDED"}]};igv.createBrowser(div, options);});<\/script><\/body>';
 
@@ -67,7 +70,7 @@ class CNASegmentIframe extends React.Component<CNSegmentsIframeProps,{}>{
                 }
             };
             // Post data to URL which handles post request
-            xhr.open("POST", "api-legacy/segmentfile");
+            xhr.open("POST", "http://" + getHost() + "api-legacy/segmentfile");
             xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
             xhr.responseType = 'blob';
             xhr.send(sendData);

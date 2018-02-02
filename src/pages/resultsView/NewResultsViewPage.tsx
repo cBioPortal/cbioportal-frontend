@@ -274,11 +274,21 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
             <div>
 
+                <If condition={this.showQuerySelector}>
+                    <div style={{padding:15}}>
+                    <QueryAndDownloadTabs onSubmit={()=>this.showQuerySelector = false} store={this.props.queryStore}/>
+                    </div>
+                        <hr />
+
+                </If>
+
+
+
                 <If condition={this.resultsViewPageStore.currentQuery}>
                     <div>
 
                         <div style={{marginBottom:8}}>
-                            <QuerySummary queryStore={this.props.queryStore} className={'contentWidth'} onSubmit={()=>alert('nora')} store={this.resultsViewPageStore}/>
+                            <QuerySummary queryStore={this.props.queryStore} className={'contentWidth'} onSubmit={()=>this.showQuerySelector = true} store={this.resultsViewPageStore}/>
                         </div>
 
                         <Observer>
@@ -315,13 +325,22 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                         <MSKTab key={6} id="copyNumberSegmentsTab" linkText="CN Segments">
                             <CNSegments store={this.resultsViewPageStore}/>
                         </MSKTab>
+                        <MSKTab key={7} id="expressionTab" linkText="Expression">
+                            {
+                                (this.resultsViewPageStore.studies.isComplete && this.resultsViewPageStore.genes.isComplete) && (
+                                 <ExpressionWrapper
+                                    genes={this.resultsViewPageStore.genes.result.map((gene: Gene) => gene.hugoGeneSymbol)}
+                                    studyIds={this.resultsViewPageStore.studyIds.result!}>
+                                 </ExpressionWrapper>
+                                )
+                            }
+                        </MSKTab>
+
                     </MSKTabs>
                     </div>
                 </If>
 
-                <If condition={this.showQuerySelector}>
-                    <QueryAndDownloadTabs onSubmit={()=>this.showQuerySelector = false} store={this.props.queryStore}/>
-                </If>
+
 
             </div>
         )
