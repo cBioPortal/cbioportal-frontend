@@ -439,3 +439,13 @@ th.reactable-header-sort-asc:after {
 .oncoprintjs__scroll_div {
   overflow:auto !important;
 }
+
+#oncoprintContainer {
+  opacity: 0;
+  transition: opacity .75s ease-in-out;
+
+  &.fadeIn {
+    opacity:1;
+  }
+
+}

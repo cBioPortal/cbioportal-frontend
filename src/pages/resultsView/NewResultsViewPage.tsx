@@ -302,7 +302,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                             }
                         </Observer>
 
-                    <MSKTabs activeTabId={this.props.routing.location.query.tab}  onTabClick={(id:string)=>this.handleTabChange(id)} className="mainTabs">
+                    <MSKTabs activeTabId={this.props.routing.location.query.tab} unmountOnHide={true}  onTabClick={(id:string)=>this.handleTabChange(id)} className="mainTabs">
                         <MSKTab key={0} id="oncoprintTab" linkText="Oncoprint">
                                 <ResultsViewOncoprint
                                     divId={'oncoprintContainer'}

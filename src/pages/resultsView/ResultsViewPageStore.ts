@@ -886,30 +886,42 @@ export class ResultsViewPageStore {
         }
     });
 
-    readonly studyToSampleIds = remoteData<{ [studyId: string]: { [sampleId: string]: boolean } }>(async () => {
-        const sampleListsToQuery: { studyId: string, sampleListId: string }[] = [];
-        const ret: { [studyId: string]: { [sampleId: string]: boolean } } = {};
-        for (const sampleSpec of this.samplesSpecification) {
-            if (sampleSpec.sampleId) {
-                ret[sampleSpec.studyId] = ret[sampleSpec.studyId] || {};
-                ret[sampleSpec.studyId][sampleSpec.sampleId] = true;
-            } else if (sampleSpec.sampleListId) {
-                sampleListsToQuery.push(sampleSpec as { studyId: string, sampleListId: string });
+    readonly studyToSampleIds = remoteData<{ [studyId: string]: { [sampleId: string]: boolean } }>({
+        await:()=>[this.sampleLists],
+        invoke:async () => {
+                // const sampleListsToQuery: { studyId: string, sampleListId: string }[] = [];
+                const ret: { [studyId: string]: { [sampleId: string]: boolean } } = {};
+                // for (const sampleSpec of this.samplesSpecification) {
+                //     if (sampleSpec.sampleId) {
+                //         ret[sampleSpec.studyId] = ret[sampleSpec.studyId] || {};
+                //         ret[sampleSpec.studyId][sampleSpec.sampleId] = true;
+                //     } else if (sampleSpec.sampleListId) {
+                //         sampleListsToQuery.push(sampleSpec as { studyId: string, sampleListId: string });
+                //     }
+                // }
+                // const results: string[][] = await Promise.all(sampleListsToQuery.map(spec => {
+                //     return client.getAllSampleIdsInSampleListUsingGET({
+                //         sampleListId: spec.sampleListId
+                //     });
+                // }));
+
+                this.sampleLists.result!.forEach((list:SampleList)=>{
+                    ret[list.studyId] = ret[list.studyId] || {};
+                    list.sampleIds.forEach((sampleId:string)=>{
+                       ret[list.studyId][sampleId] = true;
+                    });
+                });
+
+
+                // for (let i = 0; i < results.length; i++) {
+                //     ret[sampleListsToQuery[i].studyId] = ret[sampleListsToQuery[i].studyId] || {};
+                //     const sampleMap = ret[sampleListsToQuery[i].studyId];
+                //     results[i].map(sampleId => {
+                //         sampleMap[sampleId] = true;
+                //     });
+                // }
+                return ret;
             }
-        }
-        const results: string[][] = await Promise.all(sampleListsToQuery.map(spec => {
-            return client.getAllSampleIdsInSampleListUsingGET({
-                sampleListId: spec.sampleListId
-            });
-        }));
-        for (let i = 0; i < results.length; i++) {
-            ret[sampleListsToQuery[i].studyId] = ret[sampleListsToQuery[i].studyId] || {};
-            const sampleMap = ret[sampleListsToQuery[i].studyId];
-            results[i].map(sampleId => {
-                sampleMap[sampleId] = true;
-            });
-        }
-        return ret;
     }, {});
 
     @computed get studyToSampleListId(): { [studyId: string]: string } {
@@ -949,12 +961,18 @@ export class ResultsViewPageStore {
     }
 
     readonly sampleLists = remoteData<SampleList[]>({
-        invoke:()=>Promise.all(Object.keys(this.studyToSampleListId).map(studyId=>{
-            return client.getSampleListUsingGET({
-                sampleListId: this.studyToSampleListId[studyId]
-            });
-        }))
+        invoke:()=>{
+            return client.fetchSampleListsUsingPOST({ sampleListIds:_.values(this.studyToSampleListId), projection:'DETAILED'  });
+        }
     });
+
+    // readonly sampleLists = remoteData<SampleList[]>({
+    //     invoke:()=>Promise.all(Object.keys(this.studyToSampleListId).map(studyId=>{
+    //         return client.getSampleListUsingGET({
+    //             sampleListId: this.studyToSampleListId[studyId]
+    //         });
+    //     }))
+    // });
 
     readonly mutations = remoteData<Mutation[]>({
         await:()=>[
