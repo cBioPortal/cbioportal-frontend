@@ -276,7 +276,12 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
                 <If condition={this.showQuerySelector}>
                     <div style={{padding:15}}>
-                    <QueryAndDownloadTabs onSubmit={()=>this.showQuerySelector = false} store={this.props.queryStore}/>
+                    <QueryAndDownloadTabs onSubmit={()=>{
+                        this.showQuerySelector = false;
+                        $("#oncoprintContainer > span").css({minWidth:"auto"});
+                        $(".oncoprintBody").removeClass("fadeIn");
+                        $(".oncoprintLoadingIndicator").css("visibility","visible");
+                    }} store={this.props.queryStore}/>
                     </div>
                         <hr />
 
@@ -296,7 +301,12 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                                 () => {
                                     return <div className={"contentWidth"} style={{marginBottom:8}}><OQLEditor
                                         oqlQuery={this.resultsViewPageStore.oqlQuery}
-                                        onChange={(oql: string) => this.resultsViewPageStore.setOQL(oql)}
+                                        onChange={(oql: string) =>{
+                                            this.resultsViewPageStore.setOQL(oql);
+                                            $("#oncoprintContainer > span").css({minWidth:"auto"});
+                                            $(".oncoprintBody").removeClass("fadeIn");
+                                            $(".oncoprintLoadingIndicator").css("visibility","visible");
+                                        }}
                                     /></div>
                                 }
                             }
