@@ -160,6 +160,13 @@
                 "type": "string"
               }
             }
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "The fields to be returned.",
+            "required": false,
+            "type": "string"
           }
         ],
         "responses": {
@@ -270,7 +277,14 @@
           {
             "name": "evidenceTypes",
             "in": "query",
-            "description": "Separate by comma. Evidence type includes GENE_SUMMARY, GENE_BACKGROUND, MUTATION_SUMMARY, ONCOGENIC, MUTATION_EFFECT, VUS, PREVALENCE, PROGNOSTIC_IMPLICATION, DIAGNOSTIC_IMPLICATION, TUMOR_TYPE_SUMMARY, NCCN_GUIDELINES, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE, CLINICAL_TRIAL",
+            "description": "Separate by comma. Evidence type includes GENE_SUMMARY, GENE_BACKGROUND, MUTATION_SUMMARY, ONCOGENIC, MUTATION_EFFECT, VUS, PROGNOSTIC_IMPLICATION, DIAGNOSTIC_IMPLICATION, TUMOR_TYPE_SUMMARY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "The fields to be returned.",
             "required": false,
             "type": "string"
           }
@@ -310,6 +324,13 @@
             "schema": {
               "$ref": "#/definitions/EvidenceQueries"
             }
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "The fields to be returned.",
+            "required": false,
+            "type": "string"
           }
         ],
         "responses": {
@@ -346,6 +367,13 @@
             "description": "Unique identifier.",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "The fields to be returned.",
+            "required": false,
+            "type": "string"
           }
         ],
         "responses": {
@@ -377,6 +405,15 @@
         ],
         "produces": [
           "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "The fields to be returned.",
+            "required": false,
+            "type": "string"
+          }
         ],
         "responses": {
           "200": {
@@ -428,6 +465,13 @@
             "description": "The search query, it could be hugoSymbol or entrezGeneId.",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "The fields to be returned.",
+            "required": false,
+            "type": "string"
           }
         ],
         "responses": {
@@ -465,6 +509,13 @@
             "required": true,
             "type": "integer",
             "format": "int32"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "The fields to be returned.",
+            "required": false,
+            "type": "string"
           }
         ],
         "responses": {
@@ -543,6 +594,13 @@
             "required": true,
             "type": "integer",
             "format": "int32"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "The fields to be returned.",
+            "required": false,
+            "type": "string"
           }
         ],
         "responses": {
@@ -751,9 +809,23 @@
             "default": "regular"
           },
           {
+            "name": "evidenceType",
+            "in": "query",
+            "description": "Evidence type.",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "hgvs",
             "in": "query",
             "description": "HGVS varaint. Its priority is higher than entrezGeneId/hugoSymbol + variant combination",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "The fields to be returned.",
             "required": false,
             "type": "string"
           }
@@ -796,6 +868,13 @@
             "schema": {
               "$ref": "#/definitions/EvidenceQueries"
             }
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "The fields to be returned.",
+            "required": false,
+            "type": "string"
           }
         ],
         "responses": {
@@ -960,6 +1039,15 @@
         "produces": [
           "application/json"
         ],
+        "parameters": [
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "The fields to be returned.",
+            "required": false,
+            "type": "string"
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -1047,6 +1135,13 @@
             "description": "HGVS varaint. Its priority is higher than entrezGeneId/hugoSymbol + variant combination",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "The fields to be returned.",
+            "required": false,
+            "type": "string"
           }
         ],
         "responses": {
@@ -1087,6 +1182,13 @@
                 "$ref": "#/definitions/VariantSearchQuery"
               }
             }
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "The fields to be returned.",
+            "required": false,
+            "type": "string"
           }
         ],
         "responses": {
@@ -1124,6 +1226,18 @@
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "TreatmentDrug": {
+      "type": "object",
+      "properties": {
+        "priority": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "treatmentDrugId": {
+          "$ref": "#/definitions/TreatmentDrugId"
         }
       }
     },
@@ -1280,35 +1394,6 @@
           "type": "string"
         },
         "volume": {
-          "type": "string"
-        }
-      }
-    },
-    "NccnGuideline": {
-      "type": "object",
-      "properties": {
-        "additionalInfo": {
-          "type": "string"
-        },
-        "category": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "disease": {
-          "type": "string"
-        },
-        "empty": {
-          "type": "boolean"
-        },
-        "pages": {
-          "type": "string"
-        },
-        "therapy": {
-          "type": "string"
-        },
-        "version": {
           "type": "string"
         }
       }
@@ -1585,8 +1670,12 @@
         "drugs": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/Drug"
+            "$ref": "#/definitions/TreatmentDrug"
           }
+        },
+        "priority": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
@@ -1782,6 +1871,14 @@
         }
       }
     },
+    "TreatmentDrugId": {
+      "type": "object",
+      "properties": {
+        "drug": {
+          "$ref": "#/definitions/Drug"
+        }
+      }
+    },
     "GeneEvidence": {
       "type": "object",
       "required": [
@@ -1813,15 +1910,12 @@
             "ONCOGENIC",
             "MUTATION_EFFECT",
             "VUS",
-            "PREVALENCE",
             "PROGNOSTIC_IMPLICATION",
             "DIAGNOSTIC_IMPLICATION",
-            "NCCN_GUIDELINES",
             "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY",
             "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE",
             "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY",
-            "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE",
-            "CLINICAL_TRIAL"
+            "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE"
           ]
         },
         "gene": {
@@ -1838,56 +1932,6 @@
           "type": "string"
         },
         "status": {
-          "type": "string"
-        }
-      }
-    },
-    "ClinicalTrial": {
-      "type": "object",
-      "properties": {
-        "cdrId": {
-          "type": "string"
-        },
-        "countries": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "diseaseCondition": {
-          "type": "string"
-        },
-        "drugs": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/Drug"
-          }
-        },
-        "eligibilityCriteria": {
-          "type": "string"
-        },
-        "inUSA": {
-          "type": "boolean"
-        },
-        "lastChangedDate": {
-          "type": "string"
-        },
-        "nctId": {
-          "type": "string"
-        },
-        "open": {
-          "type": "boolean"
-        },
-        "phase": {
-          "type": "string"
-        },
-        "purpose": {
-          "type": "string"
-        },
-        "recruitingStatus": {
-          "type": "string"
-        },
-        "title": {
           "type": "string"
         }
       }
@@ -1913,12 +1957,6 @@
         "cancerType": {
           "type": "string"
         },
-        "clinicalTrials": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/ClinicalTrial"
-          }
-        },
         "description": {
           "type": "string"
         },
@@ -1933,19 +1971,20 @@
             "ONCOGENIC",
             "MUTATION_EFFECT",
             "VUS",
-            "PREVALENCE",
             "PROGNOSTIC_IMPLICATION",
             "DIAGNOSTIC_IMPLICATION",
-            "NCCN_GUIDELINES",
             "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY",
             "STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE",
             "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY",
-            "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE",
-            "CLINICAL_TRIAL"
+            "INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE"
           ]
         },
         "gene": {
           "$ref": "#/definitions/Gene"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int32"
         },
         "knownEffect": {
           "type": "string"
@@ -1976,12 +2015,6 @@
             "LEVEL_D2",
             "LEVEL_D3"
           ]
-        },
-        "nccnGuidelines": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/NccnGuideline"
-          }
         },
         "oncoTreeType": {
           "$ref": "#/definitions/TumorType"
