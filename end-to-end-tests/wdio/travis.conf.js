@@ -1,9 +1,9 @@
 var browserstack = require('browserstack-local');
 
 var path = require('path');
-//var VisualRegressionCompare = require('wdio-visual-regression-service/compare');
+var VisualRegressionCompare = require('wdio-visual-regression-service/compare');
 
-//var getScreenshotName = require('./getScreenshotName');
+var getScreenshotName = require('./getScreenshotName');
 const localIdentifier = `foobar_${Date.now()}`
 
 exports.config = {
@@ -17,7 +17,7 @@ exports.config = {
     // directory is where your package.json resides, so `wdio` will be called from there.
     //
     specs: [
-        './specs/**/*.js'
+        './specs/**/*.js' //'./specs/**/screenshot.spec.js'
     ],
     // Patterns to exclude.
     exclude: [
@@ -51,9 +51,10 @@ exports.config = {
         // 5 instances get started at a time.
         maxInstances: 5,
         'os': 'OS X',
-        'os_version': 'El Capitan',
+        'os_version': 'High Sierra',
         'browser': 'Chrome',
         'browser_version': '63.0',
+        'resolution': '1600x1200',
         build: 'webdriver-browserstack',
         'browserstack.local': true,
         'browserstack.localIdentifier': localIdentifier
@@ -118,19 +119,19 @@ exports.config = {
     // Services take over a specific job you don't want to take care of. They enhance
     // your test setup with almost no effort. Unlike plugins, they don't add new
     // commands. Instead, they hook themselves up into the test process.
-    services: ['browserstack'],
+    services: ['browserstack', 'visual-regression'],
 
-    // visualRegression: {
-    //     compare: new VisualRegressionCompare.LocalCompare({
-    //         referenceName: getScreenshotName(path.join(process.cwd(), 'screenshots/reference')),
-    //         screenshotName: getScreenshotName(path.join(process.cwd(), 'screenshots/screen')),
-    //         diffName: getScreenshotName(path.join(process.cwd(), 'screenshots/diff')),
-    //         misMatchTolerance:5
-    //     }),
-    //     viewportChangePause: 300,
-    //     viewports: [{ width: 1600, height: 1000 }],
-    //     orientations: ['landscape', 'portrait'],
-    // },
+    visualRegression: {
+        compare: new VisualRegressionCompare.LocalCompare({
+            referenceName: getScreenshotName(path.join(process.cwd(), 'screenshots/reference')),
+            screenshotName: getScreenshotName(path.join(process.cwd(), 'screenshots/screen')),
+            diffName: getScreenshotName(path.join(process.cwd(), 'screenshots/diff')),
+            misMatchTolerance:0.1
+        }),
+        viewportChangePause: 300,
+        viewports: [{ width: 1600, height: 1000 }],
+        orientations: ['landscape', 'portrait'],
+    },
 
     user: process.env.BROWSERSTACK_USERNAME,
     key: process.env.BROWSERSTACK_ACCESS_KEY,
