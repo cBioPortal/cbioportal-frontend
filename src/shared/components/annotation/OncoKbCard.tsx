@@ -399,7 +399,7 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps, IOncoKb
                     )}
 
                     <div className="item footer">
-                        <a href="http://oncokb.org/#/gene/{{gene}}" target="_blank">
+                        <a href={`http://oncokb.org/#/gene/${this.props.gene}`} target="_blank">
                             <img src={require("./images/oncokb.png")} className="oncokb-logo" alt="OncoKB"/>
                         </a>
                         <span className="pull-right feedback">

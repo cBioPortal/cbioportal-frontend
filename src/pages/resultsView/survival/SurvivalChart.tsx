@@ -139,9 +139,9 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
 
             <div className="posRelative">
 
-                <div className="borderedChart">
+                <div className="borderedChart" data-test={'SurvivalChart'} style={{width: 910}}>
 
-                    <div className="btn-group" style={{position:'absolute', zIndex:10, right:10 }} role="group">
+                    <div className="btn-group" style={{position:'absolute', zIndex:10, right:260 }} role="group">
                         <button className={`btn btn-default btn-xs`} onClick={this.downloadSvg}>
                             SVG <i className="fa fa-cloud-download" />
                         </button>
@@ -154,11 +154,12 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                     </div>
 
                     <VictoryChart containerComponent={<VictoryContainer responsive={false} containerRef={(ref: any) => this.svgContainer = ref} />}
-                        height={620} width={1150} padding={{ top: 20, bottom: 50, left: 60, right: 300 }} theme={VictoryTheme.material}>
-                        <VictoryAxis style={{ ticks: { size: 8 }, tickLabels: { padding: 2 }, axisLabel: { padding: 35 }, grid: { opacity: 0 } }}
-                            crossAxis={false} tickCount={11} label={this.props.xAxisLabel} />
+                        height={500} width={900} padding={{ top: 20, bottom: 50, left: 60, right: 300 }} theme={VictoryTheme.material}>
+                        <VictoryAxis style={{ ticks: { size: 8, stroke: "black" }, tickLabels: { padding: 2, fill: "black" }, axisLabel: { padding: 35, fill: "black" },
+                            grid: { opacity: 0 }, axis: {stroke: "black", strokeWidth: 1} }} crossAxis={false} tickCount={11} label={this.props.xAxisLabel} />
                         <VictoryAxis label={this.props.yAxisLabel} dependentAxis={true} tickFormat={(t: any) => `${t}%`} tickCount={11}
-                            style={{ ticks: { size: 8 }, tickLabels: { padding: 2 }, axisLabel: { padding: 45 }, grid: { opacity: 0 } }} domain={[0, 100]} crossAxis={false} />
+                            style={{ ticks: { size: 8, stroke: "black" }, tickLabels: { padding: 2, fill: "black" }, axisLabel: { padding: 45, fill: "black" },
+                            grid: { opacity: 0 }, axis: {stroke: "black", strokeWidth: 1} }} domain={[0, 100]} crossAxis={false} />
                         <VictoryLine interpolation="stepAfter" data={getLineData(this.sortedAlteredPatientSurvivals, this.alteredEstimates)}
                             style={{ data: { stroke: "red", strokeWidth: 1 } }} />
                         <VictoryLine interpolation="stepAfter" data={getLineData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)}
@@ -171,7 +172,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                             symbol="circle" style={{ data: { fill: "red", fillOpacity: (datum: any, active: any) => active ? 0.3 : 0 } }} size={10} events={events} />
                         <VictoryScatter data={getScatterData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)}
                             symbol="circle" style={{ data: { fill: "blue", fillOpacity: (datum: any, active: any) => active ? 0.3 : 0 } }} size={10} events={events} />
-                        <VictoryLegend x={850} y={40}
+                        <VictoryLegend x={600} y={40}
                             data={[
                                 { name: this.alteredLegendText, symbol: { fill: "red", type: "square" } },
                                 { name: this.unalteredLegendText, symbol: { fill: "blue", type: "square" } },
@@ -192,11 +193,10 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                             : {this.tooltipModel.datum.x.toFixed(2)} months {this.tooltipModel.datum.status ? "" :
                                 "(censored)"}
                         </div>
-
                     </Popover>
                 }
 
-                <table className="table table-striped" style={{marginTop:20}}>
+                <table className="table table-striped" style={{marginTop:20, width: 910}}>
                     <tbody>
                         <tr>
                             <td />
