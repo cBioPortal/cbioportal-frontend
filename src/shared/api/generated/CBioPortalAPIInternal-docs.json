@@ -16,15 +16,7 @@
   },
   "tags": [
     {
-      "name": "Gene Set Correlation",
-      "description": " "
-    },
-    {
-      "name": "Mutation Spectrums",
-      "description": " "
-    },
-    {
-      "name": "Variant Counts",
+      "name": "Co-Expressions",
       "description": " "
     },
     {
@@ -36,39 +28,7 @@
       "description": " "
     },
     {
-      "name": "Co-Expressions",
-      "description": " "
-    },
-    {
-      "name": "Info",
-      "description": " "
-    },
-    {
-      "name": "Gene Set Scores",
-      "description": " "
-    },
-    {
       "name": "Expression Enrichments",
-      "description": " "
-    },
-    {
-      "name": "Gene Set Hierarchy",
-      "description": " "
-    },
-    {
-      "name": "mRNA Percentile",
-      "description": " "
-    },
-    {
-      "name": "Significantly Mutated Genes",
-      "description": " "
-    },
-    {
-      "name": "Gene Sets",
-      "description": " "
-    },
-    {
-      "name": "Mutation Enrichments",
       "description": " "
     },
     {
@@ -76,7 +36,47 @@
       "description": " "
     },
     {
+      "name": "Gene Set Correlation",
+      "description": " "
+    },
+    {
+      "name": "Gene Set Hierarchy",
+      "description": " "
+    },
+    {
+      "name": "Gene Set Scores",
+      "description": " "
+    },
+    {
+      "name": "Gene Sets",
+      "description": " "
+    },
+    {
+      "name": "Info",
+      "description": " "
+    },
+    {
+      "name": "Mutation Enrichments",
+      "description": " "
+    },
+    {
+      "name": "Mutation Spectrums",
+      "description": " "
+    },
+    {
       "name": "Significant Copy Number Regions",
+      "description": " "
+    },
+    {
+      "name": "Significantly Mutated Genes",
+      "description": " "
+    },
+    {
+      "name": "Variant Counts",
+      "description": " "
+    },
+    {
+      "name": "mRNA Percentile",
       "description": " "
     }
   ],
@@ -153,6 +153,10 @@
             "required": false,
             "type": "integer",
             "default": 75,
+            "maximum": 100,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -162,6 +166,10 @@
             "required": false,
             "type": "number",
             "default": 0.4,
+            "maximum": 1,
+            "exclusiveMaximum": false,
+            "minimum": 0,
+            "exclusiveMinimum": false,
             "format": "double"
           },
           {
@@ -171,6 +179,10 @@
             "required": false,
             "type": "number",
             "default": 0.05,
+            "maximum": 1,
+            "exclusiveMaximum": false,
+            "minimum": 0,
+            "exclusiveMinimum": false,
             "format": "double"
           },
           {
@@ -213,9 +225,6 @@
         ],
         "summary": "Get all gene sets",
         "operationId": "getAllGenesetsUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -241,6 +250,10 @@
             "required": false,
             "type": "integer",
             "default": 10000000,
+            "maximum": 2147483647,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -250,6 +263,8 @@
             "required": false,
             "type": "integer",
             "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
             "format": "int32"
           }
         ],
@@ -313,9 +328,6 @@
         ],
         "summary": "Get a gene set",
         "operationId": "getGenesetUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -373,6 +385,10 @@
             "required": false,
             "type": "number",
             "default": 0.3,
+            "maximum": 1,
+            "exclusiveMaximum": false,
+            "minimum": 0,
+            "exclusiveMinimum": false,
             "format": "double"
           },
           {
@@ -459,9 +475,6 @@
         ],
         "summary": "Get information about the running instance",
         "operationId": "getInfoUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -922,9 +935,6 @@
         ],
         "summary": "Get significant copy number alteration regions in a study",
         "operationId": "getSignificantCopyNumberRegionsUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -957,6 +967,10 @@
             "required": false,
             "type": "integer",
             "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -966,6 +980,8 @@
             "required": false,
             "type": "integer",
             "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -1016,9 +1032,6 @@
         ],
         "summary": "Get significantly mutated genes in a study",
         "operationId": "getSignificantlyMutatedGenesUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -1051,6 +1064,10 @@
             "required": false,
             "type": "integer",
             "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -1060,6 +1077,8 @@
             "required": false,
             "type": "integer",
             "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -1105,6 +1124,276 @@
     }
   },
   "definitions": {
+    "AlterationEnrichment": {
+      "type": "object",
+      "required": [
+        "alteredCount",
+        "entrezGeneId",
+        "hugoGeneSymbol",
+        "logRatio",
+        "pValue",
+        "qValue",
+        "unalteredCount"
+      ],
+      "properties": {
+        "alteredCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "cytoband": {
+          "type": "string"
+        },
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "logRatio": {
+          "type": "string"
+        },
+        "pValue": {
+          "type": "number"
+        },
+        "qValue": {
+          "type": "number"
+        },
+        "unalteredCount": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "AlterationEnrichment"
+    },
+    "CoExpression": {
+      "type": "object",
+      "required": [
+        "cytoband",
+        "entrezGeneId",
+        "hugoGeneSymbol",
+        "pearsonsCorrelation",
+        "spearmansCorrelation"
+      ],
+      "properties": {
+        "cytoband": {
+          "type": "string"
+        },
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "pearsonsCorrelation": {
+          "type": "number"
+        },
+        "spearmansCorrelation": {
+          "type": "number"
+        }
+      },
+      "title": "CoExpression"
+    },
+    "CoExpressionFilter": {
+      "type": "object",
+      "properties": {
+        "sampleIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sampleListId": {
+          "type": "string"
+        }
+      },
+      "title": "CoExpressionFilter"
+    },
+    "CosmicMutation": {
+      "type": "object",
+      "required": [
+        "cosmicMutationId",
+        "count",
+        "proteinChange"
+      ],
+      "properties": {
+        "cosmicMutationId": {
+          "type": "string"
+        },
+        "count": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "keyword": {
+          "type": "string"
+        },
+        "proteinChange": {
+          "type": "string"
+        }
+      },
+      "title": "CosmicMutation"
+    },
+    "EnrichmentFilter": {
+      "type": "object",
+      "required": [
+        "alteredIds",
+        "unalteredIds"
+      ],
+      "properties": {
+        "alteredIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "unalteredIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "EnrichmentFilter"
+    },
+    "ExpressionEnrichment": {
+      "type": "object",
+      "required": [
+        "entrezGeneId",
+        "hugoGeneSymbol",
+        "meanExpressionInAlteredGroup",
+        "meanExpressionInUnalteredGroup",
+        "pValue",
+        "qValue",
+        "standardDeviationInAlteredGroup",
+        "standardDeviationInUnalteredGroup"
+      ],
+      "properties": {
+        "cytoband": {
+          "type": "string"
+        },
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "meanExpressionInAlteredGroup": {
+          "type": "number"
+        },
+        "meanExpressionInUnalteredGroup": {
+          "type": "number"
+        },
+        "pValue": {
+          "type": "number"
+        },
+        "qValue": {
+          "type": "number"
+        },
+        "standardDeviationInAlteredGroup": {
+          "type": "number"
+        },
+        "standardDeviationInUnalteredGroup": {
+          "type": "number"
+        }
+      },
+      "title": "ExpressionEnrichment"
+    },
+    "FractionGenomeAltered": {
+      "type": "object",
+      "required": [
+        "patientId",
+        "sampleId",
+        "studyId",
+        "value"
+      ],
+      "properties": {
+        "patientId": {
+          "type": "string"
+        },
+        "sampleId": {
+          "type": "string"
+        },
+        "studyId": {
+          "type": "string"
+        },
+        "uniquePatientKey": {
+          "type": "string"
+        },
+        "uniqueSampleKey": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "title": "FractionGenomeAltered"
+    },
+    "FractionGenomeAlteredFilter": {
+      "type": "object",
+      "properties": {
+        "sampleIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sampleListId": {
+          "type": "string"
+        }
+      },
+      "title": "FractionGenomeAlteredFilter"
+    },
+    "Geneset": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "genesetId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "refLink": {
+          "type": "string"
+        },
+        "representativePvalue": {
+          "type": "number",
+          "format": "double"
+        },
+        "representativeScore": {
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "title": "Geneset"
+    },
+    "GenesetCorrelation": {
+      "type": "object",
+      "properties": {
+        "correlationValue": {
+          "type": "number",
+          "format": "double"
+        },
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "expressionGeneticProfileId": {
+          "type": "string"
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "zScoreGeneticProfileId": {
+          "type": "string"
+        }
+      },
+      "title": "GenesetCorrelation"
+    },
     "GenesetDataFilterCriteria": {
       "type": "object",
       "properties": {
@@ -1123,80 +1412,51 @@
         "sampleListId": {
           "type": "string"
         }
-      }
+      },
+      "title": "GenesetDataFilterCriteria"
     },
-    "MutationSpectrumFilter": {
+    "GenesetHierarchyInfo": {
       "type": "object",
       "properties": {
-        "sampleIds": {
+        "genesets": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/definitions/Geneset"
           }
         },
-        "sampleListId": {
-          "type": "string"
-        }
-      }
-    },
-    "GisticToGene": {
-      "type": "object",
-      "properties": {
-        "entrezGeneId": {
+        "nodeId": {
           "type": "integer",
           "format": "int32"
         },
-        "hugoGeneSymbol": {
+        "nodeName": {
           "type": "string"
-        }
-      }
-    },
-    "EnrichmentFilter": {
-      "type": "object",
-      "properties": {
-        "alteredIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
         },
-        "unalteredIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "VariantCountIdentifier": {
-      "type": "object",
-      "properties": {
-        "entrezGeneId": {
+        "parentId": {
           "type": "integer",
           "format": "int32"
         },
-        "keyword": {
+        "parentNodeName": {
           "type": "string"
         }
-      }
+      },
+      "title": "GenesetHierarchyInfo"
     },
-    "FractionGenomeAlteredFilter": {
+    "GenesetMolecularData": {
       "type": "object",
+      "required": [
+        "geneticProfileId",
+        "patientId",
+        "sampleId",
+        "studyId",
+        "value"
+      ],
       "properties": {
-        "sampleIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "genesetId": {
+          "type": "string"
         },
-        "sampleListId": {
+        "geneticProfileId": {
           "type": "string"
-        }
-      }
-    },
-    "FractionGenomeAltered": {
-      "type": "object",
-      "properties": {
+        },
         "patientId": {
           "type": "string"
         },
@@ -1213,13 +1473,79 @@
           "type": "string"
         },
         "value": {
-          "type": "number",
-          "format": "double"
+          "type": "string"
         }
-      }
+      },
+      "title": "GenesetMolecularData"
+    },
+    "Gistic": {
+      "type": "object",
+      "required": [
+        "amp",
+        "chromosome",
+        "cytoband",
+        "qValue",
+        "studyId",
+        "widePeakEnd",
+        "widePeakStart"
+      ],
+      "properties": {
+        "amp": {
+          "type": "boolean"
+        },
+        "chromosome": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "cytoband": {
+          "type": "string"
+        },
+        "genes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GisticToGene"
+          }
+        },
+        "qValue": {
+          "type": "number"
+        },
+        "studyId": {
+          "type": "string"
+        },
+        "widePeakEnd": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "widePeakStart": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "Gistic"
+    },
+    "GisticToGene": {
+      "type": "object",
+      "required": [
+        "entrezGeneId",
+        "hugoGeneSymbol"
+      ],
+      "properties": {
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        }
+      },
+      "title": "GisticToGene"
     },
     "Info": {
       "type": "object",
+      "required": [
+        "dbVersion",
+        "portalVersion"
+      ],
       "properties": {
         "dbVersion": {
           "type": "string"
@@ -1227,10 +1553,105 @@
         "portalVersion": {
           "type": "string"
         }
-      }
+      },
+      "title": "Info"
+    },
+    "MrnaPercentile": {
+      "type": "object",
+      "required": [
+        "entrezGeneId",
+        "molecularProfileId",
+        "patientId",
+        "percentile",
+        "sampleId",
+        "studyId",
+        "zScore"
+      ],
+      "properties": {
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "molecularProfileId": {
+          "type": "string"
+        },
+        "patientId": {
+          "type": "string"
+        },
+        "percentile": {
+          "type": "number"
+        },
+        "sampleId": {
+          "type": "string"
+        },
+        "studyId": {
+          "type": "string"
+        },
+        "uniquePatientKey": {
+          "type": "string"
+        },
+        "uniqueSampleKey": {
+          "type": "string"
+        },
+        "zScore": {
+          "type": "number"
+        }
+      },
+      "title": "MrnaPercentile"
+    },
+    "MutSig": {
+      "type": "object",
+      "required": [
+        "entrezGeneId",
+        "hugoGeneSymbol",
+        "numberOfMutations",
+        "pValue",
+        "qValue",
+        "rank",
+        "studyId"
+      ],
+      "properties": {
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "numberOfMutations": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "pValue": {
+          "type": "number"
+        },
+        "qValue": {
+          "type": "number"
+        },
+        "rank": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "studyId": {
+          "type": "string"
+        }
+      },
+      "title": "MutSig"
     },
     "MutationSpectrum": {
       "type": "object",
+      "required": [
+        "CtoA",
+        "CtoG",
+        "CtoT",
+        "TtoA",
+        "TtoC",
+        "TtoG",
+        "molecularProfileId",
+        "patientId",
+        "sampleId",
+        "studyId"
+      ],
       "properties": {
         "CtoA": {
           "type": "integer",
@@ -1274,211 +1695,33 @@
         "uniqueSampleKey": {
           "type": "string"
         }
-      }
+      },
+      "title": "MutationSpectrum"
     },
-    "MutSig": {
+    "MutationSpectrumFilter": {
       "type": "object",
       "properties": {
-        "entrezGeneId": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "hugoGeneSymbol": {
-          "type": "string"
-        },
-        "numberOfMutations": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "pValue": {
-          "type": "number",
-          "format": "double"
-        },
-        "qValue": {
-          "type": "number",
-          "format": "double"
-        },
-        "rank": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "studyId": {
-          "type": "string"
-        }
-      }
-    },
-    "CoExpression": {
-      "type": "object",
-      "properties": {
-        "cytoband": {
-          "type": "string"
-        },
-        "entrezGeneId": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "hugoGeneSymbol": {
-          "type": "string"
-        },
-        "pearsonsCorrelation": {
-          "type": "number",
-          "format": "double"
-        },
-        "spearmansCorrelation": {
-          "type": "number",
-          "format": "double"
-        }
-      }
-    },
-    "GenesetMolecularData": {
-      "type": "object",
-      "properties": {
-        "genesetId": {
-          "type": "string"
-        },
-        "geneticProfileId": {
-          "type": "string"
-        },
-        "patientId": {
-          "type": "string"
-        },
-        "sampleId": {
-          "type": "string"
-        },
-        "studyId": {
-          "type": "string"
-        },
-        "uniquePatientKey": {
-          "type": "string"
-        },
-        "uniqueSampleKey": {
-          "type": "string"
-        },
-        "value": {
-          "type": "string"
-        }
-      }
-    },
-    "Gistic": {
-      "type": "object",
-      "properties": {
-        "amp": {
-          "type": "boolean"
-        },
-        "chromosome": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "cytoband": {
-          "type": "string"
-        },
-        "genes": {
+        "sampleIds": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/GisticToGene"
+            "type": "string"
           }
         },
-        "qValue": {
-          "type": "number",
-          "format": "double"
-        },
-        "studyId": {
-          "type": "string"
-        },
-        "widePeakEnd": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "widePeakStart": {
-          "type": "integer",
-          "format": "int32"
-        }
-      }
-    },
-    "GenesetHierarchyInfo": {
-      "type": "object",
-      "properties": {
-        "genesets": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/Geneset"
-          }
-        },
-        "nodeId": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "nodeName": {
-          "type": "string"
-        },
-        "parentId": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "parentNodeName": {
+        "sampleListId": {
           "type": "string"
         }
-      }
-    },
-    "CosmicMutation": {
-      "type": "object",
-      "properties": {
-        "cosmicMutationId": {
-          "type": "string"
-        },
-        "count": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "keyword": {
-          "type": "string"
-        },
-        "proteinChange": {
-          "type": "string"
-        }
-      }
-    },
-    "ExpressionEnrichment": {
-      "type": "object",
-      "properties": {
-        "cytoband": {
-          "type": "string"
-        },
-        "entrezGeneId": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "hugoGeneSymbol": {
-          "type": "string"
-        },
-        "meanExpressionInAlteredGroup": {
-          "type": "number",
-          "format": "double"
-        },
-        "meanExpressionInUnalteredGroup": {
-          "type": "number",
-          "format": "double"
-        },
-        "pValue": {
-          "type": "number",
-          "format": "double"
-        },
-        "qValue": {
-          "type": "number",
-          "format": "double"
-        },
-        "standardDeviationInAlteredGroup": {
-          "type": "number",
-          "format": "double"
-        },
-        "standardDeviationInUnalteredGroup": {
-          "type": "number",
-          "format": "double"
-        }
-      }
+      },
+      "title": "MutationSpectrumFilter"
     },
     "VariantCount": {
       "type": "object",
+      "required": [
+        "entrezGeneId",
+        "molecularProfileId",
+        "numberOfSamples",
+        "numberOfSamplesWithKeyword",
+        "numberOfSamplesWithMutationInGene"
+      ],
       "properties": {
         "entrezGeneId": {
           "type": "integer",
@@ -1502,137 +1745,21 @@
           "type": "integer",
           "format": "int32"
         }
-      }
+      },
+      "title": "VariantCount"
     },
-    "CoExpressionFilter": {
-      "type": "object",
-      "properties": {
-        "sampleIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "sampleListId": {
-          "type": "string"
-        }
-      }
-    },
-    "Geneset": {
-      "type": "object",
-      "properties": {
-        "description": {
-          "type": "string"
-        },
-        "genesetId": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "refLink": {
-          "type": "string"
-        },
-        "representativePvalue": {
-          "type": "number",
-          "format": "double"
-        },
-        "representativeScore": {
-          "type": "number",
-          "format": "double"
-        }
-      }
-    },
-    "AlterationEnrichment": {
-      "type": "object",
-      "properties": {
-        "alteredCount": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "cytoband": {
-          "type": "string"
-        },
-        "entrezGeneId": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "hugoGeneSymbol": {
-          "type": "string"
-        },
-        "logRatio": {
-          "type": "string"
-        },
-        "pValue": {
-          "type": "number",
-          "format": "double"
-        },
-        "qValue": {
-          "type": "number",
-          "format": "double"
-        },
-        "unalteredCount": {
-          "type": "integer",
-          "format": "int32"
-        }
-      }
-    },
-    "MrnaPercentile": {
+    "VariantCountIdentifier": {
       "type": "object",
       "properties": {
         "entrezGeneId": {
           "type": "integer",
           "format": "int32"
         },
-        "molecularProfileId": {
-          "type": "string"
-        },
-        "patientId": {
-          "type": "string"
-        },
-        "percentile": {
-          "type": "number",
-          "format": "double"
-        },
-        "sampleId": {
-          "type": "string"
-        },
-        "studyId": {
-          "type": "string"
-        },
-        "uniquePatientKey": {
-          "type": "string"
-        },
-        "uniqueSampleKey": {
-          "type": "string"
-        },
-        "zScore": {
-          "type": "number",
-          "format": "double"
-        }
-      }
-    },
-    "GenesetCorrelation": {
-      "type": "object",
-      "properties": {
-        "correlationValue": {
-          "type": "number",
-          "format": "double"
-        },
-        "entrezGeneId": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "expressionGeneticProfileId": {
-          "type": "string"
-        },
-        "hugoGeneSymbol": {
-          "type": "string"
-        },
-        "zScoreGeneticProfileId": {
+        "keyword": {
           "type": "string"
         }
-      }
+      },
+      "title": "VariantCountIdentifier"
     }
   }
 }
