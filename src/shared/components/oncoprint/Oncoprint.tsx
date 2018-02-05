@@ -167,8 +167,10 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
                 props.oncoprintRef(this.oncoprint);
             }
         }
-        transition(props, this.lastTransitionProps || {}, this.oncoprint, ()=>this.trackSpecKeyToTrackId);
-        this.lastTransitionProps = _.clone(this.props);
+        if (!this.oncoprint.webgl_unavailable) {
+            transition(props, this.lastTransitionProps || {}, this.oncoprint, ()=>this.trackSpecKeyToTrackId);
+            this.lastTransitionProps = _.clone(this.props);
+        }
     }
 
     componentWillReceiveProps(nextProps:IOncoprintProps) {

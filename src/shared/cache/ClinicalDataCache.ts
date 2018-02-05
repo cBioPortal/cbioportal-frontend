@@ -14,10 +14,10 @@ import {
 } from "../api/generated/CBioPortalAPIInternal";
 
 export enum SpecialAttribute {
-    MutationCount = "0",
-    FractionGenomeAltered = "1",
-    MutationSpectrum = "2",
-    StudyOfOrigin = "3"
+    MutationCount = "MUTATION_COUNT",
+    FractionGenomeAltered = "FRACTION_GENOME_ALTERED",
+    MutationSpectrum = "NO_CONTEXT_MUTATION_SIGNATURE",
+    StudyOfOrigin = "CANCER_STUDY"
 }
 
 interface Query extends ClinicalAttribute {
