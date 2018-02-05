@@ -95,7 +95,7 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
                     <div className="query-summary">
                         <div className="query-summary__leftItems">
                             <div>
-                                <button onClick={this.handleModifyQueryClick} className={classNames('btn btn-primary' , { disabled:!loadingComplete  })}>
+                                <button id="modifyQueryBtn" onClick={this.handleModifyQueryClick} className={classNames('btn btn-primary' , { disabled:!loadingComplete  })}>
                                     {(this.queryFormVisible) ? 'Cancel Modify Query' : 'Modify Query'}
                                 </button>
                             </div>
