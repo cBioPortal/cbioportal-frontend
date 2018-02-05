@@ -27,7 +27,7 @@ import request, {Response} from "superagent";
 import formSubmit from "shared/lib/formSubmit";
 import {
 	MolecularProfileQueryParams, NonMolecularProfileQueryParams, queryUrl,
-	nonMolecularProfileParams, currentQueryParams, molecularProfileParams, queryParams
+	nonMolecularProfileParams, currentQueryParams, molecularProfileParams, queryParams, profileAvailability
 } from "./QueryStoreUtils";
 import onMobxPromise from "shared/lib/onMobxPromise";
 import getOverlappingStudies from "../../lib/getOverlappingStudies";
@@ -567,6 +567,28 @@ export class QueryStore
 			const profiles:CacheData<MolecularProfile[], string>[] =
 				await this.molecularProfilesInStudyCache.getPromise(this.physicalStudyIdsInSelection, true);
 			return _.flatten(profiles.map(d=>(d.data ? d.data : [])));
+		},
+		default: [],
+		onResult: () => {
+			if (!this.initiallySelected.sampleListId || this.studiesHaveChangedSinceInitialization) {
+				this._selectedSampleListId = undefined;
+			}
+		}
+	});
+
+	readonly profileAvailability = remoteData<{mutation: boolean, cna: boolean}>({
+		await:()=>[this.molecularProfilesInSelectedStudies],
+		invoke:()=>{
+			return Promise.resolve(profileAvailability(this.molecularProfilesInSelectedStudies.result!));
+		},
+		default:{
+			mutation: false,
+			cna: false
+		},
+		onResult: () => {
+			if (!this.initiallySelected.sampleListId || this.studiesHaveChangedSinceInitialization) {
+				this.dataTypePriority = profileAvailability(this.molecularProfilesInSelectedStudies.result!)
+			}
 		}
 	});
 
@@ -1049,10 +1071,22 @@ export class QueryStore
 
 	// SAMPLE LIST
 
+	private calculateSampleListId(dataTypePriority:{mutation: boolean, cna: boolean}): '0'|'1'|'2'|'all'
+	{
+		let {mutation, cna} = dataTypePriority;
+		if (mutation && cna)
+		    return '0';
+		if (mutation)
+		    return'1';
+		else if (cna)
+		    return '2';
+		return ALL_CASES_LIST_ID;
+	}
+
 	@computed get defaultSelectedSampleListId()
 	{
 		if (this.isVirtualStudyQuery) {
-			return ALL_CASES_LIST_ID;
+			return this.calculateSampleListId(this.dataTypePriority);
 		}
 
 		if (this.selectableSelectedStudyIds.length !== 1)
@@ -1282,6 +1316,8 @@ export class QueryStore
 			if (haveExpInQuery && !expProfileSelected)
 				return "Expression specified in the list of genes, but not selected in the Molecular Profile Checkboxes.";
 
+		} else if(!(this.dataTypePriority.mutation || this.dataTypePriority.cna)){
+			return "Please select one or more molecular profiles.";
 		}
 		if (this.selectableSelectedStudyIds.length && this.selectedSampleListId === CUSTOM_CASE_LIST_ID)
 		{

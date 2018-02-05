@@ -25,15 +25,15 @@ export default class DataTypePrioritySelector extends QueryStoreComponent<{}, {}
 			return null;
 
 		let flexRowContents:JSX.Element[] = [];
-		flexRowContents.push(<LoadingIndicator key="loading" isLoading={this.profileAvailability.isPending}/>);
-		if (this.profileAvailability.isError) {
+		flexRowContents.push(<LoadingIndicator key="loading" isLoading={this.store.profileAvailability.isPending}/>);
+		if (this.store.profileAvailability.isError) {
 			flexRowContents.push(<span key="error">Error loading profiles for selected studies.</span>);
-		} else if (this.profileAvailability.isComplete) {
-			flexRowContents = flexRowContents.concat(radioButtons(this.profileAvailability.result, this.store));
+		} else if (this.store.profileAvailability.isComplete) {
+			flexRowContents = flexRowContents.concat(checkBoxes(this.store.profileAvailability.result, this.store));
 		}
 		return (
 			<FlexRow padded className={styles.DataTypePrioritySelector} data-test="dataTypePrioritySelector">
-				<SectionHeader className="sectionLabel">Select Data Type Priority:</SectionHeader>
+				<SectionHeader className="sectionLabel">Select Molecular Profiles:</SectionHeader>
 				<FlexRow>
 					{flexRowContents}
 				</FlexRow>
@@ -41,23 +41,17 @@ export default class DataTypePrioritySelector extends QueryStoreComponent<{}, {}
 		);
 	}
 
-	readonly profileAvailability = remoteData({
-		await:()=>[this.store.molecularProfilesInSelectedStudies],
-		invoke:()=>{
-			return Promise.resolve(profileAvailability(this.store.molecularProfilesInSelectedStudies.result!));
-		}
-	});
+
 }
 
-export const DataTypePriorityRadio = observer(
-	(props: {label: string, state:QueryStore['dataTypePriority'], store:QueryStore, dataTest:string}) => (
+export const DataTypePriorityCheckBox = observer(
+	(props: {label: string, state:'mutation' | 'cna', store:QueryStore, dataTest:string}) => (
 		<label className={styles.DataTypePriorityLabel}>
 			<input
-				type="radio"
-				checked={_.isEqual(toJS(props.store.dataTypePriority), props.state)}
+				type="checkbox"
+				checked={props.store.dataTypePriority[props.state] || false}
 				onChange={event => {
-					if (event.currentTarget.checked)
-						props.store.dataTypePriority = props.state;
+					props.store.dataTypePriority[props.state] = event.currentTarget.checked;
 				}}
 				data-test={props.dataTest}
 			/>
@@ -66,27 +60,14 @@ export const DataTypePriorityRadio = observer(
 	)
 );
 
-export function radioButtons(availability:{mutation:boolean, cna:boolean}, store:QueryStore):JSX.Element[] {
+export function checkBoxes(availability:{mutation:boolean, cna:boolean}, store:QueryStore):JSX.Element[] {
 	let buttons = [];
-	let hasBoth = false;
-	if (availability.mutation && availability.cna) {
-		buttons.push(
-			<DataTypePriorityRadio
-				key="MC"
-				label='Mutation and CNA'
-				state={{mutation: true, cna: true}}
-				store={store}
-				dataTest="MC"
-			/>
-		);
-		hasBoth = true;
-	}
 	if (availability.mutation) {
 		buttons.push(
-			<DataTypePriorityRadio
+			<DataTypePriorityCheckBox
 				key="M"
-				label={`${hasBoth ? 'Only ' : ''}Mutation`}
-				state={{mutation:true, cna:false}}
+				label={"Mutation"}
+				state={"mutation"}
 				store={store}
 				dataTest="M"
 			/>
@@ -94,10 +75,10 @@ export function radioButtons(availability:{mutation:boolean, cna:boolean}, store
 	}
 	if (availability.cna) {
 		buttons.push(
-			<DataTypePriorityRadio
+			<DataTypePriorityCheckBox
 				key="C"
-				label={`${hasBoth ? 'Only ' : ''}CNA`}
-				state={{mutation:false, cna:true}}
+				label={"Copy number alterations"}
+				state={"cna"}
 				store={store}
 				dataTest="C"
 			/>
@@ -106,27 +87,4 @@ export function radioButtons(availability:{mutation:boolean, cna:boolean}, store
 	return buttons;
 }
 
-export function profileAvailability(molecularProfiles:MolecularProfile[]) {
-	let hasMutationProfile = false;
-	let hasCNAProfile = false;
-	for (const profile of molecularProfiles) {
-		if (!profile.showProfileInAnalysisTab)
-			continue;
 
-		switch (profile.molecularAlterationType) {
-			case AlterationTypeConstants.MUTATION_EXTENDED:
-				hasMutationProfile = true;
-				break;
-			case AlterationTypeConstants.COPY_NUMBER_ALTERATION:
-				hasCNAProfile = true;
-				break;
-		}
-
-		if (hasMutationProfile && hasCNAProfile)
-			break;
-	}
-	return {
-		mutation: hasMutationProfile,
-		cna: hasCNAProfile
-	};
-}
