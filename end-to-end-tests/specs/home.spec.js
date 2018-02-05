@@ -1,5 +1,6 @@
 var assert = require('assert');
 var expect = require('chai').expect;
+var waitForOncoprint = require('./specUtils').waitForOncoprint;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
@@ -80,20 +81,19 @@ describe('homepage', function() {
 
         it('clicking select all studies checkbox selects all studies',function(){
 
-            var visibleCheckboxes = getVisibleCheckboxes();
+            var studyCheckboxes = getVisibleCheckboxes();
 
-            var selectedStudies = visibleCheckboxes.filter(function(el){
+            var selectedStudies = studyCheckboxes.filter(function(el){
                 return el.isSelected();
             });
 
-            var allStudies = visibleCheckboxes.length;
+            var allStudies = studyCheckboxes.length;
 
-            assert.equal(allStudies, 173, 'we have 173 visible checkboxes');
             assert.equal(selectedStudies.length, 0, 'no studies selected');
 
             browser.element('[data-test=selectAllStudies]').click();
 
-            selectedStudies = visibleCheckboxes.filter(function(el){
+            selectedStudies = studyCheckboxes.filter(function(el){
                 return el.isSelected();
             });
 
@@ -101,7 +101,7 @@ describe('homepage', function() {
 
             browser.element('[data-test=selectAllStudies]').click();
 
-            selectedStudies = visibleCheckboxes.filter(function(el){
+            selectedStudies = studyCheckboxes.filter(function(el){
                 return el.isSelected();
             });
 
@@ -222,6 +222,12 @@ describe('cross cancer query', function() {
 });
 
 describe('single study query', function() {
+    before(()=>{
+        browser.url(CBIOPORTAL_URL);
+
+        browser.localStorage('POST', {key: 'localdev', value: 'true'});
+        browser.refresh();
+    });
     describe('mutation mapper ', function() {
         it('should show somatic and germline mutation rate', function() {
             browser.url(`${CBIOPORTAL_URL}`);
@@ -294,15 +300,34 @@ describe('single study query', function() {
             // there should be one more gene queried now
             assert(text.search('3' > -1));
         });
+
+        it('should be possible to add genes to query, with custom case list query in single study query', function() {
+            browser.url(`${CBIOPORTAL_URL}/index.do?cancer_study_id=ov_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=-1&case_ids=ov_tcga_pub%3ATCGA-24-1428-01%0D%0Aov_tcga_pub%3ATCGA-24-1928-01%0D%0Aov_tcga_pub%3ATCGA-29-1698-01%0D%0Aov_tcga_pub%3ATCGA-24-0980-01%0D%0Aov_tcga_pub%3ATCGA-24-0970-01%0D%0Aov_tcga_pub%3ATCGA-13-0725-01%0D%0Aov_tcga_pub%3ATCGA-23-1027-01%0D%0Aov_tcga_pub%3ATCGA-13-0755-01%0D%0Aov_tcga_pub%3ATCGA-25-1315-01&gene_list=BRCA1%2520BRCA2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=ov_tcga_pub_gistic`);
+
+            // click enrichments tab
+            $('#enrichments-result-tab').waitForExist(30000);
+            $('#enrichments-result-tab').click();
+
+            var checkBoxes = $('.ov_tcga_pub_mutations_datatable_table_gene_checkbox_class');
+
+            checkBoxes.waitForExist(10000);
+
+            // select one gene and click add checked genes to query
+            browser.click('.ov_tcga_pub_mutations_datatable_table_gene_checkbox_class');
+            browser.click('#ov_tcga_pub_mutations_datatable_table_update_query_btn');
+
+            // wait for page to load
+            $('[data-test="QuerySummaryGeneCount"]').waitForExist(60000);
+            var text = browser.getText('[data-test="QuerySummaryGeneCount"]')
+
+            // there should be one more gene queried now
+            assert(text.search('3' > -1), "one more gene queried");
+        });
     });
 });
 
 
 describe('oncoprint', function() {
-    function waitForOncoprint(timeout) {
-        browser.pause(100); // give oncoprint time to disappear
-        $('#oncoprint-inner svg rect').waitForExist(10000); // as a proxy for oncoprint being rendered, wait for an svg rectangle to appear in the legend
-    }
 
     before(()=>{
         browser.url(CBIOPORTAL_URL);
@@ -347,8 +372,42 @@ describe('oncoprint', function() {
                 "sample id order"
             );
         });
+
+        it("should start successfully if a specified clinical track doesnt exist", ()=>{
+            browser.url(CBIOPORTAL_URL+'/index.do?cancer_study_id=acc_tcga&show_samples=true&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=acc_tcga_cnaseq&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=acc_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=acc_tcga_gistic&clinicallist=asodifjpaosidjfa');
+            waitForOncoprint(10000);
+
+            assert.equal(
+                browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
+                "VENHQS1PUi1BNUpZLTAxOmFjY190Y2dh,VENHQS1PUi1BNUo0LTAxOmFjY190Y2dh,VENHQS1PUi1BNUpCLTAxOmFjY190Y2dh,VENHQS1PUi1BNUoxLTAxOmFjY190Y2dh,VENHQS1PUi1BNUoyLTAxOmFjY190Y2dh,VENHQS1PUi1BNUozLTAxOmFjY190Y2dh,VENHQS1PUi1BNUo1LTAxOmFjY190Y2dh,VENHQS1PUi1BNUo2LTAxOmFjY190Y2dh,VENHQS1PUi1BNUo3LTAxOmFjY190Y2dh,VENHQS1PUi1BNUo4LTAxOmFjY190Y2dh,VENHQS1PUi1BNUo5LTAxOmFjY190Y2dh,VENHQS1PUi1BNUpBLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpDLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpELTAxOmFjY190Y2dh,VENHQS1PUi1BNUpFLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpGLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpHLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpILTAxOmFjY190Y2dh,VENHQS1PUi1BNUpJLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpKLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpLLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpMLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpNLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpPLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpQLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpRLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpSLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpTLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpULTAxOmFjY190Y2dh,VENHQS1PUi1BNUpVLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpWLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpXLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpYLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpaLTAxOmFjY190Y2dh,VENHQS1PUi1BNUswLTAxOmFjY190Y2dh,VENHQS1PUi1BNUsxLTAxOmFjY190Y2dh,VENHQS1PUi1BNUsyLTAxOmFjY190Y2dh,VENHQS1PUi1BNUszLTAxOmFjY190Y2dh,VENHQS1PUi1BNUs0LTAxOmFjY190Y2dh,VENHQS1PUi1BNUs1LTAxOmFjY190Y2dh,VENHQS1PUi1BNUs2LTAxOmFjY190Y2dh,VENHQS1PUi1BNUs4LTAxOmFjY190Y2dh,VENHQS1PUi1BNUs5LTAxOmFjY190Y2dh,VENHQS1PUi1BNUtCLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtPLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtQLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtRLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtTLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtULTAxOmFjY190Y2dh,VENHQS1PUi1BNUtVLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtWLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtXLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtYLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtZLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtaLTAxOmFjY190Y2dh,VENHQS1PUi1BNUwxLTAxOmFjY190Y2dh,VENHQS1PUi1BNUwyLTAxOmFjY190Y2dh,VENHQS1PUi1BNUwzLTAxOmFjY190Y2dh,VENHQS1PUi1BNUw0LTAxOmFjY190Y2dh,VENHQS1PUi1BNUw1LTAxOmFjY190Y2dh,VENHQS1PUi1BNUw2LTAxOmFjY190Y2dh,VENHQS1PUi1BNUw4LTAxOmFjY190Y2dh,VENHQS1PUi1BNUw5LTAxOmFjY190Y2dh,VENHQS1PUi1BNUxBLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxCLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxDLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxELTAxOmFjY190Y2dh,VENHQS1PUi1BNUxFLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxGLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxHLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxILTAxOmFjY190Y2dh,VENHQS1PUi1BNUxJLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxKLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxLLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxMLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxOLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxPLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxQLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxSLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxTLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxULTAxOmFjY190Y2dh,VENHQS1PVS1BNVBJLTAxOmFjY190Y2dh,VENHQS1QNi1BNU9ILTAxOmFjY190Y2dh,VENHQS1QQS1BNVlHLTAxOmFjY190Y2dh,VENHQS1QSy1BNUg5LTAxOmFjY190Y2dh,VENHQS1QSy1BNUhBLTAxOmFjY190Y2dh,VENHQS1QSy1BNUhCLTAxOmFjY190Y2dh,VENHQS1QSy1BNUhDLTAxOmFjY190Y2dh",
+                "sample id order"
+            );
+
+            assert.equal(
+                browser.execute(function() { return frontendOnc.model.getTracks().length; }).value,
+                3,
+                "gene tracks should exist"
+            )
+        });
+
+        it("should start successfully if a specified clinical track doesnt exist, but others do", ()=>{
+            browser.url(CBIOPORTAL_URL+'/index.do?cancer_study_id=acc_tcga&show_samples=true&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=acc_tcga_cnaseq&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=acc_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=acc_tcga_gistic&clinicallist=CANCER_TYPE,asodifjpaosidjfa,CANCER_TYPE_DETAILED,FRACTION_GENOME_ALTERED,aposdijfpoai,MUTATION_COUNT');
+            waitForOncoprint(10000);
+
+            assert.equal(
+                browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
+                "VENHQS1PUi1BNUpZLTAxOmFjY190Y2dh,VENHQS1PUi1BNUo0LTAxOmFjY190Y2dh,VENHQS1PUi1BNUpCLTAxOmFjY190Y2dh,VENHQS1PUi1BNUoxLTAxOmFjY190Y2dh,VENHQS1PUi1BNUoyLTAxOmFjY190Y2dh,VENHQS1PUi1BNUozLTAxOmFjY190Y2dh,VENHQS1PUi1BNUo1LTAxOmFjY190Y2dh,VENHQS1PUi1BNUo2LTAxOmFjY190Y2dh,VENHQS1PUi1BNUo3LTAxOmFjY190Y2dh,VENHQS1PUi1BNUo4LTAxOmFjY190Y2dh,VENHQS1PUi1BNUo5LTAxOmFjY190Y2dh,VENHQS1PUi1BNUpBLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpDLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpELTAxOmFjY190Y2dh,VENHQS1PUi1BNUpFLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpGLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpHLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpILTAxOmFjY190Y2dh,VENHQS1PUi1BNUpJLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpKLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpLLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpMLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpNLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpPLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpQLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpRLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpSLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpTLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpULTAxOmFjY190Y2dh,VENHQS1PUi1BNUpVLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpWLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpXLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpYLTAxOmFjY190Y2dh,VENHQS1PUi1BNUpaLTAxOmFjY190Y2dh,VENHQS1PUi1BNUswLTAxOmFjY190Y2dh,VENHQS1PUi1BNUsxLTAxOmFjY190Y2dh,VENHQS1PUi1BNUsyLTAxOmFjY190Y2dh,VENHQS1PUi1BNUszLTAxOmFjY190Y2dh,VENHQS1PUi1BNUs0LTAxOmFjY190Y2dh,VENHQS1PUi1BNUs1LTAxOmFjY190Y2dh,VENHQS1PUi1BNUs2LTAxOmFjY190Y2dh,VENHQS1PUi1BNUs4LTAxOmFjY190Y2dh,VENHQS1PUi1BNUs5LTAxOmFjY190Y2dh,VENHQS1PUi1BNUtCLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtPLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtQLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtRLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtTLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtULTAxOmFjY190Y2dh,VENHQS1PUi1BNUtVLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtWLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtXLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtYLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtZLTAxOmFjY190Y2dh,VENHQS1PUi1BNUtaLTAxOmFjY190Y2dh,VENHQS1PUi1BNUwxLTAxOmFjY190Y2dh,VENHQS1PUi1BNUwyLTAxOmFjY190Y2dh,VENHQS1PUi1BNUwzLTAxOmFjY190Y2dh,VENHQS1PUi1BNUw0LTAxOmFjY190Y2dh,VENHQS1PUi1BNUw1LTAxOmFjY190Y2dh,VENHQS1PUi1BNUw2LTAxOmFjY190Y2dh,VENHQS1PUi1BNUw4LTAxOmFjY190Y2dh,VENHQS1PUi1BNUw5LTAxOmFjY190Y2dh,VENHQS1PUi1BNUxBLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxCLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxDLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxELTAxOmFjY190Y2dh,VENHQS1PUi1BNUxFLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxGLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxHLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxILTAxOmFjY190Y2dh,VENHQS1PUi1BNUxJLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxKLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxLLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxMLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxOLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxPLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxQLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxSLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxTLTAxOmFjY190Y2dh,VENHQS1PUi1BNUxULTAxOmFjY190Y2dh,VENHQS1PVS1BNVBJLTAxOmFjY190Y2dh,VENHQS1QNi1BNU9ILTAxOmFjY190Y2dh,VENHQS1QQS1BNVlHLTAxOmFjY190Y2dh,VENHQS1QSy1BNUg5LTAxOmFjY190Y2dh,VENHQS1QSy1BNUhBLTAxOmFjY190Y2dh,VENHQS1QSy1BNUhCLTAxOmFjY190Y2dh,VENHQS1QSy1BNUhDLTAxOmFjY190Y2dh",
+                "sample id order"
+            );
+
+            assert.equal(
+                browser.execute(function() { return frontendOnc.model.getTracks().length; }).value,
+                7,
+                "gene tracks and existing clinical tracks should exist"
+            )
+        });
     });
-    describe.skip("sorting", ()=>{
+    describe("sorting", ()=>{
         function topCmp(eltA, eltB) {
             return eltA.top - eltB.top;
         }
@@ -478,7 +537,7 @@ describe('oncoprint', function() {
         });
 
         it("sorts correctly w/ clinical tracks and heatmap tracks, clinical tracks sorted", ()=>{
-            browser.url(CBIOPORTAL_URL+'/index.do?cancer_study_id=gbm_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=gbm_tcga_pub_cnaseq&gene_list=TP53%2520MDM2%2520MDM4&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_pub_cna_rae&clinicallist=1%2CDFS_MONTHS%2CKARNOFSKY_PERFORMANCE_SCORE%2COS_STATUS&heatmap_track_groups=gbm_tcga_pub_mrna_median_Zscores%2CTP53%2CMDM2%2CMDM4%3Bgbm_tcga_pub_mrna_merged_median_Zscores%2CTP53%2CMDM2%2CMDM4');
+            browser.url(CBIOPORTAL_URL+'/index.do?cancer_study_id=gbm_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=gbm_tcga_pub_cnaseq&gene_list=TP53%2520MDM2%2520MDM4&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_pub_cna_rae&clinicallist=FRACTION_GENOME_ALTERED%2CDFS_MONTHS%2CKARNOFSKY_PERFORMANCE_SCORE%2COS_STATUS&heatmap_track_groups=gbm_tcga_pub_mrna_median_Zscores%2CTP53%2CMDM2%2CMDM4%3Bgbm_tcga_pub_mrna_merged_median_Zscores%2CTP53%2CMDM2%2CMDM4');
             $('.alert-warning').$('button.close').click(); // close dev mode notification so it doesnt intercept clicks
 
             waitForOncoprint(10000);
@@ -604,7 +663,8 @@ describe('oncoprint', function() {
             var TP53HeatmapElements = getNthTrackOptionsElements(8);
             TP53HeatmapElements.button.click(); // open Fraction Genome Altered clinical track menu
             browser.waitForVisible(TP53HeatmapElements.dropdown_selector, 1000);// wait for menu to appear
-            TP53HeatmapElements.dropdown.$('li:nth-child(6)').click(); // Click sort Z-a
+            browser.scroll(0, 1000);// scroll down
+            browser.click(TP53HeatmapElements.dropdown_selector + ' li:nth-child(6)'); // Click sort Z-a
             browser.pause(100); // give time to sort
 
             assert.equal(
@@ -614,16 +674,17 @@ describe('oncoprint', function() {
             );
         });
         it("sorts correctly w/ clinical tracks and heatmap tracks, heatmap tracks sorted", ()=>{
-            browser.url(CBIOPORTAL_URL+'/index.do?cancer_study_id=gbm_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=gbm_tcga_pub_cnaseq&gene_list=TP53%2520MDM2%2520MDM4&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_pub_cna_rae&clinicallist=1%2CDFS_MONTHS%2CKARNOFSKY_PERFORMANCE_SCORE%2COS_STATUS&heatmap_track_groups=gbm_tcga_pub_mrna_median_Zscores%2CTP53%2CMDM2%2CMDM4%3Bgbm_tcga_pub_mrna_merged_median_Zscores%2CTP53%2CMDM2%2CMDM4&show_samples=true');
+            browser.url(CBIOPORTAL_URL+'/index.do?cancer_study_id=gbm_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=gbm_tcga_pub_cnaseq&gene_list=TP53%2520MDM2%2520MDM4&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_pub_cna_rae&clinicallist=FRACTION_GENOME_ALTERED%2CDFS_MONTHS%2CKARNOFSKY_PERFORMANCE_SCORE%2COS_STATUS&heatmap_track_groups=gbm_tcga_pub_mrna_median_Zscores%2CTP53%2CMDM2%2CMDM4%3Bgbm_tcga_pub_mrna_merged_median_Zscores%2CTP53%2CMDM2%2CMDM4&show_samples=true');
             $('.alert-warning').$('button.close').click(); // close dev mode notification so it doesnt intercept clicks
 
             waitForOncoprint(10000);
+            browser.scroll(0,1000);//scroll down
 
             // Sort heatmap tracks
             var TP53HeatmapElements = getNthTrackOptionsElements(8);
             TP53HeatmapElements.button.click(); // open track menu
             browser.waitForVisible(TP53HeatmapElements.dropdown_selector, 1000);// wait for menu to appear
-            TP53HeatmapElements.dropdown.$('li:nth-child(6)').click(); // Click sort Z-a
+            browser.click(TP53HeatmapElements.dropdown_selector + ' li:nth-child(6)'); // Click sort Z-a
             browser.pause(100); // give time to sort
 
             assert.equal(
@@ -688,5 +749,412 @@ describe('oncoprint', function() {
                 "sorted patient order correct - 1"
             );
         });
+    });
+});
+
+describe('case set selection in front page query form', ()=>{
+    var selectedCaseSet_sel = 'div[data-test="CaseSetSelector"] span.Select-value-label[aria-selected="true"]';
+
+    beforeEach(function() {
+        var url = CBIOPORTAL_URL;
+        browser.url(url);
+        browser.localStorage('POST', {key: 'localdev', value: 'true'});
+        browser.refresh();
+    });
+
+    it('selects the default case set for single study selections', ()=>{
+        var input = $(".autosuggest input[type=text]");
+        input.waitForExist(10000);
+        input.setValue('ovarian nature 2011');
+        browser.pause(500);
+        // should only be one element
+        assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
+        var checkBox = $('[data-test="StudySelect"]');
+        checkBox.waitForExist(10000);
+        browser.click('[data-test="StudySelect"] input');
+
+        browser.waitForExist(selectedCaseSet_sel);
+        assert.equal(
+            browser.getText(selectedCaseSet_sel),
+            "Tumors with sequencing and CNA data (316)",
+            "Default selected case set"
+        );
+    });
+    it('selects the right default case sets in a single->multiple->single study selection flow', ()=>{
+        // Select Ampullary Carcinoma
+        var input = $(".autosuggest input[type=text]");
+        input.waitForExist(10000);
+        input.setValue('ampullary baylor');
+        browser.pause(500);
+        // should only be one element
+        assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
+        var checkBox = $('[data-test="StudySelect"]');
+        checkBox.waitForExist(10000);
+        browser.click('[data-test="StudySelect"] input');
+
+        browser.waitForExist(selectedCaseSet_sel);
+        assert.equal(
+            browser.getText(selectedCaseSet_sel),
+            "Sequenced Tumors (160)",
+            "Default selected case set"
+        );
+
+        // select Adrenocortical Carcinoma
+        input = $(".autosuggest input[type=text]");
+        input.waitForExist(10000);
+        input.setValue('adrenocortical carcinoma');
+        browser.pause(500);
+        // should only be one element
+        assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
+        checkBox = $('[data-test="StudySelect"]');
+        checkBox.waitForExist(10000);
+        browser.click('[data-test="StudySelect"] input');
+
+        browser.waitForExist(selectedCaseSet_sel);
+        assert.equal(
+            browser.getText(selectedCaseSet_sel),
+            "All",
+            "Default case set for multiple"
+        );
+
+        // Deselect Ampullary Carcinoma
+        input = $(".autosuggest input[type=text]");
+        input.waitForExist(10000);
+        input.setValue('ampullary baylor');
+        browser.pause(500);
+        // should only be one element
+        assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
+        var checkBox = $('[data-test="StudySelect"]');
+        checkBox.waitForExist(10000);
+        browser.click('[data-test="StudySelect"] input');
+
+        browser.waitForExist(selectedCaseSet_sel);
+        assert.equal(
+            browser.getText(selectedCaseSet_sel),
+            "Tumor Samples with sequencing and CNA data (88)",
+            "Default selected case set for adrenocortical carcinoma"
+        );
+    });
+    it('selects the right default case sets in a single->select all filtered->single study selection flow', ()=>{
+        // Select Ampullary Carcinoma
+        var input = $(".autosuggest input[type=text]");
+        input.waitForExist(10000);
+        input.setValue('ampullary baylor');
+        browser.pause(500);
+        // should only be one element
+        assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
+        var checkBox = $('[data-test="StudySelect"]');
+        checkBox.waitForExist(10000);
+        browser.click('[data-test="StudySelect"] input');
+
+        browser.waitForExist(selectedCaseSet_sel);
+        assert.equal(
+            browser.getText(selectedCaseSet_sel),
+            "Sequenced Tumors (160)",
+            "Default selected case set"
+        );
+
+        // select all TCGA non-provisional
+        input = $(".autosuggest input[type=text]");
+        input.waitForExist(10000);
+        input.setValue('tcga -provisional');
+        browser.pause(500);
+        browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
+        browser.waitForExist(selectedCaseSet_sel, 10000);
+        assert.equal(
+            browser.getText(selectedCaseSet_sel),
+            "All",
+            "Default selected case set with multiple studies should be 'All'"
+        );
+
+        // Deselect all tcga -provisional studies
+        browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
+        browser.pause(100);
+
+        // select Adrenocortical Carcinoma
+        input = $(".autosuggest input[type=text]");
+        input.waitForExist(10000);
+        input.setValue('adrenocortical carcinoma');
+        browser.pause(500);
+        // should only be one element
+        assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
+        checkBox = $('[data-test="StudySelect"]');
+        checkBox.waitForExist(10000);
+        browser.click('[data-test="StudySelect"] input');
+
+        browser.waitForExist(selectedCaseSet_sel);
+        assert.equal(
+            browser.getText(selectedCaseSet_sel),
+            "All",
+            "Default case set for multiple"
+        );
+
+        // Deselect Ampullary Carcinoma
+        input = $(".autosuggest input[type=text]");
+        input.waitForExist(10000);
+        input.setValue('ampullary baylor');
+        browser.pause(500);
+        // should only be one element
+        assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
+        var checkBox = $('[data-test="StudySelect"]');
+        checkBox.waitForExist(10000);
+        browser.click('[data-test="StudySelect"] input');
+
+        browser.waitForExist(selectedCaseSet_sel);
+        assert.equal(
+            browser.getText(selectedCaseSet_sel),
+            "Tumor Samples with sequencing and CNA data (88)",
+            "Default selected case set for adrenocortical carcinoma"
+        );
+    });
+});
+
+describe('case set selection in modify query form', ()=>{
+    var selectedCaseSet_sel = 'div[data-test="CaseSetSelector"] span.Select-value-label[aria-selected="true"]';
+
+    beforeEach(function(){
+        var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_rppa&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`;
+        browser.url(url);
+        browser.localStorage('POST', {key: 'localdev', value: 'true'});
+        browser.refresh();
+    });
+
+    it('contains correct selected case set through a certain use flow involving two selected studies', ()=>{
+        //populates case set selector with selected case set in current query, then selects "All" when more studies are selected, then selects default when only one is selected again
+        // open query form
+        $('#modifyQueryBtn').click();
+        browser.waitForExist(selectedCaseSet_sel, 10000);
+        assert.equal(
+            browser.getText(selectedCaseSet_sel),
+            "Tumors with RPPA data (196)",
+            "Initially selected case set should be as specified from URL"
+        );
+
+        // Select a different study
+        var input = $(".autosuggest input[type=text]");
+        input.waitForExist(10000);
+        input.setValue('adrenocortical carcinoma tcga');
+        browser.pause(500);
+        // should only be one element
+        assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
+        var checkBox = $('[data-test="StudySelect"]');
+        checkBox.waitForExist(10000);
+        browser.click('[data-test="StudySelect"] input');
+        browser.pause(100);
+
+        browser.waitForExist(selectedCaseSet_sel, 10000);
+        assert.equal(
+            browser.getText(selectedCaseSet_sel),
+            "All",
+            "Default selected case set with multiple studies should be 'All'"
+        );
+
+        // Uncheck study
+        browser.click('[data-test="StudySelect"] input');
+        browser.pause(100);
+
+        browser.waitForExist(selectedCaseSet_sel, 10000);
+        assert.equal(
+            browser.getText(selectedCaseSet_sel),
+            "Tumors with sequencing and CNA data (212)",
+            "Now we should be back to default selected case set for this study"
+        );
+    });
+
+    it('contains correct selected case set through a certain use flow involving the "select all filtered studies" checkbox', ()=>{
+        //populates case set selector with selected case set in current query, then selects "All" when more studies are selected, then selects default when only one is selected again
+        // open query form
+        $('#modifyQueryBtn').click();
+        browser.waitForExist(selectedCaseSet_sel, 10000);
+        assert.equal(
+            browser.getText(selectedCaseSet_sel),
+            "Tumors with RPPA data (196)",
+            "Initially selected case set should be as specified from URL"
+        );
+
+        // Select all tcga -provisional studies
+        var input = $(".autosuggest input[type=text]");
+        input.waitForExist(10000);
+        input.setValue('impact');
+        browser.pause(500);
+
+        browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
+        browser.waitForExist(selectedCaseSet_sel, 10000);
+        assert.equal(
+            browser.getText(selectedCaseSet_sel),
+            "All",
+            "Default selected case set with multiple studies should be 'All'"
+        );
+
+        // Deselect all tcga -provisional studies
+        browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
+        browser.pause(100);
+
+        browser.waitForExist(selectedCaseSet_sel, 10000);
+        assert.equal(
+            browser.getText(selectedCaseSet_sel),
+            "Tumors with sequencing and CNA data (212)",
+            "Now we should be back to default selected case set for this study"
+        );
+    });
+});
+
+describe('genetic profile selection in modify query form', ()=>{
+    beforeEach(function(){
+        var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=chol_tcga&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=chol_tcga_all&gene_list=EGFR&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=chol_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=chol_tcga_gistic&genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION=chol_tcga_rppa_Zscores`;
+        browser.url(url);
+        browser.localStorage('POST', {key: 'localdev', value: 'true'});
+        browser.refresh();
+    });
+
+    it('contains correct selected genetic profiles through a certain use flow involving two studies', ()=>{
+        //populates selected genetic profiles from current query, then goes back to defaults if another study is selected then deselected
+        // open modify query form
+        $('#modifyQueryBtn').click();
+        // wait for profiles selector to load
+        browser.waitForExist('div[data-test="molecularProfileSelector"] input[type="checkbox"]', 3000);
+        // mutations, CNA, and protein should be selected
+        assert(browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MUTATION_EXTENDED"]'), "mutation profile should be selected");
+        assert(browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="COPY_NUMBER_ALTERATION"]'), "cna profile should be selected");
+        assert(!browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MRNA_EXPRESSION"]'), "mrna profile not selected");
+        assert(browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="PROTEIN_LEVEL"]'), "protein level should be selected");
+
+        // select another study
+        var input = $(".autosuggest input[type=text]");
+        input.waitForExist(10000);
+        input.setValue('ampullary baylor');
+        browser.pause(500);
+        // should only be one element
+        assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
+        var checkBox = $('[data-test="StudySelect"]');
+        checkBox.waitForExist(10000);
+        browser.click('[data-test="StudySelect"] input');
+
+        // wait for data type priority selector to load
+        browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="radio"][data-test="MC"]', 10000);
+        assert(browser.isSelected('[data-test="dataTypePrioritySelector"] input[type="radio"][data-test="MC"]'), "mutation and cna option should be selected");
+
+        //deselect other study
+        browser.click('[data-test="StudySelect"] input');
+
+        // wait for profiles selector to load
+        browser.waitForExist('div[data-test="molecularProfileSelector"] input[type="checkbox"]', 3000);
+        // mutations, CNA should be selected
+        assert(browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MUTATION_EXTENDED"]'), "mutation profile should be selected");
+        assert(browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="COPY_NUMBER_ALTERATION"]'), "cna profile should be selected");
+        assert(!browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MRNA_EXPRESSION"]'), "mrna profile not selected");
+        assert(!browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="PROTEIN_LEVEL"]'), "protein level not selected");
+    });
+
+    it('contains correct selected genetic profiles through a certain use flow involving the "select all filtered studies" checkbox', ()=>{
+        //populates selected genetic profiles from current query, then goes back to defaults if a lot of studies are selected then deselected
+        // open modify query form
+        $('#modifyQueryBtn').click();
+        // wait for profiles selector to load
+        browser.waitForExist('div[data-test="molecularProfileSelector"] input[type="checkbox"]', 3000);
+        // mutations, CNA, and protein should be selected
+        assert(browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MUTATION_EXTENDED"]'), "mutation profile should be selected");
+        assert(browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="COPY_NUMBER_ALTERATION"]'), "cna profile should be selected");
+        assert(!browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MRNA_EXPRESSION"]'), "mrna profile not selected");
+        assert(browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="PROTEIN_LEVEL"]'), "protein level should be selected");
+
+        // select all TCGA non-provisional
+        var input = $(".autosuggest input[type=text]");
+        input.waitForExist(10000);
+        input.setValue('tcga -provisional');
+        browser.pause(500);
+        browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
+
+        // wait for data type priority selector to load
+        browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="radio"][data-test="MC"]', 10000);
+        assert(browser.isSelected('[data-test="dataTypePrioritySelector"] input[type="radio"][data-test="MC"]'), "mutation and cna option should be selected");
+
+        // Deselect all tcga -provisional studies
+        browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
+        browser.pause(100);
+
+        // wait for profiles selector to load
+        browser.waitForExist('div[data-test="molecularProfileSelector"] input[type="checkbox"]', 3000);
+        // mutations, CNA should be selected
+        assert(browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MUTATION_EXTENDED"]'), "mutation profile should be selected");
+        assert(browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="COPY_NUMBER_ALTERATION"]'), "cna profile should be selected");
+        assert(!browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MRNA_EXPRESSION"]'), "mrna profile not selected");
+        assert(!browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="PROTEIN_LEVEL"]'), "protein level not selected");
+    });
+});
+
+describe('genetic profile selection in front page query form', ()=>{
+    beforeEach(function(){
+        var url = CBIOPORTAL_URL;
+        browser.url(url);
+        browser.localStorage('POST', {key: 'localdev', value: 'true'});
+        browser.refresh();
+    });
+    it('selects the right default genetic profiles in a single->multiple->single study selection flow', ()=>{
+        // select a study
+        var input = $(".autosuggest input[type=text]");
+        input.waitForExist(10000);
+        input.setValue('ovarian nature 2011');
+        browser.pause(500);
+        // should only be one element
+        assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
+        var checkBox = $('[data-test="StudySelect"]');
+        checkBox.waitForExist(10000);
+        browser.click('[data-test="StudySelect"] input');
+        browser.pause(200);
+
+        // wait for profiles selector to load
+        browser.waitForExist('div[data-test="molecularProfileSelector"] input[type="checkbox"]', 3000);
+        // mutations, CNA should be selected
+        assert(browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MUTATION_EXTENDED"]'), "mutation profile should be selected");
+        assert(browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="COPY_NUMBER_ALTERATION"]'), "cna profile should be selected");
+        assert(!browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MRNA_EXPRESSION"]'), "mrna profile not selected");
+
+        // select another study
+        var input = $(".autosuggest input[type=text]");
+        input.waitForExist(10000);
+        input.setValue('ampullary baylor');
+        browser.pause(500);
+        // should only be one element
+        assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
+        var checkBox = $('[data-test="StudySelect"]');
+        checkBox.waitForExist(10000);
+        browser.click('[data-test="StudySelect"] input');
+
+        // wait for data type priority selector to load
+        browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="radio"][data-test="MC"]', 10000);
+        assert(browser.isSelected('[data-test="dataTypePrioritySelector"] input[type="radio"][data-test="MC"]'), "mutation and cna option should be selected");
+
+        //deselect other study
+        browser.click('[data-test="StudySelect"] input');
+
+        // wait for profiles selector to load
+        browser.waitForExist('div[data-test="molecularProfileSelector"] input[type="checkbox"]', 3000);
+        // mutations, CNA should be selected
+        assert(browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MUTATION_EXTENDED"]'), "mutation profile should be selected");
+        assert(browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="COPY_NUMBER_ALTERATION"]'), "cna profile should be selected");
+        assert(!browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MRNA_EXPRESSION"]'), "mrna profile not selected");
+
+        // select all tcga provisional
+        input = $(".autosuggest input[type=text]");
+        input.waitForExist(10000);
+        input.setValue('tcga provisional');
+        browser.pause(500);
+        browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
+
+        // wait for data type priority selector to load
+        browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="radio"][data-test="MC"]', 10000);
+        assert(browser.isSelected('[data-test="dataTypePrioritySelector"] input[type="radio"][data-test="MC"]'), "mutation and cna option should be selected");
+
+        // Deselect all tcga provisional studies
+        browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
+        browser.pause(100);
+
+        // wait for profiles selector to load
+        browser.waitForExist('div[data-test="molecularProfileSelector"] input[type="checkbox"]', 3000);
+        // mutations, CNA should be selected
+        assert(browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MUTATION_EXTENDED"]'), "mutation profile should be selected");
+        assert(browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="COPY_NUMBER_ALTERATION"]'), "cna profile should be selected");
+        assert(!browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MRNA_EXPRESSION"]'), "mrna profile not selected");
     });
 });

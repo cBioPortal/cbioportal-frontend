@@ -86,10 +86,15 @@ export function getOncoKbApiUrl() {
 export function getGenomeNexusApiUrl() {
     let url = AppConfig.genomeNexusApiUrl;
     if (typeof url === 'string') {
-        // we need to support legacy configuration values
-        url = url.replace(/^http[s]?:\/\//,''); // get rid of protocol
-        url = url.replace(/\/$/,""); // get rid of trailing slashes
-        return cbioUrl(`proxy/${url}`)
+        // use url if https, otherwise use proxy
+        if (url.startsWith('https://')) {
+            return url
+        } else {
+            // we need to support legacy configuration values
+            url = url.replace(/^http[s]?:\/\//,''); // get rid of protocol
+            url = url.replace(/\/$/,""); // get rid of trailing slashes
+            return cbioUrl(`proxy/${url}`)
+        }
     } else {
         return undefined;
     }
