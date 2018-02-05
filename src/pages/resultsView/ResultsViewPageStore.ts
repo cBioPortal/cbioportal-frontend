@@ -518,6 +518,8 @@ export class ResultsViewPageStore {
             } else {
                 results = [];
             }
+            results = []; // temporarily disable gene panels to work around run time error
+            console.log("TODO: ADAM SHOULD FIX THE ABOVE!")
             const entrezToGene = _.keyBy(this.genes.result, gene=>gene.entrezGeneId);
             const samples:GenePanelInformation["samples"] = {};
             const patients:GenePanelInformation["patients"] = {};
@@ -533,20 +535,21 @@ export class ResultsViewPageStore {
                     wholeExomeSequenced: !!studyToMutationMolecularProfile[patient.studyId] // only assume WXS if theres a mutation profile to query for this patient
                 };
             }
-            for (const gpData of results) {
-                const sampleSequencingInfo = samples[gpData.uniqueSampleKey];
-                const patientSequencingInfo = patients[gpData.uniquePatientKey];
-                for (const entrez of gpData.entrezGeneIds) {
-                    const hugo = entrezToGene[entrez].hugoGeneSymbol;
-                    sampleSequencingInfo.sequencedGenes[hugo] = sampleSequencingInfo.sequencedGenes[hugo] || [];
-                    sampleSequencingInfo.sequencedGenes[hugo].push(gpData);
-                    sampleSequencingInfo.wholeExomeSequenced = false;
-
-                    patientSequencingInfo.sequencedGenes[hugo] = patientSequencingInfo.sequencedGenes[hugo] || [];
-                    patientSequencingInfo.sequencedGenes[hugo].push(gpData);
-                    patientSequencingInfo.wholeExomeSequenced = false;
-                }
-            }
+            console.log("TODO: ADAM UNCOMMENT BELOW!")
+            // for (const gpData of results) {
+            //     const sampleSequencingInfo = samples[gpData.uniqueSampleKey];
+            //     const patientSequencingInfo = patients[gpData.uniquePatientKey];
+            //     for (const entrez of gpData.entrezGeneIds) {
+            //         const hugo = entrezToGene[entrez].hugoGeneSymbol;
+            //         sampleSequencingInfo.sequencedGenes[hugo] = sampleSequencingInfo.sequencedGenes[hugo] || [];
+            //         sampleSequencingInfo.sequencedGenes[hugo].push(gpData);
+            //         sampleSequencingInfo.wholeExomeSequenced = false;
+            //
+            //         patientSequencingInfo.sequencedGenes[hugo] = patientSequencingInfo.sequencedGenes[hugo] || [];
+            //         patientSequencingInfo.sequencedGenes[hugo].push(gpData);
+            //         patientSequencingInfo.wholeExomeSequenced = false;
+            //     }
+            // }
             return {
                 samples,
                 patients
@@ -1202,20 +1205,6 @@ export class ResultsViewPageStore {
                     studyId: sample.studyId
                 };
             }
-
-            // export type PatientFilter = {
-            //     'patientIdentifiers': Array < PatientIdentifier >
-            //
-            //     'uniquePatientKeys': Array < string >
-            //
-            // };
-            // // export type PatientFilter = {
-            // //     'patientIdentifiers': Array < PatientIdentifier >
-            // //
-            // //     'uniquePatientKeys': Array < string >
-            // //
-            // // };
-
             const patientFilter = {
                 uniquePatientKeys: _.uniq(this.samples.result.map((sample:Sample)=>sample.uniquePatientKey))
             } as PatientFilter;
