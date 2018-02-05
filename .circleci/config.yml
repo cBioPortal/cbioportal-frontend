@@ -83,7 +83,7 @@ jobs:
           name: "Spin up frontend repo and run end to end tests"
           command: |
             npm run start & \
-            export CBIOPORTAL_URL=http://www.cbioportal.org$((test "$TRAVIS_BRANCH" != master && test "$TRAVIS_BRANCH" != hotfix) && echo /beta) && \
+            eval "$(./scripts/env_vars.sh)" && \
             curl $CBIOPORTAL_URL > /dev/null && \
             sleep 5s && \
             curl $CBIOPORTAL_URL > /dev/null && \
@@ -117,3 +117,25 @@ workflows:
             - end_to_end_tests:
                 requires:
                     - install
+
+    nightly:
+       triggers:
+           - schedule:
+               cron: "0 5 * * *"
+               filters:
+                   branches:
+                       only:
+                           - master
+                           - rc
+       jobs:
+           - install
+           - api_sync:
+               requires:
+                   - install
+           - unit_tests:
+               requires:
+                   - install
+           - end_to_end_tests:
+               requires:
+                   - install
+
