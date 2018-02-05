@@ -68,7 +68,7 @@ const history = (AppConfig.historyType === 'memory') ? createMemoryHistory() : h
 const syncedHistory = syncHistoryWithStore(history, routingStore);
 
 // lets make query Store since it's used in a lot of places
-const queryStore = new QueryStore(window.location.href);
+const queryStore = new QueryStore(window, window.location.href);
 
 const stores = {
     // Key can be whatever you want

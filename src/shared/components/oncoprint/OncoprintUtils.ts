@@ -156,7 +156,7 @@ export function makeClinicalTracksMobxPromise(oncoprint:ResultsViewOncoprint, sa
             }
             const attributes = oncoprint.selectedClinicalAttributeIds.keys().map(attrId=>{
                 return oncoprint.clinicalAttributesById.result![attrId];
-            });
+            }).filter(x=>!!x);
             await oncoprint.props.store.clinicalDataCache.getPromise(attributes, true);
             return attributes.map((attribute:ClinicalAttribute)=>{
                 const data = oncoprint.props.store.clinicalDataCache.get(attribute)!.data!;
