@@ -9,6 +9,7 @@ import "./mutations.scss";
 import {filterCBioPortalWebServiceData} from '../../../shared/lib/oql/oqlfilter';
 import accessors from '../../../shared/lib/oql/accessors';
 import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator";
+import {Gene} from "../../../shared/api/generated/CBioPortalAPI";
 
 export interface IMutationsPageProps {
     routing?: any;

@@ -5,14 +5,16 @@
     <title><%= htmlWebpackPlugin.options.title %></title>
     <script>
         window.devContext = true;
-        window.defaultRoute = "/home";
+        window.defaultRoute = "/newresult";
         // Set default API in case none is specified in .env
         window.frontendConfig = {
             // uncomment to enable Darwin internal MSKCC service patient view link
             // uses checkDarwinAccess.do service from cbioportal/cbioportal
             // enableDarwin : true,
             apiRoot: 'www.cbioportal.org/beta',
+            historyType:'memory',
             showCivic : true,
+            maxTreeDepth:3,
             showHotspot : true,
             showMyCancerGenome : true,
             showOncoKB : true,

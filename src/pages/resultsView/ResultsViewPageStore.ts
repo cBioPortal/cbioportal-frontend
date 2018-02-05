@@ -42,7 +42,10 @@ import {
 } from "../../shared/components/cancerSummary/CancerSummaryContent";
 import {writeTest} from "../../shared/lib/writeTest";
 import {PatientSurvival} from "../../shared/model/PatientSurvival";
-import {filterCBioPortalWebServiceDataByOQLLine, OQLLineFilterOutput} from "../../shared/lib/oql/oqlfilter";
+import {
+    filterCBioPortalWebServiceDataByOQLLine, OQLLineFilterOutput,
+    parseOQLQuery
+} from "../../shared/lib/oql/oqlfilter";
 import GeneMolecularDataCache from "../../shared/cache/GeneMolecularDataCache";
 import GeneCache from "../../shared/cache/GeneCache";
 import ClinicalDataCache from "../../shared/cache/ClinicalDataCache";
@@ -234,6 +237,15 @@ export function countAlterationOccurences(groupedSamples: {[groupingProperty: st
 
 }
 
+interface QuerySpecification {
+    sampleSpecification: { studyId:string, sampleListId:string }[]
+    hugoGeneSymbols: string[],
+    selectedMolecularProfileIds: string[],
+    rppaScoreThreshold:number;
+    zScoreThreshold:number;
+    oqlQuery:string,
+}
+
 export function extendSamplesWithCancerType(samples:Sample[], clinicalDataForSamples:ClinicalData[], studies:CancerStudy[]){
 
     const clinicalDataGroupedBySampleId = _.groupBy(clinicalDataForSamples, (clinicalData:ClinicalData)=>clinicalData.uniqueSampleKey);
@@ -300,7 +312,7 @@ export class ResultsViewPageStore {
     @observable ajaxErrors: Error[] = [];
 
     @observable hugoGeneSymbols: string[];
-    @observable samplesSpecification: SamplesSpecificationElement[] = [];
+    @observable.ref samplesSpecification: SamplesSpecificationElement[] = [];
 
     @observable zScoreThreshold: number;
 
@@ -308,6 +320,8 @@ export class ResultsViewPageStore {
 
     @observable oqlQuery: string = '';
     @observable public sessionIdURL = '';
+
+    @observable currentQuery: any = null;
 
     @observable selectedMolecularProfileIds: string[] = [];
 
@@ -322,6 +336,10 @@ export class ResultsViewPageStore {
         driverFilter: AppConfig.oncoprintCustomDriverAnnotationDefault,
         driverTiers: observable.map<boolean>()
     };
+
+    @action setQuery(querySpecification:QuerySpecification){
+        
+    }
 
     private getURL() {
         const shareURL = window.location.href;
@@ -400,6 +418,19 @@ export class ResultsViewPageStore {
             }
         }
     });
+
+    readonly parsedOQL = remoteData({
+        await: ()=> [
+            this.defaultOQLQuery
+        ],
+        invoke:() => {
+            return Promise.resolve(parseOQLQuery(this.oqlQuery, this.defaultOQLQuery.result!));
+        }
+    });
+
+    @action setOQL(oqlStr:string){
+        this.oqlQuery = oqlStr;
+    }
 
     readonly unfilteredAlterations = remoteData<(Mutation|GeneMolecularData)[]>({
         await: ()=>[
@@ -855,40 +886,42 @@ export class ResultsViewPageStore {
         }
     });
 
-    // readonly genes = remoteData(async() => {
-    //     if (this.hugoGeneSymbols) {
-    //         return client.fetchGenesUsingPOST({
-    //             geneIds: this.hugoGeneSymbols.slice(),
-    //             geneIdType: "HUGO_GENE_SYMBOL"
-    //         });
-    //     }
-    //     return undefined;
-    // });
+    readonly studyToSampleIds = remoteData<{ [studyId: string]: { [sampleId: string]: boolean } }>({
+        await:()=>[this.sampleLists],
+        invoke:async () => {
+                // const sampleListsToQuery: { studyId: string, sampleListId: string }[] = [];
+                const ret: { [studyId: string]: { [sampleId: string]: boolean } } = {};
+                // for (const sampleSpec of this.samplesSpecification) {
+                //     if (sampleSpec.sampleId) {
+                //         ret[sampleSpec.studyId] = ret[sampleSpec.studyId] || {};
+                //         ret[sampleSpec.studyId][sampleSpec.sampleId] = true;
+                //     } else if (sampleSpec.sampleListId) {
+                //         sampleListsToQuery.push(sampleSpec as { studyId: string, sampleListId: string });
+                //     }
+                // }
+                // const results: string[][] = await Promise.all(sampleListsToQuery.map(spec => {
+                //     return client.getAllSampleIdsInSampleListUsingGET({
+                //         sampleListId: spec.sampleListId
+                //     });
+                // }));
 
-    readonly studyToSampleIds = remoteData<{ [studyId: string]: { [sampleId: string]: boolean } }>(async () => {
-        const sampleListsToQuery: { studyId: string, sampleListId: string }[] = [];
-        const ret: { [studyId: string]: { [sampleId: string]: boolean } } = {};
-        for (const sampleSpec of this.samplesSpecification) {
-            if (sampleSpec.sampleId) {
-                ret[sampleSpec.studyId] = ret[sampleSpec.studyId] || {};
-                ret[sampleSpec.studyId][sampleSpec.sampleId] = true;
-            } else if (sampleSpec.sampleListId) {
-                sampleListsToQuery.push(sampleSpec as { studyId: string, sampleListId: string });
+                this.sampleLists.result!.forEach((list:SampleList)=>{
+                    ret[list.studyId] = ret[list.studyId] || {};
+                    list.sampleIds.forEach((sampleId:string)=>{
+                       ret[list.studyId][sampleId] = true;
+                    });
+                });
+
+
+                // for (let i = 0; i < results.length; i++) {
+                //     ret[sampleListsToQuery[i].studyId] = ret[sampleListsToQuery[i].studyId] || {};
+                //     const sampleMap = ret[sampleListsToQuery[i].studyId];
+                //     results[i].map(sampleId => {
+                //         sampleMap[sampleId] = true;
+                //     });
+                // }
+                return ret;
             }
-        }
-        const results: string[][] = await Promise.all(sampleListsToQuery.map(spec => {
-            return client.getAllSampleIdsInSampleListUsingGET({
-                sampleListId: spec.sampleListId
-            });
-        }));
-        for (let i = 0; i < results.length; i++) {
-            ret[sampleListsToQuery[i].studyId] = ret[sampleListsToQuery[i].studyId] || {};
-            const sampleMap = ret[sampleListsToQuery[i].studyId];
-            results[i].map(sampleId => {
-                sampleMap[sampleId] = true;
-            });
-        }
-        return ret;
     }, {});
 
     @computed get studyToSampleListId(): { [studyId: string]: string } {
@@ -928,12 +961,18 @@ export class ResultsViewPageStore {
     }
 
     readonly sampleLists = remoteData<SampleList[]>({
-        invoke:()=>Promise.all(Object.keys(this.studyToSampleListId).map(studyId=>{
-            return client.getSampleListUsingGET({
-                sampleListId: this.studyToSampleListId[studyId]
-            });
-        }))
+        invoke:()=>{
+            return client.fetchSampleListsUsingPOST({ sampleListIds:_.values(this.studyToSampleListId), projection:'DETAILED'  });
+        }
     });
+
+    // readonly sampleLists = remoteData<SampleList[]>({
+    //     invoke:()=>Promise.all(Object.keys(this.studyToSampleListId).map(studyId=>{
+    //         return client.getSampleListUsingGET({
+    //             sampleListId: this.studyToSampleListId[studyId]
+    //         });
+    //     }))
+    // });
 
     readonly mutations = remoteData<Mutation[]>({
         await:()=>[
@@ -1340,12 +1379,17 @@ export class ResultsViewPageStore {
     });
 
     readonly genes = remoteData<Gene[]>({
+        await: ()=> [
+            this.parsedOQL
+        ],
         invoke: async () => {
-            if (this.hugoGeneSymbols && this.hugoGeneSymbols.length) {
+            //
+            const geneIds = this.parsedOQL.result!.map((gene:any)=>gene.gene);
+            if (geneIds && geneIds.length) {
                 const order = stringListToIndexSet(this.hugoGeneSymbols);
                 return _.sortBy(await client.fetchGenesUsingPOST({
                     geneIdType: "HUGO_GENE_SYMBOL",
-                    geneIds: this.hugoGeneSymbols.slice(),
+                    geneIds: geneIds,
                     projection: "SUMMARY"
                 }), (gene: Gene) => order[gene.hugoGeneSymbol]);
             } else {

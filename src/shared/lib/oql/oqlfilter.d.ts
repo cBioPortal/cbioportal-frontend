@@ -17,7 +17,14 @@ export type OQLLineFilterOutput<T> = {
     data: T[];
 }
 
+interface ParsedOQLGene {
+    gene:string;
+    alteration: { alteration_type:string }[]
+}
+
 export declare function filterCBioPortalWebServiceData(oql_query:string, data:(Mutation | GeneMolecularData)[], accessors:any, default_oql:string): ExtendedAlteration[];
 
 export declare function filterCBioPortalWebServiceDataByOQLLine(oql_query:string, data:(AnnotatedMutation | GeneMolecularData)[], accessors:any, default_oql:string): OQLLineFilterOutput<ExtendedAlteration&AnnotatedMutation>[];
 export declare function filterCBioPortalWebServiceDataByOQLLine(oql_query:string, data:(Mutation | GeneMolecularData)[], accessors:any, default_oql:string): OQLLineFilterOutput<ExtendedAlteration>[];
+
+export declare function parseOQLQuery(oql_query:string, opt_default_oql:string): ParsedOQLGene[];

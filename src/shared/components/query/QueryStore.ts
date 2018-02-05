@@ -36,6 +36,10 @@ import getOverlappingStudies from "../../lib/getOverlappingStudies";
 import MolecularProfilesInStudyCache from "../../cache/MolecularProfilesInStudyCache";
 import {CacheData} from "../../lib/LazyMobXCache";
 
+const win = (window as any);
+win.oql_parser = win.oql_parser || oql_parser;
+
+
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
 	cancer_study_id: string,
@@ -110,7 +114,7 @@ export class QueryStore
 		molecularProfileIds: ReadonlyArray<string>
 	};
 
-	constructor(_window:Window, urlWithInitialParams?:string)
+	constructor(_window:Window, urlWithInitialParams:string|undefined = undefined, public singlePageSubmitRoutine?:()=>void)
 	{
 		this.loadSavedVirtualCohorts();
 
@@ -1485,7 +1489,12 @@ export class QueryStore
 		if (historyUrl != newUrl)
 			window.history.pushState(null, window.document.title, historyUrl);*/
 
-		formSubmit(urlParams.pathname, urlParams.query, undefined, "smart");
+		if (this.singlePageSubmitRoutine) {
+			console.log('submitting', urlParams.pathname, urlParams.query);
+			this.singlePageSubmitRoutine();
+		} else {
+            formSubmit(urlParams.pathname, urlParams.query, undefined, "smart");
+		}
 	}
 
 	@action openSummary() {
@@ -1507,7 +1516,13 @@ export class QueryStore
 
 			const urlParams = queryParams(nonProfileParams, profileParams, this.initialQueryParams.pathname);
 
-			formSubmit(urlParams.pathname, urlParams.query);
+            if (this.singlePageSubmitRoutine) {
+                console.log('submitting', urlParams.pathname, urlParams.query);
+                this.singlePageSubmitRoutine()
+            } else {
+                formSubmit(urlParams.pathname, urlParams.query);
+            }
+
 		});
 	}
 

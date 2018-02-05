@@ -21,7 +21,7 @@ class StudyLink extends React.Component<{ study: CancerStudy, onClick?: () => vo
 }
 
 @observer
-export default class QuerySummary extends React.Component<{ queryStore:QueryStore, store: ResultsViewPageStore }, {}> {
+export default class QuerySummary extends React.Component<{ queryStore:QueryStore, onSubmit?:()=>void, className?:string, store: ResultsViewPageStore }, {}> {
 
     @observable private queryFormVisible = false;
     @observable private queryStoreInitialized = false;
@@ -33,11 +33,15 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
 
     private handleModifyQueryClick() {
 
-        // this will have no functional impact after initial invocation of this method
-        this.queryStoreInitialized = true;
+        if (this.props.onSubmit) {
+            this.props.onSubmit();
+        } else {
+            // this will have no functional impact after initial invocation of this method
+            this.queryStoreInitialized = true;
 
-        // toggle visibility
-        this.queryFormVisible = !this.queryFormVisible;
+            // toggle visibility
+            this.queryFormVisible = !this.queryFormVisible;
+        }
 
     }
 
@@ -45,7 +49,7 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
         return <div>
             <h4><StudyLink study={this.props.store.studies.result[0]}/></h4>
             <span>
-                {(window as any).serverVars.caseSetProperties.case_set_name}&nbsp;
+                { 'RESTORE THIS' }&nbsp;
                 (<strong>{this.props.store.samples.result.length}</strong> samples)
                  / <strong data-test='QuerySummaryGeneCount'>{this.props.store.hugoGeneSymbols.length}</strong> Genes
             </span>
@@ -84,7 +88,6 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
 
         if (!this.props.store.totalAlterationStats.isError && !this.props.store.studies.isError) {
 
-
             const loadingComplete = this.props.store.totalAlterationStats.isComplete && this.props.store.studies.isComplete;
 
             let alterationPercentage = (loadingComplete) ?
@@ -92,7 +95,7 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
 
             return (
                 <div>
-                    <div className="query-summary">
+                    <div className={ classNames('query-summary', this.props.className) }>
                         <div className="query-summary__leftItems">
                             <div>
                                 <button id="modifyQueryBtn" onClick={this.handleModifyQueryClick} className={classNames('btn btn-primary' , { disabled:!loadingComplete  })}>
@@ -102,8 +105,6 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
 
 
                             <Loader isLoading={loadingComplete === false}/>
-
-
                             {
                                 (loadingComplete) && ((this.props.store.studies.result.length === 1) ? this.singleStudyUI : this.multipleStudyUI)
                             }

@@ -160,3 +160,13 @@ if (__DEBUG__ && module.hot) {
 }
 
 $(document).ready(() => render());
+
+window.oncoprintLast = 0;
+var thisInterval = setInterval(function(){
+    var $el = $("#oncoprintContainer > span");
+    var width = parseInt($el.css("minWidth"));
+    if (_.isNumber(width) && width > 0) {
+        $(".oncoprintBody").addClass("fadeIn");
+        $(".oncoprintLoadingIndicator").css("visibility","hidden");
+    }
+},500);

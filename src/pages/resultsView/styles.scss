@@ -37,15 +37,31 @@
   }
 }
 
+.fadeIn {
+  opacity:1 !important;
+}
+
+#oncoprintContainer {
+
+}
+
+.oncoprintBody {
+  transition: opacity .75s ease-in-out;
+  opacity:0;
+}
+
 .oncoprintLoadingIndicator {
   height: 200px;
   border-radius: 4px;
-  background-color: #eee;
+  background-color: transparent;
   display: flex;
   justify-content: center;
   align-items: center;
   margin-top: 10px;
   flex-direction: column;
+  position:absolute;
+  width:100%;
+  top:0;
 
   div {
     margin-bottom: 5px;

@@ -63,11 +63,11 @@ loader:'sass-resources-loader',
 
 var config = {
 
-    'entry': [
+    entry: [
         `babel-polyfill`,
         `${path.join(src, 'appBootstrapper.jsx')}`
     ],
-    'output': {
+    output: {
         path: path.resolve(__dirname, 'dist'),
         filename: 'reactapp/[name].app.js',
         chunkFilename: 'reactapp/[name].[chunkhash].chunk.js',
@@ -75,9 +75,12 @@ var config = {
        // hash: false,
         publicPath: '/',
     },
+    node: {
+        fs: "empty"
+    },
 
-    'resolve': {
-        'extensions': [
+    resolve: {
+        extensions: [
             '.js',
             '.jsx',
             '.json',
@@ -108,6 +111,7 @@ var config = {
         }),
         new CopyWebpackPlugin([
             {from: './common-dist', to: 'reactapp'},
+            {from: './menudots.svg', to: 'images/menudots.svg'},
             {from: './src/globalStyles/prefixed-bootstrap.min.css', to: 'reactapp/prefixed-bootstrap.min.css'},
             {from: './src/globalStyles/prefixed-bootstrap.min.css.map', to: 'reactapp/prefixed-bootstrap.min.css.map'}
         ]) // destination is relative to dist directory
@@ -290,7 +294,8 @@ config.plugins = [
     }),
     new webpack.ProvidePlugin({
         $: "jquery",
-        jQuery: "jquery"
+        jQuery: "jquery",
+        Plotly: "plotly.js"
     })
 ].concat(config.plugins);
 // END ENV variables
