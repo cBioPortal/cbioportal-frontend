@@ -3,7 +3,7 @@ import {
     SampleIdentifier, MolecularProfile, Mutation, GeneMolecularData, MolecularDataFilter, Gene,
     ClinicalDataSingleStudyFilter, CancerStudy, PatientIdentifier, Patient, GenePanelData, GenePanelDataFilter,
     SampleList, MutationCountByPosition, MutationMultipleStudyFilter, SampleMolecularIdentifier,
-    MolecularDataMultipleStudyFilter, SampleFilter, MolecularProfileFilter, GenePanelMultipleStudyFilter
+    MolecularDataMultipleStudyFilter, SampleFilter, MolecularProfileFilter, GenePanelMultipleStudyFilter, PatientFilter
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {computed, observable, action} from "mobx";
@@ -1202,8 +1202,26 @@ export class ResultsViewPageStore {
                     studyId: sample.studyId
                 };
             }
+
+            // export type PatientFilter = {
+            //     'patientIdentifiers': Array < PatientIdentifier >
+            //
+            //     'uniquePatientKeys': Array < string >
+            //
+            // };
+            // // export type PatientFilter = {
+            // //     'patientIdentifiers': Array < PatientIdentifier >
+            // //
+            // //     'uniquePatientKeys': Array < string >
+            // //
+            // // };
+
+            const patientFilter = {
+                uniquePatientKeys: _.uniq(this.samples.result.map((sample:Sample)=>sample.uniquePatientKey))
+            } as PatientFilter;
+
             return client.fetchPatientsUsingPOST({
-                patientIdentifiers: _.values(patientKeyToPatientIdentifier)
+                patientFilter
             });
         },
         default: []
