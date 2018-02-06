@@ -1292,11 +1292,11 @@ export class ResultsViewPageStore {
 
     readonly genesetMolecularProfile = remoteData<MolecularProfile | undefined>({
         await: () => [
-            this.molecularProfilesInStudies
+            this.selectedMolecularProfiles
         ],
         invoke: () => {
             const applicableProfiles = _.filter(
-                this.molecularProfilesInStudies.result!,
+                this.selectedMolecularProfiles.result!,
                 profile => (
                     profile.molecularAlterationType === AlterationTypeConstants.GENESET_SCORE
                     && profile.showProfileInAnalysisTab
