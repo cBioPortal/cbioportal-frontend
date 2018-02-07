@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { If, Then, Else } from 'react-if';
-import { ICivicVariantData } from "shared/model/Civic.ts";
+import { ICivicVariantData } from "shared/model/Civic";
 import "./styles/civicCard.scss";
 import * as _ from "lodash";
 

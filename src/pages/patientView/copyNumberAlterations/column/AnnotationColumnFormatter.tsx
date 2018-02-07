@@ -10,7 +10,7 @@ import Civic from "shared/components/annotation/Civic";
 import {generateQueryVariantId, generateQueryVariant} from "shared/lib/OncoKbUtils";
 import {IndicatorQueryResp, Query} from "shared/api/generated/OncoKbAPI";
 import {getAlterationString} from "shared/lib/CopyNumberUtils";
-import {ICivicVariant, ICivicGene, ICivicEntry, ICivicVariantData, ICivicGeneData, ICivicGeneDataWrapper, ICivicVariantDataWrapper} from "shared/model/Civic.ts";
+import {ICivicVariant, ICivicGene, ICivicEntry, ICivicVariantData, ICivicGeneData, ICivicGeneDataWrapper, ICivicVariantDataWrapper} from "shared/model/Civic";
 import {buildCivicEntry, getCivicCNAVariants} from "shared/lib/CivicUtils";
 
 /**

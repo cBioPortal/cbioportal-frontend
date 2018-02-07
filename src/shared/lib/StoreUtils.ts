@@ -37,7 +37,7 @@ import {IGisticData} from "shared/model/Gistic";
 import {IMutSigData} from "shared/model/MutSig";
 import {IMyCancerGenomeData, IMyCancerGenome} from "shared/model/MyCancerGenome";
 import {IHotspotData, ICancerHotspotData} from "shared/model/CancerHotspots";
-import {ICivicGeneData, ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
+import {ICivicGeneData, ICivicVariant, ICivicGene} from "shared/model/Civic";
 import CancerHotspotsAPI from "shared/api/generated/CancerHotspotsAPI";
 import {MOLECULAR_PROFILE_MUTATIONS_SUFFIX, MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
 import GenomeNexusAPI from "shared/api/generated/GenomeNexusAPI";

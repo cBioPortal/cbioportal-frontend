@@ -1,5 +1,5 @@
 import * as request from 'superagent';
-import {ICivicGene, ICivicGeneData, ICivicVariant, ICivicVariantData} from "shared/model/Civic.ts";
+import {ICivicGene, ICivicGeneData, ICivicVariant, ICivicVariantData} from "shared/model/Civic";
 
 type CivicAPIGene = {
     id: number;

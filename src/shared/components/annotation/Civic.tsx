@@ -4,7 +4,7 @@ import {observer} from "mobx-react";
 import {Circle} from "better-react-spinkit";
 import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import annotationStyles from "./styles/annotation.module.scss";
-import {ICivicVariant, ICivicEntry} from "shared/model/Civic.ts";
+import {ICivicVariant, ICivicEntry} from "shared/model/Civic";
 import {observable} from "mobx";
 import CivicCard from "./CivicCard";
 
