@@ -45,7 +45,7 @@ function runResultsTests(){
         ssAssert(res);
     });
 
-    it('mutation tab', function(){
+    it.skip('mutation tab', function(){
         browser.click("[href='#mutation_details']");
         browser.waitForVisible('.borderedChart svg',20000);
         var res = browser.checkElement('#mutation_details',{hide:['.qtip'] });
@@ -73,7 +73,7 @@ function runResultsTests(){
         ssAssert(res);
     });
 
-    it('data_download tab', function(){
+    it.skip('data_download tab', function(){
         browser.click("[href='#data_download']");
         //  browser.pause(1000);
         browser.waitForExist("#text_area_gene_alteration_freq",20000);
