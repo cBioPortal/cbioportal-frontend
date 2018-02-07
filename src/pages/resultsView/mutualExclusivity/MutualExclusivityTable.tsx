@@ -22,6 +22,7 @@ export enum MutualExclusivityTableColumnType {
     BOTH,
     LOG_ODDS_RATIO,
     P_VALUE,
+    ADJUSTED_P_VALUE,
     ASSOCIATION
 }
 
@@ -51,6 +52,7 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
             MutualExclusivityTableColumnType.BOTH,
             MutualExclusivityTableColumnType.LOG_ODDS_RATIO,
             MutualExclusivityTableColumnType.P_VALUE,
+            MutualExclusivityTableColumnType.ADJUSTED_P_VALUE,
             MutualExclusivityTableColumnType.ASSOCIATION
         ],
         initialSortColumn: "p-Value"
@@ -127,6 +129,14 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
             tooltip: <span>Derived from Fisher Exact Test</span>,
             sortBy: (d: MutualExclusivity) => d.pValue,
             download: (d: MutualExclusivity) => formatPValue(d.pValue)
+        };
+
+        this._columns[MutualExclusivityTableColumnType.ADJUSTED_P_VALUE] = {
+            name: "Adjusted p-Value",
+            render: (d: MutualExclusivity) => <span>{formatPValue(d.adjustedPValue)}</span>,
+            tooltip: <span>Bonferroni adjusted p-Value</span>,
+            sortBy: (d: MutualExclusivity) => d.adjustedPValue,
+            download: (d: MutualExclusivity) => formatPValue(d.adjustedPValue)
         };
 
         this._columns[MutualExclusivityTableColumnType.ASSOCIATION] = {
