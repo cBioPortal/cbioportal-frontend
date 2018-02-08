@@ -475,7 +475,7 @@ config.resolve.alias = {
     reducers: join(src, 'redux/modules'),
     pages: join(src, 'pages'),
     shared: join(src, 'shared'),
-    appConfig: path.join(__dirname + '/src', 'config', process.env.NODE_ENV + '.config')
+    appConfig: path.join(__dirname + '/src', 'config', ((process.env.NODE_ENV === 'test')? 'test.' : '') + 'config')
 };
 // end Roots
 
