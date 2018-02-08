@@ -600,16 +600,8 @@ export class QueryStore
 	        async (genesetIds:string[]):Promise<{found: Geneset[], invalid: string[]}> =>
 	        {
 	            const getGenesetResults = async () => {
-	                const found:Geneset[] = [];
-	                const invalid: string[] = [];
-	                for (const genesetId in genesetIds) {
-	                    try {
-	                        const retrievedGeneset = await internalClient.getGenesetUsingGET({genesetId: genesetIds[genesetId]});
-	                        found.push(retrievedGeneset);
-	                    } catch (error) {
-	                        invalid.push(genesetIds[genesetId]);
-	                    }
-	                }
+	                const found = await internalClient.fetchGenesetsUsingPOST({genesetIds: genesetIds});
+	                const invalid = _.difference(genesetIds, found.map(geneset => geneset.genesetId));
 	                return {found, invalid};
 	            };
 	            
