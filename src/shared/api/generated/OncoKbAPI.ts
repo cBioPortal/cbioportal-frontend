@@ -252,7 +252,7 @@ export type TumorType = {
 
         'id': number
 
-        'level': "PRIMARY" | "Secondary" | "Tertiary" | "Quaternary" | "Quinternary"
+        'level': number
 
         'links': Array < Link >
 
