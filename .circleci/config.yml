@@ -83,6 +83,10 @@ jobs:
           name: "Spin up frontend repo and run end to end tests"
           command: |
             npm run start & \
+            cd end-to-end-tests && \
+            npm install && \
+            ./node_modules/webdriver-manager/bin/webdriver-manager update && \
+            ./node_modules/webdriver-manager/bin/webdriver-manager start & \
             eval "$(./scripts/env_vars.sh)" && \
             curl $CBIOPORTAL_URL > /dev/null && \
             sleep 5s && \
@@ -93,8 +97,7 @@ jobs:
             curl http://localhost:3000 > /dev/null && \
             sleep 20s && \
             cd end-to-end-tests && \
-            npm install && \
-            npm run test-travis
+            npm run test-webdriver-manager
           environment:
             JUNIT_REPORT_PATH: ./junit/
           when: always

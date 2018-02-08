@@ -15,6 +15,7 @@
     "wdio-junit-reporter": "^0.3.1",
     "wdio-mocha-framework": "0.5.10",
     "wdio-spec-reporter": "0.1.0",
+    "webdriver-manager": "^12.0.6",
     "webdriverio": "4.8.0"
   },
   "devDependencies": {
