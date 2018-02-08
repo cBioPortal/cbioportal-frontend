@@ -566,6 +566,7 @@ function transitionGenesetHeatmapTrack(
             sortCmpFn: heatmapTrackSortComparator,
             init_sort_direction: 0 as 0,
             description: `${nextSpec.label} data from ${nextSpec.molecularProfileId}`,
+            link_url: nextSpec.trackLinkUrl,
             tooltipFn: makeHeatmapTrackTooltip(nextSpec.molecularAlterationType, true),
             onSortDirectionChange: nextProps.onTrackSortDirectionChange
         };

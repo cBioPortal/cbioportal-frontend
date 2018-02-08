@@ -307,6 +307,7 @@ export function makeGenesetHeatmapTracksMobxPromise(
             oncoprint.props.store.patients,
             oncoprint.props.store.genesetMolecularProfile,
             oncoprint.props.store.genesetMolecularDataCache,
+            oncoprint.props.store.genesetLinkMap,
             oncoprint.genesetHeatmapTrackGroup
         ],
         invoke: async () => {
@@ -314,6 +315,7 @@ export function makeGenesetHeatmapTracksMobxPromise(
             const patients = oncoprint.props.store.patients.result!;
             const molecularProfile = oncoprint.props.store.genesetMolecularProfile.result!;
             const dataCache = oncoprint.props.store.genesetMolecularDataCache.result!;
+            const genesetLinkMap = oncoprint.props.store.genesetLinkMap.result!;
             const trackGroup = oncoprint.genesetHeatmapTrackGroup.result!;
 
             if (!molecularProfile.isApplicable) {
@@ -331,6 +333,7 @@ export function makeGenesetHeatmapTracksMobxPromise(
                 molecularProfileId,
                 molecularAlterationType: molecularProfile.value.molecularAlterationType,
                 datatype: molecularProfile.value.datatype,
+                trackLinkUrl: genesetLinkMap[genesetId],
                 data: makeHeatmapTrackData<IGenesetHeatmapTrackDatum, 'geneset_id'>(
                     'geneset_id',
                     genesetId,
