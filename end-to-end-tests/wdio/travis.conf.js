@@ -51,13 +51,14 @@ exports.config = {
         // 5 instances get started at a time.
         maxInstances: 5,
         'os': 'OS X',
-        'os_version': 'High Sierra',
+        'os_version': 'Sierra',
         'browser': 'Chrome',
         'browser_version': '63.0',
         'resolution': '1600x1200',
         build: 'webdriver-browserstack',
         'browserstack.local': true,
-        'browserstack.localIdentifier': localIdentifier
+        'browserstack.localIdentifier': localIdentifier,
+        'browserstack.networkLogs':true
     }],
     //
     // ===================
