@@ -1839,14 +1839,9 @@
           "description": "the numarical identifier of tumor type."
         },
         "level": {
-          "type": "string",
-          "enum": [
-            "PRIMARY",
-            "Secondary",
-            "Tertiary",
-            "Quaternary",
-            "Quinternary"
-          ]
+          "type": "integer",
+          "format": "int32",
+          "description": "-1"
         },
         "links": {
           "type": "array",
