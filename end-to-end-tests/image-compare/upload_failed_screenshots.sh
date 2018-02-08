@@ -17,7 +17,7 @@ upload_image() {
 
 
 cd ${DIR}/../screenshots
-if [[ -d "diff/" ]]; then
+if (ls diff/*.png 2> /dev/null > /dev/null); then
     references=()
     refs_uploaded=()
     diffs_uploaded=()
