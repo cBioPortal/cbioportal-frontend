@@ -1265,15 +1265,16 @@ export class ResultsViewPageStore {
     }, {});
 
     readonly heatmapMolecularProfiles = remoteData<MolecularProfile[]>({
-        await: ()=>[
-            this.molecularProfilesInStudies
+        await: () => [
+            this.molecularProfilesInStudies,
+            this.genesetMolecularProfile
         ],
-        invoke:()=>{
+        invoke: () => {
             const MRNA_EXPRESSION = "MRNA_EXPRESSION";
             const PROTEIN_LEVEL = "PROTEIN_LEVEL";
             const selectedMolecularProfileIds = stringListToSet(this.selectedMolecularProfileIds);
 
-            return Promise.resolve(_.sortBy(_.filter(this.molecularProfilesInStudies.result!, profile=>{
+            const expressionHeatmaps = _.sortBy(_.filter(this.molecularProfilesInStudies.result!, profile=>{
                 return (profile.molecularAlterationType === MRNA_EXPRESSION ||
                         profile.molecularAlterationType === PROTEIN_LEVEL) && profile.showProfileInAnalysisTab;
             }), profile=>{
@@ -1291,7 +1292,14 @@ export class ResultsViewPageStore {
                         return 3;
                     }
                 }
-            }));
+            });
+            const genesetMolecularProfile = this.genesetMolecularProfile.result!;
+            const genesetHeatmaps = (
+                genesetMolecularProfile.isApplicable
+                ? [genesetMolecularProfile.value]
+                : []
+            );
+            return Promise.resolve(expressionHeatmaps.concat(genesetHeatmaps));
         }
     });
 
