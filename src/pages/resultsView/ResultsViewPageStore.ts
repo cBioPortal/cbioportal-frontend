@@ -1274,25 +1274,33 @@ export class ResultsViewPageStore {
             const PROTEIN_LEVEL = "PROTEIN_LEVEL";
             const selectedMolecularProfileIds = stringListToSet(this.selectedMolecularProfileIds);
 
-            const expressionHeatmaps = _.sortBy(_.filter(this.molecularProfilesInStudies.result!, profile=>{
-                return (profile.molecularAlterationType === MRNA_EXPRESSION ||
-                        profile.molecularAlterationType === PROTEIN_LEVEL) && profile.showProfileInAnalysisTab;
-            }), profile=>{
-                // Sort order: selected and mrna, selected and protein, unselected and mrna, unselected and protein
-                if (profile.molecularProfileId in selectedMolecularProfileIds) {
-                    if (profile.molecularAlterationType === MRNA_EXPRESSION) {
-                        return 0;
-                    } else if (profile.molecularAlterationType === PROTEIN_LEVEL) {
-                        return 1;
-                    }
-                } else {
-                    if (profile.molecularAlterationType === MRNA_EXPRESSION) {
-                        return 2;
-                    } else if (profile.molecularAlterationType === PROTEIN_LEVEL) {
-                        return 3;
+            const expressionHeatmaps = _.sortBy(
+                _.filter(
+                    this.molecularProfilesInStudies.result!,
+                    ({showProfileInAnalysisTab, molecularAlterationType}) => (
+                        showProfileInAnalysisTab && (
+                            molecularAlterationType === MRNA_EXPRESSION ||
+                            molecularAlterationType === PROTEIN_LEVEL
+                        )
+                    )
+                ),
+                profile => {
+                    // Sort order: selected and mrna, selected and protein, unselected and mrna, unselected and protein
+                    if (profile.molecularProfileId in selectedMolecularProfileIds) {
+                        if (profile.molecularAlterationType === MRNA_EXPRESSION) {
+                            return 0;
+                        } else if (profile.molecularAlterationType === PROTEIN_LEVEL) {
+                            return 1;
+                        }
+                    } else {
+                        if (profile.molecularAlterationType === MRNA_EXPRESSION) {
+                            return 2;
+                        } else if (profile.molecularAlterationType === PROTEIN_LEVEL) {
+                            return 3;
+                        }
                     }
                 }
-            });
+            );
             const genesetMolecularProfile = this.genesetMolecularProfile.result!;
             const genesetHeatmaps = (
                 genesetMolecularProfile.isApplicable
