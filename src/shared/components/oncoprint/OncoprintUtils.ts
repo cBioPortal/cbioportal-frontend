@@ -285,10 +285,13 @@ export function makeHeatmapTracksMobxPromise(oncoprint:ResultsViewOncoprint, sam
                             trackGroup.genes.delete(gene);
                             if (!trackGroup.genes.size) {
                                 molecularProfileIdToHeatmapTracks.delete(molecularProfileId);
-                                if (oncoprint.sortMode.type === "heatmap" && oncoprint.sortMode.clusteredHeatmapProfile === molecularProfileId) {
-                                    oncoprint.sortByData();
-                                }
                             }
+                        }
+                        if (!molecularProfileIdToHeatmapTracks.has(molecularProfileId)
+                            && oncoprint.sortMode.type === "heatmap"
+                            && oncoprint.sortMode.clusteredHeatmapProfile === molecularProfileId
+                        ) {
+                            oncoprint.sortByData();
                         }
                     })
                 };
