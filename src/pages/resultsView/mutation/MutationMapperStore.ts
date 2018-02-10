@@ -7,7 +7,7 @@ import {computed, observable} from "mobx";
 import {remoteData} from "shared/api/remoteData";
 import {labelMobxPromises, MobxPromise, cached} from "mobxpromise";
 import {IOncoKbData, IOncoKbDataWrapper} from "shared/model/OncoKB";
-import {IHotspotData} from "shared/model/CancerHotspots";
+import {IHotspotIndex} from "shared/model/CancerHotspots";
 import {IPdbChain, PdbAlignmentIndex} from "shared/model/Pdb";
 import {ICivicGene, ICivicVariant} from "shared/model/Civic";
 import PdbPositionMappingCache from "shared/cache/PdbPositionMappingCache";
@@ -15,7 +15,7 @@ import ResidueMappingCache from "shared/cache/ResidueMappingCache";
 import {calcPdbIdNumericalValue, mergeIndexedPdbAlignments} from "shared/lib/PdbUtils";
 import {lazyMobXTableSort} from "shared/components/lazyMobXTable/LazyMobXTable";
 import {
-    indexHotspotData, fetchHotspotsData, fetchCosmicData, fetchOncoKbData,
+    fetchCosmicData, fetchOncoKbData,
     fetchMutationData, generateUniqueSampleKeyToTumorTypeMap, generateDataQueryFilter,
     ONCOKB_DEFAULT, fetchPdbAlignmentData, fetchSwissProtAccession, fetchUniprotId, indexPdbAlignmentData,
     fetchPfamDomainData, fetchCivicGenes, fetchCivicVariants, IDataQueryFilter, fetchCanonicalTranscript,
@@ -52,7 +52,7 @@ export class MutationMapperStore {
                 public studiesForSamplesWithoutCancerTypeClinicalData: MobxPromise<CancerStudy[]>,
                 private samplesWithoutCancerTypeClinicalData: MobxPromise<Sample[]>,
                 public germlineConsentedSamples:MobxPromise<SampleIdentifier[]>,
-                public indexedHotspotData:MobxPromise<IHotspotData|undefined>,
+                public indexedHotspotData:MobxPromise<IHotspotIndex|undefined>,
                 public uniqueSampleKeyToTumorType:{[uniqueSampleKey:string]:string},
                 public oncoKbData:IOncoKbDataWrapper
     )
