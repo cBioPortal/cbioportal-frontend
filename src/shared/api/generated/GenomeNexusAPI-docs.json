@@ -12,7 +12,7 @@
       "url": "https://github.com/cBioPortal/genome-nexus/blob/master/LICENSE"
     }
   },
-  "basePath": "/",
+  "basePath": "/beta",
   "tags": [
     {
       "name": "info-controller",
