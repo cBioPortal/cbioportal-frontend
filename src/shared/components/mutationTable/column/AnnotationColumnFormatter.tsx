@@ -9,11 +9,11 @@ import OncoKB from "shared/components/annotation/OncoKB";
 import Civic from "shared/components/annotation/Civic";
 import {IOncoKbData, IOncoKbDataWrapper} from "shared/model/OncoKB";
 import {IMyCancerGenomeData, IMyCancerGenome} from "shared/model/MyCancerGenome";
-import {IHotspotData} from "shared/model/CancerHotspots";
+import {IHotspotIndex} from "shared/model/CancerHotspots";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {IndicatorQueryResp, Query} from "shared/api/generated/OncoKbAPI";
 import {generateQueryVariantId, generateQueryVariant} from "shared/lib/OncoKbUtils";
-import {isHotspot, is3dHotspot} from "shared/lib/AnnotationUtils";
+import {is3dHotspot, isRecurrentHotspot} from "shared/lib/AnnotationUtils";
 import {ICivicVariant, ICivicGene, ICivicEntry, ICivicVariantData, ICivicGeneData, ICivicGeneDataWrapper, ICivicVariantDataWrapper} from "shared/model/Civic.ts";
 import {buildCivicEntry} from "shared/lib/CivicUtils";
 
@@ -22,7 +22,7 @@ export interface IAnnotationColumnProps {
     enableMyCancerGenome: boolean;
     enableHotspot: boolean;
     enableCivic: boolean;
-    hotspots?: IHotspotData;
+    hotspots?: IHotspotIndex;
     myCancerGenomeData?: IMyCancerGenomeData;
     oncoKbData?: IOncoKbDataWrapper;
     oncoKbEvidenceCache?: OncoKbEvidenceCache;
@@ -67,7 +67,7 @@ export default class AnnotationColumnFormatter
 
     public static getData(rowData:Mutation[]|undefined,
                           oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean},
-                          hotspotsData?:IHotspotData,
+                          hotspots?:IHotspotIndex,
                           myCancerGenomeData?:IMyCancerGenomeData,
                           oncoKbData?:IOncoKbDataWrapper,
                           civicGenes?:ICivicGeneDataWrapper,
@@ -93,10 +93,8 @@ export default class AnnotationColumnFormatter
                 hasCivicVariants: true,
                 myCancerGenomeLinks: myCancerGenomeData ?
                     AnnotationColumnFormatter.getMyCancerGenomeLinks(mutation, myCancerGenomeData) : [],
-                isHotspot: hotspotsData ?
-                    isHotspot(mutation, hotspotsData.single) : false,
-                is3dHotspot: hotspotsData ?
-                    is3dHotspot(mutation, hotspotsData.clustered) : false
+                isHotspot: hotspots ? isRecurrentHotspot(mutation, hotspots) : false,
+                is3dHotspot: hotspots ? is3dHotspot(mutation, hotspots) : false
             };
             if (oncoKbGeneExist) {
                 if (oncoKbData && oncoKbData.result && oncoKbData.status === "complete") {
@@ -214,13 +212,13 @@ export default class AnnotationColumnFormatter
 
     public static sortValue(data:Mutation[],
                             oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean},
-                            hotspotsData?:IHotspotData,
+                            hotspots?: IHotspotIndex,
                             myCancerGenomeData?:IMyCancerGenomeData,
                             oncoKbData?: IOncoKbDataWrapper,
                             civicGenes?: ICivicGeneDataWrapper,
                             civicVariants?: ICivicVariantDataWrapper):number[] {
         const annotationData:IAnnotation = AnnotationColumnFormatter.getData(
-            data, oncoKbAnnotatedGenes, hotspotsData, myCancerGenomeData, oncoKbData, civicGenes, civicVariants);
+            data, oncoKbAnnotatedGenes, hotspots, myCancerGenomeData, oncoKbData, civicGenes, civicVariants);
 
         return _.flatten([
             OncoKB.sortValue(annotationData.oncoKbIndicator),
@@ -232,14 +230,14 @@ export default class AnnotationColumnFormatter
 
     public static download(data:Mutation[]|undefined,
                            oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean},
-                           hotspotsData?:IHotspotData,
+                           hotspots?:IHotspotIndex,
                            myCancerGenomeData?:IMyCancerGenomeData,
                            oncoKbData?:IOncoKbDataWrapper,
                            civicGenes?:ICivicGeneDataWrapper,
                            civicVariants?:ICivicVariantDataWrapper)
     {
         const annotationData:IAnnotation = AnnotationColumnFormatter.getData(
-            data, oncoKbAnnotatedGenes, hotspotsData, myCancerGenomeData, oncoKbData, civicGenes, civicVariants);
+            data, oncoKbAnnotatedGenes, hotspots, myCancerGenomeData, oncoKbData, civicGenes, civicVariants);
 
         return [
             `OncoKB: ${OncoKB.download(annotationData.oncoKbIndicator)}`,
