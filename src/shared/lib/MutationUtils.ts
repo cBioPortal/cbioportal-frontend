@@ -230,3 +230,14 @@ export function somaticMutationRate(hugoGeneSymbol: string, mutations: Mutation[
         return 0;
     }
 }
+
+export function extractGenomicLocation(mutation: Mutation)
+{
+    return {
+        chromosome: mutation.gene.chromosome.replace("chr", ""),
+        start: mutation.startPosition,
+        end: mutation.endPosition,
+        referenceAllele: mutation.referenceAllele,
+        variantAllele: mutation.variantAllele
+    };
+}
