@@ -100,6 +100,27 @@ export function groupMutationsByProteinStartPos(mutationData: Mutation[][]): {[p
     return map;
 }
 
+export function groupMutationsByGeneAndPatientAndProteinChange(mutations: Mutation[]): {[key: string]: Mutation[]}
+{
+    // key = <gene>_<patient>_<proteinChange>
+    const map: {[key: string]: Mutation[]} = {};
+
+    for (const mutation of mutations)
+    {
+        const key = `${mutation.gene.hugoGeneSymbol}_${mutation.patientId}_${mutation.proteinChange}`;
+        map[key] = map[key] || [];
+        map[key].push(mutation);
+    }
+
+    return map;
+}
+
+
+export function countUniqueMutations(mutations: Mutation[])
+{
+    return Object.keys(groupMutationsByGeneAndPatientAndProteinChange(mutations)).length;
+}
+
 /**
  * Protein start positions for the mutations falling between a specific start and end position range
  */
