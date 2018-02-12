@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Router } from 'react-router';
+import { RouterProps } from 'react-router';
 import { expect } from 'chai';
 import { shallow, ShallowWrapper } from 'enzyme';
 
@@ -21,7 +21,7 @@ describe('<App />', () => {
     });
 
     it('passes a history prop', () => {
-        const props = wrapper.find('Router').props() as Router.RouterProps;
+        const props = wrapper.find('Router').props() as RouterProps;
 
         expect(props.history).to.exist;
     });
