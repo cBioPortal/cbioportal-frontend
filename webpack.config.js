@@ -18,6 +18,17 @@ if (process.env.PATH.indexOf('heroku') === -1) {
     version = JSON.stringify(gitRevisionPlugin.version())
 }
 
+function cleanUrl(url) {
+    if (typeof url === 'string') {
+        // we need to support legacy configuration values
+        let cleanUrl = url.replace(/^http[s]?:\/\//,''); // get rid of protocol
+        cleanUrl = cleanUrl.replace(/\/$/,""); // get rid of trailing slashes
+        return cleanUrl;
+    } else {
+        throw `Not a url: ${url}`
+    }
+}
+
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
 
@@ -96,8 +107,10 @@ var config = {
 
     plugins: [
         new webpack.DefinePlugin({
-            'VERSION': version,
-            'COMMIT': commit
+            'VERSION': version, 
+            'COMMIT': commit,
+            'ENV_CBIOPORTAL_URL': process.env.CBIOPORTAL_URL? JSON.stringify(cleanUrl(process.env.CBIOPORTAL_URL)) : '"unknown"',
+            'ENV_GENOME_NEXUS_URL': process.env.GENOME_NEXUS_URL? JSON.stringify(cleanUrl(process.env.GENOME_NEXUS_URL)) : '"unkown"',
         }),
         new HtmlWebpackPlugin({cache: false, template: 'my-index.ejs'}),
         WebpackFailPlugin,
@@ -475,7 +488,7 @@ config.resolve.alias = {
     reducers: join(src, 'redux/modules'),
     pages: join(src, 'pages'),
     shared: join(src, 'shared'),
-    appConfig: path.join(__dirname + '/src', 'config', process.env.NODE_ENV + '.config')
+    appConfig: path.join(__dirname + '/src', 'config', ((process.env.NODE_ENV === 'test')? 'test.' : '') + 'config')
 };
 // end Roots
 
