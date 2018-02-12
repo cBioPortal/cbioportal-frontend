@@ -13,7 +13,7 @@ import {computed, observable, action} from "mobx";
 import _ from "lodash";
 import svgToPdfDownload from "shared/lib/svgToPdfDownload";
 import {longestCommonStartingSubstring} from "shared/lib/StringUtils";
-import {getColorForProteinImpactType, IProteinImpactTypeColors} from "shared/lib/MutationUtils";
+import {countUniqueMutations, getColorForProteinImpactType, IProteinImpactTypeColors} from "shared/lib/MutationUtils";
 import {generatePfamDomainColorMap} from "shared/lib/PfamUtils";
 import {getMutationAlignerUrl} from "shared/api/urls";
 import ReactDOM from "react-dom";
@@ -93,8 +93,9 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
         return startStr + proteinChanges.join("/");
     }
 
-    private lollipopTooltip(mutationsAtPosition:Mutation[]):JSX.Element {
-        const count = mutationsAtPosition.length;
+    private lollipopTooltip(mutationsAtPosition:Mutation[], countsByPosition:{[pos: number]: number}):JSX.Element {
+        const codon = mutationsAtPosition[0].proteinPosStart;
+        const count = countsByPosition[codon];
         const mutationStr = "mutation" + (count > 1 ? "s" : "");
         const label = this.lollipopLabel(mutationsAtPosition);
         return (
@@ -118,21 +119,37 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
         return ret;
     }
 
+    @computed private get uniqueMutationCountsByPosition(): {[pos: number]: number} {
+        const map: {[pos: number]: number} = {};
+
+        Object.keys(this.mutationsByPosition).forEach(pos => {
+            const position = parseInt(pos, 10);
+            // for each position multiple mutations for the same patient is counted only once
+            map[position] = countUniqueMutations(this.mutationsByPosition[position]);
+        });
+
+        return map;
+    }
+
     @computed private get lollipops():LollipopSpec[] {
         if (Object.keys(this.mutationsByPosition).length === 0) {
             return [];
         }
 
+        const countsByPosition = this.uniqueMutationCountsByPosition;
+
         // positionMutations: Mutation[][], in descending order of mutation count
         const positionMutations = Object.keys(this.mutationsByPosition)
             .map(position=>this.mutationsByPosition[parseInt(position,10)])
-            .sort((x,y)=>(x.length < y.length ? 1 : -1));
+            .sort((x,y)=>(countsByPosition[x[0].proteinPosStart] < countsByPosition[y[0].proteinPosStart] ? 1 : -1));
 
         // maxCount: max number of mutations at a position
-        const maxCount = positionMutations[0].length;
+        const maxCount = countsByPosition[positionMutations[0][0].proteinPosStart];
 
         // numLabelCandidates: number of positions with maxCount mutations
-        let numLabelCandidates = positionMutations.findIndex(mutations=>(mutations.length !== maxCount));
+        let numLabelCandidates = positionMutations.findIndex(
+            mutations => (countsByPosition[mutations[0].proteinPosStart] !== maxCount));
+
         if (numLabelCandidates === -1) {
             numLabelCandidates = positionMutations.length;
         }
@@ -154,6 +171,8 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
         for (let i=0; i<positionMutations.length; i++) {
             const mutations = positionMutations[i];
             const codon = mutations[0].proteinPosStart;
+            const mutationCount = countsByPosition[codon];
+
             if (isNaN(codon) ||
                 codon < 0 ||
                 (this.props.store.canonicalTranscript.isComplete &&
@@ -165,15 +184,15 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                 continue;
             }
             let label:string|undefined;
-            if (i < numLabelsToShow && mutations.length >= minMutationsToShowLabel) {
+            if (i < numLabelsToShow && mutationCount >= minMutationsToShowLabel) {
                 label = this.lollipopLabel(mutations);
             } else {
                 label = undefined;
             }
             ret.push({
                 codon,
-                count: mutations.length,
-                tooltip:this.lollipopTooltip(mutations),
+                count: mutationCount,
+                tooltip: this.lollipopTooltip(mutations, countsByPosition),
                 color: getColorForProteinImpactType(mutations, this.props),
                 label
             });

@@ -180,11 +180,11 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                     </VictoryChart>
                 </div>
                 {this.tooltipModel &&
-                    <Popover arrowOffsetTop={48} positionLeft={this.tooltipModel.x + 15}
+                    <Popover arrowOffsetTop={48} className={styles.Tooltip} positionLeft={this.tooltipModel.x + 15}
                              { ...{container:this} }
                         positionTop={this.tooltipModel.y - 60}
                         onMouseEnter={this.tooltipMouseEnter} onMouseLeave={this.tooltipMouseLeave}>
-                        <div className={styles.Tooltip}>
+                        <div>
                             Patient ID: <a href={'/case.do#/patient?caseId=' + this.tooltipModel.datum.patientId + '&studyId=' +
                                 this.tooltipModel.datum.studyId} target="_blank">{this.tooltipModel.datum.patientId}</a><br />
                             {this.props.yLabelTooltip}: {(this.tooltipModel.datum.y).toFixed(2)}%<br />
