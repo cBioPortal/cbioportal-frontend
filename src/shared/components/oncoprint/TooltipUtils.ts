@@ -28,11 +28,13 @@ function makeGenePanelPopupLink(gene_panel_id:string) {
             client.getGenePanelUsingGET({ genePanelId: gene_panel_id }).then((panel:GenePanel)=>{
                 const genes = panel.genes.map(function(g) { return g.hugoGeneSymbol; }).sort();
                 const popup = open("", "_blank", "width=500,height=500");
-                const div = popup.document.createElement("div");
-                popup.document.body.appendChild(div);
+                if (popup) {
+                    const div = popup.document.createElement("div");
+                    popup.document.body.appendChild(div);
 
-                $(`<h3 style="text-align:center;">${gene_panel_id}</h3><br>`).appendTo(div);
-                $(`<span>${genes.join("<br>")}</span>`).appendTo(div);
+                    $(`<h3 style="text-align:center;">${gene_panel_id}</h3><br>`).appendTo(div);
+                    $(`<span>${genes.join("<br>")}</span>`).appendTo(div);
+                }
             });
         });
     });
