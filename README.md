@@ -36,6 +36,10 @@ npm run buildDLL:dev
 
 To start dev server with hot reload enabled
 ```
+# set the environment variables you want based on what branch you're branching
+# from
+export BRANCH_ENV=master # or rc if branching from rc
+# export any custom external API URLs by editing env/custom.sh
 npm run start
 ```
 
@@ -74,6 +78,10 @@ the typescipt client, one can hange the `API_ROOT` variable for development in
 endpoint works with the checked in client by changing the API URL in
 [package.json](package.json) and running:
 ```
+# set the environment variables you want based on what branch you're branching
+# from
+export BRANCH_ENV=master # or rc if branching from rc
+# export any custom external API URLs by editing env/custom.sh
 npm run updateAPI
 npm run test
 ```
@@ -117,12 +125,18 @@ webdriver-manager start
 In one terminal run frontend (this will get mounted inside whatever
 `CBIOPORTAL_URL` is pointing to)
 ```bash
+# set the environment variables you want based on what branch you're branching
+# from
+export BRANCH_ENV=master # or rc if branching from rc
+# export any custom external API URLs by editing env/custom.sh
 npm run start
 ```
 In another terminal run the e2e tests
 ```bash
-# get CBIOPORTAL backend url from my-index.ejs
-eval "$(./scripts/env_vars.sh)"
+# set the environment variables you want based on what branch you're branching
+# from
+export BRANCH_ENV=master # or rc if branching from rc
+# export any custom external API URLs in env/custom.sh
 cd end-to-end-tests
 npm install
 npm run test-webdriver-manager

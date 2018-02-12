@@ -6,6 +6,8 @@ const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
 describe('homepage', function() {
 
+    this.retries(2);
+
     it('it should show dev mode when testing', function() {
         browser.url(CBIOPORTAL_URL);
 
@@ -162,10 +164,13 @@ describe('homepage', function() {
 
 describe('patient page', function(){
 
+    this.retries(2);
+
     it('oncokb indicators show up and hovering produces oncocard', function(){
 
         browser.url(`${CBIOPORTAL_URL}/case.do#/patient?studyId=ucec_tcga_pub&caseId=TCGA-BK-A0CC`);
-        browser.setViewportSize({ height:1400, width:1000 });
+        // browser.setViewportSize({ height:1400, width:1000 });
+
 
         browser.waitUntil( function(){
             let el = $('.tab-content table td span');
@@ -191,6 +196,9 @@ describe('patient page', function(){
 });
 
 describe('cross cancer query', function() {
+
+    this.retries(2);
+
     it('should show cross cancer bar chart with TP53 in title when selecting multiple studies and querying for TP53', function() {
         browser.url(`${CBIOPORTAL_URL}`);
         browser.setViewportSize({ height:1400, width:1000 });
@@ -222,6 +230,9 @@ describe('cross cancer query', function() {
 });
 
 describe('single study query', function() {
+
+    this.retries(2);
+
     before(()=>{
         browser.url(CBIOPORTAL_URL);
 
@@ -328,6 +339,8 @@ describe('single study query', function() {
 
 
 describe('oncoprint', function() {
+
+    this.retries(2);
 
     before(()=>{
         browser.url(CBIOPORTAL_URL);
@@ -752,8 +765,10 @@ describe('oncoprint', function() {
     });
 });
 
-describe('case set selection in front page query form', ()=>{
+describe('case set selection in front page query form', function(){
     var selectedCaseSet_sel = 'div[data-test="CaseSetSelector"] span.Select-value-label[aria-selected="true"]';
+
+    this.retries(2);
 
     beforeEach(function() {
         var url = CBIOPORTAL_URL;
@@ -909,8 +924,10 @@ describe('case set selection in front page query form', ()=>{
     });
 });
 
-describe('case set selection in modify query form', ()=>{
+describe('case set selection in modify query form', function(){
     var selectedCaseSet_sel = 'div[data-test="CaseSetSelector"] span.Select-value-label[aria-selected="true"]';
+
+    this.retries(2);
 
     beforeEach(function(){
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_rppa&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`;
@@ -999,7 +1016,10 @@ describe('case set selection in modify query form', ()=>{
     });
 });
 
-describe('genetic profile selection in modify query form', ()=>{
+describe('genetic profile selection in modify query form', function(){
+
+    this.retries(2);
+
     beforeEach(function(){
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=chol_tcga&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=chol_tcga_all&gene_list=EGFR&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=chol_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=chol_tcga_gistic&genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION=chol_tcga_rppa_Zscores`;
         browser.url(url);
