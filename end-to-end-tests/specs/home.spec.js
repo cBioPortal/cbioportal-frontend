@@ -165,7 +165,8 @@ describe('patient page', function(){
     it('oncokb indicators show up and hovering produces oncocard', function(){
 
         browser.url(`${CBIOPORTAL_URL}/case.do#/patient?studyId=ucec_tcga_pub&caseId=TCGA-BK-A0CC`);
-        browser.setViewportSize({ height:1400, width:1000 });
+        // browser.setViewportSize({ height:1400, width:1000 });
+
 
         browser.waitUntil( function(){
             let el = $('.tab-content table td span');

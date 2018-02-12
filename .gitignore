@@ -25,4 +25,4 @@ target
 end-to-end-tests/screenshots/diff
 end-to-end-tests/screenshots/screen
 wdio/browserstack.txt
-
+env/custom.sh
