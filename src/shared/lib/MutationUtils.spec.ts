@@ -1,5 +1,5 @@
 import {
-    somaticMutationRate, germlineMutationRate
+    somaticMutationRate, germlineMutationRate, countUniqueMutations, groupMutationsByGeneAndPatientAndProteinChange
 } from "./MutationUtils";
 import * as _ from 'lodash';
 import { assert, expect } from 'chai';
@@ -12,6 +12,7 @@ describe('MutationUtils', () => {
     let somaticMutations: Mutation[];
     let germlineMutations: Mutation[];
     let molecularProfileIdToMolecularProfile:{[molecularProfileId:string]:MolecularProfile};
+    let mutationsToCount: Mutation[];
 
     before(()=>{
         molecularProfileIdToMolecularProfile = {
@@ -68,6 +69,98 @@ describe('MutationUtils', () => {
                 molecularProfileId:"GP1"
              })
         ];
+        mutationsToCount = [
+            initMutation({ // mutation
+                sampleId: "P1_sample1",
+                patientId: "P1",
+                gene: {
+                    hugoGeneSymbol: "TP53",
+                },
+                proteinPosStart: 66,
+                proteinChange: "D66B"
+
+            }),
+            initMutation({ // mutation
+                sampleId: "P1_sample2",
+                patientId: "P1",
+                gene: {
+                    hugoGeneSymbol: "TP53",
+                },
+                proteinPosStart: 66,
+                proteinChange: "D66B"
+            }),
+            initMutation({ // mutation
+                sampleId: "P2_sample1",
+                patientId: "P2",
+                gene: {
+                    hugoGeneSymbol: "TP53",
+                },
+                proteinPosStart: 66,
+                proteinChange: "D66B"
+            }),
+            initMutation({ // mutation
+                sampleId: "P2_sample2",
+                patientId: "P2",
+                gene: {
+                    hugoGeneSymbol: "TP53",
+                },
+                proteinPosStart: 66,
+                proteinChange: "D66B"
+            }),
+            initMutation({ // mutation
+                sampleId: "P3_sample1",
+                patientId: "P3",
+                gene: {
+                    hugoGeneSymbol: "TP53",
+                },
+                proteinPosStart: 66,
+                proteinChange: "D66B"
+            }),
+            initMutation({ // mutation
+                sampleId: "P4_sample1",
+                patientId: "P4",
+                gene: {
+                    hugoGeneSymbol: "TP53",
+                },
+                proteinPosStart: 666,
+                proteinChange: "D666C"
+            }),
+            initMutation({ // mutation
+                sampleId: "P4_sample2",
+                patientId: "P4",
+                gene: {
+                    hugoGeneSymbol: "TP53",
+                },
+                proteinPosStart: 666,
+                proteinChange: "D666F"
+            }),
+        ];
+    });
+
+    describe('groupMutationsByGeneAndPatientAndProteinChange', () => {
+        it("groups mutations correctly by gene, patient, and protein change", () => {
+            const grouped = groupMutationsByGeneAndPatientAndProteinChange(mutationsToCount);
+
+            assert.equal(grouped["TP53_P1_D66B"].length, 2,
+                "There should be 2 mutations for TP53_P1_D66B");
+            assert.equal(grouped["TP53_P2_D66B"].length, 2,
+                "There should be 2 mutations for TP53_P2_D66B");
+            assert.equal(grouped["TP53_P3_D66B"].length, 1,
+                "There should be 1 mutation for TP53_P3_D66B");
+            assert.equal(grouped["TP53_P4_D666C"].length, 1,
+                "There should be 1 mutation for TP53_P4_D666C");
+            assert.equal(grouped["TP53_P4_D666F"].length, 1,
+                "There should be 1 mutation for TP53_P4_D666F");
+        });
+    });
+
+    describe('countUniqueMutations', () => {
+        it("counts unique mutations correctly", () => {
+            const count = countUniqueMutations(mutationsToCount);
+
+            assert.equal(count, 5,
+                "total number of unique mutations should be 5");
+        });
     });
 
     describe('somaticMutationRate', () => {
