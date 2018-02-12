@@ -8,7 +8,7 @@ if [[ "$CIRCLECI" ]]; then
     # on circle ci determine env variables based on branch or in case of PR
     # what branch the PR is pointing to
     if [[ "$CIRCLE_PULL_REQUEST" ]]; then
-        BRANCH=$(curl "${CIRCLE_PULL_REQUEST}" | grep -oE 'cBioPortal/cbioportal-frontend:[^"]*' | cut -d: -f2)
+        BRANCH=$(curl "${CIRCLE_PULL_REQUEST}" | grep -oE 'cBioPortal/cbioportal-frontend:[^"]*' | cut -d: -f2 | head -1)
     else
         BRANCH=$CIRCLE_BRANCH
     fi
