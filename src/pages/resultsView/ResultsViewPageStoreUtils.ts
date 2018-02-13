@@ -1,8 +1,12 @@
-import {GeneMolecularData, MolecularProfile, Mutation} from "../../shared/api/generated/CBioPortalAPI";
+import {
+    Gene, GeneMolecularData, GenePanelData, MolecularProfile,
+    Mutation, Patient, Sample
+} from "../../shared/api/generated/CBioPortalAPI";
 import {action} from "mobx";
 import {getSimplifiedMutationType} from "../../shared/lib/oql/accessors";
-import {AnnotatedGeneMolecularData, AnnotatedMutation} from "./ResultsViewPageStore";
+import {AnnotatedGeneMolecularData, AnnotatedMutation, GenePanelInformation} from "./ResultsViewPageStore";
 import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
+import _ from "lodash";
 
 type CustomDriverAnnotationReport = {
     hasBinary: boolean,
@@ -83,6 +87,50 @@ export function getOncoKbOncogenic(response:IndicatorQueryResp):string {
     } else {
         return "";
     }
+}
+
+export function computeGenePanelInformation(
+    genePanelData:GenePanelData[],
+    samples: Sample[],
+    patients: Patient[],
+    genes:Gene[]
+):GenePanelInformation {
+    const entrezToGene = _.keyBy(genes, gene=>gene.entrezGeneId);
+    const sampleInfo:GenePanelInformation["samples"] = _.reduce(samples, (map:GenePanelInformation["samples"], sample)=>{
+        map[sample.uniqueSampleKey] = {
+            sequencedGenes: {},
+            wholeExomeSequenced: false
+        };
+        return map;
+    }, {});
+
+    const patientInfo:GenePanelInformation["patients"] = _.reduce(patients, (map:GenePanelInformation["patients"], patient)=>{
+        map[patient.uniquePatientKey] = {
+            sequencedGenes: {},
+            wholeExomeSequenced: false
+        };
+        return map;
+    }, {});
+    for (const gpData of genePanelData) {
+        const sampleSequencingInfo = sampleInfo[gpData.uniqueSampleKey];
+        const patientSequencingInfo = patientInfo[gpData.uniquePatientKey];
+        const hugo = entrezToGene[gpData.entrezGeneId].hugoGeneSymbol;
+
+        if (gpData.genePanelId !== undefined) {
+            sampleSequencingInfo.sequencedGenes[hugo] = sampleSequencingInfo.sequencedGenes[hugo] || [];
+            sampleSequencingInfo.sequencedGenes[hugo].push(gpData);
+
+            patientSequencingInfo.sequencedGenes[hugo] = patientSequencingInfo.sequencedGenes[hugo] || [];
+            patientSequencingInfo.sequencedGenes[hugo].push(gpData);
+        }
+
+        sampleSequencingInfo.wholeExomeSequenced = gpData.wholeExomeSequenced || sampleSequencingInfo.wholeExomeSequenced;
+        patientSequencingInfo.wholeExomeSequenced = gpData.wholeExomeSequenced || patientSequencingInfo.wholeExomeSequenced;
+    }
+    return {
+        samples: sampleInfo,
+        patients: patientInfo
+    };
 }
 
 export function annotateMolecularDatum(
