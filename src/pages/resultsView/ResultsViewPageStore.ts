@@ -62,7 +62,7 @@ import {QueryStore} from "shared/components/query/QueryStore";
 import {
     annotateMolecularDatum, getOncoKbOncogenic,
     computeCustomDriverAnnotationReport, computePutativeDriverAnnotatedMutations,
-    initializeCustomDriverAnnotationSettings
+    initializeCustomDriverAnnotationSettings, computeGenePanelInformation
 } from "./ResultsViewPageStoreUtils";
 
 export type SamplesSpecificationElement = {studyId: string, sampleId: string, sampleListId: undefined} |
@@ -518,42 +518,7 @@ export class ResultsViewPageStore {
             } else {
                 results = [];
             }
-            results = []; // temporarily disable gene panels to work around run time error
-            console.log("TODO: ADAM SHOULD FIX THE ABOVE!")
-            const entrezToGene = _.keyBy(this.genes.result, gene=>gene.entrezGeneId);
-            const samples:GenePanelInformation["samples"] = {};
-            const patients:GenePanelInformation["patients"] = {};
-            for (const sample of this.samples.result!) {
-                samples[sample.uniqueSampleKey] = {
-                    sequencedGenes: {},
-                    wholeExomeSequenced: !!studyToMutationMolecularProfile[sample.studyId] // only assume WXS if theres a mutation profile to query for this sample
-                };
-            }
-            for (const patient of this.patients.result!) {
-                patients[patient.uniquePatientKey] = {
-                    sequencedGenes: {},
-                    wholeExomeSequenced: !!studyToMutationMolecularProfile[patient.studyId] // only assume WXS if theres a mutation profile to query for this patient
-                };
-            }
-            console.log("TODO: ADAM UNCOMMENT BELOW!")
-            // for (const gpData of results) {
-            //     const sampleSequencingInfo = samples[gpData.uniqueSampleKey];
-            //     const patientSequencingInfo = patients[gpData.uniquePatientKey];
-            //     for (const entrez of gpData.entrezGeneIds) {
-            //         const hugo = entrezToGene[entrez].hugoGeneSymbol;
-            //         sampleSequencingInfo.sequencedGenes[hugo] = sampleSequencingInfo.sequencedGenes[hugo] || [];
-            //         sampleSequencingInfo.sequencedGenes[hugo].push(gpData);
-            //         sampleSequencingInfo.wholeExomeSequenced = false;
-            //
-            //         patientSequencingInfo.sequencedGenes[hugo] = patientSequencingInfo.sequencedGenes[hugo] || [];
-            //         patientSequencingInfo.sequencedGenes[hugo].push(gpData);
-            //         patientSequencingInfo.wholeExomeSequenced = false;
-            //     }
-            // }
-            return {
-                samples,
-                patients
-            };
+            return computeGenePanelInformation(results, this.samples.result!, this.patients.result!, this.genes.result!);
         }
     });
 
