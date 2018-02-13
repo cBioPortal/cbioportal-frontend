@@ -24,45 +24,45 @@ describe('homepage', function() {
         browser.url(CBIOPORTAL_URL);
 
         var studies = $('[data-test="cancerTypeListContainer"] > ul > ul');
-        
+
         studies.waitForExist(10000); // same as `browser.waitForExist('.notification', 10000)`
 
         expect([27, 29, 31]).to.include(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length);
-        
+
     });
 
 
     it('should filter study list according to filter text input', function () {
-        
+
         var input = $(".autosuggest input[type=text]");
 
-        input.waitForExist(10000); 
+        input.waitForExist(10000);
 
         input.setValue('tract');
-        
+
         browser.pause(500);
 
         assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 2);
-        
+
     });
-    
+
     it('when a single study is selected, a case set selector is provided', function(){
 
         var caseSetSelectorClass = '[data-test="CaseSetSelector"]';
-        
+
         var checkBox = $('[data-test="StudySelect"]');
 
         checkBox.waitForExist(10000);
-        
+
         assert.equal(browser.isExisting(caseSetSelectorClass), false);
-        
+
         browser.click('[data-test="StudySelect"]');
 
         var caseSetSelector = $(caseSetSelectorClass);
         caseSetSelector.waitForExist(10000);
-        
+
         assert.equal(browser.isExisting(caseSetSelectorClass), true);
-        
+
     });
 
 
@@ -205,7 +205,7 @@ describe('cross cancer query', function() {
 
         $('[data-test="StudySelect"]').waitForExist(20000);
         var checkBoxes = $$('[data-test="StudySelect"]');
-        
+
         checkBoxes.forEach(function (checkBox, i) {
             // select a proportion of existing studies
             if (i % 20 === 0) {
@@ -246,10 +246,10 @@ describe('single study query', function() {
 
             var input = $(".autosuggest input[type=text]");
 
-            input.waitForExist(10000); 
+            input.waitForExist(10000);
 
             input.setValue('ovarian nature 2011');
-            
+
             browser.pause(500);
 
             // should only be one element
@@ -258,7 +258,7 @@ describe('single study query', function() {
             var checkBox = $('[data-test="StudySelect"]');
 
             checkBox.waitForExist(10000);
-            
+
             browser.click('[data-test="StudySelect"]');
 
             // query BRCA1 and BRCA2
@@ -275,7 +275,7 @@ describe('single study query', function() {
             var text = browser.getText('[data-test="germlineMutationRate"]')
             // check germline mutation rate
             assert(text.search('8.2%' > -1));
-            // check somatic mutation 
+            // check somatic mutation
             var text = browser.getText('[data-test="somaticMutationRate"]')
             assert(text.search('3.5%' > -1));
 
@@ -299,7 +299,7 @@ describe('single study query', function() {
             var checkBoxes = $('.ov_tcga_pub_mutations_datatable_table_gene_checkbox_class');
 
             checkBoxes.waitForExist(10000);
-            
+
             // select one gene and click add checked genes to query
             browser.click('.ov_tcga_pub_mutations_datatable_table_gene_checkbox_class');
             browser.click('#ov_tcga_pub_mutations_datatable_table_update_query_btn');
@@ -307,7 +307,7 @@ describe('single study query', function() {
             // wait for page to load
             $('[data-test="QuerySummaryGeneCount"]').waitForExist(60000);
             var text = browser.getText('[data-test="QuerySummaryGeneCount"]')
-            
+
             // there should be one more gene queried now
             assert(text.search('3' > -1));
         });
@@ -337,6 +337,47 @@ describe('single study query', function() {
     });
 });
 
+describe("results page", function() {
+    before(()=>{
+        browser.url(CBIOPORTAL_URL);
+
+        browser.localStorage('POST', {key: 'localdev', value: 'true'});
+        browser.refresh();
+        browser.setViewportSize({ height:1400, width:1000 });
+    });
+    describe("mutual exclusivity tab", function() {
+        it("should appear in a single study query with multiple genes", function(){
+            browser.url(`${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%2520NRAS%2520BRAF%250APTEN%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`);
+            browser.waitForExist('li a#oncoprint-result-tab', 10000);
+
+            assert(browser.isVisible('li a#mutex-result-tab'));
+        });
+        it("should appear in a multiple study with multiple genes", function(){
+            browser.url(`${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=KRAS%2520NRAS%2520BRAF%250APTEN%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=coadread_tcga_pub%2Ccellline_nci60%2Cacc_tcga`);
+            browser.waitForExist('li a#oncoprint-result-tab', 10000);
+
+            assert(browser.isVisible('li a#mutex-result-tab'));
+        });
+        it("should not appear in a single study query with one gene", function(){
+            browser.url(`${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`);
+            browser.waitForExist('li a#oncoprint-result-tab', 10000);
+            assert(!browser.isVisible('li a#mutex-result-tab'));
+
+            browser.url(`${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`);
+            browser.waitForExist('li a#oncoprint-result-tab', 10000);
+            assert(!browser.isVisible('li a#mutex-result-tab'));
+        });
+        it("should not appear in a multiple study query with one gene", function() {
+            browser.url(`${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=KRAS&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=coadread_tcga_pub%2Ccellline_nci60%2Cacc_tcga`);
+            browser.waitForExist('li a#oncoprint-result-tab', 10000);
+            assert(!browser.isVisible('li a#mutex-result-tab'));
+
+            browser.url(`${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=KRAS%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=coadread_tcga_pub%2Ccellline_nci60%2Cacc_tcga`);
+            browser.waitForExist('li a#oncoprint-result-tab', 10000);
+            assert(!browser.isVisible('li a#mutex-result-tab'));
+        });
+    });
+});
 
 describe('oncoprint', function() {
 
