@@ -278,9 +278,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             get heatmapIsDynamicallyQueried () {
                 return self.heatmapIsDynamicallyQueried;
             },
-            get clusterHeatmapButtonDisabled() {
-                return (self.sortMode.type === "heatmap" &&
-                    self.selectedHeatmapProfile === self.sortMode.clusteredHeatmapProfile);
+            get clusterHeatmapButtonActive() {
+                return self.isClusteredByCurrentSelectedHeatmapProfile;
             },
             get hideClusterHeatmapButton() {
                 const genesetHeatmapProfile: string | undefined = (
@@ -352,6 +351,13 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     componentWillUnmount() {
         this.putativeDriverSettingsReaction();
         this.urlParamsReaction();
+    }
+
+    @action
+    public selectHeatmapProfile(index:number) {
+        onMobxPromise(this.props.store.heatmapMolecularProfiles, (profiles:MolecularProfile[])=>{
+            this.selectedHeatmapProfile = this.props.store.heatmapMolecularProfiles.result![index].molecularProfileId;
+        });
     }
 
     private buildControlsHandlers() {
@@ -462,7 +468,11 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 this.molecularProfileIdToHeatmapTracks.clear();
             }),
             onClickClusterHeatmap:()=>{
-                this.sortMode = {type: "heatmap", clusteredHeatmapProfile: this.selectedHeatmapProfile};
+                if (this.isClusteredByCurrentSelectedHeatmapProfile) {
+                    this.sortByData();
+                } else {
+                    this.sortMode = {type: "heatmap", clusteredHeatmapProfile: this.selectedHeatmapProfile};
+                }
             },
             onClickDownload:(type:string)=>{
                 switch(type) {
@@ -580,6 +590,10 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     @action public sortByData() {
         this.sortMode = {type:"data"};
+    }
+
+    @computed get isClusteredByCurrentSelectedHeatmapProfile() {
+        return (this.sortMode.type === "heatmap" && (this.selectedHeatmapProfile === this.sortMode.clusteredHeatmapProfile));
     }
 
     @computed get clinicalTracksUrlParam() {
