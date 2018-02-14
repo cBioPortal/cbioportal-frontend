@@ -9,11 +9,15 @@ run_and_check_diff() {
     local cmd="$1"
     local files="$2"
     local msg="$3"
+    local return_code=0
 
     eval "$cmd"
     for f in $files; do
-        git diff --quiet $f || (git checkout -- $files && echo -e "${RED}$f $msg${NC}" && exit 1)
+        git diff --quiet $f || (git checkout -- $f && echo -e "${RED}$f $msg${NC}" && exit 1)
+        return_code=$(($return_code + $?))
     done
+
+    return $return_code
 }
 # dir of bash script http://stackoverflow.com/questions/59895
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
