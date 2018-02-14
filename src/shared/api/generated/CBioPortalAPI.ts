@@ -274,8 +274,6 @@ export type GenePanelDataFilter = {
 export type GenePanelMultipleStudyFilter = {
     'entrezGeneIds': Array < number >
 
-        'molecularProfileIds': Array < string >
-
         'sampleMolecularIdentifiers': Array < SampleMolecularIdentifier >
 
 };
