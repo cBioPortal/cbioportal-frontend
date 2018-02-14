@@ -549,7 +549,7 @@ function transitionGenesetHeatmapTrack(
             has_column_spacing: false,
             track_padding: 0,
             label: nextSpec.label,
-            target_group: 30,
+            target_group: nextSpec.trackGroupIndex,
             sort_direction_changeable: true,
             sortCmpFn: heatmapTrackSortComparator,
             init_sort_direction: 0 as 0,
