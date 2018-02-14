@@ -7,7 +7,7 @@ import {
     reaction
 } from "mobx";
 import {remoteData} from "../../api/remoteData";
-import Oncoprint from "./Oncoprint";
+import {default as Oncoprint, GENETIC_TRACK_GROUP_INDEX} from "./Oncoprint";
 import OncoprintControls, {
     IOncoprintControlsHandlers,
     IOncoprintControlsState
@@ -729,17 +729,26 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         return (this.columnMode === "sample" ? this.sampleClinicalTracks : this.patientClinicalTracks);
     }
 
+    readonly sampleHeatmapTracks = makeHeatmapTracksMobxPromise(this, true);
+    readonly patientHeatmapTracks = makeHeatmapTracksMobxPromise(this, false);
+    @computed get heatmapTracks() {
+        return (this.columnMode === "sample" ? this.sampleHeatmapTracks : this.patientHeatmapTracks);
+    }
+
+    readonly genesetHeatmapTrackGroup = remoteData<number>({
+        await: () => [this.heatmapTracks],
+        invoke: () => Promise.resolve(1 + Math.max(
+            GENETIC_TRACK_GROUP_INDEX,
+            ...(this.heatmapTracks.result!.map(hmTrack => hmTrack.trackGroupIndex))
+        ))
+    });
+
     readonly sampleGenesetHeatmapTracks = makeGenesetHeatmapTracksMobxPromise(this, true);
     readonly patientGenesetHeatmapTracks = makeGenesetHeatmapTracksMobxPromise(this, false);
     @computed get genesetHeatmapTracks() {
         return (this.columnMode === "sample" ? this.sampleGenesetHeatmapTracks : this.patientGenesetHeatmapTracks);
     }
 
-    readonly sampleHeatmapTracks = makeHeatmapTracksMobxPromise(this, true);
-    readonly patientHeatmapTracks = makeHeatmapTracksMobxPromise(this, false);
-    @computed get heatmapTracks() {
-        return (this.columnMode === "sample" ? this.sampleHeatmapTracks : this.patientHeatmapTracks);
-    }
 
     @computed get clusterHeatmapTrackGroupIndex() {
         if (this.sortMode.type === "heatmap") {
