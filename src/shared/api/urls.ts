@@ -113,3 +113,7 @@ export function getTissueImageCheckUrl(filter:string) {
 export function getDarwinUrl(sampleIds:string[], caseId:string) {
     return cbioUrl('checkDarwinAccess.do', {sample_id: sampleIds.join(','), case_id: caseId});
 }
+
+export function getStudyDownloadListUrl(){
+    return cbioUrl('proxy/download.cbioportal.org/study_list.json');
+}
