@@ -8,12 +8,13 @@ describe('homepage', function() {
 
     this.retries(2);
 
-    it('it should show dev mode when testing', function() {
+    before(()=>{
         browser.url(CBIOPORTAL_URL);
 
         browser.localStorage('POST', {key: 'localdev', value: 'true'});
         browser.refresh();
-
+    });
+    it('it should show dev mode when testing', function() {
         var devMode = $('.alert-warning');
 
         devMode.waitForExist(60000);
@@ -65,6 +66,39 @@ describe('homepage', function() {
 
     });
 
+    it('should not allow submission if OQL contains EXP or PROT for multiple studies', ()=>{
+        var nextCheckboxSel = '[data-test="StudySelect"]:nth-child(5)';
+        browser.click(nextCheckboxSel);
+
+        var oqlEntrySel = 'textarea[data-test="geneSet"]';
+        browser.setValue(oqlEntrySel, 'PTEN: EXP>1');
+
+        var errorMessageSel = 'span[data-test="oqlErrorMessage"]';
+        browser.waitForExist(errorMessageSel);
+        assert.equal(
+            browser.getText(errorMessageSel),
+            "Expression filtering in the gene list (the EXP command) is not supported when doing cross cancer queries."
+        );
+
+        var submitButtonSel = 'button[data-test="queryButton"]';
+        assert.equal(
+            browser.getAttribute(submitButtonSel, 'disabled'),
+            'true',
+            "submit should be disabled w/ EXP in oql"
+        );
+
+        browser.setValue(oqlEntrySel, 'PTEN: PROT>1');
+        browser.waitForExist(errorMessageSel);
+        assert.equal(
+            browser.getText(errorMessageSel),
+            "Protein level filtering in the gene list (the PROT command) is not supported when doing cross cancer queries."
+        );
+        assert.equal(
+            browser.getAttribute(submitButtonSel, 'disabled'),
+            'true',
+            "submit should be disabled w/ PROT in oql"
+        );
+    });
 
     describe('select all/deselect all functionality in study selector',function(){
 
