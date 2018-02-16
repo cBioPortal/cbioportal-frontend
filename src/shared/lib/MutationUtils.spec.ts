@@ -1,5 +1,6 @@
 import {
-    somaticMutationRate, germlineMutationRate, countUniqueMutations, groupMutationsByGeneAndPatientAndProteinChange
+    somaticMutationRate, germlineMutationRate, countUniqueMutations, groupMutationsByGeneAndPatientAndProteinChange,
+    countDuplicateMutations
 } from "./MutationUtils";
 import * as _ from 'lodash';
 import { assert, expect } from 'chai';
@@ -160,6 +161,16 @@ describe('MutationUtils', () => {
 
             assert.equal(count, 5,
                 "total number of unique mutations should be 5");
+        });
+    });
+
+    describe('countDuplicateMutations', () => {
+        it("counts duplicates correctly for mutations grouped by patients", () => {
+            const grouped = groupMutationsByGeneAndPatientAndProteinChange(mutationsToCount);
+            const count = countDuplicateMutations(grouped);
+
+            assert.equal(count, 2,
+                "total number of duplicate mutations should be 2");
         });
     });
 
