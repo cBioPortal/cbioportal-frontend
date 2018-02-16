@@ -77,18 +77,42 @@ var OncoprintLegendView = (function() {
 	    var in_group_y_offset = 0;
 	    
 	    var rules = model.getActiveRules(rule_sets[i].rule_set_id);
+	    var labelSort = function(ruleA, ruleB) {
+            var labelA = ruleA.rule.legend_label;
+            var labelB = ruleB.rule.legend_label;
+            if (labelA && labelB) {
+                return labelA.localeCompare(labelB);
+            } else if (!labelA && !labelB) {
+                return 0;
+            } else if (!labelA) {
+                return -1;
+            } else if (!labelB) {
+                return 1;
+            }
+		};
+
 	    rules.sort(function(ruleA, ruleB) {
-	    	// sort alphabetically
-	    	var labelA = ruleA.rule.legend_label;
-	    	var labelB = ruleB.rule.legend_label;
-	    	if (labelA && labelB) {
-	    		return labelA.localeCompare(labelB);
-			} else if (!labelA && !labelB) {
-	    		return 0;
-			} else if (!labelA) {
-	    		return -1;
-			} else if (!labelB) {
-	    		return 1;
+	    	// sort, by legend_order, then alphabetically
+			var orderA = ruleA.rule.legend_order;
+			var orderB = ruleB.rule.legend_order;
+
+			if (typeof orderA === "undefined" && typeof orderB === "undefined") {
+			    // if neither have defined order, then sort alphabetically
+                return labelSort(ruleA, ruleB);
+			} else if (typeof orderA !== "undefined" && typeof orderB !== "undefined") {
+				// if both have defined order, sort by order
+				if (orderA < orderB) {
+					return -1;
+				} else if (orderA > orderB) {
+					return 1;
+				} else {
+					// if order is same, sort alphabetically
+					return labelSort(ruleA, ruleB);
+				}
+			} else if (typeof orderA === "undefined") {
+				return 1; // A comes after B if B has defined order and A doesnt
+			} else if (typeof orderB === "undefined") {
+				return -1; // A comes before B if A has defined order and B doesnt
 			}
 		});
 	    for (var j=0; j<rules.length; j++) {

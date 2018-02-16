@@ -378,7 +378,8 @@ var ConditionRuleSet = (function () {
 		{shapes: makeNAShapes(params.na_z || 1000),
 		    legend_label: NA_LABEL,
 		    exclude_from_legend: false,
-		    legend_config: {'type': 'rule', 'target': {'na': true}}
+		    legend_config: {'type': 'rule', 'target': {'na': true}},
+			legend_order: Number.POSITIVE_INFINITY
 		});
     }
     ConditionRuleSet.prototype = Object.create(RuleSet.prototype);
@@ -422,7 +423,8 @@ var CategoricalRuleSet = (function () {
 	    shapes: makeNAShapes(params.na_z || 1000),
 	    legend_label: NA_LABEL,
 	    exclude_from_legend: false,
-	    legend_config: {'type': 'rule', 'target': {'na': true}}
+	    legend_config: {'type': 'rule', 'target': {'na': true}},
+		legend_order: Number.POSITIVE_INFINITY
 	});
 	
 	this.category_key = params.category_key;
@@ -865,7 +867,8 @@ var GeneticAlterationRuleSet = (function () {
 	    shapes: makeNAShapes(params.na_z || 1),
 	    legend_label: "Not sequenced",
 	    exclude_from_legend: false,
-	    legend_config: {'type': 'rule', 'target': {'na': true}}
+	    legend_config: {'type': 'rule', 'target': {'na': true}},
+		legend_order: Number.POSITIVE_INFINITY
 	});
     }
     GeneticAlterationRuleSet.prototype = Object.create(LookupRuleSet.prototype);
@@ -889,6 +892,7 @@ var Rule = (function () {
 	this.legend_label = typeof params.legend_label === "undefined" ? "" : params.legend_label;
 	this.exclude_from_legend = params.exclude_from_legend;
 	this.legend_config = params.legend_config;// {'type':'rule', 'target': {'mut_type':'MISSENSE'}} or {'type':'number', 'color':'rgba(1,2,3,1), 'range':[lower, upper]} or {'type':'gradient', 'color_range':['rgba(...)' or '#...', 'rgba(...)' or '#...'], 'number_range':[lower, upper]}
+		this.legend_order = params.legend_order;
     }
     Rule.prototype.getLegendConfig = function () {
 	return this.legend_config;
