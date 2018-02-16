@@ -12,7 +12,7 @@ import {getClinicalTrackSortComparator, getGeneticTrackSortComparator, heatmapTr
 import {transition} from "./DeltaUtils";
 import _ from "lodash";
 import {AnnotatedMutation, ExtendedAlteration} from "../../../pages/resultsView/ResultsViewPageStore";
-
+import "./styles.scss";
 
 export type ClinicalTrackDatum = {
     attr_id: string;
