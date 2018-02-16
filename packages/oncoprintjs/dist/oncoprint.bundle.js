@@ -24404,9 +24404,19 @@ var OncoprintLegendView = (function() {
 					return labelSort(ruleA, ruleB);
 				}
 			} else if (typeof orderA === "undefined") {
-				return 1; // A comes after B if B has defined order and A doesnt
+				if (orderB === Number.POSITIVE_INFINITY) {
+					return -1; // A comes before B regardless, if B is forced to end
+				} else {
+					//otherwise, A comes after B if B has defined order and A doesnt
+					return 1;
+				}
 			} else if (typeof orderB === "undefined") {
-				return -1; // A comes before B if A has defined order and B doesnt
+				if (orderA === Number.POSITIVE_INFINITY) {
+					return 1; // A comes after B regardless, if A is forced to end
+				} else {
+				    // otherwise, A comes before B if A has defined order and B doesnt
+                    return -1;
+				}
 			}
 		});
 	    for (var j=0; j<rules.length; j++) {
