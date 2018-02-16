@@ -11,7 +11,7 @@ import {MobxPromise} from "mobxpromise";
 import {computed, IObservableObject, IObservableValue, observable, ObservableMap, reaction} from "mobx";
 import _ from "lodash";
 import {OncoprintClinicalAttribute, SortMode} from "../ResultsViewOncoprint";
-import {MolecularProfile} from "shared/api/generated/CBioPortalAPI";
+import {ClinicalAttribute, MolecularProfile} from "shared/api/generated/CBioPortalAPI";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import Slider from "react-rangeslider";
@@ -20,6 +20,7 @@ import EditableSpan from "shared/components/editableSpan/EditableSpan";
 import FadeInteraction from "shared/components/fadeInteraction/FadeInteraction";
 import './styles.scss';
 import ErrorIcon from "../../ErrorIcon";
+import {getPercentage} from "../../../lib/FormatUtils";
 const CheckedSelect = require("react-select-checked").CheckedSelect;
 import classNames from "classnames";
 import {SpecialAttribute} from "../../../cache/OncoprintClinicalDataCache";
@@ -84,6 +85,7 @@ export interface IOncoprintControlsState {
 
     sortMode:SortMode,
     clinicalAttributesPromise?:MobxPromise<OncoprintClinicalAttribute[]>,
+    clinicalAttributeSampleCountPromise?:MobxPromise<{[clinicalAttributeId:string]:number}>,
     selectedClinicalAttributeIds?:string[],
     heatmapProfilesPromise?:MobxPromise<MolecularProfile[]>,
     selectedHeatmapProfile?:string;
@@ -102,6 +104,8 @@ export interface IOncoprintControlsState {
     columnMode?:"sample"|"patient";
 
     horzZoom:number;
+
+    sampleCount:number;
 };
 
 export interface IOncoprintControlsProps {
@@ -360,11 +364,26 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
     }
 
     @computed get clinicalTrackOptions() {
-        if (this.clinicalTracksMenuFocused && this.props.state.clinicalAttributesPromise && this.props.state.clinicalAttributesPromise.result) {
-            return _.map(this.props.state.clinicalAttributesPromise.result, clinicalAttribute=>({
-                label: clinicalAttribute.displayName,
-                value: clinicalAttribute.clinicalAttributeId
-            }));
+        if (this.clinicalTracksMenuFocused &&
+            this.props.state.clinicalAttributesPromise &&
+            this.props.state.clinicalAttributesPromise.result &&
+            this.props.state.clinicalAttributeSampleCountPromise &&
+            this.props.state.clinicalAttributeSampleCountPromise.result
+        ) {
+            const clinicalAttributeIdToAvailableSampleCount = this.props.state.clinicalAttributeSampleCountPromise.result;
+            return _.reduce(this.props.state.clinicalAttributesPromise.result, (options:{label:string, value:string}[], next:ClinicalAttribute)=>{
+                const sampleCount = clinicalAttributeIdToAvailableSampleCount[next.clinicalAttributeId];
+                const newOption = {
+                    label: `${next.displayName} (${getPercentage(sampleCount/this.props.state.sampleCount, 0)})`,
+                    value: next.clinicalAttributeId,
+                    disabled: false
+                };
+                if (sampleCount === 0) {
+                    newOption.disabled = true;
+                }
+                options.push(newOption);
+                return options;
+            }, []);
         } else {
             return [];
         }
@@ -383,8 +402,10 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
 
     @computed get clinicalTracksMenuLoading() {
         return this.clinicalTracksMenuFocused &&
-            this.props.state.clinicalAttributesPromise &&
-            this.props.state.clinicalAttributesPromise.isPending;
+            ((this.props.state.clinicalAttributesPromise &&
+            this.props.state.clinicalAttributesPromise.isPending) ||
+            (this.props.state.clinicalAttributeSampleCountPromise &&
+            this.props.state.clinicalAttributeSampleCountPromise.isPending));
     }
 
     private getClinicalTracksMenu() {
@@ -400,7 +421,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                     <CheckedSelect
                         placeholder="Add clinical tracks.."
                         isLoading={this.clinicalTracksMenuLoading}
-                        noResultsText={this.clinicalTracksMenuLoading ? "Loading..." : "No matching clinical tracks found"}
+                        noResultsText={this.clinicalTracksMenuLoading ? "Downloading available clinical attributes..." : "No matching clinical tracks found"}
                         onChange={this.onChangeSelectedClinicalTracks}
                         options={this.clinicalTrackOptions}
                         value={(this.props.state.selectedClinicalAttributeIds || []).map(x=>({value:x}))}
