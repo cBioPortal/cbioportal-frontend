@@ -279,6 +279,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             get clinicalAttributesPromise() {
                 return self.clinicalAttributes;
             },
+            get clinicalAttributeSampleCountPromise() {
+                return self.props.store.clinicalAttributeIdToAvailableSampleCount;
+            },
             get sortMode() {
                 return self.sortMode;
             },
@@ -353,6 +356,13 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                     return self.horzZoom;
                 }
             },
+            get sampleCount() {
+                if (self.props.store.samples.isComplete) {
+                    return self.props.store.samples.result.length;
+                } else {
+                    return 1;
+                }
+            }
         });
     }
 
@@ -805,12 +815,27 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     });
 
     readonly clinicalAttributes = remoteData({
-        await:()=>[this.props.store.studies, this.props.store.clinicalAttributes, this.clinicalAttributes_profiledIn],
+        await:()=>[
+            this.props.store.studies,
+            this.props.store.clinicalAttributes,
+            this.clinicalAttributes_profiledIn,
+            this.props.store.clinicalAttributeIdToAvailableSampleCount
+        ],
         invoke:()=>{
-            let clinicalAttributes:OncoprintClinicalAttribute[] = _.sortBy(
+            const availableSampleCount = this.props.store.clinicalAttributeIdToAvailableSampleCount.result!;
+            let clinicalAttributes:OncoprintClinicalAttribute[] = _.sortBy<ClinicalAttribute>(
                 this.props.store.clinicalAttributes.result!,
-                x=>x.displayName
-            ); // sort server clinical attrs by display name
+                [
+                    (x:ClinicalAttribute)=>{
+                        let sampleCount = availableSampleCount[x.clinicalAttributeId];
+                        if (sampleCount === undefined) {
+                        sampleCount = 0;
+                    }
+                        return -sampleCount;
+                    },
+                    (x:ClinicalAttribute)=>x.displayName
+                ]
+            ); // sort server clinical attrs by availability and display name
             clinicalAttributes = specialClinicalAttributes.concat(this.clinicalAttributes_profiledIn.result!)
                                                             .concat(clinicalAttributes); // put special clinical attrs at beginning
             // filter out StudyOfOrigin if only one study

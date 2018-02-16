@@ -3,8 +3,8 @@ import {
     SampleIdentifier, MolecularProfile, Mutation, NumericGeneMolecularData, MolecularDataFilter, Gene,
     ClinicalDataSingleStudyFilter, CancerStudy, PatientIdentifier, Patient, GenePanelData, GenePanelDataFilter,
     SampleList, MutationCountByPosition, MutationMultipleStudyFilter, SampleMolecularIdentifier,
-    MolecularDataMultipleStudyFilter, SampleFilter, MolecularProfileFilter, GenePanelMultipleStudyFilter, PatientFilter,
-    GenePanel, ClinicalAttribute, MutationFilter
+    MolecularDataMultipleStudyFilter, SampleFilter, MolecularProfileFilter, GenePanelMultipleStudyFilter, PatientFilter, MutationFilter,
+    GenePanel, ClinicalAttributeFilter, ClinicalAttribute
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {computed, observable, action, reaction, IObservable, IObservableValue, ObservableMap} from "mobx";
@@ -74,11 +74,11 @@ import {
 } from "./ResultsViewPageStoreUtils";
 import {getAlterationCountsForCancerTypesForAllGenes} from "../../shared/lib/alterationCountHelpers";
 import MobxPromiseCache from "../../shared/lib/MobxPromiseCache";
-import OncoprintClinicalDataCache from "../../shared/cache/OncoprintClinicalDataCache";
 import {isSampleProfiledInMultiple} from "../../shared/lib/isSampleProfiled";
 import {BookmarkLinks} from "../../shared/model/BookmarkLinks";
 import {getBitlyServiceUrl, getSessionServiceUrl} from "../../shared/api/urls";
 import url from 'url';
+import OncoprintClinicalDataCache, {SpecialAttribute} from "../../shared/cache/OncoprintClinicalDataCache";
 
 type Optional<T> = (
     {isApplicable: true, value: T}
@@ -359,6 +359,60 @@ export class ResultsViewPageStore {
             return client.fetchClinicalAttributesUsingPOST({
                 studyIds:this.studyIds.result!
             });
+        }
+    });
+
+    readonly clinicalAttributeIdToAvailableSampleCount = remoteData({
+        await:()=>[
+            this.samples,
+            this.studies,
+            this.clinicalAttributes,
+            this.studyToDataQueryFilter,
+        ],
+        invoke:async()=>{
+            let clinicalAttributeFilter:ClinicalAttributeFilter;
+            if (this.studies.result.length === 1) {
+                // try using sample list id
+                const studyId = this.studies.result[0].studyId;
+                const dqf = this.studyToDataQueryFilter.result[studyId];
+                if (dqf.sampleListId) {
+                    clinicalAttributeFilter = {
+                        sampleListId: dqf.sampleListId
+                    } as ClinicalAttributeFilter;
+                } else {
+                    clinicalAttributeFilter = {
+                        sampleIdentifiers: dqf.sampleIds!.map(sampleId=>({ sampleId, studyId }))
+                    } as ClinicalAttributeFilter;
+                }
+            } else {
+                // use sample identifiers
+                clinicalAttributeFilter = {
+                    sampleIdentifiers: this.samples.result!.map(sample=>({sampleId:sample.sampleId, studyId:sample.studyId}))
+                } as ClinicalAttributeFilter;
+            }
+
+            const result = await client.getAllClinicalAttributesInStudiesUsingPOST({
+                clinicalAttributeFilter,
+                projection: "DETAILED"
+            });
+            // build map
+            const ret:{[clinicalAttributeId:string]:number} = _.reduce(result, (map:{[clinicalAttributeId:string]:number}, next:ClinicalAttribute)=>{
+                map[next.clinicalAttributeId] = map[next.clinicalAttributeId] || 0;
+                map[next.clinicalAttributeId] += next.count;
+                return map;
+            }, {});
+            // add counts for "special" clinical attributes
+            ret[SpecialAttribute.StudyOfOrigin] = this.samples.result!.length;
+            let samplesWithMutationData = 0, samplesWithCNAData = 0;
+            for (const sample of this.samples.result!) {
+                samplesWithMutationData += +!!sample.sequenced;
+                samplesWithCNAData += +!!sample.copyNumberSegmentPresent;
+            }
+            ret[SpecialAttribute.MutationSpectrum] = samplesWithMutationData;
+            ret[SpecialAttribute.MutationCount] = samplesWithMutationData;
+            ret[SpecialAttribute.FractionGenomeAltered] = samplesWithCNAData;
+
+            return ret;
         }
     });
 
@@ -1236,14 +1290,16 @@ export class ResultsViewPageStore {
                 promises.push(client.fetchSamplesUsingPOST({
                     sampleFilter: {
                         sampleIdentifiers
-                    } as SampleFilter
+                    } as SampleFilter,
+                    projection: "DETAILED"
                 }));
             }
             if (sampleListIds.length) {
                 promises.push(client.fetchSamplesUsingPOST({
                     sampleFilter: {
                         sampleListIds
-                    } as SampleFilter
+                    } as SampleFilter,
+                    projection:"DETAILED"
                 }));
             }
             return _.flatten(await Promise.all(promises));
