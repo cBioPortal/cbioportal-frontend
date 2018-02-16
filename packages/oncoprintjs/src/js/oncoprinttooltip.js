@@ -1,10 +1,12 @@
 var $ = require('jquery');
 
+var TOOLTIP_CLASS = "oncoprintjs__tooltip";
+
 var OncoprintToolTip = (function() {
     function OncoprintToolTip($container, params) {
 	params = params || {};
 	this.$container = $container;
-	this.$div = $('<div></div>').appendTo($container).css({'background-color':'rgba(255,255,255,1)', 'position':'absolute', 'display':'none', 'border':'1px solid black', 'max-width':300, 'min-width':150});
+	this.$div = $('<div></div>').addClass(TOOLTIP_CLASS).appendTo($container).css({'background-color':'rgba(255,255,255,1)', 'position':'absolute', 'display':'none', 'border':'1px solid black', 'max-width':300, 'min-width':150});
 	if (params.noselect) {
 	    this.$div.addClass("noselect");
 	}
