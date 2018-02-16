@@ -47,13 +47,25 @@ export function transition(
     }
 }
 
+type TrackSpecsWithDynamicGroups = {
+    heatmapTracks: {trackGroupIndex: number}[],
+    genesetHeatmapTracks: {trackGroupIndex: number}[]
+};
 export function transitionTrackGroupSortPriority(
-    nextProps:{ heatmapTracks:IOncoprintProps["heatmapTracks"]},
-    prevProps:{ heatmapTracks?:IOncoprintProps["heatmapTracks"]},
-    oncoprint:OncoprintJS<any>
+    nextProps: TrackSpecsWithDynamicGroups,
+    prevProps: Partial<TrackSpecsWithDynamicGroups>,
+    oncoprint: OncoprintJS<any>
 ) {
-    const prevHeatmapTrackGroups = _.sortBy(_.uniq((prevProps.heatmapTracks || []).map(x=>x.trackGroupIndex)));
-    const nextHeatmapTrackGroups = _.sortBy(_.uniq(nextProps.heatmapTracks.map(x=>x.trackGroupIndex)));
+    const prevHeatmapTrackGroups = _.sortBy(_.uniq(
+        (prevProps.heatmapTracks || [])
+        .concat(prevProps.genesetHeatmapTracks || [])
+        .map(x => x.trackGroupIndex)
+    ));
+    const nextHeatmapTrackGroups = _.sortBy(_.uniq(
+        nextProps.heatmapTracks
+        .concat(nextProps.genesetHeatmapTracks)
+        .map(x=>x.trackGroupIndex)
+    ));
     if (_.xor(nextHeatmapTrackGroups, prevHeatmapTrackGroups).length) {
         // if track groups have changed
         oncoprint.setTrackGroupSortPriority([CLINICAL_TRACK_GROUP_INDEX].concat(nextHeatmapTrackGroups).concat(GENETIC_TRACK_GROUP_INDEX));
