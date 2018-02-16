@@ -10,7 +10,6 @@ import {
     AnnotatedExtendedAlteration, AnnotatedMutation,
     ExtendedAlteration
 } from "../../../pages/resultsView/ResultsViewPageStore";
-import "./TooltipUtils.scss";
 
 export const TOOLTIP_DIV_CLASS = "oncoprint__tooltip";
 
