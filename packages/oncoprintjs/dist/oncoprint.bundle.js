@@ -13970,7 +13970,7 @@ var Oncoprint = (function () {
 	}*/
 	
 	this.track_options_view = new OncoprintTrackOptionsView($track_options_div,
-								function(track_id) { 
+								function (track_id) {
 								    // move up
 								    var tracks = self.model.getContainingTrackGroup(track_id);
 								    var index = tracks.indexOf(track_id);
@@ -13982,7 +13982,7 @@ var Oncoprint = (function () {
 									self.moveTrack(track_id, new_previous_track);
 								    }
 								},
-								function(track_id) {
+								function (track_id) {
 								    // move down
 								    var tracks = self.model.getContainingTrackGroup(track_id);
 								    var index = tracks.indexOf(track_id);
@@ -13990,8 +13990,9 @@ var Oncoprint = (function () {
 									self.moveTrack(track_id, tracks[index+1]);
 								    }
 								},
-								function(track_id) { self.removeTrack(track_id); }, 
-								function(track_id, dir) { self.setTrackSortDirection(track_id, dir); });
+								function (track_id) { self.removeTrack(track_id); },
+								function (track_id, dir) { self.setTrackSortDirection(track_id, dir); },
+								function (track_id) { self.removeExpansionTracksFor(track_id); });
 	this.track_info_view = new OncoprintTrackInfoView($track_info_div);
 								
 	//this.track_info_view = new OncoprintTrackInfoView($track_info_div);
@@ -14293,6 +14294,28 @@ var Oncoprint = (function () {
         }
 	var track_ids = this.model.getTracks();
 	this.removeTracks(track_ids);
+    }
+
+    Oncoprint.prototype.removeExpansionTracksFor = function (track_id) {
+	// remove all expansion tracks for this track
+	this.removeTracks(this.model.track_expansion_tracks[track_id].slice());
+    }
+
+    Oncoprint.prototype.removeAllExpansionTracksInGroup = function (index) {
+	var tracks_in_group = this.model.getTrackGroups()[index],
+	    expanded_tracks = [],
+	    i;
+	for (i = 0; i < tracks_in_group.length ; i++) {
+	    if (this.model.isTrackExpanded(tracks_in_group[i])) {
+		expanded_tracks.push(tracks_in_group[i]);
+	    }
+	}
+	this.suppressRendering();
+	for (i = 0; i < expanded_tracks.length; i++) {
+	    // assume that the expanded tracks are not themselves removed here
+	    this.removeExpansionTracksFor(expanded_tracks[i]);
+	}
+	this.releaseRendering();
     }
 
     Oncoprint.prototype.setHorzZoomToFit = function(ids) {
@@ -14917,6 +14940,7 @@ module.exports = (function setPolyfills() {
 /* 13 */
 /***/ (function(module, exports, __webpack_require__) {
 
+/* jshint browserify: true, asi: true */
 var binarysearch = __webpack_require__(4);
 var hasElementsInInterval = __webpack_require__(14);
 var CachedProperty = __webpack_require__(5);
@@ -15050,6 +15074,8 @@ var OncoprintModel = (function () {
 	
 	// Track Properties
 	this.track_label = {};
+	this.track_label_color = {};
+	this.track_link_url = {};
 	this.track_description = {};
 	this.cell_height = {};
 	this.track_padding = {};
@@ -15066,6 +15092,11 @@ var OncoprintModel = (function () {
 	this.track_active_rules = {}; // from track id to active rule map (map with rule ids as keys)
 	this.track_info = {};
 	this.track_has_column_spacing = {}; // track id -> boolean
+	this.track_expansion_enabled = {}; // track id -> boolean or undefined
+	this.track_expand_callback = {}; // track id -> function that adds expansion tracks for its track if set
+	this.track_expand_button_getter = {}; // track id -> function from boolean to string if customized
+	this.track_expansion_tracks = {}; // track id -> array of track ids if applicable
+	this.track_expansion_parent = {}; // track id -> track id if applicable
 	
 	// Rule Set Properties
 	this.rule_sets = {}; // map from rule set id to rule set
@@ -15625,21 +15656,25 @@ var OncoprintModel = (function () {
 	    var params = params_list[i];
 	    addTrack(this, params.track_id, params.target_group, params.track_group_header,
 		    params.cell_height, params.track_padding, params.has_column_spacing,
-		    params.data_id_key, params.tooltipFn,
+		    params.data_id_key, params.tooltipFn, params.link_url,
 		    params.removable, params.removeCallback, params.label, params.description, params.track_info,
 		    params.sortCmpFn, params.sort_direction_changeable, params.init_sort_direction, params.onSortDirectionChange,
-		    params.data, params.rule_set);
+		    params.data, params.rule_set, params.track_label_color, params.expansion_of,
+		    params.expandCallback, params.expandButtonTextGetter);
 	}
 	this.track_tops.update();
     }
   
     var addTrack = function (model, track_id, target_group, track_group_header,
 	    cell_height, track_padding, has_column_spacing,
-	    data_id_key, tooltipFn,
+	    data_id_key, tooltipFn, link_url,
 	    removable, removeCallback, label, description, track_info,
 	    sortCmpFn, sort_direction_changeable, init_sort_direction, onSortDirectionChange,
-	    data, rule_set) {
+	    data, rule_set, track_label_color, expansion_of, expandCallback,
+	    expandButtonTextGetter) {
 	model.track_label[track_id] = ifndef(label, "Label");
+	model.track_label_color[track_id] = ifndef(track_label_color, "black");
+	model.track_link_url[track_id] = ifndef(link_url, null);
 	model.track_description[track_id] = ifndef(description, "");
 	model.cell_height[track_id] = ifndef(cell_height, 23);
 	model.track_padding[track_id] = ifndef(track_padding, 5);
@@ -15650,6 +15685,14 @@ var OncoprintModel = (function () {
 	});
 	model.track_removable[track_id] = ifndef(removable, false);
 	model.track_remove_callback[track_id] = ifndef(removeCallback, function() {});
+	
+	if (typeof expandCallback !== 'undefined') {
+	    model.track_expand_callback[track_id] = expandCallback;
+	    model.track_expansion_enabled[track_id] = true;
+	}
+	if (typeof expandButtonTextGetter !== 'undefined') {
+	    model.track_expand_button_getter[track_id] = expandButtonTextGetter;
+	}
 	
 	model.track_sort_cmp_fn[track_id] = ifndef(sortCmpFn, function () {
 	    return 0;
@@ -15679,9 +15722,24 @@ var OncoprintModel = (function () {
 	if (track_group_header) {
 	    model.track_group_header[target_group] = track_group_header;
 	}
-	model.track_groups[target_group].push(track_id);
-	
-	
+
+	var group_array = model.track_groups[target_group];
+	var target_index = (expansion_of !== undefined
+	    ? group_array.indexOf(model.getLastExpansion(expansion_of)) + 1
+	    : group_array.length
+	);
+	group_array.splice(target_index, 0, track_id);
+
+	if (expansion_of !== undefined) {
+	    if (!model.track_expansion_tracks.hasOwnProperty(expansion_of)) {
+		model.track_expansion_tracks[expansion_of] = [];
+	    }
+	    if (model.track_expansion_tracks[expansion_of].indexOf(track_id) !== -1) {
+		throw new Error('Illegal state: duplicate expansion track ID');
+	    }
+	    model.track_expansion_parent[track_id] = expansion_of;
+	    model.track_expansion_tracks[expansion_of].push(track_id);
+	}
 	
 	model.track_id_to_datum.update(model, track_id);
 	model.track_present_ids.update(model, track_id);
@@ -15690,7 +15748,9 @@ var OncoprintModel = (function () {
 	model.setIdOrder(Object.keys(model.present_ids.get()));
     }
 
-    var _getContainingTrackGroup = function (oncoprint_model, track_id, return_reference, return_index) {
+    // get a reference to the array that stores the order of tracks in
+    // the same group
+    var _getMajorTrackGroup = function (oncoprint_model, track_id, return_index) {
 	var group;
 	track_id = parseInt(track_id);
 	var i;
@@ -15701,14 +15761,26 @@ var OncoprintModel = (function () {
 	    }
 	}
 	if (group) {
-		if (return_index) {
-			return i;
-		} else {
-	    	return (return_reference ? group : group.slice());
-		}
+	    return return_index ? i : group;
 	} else {
 	    return null;
 	}
+    }
+    // get an array listing the track IDs that a track can move around
+    var _getEffectiveTrackGroup = function (oncoprint_model, track_id) {
+	var group,
+	    parent_id = oncoprint_model.track_expansion_parent[track_id];
+	if (parent_id === undefined) {
+	    group = (function(major_group) {
+		return (major_group === null ? null
+			: major_group.filter(function (sibling_id) {
+			    return oncoprint_model.track_expansion_parent[sibling_id] === undefined;
+			}));
+	    })(_getMajorTrackGroup(oncoprint_model, track_id));
+	} else {
+	    group = oncoprint_model.track_expansion_tracks[parent_id];
+	}
+	return group ? group.slice() : null;
     }
 
     var isRuleSetUsed = function(model, rule_set_id) {
@@ -15735,6 +15807,7 @@ var OncoprintModel = (function () {
 	delete this.track_data[track_id];
 	delete this.track_rule_set_id[track_id];
 	delete this.track_label[track_id];
+	delete this.track_link_url[track_id];
 	delete this.cell_height[track_id];
 	delete this.track_padding[track_id];
 	delete this.track_data_id_key[track_id];
@@ -15746,12 +15819,22 @@ var OncoprintModel = (function () {
 	delete this.track_sort_direction[track_id];
 	delete this.track_info[track_id];
 	delete this.track_has_column_spacing[track_id];
+	delete this.track_expansion_enabled[track_id];
+	delete this.track_expand_callback[track_id];
+	delete this.track_expand_button_getter[track_id];
+	delete this.track_expansion_tracks[track_id];
 
-	var containing_track_group = _getContainingTrackGroup(this, track_id, true);
+	var containing_track_group = _getMajorTrackGroup(this, track_id);
 	if (containing_track_group !== null) {
 	    containing_track_group.splice(
 		    containing_track_group.indexOf(track_id), 1);
 	}
+	// remove listing of the track as an expansion of its parent track
+	var expansion_group = this.track_expansion_tracks[this.track_expansion_parent[track_id]]
+	if (expansion_group) {
+	    expansion_group.splice(expansion_group.indexOf(track_id), 1);
+	}
+	delete this.track_expansion_parent[track_id];
 	this.track_tops.update();
 	this.track_present_ids.update(this, track_id);
 	this.track_id_to_datum.update(this, track_id);
@@ -15761,7 +15844,7 @@ var OncoprintModel = (function () {
 	if (!rule_set_used) {
 	    removeRuleSet(this, rule_set_id);
 	}
-    }
+    };
     
     OncoprintModel.prototype.getOverlappingCell = function(x,y) {
 	// First, see if it's in a column
@@ -15835,11 +15918,11 @@ var OncoprintModel = (function () {
     }
     
     OncoprintModel.prototype.getContainingTrackGroup = function (track_id) {
-	return _getContainingTrackGroup(this, track_id, false);
+	return _getEffectiveTrackGroup(this, track_id);
     }
 
     OncoprintModel.prototype.getContainingTrackGroupIndex = function(track_id) {
-    	return _getContainingTrackGroup(this, track_id, false, true);
+    	return _getMajorTrackGroup(this, track_id, true);
 	}
 
     OncoprintModel.prototype.setTrackGroupHeader = function(track_group_id, text) {
@@ -15932,18 +16015,51 @@ var OncoprintModel = (function () {
 	return this.getOncoprintWidth();
     }
     OncoprintModel.prototype.moveTrack = function (track_id, new_previous_track) {
-	var track_group = _getContainingTrackGroup(this, track_id, true);
+
+	function moveContiguousValues(uniqArray, first_value, last_value, new_predecessor) {
+	    var old_start_index = uniqArray.indexOf(first_value),
+		old_end_index = uniqArray.indexOf(last_value);
+	    var values = uniqArray.slice(old_start_index, old_end_index + 1);
+	    uniqArray.splice(old_start_index, values.length);
+	    var new_position = (new_predecessor === null ? 0 : uniqArray.indexOf(new_predecessor)+1);
+	    uniqArray.splice.bind(uniqArray, new_position, 0).apply(null, values);
+	}
+
+	var track_group = _getMajorTrackGroup(this, track_id),
+	    expansion_parent = this.track_expansion_parent[track_id],
+	    flat_previous_track;
+
 	if (track_group !== null) {
-	    track_group.splice(track_group.indexOf(track_id), 1);
-	    var new_position = (new_previous_track === null ? 0 : track_group.indexOf(new_previous_track)+1);
-	    track_group.splice(new_position, 0, track_id);
+	    // if an expansion track moves above all other tracks it can,
+	    // place it directly below its expansion parent
+	    if (expansion_parent !== undefined && new_previous_track === null) {
+		flat_previous_track = expansion_parent;
+	    // otherwise, place the track under (the last expansion track of)
+	    // its sibling
+	    } else {
+		flat_previous_track = this.getLastExpansion(new_previous_track);
+	    }
+	    moveContiguousValues(track_group, track_id, this.getLastExpansion(track_id), flat_previous_track);
+	}
+
+	// keep the order of expansion siblings up-to-date as well
+	if (this.track_expansion_parent[track_id] !== undefined) {
+	    moveContiguousValues(this.track_expansion_tracks[expansion_parent], track_id, track_id, new_previous_track);
 	}
 	
 	this.track_tops.update();
-    }
+    };
 
     OncoprintModel.prototype.getTrackLabel = function (track_id) {
 	return this.track_label[track_id];
+    }
+    
+    OncoprintModel.prototype.getTrackLabelColor = function (track_id) {
+	return this.track_label_color[track_id];
+    }
+    
+    OncoprintModel.prototype.getTrackLinkUrl = function (track_id) {
+	return this.track_link_url[track_id];
     }
     
     OncoprintModel.prototype.getTrackDescription = function(track_id) {
@@ -15972,7 +16088,69 @@ var OncoprintModel = (function () {
     OncoprintModel.prototype.isTrackSortDirectionChangeable = function (track_id) {
 	return this.track_sort_direction_changeable[track_id];
     }
+    
+    OncoprintModel.prototype.isTrackExpandable = function (track_id) {
+	// return true if the flag is defined and true
+	return Boolean(this.track_expansion_enabled[track_id]);
+    }
+    
+    OncoprintModel.prototype.expandTrack = function (track_id) {
+	return this.track_expand_callback[track_id](track_id);
+    }
+    
+    OncoprintModel.prototype.disableTrackExpansion = function (track_id) {
+	this.track_expansion_enabled[track_id] = false;
+    }
 
+    OncoprintModel.prototype.enableTrackExpansion = function (track_id) {
+	if (!this.track_expand_callback.hasOwnProperty(track_id)) {
+	    throw new Error("Track '" + track_id +"' has no expandCallback");
+	}
+	this.track_expansion_enabled[track_id] = true;
+    }
+    
+    OncoprintModel.prototype.isTrackExpanded = function (track_id) {
+	return this.track_expansion_tracks.hasOwnProperty(track_id) &&
+		this.track_expansion_tracks[track_id].length > 0;
+    }
+    
+    OncoprintModel.prototype.getExpandButtonText = function (track_id) {
+	var self = this;
+	var getExpandButtonFunction = function (track_id) {
+	    return (self.track_expand_button_getter[track_id] ||
+		    function (is_expanded) {
+			return is_expanded ? 'Expand more' : 'Expand';
+		    });
+	};
+	return getExpandButtonFunction(track_id)(this.isTrackExpanded(track_id));
+    }
+    
+    /**
+     * Checks if one track is the expansion of another
+     *
+     * @param {number} expansion_track_id - the ID of the track to check
+     * @param {number} set_track_id - the ID of the track it may be an expansion of
+     */
+    OncoprintModel.prototype.isExpansionOf = function (expansion_track_id, set_track_id) {
+	return this.track_expansion_tracks.hasOwnProperty(set_track_id) &&
+	    this.track_expansion_tracks[set_track_id].indexOf(expansion_track_id) !== -1;
+    }
+    
+    /**
+     * Finds the bottom-most track in a track's expansion group
+     *
+     * @param track_id - the ID of the track to start from
+     * @returns the ID of its last expansion, or the unchanged param if none
+     */
+    OncoprintModel.prototype.getLastExpansion = function (track_id) {
+	var direct_children = this.track_expansion_tracks[track_id];
+	while (direct_children && direct_children.length) {
+	    track_id = direct_children[direct_children.length - 1];
+	    direct_children = this.track_expansion_tracks[track_id];
+	}
+	return track_id;
+    }
+    
     OncoprintModel.prototype.getRuleSet = function (track_id) {
 	return this.rule_sets[this.track_rule_set_id[track_id]];
     }
@@ -21951,6 +22129,8 @@ var OncoprintLabelView = (function () {
 	this.cell_heights_view_space = {};
 	this.label_middles_view_space = {};
 	this.labels = {};
+	this.label_colors = {};
+	this.track_link_urls = {};
 	this.track_descriptions = {};
 	this.tracks = [];
 	this.minimum_track_height = Number.POSITIVE_INFINITY;
@@ -21979,7 +22159,8 @@ var OncoprintLabelView = (function () {
 	    view.$canvas.on("mousemove", function(evt) {
 		if (view.dragged_label_track_id !== null) {
 		    var track_group = model.getContainingTrackGroup(view.dragged_label_track_id);
-		    var max_drag_y = view.track_tops[track_group[track_group.length-1]] + model.getTrackHeight(track_group[track_group.length-1]) - view.scroll_y;
+		    var bottommost_track = model.getLastExpansion(track_group[track_group.length - 1]);
+		    var max_drag_y = view.track_tops[bottommost_track] + model.getTrackHeight(bottommost_track) - view.scroll_y;
 		    var min_drag_y = view.track_tops[track_group[0]] - 5 - view.scroll_y;
 		    view.drag_mouse_y = Math.min(evt.pageY - view.$canvas.offset().top, max_drag_y);
 		    view.drag_mouse_y = Math.max(view.drag_mouse_y, min_drag_y);
@@ -21989,12 +22170,15 @@ var OncoprintLabelView = (function () {
 		    if (hovered_track !== null) {
 			var $tooltip_div = $('<div>');
 			var offset = view.$canvas.offset();   
-			if (isNecessaryToShortenLabel(view, view.labels[hovered_track])) {
-			    $tooltip_div.append($('<b>'+view.labels[hovered_track]+'</b><br>'));
+			if (isNecessaryToShortenLabel(view, view.labels[hovered_track])
+				|| view.track_link_urls[hovered_track]) {
+			    $tooltip_div.append(formatTooltipHeader(
+				    view.labels[hovered_track],
+				    view.track_link_urls[hovered_track]));
 			}
-			var track_description = view.track_descriptions[hovered_track].replace("<", "&lt;").replace(">", "&gt;");
+			var track_description = view.track_descriptions[hovered_track];
 			if (track_description.length > 0) {
-			    $tooltip_div.append(track_description + "<br>");
+			    $tooltip_div.append($('<div>').text(track_description));
 			}
 			if (model.isTrackInClusteredGroup(hovered_track)) {
                 view.$canvas.css('cursor', 'not-allowed');
@@ -22017,7 +22201,7 @@ var OncoprintLabelView = (function () {
 		    var previous_track_id = getLabelAboveMouseSpace(view, track_group, evt.offsetY, view.dragged_label_track_id);
 		    stopDragging(view, previous_track_id);
 		}
-		view.tooltip.hide();
+		view.tooltip.hideIfNotAlreadyGoingTo(150);
 	    });
 	})(this);
 	
@@ -22079,6 +22263,18 @@ var OncoprintLabelView = (function () {
 	    return label;
 	}
     };
+    var formatTooltipHeader = function (label, link_url) {
+	var header_contents;
+	if (link_url) {
+	    header_contents = (
+		    $('<a target="_blank" rel="noopener noreferrer">')
+		    .attr('href', link_url));
+	} else {
+	    header_contents = $('<span>');
+	}
+	header_contents.append(label.html_content || document.createTextNode(label));
+	return $('<b style="display: block;">').append(header_contents);
+    };
     var renderAllLabels = function(view) {
 	if (view.rendering_suppressed) {
 	    return;
@@ -22096,6 +22292,10 @@ var OncoprintLabelView = (function () {
 	view.ctx.fillStyle = 'black';
 	var tracks = view.tracks;
 	for (var i=0; i<tracks.length; i++) {
+	    if (view.label_colors && view.label_colors[tracks[i]]) {
+		//override color, if set:
+		view.ctx.fillStyle = view.label_colors[tracks[i]];
+	    }
 	    view.ctx.fillText(shortenLabelIfNecessary(view, view.labels[tracks[i]]), 0, view.label_middles_view_space[tracks[i]]);
 	}
 	if (view.dragged_label_track_id !== null) {
@@ -22103,7 +22303,7 @@ var OncoprintLabelView = (function () {
 	    view.ctx.fillText(shortenLabelIfNecessary(view, view.labels[view.dragged_label_track_id]), 0, view.supersampling_ratio*view.drag_mouse_y);
 	    view.ctx.fillStyle = 'rgba(0,0,0,0.15)';
 	    var group = view.model.getContainingTrackGroup(view.dragged_label_track_id);
-	    var label_above_mouse = getLabelAboveMouseSpace(view, group, view.drag_mouse_y, null);
+	    var label_above_mouse = view.model.getLastExpansion(getLabelAboveMouseSpace(view, group, view.drag_mouse_y, null));
 	    var label_below_mouse = getLabelBelowMouseSpace(view, group, view.drag_mouse_y, null);
 	    var rect_y, rect_height;
 	    if (label_above_mouse === view.dragged_label_track_id || label_below_mouse === view.dragged_label_track_id) {
@@ -22116,7 +22316,7 @@ var OncoprintLabelView = (function () {
 		rect_y = view.cell_tops_view_space[group[0]] - view.ctx.measureText("m").width;
 		rect_height = view.ctx.measureText("m").width;
 	    } else if (label_below_mouse === null) {
-		rect_y = view.cell_tops_view_space[group[group.length-1]] + view.cell_heights_view_space[group[group.length-1]];
+		rect_y = view.cell_tops_view_space[label_above_mouse] + view.cell_heights_view_space[label_above_mouse];
 		rect_height = view.ctx.measureText("m").width;
 	    }
 	    
@@ -22213,6 +22413,8 @@ var OncoprintLabelView = (function () {
     OncoprintLabelView.prototype.addTracks = function (model, track_ids) {
 	for (var i=0; i<track_ids.length; i++) {
 	    this.labels[track_ids[i]] = model.getTrackLabel(track_ids[i]);
+	    this.label_colors[track_ids[i]] = model.getTrackLabelColor(track_ids[i]);
+	    this.track_link_urls[track_ids[i]] = model.getTrackLinkUrl(track_ids[i]);
 	}
 	updateFromModel(this, model);
 	resizeAndClear(this, model);
@@ -22668,7 +22870,8 @@ var ConditionRuleSet = (function () {
 		{shapes: makeNAShapes(params.na_z || 1000),
 		    legend_label: NA_LABEL,
 		    exclude_from_legend: false,
-		    legend_config: {'type': 'rule', 'target': {'na': true}}
+		    legend_config: {'type': 'rule', 'target': {'na': true}},
+			legend_order: Number.POSITIVE_INFINITY
 		});
     }
     ConditionRuleSet.prototype = Object.create(RuleSet.prototype);
@@ -22712,7 +22915,8 @@ var CategoricalRuleSet = (function () {
 	    shapes: makeNAShapes(params.na_z || 1000),
 	    legend_label: NA_LABEL,
 	    exclude_from_legend: false,
-	    legend_config: {'type': 'rule', 'target': {'na': true}}
+	    legend_config: {'type': 'rule', 'target': {'na': true}},
+		legend_order: Number.POSITIVE_INFINITY
 	});
 	
 	this.category_key = params.category_key;
@@ -23155,7 +23359,8 @@ var GeneticAlterationRuleSet = (function () {
 	    shapes: makeNAShapes(params.na_z || 1),
 	    legend_label: "Not sequenced",
 	    exclude_from_legend: false,
-	    legend_config: {'type': 'rule', 'target': {'na': true}}
+	    legend_config: {'type': 'rule', 'target': {'na': true}},
+		legend_order: Number.POSITIVE_INFINITY
 	});
     }
     GeneticAlterationRuleSet.prototype = Object.create(LookupRuleSet.prototype);
@@ -23179,6 +23384,7 @@ var Rule = (function () {
 	this.legend_label = typeof params.legend_label === "undefined" ? "" : params.legend_label;
 	this.exclude_from_legend = params.exclude_from_legend;
 	this.legend_config = params.legend_config;// {'type':'rule', 'target': {'mut_type':'MISSENSE'}} or {'type':'number', 'color':'rgba(1,2,3,1), 'range':[lower, upper]} or {'type':'gradient', 'color_range':['rgba(...)' or '#...', 'rgba(...)' or '#...'], 'number_range':[lower, upper]}
+		this.legend_order = params.legend_order;
     }
     Rule.prototype.getLegendConfig = function () {
 	return this.legend_config;
@@ -23752,7 +23958,7 @@ var TOGGLE_BTN_OPEN_CLASS = "oncoprintjs__track_options__open";
 var DROPDOWN_CLASS = "oncoprintjs__track_options__dropdown";
 
 var OncoprintTrackOptionsView = (function () {
-    function OncoprintTrackOptionsView($div, moveUpCallback, moveDownCallback, removeCallback, sortChangeCallback) {
+    function OncoprintTrackOptionsView($div, moveUpCallback, moveDownCallback, removeCallback, sortChangeCallback, unexpandCallback) {
 	// removeCallback: function(track_id)
 	var position = $div.css('position');
 	if (position !== 'absolute' && position !== 'relative') {
@@ -23763,6 +23969,7 @@ var OncoprintTrackOptionsView = (function () {
 	this.moveDownCallback = moveDownCallback;
 	this.removeCallback = removeCallback; // function(track_id) { ... }
 	this.sortChangeCallback = sortChangeCallback; // function(track_id, dir) { ... }
+	this.unexpandCallback = unexpandCallback; // function(track_id)
 
 	this.$div = $div;
 	this.$ctr = $('<div></div>').css({'position': 'absolute', 'overflow-y':'hidden', 'overflow-x':'hidden'}).appendTo(this.$div);
@@ -23993,6 +24200,29 @@ var OncoprintTrackOptionsView = (function () {
 	    $dropdown.append($sort_dec_li);
 	    $dropdown.append($dont_sort_li);
 	}
+	if (model.isTrackExpandable(track_id)) {
+	    $dropdown.append($makeDropdownOption(
+		    model.getExpandButtonText(track_id),
+		    'normal',
+		    false,
+		    function (evt) {
+			evt.stopPropagation();
+			// close the menu to discourage clicking again, as it
+			// may take a moment to finish expanding
+			renderAllOptions(view, model);
+			model.expandTrack(track_id);
+		    }));
+	}
+	if (model.isTrackExpanded(track_id)) {
+	    $dropdown.append($makeDropdownOption(
+		    'Remove expansion',
+		    'normal',
+		    false,
+		    function (evt) {
+			evt.stopPropagation();
+			view.unexpandCallback(track_id);
+		    }));
+	}
     };
 
     OncoprintTrackOptionsView.prototype.enableInteraction = function () {
@@ -24141,18 +24371,42 @@ var OncoprintLegendView = (function() {
 	    var in_group_y_offset = 0;
 	    
 	    var rules = model.getActiveRules(rule_sets[i].rule_set_id);
+	    var labelSort = function(ruleA, ruleB) {
+            var labelA = ruleA.rule.legend_label;
+            var labelB = ruleB.rule.legend_label;
+            if (labelA && labelB) {
+                return labelA.localeCompare(labelB);
+            } else if (!labelA && !labelB) {
+                return 0;
+            } else if (!labelA) {
+                return -1;
+            } else if (!labelB) {
+                return 1;
+            }
+		};
+
 	    rules.sort(function(ruleA, ruleB) {
-	    	// sort alphabetically
-	    	var labelA = ruleA.rule.legend_label;
-	    	var labelB = ruleB.rule.legend_label;
-	    	if (labelA && labelB) {
-	    		return labelA.localeCompare(labelB);
-			} else if (!labelA && !labelB) {
-	    		return 0;
-			} else if (!labelA) {
-	    		return -1;
-			} else if (!labelB) {
-	    		return 1;
+	    	// sort, by legend_order, then alphabetically
+			var orderA = ruleA.rule.legend_order;
+			var orderB = ruleB.rule.legend_order;
+
+			if (typeof orderA === "undefined" && typeof orderB === "undefined") {
+			    // if neither have defined order, then sort alphabetically
+                return labelSort(ruleA, ruleB);
+			} else if (typeof orderA !== "undefined" && typeof orderB !== "undefined") {
+				// if both have defined order, sort by order
+				if (orderA < orderB) {
+					return -1;
+				} else if (orderA > orderB) {
+					return 1;
+				} else {
+					// if order is same, sort alphabetically
+					return labelSort(ruleA, ruleB);
+				}
+			} else if (typeof orderA === "undefined") {
+				return 1; // A comes after B if B has defined order and A doesnt
+			} else if (typeof orderB === "undefined") {
+				return -1; // A comes before B if A has defined order and B doesnt
 			}
 		});
 	    for (var j=0; j<rules.length; j++) {
