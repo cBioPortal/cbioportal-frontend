@@ -118,6 +118,17 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
         }
     }
 
+    @computed get multipleMutationInfo(): string {
+        const count = this.props.store.dataStore.duplicateMutationCountInMultipleSamples;
+        const mutationsLabel = count === 1 ? "mutation" : "mutations";
+
+        return count > 0 ? `: includes ${count} duplicate ${mutationsLabel} in patients with multiple samples` : "";
+    }
+
+    @computed get itemsLabelPlural(): string {
+        return `Mutations${this.multipleMutationInfo}`;
+    }
+
     public render() {
 
         return (
@@ -216,6 +227,7 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                                     pubMedCache={this.props.pubMedCache}
                                     mutationCountCache={this.props.mutationCountCache}
                                     dataStore={this.props.store.dataStore}
+                                    itemsLabelPlural={this.itemsLabelPlural}
                                     downloadDataFetcher={this.props.store.downloadDataFetcher}
                                     myCancerGenomeData={this.props.myCancerGenomeData}
                                     hotspots={this.props.store.indexedHotspotData.result}
