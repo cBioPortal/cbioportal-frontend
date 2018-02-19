@@ -119,7 +119,7 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
 					)}
 					<FlexCol>
 						{!!(this.store.submitError) && (
-							<span className={styles.errorMessage}>
+							<span className={styles.errorMessage} data-test="oqlErrorMessage">
 							{this.store.submitError}
 						</span>
 						)}
