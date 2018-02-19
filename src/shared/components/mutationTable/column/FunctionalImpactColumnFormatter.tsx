@@ -47,7 +47,9 @@ class FunctionalImpactColumnTooltip extends React.Component<FunctionalImpactColu
                     <thead>
                         <tr>
                             <th>Legend</th>
+                            {/* TODO: enable when MutationAsessor comes back online
                             <th>
+                                {/*
                                 <span
                                     style={{display:'inline-block',width:22}}
                                     title='Mutation Asessor'
@@ -59,7 +61,7 @@ class FunctionalImpactColumnTooltip extends React.Component<FunctionalImpactColu
                                         alt='Mutation Assessor'
                                     />
                                 </span>
-                            </th>
+                            </th> */}
                             <th>
                                 <span
                                     style={{display:'inline-block',width:22}}
@@ -95,11 +97,11 @@ class FunctionalImpactColumnTooltip extends React.Component<FunctionalImpactColu
                                     <i className='fa fa-circle' aria-hidden="true"></i>
                                 </span>
                             </td>
-                            <td className={mutationAssessorStyles['ma-high']}>high</td>
+                            {/* <td className={mutationAssessorStyles['ma-high']}>high</td> */}
                             <td className={siftStyles['sift-deleterious']}>deleterious</td>
                             <td className={polyPhen2Styles['polyPhen2-probably_damaging']}>probably_damaging</td>
                         </tr>
-                        <tr>
+                        {/* <tr>
                             <td>
                                 <span className={classNames(annotationStyles["annotation-item-text"], mutationAssessorStyles[`ma-medium`])}>
                                     <i className='fa fa-circle' aria-hidden="true"></i>
@@ -108,14 +110,14 @@ class FunctionalImpactColumnTooltip extends React.Component<FunctionalImpactColu
                             <td className={mutationAssessorStyles['ma-medium']}>medium</td>
                             <td>-</td>
                             <td>-</td>
-                        </tr>
+                        </tr> */}
                         <tr>
                             <td>
                                 <span className={classNames(annotationStyles["annotation-item-text"], mutationAssessorStyles[`ma-low`])}>
                                     <i className='fa fa-circle' aria-hidden="true"></i>
                                 </span>
                             </td>
-                            <td className={mutationAssessorStyles['ma-low']}>low</td>
+                            {/* <td className={mutationAssessorStyles['ma-low']}>low</td> */}
                             <td className={siftStyles['sift-deleterious_low_confidence']}>deleterious_low_confidence</td>
                             <td className={polyPhen2Styles['polyPhen2-possibly_damaging']}>possibly_damaging</td>
                         </tr>
@@ -125,13 +127,13 @@ class FunctionalImpactColumnTooltip extends React.Component<FunctionalImpactColu
                                     <i className='fa fa-circle' aria-hidden="true"></i>
                                 </span>
                             </td>
-                            <td className={mutationAssessorStyles['ma-neutral']}>neutral</td>
+                            {/* <td className={mutationAssessorStyles['ma-neutral']}>neutral</td> */}
                             <td className={siftStyles['sift-tolerated_low_confidence']}>tolerated_low_confidence</td>
                             <td className={polyPhen2Styles['polyPhen2-benign']}>benign</td>
                         </tr>
                         <tr>
                             <td></td>
-                            <td>-</td>
+                            {/* <td>-</td> */}
                             <td className={siftStyles['sift-tolerated']}>tolerated</td>
                             <td>-</td>
                         </tr>
@@ -202,7 +204,7 @@ export default class FunctionalImpactColumnFormatter {
             <div>
                 {name}<br />
                 <div style={{height:14}}>
-                    <DefaultTooltip
+                    {/* <DefaultTooltip
                         overlay={<FunctionalImpactColumnTooltip active='mutationAssessor' />}
                         placement="topLeft"
                         trigger={['hover', 'focus']}
@@ -218,7 +220,7 @@ export default class FunctionalImpactColumnFormatter {
                                 alt='Sift'
                             />
                         </span>
-                    </DefaultTooltip>
+                    </DefaultTooltip> */}
                     <DefaultTooltip
                         overlay={<FunctionalImpactColumnTooltip active='sift' />}
                         placement="topLeft"
@@ -329,9 +331,10 @@ export default class FunctionalImpactColumnFormatter {
 
             return functionalImpactData && (
                 <div>
+                    {/* TODO: Enable after Mutation Assessor comes back online
                     <MutationAssessor
                         mutationAssessor={functionalImpactData.mutationAssessor}
-                    />
+                    /> */}
                     <Sift
                         siftScore={functionalImpactData.siftScore}
                         siftPrediction={functionalImpactData.siftPrediction}
