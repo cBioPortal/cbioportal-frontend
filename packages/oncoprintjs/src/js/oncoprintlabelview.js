@@ -20,6 +20,7 @@ var OncoprintLabelView = (function () {
 	this.label_middles_view_space = {};
 	this.labels = {};
 	this.label_colors = {};
+	this.html_labels = {};
 	this.track_link_urls = {};
 	this.track_descriptions = {};
 	this.tracks = [];
@@ -64,6 +65,7 @@ var OncoprintLabelView = (function () {
 				|| view.track_link_urls[hovered_track]) {
 			    $tooltip_div.append(formatTooltipHeader(
 				    view.labels[hovered_track],
+				    view.html_labels[hovered_track],
 				    view.track_link_urls[hovered_track]));
 			}
 			var track_description = view.track_descriptions[hovered_track];
@@ -153,7 +155,7 @@ var OncoprintLabelView = (function () {
 	    return label;
 	}
     };
-    var formatTooltipHeader = function (label, link_url) {
+    var formatTooltipHeader = function (label, html_label, link_url) {
 	var header_contents;
 	if (link_url) {
 	    header_contents = (
@@ -162,7 +164,7 @@ var OncoprintLabelView = (function () {
 	} else {
 	    header_contents = $('<span>');
 	}
-	header_contents.append(label.html_content || document.createTextNode(label));
+	header_contents.append(html_label || document.createTextNode(label));
 	return $('<b style="display: block;">').append(header_contents);
     };
     var renderAllLabels = function(view) {
@@ -304,6 +306,7 @@ var OncoprintLabelView = (function () {
 	for (var i=0; i<track_ids.length; i++) {
 	    this.labels[track_ids[i]] = model.getTrackLabel(track_ids[i]);
 	    this.label_colors[track_ids[i]] = model.getTrackLabelColor(track_ids[i]);
+	    this.html_labels[track_ids[i]] = model.getOptionalHtmlTrackLabel(track_ids[i]);
 	    this.track_link_urls[track_ids[i]] = model.getTrackLinkUrl(track_ids[i]);
 	}
 	updateFromModel(this, model);
