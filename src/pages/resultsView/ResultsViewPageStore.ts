@@ -44,6 +44,7 @@ import {writeTest} from "../../shared/lib/writeTest";
 import {PatientSurvival} from "../../shared/model/PatientSurvival";
 import {filterCBioPortalWebServiceDataByOQLLine, OQLLineFilterOutput} from "../../shared/lib/oql/oqlfilter";
 import GeneMolecularDataCache from "../../shared/cache/GeneMolecularDataCache";
+import GenesetMolecularDataCache from "../../shared/cache/GenesetMolecularDataCache";
 import GeneCache from "../../shared/cache/GeneCache";
 import ClinicalDataCache from "../../shared/cache/ClinicalDataCache";
 import {IHotspotData} from "../../shared/model/CancerHotspots";
@@ -65,6 +66,11 @@ import {
     initializeCustomDriverAnnotationSettings, computeGenePanelInformation
 } from "./ResultsViewPageStoreUtils";
 
+type Optional<T> = (
+    {isApplicable: true, value: T}
+    | {isApplicable: false, value?: undefined}
+);
+
 export type SamplesSpecificationElement = {studyId: string, sampleId: string, sampleListId: undefined} |
     {studyId: string, sampleId: undefined, sampleListId: string};
 
@@ -73,8 +79,9 @@ export const AlterationTypeConstants = {
     COPY_NUMBER_ALTERATION: 'COPY_NUMBER_ALTERATION',
     MRNA_EXPRESSION: 'MRNA_EXPRESSION',
     PROTEIN_LEVEL: 'PROTEIN_LEVEL',
-    FUSION: 'FUSION'
-}
+    FUSION: 'FUSION',
+    GENESET_SCORE: 'GENESET_SCORE'
+};
 
 export interface ExtendedAlteration extends Mutation, GeneMolecularData {
     molecularProfileAlterationType: MolecularProfile["molecularAlterationType"];
@@ -282,6 +289,9 @@ export function extendSamplesWithCancerType(samples:Sample[], clinicalDataForSam
 
 }
 
+/* fields and methods in the class below are ordered based on roughly
+/* chronological setup concerns, rather than on encapsulation and public API */
+/* tslint:disable: member-ordering */
 export class ResultsViewPageStore {
 
     constructor() {
@@ -300,6 +310,7 @@ export class ResultsViewPageStore {
     @observable ajaxErrors: Error[] = [];
 
     @observable hugoGeneSymbols: string[];
+    @observable genesetIds: string[];
     @observable samplesSpecification: SamplesSpecificationElement[] = [];
 
     @observable zScoreThreshold: number;
@@ -1284,6 +1295,31 @@ export class ResultsViewPageStore {
         }
     });
 
+    readonly genesetMolecularProfile = remoteData<Optional<MolecularProfile>>({
+        await: () => [
+            this.selectedMolecularProfiles
+        ],
+        invoke: () => {
+            const applicableProfiles = _.filter(
+                this.selectedMolecularProfiles.result!,
+                profile => (
+                    profile.molecularAlterationType === AlterationTypeConstants.GENESET_SCORE
+                    && profile.showProfileInAnalysisTab
+                )
+            );
+            if (applicableProfiles.length > 1) {
+                return Promise.reject(new Error("Queried more than one gene set score profile"));
+            }
+            const genesetProfile = applicableProfiles.pop();
+            const value: Optional<MolecularProfile> = (
+                genesetProfile
+                ? {isApplicable: true, value: genesetProfile}
+                : {isApplicable: false}
+            );
+            return Promise.resolve(value);
+        }
+    });
+
     readonly studyToDataQueryFilter = remoteData<{ [studyId: string]: IDataQueryFilter }>({
         await: () => [this.studyToSampleIds, this.studyIds],
         invoke: () => {
@@ -1690,6 +1726,17 @@ export class ResultsViewPageStore {
                 )
             );
         }
+    });
+
+    readonly genesetMolecularDataCache = remoteData({
+        await:() => [
+            this.molecularProfileIdToDataQueryFilter
+        ],
+        invoke: () => Promise.resolve(
+            new GenesetMolecularDataCache(
+                this.molecularProfileIdToDataQueryFilter.result!
+            )
+        )
     });
 
     @cached get geneCache() {
