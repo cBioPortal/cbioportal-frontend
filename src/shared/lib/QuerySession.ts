@@ -1,4 +1,4 @@
-import {GeneticTrackDatum, HeatmapTrackDatum} from "../components/oncoprint/Oncoprint";
+import {GeneticTrackDatum, IGeneHeatmapTrackDatum} from "../components/oncoprint/Oncoprint";
 import {SingleGeneQuery} from "./oql/oql-parser";
 export type OncoprintSampleGeneticTrackData = {
     altered_sample_uids: string[];
@@ -44,7 +44,7 @@ export type OncoprintHeatmapTrackData = {
     gene: string;
     genetic_alteration_type: string;
     genetic_profile_id: string;
-    oncoprint_data: HeatmapTrackDatum[];
+    oncoprint_data: IGeneHeatmapTrackDatum[];
 };
 
 export type KnownMutationSettings = {
