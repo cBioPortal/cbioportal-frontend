@@ -94,19 +94,25 @@ declare module "oncoprintjs"
         cell_height?: number;
         track_padding?: number;
         has_column_spacing?: boolean;
-        data_id_key?: string;
-        tooltipFn?:TrackTooltipFn<D>;
+        data_id_key?: keyof D;
+        tooltipFn?: TrackTooltipFn<D>;
         removable?:boolean;
         removeCallback?:(track_id:TrackId)=>void;
-        label?:string;
-        description?:string;
+        label?: string;
+        html_label?: string;
+        label_color?: string;
+        link_url?: string;
+        description?: string;
         track_info?:string;
         sortCmpFn?:TrackSortSpecification<D>;
         sort_direction_changeable?:boolean;
         onSortDirectionChange?:(track_id:TrackId, dir:number)=>void;
         init_sort_direction?:TrackSortDirection;
         data?:D[];
-        rule_set_params?:RuleSetParams;
+        rule_set_params?: RuleSetParams;
+        expansion_of?: TrackId;
+        expandCallback?: (id: TrackId) => void;
+        expandButtonTextGetter?: (is_expanded: boolean) => string;
     };
 
     export default class OncoprintJS<D> {
@@ -122,8 +128,10 @@ declare module "oncoprintjs"
         removeTrack:(track_id:TrackId)=>void;
         removeTracks:(track_ids:TrackId[])=>void;
         getTracks:()=>TrackId[];
-        removeAllTracks:()=>void;
-        setHorzZoomToFit:(ids:string[])=>void;
+        removeAllTracks: () => void;
+        removeExpansionTracksFor: (parent_track: TrackId) => void;
+        removeAllExpansionTracksInGroup: (index: TrackGroupIndex) => void;
+        setHorzZoomToFit: (ids: string[]) => void;
         updateHorzZoomToFitIds:(ids:string[])=>void;
         getMinHorzZoom:()=>number;
         getHorzZoom:()=>number;

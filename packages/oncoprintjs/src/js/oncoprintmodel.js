@@ -133,6 +133,7 @@ var OncoprintModel = (function () {
 	// Track Properties
 	this.track_label = {};
 	this.track_label_color = {};
+	this.track_html_label = {};
 	this.track_link_url = {};
 	this.track_description = {};
 	this.cell_height = {};
@@ -714,22 +715,24 @@ var OncoprintModel = (function () {
 	    var params = params_list[i];
 	    addTrack(this, params.track_id, params.target_group, params.track_group_header,
 		    params.cell_height, params.track_padding, params.has_column_spacing,
-		    params.data_id_key, params.tooltipFn, params.link_url,
-		    params.removable, params.removeCallback, params.label, params.description, params.track_info,
+		    params.data_id_key, params.tooltipFn, params.link_url, params.removable,
+		    params.removeCallback, params.label, params.description, params.track_info,
 		    params.sortCmpFn, params.sort_direction_changeable, params.init_sort_direction, params.onSortDirectionChange,
-		    params.data, params.rule_set, params.track_label_color, params.expansion_of,
-		    params.expandCallback, params.expandButtonTextGetter);
+		    params.data, params.rule_set, params.track_label_color, params.html_label,
+		    params.expansion_of, params.expandCallback, params.expandButtonTextGetter
+	    );
 	}
 	this.track_tops.update();
     }
   
     var addTrack = function (model, track_id, target_group, track_group_header,
 	    cell_height, track_padding, has_column_spacing,
-	    data_id_key, tooltipFn, link_url,
-	    removable, removeCallback, label, description, track_info,
+	    data_id_key, tooltipFn, link_url, removable,
+	    removeCallback, label, description, track_info,
 	    sortCmpFn, sort_direction_changeable, init_sort_direction, onSortDirectionChange,
-	    data, rule_set, track_label_color, expansion_of, expandCallback,
-	    expandButtonTextGetter) {
+	    data, rule_set, track_label_color, html_label,
+	    expansion_of, expandCallback, expandButtonTextGetter
+    ) {
 	model.track_label[track_id] = ifndef(label, "Label");
 	model.track_label_color[track_id] = ifndef(track_label_color, "black");
 	model.track_link_url[track_id] = ifndef(link_url, null);
@@ -760,9 +763,13 @@ var OncoprintModel = (function () {
 	model.track_sort_direction_change_callback[track_id] = ifndef(onSortDirectionChange, function() {});
 	model.track_data[track_id] = ifndef(data, []);
 	model.track_data_id_key[track_id] = ifndef(data_id_key, 'id');
-	
+
 	model.track_info[track_id] = ifndef(track_info, "");
-	
+
+	if (typeof html_label !== 'undefined') {
+	    model.track_html_label[track_id] = html_label;
+	}
+
 	if (typeof rule_set !== 'undefined') {
 	    model.rule_sets[rule_set.rule_set_id] = rule_set;
 	    model.rule_set_active_rules[rule_set.rule_set_id] = {};
@@ -1114,6 +1121,10 @@ var OncoprintModel = (function () {
     
     OncoprintModel.prototype.getTrackLabelColor = function (track_id) {
 	return this.track_label_color[track_id];
+    }
+    
+    OncoprintModel.prototype.getOptionalHtmlTrackLabel = function (track_id) {
+	return this.track_html_label[track_id];
     }
     
     OncoprintModel.prototype.getTrackLinkUrl = function (track_id) {
