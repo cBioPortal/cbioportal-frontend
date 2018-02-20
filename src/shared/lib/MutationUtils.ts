@@ -123,7 +123,7 @@ export function countDuplicateMutations(groupedMutations: {[key: string]: Mutati
     // helper to get the total sum
     const sumReducer = (acc: number, current: number) => acc + current;
 
-    return _.values(groupedMutations).map(countMapper).reduce(sumReducer);
+    return _.values(groupedMutations).map(countMapper).reduce(sumReducer, 0);
 }
 
 export function countUniqueMutations(mutations: Mutation[]): number
