@@ -1141,6 +1141,10 @@ export class QueryStore
 			return (result.alterations || []).some(alt => alt.alteration_type === 'exp');
 		});
 
+		const haveProtInQuery = this.oql.query.some(result => {
+			return (result.alterations || []).some(alt => alt.alteration_type === 'prot');
+		});
+
 		if (!this.selectedStudyIds.length)
 			return "Please select one or more cancer studies.";
 
@@ -1163,7 +1167,11 @@ export class QueryStore
 		}
 		else if (haveExpInQuery && this.selectedStudyIds.length > 1)
 		{
-			return "Expression filtering in the gene list is not supported when doing cross cancer queries.";
+			return "Expression filtering in the gene list (the EXP command) is not supported when doing cross cancer queries.";
+		}
+		else if (haveProtInQuery && this.selectedStudyIds.length > 1)
+		{
+			return "Protein level filtering in the gene list (the PROT command) is not supported when doing cross cancer queries.";
 		}
 
 		if (this.selectedProfileIds.length !== 0) {
