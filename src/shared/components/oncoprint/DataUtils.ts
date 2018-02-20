@@ -10,7 +10,12 @@ import {
     GeneMolecularData, GenePanelData, MolecularProfile, Mutation, MutationCount, Patient,
     Sample
 } from "../../api/generated/CBioPortalAPI";
-import {ClinicalTrackDatum, GeneticTrackDatum, HeatmapTrackDatum} from "./Oncoprint";
+import {
+    ClinicalTrackDatum,
+    GeneticTrackDatum,
+    IBaseHeatmapTrackDatum,
+    IGeneHeatmapTrackDatum,
+} from "./Oncoprint";
 import {isMutationCount, isSample, isSampleList} from "../../lib/CBioPortalAPIUtils";
 import {getSimplifiedMutationType, SimplifiedMutationType} from "../../lib/oql/accessors";
 import _ from "lodash";
@@ -225,14 +230,14 @@ export function makeGeneticTrackData(
     return ret;
 }
 
-
-export function fillHeatmapTrackDatum(
-    trackDatum: Partial<HeatmapTrackDatum>,
-    hugoGeneSymbol: string,
+export function fillHeatmapTrackDatum<T extends IBaseHeatmapTrackDatum, K extends keyof T>(
+    trackDatum: Partial<T>,
+    featureKey: K,
+    featureId: string,
     case_:Sample|Patient,
-    data?:GeneMolecularData[]
+    data?: {value: string}[]
 ) {
-    trackDatum.hugo_gene_symbol = hugoGeneSymbol;
+    trackDatum[featureKey] = featureId;
     trackDatum.study = case_.studyId;
     if (!data || !data.length) {
         trackDatum.profile_data = null;
@@ -244,49 +249,52 @@ export function fillHeatmapTrackDatum(
             throw Error("Unexpectedly received multiple heatmap profile data for one sample");
         } else {
             // aggregate samples for this patient by selecting the highest absolute (Z-)score
-            trackDatum.profile_data = data.reduce((maxInAbsVal:number, next:GeneMolecularData)=>{
-                const val = parseFloat(next.value);
-                if (Math.abs(val) > Math.abs(maxInAbsVal)) {
-                    return val;
-                } else {
-                    return maxInAbsVal;
-                }
-            }, 0);
+            trackDatum.profile_data = data.reduce(
+                (maxInAbsVal: number, next) => {
+                    const val = parseFloat(next.value);
+                    if (Math.abs(val) > Math.abs(maxInAbsVal)) {
+                        return val;
+                    } else {
+                        return maxInAbsVal;
+                    }
+                },
+                0);
         }
     }
     return trackDatum;
 }
 
-export function makeHeatmapTrackData(
-    hugoGeneSymbol: string,
+export function makeHeatmapTrackData<T extends IBaseHeatmapTrackDatum, K extends keyof T>(
+    featureKey: K,
+    featureId: string,
     cases:Sample[]|Patient[],
-    data: GeneMolecularData[]
-):HeatmapTrackDatum[] {
+    data: {value: string, uniquePatientKey: string, uniqueSampleKey: string}[]
+): T[] {
     if (!cases.length) {
         return [];
     }
     const sampleData = isSampleList(cases);
-    let keyToData:{[uniqueKey:string]:GeneMolecularData[]};
-    let ret:HeatmapTrackDatum[];
+    let keyToData:{[uniqueKey:string]:{value: string}[]};
+    let ret: T[];
     if (isSampleList(cases)) {
         keyToData = _.groupBy(data, d=>d.uniqueSampleKey);
         ret = cases.map(c=>{
-            const trackDatum:Partial<HeatmapTrackDatum> = {};
+            const trackDatum: Partial<T> = {};
             trackDatum.sample = c.sampleId;
             trackDatum.uid = c.uniqueSampleKey;
-            const data = keyToData[c.uniqueSampleKey];
-            fillHeatmapTrackDatum(trackDatum, hugoGeneSymbol, c, data);
-            return trackDatum as HeatmapTrackDatum;
+            const caseData = keyToData[c.uniqueSampleKey];
+            fillHeatmapTrackDatum(trackDatum, featureKey, featureId, c, caseData);
+            return trackDatum as T;
         });
     } else {
         keyToData = _.groupBy(data, d=>d.uniquePatientKey);
         ret = cases.map(c=>{
-            const trackDatum:Partial<HeatmapTrackDatum> = {};
+            const trackDatum: Partial<T> = {};
             trackDatum.patient = c.patientId;
             trackDatum.uid = c.uniquePatientKey;
-            const data = keyToData[c.uniquePatientKey];
-            fillHeatmapTrackDatum(trackDatum, hugoGeneSymbol, c, data);
-            return trackDatum as HeatmapTrackDatum;
+            const caseData = keyToData[c.uniquePatientKey];
+            fillHeatmapTrackDatum(trackDatum, featureKey, featureId, c, caseData);
+            return trackDatum as T;
         });
     }
     return ret;
