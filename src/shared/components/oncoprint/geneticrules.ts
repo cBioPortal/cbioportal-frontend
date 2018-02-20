@@ -15,6 +15,19 @@ export const MUT_COLOR_PROMOTER = '#FFA942';
 export const PROT_COLOR_UP = "#ff3df8";
 export const PROT_COLOR_DOWN = "#00E1FF";
 
+
+
+const MUTATION_LEGEND_ORDER = 0;
+const FUSION_LEGEND_ORDER = 1;
+const AMP_LEGEND_ORDER = 10;
+const GAIN_LEGEND_ORDER = 11;
+const HOMDEL_LEGEND_ORDER = 12;
+const HETLOSS_LEGEND_ORDER = 13;
+const MRNA_UP_LEGEND_ORDER = 20;
+const MRNA_DOWN_LEGEND_ORDER = 21;
+const PROT_UP_LEGEND_ORDER = 31;
+const PROT_DOWN_LEGEND_ORDER = 32;
+
 let non_mutation_rule_params = {
     // Default: gray rectangle
     '*': {
@@ -23,7 +36,8 @@ let non_mutation_rule_params = {
 		'fill': 'rgba(190, 190, 190, 1)',
 		'z': 1
 	    }],
-	legend_label: "No alterations"
+	legend_label: "No alterations",
+	legend_order: Number.POSITIVE_INFINITY // put at the end always
     },
     // Copy number alteration
     'disp_cna': {
@@ -39,6 +53,7 @@ let non_mutation_rule_params = {
 		    'z': 2,
 		}],
 	    legend_label: 'Amplification',
+		legend_order: AMP_LEGEND_ORDER
 	},
 	// Light red rectangle for gain
 	'gain': {
@@ -52,6 +67,7 @@ let non_mutation_rule_params = {
 		    'z': 2,
 		}],
 	    legend_label: 'Gain',
+		legend_order: GAIN_LEGEND_ORDER
 	},
 	// Blue rectangle for deep deletion 
 	'homdel': {
@@ -65,6 +81,7 @@ let non_mutation_rule_params = {
 		    'z': 2,
 		}],
 	    legend_label: 'Deep Deletion',
+		legend_order: HOMDEL_LEGEND_ORDER
 	},
 	// Light blue rectangle for shallow deletion
 	'hetloss': {
@@ -78,6 +95,7 @@ let non_mutation_rule_params = {
 		    'z': 2,
 		}],
 	    legend_label: 'Shallow Deletion',
+		legend_order: HETLOSS_LEGEND_ORDER
 	}
     },
     // mRNA regulation
@@ -96,6 +114,7 @@ let non_mutation_rule_params = {
 		    'z': 3,
 		}],
 	    legend_label: 'mRNA Upregulation',
+		legend_order: MRNA_UP_LEGEND_ORDER
 	},
 	// Light blue outline for downregulation
 	'down': {
@@ -111,6 +130,7 @@ let non_mutation_rule_params = {
 		    'z': 3,
 		}],
 	    legend_label: 'mRNA Downregulation',
+		legend_order: MRNA_DOWN_LEGEND_ORDER
 	},
     },
     // protein expression regulation
@@ -127,6 +147,7 @@ let non_mutation_rule_params = {
 			'z': 4,
 		}],
 	    legend_label: 'Protein Upregulation',
+		legend_order: PROT_UP_LEGEND_ORDER
 	},
 	// small down arrow for upregulated
 	'down': {
@@ -140,6 +161,7 @@ let non_mutation_rule_params = {
 			'z': 4,
 		}],
 	    legend_label: 'Protein Downregulation',
+		legend_order: PROT_DOWN_LEGEND_ORDER
 	}
     },
     // fusion
@@ -155,7 +177,8 @@ let non_mutation_rule_params = {
 			'height': '60%',
 			'z': 5
 		    }],
-		legend_label: 'Fusion'
+		legend_label: 'Fusion',
+		legend_order: FUSION_LEGEND_ORDER
 	}
     },
 };
@@ -175,7 +198,8 @@ export const genetic_rule_set_same_color_for_all_no_recurrence:RuleSetParams = {
 			'height': '33.33%',
 			'z': 6
 		}],
-		legend_label: 'Mutation'
+		legend_label: 'Mutation',
+        legend_order: MUTATION_LEGEND_ORDER
 	    }
 	}
     })
@@ -195,7 +219,8 @@ export const genetic_rule_set_same_color_for_all_recurrence:RuleSetParams = {
 			'height': '33.33%',
 			'z': 6
 		}],
-		legend_label: 'Mutation (putative driver)'
+		legend_label: 'Mutation (putative driver)',
+        legend_order: MUTATION_LEGEND_ORDER
 	    },
 	    'missense,inframe,trunc,promoter,promoter_rec': { 
 		shapes: [{
@@ -207,7 +232,8 @@ export const genetic_rule_set_same_color_for_all_recurrence:RuleSetParams = {
 			'height': '33.33%',
 			'z': 6
 		}],
-		legend_label: 'Mutation (unknown significance)'
+		legend_label: 'Mutation (unknown significance)',
+        legend_order: MUTATION_LEGEND_ORDER
 	    },
 	},
     })
@@ -227,7 +253,8 @@ export const genetic_rule_set_different_colors_no_recurrence:RuleSetParams = {
 			'height': '33.33%',
 			'z': 6,
 		    }],
-		legend_label: 'Promoter Mutation'
+		legend_label: 'Promoter Mutation',
+        legend_order: MUTATION_LEGEND_ORDER
 	    },
 	    'trunc,trunc_rec': {
 		shapes: [{
@@ -240,6 +267,7 @@ export const genetic_rule_set_different_colors_no_recurrence:RuleSetParams = {
 			'z': 6,
 		    }],
 		legend_label: 'Truncating Mutation',
+        legend_order: MUTATION_LEGEND_ORDER
 	    },
 	    'inframe,inframe_rec': {
 		shapes: [{
@@ -252,6 +280,7 @@ export const genetic_rule_set_different_colors_no_recurrence:RuleSetParams = {
 			'z': 6,
 		    }],
 		legend_label: 'Inframe Mutation',
+        legend_order: MUTATION_LEGEND_ORDER
 	    },
 	    'missense,missense_rec': {
 		shapes: [{
@@ -264,6 +293,7 @@ export const genetic_rule_set_different_colors_no_recurrence:RuleSetParams = {
 			'z': 6,
 		    }],
 		legend_label: 'Missense Mutation',
+        legend_order: MUTATION_LEGEND_ORDER
 	    },
 	}
     })
@@ -283,7 +313,8 @@ export const genetic_rule_set_different_colors_recurrence:RuleSetParams = {
 			'height': '33.33%',
 			'z': 6,
 		    }],
-		legend_label: 'Promoter Mutation'
+		legend_label: 'Promoter Mutation',
+        legend_order: MUTATION_LEGEND_ORDER
 	    },
 	    'trunc_rec': {
 		shapes: [{
@@ -296,6 +327,7 @@ export const genetic_rule_set_different_colors_recurrence:RuleSetParams = {
 			'z': 6,
 		    }],
 		legend_label: 'Truncating Mutation (putative driver)',
+        legend_order: MUTATION_LEGEND_ORDER
 	    },
 	    'trunc': {
 		shapes: [{
@@ -308,6 +340,7 @@ export const genetic_rule_set_different_colors_recurrence:RuleSetParams = {
 			'z': 6,
 		    }],
 		legend_label: 'Truncating Mutation (unknown significance)',
+        legend_order: MUTATION_LEGEND_ORDER
 	    },
 	    'inframe_rec': {
 		shapes: [{
@@ -320,6 +353,7 @@ export const genetic_rule_set_different_colors_recurrence:RuleSetParams = {
 			'z': 6,
 		    }],
 		legend_label: 'Inframe Mutation (putative driver)',
+        legend_order: MUTATION_LEGEND_ORDER
 	    },
 	    'inframe': {
 		shapes: [{
@@ -332,6 +366,7 @@ export const genetic_rule_set_different_colors_recurrence:RuleSetParams = {
 			'z': 6,
 		    }],
 		legend_label: 'Inframe Mutation (unknown significance)',
+        legend_order: MUTATION_LEGEND_ORDER
 	    },
 	    'missense_rec': {
 		shapes: [{
@@ -344,6 +379,7 @@ export const genetic_rule_set_different_colors_recurrence:RuleSetParams = {
 			'z': 6,
 		    }],
 		legend_label: 'Missense Mutation (putative driver)',
+        legend_order: MUTATION_LEGEND_ORDER
 	    },
 	    'missense': {
 		shapes: [{
@@ -356,6 +392,7 @@ export const genetic_rule_set_different_colors_recurrence:RuleSetParams = {
 			'z': 6,
 		    }],
 		legend_label: 'Missense Mutation (unknown significance)',
+        legend_order: MUTATION_LEGEND_ORDER
 	    },
 	}
     })
