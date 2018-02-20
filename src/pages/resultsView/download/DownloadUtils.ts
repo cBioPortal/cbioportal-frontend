@@ -8,7 +8,7 @@ import {
 import {makeGeneticTrackData} from "shared/components/oncoprint/DataUtils";
 import {OQLLineFilterOutput} from "shared/lib/oql/oqlfilter";
 import {GeneticTrackDatum} from "shared/components/oncoprint/Oncoprint";
-import {Sample, Gene} from "shared/api/generated/CBioPortalAPI";
+import {Sample, Gene, MolecularProfile} from "shared/api/generated/CBioPortalAPI";
 import {ICaseAlteration, IOqlData, ISubAlteration} from "./CaseAlterationTable";
 import {IGeneAlteration} from "./GeneAlterationTable";
 import {CoverageInformation} from "../ResultsViewPageStoreUtils";
@@ -272,14 +272,15 @@ export function generateDownloadData(sampleAlterationDataByGene: {[key: string]:
 }
 
 export function generateCaseAlterationData(
+    selectedMolecularProfiles:MolecularProfile[],
     caseAggregatedDataByOQLLine?: {
         cases:CaseAggregatedData<AnnotatedExtendedAlteration>,
         oql:OQLLineFilterOutput<AnnotatedExtendedAlteration>
     }[],
     genePanelInformation?: CoverageInformation,
     samples: Sample[] = [],
-    geneAlterationDataByGene?: {[gene: string]: IGeneAlteration}): ICaseAlteration[]
-{
+    geneAlterationDataByGene?: {[gene: string]: IGeneAlteration}
+): ICaseAlteration[] {
     const caseAlterationData: {[studyCaseId: string] : ICaseAlteration} = {};
 
     if (caseAggregatedDataByOQLLine &&
@@ -290,7 +291,7 @@ export function generateCaseAlterationData(
 
         caseAggregatedDataByOQLLine.forEach(data => {
             const geneticTrackData = makeGeneticTrackData(
-                data.cases.samples, data.oql.gene, samples, genePanelInformation);
+                data.cases.samples, data.oql.gene, samples, genePanelInformation, selectedMolecularProfiles);
 
             geneticTrackData.forEach(datum => {
                 const studyId = datum.study_id;

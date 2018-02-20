@@ -39,6 +39,7 @@ import QuerySummary from "./querySummary/QuerySummary";
 import {QueryStore} from "../../shared/components/query/QueryStore";
 import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import {getGAInstance} from "../../shared/lib/tracking";
+import CoExpressionTabContainer from "./coExpression/CoExpressionTabContainer";
 
 
 const win = (window as any);
@@ -326,6 +327,13 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             return (
                 <div>
                     <DownloadTab store={this.resultsViewPageStore} />
+                </div>
+            );
+        });
+        exposeComponentRenderer('renderCoExpressionTab', ()=>{
+            return (
+                <div className="cbioportal-frontend">
+                    <CoExpressionTabContainer store={this.resultsViewPageStore}/>
                 </div>
             );
         });
