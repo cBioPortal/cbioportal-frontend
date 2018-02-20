@@ -6,9 +6,8 @@ import {
     computed, IObservableObject, IObservableValue, IReactionDisposer, observable, ObservableMap,
     reaction
 } from "mobx";
-import {ClinicalTrackSpec, GeneticTrackDatum, GeneticTrackSpec, HeatmapTrackSpec} from "./Oncoprint";
 import {remoteData} from "../../api/remoteData";
-import Oncoprint from "./Oncoprint";
+import {default as Oncoprint, GENETIC_TRACK_GROUP_INDEX} from "./Oncoprint";
 import OncoprintControls, {
     IOncoprintControlsHandlers,
     IOncoprintControlsState
@@ -17,7 +16,8 @@ import {ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageSt
 import {ClinicalAttribute, Gene, MolecularProfile, Mutation, Sample} from "../../api/generated/CBioPortalAPI";
 import {
     percentAltered, makeGeneticTracksMobxPromise,
-    makeHeatmapTracksMobxPromise, makeClinicalTracksMobxPromise
+    makeGenesetHeatmapTracksMobxPromise, makeHeatmapTracksMobxPromise,
+    makeClinicalTracksMobxPromise
 } from "./OncoprintUtils";
 import _ from "lodash";
 import onMobxPromise from "shared/lib/onMobxPromise";
@@ -92,6 +92,9 @@ type HeatmapTrackGroupRecord = {
     molecularProfileId:string
 };
 
+/* fields and methods in the class below are ordered based on roughly
+/* chronological setup concerns, rather than on encapsulation and public API */
+/* tslint:disable: member-ordering */
 @observer
 export default class ResultsViewOncoprint extends React.Component<IResultsViewOncoprintProps, {}> {
     @observable columnMode:"sample"|"patient" = "patient";
@@ -732,6 +735,21 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         return (this.columnMode === "sample" ? this.sampleHeatmapTracks : this.patientHeatmapTracks);
     }
 
+    readonly genesetHeatmapTrackGroup = remoteData<number>({
+        await: () => [this.heatmapTracks],
+        invoke: () => Promise.resolve(1 + Math.max(
+            GENETIC_TRACK_GROUP_INDEX,
+            ...(this.heatmapTracks.result!.map(hmTrack => hmTrack.trackGroupIndex))
+        ))
+    });
+
+    readonly sampleGenesetHeatmapTracks = makeGenesetHeatmapTracksMobxPromise(this, true);
+    readonly patientGenesetHeatmapTracks = makeGenesetHeatmapTracksMobxPromise(this, false);
+    @computed get genesetHeatmapTracks() {
+        return (this.columnMode === "sample" ? this.sampleGenesetHeatmapTracks : this.patientGenesetHeatmapTracks);
+    }
+
+
     @computed get clusterHeatmapTrackGroupIndex() {
         if (this.sortMode.type === "heatmap") {
             return this.molecularProfileIdToHeatmapTracks.get(this.sortMode.clusteredHeatmapProfile!)!.trackGroupIndex;
@@ -840,7 +858,12 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     public render() {
 
-        const isLoading = (this.clinicalTracks.isPending || this.geneticTracks.isPending || this.heatmapTracks.isPending);
+        const isLoading = (
+            this.clinicalTracks.isPending
+            || this.geneticTracks.isPending
+            || this.genesetHeatmapTracks.isPending
+            || this.heatmapTracks.isPending
+        );
 
         return (
             <div className="cbioportal-frontend"
@@ -865,6 +888,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                     oncoprintRef={this.oncoprintRef}
                     clinicalTracks={this.clinicalTracks.result}
                     geneticTracks={this.geneticTracks.result}
+                    genesetHeatmapTracks={this.genesetHeatmapTracks.result}
                     heatmapTracks={this.heatmapTracks.result}
                     divId={this.props.divId}
                     width={1050}
