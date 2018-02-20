@@ -1,10 +1,14 @@
 import {getSimplifiedMutationType} from "shared/lib/oql/accessors";
 import {assert} from "chai";
-import {GeneMolecularData, MolecularProfile, Mutation} from "../../shared/api/generated/CBioPortalAPI";
+import {
+    Gene, GeneMolecularData, GenePanelData, MolecularProfile, Mutation, Patient,
+    Sample
+} from "../../shared/api/generated/CBioPortalAPI";
 import {
     annotateMolecularDatum,
     annotateMutationPutativeDriver,
-    computeCustomDriverAnnotationReport, computePutativeDriverAnnotatedMutations, getOncoKbOncogenic,
+    computeCustomDriverAnnotationReport, computeGenePanelInformation, computePutativeDriverAnnotatedMutations,
+    getOncoKbOncogenic,
     initializeCustomDriverAnnotationSettings
 } from "./ResultsViewPageStoreUtils";
 import {observable} from "mobx";
@@ -560,6 +564,279 @@ describe("ResultsViewPageStoreUtils", ()=>{
                     {"profile":{molecularAlterationType:"FUSION"} as MolecularProfile}
                 ),
                 {value:"0", molecularProfileId:"profile", oncoKbOncogenic:""}
+            );
+        });
+    });
+
+    describe("computeGenePanelInformation", ()=>{
+        const genes:Gene[] = [];
+        const samples:Sample[] = [];
+        const patients:Patient[] = [];
+        let genePanelDatum1:any, genePanelDatum2:any, genePanelDatum3:any, genePanelDatum4:any, wxsDatum1:any, wxsDatum2:any, wxsDatum3:any, nsDatum1:any, nsDatum2:any;
+        before(()=>{
+            genes.push({
+                entrezGeneId:0,
+                hugoGeneSymbol:"GENE1"
+            } as Gene);
+            genes.push({
+                entrezGeneId:1,
+                hugoGeneSymbol:"GENE2"
+            } as Gene);
+            genes.push({
+                entrezGeneId:2,
+                hugoGeneSymbol:"GENE3"
+            } as Gene);
+
+            samples.push({
+                uniqueSampleKey:"PATIENT1 SAMPLE1"
+            } as Sample);
+            samples.push({
+                uniqueSampleKey:"PATIENT1 SAMPLE2"
+            } as Sample);
+            samples.push({
+                uniqueSampleKey:"PATIENT2 SAMPLE1"
+            } as Sample);
+
+            patients.push({
+                uniquePatientKey:"PATIENT1"
+            } as Patient);
+            patients.push({
+                uniquePatientKey:"PATIENT2"
+            } as Patient);
+
+            genePanelDatum1 = {
+                entrezGeneId: 0,
+                uniqueSampleKey: "PATIENT1 SAMPLE1",
+                uniquePatientKey: "PATIENT1",
+                sequenced: true,
+                genePanelId: "GENEPANEL1"
+            };
+
+            genePanelDatum2 = {
+                entrezGeneId: 1,
+                uniqueSampleKey: "PATIENT1 SAMPLE1",
+                uniquePatientKey: "PATIENT1",
+                sequenced: true,
+                genePanelId: "GENEPANEL2"
+            };
+
+            genePanelDatum3 = {
+                entrezGeneId: 0,
+                uniqueSampleKey: "PATIENT2 SAMPLE1",
+                uniquePatientKey: "PATIENT2",
+                sequenced: true,
+                genePanelId: "GENEPANEL2"
+            };
+
+            genePanelDatum4 = {
+                entrezGeneId: 1,
+                uniqueSampleKey: "PATIENT2 SAMPLE1",
+                uniquePatientKey: "PATIENT2",
+                sequenced: true,
+                genePanelId: "GENEPANEL2"
+            };
+
+            wxsDatum1 = {
+                entrezGeneId: 0,
+                uniqueSampleKey:"PATIENT1 SAMPLE2",
+                uniquePatientKey: "PATIENT1",
+                sequenced: true,
+                wholeExomeSequenced: true
+            };
+
+            wxsDatum2 = {
+                entrezGeneId: 1,
+                uniqueSampleKey:"PATIENT1 SAMPLE2",
+                uniquePatientKey: "PATIENT1",
+                sequenced: true,
+                wholeExomeSequenced: true
+            };
+
+            wxsDatum3 = {
+                entrezGeneId: 2,
+                uniqueSampleKey: "PATIENT1 SAMPLE2",
+                uniquePatientKey: "PATIENT1",
+                sequenced: true,
+                wholeExomeSequenced: true
+            };
+
+            nsDatum1 = {
+                entrezGeneId: 2,
+                uniqueSampleKey: "PATIENT1 SAMPLE1",
+                uniquePatientKey: "PATIENT1",
+                sequenced: false
+            };
+
+            nsDatum2 = {
+                entrezGeneId: 2,
+                uniqueSampleKey: "PATIENT2 SAMPLE1",
+                uniquePatientKey: "PATIENT2",
+                sequenced: false
+            };
+        });
+        it("computes the correct object with no input data", ()=>{
+            assert.deepEqual(
+                computeGenePanelInformation([], samples, patients, genes),
+                {
+                    samples: {
+                        "PATIENT1 SAMPLE1": {
+                            sequencedGenes:{},
+                            wholeExomeSequenced:false
+                        },
+                        "PATIENT1 SAMPLE2": {
+                            sequencedGenes:{},
+                            wholeExomeSequenced:false
+                        },
+                        "PATIENT2 SAMPLE1": {
+                            sequencedGenes:{},
+                            wholeExomeSequenced:false
+                        }
+                    },
+                    patients: {
+                        "PATIENT1": {
+                            sequencedGenes:{},
+                            wholeExomeSequenced:false
+                        },
+                        "PATIENT2": {
+                            sequencedGenes:{},
+                            wholeExomeSequenced:false
+                        }
+                    }
+                }
+            );
+        });
+        it("computes the correct object with gene panel data", ()=>{
+            assert.deepEqual(
+                computeGenePanelInformation([
+                    genePanelDatum1, genePanelDatum2, genePanelDatum3, genePanelDatum4
+                ] as GenePanelData[], samples, patients, genes),
+                {
+                    samples: {
+                        "PATIENT1 SAMPLE1": {
+                            sequencedGenes:{"GENE1":[genePanelDatum1], "GENE2":[genePanelDatum2]},
+                            wholeExomeSequenced:false
+                        },
+                        "PATIENT1 SAMPLE2": {
+                            sequencedGenes:{},
+                            wholeExomeSequenced:false
+                        },
+                        "PATIENT2 SAMPLE1": {
+                            sequencedGenes:{"GENE1":[genePanelDatum3], "GENE2":[genePanelDatum4]},
+                            wholeExomeSequenced:false
+                        }
+                    },
+                    patients: {
+                        "PATIENT1": {
+                            sequencedGenes:{"GENE1":[genePanelDatum1], "GENE2":[genePanelDatum2]},
+                            wholeExomeSequenced:false
+                        },
+                        "PATIENT2": {
+                            sequencedGenes:{"GENE1":[genePanelDatum3], "GENE2":[genePanelDatum4]},
+                            wholeExomeSequenced:false
+                        }
+                    }
+                }
+            );
+        });
+        it("computes the correct object with whole exome sequenced data", ()=>{
+            assert.deepEqual(
+                computeGenePanelInformation([
+                    wxsDatum1, wxsDatum2, wxsDatum3
+                ] as GenePanelData[], samples, patients, genes),
+                {
+                    samples: {
+                        "PATIENT1 SAMPLE1": {
+                            sequencedGenes:{},
+                            wholeExomeSequenced:false
+                        },
+                        "PATIENT1 SAMPLE2": {
+                            sequencedGenes:{},
+                            wholeExomeSequenced:true
+                        },
+                        "PATIENT2 SAMPLE1": {
+                            sequencedGenes:{},
+                            wholeExomeSequenced:false
+                        }
+                    },
+                    patients: {
+                        "PATIENT1": {
+                            sequencedGenes:{},
+                            wholeExomeSequenced:true
+                        },
+                        "PATIENT2": {
+                            sequencedGenes:{},
+                            wholeExomeSequenced:false
+                        }
+                    }
+                }
+            );
+        });
+        it("computes the correct object with not sequenced data", ()=>{
+            assert.deepEqual(
+                computeGenePanelInformation([
+                    nsDatum1, nsDatum2
+                ] as GenePanelData[], samples, patients, genes),
+                {
+                    samples: {
+                        "PATIENT1 SAMPLE1": {
+                            sequencedGenes:{},
+                            wholeExomeSequenced:false
+                        },
+                        "PATIENT1 SAMPLE2": {
+                            sequencedGenes:{},
+                            wholeExomeSequenced:false
+                        },
+                        "PATIENT2 SAMPLE1": {
+                            sequencedGenes:{},
+                            wholeExomeSequenced:false
+                        }
+                    },
+                    patients: {
+                        "PATIENT1": {
+                            sequencedGenes:{},
+                            wholeExomeSequenced:false
+                        },
+                        "PATIENT2": {
+                            sequencedGenes:{},
+                            wholeExomeSequenced:false
+                        }
+                    }
+                }
+            );
+        });
+        it("computes the correct object with gene panel data and whole exome sequenced data and not sequenced data", ()=>{
+            assert.deepEqual(
+                computeGenePanelInformation([
+                    genePanelDatum1, genePanelDatum2, genePanelDatum3, genePanelDatum4,
+                    wxsDatum1, wxsDatum2,
+                    nsDatum1, nsDatum2
+                ] as GenePanelData[], samples, patients, genes),
+                {
+                    samples: {
+                        "PATIENT1 SAMPLE1": {
+                            sequencedGenes:{"GENE1":[genePanelDatum1], "GENE2":[genePanelDatum2]},
+                            wholeExomeSequenced:false
+                        },
+                        "PATIENT1 SAMPLE2": {
+                            sequencedGenes:{},
+                            wholeExomeSequenced:true
+                        },
+                        "PATIENT2 SAMPLE1": {
+                            sequencedGenes:{"GENE1":[genePanelDatum3], "GENE2":[genePanelDatum4]},
+                            wholeExomeSequenced:false
+                        }
+                    },
+                    patients: {
+                        "PATIENT1": {
+                            sequencedGenes:{"GENE1":[genePanelDatum1], "GENE2":[genePanelDatum2]},
+                            wholeExomeSequenced:true
+                        },
+                        "PATIENT2": {
+                            sequencedGenes:{"GENE1":[genePanelDatum3], "GENE2":[genePanelDatum4]},
+                            wholeExomeSequenced:false
+                        }
+                    }
+                }
             );
         });
     });
