@@ -115,8 +115,18 @@ export function groupMutationsByGeneAndPatientAndProteinChange(mutations: Mutati
     return map;
 }
 
+export function countDuplicateMutations(groupedMutations: {[key: string]: Mutation[]}): number
+{
+    // helper to count duplicate mutations
+    const countMapper = (mutations: Mutation[]) => mutations.length > 0 ? mutations.length - 1 : 0;
 
-export function countUniqueMutations(mutations: Mutation[])
+    // helper to get the total sum
+    const sumReducer = (acc: number, current: number) => acc + current;
+
+    return _.values(groupedMutations).map(countMapper).reduce(sumReducer);
+}
+
+export function countUniqueMutations(mutations: Mutation[]): number
 {
     return Object.keys(groupMutationsByGeneAndPatientAndProteinChange(mutations)).length;
 }
