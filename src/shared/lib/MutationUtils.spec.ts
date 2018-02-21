@@ -156,6 +156,11 @@ describe('MutationUtils', () => {
     });
 
     describe('countUniqueMutations', () => {
+        it("counts unique mutations as zero when there are no mutations", () => {
+            assert.equal(countUniqueMutations([]), 0,
+                "total number of unique mutations should be 0");
+        });
+
         it("counts unique mutations correctly", () => {
             const count = countUniqueMutations(mutationsToCount);
 
@@ -165,6 +170,11 @@ describe('MutationUtils', () => {
     });
 
     describe('countDuplicateMutations', () => {
+        it("counts duplicate mutations as zero when there are no mutations", () => {
+            assert.equal(countDuplicateMutations({}), 0,
+                "total number of duplicate mutations should be 0");
+        });
+
         it("counts duplicates correctly for mutations grouped by patients", () => {
             const grouped = groupMutationsByGeneAndPatientAndProteinChange(mutationsToCount);
             const count = countDuplicateMutations(grouped);
