@@ -39,6 +39,20 @@ function makeGenePanelPopupLink(gene_panel_id:string) {
     });
     return anchor;
 }
+
+export function linebreakGenesetId(
+    genesetId: string
+): string {
+    return (
+        // encode the string as the textual contents of an HTML element
+        $('<div>').text(genesetId).html()
+        // Include zero-width spaces to allow line breaks after punctuation in
+        // (typically long) gs names
+        .replace(/_/g, '_&#8203;')
+        .replace(/\./g, '.&#8203;')
+    );
+}
+
 export function makeClinicalTrackTooltip(track:ClinicalTrackSpec, link_id?:boolean) {
     return function(d:any) {
         let ret = '';
