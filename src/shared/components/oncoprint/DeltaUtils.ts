@@ -32,11 +32,11 @@ export function transition(
         oncoprint.keepSorted(false);
     }
     trySuppressRendering(nextProps, prevProps, oncoprint);
-    transitionSortConfig(nextProps, prevProps, oncoprint);
     transitionWhitespaceBetweenColumns(nextProps, prevProps, oncoprint);
     transitionShowMinimap(nextProps, prevProps, oncoprint);
     transitionOnMinimapCloseCallback(nextProps, prevProps, oncoprint);
     transitionTracks(nextProps, prevProps, oncoprint, getTrackSpecKeyToTrackId);
+    transitionSortConfig(nextProps, prevProps, oncoprint);
     transitionTrackGroupSortPriority(nextProps, prevProps, oncoprint);
     transitionHiddenIds(nextProps, prevProps, oncoprint);
     transitionHorzZoomToFit(nextProps, prevProps, oncoprint);
@@ -162,7 +162,7 @@ function shouldNotKeepSorted_ClinicalTracksHelper(
     // Check if
     // (1) A track added/removed
     // (2) Track data changed
-    if (differentTracksOrChangedData(nextProps.geneticTracks || [], prevProps.geneticTracks || [])) {
+    if (differentTracksOrChangedData(nextProps.clinicalTracks || [], prevProps.clinicalTracks || [])) {
         return true;
     }
 }
@@ -174,7 +174,10 @@ function shouldNotKeepSorted_HeatmapTracksHelper(
     // Check if
     // (1) A track added/removed
     // (2) Track data changed
-    if (differentTracksOrChangedData(nextProps.geneticTracks || [], prevProps.geneticTracks || [])) {
+    if (
+        differentTracksOrChangedData(nextProps.heatmapTracks, prevProps.heatmapTracks || [] )
+        || differentTracksOrChangedData(nextProps.genesetHeatmapTracks, prevProps.genesetHeatmapTracks || [])
+    ) {
         return true;
     }
 }

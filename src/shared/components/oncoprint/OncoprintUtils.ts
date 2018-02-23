@@ -285,10 +285,13 @@ export function makeHeatmapTracksMobxPromise(oncoprint:ResultsViewOncoprint, sam
                             trackGroup.genes.delete(gene);
                             if (!trackGroup.genes.size) {
                                 molecularProfileIdToHeatmapTracks.delete(molecularProfileId);
-                                if (oncoprint.sortMode.type === "heatmap" && oncoprint.sortMode.clusteredHeatmapProfile === molecularProfileId) {
-                                    oncoprint.sortByData();
-                                }
                             }
+                        }
+                        if (!molecularProfileIdToHeatmapTracks.has(molecularProfileId)
+                            && oncoprint.sortMode.type === "heatmap"
+                            && oncoprint.sortMode.clusteredHeatmapProfile === molecularProfileId
+                        ) {
+                            oncoprint.sortByData();
                         }
                     })
                 };
@@ -307,8 +310,7 @@ export function makeGenesetHeatmapTracksMobxPromise(
             oncoprint.props.store.patients,
             oncoprint.props.store.genesetMolecularProfile,
             oncoprint.props.store.genesetMolecularDataCache,
-            oncoprint.props.store.genesetLinkMap,
-            oncoprint.genesetHeatmapTrackGroup
+            oncoprint.props.store.genesetLinkMap
         ],
         invoke: async () => {
             const samples = oncoprint.props.store.samples.result!;
@@ -316,7 +318,9 @@ export function makeGenesetHeatmapTracksMobxPromise(
             const molecularProfile = oncoprint.props.store.genesetMolecularProfile.result!;
             const dataCache = oncoprint.props.store.genesetMolecularDataCache.result!;
             const genesetLinkMap = oncoprint.props.store.genesetLinkMap.result!;
-            const trackGroup = oncoprint.genesetHeatmapTrackGroup.result!;
+
+            // observe computed property based on other tracks
+            const trackGroup = oncoprint.genesetHeatmapTrackGroup;
 
             if (!molecularProfile.isApplicable) {
                 return [];
