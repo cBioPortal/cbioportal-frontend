@@ -7,7 +7,7 @@ import {
     reaction
 } from "mobx";
 import {remoteData} from "../../api/remoteData";
-import {default as Oncoprint, GENETIC_TRACK_GROUP_INDEX} from "./Oncoprint";
+import Oncoprint, {GENETIC_TRACK_GROUP_INDEX} from "./Oncoprint";
 import OncoprintControls, {
     IOncoprintControlsHandlers,
     IOncoprintControlsState
@@ -47,7 +47,10 @@ export type OncoprintClinicalAttribute =
         clinicalAttributeId: string|SpecialAttribute;
     };
 
-export type SortMode = {type:"data"|"alphabetical"|"caseList"|"heatmap", clusteredHeatmapProfile?:string};
+export type SortMode = (
+    {type:"data"|"alphabetical"|"caseList", clusteredHeatmapProfile?:undefined} |
+    {type:"heatmap", clusteredHeatmapProfile:string}
+);
 
 const specialClinicalAttributes:OncoprintClinicalAttribute[] = [
     {
@@ -110,8 +113,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     @observable showClinicalTrackLegends:boolean = true;
     @observable showMinimap:boolean = false;
 
-    @observable selectedHeatmapProfile:string = "";
-    @observable heatmapGeneInputValue:string = "";
+    @observable selectedHeatmapProfile = "";
+    @observable heatmapGeneInputValue = "";
 
     @observable horzZoom:number = 0.5;
 
@@ -263,12 +266,23 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             get selectedHeatmapProfile() {
                 return self.selectedHeatmapProfile;
             },
+            get heatmapIsDynamicallyQueried () {
+                return self.heatmapIsDynamicallyQueried;
+            },
             get clusterHeatmapButtonDisabled() {
                 return (self.sortMode.type === "heatmap" &&
                     self.selectedHeatmapProfile === self.sortMode.clusteredHeatmapProfile);
             },
             get hideClusterHeatmapButton() {
-                return !self.molecularProfileIdToHeatmapTracks.get(self.selectedHeatmapProfile);
+                const genesetHeatmapProfile: string | undefined = (
+                    self.props.store.genesetMolecularProfile.result &&
+                    self.props.store.genesetMolecularProfile.result.value &&
+                    self.props.store.genesetMolecularProfile.result.value.molecularProfileId
+                );
+                return !(
+                    self.molecularProfileIdToHeatmapTracks.get(self.selectedHeatmapProfile) ||
+                    self.selectedHeatmapProfile === genesetHeatmapProfile
+                );
             },
             get heatmapGeneInputValue() {
                 return self.heatmapGeneInputValue;
@@ -435,11 +449,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             onClickAddGenesToHeatmap:()=>{
                 this.addHeatmapTracks(this.selectedHeatmapProfile, this.heatmapGeneInputValue.toUpperCase().trim().split(/\s+/));
             },
-            onClickRemoveHeatmap:action(()=>{
+            onClickRemoveHeatmap:action(() => {
                 this.molecularProfileIdToHeatmapTracks.clear();
-                if (this.sortMode.type === "heatmap") {
-                    this.sortByData();
-                }
             }),
             onClickClusterHeatmap:()=>{
                 this.sortMode = {type: "heatmap", clusteredHeatmapProfile: this.selectedHeatmapProfile};
@@ -527,7 +538,21 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             }
         };
     }
-    
+
+    /**
+     * Indicates whether dynamic heatmap querying controls are relevant.
+     *
+     * They are if a non-geneset heatmap profile is currently selected; gene set
+     * heatmaps are queried from the query page.
+     */
+    @computed get heatmapIsDynamicallyQueried(): boolean {
+        const profileMap = this.props.store.molecularProfileIdToMolecularProfile.result;
+        return (
+            profileMap.hasOwnProperty(this.selectedHeatmapProfile) &&
+            profileMap[this.selectedHeatmapProfile].molecularAlterationType !== 'GENESET_SCORE'
+        );
+    }
+
     @action private initFromUrlParams(paramsMap:any) {
         if (paramsMap[SAMPLE_MODE_URL_PARAM]) {
             this.columnMode = (paramsMap[SAMPLE_MODE_URL_PARAM] && paramsMap[SAMPLE_MODE_URL_PARAM]==="true") ? "sample" : "patient";
@@ -735,13 +760,13 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         return (this.columnMode === "sample" ? this.sampleHeatmapTracks : this.patientHeatmapTracks);
     }
 
-    readonly genesetHeatmapTrackGroup = remoteData<number>({
-        await: () => [this.heatmapTracks],
-        invoke: () => Promise.resolve(1 + Math.max(
+    @computed get genesetHeatmapTrackGroup(): number {
+        return 1 + Math.max(
             GENETIC_TRACK_GROUP_INDEX,
-            ...(this.heatmapTracks.result!.map(hmTrack => hmTrack.trackGroupIndex))
-        ))
-    });
+            // observe the heatmap tracks to render in the very next group
+            ...(this.heatmapTracks.result.map(hmTrack => hmTrack.trackGroupIndex))
+        );
+    }
 
     readonly sampleGenesetHeatmapTracks = makeGenesetHeatmapTracksMobxPromise(this, true);
     readonly patientGenesetHeatmapTracks = makeGenesetHeatmapTracksMobxPromise(this, false);
@@ -752,10 +777,20 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     @computed get clusterHeatmapTrackGroupIndex() {
         if (this.sortMode.type === "heatmap") {
-            return this.molecularProfileIdToHeatmapTracks.get(this.sortMode.clusteredHeatmapProfile!)!.trackGroupIndex;
-        } else {
-            return undefined;
+            const clusteredHeatmapProfile: string = this.sortMode.clusteredHeatmapProfile;
+            const genesetHeatmapProfile: string | undefined = (
+                this.props.store.genesetMolecularProfile.result &&
+                this.props.store.genesetMolecularProfile.result.value &&
+                this.props.store.genesetMolecularProfile.result.value.molecularProfileId
+            );
+            if (clusteredHeatmapProfile === genesetHeatmapProfile) {
+                return this.genesetHeatmapTrackGroup;
+            } else {
+                const heatmapGroup = this.molecularProfileIdToHeatmapTracks.get(clusteredHeatmapProfile);
+                return (heatmapGroup && heatmapGroup.trackGroupIndex);
+            }
         }
+        return undefined;
     }
 
     @computed get sortConfig() {
