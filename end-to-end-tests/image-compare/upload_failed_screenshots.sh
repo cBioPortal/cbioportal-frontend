@@ -27,8 +27,10 @@ if (ls diff/*.png 2> /dev/null > /dev/null); then
         reference=${diff/diff/reference}
         references=( ${references[@]} $reference )
 
+        echo $reference
+
         # upload screenshots when using Travis or Circle CI
-        if [[ ${TRAVIS} || ${CIRCLECI} ]]; then
+        if [[ ${TRAVIS} || ${CIRCLECI} || ${LOCALTESTING} ]]; then
 
             screenshot=${diff/diff/screen}
             diffs_uploaded=( ${diffs_uploaded[@]} "$(upload_image $diff)" )
@@ -37,15 +39,24 @@ if (ls diff/*.png 2> /dev/null > /dev/null); then
         fi
     done
 
+    echo "var errorImages = '${references[@]}'.split()" > ${DIR}/errors.js
+
+
 	# show dev how to download failing test screenshots
 	echo -e "${RED}SCREENSHOT TESTS FAILED!${NC}"
-    if [[ ${TRAVIS} || ${CIRCLECI} ]]; then
+    if [[ ${TRAVIS} || ${CIRCLECI} || ${LOCALTESTING} ]]; then
         echo "TO DOWNLOAD FAILING SCREENSHOTS TO LOCAL REPO ROOT RUN:"
         for ((i=0; i < ${#references[@]}; i++)); do
             reference=${references[$i]}
             url=${screenshots_uploaded[$i]}
             echo "curl '"${url}"' > end-to-end-tests/screenshots/${reference}"
         done
+    fi
+
+    if [[ ${TRAVIS} || ${CIRCLECI} || ${LOCALTESTING} ]]; then
+        echo "var screenImages = '${screenshots_uploaded[@]}'.split()" > ${DIR}/screens.js
+        echo "var referenceImages = '${refs_uploaded[@]}'.split()" > ${DIR}/references.js
+        echo "var diffImages = '${diffs_uploaded[@]}'.split()" > ${DIR}/diffs.js
     fi
 
     echo "CHECK OUT FAILED SCREENSHOTS:"

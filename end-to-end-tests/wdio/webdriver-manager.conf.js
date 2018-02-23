@@ -16,9 +16,9 @@ exports.config = {
         './specs/**/*.js'  // './specs/**/screenshot.spec.js'
     ],
 
-    // specs: [
-    //      './specs/**/results.spec.js'
-    // ],
+    specs: [
+         './specs/**/results.spec.js'
+    ],
 
     // Patterns to exclude.
     exclude: [
