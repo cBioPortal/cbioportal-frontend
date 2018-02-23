@@ -15,7 +15,6 @@ upload_image() {
     curl -F "c=@$png" https://ptpb.pw/ | grep url | cut -d' ' -f2
 }
 
-
 cd ${DIR}/../screenshots
 if (ls diff/*.png 2> /dev/null > /dev/null); then
     references=()
@@ -27,15 +26,20 @@ if (ls diff/*.png 2> /dev/null > /dev/null); then
         reference=${diff/diff/reference}
         references=( ${references[@]} $reference )
 
+        echo $reference
+
         # upload screenshots when using Travis or Circle CI
         if [[ ${TRAVIS} || ${CIRCLECI} ]]; then
-
             screenshot=${diff/diff/screen}
             diffs_uploaded=( ${diffs_uploaded[@]} "$(upload_image $diff)" )
             refs_uploaded=( ${refs_uploaded[@]} "$(upload_image $reference)" )
             screenshots_uploaded=( ${screenshots_uploaded[@]} "$(upload_image $screenshot)" )
         fi
     done
+
+
+    echo "var errorImages = '${references[@]}'.split(' ')" > ${DIR}/errors.js
+
 
 	# show dev how to download failing test screenshots
 	echo -e "${RED}SCREENSHOT TESTS FAILED!${NC}"
@@ -46,6 +50,12 @@ if (ls diff/*.png 2> /dev/null > /dev/null); then
             url=${screenshots_uploaded[$i]}
             echo "curl '"${url}"' > end-to-end-tests/screenshots/${reference}"
         done
+    fi
+
+    if [[ ${TRAVIS} || ${CIRCLECI} ]]; then
+        echo "var screenImages = '${screenshots_uploaded[@]}'.split()" > ${DIR}/screens.js
+        echo "var referenceImages = '${references[@]}'.split()" > ${DIR}/references.js
+        echo "var diffImages = '${diffs_uploaded[@]}'.split()" > ${DIR}/diffs.js
     fi
 
     echo "CHECK OUT FAILED SCREENSHOTS:"
