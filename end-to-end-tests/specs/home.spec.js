@@ -6,7 +6,7 @@ const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
 describe('homepage', function() {
 
-    this.retries(2);
+    //this.retries(2);
 
     before(()=>{
         browser.url(CBIOPORTAL_URL);
