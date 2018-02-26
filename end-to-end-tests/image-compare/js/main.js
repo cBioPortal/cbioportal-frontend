@@ -13,11 +13,16 @@ $(document).ready(function(){
         $(`<li><a data-path='${item}' href="javascript:void">${item}</a></li>`).appendTo($list);
     });
 
-    buildDisplay(errorImages[0], '..');
-
     $list.on('click','a',function(){
-       buildDisplay($(this).attr('data-path'),'..');
+
+        $list.find("a").removeClass('active');
+
+        $(this).addClass('active');
+
+        buildDisplay($(this).attr('data-path'),'..');
     });
+
+    $list.find("a").get(0).click();
 
 });
 
@@ -26,8 +31,6 @@ function buildDisplay(ref, rootUrl){
     var screenImagePath = `${rootUrl}/screenshots/` + ref.replace(/^reference\//,'screen/');
     var diffImagePath = `${rootUrl}/screenshots/` + ref.replace(/^reference\//,'diff/');
     var refImagePath = `${rootUrl}/screenshots/${ref}`;
-
-    console.log(screenImagePath);
 
     var template = `
      <h3 class="screenshot-name"></h3>
@@ -60,8 +63,6 @@ function buildDisplay(ref, rootUrl){
     `;
 
     $("#display").html(template);
-
-    console.log(refImagePath);
 
     var slider = new juxtapose.JXSlider('#juxta',
         [

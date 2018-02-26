@@ -31,7 +31,6 @@ if (ls diff/*.png 2> /dev/null > /dev/null); then
 
         # upload screenshots when using Travis or Circle CI
         if [[ ${TRAVIS} || ${CIRCLECI} || ${LOCALTESTING} ]]; then
-
             screenshot=${diff/diff/screen}
             diffs_uploaded=( ${diffs_uploaded[@]} "$(upload_image $diff)" )
             refs_uploaded=( ${refs_uploaded[@]} "$(upload_image $reference)" )
@@ -39,7 +38,7 @@ if (ls diff/*.png 2> /dev/null > /dev/null); then
         fi
     done
 
-    echo "var errorImages = '${references[@]}'.split()" > ${DIR}/errors.js
+    echo "var errorImages = '${references[@]}'.split(' ')" > ${DIR}/errors.js
 
 
 	# show dev how to download failing test screenshots
@@ -55,7 +54,7 @@ if (ls diff/*.png 2> /dev/null > /dev/null); then
 
     if [[ ${TRAVIS} || ${CIRCLECI} || ${LOCALTESTING} ]]; then
         echo "var screenImages = '${screenshots_uploaded[@]}'.split()" > ${DIR}/screens.js
-        echo "var referenceImages = '${refs_uploaded[@]}'.split()" > ${DIR}/references.js
+        echo "var referenceImages = '${references[@]}'.split()" > ${DIR}/references.js
         echo "var diffImages = '${diffs_uploaded[@]}'.split()" > ${DIR}/diffs.js
     fi
 
