@@ -18,8 +18,7 @@ $(document).ready(function(){
         $list.find("a").removeClass('active');
 
         $(this).addClass('active');
-
-        buildDisplay($(this).attr('data-path'),'..');
+        buildDisplay($(this).attr('data-path'),'./');
     });
 
     $list.find("a").get(0).click();
