@@ -33,13 +33,14 @@ if (ls diff/*.png 2> /dev/null > /dev/null); then
         if [[ ${TRAVIS} || ${CIRCLECI} || ${LOCALTESTING} ]]; then
             screenshot=${diff/diff/screen}
             echo "Full path to image being uploaded $(readlink -f $diff)"
+            echo "aaron"
             diffs_uploaded=( ${diffs_uploaded[@]} "$(upload_image $diff)" )
             refs_uploaded=( ${refs_uploaded[@]} "$(upload_image $reference)" )
             screenshots_uploaded=( ${screenshots_uploaded[@]} "$(upload_image $screenshot)" )
         fi
     done
 
-
+    echo "aaron"
     echo "donkeys" > ${DIR}/donkeys.txt
 
     echo "var errorImages = '${references[@]}'.split(' ')" > ${DIR}/errors.js
