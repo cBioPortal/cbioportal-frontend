@@ -106,7 +106,7 @@ jobs:
           path: ~/repo/end-to-end-tests/screenshots
           destination: /screenshots
       -  store_artifacts:
-          path: ~/repo/image-compare
+          path: ~/repo/end-to-end-tests/image-compare
           destination: /image-compare
       - store_test_results:
           path: ~/repo/end-to-end-tests/junit
