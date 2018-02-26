@@ -32,6 +32,7 @@ if (ls diff/*.png 2> /dev/null > /dev/null); then
         # upload screenshots when using Travis or Circle CI
         if [[ ${TRAVIS} || ${CIRCLECI} || ${LOCALTESTING} ]]; then
             screenshot=${diff/diff/screen}
+            echo "Full path to image being uploaded $(readlink -f $diff)"
             diffs_uploaded=( ${diffs_uploaded[@]} "$(upload_image $diff)" )
             refs_uploaded=( ${refs_uploaded[@]} "$(upload_image $reference)" )
             screenshots_uploaded=( ${screenshots_uploaded[@]} "$(upload_image $screenshot)" )
