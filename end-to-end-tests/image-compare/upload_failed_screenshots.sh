@@ -40,7 +40,7 @@ if (ls diff/*.png 2> /dev/null > /dev/null); then
     done
 
 
-    echo "donkeys" > donkeys.txt
+    echo "donkeys" > ${DIR}/donkeys.txt
 
     echo "var errorImages = '${references[@]}'.split(' ')" > ${DIR}/errors.js
 
