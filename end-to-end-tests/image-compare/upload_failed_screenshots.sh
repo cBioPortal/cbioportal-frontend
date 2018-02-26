@@ -16,6 +16,10 @@ upload_image() {
 }
 
 
+    echo "aaron"
+    echo "donkeys" > ${DIR}/donkeys.txt
+
+
 cd ${DIR}/../screenshots
 if (ls diff/*.png 2> /dev/null > /dev/null); then
     references=()
@@ -40,8 +44,6 @@ if (ls diff/*.png 2> /dev/null > /dev/null); then
         fi
     done
 
-    echo "aaron"
-    echo "donkeys" > ${DIR}/donkeys.txt
 
     echo "var errorImages = '${references[@]}'.split(' ')" > ${DIR}/errors.js
 
