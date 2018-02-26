@@ -113,7 +113,7 @@ jobs:
       - store_artifacts:
           path: ~/repo/end-to-end-tests/junit
       - store_artifacts:
-          path: ~/repo/end-to-end-tests/image-compare/imageCompare.html
+          path: ~/repo/end-to-end-tests/imageCompare.html
           destination: /imageCompare.html
 
 
