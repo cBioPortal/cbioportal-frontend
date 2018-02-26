@@ -104,14 +104,12 @@ jobs:
           when: always
       -  store_artifacts:
           path: ~/repo/end-to-end-tests/screenshots
-      -  store_artifacts:
-          path: ~/repo/end-to-end-tests/image-compare
       - store_test_results:
           path: ~/repo/end-to-end-tests/junit
       - store_artifacts:
           path: ~/repo/end-to-end-tests/junit
       - store_artifacts:
-           path: ~/repo/end-to-end-tests/image-compare/index.html
+          path: ~/repo/end-to-end-tests/image-compare/index.html
           destination: /index.html
 
 
