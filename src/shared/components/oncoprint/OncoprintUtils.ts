@@ -402,7 +402,7 @@ export function makeGenesetHeatmapExpansionsMobxPromise(oncoprint:ResultsViewOnc
                             const data = dataCache.get({entrezGeneId, molecularProfileId})!.data!;
                             const profile = molecularProfileIdToMolecularProfile[molecularProfileId];
                             return {
-                                key: `EXPANSIONTRACK_${gsTrack},${hugoGeneSymbol}`,
+                                key: `EXPANSIONTRACK_${gsTrack},${hugoGeneSymbol},GROUP${trackGroup}`,
                                 label: hugoGeneSymbol,
                                 info: correlationValue.toFixed(2),
                                 molecularProfileId: molecularProfileId,
@@ -473,9 +473,9 @@ export function makeGenesetHeatmapTracksMobxPromise(
             await dataCache.getPromise(cacheQueries, true);
 
             return genesetIds.map((genesetId) => {
-                const track_key = `GENESETHEATMAPTRACK_${molecularProfileId},${genesetId},GROUP${trackGroup}`;
+                const expansionMapKey = `GENESETHEATMAPTRACK_${molecularProfileId},${genesetId}`;
                 return {
-                    key: track_key,
+                    key: `GENESETHEATMAPTRACK_${molecularProfileId},${genesetId},GROUP${trackGroup}`,
                     label: genesetId,
                     molecularProfileId,
                     molecularAlterationType: molecularProfile.value.molecularAlterationType,
@@ -490,11 +490,11 @@ export function makeGenesetHeatmapTracksMobxPromise(
                     trackGroupIndex: trackGroup,
                     expansionCallback: makeGenesetHeatmapExpandHandler(
                         oncoprint,
-                        track_key,
+                        expansionMapKey,
                         {molecularProfileId, genesetId},
                         correlatedGeneCache
                     ),
-                    expansionTrackList: expansions[track_key]
+                    expansionTrackList: expansions[expansionMapKey]
                 };
             });
         },
