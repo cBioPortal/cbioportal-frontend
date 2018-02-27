@@ -12,6 +12,14 @@ export function emptyQueryIndicator(): IndicatorQueryResp
         highestSensitiveLevel: "LEVEL_4",
         hotspot: false,
         lastUpdate: "",
+        mutationEffect: {
+            description: "",
+            knownEffect: "",
+            citations: {
+                abstracts: [],
+                pmids: []
+            }
+        },
         oncogenic: "",
         otherSignificantResistanceLevels: [],
         otherSignificantSensitiveLevels: [],

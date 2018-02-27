@@ -1,36 +1,10 @@
 import * as request from "superagent";
 
 type CallbackHandler = (err: any, res ? : request.Response) => void;
-export type Drug = {
-    'atcCodes': Array < string >
-
-        'drugName': string
-
-        'synonyms': Array < string >
-
-};
 export type TreatmentDrug = {
     'priority': number
 
         'treatmentDrugId': TreatmentDrugId
-
-};
-export type EvidenceQueryRes = {
-    'alleles': Array < Alteration >
-
-        'alterations': Array < Alteration >
-
-        'evidences': Array < Evidence >
-
-        'gene': Gene
-
-        'id': string
-
-        'levelOfEvidences': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_P1" | "LEVEL_P2" | "LEVEL_P3" | "LEVEL_P4" | "LEVEL_D1" | "LEVEL_D2" | "LEVEL_D3" >
-
-        'oncoTreeTypes': Array < TumorType >
-
-        'query': Query
 
 };
 export type Query = {
@@ -85,28 +59,6 @@ export type Article = {
         'volume': string
 
 };
-export type CancerGene = {
-    'entrezGeneId': string
-
-        'foundation': boolean
-
-        'foundationHeme': boolean
-
-        'hugoSymbol': string
-
-        'mSKHeme': boolean
-
-        'mSKImpact': boolean
-
-        'occurrenceCount': number
-
-        'oncokbAnnotated': boolean
-
-        'sangerCGC': boolean
-
-        'vogelstein': boolean
-
-};
 export type Alteration = {
     'alteration': string
 
@@ -123,12 +75,6 @@ export type Alteration = {
         'refResidues': string
 
         'variantResidues': string
-
-};
-export type MainType = {
-    'id': number
-
-        'name': string
 
 };
 export type AnnotatedVariant = {
@@ -149,72 +95,6 @@ export type AnnotatedVariant = {
         'refSeq': string
 
         'variant': string
-
-};
-export type VariantConsequence = {
-    'description': string
-
-        'isGenerallyTruncating': boolean
-
-        'term': string
-
-};
-export type IndicatorQueryTreatment = {
-    'abstracts': Array < ArticleAbstract >
-
-        'approvedIndications': Array < string >
-
-        'drugs': Array < Drug >
-
-        'fdaApproved': boolean
-
-        'level': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_P1" | "LEVEL_P2" | "LEVEL_P3" | "LEVEL_P4" | "LEVEL_D1" | "LEVEL_D2" | "LEVEL_D3"
-
-        'pmids': Array < string >
-
-};
-export type ResponseEntity = {
-    'body': {}
-
-    'statusCode': "100" | "101" | "102" | "103" | "200" | "201" | "202" | "203" | "204" | "205" | "206" | "207" | "208" | "226" | "300" | "301" | "302" | "303" | "304" | "305" | "307" | "308" | "400" | "401" | "402" | "403" | "404" | "405" | "406" | "407" | "408" | "409" | "410" | "411" | "412" | "413" | "414" | "415" | "416" | "417" | "418" | "419" | "420" | "421" | "422" | "423" | "424" | "426" | "428" | "429" | "431" | "500" | "501" | "502" | "503" | "504" | "505" | "506" | "507" | "508" | "509" | "510" | "511"
-
-};
-export type Treatment = {
-    'approvedIndications': Array < string >
-
-        'drugs': Array < TreatmentDrug >
-
-        'priority': number
-
-};
-export type EvidenceQueries = {
-    'evidenceTypes': string
-
-        'highestLevelOnly': boolean
-
-        'levels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_P1" | "LEVEL_P2" | "LEVEL_P3" | "LEVEL_P4" | "LEVEL_D1" | "LEVEL_D2" | "LEVEL_D3" >
-
-        'queries': Array < Query >
-
-        'source': string
-
-};
-export type VariantSearchQuery = {
-    'consequence': string
-
-        'entrezGeneId': number
-
-        'hgvs': string
-
-        'hugoSymbol': string
-
-        'proteinEnd': number
-
-        'proteinStart': number
-
-        'variant': string
-
-        'variantType': string
 
 };
 export type Gene = {
@@ -338,6 +218,8 @@ export type IndicatorQueryResp = {
 
         'lastUpdate': string
 
+        'mutationEffect': MutationEffectResp
+
         'oncogenic': string
 
         'otherSignificantResistanceLevels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_P1" | "LEVEL_P2" | "LEVEL_P3" | "LEVEL_P4" | "LEVEL_D1" | "LEVEL_D2" | "LEVEL_D3" >
@@ -379,18 +261,152 @@ export type ActionableGene = {
         'variant': string
 
 };
+export type ArticleAbstract = {
+    'abstract': string
+
+        'link': string
+
+};
+export type Drug = {
+    'atcCodes': Array < string >
+
+        'drugName': string
+
+        'synonyms': Array < string >
+
+};
+export type EvidenceQueryRes = {
+    'alleles': Array < Alteration >
+
+        'alterations': Array < Alteration >
+
+        'evidences': Array < Evidence >
+
+        'gene': Gene
+
+        'id': string
+
+        'levelOfEvidences': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_P1" | "LEVEL_P2" | "LEVEL_P3" | "LEVEL_P4" | "LEVEL_D1" | "LEVEL_D2" | "LEVEL_D3" >
+
+        'oncoTreeTypes': Array < TumorType >
+
+        'query': Query
+
+};
+export type CancerGene = {
+    'entrezGeneId': string
+
+        'foundation': boolean
+
+        'foundationHeme': boolean
+
+        'hugoSymbol': string
+
+        'mSKHeme': boolean
+
+        'mSKImpact': boolean
+
+        'occurrenceCount': number
+
+        'oncokbAnnotated': boolean
+
+        'sangerCGC': boolean
+
+        'vogelstein': boolean
+
+};
+export type MainType = {
+    'id': number
+
+        'name': string
+
+};
+export type VariantConsequence = {
+    'description': string
+
+        'isGenerallyTruncating': boolean
+
+        'term': string
+
+};
+export type IndicatorQueryTreatment = {
+    'abstracts': Array < ArticleAbstract >
+
+        'approvedIndications': Array < string >
+
+        'drugs': Array < Drug >
+
+        'fdaApproved': boolean
+
+        'level': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_P1" | "LEVEL_P2" | "LEVEL_P3" | "LEVEL_P4" | "LEVEL_D1" | "LEVEL_D2" | "LEVEL_D3"
+
+        'pmids': Array < string >
+
+};
+export type ResponseEntity = {
+    'body': {}
+
+    'statusCode': "100" | "101" | "102" | "103" | "200" | "201" | "202" | "203" | "204" | "205" | "206" | "207" | "208" | "226" | "300" | "301" | "302" | "303" | "304" | "305" | "307" | "308" | "400" | "401" | "402" | "403" | "404" | "405" | "406" | "407" | "408" | "409" | "410" | "411" | "412" | "413" | "414" | "415" | "416" | "417" | "418" | "419" | "420" | "421" | "422" | "423" | "424" | "426" | "428" | "429" | "431" | "500" | "501" | "502" | "503" | "504" | "505" | "506" | "507" | "508" | "509" | "510" | "511"
+
+};
+export type Treatment = {
+    'approvedIndications': Array < string >
+
+        'drugs': Array < TreatmentDrug >
+
+        'priority': number
+
+};
+export type EvidenceQueries = {
+    'evidenceTypes': string
+
+        'highestLevelOnly': boolean
+
+        'levels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_P1" | "LEVEL_P2" | "LEVEL_P3" | "LEVEL_P4" | "LEVEL_D1" | "LEVEL_D2" | "LEVEL_D3" >
+
+        'queries': Array < Query >
+
+        'source': string
+
+};
+export type VariantSearchQuery = {
+    'consequence': string
+
+        'entrezGeneId': number
+
+        'hgvs': string
+
+        'hugoSymbol': string
+
+        'proteinEnd': number
+
+        'proteinStart': number
+
+        'variant': string
+
+        'variantType': string
+
+};
+export type MutationEffectResp = {
+    'citations': Citations
+
+        'description': string
+
+        'knownEffect': string
+
+};
+export type Citations = {
+    'abstracts': Array < ArticleAbstract >
+
+        'pmids': Array < string >
+
+};
 export type Link = {
     'href': string
 
         'method': string
 
         'rel': string
-
-};
-export type ArticleAbstract = {
-    'abstract': string
-
-        'link': string
 
 };
 
@@ -447,6 +463,58 @@ export default class OncoKbAPI {
             }
         });
     }
+
+    classificationVariantsGetUsingGETURL(parameters: {
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/classification/variants';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get All OncoKB Variant Classification.
+     * @method
+     * @name OncoKbAPI#classificationVariantsGetUsingGET
+     */
+    classificationVariantsGetUsingGET(parameters: {
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < string >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/classification/variants';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
 
     drugsGetUsingGETURL(parameters: {
         $queryParameters ? : any
