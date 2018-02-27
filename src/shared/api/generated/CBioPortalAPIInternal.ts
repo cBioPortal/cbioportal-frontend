@@ -1,24 +1,50 @@
 import * as request from "superagent";
 
 type CallbackHandler = (err: any, res ? : request.Response) => void;
-export type GenesetDataFilterCriteria = {
-    'genesetIds': Array < string >
+export type AlterationEnrichment = {
+    'alteredCount': number
 
-        'sampleIds': Array < string >
+        'cytoband': string
 
-        'sampleListId': string
+        'entrezGeneId': number
+
+        'hugoGeneSymbol': string
+
+        'logRatio': string
+
+        'pValue': number
+
+        'qValue': number
+
+        'unalteredCount': number
 
 };
-export type MutationSpectrumFilter = {
+export type CoExpression = {
+    'cytoband': string
+
+        'entrezGeneId': number
+
+        'hugoGeneSymbol': string
+
+        'pearsonsCorrelation': number
+
+        'spearmansCorrelation': number
+
+};
+export type CoExpressionFilter = {
     'sampleIds': Array < string >
 
         'sampleListId': string
 
 };
-export type GisticToGene = {
-    'entrezGeneId': number
+export type CosmicMutation = {
+    'cosmicMutationId': string
 
-        'hugoGeneSymbol': string
+        'count': number
+
+        'keyword': string
+
+        'proteinChange': string
 
 };
 export type EnrichmentFilter = {
@@ -27,16 +53,24 @@ export type EnrichmentFilter = {
         'unalteredIds': Array < string >
 
 };
-export type VariantCountIdentifier = {
-    'entrezGeneId': number
+export type ExpressionEnrichment = {
+    'cytoband': string
 
-        'keyword': string
+        'entrezGeneId': number
 
-};
-export type FractionGenomeAlteredFilter = {
-    'sampleIds': Array < string >
+        'hugoGeneSymbol': string
 
-        'sampleListId': string
+        'meanExpressionInAlteredGroup': number
+
+        'meanExpressionInUnalteredGroup': number
+
+        'pValue': number
+
+        'qValue': number
+
+        'standardDeviationInAlteredGroup': number
+
+        'standardDeviationInUnalteredGroup': number
 
 };
 export type FractionGenomeAltered = {
@@ -53,64 +87,56 @@ export type FractionGenomeAltered = {
         'value': number
 
 };
-export type Info = {
-    'dbVersion': string
+export type FractionGenomeAlteredFilter = {
+    'sampleIds': Array < string >
 
-        'portalVersion': string
-
-};
-export type MutationSpectrum = {
-    'CtoA': number
-
-        'CtoG': number
-
-        'CtoT': number
-
-        'TtoA': number
-
-        'TtoC': number
-
-        'TtoG': number
-
-        'molecularProfileId': string
-
-        'patientId': string
-
-        'sampleId': string
-
-        'studyId': string
-
-        'uniquePatientKey': string
-
-        'uniqueSampleKey': string
+        'sampleListId': string
 
 };
-export type MutSig = {
-    'entrezGeneId': number
+export type Geneset = {
+    'description': string
 
-        'hugoGeneSymbol': string
+        'genesetId': string
 
-        'numberOfMutations': number
+        'name': string
 
-        'pValue': number
+        'refLink': string
 
-        'qValue': number
+        'representativePvalue': number
 
-        'rank': number
-
-        'studyId': string
+        'representativeScore': number
 
 };
-export type CoExpression = {
-    'cytoband': string
+export type GenesetCorrelation = {
+    'correlationValue': number
 
         'entrezGeneId': number
 
+        'expressionGeneticProfileId': string
+
         'hugoGeneSymbol': string
 
-        'pearsonsCorrelation': number
+        'zScoreGeneticProfileId': string
 
-        'spearmansCorrelation': number
+};
+export type GenesetDataFilterCriteria = {
+    'genesetIds': Array < string >
+
+        'sampleIds': Array < string >
+
+        'sampleListId': string
+
+};
+export type GenesetHierarchyInfo = {
+    'genesets': Array < Geneset >
+
+        'nodeId': number
+
+        'nodeName': string
+
+        'parentId': number
+
+        'parentNodeName': string
 
 };
 export type GenesetMolecularData = {
@@ -149,98 +175,16 @@ export type Gistic = {
         'widePeakStart': number
 
 };
-export type GenesetHierarchyInfo = {
-    'genesets': Array < Geneset >
-
-        'nodeId': number
-
-        'nodeName': string
-
-        'parentId': number
-
-        'parentNodeName': string
-
-};
-export type CosmicMutation = {
-    'cosmicMutationId': string
-
-        'count': number
-
-        'keyword': string
-
-        'proteinChange': string
-
-};
-export type ExpressionEnrichment = {
-    'cytoband': string
-
-        'entrezGeneId': number
-
-        'hugoGeneSymbol': string
-
-        'meanExpressionInAlteredGroup': number
-
-        'meanExpressionInUnalteredGroup': number
-
-        'pValue': number
-
-        'qValue': number
-
-        'standardDeviationInAlteredGroup': number
-
-        'standardDeviationInUnalteredGroup': number
-
-};
-export type VariantCount = {
+export type GisticToGene = {
     'entrezGeneId': number
 
-        'keyword': string
-
-        'molecularProfileId': string
-
-        'numberOfSamples': number
-
-        'numberOfSamplesWithKeyword': number
-
-        'numberOfSamplesWithMutationInGene': number
-
-};
-export type CoExpressionFilter = {
-    'sampleIds': Array < string >
-
-        'sampleListId': string
-
-};
-export type Geneset = {
-    'description': string
-
-        'genesetId': string
-
-        'name': string
-
-        'refLink': string
-
-        'representativePvalue': number
-
-        'representativeScore': number
-
-};
-export type AlterationEnrichment = {
-    'alteredCount': number
-
-        'cytoband': string
-
-        'entrezGeneId': number
-
         'hugoGeneSymbol': string
 
-        'logRatio': string
+};
+export type Info = {
+    'dbVersion': string
 
-        'pValue': number
-
-        'qValue': number
-
-        'unalteredCount': number
+        'portalVersion': string
 
 };
 export type MrnaPercentile = {
@@ -263,16 +207,72 @@ export type MrnaPercentile = {
         'zScore': number
 
 };
-export type GenesetCorrelation = {
-    'correlationValue': number
-
-        'entrezGeneId': number
-
-        'expressionGeneticProfileId': string
+export type MutSig = {
+    'entrezGeneId': number
 
         'hugoGeneSymbol': string
 
-        'zScoreGeneticProfileId': string
+        'numberOfMutations': number
+
+        'pValue': number
+
+        'qValue': number
+
+        'rank': number
+
+        'studyId': string
+
+};
+export type MutationSpectrum = {
+    'CtoA': number
+
+        'CtoG': number
+
+        'CtoT': number
+
+        'TtoA': number
+
+        'TtoC': number
+
+        'TtoG': number
+
+        'molecularProfileId': string
+
+        'patientId': string
+
+        'sampleId': string
+
+        'studyId': string
+
+        'uniquePatientKey': string
+
+        'uniqueSampleKey': string
+
+};
+export type MutationSpectrumFilter = {
+    'sampleIds': Array < string >
+
+        'sampleListId': string
+
+};
+export type VariantCount = {
+    'entrezGeneId': number
+
+        'keyword': string
+
+        'molecularProfileId': string
+
+        'numberOfSamples': number
+
+        'numberOfSamplesWithKeyword': number
+
+        'numberOfSamplesWithMutationInGene': number
+
+};
+export type VariantCountIdentifier = {
+    'entrezGeneId': number
+
+        'keyword': string
 
 };
 
@@ -568,7 +568,6 @@ export default class CBioPortalAPIInternal {
             let form: any = {};
             return new Promise(function(resolve, reject) {
                 headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
 
                 if (parameters['projection'] !== undefined) {
                     queryParameters['projection'] = parameters['projection'];
@@ -700,7 +699,6 @@ export default class CBioPortalAPIInternal {
         let form: any = {};
         return new Promise(function(resolve, reject) {
             headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
 
             path = path.replace('{genesetId}', parameters['genesetId'] + '');
 
@@ -942,7 +940,6 @@ export default class CBioPortalAPIInternal {
         let form: any = {};
         return new Promise(function(resolve, reject) {
             headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
 
             if (parameters.$queryParameters) {
                 Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -1735,7 +1732,6 @@ export default class CBioPortalAPIInternal {
             let form: any = {};
             return new Promise(function(resolve, reject) {
                 headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
 
                 path = path.replace('{studyId}', parameters['studyId'] + '');
 
@@ -1853,7 +1849,6 @@ export default class CBioPortalAPIInternal {
             let form: any = {};
             return new Promise(function(resolve, reject) {
                 headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
 
                 path = path.replace('{studyId}', parameters['studyId'] + '');
 
