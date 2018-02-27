@@ -65,17 +65,28 @@ function makeGenesetHeatmapUnexpandHandler(
     oncoprint: ResultsViewOncoprint,
     parentKey: string,
     expansionEntrezGeneId: number,
+    myTrackGroup: number,
     onRemoveLast: () => void
 ) {
     return action('genesetHeatmapUnexpansion', () => {
         const list = oncoprint.genesetHeatmapTrackExpansionGenes.get(parentKey);
         if (list) {
-            const indexToRemove = list.findIndex(
-                ({entrezGeneId}) => entrezGeneId === expansionEntrezGeneId
-            );
-            list.splice(indexToRemove, 1);
-            if (!list.length) {
-                onRemoveLast();
+            // only remove if the expansion if it isn't needed in another track
+            // group than the one this track is being removed from; keep the
+            // expansion if the track is being re-rendered into a different
+            // track group
+            if (myTrackGroup === oncoprint.genesetHeatmapTrackGroup) {
+                // this is a MobX Observable Array, so it should have findIndex
+                // implemented even in IE
+                const indexToRemove = list.findIndex(
+                    ({entrezGeneId}) => entrezGeneId === expansionEntrezGeneId
+                );
+                if (indexToRemove !== -1) {
+                    list.splice(indexToRemove, 1);
+                    if (!list.length) {
+                        onRemoveLast();
+                    }
+                }
             }
         } else {
             throw new Error(`Track '${parentKey}' has no expansions to remove.`);
@@ -416,7 +427,7 @@ export function makeGenesetHeatmapExpansionsMobxPromise(oncoprint:ResultsViewOnc
                                 ),
                                 trackGroupIndex: trackGroup,
                                 onRemove: makeGenesetHeatmapUnexpandHandler(
-                                    oncoprint, gsTrack, entrezGeneId,
+                                    oncoprint, gsTrack, entrezGeneId, trackGroup,
                                     genesetGeneCache.reset.bind(
                                         genesetGeneCache, gsTrack
                                     )
