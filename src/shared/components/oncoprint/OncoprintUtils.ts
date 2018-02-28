@@ -51,10 +51,10 @@ function makeGenesetHeatmapExpandHandler(
         );
         runInAction('genesetHeatmapExpansion', () => {
             const list = (
-                oncoprint.genesetHeatmapTrackExpansionGenes.get(track_key)
+                oncoprint.expansionsByGenesetHeatmapTrackKey.get(track_key)
                 || []
             );
-            oncoprint.genesetHeatmapTrackExpansionGenes.set(
+            oncoprint.expansionsByGenesetHeatmapTrackKey.set(
                 track_key, list.concat(new_genes)
             );
         });
@@ -69,7 +69,7 @@ function makeGenesetHeatmapUnexpandHandler(
     onRemoveLast: () => void
 ) {
     return action('genesetHeatmapUnexpansion', () => {
-        const list = oncoprint.genesetHeatmapTrackExpansionGenes.get(parentKey);
+        const list = oncoprint.expansionsByGenesetHeatmapTrackKey.get(parentKey);
         if (list) {
             // only remove if the expansion if it isn't needed in another track
             // group than the one this track is being removed from; keep the
@@ -396,7 +396,7 @@ export function makeGenesetHeatmapExpansionsMobxPromise(oncoprint:ResultsViewOnc
             const genesetGeneCache = oncoprint.props.store.genesetCorrelatedGeneCache.result!;
 
             const trackGroup = oncoprint.genesetHeatmapTrackGroup;
-            const expansionsByGenesetTrack = oncoprint.genesetHeatmapTrackExpansionGenes;
+            const expansionsByGenesetTrack = oncoprint.expansionsByGenesetHeatmapTrackKey;
 
             // list all the genes in an array of plain, non-observable objects,
             // as observable arrays cannot be safely passed to external libs
