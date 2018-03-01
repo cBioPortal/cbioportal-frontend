@@ -83,12 +83,6 @@ function runResultsTests(){
         ssAssert(res);
     });
 
-    it('bookmark tab', function(){
-        browser.click("[href='#bookmark_email']");
-        var res = browser.checkElement('#bookmark_email', {hide:['.qtip'] });
-        ssAssert(res);
-    });
-
 }
 
 describe('result page screenshot tests', function(){
@@ -127,7 +121,7 @@ describe('study view screenshot test', function(){
         goToUrlAndSetLocalStorage(url);
     });
 
-	it('study view lgg_ucsf_2014', function() {
+	it.skip('study view lgg_ucsf_2014', function() {
         // assume that when mutated genes header is loaded the full page is
         // done loading
         var mutatedGenesHeader = $('#chart-new-mutated_genes-chart-header');
