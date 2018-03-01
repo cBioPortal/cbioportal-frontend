@@ -17,8 +17,8 @@ elif [[ "$BRANCH_ENV" ]]; then
     cat $SCRIPT_DIR/../env/${BRANCH_ENV}.sh
 
     # override with custom exports if they exist
-    if [[ -f ${SCRIPT_DIR}/env/custom.sh ]]; then
-        cat ${SCRIPT_DIR}/env/custom.sh
+    if [[ -f ${SCRIPT_DIR}/../env/custom.sh ]]; then
+        cat ${SCRIPT_DIR}/../env/custom.sh
     fi
 else
     echo -e "${RED}No desired BRANCH_ENV variable set${NC}"
