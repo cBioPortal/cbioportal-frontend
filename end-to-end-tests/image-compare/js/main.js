@@ -5,13 +5,23 @@ function getURLParameterByName(name) {
     return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
 }
 
+
+function getRootUrl(href){
+    if (href.includes('circle-artifacts')) {
+        return href.substring(0,href.lastIndexOf('/')) + '/';
+    } else {
+        return './';
+    }
+}
+
+
+
+var rootUrl = getRootUrl(window.location.href);
+
 $(document).ready(function(){
 
+
     var $list = $("<ul></ul>").prependTo("body");
-
-    var rootUrl = './';
-    //var rootUrl = 'https://2600-66571349-gh.circle-artifacts.com/0/';
-
 
     errorImages.forEach((item)=>{
         $(`<li><a data-path='${item}' href="javascript:void">${item}</a></li>`).appendTo($list);
