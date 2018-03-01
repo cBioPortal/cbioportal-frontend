@@ -36,13 +36,88 @@
     "https"
   ],
   "paths": {
-    "/cancer_hotspots": {
+    "/cancer_hotspots/genomic": {
       "post": {
         "tags": [
           "cancer-hotspots-controller"
         ],
-        "summary": "Retrieves hotspot annotation for the provided list of variants",
-        "operationId": "fetchHotspotAnnotationPOST",
+        "summary": "Retrieves hotspot annotations for the provided list of genomic locations",
+        "operationId": "fetchHotspotAnnotationByGenomicLocationPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "genomicLocations",
+            "description": "List of genomic locations.",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GenomicLocation"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/AggregatedHotspots"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cancer_hotspots/genomic/{genomicLocation}": {
+      "get": {
+        "tags": [
+          "cancer-hotspots-controller"
+        ],
+        "summary": "Retrieves hotspot annotations for a specific genomic location",
+        "operationId": "fetchHotspotAnnotationByGenomicLocationGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "genomicLocation",
+            "in": "path",
+            "description": "A genomic location. For example 7,140453136,140453136,A,T",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Hotspot"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cancer_hotspots/hgvs": {
+      "post": {
+        "tags": [
+          "cancer-hotspots-controller"
+        ],
+        "summary": "Retrieves hotspot annotations for the provided list of variants",
+        "operationId": "fetchHotspotAnnotationByHgvsPOST",
         "consumes": [
           "application/json"
         ],
@@ -69,20 +144,20 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/Hotspot"
+                "$ref": "#/definitions/AggregatedHotspots"
               }
             }
           }
         }
       }
     },
-    "/cancer_hotspots/{variant}": {
+    "/cancer_hotspots/hgvs/{variant}": {
       "get": {
         "tags": [
           "cancer-hotspots-controller"
         ],
-        "summary": "Retrieves hotspot annotation for a specific variant",
-        "operationId": "fetchHotspotAnnotationGET",
+        "summary": "Retrieves hotspot annotations for a specific variant",
+        "operationId": "fetchHotspotAnnotationByHgvsGET",
         "consumes": [
           "application/json"
         ],
@@ -368,6 +443,31 @@
     }
   },
   "definitions": {
+    "AggregatedHotspots": {
+      "type": "object",
+      "required": [
+        "genomicLocation",
+        "hotspots",
+        "variant"
+      ],
+      "properties": {
+        "genomicLocation": {
+          "description": "Genomic Location",
+          "$ref": "#/definitions/GenomicLocation"
+        },
+        "hotspots": {
+          "type": "array",
+          "description": "Hotspots",
+          "items": {
+            "$ref": "#/definitions/Hotspot"
+          }
+        },
+        "variant": {
+          "type": "string",
+          "description": "HGVS notation"
+        }
+      }
+    },
     "GeneXref": {
       "type": "object",
       "required": [
@@ -420,27 +520,53 @@
         }
       }
     },
+    "GenomicLocation": {
+      "type": "object",
+      "required": [
+        "chromosome",
+        "end",
+        "referenceAllele",
+        "start",
+        "variantAllele"
+      ],
+      "properties": {
+        "chromosome": {
+          "type": "string",
+          "description": "Chromosome"
+        },
+        "start": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Start Position"
+        },
+        "end": {
+          "type": "integer",
+          "format": "int32",
+          "description": "End Position"
+        },
+        "referenceAllele": {
+          "type": "string",
+          "description": "Reference Allele"
+        },
+        "variantAllele": {
+          "type": "string",
+          "description": "Variant Allele"
+        }
+      }
+    },
     "Hotspot": {
       "type": "object",
       "required": [
         "transcriptId"
       ],
       "properties": {
-        "geneId": {
-          "type": "string",
-          "description": "Ensembl gene id"
+        "aminoAcidPosition": {
+          "description": "Amino acid position (start - end)",
+          "$ref": "#/definitions/IntegerRange"
         },
         "hugoSymbol": {
           "type": "string",
           "description": "Hugo gene symbol"
-        },
-        "proteinEnd": {
-          "type": "string",
-          "description": "Protein end position"
-        },
-        "proteinStart": {
-          "type": "string",
-          "description": "Protein start position"
         },
         "residue": {
           "type": "string",
@@ -449,6 +575,33 @@
         "transcriptId": {
           "type": "string",
           "description": "Transcript id"
+        },
+        "tumorCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Tumor count"
+        },
+        "tumorTypeCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Tumor type count"
+        },
+        "type": {
+          "type": "string",
+          "description": "Hotspot type"
+        }
+      }
+    },
+    "IntegerRange": {
+      "type": "object",
+      "properties": {
+        "end": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "start": {
+          "type": "integer",
+          "format": "int32"
         }
       }
     },
@@ -499,6 +652,9 @@
           "type": "number",
           "format": "double",
           "description": "Functional impact score"
+        },
+        "hgvs": {
+          "type": "string"
         },
         "hugoSymbol": {
           "type": "string",
