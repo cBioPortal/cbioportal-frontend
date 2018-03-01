@@ -265,6 +265,13 @@
             "description": "An Ensembl protein ID. For example ENSP00000439985",
             "required": false,
             "type": "string"
+          },
+          {
+            "name": "hugoSymbol",
+            "in": "query",
+            "description": "A Hugo Symbol For example ARF5",
+            "required": false,
+            "type": "string"
           }
         ],
         "responses": {
@@ -283,7 +290,7 @@
         "tags": [
           "ensembl-controller"
         ],
-        "summary": "Retrieves Ensembl Transcripts by Ensembl transcript IDs, protein IDs, or gene IDs",
+        "summary": "Retrieves Ensembl Transcripts by Ensembl transcript IDs, hugo Symbols, protein IDs, or gene IDs",
         "operationId": "fetchEnsemblTranscriptsByEnsemblFilterPOST",
         "consumes": [
           "application/json"
@@ -295,7 +302,7 @@
           {
             "in": "body",
             "name": "ensemblFilter",
-            "description": "List of Ensembl transcript IDs. For example [\"ENST00000361390\", \"ENST00000361453\", \"ENST00000361624\"]<br>OR<br>List of Ensembl protein IDs. For example [\"ENSP00000439985\", \"ENSP00000478460\", \"ENSP00000346196\"]<br>OR<br>List of Ensembl gene IDs. For example [\"ENSG00000136999\", \"ENSG00000272398\", \"ENSG00000198695\"]",
+            "description": "List of Ensembl transcript IDs. For example [\"ENST00000361390\", \"ENST00000361453\", \"ENST00000361624\"]<br>OR<br>List of Hugo Symbols. For example [\"TP53\", \"PIK3CA\", \"BRCA1\"]<br>OR<br>List of Ensembl protein IDs. For example [\"ENSP00000439985\", \"ENSP00000478460\", \"ENSP00000346196\"]<br>OR<br>List of Ensembl gene IDs. For example [\"ENSG00000136999\", \"ENSG00000272398\", \"ENSG00000198695\"]",
             "required": true,
             "schema": {
               "$ref": "#/definitions/EnsemblFilter"
@@ -585,6 +592,13 @@
             "type": "string"
           }
         },
+        "hugoSymbols": {
+          "type": "array",
+          "description": "List of Hugo Symbols. For example [\"TP53\", \"PIK3CA\", \"BRCA1\"]",
+          "items": {
+            "type": "string"
+          }
+        },
         "proteinIds": {
           "type": "array",
           "description": "List of Ensembl protein IDs. For example [\"ENSP00000439985\", \"ENSP00000478460\", \"ENSP00000346196\"]",
@@ -632,6 +646,62 @@
           "items": {
             "$ref": "#/definitions/PfamDomainRange"
           }
+        },
+        "exons": {
+          "type": "array",
+          "description": "Exon information",
+          "items": {
+            "$ref": "#/definitions/ExonRange"
+          }
+        },
+        "hugoSymbols": {
+          "type": "array",
+          "description": "Hugo symbols",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ExonRange": {
+      "type": "object",
+      "required": [
+        "exonEnd",
+        "exonId",
+        "exonStart",
+        "rank",
+        "strand",
+        "version"
+      ],
+      "properties": {
+        "exonId": {
+          "type": "string",
+          "description": "Exon id"
+        },
+        "exonStart": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Start position of exon"
+        },
+        "exonEnd": {
+          "type": "integer",
+          "format": "int32",
+          "description": "End position of exon"
+        },
+        "rank": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Number of exon in transcript"
+        },
+        "strand": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Strand exon is on, -1 for - and 1 for +"
+        },
+        "version": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Exon version"
         }
       }
     },
@@ -789,7 +859,8 @@
           "description": "Hugo gene symbol"
         },
         "hgnc_id": {
-          "type": "string",
+          "type": "integer",
+          "format": "int32",
           "description": "HGNC id"
         },
         "hgvsc": {
@@ -805,11 +876,13 @@
           "description": "Polyphen Prediction"
         },
         "polyphen_score": {
-          "type": "string",
+          "type": "number",
+          "format": "double",
           "description": "Polyphen Score"
         },
         "protein_end": {
-          "type": "string",
+          "type": "integer",
+          "format": "int32",
           "description": "Protein end position"
         },
         "protein_id": {
@@ -817,7 +890,8 @@
           "description": "Ensembl protein id"
         },
         "protein_start": {
-          "type": "string",
+          "type": "integer",
+          "format": "int32",
           "description": "Protein start position"
         },
         "refseq_transcript_ids": {
@@ -832,7 +906,8 @@
           "description": "Sift Prediction"
         },
         "sift_score": {
-          "type": "string",
+          "type": "number",
+          "format": "double",
           "description": "Sift Score"
         },
         "transcript_id": {
@@ -848,7 +923,6 @@
     "VariantAnnotation": {
       "type": "object",
       "required": [
-        "annotationJSON",
         "id",
         "variant"
       ],
