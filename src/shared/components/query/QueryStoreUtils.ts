@@ -50,10 +50,13 @@ export function queryParams(nonMolecularProfileParams:NonMolecularProfileQueryPa
     return {pathname: path, query:params};
 }
 
-export function nonMolecularProfileParams(store:QueryStore, case_ids?:string):NonMolecularProfileQueryParams {
+export function nonMolecularProfileParams(store:QueryStore, whitespace_separated_case_ids?:string):NonMolecularProfileQueryParams {
     const selectedStudyIds = store.allSelectedStudyIds;
 
-    case_ids = case_ids || store.asyncCustomCaseSet.result.map(caseRow => (caseRow.studyId + ':' + caseRow.sampleId)).join('\r\n');
+    // case ids is of format study1:sample1+study2:sample2+...
+    const case_ids = whitespace_separated_case_ids ?
+                    whitespace_separated_case_ids.replace(/\s+/g, '+') :
+                    store.asyncCustomCaseSet.result.map(caseRow => (caseRow.studyId + ':' + caseRow.sampleId)).join('+');
 
     let ret:NonMolecularProfileQueryParams = {
         cancer_study_id: selectedStudyIds.length === 1 ? selectedStudyIds[0] : 'all',
