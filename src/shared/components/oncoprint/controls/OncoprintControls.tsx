@@ -69,6 +69,7 @@ export interface IOncoprintControlsState {
     distinguishDrivers?:boolean,
     sortByMutationType?:boolean,
     sortByDrivers?:boolean,
+    sortByCaseListDisabled?:boolean,
     annotateDriversOncoKb?:boolean,
     annotateDriversHotspots?:boolean,
     annotateDriversCBioPortal?:boolean,
@@ -476,7 +477,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
     private getSortMenu() {
         return (
             <CustomDropdown bsStyle="default" title="Sort" id="sortDropdown">
-                <div>
+                <div data-test="oncoprintSortDropdownMenu">
 
                         <div className="radio"><label>
                             <input
@@ -523,6 +524,8 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                                 value={EVENT_KEY.sortCaseListOrder}
                                 checked={this.props.state.sortMode.type === "caseList"}
                                 onClick={this.onInputClick}
+                                data-test="caseList"
+                                disabled={!!this.props.state.sortByCaseListDisabled}
                             /> Sort by case list order
                         </label></div>
                         {(this.props.state.heatmapProfilesPromise &&
