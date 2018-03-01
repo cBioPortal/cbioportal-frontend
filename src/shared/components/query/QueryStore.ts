@@ -374,13 +374,13 @@ export class QueryStore
 
 	// sample list id
 	@observable private _selectedSampleListId?:string = undefined; // user selection
-	@computed get selectedSampleListId()
+	@computed public get selectedSampleListId()
 	{
 		if (this._selectedSampleListId !== undefined)
 			return this._selectedSampleListId;
 		return this.defaultSelectedSampleListId;
 	}
-	set selectedSampleListId(value)
+	public set selectedSampleListId(value)
 	{
 		this._selectedSampleListId = value;
 	}
@@ -628,14 +628,6 @@ export class QueryStore
 				error => ({studyId, patientId, samples: [] as Sample[], error})
 			);
 	}
-
-	readonly asyncCustomCaseSetUrlParam = remoteData({
-		await: ()=>[this.asyncCustomCaseSet],
-		invoke: async ()=>{
-			return this.asyncCustomCaseSet.result.map(x=>`${x.studyId}\t${x.sampleId}`).join('\r\n');
-		},
-		default: ''
-	});
 
 	readonly asyncCustomCaseSet = remoteData<{sampleId:string, studyId:string}[]>({
 		invoke: async () => {
@@ -1295,13 +1287,11 @@ export class QueryStore
 				this.initiallySelected.sampleListId = true;
 			}
 
-			const studySampleMap = (_window as any).serverVars.studySampleObj;
-			if (studySampleMap) {
+			const caseIds = (_window as any).serverVars.caseIds;
+			if (caseIds) {
 				if (caseSetId === CUSTOM_CASE_LIST_ID) {
 					this.caseIdsMode = 'sample';
-					this.caseIds = _.flatten<string>(Object.keys(studySampleMap).map(studyId=>{
-						return studySampleMap[studyId].map((sampleId:string)=>`${studyId}:${sampleId}`);
-					})).join("\n");
+					this.caseIds = caseIds.replace(/\+/g, "\n");
 				}
 			}
 		}

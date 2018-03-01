@@ -304,10 +304,10 @@ describe('single study query', function() {
             $('[data-test="germlineMutationRate"]').waitForExist(60000);
             var text = browser.getText('[data-test="germlineMutationRate"]')
             // check germline mutation rate
-            assert(text.search('8.2%' > -1));
+            assert(text.search('8.2%') > -1);
             // check somatic mutation
             var text = browser.getText('[data-test="somaticMutationRate"]')
-            assert(text.search('3.5%' > -1));
+            assert(text.search('3.5%') > -1);
 
         });
 
@@ -353,11 +353,11 @@ describe('single study query', function() {
             var text = browser.getText('[data-test="QuerySummaryGeneCount"]')
 
             // there should be one more gene queried now
-            assert(text.search('3' > -1));
+            assert(text.search('3') > -1);
         });
 
         it('should be possible to add genes to query, with custom case list query in single study query', function() {
-            browser.url(`${CBIOPORTAL_URL}/index.do?cancer_study_id=ov_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=-1&case_ids=ov_tcga_pub%3ATCGA-24-1428-01%0D%0Aov_tcga_pub%3ATCGA-24-1928-01%0D%0Aov_tcga_pub%3ATCGA-29-1698-01%0D%0Aov_tcga_pub%3ATCGA-24-0980-01%0D%0Aov_tcga_pub%3ATCGA-24-0970-01%0D%0Aov_tcga_pub%3ATCGA-13-0725-01%0D%0Aov_tcga_pub%3ATCGA-23-1027-01%0D%0Aov_tcga_pub%3ATCGA-13-0755-01%0D%0Aov_tcga_pub%3ATCGA-25-1315-01&gene_list=BRCA1%2520BRCA2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=ov_tcga_pub_gistic`);
+            browser.url(`${CBIOPORTAL_URL}/index.do?cancer_study_id=ov_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=-1&case_ids=ov_tcga_pub%3ATCGA-24-1428-01%0D%0Aov_tcga_pub%3ATCGA-24-1928-01%0D%0Aov_tcga_pub%3ATCGA-29-1698-01%0D%0Aov_tcga_pub%3ATCGA-24-0980-01%0D%0Aov_tcga_pub%3ATCGA-24-0970-01%0D%0Aov_tcga_pub%3ATCGA-13-0725-01%0D%0Aov_tcga_pub%3ATCGA-23-1027-01%0D%0Aov_tcga_pub%3ATCGA-13-0755-01%0D%0Aov_tcga_pub%3ATCGA-25-1315-01&gene_list=BRCA1%2520BRCA2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=ov_tcga_pub_gistic`);
 
             // click enrichments tab
             $('#enrichments-result-tab').waitForExist(30000);
@@ -376,7 +376,7 @@ describe('single study query', function() {
             var text = browser.getText('[data-test="QuerySummaryGeneCount"]')
 
             // there should be one more gene queried now
-            assert(text.search('3' > -1), "one more gene queried");
+            assert(text.search('3') > -1, "one more gene queried");
         });
     });
 });
@@ -542,6 +542,70 @@ describe('oncoprint', function() {
                 dropdown_selector: dropdowns[n-1].selector
             };
         }
+
+        it("should sort patients and samples by custom case list order correctly", ()=>{
+            browser.url(CBIOPORTAL_URL);
+
+            // select Colorectal TCGA and Adrenocortical Carcinoma TCGA
+            var input = $(".autosuggest input[type=text]");
+            input.waitForExist(10000);
+            input.setValue('colorectal tcga nature');
+            browser.pause(500);
+            // should only be one element
+            assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
+            var checkBox = $('[data-test="StudySelect"]');
+            checkBox.waitForExist(10000);
+            browser.click('[data-test="StudySelect"] input');
+
+            input.setValue('adrenocortical carcinoma tcga provisional');
+            browser.pause(500);
+            // should only be one element
+            assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
+            var checkBox = $('[data-test="StudySelect"]');
+            checkBox.waitForExist(10000);
+            browser.click('[data-test="StudySelect"] input');
+
+            browser.execute(function() { globalStores.queryStore.selectedSampleListId = "-1"; }); // select custom case list
+
+            var caseInput = $('[data-test="CustomCaseSetInput"]');
+            caseInput.waitForExist(10000);
+            caseInput.setValue('coadread_tcga_pub:TCGA-AA-3971-01\n'+
+                                'acc_tcga:TCGA-OR-A5JC-01\n'+
+                                'acc_tcga:TCGA-OR-A5J2-01\n'+
+                                'coadread_tcga_pub:TCGA-AA-A00Q-01\n'+
+                                'coadread_tcga_pub:TCGA-CM-4748-01\n'+
+                                'acc_tcga:TCGA-OR-A5JD-01\n'+
+                                'acc_tcga:TCGA-OR-A5J3-01');
+
+            $('[data-test="geneSet"]').setValue('DKK2 KRAS BCL2L1 RASA1 HLA-B RRAGC');
+            browser.waitForEnabled('[data-test="queryButton"]', 30000);
+            browser.click('[data-test="queryButton"]');
+
+            // now we're on results page
+            waitForOncoprint(10000);
+            // open sort menu
+            browser.click('#sortDropdown');
+            browser.waitForVisible('[data-test="oncoprintSortDropdownMenu"] input[data-test="caseList"]');
+            browser.click('[data-test="oncoprintSortDropdownMenu"] input[data-test="caseList"]');
+            browser.pause(100); // allow to sort
+
+            assert.equal(
+                browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
+                "VENHQS1BQS0zOTcxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1PUi1BNUpDOmFjY190Y2dh,VENHQS1PUi1BNUoyOmFjY190Y2dh,VENHQS1BQS1BMDBROmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1DTS00NzQ4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1PUi1BNUpEOmFjY190Y2dh,VENHQS1PUi1BNUozOmFjY190Y2dh",
+                "sorted patient order correct"
+            );
+
+            $('#oncoprint .oncoprint__controls #viewDropdownButton').click(); // open view menu
+            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').waitForVisible(10000);
+            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
+            waitForOncoprint(10000);
+
+            assert.equal(
+                browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
+                "VENHQS1BQS0zOTcxLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1PUi1BNUpDLTAxOmFjY190Y2dh,VENHQS1PUi1BNUoyLTAxOmFjY190Y2dh,VENHQS1BQS1BMDBRLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1DTS00NzQ4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1PUi1BNUpELTAxOmFjY190Y2dh,VENHQS1PUi1BNUozLTAxOmFjY190Y2dh",
+                "sorted sample order correct"
+            );
+        });
 
         it("should sort patients and samples correctly in coadread_tcga_pub", ()=>{
             browser.url(CBIOPORTAL_URL);
