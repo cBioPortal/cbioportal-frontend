@@ -9,6 +9,6 @@ module.exports = function getScreenshotName(basePath) {
         var browserWidth = browserViewport.width;
         var browserHeight = browserViewport.height;
 
-        return path.join(basePath, `${testName}_${type}_${browserName}_v${browserVersion}_${browserWidth}x${browserHeight}.png`.toLowerCase().replace(/ /g,"_"));
+        return path.join(basePath, `${testName}_${type}_${browserName}_${browserWidth}x${browserHeight}.png`.toLowerCase().replace(/ /g,"_"));
     };
 }
