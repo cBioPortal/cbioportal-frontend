@@ -1,6 +1,8 @@
 var assert = require('assert');
 var expect = require('chai').expect;
 var waitForOncoprint = require('./specUtils').waitForOncoprint;
+var goToUrlAndSetLocalStorage = require('./specUtils').goToUrlAndSetLocalStorage;
+var useExternalFrontend = require('./specUtils').useExternalFrontend;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
@@ -9,17 +11,17 @@ describe('homepage', function() {
     this.retries(2);
 
     before(()=>{
-        browser.url(CBIOPORTAL_URL);
-
-        browser.localStorage('POST', {key: 'localdev', value: 'true'});
-        browser.refresh();
+        goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
     });
-    it('it should show dev mode when testing', function() {
-        var devMode = $('.alert-warning');
 
-        devMode.waitForExist(60000);
-        assert(browser.getText('.alert-warning').indexOf('dev mode') > 0);
-    });
+    if (useExternalFrontend) {
+        it('it should show dev mode when testing', function() {
+            var devMode = $('.alert-warning');
+
+            devMode.waitForExist(60000);
+            assert(browser.getText('.alert-warning').indexOf('dev mode') > 0);
+        });
+    }
 
     it('it should have 27 (small test db), 29 (public test db) or 31 studies (production) in list', function () {
         browser.url(CBIOPORTAL_URL);
@@ -103,9 +105,7 @@ describe('homepage', function() {
     describe('select all/deselect all functionality in study selector',function(){
 
         beforeEach(function(){
-            browser.url(CBIOPORTAL_URL);
-            browser.localStorage('POST', {key: 'localdev', value: 'true'});
-            browser.refresh();
+            goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
             browser.setViewportSize({ height:1400, width:1000 });
             //browser.waitForExist('[data-test="StudySelect"] input[type=checkbox]');
         });
@@ -268,10 +268,7 @@ describe('single study query', function() {
     this.retries(2);
 
     before(()=>{
-        browser.url(CBIOPORTAL_URL);
-
-        browser.localStorage('POST', {key: 'localdev', value: 'true'});
-        browser.refresh();
+        goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
     });
     describe('mutation mapper ', function() {
         it('should show somatic and germline mutation rate', function() {
@@ -373,10 +370,7 @@ describe('single study query', function() {
 
 describe("results page", function() {
     before(()=>{
-        browser.url(CBIOPORTAL_URL);
-
-        browser.localStorage('POST', {key: 'localdev', value: 'true'});
-        browser.refresh();
+        goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
         browser.setViewportSize({ height:1400, width:1000 });
     });
     describe("mutual exclusivity tab", function() {
@@ -418,10 +412,7 @@ describe('oncoprint', function() {
     this.retries(2);
 
     before(()=>{
-        browser.url(CBIOPORTAL_URL);
-
-        browser.localStorage('POST', {key: 'localdev', value: 'true'});
-        browser.refresh();
+        goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
         browser.setViewportSize({ height:1400, width:1000 });
     });
 
@@ -846,10 +837,7 @@ describe('case set selection in front page query form', function(){
     this.retries(2);
 
     beforeEach(function() {
-        var url = CBIOPORTAL_URL;
-        browser.url(url);
-        browser.localStorage('POST', {key: 'localdev', value: 'true'});
-        browser.refresh();
+        goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
     });
 
     it('selects the default case set for single study selections', ()=>{
@@ -1006,9 +994,7 @@ describe('case set selection in modify query form', function(){
 
     beforeEach(function(){
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_rppa&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`;
-        browser.url(url);
-        browser.localStorage('POST', {key: 'localdev', value: 'true'});
-        browser.refresh();
+        goToUrlAndSetLocalStorage(url);
     });
 
     it('contains correct selected case set through a certain use flow involving two selected studies', ()=>{
@@ -1097,9 +1083,7 @@ describe('genetic profile selection in modify query form', function(){
 
     beforeEach(function(){
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=chol_tcga&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=chol_tcga_all&gene_list=EGFR&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=chol_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=chol_tcga_gistic&genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION=chol_tcga_rppa_Zscores`;
-        browser.url(url);
-        browser.localStorage('POST', {key: 'localdev', value: 'true'});
-        browser.refresh();
+        goToUrlAndSetLocalStorage(url);
     });
 
     it('contains correct selected genetic profiles through a certain use flow involving two studies', ()=>{
@@ -1180,10 +1164,7 @@ describe('genetic profile selection in modify query form', function(){
 
 describe('genetic profile selection in front page query form', ()=>{
     beforeEach(function(){
-        var url = CBIOPORTAL_URL;
-        browser.url(url);
-        browser.localStorage('POST', {key: 'localdev', value: 'true'});
-        browser.refresh();
+        goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
     });
     it('selects the right default genetic profiles in a single->multiple->single study selection flow', ()=>{
         // select a study
