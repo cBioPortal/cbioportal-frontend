@@ -89,7 +89,7 @@ export default class CancerHotspots extends React.Component<ICancerHotspotsProps
     public static link(isHotspot:boolean, is3dHotspot:boolean)
     {
         const recurrentLink = isHotspot ? (
-                <a href="http://cancerhotspots.org/" target="_blank">
+                <a href="http://www.cancerhotspots.org/" target="_blank">
                     http://cancerhotspots.org/
                 </a>
             ) : "";
@@ -97,7 +97,7 @@ export default class CancerHotspots extends React.Component<ICancerHotspotsProps
         const maybeAnd = isHotspot && is3dHotspot ? "and" : "";
 
         const clusteredLink = is3dHotspot ? (
-                <a href="http://3dhotspots.org/" target="_blank">
+                <a href="http://www.3dhotspots.org/" target="_blank">
                     http://3dhotspots.org/
                 </a>
             ) : "";
