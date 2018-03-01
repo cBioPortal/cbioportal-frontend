@@ -271,9 +271,9 @@ export default class FunctionalImpactColumnFormatter {
 
         // TODO: handle multiple transcripts instead of just picking the first one
         const mutationAssessor = genomeNexusData.data.mutation_assessor && genomeNexusData.data.mutation_assessor.annotation;
-        const siftScore = parseFloat(genomeNexusData.data.transcript_consequences[0].sift_score);
+        const siftScore = genomeNexusData.data.transcript_consequences[0].sift_score;
         const siftPrediction = genomeNexusData.data.transcript_consequences[0].sift_prediction;
-        const polyPhenScore = parseFloat(genomeNexusData.data.transcript_consequences[0].polyphen_score);
+        const polyPhenScore = genomeNexusData.data.transcript_consequences[0].polyphen_score;
         const polyPhenPrediction = genomeNexusData.data.transcript_consequences[0].polyphen_prediction;
 
         return {
