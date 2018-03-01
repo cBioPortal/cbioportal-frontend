@@ -31,10 +31,6 @@ run_and_check_diff 'npm run fetchAPI' 'src/shared/api/generated/CBioPortalAPI-do
 if [[ $? -gt 0 ]]; then
     sync_error_count=$(($sync_error_count + 1))
 fi
-run_and_check_diff 'npm run fetchHotspotsAPI' src/shared/api/generated/CancerHotspotsAPI-docs.json "${OUT_OF_SYNC_MSG}"
-if [[ $? -gt 0 ]]; then
-    sync_error_count=$(($sync_error_count + 1))
-fi
 run_and_check_diff 'npm run fetchOncoKbAPI' src/shared/api/generated/OncoKbAPI-docs.json "${OUT_OF_SYNC_MSG}"
 if [[ $? -gt 0 ]]; then
     sync_error_count=$(($sync_error_count + 1))
@@ -47,10 +43,6 @@ TS_GEN_MSG="generation of typescript client differs compared to checked in versi
 echo "Test if docs generate the same TS client as the one stored in the repo (fail with exit code > 0)"
 generation_error_count=0
 run_and_check_diff 'npm run buildAPI' 'src/shared/api/generated/CBioPortalAPI.ts src/shared/api/generated/CBioPortalAPIInternal.ts' "${TS_GEN_MSG}"
-if [[ $? -gt 0 ]]; then
-    generation_error_count=$(($generation_error_count + 1))
-fi
-run_and_check_diff 'npm run buildHotspotsAPI' src/shared/api/generated/CancerHotspotsAPI.ts "${TS_GEN_MSG}"
 if [[ $? -gt 0 ]]; then
     generation_error_count=$(($generation_error_count + 1))
 fi
