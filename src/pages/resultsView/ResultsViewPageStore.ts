@@ -338,6 +338,29 @@ export class ResultsViewPageStore {
         }
     });
 
+    readonly unfilteredExtendedAlterations = remoteData<ExtendedAlteration[]>({
+        await: ()=>[
+            this.unfilteredAlterations,
+            this.selectedMolecularProfiles,
+            this.defaultOQLQuery
+        ],
+        invoke: () => {
+            const acc = new accessors(this.selectedMolecularProfiles.result!);
+            const alterations: ExtendedAlteration[] = [];
+
+            this.unfilteredAlterations.result!.forEach(alteration => {
+                const extendedAlteration: Partial<ExtendedAlteration> = {
+                    molecularProfileAlterationType: acc.molecularAlterationType(alteration.molecularProfileId),
+                    ...Object.assign({}, alteration)
+                };
+
+                alterations.push(extendedAlteration as ExtendedAlteration);
+            });
+
+            return Promise.resolve(alterations);
+        }
+    });
+
     readonly filteredAlterations = remoteData<ExtendedAlteration[]>({
         await:()=>[
             this.unfilteredAlterations,
@@ -375,6 +398,22 @@ export class ResultsViewPageStore {
                     groupBy(this.filteredAlterations.result!, alteration=>alteration.uniqueSampleKey, this.samples.result!.map(sample=>sample.uniqueSampleKey)),
                 patients:
                     groupBy(this.filteredAlterations.result!, alteration=>alteration.uniquePatientKey, this.patients.result!.map(sample=>sample.uniquePatientKey))
+            });
+        }
+    });
+
+    readonly unfilteredCaseAggregatedData = remoteData<CaseAggregatedData<ExtendedAlteration>>({
+        await: ()=>[
+            this.unfilteredExtendedAlterations,
+            this.samples,
+            this.patients
+        ],
+        invoke: ()=>{
+            return Promise.resolve({
+                samples:
+                    groupBy(this.unfilteredExtendedAlterations.result!, alteration=>alteration.uniqueSampleKey, this.samples.result!.map(sample=>sample.uniqueSampleKey)),
+                patients:
+                    groupBy(this.unfilteredExtendedAlterations.result!, alteration=>alteration.uniquePatientKey, this.patients.result!.map(sample=>sample.uniquePatientKey))
             });
         }
     });
