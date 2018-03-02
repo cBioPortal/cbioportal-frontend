@@ -599,7 +599,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                                 /> Hotspots
                                 <DefaultTooltip
                                     overlay={<div style={{maxWidth:"400px"}}>Identified as a recurrent hotspot (statistically significant) in a population-scale cohort of tumor samples of various cancer types using methodology based in part on <a href="http://www.ncbi.nlm.nih.gov/pubmed/26619011" target="_blank">Chang et al., Nat Biotechnol, 2016.</a>
-                                        Explore all mutations at <a href="http://cancerhotspots.org" target="_blank">http://cancerhotspots.org</a></div>}
+                                        Explore all mutations at <a href="http://www.cancerhotspots.org" target="_blank">http://cancerhotspots.org</a></div>}
                                     placement="top"
                                 >
                                     <img
