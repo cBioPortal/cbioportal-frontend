@@ -1,6 +1,7 @@
 var assert = require('assert');
 var expect = require('chai').expect;
 var waitForOncoprint = require('./specUtils').waitForOncoprint;
+var goToUrlAndSetLocalStorage = require('./specUtils').goToUrlAndSetLocalStorage;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
@@ -82,20 +83,12 @@ function runResultsTests(){
         ssAssert(res);
     });
 
-    it('bookmark tab', function(){
-        browser.click("[href='#bookmark_email']");
-        var res = browser.checkElement('#bookmark_email', {hide:['.qtip'] });
-        ssAssert(res);
-    });
-
 }
 
 describe('result page screenshot tests', function(){
     before(function(){
         var url = `${CBIOPORTAL_URL}/index.do?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&case_ids=&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list&Action=Submit&show_samples=false&`;
-        browser.url(url);
-        browser.localStorage('POST', {key: 'localdev', value: 'true'});
-        browser.refresh();
+        goToUrlAndSetLocalStorage(url);
     });
 
     runResultsTests()
@@ -103,12 +96,50 @@ describe('result page screenshot tests', function(){
 
 });
 
+describe('patient view page screenshot test', function(){
+    before(function(){
+        var url = `${CBIOPORTAL_URL}/case.do#/patient?studyId=lgg_ucsf_2014&caseId=P04`;
+        goToUrlAndSetLocalStorage(url);
+    });
+
+	it('patient view lgg_ucsf_2014 P04', function() {
+        // find oncokb image
+        var oncokbIndicator = $('[data-test="oncogenic-icon-image"]');
+        oncokbIndicator.waitForExist(30000);
+        // find vaf plot
+        var vafPlot = $('.vafPlot');
+        vafPlot.waitForExist(30000);
+
+        var res = browser.checkElement('#mainColumn', {hide:['.qtip'] });
+        ssAssert(res);
+	});
+});
+
+describe('study view screenshot test', function(){
+    before(function(){
+        var url = `${CBIOPORTAL_URL}/study.do?cancer_study_id=lgg_ucsf_2014`;
+        goToUrlAndSetLocalStorage(url);
+    });
+
+	it.skip('study view lgg_ucsf_2014', function() {
+        // assume that when mutated genes header is loaded the full page is
+        // done loading
+        var mutatedGenesHeader = $('#chart-new-mutated_genes-chart-header');
+        mutatedGenesHeader.waitForExist(30000);
+
+        // give charts time to render
+        browser.setViewportSize({ height: 1600, width: 1000 })
+        browser.pause(5000);
+
+        var res = browser.checkElement('#page_wrapper_table', {hide:['.qtip'] });
+        ssAssert(res);
+	});
+});
+
 describe('result page tabs, loading from session id', function(){
     before(function(){
         var url = `${CBIOPORTAL_URL}/index.do?session_id=596f9fa3498e5df2e292bdfd`;
-        browser.url(url);
-        browser.localStorage('POST', {key: 'localdev', value: 'true'});
-        browser.refresh();
+        goToUrlAndSetLocalStorage(url);
     });
 
     runResultsTests();
