@@ -14,7 +14,7 @@
     "fetchAPI": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && curl ${CBIOPORTAL_URL}/api/api-docs | json | grep -v basePath | grep -v termsOfService | grep -v host > src/shared/api/generated/CBioPortalAPI-docs.json && curl ${CBIOPORTAL_URL}/api/api-docs?group=internal | json | grep -v host | grep -v basePath | grep -v termsOfService > src/shared/api/generated/CBioPortalAPIInternal-docs.json",
     "buildAPI": "node scripts/generate-api.js src/shared/api/generated CBioPortalAPI CBioPortalAPIInternal",
     "updateHotspotsAPI": "npm run fetchHotspotsAPI && npm run buildHotspotsAPI",
-    "fetchHotspotsAPI": "curl http://cancerhotspots.org/v2/api-docs?group=cancer_hotspots | json > src/shared/api/generated/CancerHotspotsAPI-docs.json",
+    "fetchHotspotsAPI": "curl http://www.cancerhotspots.org/v2/api-docs?group=cancer_hotspots | json > src/shared/api/generated/CancerHotspotsAPI-docs.json",
     "buildHotspotsAPI": "node scripts/generate-api.js src/shared/api/generated CancerHotspotsAPI",
     "updateOncoKbAPI": "npm run fetchOncoKbAPI && npm run buildOncoKbAPI",
     "fetchOncoKbAPI": "curl http://oncokb.org/api/v1/v2/api-docs | json > src/shared/api/generated/OncoKbAPI-docs.json",
