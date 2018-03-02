@@ -4,6 +4,8 @@ type CallbackHandler = (err: any, res ? : request.Response) => void;
 export type EnsemblFilter = {
     'geneIds': Array < string >
 
+        'hugoSymbols': Array < string >
+
         'proteinIds': Array < string >
 
         'transcriptIds': Array < string >
@@ -19,6 +21,24 @@ export type EnsemblTranscript = {
         'proteinLength': number
 
         'pfamDomains': Array < PfamDomainRange >
+
+        'exons': Array < ExonRange >
+
+        'hugoSymbols': Array < string >
+
+};
+export type ExonRange = {
+    'exonId': string
+
+        'exonStart': number
+
+        'exonEnd': number
+
+        'rank': number
+
+        'strand': number
+
+        'version': number
 
 };
 export type GeneXref = {
@@ -80,7 +100,7 @@ export type TranscriptConsequence = {
 
         'gene_symbol': string
 
-        'hgnc_id': string
+        'hgnc_id': number
 
         'hgvsc': string
 
@@ -88,19 +108,19 @@ export type TranscriptConsequence = {
 
         'polyphen_prediction': string
 
-        'polyphen_score': string
+        'polyphen_score': number
 
-        'protein_end': string
+        'protein_end': number
 
         'protein_id': string
 
-        'protein_start': string
+        'protein_start': number
 
         'refseq_transcript_ids': Array < string >
 
         'sift_prediction': string
 
-        'sift_score': string
+        'sift_score': number
 
         'transcript_id': string
 
@@ -511,6 +531,7 @@ export default class GenomeNexusAPI {
     fetchEnsemblTranscriptsGETURL(parameters: {
         'geneId' ? : string,
         'proteinId' ? : string,
+        'hugoSymbol' ? : string,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
@@ -521,6 +542,10 @@ export default class GenomeNexusAPI {
 
         if (parameters['proteinId'] !== undefined) {
             queryParameters['proteinId'] = parameters['proteinId'];
+        }
+
+        if (parameters['hugoSymbol'] !== undefined) {
+            queryParameters['hugoSymbol'] = parameters['hugoSymbol'];
         }
 
         if (parameters.$queryParameters) {
@@ -539,10 +564,12 @@ export default class GenomeNexusAPI {
      * @name GenomeNexusAPI#fetchEnsemblTranscriptsGET
      * @param {string} geneId - An Ensembl gene ID. For example ENSG00000136999
      * @param {string} proteinId - An Ensembl protein ID. For example ENSP00000439985
+     * @param {string} hugoSymbol - A Hugo Symbol For example ARF5
      */
     fetchEnsemblTranscriptsGET(parameters: {
             'geneId' ? : string,
             'proteinId' ? : string,
+            'hugoSymbol' ? : string,
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < EnsemblTranscript >
@@ -565,6 +592,10 @@ export default class GenomeNexusAPI {
 
                 if (parameters['proteinId'] !== undefined) {
                     queryParameters['proteinId'] = parameters['proteinId'];
+                }
+
+                if (parameters['hugoSymbol'] !== undefined) {
+                    queryParameters['hugoSymbol'] = parameters['hugoSymbol'];
                 }
 
                 if (parameters.$queryParameters) {
@@ -599,10 +630,10 @@ export default class GenomeNexusAPI {
     };
 
     /**
-     * Retrieves Ensembl Transcripts by Ensembl transcript IDs, protein IDs, or gene IDs
+     * Retrieves Ensembl Transcripts by Ensembl transcript IDs, hugo Symbols, protein IDs, or gene IDs
      * @method
      * @name GenomeNexusAPI#fetchEnsemblTranscriptsByEnsemblFilterPOST
-     * @param {} ensemblFilter - List of Ensembl transcript IDs. For example ["ENST00000361390", "ENST00000361453", "ENST00000361624"]<br>OR<br>List of Ensembl protein IDs. For example ["ENSP00000439985", "ENSP00000478460", "ENSP00000346196"]<br>OR<br>List of Ensembl gene IDs. For example ["ENSG00000136999", "ENSG00000272398", "ENSG00000198695"]
+     * @param {} ensemblFilter - List of Ensembl transcript IDs. For example ["ENST00000361390", "ENST00000361453", "ENST00000361624"]<br>OR<br>List of Hugo Symbols. For example ["TP53", "PIK3CA", "BRCA1"]<br>OR<br>List of Ensembl protein IDs. For example ["ENSP00000439985", "ENSP00000478460", "ENSP00000346196"]<br>OR<br>List of Ensembl gene IDs. For example ["ENSG00000136999", "ENSG00000272398", "ENSG00000198695"]
      */
     fetchEnsemblTranscriptsByEnsemblFilterPOST(parameters: {
             'ensemblFilter': EnsemblFilter,
