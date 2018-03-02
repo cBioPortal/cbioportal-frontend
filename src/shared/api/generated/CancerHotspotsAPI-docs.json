@@ -12,7 +12,7 @@
       "url": "https://github.com/cBioPortal/cancerhotspots/blob/master/LICENSE"
     }
   },
-  "host": "cancerhotspots.org",
+  "host": "www.cancerhotspots.org",
   "basePath": "/",
   "tags": [
     {
