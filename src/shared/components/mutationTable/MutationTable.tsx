@@ -24,7 +24,7 @@ import ValidationStatusColumnFormatter from "./column/ValidationStatusColumnForm
 import {ICosmicData} from "shared/model/Cosmic";
 import AnnotationColumnFormatter from "./column/AnnotationColumnFormatter";
 import {IMyCancerGenomeData} from "shared/model/MyCancerGenome";
-import {IHotspotData} from "shared/model/CancerHotspots";
+import {IHotspotIndex} from "shared/model/CancerHotspots";
 import {IOncoKbDataWrapper} from "shared/model/OncoKB";
 import {ICivicVariantDataWrapper, ICivicGeneDataWrapper} from "shared/model/Civic";
 import {IMutSigData} from "shared/model/MutSig";
@@ -60,7 +60,7 @@ export interface IMutationTableProps {
     enableCivic?: boolean;
     enableFunctionalImpact?: boolean;
     myCancerGenomeData?: IMyCancerGenomeData;
-    hotspots?: IHotspotData;
+    hotspots?: IHotspotIndex;
     cosmicData?:ICosmicData;
     oncoKbData?: IOncoKbDataWrapper;
     oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean};
