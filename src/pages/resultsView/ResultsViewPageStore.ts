@@ -21,10 +21,11 @@ import {
     fetchDiscreteCNAData, findMutationMolecularProfileId, mergeDiscreteCNAData,
     fetchSamples, fetchClinicalDataInStudy, generateDataQueryFilter,
     fetchSamplesWithoutCancerTypeClinicalData, fetchStudiesForSamplesWithoutCancerTypeClinicalData, IDataQueryFilter,
-    isMutationProfile, fetchOncoKbAnnotatedGenes, groupBy, fetchHotspotsData, indexHotspotData, fetchOncoKbData,
+    isMutationProfile, fetchOncoKbAnnotatedGenes, groupBy, fetchOncoKbData,
     ONCOKB_DEFAULT, generateUniqueSampleKeyToTumorTypeMap, cancerTypeForOncoKb, fetchCnaOncoKbData,
     fetchCnaOncoKbDataWithGeneMolecularData, fetchGermlineConsentedSamples
 } from "shared/lib/StoreUtils";
+import {indexHotspotsData, fetchHotspotsData} from "shared/lib/CancerHotspotsUtils";
 import {MutationMapperStore} from "./mutation/MutationMapperStore";
 import AppConfig from "appConfig";
 import * as _ from 'lodash';
@@ -47,8 +48,7 @@ import GeneMolecularDataCache from "../../shared/cache/GeneMolecularDataCache";
 import GenesetMolecularDataCache from "../../shared/cache/GenesetMolecularDataCache";
 import GeneCache from "../../shared/cache/GeneCache";
 import ClinicalDataCache from "../../shared/cache/ClinicalDataCache";
-import {IHotspotData} from "../../shared/model/CancerHotspots";
-import {isHotspot} from "../../shared/lib/AnnotationUtils";
+import {IHotspotIndex} from "../../shared/model/CancerHotspots";
 import {IOncoKbData} from "../../shared/model/OncoKB";
 import {generateQueryVariantId} from "../../shared/lib/OncoKbUtils";
 import {CosmicMutation} from "../../shared/api/generated/CBioPortalAPIInternal";
@@ -1440,11 +1440,11 @@ export class ResultsViewPageStore {
         }
     });
 
-    readonly indexedHotspotData = remoteData<IHotspotData|undefined>({
+    readonly indexedHotspotData = remoteData<IHotspotIndex|undefined>({
         await:()=>[
             this.hotspotData
         ],
-        invoke: ()=>Promise.resolve(indexHotspotData(this.hotspotData))
+        invoke: ()=>Promise.resolve(indexHotspotsData(this.hotspotData))
     });
 
     public readonly isHotspot = remoteData({

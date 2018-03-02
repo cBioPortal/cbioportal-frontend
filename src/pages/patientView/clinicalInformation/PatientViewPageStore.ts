@@ -21,7 +21,7 @@ import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import GenomeNexusEnrichmentCache from "shared/cache/GenomeNexusEnrichment";
 import PubMedCache from "shared/cache/PubMedCache";
 import {IOncoKbData} from "shared/model/OncoKB";
-import {IHotspotData} from "shared/model/CancerHotspots";
+import {IHotspotIndex} from "shared/model/CancerHotspots";
 import {IMutSigData} from "shared/model/MutSig";
 import {ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
 import {ClinicalInformationData} from "shared/model/ClinicalInformation";
@@ -32,7 +32,7 @@ import MutationCountCache from "shared/cache/MutationCountCache";
 import AppConfig from "appConfig";
 import {
     findMolecularProfileIdDiscrete, ONCOKB_DEFAULT, fetchOncoKbData,
-    fetchCnaOncoKbData, indexHotspotData, mergeMutations, fetchHotspotsData, fetchMyCancerGenomeData, fetchCosmicData,
+    fetchCnaOncoKbData, mergeMutations, fetchMyCancerGenomeData, fetchCosmicData,
     fetchMutationData, fetchDiscreteCNAData, generateUniqueSampleKeyToTumorTypeMap, findMutationMolecularProfileId,
     findUncalledMutationMolecularProfileId, mergeMutationsIncludingUncalled, fetchGisticData, fetchCopyNumberData,
     fetchMutSigData, findMrnaRankMolecularProfileId, mergeDiscreteCNAData, fetchSamplesForPatient, fetchClinicalData,
@@ -40,6 +40,7 @@ import {
     fetchCivicGenes, fetchCnaCivicGenes, fetchCivicVariants, groupBySampleId, findSamplesWithoutCancerTypeClinicalData,
     fetchStudiesForSamplesWithoutCancerTypeClinicalData, fetchOncoKbAnnotatedGenes
 } from "shared/lib/StoreUtils";
+import {indexHotspotsData, fetchHotspotsData} from "shared/lib/CancerHotspotsUtils";
 import {stringListToSet} from "../../../shared/lib/StringUtils";
 import {Gene as OncoKbGene} from "../../../shared/api/generated/OncoKbAPI";
 import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
@@ -607,9 +608,9 @@ export class PatientViewPageStore {
         return [];
     }
 
-    @computed get indexedHotspotData(): IHotspotData|undefined
+    @computed get indexedHotspotData(): IHotspotIndex|undefined
     {
-        return indexHotspotData(this.hotspotData);
+        return indexHotspotsData(this.hotspotData);
     }
 
     @computed get mergedMutationData(): Mutation[][] {
