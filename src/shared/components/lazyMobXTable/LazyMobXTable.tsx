@@ -10,8 +10,10 @@ import {
     ColumnVisibilityControls, IColumnVisibilityDef, IColumnVisibilityControlsProps
 } from "../columnVisibilityControls/ColumnVisibilityControls";
 import {
-    CopyDownloadControls, ICopyDownloadControlsProps, ICopyDownloadData
+    CopyDownloadControls, ICopyDownloadData
 } from "../copyDownloadControls/CopyDownloadControls";
+import {ICopyDownloadControlsProps} from "../copyDownloadControls/ICopyDownloadControls";
+import {SimpleCopyDownloadControls} from "../copyDownloadControls/SimpleCopyDownloadControls";
 import {serializeData} from "shared/lib/Serializer";
 import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
 import {ButtonToolbar} from "react-bootstrap";
@@ -55,6 +57,7 @@ type LazyMobXTableProps<T> = {
 	// used only when showPagination === true (show pagination at bottom otherwise)
 	showPaginationAtTop?:boolean; 
     paginationProps?:IPaginationControlsProps;
+    enableHorizontalScroll?:boolean;
     showColumnVisibility?:boolean;
     columnVisibilityProps?:IColumnVisibilityControlsProps;
     highlightColor?:"yellow"|"bluegray";
@@ -584,7 +587,12 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
         showCountHeader: false
     };
 
-    public getDownloadData(): Promise<ICopyDownloadData>
+    public getDownloadData(): string
+    {
+        return serializeData(this.store.downloadData);
+    }
+
+    public getDownloadDataPromise(): Promise<ICopyDownloadData>
     {
         // returning a promise instead of a string allows us to prevent triggering fetchAndCacheAllLazyData
         // until the copy/download button is clicked.
@@ -597,13 +605,13 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
                     // we rely on the data cached by the download data fetcher
                     resolve({
                         status: "complete",
-                        text: serializeData(this.store.downloadData)
+                        text: this.getDownloadData()
                     });
                 }).catch(() => {
                     // even if loading of all lazy data fails, resolve with partial data
                     resolve({
                         status: "incomplete",
-                        text: serializeData(this.store.downloadData)
+                        text: this.getDownloadData()
                     });
                 });
             }
@@ -611,7 +619,7 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
             else {
                 resolve({
                     status: "complete",
-                    text: serializeData(this.store.downloadData)
+                    text: this.getDownloadData()
                 });
             }
         });
@@ -657,6 +665,7 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
             }
         };
         this.getDownloadData = this.getDownloadData.bind(this);
+        this.getDownloadDataPromise = this.getDownloadDataPromise.bind(this);
         this.getTopToolbar = this.getTopToolbar.bind(this);
         this.getBottomToolbar = this.getBottomToolbar.bind(this);
         this.getTable = this.getTable.bind(this);
@@ -747,12 +756,22 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
 						{...this.props.columnVisibilityProps}
 					/>) : ""}
                 {this.props.showCopyDownload ? (
-                    <CopyDownloadControls
-                        className="pull-right"
-                        downloadData={this.getDownloadData}
-                        downloadFilename="table.tsv"
-                        {...this.props.copyDownloadProps}
-                    />) : ""}
+                    ( this.props.downloadDataFetcher ?
+                        <CopyDownloadControls
+                            className="pull-right"
+                            downloadData={this.getDownloadDataPromise}
+                            downloadFilename="table.tsv"
+                            {...this.props.copyDownloadProps}
+                        /> :
+                        <SimpleCopyDownloadControls
+                            className="pull-right"
+                            downloadData={this.getDownloadData}
+                            downloadFilename="table.tsv"
+                            controlsStyle="BUTTON"
+                            {...this.props.copyDownloadProps}
+                        />
+                    )
+                ) : ""}
                 {this.props.showPagination && this.props.showPaginationAtTop ? (
                     <Observer>
                         { this.getPaginationControls }
@@ -777,11 +796,13 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
 
     private getTable() {
         return (
-            <SimpleTable
-                headers={this.store.headers}
-                rows={this.store.rows}
-                className={this.props.className}
-            />
+            <div style={{overflowX: this.props.enableHorizontalScroll ? "auto" : "visible"}}>
+                <SimpleTable
+                    headers={this.store.headers}
+                    rows={this.store.rows}
+                    className={this.props.className}
+                />
+            </div>
         );
     }
 

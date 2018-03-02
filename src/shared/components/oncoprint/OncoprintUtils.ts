@@ -136,6 +136,31 @@ export function percentAltered(altered:number, sequenced:number) {
     return fixed+"%";
 }
 
+export function alterationInfoForCaseAggregatedDataByOQLLine(
+    sampleMode: boolean,
+    data: {
+        cases:CaseAggregatedData<AnnotatedExtendedAlteration>,
+        oql:OQLLineFilterOutput<AnnotatedExtendedAlteration>
+    },
+    sequencedSampleKeysByGene: {[hugoGeneSymbol:string]:string[]},
+    sequencedPatientKeysByGene: {[hugoGeneSymbol:string]:string[]})
+{
+    const sequenced =
+        sampleMode ?
+            sequencedSampleKeysByGene[data.oql.gene].length :
+            sequencedPatientKeysByGene[data.oql.gene].length;
+    const altered =
+        sampleMode ?
+            Object.keys(data.cases.samples).filter(k=>!!data.cases.samples[k].length).length :
+            Object.keys(data.cases.patients).filter(k=>!!data.cases.patients[k].length).length;
+
+    return {
+        sequenced,
+        altered,
+        percent: percentAltered(altered, sequenced)
+    };
+}
+
 export function makeGeneticTracksMobxPromise(oncoprint:ResultsViewOncoprint, sampleMode:boolean) {
     return remoteData<GeneticTrackSpec[]>({
         await:()=>[
@@ -159,21 +184,11 @@ export function makeGeneticTracksMobxPromise(oncoprint:ResultsViewOncoprint, sam
                     sampleMode ? oncoprint.props.store.samples.result! : oncoprint.props.store.patients.result!,
                     oncoprint.props.store.genePanelInformation.result!
                 );
-                const sequenced =
-                    sampleMode ?
-                        oncoprint.props.store.sequencedSampleKeysByGene.result![x.oql.gene].length :
-                        oncoprint.props.store.sequencedPatientKeysByGene.result![x.oql.gene].length;
-                const altered =
-                    sampleMode ?
-                        Object.keys(x.cases.samples).filter(k=>!!x.cases.samples[k].length).length :
-                        Object.keys(x.cases.patients).filter(k=>!!x.cases.patients[k].length).length;
 
-                let info:string;
-                if (sequenced === 0) {
-                    info = "N/S";
-                } else {
-                    info = percentAltered(altered, sequenced);
-                }
+                const info = alterationInfoForCaseAggregatedDataByOQLLine(sampleMode, x,
+                    oncoprint.props.store.sequencedSampleKeysByGene.result!,
+                    oncoprint.props.store.sequencedPatientKeysByGene.result!).percent;
+
                 return {
                     key: `GENETICTRACK_${index}`,
                     label: x.oql.gene,
