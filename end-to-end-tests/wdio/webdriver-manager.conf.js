@@ -15,6 +15,10 @@ exports.config = {
     specs: [
         './specs/**/*.js'  // './specs/**/screenshot.spec.js'
     ],
+
+    // specs: [
+    //     './specs/**/home.spec.js'  // './specs/**/screenshot.spec.js'
+    // ],
     // Patterns to exclude.
     exclude: [
         // 'path/to/excluded/files'
@@ -48,6 +52,12 @@ exports.config = {
         maxInstances: 1,
         //
         browserName: 'chrome',
+
+        // chromeOptions: {
+        //     args: ['--headless'],
+        //     binary: '/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome'
+        // }
+
     }],
     //
     // ===================

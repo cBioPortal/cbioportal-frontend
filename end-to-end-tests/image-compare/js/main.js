@@ -5,7 +5,21 @@ function getURLParameterByName(name) {
     return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
 }
 
+
+function getRootUrl(href){
+    if (href.includes('circle-artifacts')) {
+        return href.substring(0,href.lastIndexOf('/')) + '/';
+    } else {
+        return './';
+    }
+}
+
+
+
+var rootUrl = getRootUrl(window.location.href);
+
 $(document).ready(function(){
+
 
     var $list = $("<ul></ul>").prependTo("body");
 
@@ -18,18 +32,37 @@ $(document).ready(function(){
         $list.find("a").removeClass('active');
 
         $(this).addClass('active');
-        buildDisplay($(this).attr('data-path'),'./');
+        buildDisplay($(this).attr('data-path'),rootUrl);
     });
 
     $list.find("a").get(0).click();
 
 });
 
+function buildImagePath(ref, rootUrl){
+    return {
+        screenImagePath: `${rootUrl}screenshots/` + ref.replace(/^reference\//,'screen/'),
+        diffImagePath: `${rootUrl}screenshots/` + ref.replace(/^reference\//,'diff/'),
+        refImagePath: `${rootUrl}screenshots/${ref}`,
+        imageName: ref.substring(ref.lastIndexOf('/')+1)
+    }
+}
+
+function buildCurlStatement(data){
+
+    return `curl '${data.screenImagePath}' > 'end-to-end-tests/screenshots/reference/${data.imageName}'; git add 'end-to-end-tests/screenshots/reference/${data.imageName}'`;
+
+}
+
+
 function buildDisplay(ref, rootUrl){
 
-    var screenImagePath = `${rootUrl}/screenshots/` + ref.replace(/^reference\//,'screen/');
-    var diffImagePath = `${rootUrl}/screenshots/` + ref.replace(/^reference\//,'diff/');
-    var refImagePath = `${rootUrl}/screenshots/${ref}`;
+    var data = buildImagePath(ref,rootUrl);
+
+    var curlStatements = errorImages.map((item)=>{
+        var data = buildImagePath(item,rootUrl);
+        return buildCurlStatement(data);
+    });
 
     var template = `
      <h3 class="screenshot-name"></h3>
@@ -39,7 +72,7 @@ function buildDisplay(ref, rootUrl){
         
         <h2>Screenshot Diff</h2>
         <h3 class="screenshot-name"></h3>
-        <img id="diff" src="${diffImagePath}" />
+        <img id="diff" src="${data.diffImagePath}" />
         <h2>Help</h2>
         <p id="help-text">
         When the screenshot test fails, it means that the screenshot taken from
@@ -52,12 +85,17 @@ function buildDisplay(ref, rootUrl){
         2. If the change in the screenshot is <b>desired</b>, add the screenshot
         to the repo, commit it and push it to your PR's branch, that is:
         <br />
-        <br /> curl <span id="img2-url"></span> > <span class="screenshot-name"></span><br />
-        git add <span class="screenshot-name"></span><br />
+        <br />
+        <textarea class="curls">${buildCurlStatement(data)}</textarea>
+        <br />
         <br />
         Then preferably use git commit --amend and change your commit message
         to explain how the commit changed the screenshot. Subsequently force
         push to your <b>own branch</b>.
+        
+        <br/>
+        <h3>Curls for all failing screenshots</h3>
+        <textarea class="curls">${curlStatements.join('\\n')}</textarea>
         </p>
     `;
 
@@ -66,11 +104,11 @@ function buildDisplay(ref, rootUrl){
     var slider = new juxtapose.JXSlider('#juxta',
         [
             {
-                src: refImagePath,
+                src: data.refImagePath,
                 label: 'reference'
             },
             {
-                src: screenImagePath,
+                src: data.screenImagePath,
                 label: 'screen'
             }
         ],
