@@ -65,10 +65,10 @@ export function getOncoQueryDocUrl() {
     return cbioUrl('onco_query_lang_desc.jsp');
 }
 export function getHotspotsApiUrl() {
-    return cbioUrl('proxy/cancerhotspots.org');
+    return cbioUrl('proxy/www.cancerhotspots.org');
 }
 export function getHotspots3DApiUrl() {
-    return cbioUrl('proxy/3dhotspots.org/3d');
+    return cbioUrl('proxy/www.3dhotspots.org');
 }
 export function getOncoKbApiUrl() {
     let url = AppConfig.oncoKBApiUrl;
