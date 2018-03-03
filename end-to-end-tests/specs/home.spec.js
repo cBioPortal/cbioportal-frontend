@@ -221,7 +221,7 @@ describe('patient page', function(){
 
         oncokbCard.waitForExist(30000);
 
-        assert.equal(browser.getText('.tip-header').toLowerCase(), 'TP53 Q331* in uterine serous carcinoma/uterine papillary serous carcinoma'.toLowerCase());
+        assert.equal(browser.getText('.tip-header').toLowerCase(), 'ppp2r1a s256f in uterine serous carcinoma/uterine papillary serous carcinoma'.toLowerCase());
 
     });
 
@@ -270,9 +270,6 @@ describe('single study query', function() {
     });
     describe('mutation mapper ', function() {
         it('should show somatic and germline mutation rate', function() {
-            browser.url(`${CBIOPORTAL_URL}`);
-            browser.setViewportSize({ height:1400, width:1000 });
-
             var input = $(".autosuggest input[type=text]");
 
             input.waitForExist(10000);
@@ -296,11 +293,17 @@ describe('single study query', function() {
             browser.waitForEnabled('[data-test="queryButton"]', 30000);
             browser.click('[data-test="queryButton"]');
 
+            // TODO: wait for store to be populated (this is actual bug when
+            // someone clicks too fast on the next tab)
+            waitForOncoprint(10000);
+
             // click mutations tab
             $('#mutation-result-tab').waitForExist(30000);
+            browser.pause(2000);
             $('#mutation-result-tab').click();
 
-            $('[data-test="germlineMutationRate"]').waitForExist(60000);
+
+            $('[data-test="germlineMutationRate"]').waitForExist(90000);
             var text = browser.getText('[data-test="germlineMutationRate"]')
             // check germline mutation rate
             assert(text.search('8.2%' > -1));
@@ -315,12 +318,17 @@ describe('single study query', function() {
         it('should show mutations plot', function() {
             browser.url(`${CBIOPORTAL_URL}/index.do?cancer_study_id=ov_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=ov_tcga_pub_cna_seq&gene_list=BRCA1+BRCA2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=ov_tcga_pub_gistic`);
 
+            // TODO: wait for store to be populated (this is actual bug when
+            // someone clicks too fast on the next tab)
+            waitForOncoprint(10000);
+
             // click enrichments tab
             $('#enrichments-result-tab').waitForExist(30000);
+            browser.pause(5000); // wait for click handler
             $('#enrichments-result-tab').click();
 
             // wait for plot to show
-            $('#ov_tcga_pub_mutations_plot_div').waitForExist(60000);
+            $('#ov_tcga_pub_mutations_plot_div').waitForExist(120000);
         });
 
         it('should be possible to add genes to query', function() {
@@ -344,8 +352,13 @@ describe('single study query', function() {
         it('should be possible to add genes to query, with custom case list query in single study query', function() {
             browser.url(`${CBIOPORTAL_URL}/index.do?cancer_study_id=ov_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=-1&case_ids=ov_tcga_pub%3ATCGA-24-1428-01%0D%0Aov_tcga_pub%3ATCGA-24-1928-01%0D%0Aov_tcga_pub%3ATCGA-29-1698-01%0D%0Aov_tcga_pub%3ATCGA-24-0980-01%0D%0Aov_tcga_pub%3ATCGA-24-0970-01%0D%0Aov_tcga_pub%3ATCGA-13-0725-01%0D%0Aov_tcga_pub%3ATCGA-23-1027-01%0D%0Aov_tcga_pub%3ATCGA-13-0755-01%0D%0Aov_tcga_pub%3ATCGA-25-1315-01&gene_list=BRCA1%2520BRCA2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=ov_tcga_pub_gistic`);
 
+            // TODO: wait for store to be populated (this is actual bug when
+            // someone clicks too fast on the next tab)
+            waitForOncoprint(10000);
+
             // click enrichments tab
             $('#enrichments-result-tab').waitForExist(30000);
+            browser.pause(2000); // wait for click handler
             $('#enrichments-result-tab').click();
 
             var checkBoxes = $('.ov_tcga_pub_mutations_datatable_table_gene_checkbox_class');
@@ -1005,6 +1018,7 @@ describe('case set selection in modify query form', function(){
     it('contains correct selected case set through a certain use flow involving two selected studies', ()=>{
         //populates case set selector with selected case set in current query, then selects "All" when more studies are selected, then selects default when only one is selected again
         // open query form
+        browser.waitForExist("#modifyQueryBtn", 10000);
         $('#modifyQueryBtn').click();
         browser.waitForExist(selectedCaseSet_sel, 10000);
         assert.equal(
@@ -1047,6 +1061,7 @@ describe('case set selection in modify query form', function(){
     it('contains correct selected case set through a certain use flow involving the "select all filtered studies" checkbox', ()=>{
         //populates case set selector with selected case set in current query, then selects "All" when more studies are selected, then selects default when only one is selected again
         // open query form
+        browser.waitForExist("#modifyQueryBtn", 10000);
         $('#modifyQueryBtn').click();
         browser.waitForExist(selectedCaseSet_sel, 10000);
         assert.equal(

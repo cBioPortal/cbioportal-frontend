@@ -13,7 +13,7 @@ exports.config = {
     // directory is where your package.json resides, so `wdio` will be called from there.
     //
     specs: [
-        './specs/**/*.js'  // './specs/**/screenshot.spec.js'
+        './specs/**/home.spec.js'  // './specs/**/screenshot.spec.js'
     ],
     // Patterns to exclude.
     exclude: [
@@ -68,7 +68,7 @@ exports.config = {
 
     //
     // Level of logging verbosity: silent | verbose | command | data | result | error
-    logLevel: 'silent',
+    logLevel: 'error',
     //
     // Enables colors for log output.
     coloredLogs: true,
