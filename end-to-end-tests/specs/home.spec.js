@@ -223,7 +223,7 @@ describe('patient page', function(){
 
         oncokbCard.waitForExist(30000);
 
-        assert.equal(browser.getText('.tip-header').toLowerCase(), 'TP53 Q331* in uterine serous carcinoma/uterine papillary serous carcinoma'.toLowerCase());
+        assert.equal(browser.getText('.tip-header').toLowerCase(), 'ppp2r1a s256f in uterine serous carcinoma/uterine papillary serous carcinoma'.toLowerCase());
 
     });
 
