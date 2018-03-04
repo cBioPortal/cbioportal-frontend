@@ -8,7 +8,7 @@ const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
 function runResultsTests(){
 
-    it.skip('render the oncoprint', function(){
+    it('render the oncoprint', function(){
         waitForOncoprint();
         browser.pause(2000);
         var res = browser.checkElement('#oncoprint');
@@ -43,7 +43,7 @@ function runResultsTests(){
         assertScreenShotMatch(res);
     });
 
-    it.skip('mutation tab', function(){
+    it('mutation tab', function(){
         browser.click("[href='#mutation_details']");
         browser.waitForVisible('.borderedChart svg',20000);
         var res = browser.checkElement('#mutation_details',{hide:['.qtip'] });
@@ -57,7 +57,7 @@ function runResultsTests(){
         assertScreenShotMatch(res);
     });
 
-    it.only('survival tab', function(){
+    it('survival tab', function(){
         browser.click("[href='#survival']");
         browser.waitForVisible('[data-test=SurvivalChart] svg',10000);
         var res = browser.checkElement('#survival');
@@ -109,7 +109,7 @@ describe('patient view page screenshot test', function(){
         vafPlot.waitForExist(30000);
 
         var res = browser.checkElement('#mainColumn', {hide:['.qtip'] });
-        ssAssert(res);
+        assertScreenShotMatch(res);
     });
 });
 
@@ -119,7 +119,7 @@ describe('study view screenshot test', function(){
         goToUrlAndSetLocalStorage(url);
     });
 
-    it.skip('study view lgg_ucsf_2014', function() {
+    it('study view lgg_ucsf_2014', function() {
         // assume that when mutated genes header is loaded the full page is
         // done loading
         var mutatedGenesHeader = $('#chart-new-mutated_genes-chart-header');
@@ -130,7 +130,7 @@ describe('study view screenshot test', function(){
         browser.pause(5000);
 
         var res = browser.checkElement('#page_wrapper_table', {hide:['.qtip'] });
-        ssAssert(res);
+        assertScreenShotMatch(res);
     });
 });
 
