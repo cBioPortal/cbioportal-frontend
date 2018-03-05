@@ -1273,6 +1273,7 @@ export class QueryStore
 		if ((_window as any).serverVars) {
 			// Populate OQL
 			this.geneQuery = normalizeQuery((_window as any).serverVars.theQuery);
+			this.genesetQuery = normalizeQuery((_window as any).serverVars.genesetIds);
 			const dataPriority = (_window as any).serverVars.dataPriority;
 			if (typeof dataPriority !== "undefined") {
 				this.dataTypePriorityCode = (dataPriority + '') as '0'|'1'|'2';
