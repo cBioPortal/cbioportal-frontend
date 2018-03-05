@@ -313,6 +313,8 @@ describe('single study query', function() {
     });
 
     describe('enrichments', function() {
+        this.retries(3)
+
         it('should show mutations plot', function() {
             browser.url(`${CBIOPORTAL_URL}/index.do?cancer_study_id=ov_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=ov_tcga_pub_cna_seq&gene_list=BRCA1+BRCA2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=ov_tcga_pub_gistic`);
 
@@ -368,6 +370,8 @@ describe('single study query', function() {
 });
 
 describe("results page", function() {
+    this.retries(2);
+
     before(()=>{
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
         browser.setViewportSize({ height:1400, width:1000 });
