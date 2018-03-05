@@ -1179,13 +1179,17 @@ export class QueryStore
             {
 	            if (this.isGenesetProfileSelected)
                 { //Only geneset profile selected
-                    if (!this.genesetQuery.length) 
+                    if (!this.genesetQuery.length && !this.oql.query.length) 
+                    {
+                        return "Please enter one or more gene symbols and gene sets.";
+                    }
+                    else if (!this.genesetQuery.length)
                     {
                         return "Please enter one or more gene sets or deselect gene set profiles.";
                     }
-                    if (this.oql.query.length)
+                    else if (!this.oql.query.length)
                     {
-                        return "Please select genetic profiles or remove the genes from the query.";
+                        return "Please enter one or more gene symbols.";
                     }
                 }
                 else
@@ -1205,12 +1209,9 @@ export class QueryStore
 	                {
 	                    return "Please enter one or more gene symbols and gene sets.";
 	                }
-	                else if (!this.oql.query.length && this.genesetQuery.length)
+	                else if (!this.oql.query.length)
 	                {
-	                    return "Please enter one or more gene symbols or deselect genetic profiles.";
-	                }
-	                else if (!this.genesetQuery.length && this.oql.query.length) {
-	                    return "Please enter one or more gene sets or deselect gene set profiles.";
+	                    return "Please enter one or more gene symbols.";
 	                }
 	            }
 	            else if (!this.oql.query.length)
