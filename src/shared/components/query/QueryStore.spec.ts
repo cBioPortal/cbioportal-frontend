@@ -10,6 +10,7 @@ describe("QueryStore", ()=>{
                         study1: ["sample1", "sample2", "sample3"]
                     },
                     theQuery:"",
+                    genesetIds: "",
                     caseSetProperties:{
                         case_set_id: CUSTOM_CASE_LIST_ID
                     }
@@ -29,6 +30,7 @@ describe("QueryStore", ()=>{
                                 study2: ["sample4", "sample5", "sample6"]
                         },
                         theQuery:"",
+                        genesetIds: "",
                         caseSetProperties:{
                             case_set_id: CUSTOM_CASE_LIST_ID
                         }
