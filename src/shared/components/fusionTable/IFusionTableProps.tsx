@@ -20,18 +20,18 @@
 
 import { FusionTableColumnType } from './FusionTable';
 import { CancerStudy, MolecularProfile, StructuralVariant } from '../../api/generated/CBioPortalAPI';
-import { IMobXApplicationDataStore } from '../../lib/IMobXApplicationDataStore';
 import { SortDirection } from '../lazyMobXTable/LazyMobXTable';
-import { IMobXApplicationLazyDownloadDataFetcher } from '../../lib/IMobXApplicationLazyDownloadDataFetcher';
 import { IPaginationControlsProps } from '../paginationControls/PaginationControls';
+import { ILazyMobXTableApplicationLazyDownloadDataFetcher } from '../../lib/ILazyMobXTableApplicationLazyDownloadDataFetcher';
+import { ILazyMobXTableApplicationDataStore } from '../../lib/ILazyMobXTableApplicationDataStore';
 
 export interface IFusionTableProps {
     studyIdToStudy?: { [studyId: string]: CancerStudy } | undefined;
     molecularProfileIdToMolecularProfile?: { [molecularProfileId: string]: MolecularProfile };
     columns?: FusionTableColumnType[];
-    dataStore?: IMobXApplicationDataStore<StructuralVariant[]>;
-    downloadDataFetcher?: IMobXApplicationLazyDownloadDataFetcher;
-    fusionMolecularProfile: MolecularProfile;
+    dataStore?: ILazyMobXTableApplicationDataStore<StructuralVariant[]>;
+    downloadDataFetcher?: ILazyMobXTableApplicationLazyDownloadDataFetcher;
+    fusionMolecularProfile: MolecularProfile | undefined;
     initialItemsPerPage?: number;
     itemsLabel?: string;
     itemsLabelPlural?: string;

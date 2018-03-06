@@ -295,9 +295,6 @@ export type MolecularProfileFilter = {
         'studyIds': Array < string >
 
 };
-
-export interface StructuralVariant {[index: string]: any}
-
 export type Mutation = {
     'aminoAcidChange': string
 
@@ -520,6 +517,110 @@ export type SampleMolecularIdentifier = {
     'molecularProfileId': string
 
         'sampleId': string
+
+};
+export type StructuralVariant = {
+    'annotation': string
+
+        'breakpointType': string
+
+        'center': string
+
+        'comments': string
+
+        'connectionType': string
+
+        'dnaSupport': string
+
+        'driverFilter': string
+
+        'driverFilterAnn': string
+
+        'driverTiersFilter': string
+
+        'driverTiersFilterAnn': string
+
+        'eventInfo': string
+
+        'externalAnnotation': string
+
+        'length': number
+
+        'molecularProfileId': string
+
+        'ncbiBuild': string
+
+        'normalPairedEndReadCount': number
+
+        'normalReadCount': number
+
+        'normalSplitReadCount': number
+
+        'normalVariantCount': number
+
+        'patientId': string
+
+        'rnaSupport': string
+
+        'sampleId': string
+
+        'sampleIdInternal': number
+
+        'site1Chromosome': string
+
+        'site1Description': string
+
+        'site1EnsemblTranscriptId': string
+
+        'site1EntrezGeneId': number
+
+        'site1Exon': number
+
+        'site1HugoSymbol': string
+
+        'site1Position': number
+
+        'site2Chromosome': string
+
+        'site2Description': string
+
+        'site2EffectOnFrame': string
+
+        'site2EnsemblTranscriptId': string
+
+        'site2EntrezGeneId': number
+
+        'site2Exon': number
+
+        'site2HugoSymbol': string
+
+        'site2Position': number
+
+        'structuralVariantId': number
+
+        'studyId': string
+
+        'tumorPairedEndReadCount': number
+
+        'tumorReadCount': number
+
+        'tumorSplitReadCount': number
+
+        'tumorVariantCount': number
+
+        'uniquePatientKey': string
+
+        'uniqueSampleKey': string
+
+        'variantClass': string
+
+};
+export type StructuralVariantFilter = {
+    'entrezGeneIds': Array < number >
+
+        'molecularProfileIds': Array < string >
+
+        'sampleMolecularIdentifiers': Array < SampleMolecularIdentifier >
 
 };
 export type TypeOfCancer = {
@@ -3805,6 +3906,70 @@ export default class CBioPortalAPI {
             });
         };
 
+    fetchStructuralVariantsUsingPOSTURL(parameters: {
+        'structuralVariantFilter': StructuralVariantFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/structuralvariant/fetch';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch structural variants for entrezGeneIds and molecularProfileIds or sampleMolecularIdentifiers
+     * @method
+     * @name CBioPortalAPI#fetchStructuralVariantsUsingPOST
+     * @param {} structuralVariantFilter - List of entrezGeneIds and molecularProfileIds or sampleMolecularIdentifiers
+     */
+    fetchStructuralVariantsUsingPOST(parameters: {
+            'structuralVariantFilter': StructuralVariantFilter,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < StructuralVariant >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/structuralvariant/fetch';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                if (parameters['structuralVariantFilter'] !== undefined) {
+                    body = parameters['structuralVariantFilter'];
+                }
+
+                if (parameters['structuralVariantFilter'] === undefined) {
+                    reject(new Error('Missing required  parameter: structuralVariantFilter'));
+                    return;
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
     getAllStudiesUsingGETURL(parameters: {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
@@ -5750,33 +5915,5 @@ export default class CBioPortalAPI {
                 return response.body;
             });
         };
-
-    /**
-     * Ajax call to get fusion data
-     * @param {{geneticProfileStableIds?: any; hugoGeneSymbols?: any; sampleIdentifiers?: any}} parameters
-     * @returns {Promise<Array<StructuralVariant>>}
-     */
-    fetchStructuralVariantsPOST(parameters: {
-        entrezGeneIds?: any,
-        molecularProfileIds?: any,
-        sampleMolecularIdentifiers?: any
-    }): Promise<Array<StructuralVariant>> {
-        let path = '/structuralvariant/fetch';
-        let body: any = parameters;
-        let headers: any = {};
-        let queryParameters: any;
-        let form: any = {};
-        return new Promise(
-            (resolve, reject) => {
-                headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
-
-                this.request('POST', this.domain + path, body, headers, queryParameters, form, reject, resolve,
-                    this.errorHandlers);
-            },
-        ).then((response: request.Response) => {
-            return response.body;
-        });
-    }
 
 }

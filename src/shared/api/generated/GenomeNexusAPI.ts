@@ -1,4 +1,5 @@
 import * as request from "superagent";
+import { StructuralVariant } from './CBioPortalAPI';
 
 type CallbackHandler = (err: any, res ? : request.Response) => void;
 export type ColocatedVariant = {
@@ -51,6 +52,10 @@ export type EnsemblTranscript = {
         'exons': Array < Exon >
 
         'utrs': Array < UntranslatedRegion >
+
+        'fusions': Array<StructuralVariant>
+
+        'totalWidth': number
 
 };
 export type Exon = {

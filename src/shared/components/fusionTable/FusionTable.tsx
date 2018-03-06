@@ -27,6 +27,7 @@ import { IFusionTableProps } from './IFusionTableProps';
 import { CancerStudy, MolecularProfile, StructuralVariant } from '../../api/generated/CBioPortalAPI';
 import { getStudySummaryUrl } from '../../api/urls';
 import TruncatedText from '../TruncatedText';
+import { StructuralVariantExt } from '../../model/Fusion';
 
 /**
  * Fusion table column types
@@ -84,13 +85,19 @@ export enum FusionTableColumnType {
     DRIVER_TIERS_FILTER_ANNOTATION,
 }
 
+export type FusionTableColumnLabel = {
+    columnType: number
+    label: string
+    attribute: string
+    visible: boolean
+}
 
-export const FusionTableColumnLabels = [
+export const FusionTableColumnLabels: FusionTableColumnLabel[] = [
     { columnType: FusionTableColumnType.STUDY, label: 'Study', attribute: 'studyId', visible: false},
     { columnType: FusionTableColumnType.SAMPLE_ID, label: 'Sample Id', attribute: 'sampleId', visible: false},
 
     { columnType: FusionTableColumnType.SITE1_ENTREZ_GENE_ID, label: 'Site1 Entrez Gene Id', attribute: 'site1EntrezGeneId', visible: false},
-    { columnType: FusionTableColumnType.SITE1_HUGO_SYMBOL, label: 'Site1 Hugo Symbol', attribute: 'site1HugoSymbol' , visible: false },
+    { columnType: FusionTableColumnType.SITE1_HUGO_SYMBOL, label: 'Gene 1', attribute: 'site1HugoSymbol' , visible: false },
     { columnType: FusionTableColumnType.SITE1_ENSEMBL_TRANSCRIPT_ID, label: 'Site1 Ensembl Transcript Id', attribute: 'site1EnsemblTranscriptId' , visible: false },
     { columnType: FusionTableColumnType.SITE1_EXON, label: 'Site1 Exon', attribute: 'site1Exon' , visible: false },
     { columnType: FusionTableColumnType.SITE1_CHROMOSOME, label: 'Site1 Chromosome', attribute: 'site1Chromosome' , visible: false },
@@ -98,13 +105,13 @@ export const FusionTableColumnLabels = [
     { columnType: FusionTableColumnType.SITE1_DESCRIPTION, label: 'Site1 Description', attribute: 'site1Description' , visible: false },
 
     { columnType: FusionTableColumnType.SITE2_ENTREZ_GENE_ID, label: 'Site2 Entrez Gene Idd', attribute: 'site2EntrezGeneId' , visible: false },
-    { columnType: FusionTableColumnType.SITE2_HUGO_SYMBOL, label: 'Site2 Hugo Symbol', attribute: 'site2HugoSymbol' , visible: false },
+    { columnType: FusionTableColumnType.SITE2_HUGO_SYMBOL, label: 'Gene 2', attribute: 'site2HugoSymbol' , visible: false },
     { columnType: FusionTableColumnType.SITE2_ENSEMBL_TRANSCRIPT_ID, label: 'Site2 Ensembl Transcript Id', attribute: 'site2EnsemblTranscriptId' , visible: false },
     { columnType: FusionTableColumnType.SITE2_EXON, label: 'Site2 Exon', attribute: 'site2Exon' , visible: false },
     { columnType: FusionTableColumnType.SITE2_CHROMOSOME, label: 'Site2 Chromosome', attribute: 'site2Chromosome' , visible: false },
     { columnType: FusionTableColumnType.SITE2_POSITION, label: 'Site2 Position', attribute: 'site2Position' , visible: false },
     { columnType: FusionTableColumnType.SITE2_DESCRIPTION, label: 'Site2 Description', attribute: 'site2Description' , visible: false },
-    { columnType: FusionTableColumnType.SITE2_EFFECT_ON_FRAME, label: 'Site2 Effect on Frame', attribute: 'site2EffectOnFrame' , visible: false },
+    { columnType: FusionTableColumnType.SITE2_EFFECT_ON_FRAME, label: 'Effect on Frame', attribute: 'site2EffectOnFrame' , visible: false },
 
     { columnType: FusionTableColumnType.NCBI_BUILD, label: 'NCBI Build', attribute: 'ncbiBuild' , visible: false },
     { columnType: FusionTableColumnType.DNA_SUPPORT, label: 'DNA Support', attribute: 'dnaSupport' , visible: false },
@@ -183,16 +190,19 @@ export default class FusionTable<P extends IFusionTableProps> extends React.Comp
      * @param label
      * @returns {(d: StructuralVariant[]) => any}
      */
-    private renderColumnFn(label: any,
+    private renderColumnFn(label: FusionTableColumnLabel,
                            molecularProfileIdToMolecularProfile?: { [molecularProfileId: string]: MolecularProfile },
                            studyIdToStudy?: { [studyId: string]: CancerStudy }) {
-        let _renderColumnFn = (d: StructuralVariant[]) => {
-            return <span>{d[0][label.attribute]}</span>;
+
+        let _renderColumnFn = (d: StructuralVariantExt[]) => {
+            const sampleId = d[0][label.attribute];
+            return <span>{sampleId}</span>;
         };
 
         if (label.columnType === FusionTableColumnType.SAMPLE_ID && this.props.fusionMolecularProfile) {
-            _renderColumnFn = (d: StructuralVariant[]) => {
 
+            _renderColumnFn = (d: StructuralVariantExt[]) => {
+                const sampleId = d[0][label.attribute];
                 if (!molecularProfileIdToMolecularProfile || !studyIdToStudy)
                     return <span/>;
 
@@ -201,7 +211,7 @@ export default class FusionTable<P extends IFusionTableProps> extends React.Comp
 
 
                 const study = studyIdToStudy[geneticProfile.studyId];
-                let linkToPatientView: string = `#/patient?sampleId=${d[0][label.attribute]}&studyId=${study.studyId}`;
+                let linkToPatientView: string = `#/patient?sampleId=${sampleId}&studyId=${study.studyId}`;
 
                 /**
                  * HACK to deal with having mutation mapper on index.do
@@ -215,7 +225,7 @@ export default class FusionTable<P extends IFusionTableProps> extends React.Comp
                 }
                 // END HACK
 
-                return <a href={linkToPatientView} target='_blank'>{d[0][label.attribute]}</a>
+                return <a href={linkToPatientView} target='_blank'>{sampleId}</a>
             }
         }
 
@@ -252,13 +262,12 @@ export default class FusionTable<P extends IFusionTableProps> extends React.Comp
 
         let visibleColumns = [
             FusionTableColumnType.SAMPLE_ID,
-            FusionTableColumnType.ANNOTATION,
             FusionTableColumnType.SITE1_HUGO_SYMBOL,
             FusionTableColumnType.SITE2_HUGO_SYMBOL,
-            FusionTableColumnType.SITE1_EXON,
-            FusionTableColumnType.SITE2_EXON,
+            FusionTableColumnType.SITE2_EFFECT_ON_FRAME,
             FusionTableColumnType.RNA_SUPPORT,
-            FusionTableColumnType.TUMOR_VARIANT_COUNT,
+            FusionTableColumnType.TUMOR_READ_COUNT,
+            FusionTableColumnType.ANNOTATION
         ];
 
         this._columns = {};
@@ -278,9 +287,9 @@ export default class FusionTable<P extends IFusionTableProps> extends React.Comp
                     this.props.molecularProfileIdToMolecularProfile,
                     this.props.studyIdToStudy
                 ),
-                download: (d => d[0][label.attribute]),
-                sortBy: (d: StructuralVariant[]) => d.map(m => m[label.attribute]),
-                filter: (d: StructuralVariant[], filterString: string, filterStringUpper: string) =>
+                download: (d:StructuralVariantExt[]) => d[0][label.attribute],
+                sortBy: (d: StructuralVariantExt[]) => d.map(m => m[label.attribute]),
+                filter: (d: StructuralVariantExt[], filterString: string, filterStringUpper: string) =>
                     this.defaultFilter(d, label.attribute, filterStringUpper),
                 visible: visibleColumns.indexOf(label.columnType) > -1
             };

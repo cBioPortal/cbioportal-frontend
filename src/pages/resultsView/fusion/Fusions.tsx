@@ -23,9 +23,8 @@ import { observer } from "mobx-react";
 import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import { observable } from 'mobx';
 import { MSKTab, MSKTabs } from '../../../shared/components/MSKTabs/MSKTabs';
-import AppConfig from 'appConfig';
 import Loader from '../../../shared/components/loadingIndicator/LoadingIndicator';
-import FusionMapper from './FusionMapper';
+import ResultViewFusionMapper from './ResultViewFusionMapper';
 
 export interface IFusionPageProps {
     routing?: any;
@@ -56,12 +55,11 @@ export default class Fusions extends React.Component<IFusionPageProps, {}> {
                         id="fusionsPageTabs"
                         activeTabId={activeTabId}
                         onTabClick={(id: string) => this.handleTabChange(id)}
-                        className="secondaryTabs resultsPageMutationsGeneTabs"
+                        className="pillTabs resultsPageMutationsGeneTabs"
                         enablePagination={true}
                         arrowStyle={{'line-height': .8}}
                         tabButtonStyle="pills"
-                        unmountOnHide={true}
-                    >
+                        unmountOnHide={true}>
                         {this.generateTabs(this.props.store.hugoGeneSymbols!)}
                     </MSKTabs>
                 )}
@@ -81,7 +79,7 @@ export default class Fusions extends React.Component<IFusionPageProps, {}> {
             if (fusionMapperStore) {
                 tabs.push(
                     <MSKTab key={gene} id={gene} linkText={gene}>
-                        <FusionMapper store={fusionMapperStore} config={AppConfig}/>
+                        <ResultViewFusionMapper store={fusionMapperStore}/>
                     </MSKTab>
                 );
             }
@@ -89,7 +87,6 @@ export default class Fusions extends React.Component<IFusionPageProps, {}> {
 
         return tabs;
     }
-
 
     /**
      * Handle tab changes

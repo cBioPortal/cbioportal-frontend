@@ -1,6 +1,8 @@
 import {assert} from 'chai';
-import {buildDefaultOQLProfile, extendSamplesWithCancerType} from './ResultsViewPageStore';
+import { buildDefaultOQLProfile, extendSamplesWithCancerType, ResultsViewPageStore } from './ResultsViewPageStore';
 import {CancerStudy, ClinicalData, Sample} from "../../shared/api/generated/CBioPortalAPI";
+import client from '../../shared/api/cbioportalClientInstance';
+import sinon from 'sinon';
 
 describe('buildDefaultOQLProfile', () => {
 
@@ -13,8 +15,6 @@ describe('buildDefaultOQLProfile', () => {
     });
 
 });
-
-
 describe('extendSamplesWithCancerType', () => {
 
     var arg2 = [{
@@ -163,3 +163,133 @@ describe('extendSamplesWithCancerType', () => {
 
 });
 
+describe('fusionByGene', () => {
+    let dummyFusions = {
+        result : [
+            {
+                "uniqueSampleKey": "VENHQS1BMi1BMDRQLTAxOnN0dWR5X2VzXzA",
+                "uniquePatientKey": "VENHQS1BMi1BMDRQOnN0dWR5X2VzXzA",
+                "molecularProfileId": "study_es_0_structural_variants",
+                "structuralVariantId": 51,
+                "sampleIdInternal": 13054,
+                "sampleId": "TCGA-A2-A04P-01",
+                "patientId": "TCGA-A2-A04P",
+                "studyId": "study_es_0",
+                "site1EntrezGeneId": 238,
+                "site1HugoSymbol": "ALK",
+                "site1EnsemblTranscriptId": "ENST00000389048",
+                "site1Exon": 11,
+                "site1Chromosome": "2",
+                "site1Position": 29497964,
+                "site1Description": "ALK-PTPN3.A11P3_1",
+                "site2EntrezGeneId": 5774,
+                "site2HugoSymbol": "PTPN3",
+                "site2EnsemblTranscriptId": "ENST00000374541",
+                "site2Exon": 3,
+                "site2Chromosome": "9",
+                "site2Position": 112219680,
+                "site2Description": "ALK-PTPN3.A11P3_2",
+                "site2EffectOnFrame": "NA",
+                "ncbiBuild": "GRCh37",
+                "dnaSupport": "no",
+                "rnaSupport": "yes",
+                "normalReadCount": -1,
+                "tumorReadCount": 1005,
+                "normalVariantCount": -1,
+                "tumorVariantCount": 400,
+                "normalPairedEndReadCount": -1,
+                "tumorPairedEndReadCount": -1,
+                "normalSplitReadCount": -1,
+                "tumorSplitReadCount": -1,
+                "annotation": "ALK-PTPN3.A11P3",
+                "breakpointType": "NA",
+                "center": "NA",
+                "connectionType": "NA",
+                "eventInfo": "Fusion",
+                "variantClass": "NA",
+                "length": -1,
+                "comments": "NA",
+                "externalAnnotation": "NA",
+                "driverFilter": "NA",
+                "driverFilterAnn": "NA",
+                "driverTiersFilter": "NA",
+                "driverTiersFilterAnn": "NA"
+            },
+            {
+                "uniqueSampleKey": "VENHQS1BMi1BMDRQLTAxOnN0dWR5X2VzXzA",
+                "uniquePatientKey": "VENHQS1BMi1BMDRQOnN0dWR5X2VzXzA",
+                "molecularProfileId": "study_es_0_structural_variants",
+                "structuralVariantId": 48,
+                "sampleIdInternal": 13054,
+                "sampleId": "TCGA-A2-A04P-01",
+                "patientId": "TCGA-A2-A04P",
+                "studyId": "study_es_0",
+                "site1EntrezGeneId": 27436,
+                "site1HugoSymbol": "EML4",
+                "site1EnsemblTranscriptId": "ENST00000318522",
+                "site1Exon": 6,
+                "site1Chromosome": "2",
+                "site1Position": 42492092,
+                "site1Description": "EML4-ALK.E6bA20.AB374362_1",
+                "site2EntrezGeneId": 238,
+                "site2HugoSymbol": "ALK",
+                "site2EnsemblTranscriptId": "ENST00000389048",
+                "site2Exon": 20,
+                "site2Chromosome": "2",
+                "site2Position": 29446394,
+                "site2Description": "EML4-ALK.E6bA20.AB374362_2",
+                "site2EffectOnFrame": "NA",
+                "ncbiBuild": "GRCh37",
+                "dnaSupport": "no",
+                "rnaSupport": "yes",
+                "normalReadCount": -1,
+                "tumorReadCount": 1002,
+                "normalVariantCount": -1,
+                "tumorVariantCount": 700,
+                "normalPairedEndReadCount": -1,
+                "tumorPairedEndReadCount": -1,
+                "normalSplitReadCount": -1,
+                "tumorSplitReadCount": -1,
+                "annotation": "EML4-ALK.E6bA20.AB374362",
+                "breakpointType": "NA",
+                "center": "NA",
+                "connectionType": "NA",
+                "eventInfo": "Fusion",
+                "variantClass": "NA",
+                "length": -1,
+                "comments": "Gain-of-Function",
+                "externalAnnotation": "GENBANK:AB374362",
+                "driverFilter": "NA",
+                "driverFilterAnn": "NA",
+                "driverTiersFilter": "NA",
+                "driverTiersFilterAnn": "NA"
+            }
+        ]
+    };
+    let dummyGenes = {
+        result : [
+            {
+                "entrezGeneId": 238,
+                "hugoGeneSymbol": "ALK",
+                "type": "protein-coding",
+                "cytoband": "2p23",
+                "length": 6932,
+                "chromosome": "2"
+            }
+        ]
+    };
+    let store:ResultsViewPageStore;
+
+    before(() => {
+        store = new ResultsViewPageStore();
+        sinon.stub(store, 'fusions').callsFake(function fakeFn() {
+            return dummyFusions;
+        });
+        sinon.stub(store, 'genes').callsFake(function fakeFn() {
+            return dummyGenes;
+        });
+    });
+
+    it('should grouped fusions by queried gene');
+
+});

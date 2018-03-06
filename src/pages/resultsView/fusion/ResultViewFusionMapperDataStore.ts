@@ -19,17 +19,15 @@
  **/
 
 import * as _ from 'lodash';
-import {
-    SimpleMobXApplicationDataStore
-} from "../../../shared/lib/IMobXApplicationDataStore";
 import { StructuralVariant } from "../../../shared/api/generated/CBioPortalAPI";
-import { action, observable } from "mobx";
+import { action, observable, computed } from "mobx";
 import Immutable from "seamless-immutable";
+import { SimpleLazyMobXTableApplicationDataStore } from '../../../shared/lib/ILazyMobXTableApplicationDataStore';
 
 type PositionAttr = { [position: string]: boolean };
 type ImmutablePositionAttr = PositionAttr & Immutable.ImmutableObject<PositionAttr>;
 
-export default class FusionMapperDataStore extends SimpleMobXApplicationDataStore<StructuralVariant[]> {
+export default class FusionMapperDataStore extends SimpleLazyMobXTableApplicationDataStore<StructuralVariant[]> {
     @observable.ref private selectedPositions: ImmutablePositionAttr;
     @observable.ref private highlightedPositions: ImmutablePositionAttr;
 

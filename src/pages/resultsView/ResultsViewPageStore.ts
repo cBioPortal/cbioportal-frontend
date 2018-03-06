@@ -4,7 +4,7 @@ import {
     ClinicalDataSingleStudyFilter, CancerStudy, PatientIdentifier, Patient, GenePanelData, GenePanelDataFilter,
     SampleList, MutationCountByPosition, MutationMultipleStudyFilter, SampleMolecularIdentifier,
     MolecularDataMultipleStudyFilter, SampleFilter, MolecularProfileFilter, GenePanelMultipleStudyFilter, PatientFilter, MutationFilter,
-    GenePanel, ClinicalAttributeFilter, ClinicalAttribute, StructuralVariant
+    GenePanel, ClinicalAttributeFilter, ClinicalAttribute, StructuralVariant, StructuralVariantFilter
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {computed, observable, action, reaction, IObservable, IObservableValue, ObservableMap} from "mobx";
@@ -62,6 +62,7 @@ import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
 import {getAlterationString} from "../../shared/lib/CopyNumberUtils";
 import memoize from "memoize-weak-decorator";
 import request from 'superagent';
+import { ResultViewFusionMapperStore } from './fusion/ResultViewFusionMapperStore';
 import {countMutations, mutationCountByPositionKey} from "./mutationCountHelpers";
 import {getPatientSurvivals} from "./SurvivalStoreHelper";
 import {QueryStore} from "shared/components/query/QueryStore";
@@ -75,6 +76,7 @@ import {
 import {getAlterationCountsForCancerTypesForAllGenes} from "../../shared/lib/alterationCountHelpers";
 import MobxPromiseCache from "../../shared/lib/MobxPromiseCache";
 import {isSampleProfiledInMultiple} from "../../shared/lib/isSampleProfiled";
+import { StructuralVariantFilterExt } from '../../shared/model/Fusion';
 import {BookmarkLinks} from "../../shared/model/BookmarkLinks";
 import {getBitlyServiceUrl, getSessionServiceUrl} from "../../shared/api/urls";
 import url from 'url';
@@ -1074,7 +1076,10 @@ export class ResultsViewPageStore {
     });
 
     /**
-     * Fusion data
+     * Fetch fusion data from the backend API with following request parameters:
+     * - entrez gene ids
+     * - sample molecular identifiers
+     * - molecular profile ids (only when sample molecular identifiers are not provided)
      * @type {MobxPromiseUnionType<StructuralVariant[]>}
      */
     readonly fusions = remoteData<StructuralVariant[]>({
@@ -1085,36 +1090,34 @@ export class ResultsViewPageStore {
             this.studyIdToStudy
         ],
         invoke: async () => {
-            let _molecularProfiles: Array<string> = [];
-            let _samples: Array<{ molecularProfileId: string, sampleId: string }> = [];
-            let _params: any = {};
-
-            if (this.selectedMolecularProfiles.result) {
-                _molecularProfiles = this.selectedMolecularProfiles.result.filter( profile => {
-                    return profile.molecularAlterationType === AlterationTypeConstants.STRUCTURAL_VARIANT;
-                }).map( profile => {
-                    return profile.molecularProfileId;
-                });
-            }
-
+            let molecularProfiles: Array<string> = [];
+            let samples: SampleMolecularIdentifier[] = [];
+            let params: StructuralVariantFilterExt = {entrezGeneIds:[]};
             if (this.genes.result) {
-                _params.entrezGeneIds = _.map(this.genes.result,(gene:Gene)=>gene.entrezGeneId);
+                params.entrezGeneIds = _.map(this.genes.result, (gene: Gene) => gene.entrezGeneId);
             }
-
-            // map according what's expected by backend
+            // compose request parameters
             if (this.samples.result) {
-                _samples = this.samples.result.map(sample => {
+                // get sample molecular identifiers
+                samples = this.samples.result.map(sample => {
                     return {
                         molecularProfileId: sample.studyId + '_structural_variants',
                         sampleId: sample.sampleId
                     };
                 });
-                _params.sampleMolecularIdentifiers = _samples;
+                params.sampleMolecularIdentifiers = samples;
             } else {
-                _params.molecularProfileIds = _molecularProfiles;
+                // get molecular profile ids
+                if (this.selectedMolecularProfiles.result) {
+                    molecularProfiles = this.selectedMolecularProfiles.result.filter(profile => {
+                        return profile.molecularAlterationType === AlterationTypeConstants.STRUCTURAL_VARIANT;
+                    }).map(profile => {
+                        return profile.molecularProfileId;
+                    });
+                    params.molecularProfileIds = molecularProfiles;
+                }
             }
-
-            return await client.fetchStructuralVariantsPOST(_params);
+            return await client.fetchStructuralVariantsUsingPOST({'structuralVariantFilter':<StructuralVariantFilter> params});
         }
     });
 
@@ -1124,50 +1127,45 @@ export class ResultsViewPageStore {
      */
     @computed
     get fusionsByGene(): { [hugeGeneSymbol: string]: StructuralVariant[] } {
-        let _genes: Array<string> = [],
-            _fusionsByGene = {},
-            hugoSymbolsAttrs = ['site1HugoSymbol', 'site2HugoSymbol']; // will check in these two attributes
-
+        let genes:Array<string> = [];
+        let fusionsByGene:{ [hugeGeneSymbol: string]: StructuralVariant[] } = {};
         // get string values of genes from input query
         if (this.genes.result) {
-            _genes = this.genes.result.map(gene => gene.hugoGeneSymbol);
-        }
-
-        // group fusion data by the genes from input query
-        _genes.forEach(gene => {
-            hugoSymbolsAttrs.forEach( hugoSymbolsAttr => {
-                let _tmp = _.groupBy(this.fusions.result, (fusion: StructuralVariant) => {
-                    if (fusion[hugoSymbolsAttr] === gene) return  gene;
-                });
-                _fusionsByGene = Object.assign(_fusionsByGene, _tmp);
+            // get the genes
+            genes = this.genes.result.map(gene => gene.hugoGeneSymbol);
+            // group fusion data by the genes from input query
+            genes.forEach(gene => {
+                let tmpFusions:Array<any> = [];
+                if (this.fusions.result) {
+                    tmpFusions = tmpFusions.concat(this.fusions.result.filter((fusion:StructuralVariant) => {
+                        return fusion.site1HugoSymbol === gene || fusion.site2HugoSymbol === gene;
+                    }));
+                    fusionsByGene = Object.assign(fusionsByGene, { [gene]: tmpFusions });
+                }
             });
-        });
-        return _fusionsByGene;
+        }
+        return fusionsByGene;
     }
 
     /**
      * Assign a FusionMapperStore per genes
      * @type {MobxPromiseUnionTypeWithDefault<{[p: string]: FusionMapperStore}>}
      */
-    readonly fusionMapperStores = remoteData<{[hugoGeneSymbol: string]: FusionMapperStore}>({
+    readonly fusionMapperStores = remoteData<{[hugoGeneSymbol: string]: ResultViewFusionMapperStore}>({
         invoke: () => {
-            if (this.genes.result) {
+            if (this.genes.result && this.fusionsByGene) {
                 return Promise.resolve(
-                    _.reduce(
-                        this.genes.result,
-                        (map: { [hugoGeneSymbol: string]: FusionMapperStore }, gene: Gene) => {
-                            map[gene.hugoGeneSymbol] = new FusionMapperStore(
-                                gene,
-                                this.studyIdToStudy,
-                                this.molecularProfileIdToMolecularProfile,
-                                this.samples,
-                                this.fusionsByGene[gene.hugoGeneSymbol]
-                            );
-                            return map;
-                        }, {}
-                    )
+                    this.genes.result.reduce((map: { [hugoGeneSymbol: string]: ResultViewFusionMapperStore }, gene: Gene) => {
+                        map[gene.hugoGeneSymbol] = new ResultViewFusionMapperStore(
+                            gene,
+                            this.studyIdToStudy,
+                            this.molecularProfileIdToMolecularProfile,
+                            this.samples,
+                            this.fusionsByGene[gene.hugoGeneSymbol]
+                        );
+                        return map;
+                    }, {})
                 );
-
             } else {
                 return Promise.resolve({});
             }
@@ -1177,9 +1175,9 @@ export class ResultsViewPageStore {
     /**
      * Get fusion mapper store by gene
      * @param {string} hugoGeneSymbol
-     * @returns {FusionMapperStore}
+     * @returns {ResultViewFusionMapperStore}
      */
-    public getFusionMapperStore(hugoGeneSymbol: string): FusionMapperStore | undefined {
+    public getFusionMapperStore(hugoGeneSymbol: string): ResultViewFusionMapperStore | undefined {
         return this.fusionMapperStores.result[hugoGeneSymbol];
     }
 
@@ -2105,7 +2103,7 @@ export class ResultsViewPageStore {
             this.molecularProfileIdToProfiledSampleCount
         ],
         invoke: async () => {
-            return _.filter(this.molecularProfilesInStudies.result, (profile: MolecularProfile) => 
+            return _.filter(this.molecularProfilesInStudies.result, (profile: MolecularProfile) =>
                 profile.molecularAlterationType === AlterationTypeConstants.MUTATION_EXTENDED);
         },
         onResult:(profiles: MolecularProfile[])=>{
@@ -2138,7 +2136,7 @@ export class ResultsViewPageStore {
             this.molecularProfileIdToProfiledSampleCount
         ],
         invoke: async () => {
-            return _.filter(this.molecularProfilesInStudies.result, (profile: MolecularProfile) => 
+            return _.filter(this.molecularProfilesInStudies.result, (profile: MolecularProfile) =>
                 profile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && profile.datatype === "DISCRETE");
         },
         onResult:(profiles: MolecularProfile[])=>{
@@ -2156,7 +2154,7 @@ export class ResultsViewPageStore {
         ],
         invoke: async () => {
             // returns an empty array if the selected study doesn't have any CNA profiles
-            return this.selectedEnrichmentCopyNumberProfile ? this.getCopyNumberEnrichmentData(this.alteredSamples.result, 
+            return this.selectedEnrichmentCopyNumberProfile ? this.getCopyNumberEnrichmentData(this.alteredSamples.result,
                 this.unalteredSamples.result, "HOMDEL") : [];
         }
     });
@@ -2171,14 +2169,14 @@ export class ResultsViewPageStore {
         ],
         invoke: async () => {
             // returns an empty array if the selected study doesn't have any CNA profiles
-            return this.selectedEnrichmentCopyNumberProfile ? this.getCopyNumberEnrichmentData(this.alteredSamples.result, 
+            return this.selectedEnrichmentCopyNumberProfile ? this.getCopyNumberEnrichmentData(this.alteredSamples.result,
                 this.unalteredSamples.result, "AMP") : [];
         }
     });
 
-    private async getCopyNumberEnrichmentData(alteredSamples: Sample[], unalteredSamples: Sample[], 
+    private async getCopyNumberEnrichmentData(alteredSamples: Sample[], unalteredSamples: Sample[],
         copyNumberEventType: "HOMDEL" | "AMP"): Promise<AlterationEnrichment[]> {
-        
+
         return this.sortEnrichmentData(await internalClient.fetchCopyNumberEnrichmentsUsingPOST({
             molecularProfileId: this.selectedEnrichmentCopyNumberProfile.molecularProfileId,
             copyNumberEventType: copyNumberEventType,
@@ -2235,7 +2233,7 @@ export class ResultsViewPageStore {
             this.molecularProfileIdToProfiledSampleCount
         ],
         invoke: async () => {
-            return _.filter(this.molecularProfilesInStudies.result, (profile: MolecularProfile) => 
+            return _.filter(this.molecularProfilesInStudies.result, (profile: MolecularProfile) =>
                 profile.molecularAlterationType === AlterationTypeConstants.PROTEIN_LEVEL && profile.datatype != "Z-SCORE");
         },
         onResult:(profiles: MolecularProfile[])=>{

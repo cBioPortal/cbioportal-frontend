@@ -19,7 +19,7 @@
  **/
 
 import * as React from "react";
-import {observer} from "mobx-react";
+import { observer } from "mobx-react";
 import FusionTable, { FusionTableColumnType } from '../../../shared/components/fusionTable/FusionTable';
 import { IFusionTableProps } from '../../../shared/components/fusionTable/IFusionTableProps';
 
@@ -30,60 +30,60 @@ export interface IResultsViewFusionTableProps extends IFusionTableProps {
 @observer
 export default class ResultsViewFusionTable extends FusionTable<IResultsViewFusionTableProps> {
 
-    constructor(props:IResultsViewFusionTableProps) {
+    constructor(props: IResultsViewFusionTableProps) {
         super(props);
     }
 
     public static defaultProps =
-    {
-        ...FusionTable.defaultProps,
-        columns: [
-            FusionTableColumnType.STUDY,
-            FusionTableColumnType.SAMPLE_ID,
-            FusionTableColumnType.SITE1_ENTREZ_GENE_ID,
-            FusionTableColumnType.SITE1_HUGO_SYMBOL,
-            FusionTableColumnType.SITE1_ENSEMBL_TRANSCRIPT_ID,
-            FusionTableColumnType.SITE1_EXON,
-            FusionTableColumnType.SITE1_CHROMOSOME,
-            FusionTableColumnType.SITE1_POSITION,
-            FusionTableColumnType.SITE1_DESCRIPTION,
-            FusionTableColumnType.SITE2_ENTREZ_GENE_ID,
-            FusionTableColumnType.SITE2_HUGO_SYMBOL,
-            FusionTableColumnType.SITE2_ENSEMBL_TRANSCRIPT_ID,
-            FusionTableColumnType.SITE2_EXON,
-            FusionTableColumnType.SITE2_CHROMOSOME,
-            FusionTableColumnType.SITE2_POSITION,
-            FusionTableColumnType.SITE2_DESCRIPTION,
-            FusionTableColumnType.SITE2_EFFECT_ON_FRAME,
-            FusionTableColumnType.NCBI_BUILD,
-            FusionTableColumnType.DNA_SUPPORT,
-            FusionTableColumnType.RNA_SUPPORT,
-            FusionTableColumnType.NORMAL_READ_COUNT,
-            FusionTableColumnType.TUMOR_READ_COUNT,
-            FusionTableColumnType.NORMAL_VARIANT_COUNT,
-            FusionTableColumnType.TUMOR_VARIANT_COUNT,
-            FusionTableColumnType.NORMAL_PAIRED_END_READ_COUNT,
-            FusionTableColumnType.TUMOR_PAIRED_END_READ_COUNT,
-            FusionTableColumnType.NORMAL_SPLIT_READ_COUNT,
-            FusionTableColumnType.TUMOR_SPLIT_READ_COUNT,
-            FusionTableColumnType.ANNOTATION,
-            FusionTableColumnType.BREAKPOINT_TYPE,
-            FusionTableColumnType.CENTER,
-            FusionTableColumnType.CONNECTION_TYPE,
-            FusionTableColumnType.EVENT_INFO,
-            FusionTableColumnType.VARIANT_CLASS,
-            FusionTableColumnType.LENGTH,
-            FusionTableColumnType.COMMENTS,
-            FusionTableColumnType.EXTERNAL_ANNOTATION,
-            FusionTableColumnType.DRIVER_FILTER,
-            FusionTableColumnType.DRIVER_FILTER_ANNOTATION,
-            FusionTableColumnType.DRIVER_TIERS_FILTER,
-            FusionTableColumnType.DRIVER_TIERS_FILTER_ANNOTATION
-        ]
-    };
+        {
+            ...FusionTable.defaultProps,
+            columns: [
+                FusionTableColumnType.STUDY,
+                FusionTableColumnType.SAMPLE_ID,
+                FusionTableColumnType.SITE1_ENTREZ_GENE_ID,
+                FusionTableColumnType.SITE1_HUGO_SYMBOL,
+                FusionTableColumnType.SITE1_ENSEMBL_TRANSCRIPT_ID,
+                FusionTableColumnType.SITE1_EXON,
+                FusionTableColumnType.SITE1_CHROMOSOME,
+                FusionTableColumnType.SITE1_POSITION,
+                FusionTableColumnType.SITE1_DESCRIPTION,
+                FusionTableColumnType.SITE2_ENTREZ_GENE_ID,
+                FusionTableColumnType.SITE2_HUGO_SYMBOL,
+                FusionTableColumnType.SITE2_ENSEMBL_TRANSCRIPT_ID,
+                FusionTableColumnType.SITE2_EXON,
+                FusionTableColumnType.SITE2_CHROMOSOME,
+                FusionTableColumnType.SITE2_POSITION,
+                FusionTableColumnType.SITE2_DESCRIPTION,
+                FusionTableColumnType.SITE2_EFFECT_ON_FRAME,
+                FusionTableColumnType.NCBI_BUILD,
+                FusionTableColumnType.DNA_SUPPORT,
+                FusionTableColumnType.RNA_SUPPORT,
+                FusionTableColumnType.NORMAL_READ_COUNT,
+                FusionTableColumnType.TUMOR_READ_COUNT,
+                FusionTableColumnType.NORMAL_VARIANT_COUNT,
+                FusionTableColumnType.TUMOR_VARIANT_COUNT,
+                FusionTableColumnType.NORMAL_PAIRED_END_READ_COUNT,
+                FusionTableColumnType.TUMOR_PAIRED_END_READ_COUNT,
+                FusionTableColumnType.NORMAL_SPLIT_READ_COUNT,
+                FusionTableColumnType.TUMOR_SPLIT_READ_COUNT,
+                FusionTableColumnType.ANNOTATION,
+                FusionTableColumnType.BREAKPOINT_TYPE,
+                FusionTableColumnType.CENTER,
+                FusionTableColumnType.CONNECTION_TYPE,
+                FusionTableColumnType.EVENT_INFO,
+                FusionTableColumnType.VARIANT_CLASS,
+                FusionTableColumnType.LENGTH,
+                FusionTableColumnType.COMMENTS,
+                FusionTableColumnType.EXTERNAL_ANNOTATION,
+                FusionTableColumnType.DRIVER_FILTER,
+                FusionTableColumnType.DRIVER_FILTER_ANNOTATION,
+                FusionTableColumnType.DRIVER_TIERS_FILTER,
+                FusionTableColumnType.DRIVER_TIERS_FILTER_ANNOTATION
+            ]
+        };
 
-    componentWillUpdate(nextProps:IResultsViewFusionTableProps) {
-        // TODO: Check how mutation table do it
+    componentWillUpdate(nextProps: IResultsViewFusionTableProps) {
+        this._columns[FusionTableColumnType.STUDY].visible = !!(nextProps.studyIdToStudy && (Object.keys(nextProps.studyIdToStudy).length > 1));
     }
 
     protected generateColumns() {
