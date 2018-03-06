@@ -65,7 +65,7 @@ export default class MutualExclusivityTab extends React.Component<IMutualExclusi
                         <div className={styles.Checkboxes}>
                             <Checkbox checked={this.mutualExclusivityFilter}
                                 onChange={this.mutualExclusivityFilterChange}>
-                                Mutual exclusivityy
+                                Mutual exclusivity
                             </Checkbox>
                             <Checkbox checked={this.coOccurenceFilter}
                                 onChange={this.coOccurenceFilterChange}>
