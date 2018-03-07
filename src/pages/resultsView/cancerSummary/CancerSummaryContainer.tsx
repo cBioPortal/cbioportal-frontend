@@ -98,10 +98,10 @@ export default class CancerSummaryContainer extends React.Component<ICancerSumma
             },0);
 
             // if there are no alterations for this gene, grey out text
-            const anchorStyle = (alterationCountAcrossCancerType === 0) ? { color:'#bbb' } : {};
+            const anchorStyle = (alterationCountAcrossCancerType === 0) ? { color:'#bbb' } : undefined;
 
             return (
-                <MSKTab key={geneName} id={"summaryTab" + geneName} linkText={geneName} anchorStyle={anchorStyle}>
+                <MSKTab key={geneName} id={"summaryTab" + geneName} linkText={geneName} {...{anchorStyle}}>
                     <CancerSummaryContent
                         groupedAlterationData={alterationCountsForCancerTypesByGene[geneName]}
                         groupAlterationsBy={this.groupAlterationsBy}
