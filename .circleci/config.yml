@@ -141,6 +141,7 @@ workflows:
                        only:
                            - master
                            - rc
+                           - release-1.12.0
        jobs:
            - install
            - api_sync:
