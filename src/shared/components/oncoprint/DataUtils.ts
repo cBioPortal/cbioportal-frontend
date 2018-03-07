@@ -233,7 +233,7 @@ export function makeGeneticTrackData(
 export function fillHeatmapTrackDatum<T extends IBaseHeatmapTrackDatum, K extends keyof T>(
     trackDatum: Partial<T>,
     featureKey: K,
-    featureId: string,
+    featureId: T[K],
     case_:Sample|Patient,
     data?: {value: string}[]
 ) {
@@ -266,7 +266,7 @@ export function fillHeatmapTrackDatum<T extends IBaseHeatmapTrackDatum, K extend
 
 export function makeHeatmapTrackData<T extends IBaseHeatmapTrackDatum, K extends keyof T>(
     featureKey: K,
-    featureId: string,
+    featureId: T[K],
     cases:Sample[]|Patient[],
     data: {value: string, uniquePatientKey: string, uniqueSampleKey: string}[]
 ): T[] {

@@ -449,7 +449,7 @@ describe('StoreUtils', () => {
         it('finds samples without cancer type clinical data', () => {
             const samplesWithoutCancerType = findSamplesWithoutCancerTypeClinicalData(samples, clinicalDataForSamples);
 
-            assert.deepEqual(samplesWithoutCancerType, [{sampleId: "Sample4", uniqueSampleKey: "Sample4"}]);
+            assert.deepEqual(samplesWithoutCancerType, [{sampleId: "Sample4", uniqueSampleKey: "Sample4"} as Partial<Sample>]);
         });
 
         const fetchSamplesStub = sinon.stub();
