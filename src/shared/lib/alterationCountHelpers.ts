@@ -70,7 +70,7 @@ export function countAlterationOccurences(groupedSamples: {[groupingProperty: st
         };
 
         // for each sample in cancer type
-        _.forIn(samples, (sample: Sample) => {
+        _.forEach(samples, (sample: Sample) => {
             // there are alterations corresponding to that sample
             if (sample.uniqueSampleKey in alterationsBySampleId) {
 
