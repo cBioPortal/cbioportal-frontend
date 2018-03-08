@@ -59,6 +59,7 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
     private hideTooltipTimeout:any;
     @observable.ref private tooltipModel: ITooltipModel | null;
     public svgContainer = HTMLElement;
+    private scrollPane: HTMLDivElement;
 
     constructor(){
         super();
@@ -165,15 +166,10 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
                         {
                             target: "data",
                             mutation: (props:any) => {
-                                console.log(props);
-                                //console.log(props.x, props.y);
-                                if (self.hideTooltipTimeout) {
-                                    clearTimeout(self.hideTooltipTimeout);
-                                }
                                 if (props.datum.x in self.props.countsByGroup) {
                                     self.tooltipModel = {
-                                        x:props.x + 15,
-                                        y:props.y,
+                                        x:props.x + 20 - this.scrollPane.scrollLeft,
+                                        y:props.y - 18,
                                         groupName:props.datum.x,
                                         alterationData:self.props.countsByGroup[props.datum.x]
                                     };
@@ -189,9 +185,7 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
                         {
                             target: "data",
                             mutation: (props:any) => {
-                                //self.hideTooltipTimeout = setTimeout(()=>{
-                                    self.hideTooltip();
-                               // },200);
+                                self.hideTooltip();
                             }
                         }
                     ];
@@ -205,10 +199,9 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
         return (
             <div className="popover right"
                  onMouseLeave={()=>this.hideTooltip()}
-                 onMouseEnter={()=>clearTimeout(this.hideTooltipTimeout)}
                  style={{display:'block', position:'absolute', top:tooltipModel.y, width:500, left:tooltipModel!.x}}
             >
-                <div className="arrow"></div>
+                <div className="arrow" style={{top:30}}></div>
                 <div className="popover-content">
                     <strong>Summary for {tooltipModel.groupName}</strong>
                     <p>Gene altered in {percentageRounder(tooltipModel.alterationData.alteredSampleCount/tooltipModel.alterationData.sampleTotal)}% of cases</p>
@@ -267,7 +260,7 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
         return (
             <div data-test="cancerTypeSummaryChart">
                 <div style={this.overflowStyle} className="borderedChart">
-                    <div style={{overflowX:'auto', overflowY:'hidden'}}>
+                    <div ref={(el:HTMLDivElement)=>this.scrollPane=el} style={{overflowX:'auto', overflowY:'hidden'}}>
                     {
                         (this.tooltipModel) && (this.buildTooltip(this.tooltipModel))
                     }

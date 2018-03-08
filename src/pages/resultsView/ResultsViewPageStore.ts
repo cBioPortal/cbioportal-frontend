@@ -607,11 +607,14 @@ export class ResultsViewPageStore {
             this.filteredAlterations
         ],
         invoke: () => {
-
-            const ret = _.groupBy(this.filteredAlterations.result!, alteration=>alteration.gene.hugoGeneSymbol);
-            for (const gene of this.genes.result!) {
-                ret[gene.hugoGeneSymbol] = ret[gene.hugoGeneSymbol] || []; // default
-            }
+            // first group them by gene symbol
+            const groupedGenesMap = _.groupBy(this.filteredAlterations.result!, alteration=>alteration.gene.hugoGeneSymbol);
+            // kind of ugly but this fixes a bug where sort order of genes not respected
+            // yes we are relying on add order of js map. in theory not guaranteed, in practice guaranteed
+            const ret = this.genes.result!.reduce((memo:{[hugoGeneSymbol:string]:ExtendedAlteration[]}, gene:Gene)=>{
+                memo[gene.hugoGeneSymbol] = groupedGenesMap[gene.hugoGeneSymbol];
+                return memo;
+            },{});
 
             return Promise.resolve(ret);
         }
