@@ -135,7 +135,6 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
         this.handleTotalInputKeyPress = this.handleTotalInputKeyPress.bind(this);
         this.toggleShowControls = this.toggleShowControls.bind(this);
         this.setPngAnchor = this.setPngAnchor.bind(this);
-        this.resetSliders = this.resetSliders.bind(this);
         this.downloadSvg = this.downloadSvg.bind(this);
         this.downloadPng = this.downloadPng.bind(this);
     }
@@ -277,21 +276,14 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
         }
     }
 
-    private handleYAxisChange(e: any) {
+    public handleYAxisChange(e: any) {
         this.yAxis = e.target.value;
-        this.resetSliders();
-    }
-
-    private handleXAxisChange(e: any) {
-        this.xAxis = e.target.value;
-        this.resetSliders();
-    }
-
-    private resetSliders() {
         this.altCasesValue = 0;
-        this.totalCasesValue = 0;
         this.handleAltSliderChange(0);
-        this.handleTotalSliderChange(0);
+    }
+
+    public handleXAxisChange(e: any) {
+        this.xAxis = e.target.value;
     }
 
     private handleCancerTypeCheckboxChange() {

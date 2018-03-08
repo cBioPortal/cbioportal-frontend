@@ -6,6 +6,7 @@ import {assert} from 'chai';
 import {shallow, mount} from "enzyme";
 import * as React from "react";
 import * as _ from 'lodash';
+import sinon from 'sinon';
 
 describe('CancerSummaryContent', () => {
 
@@ -112,6 +113,37 @@ describe('CancerSummaryContent', () => {
         instance.yAxis = 'abs-count';
         assert.equal(instance.altCasesMax, chartData.maxAbsoluteCount, 'returns absolute count');
 
+    });
+
+    it('#handleYAxisChange should reset alteration slider to zero', () => {
+        const comp = CancerSummaryContent;
+        const mockInstance = {
+            handleAltSliderChange:sinon.stub(),
+            altCasesValue:null,
+            yAxis:null
+        };
+        comp.prototype.handleYAxisChange.call(mockInstance,{
+            target:{
+                value:"something"
+            }
+        });
+        assert.equal(mockInstance.altCasesValue, 0, 'sets altCasesValue to 0');
+        assert.equal(mockInstance.yAxis, 'something', 'sets altCasesValue to 0');
+        assert.isTrue(mockInstance.handleAltSliderChange.calledOnce,'slider change handler called');
+        assert.isTrue(mockInstance.handleAltSliderChange.calledWith(0),'slider set to zero');
+    });
+
+    it('#handleXAxisChange should reset alteration slider to zero', () => {
+        const comp = CancerSummaryContent;
+        const mockInstance = {
+            xAxis:null
+        };
+        comp.prototype.handleXAxisChange.call(mockInstance,{
+            target:{
+                value:"something"
+            }
+        });
+        assert.equal(mockInstance.xAxis, 'something', 'sets xAis to passed value');
     });
 
     describe('chartData getter', ()=>{
