@@ -380,7 +380,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
 
                 <div>
                     <FormGroup>
-                        <ControlLabel>Y Axiis Value:</ControlLabel>
+                        <ControlLabel>Y-Axis Value:</ControlLabel>
                         <FormControl componentClass="select" data-test="cancerSummaryYAxisSelect" onChange={this.handleYAxisChange}
                                      ref={(el: any) => this.inputYAxisEl = el}>
                             <option value="alt-freq">Alteration Frequency</option>
@@ -388,16 +388,38 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                         </FormControl>
                     </FormGroup>
                     <FormGroup>
-                        <ControlLabel>Sort X Axis By:</ControlLabel>
+                        <ControlLabel>Sort X-Axis By:</ControlLabel>
                         <FormControl componentClass="select" data-test="cancerSummaryXAxisSelect" onChange={this.handleXAxisChange}
                                      ref={(el: any) => this.inputXAxisEl = el}>
                             <option value="y-axis">Y-Axis Values</option>
-                            <option value="x-axis">X-Axis Values</option>
+                            <option value="x-axis">Alphabetically</option>
                         </FormControl>
                     </FormGroup>
                 </div>
 
                 <div style={{width: 400}}>
+                    <div className="slider-holder">
+                        <FormGroup>
+                            <ControlLabel>Min. # Total Cases:</ControlLabel>
+                            <div className='slider custom-labels'>
+                                <Slider
+                                    min={0}
+                                    max={this.totalCasesMax}
+                                    value={this.tempTotalCasesValue}
+                                    labels={{0: 0, [this.totalCasesMax]: this.totalCasesMax}}
+                                    onChange={this.handleTotalSliderChange}
+                                    onChangeComplete={this.handleTotalSliderChangeComplete}
+                                />
+                            </div>
+                        </FormGroup>
+                        <FormGroup>
+                            <ControlLabel className="invisible">Hidden</ControlLabel>
+                            <FormControl type="text" value={this.tempTotalCasesInputValue}
+                                         data-test="sampleTotalThresholdInput"
+                                         onChange={this.handleTotalInputChange}
+                                         onKeyPress={this.handleTotalInputKeyPress}/>
+                        </FormGroup>
+                    </div>
                     <div className="slider-holder">
                         <FormGroup>
                             <ControlLabel>{`Min. ${this.yAxis === 'alt-freq' ? '%' : '#'} Altered Cases:`}</ControlLabel>
@@ -419,29 +441,6 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                                          onChange={this.handleAltInputChange}
                                          data-test="alterationThresholdInput"
                                          onKeyPress={this.handleAltInputKeyPress}/>
-                        </FormGroup>
-                    </div>
-
-                    <div className="slider-holder">
-                        <FormGroup>
-                            <ControlLabel>Min. # Total Cases:</ControlLabel>
-                            <div className='slider custom-labels'>
-                                <Slider
-                                    min={0}
-                                    max={this.totalCasesMax}
-                                    value={this.tempTotalCasesValue}
-                                    labels={{0: 0, [this.totalCasesMax]: this.totalCasesMax}}
-                                    onChange={this.handleTotalSliderChange}
-                                    onChangeComplete={this.handleTotalSliderChangeComplete}
-                                />
-                            </div>
-                        </FormGroup>
-                        <FormGroup>
-                            <ControlLabel className="invisible">Hidden</ControlLabel>
-                            <FormControl type="text" value={this.tempTotalCasesInputValue}
-                                         data-test="sampleTotalThresholdInput"
-                                         onChange={this.handleTotalInputChange}
-                                         onKeyPress={this.handleTotalInputKeyPress}/>
                         </FormGroup>
                     </div>
                 </div>
