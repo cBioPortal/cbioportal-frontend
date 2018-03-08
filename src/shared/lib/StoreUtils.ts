@@ -6,6 +6,7 @@ import {
     DiscreteCopyNumberFilter, ClinicalData, Sample, CancerStudy, CopyNumberCountIdentifier,
     ClinicalDataSingleStudyFilter, ClinicalDataMultiStudyFilter, GeneMolecularData, SampleFilter
 } from "shared/api/generated/CBioPortalAPI";
+import { EnsemblFilter } from "shared/api/generated/GenomeNexusAPI";
 import {getMyGeneUrl, getUniprotIdUrl} from "shared/api/urls";
 import defaultClient from "shared/api/cbioportalClientInstance";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
@@ -116,6 +117,20 @@ export async function fetchCanonicalTranscript(hugoSymbol: string,
     return await client.fetchCanonicalEnsemblTranscriptByHugoSymbolGET({
         hugoSymbol, isoformOverrideSource
     });
+}
+
+export async function fetchEnsemblTranscriptsByEnsemblFilter(ensemblFilter: Partial<EnsemblFilter>,
+                                                             client:GenomeNexusAPI = genomeNexusClient)
+{
+
+    return await client.fetchEnsemblTranscriptsByEnsemblFilterPOST({ensemblFilter: Object.assign(
+        // set default to empty array
+        {
+            'geneIds': [],
+            'hugoSymbols': [],
+            'proteinIds': [],
+            'transcriptIds': [],
+        }, ensemblFilter)});
 }
 
 export async function fetchClinicalData(clinicalDataMultiStudyFilter:ClinicalDataMultiStudyFilter,
