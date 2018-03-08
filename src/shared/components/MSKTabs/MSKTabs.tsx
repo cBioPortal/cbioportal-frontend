@@ -1,14 +1,9 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import classnames from 'classnames';
-import ReactChild = React.ReactChild;
-import ReactNode = React.ReactNode;
-import ReactChildren = React.ReactChildren;
 import {ThreeBounce} from 'better-react-spinkit';
 import ReactResizeDetector from 'react-resize-detector';
-import onNextRenderFrame from "shared/lib/onNextRenderFrame";
 import './styles.scss';
-import {ReactElement} from "react";
 
 interface IMSKTabProps {
     inactive?:boolean;
@@ -191,7 +186,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
         // we need a little style tweak to prevent initial overflow flashing when paging enabled
         // TODO disabling maxHeight tweak due to inconsistencies for now
         const navBarStyle = this.props.enablePagination ? {
-           border: 0, overflow: "hidden"
+           border: 0, overflow: "hidden" as "hidden"
         } : {};
 
         const prev = this.state.currentPage > 1 ? (
