@@ -19,6 +19,7 @@ import {
     fetchMutationData, generateUniqueSampleKeyToTumorTypeMap, generateDataQueryFilter,
     ONCOKB_DEFAULT, fetchPdbAlignmentData, fetchSwissProtAccession, fetchUniprotId, indexPdbAlignmentData,
     fetchPfamDomainData, fetchCivicGenes, fetchCivicVariants, IDataQueryFilter, fetchCanonicalTranscript,
+    fetchEnsemblTranscriptsByEnsemblFilter
 } from "shared/lib/StoreUtils";
 import MutationMapperDataStore from "./MutationMapperDataStore";
 import PdbChainDataStore from "./PdbChainDataStore";
@@ -142,10 +143,33 @@ export class MutationMapperStore {
         }
     }, undefined);
 
-    readonly canonicalTranscript = remoteData<EnsemblTranscript | undefined>({
+    readonly allTranscripts = remoteData<EnsemblTranscript[] | undefined>({
         invoke: async()=>{
             if (this.gene) {
-                return fetchCanonicalTranscript(this.gene.hugoGeneSymbol, this.isoformOverrideSource);
+                return fetchEnsemblTranscriptsByEnsemblFilter({"hugoSymbols":[this.gene.hugoGeneSymbol]});
+            } else {
+                return undefined;
+            }
+        },
+        onError: (err: Error) => {
+            console.log("Getting all transcripts failed");
+        }
+    }, undefined);
+
+    readonly canonicalTranscript = remoteData<EnsemblTranscript | undefined>({
+        await: () => [
+            this.allTranscripts
+        ],
+        invoke: async()=>{
+            if (this.gene) {
+                return fetchCanonicalTranscript(this.gene.hugoGeneSymbol, this.isoformOverrideSource).catch(async() => {
+                    console.log("No canonical transcript for: " + this.gene.hugoGeneSymbol);
+                    const transcript = _.maxBy(this.allTranscripts.result, (t:EnsemblTranscript) => t.proteinLength);
+                    if (transcript) {
+                        console.log("Using transcript with longest length instead: " + transcript);
+                        return transcript;
+                    }
+                })
             } else {
                 return undefined;
             }
