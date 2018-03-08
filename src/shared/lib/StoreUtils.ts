@@ -6,7 +6,7 @@ import {
     DiscreteCopyNumberFilter, ClinicalData, Sample, CancerStudy, CopyNumberCountIdentifier,
     ClinicalDataSingleStudyFilter, ClinicalDataMultiStudyFilter, GeneMolecularData, SampleFilter
 } from "shared/api/generated/CBioPortalAPI";
-import { EnsemblFilter } from "shared/api/generated/GenomeNexusAPI";
+import { EnsemblFilter, EnsemblTranscript } from "shared/api/generated/GenomeNexusAPI";
 import {getMyGeneUrl, getUniprotIdUrl} from "shared/api/urls";
 import defaultClient from "shared/api/cbioportalClientInstance";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
@@ -107,6 +107,22 @@ export async function fetchPfamDomainData(pfamAccessions: string[],
 {
     return await client.fetchPfamDomainsByPfamAccessionPOST({
         pfamAccessions: pfamAccessions
+    });
+}
+
+/*
+ * Gets the canonical transcript. If there is none pick the transcript with max
+ * length.
+ */
+export async function fetchCanonicalTranscriptWithFallback(hugoSymbol:string,
+                                                           isoformOverrideSource: string,
+                                                           allTranscripts: EnsemblTranscript[] | undefined,
+                                                           client:GenomeNexusAPI =  genomeNexusClient)
+{
+    return fetchCanonicalTranscript(hugoSymbol, isoformOverrideSource).catch(() => {
+        // get transcript with max protein length in given list of all transcripts
+        const transcript = _.maxBy(allTranscripts, (t:EnsemblTranscript) => t.proteinLength);
+        return transcript? transcript : undefined;
     });
 }
 
