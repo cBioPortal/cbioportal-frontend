@@ -27,10 +27,15 @@ import {
 import ResultsViewOncoprint from "./ResultsViewOncoprint";
 import _ from "lodash";
 import {action, runInAction} from "mobx";
+import {MobxPromise} from "mobxpromise";
 import {SpecialAttribute} from "shared/cache/ClinicalDataCache";
 import GenesetCorrelatedGeneCache from "shared/cache/GenesetCorrelatedGeneCache";
 import Spec = Mocha.reporters.Spec;
 import {OQLLineFilterOutput} from "../../lib/oql/oqlfilter";
+
+interface IGenesetExpansionMap {
+        [genesetTrackKey: string]: IGeneHeatmapTrackSpec[];
+}
 
 function makeGenesetHeatmapExpandHandler(
     oncoprint: ResultsViewOncoprint,
@@ -380,7 +385,7 @@ export function makeHeatmapTracksMobxPromise(oncoprint:ResultsViewOncoprint, sam
 }
 
 export function makeGenesetHeatmapExpansionsMobxPromise(oncoprint:ResultsViewOncoprint, sampleMode:boolean) {
-    return remoteData<{[genesetTrackKey: string]: IGeneHeatmapTrackSpec[]}>({
+    return remoteData<IGenesetExpansionMap>({
         await: () => [
             oncoprint.props.store.samples,
             oncoprint.props.store.patients,
@@ -444,7 +449,9 @@ export function makeGenesetHeatmapExpansionsMobxPromise(oncoprint:ResultsViewOnc
 }
 
 export function makeGenesetHeatmapTracksMobxPromise(
-    oncoprint:ResultsViewOncoprint, sampleMode:boolean
+    oncoprint: ResultsViewOncoprint,
+    sampleMode: boolean,
+    expansionMapPromise: MobxPromise<IGenesetExpansionMap>
 ) {
     return remoteData<IGenesetHeatmapTrackSpec[]>({
         await: () => [
@@ -454,8 +461,7 @@ export function makeGenesetHeatmapTracksMobxPromise(
             oncoprint.props.store.genesetMolecularDataCache,
             oncoprint.props.store.genesetLinkMap,
             oncoprint.props.store.genesetCorrelatedGeneCache,
-            oncoprint.sampleGenesetHeatmapExpansionTracks,
-            oncoprint.patientGenesetHeatmapExpansionTracks
+            expansionMapPromise
         ],
         invoke: async () => {
             const samples = oncoprint.props.store.samples.result!;
@@ -464,15 +470,10 @@ export function makeGenesetHeatmapTracksMobxPromise(
             const dataCache = oncoprint.props.store.genesetMolecularDataCache.result!;
             const genesetLinkMap = oncoprint.props.store.genesetLinkMap.result!;
             const correlatedGeneCache = oncoprint.props.store.genesetCorrelatedGeneCache.result!;
+            const expansions = expansionMapPromise.result!;
 
             // observe computed property based on other tracks
             const trackGroup = oncoprint.genesetHeatmapTrackGroup;
-
-            const expansions: {[parentKey: string]: IGeneHeatmapTrackSpec[]} = (
-                sampleMode
-                ? oncoprint.sampleGenesetHeatmapExpansionTracks.result!
-                : oncoprint.patientGenesetHeatmapExpansionTracks.result!
-            );
 
             if (!molecularProfile.isApplicable) {
                 return [];

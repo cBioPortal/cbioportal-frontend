@@ -777,10 +777,14 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         );
     }
 
-    readonly sampleGenesetHeatmapExpansionTracks = makeGenesetHeatmapExpansionsMobxPromise(this, true);
-    readonly sampleGenesetHeatmapTracks = makeGenesetHeatmapTracksMobxPromise(this, true);
-    readonly patientGenesetHeatmapExpansionTracks = makeGenesetHeatmapExpansionsMobxPromise(this, false);
-    readonly patientGenesetHeatmapTracks = makeGenesetHeatmapTracksMobxPromise(this, false);
+    readonly sampleGenesetHeatmapTracks = makeGenesetHeatmapTracksMobxPromise(
+            this, true,
+            makeGenesetHeatmapExpansionsMobxPromise(this, true)
+    );
+    readonly patientGenesetHeatmapTracks = makeGenesetHeatmapTracksMobxPromise(
+            this, false,
+            makeGenesetHeatmapExpansionsMobxPromise(this, false)
+    );
     @computed get genesetHeatmapTracks() {
         return (this.columnMode === "sample" ? this.sampleGenesetHeatmapTracks : this.patientGenesetHeatmapTracks);
     }
