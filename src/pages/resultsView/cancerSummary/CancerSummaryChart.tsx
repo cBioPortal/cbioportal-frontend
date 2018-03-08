@@ -1,12 +1,9 @@
 import * as React from "react";
 import * as _ from 'lodash';
 import { VictoryChart, VictoryTheme, VictoryLegend, VictoryContainer, VictoryAxis, VictoryLabel, VictoryStack, VictoryBar } from 'victory';
-import {Popover} from 'react-bootstrap';
 import {IAlterationCountMap, IAlterationData, ICancerSummaryChartData} from "./CancerSummaryContent";
 import {observable} from "mobx";
 import {observer} from "mobx-react";
-import Timer = NodeJS.Timer;
-import {testIt} from "../../../shared/lib/writeTest";
 import {CSSProperties} from "react";
 
 interface CancerSummaryChartProps {
@@ -168,33 +165,19 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
                         {
                             target: "data",
                             mutation: (props:any) => {
-                                console.log(props);
-                                //console.log(props.x, props.y);
                                 if (self.hideTooltipTimeout) {
                                     clearTimeout(self.hideTooltipTimeout);
                                 }
                                 if (props.datum.x in self.props.countsByGroup) {
                                     self.tooltipModel = {
-                                        x:props.x + 15,
-                                        y:props.y,
+                                        x:props.x + 20,
+                                        y:props.y - 18,
                                         groupName:props.datum.x,
                                         alterationData:self.props.countsByGroup[props.datum.x]
                                     };
                                 } else {
                                     self.hideTooltip();
                                 }
-                            }
-                        }
-                    ];
-                },
-                onMouseLeave: () => {
-                    return [
-                        {
-                            target: "data",
-                            mutation: (props:any) => {
-                                //self.hideTooltipTimeout = setTimeout(()=>{
-                                    self.hideTooltip();
-                               // },200);
                             }
                         }
                     ];
@@ -209,9 +192,9 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
             <div className="popover right"
                  onMouseLeave={()=>this.hideTooltip()}
                  onMouseEnter={()=>clearTimeout(this.hideTooltipTimeout)}
-                 style={{display:'block', position:'absolute', top:tooltipModel.y, maxWidth:'auto', left:tooltipModel!.x}}
+                 style={{display:'block', position:'absolute', top:tooltipModel.y, width:500, left:tooltipModel!.x}}
             >
-                <div className="arrow"></div>
+                <div className="arrow" style={{top:30}}></div>
                 <div className="popover-content">
                     <strong>Summary for {tooltipModel.groupName}</strong>
                     <p>Gene altered in {percentageRounder(tooltipModel.alterationData.alteredSampleCount/tooltipModel.alterationData.sampleTotal)}% of cases</p>
@@ -226,12 +209,13 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
                         {
                             _.reduce(this.props.alterationTypes,(memo, name:string, key:string)=>{
                                 if (key in tooltipModel!.alterationData.alterationTypeCounts && (tooltipModel!.alterationData.alterationTypeCounts as any)[key] > 0) {
+                                    const alterationCount = (tooltipModel!.alterationData.alterationTypeCounts as any)[key];
                                     memo.push((
                                         <tr>
                                             <td>{name}</td>
                                             <td>
                                                 {percentageRounder((tooltipModel!.alterationData.alterationTypeCounts as any)[key]/tooltipModel!.alterationData.sampleTotal)}%
-                                                ({(tooltipModel!.alterationData.alterationTypeCounts as any)[key]} cases)
+                                                ({alterationCount} {(alterationCount === 1) ? 'case' : 'cases'})
                                             </td>
                                         </tr>
                                     ))
