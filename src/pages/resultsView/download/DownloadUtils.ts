@@ -88,7 +88,7 @@ export function generateGeneAlterationData(
     }[],
     sequencedSampleKeysByGene: {[hugoGeneSymbol:string]:string[]} = {}): IGeneAlteration[]
 {
-    return (caseAggregatedDataByOQLLine) ?
+    return (caseAggregatedDataByOQLLine && !_.isEmpty(sequencedSampleKeysByGene)) ?
         caseAggregatedDataByOQLLine.map(data => {
             const info = alterationInfoForCaseAggregatedDataByOQLLine(
                 true, data, sequencedSampleKeysByGene, {});
