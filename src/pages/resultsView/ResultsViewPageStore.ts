@@ -298,8 +298,9 @@ export class ResultsViewPageStore {
 
             // we get mutations with mutations endpoint, all other alterations with this one, so filter out mutation genetic profile
             const profilesWithoutMutationProfile = _.filter(this.selectedMolecularProfiles.result, (profile: MolecularProfile) => profile.molecularAlterationType !== 'MUTATION_EXTENDED');
+            const genes = this.genes.result;
 
-            if (profilesWithoutMutationProfile.length) {
+            if (profilesWithoutMutationProfile.length && genes != undefined && genes.length) {
 
                 const identifiers : SampleMolecularIdentifier[] = [];
 
@@ -369,9 +370,13 @@ export class ResultsViewPageStore {
             this.defaultOQLQuery
         ],
         invoke:()=>{
-            return Promise.resolve(
-                filterCBioPortalWebServiceData(this.oqlQuery, this.unfilteredAlterations.result!, (new accessors(this.selectedMolecularProfiles.result!)), this.defaultOQLQuery.result!)
-            );
+            if (this.oqlQuery.trim() != "") {
+                return Promise.resolve(
+                        filterCBioPortalWebServiceData(this.oqlQuery, this.unfilteredAlterations.result!, (new accessors(this.selectedMolecularProfiles.result!)), this.defaultOQLQuery.result!)
+                );
+            } else {
+                return Promise.resolve([]);
+            }
         }
     });
 
@@ -433,21 +438,25 @@ export class ResultsViewPageStore {
             unfilteredAlterations = unfilteredAlterations.concat(this.putativeDriverAnnotatedMutations.result!);
             unfilteredAlterations = unfilteredAlterations.concat(this.annotatedMolecularData.result!);
 
-            const filteredAlterationsByOQLLine:OQLLineFilterOutput<AnnotatedExtendedAlteration>[] = filterCBioPortalWebServiceDataByOQLLine(this.oqlQuery, unfilteredAlterations,
-                (new accessors(this.selectedMolecularProfiles.result!)), this.defaultOQLQuery.result!);
+            if (this.oqlQuery.trim() != "") {
+                const filteredAlterationsByOQLLine:OQLLineFilterOutput<AnnotatedExtendedAlteration>[] = filterCBioPortalWebServiceDataByOQLLine(this.oqlQuery, unfilteredAlterations,
+                        (new accessors(this.selectedMolecularProfiles.result!)), this.defaultOQLQuery.result!);
 
-            return Promise.resolve(filteredAlterationsByOQLLine.map(oql=>{
-                const cases:CaseAggregatedData<AnnotatedExtendedAlteration> = {
-                    samples:
-                        groupBy(oql.data, datum=>datum.uniqueSampleKey, this.samples.result!.map(sample=>sample.uniqueSampleKey)),
-                    patients:
-                        groupBy(oql.data, datum=>datum.uniquePatientKey, this.patients.result!.map(sample=>sample.uniquePatientKey))
-                };
-                return {
-                    cases,
-                    oql
-                };
-            }));
+                    return Promise.resolve(filteredAlterationsByOQLLine.map(oql=>{
+                        const cases:CaseAggregatedData<AnnotatedExtendedAlteration> = {
+                            samples:
+                                groupBy(oql.data, datum=>datum.uniqueSampleKey, this.samples.result!.map(sample=>sample.uniqueSampleKey)),
+                            patients:
+                                groupBy(oql.data, datum=>datum.uniquePatientKey, this.patients.result!.map(sample=>sample.uniquePatientKey))
+                        };
+                        return {
+                            cases,
+                            oql
+                        };
+                    }));
+            } else {
+                return Promise.resolve([]);
+            }
         }
     });
 

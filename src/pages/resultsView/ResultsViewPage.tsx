@@ -133,7 +133,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
         // hide mutex tab
         $(document).ready(()=>{
-            if (genes((window as any).serverVars.theQuery).length <= 1) {
+            if (!(window as any).serverVars.theQuery.trim().length || genes((window as any).serverVars.theQuery).length <= 1) {
                 $('a#mutex-result-tab').parent().hide();
             }
         });
