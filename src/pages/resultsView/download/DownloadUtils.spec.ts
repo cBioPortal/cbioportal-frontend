@@ -410,6 +410,15 @@ describe('DownloadUtils', () => {
     });
 
     describe('generateGeneAlterationData', () => {
+        it('returns empty list in case of empty input', () => {
+            const sampleKeys = {};
+
+            const caseAlterationData = generateGeneAlterationData(caseAggregatedDataByOQLLine, sampleKeys);
+
+            assert.equal(caseAlterationData.length, 0,
+                "case alteration data should be empty");
+        });
+
         it('generates gene alteration data for multiple samples', () => {
 
             const sampleKeys = {
