@@ -18,7 +18,7 @@ import {
     indexHotspotData, fetchHotspotsData, fetchCosmicData, fetchOncoKbData,
     fetchMutationData, generateUniqueSampleKeyToTumorTypeMap, generateDataQueryFilter,
     ONCOKB_DEFAULT, fetchPdbAlignmentData, fetchSwissProtAccession, fetchUniprotId, indexPdbAlignmentData,
-    fetchPfamDomainData, fetchCivicGenes, fetchCivicVariants, IDataQueryFilter, fetchCanonicalTranscript,
+    fetchPfamDomainData, fetchCivicGenes, fetchCivicVariants, IDataQueryFilter, fetchCanonicalTranscriptWithFallback,
     fetchEnsemblTranscriptsByEnsemblFilter
 } from "shared/lib/StoreUtils";
 import MutationMapperDataStore from "./MutationMapperDataStore";
@@ -152,7 +152,7 @@ export class MutationMapperStore {
             }
         },
         onError: (err: Error) => {
-            console.log("Getting all transcripts failed");
+            throw new Error("Failed to fetch all transcripts");
         }
     }, undefined);
 
@@ -162,17 +162,13 @@ export class MutationMapperStore {
         ],
         invoke: async()=>{
             if (this.gene) {
-                return fetchCanonicalTranscript(this.gene.hugoGeneSymbol, this.isoformOverrideSource).catch(async() => {
-                    console.log("No canonical transcript for: " + this.gene.hugoGeneSymbol);
-                    const transcript = _.maxBy(this.allTranscripts.result, (t:EnsemblTranscript) => t.proteinLength);
-                    if (transcript) {
-                        console.log("Using transcript with longest length instead: " + transcript);
-                        return transcript;
-                    }
-                })
+                return fetchCanonicalTranscriptWithFallback(this.gene.hugoGeneSymbol, this.isoformOverrideSource, this.allTranscripts.result);
             } else {
                 return undefined;
             }
+        },
+        onError: (err: Error) => {
+            throw new Error("Failed to get canonical transcript");
         }
     }, undefined);
 
