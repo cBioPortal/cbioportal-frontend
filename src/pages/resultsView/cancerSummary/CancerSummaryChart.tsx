@@ -1,12 +1,9 @@
 import * as React from "react";
 import * as _ from 'lodash';
 import { VictoryChart, VictoryTheme, VictoryLegend, VictoryContainer, VictoryAxis, VictoryLabel, VictoryStack, VictoryBar } from 'victory';
-import {Popover} from 'react-bootstrap';
 import {IAlterationCountMap, IAlterationData, ICancerSummaryChartData} from "./CancerSummaryContent";
 import {observable} from "mobx";
 import {observer} from "mobx-react";
-import Timer = NodeJS.Timer;
-import {testIt} from "../../../shared/lib/writeTest";
 import {CSSProperties} from "react";
 
 interface CancerSummaryChartProps {
@@ -209,7 +206,7 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
             <div className="popover right"
                  onMouseLeave={()=>this.hideTooltip()}
                  onMouseEnter={()=>clearTimeout(this.hideTooltipTimeout)}
-                 style={{display:'block', position:'absolute', top:tooltipModel.y, maxWidth:'auto', left:tooltipModel!.x}}
+                 style={{display:'block', position:'absolute', top:tooltipModel.y, width:500, left:tooltipModel!.x}}
             >
                 <div className="arrow"></div>
                 <div className="popover-content">
@@ -226,12 +223,13 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
                         {
                             _.reduce(this.props.alterationTypes,(memo, name:string, key:string)=>{
                                 if (key in tooltipModel!.alterationData.alterationTypeCounts && (tooltipModel!.alterationData.alterationTypeCounts as any)[key] > 0) {
+                                    const alterationCount = (tooltipModel!.alterationData.alterationTypeCounts as any)[key];
                                     memo.push((
                                         <tr>
                                             <td>{name}</td>
                                             <td>
                                                 {percentageRounder((tooltipModel!.alterationData.alterationTypeCounts as any)[key]/tooltipModel!.alterationData.sampleTotal)}%
-                                                ({(tooltipModel!.alterationData.alterationTypeCounts as any)[key]} cases)
+                                                ({alterationCount} {(alterationCount === 1) ? 'case' : 'cases'})
                                             </td>
                                         </tr>
                                     ))
