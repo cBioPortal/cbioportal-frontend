@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test-travis": "rm -rf screenshots/diff/; wdio wdio/travis.conf.js || bash image-compare/upload_failed_screenshots.sh",
-    "test-webdriver-manager": "rm -rf screenshots/diff/; rm -rf image-compare/errors.js; rm -rf errorShots; cd .. && ./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && cd end-to-end-tests && (wdio wdio/webdriver-manager.conf.js || bash image-compare/upload_failed_screenshots.sh)"
+    "test-webdriver-manager": "rm -rf screenshots/diff/; cd .. && ./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && cd end-to-end-tests && (wdio wdio/webdriver-manager.conf.js || bash image-compare/upload_failed_screenshots.sh)"
   },
   "author": "",
   "license": "",
