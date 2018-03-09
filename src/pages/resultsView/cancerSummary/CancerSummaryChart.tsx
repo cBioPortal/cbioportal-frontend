@@ -5,6 +5,7 @@ import {IAlterationCountMap, IAlterationData, ICancerSummaryChartData} from "./C
 import {observable} from "mobx";
 import {observer} from "mobx-react";
 import {CSSProperties} from "react";
+import CBIOPORTAL_VICTORY_THEME from "../../../shared/theme/cBioPoralTheme";
 
 interface CancerSummaryChartProps {
     colors: Record<keyof IAlterationCountMap, string>;
@@ -88,7 +89,7 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
 
     private get legendWidth(){
         const legendItems = this.legendData.map((item)=>item.name);
-        return (legendItems.join("").length * 4) + (legendItems.length * 40);
+        return (legendItems.join("").length * 6) + (legendItems.length * 40);
     }
 
     private get legendX(){
@@ -100,7 +101,7 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
     }
 
     private get bottomPadding(){
-        return this.longestXLabelLength! * 6;
+        return this.longestXLabelLength! * 7 + 40;
     }
 
     private get topPadding(){
@@ -137,8 +138,10 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
     private get longestXLabelLength(){
 
         const adjustedForCaps = this.props.xLabels.map((label)=>{
-           const capitalizedLetters = label.match(/[A-Z]/g);
-           return label.length + ((capitalizedLetters) ? (capitalizedLetters.length * 3) : 0 );
+           const capitalizedLetters = label.match(/[A-Z]/g) || [];
+           const undercaseLetters = label.match(/[a-z]/g) || [];
+           const spaces = label.match(/\s/g) || [];
+           return (capitalizedLetters.length * 2) + (undercaseLetters.length * 1) + (spaces.length * 2);
         });
 
         return _.max(adjustedForCaps);
@@ -264,7 +267,7 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
                     {
                         (this.tooltipModel) && (this.buildTooltip(this.tooltipModel))
                     }
-                    <VictoryChart width={this.width} height={this.height} theme={VictoryTheme.material}
+                    <VictoryChart width={this.width} height={this.height} theme={CBIOPORTAL_VICTORY_THEME}
                                   padding={{bottom:this.bottomPadding, top:this.topPadding, left:this.leftPadding, right:this.rightPadding }} domainPadding={{x: 20, y: 20}}
                                   containerComponent={<VictoryContainer containerRef={(ref: any) => this.svgContainer = ref} responsive={false}/>}
                     >
