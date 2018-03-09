@@ -311,6 +311,18 @@ describe('single study query', function() {
             assert(text.search('3.5%' > -1));
 
         });
+
+        it('should show lollipop for MUC2', function() {
+            browser.url(`${CBIOPORTAL_URL}/index.do?cancer_study_id=cellline_nci60&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=cellline_nci60_cnaseq&gene_list=MUC2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=cellline_nci60_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=cellline_nci60_CNA`);
+            browser.setViewportSize({ height:1400, width:1000 });
+
+            //  wait for mutations tab
+            $('#mutation-result-tab').waitForExist(30000);
+            $('#mutation-result-tab').click();
+
+            // check lollipop plot appears
+            $('[data-test="LollipopPlot"]').waitForExist(60000);
+        });
     });
 
     describe('enrichments', function() {
