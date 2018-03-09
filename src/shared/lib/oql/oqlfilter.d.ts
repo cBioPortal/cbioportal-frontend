@@ -10,12 +10,19 @@ import {SingleGeneQuery} from "./oql-parser";
 import {AnnotatedMutation, ExtendedAlteration} from "../../../pages/resultsView/ResultsViewPageStore";
 import {NumericGeneMolecularData, Mutation} from "../../api/generated/CBioPortalAPI";
 
+type OQLAlterationFilterString = string;
+
 export type OQLLineFilterOutput<T> = {
     gene: string;
     parsed_oql_line: SingleGeneQuery[];
     oql_line: string;
     data: T[];
 };
+
+export declare function parseOQLQuery(
+    oql_query: string,
+    opt_default_oql?: OQLAlterationFilterString
+): SingleGeneQuery[];
 
 export declare function filterCBioPortalWebServiceData(oql_query:string, data:(Mutation | NumericGeneMolecularData)[], accessors:any, default_oql:string): ExtendedAlteration[];
 
