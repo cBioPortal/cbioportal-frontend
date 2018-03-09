@@ -1,4 +1,3 @@
-import * as _ from "lodash";
 import MobxPromise from "mobxpromise";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {
@@ -6,7 +5,7 @@ import {
 } from "shared/api/generated/GenomeNexusAPIInternal";
 import genomeNexusInternalClient from "shared/api/genomeNexusInternalClientInstance";
 import {concatMutationData} from "./StoreUtils";
-import {extractGenomicLocation} from "./MutationUtils";
+import {extractGenomicLocation, genomicLocationString, uniqueGenomicLocations} from "./MutationUtils";
 import {IHotspotIndex} from "shared/model/CancerHotspots";
 
 export async function fetchHotspotsData(mutationData: MobxPromise<Mutation[]>,
@@ -19,7 +18,7 @@ export async function fetchHotspotsData(mutationData: MobxPromise<Mutation[]>,
         return [];
     }
 
-    const genomicLocations: GenomicLocation[] = _.uniq(_.map(mutationDataResult, extractGenomicLocation));
+    const genomicLocations: GenomicLocation[] = uniqueGenomicLocations(mutationDataResult);
 
     return await client.fetchHotspotAnnotationByGenomicLocationPOST({genomicLocations: genomicLocations});
 }
@@ -43,11 +42,6 @@ export function indexHotspots(hotspots: AggregatedHotspots[]): IHotspotIndex
     });
 
     return index;
-}
-
-export function genomicLocationString(genomicLocation: GenomicLocation)
-{
-    return `${genomicLocation.chromosome},${genomicLocation.start},${genomicLocation.end},${genomicLocation.referenceAllele},${genomicLocation.variantAllele}`;
 }
 
 export function isHotspot(mutation: Mutation, index: IHotspotIndex, filter?: (hotspot: Hotspot) => boolean): boolean
