@@ -880,7 +880,7 @@ export class ResultsViewPageStore {
     }
 
     readonly mutationMapperStores = remoteData<{ [hugoGeneSymbol: string]: MutationMapperStore }>({
-        await: () => [this.genes, this.oncoKbAnnotatedGenes, this.indexedHotspotData, this.uniqueSampleKeyToTumorType, this.mutations],
+        await: () => [this.genes, this.oncoKbAnnotatedGenes, this.uniqueSampleKeyToTumorType, this.mutations],
         invoke: () => {
             if (this.genes.result) {
                 // we have to use _.reduce, otherwise this.genes.result (Immutable, due to remoteData) will return

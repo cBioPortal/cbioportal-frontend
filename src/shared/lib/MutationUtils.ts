@@ -4,6 +4,7 @@ import {
     ProteinImpactType, getProteinImpactTypeFromCanonical
 } from "./getCanonicalMutationType";
 import {MolecularProfile, Mutation, SampleIdentifier} from "shared/api/generated/CBioPortalAPI";
+import {GenomicLocation} from "shared/api/generated/GenomeNexusAPIInternal";
 import {MUTATION_STATUS_GERMLINE, MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
 import {findFirstMostCommonElt} from "./findFirstMostCommonElt";
 import {toSampleUuid} from "./UuidUtils";
@@ -240,4 +241,21 @@ export function extractGenomicLocation(mutation: Mutation)
         referenceAllele: mutation.referenceAllele,
         variantAllele: mutation.variantAllele
     };
+}
+
+export function genomicLocationString(genomicLocation: GenomicLocation)
+{
+    return `${genomicLocation.chromosome},${genomicLocation.start},${genomicLocation.end},${genomicLocation.referenceAllele},${genomicLocation.variantAllele}`;
+}
+
+export function uniqueGenomicLocations(mutations: Mutation[]): GenomicLocation[]
+{
+    const genomicLocationMap: {[key: string]: GenomicLocation} = {};
+
+    mutations.map((mutaiton: Mutation) => {
+        const genomicLocation: GenomicLocation = extractGenomicLocation(mutaiton);
+        genomicLocationMap[genomicLocationString(genomicLocation)] = genomicLocation;
+    });
+
+    return _.values(genomicLocationMap);
 }
