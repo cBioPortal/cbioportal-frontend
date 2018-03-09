@@ -3,7 +3,7 @@
 import * as _ from 'lodash';
 import oql_parser from './oql-parser';
 
-function parseOQLQuery(oql_query, opt_default_oql = '') {
+export function parseOQLQuery(oql_query, opt_default_oql = '') {
     /* In: - oql_query, a string, an OQL query
      - opt_default_oql, a string, default OQL to add to any empty line
      Out: An array, with each element being a parsed single-gene OQL line,
