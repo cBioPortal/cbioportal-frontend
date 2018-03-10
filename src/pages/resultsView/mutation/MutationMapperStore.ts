@@ -18,7 +18,8 @@ import {
     fetchCosmicData, fetchOncoKbData,
     fetchMutationData, generateUniqueSampleKeyToTumorTypeMap, generateDataQueryFilter,
     ONCOKB_DEFAULT, fetchPdbAlignmentData, fetchSwissProtAccession, fetchUniprotId, indexPdbAlignmentData,
-    fetchPfamDomainData, fetchCivicGenes, fetchCivicVariants, IDataQueryFilter, fetchCanonicalTranscript,
+    fetchPfamDomainData, fetchCivicGenes, fetchCivicVariants, IDataQueryFilter, fetchCanonicalTranscriptWithFallback,
+    fetchEnsemblTranscriptsByEnsemblFilter
 } from "shared/lib/StoreUtils";
 import MutationMapperDataStore from "./MutationMapperDataStore";
 import PdbChainDataStore from "./PdbChainDataStore";
@@ -142,13 +143,32 @@ export class MutationMapperStore {
         }
     }, undefined);
 
-    readonly canonicalTranscript = remoteData<EnsemblTranscript | undefined>({
+    readonly allTranscripts = remoteData<EnsemblTranscript[] | undefined>({
         invoke: async()=>{
             if (this.gene) {
-                return fetchCanonicalTranscript(this.gene.hugoGeneSymbol, this.isoformOverrideSource);
+                return fetchEnsemblTranscriptsByEnsemblFilter({"hugoSymbols":[this.gene.hugoGeneSymbol]});
             } else {
                 return undefined;
             }
+        },
+        onError: (err: Error) => {
+            throw new Error("Failed to fetch all transcripts");
+        }
+    }, undefined);
+
+    readonly canonicalTranscript = remoteData<EnsemblTranscript | undefined>({
+        await: () => [
+            this.allTranscripts
+        ],
+        invoke: async()=>{
+            if (this.gene) {
+                return fetchCanonicalTranscriptWithFallback(this.gene.hugoGeneSymbol, this.isoformOverrideSource, this.allTranscripts.result);
+            } else {
+                return undefined;
+            }
+        },
+        onError: (err: Error) => {
+            throw new Error("Failed to get canonical transcript");
         }
     }, undefined);
 

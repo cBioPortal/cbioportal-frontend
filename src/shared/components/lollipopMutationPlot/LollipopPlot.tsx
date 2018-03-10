@@ -106,7 +106,7 @@ export default class LollipopPlot extends React.Component<LollipopPlotProps, {}>
             tooltipVisibleProps.visible = false;
         }
         return (
-            <div style={{position:"relative"}}>
+            <div style={{position:"relative"}} data-test="LollipopPlot">
                 <DefaultTooltip
                     placement={this.handlers.getOverlayPlacement()}
                     overlay={this.handlers.getOverlay}
