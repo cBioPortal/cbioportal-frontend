@@ -249,6 +249,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                                     }}
                                 />
                                 <CancerSummaryContainer
+                                    genes={this.resultsViewPageStore.genes.result!}
                                     samplesExtendedWithClinicalData={this.resultsViewPageStore.samplesExtendedWithClinicalData.result!}
                                     alterationsByGeneBySampleKey={this.resultsViewPageStore.alterationsByGeneBySampleKey.result!}
                                     studies={this.resultsViewPageStore.studies.result!}
