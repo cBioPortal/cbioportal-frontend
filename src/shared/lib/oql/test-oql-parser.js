@@ -103,6 +103,145 @@ doTest("MIR-493*:MUT=V600", [{gene:"MIR-493*", alterations:[{alteration_type: "m
 doTest("BRAF:CNA >= gain", [{gene:"BRAF", alterations:[{alteration_type:"cna", constr_rel:">=", constr_val:"GAIN"}]}])
 doTest("BRAF:CNA < homdel", [{gene:"BRAF", alterations:[{alteration_type:"cna", constr_rel:"<", constr_val:"HOMDEL"}]}])
 
+doTest("[TP53 BRCA1] NRAS", 
+      [
+         [
+            {
+               "gene": "TP53",
+               "alterations": false
+            },
+            {
+               "gene": "BRCA1",
+               "alterations": false
+            }
+         ],
+         {
+            "gene": "NRAS",
+            "alterations": false
+         }
+      ]);
+
+doTest("NRAS [TP53 BRCA1]",
+      [
+         {
+            "gene": "NRAS",
+            "alterations": false
+         },
+         {
+            "label": undefined,
+            "list": [
+               {
+                  "gene": "TP53",
+                  "alterations": false
+               },
+               {
+                  "gene": "BRCA1",
+                  "alterations": false
+               }
+            ]
+         }
+      ]);
+
+doTest("NRAS [TP53 BRCA1] BRCA2", 
+      [
+         {
+            "gene": "NRAS",
+            "alterations": false
+         },
+         {
+            "label": undefined,
+            "list": [
+               {
+                  "gene": "TP53",
+                  "alterations": false
+               },
+               {
+                  "gene": "BRCA1",
+                  "alterations": false
+               }
+            ]
+         },
+         {
+            "gene": "BRCA2",
+            "alterations": false
+         }
+      ]
+
+doTest("[TP53;BRAF:MUT=V600E;KRAS] NRAS", 
+      [
+         [
+            {
+               "gene": "TP53",
+               "alterations": false
+            },
+            {
+               "gene": "BRAF",
+               "alterations": [
+                  {
+                     "alteration_type": "mut",
+                     "constr_rel": "=",
+                     "constr_type": "name",
+                     "constr_val": "V600E",
+                     "info": {}
+                  }
+               ]
+            },
+            {
+               "gene": "KRAS",
+               "alterations": false
+            }
+         ],
+         {
+            "gene": "NRAS",
+            "alterations": false
+         }
+      ]);
+
+doTest("[TP53 BRCA1] [KRAS NRAS]", 
+      [
+         [
+            {
+               "gene": "TP53",
+               "alterations": false
+            },
+            {
+               "gene": "BRCA1",
+               "alterations": false
+            }
+         ],
+         [
+            {
+               "gene": "KRAS",
+               "alterations": false
+            },
+            {
+               "gene": "NRAS",
+               "alterations": false
+            }
+         ]
+      ]);
+
+doTest('["Test_gene_set #1" TP53 BRCA1] NRAS', 
+      [
+         {
+            "label": "Test_gene_set #1",
+            "list": [
+               {
+                  "gene": "TP53",
+                  "alterations": false
+               },
+               {
+                  "gene": "BRCA1",
+                  "alterations": false
+               }
+            ]
+         },
+         {
+            "gene": "NRAS",
+            "alterations": false
+         }
+      ]
+
 if (!failed_a_test) {
 	console.log("Passed all tests!");
 }
