@@ -14082,7 +14082,7 @@ var Oncoprint = (function () {
 	oncoprint.$ctr.css({'min-height': oncoprint.model.getCellViewHeight() + Math.max(oncoprint.$legend_div.outerHeight(), (oncoprint.$minimap_div.is(":visible") ? oncoprint.$minimap_div.outerHeight() : 0)) + 30});
     };
     
-    var resizeAndOrganize = function (oncoprint) {
+    var resizeAndOrganize = function (oncoprint, onComplete) {
 	if (oncoprint.model.rendering_suppressed_depth > 0) {
 	    return;
 	}
@@ -14108,15 +14108,16 @@ var Oncoprint = (function () {
 	    if (oncoprint.keep_horz_zoomed_to_fit) {
 		updateHorzZoomToFit(oncoprint);
 	    }
+        onComplete && onComplete();
 	}, 0);
     };
 
-    var resizeAndOrganizeAfterTimeout = function (oncoprint) {
+    var resizeAndOrganizeAfterTimeout = function (oncoprint, onComplete) {
 	if (oncoprint.model.rendering_suppressed_depth > 0) {
 	    return;
 	}
 	setTimeout(function () {
-	    resizeAndOrganize(oncoprint);
+	    resizeAndOrganize(oncoprint, onComplete);
 	}, 0);
     };
     
@@ -14703,7 +14704,7 @@ var Oncoprint = (function () {
 	this.minimap_view.suppressRendering();
     }
     
-    Oncoprint.prototype.releaseRendering = function() {
+    Oncoprint.prototype.releaseRendering = function(onComplete) {
         if(this.webgl_unavailable) {
             return;
         }
@@ -14716,7 +14717,7 @@ var Oncoprint = (function () {
 	    this.track_info_view.releaseRendering(this.model);
 	    this.legend_view.releaseRendering(this.model);
 	    this.minimap_view.releaseRendering(this.model, this.cell_view);
-	    resizeAndOrganizeAfterTimeout(this);
+	    resizeAndOrganizeAfterTimeout(this, onComplete);
 	}
     }
 
@@ -15075,6 +15076,7 @@ var OncoprintModel = (function () {
 	// Track Properties
 	this.track_label = {};
 	this.track_label_color = {};
+	this.track_html_label = {};
 	this.track_link_url = {};
 	this.track_description = {};
 	this.cell_height = {};
@@ -15506,11 +15508,13 @@ var OncoprintModel = (function () {
 	for (var i=0; i<legend_order.length; i++) {
 		// add track groups in legend order
 		used_track_groups[legend_order[i]] = true;
-		sorted_track_groups.push(track_groups[legend_order[i]]);
+		if (track_groups[legend_order[i]]) {
+			sorted_track_groups.push(track_groups[legend_order[i]]);
+		}
 	}
 	for (var i=0; i<track_groups.length; i++) {
 		// add groups not in legend order to end
-		if (!used_track_groups[i]) {
+		if (!used_track_groups[i] && track_groups[i]) {
 			sorted_track_groups.push(track_groups[i]);
 		}
 	}
@@ -15656,22 +15660,24 @@ var OncoprintModel = (function () {
 	    var params = params_list[i];
 	    addTrack(this, params.track_id, params.target_group, params.track_group_header,
 		    params.cell_height, params.track_padding, params.has_column_spacing,
-		    params.data_id_key, params.tooltipFn, params.link_url,
-		    params.removable, params.removeCallback, params.label, params.description, params.track_info,
+		    params.data_id_key, params.tooltipFn, params.link_url, params.removable,
+		    params.removeCallback, params.label, params.description, params.track_info,
 		    params.sortCmpFn, params.sort_direction_changeable, params.init_sort_direction, params.onSortDirectionChange,
-		    params.data, params.rule_set, params.track_label_color, params.expansion_of,
-		    params.expandCallback, params.expandButtonTextGetter);
+		    params.data, params.rule_set, params.track_label_color, params.html_label,
+		    params.expansion_of, params.expandCallback, params.expandButtonTextGetter
+	    );
 	}
 	this.track_tops.update();
     }
   
     var addTrack = function (model, track_id, target_group, track_group_header,
 	    cell_height, track_padding, has_column_spacing,
-	    data_id_key, tooltipFn, link_url,
-	    removable, removeCallback, label, description, track_info,
+	    data_id_key, tooltipFn, link_url, removable,
+	    removeCallback, label, description, track_info,
 	    sortCmpFn, sort_direction_changeable, init_sort_direction, onSortDirectionChange,
-	    data, rule_set, track_label_color, expansion_of, expandCallback,
-	    expandButtonTextGetter) {
+	    data, rule_set, track_label_color, html_label,
+	    expansion_of, expandCallback, expandButtonTextGetter
+    ) {
 	model.track_label[track_id] = ifndef(label, "Label");
 	model.track_label_color[track_id] = ifndef(track_label_color, "black");
 	model.track_link_url[track_id] = ifndef(link_url, null);
@@ -15702,9 +15708,13 @@ var OncoprintModel = (function () {
 	model.track_sort_direction_change_callback[track_id] = ifndef(onSortDirectionChange, function() {});
 	model.track_data[track_id] = ifndef(data, []);
 	model.track_data_id_key[track_id] = ifndef(data_id_key, 'id');
-	
+
 	model.track_info[track_id] = ifndef(track_info, "");
-	
+
+	if (typeof html_label !== 'undefined') {
+	    model.track_html_label[track_id] = html_label;
+	}
+
 	if (typeof rule_set !== 'undefined') {
 	    model.rule_sets[rule_set.rule_set_id] = rule_set;
 	    model.rule_set_active_rules[rule_set.rule_set_id] = {};
@@ -16058,6 +16068,10 @@ var OncoprintModel = (function () {
 	return this.track_label_color[track_id];
     }
     
+    OncoprintModel.prototype.getOptionalHtmlTrackLabel = function (track_id) {
+	return this.track_html_label[track_id];
+    }
+    
     OncoprintModel.prototype.getTrackLinkUrl = function (track_id) {
 	return this.track_link_url[track_id];
     }
@@ -16194,11 +16208,19 @@ var OncoprintModel = (function () {
 
     OncoprintModel.prototype.clusterTrackGroup = function(track_group_index, clusterValueFn) {
     	// Prepare input
+	var self = this;
 		var def = new $.Deferred();
 		var cluster_input = {};
 
-    	var track_ids = this.getTrackGroups()[track_group_index];
-    	for (var i=0; i<track_ids.length; i++) {
+	// Use data from tracks on the same level of expansion as the first one
+	// in the track group as input, i.e. the outer level excluding any
+	// expansions
+	var track_group = this.getTrackGroups()[track_group_index];
+	var track_ids = [];
+	if (track_group !== undefined) {
+	    track_ids = _getEffectiveTrackGroup(this, track_group[0]) || [];
+	}
+	for (var i = 0; i < track_ids.length; i++) {
     		var track_id = track_ids[i];
     		var data_id_key = this.getTrackDataIdKey(track_id);
     		var data = this.getTrackData(track_id);
@@ -16208,19 +16230,40 @@ var OncoprintModel = (function () {
 				cluster_input[id] = cluster_input[id] || {};
 				cluster_input[id][track_id] = value;
 			}
-		}
-		//do hierarchical clustering in background:
-		var self = this;
+	}
+	if (!Object.keys(cluster_input).length) {
+	    // skip clustering if there's nothing to cluster
+	    return def.resolve().promise();
+	}
 
+	// unset sorting by tracks in this group
+	track_group.forEach(function (track_id) {
+	    self.setTrackSortDirection(track_id, 0, true);
+	});
+
+	//do hierarchical clustering in background:
         $.when(clustering.hclusterColumns(cluster_input), clustering.hclusterTracks(cluster_input)).then(
             function (columnClusterOrder, trackClusterOrder) {
-            	// set clustered order
-				self.setIdOrder(columnClusterOrder.map(function(c) { return c.caseId; }));
-                def.resolve({
-                    track_group_index: track_group_index,
-					track_id_order: trackClusterOrder.map(function(entity){ return parseInt(entity.entityId, 10);})
-				});
-		}).fail(function() {
+		// set clustered column order
+		self.setIdOrder(columnClusterOrder.map(function (c) {return c.caseId;}));
+		// determine clustered row order
+		var clustered_track_id_order = trackClusterOrder.map(function (entity) {
+		    return parseInt(entity.entityId, 10);
+		});
+		// re-insert any expansions below each clustered track
+		var full_track_id_order = [];
+		clustered_track_id_order.forEach(function (track_id) {
+		    full_track_id_order.push(track_id)
+		    Array.prototype.push.apply(
+			full_track_id_order,
+			self.track_expansion_tracks[track_id] || []
+		    );
+		});
+		def.resolve({
+		    track_group_index: track_group_index,
+		    track_id_order: full_track_id_order
+		});
+	    }).fail(function () {
             	def.reject();
 		});
 		return def.promise();
@@ -16338,13 +16381,6 @@ var OncoprintModel = (function () {
     
     OncoprintModel.prototype.setSortConfig = function(params) {
 	this.sort_config = params;
-	if (this.sort_config.type === "cluster") {
-		// if sort config is cluster, do not sort by tracks in that group
-		var trackGroup = this.getTrackGroups()[this.sort_config.track_group_index];
-		for (var i=0; i<trackGroup.length; i++) {
-			this.setTrackSortDirection(trackGroup[i], 0, true);
-		}
-	}
     }
 
     OncoprintModel.prototype.isTrackInClusteredGroup = function(track_id) {
@@ -22130,6 +22166,7 @@ var OncoprintLabelView = (function () {
 	this.label_middles_view_space = {};
 	this.labels = {};
 	this.label_colors = {};
+	this.html_labels = {};
 	this.track_link_urls = {};
 	this.track_descriptions = {};
 	this.tracks = [];
@@ -22174,6 +22211,7 @@ var OncoprintLabelView = (function () {
 				|| view.track_link_urls[hovered_track]) {
 			    $tooltip_div.append(formatTooltipHeader(
 				    view.labels[hovered_track],
+				    view.html_labels[hovered_track],
 				    view.track_link_urls[hovered_track]));
 			}
 			var track_description = view.track_descriptions[hovered_track];
@@ -22263,7 +22301,7 @@ var OncoprintLabelView = (function () {
 	    return label;
 	}
     };
-    var formatTooltipHeader = function (label, link_url) {
+    var formatTooltipHeader = function (label, html_label, link_url) {
 	var header_contents;
 	if (link_url) {
 	    header_contents = (
@@ -22272,7 +22310,7 @@ var OncoprintLabelView = (function () {
 	} else {
 	    header_contents = $('<span>');
 	}
-	header_contents.append(label.html_content || document.createTextNode(label));
+	header_contents.append(html_label || document.createTextNode(label));
 	return $('<b style="display: block;">').append(header_contents);
     };
     var renderAllLabels = function(view) {
@@ -22414,6 +22452,7 @@ var OncoprintLabelView = (function () {
 	for (var i=0; i<track_ids.length; i++) {
 	    this.labels[track_ids[i]] = model.getTrackLabel(track_ids[i]);
 	    this.label_colors[track_ids[i]] = model.getTrackLabelColor(track_ids[i]);
+	    this.html_labels[track_ids[i]] = model.getOptionalHtmlTrackLabel(track_ids[i]);
 	    this.track_link_urls[track_ids[i]] = model.getTrackLinkUrl(track_ids[i]);
 	}
 	updateFromModel(this, model);

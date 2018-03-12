@@ -565,11 +565,13 @@ var OncoprintModel = (function () {
 	for (var i=0; i<legend_order.length; i++) {
 		// add track groups in legend order
 		used_track_groups[legend_order[i]] = true;
-		sorted_track_groups.push(track_groups[legend_order[i]]);
+		if (track_groups[legend_order[i]]) {
+			sorted_track_groups.push(track_groups[legend_order[i]]);
+		}
 	}
 	for (var i=0; i<track_groups.length; i++) {
 		// add groups not in legend order to end
-		if (!used_track_groups[i]) {
+		if (!used_track_groups[i] && track_groups[i]) {
 			sorted_track_groups.push(track_groups[i]);
 		}
 	}
