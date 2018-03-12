@@ -225,7 +225,7 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
                 <hr/>
                 <div className={styles["tables-container"]}>
                     <FeatureTitle
-                        title="Type of Genetic alterations across all samples"
+                        title="Type of Genetic Alterations Across All Samples"
                         isLoading={loadingCaseAlterationData}
                         className="pull-left forceHeaderStyle h4"
                     />

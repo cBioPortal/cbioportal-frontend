@@ -1,6 +1,6 @@
 import {
     somaticMutationRate, germlineMutationRate, countUniqueMutations, groupMutationsByGeneAndPatientAndProteinChange,
-    countDuplicateMutations
+    countDuplicateMutations, uniqueGenomicLocations
 } from "./MutationUtils";
 import * as _ from 'lodash';
 import { assert, expect } from 'chai';
@@ -280,6 +280,63 @@ describe('MutationUtils', () => {
                     [{studyId:'STUDY1', sampleId:'PATIENT1'}, {studyId:'STUDY1', sampleId:'PATIENT2'}]
                 );
             assert.equal(result, 0);
+        });
+    });
+
+    describe('uniqueGenomicLocations', () => {
+        it('extracts unique genomic locations', () => {
+            const mutations = [
+                initMutation({
+                    gene: {
+                        chromosome: "7"
+                    },
+                    startPosition: 111,
+                    endPosition: 111,
+                    referenceAllele: "T",
+                    variantAllele: "C",
+                }),
+                initMutation({
+                    gene: {
+                        chromosome: "7"
+                    },
+                    startPosition: 111,
+                    endPosition: 111,
+                    referenceAllele: "T",
+                    variantAllele: "C",
+                }),
+                initMutation({
+                    gene: {
+                        chromosome: "17"
+                    },
+                    startPosition: 66,
+                    endPosition: 66,
+                    referenceAllele: "T",
+                    variantAllele: "A",
+                }),
+                initMutation({
+                    gene: {
+                        chromosome: "17"
+                    },
+                    startPosition: 66,
+                    endPosition: 66,
+                    referenceAllele: "T",
+                    variantAllele: "A",
+                }),
+                initMutation({
+                    gene: {
+                        chromosome: "4"
+                    },
+                    startPosition: 11,
+                    endPosition: 11,
+                    referenceAllele: "-",
+                    variantAllele: "G",
+                }),
+            ];
+
+            const genomicLocations = uniqueGenomicLocations(mutations);
+
+            assert.equal(genomicLocations.length, 3,
+                "Duplicate genomic locations should be removed (5 - 2 = 3)");
         });
     });
 });
