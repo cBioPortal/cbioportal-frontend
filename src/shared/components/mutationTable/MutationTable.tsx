@@ -24,7 +24,7 @@ import ValidationStatusColumnFormatter from "./column/ValidationStatusColumnForm
 import {ICosmicData} from "shared/model/Cosmic";
 import AnnotationColumnFormatter from "./column/AnnotationColumnFormatter";
 import {IMyCancerGenomeData} from "shared/model/MyCancerGenome";
-import {IHotspotIndex} from "shared/model/CancerHotspots";
+import {IHotspotDataWrapper} from "shared/model/CancerHotspots";
 import {IOncoKbDataWrapper} from "shared/model/OncoKB";
 import {ICivicVariantDataWrapper, ICivicGeneDataWrapper} from "shared/model/Civic";
 import {IMutSigData} from "shared/model/MutSig";
@@ -60,7 +60,7 @@ export interface IMutationTableProps {
     enableCivic?: boolean;
     enableFunctionalImpact?: boolean;
     myCancerGenomeData?: IMyCancerGenomeData;
-    hotspots?: IHotspotIndex;
+    hotspotData?: IHotspotDataWrapper;
     cosmicData?:ICosmicData;
     oncoKbData?: IOncoKbDataWrapper;
     oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean};
@@ -435,7 +435,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
         this._columns[MutationTableColumnType.ANNOTATION] = {
             name: "Annotation",
             render: (d:Mutation[]) => (AnnotationColumnFormatter.renderFunction(d, {
-                hotspots: this.props.hotspots,
+                hotspotData: this.props.hotspotData,
                 myCancerGenomeData: this.props.myCancerGenomeData,
                 oncoKbData: this.props.oncoKbData,
                 oncoKbEvidenceCache: this.props.oncoKbEvidenceCache,
@@ -452,7 +452,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             download:(d:Mutation[])=>{
                 return AnnotationColumnFormatter.download(d,
                     this.props.oncoKbAnnotatedGenes,
-                    this.props.hotspots,
+                    this.props.hotspotData,
                     this.props.myCancerGenomeData,
                     this.props.oncoKbData,
                     this.props.civicGenes,
@@ -461,7 +461,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             sortBy:(d:Mutation[])=>{
                 return AnnotationColumnFormatter.sortValue(d,
                     this.props.oncoKbAnnotatedGenes,
-                    this.props.hotspots,
+                    this.props.hotspotData,
                     this.props.myCancerGenomeData,
                     this.props.oncoKbData,
                     this.props.civicGenes,
