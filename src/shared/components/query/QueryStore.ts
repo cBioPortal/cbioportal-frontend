@@ -1191,6 +1191,9 @@ export class QueryStore
                     {
                         return "Please enter one or more gene symbols.";
                     }
+                    else {
+                        return "Please select a profile for the queried genes.";
+                    }
                 }
                 else
                 { 
