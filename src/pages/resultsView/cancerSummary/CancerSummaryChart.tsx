@@ -263,7 +263,7 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
         return (
             <div data-test="cancerTypeSummaryChart">
                 <div style={this.overflowStyle} className="borderedChart">
-                    <div ref={(el:HTMLDivElement)=>this.scrollPane=el} style={{overflowX:'auto', overflowY:'hidden'}}>
+                    <div ref={(el:HTMLDivElement)=>this.scrollPane=el} style={{fontFamily:"Arial, Helvetica", overflowX:'auto', overflowY:'hidden'}}>
                     {
                         (this.tooltipModel) && (this.buildTooltip(this.tooltipModel))
                     }
