@@ -5,6 +5,7 @@ import $ from 'jquery';
 import {observer} from "mobx-react";
 import {remoteData} from "../../shared/api/remoteData";
 import {action, computed, observable, reaction} from "mobx";
+import client from "shared/api/cbioportalInternalClientInstance";
 
 
 function getMutatedGenes(query:string){
@@ -17,6 +18,11 @@ function getMutatedGenes(query:string){
 
 }
 
+
+// this is an example of using client.
+client.getAllGenesetsUsingGET({}).then(function(data){
+    console.log(data);
+});
 
 class StudyViewPageStore {
 
