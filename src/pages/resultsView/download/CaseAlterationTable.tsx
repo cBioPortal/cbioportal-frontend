@@ -118,7 +118,7 @@ export default class CaseAlterationTable extends React.Component<ICaseAlteration
             },
             {
                 name: 'Altered',
-                tooltip: <span>1 = Case harbors alteration in one of the input genes</span>,
+                tooltip: <span>1 = Sample harbors alteration in one of the input genes</span>,
                 render: (data: ICaseAlteration) => <span>{data.altered ? "1" : "0"}</span>,
                 download: (data: ICaseAlteration) => data.altered ? "1" : "0",
                 sortBy: (data: ICaseAlteration) => data.altered ? 1 : 0
