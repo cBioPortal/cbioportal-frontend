@@ -329,7 +329,7 @@ var Oncoprint = (function () {
 	oncoprint.$ctr.css({'min-height': oncoprint.model.getCellViewHeight() + Math.max(oncoprint.$legend_div.outerHeight(), (oncoprint.$minimap_div.is(":visible") ? oncoprint.$minimap_div.outerHeight() : 0)) + 30});
     };
     
-    var resizeAndOrganize = function (oncoprint) {
+    var resizeAndOrganize = function (oncoprint, onComplete) {
 	if (oncoprint.model.rendering_suppressed_depth > 0) {
 	    return;
 	}
@@ -355,15 +355,16 @@ var Oncoprint = (function () {
 	    if (oncoprint.keep_horz_zoomed_to_fit) {
 		updateHorzZoomToFit(oncoprint);
 	    }
+        onComplete && onComplete();
 	}, 0);
     };
 
-    var resizeAndOrganizeAfterTimeout = function (oncoprint) {
+    var resizeAndOrganizeAfterTimeout = function (oncoprint, onComplete) {
 	if (oncoprint.model.rendering_suppressed_depth > 0) {
 	    return;
 	}
 	setTimeout(function () {
-	    resizeAndOrganize(oncoprint);
+	    resizeAndOrganize(oncoprint, onComplete);
 	}, 0);
     };
     
@@ -950,7 +951,7 @@ var Oncoprint = (function () {
 	this.minimap_view.suppressRendering();
     }
     
-    Oncoprint.prototype.releaseRendering = function() {
+    Oncoprint.prototype.releaseRendering = function(onComplete) {
         if(this.webgl_unavailable) {
             return;
         }
@@ -963,7 +964,7 @@ var Oncoprint = (function () {
 	    this.track_info_view.releaseRendering(this.model);
 	    this.legend_view.releaseRendering(this.model);
 	    this.minimap_view.releaseRendering(this.model, this.cell_view);
-	    resizeAndOrganizeAfterTimeout(this);
+	    resizeAndOrganizeAfterTimeout(this, onComplete);
 	}
     }
 
