@@ -53,6 +53,7 @@ export default class AnnotationColumnFormatter
                 hasCivicVariants: civicGenes && civicGenes.result && civicVariants && civicVariants.result ?
                     AnnotationColumnFormatter.hasCivicVariants(copyNumberData, civicGenes.result, civicVariants.result) : true,
                 myCancerGenomeLinks: [],
+                hotspotStatus: "complete",
                 isHotspot: false,
                 is3dHotspot: false
             };
