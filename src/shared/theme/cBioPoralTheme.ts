@@ -24,7 +24,7 @@ const grey900 = "#212121";
 // *
 // * Typography
 // *
-const sansSerif = "Verdana, sans-serif";
+const sansSerif = "Arial, Helvetica";
 const letterSpacing = "normal";
 const fontSize = 12;
 // *
@@ -32,6 +32,7 @@ const fontSize = 12;
 // *
 const padding = 8;
 const baseProps = {
+    fontFamily: sansSerif,
     width: 350,
     height: 350,
     padding: 50
