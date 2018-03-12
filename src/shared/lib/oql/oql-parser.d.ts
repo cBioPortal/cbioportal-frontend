@@ -51,7 +51,7 @@ export declare type AminoAcid = 'G'|'P'|'A'|'V'|'L'|'I'|'M'|'C'|'F'|'Y'|'W'|'H'|
 // 	/ msp first:SingleGeneQuery msp br rest:Query  { return [first].concat(rest); }
 // 	/ msp first:SingleGeneQuery msp br { return [first]; }
 // 	/ msp first:SingleGeneQuery msp { return [first]; }
-export declare type OQLQuery = SingleGeneQuery[];
+export declare type OQLQuery = (SingleGeneQuery | MergedGeneQuery)[];
 //
 // ListOfGenes
 // 	= msp geneName:String msp rest:ListOfGenes { return [geneName].concat(rest);}
@@ -60,6 +60,7 @@ export declare type OQLQuery = SingleGeneQuery[];
 // SingleGeneQuery
 // 	= geneName:String msp ":" msp alts:Alterations { return {"gene": geneName, "alterations": alts}; }
 // 	/ geneName:String { return {"gene": geneName, "alterations":false}; }
+export declare type MergedGeneQuery = {label?: string, list: SingleGeneQuery[]};
 export declare type SingleGeneQuery = {gene:string, alterations:false|Alteration[]};
 //
 // Alterations

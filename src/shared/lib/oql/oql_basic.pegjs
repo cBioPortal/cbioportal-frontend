@@ -1,5 +1,5 @@
 start
-	= Query
+	= SuperQuery
 	/ sp { return false; }
 
 br	= [\n] b:br
@@ -14,10 +14,14 @@ Number = "-" number: Number { return "-"+number;}
         / whole_part:NaturalNumber {return whole_part;}
 String = word:[-_.@/a-zA-Z0-9*]+ { return word.join("") }
 AminoAcid = letter:[GPAVLIMCFYWHKRQNEDST] { return letter; }
+AnyString = anyString:[^"]+ { return anyString.join("") }
 
 sp = space:[ \t\r]+
 msp = space:[ \t\r]*
 
+StartMergedGenes
+	= "[\"" label:AnyString "\"" {return {"label": label, "list":[]};}
+	/ "[" {return {"label": undefined, "list":[]};}
 
 // Case-insensitive keywords
 AMP = "AMP"i
@@ -27,6 +31,16 @@ HETLOSS = "HETLOSS"i
 MUT = "MUT"i
 EXP = "EXP"i
 PROT = "PROT"i
+
+SuperQuery
+	= mqr:MergedQuery sqr:SuperQuery {return mqr.concat(sqr);}
+	/ qr:Query sqr:SuperQuery {return qr.concat(sqr);}
+	/ mqr:MergedQuery {return mqr;}
+	/ qr:Query {return qr; }
+
+MergedQuery
+	= msp mergedGenes:StartMergedGenes qr:Query "]" msp br mqr:MergedQuery { mergedGenes.list = qr; return [mergedGenes].concat(mqr);; }
+	/ msp mergedGenes:StartMergedGenes qr:Query "]" msp br* { mergedGenes.list = qr; return [mergedGenes]; }
 
 Query
 	= listofgenes:ListOfGenes msp br rest:Query { return listofgenes.map(function(gene) { return {"gene":gene, "alterations":false}; }).concat(rest); }
