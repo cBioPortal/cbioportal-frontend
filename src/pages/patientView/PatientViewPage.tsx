@@ -366,7 +366,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         downloadDataFetcher={patientViewPageStore.downloadDataFetcher}
                                         mutSigData={patientViewPageStore.mutSigData.result}
                                         myCancerGenomeData={patientViewPageStore.myCancerGenomeData}
-                                        hotspots={patientViewPageStore.indexedHotspotData}
+                                        hotspotData={patientViewPageStore.indexedHotspotData}
                                         cosmicData={patientViewPageStore.cosmicData.result}
                                         oncoKbData={patientViewPageStore.oncoKbData}
                                         oncoKbAnnotatedGenes={patientViewPageStore.oncoKbAnnotatedGenes.result}
