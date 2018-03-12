@@ -72,6 +72,10 @@
       "description": " "
     },
     {
+      "name": "Study View",
+      "description": " "
+    },
+    {
       "name": "Variant Counts",
       "description": " "
     },
@@ -728,6 +732,50 @@
         }
       }
     },
+    "/molecular-profiles/{molecularProfileId}/mutated-genes/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Fetch mutated genes by study view filter",
+        "operationId": "fetchMutatedGenesUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "molecularProfileId",
+            "in": "path",
+            "description": "Molecular Profile ID e.g. acc_tcga_mutations",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "description": "Study view filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MutationCountByGene"
+              }
+            }
+          }
+        }
+      }
+    },
     "/molecular-profiles/{molecularProfileId}/mutation-enrichments/fetch": {
       "post": {
         "tags": [
@@ -869,6 +917,62 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/VariantCount"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/studies/{studyId}/clinical-data-counts/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Fetch clinical data counts by study view filter",
+        "operationId": "fetchClinicalDataCountsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. acc_tcga",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clinicalDataType",
+            "in": "query",
+            "description": "Type of the clinical data",
+            "required": false,
+            "type": "string",
+            "default": "SAMPLE",
+            "enum": [
+              "SAMPLE",
+              "PATIENT"
+            ]
+          },
+          {
+            "in": "body",
+            "name": "clinicalDataCountFilter",
+            "description": "Clinical data count filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ClinicalDataCountFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ClinicalDataCount"
               }
             }
           }
@@ -1165,6 +1269,56 @@
         }
       },
       "title": "AlterationEnrichment"
+    },
+    "ClinicalDataCount": {
+      "type": "object",
+      "properties": {
+        "attributeId": {
+          "type": "string"
+        },
+        "counts": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "title": "ClinicalDataCount"
+    },
+    "ClinicalDataCountFilter": {
+      "type": "object",
+      "properties": {
+        "attributeIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "filter": {
+          "$ref": "#/definitions/StudyViewFilter"
+        }
+      },
+      "title": "ClinicalDataCountFilter"
+    },
+    "ClinicalDataEqualityFilter": {
+      "type": "object",
+      "properties": {
+        "attributeId": {
+          "type": "string"
+        },
+        "clinicalDataType": {
+          "type": "string",
+          "enum": [
+            "SAMPLE",
+            "PATIENT"
+          ]
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "title": "ClinicalDataEqualityFilter"
     },
     "CoExpression": {
       "type": "object",
@@ -1556,6 +1710,22 @@
       },
       "title": "Info"
     },
+    "MolecularProfileGeneFilter": {
+      "type": "object",
+      "properties": {
+        "entrezGeneIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "molecularProfileId": {
+          "type": "string"
+        }
+      },
+      "title": "MolecularProfileGeneFilter"
+    },
     "MrnaPercentile": {
       "type": "object",
       "required": [
@@ -1638,6 +1808,27 @@
       },
       "title": "MutSig"
     },
+    "MutationCountByGene": {
+      "type": "object",
+      "properties": {
+        "countByEntity": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "totalCount": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "MutationCountByGene"
+    },
     "MutationSpectrum": {
       "type": "object",
       "required": [
@@ -1712,6 +1903,30 @@
         }
       },
       "title": "MutationSpectrumFilter"
+    },
+    "StudyViewFilter": {
+      "type": "object",
+      "properties": {
+        "clinicalDataEqualityFilters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ClinicalDataEqualityFilter"
+          }
+        },
+        "mutatedGenes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MolecularProfileGeneFilter"
+          }
+        },
+        "sampleIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "StudyViewFilter"
     },
     "VariantCount": {
       "type": "object",
