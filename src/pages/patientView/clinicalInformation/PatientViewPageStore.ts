@@ -608,10 +608,12 @@ export class PatientViewPageStore {
         return [];
     }
 
-    @computed get indexedHotspotData(): IHotspotIndex|undefined
-    {
-        return indexHotspotsData(this.hotspotData);
-    }
+    readonly indexedHotspotData = remoteData<IHotspotIndex|undefined>({
+        await:()=>[
+            this.hotspotData
+        ],
+        invoke: ()=>Promise.resolve(indexHotspotsData(this.hotspotData))
+    });
 
     @computed get mergedMutationData(): Mutation[][] {
         return mergeMutations(this.mutationData);
