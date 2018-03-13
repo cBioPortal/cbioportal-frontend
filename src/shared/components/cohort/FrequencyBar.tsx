@@ -12,6 +12,7 @@ export interface IFrequencyBarProps
     barWidth?: number;
     barHeight?: number;
     textMargin?: number;
+    textWidth?: number;
     tooltip?: JSX.Element;
 }
 
@@ -24,13 +25,10 @@ export default class FrequencyBar extends React.Component<IFrequencyBarProps, {}
         freqColors: ["lightgreen", "green"],
         barColor: "#ccc",
         textMargin: 6,
+        textWidth: 35,
         barWidth: 30,
         barHeight: 8
     };
-
-    public static get TEXT_WIDTH() {
-        return 35;
-    }
 
     constructor(props:IFrequencyBarProps) {
         super(props);
@@ -39,7 +37,7 @@ export default class FrequencyBar extends React.Component<IFrequencyBarProps, {}
     public mainContent()
     {
         const {
-            barWidth, barHeight, barColor, totalCount, counts, textMargin
+            barWidth, barHeight, barColor, totalCount, counts, textMargin, textWidth
         } = this.props;
 
         const freqColors = this.props.freqColors || FrequencyBar.defaultProps.freqColors;
@@ -54,7 +52,7 @@ export default class FrequencyBar extends React.Component<IFrequencyBarProps, {}
 
         const mainProportion = counts[mainCountIndex] / totalCount;
         const textPos = (barWidth || 0) + (textMargin || 0);
-        const totalWidth = textPos + FrequencyBar.TEXT_WIDTH;
+        const totalWidth = textPos + (textWidth || 0);
 
         // create a frequency rectangle for each count
         const freqRects: JSX.Element[] = [];

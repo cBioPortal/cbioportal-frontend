@@ -11,7 +11,7 @@ import {
     ResultsViewPageStore
 } from "../ResultsViewPageStore";
 import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator";
-import {CancerStudy} from "../../../shared/api/generated/CBioPortalAPI";
+import {CancerStudy, Gene} from "../../../shared/api/generated/CBioPortalAPI";
 import './styles.scss';
 import {
     getAlterationCountsForCancerTypesByGene,
@@ -24,6 +24,7 @@ interface ICancerSummaryContainerProps {
     alterationsByGeneBySampleKey:{[hugoGeneSymbol:string]:{ [uniquSampleKey:string]:ExtendedAlteration[] }};
     studies:CancerStudy[];
     studyMap:{ [studyId:string]:CancerStudy };
+    genes:Gene[];
 
 };
 
@@ -90,8 +91,8 @@ export default class CancerSummaryContainer extends React.Component<ICancerSumma
             getAlterationCountsForCancerTypesByGene(this.props.alterationsByGeneBySampleKey,
                 this.props.samplesExtendedWithClinicalData, this.groupAlterationsBy);
 
-        const geneTabs = _.map(alterationCountsForCancerTypesByGene, (geneData, geneName: string) => {
-
+        const geneTabs = _.map(this.props.genes, (gene:Gene) => {
+            const geneData = alterationCountsForCancerTypesByGene[gene.hugoGeneSymbol];
             // count how many alterations there are across all cancer types for this gene
             const alterationCountAcrossCancerType = _.reduce(geneData,(count, alterationData:IAlterationData)=>{
                 return count + alterationData.alterationTotal;
@@ -101,11 +102,11 @@ export default class CancerSummaryContainer extends React.Component<ICancerSumma
             const anchorStyle = (alterationCountAcrossCancerType === 0) ? { color:'#bbb' } : undefined;
 
             return (
-                <MSKTab key={geneName} id={"summaryTab" + geneName} linkText={geneName} {...{anchorStyle}}>
+                <MSKTab key={gene.hugoGeneSymbol} id={"summaryTab" + gene.hugoGeneSymbol} linkText={gene.hugoGeneSymbol} {...{anchorStyle}}>
                     <CancerSummaryContent
-                        groupedAlterationData={alterationCountsForCancerTypesByGene[geneName]}
+                        groupedAlterationData={alterationCountsForCancerTypesByGene[gene.hugoGeneSymbol]}
                         groupAlterationsBy={this.groupAlterationsBy}
-                        gene={geneName}
+                        gene={gene.hugoGeneSymbol}
                         labelTransformer={labelTransformer}
                         handlePivotChange={this.pivotData}
                         width={this.resultsViewPageWidth}/>

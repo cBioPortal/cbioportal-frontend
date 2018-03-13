@@ -1,13 +1,11 @@
 import * as React from "react";
 import * as _ from 'lodash';
 import { VictoryChart, VictoryTheme, VictoryLegend, VictoryContainer, VictoryAxis, VictoryLabel, VictoryStack, VictoryBar } from 'victory';
-import {Popover} from 'react-bootstrap';
 import {IAlterationCountMap, IAlterationData, ICancerSummaryChartData} from "./CancerSummaryContent";
 import {observable} from "mobx";
 import {observer} from "mobx-react";
-import Timer = NodeJS.Timer;
-import {testIt} from "../../../shared/lib/writeTest";
 import {CSSProperties} from "react";
+import CBIOPORTAL_VICTORY_THEME from "../../../shared/theme/cBioPoralTheme";
 
 interface CancerSummaryChartProps {
     colors: Record<keyof IAlterationCountMap, string>;
@@ -62,6 +60,7 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
     private hideTooltipTimeout:any;
     @observable.ref private tooltipModel: ITooltipModel | null;
     public svgContainer = HTMLElement;
+    private scrollPane: HTMLDivElement;
 
     constructor(){
         super();
@@ -90,7 +89,7 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
 
     private get legendWidth(){
         const legendItems = this.legendData.map((item)=>item.name);
-        return (legendItems.join("").length * 4) + (legendItems.length * 40);
+        return (legendItems.join("").length * 6) + (legendItems.length * 40);
     }
 
     private get legendX(){
@@ -102,7 +101,7 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
     }
 
     private get bottomPadding(){
-        return this.longestXLabelLength! * 6;
+        return this.longestXLabelLength! * 7 + 40;
     }
 
     private get topPadding(){
@@ -139,8 +138,10 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
     private get longestXLabelLength(){
 
         const adjustedForCaps = this.props.xLabels.map((label)=>{
-           const capitalizedLetters = label.match(/[A-Z]/g);
-           return label.length + ((capitalizedLetters) ? (capitalizedLetters.length * 3) : 0 );
+           const capitalizedLetters = label.match(/[A-Z]/g) || [];
+           const undercaseLetters = label.match(/[a-z]/g) || [];
+           const spaces = label.match(/\s/g) || [];
+           return (capitalizedLetters.length * 2) + (undercaseLetters.length * 1) + (spaces.length * 2);
         });
 
         return _.max(adjustedForCaps);
@@ -168,15 +169,10 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
                         {
                             target: "data",
                             mutation: (props:any) => {
-                                console.log(props);
-                                //console.log(props.x, props.y);
-                                if (self.hideTooltipTimeout) {
-                                    clearTimeout(self.hideTooltipTimeout);
-                                }
                                 if (props.datum.x in self.props.countsByGroup) {
                                     self.tooltipModel = {
-                                        x:props.x + 15,
-                                        y:props.y,
+                                        x:props.x + 20 - this.scrollPane.scrollLeft,
+                                        y:props.y - 18,
                                         groupName:props.datum.x,
                                         alterationData:self.props.countsByGroup[props.datum.x]
                                     };
@@ -192,9 +188,7 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
                         {
                             target: "data",
                             mutation: (props:any) => {
-                                //self.hideTooltipTimeout = setTimeout(()=>{
-                                    self.hideTooltip();
-                               // },200);
+                                self.hideTooltip();
                             }
                         }
                     ];
@@ -208,10 +202,9 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
         return (
             <div className="popover right"
                  onMouseLeave={()=>this.hideTooltip()}
-                 onMouseEnter={()=>clearTimeout(this.hideTooltipTimeout)}
-                 style={{display:'block', position:'absolute', top:tooltipModel.y, maxWidth:'auto', left:tooltipModel!.x}}
+                 style={{display:'block', position:'absolute', top:tooltipModel.y, width:500, left:tooltipModel!.x}}
             >
-                <div className="arrow"></div>
+                <div className="arrow" style={{top:30}}></div>
                 <div className="popover-content">
                     <strong>Summary for {tooltipModel.groupName}</strong>
                     <p>Gene altered in {percentageRounder(tooltipModel.alterationData.alteredSampleCount/tooltipModel.alterationData.sampleTotal)}% of cases</p>
@@ -226,12 +219,13 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
                         {
                             _.reduce(this.props.alterationTypes,(memo, name:string, key:string)=>{
                                 if (key in tooltipModel!.alterationData.alterationTypeCounts && (tooltipModel!.alterationData.alterationTypeCounts as any)[key] > 0) {
+                                    const alterationCount = (tooltipModel!.alterationData.alterationTypeCounts as any)[key];
                                     memo.push((
                                         <tr>
                                             <td>{name}</td>
                                             <td>
                                                 {percentageRounder((tooltipModel!.alterationData.alterationTypeCounts as any)[key]/tooltipModel!.alterationData.sampleTotal)}%
-                                                ({(tooltipModel!.alterationData.alterationTypeCounts as any)[key]} cases)
+                                                ({alterationCount} {(alterationCount === 1) ? 'case' : 'cases'})
                                             </td>
                                         </tr>
                                     ))
@@ -269,11 +263,11 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
         return (
             <div data-test="cancerTypeSummaryChart">
                 <div style={this.overflowStyle} className="borderedChart">
-                    <div style={{overflowX:'auto', overflowY:'hidden'}}>
+                    <div ref={(el:HTMLDivElement)=>this.scrollPane=el} style={{fontFamily:"Arial, Helvetica", overflowX:'auto', overflowY:'hidden'}}>
                     {
                         (this.tooltipModel) && (this.buildTooltip(this.tooltipModel))
                     }
-                    <VictoryChart width={this.width} height={this.height} theme={VictoryTheme.material}
+                    <VictoryChart width={this.width} height={this.height} theme={CBIOPORTAL_VICTORY_THEME}
                                   padding={{bottom:this.bottomPadding, top:this.topPadding, left:this.leftPadding, right:this.rightPadding }} domainPadding={{x: 20, y: 20}}
                                   containerComponent={<VictoryContainer containerRef={(ref: any) => this.svgContainer = ref} responsive={false}/>}
                     >

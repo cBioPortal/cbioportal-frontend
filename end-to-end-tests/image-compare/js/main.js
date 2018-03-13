@@ -50,7 +50,7 @@ function buildImagePath(ref, rootUrl){
 
 function buildCurlStatement(data){
 
-    return `curl '${data.screenImagePath}' > 'end-to-end-tests/screenshots/reference/${data.imageName}'; git add 'end-to-end-tests/screenshots/reference/${data.imageName}'`;
+    return `curl '${data.screenImagePath}' > 'end-to-end-tests/screenshots/reference/${data.imageName}'; git add 'end-to-end-tests/screenshots/reference/${data.imageName}';`;
 
 }
 
@@ -95,7 +95,7 @@ function buildDisplay(ref, rootUrl){
         
         <br/>
         <h3>Curls for all failing screenshots</h3>
-        <textarea class="curls">${curlStatements.join('\\n')}</textarea>
+        <textarea class="curls">${curlStatements.join(' ')}</textarea>
         </p>
     `;
 

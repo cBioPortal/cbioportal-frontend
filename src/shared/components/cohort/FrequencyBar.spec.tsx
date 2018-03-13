@@ -15,6 +15,7 @@ describe('FrequencyBar', () => {
         barWidth: 50,
         barHeight: 15,
         textMargin: 10,
+        textWidth: 40,
         tooltip: (<span>This used to be an amazing bar.</span>)
     };
 
@@ -33,7 +34,7 @@ describe('FrequencyBar', () => {
     });
 
     it('renders the components with correct dimensions', () => {
-        assert.equal(rootSvg.prop("width"), (50 + 10 + FrequencyBar.TEXT_WIDTH),
+        assert.equal(rootSvg.prop("width"), (50 + 10 + 40),
             "total width should respect bar width and text margin");
 
         assert.isTrue(barRect.exists(),
