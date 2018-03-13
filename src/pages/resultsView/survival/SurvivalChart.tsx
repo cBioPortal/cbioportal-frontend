@@ -15,6 +15,7 @@ import {
     getEstimates, getMedian, getLineData, getScatterData, getScatterDataWithOpacity, getStats, calculateLogRank,
     getDownloadContent, convertScatterDataToDownloadData
 } from "./SurvivalUtil";
+import CBIOPORTAL_VICTORY_THEME from "../../../shared/theme/cBioPoralTheme";
 
 export interface ISurvivalChartProps {
     alteredPatientSurvivals: PatientSurvival[];
@@ -154,7 +155,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                     </div>
 
                     <VictoryChart containerComponent={<VictoryContainer responsive={false} containerRef={(ref: any) => this.svgContainer = ref} />}
-                        height={500} width={900} padding={{ top: 20, bottom: 50, left: 60, right: 300 }} theme={VictoryTheme.material}>
+                        height={500} width={900} padding={{ top: 20, bottom: 50, left: 60, right: 300 }} theme={CBIOPORTAL_VICTORY_THEME}>
                         <VictoryAxis style={{ ticks: { size: 8, stroke: "black" }, tickLabels: { padding: 2, fill: "black" }, axisLabel: { padding: 35, fill: "black" },
                             grid: { opacity: 0 }, axis: {stroke: "black", strokeWidth: 1} }} crossAxis={false} tickCount={11} label={this.props.xAxisLabel} />
                         <VictoryAxis label={this.props.yAxisLabel} dependentAxis={true} tickFormat={(t: any) => `${t}%`} tickCount={11}
