@@ -6,6 +6,7 @@ import {
     DiscreteCopyNumberFilter, ClinicalData, Sample, CancerStudy, CopyNumberCountIdentifier,
     ClinicalDataSingleStudyFilter, ClinicalDataMultiStudyFilter, GeneMolecularData, SampleFilter
 } from "shared/api/generated/CBioPortalAPI";
+import { EnsemblFilter, EnsemblTranscript } from "shared/api/generated/GenomeNexusAPI";
 import {getMyGeneUrl, getUniprotIdUrl} from "shared/api/urls";
 import defaultClient from "shared/api/cbioportalClientInstance";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
@@ -98,6 +99,22 @@ export async function fetchPfamDomainData(pfamAccessions: string[],
     });
 }
 
+/*
+ * Gets the canonical transcript. If there is none pick the transcript with max
+ * length.
+ */
+export async function fetchCanonicalTranscriptWithFallback(hugoSymbol:string,
+                                                           isoformOverrideSource: string,
+                                                           allTranscripts: EnsemblTranscript[] | undefined,
+                                                           client:GenomeNexusAPI =  genomeNexusClient)
+{
+    return fetchCanonicalTranscript(hugoSymbol, isoformOverrideSource).catch(() => {
+        // get transcript with max protein length in given list of all transcripts
+        const transcript = _.maxBy(allTranscripts, (t:EnsemblTranscript) => t.proteinLength);
+        return transcript? transcript : undefined;
+    });
+}
+
 export async function fetchCanonicalTranscript(hugoSymbol: string,
                                                isoformOverrideSource: string,
                                                client:GenomeNexusAPI = genomeNexusClient)
@@ -105,6 +122,20 @@ export async function fetchCanonicalTranscript(hugoSymbol: string,
     return await client.fetchCanonicalEnsemblTranscriptByHugoSymbolGET({
         hugoSymbol, isoformOverrideSource
     });
+}
+
+export async function fetchEnsemblTranscriptsByEnsemblFilter(ensemblFilter: Partial<EnsemblFilter>,
+                                                             client:GenomeNexusAPI = genomeNexusClient)
+{
+
+    return await client.fetchEnsemblTranscriptsByEnsemblFilterPOST({ensemblFilter: Object.assign(
+        // set default to empty array
+        {
+            'geneIds': [],
+            'hugoSymbols': [],
+            'proteinIds': [],
+            'transcriptIds': [],
+        }, ensemblFilter)});
 }
 
 export async function fetchClinicalData(clinicalDataMultiStudyFilter:ClinicalDataMultiStudyFilter,
