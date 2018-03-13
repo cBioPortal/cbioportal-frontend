@@ -127,7 +127,6 @@ describe('Results Page', function() {
                 browser.keys("Enter");
                 var res = browser.checkElement('#pancancer_study_summary', { hide:['.qtip'] });
                 assertScreenShotMatch(res);
-                var res = browser.checkElement('#pancancer_study_summary', { hide:['.qtip'] });
             });
 
         });
