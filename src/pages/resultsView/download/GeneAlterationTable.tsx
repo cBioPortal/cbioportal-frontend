@@ -56,6 +56,7 @@ export default class GeneAlterationTable extends React.Component<IGeneAlteration
                             render: (data: IGeneAlteration) => (
                                 <FrequencyBar
                                     barWidth={200}
+                                    textWidth={45}
                                     counts={[data.altered]}
                                     totalCount={data.sequenced}
                                 />

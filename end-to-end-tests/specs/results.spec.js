@@ -22,7 +22,7 @@ describe('Results Page', function() {
 
         describe('single study query with four genes', ()=>{
             before(()=>{
-                var url = `${CBIOPORTAL_URL}/index.do?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&case_ids=&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list&Action=Submit#pancancer_study_summary`;
+                var url = `${CBIOPORTAL_URL}/index.do?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&case_ids=&gene_list=BRAF+KRAS+NRAS&gene_set_choice=user-defined-list&Action=Submit#pancancer_study_summary`;
                 browser.url(url);
                 browser.waitForVisible('[data-test=cancerTypeSummaryChart]',10000)
             });
@@ -32,10 +32,11 @@ describe('Results Page', function() {
                 assert.equal(el.isSelected(), true);
             });
 
-            it('three gene tabs plus "all genes" equals four total tabs', ()=>{
+            it('three gene tabs plus "all genes" equals four total tabs, in order of genes in oql', ()=>{
                 var tabs = browser.elements("[data-test='cancerTypeSummaryWrapper'] .nav li a");
                 assert.equal(tabs.value.length, 4, 'three gene tabs plus "all genes" equals four total tabs');
                 assert.equal(tabs.value[0].getText(), 'All Queried Genes');
+                assert.deepEqual( tabs.value.map((tab)=>tab.getText()), ['All Queried Genes','BRAF','KRAS','NRAS'], 'we have all genes and genes in order of oql' )
             });
 
         });
@@ -126,7 +127,6 @@ describe('Results Page', function() {
                 browser.keys("Enter");
                 var res = browser.checkElement('#pancancer_study_summary', { hide:['.qtip'] });
                 assertScreenShotMatch(res);
-                var res = browser.checkElement('#pancancer_study_summary', { hide:['.qtip'] });
             });
 
         });
