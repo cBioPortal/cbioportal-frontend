@@ -50,7 +50,7 @@ function buildImagePath(ref, rootUrl){
 
 function buildCurlStatement(data){
 
-    return `curl '${data.screenImagePath}' > 'end-to-end-tests/screenshots/reference/${data.imageName}'; git add 'end-to-end-tests/screenshots/reference/${data.imageName};'`;
+    return `curl '${data.screenImagePath}' > 'end-to-end-tests/screenshots/reference/${data.imageName}'; git add 'end-to-end-tests/screenshots/reference/${data.imageName}';`;
 
 }
 
