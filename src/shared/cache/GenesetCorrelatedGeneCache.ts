@@ -24,36 +24,52 @@ async function fetch(
     return client.fetchCorrelatedGenesUsingPOST(param);
 }
 
+class AsyncStateChain<S> {
+    private stateChain: Promise<S>;
+    constructor(initState: S) {
+        this.stateChain = Promise.resolve(initState);
+    }
+    appendTransition<A>(
+        useState: (currentState: S) => Promise<{newState: S, output: A}>
+    ): Promise<A> {
+        // Synchronously replace stateChain by a promise of the new state,
+        // and return a promise of the output
+        const stateAndOutputPromise = this.stateChain.then(useState);
+        this.stateChain = stateAndOutputPromise.then(pair => pair.newState);
+        return stateAndOutputPromise.then(pair => pair.output);
+    }
+}
+
 class GenesetCorrelatedGeneIteration {
     private query: IQuery;
     private sampleFilterByProfile: SampleFilterByProfile;
-    private nextGeneIndex = 0;
+    private nextGeneIndexStateChain = new AsyncStateChain(0);
     private data: undefined | GenesetCorrelation[] = undefined;
 
     constructor(query: IQuery, sampleFilterByProfile: SampleFilterByProfile) {
         this.query = query;
         this.sampleFilterByProfile = sampleFilterByProfile;
     }
-
     async next(maxNumber: number) {
-        if (this.data === undefined) {
-            this.data = await fetch(this.query, this.sampleFilterByProfile);
-        }
-        // select the first 5 genes starting from the index,
-        // up to the end of the array
-        const nextGenes = this.data.slice(
-            this.nextGeneIndex,
-            this.nextGeneIndex + maxNumber
-        );
-        this.nextGeneIndex += nextGenes.length;
-        return nextGenes;
+        return this.nextGeneIndexStateChain.appendTransition(async currentIndex => {
+            if (this.data === undefined) {
+                this.data = await fetch(this.query, this.sampleFilterByProfile);
+            }
+            // select the first n genes starting from the index,
+            // up to the end of the array
+            const nextGenes = this.data.slice(
+                currentIndex,
+                currentIndex + maxNumber
+            );
+            return {newState: currentIndex + nextGenes.length, output: nextGenes};
+        });
     }
 
     /**
      * Resets the iteration so that next() will start from the beginning.
      */
     reset(): void {
-        this.nextGeneIndex = 0;
+        this.nextGeneIndexStateChain.appendTransition((currentIndex) => Promise.resolve({newState: 0, output: undefined}));
     }
 }
 
