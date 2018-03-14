@@ -35,6 +35,11 @@ export function calculatePValue(a: number, b: number, c: number, d: number): num
     return getCumulativePValue(a, b, c, d);
 }
 
+export function calculateAdjustedPValue(pValue: number, count: number): number {
+    let value = pValue * count;
+    return value > 1 ? 1 : value;
+}
+
 export function calculateLogOddsRatio(a: number, b: number, c: number, d: number): number {
 
     if ((a * d) === 0 && (b * c) === 0) {
@@ -97,7 +102,8 @@ export function getData(isSampleAlteredMap: Dictionary<boolean[]>): MutualExclus
         const logOddsRatio = calculateLogOddsRatio(counts[0], counts[1], counts[2], counts[3]);
         const association = calculateAssociation(logOddsRatio);
         data.push({ geneA, geneB, neitherCount: counts[0], bNotACount: counts[1], aNotBCount: counts[2], 
-            bothCount: counts[3], logOddsRatio, pValue, adjustedPValue: pValue * combinations.length, association });
+            bothCount: counts[3], logOddsRatio, pValue, 
+            adjustedPValue: calculateAdjustedPValue(pValue, combinations.length), association });
     });
     return data;
 }
