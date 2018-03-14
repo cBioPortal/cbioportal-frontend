@@ -12,7 +12,6 @@ export declare class SyntaxError
 }
 
 export declare function parse(str:string):OQLQuery | undefined;
-export declare function parseGeneset(str:string):OQLGenesetQuery | undefined;
 
 // start
 // 	= Query
@@ -53,7 +52,6 @@ export declare type AminoAcid = 'G'|'P'|'A'|'V'|'L'|'I'|'M'|'C'|'F'|'Y'|'W'|'H'|
 // 	/ msp first:SingleGeneQuery msp br { return [first]; }
 // 	/ msp first:SingleGeneQuery msp { return [first]; }
 export declare type OQLQuery = SingleGeneQuery[];
-export declare type OQLGenesetQuery = SingleGenesetQuery[];
 //
 // ListOfGenes
 // 	= msp geneName:String msp rest:ListOfGenes { return [geneName].concat(rest);}
@@ -63,7 +61,6 @@ export declare type OQLGenesetQuery = SingleGenesetQuery[];
 // 	= geneName:String msp ":" msp alts:Alterations { return {"gene": geneName, "alterations": alts}; }
 // 	/ geneName:String { return {"gene": geneName, "alterations":false}; }
 export declare type SingleGeneQuery = {gene:string, alterations:false|Alteration[]};
-export declare type SingleGenesetQuery = {geneset:string, alterations:false|Alteration[]};
 //
 // Alterations
 // 	= a1:Alteration sp a2:Alterations { return [a1].concat(a2);}
