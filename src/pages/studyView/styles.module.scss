@@ -1,0 +1,27 @@
+.chart{
+    width:200px
+}
+
+.header
+{
+    overflow: hidden;
+    white-space:nowrap;
+    text-overflow:ellipsis;
+    width:inherit;
+    display:inline-block;
+
+    span {
+        font-size: 10px;
+        color: #000;
+        font-weight: 700;
+        display: block;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        text-align: center;
+    }
+}
+
+.flexContainer {
+    display: flex;
+}

@@ -20,9 +20,9 @@ export type AlterationEnrichment = {
 
 };
 export type ClinicalDataCount = {
-    'attributeId': string
+    'count': number
 
-        'counts': {}
+        'value': string
 
 };
 export type ClinicalDataCountFilter = {
@@ -36,7 +36,7 @@ export type ClinicalDataEqualityFilter = {
 
         'clinicalDataType': "SAMPLE" | "PATIENT"
 
-        'value': string
+        'values': Array < string >
 
 };
 export type CoExpression = {
@@ -1723,58 +1723,57 @@ export default class CBioPortalAPIInternal {
      * @param {} clinicalDataCountFilter - Clinical data count filter
      */
     fetchClinicalDataCountsUsingPOST(parameters: {
-            'studyId': string,
-            'clinicalDataType' ? : "SAMPLE" | "PATIENT",
-            'clinicalDataCountFilter': ClinicalDataCountFilter,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < ClinicalDataCount >
-        > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/studies/{studyId}/clinical-data-counts/fetch';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
+        'studyId': string,
+        'clinicalDataType' ? : "SAMPLE" | "PATIENT",
+        'clinicalDataCountFilter': ClinicalDataCountFilter,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < {} > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/studies/{studyId}/clinical-data-counts/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
 
-                path = path.replace('{studyId}', parameters['studyId'] + '');
+            path = path.replace('{studyId}', parameters['studyId'] + '');
 
-                if (parameters['studyId'] === undefined) {
-                    reject(new Error('Missing required  parameter: studyId'));
-                    return;
-                }
+            if (parameters['studyId'] === undefined) {
+                reject(new Error('Missing required  parameter: studyId'));
+                return;
+            }
 
-                if (parameters['clinicalDataType'] !== undefined) {
-                    queryParameters['clinicalDataType'] = parameters['clinicalDataType'];
-                }
+            if (parameters['clinicalDataType'] !== undefined) {
+                queryParameters['clinicalDataType'] = parameters['clinicalDataType'];
+            }
 
-                if (parameters['clinicalDataCountFilter'] !== undefined) {
-                    body = parameters['clinicalDataCountFilter'];
-                }
+            if (parameters['clinicalDataCountFilter'] !== undefined) {
+                body = parameters['clinicalDataCountFilter'];
+            }
 
-                if (parameters['clinicalDataCountFilter'] === undefined) {
-                    reject(new Error('Missing required  parameter: clinicalDataCountFilter'));
-                    return;
-                }
+            if (parameters['clinicalDataCountFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: clinicalDataCountFilter'));
+                return;
+            }
 
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
 
-                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
 
-            }).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
+        }).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
 
     fetchFractionGenomeAlteredUsingPOSTURL(parameters: {
         'studyId': string,
