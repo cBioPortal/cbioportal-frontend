@@ -24,6 +24,7 @@ import OverlappingStudiesWarning from "../../shared/components/overlappingStudie
 import CNSegments from "./cnSegments/CNSegments";
 import './styles.scss';
 import {genes} from "shared/lib/oql/oqlfilter.js";
+import oql_parser from "shared/lib/oql/oql-parser.js";
 
 (Chart as any).plugins.register({
     beforeDraw: function(chartInstance:any) {
@@ -48,7 +49,7 @@ function initStore(queryStore: QueryStore) {
 
     const oqlQuery = serverVars.theQuery;
 
-    const parsedOQL = (window as any).oql_parser.parse(oqlQuery);
+    const parsedOQL = oql_parser.parse(oqlQuery);
 
     const genesetIds = (serverVars.genesetIds.length
         ? serverVars.genesetIds.split(/\s+/)
