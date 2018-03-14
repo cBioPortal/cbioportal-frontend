@@ -14,7 +14,7 @@ import oql_parser, {MUTCommand} from "../../lib/oql/oql-parser";
 import memoize from "memoize-weak-decorator";
 import AppConfig from 'appConfig';
 import {gsUploadByGet} from "../../api/gsuploadwindow";
-import {OQLQuery, OQLGenesetQuery} from "../../lib/oql/oql-parser";
+import {OQLQuery} from "../../lib/oql/oql-parser";
 import {ComponentGetsStoreContext} from "../../lib/ContextUtils";
 import URL from 'url';
 import {buildCBioPortalUrl, BuildUrlParams, getHost, openStudySummaryFormSubmit} from "../../api/urls";
@@ -100,6 +100,8 @@ export const QueryParamsKeys:(keyof CancerStudyQueryParams)[] = [
 	'geneQuery',
 	'genesetQuery',
 ];
+
+type GenesetId = string;
 
 // mobx observable
 export class QueryStore
@@ -1064,14 +1066,13 @@ export class QueryStore
 	}
 	
 	// GENE SETS
-	@computed get genesetIdsOQL():{ query: OQLGenesetQuery, error?: { start: number, end: number, message: string } }
+	@computed get genesetIdsQuery():{ query: GenesetId[], error?: { start: number, end: number, message: string } }
     {
         try
         {
-            const queriedGenesets: string[] = this.genesetQuery ? this.genesetQuery.split(/[ \n]+/) : [];
-            const result = queriedGenesets.map(geneset => ({geneset: geneset, alterations:false as false}));
+            const queriedGenesets: GenesetId[] = this.genesetQuery ? this.genesetQuery.split(/[ \n]+/) : [];
             return {
-                query: result,
+                query: queriedGenesets,
                 error: undefined
             };
         }
@@ -1099,16 +1100,9 @@ export class QueryStore
         }
     }
     
-    @computed get genesetIds():string[]
+    @computed get genesetIds():GenesetId[]
     {
-            try
-            {
-                return this.genesetIdsOQL.query.map(line => line.geneset).filter(geneset => geneset && geneset !== 'DATATYPES');
-            }
-            catch (e)
-            {
-                return [];
-            }
+        return this.genesetIdsQuery.query;
     }
 
 	// SUBMIT
@@ -1119,7 +1113,7 @@ export class QueryStore
 			!this.submitError &&
 			(this.genes.isComplete || this.genesets.isComplete) &&
 			this.asyncUrlParams.isComplete
-		) || (!!this.oql.error || !!this.genesetIdsOQL.error); // to make "Please click 'Submit' to see location of error." possible
+		) || (!!this.oql.error || !!this.genesetIdsQuery.error); // to make "Please click 'Submit' to see location of error." possible
 	}
 
 	@computed get summaryEnabled() {
