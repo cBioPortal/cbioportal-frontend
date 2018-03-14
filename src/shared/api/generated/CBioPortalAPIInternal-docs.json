@@ -970,9 +970,12 @@
           "200": {
             "description": "OK",
             "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/ClinicalDataCount"
+              "type": "object",
+              "additionalProperties": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/ClinicalDataCount"
+                }
               }
             }
           }
@@ -1273,15 +1276,12 @@
     "ClinicalDataCount": {
       "type": "object",
       "properties": {
-        "attributeId": {
-          "type": "string"
+        "count": {
+          "type": "integer",
+          "format": "int32"
         },
-        "counts": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "integer",
-            "format": "int32"
-          }
+        "value": {
+          "type": "string"
         }
       },
       "title": "ClinicalDataCount"
@@ -1314,8 +1314,11 @@
             "PATIENT"
           ]
         },
-        "value": {
-          "type": "string"
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "title": "ClinicalDataEqualityFilter"
