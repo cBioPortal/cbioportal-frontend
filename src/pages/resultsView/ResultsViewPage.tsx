@@ -133,8 +133,20 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
         // hide mutex tab
         $(document).ready(()=>{
-            if (genes((window as any).serverVars.theQuery).length <= 1) {
+            if (!(window as any).serverVars.theQuery.trim().length || genes((window as any).serverVars.theQuery).length <= 1) {
                 $('a#mutex-result-tab').parent().hide();
+            }
+            //hide gene-specific tabs when we only query gene sets (and no genes are queried)
+            if (!(window as any).serverVars.theQuery.trim().length || genes((window as any).serverVars.theQuery).length == 0) {
+                $('a#cancer-types-result-tab').parent().hide();
+                $('a#plots-result-tab').parent().hide();
+                $('a#mutation-result-tab').parent().hide();
+                $('a#coexp-result-tab').parent().hide();
+                $('a#enrichments-result-tab').parent().hide();
+                $('a#survival-result-tab').parent().hide();
+                $('a#network-result-tab').parent().hide();
+                $('a#igv-result-tab').parent().hide();
+                $('a#data-download-result-tab').parent().hide();
             }
         });
     }
