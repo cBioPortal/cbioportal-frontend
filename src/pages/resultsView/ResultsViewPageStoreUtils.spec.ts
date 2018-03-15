@@ -13,6 +13,7 @@ import {
 } from "./ResultsViewPageStoreUtils";
 import {observable} from "mobx";
 import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
+import {AnnotatedMutation} from "./ResultsViewPageStore";
 
 describe("ResultsViewPageStoreUtils", ()=>{
     describe("computeCustomDriverAnnotationReport", ()=>{
@@ -362,14 +363,14 @@ describe("ResultsViewPageStoreUtils", ()=>{
                     [{mutationType:"missense"} as Mutation],
                     ()=>({oncoKb:"", hotspots:true, cbioportalCount:false, cosmicCount:true, customDriverBinary:false}),
                     true
-                ),
+                ) as Partial<AnnotatedMutation>[],
                 [{
                     mutationType:"missense",
                     simplifiedMutationType: getSimplifiedMutationType("missense"),
                     isHotspot: true,
                     oncoKbOncogenic: "",
                     putativeDriver: true
-                }]
+                } as AnnotatedMutation]
             );
         });
         it("annotates a few mutations", ()=>{
@@ -378,7 +379,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
                     [{mutationType:"missense"} as Mutation, {mutationType:"in_frame_del"} as Mutation, {mutationType:"asdf"} as Mutation],
                     ()=>({oncoKb:"", hotspots:true, cbioportalCount:false, cosmicCount:true, customDriverBinary:false}),
                     true
-                ),
+                ) as Partial<AnnotatedMutation>[],
                 [{
                     mutationType:"missense",
                     simplifiedMutationType: getSimplifiedMutationType("missense"),
@@ -419,7 +420,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
                         {oncoKb:"", hotspots:false, cbioportalCount:false, cosmicCount:false, customDriverBinary:false}
                     ),
                     true
-                ),
+                ) as Partial<AnnotatedMutation>[],
                 [{
                     mutationType:"in_frame_del",
                     simplifiedMutationType: getSimplifiedMutationType("in_frame_del"),
