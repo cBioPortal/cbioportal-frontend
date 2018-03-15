@@ -250,7 +250,6 @@
     "mocha": "^3.2.0",
     "phantomjs-polyfill": "^0.0.2",
     "phantomjs-prebuilt": "^2.1.14",
-    "pre-commit": "^1.2.2",
     "redux-devtools": "^3.3.2",
     "redux-devtools-dock-monitor": "^1.1.1",
     "redux-devtools-log-monitor": "^1.2.0",
