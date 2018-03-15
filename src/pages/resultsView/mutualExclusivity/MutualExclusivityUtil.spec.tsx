@@ -2,7 +2,7 @@ import { assert } from 'chai';
 import React from 'react';
 import {
     calculateAssociation, countOccurences, calculatePValue, calculateLogOddsRatio, getMutuallyExclusiveCounts,
-    getCountsText, getData, getFilteredData, formatPValue, formatPValueWithStyle, formatLogOddsRatio
+    getCountsText, getData, getFilteredData, formatPValue, formatPValueWithStyle, formatLogOddsRatio, calculateAdjustedPValue
 } from "./MutualExclusivityUtil";
 import { MutualExclusivity } from "../../../shared/model/MutualExclusivity";
 import expect from 'expect';
@@ -59,7 +59,7 @@ const exampleData = [
         "bothCount": 1,
         "logOddsRatio": -1.791759469228055,
         "pValue": 0.2619047619047609,
-        "adjustedPValue": 1.5714285714285654,
+        "adjustedPValue": 1,
         "association": "Mutual exclusivity"
     },
     {
@@ -71,7 +71,7 @@ const exampleData = [
         "bothCount": 3,
         "logOddsRatio": 1.791759469228055,
         "pValue": 0.2619047619047609,
-        "adjustedPValue": 1.5714285714285654,
+        "adjustedPValue": 1,
         "association": "Co-occurrence"
     },
     {
@@ -131,6 +131,16 @@ describe("MutualExclusivityUtil", () => {
 
         it("returns 0.07706146926536687 for 13, 7, 3, 7", () => {
             assert.equal(calculatePValue(13, 7, 3, 7), 0.07706146926536687);
+        });
+    });
+
+    describe("#calculateAdjustedPValue()", () => {
+        it("returns 1 if bigger than 1", () => {
+            assert.equal(calculateAdjustedPValue(0.345, 4), 1);
+        });
+
+        it("returns the value if smaller than 1", () => {
+            assert.equal(calculateAdjustedPValue(0.001, 3), 0.003);
         });
     });
 
@@ -396,8 +406,8 @@ describe("MutualExclusivityUtil", () => {
                     "bNotACount": 1,
                     "bothCount": 3,
                     "logOddsRatio": Infinity,
-                    "pValue": 0.03333333333333333,
-                    "adjustedPValue": 0.06666666666666667,
+                    "pValue": 0.003968253968253951,
+                    "adjustedPValue": 0.023809523809523704,
                     "association": "Co-occurrence"
                 }
             ];
@@ -411,8 +421,8 @@ describe("MutualExclusivityUtil", () => {
             assert.equal(cells.at(4).html(), "<td><span>1</span></td>");
             assert.equal(cells.at(5).html(), "<td><span>3</span></td>");
             assert.equal(cells.at(6).html(), "<td><span>&gt;3</span></td>");
-            assert.equal(cells.at(7).html(), "<td><b><span>0.033</span></b></td>");
-            assert.equal(cells.at(8).html(), "<td><span>0.067</span></td>");
+            assert.equal(cells.at(7).html(), "<td><span>0.004</span></td>");
+            assert.equal(cells.at(8).html(), "<td><b><span>0.024</span></b></td>");
             assert.equal(cells.at(9).html().replace(/<!--[^>]*-->/g, ""), "<td><span>Co-occurrence" +
                 "&nbsp;&nbsp;&nbsp;<span class=\"badge\" style=\"background-color: rgb(88, 172, 250);\">Significant" +
                 "</span></span></td>");
