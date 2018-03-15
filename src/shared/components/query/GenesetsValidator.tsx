@@ -23,20 +23,20 @@ export default class GenesetsValidator extends QueryStoreComponent<{}, {}>
 {
     render()
     {
-        if (this.store.genesetIdsOQL.error)
+        if (this.store.genesetIdsQuery.error)
             return (
                     <div className={styles.GeneSymbolValidator}>
                     <span className={styles.errorMessage}>
                     {`Cannot validate gene sets because of invalid OQL. ${
                         this.store.genesetQueryErrorDisplayStatus === 'unfocused'
                         ? "Please click 'Submit' to see location of error."
-                        : this.store.genesetIdsOQL.error.message
+                        : this.store.genesetIdsQuery.error.message
                     }`}
                     </span>
                     </div>
             );
         
-        if (!this.store.genesetIdsOQL.query.length)
+        if (!this.store.genesetIdsQuery.query.length)
             return null;
         
         if (this.store.genesets.isError)

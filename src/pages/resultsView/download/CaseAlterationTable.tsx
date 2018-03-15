@@ -1,6 +1,6 @@
 import {observer} from "mobx-react";
 import * as React from 'react';
-import LazyMobXTable from "shared/components/lazyMobXTable/LazyMobXTable";
+import LazyMobXTable, {Column} from "shared/components/lazyMobXTable/LazyMobXTable";
 import {OQLLineFilterOutput} from "shared/lib/oql/oqlfilter";
 import {AnnotatedExtendedAlteration} from "../ResultsViewPageStore";
 
@@ -88,7 +88,7 @@ class CaseAlterationTableComponent extends LazyMobXTable<ICaseAlteration> {}
 export default class CaseAlterationTable extends React.Component<ICaseAlterationTableProps, {}> {
     public render()
     {
-        const columns = [
+        const columns: Column<ICaseAlteration>[] = [
             {
                 name: 'Study ID',
                 render: (data: ICaseAlteration) => <span style={{whiteSpace: "nowrap"}}>{data.studyId}</span>,
