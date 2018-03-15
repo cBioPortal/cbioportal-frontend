@@ -136,7 +136,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             if (!(window as any).serverVars.theQuery.trim().length || genes((window as any).serverVars.theQuery).length <= 1) {
                 $('a#mutex-result-tab').parent().hide();
             }
-            //hide gene-specific tabs when no genes are queried
+            //hide gene-specific tabs when we only query gene sets (and no genes are queried)
             if (!(window as any).serverVars.theQuery.trim().length || genes((window as any).serverVars.theQuery).length == 0) {
                 $('a#cancer-types-result-tab').parent().hide();
                 $('a#plots-result-tab').parent().hide();
