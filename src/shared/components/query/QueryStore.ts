@@ -1179,13 +1179,20 @@ export class QueryStore
             {
 	            if (this.isGenesetProfileSelected)
                 { //Only geneset profile selected
-                    if (!this.genesetQuery.length) 
+                    if (!this.genesetQuery.length && !this.oql.query.length) 
+                    {
+                        return "Please enter one or more gene symbols and gene sets.";
+                    }
+                    else if (!this.genesetQuery.length)
                     {
                         return "Please enter one or more gene sets or deselect gene set profiles.";
                     }
-                    if (this.oql.query.length)
+                    else if (!this.oql.query.length)
                     {
-                        return "Please select genetic profiles or remove the genes from the query.";
+                        return "Please enter one or more gene symbols.";
+                    }
+                    else {
+                        return "Please select a profile for the queried genes.";
                     }
                 }
                 else
@@ -1205,12 +1212,9 @@ export class QueryStore
 	                {
 	                    return "Please enter one or more gene symbols and gene sets.";
 	                }
-	                else if (!this.oql.query.length && this.genesetQuery.length)
+	                else if (!this.oql.query.length)
 	                {
-	                    return "Please enter one or more gene symbols or deselect genetic profiles.";
-	                }
-	                else if (!this.genesetQuery.length && this.oql.query.length) {
-	                    return "Please enter one or more gene sets or deselect gene set profiles.";
+	                    return "Please enter one or more gene symbols.";
 	                }
 	            }
 	            else if (!this.oql.query.length)
@@ -1273,6 +1277,7 @@ export class QueryStore
 		if ((_window as any).serverVars) {
 			// Populate OQL
 			this.geneQuery = normalizeQuery((_window as any).serverVars.theQuery);
+			this.genesetQuery = normalizeQuery((_window as any).serverVars.genesetIds);
 			const dataPriority = (_window as any).serverVars.dataPriority;
 			if (typeof dataPriority !== "undefined") {
 				this.dataTypePriorityCode = (dataPriority + '') as '0'|'1'|'2';
