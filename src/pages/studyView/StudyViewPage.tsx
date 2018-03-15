@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as _ from 'lodash';
 import $ from 'jquery';
-import {observer} from "mobx-react";
+import {observer, inject} from "mobx-react";
 import {remoteData} from "../../shared/api/remoteData";
 import {action, computed, observable, reaction, ObservableMap} from "mobx";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
@@ -21,13 +21,20 @@ export class StudyViewPageStore {
 
     }
 
-    @observable studyId = "hnsc_tcga";
+    //TODO: make studyId, sampleAttrIds, patientAttrIds dynamic
+    // @observable studyId = "hnsc_tcga";
 
-    @observable sampleAttrIds = ["OCT_EMBEDDED"];
+    // @observable sampleAttrIds = ["OCT_EMBEDDED","PRIMARY_SITE","AMPLIFICATION_STATUS"];
 
-    @observable patientAttrIds = ["AJCC_PATHOLOGIC_TUMOR_STAGE","ICD_O_3_HISTOLOGY"];
+    // @observable patientAttrIds = ["AJCC_PATHOLOGIC_TUMOR_STAGE","ICD_O_3_HISTOLOGY","SEX"];
 
-    @observable private _clinicalDataEqualityFilter = observable.map<ClinicalDataEqualityFilter>();
+    @observable studyId:string;
+
+    @observable sampleAttrIds:string[] = [];
+
+    @observable patientAttrIds:string[] = [];
+
+    @observable private _clinicalDataEqualityFilterSet = observable.map<ClinicalDataEqualityFilter>();
 
     @action updateClinicalDataEqualityFilters( attributeId      : string,
                                                clinicalDataType : ClinicalDataType,
@@ -35,7 +42,7 @@ export class StudyViewPageStore {
         
         let id = [clinicalDataType,attributeId].join('_');
 
-        let clinicalDataEqualityFilter =this._clinicalDataEqualityFilter.get(id);
+        let clinicalDataEqualityFilter =this._clinicalDataEqualityFilterSet.get(id);
 
         if(clinicalDataEqualityFilter) {
             let values = clinicalDataEqualityFilter.values;
@@ -46,24 +53,24 @@ export class StudyViewPageStore {
             }
             if(values.length>0) {
                 clinicalDataEqualityFilter.values = values;
-                this._clinicalDataEqualityFilter.set(id, clinicalDataEqualityFilter);
+                this._clinicalDataEqualityFilterSet.set(id, clinicalDataEqualityFilter);
             } else {
                 clinicalDataEqualityFilter = {} as any;
-                this._clinicalDataEqualityFilter.delete(id)
+                this._clinicalDataEqualityFilterSet.delete(id)
             }
         } else {
             clinicalDataEqualityFilter = {
-                    "attributeId": attributeId,
-                    "clinicalDataType": clinicalDataType,
-                    "values": [value]
+                    attributeId: attributeId,
+                    clinicalDataType: clinicalDataType,
+                    values: [value]
             };
-            this._clinicalDataEqualityFilter.set(id, clinicalDataEqualityFilter);
+            this._clinicalDataEqualityFilterSet.set(id, clinicalDataEqualityFilter);
         }
     }
 
     @computed get filters() {
         let filters: StudyViewFilter = {} as any;
-        let clinicalDataEqualityFilter= this._clinicalDataEqualityFilter.values()
+        let clinicalDataEqualityFilter= this._clinicalDataEqualityFilterSet.values()
         //checking for empty since the api throws error when the clinicalDataEqualityFilter array is empty
         if(clinicalDataEqualityFilter.length>0){
             filters.clinicalDataEqualityFilters = clinicalDataEqualityFilter
@@ -72,7 +79,7 @@ export class StudyViewPageStore {
     }
 
     public getClinicalDataEqualityFilters(id : string): string[] {
-        let clinicalDataEqualityFilter = this._clinicalDataEqualityFilter.get(id)
+        let clinicalDataEqualityFilter = this._clinicalDataEqualityFilterSet.get(id)
         return clinicalDataEqualityFilter ? clinicalDataEqualityFilter.values : [];
     }
 
@@ -80,25 +87,50 @@ export class StudyViewPageStore {
     readonly clinicalAttributes = remoteData({
         invoke: () => {
             return defaultClient.getAllClinicalAttributesInStudyUsingGET({
-                'studyId': this.studyId
-            }).then((attributes:ClinicalAttribute[])=>{
-                let attributeIds = [...this.sampleAttrIds, ...this.patientAttrIds];
-                return attributes.filter(attribute => {
-                    return _.includes(attributeIds, attribute.clinicalAttributeId);
-                });
-            });
-        }
+                studyId: this.studyId
+            })
+        },
+        default: []
     });
 
-    readonly sampleAttributesData = remoteData<ClinicalAttributeData>({
+    readonly selectedAttributes = remoteData({
         await: ()=>[this.clinicalAttributes],
+        invoke: async () => {
+            let selectedAttrIds = [...this.sampleAttrIds, ...this.patientAttrIds];
+            let visibleClinicalAttributes = this.clinicalAttributes.result.filter(attribute => attribute.datatype == "STRING");
+            if(!_.isEmpty(selectedAttrIds)){
+                visibleClinicalAttributes = visibleClinicalAttributes.filter(attribute => {
+                    return _.includes(selectedAttrIds, attribute.clinicalAttributeId);
+                });
+            }
+            return visibleClinicalAttributes;
+        },
+        default: []
+    });
+
+    @computed get selectedSampleAttributeIds(){
+        let attributes = this.selectedAttributes.result;
+        return attributes
+                    .filter(attribute => !attribute.patientAttribute)
+                    .map(attribute => attribute.clinicalAttributeId);
+    }
+
+    @computed get selectedPatientAttributeIds(){
+        let attributes = this.selectedAttributes.result;
+        return attributes
+                    .filter(attribute => attribute.patientAttribute)
+                    .map(attribute => attribute.clinicalAttributeId);
+    }
+
+    readonly sampleAttributesData = remoteData<ClinicalAttributeData>({
+        await: ()=>[this.selectedAttributes],
         invoke: () => {
             return internalClient.fetchClinicalDataCountsUsingPOST({
-                'studyId': this.studyId,
-                'clinicalDataType': "SAMPLE",
-                'clinicalDataCountFilter': {
-                    'attributeIds': this.sampleAttrIds,
-                    'filter': this.filters
+                studyId: this.studyId,
+                clinicalDataType: "SAMPLE",
+                clinicalDataCountFilter: {
+                    attributeIds: this.selectedSampleAttributeIds,
+                    filter: this.filters
                 }
             })
         },
@@ -106,14 +138,14 @@ export class StudyViewPageStore {
     });
 
     readonly patientAttributesData = remoteData<ClinicalAttributeData>({
-        await: ()=>[this.clinicalAttributes],
+        await: ()=>[this.selectedAttributes],
         invoke: () => {
             return internalClient.fetchClinicalDataCountsUsingPOST({
-                'studyId': this.studyId,
-                'clinicalDataType': "PATIENT",
-                'clinicalDataCountFilter': {
-                    'attributeIds': this.patientAttrIds,
-                    'filter': this.filters
+                studyId: this.studyId,
+                clinicalDataType: "PATIENT",
+                clinicalDataCountFilter: {
+                    attributeIds: this.selectedPatientAttributeIds,
+                    filter: this.filters
                 }
             })
         },
@@ -141,19 +173,39 @@ export class StudyViewPageStore {
 }
 
 
+export interface IStudyViewPageProps {
+    routing: any;
+}
+
 // making this an observer (mobx-react) causes this component to re-render any time
 // there is a change to any observable value which is referenced in its render method. 
 // Even if this value is referenced deep within some helper method
+@inject('routing')
 @observer
-export default class StudyViewPage extends React.Component<{}, {}> {
+export default class StudyViewPage extends React.Component<IStudyViewPageProps, {}> {
 
     store:StudyViewPageStore;
     queryInput:HTMLInputElement;
 
-    constructor(){
+    constructor(props: IStudyViewPageProps){
         super();
         this.store = new StudyViewPageStore();
         this.onUserSelection = this.onUserSelection.bind(this);
+
+        super();
+
+        //TODO: this should be done by a module so that it can be reused on other pages
+        const reaction1 = reaction(
+            () => props.routing.location.query,
+            query => {
+                if ('studyId' in query) {
+                    this.store.studyId = query.studyId;
+                    this.store.sampleAttrIds  = ('sampleAttrIds'  in query ? (query.sampleAttrIds  as string).split(",") : []);
+                    this.store.patientAttrIds = ('patientAttrIds' in query ? (query.patientAttrIds as string).split(",") : []);
+                }
+            },
+            { fireImmediately:true }
+        );
 
     }
 
@@ -166,18 +218,19 @@ export default class StudyViewPage extends React.Component<{}, {}> {
     
     renderAttributeChart = (clinicalAttribute : ClinicalAttribute,
                             arrayIndex        : number) => {
-                                
-        let attributeUID = (clinicalAttribute.patientAttribute ? "PATIENT_" : "SAMPLE_")+clinicalAttribute.clinicalAttributeId
+                            
+        let attributeUID = (clinicalAttribute.patientAttribute ? "PATIENT_" : "SAMPLE_")+clinicalAttribute.clinicalAttributeId;
         let filters = this.store.getClinicalDataEqualityFilters(attributeUID)
+        let data = this.store.cinicalAttributeData.result[attributeUID]
         return (
-            <div className={styles.chart} key={arrayIndex}>
+            data && <div className={styles.chart} key={arrayIndex}>
                 <div className={styles.header}>
                     <span>{clinicalAttribute.displayName}</span>
                 </div>
                 <div className="plot">
                     <PieChart onUserSelection= {this.onUserSelection}
                               filters={filters}
-                              data={this.store.cinicalAttributeData.result[attributeUID]}/> 
+                              data={data}/> 
                 </div>
             </div>
         );
@@ -187,10 +240,10 @@ export default class StudyViewPage extends React.Component<{}, {}> {
         return (
             <div>
                 {
-                    (this.store.clinicalAttributes.isComplete && this.store.cinicalAttributeData.isComplete) && 
+                    (this.store.selectedAttributes.isComplete && this.store.cinicalAttributeData.isComplete) && 
                     (
                         <div  className={styles.flexContainer}>
-                            {this.store.clinicalAttributes.result.map(this.renderAttributeChart)}
+                            {this.store.selectedAttributes.result.map(this.renderAttributeChart)}
                         </div>
                     )
                 }
