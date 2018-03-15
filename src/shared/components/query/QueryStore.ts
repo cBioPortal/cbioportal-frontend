@@ -597,22 +597,26 @@ export class QueryStore
 	);
 	
 	private invokeGenesetsLater = debounceAsync(
-	        async (genesetIds:string[]):Promise<{found: Geneset[], invalid: string[]}> =>
-	        {
-	            const getGenesetResults = async () => {
-	                const found = await internalClient.fetchGenesetsUsingPOST({genesetIds: genesetIds});
-	                const invalid = _.difference(genesetIds, found.map(geneset => geneset.genesetId));
-	                return {found, invalid};
-	            };
-	            
-	            const [genesetResults] = await Promise.all([getGenesetResults()]);
-	            return {
-	                found: [...genesetResults.found],
-	                invalid: [...genesetResults.invalid]
-	            };
-	        },
-	        500
-	    );
+			async (genesetIds:string[]):Promise<{found: Geneset[], invalid: string[]}> =>
+			{
+				if (genesetIds.length > 0) {
+					const getGenesetResults = async () => {
+						const found = await internalClient.fetchGenesetsUsingPOST({genesetIds: genesetIds});
+						const invalid = _.difference(genesetIds, found.map(geneset => geneset.genesetId));
+						return {found, invalid};
+					};
+					
+					const [genesetResults] = await Promise.all([getGenesetResults()]);
+					return {
+						found: [...genesetResults.found],
+						invalid: [...genesetResults.invalid]
+					};
+				} else {
+					return Promise.resolve({found:[], invalid:[]});
+				}
+			},
+			500
+	);
 
 	@memoize
 	async getGeneSuggestions(alias:string):Promise<GeneReplacement>
