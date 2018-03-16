@@ -71,6 +71,18 @@ export type CopyNumberCountByGene = {
         'totalCount': number
 
 };
+export type CopyNumberGeneFilter = {
+    'alterations': Array < CopyNumberGeneFilterElement >
+
+        'molecularProfileId': string
+
+};
+export type CopyNumberGeneFilterElement = {
+    'alteration': number
+
+        'entrezGeneId': number
+
+};
 export type CosmicMutation = {
     'cosmicMutationId': string
 
@@ -221,12 +233,6 @@ export type Info = {
         'portalVersion': string
 
 };
-export type MolecularProfileGeneFilter = {
-    'entrezGeneIds': Array < number >
-
-        'molecularProfileId': string
-
-};
 export type MrnaPercentile = {
     'entrezGeneId': number
 
@@ -273,6 +279,12 @@ export type MutationCountByGene = {
         'totalCount': number
 
 };
+export type MutationGeneFilter = {
+    'entrezGeneIds': Array < number >
+
+        'molecularProfileId': string
+
+};
 export type MutationSpectrum = {
     'CtoA': number
 
@@ -308,7 +320,9 @@ export type MutationSpectrumFilter = {
 export type StudyViewFilter = {
     'clinicalDataEqualityFilters': Array < ClinicalDataEqualityFilter >
 
-        'mutatedGenes': Array < MolecularProfileGeneFilter >
+        'cnaGenes': Array < CopyNumberGeneFilter >
+
+        'mutatedGenes': Array < MutationGeneFilter >
 
         'sampleIds': Array < string >
 
