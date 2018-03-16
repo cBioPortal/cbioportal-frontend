@@ -1,18 +1,22 @@
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
 import * as _ from 'lodash';
-import $ from 'jquery';
-import {observer, inject} from "mobx-react";
+import {inject, observer} from "mobx-react";
 import {remoteData} from "../../shared/api/remoteData";
-import {action, computed, observable, reaction, ObservableMap} from "mobx";
+import {action, computed, observable, reaction} from "mobx";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import defaultClient from "shared/api/cbioportalClientInstance";
 import {
-    ClinicalDataCountFilter, StudyViewFilter, ClinicalDataCount, ClinicalDataEqualityFilter,
-    MutationCountByGene, MolecularProfileGeneFilter, CopyNumberCountByGene
+    ClinicalDataCount,
+    ClinicalDataEqualityFilter,
+    CopyNumberCountByGene,
+    CopyNumberGeneFilter,
+    CopyNumberGeneFilterElement,
+    MutationCountByGene,
+    MutationGeneFilter,
+    StudyViewFilter
 } from 'shared/api/generated/CBioPortalAPIInternal';
-import { PieChart } from './charts/pieChart/PieChart'
-import { ClinicalAttribute } from 'shared/api/generated/CBioPortalAPI';
+import {PieChart} from './charts/pieChart/PieChart'
+import {ClinicalAttribute} from 'shared/api/generated/CBioPortalAPI';
 import styles from "./styles.module.scss";
 import {MutatedGenesTable} from "./table/MutatedGenesTable";
 import {CNAGenesTable} from "./table/CNAGenesTable";
@@ -25,14 +29,19 @@ export type CNAGenesData = CopyNumberCountByGene[];
 export class StudyViewPageStore {
 
     constructor(){
-        this._molecularProfileGeneFilter = {
+        this._mutatedGeneFilter = {
             entrezGeneIds: [],
             molecularProfileId: ''
         };
+        this._cnaGeneFilter = {
+            alterations: [],
+            molecularProfileId: ''
+        };
         reaction(
-            () => this.molecularProfileId,
-            (newProfile) => {
-                this._molecularProfileGeneFilter.molecularProfileId = newProfile;
+            () => this.studyId,
+            (newStudyId) => {
+                this._mutatedGeneFilter.molecularProfileId = `${newStudyId}_mutations`;
+                this._cnaGeneFilter.molecularProfileId = `${newStudyId}_gistic`;
             },
             {fireImmediately: true}
         )
@@ -49,15 +58,15 @@ export class StudyViewPageStore {
 
     @observable studyId:string;
 
-    @observable molecularProfileId:string;
-
     @observable sampleAttrIds:string[] = [];
 
     @observable patientAttrIds:string[] = [];
 
     @observable private _clinicalDataEqualityFilterSet = observable.map<ClinicalDataEqualityFilter>();
 
-    @observable private _molecularProfileGeneFilter:MolecularProfileGeneFilter;
+    @observable private _mutatedGeneFilter: MutationGeneFilter;
+
+    @observable private _cnaGeneFilter: CopyNumberGeneFilter;
 
     @action updateClinicalDataEqualityFilters( attributeId      : string,
                                                clinicalDataType : ClinicalDataType,
@@ -93,22 +102,30 @@ export class StudyViewPageStore {
 
     @action
     updateGeneFilter(entrezGeneId: number) {
-        let _index = this._molecularProfileGeneFilter.entrezGeneIds.indexOf(entrezGeneId);
+        let _index = this._mutatedGeneFilter.entrezGeneIds.indexOf(entrezGeneId);
         if (_index === -1) {
-            this._molecularProfileGeneFilter.entrezGeneIds.push(entrezGeneId);
+            this._mutatedGeneFilter.entrezGeneIds.push(entrezGeneId);
         } else {
-            this._molecularProfileGeneFilter.entrezGeneIds.splice(_index, 1);
+            this._mutatedGeneFilter.entrezGeneIds.splice(_index, 1);
         }
     }
 
     @action
     updateCNAGeneFilter(entrezGeneId: number, alteration: number) {
-        let _id = [entrezGeneId, alteration].join('_');
-        let _index = this._molecularProfileGeneFilter.entrezGeneIds.indexOf(entrezGeneId);
+        var _index = -1;
+        _.every(this._cnaGeneFilter.alterations, (val: CopyNumberGeneFilterElement, index: number) => {
+            if (val.entrezGeneId === entrezGeneId && val.alteration === alteration) {
+                _index = index;
+                return false;
+            }
+        });
         if (_index === -1) {
-            this._molecularProfileGeneFilter.entrezGeneIds.push(entrezGeneId);
+            this._cnaGeneFilter.alterations.push({
+                entrezGeneId: entrezGeneId,
+                alteration: alteration
+            });
         } else {
-            this._molecularProfileGeneFilter.entrezGeneIds.splice(_index, 1);
+            this._cnaGeneFilter.alterations.splice(_index, 1);
         }
     }
 
@@ -121,8 +138,12 @@ export class StudyViewPageStore {
             filters.clinicalDataEqualityFilters = clinicalDataEqualityFilter
         }
 
-        if(this._molecularProfileGeneFilter && this._molecularProfileGeneFilter.entrezGeneIds.length > 0) {
-            filters.mutatedGenes = [this._molecularProfileGeneFilter];
+        if(this._mutatedGeneFilter && this._mutatedGeneFilter.entrezGeneIds.length > 0) {
+            filters.mutatedGenes = [this._mutatedGeneFilter];
+        }
+
+        if(this._cnaGeneFilter && this._cnaGeneFilter.alterations.length > 0) {
+            filters.cnaGenes = [this._cnaGeneFilter];
         }
         return filters;
     }
@@ -133,11 +154,11 @@ export class StudyViewPageStore {
     }
 
     public getMutatedGenesTableFilters(): number[] {
-        return this._molecularProfileGeneFilter ? this._molecularProfileGeneFilter.entrezGeneIds : [];
+        return this._mutatedGeneFilter ? this._mutatedGeneFilter.entrezGeneIds : [];
     }
 
-    public getCNAGenesTableFilters(): string[] {
-        return [];
+    public getCNAGenesTableFilters(): CopyNumberGeneFilterElement[] {
+        return this._cnaGeneFilter ? this._cnaGeneFilter.alterations : [];
     }
 
     readonly clinicalAttributes = remoteData({
@@ -230,7 +251,7 @@ export class StudyViewPageStore {
         await: ()=>[],
         invoke: () => {
             return internalClient.fetchMutatedGenesUsingPOST({
-                molecularProfileId: this.molecularProfileId,
+                molecularProfileId: `${this.studyId}_mutations`,
                 studyViewFilter: this.filters
             })
         },
@@ -241,7 +262,7 @@ export class StudyViewPageStore {
         await: ()=>[],
         invoke: () => {
             return internalClient.fetchCNAGenesUsingPOST({
-                molecularProfileId: this.molecularProfileId,
+                molecularProfileId: `${this.studyId}_gistic`,
                 studyViewFilter: this.filters
             })
         },
@@ -269,6 +290,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         this.store = new StudyViewPageStore();
         this.onUserSelection = this.onUserSelection.bind(this);
         this.updateGeneFilter = this.updateGeneFilter.bind(this);
+        this.updateCNAGeneFilter = this.updateCNAGeneFilter.bind(this);
 
         //TODO: this should be done by a module so that it can be reused on other pages
         const reaction1 = reaction(
@@ -276,7 +298,6 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             query => {
                 if ('studyId' in query) {
                     this.store.studyId = query.studyId;
-                    this.store.molecularProfileId = `${this.store.studyId}_mutations`;
                     this.store.sampleAttrIds  = ('sampleAttrIds'  in query ? (query.sampleAttrIds  as string).split(",") : []);
                     this.store.patientAttrIds = ('patientAttrIds' in query ? (query.patientAttrIds as string).split(",") : []);
                 }
