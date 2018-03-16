@@ -28,3 +28,4 @@ wdio/browserstack.txt
 env/custom.sh
 image-compare/errors.js
 errorshots/
+TESTS.xml
