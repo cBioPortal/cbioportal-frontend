@@ -21,6 +21,7 @@ import FadeInteraction from "shared/components/fadeInteraction/FadeInteraction";
 import './styles.scss';
 import {SpecialAttribute} from "../../../cache/ClinicalDataCache";
 const CheckedSelect = require("react-select-checked").CheckedSelect;
+import classNames from "classnames";
 
 export interface IOncoprintControlsHandlers {
     onSelectColumnType?:(type:"sample"|"patient")=>void,
@@ -84,7 +85,7 @@ export interface IOncoprintControlsState {
     selectedHeatmapProfile?:string;
     heatmapIsDynamicallyQueried:boolean;
     heatmapGeneInputValue?: string;
-    clusterHeatmapButtonDisabled?:boolean;
+    clusterHeatmapButtonActive?:boolean;
     hideClusterHeatmapButton?:boolean;
     hideHeatmapMenu?:boolean;
 
@@ -454,10 +455,10 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
 
                         {!this.props.state.hideClusterHeatmapButton &&
                             (<button
-                                 className="btn btn-sm btn-default"
+                                data-test="clusterHeatmapBtn"
+                                 className={classNames("btn", "btn-sm", "btn-default", {active:this.props.state.clusterHeatmapButtonActive})}
                                  name={EVENT_KEY.sortByHeatmapClustering}
                                  onClick={this.onButtonClick}
-                                 disabled={this.props.state.clusterHeatmapButtonDisabled}
                              >Cluster Heatmap</button>)
                         }
                     </div>
@@ -476,10 +477,11 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
     private getSortMenu() {
         return (
             <CustomDropdown bsStyle="default" title="Sort" id="sortDropdown">
-                <div>
+                <div className="oncoprint__controls__sort_menu">
 
                         <div className="radio"><label>
                             <input
+                                data-test="sortByData"
                                 type="radio"
                                 name="sortBy"
                                 value={EVENT_KEY.sortByData}
@@ -530,6 +532,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                                     && !this.props.state.heatmapProfilesPromise.result!.length))
                         && (<div className="radio"><label>
                             <input
+                                data-test="sortByHeatmapClustering"
                                 type="radio"
                                 name="sortBy"
                                 checked={this.props.state.sortMode.type === "heatmap"}
