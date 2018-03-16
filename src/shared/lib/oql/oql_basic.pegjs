@@ -2,11 +2,6 @@ start
 	= SuperQuery
 	/ sp { return false; }
 
-br	= [\n] b:br
-        / ";" b:br
-        / [\n]
-	/ ";"
-
 NaturalNumber = number:[0-9]+ { return number.join("");}
 Number = "-" number: Number { return "-"+number;}
         / whole_part:NaturalNumber "." decimal_part:NaturalNumber { return whole_part + "." + decimal_part;}
@@ -19,9 +14,12 @@ AnyString = anyString:[^"]+ { return anyString.join("") }
 sp = space:[ \t\r]+
 msp = space:[ \t\r]*
 
+zmbs = zero_or_more_breaks_and_spaces:[; \t\r\n]*
+ombs = one_or_more_breaks_and_spaces:[; \t\r\n]+
+
 StartMergedGenes
-	= "[\"" label:AnyString "\"" {return {"label": label, "list":[]};}
-	/ "[" {return {"label": undefined, "list":[]};}
+	= "[" zmbs "\"" label:AnyString "\"" {return {"label": label, "list":[]};}
+	/ "[" zmbs {return {"label": undefined, "list":[]};}
 
 // Case-insensitive keywords
 AMP = "AMP"i
@@ -39,20 +37,12 @@ SuperQuery
 	/ qr:Query {return qr; }
 
 MergedQuery
-	= msp mergedGenes:StartMergedGenes qr:Query "]" msp br mqr:MergedQuery { mergedGenes.list = qr; return [mergedGenes].concat(mqr);; }
-	/ msp mergedGenes:StartMergedGenes qr:Query "]" msp br* { mergedGenes.list = qr; return [mergedGenes]; }
+	= zmbs mergedGenes:StartMergedGenes qr:Query zmbs "]" zmbs mqr:MergedQuery { mergedGenes.list = qr; return [mergedGenes].concat(mqr);; }
+	/ zmbs mergedGenes:StartMergedGenes qr:Query zmbs "]" zmbs { mergedGenes.list = qr; return [mergedGenes]; }
 
 Query
-	= listofgenes:ListOfGenes msp br rest:Query { return listofgenes.map(function(gene) { return {"gene":gene, "alterations":false}; }).concat(rest); }
-        / listofgenes:ListOfGenes msp br { return listofgenes.map(function(gene) { return {"gene":gene, "alterations":false}; }); }
-        / listofgenes:ListOfGenes msp { return listofgenes.map(function(gene) { return {"gene":gene, "alterations":false}; }); }
-	/ msp first:SingleGeneQuery msp br rest:Query  { return [first].concat(rest); }
-	/ msp first:SingleGeneQuery msp br { return [first]; }
-	/ msp first:SingleGeneQuery msp { return [first]; }
-
-ListOfGenes
-	= msp geneName:String msp rest:ListOfGenes { return [geneName].concat(rest);}
-	/ msp geneName1:String msp geneName2:String msp{ return [geneName1, geneName2]; }
+	= zmbs first:SingleGeneQuery ombs rest:Query  { return [first].concat(rest); }
+	/ zmbs first:SingleGeneQuery zmbs { return [first]; }
 
 SingleGeneQuery 
 	= geneName:String msp ":" msp alts:Alterations { return {"gene": geneName, "alterations": alts}; }
