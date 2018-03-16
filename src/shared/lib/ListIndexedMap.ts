@@ -1,7 +1,7 @@
 import _ from "lodash";
 
 function getFolderKey(key:string[]) {
-    return key.join(",");
+    return JSON.stringify(key);
 }
 
 type Entry<R> = { key:string[], value: R };

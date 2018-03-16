@@ -24,16 +24,6 @@ export default class MobxCache<Query, Result> {
     }
 
     public getAll(queries:Query[]):MobxPromise<Result>[] {
-        const key = queries.map(q=>this.queryToKey(q));
-        const existing = this.allCache.get(key);
-        if (existing) {
-            return existing;
-        } else {
-            const newPromise = MobxPromise.all(
-                queries.map(q=>this.get(q))
-            );
-            this.allCache.set(key, newPromise);
-            return newPromise;
-        }
+        return queries.map(q=>this.get(q));
     }
 }
