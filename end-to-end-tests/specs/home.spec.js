@@ -508,6 +508,67 @@ describe('oncoprint', function() {
             )
         });
     });
+    describe("heatmap clustering", ()=>{
+        describe("'Cluster Heatmap' button", ()=>{
+            // THESE TESTs ARE RUN IN SERIAL, cannot be run alone
+            var clusterButtonSelector;
+            var heatmapButtonSelector;
+            var heatmapMenuSelector;
+
+            var sortButtonSelector;
+            var sortMenuSelector;
+            var sortMenuDataRadioSelector;
+            var sortMenuHeatmapRadioSelector;
+
+            before(()=>{
+                heatmapButtonSelector = "#heatmapDropdown";
+                heatmapMenuSelector = "div.oncoprint__controls__heatmap_menu";
+                clusterButtonSelector = heatmapMenuSelector + ' button[data-test="clusterHeatmapBtn"]';
+
+                sortButtonSelector="#sortDropdown";
+                sortMenuSelector = "div.oncoprint__controls__sort_menu";
+                sortMenuDataRadioSelector = sortMenuSelector + ' input[data-test="sortByData"]';
+                sortMenuHeatmapRadioSelector = sortMenuSelector + ' input[data-test="sortByHeatmapClustering"]';
+            });
+
+            it("should be active (pressed) if, and only if, the oncoprint is clustered by the profile selected in the dropdown", ()=>{
+                browser.url(CBIOPORTAL_URL+'/index.do?cancer_study_id=blca_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=blca_tcga_pub_cnaseq&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=blca_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=blca_tcga_pub_gistic&show_samples=false&heatmap_track_groups=blca_tcga_pub_rna_seq_mrna_median_Zscores%2CKRAS%2CNRAS%2CBRAF%3Bblca_tcga_pub_rppa_Zscores%2CKRAS%2CNRAS%2CBRAF');
+                waitForOncoprint(10000);
+
+                // open heatmap menu
+                $(heatmapButtonSelector).click();
+                browser.waitForVisible(heatmapMenuSelector, 2000);
+                assert(browser.getAttribute(clusterButtonSelector, "class").split(/\s+/).indexOf("active") === -1, "button not active - 1");
+                // click button
+                browser.click(clusterButtonSelector);
+                browser.pause(100);// wait for oncoprint to sort
+                assert(browser.getAttribute(clusterButtonSelector, "class").split(/\s+/).indexOf("active") > -1, "button active - 1");
+                // change heatmap profile
+                browser.execute(function() { resultsViewOncoprint.selectHeatmapProfile(1); });
+                assert(browser.getAttribute(clusterButtonSelector, "class").split(/\s+/).indexOf("active") === -1, "button not active - 2");
+                browser.execute(function() { resultsViewOncoprint.selectHeatmapProfile(0); });
+                assert(browser.getAttribute(clusterButtonSelector, "class").split(/\s+/).indexOf("active") > -1, "button active - 2");
+            });
+            it("should return to sort by data when the button is un-clicked", ()=>{
+                // open sort menu, ensure sorted by heatmap clustering order
+                $(sortButtonSelector).click();
+                browser.waitForVisible(sortMenuSelector, 2000);
+                assert(!browser.isSelected(sortMenuDataRadioSelector), "not sorted by data");
+                assert(browser.isSelected(sortMenuHeatmapRadioSelector), "sorted by heatmap clustering");
+                // open heatmap menu and unclick clustering button
+                $(heatmapButtonSelector).click();
+                browser.waitForVisible(heatmapMenuSelector, 2000);
+                assert(browser.getAttribute(clusterButtonSelector, "class").split(/\s+/).indexOf("active") > -1, "button active");
+                browser.click(clusterButtonSelector);
+                assert(browser.getAttribute(clusterButtonSelector, "class").split(/\s+/).indexOf("active") === -1, "button not active");
+                // open sort menu, ensure sorted by data
+                $(sortButtonSelector).click();
+                browser.waitForVisible(sortMenuSelector, 2000);
+                assert(!browser.isSelected(sortMenuHeatmapRadioSelector), "not sorted by heatmap clustering");
+                assert(browser.isSelected(sortMenuDataRadioSelector), "sorted by data");
+            });
+        });
+    });
     describe("sorting", ()=>{
         function topCmp(eltA, eltB) {
             return eltA.top - eltB.top;
