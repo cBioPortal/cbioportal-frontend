@@ -7,22 +7,39 @@ import {remoteData} from "../../shared/api/remoteData";
 import {action, computed, observable, reaction, ObservableMap} from "mobx";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import defaultClient from "shared/api/cbioportalClientInstance";
-import { ClinicalDataCountFilter, StudyViewFilter, ClinicalDataCount, ClinicalDataEqualityFilter } from 'shared/api/generated/CBioPortalAPIInternal';
+import {
+    ClinicalDataCountFilter, StudyViewFilter, ClinicalDataCount, ClinicalDataEqualityFilter,
+    MutationCountByGene, MolecularProfileGeneFilter
+} from 'shared/api/generated/CBioPortalAPIInternal';
 import { PieChart } from './charts/pieChart/PieChart'
 import { ClinicalAttribute } from 'shared/api/generated/CBioPortalAPI';
 import styles from "./styles.module.scss";
+import {MutatedGenesTable} from "./table/MutatedGenesTable";
 
 export type ClinicalDataType= "SAMPLE" | "PATIENT";
 export type ClinicalAttributeData = {[attrId:string]:ClinicalDataCount[]};
 export type ClinicalAttributeDataWithMeta = {attributeId:string,clinicalDataType:ClinicalDataType,counts:ClinicalDataCount[]};
+export type MutatedGenesData = MutationCountByGene[];
 export class StudyViewPageStore {
 
     constructor(){
-
+        this._molecularProfileGeneFilter = {
+            entrezGeneIds: [],
+            molecularProfileId: ''
+        };
+        reaction(
+            () => this.molecularProfileId,
+            (newProfile) => {
+                this._molecularProfileGeneFilter.molecularProfileId = newProfile;
+            },
+            {fireImmediately: true}
+        )
     }
 
     //TODO: make studyId, sampleAttrIds, patientAttrIds dynamic
     // @observable studyId = "hnsc_tcga";
+
+    // @observable molecularProfileId = "hnsc_tcga_mutations";
 
     // @observable sampleAttrIds = ["OCT_EMBEDDED","PRIMARY_SITE","AMPLIFICATION_STATUS"];
 
@@ -30,11 +47,15 @@ export class StudyViewPageStore {
 
     @observable studyId:string;
 
+    @observable molecularProfileId:string;
+
     @observable sampleAttrIds:string[] = [];
 
     @observable patientAttrIds:string[] = [];
 
     @observable private _clinicalDataEqualityFilterSet = observable.map<ClinicalDataEqualityFilter>();
+
+    @observable private _molecularProfileGeneFilter:MolecularProfileGeneFilter;
 
     @action updateClinicalDataEqualityFilters( attributeId      : string,
                                                clinicalDataType : ClinicalDataType,
@@ -68,12 +89,27 @@ export class StudyViewPageStore {
         }
     }
 
+    @action
+    updateGeneFilter(entrezGeneId: number) {
+        let _index = this._molecularProfileGeneFilter.entrezGeneIds.indexOf(entrezGeneId);
+        if (_index === -1) {
+            this._molecularProfileGeneFilter.entrezGeneIds.push(entrezGeneId);
+        } else {
+            this._molecularProfileGeneFilter.entrezGeneIds.splice(_index, 1);
+        }
+    }
+
     @computed get filters() {
         let filters: StudyViewFilter = {} as any;
-        let clinicalDataEqualityFilter= this._clinicalDataEqualityFilterSet.values()
+        let clinicalDataEqualityFilter= this._clinicalDataEqualityFilterSet.values();
+
         //checking for empty since the api throws error when the clinicalDataEqualityFilter array is empty
         if(clinicalDataEqualityFilter.length>0){
             filters.clinicalDataEqualityFilters = clinicalDataEqualityFilter
+        }
+
+        if(this._molecularProfileGeneFilter && this._molecularProfileGeneFilter.entrezGeneIds.length > 0) {
+            filters.mutatedGenes = [this._molecularProfileGeneFilter];
         }
         return filters;
     }
@@ -83,6 +119,9 @@ export class StudyViewPageStore {
         return clinicalDataEqualityFilter ? clinicalDataEqualityFilter.values : [];
     }
 
+    public getMutatedGenesTableFilters(): number[] {
+        return this._molecularProfileGeneFilter ? this._molecularProfileGeneFilter.entrezGeneIds : [];
+    }
 
     readonly clinicalAttributes = remoteData({
         invoke: () => {
@@ -170,6 +209,16 @@ export class StudyViewPageStore {
         default: {}
     });
 
+    readonly mutatedGeneData = remoteData<MutatedGenesData>({
+        await: ()=>[],
+        invoke: () => {
+            return internalClient.fetchMutatedGenesUsingPOST({
+                molecularProfileId: this.molecularProfileId,
+                studyViewFilter: this.filters
+            })
+        },
+        default: []
+    });
 }
 
 
@@ -191,8 +240,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         super();
         this.store = new StudyViewPageStore();
         this.onUserSelection = this.onUserSelection.bind(this);
-
-        super();
+        this.updateGeneFilter = this.updateGeneFilter.bind(this);
 
         //TODO: this should be done by a module so that it can be reused on other pages
         const reaction1 = reaction(
@@ -200,6 +248,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             query => {
                 if ('studyId' in query) {
                     this.store.studyId = query.studyId;
+                    this.store.molecularProfileId = `${this.store.studyId}_mutations`;
                     this.store.sampleAttrIds  = ('sampleAttrIds'  in query ? (query.sampleAttrIds  as string).split(",") : []);
                     this.store.patientAttrIds = ('patientAttrIds' in query ? (query.patientAttrIds as string).split(",") : []);
                 }
@@ -215,7 +264,11 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
 
         this.store.updateClinicalDataEqualityFilters(attrId, clinicalDataType, value)
     }
-    
+
+    private updateGeneFilter(entrezGeneId: number) {
+        this.store.updateGeneFilter(entrezGeneId);
+    }
+
     renderAttributeChart = (clinicalAttribute : ClinicalAttribute,
                             arrayIndex        : number) => {
                             
@@ -237,6 +290,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     }
 
     render(){
+        let mutatedGeneData = this.store.mutatedGeneData.result;
         return (
             <div>
                 {
@@ -247,6 +301,12 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                         </div>
                     )
                 }
+                {(this.store.mutatedGeneData.isComplete && <MutatedGenesTable
+                    data={mutatedGeneData}
+                    numOfSelectedSamples={100}
+                    filters={this.store.getMutatedGenesTableFilters()}
+                    toggleSelection={this.updateGeneFilter}
+                />)}
             </div>
         )
     }
