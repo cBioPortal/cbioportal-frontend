@@ -1,14 +1,16 @@
 import * as React from "react";
+import * as _ from "lodash";
 import {CNAGenesData} from "pages/studyView/StudyViewPage";
 import {default as LazyMobXTable} from "shared/components/lazyMobXTable/LazyMobXTable";
+import {action} from "mobx";
 import {observer} from "mobx-react";
 import styles from "./tables.module.scss";
-import {CopyNumberCountByGene} from "shared/api/generated/CBioPortalAPIInternal";
+import {CopyNumberCountByGene, CopyNumberGeneFilterElement} from "shared/api/generated/CBioPortalAPIInternal";
 import LabeledCheckbox from "../../../shared/components/labeledCheckbox/LabeledCheckbox";
 
 export interface ICNAGenesTablePros {
     data: CNAGenesData;
-    filters: string[];
+    filters: CopyNumberGeneFilterElement[];
     toggleSelection: (entrezGeneId: number, alteration: number) => void;
     numOfSelectedSamples: number;
 }
@@ -18,6 +20,18 @@ class CNAGenesTableComponent extends LazyMobXTable<CopyNumberCountByGene> {
 
 @observer
 export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
+
+    @action
+    isChecked(entrezGeneId: number, alteration: number) {
+        var flag = false;
+        _.every(this.props.filters, (val: CopyNumberGeneFilterElement, index: number) => {
+            if (val.entrezGeneId === entrezGeneId && val.alteration === alteration) {
+                flag = true;
+                return false;
+            }
+        });
+        return flag;
+    }
 
     public render() {
         let data: CNAGenesData = this.props.data;
@@ -45,7 +59,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                                 name: '#',
                                 render: (data: CopyNumberCountByGene) =>
                                     <LabeledCheckbox
-                                        checked={this.props.filters.indexOf([data.entrezGeneId, data.alteration].join('_')) !== -1}
+                                        checked={this.isChecked(data.entrezGeneId, data.alteration)}
                                         onChange={event => this.props.toggleSelection(data.entrezGeneId, data.alteration)}
                                     >
                                         {data.countByEntity}
