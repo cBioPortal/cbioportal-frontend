@@ -360,6 +360,16 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         });
     }
 
+    @action
+    public setAnnotateCBioPortalInputValue(value:string) {
+        this.controlsHandlers.onChangeAnnotateCBioPortalInputValue && this.controlsHandlers.onChangeAnnotateCBioPortalInputValue(value);
+    }
+
+    @action
+    public setAnnotateCOSMICInputValue(value:string) {
+        this.controlsHandlers.onChangeAnnotateCOSMICInputValue && this.controlsHandlers.onChangeAnnotateCOSMICInputValue(value);
+    }
+
     private buildControlsHandlers() {
         const considerChangingDistinguishDrivers = action(()=>{
             if (!this.props.store.mutationAnnotationSettings.oncoKb &&
