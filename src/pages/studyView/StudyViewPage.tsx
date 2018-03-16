@@ -9,17 +9,19 @@ import internalClient from "shared/api/cbioportalInternalClientInstance";
 import defaultClient from "shared/api/cbioportalClientInstance";
 import {
     ClinicalDataCountFilter, StudyViewFilter, ClinicalDataCount, ClinicalDataEqualityFilter,
-    MutationCountByGene, MolecularProfileGeneFilter
+    MutationCountByGene, MolecularProfileGeneFilter, CopyNumberCountByGene
 } from 'shared/api/generated/CBioPortalAPIInternal';
 import { PieChart } from './charts/pieChart/PieChart'
 import { ClinicalAttribute } from 'shared/api/generated/CBioPortalAPI';
 import styles from "./styles.module.scss";
 import {MutatedGenesTable} from "./table/MutatedGenesTable";
+import {CNAGenesTable} from "./table/CNAGenesTable";
 
 export type ClinicalDataType= "SAMPLE" | "PATIENT";
 export type ClinicalAttributeData = {[attrId:string]:ClinicalDataCount[]};
 export type ClinicalAttributeDataWithMeta = {attributeId:string,clinicalDataType:ClinicalDataType,counts:ClinicalDataCount[]};
 export type MutatedGenesData = MutationCountByGene[];
+export type CNAGenesData = CopyNumberCountByGene[];
 export class StudyViewPageStore {
 
     constructor(){
@@ -60,7 +62,7 @@ export class StudyViewPageStore {
     @action updateClinicalDataEqualityFilters( attributeId      : string,
                                                clinicalDataType : ClinicalDataType,
                                                value            : string) {
-        
+
         let id = [clinicalDataType,attributeId].join('_');
 
         let clinicalDataEqualityFilter =this._clinicalDataEqualityFilterSet.get(id);
@@ -99,6 +101,17 @@ export class StudyViewPageStore {
         }
     }
 
+    @action
+    updateCNAGeneFilter(entrezGeneId: number, alteration: number) {
+        let _id = [entrezGeneId, alteration].join('_');
+        let _index = this._molecularProfileGeneFilter.entrezGeneIds.indexOf(entrezGeneId);
+        if (_index === -1) {
+            this._molecularProfileGeneFilter.entrezGeneIds.push(entrezGeneId);
+        } else {
+            this._molecularProfileGeneFilter.entrezGeneIds.splice(_index, 1);
+        }
+    }
+
     @computed get filters() {
         let filters: StudyViewFilter = {} as any;
         let clinicalDataEqualityFilter= this._clinicalDataEqualityFilterSet.values();
@@ -121,6 +134,10 @@ export class StudyViewPageStore {
 
     public getMutatedGenesTableFilters(): number[] {
         return this._molecularProfileGeneFilter ? this._molecularProfileGeneFilter.entrezGeneIds : [];
+    }
+
+    public getCNAGenesTableFilters(): string[] {
+        return [];
     }
 
     readonly clinicalAttributes = remoteData({
@@ -219,6 +236,17 @@ export class StudyViewPageStore {
         },
         default: []
     });
+
+    readonly cnaGeneData = remoteData<CNAGenesData>({
+        await: ()=>[],
+        invoke: () => {
+            return internalClient.fetchCNAGenesUsingPOST({
+                molecularProfileId: this.molecularProfileId,
+                studyViewFilter: this.filters
+            })
+        },
+        default: []
+    });
 }
 
 
@@ -269,9 +297,13 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         this.store.updateGeneFilter(entrezGeneId);
     }
 
+    private updateCNAGeneFilter(entrezGeneId: number, alteration: number) {
+        this.store.updateCNAGeneFilter(entrezGeneId, alteration);
+    }
+
     renderAttributeChart = (clinicalAttribute : ClinicalAttribute,
                             arrayIndex        : number) => {
-                            
+
         let attributeUID = (clinicalAttribute.patientAttribute ? "PATIENT_" : "SAMPLE_")+clinicalAttribute.clinicalAttributeId;
         let filters = this.store.getClinicalDataEqualityFilters(attributeUID)
         let data = this.store.cinicalAttributeData.result[attributeUID]
@@ -283,7 +315,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 <div className="plot">
                     <PieChart onUserSelection= {this.onUserSelection}
                               filters={filters}
-                              data={data}/> 
+                              data={data}/>
                 </div>
             </div>
         );
@@ -291,10 +323,11 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
 
     render(){
         let mutatedGeneData = this.store.mutatedGeneData.result;
+        let cnaGeneData = this.store.cnaGeneData.result;
         return (
             <div>
                 {
-                    (this.store.selectedAttributes.isComplete && this.store.cinicalAttributeData.isComplete) && 
+                    (this.store.selectedAttributes.isComplete && this.store.cinicalAttributeData.isComplete) &&
                     (
                         <div  className={styles.flexContainer}>
                             {this.store.selectedAttributes.result.map(this.renderAttributeChart)}
@@ -306,6 +339,12 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                     numOfSelectedSamples={100}
                     filters={this.store.getMutatedGenesTableFilters()}
                     toggleSelection={this.updateGeneFilter}
+                />)}
+                {(this.store.cnaGeneData.isComplete && <CNAGenesTable
+                    data={cnaGeneData}
+                    numOfSelectedSamples={100}
+                    filters={this.store.getCNAGenesTableFilters()}
+                    toggleSelection={this.updateCNAGeneFilter}
                 />)}
             </div>
         )
