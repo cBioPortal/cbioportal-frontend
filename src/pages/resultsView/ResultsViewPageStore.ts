@@ -1621,8 +1621,10 @@ export class ResultsViewPageStore {
         invoke: ()=>{
             return internalClient.fetchCosmicCountsUsingPOST({
                 keywords: _.uniq(this.mutations.result!.filter((m:Mutation)=>{
-                    const simplifiedMutationType = getSimplifiedMutationType(m.mutationType);
-                    return (simplifiedMutationType === "missense" || simplifiedMutationType === "inframe") && !!m.keyword;
+                    // keyword is what we use to query COSMIC count with, so we need
+                    //  the unique list of mutation keywords to query. If a mutation has
+                    //  no keyword, it cannot be queried for.
+                    return !!m.keyword;
                 }).map((m:Mutation)=>m.keyword))
             });
         }
