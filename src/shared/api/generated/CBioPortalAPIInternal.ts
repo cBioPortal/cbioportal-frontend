@@ -57,6 +57,20 @@ export type CoExpressionFilter = {
         'sampleListId': string
 
 };
+export type CopyNumberCountByGene = {
+    'alteration': number
+
+        'countByEntity': number
+
+        'cytoband': string
+
+        'entrezGeneId': number
+
+        'hugoGeneSymbol': string
+
+        'totalCount': number
+
+};
 export type CosmicMutation = {
     'cosmicMutationId': string
 
@@ -998,6 +1012,82 @@ export default class CBioPortalAPIInternal {
             return response.body;
         });
     };
+
+    fetchCNAGenesUsingPOSTURL(parameters: {
+        'molecularProfileId': string,
+        'studyViewFilter': StudyViewFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/molecular-profiles/{molecularProfileId}/cna-genes/fetch';
+
+        path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch CNA genes by study view filter
+     * @method
+     * @name CBioPortalAPIInternal#fetchCNAGenesUsingPOST
+     * @param {string} molecularProfileId - Molecular Profile ID e.g. acc_tcga_gistic
+     * @param {} studyViewFilter - Study view filter
+     */
+    fetchCNAGenesUsingPOST(parameters: {
+            'molecularProfileId': string,
+            'studyViewFilter': StudyViewFilter,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < CopyNumberCountByGene >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/molecular-profiles/{molecularProfileId}/cna-genes/fetch';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
+
+                if (parameters['molecularProfileId'] === undefined) {
+                    reject(new Error('Missing required  parameter: molecularProfileId'));
+                    return;
+                }
+
+                if (parameters['studyViewFilter'] !== undefined) {
+                    body = parameters['studyViewFilter'];
+                }
+
+                if (parameters['studyViewFilter'] === undefined) {
+                    reject(new Error('Missing required  parameter: studyViewFilter'));
+                    return;
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
 
     fetchCoExpressionsUsingPOSTURL(parameters: {
         'molecularProfileId': string,
