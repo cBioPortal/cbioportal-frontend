@@ -1,64 +1,39 @@
-import {action, autorun, computed, IReactionDisposer, observable} from "mobx";
-import {MobxPromise} from "mobxpromise";
+import {MobxPromise, MobxPromiseInputParams} from "mobxpromise";
+import ListIndexedMap from "shared/lib/ListIndexedMap";
 
-export class CacheLeaf<Data> implements MobxPromise<Data> {
-    @observable status = "complete" | "pending" | "error";
-    @observable result:Data|undefined = undefined;
-    @observable error:any;
-    @computed get isComplete() {
-        return this.status === "complete";
-    }
-    @computed get isPending() {
-        return this.status === "pending";
-    }
-    @computed get isError() {
-        return this.status === "error";
-    }
-
-    constructor(private promise:Promise<Data>) {
-        promise.then(
-            action(result=>{
-                this.result = result;
-                this.status = "complete";
-            }),
-            action(error=>{
-                this.error = error;
-                this.status = "error";
-            })
-        );
-    }
-}
-
-export default class MobxCache<Args, Data> {
-    private cache:{[key:string]:CacheLeaf<Data>};
-
-    private clearReaction?:IReactionDisposer;
-    private argsToKey?:(args:Args)=>string;
+export default class MobxCache<Query, Result> {
+    private cache:{[key:string]:MobxPromise<Result>};
+    private allCache:ListIndexedMap<MobxPromise<Result[]>>;
 
     constructor(
-        private argsToData:(args:Args)=>Promise<Data>,
-        options?:{
-            clearReactionTrigger?:()=>void,
-            argsToKey?:(args:Args)=>string
-        }
+        private queryToMobxPromiseInput:(q:Query)=>MobxPromiseInputParams<Result>,
+        private queryToKey?:(q:Query)=>string
     ) {
         this.cache = {};
+        this.allCache = new ListIndexedMap<>();
 
-        if (options && options.clearReactionTrigger) {
-            this.clearReaction = autorun(()=>{
-                options.clearReactionTrigger(); // any observables referenced in this function will now trigger a cache clear
-                this.cache = {};
-            });
+        this.queryToKey = this.queryToKey || JSON.stringify;
+    }
+
+    public get(q:Query):MobxPromise<Result> {
+        const key = this.queryToKey(q);
+        if (!this.cache[key]) {
+            this.cache[key] = new MobxPromise<Result>(this.queryToMobxPromiseInput(q));
         }
+        return this.cache[key];
     }
 
-    public get(args:Args) {
-        const key = this.argsToKey ? this.argsToKey(args) : JSON.stringify(args);
-        cache[key] = cache[key] || new CacheLeaf<Data>(this.argsToData(args));
-        return cache[key];
-    }
-
-    public destroy() {
-        this.clearReaction && this.clearReaction();
+    public getAll(queries:Query[]):MobxPromise<Result>[] {
+        const key = queries.map(q=>this.queryToKey(q));
+        const existing = this.allCache.get(key);
+        if (existing) {
+            return existing;
+        } else {
+            const newPromise = MobxPromise.all(
+                queries.map(q=>this.get(q))
+            );
+            this.allCache.set(key, newPromise);
+            return newPromise;
+        }
     }
 }
