@@ -1439,6 +1439,35 @@
       },
       "title": "CopyNumberCountByGene"
     },
+    "CopyNumberGeneFilter": {
+      "type": "object",
+      "properties": {
+        "alterations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CopyNumberGeneFilterElement"
+          }
+        },
+        "molecularProfileId": {
+          "type": "string"
+        }
+      },
+      "title": "CopyNumberGeneFilter"
+    },
+    "CopyNumberGeneFilterElement": {
+      "type": "object",
+      "properties": {
+        "alteration": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "CopyNumberGeneFilterElement"
+    },
     "CosmicMutation": {
       "type": "object",
       "required": [
@@ -1785,22 +1814,6 @@
       },
       "title": "Info"
     },
-    "MolecularProfileGeneFilter": {
-      "type": "object",
-      "properties": {
-        "entrezGeneIds": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "molecularProfileId": {
-          "type": "string"
-        }
-      },
-      "title": "MolecularProfileGeneFilter"
-    },
     "MrnaPercentile": {
       "type": "object",
       "required": [
@@ -1904,6 +1917,22 @@
       },
       "title": "MutationCountByGene"
     },
+    "MutationGeneFilter": {
+      "type": "object",
+      "properties": {
+        "entrezGeneIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "molecularProfileId": {
+          "type": "string"
+        }
+      },
+      "title": "MutationGeneFilter"
+    },
     "MutationSpectrum": {
       "type": "object",
       "required": [
@@ -1988,10 +2017,16 @@
             "$ref": "#/definitions/ClinicalDataEqualityFilter"
           }
         },
+        "cnaGenes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CopyNumberGeneFilter"
+          }
+        },
         "mutatedGenes": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/MolecularProfileGeneFilter"
+            "$ref": "#/definitions/MutationGeneFilter"
           }
         },
         "sampleIds": {
