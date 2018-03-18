@@ -6,16 +6,16 @@
 
 //var filterData = function (oql_query, data, _accessors, opt_default_oql, opt_by_oql_line, opt_mark_oql_regulation_direction)
 
-import {OQLQuery} from "./oql-parser";
+import {SingleGeneQuery} from "./oql-parser";
 import {AnnotatedMutation, ExtendedAlteration} from "../../../pages/resultsView/ResultsViewPageStore";
 import {NumericGeneMolecularData, Mutation} from "../../api/generated/CBioPortalAPI";
 
 export type OQLLineFilterOutput<T> = {
     gene: string;
-    parsed_oql_line: OQLQuery;
+    parsed_oql_line: SingleGeneQuery[];
     oql_line: string;
     data: T[];
-}
+};
 
 export declare function filterCBioPortalWebServiceData(oql_query:string, data:(Mutation | NumericGeneMolecularData)[], accessors:any, default_oql:string): ExtendedAlteration[];
 

@@ -1,38 +1,109 @@
+/* eslint camelcase: "off" */
 // Heavily dependent on OQL PEGjs specification
+import * as _ from 'lodash';
 import oql_parser from './oql-parser';
 
-
-var parseOQLQuery = function (oql_query, opt_default_oql) {
-    /*	In: - oql_query, a string, an OQL query
+function parseOQLQuery(oql_query, opt_default_oql = '') {
+    /* In: - oql_query, a string, an OQL query
      - opt_default_oql, a string, default OQL to add to any empty line
-     Out: An array, with each element being a parsed OQL line, with
-     all 'DATATYPES' lines applied to subsequent lines and removed.
+     Out: An array, with each element being a parsed single-gene OQL line,
+     with all 'DATATYPES' lines applied to subsequent lines and removed.
      */
-    opt_default_oql = opt_default_oql || "";
-    var parsed = oql_parser.parse(oql_query);
 
-    var datatypes_alterations = false;
-    for (var i = 0; i < parsed.length; i++) {
-        if (parsed[i].gene.toLowerCase() === "datatypes") {
-            datatypes_alterations = parsed[i].alterations;
-        } else if (datatypes_alterations && !parsed[i].alterations) {
-            parsed[i].alterations = datatypes_alterations;
-        }
+    function isDatatypeStatement(line) {
+        return line.gene !== undefined && line.gene.toUpperCase() === 'DATATYPES';
+    }
+    function isMergedTrackLine(line) {
+        return line.list !== undefined;
     }
 
-    if (opt_default_oql.length > 0) {
-        for (var i = 0; i < parsed.length; i++) {
-            if (!parsed[i].alterations) {
-                parsed[i].alterations = oql_parser.parse("DUMMYGENE:" + opt_default_oql + ";")[0].alterations;
+    /* In:
+    *     - oql_lines:
+    *         (DatatypeStatement | MergedTrackLine | SingleGeneLine)[]
+    *     - intial_dt: Alterations
+    * Out:
+    *     (SingleGeneLine|MergedTrackLine)[]
+    */
+    function applyDatatypes(oql_lines, initial_dt) {
+        /* In:
+         *     - dt_state: Alterations
+         *     - line: DatatypeStatement | MergedTrackLine | SingleGeneLine
+         * Out:
+         *     {
+         *         dt_state: Alterations,
+         *         query_line: [SingleGeneLine|MergedTrackLine] | []
+         *     }
+         */
+        function evaluateDt(dt_state, line) {
+            if (isDatatypeStatement(line)) {
+                return {
+                    dt_state: line.alterations,
+                    query_line: []
+                };
+            } else if (isMergedTrackLine(line)) {
+                const applied_list = applyDatatypes(line.list, dt_state);
+                return {
+                    dt_state,
+                    query_line: [_.assign({}, line, { list: applied_list })]
+                };
+            } else {
+                const applied_alterations = line.alterations || dt_state;
+                return {
+                    dt_state,
+                    query_line: [_.assign({}, line, { alterations: applied_alterations })]
+                };
             }
         }
-        ;
+
+        /* In:
+        *     - current_result:
+        *         {
+        *             dt_state: Alterations,
+        *             query: (SingleGeneLine|MergedTrackLine)[]
+        *         }
+        *     - line: OQLQueryLine
+        * Out:
+        *     {
+        *         dt_state: Alterations,
+        *         query: (SingleGeneLine|MergedTrackLine)[]
+        *     }
+        */
+        function appendDtResult({ dt_state, query }, line) {
+            const { dt_state: new_dt_state, query_line } = evaluateDt(dt_state, line);
+            return {
+                dt_state: new_dt_state,
+                query: query.concat(query_line)
+            };
+        }
+
+        return oql_lines.reduce(
+            appendDtResult,
+            { dt_state: initial_dt, query: [] }
+        ).query;
     }
 
-    return parsed.filter(function (parsed_line) {
-        return parsed_line.gene.toLowerCase() !== "datatypes";
-    });
-};
+    /* In: SingleGeneLine | MergedTrackLine
+     * Out: SingleGeneLine[]
+     */
+    function extractGeneLines(line) {
+        return (isMergedTrackLine(line)
+            ? line.list
+            : [line]
+        );
+    }
+
+    const parsed = oql_parser.parse(oql_query);
+    const parsed_with_datatypes = applyDatatypes(parsed, false)
+    const parsed_by_gene = _.flatMap(parsed_with_datatypes, extractGeneLines);
+    if (opt_default_oql.length > 0) {
+        for (var i = 0; i < parsed_by_gene.length; i++) {
+            if (!parsed_by_gene[i].alterations) {
+                parsed_by_gene[i].alterations = oql_parser.parse("DUMMYGENE:" + opt_default_oql + ";")[0].alterations;
+            }
+        }
+    }
+    return parsed_by_gene;
+}
 
 var parsedOQLAlterationToSourceOQL = function(alteration) {
     if (alteration.alteration_type === "cna") {
@@ -338,7 +409,8 @@ var filterData = function (oql_query, data, _accessors, opt_default_oql, opt_by_
      *  Out: the given data, filtered by the given oql query.
      *	* If opt_by_oql_line is true, then the result is a list of lists,
      *	    where out[i] = the result of filtering the given data by oql_query
-     *	    line i (after removing 'DATATYPES' lines).
+     *	    line i (after removing 'DATATYPES' lines and flattening merged
+     *	    track lines into their individual genes).
      *	* If opt_by_oql_line is false, then the result is just a flat list,
      *	    the data that is wanted by at least one oql line.
      */
