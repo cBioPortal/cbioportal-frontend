@@ -24479,7 +24479,9 @@ var OncoprintLegendView = (function() {
 	}
 	var everything_box = everything_group.getBBox();
 	view.$svg[0].setAttribute('width', everything_box.width);
-	view.$svg[0].setAttribute('height', everything_box.height);
+	// add 10px to height to give room for rectangle stroke, which doesn't factor in accurately into the bounding box
+	//  so that bounding boxes are too small to show the entire stroke (see https://github.com/cBioPortal/cbioportal/issues/3994)
+	view.$svg[0].setAttribute('height', everything_box.height + 10);
     };
     
     var ruleToSVGGroup = function(rule, view, model, target_svg, target_defs) {
