@@ -662,6 +662,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
 
             nsDatum1 = {
                 entrezGeneId: 2,
+                genePanelId:"GENEPANEL1",
                 uniqueSampleKey: "PATIENT1 SAMPLE1",
                 uniquePatientKey: "PATIENT1",
                 sequenced: false
@@ -669,6 +670,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
 
             nsDatum2 = {
                 entrezGeneId: 2,
+                genePanelId:"GENEPANEL1",
                 uniqueSampleKey: "PATIENT2 SAMPLE1",
                 uniquePatientKey: "PATIENT2",
                 sequenced: false
