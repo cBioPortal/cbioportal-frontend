@@ -120,6 +120,10 @@ export function getClinicalTrackRuleSetParams(track:ClinicalTrackSpec) {
 }
 
 export function percentAltered(altered:number, sequenced:number) {
+    if (sequenced === 0) {
+        return "N/S";
+    }
+
     const p = altered/sequenced;
     const percent = 100*p;
     let fixed:string;
@@ -149,6 +153,7 @@ export function alterationInfoForCaseAggregatedDataByOQLLine(
         sampleMode ?
             sequencedSampleKeysByGene[data.oql.gene].length :
             sequencedPatientKeysByGene[data.oql.gene].length;
+
     const altered =
         sampleMode ?
             Object.keys(data.cases.samples).filter(k=>!!data.cases.samples[k].length).length :
