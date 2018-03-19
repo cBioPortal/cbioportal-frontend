@@ -26,7 +26,7 @@ export function transition(
     const notKeepingSorted = shouldNotKeepSortedForTransition(nextProps, prevProps);
     const suppressingRendering = shouldSuppressRenderingForTransition(nextProps, prevProps);
     if (suppressingRendering) {
-        oncoprint.suppressRendering();
+        doSuppressRendering(nextProps, oncoprint);
     }
     if (notKeepingSorted) {
         oncoprint.keepSorted(false);
@@ -46,7 +46,7 @@ export function transition(
         oncoprint.keepSorted(true);
     }
     if (suppressingRendering) {
-        oncoprint.releaseRendering();
+        doReleaseRendering(nextProps, oncoprint);
     }
 }
 
@@ -75,13 +75,28 @@ export function transitionTrackGroupSortPriority(
     }
 }
 
+function doSuppressRendering(
+    nextProps:IOncoprintProps,
+    oncoprint:OncoprintJS<any>
+) {
+    oncoprint.suppressRendering();
+    nextProps.onSuppressRendering && nextProps.onSuppressRendering();
+}
+
+function doReleaseRendering(
+    nextProps:IOncoprintProps,
+    oncoprint:OncoprintJS<any>
+) {
+    oncoprint.releaseRendering(nextProps.onReleaseRendering);
+}
+
 function trySuppressRendering(
     nextProps:IOncoprintProps,
     prevProps:Partial<IOncoprintProps>,
     oncoprint:OncoprintJS<any>
 ){
     if (nextProps.suppressRendering && !prevProps.suppressRendering) {
-        oncoprint.suppressRendering();
+        doSuppressRendering(nextProps, oncoprint);
     }
 }
 
@@ -91,7 +106,7 @@ function tryReleaseRendering(
     oncoprint:OncoprintJS<any>
 ){
     if (!nextProps.suppressRendering && prevProps.suppressRendering) {
-        oncoprint.releaseRendering();
+        doReleaseRendering(nextProps, oncoprint);
     }
 }
 
