@@ -1609,6 +1609,7 @@ export default class OncoKbAPI {
         'hugoSymbol' ? : string,
         'entrezGeneId' ? : number,
         'variant' ? : string,
+        'variantType' ? : string,
         'svType' ? : "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION" | "FUSION",
         'consequence' ? : string,
         'proteinStart' ? : number,
@@ -1639,6 +1640,10 @@ export default class OncoKbAPI {
 
         if (parameters['variant'] !== undefined) {
             queryParameters['variant'] = parameters['variant'];
+        }
+
+        if (parameters['variantType'] !== undefined) {
+            queryParameters['variantType'] = parameters['variantType'];
         }
 
         if (parameters['svType'] !== undefined) {
@@ -1707,6 +1712,7 @@ export default class OncoKbAPI {
      * @param {string} hugoSymbol - The gene symbol used in Human Genome Organisation.
      * @param {integer} entrezGeneId - The entrez gene ID.
      * @param {string} variant - Variant name.
+     * @param {string} variantType - Variant type.
      * @param {string} svType - Structural Variant Type.
      * @param {string} consequence - Consequence
      * @param {integer} proteinStart - Protein Start
@@ -1725,6 +1731,7 @@ export default class OncoKbAPI {
         'hugoSymbol' ? : string,
         'entrezGeneId' ? : number,
         'variant' ? : string,
+        'variantType' ? : string,
         'svType' ? : "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION" | "FUSION",
         'consequence' ? : string,
         'proteinStart' ? : number,
@@ -1766,6 +1773,10 @@ export default class OncoKbAPI {
 
             if (parameters['variant'] !== undefined) {
                 queryParameters['variant'] = parameters['variant'];
+            }
+
+            if (parameters['variantType'] !== undefined) {
+                queryParameters['variantType'] = parameters['variantType'];
             }
 
             if (parameters['svType'] !== undefined) {
