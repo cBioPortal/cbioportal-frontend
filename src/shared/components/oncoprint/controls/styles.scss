@@ -3,7 +3,7 @@
 .oncoprint__controls {
 
   display:flex;
-  margin-top:10px;
+  padding-top:10px; /* this should be margin top but for some reason produces very strange jump affect */
 
   .rangeslider {
     margin:0;
