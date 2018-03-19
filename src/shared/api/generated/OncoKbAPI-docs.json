@@ -764,6 +764,13 @@
             "type": "string"
           },
           {
+            "name": "variantType",
+            "in": "query",
+            "description": "Variant type.",
+            "required": false,
+            "type": "string"
+          },
+          {
             "name": "svType",
             "in": "query",
             "description": "Structural Variant Type.",
