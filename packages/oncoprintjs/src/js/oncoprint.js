@@ -968,13 +968,13 @@ var Oncoprint = (function () {
 	}
     }
 
-    Oncoprint.prototype.triggerPendingResizeAndOrganize = function() {
+    Oncoprint.prototype.triggerPendingResizeAndOrganize = function(onComplete) {
         if(this.webgl_unavailable) {
             return;
         }
     	if (this.pending_resize_and_organize) {
     		this.pending_resize_and_organize = false;
-    		resizeAndOrganizeAfterTimeout(this);
+    		resizeAndOrganizeAfterTimeout(this, onComplete);
 		}
 	}
     
