@@ -160,7 +160,7 @@ declare module "oncoprintjs"
         setIdOrder:(ids:string[])=>void;
         suppressRendering:()=>void;
         releaseRendering:(onComplete?:()=>void)=>void;
-        triggerPendingResizeAndOrganize:()=>void;
+        triggerPendingResizeAndOrganize:(onComplete?:()=>void)=>void;
         hideIds:(to_hide:string[], show_others?:boolean)=>void;
         hideTrackLegends:(track_ids:TrackId[])=>void;
         showTrackLegends:(track_ids:TrackId[])=>void;
