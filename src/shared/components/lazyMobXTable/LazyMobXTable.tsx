@@ -28,6 +28,7 @@ export type SortDirection = 'asc' | 'desc';
 export type Column<T> = {
     name: string;
     headerRender?:(name:string)=>JSX.Element;
+    headerDownload?:(name:string)=>string;
     align?:"left"|"center"|"right";
     filter?:(data:T, filterString:string, filterStringUpper?:string, filterStringLower?:string)=>boolean;
     visible?:boolean;
@@ -266,7 +267,7 @@ class LazyMobXTableStore<T> {
         // add header (including hidden columns)
         tableDownloadData[0] = [];
         this.columns.forEach((column:Column<T>) => {
-            tableDownloadData[0].push(column.name);
+            tableDownloadData[0].push(column.headerDownload ? column.headerDownload(column.name) : column.name);
         });
 
         // add rows (including hidden columns). The purpose of this part is to ensure that
