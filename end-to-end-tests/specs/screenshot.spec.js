@@ -110,6 +110,17 @@ describe("oncoprint screenshot tests", function() {
     });
 });
 
+describe("download tab screenshot tests", function() {
+    it("download tab - msk_impact_2017 with ALK and SOS1 - SOS1 should be not sequenced", function() {
+        var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=msk_impact_2017_all&gene_list=ALK%2520SOS1&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=msk_impact_2017_cna`;
+        goToUrlAndSetLocalStorage(url);
+        browser.click("[href='#data_download']");
+        browser.waitForExist('[data-test="dataDownloadGeneAlterationTable"] tr > td > svg', 20000);
+        var res = browser.checkElement('#data_download',{hide:['.qtip'] });
+        assertScreenShotMatch(res);
+    });
+});
+
 
 describe('patient view page screenshot test', function(){
     before(function(){
