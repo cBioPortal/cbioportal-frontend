@@ -1104,6 +1104,22 @@ describe('LazyMobXTable', ()=>{
                 "3\t-1\tzijxcpo\t\t3HELLO123456\t\t\r\n"+
                 "4\t90\tzkzxc\t\t4HELLO123456\t\t\r\n");
         });
+
+        it("gives the correct column names when headerDownload is defined", async () => {
+            const cols = [{
+                name: "Myth",
+                render:(d:any)=><span/>
+            },{
+                name: "Science",
+                render:(d:any)=><span/>,
+                headerDownload:(name:string) => `${name}: Ruining everything since 1543`
+            }];
+
+            const table = mount(<Table columns={cols} data={[]}/>);
+
+            assert.deepEqual((await (table.instance() as LazyMobXTable<any>).getDownloadDataPromise()).text,
+                "Myth\tScience: Ruining everything since 1543\r\n");
+        });
     });
     describe('pagination', ()=>{
         it("starts with 50 items per page", ()=>{

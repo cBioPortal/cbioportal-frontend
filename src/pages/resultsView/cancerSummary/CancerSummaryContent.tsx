@@ -32,7 +32,7 @@ export const OrderedAlterationLabelMap: Record<keyof IAlterationCountMap, string
 const alterationToColor: Record<keyof IAlterationCountMap, string> = {
     mutated: "#008000",
     amp: "#ff0000",
-    homdel: "rgb(0,0,255)",
+    homdel: "#8fd8d8",
     hetloss: "#000",
     gain: "rgb(255,182,193)",
     fusion: "#8B00C9",
