@@ -181,7 +181,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                     </VictoryChart>
                 </div>
                 {this.tooltipModel &&
-                    <Popover arrowOffsetTop={48} className={styles.Tooltip} positionLeft={this.tooltipModel.x + 15}
+                    <Popover arrowOffsetTop={56} className={styles.Tooltip} positionLeft={this.tooltipModel.x + 15}
                              { ...{container:this} }
                         positionTop={this.tooltipModel.y - 60}
                         onMouseEnter={this.tooltipMouseEnter} onMouseLeave={this.tooltipMouseLeave}>
