@@ -27,6 +27,10 @@ export type UnflattenedOQLLineFilterOutput<T> = (
     OQLLineFilterOutput<T> | MergedTrackLineFilterOutput<T>
 );
 
+export declare function isMergedTrackFilter<T>(
+    oqlFilter: UnflattenedOQLLineFilterOutput<T>
+): oqlFilter is MergedTrackLineFilterOutput<T>;
+
 /* Interprets datatypes statements and flattens out merged track queries. */
 export declare function parseOQLQuery(
     oql_query: string,
