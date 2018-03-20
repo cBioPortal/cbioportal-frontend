@@ -73,7 +73,7 @@ git commit -n
 
 ## Changing the URL of API
 If the version of the desired API URL is the same as the one used to generate
-the typescipt client, one can hange the `API_ROOT` variable for development in
+the typescipt client, one can change the `API_ROOT` variable for development in
 [my-index.ejs](my-index.ejs). If the version is different, make sure the API
 endpoint works with the checked in client by changing the API URL in
 [package.json](package.json) and running:
