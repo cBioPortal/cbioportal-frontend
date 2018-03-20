@@ -20,7 +20,8 @@ export interface IDownloadFileRow {
     alterationData: {[gene: string]: string[]};
 }
 
-export function generateOqlData(datum: GeneticTrackDatum): IOqlData
+export function generateOqlData(datum: GeneticTrackDatum,
+                                geneAlterationDataByGene?: {[gene: string]: IGeneAlteration}): IOqlData
 {
     const proteinChanges: string[] = [];
     const fusions: string[] = [];
@@ -72,6 +73,9 @@ export function generateOqlData(datum: GeneticTrackDatum): IOqlData
     }
 
     return ({
+        // by default assume it is sequenced if no gene alteration data exists for a particular gene
+        sequenced: geneAlterationDataByGene && geneAlterationDataByGene[datum.gene] ?
+            geneAlterationDataByGene[datum.gene].sequenced > 0 : true,
         geneSymbol: datum.gene,
         mutation: proteinChanges,
         fusion: fusions,
@@ -272,7 +276,8 @@ export function generateCaseAlterationData(
         oql:OQLLineFilterOutput<AnnotatedExtendedAlteration>
     }[],
     genePanelInformation?: GenePanelInformation,
-    samples: Sample[] = []): ICaseAlteration[]
+    samples: Sample[] = [],
+    geneAlterationDataByGene?: {[gene: string]: IGeneAlteration}): ICaseAlteration[]
 {
     const caseAlterationData: {[studyCaseId: string] : ICaseAlteration} = {};
 
@@ -305,7 +310,7 @@ export function generateCaseAlterationData(
 
                 // for each track (for each oql line/gene) the oql data is different
                 // that's why we need a map here
-                caseAlterationData[key].oqlData[data.oql.oql_line] = generateOqlData(datum);
+                caseAlterationData[key].oqlData[data.oql.oql_line] = generateOqlData(datum, geneAlterationDataByGene);
             });
         });
     }
