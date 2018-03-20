@@ -39,6 +39,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
         return (
             <div className={styles.table}>
                 <CNAGenesTableComponent
+                    initialItemsPerPage={15}
                     data={data}
                     columns={
                         [

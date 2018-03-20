@@ -25,6 +25,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
         return (
             <div className={styles.table}>
                 <MutatedGenesTableComponent
+                    initialItemsPerPage={15}
                     data={data}
                     columns={
                         [
