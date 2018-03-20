@@ -23,5 +23,8 @@
 }
 
 .flexContainer {
-    display: flex;
+    display: inline-flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding: 10px;
 }
