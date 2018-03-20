@@ -10,6 +10,10 @@ function isMergedTrackLine(line) {
     return line.list !== undefined;
 }
 
+export function isMergedTrackFilter(oqlFilter) {
+    return oqlFilter.list !== undefined;
+}
+
 function parseMergedTrackOQLQuery(oql_query, opt_default_oql = '') {
     /* In: - oql_query, a string, an OQL query
      - opt_default_oql, a string, default OQL to add to any empty line
