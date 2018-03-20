@@ -20,6 +20,7 @@ import {ClinicalAttribute} from 'shared/api/generated/CBioPortalAPI';
 import styles from "./styles.module.scss";
 import {MutatedGenesTable} from "./table/MutatedGenesTable";
 import {CNAGenesTable} from "./table/CNAGenesTable";
+import { ResultsViewPageStore } from 'pages/resultsView/ResultsViewPageStore';
 
 export type ClinicalDataType= "SAMPLE" | "PATIENT";
 export type ClinicalAttributeData = {[attrId:string]:ClinicalDataCount[]};
@@ -273,6 +274,7 @@ export class StudyViewPageStore {
 
 export interface IStudyViewPageProps {
     routing: any;
+    resultsViewPageStore:ResultsViewPageStore;
 }
 
 // making this an observer (mobx-react) causes this component to re-render any time
@@ -300,6 +302,11 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                     this.store.studyId = query.studyId;
                     this.store.sampleAttrIds  = ('sampleAttrIds'  in query ? (query.sampleAttrIds  as string).split(",") : []);
                     this.store.patientAttrIds = ('patientAttrIds' in query ? (query.patientAttrIds as string).split(",") : []);
+                } else {
+                    let studies = this.props.resultsViewPageStore.studyIds.result
+                    if(studies && studies.length>0){
+                        this.store.studyId = studies[0];
+                    }
                 }
             },
             { fireImmediately:true }
@@ -346,7 +353,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         let mutatedGeneData = this.store.mutatedGeneData.result;
         let cnaGeneData = this.store.cnaGeneData.result;
         return (
-            <div>
+            <div style={{overflowY: "scroll", border:"1px solid #cccccc"}}>
                 {
                     (this.store.selectedAttributes.isComplete && this.store.cinicalAttributeData.isComplete) &&
                     (
