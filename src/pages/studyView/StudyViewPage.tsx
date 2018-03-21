@@ -16,7 +16,7 @@ import {
     StudyViewFilter
 } from 'shared/api/generated/CBioPortalAPIInternal';
 import {PieChart} from './charts/pieChart/PieChart'
-import {ClinicalAttribute} from 'shared/api/generated/CBioPortalAPI';
+import {ClinicalAttribute, MolecularProfile} from 'shared/api/generated/CBioPortalAPI';
 import styles from "./styles.module.scss";
 import {MutatedGenesTable} from "./table/MutatedGenesTable";
 import {CNAGenesTable} from "./table/CNAGenesTable";
@@ -30,22 +30,6 @@ export type CNAGenesData = CopyNumberCountByGene[];
 export class StudyViewPageStore {
 
     constructor(){
-        this._mutatedGeneFilter = {
-            entrezGeneIds: [],
-            molecularProfileId: ''
-        };
-        this._cnaGeneFilter = {
-            alterations: [],
-            molecularProfileId: ''
-        };
-        reaction(
-            () => this.studyId,
-            (newStudyId) => {
-                this._mutatedGeneFilter.molecularProfileId = `${newStudyId}_mutations`;
-                this._cnaGeneFilter.molecularProfileId = `${newStudyId}_gistic`;
-            },
-            {fireImmediately: true}
-        )
     }
 
     @observable studyId:string;
@@ -94,31 +78,44 @@ export class StudyViewPageStore {
 
     @action
     updateGeneFilter(entrezGeneId: number) {
-        let _index = this._mutatedGeneFilter.entrezGeneIds.indexOf(entrezGeneId);
+        let mutatedGeneFilter = this._mutatedGeneFilter
+        if(!mutatedGeneFilter) {
+            mutatedGeneFilter = { molecularProfileId : this.mutationProfileId, entrezGeneIds: []}
+        } 
+        let _index = mutatedGeneFilter.entrezGeneIds.indexOf(entrezGeneId);
         if (_index === -1) {
-            this._mutatedGeneFilter.entrezGeneIds.push(entrezGeneId);
+            mutatedGeneFilter.entrezGeneIds.push(entrezGeneId);
         } else {
-            this._mutatedGeneFilter.entrezGeneIds.splice(_index, 1);
+            mutatedGeneFilter.entrezGeneIds.splice(_index, 1);
         }
+        this._mutatedGeneFilter = mutatedGeneFilter
     }
 
     @action
     updateCNAGeneFilter(entrezGeneId: number, alteration: number) {
+        let _cnaGeneFilter = this._cnaGeneFilter;
+        if(!_cnaGeneFilter) {
+            _cnaGeneFilter = {
+                    alterations: [],
+                    molecularProfileId: this.cnaProfileId
+                }
+        }
         var _index = -1;
-        _.every(this._cnaGeneFilter.alterations, (val: CopyNumberGeneFilterElement, index: number) => {
+        _.every(_cnaGeneFilter.alterations, (val: CopyNumberGeneFilterElement, index: number) => {
             if (val.entrezGeneId === entrezGeneId && val.alteration === alteration) {
                 _index = index;
                 return false;
             }
         });
         if (_index === -1) {
-            this._cnaGeneFilter.alterations.push({
+            _cnaGeneFilter.alterations.push({
                 entrezGeneId: entrezGeneId,
                 alteration: alteration
             });
         } else {
-            this._cnaGeneFilter.alterations.splice(_index, 1);
+            _cnaGeneFilter.alterations.splice(_index, 1);
         }
+        this._cnaGeneFilter = _cnaGeneFilter;
     }
 
     @computed get filters() {
@@ -151,6 +148,37 @@ export class StudyViewPageStore {
 
     public getCNAGenesTableFilters(): CopyNumberGeneFilterElement[] {
         return this._cnaGeneFilter ? this._cnaGeneFilter.alterations : [];
+    }
+
+    readonly molecularProfiles = remoteData<MolecularProfile[]>({
+		invoke: async () => {
+			return await defaultClient.getAllMolecularProfilesInStudyUsingGET({
+				studyId: this.studyId
+			});
+		},
+		default: []
+    });
+    
+    @computed get mutationProfileId():string {
+        var i;
+        let molecularProfiles = this.molecularProfiles.result
+        for (i=0; i<molecularProfiles.length; i++) {
+            if (molecularProfiles[i].molecularAlterationType === "MUTATION_EXTENDED"){
+                return molecularProfiles[i].molecularProfileId
+            }
+        }
+        return '';
+    }
+
+    @computed get cnaProfileId():string {
+        var i;
+        let molecularProfiles = this.molecularProfiles.result
+        for (i=0; i<molecularProfiles.length; i++) {
+            if(molecularProfiles[i].molecularAlterationType === "COPY_NUMBER_ALTERATION" && molecularProfiles[i].datatype === "DISCRETE"){
+                return molecularProfiles[i].molecularProfileId
+            }
+        }
+        return '';
     }
 
     readonly clinicalAttributes = remoteData({
@@ -188,7 +216,7 @@ export class StudyViewPageStore {
                     attributeIds: visibleClinicalAttributes
                                     .filter(attribute => !attribute.patientAttribute)
                                     .map(attribute => attribute.clinicalAttributeId),
-                    filter: this.filters
+                    filter: {} as any
                 }
             })
 
@@ -199,7 +227,7 @@ export class StudyViewPageStore {
                     attributeIds: visibleClinicalAttributes
                                     .filter(attribute => attribute.patientAttribute)
                                     .map(attribute => attribute.clinicalAttributeId),
-                    filter: this.filters
+                    filter: {} as any
                 }
             })
 
@@ -292,10 +320,10 @@ export class StudyViewPageStore {
     });
 
     readonly mutatedGeneData = remoteData<MutatedGenesData>({
-        await: ()=>[],
+        await: ()=>[this.molecularProfiles],
         invoke: () => {
             return internalClient.fetchMutatedGenesUsingPOST({
-                molecularProfileId: `${this.studyId}_mutations`,
+                molecularProfileId: this.mutationProfileId,
                 studyViewFilter: this.filters
             })
         },
@@ -303,10 +331,10 @@ export class StudyViewPageStore {
     });
 
     readonly cnaGeneData = remoteData<CNAGenesData>({
-        await: ()=>[],
+        await: ()=>[this.molecularProfiles],
         invoke: () => {
             return internalClient.fetchCNAGenesUsingPOST({
-                molecularProfileId: `${this.studyId}_gistic`,
+                molecularProfileId: this.cnaProfileId,
                 studyViewFilter: this.filters
             })
         },
