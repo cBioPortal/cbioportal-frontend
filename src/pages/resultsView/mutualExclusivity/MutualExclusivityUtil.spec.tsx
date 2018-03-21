@@ -2,7 +2,7 @@ import { assert } from 'chai';
 import React from 'react';
 import {
     calculateAssociation, countOccurences, calculatePValue, calculateLogOddsRatio, getMutuallyExclusiveCounts,
-    getCountsText, getData, getFilteredData, formatPValue, formatPValueWithStyle, formatLogOddsRatio
+    getCountsText, getData, getFilteredData, formatPValue, formatPValueWithStyle, formatLogOddsRatio, calculateAdjustedPValue
 } from "./MutualExclusivityUtil";
 import { MutualExclusivity } from "../../../shared/model/MutualExclusivity";
 import expect from 'expect';
@@ -21,8 +21,9 @@ const exampleData = [
         "aNotBCount": 5,
         "bNotACount": 5,
         "bothCount": 0,
-        "pValue": 0.003968253968253951,
         "logOddsRatio": -Infinity,
+        "pValue": 0.003968253968253951,
+        "adjustedPValue": 0.023809523809523704,
         "association": "Mutual exclusivity"
     },
     {
@@ -32,8 +33,9 @@ const exampleData = [
         "aNotBCount": 5,
         "bNotACount": 3,
         "bothCount": 0,
-        "pValue": 0.08333333333333293,
         "logOddsRatio": -Infinity,
+        "pValue": 0.08333333333333293,
+        "adjustedPValue": 0.49999999999999756,
         "association": "Mutual exclusivity"
     },
     {
@@ -43,8 +45,9 @@ const exampleData = [
         "aNotBCount": 2,
         "bNotACount": 0,
         "bothCount": 3,
-        "pValue": 0.08333333333333293,
         "logOddsRatio": Infinity,
+        "pValue": 0.08333333333333293,
+        "adjustedPValue": 0.49999999999999756,
         "association": "Co-occurrence"
     },
     {
@@ -54,8 +57,9 @@ const exampleData = [
         "aNotBCount": 4,
         "bNotACount": 3,
         "bothCount": 1,
-        "pValue": 0.2619047619047609,
         "logOddsRatio": -1.791759469228055,
+        "pValue": 0.2619047619047609,
+        "adjustedPValue": 1,
         "association": "Mutual exclusivity"
     },
     {
@@ -65,8 +69,9 @@ const exampleData = [
         "aNotBCount": 2,
         "bNotACount": 1,
         "bothCount": 3,
-        "pValue": 0.2619047619047609,
         "logOddsRatio": 1.791759469228055,
+        "pValue": 0.2619047619047609,
+        "adjustedPValue": 1,
         "association": "Co-occurrence"
     },
     {
@@ -76,8 +81,9 @@ const exampleData = [
         "aNotBCount": 0,
         "bNotACount": 1,
         "bothCount": 3,
-        "pValue": 0.03333333333333314,
         "logOddsRatio": Infinity,
+        "pValue": 0.03333333333333314,
+        "adjustedPValue": 0.19999999999999885,
         "association": "Co-occurrence"
     }
 ];
@@ -128,6 +134,16 @@ describe("MutualExclusivityUtil", () => {
         });
     });
 
+    describe("#calculateAdjustedPValue()", () => {
+        it("returns 1 if bigger than 1", () => {
+            assert.equal(calculateAdjustedPValue(0.345, 4), 1);
+        });
+
+        it("returns the value if smaller than 1", () => {
+            assert.equal(calculateAdjustedPValue(0.001, 3), 0.003);
+        });
+    });
+
     describe("#calculateLogOddsRatio()", () => {
         it("returns -0.9650808960435872 for 4, 3, 7, 2", () => {
             assert.equal(calculateLogOddsRatio(4, 3, 7, 2), -0.9650808960435872);
@@ -159,8 +175,9 @@ describe("MutualExclusivityUtil", () => {
                     "aNotBCount": 5,
                     "bNotACount": 5,
                     "bothCount": 0,
-                    "pValue": 0.003968253968253968,
                     "logOddsRatio": Infinity,
+                    "pValue": 0.003968253968253968,
+                    "adjustedPValue": 0.003968253968253968,
                     "association": "Co-occurrence"
                 }
             ];
@@ -180,8 +197,9 @@ describe("MutualExclusivityUtil", () => {
                         "aNotBCount": 5,
                         "bNotACount": 5,
                         "bothCount": 0,
-                        "pValue": 0.06,
                         "logOddsRatio": -2.1,
+                        "pValue": 0.06,
+                        "adjustedPValue": 0.06,
                         "association": "Mutual exclusivity"
                     }
                 ];
@@ -201,8 +219,9 @@ describe("MutualExclusivityUtil", () => {
                         "aNotBCount": 5,
                         "bNotACount": 5,
                         "bothCount": 0,
-                        "pValue": 0.04,
                         "logOddsRatio": -2.1,
+                        "pValue": 0.04,
+                        "adjustedPValue": 0.04,
                         "association": "Mutual exclusivity"
                     }
                 ];
@@ -222,8 +241,9 @@ describe("MutualExclusivityUtil", () => {
                         "aNotBCount": 5,
                         "bNotACount": 5,
                         "bothCount": 0,
-                        "pValue": 0.04,
                         "logOddsRatio": -6.51,
+                        "pValue": 0.04,
+                        "adjustedPValue": 0.08,
                         "association": "Mutual exclusivity"
                     },
                     {
@@ -233,8 +253,9 @@ describe("MutualExclusivityUtil", () => {
                         "aNotBCount": 5,
                         "bNotACount": 3,
                         "bothCount": 0,
-                        "pValue": 0.001,
                         "logOddsRatio": -2.1,
+                        "pValue": 0.001,
+                        "adjustedPValue": 0.002,
                         "association": "Mutual exclusivity"
                     }
                 ];
@@ -255,8 +276,9 @@ describe("MutualExclusivityUtil", () => {
                     "aNotBCount": 5,
                     "bNotACount": 5,
                     "bothCount": 0,
-                    "pValue": 0.04,
                     "logOddsRatio": -6.51,
+                    "pValue": 0.04,
+                    "adjustedPValue": 0.08,
                     "association": "Mutual exclusivity"
                 },
                 {
@@ -266,8 +288,9 @@ describe("MutualExclusivityUtil", () => {
                     "aNotBCount": 5,
                     "bNotACount": 3,
                     "bothCount": 0,
-                    "pValue": 0.001,
                     "logOddsRatio": -2.1,
+                    "pValue": 0.001,
+                    "adjustedPValue": 0.002,
                     "association": "Mutual exclusivity"
                 }
             ];
@@ -299,8 +322,9 @@ describe("MutualExclusivityUtil", () => {
                         "aNotBCount": 5,
                         "bNotACount": 5,
                         "bothCount": 0,
-                        "pValue": 0.003968253968253951,
                         "logOddsRatio": -Infinity,
+                        "pValue": 0.003968253968253951,
+                        "adjustedPValue": 0.023809523809523704,
                         "association": "Mutual exclusivity"
                     }
                 ]
@@ -369,8 +393,9 @@ describe("MutualExclusivityUtil", () => {
                     "aNotBCount": 2,
                     "bNotACount": 1,
                     "bothCount": 3,
-                    "pValue": 0.23809523809523808,
                     "logOddsRatio": 1.791759469228055,
+                    "pValue": 0.23809523809523808,
+                    "adjustedPValue": 0.47619047619047616,
                     "association": "Co-occurrence"
                 },
                 {
@@ -380,8 +405,9 @@ describe("MutualExclusivityUtil", () => {
                     "aNotBCount": 0,
                     "bNotACount": 1,
                     "bothCount": 3,
-                    "pValue": 0.03333333333333333,
                     "logOddsRatio": Infinity,
+                    "pValue": 0.003968253968253951,
+                    "adjustedPValue": 0.023809523809523704,
                     "association": "Co-occurrence"
                 }
             ];
@@ -395,11 +421,12 @@ describe("MutualExclusivityUtil", () => {
             assert.equal(cells.at(4).html(), "<td><span>1</span></td>");
             assert.equal(cells.at(5).html(), "<td><span>3</span></td>");
             assert.equal(cells.at(6).html(), "<td><span>&gt;3</span></td>");
-            assert.equal(cells.at(7).html(), "<td><b><span>0.033</span></b></td>");
-            assert.equal(cells.at(8).html().replace(/<!--[^>]*-->/g, ""), "<td><span>Co-occurrence" +
+            assert.equal(cells.at(7).html(), "<td><span>0.004</span></td>");
+            assert.equal(cells.at(8).html(), "<td><b><span>0.024</span></b></td>");
+            assert.equal(cells.at(9).html().replace(/<!--[^>]*-->/g, ""), "<td><span>Co-occurrence" +
                 "&nbsp;&nbsp;&nbsp;<span class=\"badge\" style=\"background-color: rgb(88, 172, 250);\">Significant" +
                 "</span></span></td>");
-            assert.equal(cells.at(17).html().replace(/<!--[^>]*-->/g, ""), "<td><span>Co-occurrence" +
+            assert.equal(cells.at(19).html().replace(/<!--[^>]*-->/g, ""), "<td><span>Co-occurrence" +
                 "&nbsp;&nbsp;&nbsp;</span></td>");
         });
     });

@@ -1,10 +1,10 @@
-import Oncoprint, {ClinicalTrackSpec, GeneticTrackSpec, HeatmapTrackSpec} from "./Oncoprint";
+import Oncoprint, {ClinicalTrackSpec, GeneticTrackSpec, IGeneHeatmapTrackSpec} from "./Oncoprint";
 import fileDownload from "react-file-download";
 
 export default function tabularDownload(
     geneticTracks:GeneticTrackSpec[],
     clinicalTracks:ClinicalTrackSpec[],
-    heatmapTracks:HeatmapTrackSpec[],
+    heatmapTracks:IGeneHeatmapTrackSpec[],
     uidOrder:string[],
     getCaseId:(uid:string)=>string,
     columnMode:"sample"|"patient",

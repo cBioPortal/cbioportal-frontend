@@ -82,6 +82,7 @@ export interface IOncoprintControlsState {
     selectedClinicalAttributeIds?:string[],
     heatmapProfilesPromise?:MobxPromise<MolecularProfile[]>,
     selectedHeatmapProfile?:string;
+    heatmapIsDynamicallyQueried:boolean;
     heatmapGeneInputValue?: string;
     clusterHeatmapButtonDisabled?:boolean;
     hideClusterHeatmapButton?:boolean;
@@ -426,24 +427,30 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                             value={this.props.state.selectedHeatmapProfile}
                             options={this.heatmapProfileOptions}
                         />
-                        <textarea
-                            placeholder="Type space- or comma-separated genes here, then click 'Add Genes to Heatmap'"
-                            name={EVENT_KEY.heatmapGeneInput}
-                            onChange={this.onType}
-                            value={this.props.state.heatmapGeneInputValue}
-                        >
-                        </textarea>
+                        {this.props.state.heatmapIsDynamicallyQueried && [
+                            <textarea
+                                key="heatmapGeneInputArea"
+                                placeholder="Type space- or comma-separated genes here, then click 'Add Genes to Heatmap'"
+                                name={EVENT_KEY.heatmapGeneInput}
+                                onChange={this.onType}
+                                value={this.props.state.heatmapGeneInputValue}
+                            >
+                            </textarea>,
 
-                        <button className="btn btn-sm btn-default"
-                             name={EVENT_KEY.addGenesToHeatmap}
-                             onClick={this.onButtonClick}
-                         >Add Genes to Heatmap</button>
+                            <button
+                                key="addGenesToHeatmapButton"
+                                className="btn btn-sm btn-default"
+                                name={EVENT_KEY.addGenesToHeatmap}
+                                onClick={this.onButtonClick}
+                             >Add Genes to Heatmap</button>,
 
-                        <button
-                            className="btn btn-sm btn-default"
-                            name={EVENT_KEY.removeHeatmap}
-                            onClick={this.onButtonClick}
-                        >Remove Heatmap</button>
+                            <button
+                                key="removeHeatmapButton"
+                                className="btn btn-sm btn-default"
+                                name={EVENT_KEY.removeHeatmap}
+                                onClick={this.onButtonClick}
+                            >Remove Heatmap</button>
+                        ]}
 
                         {!this.props.state.hideClusterHeatmapButton &&
                             (<button
