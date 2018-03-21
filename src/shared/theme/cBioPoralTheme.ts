@@ -111,6 +111,21 @@ const CBIOPORTAL_VICTORY_THEME = {
             labels: baseLabelStyles
         }
     }, baseProps),
+    boxplot: assign({
+        style: {
+            max: { padding, stroke: blueGrey700, strokeWidth: 1 },
+            maxLabels: baseLabelStyles,
+            median: { padding, stroke: blueGrey700, strokeWidth: 1 },
+            medianLabels: baseLabelStyles,
+            min: { padding, stroke: blueGrey700, strokeWidth: 1 },
+            minLabels: baseLabelStyles,
+            q1: { padding, fill: blueGrey700 },
+            q1Labels: baseLabelStyles,
+            q3: { padding, fill: blueGrey700 },
+            q3Labels: baseLabelStyles
+        },
+        boxWidth: 20
+    }, baseProps),
     candlestick: assign({
         style: {
             data: {

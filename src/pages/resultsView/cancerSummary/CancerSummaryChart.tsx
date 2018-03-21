@@ -22,6 +22,7 @@ function percentageRounder(num:number){
     return _.round(num * 100, 2)
 }
 
+//TODO: refactor to use generic tooltip model
 interface ITooltipModel {
     x:number,
     y:number,

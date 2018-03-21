@@ -1,4 +1,6 @@
 import {Mutation} from "../api/generated/CBioPortalAPI";
+import * as _ from 'lodash';
+
 
 type MISSENSE = "missense";
 type FRAME_SHIFT_INS = "frame_shift_ins";
@@ -20,6 +22,7 @@ export type CanonicalMutationType =
     MISSENSE | FRAME_SHIFT_INS | FRAME_SHIFT_DEL | FRAMESHIFT |
         NONSENSE | SPLICE_SITE | NONSTART | NONSTOP | IN_FRAME_DEL |
         IN_FRAME_INS | INFRAME | TRUNCATING | FUSION | SILENT | OTHER;
+
 
 export type ProteinImpactType =
     MISSENSE | TRUNCATING | INFRAME | OTHER;
@@ -105,4 +108,5 @@ export function getProteinImpactTypeFromCanonical(mutationType:CanonicalMutation
 export default function getCanonicalMutationType(mutationType:string):CanonicalMutationType {
     return canonicalType[mutationType.toLowerCase()];
 }
-  
+
+export const CanonicalMutationTypeList: CanonicalMutationType[] = _.chain(canonicalType).values().uniq().value();

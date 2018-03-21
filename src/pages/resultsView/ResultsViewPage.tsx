@@ -16,7 +16,7 @@ import MutualExclusivityTab from "./mutualExclusivity/MutualExclusivityTab";
 import SurvivalTab from "./survival/SurvivalTab";
 import DownloadTab from "./download/DownloadTab";
 import Chart from 'chart.js';
-import {CancerStudy, Sample} from "../../shared/api/generated/CBioPortalAPI";
+import {CancerStudy, Gene, MolecularProfile, Sample} from "../../shared/api/generated/CBioPortalAPI";
 import AppConfig from 'appConfig';
 import AddThisBookmark from 'shared/components/addThis/AddThisBookmark';
 import getOverlappingStudies from "../../shared/lib/getOverlappingStudies";
@@ -39,6 +39,8 @@ import ResultsViewOncoprint from "shared/components/oncoprint/ResultsViewOncopri
 import QuerySummary from "./querySummary/QuerySummary";
 import {QueryStore} from "../../shared/components/query/QueryStore";
 import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
+import ExpressionWrapper from "./expression/ExpressionWrapper";
+import {MolecularDataCacheQuery} from "../../shared/cache/GeneMolecularDataCache";
 
 
 const win = (window as any);
@@ -166,6 +168,8 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
         this.mountOverlappingStudiesWarning();
 
+        this.mountExpressionTab()
+
     }
 
     private mountOverlappingStudiesWarning(){
@@ -184,6 +188,41 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                         } else {
                             return <span></span>;
                         }
+                    }
+                }
+            </Observer>
+            ,
+            target[0]
+        );
+
+    }
+
+    private mountExpressionTab(){
+
+        const target = $('<div class="cbioportal-frontend"></div>').insertBefore("#page_wrapper_table");
+
+
+
+
+
+        ReactDOM.render(
+            <Observer>
+                {
+                    ()=> {
+
+                        const store = this.resultsViewPageStore;
+
+                        if (store.rnaSeqMolecularData.isComplete && store.studyIdToStudy.isComplete && store.mutations.isComplete && store.genes.isComplete) {
+                            return <ExpressionWrapper studyMap={store.studyIdToStudy.result}
+                                                      genes={store.genes.result}
+                                                      data={store.rnaSeqMolecularData.result}
+                                                      mutations={store.mutations.result}
+                            />
+                        } else {
+                            return <div>loading</div>
+                        }
+
+
                     }
                 }
             </Observer>

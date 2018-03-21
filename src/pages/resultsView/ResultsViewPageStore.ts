@@ -36,7 +36,7 @@ import accessors, {getSimplifiedMutationType, SimplifiedMutationType} from "../.
 import {filterCBioPortalWebServiceData} from "../../shared/lib/oql/oqlfilter.js";
 import {keepAlive} from "mobx-utils";
 import MutationMapper from "./mutation/MutationMapper";
-import {CacheData} from "../../shared/lib/LazyMobXCache";
+import {AugmentedData, CacheData} from "../../shared/lib/LazyMobXCache";
 import {
     IAlterationCountMap,
     IAlterationData
@@ -44,7 +44,7 @@ import {
 import {writeTest} from "../../shared/lib/writeTest";
 import {PatientSurvival} from "../../shared/model/PatientSurvival";
 import {filterCBioPortalWebServiceDataByOQLLine, OQLLineFilterOutput} from "../../shared/lib/oql/oqlfilter";
-import GeneMolecularDataCache from "../../shared/cache/GeneMolecularDataCache";
+import GeneMolecularDataCache, {MolecularDataCacheQuery} from "../../shared/cache/GeneMolecularDataCache";
 import GenesetMolecularDataCache from "../../shared/cache/GenesetMolecularDataCache";
 import GenesetCorrelatedGeneCache from "../../shared/cache/GenesetCorrelatedGeneCache";
 import GeneCache from "../../shared/cache/GeneCache";
@@ -1833,6 +1833,53 @@ export class ResultsViewPageStore {
             );
         }
     });
+
+    readonly rnaSeqMolecularData = remoteData<{[hugoGeneSymbol:string]:GeneMolecularData[][]}>({
+       await:()=>[
+           this.molecularProfilesInStudies,
+           this.genes,
+           this.geneMolecularDataCache
+       ],
+       invoke: async ()=>{
+           const rnaSeqProfiles = this.molecularProfilesInStudies.result.filter((profile:MolecularProfile)=>/rna_seq_v2_mrna$/.test(profile.molecularProfileId));
+
+           const queries = _.flatMap(this.genes.result,(gene:Gene)=>{
+               return rnaSeqProfiles.map((profile:MolecularProfile)=> {
+                   return ({
+                       entrezGeneId: gene.entrezGeneId,
+                       molecularProfileId: profile.molecularProfileId,
+                       hugoGeneSymbol:gene.hugoGeneSymbol
+                   } as MolecularDataCacheQuery)
+               });
+           });
+
+           const data = await this.geneMolecularDataCache.result!.getPromise(queries,true);
+
+           // group cache objects by entrez geneId
+           const groupedByGene = _.groupBy(data,(cacheItem:AugmentedData<GeneMolecularData[], MolecularDataCacheQuery>)=>cacheItem.meta.entrezGeneId);
+
+           // now convert key from entrez to hugeGeneSymbol
+           const keyedByHugoSymbol = _.mapKeys(groupedByGene,(val, entrezGeneId:string)=>{
+               // look up huge gene symbol on gene with matching entrez
+               return _.find(this.genes.result,(gene:Gene)=>gene.entrezGeneId.toString()===entrezGeneId)!.hugoGeneSymbol;
+           });
+
+           const unwrapCacheObjects:{[hugeGeneSymbol:string]:GeneMolecularData[][]} =
+               _.mapValues(keyedByHugoSymbol,(val:AugmentedData<GeneMolecularData[], MolecularDataCacheQuery>)=>{
+                    return _.map(val,(item:AugmentedData<GeneMolecularData[], MolecularDataCacheQuery>)=>item.data);
+                }) as any; // there's an error with typing for _.mapValues
+
+           return Promise.resolve(unwrapCacheObjects);
+
+       }
+
+    });
+
+    @memoize sortRnaSeqMolecularDataByStudy(seqData:{[profileId:string]:GeneMolecularData[]}){
+        return _.keyBy(seqData,(data:GeneMolecularData[])=>{
+           return data[0].studyId;
+        });
+    }
 
     readonly genesetMolecularDataCache = remoteData({
         await:() => [
