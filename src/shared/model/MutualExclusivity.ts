@@ -5,7 +5,8 @@ export interface MutualExclusivity {
     aNotBCount: number;
     bNotACount: number;
     bothCount: number;
-    pValue: number;
     logOddsRatio: number;
+    pValue: number;
+    adjustedPValue: number,
     association: string;
 }

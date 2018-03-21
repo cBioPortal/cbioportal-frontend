@@ -54,7 +54,9 @@ export function emptyMutation(): Mutation
         driverFilter: "",
         driverFilterAnnotation: "",
         driverTiersFilter: "",
-        driverTiersFilterAnnotation: ""
+        driverTiersFilterAnnotation: "",
+        wildType:false,
+        sequenced:true
     };
 }
 

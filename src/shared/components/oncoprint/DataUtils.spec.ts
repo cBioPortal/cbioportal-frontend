@@ -1,11 +1,19 @@
 import { assert } from 'chai';
 import {fillClinicalTrackDatum, fillGeneticTrackDatum, fillHeatmapTrackDatum, selectDisplayValue} from "./DataUtils";
-import {GeneticTrackDatum} from "shared/components/oncoprint/Oncoprint";
+import {
+    GeneticTrackDatum,
+    IGeneHeatmapTrackDatum,
+    IGenesetHeatmapTrackDatum
+} from "shared/components/oncoprint/Oncoprint";
 import {AlterationTypeConstants, AnnotatedExtendedAlteration} from "../../../pages/resultsView/ResultsViewPageStore";
 import {ClinicalAttribute, GeneMolecularData, Sample} from "../../api/generated/CBioPortalAPI";
 import {SpecialAttribute} from "../../cache/ClinicalDataCache";
 import {OncoprintClinicalAttribute} from "./ResultsViewOncoprint";
 import {MutationSpectrum} from "../../api/generated/CBioPortalAPIInternal";
+
+/* Type assertions are used throughout this file to force functions to accept
+/* mocked parameters known to be sufficient. */
+/* tslint:disable no-object-literal-type-assertion */
 
 describe("DataUtils", ()=>{
    describe("selectDisplayValue", ()=>{
@@ -528,24 +536,43 @@ describe("DataUtils", ()=>{
 
    describe("fillHeatmapTrackDatum", ()=>{
        it("sets na true if no data", ()=>{
-           assert.isTrue(fillHeatmapTrackDatum({}, "", {} as Sample).na);
+           assert.isTrue(
+               fillHeatmapTrackDatum<IGeneHeatmapTrackDatum, "hugo_gene_symbol">(
+                   {}, "hugo_gene_symbol", "", {} as Sample
+               ).na
+           );
        });
        it("sets data for sample", ()=>{
-           let data:any[] = [
+           const data:any[] = [
                {value:3}
            ];
-           assert.deepEqual(fillHeatmapTrackDatum({}, "gene", {sampleId:"sample", studyId:"study"} as Sample, data),
-               {hugo_gene_symbol:"gene", study:"study", profile_data:3});
+           assert.deepEqual(
+               fillHeatmapTrackDatum<IGeneHeatmapTrackDatum, "hugo_gene_symbol">(
+                   {},
+                   "hugo_gene_symbol",
+                   "gene",
+                   {sampleId:"sample", studyId:"study"} as Sample,
+                   data
+               ),
+               {hugo_gene_symbol:"gene", study:"study", profile_data:3}
+           );
        });
        it("throws exception if more than one data given for sample",()=>{
-           let data:any[] = [
+           const data:any[] = [
                {value:3},
                {value:2}
            ];
            try {
-               fillHeatmapTrackDatum({}, "gene", {sampleId:"sample", studyId:"study"} as Sample, data);
+               fillHeatmapTrackDatum<IGeneHeatmapTrackDatum, "hugo_gene_symbol">(
+                   {},
+                   "hugo_gene_symbol",
+                   "gene",
+                   {sampleId:"sample", studyId:"study"} as Sample,
+                   data
+               );
                assert(false);
            } catch(e) {
+               // Succeed if an exception occurred before asserting false
            }
        });
        it("sets data for patient, if multiple then maximum in abs value", ()=>{
@@ -553,30 +580,76 @@ describe("DataUtils", ()=>{
                {value:3},
                {value:2}
            ];
-           assert.deepEqual(fillHeatmapTrackDatum({}, "gene", {patientId:"patient", studyId:"study"} as Sample, data),
-               {hugo_gene_symbol:"gene", study:"study", profile_data:3});
+           assert.deepEqual(
+               fillHeatmapTrackDatum<IGeneHeatmapTrackDatum, "hugo_gene_symbol">(
+                   {},
+                   "hugo_gene_symbol",
+                   "gene",
+                   {patientId:"patient", studyId:"study"} as Sample,
+                   data
+               ),
+               {hugo_gene_symbol:"gene", study:"study", profile_data:3}
+           );
 
            data = [
                {value:2}
            ];
-           assert.deepEqual(fillHeatmapTrackDatum({}, "gene", {patientId:"patient", studyId:"study"} as Sample, data),
-               {hugo_gene_symbol:"gene", study:"study", profile_data:2});
+           assert.deepEqual(
+               fillHeatmapTrackDatum<IGeneHeatmapTrackDatum, "hugo_gene_symbol">(
+                   {},
+                   "hugo_gene_symbol",
+                   "gene",
+                   {patientId:"patient", studyId:"study"} as Sample,
+                   data
+               ),
+               {hugo_gene_symbol:"gene", study:"study", profile_data:2}
+           );
 
            data = [
                {value:2},
                {value:3},
                {value:4}
            ];
-           assert.deepEqual(fillHeatmapTrackDatum({}, "gene", {patientId:"patient", studyId:"study"} as Sample, data),
-               {hugo_gene_symbol:"gene", study:"study", profile_data:4});
+           assert.deepEqual(
+               fillHeatmapTrackDatum<IGeneHeatmapTrackDatum, "hugo_gene_symbol">(
+                   {},
+                   "hugo_gene_symbol",
+                   "gene",
+                   {patientId:"patient", studyId:"study"} as Sample,
+                   data
+               ),
+               {hugo_gene_symbol:"gene", study:"study", profile_data:4}
+           );
 
            data = [
                {value:-10},
                {value:3},
                {value:4}
            ];
-           assert.deepEqual(fillHeatmapTrackDatum({}, "gene", {patientId:"patient", studyId:"study"} as Sample, data),
-               {hugo_gene_symbol:"gene", study:"study", profile_data:-10});
+           assert.deepEqual(
+               fillHeatmapTrackDatum<IGeneHeatmapTrackDatum, "hugo_gene_symbol">(
+                   {},
+                   "hugo_gene_symbol",
+                   "gene",
+                   {patientId:"patient", studyId:"study"} as Sample,
+                   data
+               ),
+               {hugo_gene_symbol:"gene", study:"study", profile_data:-10}
+           );
+       });
+       it("fills data for a gene set if that's requested", ()=>{
+           const partialTrackDatum = {};
+           fillHeatmapTrackDatum<IGenesetHeatmapTrackDatum, "geneset_id">(
+               partialTrackDatum,
+               "geneset_id",
+               "MY_FAVORITE_GENE_SET-3",
+               {sampleId:"sample", studyId:"study"} as Sample,
+               [{value: "7"}]
+           );
+           assert.deepEqual(
+               partialTrackDatum,
+               {geneset_id:"MY_FAVORITE_GENE_SET-3", study:"study", profile_data:7}
+           );
        });
    });
 

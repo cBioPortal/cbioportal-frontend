@@ -5,7 +5,7 @@ import {
 } from "./DeltaUtils";
 import {spy} from "sinon";
 import OncoprintJS from "oncoprintjs";
-import {CLINICAL_TRACK_GROUP_INDEX, GENETIC_TRACK_GROUP_INDEX, HeatmapTrackSpec} from "./Oncoprint";
+import {CLINICAL_TRACK_GROUP_INDEX, GENETIC_TRACK_GROUP_INDEX, IGeneHeatmapTrackSpec} from "./Oncoprint";
 
 describe("Oncoprint DeltaUtils", ()=>{
     describe("numTracksWhoseDataChanged", ()=>{
@@ -35,38 +35,90 @@ describe("Oncoprint DeltaUtils", ()=>{
     describe("transitionTrackGroupSortPriority", ()=>{
         let oncoprint:any;
         beforeEach(()=>{
-            oncoprint = { setTrackGroupSortPriority:spy(()=>{}) };
+            oncoprint = {setTrackGroupSortPriority: spy()};
         });
         it("should not do anything if the heatmap tracks are both empty", ()=>{
-           transitionTrackGroupSortPriority({heatmapTracks:[]}, {heatmapTracks:[]}, oncoprint);
+           transitionTrackGroupSortPriority(
+               {heatmapTracks:[], genesetHeatmapTracks:[]},
+               {heatmapTracks:[], genesetHeatmapTracks:[]},
+               oncoprint
+           );
+           assert.equal(oncoprint.setTrackGroupSortPriority.callCount, 0);
+        });
+        it("should not do anything on initialisation if no heatmap tracks are added", ()=>{
+           transitionTrackGroupSortPriority(
+               {heatmapTracks:[], genesetHeatmapTracks:[]},
+               {},
+               oncoprint
+           );
            assert.equal(oncoprint.setTrackGroupSortPriority.callCount, 0);
         });
         it("should not do anything if the heatmap tracks are the same", ()=>{
             transitionTrackGroupSortPriority(
-                {heatmapTracks:[{ trackGroupIndex: 2}, {trackGroupIndex: 3}] as HeatmapTrackSpec[]},
-                {heatmapTracks:[{ trackGroupIndex: 2}, {trackGroupIndex: 3}] as HeatmapTrackSpec[]},
+                {heatmapTracks:[{trackGroupIndex: 2}, {trackGroupIndex: 3}], genesetHeatmapTracks: []},
+                {heatmapTracks:[{trackGroupIndex: 2}, {trackGroupIndex: 3}], genesetHeatmapTracks: []},
+                oncoprint
+            );
+            assert.equal(oncoprint.setTrackGroupSortPriority.callCount, 0);
+        });
+        it("should not do anything if the gene set heatmap tracks are the same", ()=>{
+            transitionTrackGroupSortPriority(
+                {heatmapTracks:[], genesetHeatmapTracks: [{trackGroupIndex: 2}]},
+                {heatmapTracks:[], genesetHeatmapTracks: [{trackGroupIndex: 2}]},
                 oncoprint
             );
             assert.equal(oncoprint.setTrackGroupSortPriority.callCount, 0);
         });
         it("should not do anything if the heatmap tracks are different but same groups", ()=>{
             transitionTrackGroupSortPriority(
-                {heatmapTracks:[{ trackGroupIndex: 2}, {trackGroupIndex: 3}, {trackGroupIndex: 3}, {trackGroupIndex: 3}] as HeatmapTrackSpec[]},
-                {heatmapTracks:[{ trackGroupIndex: 2}, {trackGroupIndex: 2}, { trackGroupIndex: 2}, {trackGroupIndex: 3}] as HeatmapTrackSpec[]},
+                {heatmapTracks:[{trackGroupIndex: 2}, {trackGroupIndex: 3}, {trackGroupIndex: 3}, {trackGroupIndex: 3}], genesetHeatmapTracks: []},
+                {heatmapTracks:[{trackGroupIndex: 2}, {trackGroupIndex: 2}, {trackGroupIndex: 2}, {trackGroupIndex: 3}], genesetHeatmapTracks: []},
                 oncoprint
             );
             assert.equal(oncoprint.setTrackGroupSortPriority.callCount, 0);
         });
-        it("should set the track group sort priority if the heatmap track groups have changed", ()=>{
+        it("should set the track group sort priority if the heatmap track groups have changed and no gene set heatmap is present", ()=>{
             transitionTrackGroupSortPriority(
-                {heatmapTracks:[{ trackGroupIndex: 2}, {trackGroupIndex: 4}, { trackGroupIndex: 2}, {trackGroupIndex: 3}] as HeatmapTrackSpec[]},
-                {heatmapTracks:[{ trackGroupIndex: 2}, {trackGroupIndex: 3}, {trackGroupIndex: 3}, {trackGroupIndex: 3}] as HeatmapTrackSpec[]},
+                {heatmapTracks:[{trackGroupIndex: 2}, {trackGroupIndex: 4}, {trackGroupIndex: 2}, {trackGroupIndex: 3}], genesetHeatmapTracks: []},
+                {heatmapTracks:[{trackGroupIndex: 2}, {trackGroupIndex: 3}, {trackGroupIndex: 3}, {trackGroupIndex: 3}], genesetHeatmapTracks: []},
                 oncoprint
             );
             assert.equal(oncoprint.setTrackGroupSortPriority.callCount, 1, "called once");
             assert.deepEqual(
                 oncoprint.setTrackGroupSortPriority.args[0][0],
                 [CLINICAL_TRACK_GROUP_INDEX, 2, 3, 4, GENETIC_TRACK_GROUP_INDEX],
+                "right priority order"
+            );
+        });
+        it("should set the track group sort priority including gene set heatmaps if heatmap track groups have changed", ()=>{
+            transitionTrackGroupSortPriority(
+                {
+                    heatmapTracks: [{trackGroupIndex: 2}, {trackGroupIndex: 4}, {trackGroupIndex: 2}, {trackGroupIndex: 3}],
+                    genesetHeatmapTracks: [{trackGroupIndex: 5}]
+                },
+                {
+                    heatmapTracks:[{trackGroupIndex: 2}, {trackGroupIndex: 3}, {trackGroupIndex: 3}, {trackGroupIndex: 3}],
+                    genesetHeatmapTracks: [{trackGroupIndex: 4}]
+                },
+                oncoprint
+            );
+            assert.equal(oncoprint.setTrackGroupSortPriority.callCount, 1, "called once");
+            assert.deepEqual(
+                oncoprint.setTrackGroupSortPriority.args[0][0],
+                [CLINICAL_TRACK_GROUP_INDEX, 2, 3, 4, 5, GENETIC_TRACK_GROUP_INDEX],
+                "right priority order"
+            );
+        });
+        it("should set the track group sort priority on initialisation if only a gene set heatmap is present", ()=>{
+            transitionTrackGroupSortPriority(
+                {heatmapTracks:[], genesetHeatmapTracks: [{trackGroupIndex: 2}, {trackGroupIndex: 2}]},
+                {},
+                oncoprint
+            );
+            assert.equal(oncoprint.setTrackGroupSortPriority.callCount, 1, "called once");
+            assert.deepEqual(
+                oncoprint.setTrackGroupSortPriority.args[0][0],
+                [CLINICAL_TRACK_GROUP_INDEX, 2, GENETIC_TRACK_GROUP_INDEX],
                 "right priority order"
             );
         });

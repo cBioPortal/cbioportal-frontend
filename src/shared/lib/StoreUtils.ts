@@ -10,8 +10,6 @@ import { EnsemblFilter, EnsemblTranscript } from "shared/api/generated/GenomeNex
 import {getMyGeneUrl, getUniprotIdUrl} from "shared/api/urls";
 import defaultClient from "shared/api/cbioportalClientInstance";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
-import hotspot3DClient from 'shared/api/3DhotspotClientInstance';
-import hotspotClient from 'shared/api/hotspotClientInstance';
 import g2sClient from "shared/api/g2sClientInstance";
 import {Alignment, default as Genome2StructureAPI} from "shared/api/generated/Genome2StructureAPI";
 import {
@@ -21,7 +19,6 @@ import {
 import oncokbClient from "shared/api/oncokbClientInstance";
 import civicClient from "shared/api/civicClientInstance";
 import genomeNexusClient from "shared/api/genomeNexusClientInstance";
-import genomeNexusInternalClient from "shared/api/genomeNexusInternalClientInstance";
 import {
     generateIdToIndicatorMap, generateQueryVariant, generateEvidenceQuery
 } from "shared/lib/OncoKbUtils";
@@ -31,28 +28,20 @@ import {
 import {Query, default as OncoKbAPI, Gene} from "shared/api/generated/OncoKbAPI";
 import {getAlterationString} from "shared/lib/CopyNumberUtils";
 import {MobxPromise} from "mobxpromise";
-import {keywordToCosmic, indexHotspots, geneToMyCancerGenome} from "shared/lib/AnnotationUtils";
+import {keywordToCosmic, geneToMyCancerGenome} from "shared/lib/AnnotationUtils";
 import {indexPdbAlignments} from "shared/lib/PdbUtils";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {IGisticData} from "shared/model/Gistic";
 import {IMutSigData} from "shared/model/MutSig";
 import {IMyCancerGenomeData, IMyCancerGenome} from "shared/model/MyCancerGenome";
-import {IHotspotData, ICancerHotspotData} from "shared/model/CancerHotspots";
 import {ICivicGeneData, ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
-import CancerHotspotsAPI from "shared/api/generated/CancerHotspotsAPI";
 import {MOLECULAR_PROFILE_MUTATIONS_SUFFIX, MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
 import GenomeNexusAPI from "shared/api/generated/GenomeNexusAPI";
-import GenomeNexusAPIInternal from "shared/api/generated/GenomeNexusAPIInternal";
 import {AlterationTypeConstants} from "../../pages/resultsView/ResultsViewPageStore";
 
 export const ONCOKB_DEFAULT: IOncoKbData = {
     uniqueSampleKeyToTumorType : {},
     indicatorMap : {}
-};
-
-export const HOTSPOTS_DEFAULT = {
-    single: [],
-    clustered: []
 };
 
 export type MutationIdGenerator = (mutation:Mutation) => string;
@@ -718,53 +707,7 @@ export function findMrnaRankMolecularProfileId(molecularProfilesInStudy: MobxPro
     }
 }
 
-export async function fetchHotspotsData(mutationData:MobxPromise<Mutation[]>,
-                                        uncalledMutationData?:MobxPromise<Mutation[]>,
-                                        clientSingle:CancerHotspotsAPI = hotspotClient,
-                                        client3d:CancerHotspotsAPI = hotspot3DClient)
-{
-    const mutationDataResult = concatMutationData(mutationData, uncalledMutationData);
 
-    if (mutationDataResult.length === 0) {
-        return HOTSPOTS_DEFAULT;
-    }
-
-    const queryGenes:string[] = _.uniq(_.map(mutationDataResult, function(mutation:Mutation) {
-        if (mutation && mutation.gene) {
-            return mutation.gene.hugoGeneSymbol;
-        }
-        else {
-            return "";
-        }
-    }));
-
-    const [dataSingle, data3d] = await Promise.all([
-        clientSingle.fetchSingleResidueHotspotMutationsByGenePOST({
-            hugoSymbols: queryGenes
-        }),
-        client3d.fetch3dHotspotMutationsByGenePOST({
-            hugoSymbols: queryGenes
-        })
-    ]);
-
-    return {
-        single: dataSingle,
-        clustered: data3d
-    };
-}
-
-export function indexHotspotData(hotspotData:MobxPromise<ICancerHotspotData>): IHotspotData|undefined
-{
-    if (hotspotData.result) {
-        return {
-            single: indexHotspots(hotspotData.result.single),
-            clustered: indexHotspots(hotspotData.result.clustered)
-        };
-    }
-    else {
-        return undefined;
-    }
-}
 
 export function generateUniqueSampleKeyToTumorTypeMap(clinicalDataForSamples: MobxPromise<ClinicalData[]>,
                                                studies?: MobxPromise<CancerStudy[]>,

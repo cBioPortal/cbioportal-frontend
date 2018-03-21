@@ -1,7 +1,6 @@
 import * as React from 'react';
-import {Modal, Button, ButtonGroup} from 'react-bootstrap';
+import {Modal, Button} from 'react-bootstrap';
 import {ThreeBounce} from 'better-react-spinkit';
-import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import {If} from 'react-if';
 import fileDownload from 'react-file-download';
 import {action, observable} from "mobx";
@@ -9,13 +8,11 @@ import {observer} from "mobx-react";
 const Clipboard = require('clipboard');
 
 import copyDownloadStyles from "./copyDownloadControls.module.scss";
+import {CopyDownloadButtons} from "./CopyDownloadButtons";
+import {ICopyDownloadControlsProps} from "./ICopyDownloadControls";
 
-export interface ICopyDownloadControlsProps {
-    className?: string;
-    showCopy?: boolean;
-    showDownload?: boolean;
+export interface IAsyncCopyDownloadControlsProps extends ICopyDownloadControlsProps {
     downloadData?: () => Promise<ICopyDownloadData>;
-    downloadFilename?: string;
 }
 
 export interface ICopyDownloadData {
@@ -28,7 +25,7 @@ export interface ICopyDownloadData {
  * @author Aaron Lisman
  */
 @observer
-export class CopyDownloadControls extends React.Component<ICopyDownloadControlsProps, {}>
+export class CopyDownloadControls extends React.Component<IAsyncCopyDownloadControlsProps, {}>
 {
     @observable downloadingData = false;
     @observable copyingData = false;
@@ -40,7 +37,7 @@ export class CopyDownloadControls extends React.Component<ICopyDownloadControlsP
 
     private _copyText: string|null = null;
 
-    public static defaultProps:ICopyDownloadControlsProps = {
+    public static defaultProps:IAsyncCopyDownloadControlsProps = {
         className: "",
         showCopy: true,
         showDownload: true,
@@ -81,41 +78,16 @@ export class CopyDownloadControls extends React.Component<ICopyDownloadControlsP
 
         return (
             <span>
-                <ButtonGroup className={this.props.className} style={{ marginLeft:10 }}>
-                    <If condition={this.props.showCopy}>
-                        <DefaultTooltip
-                            overlay={<span>Copy</span>}
-                            placement="top"
-                            mouseLeaveDelay={0}
-                            mouseEnterDelay={0.5}
-                            arrowContent={arrowContent}
-                        >
-                            <button
-                                ref={(el:HTMLButtonElement) => {this._copyButton = el;}}
-                                className="btn btn-sm btn-default"
-                                data-clipboard-text="NA"
-                                id="copyButton"
-                                onClick={this.handleCopy}
-                            >
-                                <i className='fa fa-clipboard'/>
-                            </button>
-                        </DefaultTooltip>
-                    </If>
-
-                    <If condition={this.props.showDownload}>
-                        <DefaultTooltip
-                            overlay={<span>Download TSV</span>}
-                            mouseLeaveDelay={0}
-                            mouseEnterDelay={0.5}
-                            placement="top"
-                            arrowContent={arrowContent}
-                        >
-                            <Button className="btn-sm" onClick={this.handleDownload}>
-                                <i className='fa fa-cloud-download'/>
-                            </Button>
-                        </DefaultTooltip>
-                    </If>
-                </ButtonGroup>
+                <CopyDownloadButtons
+                    className={this.props.className}
+                    showCopy={this.props.showCopy}
+                    showDownload={this.props.showDownload}
+                    copyLabel={this.props.copyLabel}
+                    downloadLabel={this.props.downloadLabel}
+                    handleDownload={this.handleDownload}
+                    handleCopy={this.handleCopy}
+                    copyButtonRef={(el:HTMLButtonElement) => {this._copyButton = el;}}
+                />
                 {this.downloadIndicatorModal()}
                 {this.copyIndicatorModal()}
                 {this.downloadErrorModal()}

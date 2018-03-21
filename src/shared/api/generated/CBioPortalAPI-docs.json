@@ -16,27 +16,7 @@
   },
   "tags": [
     {
-      "name": "Molecular Data",
-      "description": " "
-    },
-    {
-      "name": "Samples",
-      "description": " "
-    },
-    {
-      "name": "Patients",
-      "description": " "
-    },
-    {
-      "name": "Mutations",
-      "description": " "
-    },
-    {
-      "name": "Genes",
-      "description": " "
-    },
-    {
-      "name": "Molecular Profiles",
+      "name": "Cancer Types",
       "description": " "
     },
     {
@@ -52,14 +32,6 @@
       "description": " "
     },
     {
-      "name": "Gene Panels",
-      "description": " "
-    },
-    {
-      "name": "Cancer Types",
-      "description": " "
-    },
-    {
       "name": "Copy Number Segments",
       "description": " "
     },
@@ -68,7 +40,35 @@
       "description": " "
     },
     {
+      "name": "Gene Panels",
+      "description": " "
+    },
+    {
+      "name": "Genes",
+      "description": " "
+    },
+    {
+      "name": "Molecular Data",
+      "description": " "
+    },
+    {
+      "name": "Molecular Profiles",
+      "description": " "
+    },
+    {
+      "name": "Mutations",
+      "description": " "
+    },
+    {
+      "name": "Patients",
+      "description": " "
+    },
+    {
       "name": "Sample Lists",
+      "description": " "
+    },
+    {
+      "name": "Samples",
       "description": " "
     },
     {
@@ -88,9 +88,6 @@
         ],
         "summary": "Get all cancer types",
         "operationId": "getAllCancerTypesUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -116,6 +113,10 @@
             "required": false,
             "type": "integer",
             "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -125,6 +126,8 @@
             "required": false,
             "type": "integer",
             "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -175,9 +178,6 @@
         ],
         "summary": "Get a cancer type",
         "operationId": "getCancerTypeUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -207,9 +207,6 @@
         ],
         "summary": "Get all clinical attributes",
         "operationId": "getAllClinicalAttributesUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -235,6 +232,10 @@
             "required": false,
             "type": "integer",
             "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -244,6 +245,8 @@
             "required": false,
             "type": "integer",
             "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -259,7 +262,88 @@
               "datatype",
               "patientAttribute",
               "priority",
-              "studyId"
+              "studyId",
+              "count"
+            ]
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "description": "Direction of the sort",
+            "required": false,
+            "type": "string",
+            "default": "ASC",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ClinicalAttribute"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/clinical-attributes/counts/fetch": {
+      "post": {
+        "tags": [
+          "Clinical Attributes"
+        ],
+        "summary": "Get all clinical attributes in specified sampleIdentifiers or sampleListID with clinical attribute count",
+        "operationId": "getAllClinicalAttributesInStudiesUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "clinicalAttributeFilter",
+            "description": "List of SampleIdentifiers or Sample List ID",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ClinicalAttributeFilter"
+            }
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "projection",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          },
+          {
+            "name": "sortBy",
+            "in": "query",
+            "description": "Name of the property that the result list is sorted by",
+            "required": false,
+            "type": "string",
+            "enum": [
+              "clinicalAttributeId",
+              "displayName",
+              "description",
+              "datatype",
+              "patientAttribute",
+              "priority",
+              "studyId",
+              "count"
             ]
           },
           {
@@ -503,9 +587,6 @@
         ],
         "summary": "Get all gene panels",
         "operationId": "getAllGenePanelsUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -531,6 +612,10 @@
             "required": false,
             "type": "integer",
             "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -540,6 +625,8 @@
             "required": false,
             "type": "integer",
             "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -586,9 +673,6 @@
         ],
         "summary": "Get gene panel",
         "operationId": "getGenePanelUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -618,9 +702,6 @@
         ],
         "summary": "Get all genes",
         "operationId": "getAllGenesUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -653,6 +734,10 @@
             "required": false,
             "type": "integer",
             "default": 100000,
+            "maximum": 100000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -662,6 +747,8 @@
             "required": false,
             "type": "integer",
             "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -777,9 +864,6 @@
         ],
         "summary": "Get a gene",
         "operationId": "getGeneUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -809,9 +893,6 @@
         ],
         "summary": "Get aliases of a gene",
         "operationId": "getAliasesOfGeneUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -895,9 +976,6 @@
         ],
         "summary": "Get all molecular profiles",
         "operationId": "getAllMolecularProfilesUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -923,6 +1001,10 @@
             "required": false,
             "type": "integer",
             "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -932,6 +1014,8 @@
             "required": false,
             "type": "integer",
             "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -1033,9 +1117,6 @@
         ],
         "summary": "Get molecular profile",
         "operationId": "getMolecularProfileUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -1065,9 +1146,6 @@
         ],
         "summary": "Get discrete copy number alterations in a molecular profile",
         "operationId": "getDiscreteCopyNumbersInMolecularProfileUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -1148,7 +1226,7 @@
           {
             "name": "molecularProfileId",
             "in": "path",
-            "description": "Molecular Profile ID e.g. acc_tcga_mutations",
+            "description": "Molecular Profile ID e.g. acc_tcga_gistic",
             "required": true,
             "type": "string"
           },
@@ -1304,9 +1382,6 @@
         ],
         "summary": "Get all molecular data in a molecular profile",
         "operationId": "getAllMolecularDataInMolecularProfileUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -1426,9 +1501,6 @@
         ],
         "summary": "Get mutation counts in a molecular profile by Sample List ID",
         "operationId": "getMutationCountsInMolecularProfileBySampleListIdUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -1515,9 +1587,6 @@
         ],
         "summary": "Get mutations in a molecular profile by Sample List ID",
         "operationId": "getMutationsInMolecularProfileBySampleListIdUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -1557,6 +1626,10 @@
             "required": false,
             "type": "integer",
             "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -1566,6 +1639,8 @@
             "required": false,
             "type": "integer",
             "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -1655,6 +1730,14 @@
             }
           },
           {
+            "name": "includeNonMutated",
+            "in": "query",
+            "description": "Include non-sequenced and wild-type values in the result. Ineffective when entrezGeneIds is missing. sortBy is ineffective when true",
+            "required": false,
+            "type": "boolean",
+            "default": false
+          },
+          {
             "name": "projection",
             "in": "query",
             "description": "Level of detail of the response",
@@ -1675,6 +1758,10 @@
             "required": false,
             "type": "integer",
             "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -1684,6 +1771,8 @@
             "required": false,
             "type": "integer",
             "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -1806,6 +1895,14 @@
             }
           },
           {
+            "name": "includeNonMutated",
+            "in": "query",
+            "description": "Include non-sequenced and wild-type values in the result. Ineffective when entrezGeneIds is missing. sortBy is ineffective when true",
+            "required": false,
+            "type": "boolean",
+            "default": false
+          },
+          {
             "name": "projection",
             "in": "query",
             "description": "Level of detail of the response",
@@ -1826,6 +1923,10 @@
             "required": false,
             "type": "integer",
             "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -1835,6 +1936,8 @@
             "required": false,
             "type": "integer",
             "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -1909,14 +2012,11 @@
         "parameters": [
           {
             "in": "body",
-            "name": "patientIdentifiers",
+            "name": "patientFilter",
             "description": "List of patient identifiers",
             "required": true,
             "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/PatientIdentifier"
-              }
+              "$ref": "#/definitions/PatientFilter"
             }
           },
           {
@@ -1954,9 +2054,6 @@
         ],
         "summary": "Get all sample lists",
         "operationId": "getAllSampleListsUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -1982,6 +2079,10 @@
             "required": false,
             "type": "integer",
             "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -1991,6 +2092,8 @@
             "required": false,
             "type": "integer",
             "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -2094,9 +2197,6 @@
         ],
         "summary": "Get sample list",
         "operationId": "getSampleListUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -2126,9 +2226,6 @@
         ],
         "summary": "Get all sample IDs in a sample list",
         "operationId": "getAllSampleIdsInSampleListUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -2212,9 +2309,6 @@
         ],
         "summary": "Get all studies",
         "operationId": "getAllStudiesUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -2240,6 +2334,10 @@
             "required": false,
             "type": "integer",
             "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -2249,6 +2347,8 @@
             "required": false,
             "type": "integer",
             "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -2358,9 +2458,6 @@
         ],
         "summary": "Get a study",
         "operationId": "getStudyUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -2390,9 +2487,6 @@
         ],
         "summary": "Get all clinical attributes in the specified study",
         "operationId": "getAllClinicalAttributesInStudyUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -2425,6 +2519,10 @@
             "required": false,
             "type": "integer",
             "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -2434,6 +2532,8 @@
             "required": false,
             "type": "integer",
             "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -2449,7 +2549,8 @@
               "datatype",
               "patientAttribute",
               "priority",
-              "studyId"
+              "studyId",
+              "count"
             ]
           },
           {
@@ -2485,9 +2586,6 @@
         ],
         "summary": "Get specified clinical attribute",
         "operationId": "getClinicalAttributeInStudyUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -2524,9 +2622,6 @@
         ],
         "summary": "Get all clinical data in a study",
         "operationId": "getAllClinicalDataInStudyUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -2578,6 +2673,10 @@
             "required": false,
             "type": "integer",
             "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -2587,6 +2686,8 @@
             "required": false,
             "type": "integer",
             "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -2703,9 +2804,6 @@
         ],
         "summary": "Get all molecular profiles in a study",
         "operationId": "getAllMolecularProfilesInStudyUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -2738,6 +2836,10 @@
             "required": false,
             "type": "integer",
             "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -2747,6 +2849,8 @@
             "required": false,
             "type": "integer",
             "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -2797,9 +2901,6 @@
         ],
         "summary": "Get all patients in a study",
         "operationId": "getAllPatientsInStudyUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -2832,6 +2933,10 @@
             "required": false,
             "type": "integer",
             "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -2841,6 +2946,8 @@
             "required": false,
             "type": "integer",
             "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -2886,9 +2993,6 @@
         ],
         "summary": "Get a patient in a study",
         "operationId": "getPatientInStudyUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -2925,9 +3029,6 @@
         ],
         "summary": "Get all clinical data of a patient in a study",
         "operationId": "getAllClinicalDataOfPatientInStudyUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -2974,6 +3075,10 @@
             "required": false,
             "type": "integer",
             "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -2983,6 +3088,8 @@
             "required": false,
             "type": "integer",
             "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -3029,9 +3136,6 @@
         ],
         "summary": "Get all clinical events of a patient in a study",
         "operationId": "getAllClinicalEventsOfPatientInStudyUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -3071,6 +3175,10 @@
             "required": false,
             "type": "integer",
             "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -3080,6 +3188,8 @@
             "required": false,
             "type": "integer",
             "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -3127,9 +3237,6 @@
         ],
         "summary": "Get all samples of a patient in a study",
         "operationId": "getAllSamplesOfPatientInStudyUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -3169,6 +3276,10 @@
             "required": false,
             "type": "integer",
             "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -3178,6 +3289,8 @@
             "required": false,
             "type": "integer",
             "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -3225,9 +3338,6 @@
         ],
         "summary": "Get all sample lists in a study",
         "operationId": "getAllSampleListsInStudyUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -3260,6 +3370,10 @@
             "required": false,
             "type": "integer",
             "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -3269,6 +3383,8 @@
             "required": false,
             "type": "integer",
             "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -3318,9 +3434,6 @@
         ],
         "summary": "Get all samples in a study",
         "operationId": "getAllSamplesInStudyUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -3353,6 +3466,10 @@
             "required": false,
             "type": "integer",
             "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -3362,6 +3479,8 @@
             "required": false,
             "type": "integer",
             "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -3409,9 +3528,6 @@
         ],
         "summary": "Get a sample in a study",
         "operationId": "getSampleInStudyUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -3448,9 +3564,6 @@
         ],
         "summary": "Get all clinical data of a sample in a study",
         "operationId": "getAllClinicalDataOfSampleInStudyUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -3497,6 +3610,10 @@
             "required": false,
             "type": "integer",
             "default": 10000000,
+            "maximum": 10000000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -3506,6 +3623,8 @@
             "required": false,
             "type": "integer",
             "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -3552,9 +3671,6 @@
         ],
         "summary": "Get copy number segments in a sample in a study",
         "operationId": "getCopyNumberSegmentsInSampleInStudyUsingGET",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
           "application/json"
         ],
@@ -3594,6 +3710,10 @@
             "required": false,
             "type": "integer",
             "default": 20000,
+            "maximum": 20000,
+            "exclusiveMaximum": false,
+            "minimum": 1,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -3603,6 +3723,8 @@
             "required": false,
             "type": "integer",
             "default": 0,
+            "minimum": 0,
+            "exclusiveMinimum": false,
             "format": "int32"
           },
           {
@@ -3647,293 +3769,11 @@
     }
   },
   "definitions": {
-    "ClinicalData": {
-      "type": "object",
-      "properties": {
-        "clinicalAttribute": {
-          "$ref": "#/definitions/ClinicalAttribute"
-        },
-        "clinicalAttributeId": {
-          "type": "string"
-        },
-        "patientId": {
-          "type": "string"
-        },
-        "sampleId": {
-          "type": "string"
-        },
-        "studyId": {
-          "type": "string"
-        },
-        "uniquePatientKey": {
-          "type": "string"
-        },
-        "uniqueSampleKey": {
-          "type": "string"
-        },
-        "value": {
-          "type": "string"
-        }
-      }
-    },
-    "GeneMolecularData": {
-      "type": "object",
-      "properties": {
-        "entrezGeneId": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "gene": {
-          "$ref": "#/definitions/Gene"
-        },
-        "molecularProfileId": {
-          "type": "string"
-        },
-        "patientId": {
-          "type": "string"
-        },
-        "sampleId": {
-          "type": "string"
-        },
-        "studyId": {
-          "type": "string"
-        },
-        "uniquePatientKey": {
-          "type": "string"
-        },
-        "uniqueSampleKey": {
-          "type": "string"
-        },
-        "value": {
-          "type": "string"
-        }
-      }
-    },
-    "ClinicalDataSingleStudyFilter": {
-      "type": "object",
-      "properties": {
-        "attributeIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "ids": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "MolecularProfileFilter": {
-      "type": "object",
-      "properties": {
-        "molecularProfileIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "studyIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "GenePanelDataFilter": {
-      "type": "object",
-      "properties": {
-        "entrezGeneIds": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "sampleIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "sampleListId": {
-          "type": "string"
-        }
-      }
-    },
-    "CopyNumberCount": {
-      "type": "object",
-      "properties": {
-        "alteration": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "entrezGeneId": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "molecularProfileId": {
-          "type": "string"
-        },
-        "numberOfSamples": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "numberOfSamplesWithAlterationInGene": {
-          "type": "integer",
-          "format": "int32"
-        }
-      }
-    },
-    "CopyNumberCountIdentifier": {
-      "type": "object",
-      "properties": {
-        "alteration": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "entrezGeneId": {
-          "type": "integer",
-          "format": "int32"
-        }
-      }
-    },
-    "MolecularDataFilter": {
-      "type": "object",
-      "properties": {
-        "entrezGeneIds": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "sampleIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "sampleListId": {
-          "type": "string"
-        }
-      }
-    },
-    "ClinicalDataIdentifier": {
-      "type": "object",
-      "properties": {
-        "entityId": {
-          "type": "string"
-        },
-        "studyId": {
-          "type": "string"
-        }
-      }
-    },
-    "MolecularProfile": {
-      "type": "object",
-      "properties": {
-        "datatype": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "molecularAlterationType": {
-          "type": "string",
-          "enum": [
-            "MUTATION_EXTENDED",
-            "FUSION",
-            "STRUCTURAL_VARIANT",
-            "COPY_NUMBER_ALTERATION",
-            "MICRO_RNA_EXPRESSION",
-            "MRNA_EXPRESSION",
-            "MRNA_EXPRESSION_NORMALS",
-            "RNA_EXPRESSION",
-            "METHYLATION",
-            "METHYLATION_BINARY",
-            "PHOSPHORYLATION",
-            "PROTEIN_LEVEL",
-            "PROTEIN_ARRAY_PROTEIN_LEVEL",
-            "PROTEIN_ARRAY_PHOSPHORYLATION",
-            "GENESET_SCORE"
-          ]
-        },
-        "molecularProfileId": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "showProfileInAnalysisTab": {
-          "type": "boolean"
-        },
-        "study": {
-          "$ref": "#/definitions/CancerStudy"
-        },
-        "studyId": {
-          "type": "string"
-        }
-      }
-    },
-    "Gene": {
-      "type": "object",
-      "properties": {
-        "chromosome": {
-          "type": "string"
-        },
-        "cytoband": {
-          "type": "string"
-        },
-        "entrezGeneId": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "hugoGeneSymbol": {
-          "type": "string"
-        },
-        "length": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "type": {
-          "type": "string"
-        }
-      }
-    },
-    "MutationPositionIdentifier": {
-      "type": "object",
-      "properties": {
-        "entrezGeneId": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "proteinPosEnd": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "proteinPosStart": {
-          "type": "integer",
-          "format": "int32"
-        }
-      }
-    },
-    "ClinicalEventData": {
-      "type": "object",
-      "properties": {
-        "key": {
-          "type": "string"
-        },
-        "value": {
-          "type": "string"
-        }
-      }
-    },
     "CancerStudy": {
       "type": "object",
+      "required": [
+        "studyId"
+      ],
       "properties": {
         "allSampleCount": {
           "type": "integer",
@@ -3964,7 +3804,7 @@
         },
         "importDate": {
           "type": "string",
-          "format": "date-time"
+          "example": "yyyy-MM-dd HH:mm:ss"
         },
         "methylationHm27SampleCount": {
           "type": "integer",
@@ -4013,9 +3853,47 @@
         "studyId": {
           "type": "string"
         }
-      }
+      },
+      "title": "CancerStudy"
     },
-    "SampleFilter": {
+    "ClinicalAttribute": {
+      "type": "object",
+      "required": [
+        "clinicalAttributeId",
+        "displayName",
+        "patientAttribute",
+        "studyId"
+      ],
+      "properties": {
+        "clinicalAttributeId": {
+          "type": "string"
+        },
+        "count": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "datatype": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "patientAttribute": {
+          "type": "boolean"
+        },
+        "priority": {
+          "type": "string"
+        },
+        "studyId": {
+          "type": "string"
+        }
+      },
+      "title": "ClinicalAttribute"
+    },
+    "ClinicalAttributeFilter": {
       "type": "object",
       "properties": {
         "sampleIdentifiers": {
@@ -4024,109 +3902,24 @@
             "$ref": "#/definitions/SampleIdentifier"
           }
         },
-        "sampleListIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "GenePanelMultipleStudyFilter": {
-      "type": "object",
-      "properties": {
-        "entrezGeneIds": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "molecularProfileIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "sampleMolecularIdentifiers": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/SampleMolecularIdentifier"
-          }
-        }
-      }
-    },
-    "SampleList": {
-      "type": "object",
-      "properties": {
-        "category": {
-          "type": "string"
-        },
-        "description": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "sampleCount": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "sampleIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
         "sampleListId": {
           "type": "string"
-        },
-        "studyId": {
-          "type": "string"
         }
-      }
+      },
+      "title": "ClinicalAttributeFilter"
     },
-    "MutationCount": {
+    "ClinicalData": {
       "type": "object",
+      "required": [
+        "clinicalAttributeId",
+        "patientId",
+        "studyId"
+      ],
       "properties": {
-        "molecularProfileId": {
-          "type": "string"
+        "clinicalAttribute": {
+          "$ref": "#/definitions/ClinicalAttribute"
         },
-        "mutationCount": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "patientId": {
-          "type": "string"
-        },
-        "sampleId": {
-          "type": "string"
-        },
-        "studyId": {
-          "type": "string"
-        },
-        "uniquePatientKey": {
-          "type": "string"
-        },
-        "uniqueSampleKey": {
-          "type": "string"
-        }
-      }
-    },
-    "GenePanelData": {
-      "type": "object",
-      "properties": {
-        "entrezGeneIds": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "genePanelId": {
-          "type": "string"
-        },
-        "molecularProfileId": {
+        "clinicalAttributeId": {
           "type": "string"
         },
         "patientId": {
@@ -4143,216 +3936,68 @@
         },
         "uniqueSampleKey": {
           "type": "string"
-        }
-      }
-    },
-    "GenePanelToGene": {
-      "type": "object",
-      "properties": {
-        "entrezGeneId": {
-          "type": "integer",
-          "format": "int32"
         },
-        "hugoGeneSymbol": {
+        "value": {
           "type": "string"
         }
-      }
+      },
+      "title": "ClinicalData"
     },
-    "GenePanel": {
+    "ClinicalDataIdentifier": {
       "type": "object",
       "properties": {
-        "description": {
+        "entityId": {
           "type": "string"
         },
-        "genePanelId": {
+        "studyId": {
           "type": "string"
-        },
-        "genes": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/GenePanelToGene"
-          }
         }
-      }
+      },
+      "title": "ClinicalDataIdentifier"
     },
-    "MolecularDataMultipleStudyFilter": {
+    "ClinicalDataMultiStudyFilter": {
       "type": "object",
       "properties": {
-        "entrezGeneIds": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "molecularProfileIds": {
+        "attributeIds": {
           "type": "array",
           "items": {
             "type": "string"
           }
         },
-        "sampleMolecularIdentifiers": {
+        "identifiers": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/SampleMolecularIdentifier"
+            "$ref": "#/definitions/ClinicalDataIdentifier"
           }
         }
-      }
+      },
+      "title": "ClinicalDataMultiStudyFilter"
     },
-    "SampleIdentifier": {
+    "ClinicalDataSingleStudyFilter": {
       "type": "object",
       "properties": {
-        "sampleId": {
-          "type": "string"
+        "attributeIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         },
-        "studyId": {
-          "type": "string"
+        "ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
-      }
-    },
-    "Sample": {
-      "type": "object",
-      "properties": {
-        "cancerTypeId": {
-          "type": "string"
-        },
-        "copyNumberSegmentPresent": {
-          "type": "boolean"
-        },
-        "patientId": {
-          "type": "string"
-        },
-        "sampleId": {
-          "type": "string"
-        },
-        "sampleType": {
-          "type": "string",
-          "enum": [
-            "Primary Solid Tumor",
-            "Recurrent Solid Tumor",
-            "Primary Blood Tumor",
-            "Recurrent Blood Tumor",
-            "Metastatic",
-            "Blood Derived Normal",
-            "Solid Tissues Normal"
-          ]
-        },
-        "sequenced": {
-          "type": "boolean"
-        },
-        "studyId": {
-          "type": "string"
-        },
-        "uniquePatientKey": {
-          "type": "string"
-        },
-        "uniqueSampleKey": {
-          "type": "string"
-        }
-      }
-    },
-    "CopyNumberSeg": {
-      "type": "object",
-      "properties": {
-        "chromosome": {
-          "type": "string"
-        },
-        "end": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "numberOfProbes": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "patientId": {
-          "type": "string"
-        },
-        "sampleId": {
-          "type": "string"
-        },
-        "segmentMean": {
-          "type": "number",
-          "format": "double"
-        },
-        "start": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "studyId": {
-          "type": "string"
-        },
-        "uniquePatientKey": {
-          "type": "string"
-        },
-        "uniqueSampleKey": {
-          "type": "string"
-        }
-      }
-    },
-    "Patient": {
-      "type": "object",
-      "properties": {
-        "patientId": {
-          "type": "string"
-        },
-        "studyId": {
-          "type": "string"
-        },
-        "uniquePatientKey": {
-          "type": "string"
-        },
-        "uniqueSampleKey": {
-          "type": "string"
-        }
-      }
-    },
-    "TypeOfCancer": {
-      "type": "object",
-      "properties": {
-        "cancerTypeId": {
-          "type": "string"
-        },
-        "clinicalTrialKeywords": {
-          "type": "string"
-        },
-        "dedicatedColor": {
-          "type": "string"
-        },
-        "name": {
-          "type": "string"
-        },
-        "parent": {
-          "type": "string"
-        },
-        "shortName": {
-          "type": "string"
-        }
-      }
-    },
-    "MutationCountByPosition": {
-      "type": "object",
-      "properties": {
-        "count": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "entrezGeneId": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "proteinPosEnd": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "proteinPosStart": {
-          "type": "integer",
-          "format": "int32"
-        }
-      }
+      },
+      "title": "ClinicalDataSingleStudyFilter"
     },
     "ClinicalEvent": {
       "type": "object",
+      "required": [
+        "eventType",
+        "patientId",
+        "studyId"
+      ],
       "properties": {
         "attributes": {
           "type": "array",
@@ -4383,45 +4028,130 @@
         "uniqueSampleKey": {
           "type": "string"
         }
-      }
+      },
+      "title": "ClinicalEvent"
     },
-    "PatientIdentifier": {
+    "ClinicalEventData": {
+      "type": "object",
+      "required": [
+        "key",
+        "value"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "title": "ClinicalEventData"
+    },
+    "CopyNumberCount": {
+      "type": "object",
+      "required": [
+        "alteration",
+        "entrezGeneId",
+        "molecularProfileId",
+        "numberOfSamples",
+        "numberOfSamplesWithAlterationInGene"
+      ],
+      "properties": {
+        "alteration": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "molecularProfileId": {
+          "type": "string"
+        },
+        "numberOfSamples": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "numberOfSamplesWithAlterationInGene": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "CopyNumberCount"
+    },
+    "CopyNumberCountIdentifier": {
       "type": "object",
       "properties": {
+        "alteration": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "CopyNumberCountIdentifier"
+    },
+    "CopyNumberSeg": {
+      "type": "object",
+      "required": [
+        "chromosome",
+        "end",
+        "numberOfProbes",
+        "patientId",
+        "sampleId",
+        "segmentMean",
+        "start",
+        "studyId"
+      ],
+      "properties": {
+        "chromosome": {
+          "type": "string"
+        },
+        "end": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "numberOfProbes": {
+          "type": "integer",
+          "format": "int32"
+        },
         "patientId": {
           "type": "string"
         },
+        "sampleId": {
+          "type": "string"
+        },
+        "segmentMean": {
+          "type": "number"
+        },
+        "start": {
+          "type": "integer",
+          "format": "int32"
+        },
         "studyId": {
           "type": "string"
-        }
-      }
-    },
-    "MutationMultipleStudyFilter": {
-      "type": "object",
-      "properties": {
-        "entrezGeneIds": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "format": "int32"
-          }
         },
-        "molecularProfileIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
+        "uniquePatientKey": {
+          "type": "string"
         },
-        "sampleMolecularIdentifiers": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/SampleMolecularIdentifier"
-          }
+        "uniqueSampleKey": {
+          "type": "string"
         }
-      }
+      },
+      "title": "CopyNumberSeg"
     },
     "DiscreteCopyNumberData": {
       "type": "object",
+      "required": [
+        "alteration",
+        "entrezGeneId",
+        "molecularProfileId",
+        "patientId",
+        "sampleId",
+        "studyId"
+      ],
       "properties": {
         "alteration": {
           "type": "integer",
@@ -4452,16 +4182,19 @@
         "uniqueSampleKey": {
           "type": "string"
         }
-      }
+      },
+      "title": "DiscreteCopyNumberData"
     },
-    "MutationFilter": {
+    "DiscreteCopyNumberFilter": {
       "type": "object",
       "properties": {
         "entrezGeneIds": {
           "type": "array",
           "items": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "minimum": 1,
+            "maximum": 50000
           }
         },
         "sampleIds": {
@@ -4473,38 +4206,348 @@
         "sampleListId": {
           "type": "string"
         }
-      }
+      },
+      "title": "DiscreteCopyNumberFilter"
     },
-    "ClinicalDataMultiStudyFilter": {
+    "Gene": {
       "type": "object",
+      "required": [
+        "entrezGeneId",
+        "hugoGeneSymbol"
+      ],
       "properties": {
-        "attributeIds": {
+        "chromosome": {
+          "type": "string"
+        },
+        "cytoband": {
+          "type": "string"
+        },
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "length": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "title": "Gene"
+    },
+    "GeneMolecularData": {
+      "type": "object",
+      "required": [
+        "entrezGeneId",
+        "molecularProfileId",
+        "patientId",
+        "sampleId",
+        "studyId",
+        "value"
+      ],
+      "properties": {
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "gene": {
+          "$ref": "#/definitions/Gene"
+        },
+        "molecularProfileId": {
+          "type": "string"
+        },
+        "patientId": {
+          "type": "string"
+        },
+        "sampleId": {
+          "type": "string"
+        },
+        "studyId": {
+          "type": "string"
+        },
+        "uniquePatientKey": {
+          "type": "string"
+        },
+        "uniqueSampleKey": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "title": "GeneMolecularData"
+    },
+    "GenePanel": {
+      "type": "object",
+      "required": [
+        "genePanelId"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "genePanelId": {
+          "type": "string"
+        },
+        "genes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GenePanelToGene"
+          }
+        }
+      },
+      "title": "GenePanel"
+    },
+    "GenePanelData": {
+      "type": "object",
+      "required": [
+        "entrezGeneId",
+        "molecularProfileId",
+        "patientId",
+        "sampleId",
+        "sequenced",
+        "studyId",
+        "wholeExomeSequenced"
+      ],
+      "properties": {
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "genePanelId": {
+          "type": "string"
+        },
+        "molecularProfileId": {
+          "type": "string"
+        },
+        "patientId": {
+          "type": "string"
+        },
+        "sampleId": {
+          "type": "string"
+        },
+        "sequenced": {
+          "type": "boolean"
+        },
+        "studyId": {
+          "type": "string"
+        },
+        "uniquePatientKey": {
+          "type": "string"
+        },
+        "uniqueSampleKey": {
+          "type": "string"
+        },
+        "wholeExomeSequenced": {
+          "type": "boolean"
+        }
+      },
+      "title": "GenePanelData"
+    },
+    "GenePanelDataFilter": {
+      "type": "object",
+      "required": [
+        "entrezGeneIds"
+      ],
+      "properties": {
+        "entrezGeneIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1,
+            "maximum": 10000000
+          }
+        },
+        "sampleIds": {
           "type": "array",
           "items": {
             "type": "string"
           }
         },
-        "identifiers": {
+        "sampleListId": {
+          "type": "string"
+        }
+      },
+      "title": "GenePanelDataFilter"
+    },
+    "GenePanelMultipleStudyFilter": {
+      "type": "object",
+      "required": [
+        "entrezGeneIds",
+        "sampleMolecularIdentifiers"
+      ],
+      "properties": {
+        "entrezGeneIds": {
           "type": "array",
           "items": {
-            "$ref": "#/definitions/ClinicalDataIdentifier"
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1,
+            "maximum": 10000000
+          }
+        },
+        "sampleMolecularIdentifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SampleMolecularIdentifier"
           }
         }
-      }
+      },
+      "title": "GenePanelMultipleStudyFilter"
     },
-    "SampleMolecularIdentifier": {
+    "GenePanelToGene": {
+      "type": "object",
+      "required": [
+        "entrezGeneId",
+        "hugoGeneSymbol"
+      ],
+      "properties": {
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        }
+      },
+      "title": "GenePanelToGene"
+    },
+    "MolecularDataFilter": {
       "type": "object",
       "properties": {
+        "entrezGeneIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1,
+            "maximum": 10000000
+          }
+        },
+        "sampleIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sampleListId": {
+          "type": "string"
+        }
+      },
+      "title": "MolecularDataFilter"
+    },
+    "MolecularDataMultipleStudyFilter": {
+      "type": "object",
+      "properties": {
+        "entrezGeneIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1,
+            "maximum": 10000000
+          }
+        },
+        "molecularProfileIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sampleMolecularIdentifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SampleMolecularIdentifier"
+          }
+        }
+      },
+      "title": "MolecularDataMultipleStudyFilter"
+    },
+    "MolecularProfile": {
+      "type": "object",
+      "required": [
+        "molecularProfileId",
+        "studyId"
+      ],
+      "properties": {
+        "datatype": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "molecularAlterationType": {
+          "type": "string",
+          "enum": [
+            "MUTATION_EXTENDED",
+            "FUSION",
+            "STRUCTURAL_VARIANT",
+            "COPY_NUMBER_ALTERATION",
+            "MICRO_RNA_EXPRESSION",
+            "MRNA_EXPRESSION",
+            "MRNA_EXPRESSION_NORMALS",
+            "RNA_EXPRESSION",
+            "METHYLATION",
+            "METHYLATION_BINARY",
+            "PHOSPHORYLATION",
+            "PROTEIN_LEVEL",
+            "PROTEIN_ARRAY_PROTEIN_LEVEL",
+            "PROTEIN_ARRAY_PHOSPHORYLATION",
+            "GENESET_SCORE"
+          ]
+        },
         "molecularProfileId": {
           "type": "string"
         },
-        "sampleId": {
+        "name": {
+          "type": "string"
+        },
+        "showProfileInAnalysisTab": {
+          "type": "boolean"
+        },
+        "study": {
+          "$ref": "#/definitions/CancerStudy"
+        },
+        "studyId": {
           "type": "string"
         }
-      }
+      },
+      "title": "MolecularProfile"
+    },
+    "MolecularProfileFilter": {
+      "type": "object",
+      "properties": {
+        "molecularProfileIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "studyIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "MolecularProfileFilter"
     },
     "Mutation": {
       "type": "object",
+      "required": [
+        "entrezGeneId",
+        "molecularProfileId",
+        "patientId",
+        "sampleId",
+        "sequenced",
+        "studyId",
+        "wildType"
+      ],
       "properties": {
         "aminoAcidChange": {
           "type": "string"
@@ -4533,8 +4576,7 @@
           "format": "int32"
         },
         "fisValue": {
-          "type": "number",
-          "format": "double"
+          "type": "number"
         },
         "functionalImpactScore": {
           "type": "string"
@@ -4597,6 +4639,9 @@
         "sampleId": {
           "type": "string"
         },
+        "sequenced": {
+          "type": "boolean"
+        },
         "startPosition": {
           "type": "integer",
           "format": "int64"
@@ -4626,17 +4671,86 @@
         },
         "variantType": {
           "type": "string"
+        },
+        "wildType": {
+          "type": "boolean"
         }
-      }
+      },
+      "title": "Mutation"
     },
-    "DiscreteCopyNumberFilter": {
+    "MutationCount": {
+      "type": "object",
+      "required": [
+        "molecularProfileId",
+        "mutationCount",
+        "patientId",
+        "sampleId",
+        "studyId"
+      ],
+      "properties": {
+        "molecularProfileId": {
+          "type": "string"
+        },
+        "mutationCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "patientId": {
+          "type": "string"
+        },
+        "sampleId": {
+          "type": "string"
+        },
+        "studyId": {
+          "type": "string"
+        },
+        "uniquePatientKey": {
+          "type": "string"
+        },
+        "uniqueSampleKey": {
+          "type": "string"
+        }
+      },
+      "title": "MutationCount"
+    },
+    "MutationCountByPosition": {
+      "type": "object",
+      "required": [
+        "count",
+        "entrezGeneId",
+        "proteinPosEnd",
+        "proteinPosStart"
+      ],
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "proteinPosEnd": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "proteinPosStart": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "MutationCountByPosition"
+    },
+    "MutationFilter": {
       "type": "object",
       "properties": {
         "entrezGeneIds": {
           "type": "array",
           "items": {
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "minimum": 1,
+            "maximum": 10000000
           }
         },
         "sampleIds": {
@@ -4648,33 +4762,261 @@
         "sampleListId": {
           "type": "string"
         }
-      }
+      },
+      "title": "MutationFilter"
     },
-    "ClinicalAttribute": {
+    "MutationMultipleStudyFilter": {
       "type": "object",
       "properties": {
-        "clinicalAttributeId": {
+        "entrezGeneIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 1,
+            "maximum": 10000000
+          }
+        },
+        "molecularProfileIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sampleMolecularIdentifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SampleMolecularIdentifier"
+          }
+        }
+      },
+      "title": "MutationMultipleStudyFilter"
+    },
+    "MutationPositionIdentifier": {
+      "type": "object",
+      "properties": {
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "proteinPosEnd": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "proteinPosStart": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "MutationPositionIdentifier"
+    },
+    "Patient": {
+      "type": "object",
+      "required": [
+        "patientId",
+        "studyId"
+      ],
+      "properties": {
+        "patientId": {
           "type": "string"
         },
-        "datatype": {
+        "studyId": {
           "type": "string"
         },
-        "description": {
+        "uniquePatientKey": {
           "type": "string"
         },
-        "displayName": {
+        "uniqueSampleKey": {
           "type": "string"
+        }
+      },
+      "title": "Patient"
+    },
+    "PatientFilter": {
+      "type": "object",
+      "properties": {
+        "patientIdentifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PatientIdentifier"
+          }
         },
-        "patientAttribute": {
-          "type": "boolean"
-        },
-        "priority": {
+        "uniquePatientKeys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "PatientFilter"
+    },
+    "PatientIdentifier": {
+      "type": "object",
+      "properties": {
+        "patientId": {
           "type": "string"
         },
         "studyId": {
           "type": "string"
         }
-      }
+      },
+      "title": "PatientIdentifier"
+    },
+    "Sample": {
+      "type": "object",
+      "required": [
+        "patientId",
+        "sampleId",
+        "studyId"
+      ],
+      "properties": {
+        "cancerTypeId": {
+          "type": "string"
+        },
+        "copyNumberSegmentPresent": {
+          "type": "boolean"
+        },
+        "patientId": {
+          "type": "string"
+        },
+        "sampleId": {
+          "type": "string"
+        },
+        "sampleType": {
+          "type": "string",
+          "enum": [
+            "Primary Solid Tumor",
+            "Recurrent Solid Tumor",
+            "Primary Blood Tumor",
+            "Recurrent Blood Tumor",
+            "Metastatic",
+            "Blood Derived Normal",
+            "Solid Tissues Normal"
+          ]
+        },
+        "sequenced": {
+          "type": "boolean"
+        },
+        "studyId": {
+          "type": "string"
+        },
+        "uniquePatientKey": {
+          "type": "string"
+        },
+        "uniqueSampleKey": {
+          "type": "string"
+        }
+      },
+      "title": "Sample"
+    },
+    "SampleFilter": {
+      "type": "object",
+      "properties": {
+        "sampleIdentifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SampleIdentifier"
+          }
+        },
+        "sampleListIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "uniqueSampleKeys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "SampleFilter"
+    },
+    "SampleIdentifier": {
+      "type": "object",
+      "properties": {
+        "sampleId": {
+          "type": "string"
+        },
+        "studyId": {
+          "type": "string"
+        }
+      },
+      "title": "SampleIdentifier"
+    },
+    "SampleList": {
+      "type": "object",
+      "required": [
+        "sampleListId"
+      ],
+      "properties": {
+        "category": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "sampleCount": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "sampleIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sampleListId": {
+          "type": "string"
+        },
+        "studyId": {
+          "type": "string"
+        }
+      },
+      "title": "SampleList"
+    },
+    "SampleMolecularIdentifier": {
+      "type": "object",
+      "properties": {
+        "molecularProfileId": {
+          "type": "string"
+        },
+        "sampleId": {
+          "type": "string"
+        }
+      },
+      "title": "SampleMolecularIdentifier"
+    },
+    "TypeOfCancer": {
+      "type": "object",
+      "required": [
+        "cancerTypeId"
+      ],
+      "properties": {
+        "cancerTypeId": {
+          "type": "string"
+        },
+        "clinicalTrialKeywords": {
+          "type": "string"
+        },
+        "dedicatedColor": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "parent": {
+          "type": "string"
+        },
+        "shortName": {
+          "type": "string"
+        }
+      },
+      "title": "TypeOfCancer"
     }
   }
 }

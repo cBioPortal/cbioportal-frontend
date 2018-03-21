@@ -22,6 +22,7 @@ export enum MutualExclusivityTableColumnType {
     BOTH,
     LOG_ODDS_RATIO,
     P_VALUE,
+    ADJUSTED_P_VALUE,
     ASSOCIATION
 }
 
@@ -51,9 +52,10 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
             MutualExclusivityTableColumnType.BOTH,
             MutualExclusivityTableColumnType.LOG_ODDS_RATIO,
             MutualExclusivityTableColumnType.P_VALUE,
+            MutualExclusivityTableColumnType.ADJUSTED_P_VALUE,
             MutualExclusivityTableColumnType.ASSOCIATION
         ],
-        initialSortColumn: "p-Value"
+        initialSortColumn: "Adjusted p-Value"
     };
 
     protected generateColumns() {
@@ -123,19 +125,27 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
 
         this._columns[MutualExclusivityTableColumnType.P_VALUE] = {
             name: "p-Value",
-            render: (d: MutualExclusivity) => formatPValueWithStyle(d.pValue),
+            render: (d: MutualExclusivity) => <span>{formatPValue(d.pValue)}</span>,
             tooltip: <span>Derived from Fisher Exact Test</span>,
             sortBy: (d: MutualExclusivity) => d.pValue,
             download: (d: MutualExclusivity) => formatPValue(d.pValue)
         };
 
+        this._columns[MutualExclusivityTableColumnType.ADJUSTED_P_VALUE] = {
+            name: "Adjusted p-Value",
+            render: (d: MutualExclusivity) => formatPValueWithStyle(d.adjustedPValue),
+            tooltip: <span>Bonferroni adjusted p-Value</span>,
+            sortBy: (d: MutualExclusivity) => d.adjustedPValue,
+            download: (d: MutualExclusivity) => formatPValue(d.adjustedPValue)
+        };
+
         this._columns[MutualExclusivityTableColumnType.ASSOCIATION] = {
             name: "Tendency",
-            render: (d: MutualExclusivity) => <span>{d.association}&nbsp;&nbsp;&nbsp;{d.pValue < 0.05 ?
+            render: (d: MutualExclusivity) => <span>{d.association}&nbsp;&nbsp;&nbsp;{d.adjustedPValue < 0.05 ?
                 <Badge style={{ backgroundColor: '#58ACFA' }}>Significant</Badge> : ""}</span>,
             tooltip: <span>Log odds ratio > 0 &nbsp;&nbsp;: Tendency towards co-occurrence<br />
                 Log odds ratio &lt;= 0 : Tendency towards mutual exclusivity<br />
-                p-Value &lt; 0.05 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Significant association</span>,
+                Adjusted p-Value &lt; 0.05 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Significant association</span>,
             filter: (d: MutualExclusivity, filterString: string, filterStringUpper: string) =>
                 d.association.toUpperCase().includes(filterStringUpper),
             sortBy: (d: MutualExclusivity) => d.association,
@@ -146,8 +156,8 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
     public render() {
         const orderedColumns = _.sortBy(this._columns, (c: MutualExclusivityTableColumn) => c.order);
         return (
-            <MutualExclusivityTableComponent columns={orderedColumns} data={this.props.data}
-                initialSortColumn={this.props.initialSortColumn} />
+            <MutualExclusivityTableComponent columns={orderedColumns} data={this.props.data} initialItemsPerPage={50}
+                initialSortColumn={this.props.initialSortColumn} paginationProps={{ itemsPerPageOptions: [50] }}/>
         );
     }
 }

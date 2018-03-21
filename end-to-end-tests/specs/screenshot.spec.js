@@ -2,12 +2,9 @@ var assert = require('assert');
 var expect = require('chai').expect;
 var waitForOncoprint = require('./specUtils').waitForOncoprint;
 var goToUrlAndSetLocalStorage = require('./specUtils').goToUrlAndSetLocalStorage;
+var assertScreenShotMatch = require('../lib/testUtils').assertScreenShotMatch;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
-
-function ssAssert(result, message){
-    assert(result[0].isWithinMisMatchTolerance);
-};
 
 function runResultsTests(){
 
@@ -15,7 +12,7 @@ function runResultsTests(){
         waitForOncoprint();
         browser.pause(2000);
         var res = browser.checkElement('#oncoprint');
-        ssAssert(res);
+        assertScreenShotMatch(res);
     });
 
     // can't get it to pass reliably
@@ -23,55 +20,55 @@ function runResultsTests(){
         browser.click("[href='#igv_tab']");
         browser.waitForExist('#cnSegmentsFrame', 20000);
         var res = browser.checkElement('#igv_tab',{hide:['.qtip'] });
-        ssAssert(res);
+        assertScreenShotMatch(res);
     });
 
     it('cancer type summary', function(){
         browser.click("[href='#pancancer_study_summary']");
-        browser.waitForVisible('.cancer-summary-chart-container',10000);
+        browser.waitForVisible('[data-test="cancerTypeSummaryChart"]',10000);
         var res = browser.checkElement('#pancancer_study_summary', { hide:['.qtip'] });
-        ssAssert(res);
+        assertScreenShotMatch(res);
     });
 
     it('mutex tab', function(){
         browser.click("[href='#mutex']");
         var res = browser.checkElement('#mutex',{ hide:['.qtip'] });
-        ssAssert(res);
+        assertScreenShotMatch(res);
     });
 
     it('plots tab', function(){
         browser.click("[href='#plots']");
         browser.waitForExist('#plots-box svg',10000);
         var res = browser.checkElement('#plots', { hide:['.qtip'], misMatchTolerance:1 });
-        ssAssert(res);
+        assertScreenShotMatch(res);
     });
 
-    it.skip('mutation tab', function(){
+    it('mutation tab', function(){
         browser.click("[href='#mutation_details']");
         browser.waitForVisible('.borderedChart svg',20000);
         var res = browser.checkElement('#mutation_details',{hide:['.qtip'] });
-        ssAssert(res);
+        assertScreenShotMatch(res);
     });
 
     it('coexpression tab', function(){
         browser.click("[href='#coexp']");
         browser.waitForVisible('#coexp_table_div_KRAS',10000);
         var res = browser.checkElement('#coexp',{hide:['.qtip'] });
-        ssAssert(res);
+        assertScreenShotMatch(res);
     });
 
     it('survival tab', function(){
         browser.click("[href='#survival']");
         browser.waitForVisible('[data-test=SurvivalChart] svg',10000);
-        var res = browser.checkElement('#survival',{hide:['.qtip'] });
-        ssAssert(res);
+        var res = browser.checkElement('#survival');
+        assertScreenShotMatch(res);
     });
 
     it('network tab', function(){
         browser.click("[href='#network']");
         browser.waitForVisible('#cytoscapeweb canvas',20000);
         var res = browser.checkElement("#network",{hide:['.qtip','canvas'] });
-        ssAssert(res);
+        assertScreenShotMatch(res);
     });
 
     it.skip('data_download tab', function(){
@@ -80,13 +77,7 @@ function runResultsTests(){
         browser.waitForExist("#text_area_gene_alteration_freq",20000);
         browser.waitUntil(function(){ return browser.getValue("#text_area_gene_alteration_freq").length > 0 },20000);
         var res = browser.checkElement('#data_download',{hide:['.qtip'] });
-        ssAssert(res);
-    });
-
-    it('bookmark tab', function(){
-        browser.click("[href='#bookmark_email']");
-        var res = browser.checkElement('#bookmark_email', {hide:['.qtip'] });
-        ssAssert(res);
+        assertScreenShotMatch(res);
     });
 
 }
@@ -102,13 +93,42 @@ describe('result page screenshot tests', function(){
 
 });
 
+describe("oncoprint screenshot tests", function() {
+    it("msk_impact_2017 with SOS1 - SOS1 should be not sequenced", function() {
+        var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=msk_impact_2017_all&gene_list=SOS1&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=msk_impact_2017_cna`;
+        goToUrlAndSetLocalStorage(url);
+        waitForOncoprint(10000);
+        var res = browser.checkElement("#oncoprint");
+        assertScreenShotMatch(res);
+    });
+    it("msk_impact_2017 with ALK and SOS1 - SOS1 should be not sequenced", function() {
+        var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=msk_impact_2017_all&gene_list=ALK%2520SOS1&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=msk_impact_2017_cna`;
+        goToUrlAndSetLocalStorage(url);
+        waitForOncoprint(10000);
+        var res = browser.checkElement("#oncoprint");
+        assertScreenShotMatch(res);
+    });
+});
+
+describe("download tab screenshot tests", function() {
+    it("download tab - msk_impact_2017 with ALK and SOS1 - SOS1 should be not sequenced", function() {
+        var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=msk_impact_2017_all&gene_list=ALK%2520SOS1&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=msk_impact_2017_cna`;
+        goToUrlAndSetLocalStorage(url);
+        browser.click("[href='#data_download']");
+        browser.waitForExist('[data-test="dataDownloadGeneAlterationTable"] tr > td > svg', 20000);
+        var res = browser.checkElement('#data_download',{hide:['.qtip'] });
+        assertScreenShotMatch(res);
+    });
+});
+
+
 describe('patient view page screenshot test', function(){
     before(function(){
         var url = `${CBIOPORTAL_URL}/case.do#/patient?studyId=lgg_ucsf_2014&caseId=P04`;
         goToUrlAndSetLocalStorage(url);
     });
 
-	it('patient view lgg_ucsf_2014 P04', function() {
+    it('patient view lgg_ucsf_2014 P04', function() {
         // find oncokb image
         var oncokbIndicator = $('[data-test="oncogenic-icon-image"]');
         oncokbIndicator.waitForExist(30000);
@@ -117,8 +137,8 @@ describe('patient view page screenshot test', function(){
         vafPlot.waitForExist(30000);
 
         var res = browser.checkElement('#mainColumn', {hide:['.qtip'] });
-        ssAssert(res);
-	});
+        assertScreenShotMatch(res);
+    });
 });
 
 describe('study view screenshot test', function(){
@@ -127,7 +147,7 @@ describe('study view screenshot test', function(){
         goToUrlAndSetLocalStorage(url);
     });
 
-	it('study view lgg_ucsf_2014', function() {
+    it('study view lgg_ucsf_2014', function() {
         // assume that when mutated genes header is loaded the full page is
         // done loading
         var mutatedGenesHeader = $('#chart-new-mutated_genes-chart-header');
@@ -138,8 +158,8 @@ describe('study view screenshot test', function(){
         browser.pause(5000);
 
         var res = browser.checkElement('#page_wrapper_table', {hide:['.qtip'] });
-        ssAssert(res);
-	});
+        assertScreenShotMatch(res);
+    });
 });
 
 describe('result page tabs, loading from session id', function(){
