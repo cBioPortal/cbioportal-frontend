@@ -462,6 +462,9 @@ th.reactable-header-sort-asc:after {
   padding:10px;
   border-radius:$cornerBorderRadius;
   border:1px dashed $borderColor;
+  display:inline-block;
+  position:relative;
+  max-width:100%;
 }
 
 h3.hr {
