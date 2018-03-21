@@ -48,15 +48,6 @@ export class StudyViewPageStore {
         )
     }
 
-    //TODO: make studyId, sampleAttrIds, patientAttrIds dynamic
-    // @observable studyId = "hnsc_tcga";
-
-    // @observable molecularProfileId = "hnsc_tcga_mutations";
-
-    // @observable sampleAttrIds = ["OCT_EMBEDDED","PRIMARY_SITE","AMPLIFICATION_STATUS"];
-
-    // @observable patientAttrIds = ["AJCC_PATHOLOGIC_TUMOR_STAGE","ICD_O_3_HISTOLOGY","SEX"];
-
     @observable studyId:string;
 
     @observable sampleAttrIds:string[] = [];
@@ -175,13 +166,65 @@ export class StudyViewPageStore {
         await: ()=>[this.clinicalAttributes],
         invoke: async () => {
             let selectedAttrIds = [...this.sampleAttrIds, ...this.patientAttrIds];
-            let visibleClinicalAttributes = this.clinicalAttributes.result.filter(attribute => attribute.datatype == "STRING");
+            //filter datatype === "STRING"
+            let visibleClinicalAttributes = this.clinicalAttributes.result.filter(attribute => attribute.datatype === "STRING");
             if(!_.isEmpty(selectedAttrIds)){
                 visibleClinicalAttributes = visibleClinicalAttributes.filter(attribute => {
                     return _.includes(selectedAttrIds, attribute.clinicalAttributeId);
                 });
             }
-            return visibleClinicalAttributes;
+            // return visibleClinicalAttributes;
+            // TODO
+            // START : This is a temporary logic to dispaly only the attributes with values(slices) size >1 and <10
+            let attribureSet: { [id: string]: ClinicalAttribute } = _.reduce(visibleClinicalAttributes, function (result, obj) {
+                result["SAMPLE_" + obj.clinicalAttributeId] = obj
+                return result;
+            }, {} as any)
+            
+            let sampleData:ClinicalAttributeData = await internalClient.fetchClinicalDataCountsUsingPOST({
+                studyId: this.studyId,
+                clinicalDataType: "SAMPLE",
+                clinicalDataCountFilter: {
+                    attributeIds: visibleClinicalAttributes
+                                    .filter(attribute => !attribute.patientAttribute)
+                                    .map(attribute => attribute.clinicalAttributeId),
+                    filter: this.filters
+                }
+            })
+
+            let patientData:ClinicalAttributeData = await internalClient.fetchClinicalDataCountsUsingPOST({
+                studyId: this.studyId,
+                clinicalDataType: "PATIENT",
+                clinicalDataCountFilter: {
+                    attributeIds: visibleClinicalAttributes
+                                    .filter(attribute => attribute.patientAttribute)
+                                    .map(attribute => attribute.clinicalAttributeId),
+                    filter: this.filters
+                }
+            })
+
+            let filterSampleAttributes:ClinicalAttribute[] = _.reduce(sampleData, function (result, value, key) {
+                //check if number of visible charts <10 and number of slices >1 and <10
+                if(result.length<10 && value.length>1 && value.length<10){
+                    if(attribureSet["SAMPLE_"+key]){
+                        result.push(attribureSet["SAMPLE_"+key]);
+                    }
+                }
+                return result;
+            }, [] as any)
+
+            let filterPatientAttributes:ClinicalAttribute[] = _.reduce(patientData, function (result, value, key) {
+                //check if number of visible charts <10 and number of slices >1 and <10
+                if(result.length<10 && value.length>1 && value.length<10){
+                    if(attribureSet["SAMPLE_"+key]){
+                        result.push(attribureSet["SAMPLE_"+key]);
+                    }
+                }
+                return result;
+            } , [] as any)
+            //END
+            
+            return [...filterSampleAttributes,...filterPatientAttributes];
         },
         default: []
     });
