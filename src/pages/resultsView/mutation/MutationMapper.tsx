@@ -230,7 +230,7 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                                     itemsLabelPlural={this.itemsLabelPlural}
                                     downloadDataFetcher={this.props.store.downloadDataFetcher}
                                     myCancerGenomeData={this.props.myCancerGenomeData}
-                                    hotspots={this.props.store.indexedHotspotData.result}
+                                    hotspotData={this.props.store.indexedHotspotData}
                                     cosmicData={this.props.store.cosmicData.result}
                                     oncoKbData={this.props.store.oncoKbData}
                                     civicGenes={this.props.store.civicGenes}

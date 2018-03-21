@@ -9,11 +9,12 @@ import ValidationAlert from "shared/components/ValidationAlert";
 import AjaxErrorModal from "shared/components/AjaxErrorModal";
 import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
 import {ResultsViewPageStore, SamplesSpecificationElement} from "./ResultsViewPageStore";
-import CancerSummaryContainer from "shared/components/cancerSummary/CancerSummaryContainer";
+import CancerSummaryContainer from "pages/resultsView/cancerSummary/CancerSummaryContainer";
 import Mutations from "./mutation/Mutations";
 import {stringListToSet} from "../../shared/lib/StringUtils";
 import MutualExclusivityTab from "./mutualExclusivity/MutualExclusivityTab";
 import SurvivalTab from "./survival/SurvivalTab";
+import DownloadTab from "./download/DownloadTab";
 import Chart from 'chart.js';
 import {CancerStudy, Sample} from "../../shared/api/generated/CBioPortalAPI";
 import AppConfig from 'appConfig';
@@ -36,6 +37,7 @@ import {QuerySession} from "../../shared/lib/QuerySession";
 import ResultsViewOncoprint from "shared/components/oncoprint/ResultsViewOncoprint";
 import QuerySummary from "./querySummary/QuerySummary";
 import {QueryStore} from "../../shared/components/query/QueryStore";
+import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 
 
 const win = (window as any);
@@ -47,6 +49,11 @@ function initStore(queryStore: QueryStore) {
     const oqlQuery = serverVars.theQuery;
 
     const parsedOQL = (window as any).oql_parser.parse(oqlQuery);
+
+    const genesetIds = (serverVars.genesetIds.length
+        ? serverVars.genesetIds.split(/\s+/)
+        : []
+    );
 
     const resultsViewPageStore = new ResultsViewPageStore();
 
@@ -78,7 +85,8 @@ function initStore(queryStore: QueryStore) {
     }
 
     resultsViewPageStore.samplesSpecification = samplesSpecification;
-    resultsViewPageStore.hugoGeneSymbols = _.map(parsedOQL,(o:any)=>o.gene); //qSession.getQueryGenes();
+    resultsViewPageStore.hugoGeneSymbols = _.map(parsedOQL, (o: any) => o.gene); //qSession.getQueryGenes();
+    resultsViewPageStore.genesetIds = genesetIds;
     resultsViewPageStore.selectedMolecularProfileIds = serverVars.molecularProfiles; // qSession.getGeneticProfileIds();
     resultsViewPageStore.rppaScoreThreshold = serverVars.rppaScoreThreshold; // FIX!
     resultsViewPageStore.zScoreThreshold = serverVars.zScoreThreshold;
@@ -224,16 +232,39 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             });
 
         exposeComponentRenderer('renderCancerTypeSummary',
-            (props: MutationsTabInitProps) => {
-                return <div>
-                    <AjaxErrorModal
-                        show={(this.resultsViewPageStore.ajaxErrors.length > 0)}
-                        onHide={() => {
-                            this.resultsViewPageStore.clearErrors();
-                        }}
-                    />
-                    <CancerSummaryContainer store={this.resultsViewPageStore}/>
-                </div>
+            () => {
+
+                return <Observer>
+                    {() => {
+
+                        const isComplete = this.resultsViewPageStore.samplesExtendedWithClinicalData.isComplete && this.resultsViewPageStore.alterationsByGeneBySampleKey.isComplete;
+                        const isPending = this.resultsViewPageStore.samplesExtendedWithClinicalData.isPending && this.resultsViewPageStore.alterationsByGeneBySampleKey.isPending;
+
+                        if (isComplete) {
+                            return (<div>
+                                <AjaxErrorModal
+                                    show={(this.resultsViewPageStore.ajaxErrors.length > 0)}
+                                    onHide={() => {
+                                        this.resultsViewPageStore.clearErrors();
+                                    }}
+                                />
+                                <CancerSummaryContainer
+                                    genes={this.resultsViewPageStore.genes.result!}
+                                    samplesExtendedWithClinicalData={this.resultsViewPageStore.samplesExtendedWithClinicalData.result!}
+                                    alterationsByGeneBySampleKey={this.resultsViewPageStore.alterationsByGeneBySampleKey.result!}
+                                    studies={this.resultsViewPageStore.studies.result!}
+                                    studyMap={this.resultsViewPageStore.studyMap}
+                                  />
+                            </div>)
+                        } else if (isPending) {
+                            return <Loader isLoading={true}/>
+                        } else {
+                            return <div></div>;
+                        }
+
+                    }}
+                </Observer>
+
             });
 
 
@@ -257,6 +288,14 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             return (<div className="cbioportal-frontend">
                 <SurvivalTab store={this.resultsViewPageStore}/>
             </div>)
+        });
+
+        exposeComponentRenderer('renderDownloadTab', () => {
+            return (
+                <div>
+                    <DownloadTab store={this.resultsViewPageStore} />
+                </div>
+            );
         });
     }
 

@@ -44,11 +44,18 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 10px;
   flex-direction: column;
 
   div {
     margin-bottom: 5px;
   }
 
+}
+
+.oncoprintContainer {
+  opacity: 0;
+  &.fadeIn {
+    transition: opacity .75s ease-in-out;
+    opacity:1;
+  }
 }
