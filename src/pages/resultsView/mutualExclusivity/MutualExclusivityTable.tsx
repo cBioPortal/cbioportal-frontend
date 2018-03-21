@@ -145,7 +145,7 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
                 <Badge style={{ backgroundColor: '#58ACFA' }}>Significant</Badge> : ""}</span>,
             tooltip: <span>Log odds ratio > 0 &nbsp;&nbsp;: Tendency towards co-occurrence<br />
                 Log odds ratio &lt;= 0 : Tendency towards mutual exclusivity<br />
-                p-Value &lt; 0.05 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Significant association</span>,
+                Adjusted p-Value &lt; 0.05 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Significant association</span>,
             filter: (d: MutualExclusivity, filterString: string, filterStringUpper: string) =>
                 d.association.toUpperCase().includes(filterStringUpper),
             sortBy: (d: MutualExclusivity) => d.association,

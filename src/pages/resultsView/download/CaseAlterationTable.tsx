@@ -1,5 +1,6 @@
 import {observer} from "mobx-react";
 import * as React from 'react';
+import * as _ from 'lodash';
 import {default as LazyMobXTable, Column} from "shared/components/lazyMobXTable/LazyMobXTable";
 import {OQLLineFilterOutput} from "shared/lib/oql/oqlfilter";
 import {AnnotatedExtendedAlteration} from "../ResultsViewPageStore";
@@ -11,6 +12,7 @@ export interface ISubAlteration {
 
 export interface IOqlData {
     geneSymbol: string;
+    sequenced: boolean;
     mutation: string[];
     fusion: string[];
     cna: ISubAlteration[];
@@ -82,6 +84,22 @@ export function generateOqlValue(data: IOqlData): string
     return oqlValue.join(" ");
 }
 
+export function generateOqlDisplayValue(oqlData: {[oqlLine: string]: IOqlData}, oqlLine: string)
+{
+    let oqlValue = "";
+
+    if (!_.isEmpty(oqlData))
+    {
+        const datum = oqlData[oqlLine];
+
+        if (datum) {
+            oqlValue = datum.sequenced ? generateOqlValue(oqlData[oqlLine]) : "N/S";
+        }
+    }
+
+    return oqlValue;
+}
+
 class CaseAlterationTableComponent extends LazyMobXTable<ICaseAlteration> {}
 
 @observer
@@ -131,15 +149,11 @@ export default class CaseAlterationTable extends React.Component<ICaseAlteration
                 tooltip: <span>{oql.oql_line}</span>,
                 headerDownload: (name: string) => oql.oql_line,
                 render: (data: ICaseAlteration) =>
-                    <span style={{whiteSpace: "nowrap"}}>{data.oqlData ? generateOqlValue(data.oqlData[oql.oql_line]) : ""}</span>,
-                download: (data: ICaseAlteration) =>
-                    data.oqlData ? generateOqlValue(data.oqlData[oql.oql_line]) : "",
-                sortBy: (data: ICaseAlteration) =>
-                    data.oqlData ? generateOqlValue(data.oqlData[oql.oql_line]) : "",
-                filter: (data: ICaseAlteration, filterString: string, filterStringUpper: string) => {
-                    return data.oqlData &&
-                        generateOqlValue(data.oqlData[oql.oql_line]).toUpperCase().includes(filterStringUpper);
-                }
+                    <span style={{whiteSpace: "nowrap"}}>{generateOqlDisplayValue(data.oqlData, oql.oql_line)}</span>,
+                download: (data: ICaseAlteration) => generateOqlDisplayValue(data.oqlData, oql.oql_line),
+                sortBy: (data: ICaseAlteration) => generateOqlDisplayValue(data.oqlData, oql.oql_line),
+                filter: (data: ICaseAlteration, filterString: string, filterStringUpper: string) =>
+                    generateOqlDisplayValue(data.oqlData, oql.oql_line).toUpperCase().includes(filterStringUpper)
             });
         });
 
