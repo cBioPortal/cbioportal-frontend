@@ -102,10 +102,20 @@ jobs:
           environment:
             JUNIT_REPORT_PATH: ./junit/
           when: always
+      -  store_artifacts:
+          path: ~/repo/end-to-end-tests/screenshots
+          destination: /screenshots
+      -  store_artifacts:
+          path: ~/repo/end-to-end-tests/image-compare
+          destination: /image-compare
       - store_test_results:
           path: ~/repo/end-to-end-tests/junit
       - store_artifacts:
           path: ~/repo/end-to-end-tests/junit
+      - store_artifacts:
+          path: ~/repo/end-to-end-tests/imageCompare.html
+          destination: /imageCompare.html
+
 
 workflows:
     version: 2
@@ -131,6 +141,7 @@ workflows:
                        only:
                            - master
                            - rc
+                           - release-1.12.0
        jobs:
            - install
            - api_sync:
