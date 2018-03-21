@@ -116,7 +116,10 @@ export function computeGenePanelInformation(
         const patientSequencingInfo = patientInfo[gpData.uniquePatientKey];
         const hugo = entrezToGene[gpData.entrezGeneId].hugoGeneSymbol;
 
-        if (gpData.genePanelId !== undefined) {
+        if (gpData.genePanelId && gpData.sequenced) {
+            // add gene panel data to record a particular gene is sequenced iff
+            //  theres a gene panel id (meaning not whole-exome sequenced gpData) and
+            //  if `sequenced` is true
             sampleSequencingInfo.sequencedGenes[hugo] = sampleSequencingInfo.sequencedGenes[hugo] || [];
             sampleSequencingInfo.sequencedGenes[hugo].push(gpData);
 

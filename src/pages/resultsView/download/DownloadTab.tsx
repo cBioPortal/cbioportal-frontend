@@ -67,9 +67,15 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
         return generateGeneAlterationData(this.caseAggregatedDataByOQLLine, this.sequencedSampleKeysByGene);
     }
 
+    @computed get geneAlterationDataByGene(): {[gene: string]: IGeneAlteration} {
+        return _.keyBy(this.geneAlterationData, "gene");
+    }
+
     @computed get caseAlterationData(): ICaseAlteration[] {
-        return generateCaseAlterationData(
-            this.caseAggregatedDataByOQLLine, this.genePanelInformation, this.samples);
+        return generateCaseAlterationData(this.caseAggregatedDataByOQLLine,
+            this.genePanelInformation,
+            this.samples,
+            this.geneAlterationDataByGene);
     }
 
     @computed get mutationData(): {[key: string]: ExtendedAlteration[]} {
@@ -214,7 +220,7 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
                     {!loadingDownloadData && !errorDownloadData && this.downloadableFilesTable()}
                 </div>
                 <hr/>
-                <div className={styles["tables-container"]}>
+                <div className={styles["tables-container"]} data-test="dataDownloadGeneAlterationTable">
                     <FeatureTitle
                         title="Gene Alteration Frequency"
                         isLoading={loadingGeneAlterationData}

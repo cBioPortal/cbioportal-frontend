@@ -569,6 +569,43 @@ describe('DownloadUtils', () => {
     });
 
     describe('generateCaseAlterationData', () => {
+        it('properly handles not sequenced genes when generating case alteration data', () => {
+            const genePanelInformation = {
+                samples: {
+                    "UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3": {
+                        "sequencedGenes": {},
+                        "wholeExomeSequenced": false
+                    },
+                    "VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ": {
+                        "sequencedGenes": {},
+                        "wholeExomeSequenced": true
+                    }
+                },
+                patients: {}
+            };
+
+            const geneAlterationData = {
+                "EGFR": {
+                    gene: "EGFR",
+                    oqlLine: "EGFR: AMP HOMDEL MUT FUSION;",
+                    sequenced: 0,
+                    altered: 0,
+                    percentAltered: "N/S"
+                }
+            };
+
+            const caseAlterationData = generateCaseAlterationData(caseAggregatedDataByOQLLine,
+                genePanelInformation,
+                samples,
+                geneAlterationData);
+
+            assert.isFalse(caseAlterationData[0].oqlData["EGFR: AMP HOMDEL MUT FUSION;"].sequenced,
+                "cases with the gene EGFR should be marked as not sequenced");
+
+            assert.isTrue(caseAlterationData[1].oqlData["PTEN: AMP HOMDEL MUT FUSION;"].sequenced,
+                "cases with the gene other than EGFR should be marked as sequenced");
+        });
+
 
         it('generates case alteration data for multiple samples',() => {
 
