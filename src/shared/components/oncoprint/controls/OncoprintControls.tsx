@@ -562,14 +562,6 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                                 onClick={this.onInputClick}
                             /> Putative drivers based on:
                         </label>
-                            <DefaultTooltip
-                                overlay={<span>For missense, inframe, and truncating mutations.</span>}
-                            >
-                                <i
-                                    className="fa fa-md fa-info-circle"
-                                    style={{cursor:"pointer", paddingTop:"0.2em"}}
-                                />
-                            </DefaultTooltip>
                         </div>
                         <div style={{marginLeft: "20px"}}>
                             <div className="checkbox"><label>
