@@ -18,6 +18,7 @@ import {
     AnnotatedMutation, CaseAggregatedData, ExtendedAlteration,
     ResultsViewPageStore
 } from "../../../pages/resultsView/ResultsViewPageStore";
+import {CoverageInformation} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
 import {remoteData} from "../../api/remoteData";
 import {
     makeClinicalTrackData,
@@ -31,7 +32,12 @@ import {MobxPromise} from "mobxpromise";
 import GenesetCorrelatedGeneCache from "shared/cache/GenesetCorrelatedGeneCache";
 import Spec = Mocha.reporters.Spec;
 import {OQLLineFilterOutput} from "../../lib/oql/oqlfilter";
-import {ClinicalAttribute} from "../../api/generated/CBioPortalAPI";
+import {
+    ClinicalAttribute,
+    MolecularProfile,
+    Patient,
+    Sample
+} from "../../api/generated/CBioPortalAPI";
 import {SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
 
 interface IGenesetExpansionMap {
@@ -227,8 +233,8 @@ export function percentAltered(altered:number, sequenced:number) {
 export function alterationInfoForCaseAggregatedDataByOQLLine(
     sampleMode: boolean,
     data: {
-        cases:CaseAggregatedData<AnnotatedExtendedAlteration>,
-        oql:OQLLineFilterOutput<AnnotatedExtendedAlteration>
+        cases: CaseAggregatedData<AnnotatedExtendedAlteration>,
+        oql: {gene: string}
     },
     sequencedSampleKeysByGene: {[hugoGeneSymbol:string]:string[]},
     sequencedPatientKeysByGene: {[hugoGeneSymbol:string]:string[]})
@@ -250,47 +256,80 @@ export function alterationInfoForCaseAggregatedDataByOQLLine(
     };
 }
 
+interface IGeneticTrackAppState {
+    sampleMode: boolean;
+    samples: Pick<Sample, 'sampleId'|'studyId'|'uniqueSampleKey'>[];
+    patients: Pick<Patient, 'patientId'|'studyId'|'uniquePatientKey'>[];
+    coverageInformation: CoverageInformation;
+    sequencedSampleKeysByGene: any;
+    sequencedPatientKeysByGene: any;
+    selectedMolecularProfiles: MolecularProfile[];
+}
+export function makeGeneticTrackWith({
+    sampleMode,
+    samples,
+    patients,
+    coverageInformation,
+    sequencedSampleKeysByGene,
+    sequencedPatientKeysByGene,
+    selectedMolecularProfiles
+}: IGeneticTrackAppState) {
+    return (
+        {cases: dataByCase, oql}: {
+            cases: CaseAggregatedData<AnnotatedExtendedAlteration>,
+            oql: OQLLineFilterOutput<object>
+        },
+        index: number
+    ): GeneticTrackSpec => {
+        const data = (
+            sampleMode
+            ? makeGeneticTrackData(dataByCase.samples, oql.gene, samples as Sample[], coverageInformation, selectedMolecularProfiles)
+            : makeGeneticTrackData(dataByCase.patients, oql.gene, patients as Patient[], coverageInformation, selectedMolecularProfiles)
+        );
+
+        const info = alterationInfoForCaseAggregatedDataByOQLLine(
+            sampleMode,
+            {cases: dataByCase, oql},
+            sequencedSampleKeysByGene,
+            sequencedPatientKeysByGene
+        ).percent;
+
+        return {
+            key: `GENETICTRACK_${index}`,
+            label: oql.gene,
+            oql: oql.oql_line,
+            info,
+            data
+        };
+    };
+}
+
 export function makeGeneticTracksMobxPromise(oncoprint:ResultsViewOncoprint, sampleMode:boolean) {
     return remoteData<GeneticTrackSpec[]>({
         await:()=>[
-            oncoprint.props.store.genes,
             oncoprint.props.store.samples,
             oncoprint.props.store.patients,
             oncoprint.props.store.putativeDriverFilteredCaseAggregatedDataByOQLLine,
-            oncoprint.props.store.molecularProfileIdToMolecularProfile,
             oncoprint.props.store.coverageInformation,
-            oncoprint.props.store.alteredSampleKeys,
             oncoprint.props.store.sequencedSampleKeysByGene,
-            oncoprint.props.store.alteredPatientKeys,
             oncoprint.props.store.sequencedPatientKeysByGene,
             oncoprint.props.store.selectedMolecularProfiles
         ],
-        invoke: async()=>{
+        invoke: async () => {
             return oncoprint.props.store.putativeDriverFilteredCaseAggregatedDataByOQLLine.result!.map(
-                (x:{cases:CaseAggregatedData<AnnotatedExtendedAlteration>, oql:OQLLineFilterOutput<AnnotatedExtendedAlteration>}, index:number)=>{
-                const data = makeGeneticTrackData(
-                    sampleMode ? x.cases.samples : x.cases.patients,
-                    x.oql.gene,
-                    sampleMode ? oncoprint.props.store.samples.result! : oncoprint.props.store.patients.result!,
-                    oncoprint.props.store.coverageInformation.result!,
-                    oncoprint.props.store.selectedMolecularProfiles.result!
-                );
-
-                const info = alterationInfoForCaseAggregatedDataByOQLLine(sampleMode, x,
-                    oncoprint.props.store.sequencedSampleKeysByGene.result!,
-                    oncoprint.props.store.sequencedPatientKeysByGene.result!).percent;
-
-                return {
-                    key: `GENETICTRACK_${index}`,
-                    label: x.oql.gene,
-                    oql: x.oql.oql_line,
-                    info,
-                    data
-                };
-            });
+                makeGeneticTrackWith({
+                    sampleMode,
+                    samples: oncoprint.props.store.samples.result!,
+                    patients: oncoprint.props.store.patients.result!,
+                    coverageInformation: oncoprint.props.store.coverageInformation.result!,
+                    sequencedSampleKeysByGene: oncoprint.props.store.sequencedSampleKeysByGene.result!,
+                    sequencedPatientKeysByGene: oncoprint.props.store.sequencedPatientKeysByGene.result!,
+                    selectedMolecularProfiles: oncoprint.props.store.selectedMolecularProfiles.result!
+                })
+            );
         },
         default: [],
-    });   
+    });
 }
 
 export function makeClinicalTracksMobxPromise(oncoprint:ResultsViewOncoprint, sampleMode:boolean) {
