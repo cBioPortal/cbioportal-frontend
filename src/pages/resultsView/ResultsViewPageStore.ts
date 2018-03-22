@@ -470,18 +470,23 @@ export class ResultsViewPageStore {
                 }
             });
             const entrezGeneIds = this.genes.result!.map(gene=>gene.entrezGeneId);
-            let results:GenePanelData[];
+            let genePanelData:GenePanelData[];
             if (sampleMolecularIdentifiers.length && entrezGeneIds.length) {
-                results = await client.fetchGenePanelDataInMultipleMolecularProfilesUsingPOST({
+                genePanelData = await client.fetchGenePanelDataInMultipleMolecularProfilesUsingPOST({
                     genePanelMultipleStudyFilter:{
-                        entrezGeneIds,
                         sampleMolecularIdentifiers
-                    } as GenePanelMultipleStudyFilter
+                    }
                 });
             } else {
-                results = [];
+                genePanelData = [];
             }
-            return computeGenePanelInformation(results, this.samples.result!, this.patients.result!, this.genes.result!);
+
+            const genePanelIds = _.uniq(genePanelData.map(gpData=>gpData.genePanelId));
+            const genePanels = await client.fetchGenePanelsUsingPOST({
+                genePanelIds,
+                projection:"DETAILED"
+            });
+            return computeGenePanelInformation(genePanelData, genePanels, this.samples.result!, this.patients.result!, this.genes.result!);
         }
     });
 
