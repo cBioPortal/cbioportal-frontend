@@ -1,5 +1,5 @@
 import {
-    Gene, GeneMolecularData, GenePanelData, MolecularProfile,
+    Gene, GeneMolecularData, GenePanel, GenePanelData, MolecularProfile,
     Mutation, Patient, Sample
 } from "../../shared/api/generated/CBioPortalAPI";
 import {action} from "mobx";
@@ -91,11 +91,15 @@ export function getOncoKbOncogenic(response:IndicatorQueryResp):string {
 
 export function computeGenePanelInformation(
     genePanelData:GenePanelData[],
+    genePanels:GenePanel[],
     samples: Sample[],
     patients: Patient[],
     genes:Gene[]
 ):GenePanelInformation {
     const entrezToGene = _.keyBy(genes, gene=>gene.entrezGeneId);
+    const genePanelToGenes = _.mapValues(_.keyBy(genePanels, panel=>panel.genePanelId), (panel:GenePanel)=>{
+        return panel.genes.filter(gene=>!!entrezToGene[gene.entrezGeneId]); // only list genes that we're curious in
+    });
     const sampleInfo:GenePanelInformation["samples"] = _.reduce(samples, (map:GenePanelInformation["samples"], sample)=>{
         map[sample.uniqueSampleKey] = {
             sequencedGenes: {},
@@ -114,17 +118,19 @@ export function computeGenePanelInformation(
     for (const gpData of genePanelData) {
         const sampleSequencingInfo = sampleInfo[gpData.uniqueSampleKey];
         const patientSequencingInfo = patientInfo[gpData.uniquePatientKey];
-        const hugo = entrezToGene[gpData.entrezGeneId].hugoGeneSymbol;
+        const genePanelId = gpData.genePanelId;
 
-        if (gpData.genePanelId && gpData.sequenced) {
-            // add gene panel data to record a particular gene is sequenced iff
-            //  theres a gene panel id (meaning not whole-exome sequenced gpData) and
-            //  if `sequenced` is true
-            sampleSequencingInfo.sequencedGenes[hugo] = sampleSequencingInfo.sequencedGenes[hugo] || [];
-            sampleSequencingInfo.sequencedGenes[hugo].push(gpData);
+        if (genePanelId) {
+            // add gene panel data to record particular genes sequenced iff theres a gene panel id
+            if (genePanelToGenes[genePanelId]) {
+                for (const gene of genePanelToGenes[genePanelId]) {
+                    sampleSequencingInfo.sequencedGenes[gene.hugoGeneSymbol] = sampleSequencingInfo.sequencedGenes[gene.hugoGeneSymbol] || [];
+                    sampleSequencingInfo.sequencedGenes[gene.hugoGeneSymbol].push(gpData);
 
-            patientSequencingInfo.sequencedGenes[hugo] = patientSequencingInfo.sequencedGenes[hugo] || [];
-            patientSequencingInfo.sequencedGenes[hugo].push(gpData);
+                    patientSequencingInfo.sequencedGenes[gene.hugoGeneSymbol] = patientSequencingInfo.sequencedGenes[gene.hugoGeneSymbol] || [];
+                    patientSequencingInfo.sequencedGenes[gene.hugoGeneSymbol].push(gpData);
+                }
+            }
         }
 
         sampleSequencingInfo.wholeExomeSequenced = gpData.wholeExomeSequenced || sampleSequencingInfo.wholeExomeSequenced;
