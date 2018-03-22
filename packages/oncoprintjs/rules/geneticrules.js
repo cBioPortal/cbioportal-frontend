@@ -1,5 +1,8 @@
 // Feed this in as 
 
+// Default grey
+var DEFAULT_GREY = "rgba(190, 190, 190, 1)";
+
 // Mutation colors
 var MUT_COLOR_MISSENSE = '#008000';
 var MUT_COLOR_MISSENSE_PASSENGER = '#53D400';
@@ -9,16 +12,23 @@ var MUT_COLOR_TRUNC = '#000000';
 var MUT_COLOR_TRUNC_PASSENGER = '#708090';
 var MUT_COLOR_FUSION = '#8B00C9';
 var MUT_COLOR_PROMOTER = '#FFA942';
+var MUT_COLOR_GERMLINE = '#FFFFFF';
 
 var PROT_COLOR_UP = "#9224A6";
 var PROT_COLOR_DOWN = "#00BCD4";
 
+// Base mutation rule set parameters
+var baseRuleSetParams = {
+    'type': 'gene',
+    'legend_label': 'Genetic Alteration',
+    'legend_base_color': DEFAULT_GREY
+};
 var non_mutation_rule_params = {
     // Default: gray rectangle
     '*': {
 	shapes: [{
 		'type': 'rectangle',
-		'fill': 'rgba(190, 190, 190, 1)',
+		'fill': DEFAULT_GREY,
 		'z': 1
 	    }],
         legend_label: 'No alterations',
@@ -156,12 +166,26 @@ var non_mutation_rule_params = {
 		legend_label: 'Fusion'
 	}
     },
+    // germline
+    'disp_germ': {
+        // white stripe in the middle
+        'true': {
+            shapes: [{
+                'type': 'rectangle',
+                'fill': MUT_COLOR_GERMLINE,
+                'x': '0%',
+                'y': '46%',
+                'width': '100%',
+                'height': '8%',
+                'z': 7
+            }],
+            legend_label: 'Germline Mutation'
+        }
+    }
 };
 
 window.geneticrules = {};
-window.geneticrules.genetic_rule_set_same_color_for_all_no_recurrence = {
-    'type':'gene',
-    'legend_label': 'Genetic Alteration',
+window.geneticrules.genetic_rule_set_same_color_for_all_no_recurrence = $.extend({}, baseRuleSetParams, {
     'rule_params': $.extend({}, non_mutation_rule_params, {
 	'disp_mut': {
 	    'trunc,inframe,missense,promoter,trunc_rec,inframe_rec,missense_rec,promoter_rec': {
@@ -178,10 +202,8 @@ window.geneticrules.genetic_rule_set_same_color_for_all_no_recurrence = {
 	    }
 	}
     })
-};
-window.geneticrules.genetic_rule_set_same_color_for_all_recurrence = {
-    'type':'gene',
-    'legend_label': 'Genetic Alteration',
+});
+window.geneticrules.genetic_rule_set_same_color_for_all_recurrence = $.extend({}, baseRuleSetParams, {
     'rule_params': $.extend({}, non_mutation_rule_params, {
 	'disp_mut': {
 	    'missense_rec,inframe_rec,trunc_rec': {
@@ -210,10 +232,8 @@ window.geneticrules.genetic_rule_set_same_color_for_all_recurrence = {
 	    },
 	},
     })
-};
-window.geneticrules.genetic_rule_set_different_colors_no_recurrence = {
-    'type':'gene',
-    'legend_label': 'Genetic Alteration',
+});
+window.geneticrules.genetic_rule_set_different_colors_no_recurrence = $.extend({}, baseRuleSetParams, {
     'rule_params': $.extend({}, non_mutation_rule_params, {
 	'disp_mut': {
 	    'promoter,promoter_rec': {
@@ -266,10 +286,8 @@ window.geneticrules.genetic_rule_set_different_colors_no_recurrence = {
 	    },
 	}
     })
-};
-window.geneticrules.genetic_rule_set_different_colors_recurrence = {
-    'type':'gene',
-    'legend_label': 'Genetic Alteration',
+});
+window.geneticrules.genetic_rule_set_different_colors_recurrence = $.extend({}, baseRuleSetParams, {
     'rule_params': $.extend({}, non_mutation_rule_params, {
 	'disp_mut': {
 	    'promoter,promoter_rec': {
@@ -358,4 +376,4 @@ window.geneticrules.genetic_rule_set_different_colors_recurrence = {
 	    },
 	}
     })
-};
+});

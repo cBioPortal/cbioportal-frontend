@@ -32,6 +32,7 @@ declare module "oncoprintjs"
 
     interface IGeneralRuleSetParams {
         legend_label?: string;
+        legend_base_color?: string;
         exclude_from_legend?: boolean;
     }
 
@@ -78,7 +79,7 @@ declare module "oncoprintjs"
 
     export type GeneticAlterationRuleParams = {
         [datumKey:string]:{
-            [commaSeparatedDatumValues:string]:{
+            [commaSeparatedDatumValues:string]: {
                 shapes: ShapeSpec[];
                 legend_label: string;
                 exclude_from_legend?:boolean;

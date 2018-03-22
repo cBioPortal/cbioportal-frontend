@@ -4,6 +4,9 @@ var ga_data = [
         "desc": "Annotation for GENE0",
         "data": [
             {
+                 "disp_cna": "hetloss",
+                 "disp_mut": "promoter_rec",
+                 "disp_germ": "true",
                 "sample": "TCGA-00"
             },
             {
@@ -16,8 +19,9 @@ var ga_data = [
                 "sample": "TCGA-02"
             },
             {
-                "disp_mut": "promoter",
-                "sample": "TCGA-03"
+                 "sample": "TCGA-03",
+                 "disp_germ": "true",
+                 "disp_mut": "trunc"
             },
             {
                 "disp_mut": "inframe",
