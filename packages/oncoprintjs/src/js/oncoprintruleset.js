@@ -70,7 +70,7 @@ function makeUniqueColorGetter(init_used_colors) {
 	}
 	used_colors[next_color] = true;
 	index += 1;
-	
+
 	return next_color;
     };
 };
@@ -135,7 +135,7 @@ var colorToHex = function(str) {
 	}
 	return '#' + r + g + b;
     }
-    
+
     var rgb_match = str.match(/^[\s]*rgb\([\s]*([0-9]+)[\s]*,[\s]*([0-9]+)[\s]*,[\s]*([0-9]+)[\s]*\)[\s]*$/);
     if (rgb_match && rgb_match.length === 4) {
 	r = parseInt(rgb_match[1]).toString(16);
@@ -152,7 +152,7 @@ var colorToHex = function(str) {
 	}
 	return '#' + r + g + b;
     }
-    
+
     return str;
 };
 
@@ -187,6 +187,7 @@ var RuleSet = (function () {
 	 */
 	this.rule_set_id = getRuleSetId();
 	this.legend_label = params.legend_label;
+	this.legend_base_color = params.legend_base_color;
 	this.exclude_from_legend = params.exclude_from_legend;
 	this.active_rule_ids = {};
 	this.rules_with_id = [];
@@ -418,7 +419,7 @@ var CategoricalRuleSet = (function () {
 	 * - categoryToColor
 	 */
 	LookupRuleSet.call(this, params);
-	
+
 	this.addRule(NA_STRING, true, {
 	    shapes: makeNAShapes(params.na_z || 1000),
 	    legend_label: NA_LABEL,
@@ -426,7 +427,7 @@ var CategoricalRuleSet = (function () {
 	    legend_config: {'type': 'rule', 'target': {'na': true}},
 		legend_order: Number.POSITIVE_INFINITY
 	});
-	
+
 	this.category_key = params.category_key;
 	this.category_to_color = ifndef(params.category_to_color, {});
 	this.getUnusedColor = makeUniqueColorGetter(objectValues(this.category_to_color).map(colorToHex));
@@ -464,7 +465,7 @@ var CategoricalRuleSet = (function () {
 	    var category = data[i][this.category_key];
 	    if (!this.category_to_color.hasOwnProperty(category)) {
 		var color = this.getUnusedColor(this);
-		
+
 		this.category_to_color[category] = color;
 		addCategoryRule(this, category, color);
 	    }
@@ -511,7 +512,7 @@ var LinearInterpRuleSet = (function () {
 		return function (val) {
                 var range_spread = range[1] - range[0],
 					range_lower = range[0],
-					range_higher = range[1];             
+					range_higher = range[1];
                 if (plotType === 'bar') {
                     if (rangeType === rangeTypes.NON_POSITIVE) {
                         // when data only contains non positive values
@@ -607,7 +608,7 @@ var GradientRuleSet = (function () {
 	if (this.colors.length === 0) {
 	    this.colors.push([0,0,0,1],[255,0,0,1]);
 	}
-	
+
 	this.value_stop_points = params.value_stop_points;
 	this.null_color = params.null_color || "rgba(211,211,211,1)";
     }
@@ -650,7 +651,7 @@ var GradientRuleSet = (function () {
 		var end_color = colors[end_interval_index];
 		return "rgba(" + linInterpColors(interval_t, begin_color, end_color).join(",") + ")";
 	    }
-	    
+
 	};
     }
 
@@ -664,7 +665,7 @@ var GradientRuleSet = (function () {
 	var colorFn = this.makeColorFn(this.colors, interpFn);
 	var value_key = this.value_key;
 	var null_color = this.null_color;
-	
+
 	this.gradient_rule = this.addRule(function (d) {
 	    return d[NA_STRING] !== true;
 	},
@@ -728,7 +729,7 @@ var BarRuleSet = (function () {
 		    exclude_from_legend: false,
                 legend_config: {
             		'type': 'number',
-				    'range': this.getEffectiveValueRange(), 
+				    'range': this.getEffectiveValueRange(),
 					'range_type': this.getValueRangeType(),
                     'positive_color': positive_color,
                     'negative_color': negative_color,
@@ -783,12 +784,12 @@ var StackedBarRuleSet = (function() {
 	var fills = params.fills || [];
 	var categories = params.categories || [];
 	var getUnusedColor = makeUniqueColorGetter(fills);
-	
+
 	// Initialize with default values
 	while (fills.length < categories.length) {
 	    fills.push(getUnusedColor());
 	}
-	
+
 	var self = this;
 	for (var i=0; i < categories.length; i++) {
 	    (function(I) {
@@ -853,7 +854,15 @@ var GeneticAlterationRuleSet = (function () {
 				var equiv_values = value.split(",");
 				var legend_rule_target = {};
 				legend_rule_target[equiv_values[0]] = value;
-				var rule_id = self.addRule(key, (equiv_values[0] === '*' ? null : equiv_values[0]), shallowExtend(key_rule_params[value], {'legend_config': {'type': 'rule', 'target': legend_rule_target}}));
+				var rule_id = self.addRule(
+				    key,
+				    (equiv_values[0] === '*' ? null : equiv_values[0]),
+				    shallowExtend(key_rule_params[value],
+					{
+						'legend_config': {'type': 'rule', 'target': legend_rule_target},
+						'legend_base_color': typeof self.legend_base_color === "undefined" ? "" : self.legend_base_color
+					})
+				);
 				for (var i = 1; i < equiv_values.length; i++) {
 				    self.linkExistingRule(key, (equiv_values[i] === '*' ? null : equiv_values[i]), rule_id);
 				}
@@ -868,7 +877,7 @@ var GeneticAlterationRuleSet = (function () {
 	    legend_label: "Not sequenced",
 	    exclude_from_legend: false,
 	    legend_config: {'type': 'rule', 'target': {'na': true}},
-		legend_order: Number.POSITIVE_INFINITY
+	    legend_order: Number.POSITIVE_INFINITY
 	});
     }
     GeneticAlterationRuleSet.prototype = Object.create(LookupRuleSet.prototype);
@@ -890,9 +899,10 @@ var Rule = (function () {
 	    }
 	});
 	this.legend_label = typeof params.legend_label === "undefined" ? "" : params.legend_label;
+        this.legend_base_color = params.legend_base_color;
 	this.exclude_from_legend = params.exclude_from_legend;
 	this.legend_config = params.legend_config;// {'type':'rule', 'target': {'mut_type':'MISSENSE'}} or {'type':'number', 'color':'rgba(1,2,3,1), 'range':[lower, upper]} or {'type':'gradient', 'color_range':['rgba(...)' or '#...', 'rgba(...)' or '#...'], 'number_range':[lower, upper]}
-		this.legend_order = params.legend_order;
+	this.legend_order = params.legend_order;
     }
     Rule.prototype.getLegendConfig = function () {
 	return this.legend_config;
@@ -926,4 +936,4 @@ module.exports = function (params) {
     } else if (params.type === 'gene') {
 	return new GeneticAlterationRuleSet(params);
     }
-}
+};
