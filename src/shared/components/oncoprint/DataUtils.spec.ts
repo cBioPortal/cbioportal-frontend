@@ -1,12 +1,15 @@
 import { assert } from 'chai';
-import {fillClinicalTrackDatum, fillGeneticTrackDatum, fillHeatmapTrackDatum, selectDisplayValue} from "./DataUtils";
+import {
+    fillClinicalTrackDatum, fillGeneticTrackDatum, fillHeatmapTrackDatum, getOncoprintMutationType,
+    selectDisplayValue
+} from "./DataUtils";
 import {
     GeneticTrackDatum,
     IGeneHeatmapTrackDatum,
     IGenesetHeatmapTrackDatum
 } from "shared/components/oncoprint/Oncoprint";
 import {AlterationTypeConstants, AnnotatedExtendedAlteration} from "../../../pages/resultsView/ResultsViewPageStore";
-import {ClinicalAttribute, GeneMolecularData, Sample} from "../../api/generated/CBioPortalAPI";
+import {ClinicalAttribute, GeneMolecularData, Mutation, Sample} from "../../api/generated/CBioPortalAPI";
 import {SpecialAttribute} from "../../cache/ClinicalDataCache";
 import {OncoprintClinicalAttribute} from "./ResultsViewOncoprint";
 import {MutationSpectrum} from "../../api/generated/CBioPortalAPIInternal";
@@ -16,6 +19,14 @@ import {MutationSpectrum} from "../../api/generated/CBioPortalAPIInternal";
 /* tslint:disable no-object-literal-type-assertion */
 
 describe("DataUtils", ()=>{
+   describe("getOncoprintMutationType", ()=>{
+       it("correctly gets `promoter` type based on mutation.proteinChange", ()=>{
+           assert.equal(getOncoprintMutationType({ proteinChange:"Promoter", mutationType:"asdjfpoai" } as Mutation), "promoter");
+           assert.equal(getOncoprintMutationType({ proteinChange:"PROMOTER", mutationType:"asdfjii"} as Mutation), "promoter");
+           assert.equal(getOncoprintMutationType({ proteinChange:"promoter", mutationType:"Asdfasl" } as Mutation), "promoter");
+           assert.equal(getOncoprintMutationType({ proteinChange:"Promoter" } as Mutation), "promoter");
+       });
+   });
    describe("selectDisplayValue", ()=>{
        it("returns undefined if no values", ()=>{
            assert.equal(selectDisplayValue({}, {}), undefined);
