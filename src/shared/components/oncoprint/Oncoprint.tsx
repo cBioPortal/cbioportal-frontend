@@ -1,14 +1,8 @@
 import * as React from "react";
-import reactionWithPrev from "shared/lib/reactionWithPrev";
-import OncoprintJS, {TrackId, TrackSpec} from "oncoprintjs";
-import {
-    ClinicalAttribute, GeneMolecularData, GenePanelData, MolecularProfile,
-    Mutation
-} from "../../api/generated/CBioPortalAPI";
+import OncoprintJS, {TrackId} from "oncoprintjs";
+import {GenePanelData, MolecularProfile} from "../../api/generated/CBioPortalAPI";
 import {observer} from "mobx-react";
-import {computed, observable} from "mobx";
-import {doWithRenderingSuppressedAndSortingOff, getClinicalTrackRuleSetParams, getGeneticTrackRuleSetParams} from "./OncoprintUtils";
-import {getClinicalTrackSortComparator, getGeneticTrackSortComparator, heatmapTrackSortComparator} from "./SortUtils";
+import {computed} from "mobx";
 import {transition} from "./DeltaUtils";
 import _ from "lodash";
 import {AnnotatedMutation, ExtendedAlteration} from "../../../pages/resultsView/ResultsViewPageStore";
