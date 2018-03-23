@@ -12,6 +12,9 @@ import {
 import {
     CopyDownloadControls, ICopyDownloadData
 } from "../copyDownloadControls/CopyDownloadControls";
+import {
+    resolveColumnVisibility, resolveColumnVisibilityByColumnDefinition
+} from "./ColumnVisibilityResolver";
 import {ICopyDownloadControlsProps} from "../copyDownloadControls/ICopyDownloadControls";
 import {SimpleCopyDownloadControls} from "../copyDownloadControls/SimpleCopyDownloadControls";
 import {serializeData} from "shared/lib/Serializer";
@@ -61,6 +64,7 @@ type LazyMobXTableProps<T> = {
     enableHorizontalScroll?:boolean;
     showColumnVisibility?:boolean;
     columnVisibilityProps?:IColumnVisibilityControlsProps;
+    columnVisibility?: {[columnId: string]: boolean};
     highlightColor?:"yellow"|"bluegray";
     pageToHighlight?:boolean;
     showCountHeader?:boolean;
@@ -198,10 +202,14 @@ class LazyMobXTableStore<T> {
     @observable public sortColumn:string;
     @observable public sortAscending:boolean;
     @observable.ref public columns:Column<T>[];
-    @observable private _columnVisibility:{[columnId: string]: boolean};
     @observable public dataStore:IMobXApplicationDataStore<T>;
     @observable public downloadDataFetcher:IMobXApplicationLazyDownloadDataFetcher|undefined;
     @observable private highlightColor:string;
+
+    // this observable is intended to always refer to props.columnVisibility
+    @observable private _columnVisibility:{[columnId: string]: boolean}|undefined;
+    // this one keeps the state of the latest action (latest user selection)
+    @observable private _columnVisibilityOverride:{[columnId: string]: boolean}|undefined;
 
     @computed public get itemsPerPage() {
         return this._itemsPerPage;
@@ -257,7 +265,13 @@ class LazyMobXTableStore<T> {
     }
 
     @computed public get columnVisibility() {
-        return this._columnVisibility;
+        return resolveColumnVisibility(this.columnVisibilityByColumnDefinition,
+            this._columnVisibility,
+            this._columnVisibilityOverride);
+    }
+
+    @computed public get columnVisibilityByColumnDefinition() {
+        return resolveColumnVisibilityByColumnDefinition(this.columns);
     }
 
     @computed public get downloadData()
@@ -502,7 +516,7 @@ class LazyMobXTableStore<T> {
         this.columns = props.columns;
         this._itemsLabel = props.itemsLabel;
         this._itemsLabelPlural = props.itemsLabelPlural;
-        this._columnVisibility = this.resolveColumnVisibility(props.columns);
+        this._columnVisibility = props.columnVisibility;
         this.highlightColor = props.highlightColor!;
         this.downloadDataFetcher = props.downloadDataFetcher;
 
@@ -527,34 +541,23 @@ class LazyMobXTableStore<T> {
         }
     }
 
-    @action public updateColumnVisibility(id:string, visible:boolean)
+    @action updateColumnVisibility(id:string, visible:boolean)
     {
-        if (this._columnVisibility[id] !== undefined) {
-            this._columnVisibility[id] = visible;
+        // no previous action, need to init
+        if (this._columnVisibilityOverride === undefined) {
+            this._columnVisibilityOverride = resolveColumnVisibility(
+                this.columnVisibilityByColumnDefinition, this._columnVisibility);
+        }
+
+        // update visibility
+        if (this._columnVisibilityOverride[id] !== undefined) {
+            this._columnVisibilityOverride[id] = visible;
         }
     }
 
     public isVisible(column:Column<T>): boolean
     {
         return this.columnVisibility[column.name] || false;
-    }
-
-    resolveColumnVisibility(columns:Array<Column<T>>): {[columnId: string]: boolean}
-    {
-        const colVis:{[columnId: string]: boolean} = {};
-
-        columns.forEach((column:Column<T>) => {
-            // every column is visible by default unless it is flagged otherwise
-            let visible:boolean = true;
-
-            if (column.visible !== undefined) {
-                visible = column.visible;
-            }
-
-            colVis[column.name] = visible;
-        });
-
-        return colVis;
     }
 
     constructor(lazyMobXTableProps:LazyMobXTableProps<T>) {
@@ -626,6 +629,14 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
         });
     }
 
+    protected updateColumnVisibility(id: string, visible: boolean)
+    {
+        // ignore undefined columns
+        if (this.store.columnVisibility[id] !== undefined) {
+            this.store.updateColumnVisibility(id, visible);
+        }
+    }
+
     constructor(props:LazyMobXTableProps<T>) {
         super(props);
         this.store = new LazyMobXTableStore<T>(props);
@@ -646,11 +657,8 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
                 };
             })(),
             visibilityToggle:(columnId: string):void => {
-                // ignore undefined columns
-                if (this.store.columnVisibility[columnId] !== undefined) {
-                    // toggle visibility
-                    this.store.updateColumnVisibility(columnId, !this.store.columnVisibility[columnId]);
-                }
+                // toggle visibility
+                this.updateColumnVisibility(columnId, !this.store.columnVisibility[columnId]);
             },
             changeItemsPerPage:(ipp:number)=>{
                 this.store.itemsPerPage=ipp;
