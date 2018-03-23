@@ -53,13 +53,22 @@ const protRenderPriority = {
     'down': 0
 };
 
-export type OncoprintMutationType = "missense" | "inframe" | "fusion" | "trunc";
+export type OncoprintMutationType = "missense" | "inframe" | "fusion" | "promoter" | "trunc";
 
-export function getOncoprintMutationType(type:SimplifiedMutationType):OncoprintMutationType {
-    if (type === "missense" || type === "inframe" || type === "fusion") {
-        return type;
+export function getOncoprintMutationType(d:Mutation):OncoprintMutationType {
+    if ((d.proteinChange || "").toLowerCase() === "promoter") {
+        // promoter mutations aren't labeled as such in mutationType, but in proteinChange, so we must detect it there
+        return "promoter";
     } else {
-        return "trunc";
+        const simplifiedMutationType = getSimplifiedMutationType(d.mutationType);
+        switch (simplifiedMutationType) {
+            case "missense":
+            case "inframe":
+            case "fusion":
+                return simplifiedMutationType;
+            default:
+                return "trunc";
+        }
     }
 }
 
@@ -128,7 +137,7 @@ export function fillGeneticTrackDatum(
                 }
                 break;
             case "MUTATION_EXTENDED":
-                let oncoprintMutationType = getOncoprintMutationType(getSimplifiedMutationType(event.mutationType)!);
+                let oncoprintMutationType = getOncoprintMutationType(event as Mutation);
                 if (oncoprintMutationType === "fusion") {
                     dispFusion = true;
                 } else {
