@@ -46,11 +46,6 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                                     >
                                         {data.countByEntity}
                                     </LabeledCheckbox>
-                            },
-                            {
-                                name: 'Freq',
-                                render: (data: MutationCountByGene) =>
-                                    <span>{'...%'}</span>
                             }
                         ]
                     }
