@@ -242,17 +242,13 @@ export type GenePanel = {
 
 };
 export type GenePanelData = {
-    'entrezGeneId': number
-
-        'genePanelId': string
+    'genePanelId': string
 
         'molecularProfileId': string
 
         'patientId': string
 
         'sampleId': string
-
-        'sequenced': boolean
 
         'studyId': string
 
@@ -264,17 +260,13 @@ export type GenePanelData = {
 
 };
 export type GenePanelDataFilter = {
-    'entrezGeneIds': Array < number >
-
-        'sampleIds': Array < string >
+    'sampleIds': Array < string >
 
         'sampleListId': string
 
 };
 export type GenePanelMultipleStudyFilter = {
-    'entrezGeneIds': Array < number >
-
-        'sampleMolecularIdentifiers': Array < SampleMolecularIdentifier >
+    'sampleMolecularIdentifiers': Array < SampleMolecularIdentifier >
 
 };
 export type GenePanelToGene = {
@@ -380,8 +372,6 @@ export type Mutation = {
 
         'sampleId': string
 
-        'sequenced': boolean
-
         'startPosition': number
 
         'studyId': string
@@ -399,8 +389,6 @@ export type Mutation = {
         'variantAllele': string
 
         'variantType': string
-
-        'wildType': boolean
 
 };
 export type MutationCount = {
@@ -1367,6 +1355,81 @@ export default class CBioPortalAPI {
                 }
 
                 request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    fetchGenePanelsUsingPOSTURL(parameters: {
+        'genePanelIds': Array < string > ,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/gene-panels/fetch';
+
+        if (parameters['projection'] !== undefined) {
+            queryParameters['projection'] = parameters['projection'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get gene panel
+     * @method
+     * @name CBioPortalAPI#fetchGenePanelsUsingPOST
+     * @param {} genePanelIds - List of Gene Panel IDs
+     * @param {string} projection - Level of detail of the response
+     */
+    fetchGenePanelsUsingPOST(parameters: {
+            'genePanelIds': Array < string > ,
+            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < GenePanel >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/gene-panels/fetch';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                if (parameters['genePanelIds'] !== undefined) {
+                    body = parameters['genePanelIds'];
+                }
+
+                if (parameters['genePanelIds'] === undefined) {
+                    reject(new Error('Missing required  parameter: genePanelIds'));
+                    return;
+                }
+
+                if (parameters['projection'] !== undefined) {
+                    queryParameters['projection'] = parameters['projection'];
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
 
             }).then(function(response: request.Response) {
                 return response.body;
@@ -2909,7 +2972,6 @@ export default class CBioPortalAPI {
     fetchMutationsInMolecularProfileUsingPOSTURL(parameters: {
         'molecularProfileId': string,
         'mutationFilter': MutationFilter,
-        'includeNonMutated' ? : boolean,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
@@ -2921,10 +2983,6 @@ export default class CBioPortalAPI {
         let path = '/molecular-profiles/{molecularProfileId}/mutations/fetch';
 
         path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
-
-        if (parameters['includeNonMutated'] !== undefined) {
-            queryParameters['includeNonMutated'] = parameters['includeNonMutated'];
-        }
 
         if (parameters['projection'] !== undefined) {
             queryParameters['projection'] = parameters['projection'];
@@ -2962,7 +3020,6 @@ export default class CBioPortalAPI {
      * @name CBioPortalAPI#fetchMutationsInMolecularProfileUsingPOST
      * @param {string} molecularProfileId - Molecular Profile ID e.g. acc_tcga_mutations
      * @param {} mutationFilter - List of Sample IDs/Sample List ID and Entrez Gene IDs
-     * @param {boolean} includeNonMutated - Include non-sequenced and wild-type values in the result. Ineffective when entrezGeneIds is missing. sortBy is ineffective when true
      * @param {string} projection - Level of detail of the response
      * @param {integer} pageSize - Page size of the result list
      * @param {integer} pageNumber - Page number of the result list
@@ -2972,7 +3029,6 @@ export default class CBioPortalAPI {
     fetchMutationsInMolecularProfileUsingPOST(parameters: {
             'molecularProfileId': string,
             'mutationFilter': MutationFilter,
-            'includeNonMutated' ? : boolean,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
@@ -3008,10 +3064,6 @@ export default class CBioPortalAPI {
                 if (parameters['mutationFilter'] === undefined) {
                     reject(new Error('Missing required  parameter: mutationFilter'));
                     return;
-                }
-
-                if (parameters['includeNonMutated'] !== undefined) {
-                    queryParameters['includeNonMutated'] = parameters['includeNonMutated'];
                 }
 
                 if (parameters['projection'] !== undefined) {
@@ -3114,7 +3166,6 @@ export default class CBioPortalAPI {
 
     fetchMutationsInMultipleMolecularProfilesUsingPOSTURL(parameters: {
         'mutationMultipleStudyFilter': MutationMultipleStudyFilter,
-        'includeNonMutated' ? : boolean,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
@@ -3124,10 +3175,6 @@ export default class CBioPortalAPI {
     }): string {
         let queryParameters: any = {};
         let path = '/mutations/fetch';
-
-        if (parameters['includeNonMutated'] !== undefined) {
-            queryParameters['includeNonMutated'] = parameters['includeNonMutated'];
-        }
 
         if (parameters['projection'] !== undefined) {
             queryParameters['projection'] = parameters['projection'];
@@ -3164,7 +3211,6 @@ export default class CBioPortalAPI {
      * @method
      * @name CBioPortalAPI#fetchMutationsInMultipleMolecularProfilesUsingPOST
      * @param {} mutationMultipleStudyFilter - List of Molecular Profile ID and Sample ID pairs and Entrez Gene IDs
-     * @param {boolean} includeNonMutated - Include non-sequenced and wild-type values in the result. Ineffective when entrezGeneIds is missing. sortBy is ineffective when true
      * @param {string} projection - Level of detail of the response
      * @param {integer} pageSize - Page size of the result list
      * @param {integer} pageNumber - Page number of the result list
@@ -3173,7 +3219,6 @@ export default class CBioPortalAPI {
      */
     fetchMutationsInMultipleMolecularProfilesUsingPOST(parameters: {
             'mutationMultipleStudyFilter': MutationMultipleStudyFilter,
-            'includeNonMutated' ? : boolean,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
@@ -3202,10 +3247,6 @@ export default class CBioPortalAPI {
                 if (parameters['mutationMultipleStudyFilter'] === undefined) {
                     reject(new Error('Missing required  parameter: mutationMultipleStudyFilter'));
                     return;
-                }
-
-                if (parameters['includeNonMutated'] !== undefined) {
-                    queryParameters['includeNonMutated'] = parameters['includeNonMutated'];
                 }
 
                 if (parameters['projection'] !== undefined) {
