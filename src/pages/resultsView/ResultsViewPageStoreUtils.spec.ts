@@ -572,8 +572,10 @@ describe("ResultsViewPageStoreUtils", ()=>{
         const genes:Gene[] = [];
         const samples:Sample[] = [];
         const patients:Patient[] = [];
-        let genePanelDatum1:any, genePanelDatum2:any, genePanelDatum3:any, genePanelDatum4:any, wxsDatum1:any, wxsDatum2:any, wxsDatum3:any, nsDatum1:any, nsDatum2:any;
+        let genePanelDatum1:any, genePanelDatum2:any, wxsDatum1:any;/*, nsDatum1:any, nsDatum2:any;*/
+        let genePanels:any[] = [];
         before(()=>{
+
             genes.push({
                 entrezGeneId:0,
                 hugoGeneSymbol:"GENE1"
@@ -586,6 +588,16 @@ describe("ResultsViewPageStoreUtils", ()=>{
                 entrezGeneId:2,
                 hugoGeneSymbol:"GENE3"
             } as Gene);
+
+            genePanels.push({
+                genePanelId:"GENEPANEL1",
+                genes:[genes[0], genes[1]]
+            });
+
+            genePanels.push({
+                genePanelId:"GENEPANEL2",
+                genes:[genes[0], genes[1]]
+            });
 
             samples.push({
                 uniqueSampleKey:"PATIENT1 SAMPLE1"
@@ -605,62 +617,25 @@ describe("ResultsViewPageStoreUtils", ()=>{
             } as Patient);
 
             genePanelDatum1 = {
-                entrezGeneId: 0,
                 uniqueSampleKey: "PATIENT1 SAMPLE1",
                 uniquePatientKey: "PATIENT1",
-                sequenced: true,
                 genePanelId: "GENEPANEL1"
             };
 
             genePanelDatum2 = {
-                entrezGeneId: 1,
-                uniqueSampleKey: "PATIENT1 SAMPLE1",
-                uniquePatientKey: "PATIENT1",
-                sequenced: true,
-                genePanelId: "GENEPANEL2"
-            };
-
-            genePanelDatum3 = {
-                entrezGeneId: 0,
                 uniqueSampleKey: "PATIENT2 SAMPLE1",
                 uniquePatientKey: "PATIENT2",
-                sequenced: true,
-                genePanelId: "GENEPANEL2"
-            };
-
-            genePanelDatum4 = {
-                entrezGeneId: 1,
-                uniqueSampleKey: "PATIENT2 SAMPLE1",
-                uniquePatientKey: "PATIENT2",
-                sequenced: true,
                 genePanelId: "GENEPANEL2"
             };
 
             wxsDatum1 = {
-                entrezGeneId: 0,
                 uniqueSampleKey:"PATIENT1 SAMPLE2",
                 uniquePatientKey: "PATIENT1",
-                sequenced: true,
                 wholeExomeSequenced: true
             };
 
-            wxsDatum2 = {
-                entrezGeneId: 1,
-                uniqueSampleKey:"PATIENT1 SAMPLE2",
-                uniquePatientKey: "PATIENT1",
-                sequenced: true,
-                wholeExomeSequenced: true
-            };
 
-            wxsDatum3 = {
-                entrezGeneId: 2,
-                uniqueSampleKey: "PATIENT1 SAMPLE2",
-                uniquePatientKey: "PATIENT1",
-                sequenced: true,
-                wholeExomeSequenced: true
-            };
-
-            nsDatum1 = {
+            /*nsDatum1 = {
                 entrezGeneId: 2,
                 genePanelId:"GENEPANEL1",
                 uniqueSampleKey: "PATIENT1 SAMPLE1",
@@ -674,11 +649,11 @@ describe("ResultsViewPageStoreUtils", ()=>{
                 uniqueSampleKey: "PATIENT2 SAMPLE1",
                 uniquePatientKey: "PATIENT2",
                 sequenced: false
-            };
+            };*/
         });
         it("computes the correct object with no input data", ()=>{
             assert.deepEqual(
-                computeGenePanelInformation([], samples, patients, genes),
+                computeGenePanelInformation([], genePanels, samples, patients, genes),
                 {
                     samples: {
                         "PATIENT1 SAMPLE1": {
@@ -710,12 +685,12 @@ describe("ResultsViewPageStoreUtils", ()=>{
         it("computes the correct object with gene panel data", ()=>{
             assert.deepEqual(
                 computeGenePanelInformation([
-                    genePanelDatum1, genePanelDatum2, genePanelDatum3, genePanelDatum4
-                ] as GenePanelData[], samples, patients, genes),
+                    genePanelDatum1, genePanelDatum2
+                ] as GenePanelData[], genePanels, samples, patients, genes),
                 {
                     samples: {
                         "PATIENT1 SAMPLE1": {
-                            sequencedGenes:{"GENE1":[genePanelDatum1], "GENE2":[genePanelDatum2]},
+                            sequencedGenes:{"GENE1":[genePanelDatum1], "GENE2":[genePanelDatum1]},
                             wholeExomeSequenced:false
                         },
                         "PATIENT1 SAMPLE2": {
@@ -723,17 +698,17 @@ describe("ResultsViewPageStoreUtils", ()=>{
                             wholeExomeSequenced:false
                         },
                         "PATIENT2 SAMPLE1": {
-                            sequencedGenes:{"GENE1":[genePanelDatum3], "GENE2":[genePanelDatum4]},
+                            sequencedGenes:{"GENE1":[genePanelDatum2], "GENE2":[genePanelDatum2]},
                             wholeExomeSequenced:false
                         }
                     },
                     patients: {
                         "PATIENT1": {
-                            sequencedGenes:{"GENE1":[genePanelDatum1], "GENE2":[genePanelDatum2]},
+                            sequencedGenes:{"GENE1":[genePanelDatum1], "GENE2":[genePanelDatum1]},
                             wholeExomeSequenced:false
                         },
                         "PATIENT2": {
-                            sequencedGenes:{"GENE1":[genePanelDatum3], "GENE2":[genePanelDatum4]},
+                            sequencedGenes:{"GENE1":[genePanelDatum2], "GENE2":[genePanelDatum2]},
                             wholeExomeSequenced:false
                         }
                     }
@@ -743,8 +718,8 @@ describe("ResultsViewPageStoreUtils", ()=>{
         it("computes the correct object with whole exome sequenced data", ()=>{
             assert.deepEqual(
                 computeGenePanelInformation([
-                    wxsDatum1, wxsDatum2, wxsDatum3
-                ] as GenePanelData[], samples, patients, genes),
+                    wxsDatum1
+                ] as GenePanelData[], genePanels, samples, patients, genes),
                 {
                     samples: {
                         "PATIENT1 SAMPLE1": {
@@ -773,7 +748,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
                 }
             );
         });
-        it("computes the correct object with not sequenced data", ()=>{
+        /*it("computes the correct object with not sequenced data", ()=>{
             assert.deepEqual(
                 computeGenePanelInformation([
                     nsDatum1, nsDatum2
@@ -805,18 +780,18 @@ describe("ResultsViewPageStoreUtils", ()=>{
                     }
                 }
             );
-        });
-        it("computes the correct object with gene panel data and whole exome sequenced data and not sequenced data", ()=>{
+        });*/
+        it("computes the correct object with gene panel data and whole exome sequenced data" /*and not sequenced data"*/, ()=>{
             assert.deepEqual(
                 computeGenePanelInformation([
-                    genePanelDatum1, genePanelDatum2, genePanelDatum3, genePanelDatum4,
-                    wxsDatum1, wxsDatum2,
-                    nsDatum1, nsDatum2
-                ] as GenePanelData[], samples, patients, genes),
+                    genePanelDatum1, genePanelDatum2,
+                    wxsDatum1
+                    //,nsDatum1, nsDatum2
+                ] as GenePanelData[], genePanels, samples, patients, genes),
                 {
                     samples: {
                         "PATIENT1 SAMPLE1": {
-                            sequencedGenes:{"GENE1":[genePanelDatum1], "GENE2":[genePanelDatum2]},
+                            sequencedGenes:{"GENE1":[genePanelDatum1], "GENE2":[genePanelDatum1]},
                             wholeExomeSequenced:false
                         },
                         "PATIENT1 SAMPLE2": {
@@ -824,17 +799,17 @@ describe("ResultsViewPageStoreUtils", ()=>{
                             wholeExomeSequenced:true
                         },
                         "PATIENT2 SAMPLE1": {
-                            sequencedGenes:{"GENE1":[genePanelDatum3], "GENE2":[genePanelDatum4]},
+                            sequencedGenes:{"GENE1":[genePanelDatum2], "GENE2":[genePanelDatum2]},
                             wholeExomeSequenced:false
                         }
                     },
                     patients: {
                         "PATIENT1": {
-                            sequencedGenes:{"GENE1":[genePanelDatum1], "GENE2":[genePanelDatum2]},
+                            sequencedGenes:{"GENE1":[genePanelDatum1], "GENE2":[genePanelDatum1]},
                             wholeExomeSequenced:true
                         },
                         "PATIENT2": {
-                            sequencedGenes:{"GENE1":[genePanelDatum3], "GENE2":[genePanelDatum4]},
+                            sequencedGenes:{"GENE1":[genePanelDatum2], "GENE2":[genePanelDatum2]},
                             wholeExomeSequenced:false
                         }
                     }

@@ -666,6 +666,60 @@
         }
       }
     },
+    "/gene-panels/fetch": {
+      "post": {
+        "tags": [
+          "Gene Panels"
+        ],
+        "summary": "Get gene panel",
+        "operationId": "fetchGenePanelsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "genePanelIds",
+            "description": "List of Gene Panel IDs",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Level of detail of the response",
+            "required": false,
+            "type": "string",
+            "default": "SUMMARY",
+            "enum": [
+              "ID",
+              "SUMMARY",
+              "DETAILED",
+              "META"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GenePanel"
+              }
+            }
+          }
+        }
+      }
+    },
     "/gene-panels/{genePanelId}": {
       "get": {
         "tags": [
@@ -1730,14 +1784,6 @@
             }
           },
           {
-            "name": "includeNonMutated",
-            "in": "query",
-            "description": "Include non-sequenced and wild-type values in the result. Ineffective when entrezGeneIds is missing. sortBy is ineffective when true",
-            "required": false,
-            "type": "boolean",
-            "default": false
-          },
-          {
             "name": "projection",
             "in": "query",
             "description": "Level of detail of the response",
@@ -1893,14 +1939,6 @@
             "schema": {
               "$ref": "#/definitions/MutationMultipleStudyFilter"
             }
-          },
-          {
-            "name": "includeNonMutated",
-            "in": "query",
-            "description": "Include non-sequenced and wild-type values in the result. Ineffective when entrezGeneIds is missing. sortBy is ineffective when true",
-            "required": false,
-            "type": "boolean",
-            "default": false
           },
           {
             "name": "projection",
@@ -4305,19 +4343,13 @@
     "GenePanelData": {
       "type": "object",
       "required": [
-        "entrezGeneId",
         "molecularProfileId",
         "patientId",
         "sampleId",
-        "sequenced",
         "studyId",
         "wholeExomeSequenced"
       ],
       "properties": {
-        "entrezGeneId": {
-          "type": "integer",
-          "format": "int32"
-        },
         "genePanelId": {
           "type": "string"
         },
@@ -4329,9 +4361,6 @@
         },
         "sampleId": {
           "type": "string"
-        },
-        "sequenced": {
-          "type": "boolean"
         },
         "studyId": {
           "type": "string"
@@ -4350,19 +4379,7 @@
     },
     "GenePanelDataFilter": {
       "type": "object",
-      "required": [
-        "entrezGeneIds"
-      ],
       "properties": {
-        "entrezGeneIds": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "format": "int32",
-            "minimum": 1,
-            "maximum": 10000000
-          }
-        },
         "sampleIds": {
           "type": "array",
           "items": {
@@ -4378,19 +4395,9 @@
     "GenePanelMultipleStudyFilter": {
       "type": "object",
       "required": [
-        "entrezGeneIds",
         "sampleMolecularIdentifiers"
       ],
       "properties": {
-        "entrezGeneIds": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "format": "int32",
-            "minimum": 1,
-            "maximum": 10000000
-          }
-        },
         "sampleMolecularIdentifiers": {
           "type": "array",
           "items": {
@@ -4544,9 +4551,7 @@
         "molecularProfileId",
         "patientId",
         "sampleId",
-        "sequenced",
-        "studyId",
-        "wildType"
+        "studyId"
       ],
       "properties": {
         "aminoAcidChange": {
@@ -4639,9 +4644,6 @@
         "sampleId": {
           "type": "string"
         },
-        "sequenced": {
-          "type": "boolean"
-        },
         "startPosition": {
           "type": "integer",
           "format": "int64"
@@ -4671,9 +4673,6 @@
         },
         "variantType": {
           "type": "string"
-        },
-        "wildType": {
-          "type": "boolean"
         }
       },
       "title": "Mutation"
