@@ -29,6 +29,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                 flag = true;
                 return false;
             }
+            return true;
         });
         return flag;
     }
@@ -65,11 +66,6 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                                     >
                                         {data.countByEntity}
                                     </LabeledCheckbox>
-                            },
-                            {
-                                name: 'Freq',
-                                render: (data: CopyNumberCountByGene) =>
-                                    <span>{'...%'}</span>
                             }
                         ]
                     }
