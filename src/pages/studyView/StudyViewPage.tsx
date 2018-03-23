@@ -190,46 +190,23 @@ export class StudyViewPageStore {
         default: []
     });
 
-    readonly selectedAttributes = remoteData({
-        await: ()=>[this.clinicalAttributes],
+    readonly defaultVisibleAttributes = remoteData({
+        await: () => [this.initialSampleAttributesData, this.initialPatientAttributesData],
         invoke: async () => {
-            let selectedAttrIds = [...this.sampleAttrIds, ...this.patientAttrIds];
-            //filter datatype === "STRING"
-            let visibleClinicalAttributes = this.clinicalAttributes.result.filter(attribute => attribute.datatype === "STRING");
-            if(!_.isEmpty(selectedAttrIds)){
-                visibleClinicalAttributes = visibleClinicalAttributes.filter(attribute => {
-                    return _.includes(selectedAttrIds, attribute.clinicalAttributeId);
-                });
-            }
+            let queriedAttributes = this.initialQueriedAttributes.result;
+
             // return visibleClinicalAttributes;
             // TODO
             // START : This is a temporary logic to dispaly only the attributes with values(slices) size >1 and <10
-            let attribureSet: { [id: string]: ClinicalAttribute } = _.reduce(visibleClinicalAttributes, function (result, obj) {
-                result["SAMPLE_" + obj.clinicalAttributeId] = obj
+            let attribureSet: { [id: string]: ClinicalAttribute } = _.reduce(queriedAttributes, function (result, obj) {
+                let tag = obj.patientAttribute?"PATIENT_":"SAMPLE_";
+                result[tag + obj.clinicalAttributeId] = obj
                 return result;
             }, {} as any)
             
-            let sampleData:ClinicalAttributeData = await internalClient.fetchClinicalDataCountsUsingPOST({
-                studyId: this.studyId,
-                clinicalDataType: "SAMPLE",
-                clinicalDataCountFilter: {
-                    attributeIds: visibleClinicalAttributes
-                                    .filter(attribute => !attribute.patientAttribute)
-                                    .map(attribute => attribute.clinicalAttributeId),
-                    filter: {} as any
-                }
-            })
+            let sampleData:ClinicalAttributeData = this.initialSampleAttributesData.result
 
-            let patientData:ClinicalAttributeData = await internalClient.fetchClinicalDataCountsUsingPOST({
-                studyId: this.studyId,
-                clinicalDataType: "PATIENT",
-                clinicalDataCountFilter: {
-                    attributeIds: visibleClinicalAttributes
-                                    .filter(attribute => attribute.patientAttribute)
-                                    .map(attribute => attribute.clinicalAttributeId),
-                    filter: {} as any
-                }
-            })
+            let patientData:ClinicalAttributeData = this.initialPatientAttributesData.result
 
             let filterSampleAttributes:ClinicalAttribute[] = _.reduce(sampleData, function (result, value, key) {
                 //check if number of visible charts <10 and number of slices >1 and <10
@@ -244,57 +221,118 @@ export class StudyViewPageStore {
             let filterPatientAttributes:ClinicalAttribute[] = _.reduce(patientData, function (result, value, key) {
                 //check if number of visible charts <10 and number of slices >1 and <10
                 if(result.length<10 && value.length>1 && value.length<10){
-                    if(attribureSet["SAMPLE_"+key]){
-                        result.push(attribureSet["SAMPLE_"+key]);
+                    if(attribureSet["PATIENT_"+key]){
+                        result.push(attribureSet["PATIENT_"+key]);
                     }
                 }
                 return result;
             } , [] as any)
             //END
-            
-            return [...filterSampleAttributes,...filterPatientAttributes];
+
+            return [...filterSampleAttributes, ...filterPatientAttributes]
+        },
+        default: []
+    });
+
+    readonly initialQueriedAttributes = remoteData({
+        await: ()=>[this.clinicalAttributes],
+        invoke: async () => {
+            let selectedAttrIds = [...this.sampleAttrIds, ...this.patientAttrIds];
+            //filter datatype === "STRING"
+            let visibleClinicalAttributes = this.clinicalAttributes.result.filter(attribute => attribute.datatype === "STRING");
+            if(!_.isEmpty(selectedAttrIds)){
+                visibleClinicalAttributes = visibleClinicalAttributes.filter(attribute => {
+                    return _.includes(selectedAttrIds, attribute.clinicalAttributeId);
+                });
+            }
+            return visibleClinicalAttributes;
         },
         default: []
     });
 
     @computed get selectedSampleAttributeIds(){
-        let attributes = this.selectedAttributes.result;
+        let attributes = this.defaultVisibleAttributes.result;
         return attributes
                     .filter(attribute => !attribute.patientAttribute)
                     .map(attribute => attribute.clinicalAttributeId);
     }
 
     @computed get selectedPatientAttributeIds(){
-        let attributes = this.selectedAttributes.result;
+        let attributes = this.defaultVisibleAttributes.result;
         return attributes
                     .filter(attribute => attribute.patientAttribute)
                     .map(attribute => attribute.clinicalAttributeId);
     }
 
     readonly sampleAttributesData = remoteData<ClinicalAttributeData>({
-        await: ()=>[this.selectedAttributes],
+        await: ()=>[this.initialSampleAttributesData],
+        invoke: async () => {
+            if(!_.isEmpty(this.filters)){
+                return internalClient.fetchClinicalDataCountsUsingPOST({
+                    studyId: this.studyId,
+                    clinicalDataType: "SAMPLE",
+                    clinicalDataCountFilter: {
+                        attributeIds: this.selectedSampleAttributeIds,
+                        filter: this.filters
+                    }
+                })
+            } else{
+                return this.initialSampleAttributesData.result;
+            }
+        },
+        default: {}
+    });
+
+    readonly patientAttributesData = remoteData<ClinicalAttributeData>({
+        await: ()=>[this.initialPatientAttributesData],
+        invoke: async () => {
+            if(!_.isEmpty(this.filters)){
+                return internalClient.fetchClinicalDataCountsUsingPOST({
+                    studyId: this.studyId,
+                    clinicalDataType: "PATIENT",
+                    clinicalDataCountFilter: {
+                        attributeIds: this.selectedPatientAttributeIds,
+                        filter: this.filters
+                    }
+                })
+            } else{
+                return this.initialPatientAttributesData.result;
+            }
+        },
+        default: {}
+    });
+
+
+    //invoked once initially
+    readonly initialSampleAttributesData = remoteData<ClinicalAttributeData>({
+        await: ()=>[this.initialQueriedAttributes],
         invoke: () => {
             return internalClient.fetchClinicalDataCountsUsingPOST({
                 studyId: this.studyId,
                 clinicalDataType: "SAMPLE",
                 clinicalDataCountFilter: {
-                    attributeIds: this.selectedSampleAttributeIds,
-                    filter: this.filters
+                    attributeIds: this.initialQueriedAttributes.result
+                    .filter(attribute => !attribute.patientAttribute)
+                    .map(attribute => attribute.clinicalAttributeId),
+                    filter: {} as any
                 }
             })
         },
         default: {}
     });
 
-    readonly patientAttributesData = remoteData<ClinicalAttributeData>({
-        await: ()=>[this.selectedAttributes],
+    //invoked once initially
+    readonly initialPatientAttributesData = remoteData<ClinicalAttributeData>({
+        await: ()=>[this.initialQueriedAttributes],
         invoke: () => {
             return internalClient.fetchClinicalDataCountsUsingPOST({
                 studyId: this.studyId,
                 clinicalDataType: "PATIENT",
                 clinicalDataCountFilter: {
-                    attributeIds: this.selectedPatientAttributeIds,
-                    filter: this.filters
+                    attributeIds: this.initialQueriedAttributes.result
+                    .filter(attribute => attribute.patientAttribute)
+                    .map(attribute => attribute.clinicalAttributeId),
+                    filter: {} as any
                 }
             })
         },
@@ -426,10 +464,10 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         return (
             <div style={{overflowY: "scroll", border:"1px solid #cccccc"}}>
                 {
-                    (this.store.selectedAttributes.isComplete && this.store.cinicalAttributeData.isComplete) &&
+                    this.store.defaultVisibleAttributes.isComplete &&
                     (
                         <div  className={styles.flexContainer}>
-                            {this.store.selectedAttributes.result.map(this.renderAttributeChart)}
+                            {this.store.defaultVisibleAttributes.result.map(this.renderAttributeChart)}
                         </div>
                     )
                 }
