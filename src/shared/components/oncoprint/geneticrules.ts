@@ -10,12 +10,18 @@ export const MUT_COLOR_INFRAME_PASSENGER = '#fe9929';
 export const MUT_COLOR_TRUNC = '#000000';
 export const MUT_COLOR_TRUNC_PASSENGER = '#708090';
 export const MUT_COLOR_FUSION = '#8B00C9';
-export const MUT_COLOR_PROMOTER = '#FFA942';
+export const MUT_COLOR_PROMOTER = '#00B7CE';
+
+export const MRNA_COLOR_UP = "#ff9999";
+export const MRNA_COLOR_DOWN = "#6699cc";
 
 export const PROT_COLOR_UP = "#ff3df8";
 export const PROT_COLOR_DOWN = "#00E1FF";
 
-
+export const CNA_COLOR_AMP = "#ff0000";
+export const CNA_COLOR_GAIN = "#ffb6c1";
+export const CNA_COLOR_HETLOSS = "#8fd8d8";
+export const CNA_COLOR_HOMDEL = "#0000ff";
 
 const MUTATION_LEGEND_ORDER = 0;
 const FUSION_LEGEND_ORDER = 1;
@@ -45,7 +51,7 @@ let non_mutation_rule_params = {
 	'amp': {
 	    shapes: [{
 		    'type': 'rectangle',
-		    'fill': 'rgba(255,0,0,1)',
+		    'fill': CNA_COLOR_AMP,
 		    'x': '0%',
 		    'y': '0%',
 		    'width': '100%',
@@ -59,7 +65,7 @@ let non_mutation_rule_params = {
 	'gain': {
 	    shapes: [{
 		    'type': 'rectangle',
-		    'fill': 'rgba(255,182,193,1)',
+		    'fill': CNA_COLOR_GAIN,
 		    'x': '0%',
 		    'y': '0%',
 		    'width': '100%',
@@ -73,7 +79,7 @@ let non_mutation_rule_params = {
 	'homdel': {
 	    shapes: [{
 		    'type': 'rectangle',
-		    'fill': 'rgba(0,0,255,1)',
+		    'fill': CNA_COLOR_HOMDEL,
 		    'x': '0%',
 		    'y': '0%',
 		    'width': '100%',
@@ -87,7 +93,7 @@ let non_mutation_rule_params = {
 	'hetloss': {
 	    shapes: [{
 		    'type': 'rectangle',
-		    'fill': 'rgba(143, 216, 216,1)',
+		    'fill': CNA_COLOR_HETLOSS,
 		    'x': '0%',
 		    'y': '0%',
 		    'width': '100%',
@@ -105,7 +111,7 @@ let non_mutation_rule_params = {
 	    shapes: [{
 		    'type': 'rectangle',
 		    'fill': 'rgba(0, 0, 0, 0)',
-		    'stroke': 'rgba(255, 153, 153, 1)',
+		    'stroke': MRNA_COLOR_UP,
 		    'stroke-width': '2',
 		    'x': '0%',
 		    'y': '0%',
@@ -121,7 +127,7 @@ let non_mutation_rule_params = {
 	    shapes: [{
 		    'type': 'rectangle',
 		    'fill': 'rgba(0, 0, 0, 0)',
-		    'stroke': 'rgba(102, 153, 204, 1)',
+		    'stroke': MRNA_COLOR_DOWN,
 		    'stroke-width': '2',
 		    'x': '0%',
 		    'y': '0%',
