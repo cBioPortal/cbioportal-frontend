@@ -650,7 +650,11 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     private oncoprintRef(oncoprint:OncoprintJS<any>) {
         this.oncoprint = oncoprint;
-        this.props.addOnBecomeVisibleListener && this.props.addOnBecomeVisibleListener(()=>this.oncoprint.triggerPendingResizeAndOrganize());
+        if (this.props.addOnBecomeVisibleListener) {
+            this.props.addOnBecomeVisibleListener(
+                ()=>this.oncoprint.triggerPendingResizeAndOrganize(this.onReleaseRendering)
+            );
+        }
 
         this.oncoprint.onHorzZoom(z=>(this.horzZoom = z));
         this.horzZoom = this.oncoprint.getHorzZoom();

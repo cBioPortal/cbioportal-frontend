@@ -207,7 +207,7 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
                 <div className="arrow" style={{top:30}}></div>
                 <div className="popover-content">
                     <strong>Summary for {tooltipModel.groupName}</strong>
-                    <p>Gene altered in {percentageRounder(tooltipModel.alterationData.alteredSampleCount/tooltipModel.alterationData.sampleTotal)}% of cases</p>
+                    <p>Gene altered in {percentageRounder(tooltipModel.alterationData.alteredSampleCount/tooltipModel.alterationData.sampleTotal)}% of {tooltipModel.alterationData.sampleTotal} cases</p>
                     <table className="table table-striped">
                         <thead>
                         <tr>
