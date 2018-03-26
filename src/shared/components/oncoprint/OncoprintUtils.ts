@@ -31,7 +31,7 @@ import {action, runInAction} from "mobx";
 import {MobxPromise} from "mobxpromise";
 import GenesetCorrelatedGeneCache from "shared/cache/GenesetCorrelatedGeneCache";
 import Spec = Mocha.reporters.Spec;
-import {OQLLineFilterOutput} from "../../lib/oql/oqlfilter";
+import {UnflattenedOQLLineFilterOutput, isMergedTrackFilter} from "../../lib/oql/oqlfilter";
 import {
     ClinicalAttribute,
     MolecularProfile,
@@ -104,6 +104,20 @@ function makeGenesetHeatmapUnexpandHandler(
             throw new Error(`Track '${parentKey}' has no expansions to remove.`);
         }
     });
+}
+
+function formatGeneticTrackLabel(oqlFilter: UnflattenedOQLLineFilterOutput<object>): string {
+    return (isMergedTrackFilter(oqlFilter)
+        ? oqlFilter.label || oqlFilter.list.map(geneLine => geneLine.gene).join(' / ')
+        : oqlFilter.gene
+    );
+}
+
+function formatGeneticTrackOql(oqlFilter: UnflattenedOQLLineFilterOutput<object>): string {
+    return (isMergedTrackFilter(oqlFilter)
+        ? `[${oqlFilter.list.map(geneLine => geneLine.oql_line).join(' ')}]`
+        : oqlFilter.oql_line
+    );
 }
 
 export function doWithRenderingSuppressedAndSortingOff(oncoprint:OncoprintJS<any>, task:()=>void) {
@@ -277,17 +291,15 @@ export function makeGeneticTrackWith({
     return (
         {cases: dataByCase, oql}: {
             cases: CaseAggregatedData<AnnotatedExtendedAlteration>,
-            oql: OQLLineFilterOutput<object>
+            oql: UnflattenedOQLLineFilterOutput<object>
         },
         index: number
     ): GeneticTrackSpec => {
-        const data = (
-            sampleMode
+        const data = isMergedTrackFilter(oql) ? [] : (sampleMode
             ? makeGeneticTrackData(dataByCase.samples, oql.gene, samples as Sample[], coverageInformation, selectedMolecularProfiles)
             : makeGeneticTrackData(dataByCase.patients, oql.gene, patients as Patient[], coverageInformation, selectedMolecularProfiles)
         );
-
-        const info = alterationInfoForCaseAggregatedDataByOQLLine(
+        const info = isMergedTrackFilter(oql) ? '' : alterationInfoForCaseAggregatedDataByOQLLine(
             sampleMode,
             {cases: dataByCase, oql},
             sequencedSampleKeysByGene,
@@ -296,8 +308,8 @@ export function makeGeneticTrackWith({
 
         return {
             key: `GENETICTRACK_${index}`,
-            label: oql.gene,
-            oql: oql.oql_line,
+            label: formatGeneticTrackLabel(oql),
+            oql: formatGeneticTrackOql(oql),
             info,
             data
         };
@@ -309,14 +321,14 @@ export function makeGeneticTracksMobxPromise(oncoprint:ResultsViewOncoprint, sam
         await:()=>[
             oncoprint.props.store.samples,
             oncoprint.props.store.patients,
-            oncoprint.props.store.putativeDriverFilteredCaseAggregatedDataByOQLLine,
+            oncoprint.props.store.putativeDriverFilteredCaseAggregatedDataByUnflattenedOQLLine,
             oncoprint.props.store.coverageInformation,
             oncoprint.props.store.sequencedSampleKeysByGene,
             oncoprint.props.store.sequencedPatientKeysByGene,
             oncoprint.props.store.selectedMolecularProfiles
         ],
         invoke: async () => {
-            return oncoprint.props.store.putativeDriverFilteredCaseAggregatedDataByOQLLine.result!.map(
+            return oncoprint.props.store.putativeDriverFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.map(
                 makeGeneticTrackWith({
                     sampleMode,
                     samples: oncoprint.props.store.samples.result!,
