@@ -14,10 +14,6 @@ interface IContainerProps {
 
 export default class Container extends React.Component<IContainerProps, {}> {
 
-    static contextTypes = {
-        router: React.PropTypes.object,
-    };
-
     context: {router: any};
 
     componentDidMount() {
