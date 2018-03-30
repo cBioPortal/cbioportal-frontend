@@ -5,6 +5,7 @@
   #oncoprint-inner {
     .oncoprintjs__scroll_div {
       overflow: auto !important;
+      position:static !important;
     }
 
     .oncoprintjs__track_options__toggle_btn_img {
