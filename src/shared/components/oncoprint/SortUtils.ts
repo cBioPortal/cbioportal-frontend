@@ -2,18 +2,28 @@ import {TrackSortComparator} from "oncoprintjs";
 import {ClinicalTrackSpec, GeneticTrackDatum} from "./Oncoprint";
 import naturalSort from 'javascript-natural-sort';
 
-function makeComparatorMetric(array_spec:(string|string[]|undefined|boolean)[]) {
-    let metric:{[s:string]:number} = {};
-    for (let i=0; i<array_spec.length; i++) {
+/**
+ * Make comparator metric
+ * @param {(string | string[] | boolean)[]} array_spec
+ * @returns {{[p: string]: number}}
+ */
+function makeComparatorMetric(array_spec: (string | string[] | undefined | boolean)[]) {
+    let metric: { [s: string]: number } = {};
+    for (let i = 0; i < array_spec.length; i++) {
         const equiv_values = ([] as any[]).concat(array_spec[i]);
-        for (let j=0; j<equiv_values.length; j++) {
+        for (let j = 0; j < equiv_values.length; j++) {
             metric[equiv_values[j]] = i;
         }
     }
     return metric;
 };
 
-function sign(x:number):0|-1|1 {
+/**
+ * Get sign of a number
+ * @param {number} x
+ * @returns {any | any | any}
+ */
+function sign(x: number): 0 | -1 | 1 {
     if (x > 0) {
         return 1;
     } else if (x < 0) {
@@ -23,13 +33,23 @@ function sign(x:number):0|-1|1 {
     }
 };
 
-export function getGeneticTrackSortComparator(sortByMutationType?: boolean, sortByDrivers?: boolean): { preferred:TrackSortComparator<GeneticTrackDatum>, mandatory:TrackSortComparator<GeneticTrackDatum> } {
+/**
+ * Get genetic track sort comparator
+ * @param {boolean} sortByMutationType
+ * @param {boolean} sortByDrivers
+ * @returns {{preferred: <GeneticTrackDatum>; mandatory: <GeneticTrackDatum>}}
+ */
+export function getGeneticTrackSortComparator(sortByMutationType?: boolean, sortByDrivers?: boolean): {
+    preferred: TrackSortComparator<GeneticTrackDatum>,
+    mandatory: TrackSortComparator<GeneticTrackDatum>
+} {
+
     const cna_order = makeComparatorMetric(['amp', 'homdel', 'gain', 'hetloss', 'diploid', undefined]);
     const mut_order = (function () {
-        let _order:{[s:string]:number};
+        let _order: { [s: string]: number };
         if (!sortByMutationType && !sortByDrivers) {
-            return function (m:any) {
-                return (({'true': 1, 'false': 2}) as {[bool:string]:number})[(!!m)+""];
+            return function (m: any) {
+                return (({'true': 1, 'false': 2}) as { [bool: string]: number })[(!!m) + ""];
             }
         } else if (!sortByMutationType && sortByDrivers) {
             _order = makeComparatorMetric([['inframe_rec', 'missense_rec', 'promoter_rec', 'trunc_rec', 'inframe', 'promoter', 'trunc',], 'missense', undefined]);
@@ -38,13 +58,14 @@ export function getGeneticTrackSortComparator(sortByMutationType?: boolean, sort
         } else if (sortByMutationType && sortByDrivers) {
             _order = makeComparatorMetric(['trunc_rec', 'inframe_rec', 'promoter_rec', 'missense_rec', 'trunc', 'inframe', 'promoter', 'missense', undefined, true, false]);
         }
-        return function (m:any) {
+        return function (m: any) {
             return _order[m];
         }
     })();
     const regulation_order = makeComparatorMetric(['up', 'down', undefined]);
+    const germline_order = makeComparatorMetric([true, false, undefined]); // germline mutation is prioritized
 
-    function mandatory(d1:GeneticTrackDatum, d2:GeneticTrackDatum):0|1|-1 {
+    function mandatory(d1: GeneticTrackDatum, d2: GeneticTrackDatum): 0 | 1 | -1 {
         // Test fusion
         if (d1.disp_fusion && !d2.disp_fusion) {
             return -1;
@@ -53,25 +74,32 @@ export function getGeneticTrackSortComparator(sortByMutationType?: boolean, sort
         }
 
         // Next, CNA
-        const cna_diff = sign(cna_order[d1.disp_cna+""] - cna_order[d2.disp_cna + ""]);
+        const cna_diff = sign(cna_order[d1.disp_cna + ""] - cna_order[d2.disp_cna + ""]);
         if (cna_diff !== 0) {
             return cna_diff;
         }
 
         // Next, mutation type
         const mut_type_diff = sign(mut_order(d1.disp_mut) - mut_order(d2.disp_mut));
+        const germ_type_diff = sign(germline_order[d1.disp_germ + ""] - germline_order[d2.disp_germ + ""]);
+
         if (mut_type_diff !== 0) {
             return mut_type_diff;
+        } else {
+            // if no mutation order difference, check the germline flag
+            if (germ_type_diff !== 0) {
+                return germ_type_diff;
+            }
         }
 
         // Next, mrna expression
-        const mrna_diff = sign(regulation_order[d1.disp_mrna+""] - regulation_order[d2.disp_mrna+""]);
+        const mrna_diff = sign(regulation_order[d1.disp_mrna + ""] - regulation_order[d2.disp_mrna + ""]);
         if (mrna_diff !== 0) {
             return mrna_diff;
         }
 
         // Next, protein expression
-        const rppa_diff = sign(regulation_order[d1.disp_prot+""] - regulation_order[d2.disp_prot+""]);
+        const rppa_diff = sign(regulation_order[d1.disp_prot + ""] - regulation_order[d2.disp_prot + ""]);
         if (rppa_diff !== 0) {
             return rppa_diff;
         }
@@ -79,7 +107,8 @@ export function getGeneticTrackSortComparator(sortByMutationType?: boolean, sort
         // If we reach this point, there's no order difference
         return 0;
     }
-    function preferred(d1:GeneticTrackDatum, d2:GeneticTrackDatum):0|1|-1 {
+
+    function preferred(d1: GeneticTrackDatum, d2: GeneticTrackDatum): 0 | 1 | -1 {
         // First, test if either is not sequenced
         const ns_diff = sign(+(!!d1.na) - (+(!!d2.na)));
         if (ns_diff !== 0) {
@@ -87,7 +116,8 @@ export function getGeneticTrackSortComparator(sortByMutationType?: boolean, sort
         }
 
         return mandatory(d1, d2);
-    };
+    }
+
     return {
         preferred: alphabeticalDefault(preferred),
         mandatory: mandatory
