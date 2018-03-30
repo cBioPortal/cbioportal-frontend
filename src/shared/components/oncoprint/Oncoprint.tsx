@@ -72,6 +72,7 @@ export type GeneticTrackDatum = {
     disp_mrna?:string;
     disp_prot?:string;
     disp_fusion?:boolean;
+    disp_germ?:boolean;
 };
 
 export type GeneticTrackSpec = {
