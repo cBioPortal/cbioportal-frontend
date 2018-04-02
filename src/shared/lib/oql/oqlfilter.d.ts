@@ -8,7 +8,7 @@
 
 import {OQLQuery} from "./oql-parser";
 import {AnnotatedMutation, ExtendedAlteration} from "../../../pages/resultsView/ResultsViewPageStore";
-import {GeneMolecularData, Mutation} from "../../api/generated/CBioPortalAPI";
+import {NumericGeneMolecularData, Mutation} from "../../api/generated/CBioPortalAPI";
 
 export type OQLLineFilterOutput<T> = {
     gene: string;
@@ -17,7 +17,7 @@ export type OQLLineFilterOutput<T> = {
     data: T[];
 }
 
-export declare function filterCBioPortalWebServiceData(oql_query:string, data:(Mutation | GeneMolecularData)[], accessors:any, default_oql:string): ExtendedAlteration[];
+export declare function filterCBioPortalWebServiceData(oql_query:string, data:(Mutation | NumericGeneMolecularData)[], accessors:any, default_oql:string): ExtendedAlteration[];
 
-export declare function filterCBioPortalWebServiceDataByOQLLine(oql_query:string, data:(AnnotatedMutation | GeneMolecularData)[], accessors:any, default_oql:string): OQLLineFilterOutput<ExtendedAlteration&AnnotatedMutation>[];
-export declare function filterCBioPortalWebServiceDataByOQLLine(oql_query:string, data:(Mutation | GeneMolecularData)[], accessors:any, default_oql:string): OQLLineFilterOutput<ExtendedAlteration>[];
+export declare function filterCBioPortalWebServiceDataByOQLLine(oql_query:string, data:(AnnotatedMutation | NumericGeneMolecularData)[], accessors:any, default_oql:string): OQLLineFilterOutput<ExtendedAlteration&AnnotatedMutation>[];
+export declare function filterCBioPortalWebServiceDataByOQLLine(oql_query:string, data:(Mutation | NumericGeneMolecularData)[], accessors:any, default_oql:string): OQLLineFilterOutput<ExtendedAlteration>[];

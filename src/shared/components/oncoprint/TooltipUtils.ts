@@ -1,7 +1,7 @@
 import {getPatientViewUrl, getSampleViewUrl} from "../../api/urls";
 import $ from "jquery";
 import {
-    GeneMolecularData, GenePanel, GenePanelData, MolecularProfile,
+    NumericGeneMolecularData, GenePanel, GenePanelData, MolecularProfile,
     Mutation
 } from "../../api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
@@ -174,9 +174,9 @@ export function makeGeneticTrackTooltip(
                     (datum.alterationSubType === "fusion" ? fusions : mutations).push(tooltip_datum);
                     break;
                 case "COPY_NUMBER_ALTERATION":
-                    if (disp_cna.hasOwnProperty((datum as GeneMolecularData).value)) {
+                    if (disp_cna.hasOwnProperty((datum as NumericGeneMolecularData).value)) {
                         const tooltip_datum:any = {
-                            cna: disp_cna[(datum as GeneMolecularData).value]
+                            cna: disp_cna[(datum as NumericGeneMolecularData).value]
                         };
                         const oncokb_oncogenic = datum.oncoKbOncogenic;
                         if (oncokb_oncogenic) {

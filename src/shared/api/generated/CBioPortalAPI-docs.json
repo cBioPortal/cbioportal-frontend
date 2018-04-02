@@ -1016,7 +1016,7 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/GeneMolecularData"
+                "$ref": "#/definitions/NumericGeneMolecularData"
               }
             }
           }
@@ -1483,7 +1483,7 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/GeneMolecularData"
+                "$ref": "#/definitions/NumericGeneMolecularData"
               }
             }
           }
@@ -1541,7 +1541,7 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/GeneMolecularData"
+                "$ref": "#/definitions/NumericGeneMolecularData"
               }
             }
           }
@@ -4277,48 +4277,6 @@
       },
       "title": "Gene"
     },
-    "GeneMolecularData": {
-      "type": "object",
-      "required": [
-        "entrezGeneId",
-        "molecularProfileId",
-        "patientId",
-        "sampleId",
-        "studyId",
-        "value"
-      ],
-      "properties": {
-        "entrezGeneId": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "gene": {
-          "$ref": "#/definitions/Gene"
-        },
-        "molecularProfileId": {
-          "type": "string"
-        },
-        "patientId": {
-          "type": "string"
-        },
-        "sampleId": {
-          "type": "string"
-        },
-        "studyId": {
-          "type": "string"
-        },
-        "uniquePatientKey": {
-          "type": "string"
-        },
-        "uniqueSampleKey": {
-          "type": "string"
-        },
-        "value": {
-          "type": "string"
-        }
-      },
-      "title": "GeneMolecularData"
-    },
     "GenePanel": {
       "type": "object",
       "required": [
@@ -4808,6 +4766,48 @@
         }
       },
       "title": "MutationPositionIdentifier"
+    },
+    "NumericGeneMolecularData": {
+      "type": "object",
+      "required": [
+        "entrezGeneId",
+        "molecularProfileId",
+        "patientId",
+        "sampleId",
+        "studyId",
+        "value"
+      ],
+      "properties": {
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "gene": {
+          "$ref": "#/definitions/Gene"
+        },
+        "molecularProfileId": {
+          "type": "string"
+        },
+        "patientId": {
+          "type": "string"
+        },
+        "sampleId": {
+          "type": "string"
+        },
+        "studyId": {
+          "type": "string"
+        },
+        "uniquePatientKey": {
+          "type": "string"
+        },
+        "uniqueSampleKey": {
+          "type": "string"
+        },
+        "value": {
+          "type": "number"
+        }
+      },
+      "title": "NumericGeneMolecularData"
     },
     "Patient": {
       "type": "object",

@@ -9,7 +9,7 @@ import {
     IGenesetHeatmapTrackDatum
 } from "shared/components/oncoprint/Oncoprint";
 import {AlterationTypeConstants, AnnotatedExtendedAlteration} from "../../../pages/resultsView/ResultsViewPageStore";
-import {ClinicalAttribute, GeneMolecularData, Mutation, Sample} from "../../api/generated/CBioPortalAPI";
+import {ClinicalAttribute, NumericGeneMolecularData, Mutation, Sample} from "../../api/generated/CBioPortalAPI";
 import {SpecialAttribute} from "../../cache/ClinicalDataCache";
 import {OncoprintClinicalAttribute} from "./ResultsViewOncoprint";
 import {MutationSpectrum} from "../../api/generated/CBioPortalAPIInternal";
@@ -141,7 +141,7 @@ describe("DataUtils", ()=>{
 
        it("fills a datum w one cna data correctly", ()=>{
            let data = [{
-               value: "2",
+               value: 2,
                molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
@@ -157,7 +157,7 @@ describe("DataUtils", ()=>{
                } as any, "amplification");
 
            data = [{
-               value: "1",
+               value: 1,
                molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
@@ -173,7 +173,8 @@ describe("DataUtils", ()=>{
                } as any, "gain");
 
            data = [{
-               value: "-1",
+               value: -1,
+               alterationType: "",
                molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
@@ -189,7 +190,8 @@ describe("DataUtils", ()=>{
                } as any, "hetloss");
 
            data = [{
-               value: "-2",
+               value: -2,
+               alterationType: "",
                molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
@@ -205,7 +207,7 @@ describe("DataUtils", ()=>{
                } as any, "homdel");
 
            data = [{
-               value: "0",
+               value: 0,
                molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
@@ -438,10 +440,10 @@ describe("DataUtils", ()=>{
        });
        it("fills a datum w multiple cna data w correct priority", ()=>{
            let data = [{
-               value: "2",
+               value: 2,
                molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION
            } as AnnotatedExtendedAlteration,{
-               value: "1",
+               value: 1,
                molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
@@ -457,10 +459,10 @@ describe("DataUtils", ()=>{
                } as any, "amplification beats gain");
 
            data = [{
-               value: "-2",
+               value: -2,
                molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION
            } as AnnotatedExtendedAlteration,{
-               value: "0",
+               value: 0,
                molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
@@ -476,13 +478,13 @@ describe("DataUtils", ()=>{
                } as any, "homdel beats diploid");
 
            data = [{
-               value: "-2",
+               value: -2,
                molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION
            } as AnnotatedExtendedAlteration,{
-               value: "-2",
+               value: -2,
                molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION
            } as AnnotatedExtendedAlteration, {
-               value: "2",
+               value: 2,
                molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
@@ -498,13 +500,13 @@ describe("DataUtils", ()=>{
                } as any, "two homdels beats one amp");
 
            data = [{
-               value: "-2",
+               value: -2,
                molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION
            } as AnnotatedExtendedAlteration,{
-               value: "2",
+               value: 2,
                molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION
            } as AnnotatedExtendedAlteration, {
-               value: "2",
+               value: 2,
                molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
@@ -629,13 +631,13 @@ describe("DataUtils", ()=>{
                alterationSubType:"down",
                molecularProfileAlterationType: AlterationTypeConstants.MRNA_EXPRESSION
            } as AnnotatedExtendedAlteration, {
-               value: "-2",
+               value: -2,
                molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION
            } as AnnotatedExtendedAlteration,{
-               value: "-2",
+               value: -2,
                molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION
            } as AnnotatedExtendedAlteration, {
-               value: "2",
+               value: 2,
                molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION
            } as AnnotatedExtendedAlteration,{
                mutationType: "missense",
@@ -770,8 +772,9 @@ describe("DataUtils", ()=>{
                "geneset_id",
                "MY_FAVORITE_GENE_SET-3",
                {sampleId:"sample", studyId:"study"} as Sample,
-               [{value: "7"}]
+               [{value: 7}]
            );
+           console.log(partialTrackDatum);
            assert.deepEqual(
                partialTrackDatum,
                {geneset_id:"MY_FAVORITE_GENE_SET-3", study:"study", profile_data:7}
