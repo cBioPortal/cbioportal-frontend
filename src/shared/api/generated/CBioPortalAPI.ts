@@ -213,26 +213,6 @@ export type Gene = {
         'type': string
 
 };
-export type GeneMolecularData = {
-    'entrezGeneId': number
-
-        'gene': Gene
-
-        'molecularProfileId': string
-
-        'patientId': string
-
-        'sampleId': string
-
-        'studyId': string
-
-        'uniquePatientKey': string
-
-        'uniqueSampleKey': string
-
-        'value': string
-
-};
 export type GenePanel = {
     'description': string
 
@@ -439,6 +419,26 @@ export type MutationPositionIdentifier = {
         'proteinPosEnd': number
 
         'proteinPosStart': number
+
+};
+export type NumericGeneMolecularData = {
+    'entrezGeneId': number
+
+        'gene': Gene
+
+        'molecularProfileId': string
+
+        'patientId': string
+
+        'sampleId': string
+
+        'studyId': string
+
+        'uniquePatientKey': string
+
+        'uniqueSampleKey': string
+
+        'value': number
 
 };
 export type Patient = {
@@ -1858,7 +1858,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             $queryParameters ? : any,
             $domain ? : string
-        }): Promise < Array < GeneMolecularData >
+        }): Promise < Array < NumericGeneMolecularData >
         > {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
@@ -2539,7 +2539,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             $queryParameters ? : any,
             $domain ? : string
-        }): Promise < Array < GeneMolecularData >
+        }): Promise < Array < NumericGeneMolecularData >
         > {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
@@ -2634,7 +2634,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             $queryParameters ? : any,
             $domain ? : string
-        }): Promise < Array < GeneMolecularData >
+        }): Promise < Array < NumericGeneMolecularData >
         > {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
