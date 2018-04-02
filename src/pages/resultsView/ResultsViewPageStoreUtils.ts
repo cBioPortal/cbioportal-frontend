@@ -1,10 +1,10 @@
 import {
-    Gene, GeneMolecularData, GenePanel, GenePanelData, MolecularProfile,
+    Gene, NumericGeneMolecularData, GenePanel, GenePanelData, MolecularProfile,
     Mutation, Patient, Sample
 } from "../../shared/api/generated/CBioPortalAPI";
 import {action} from "mobx";
 import {getSimplifiedMutationType} from "../../shared/lib/oql/accessors";
-import {AnnotatedGeneMolecularData, AnnotatedMutation, GenePanelInformation} from "./ResultsViewPageStore";
+import {AnnotatedNumericGeneMolecularData, AnnotatedMutation, GenePanelInformation} from "./ResultsViewPageStore";
 import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
 import _ from "lodash";
 
@@ -143,10 +143,10 @@ export function computeGenePanelInformation(
 }
 
 export function annotateMolecularDatum(
-    molecularDatum:GeneMolecularData,
-    getOncoKbCnaAnnotationForOncoprint:(datum:GeneMolecularData)=>IndicatorQueryResp,
+    molecularDatum:NumericGeneMolecularData,
+    getOncoKbCnaAnnotationForOncoprint:(datum:NumericGeneMolecularData)=>IndicatorQueryResp,
     molecularProfileIdToMolecularProfile:{[molecularProfileId:string]:MolecularProfile}
-):AnnotatedGeneMolecularData {
+):AnnotatedNumericGeneMolecularData {
     let oncogenic = "";
     if (molecularProfileIdToMolecularProfile[molecularDatum.molecularProfileId].molecularAlterationType
         === "COPY_NUMBER_ALTERATION") {

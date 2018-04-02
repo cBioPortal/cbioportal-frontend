@@ -7,7 +7,7 @@ import {AnnotatedExtendedAlteration} from "../ResultsViewPageStore";
 
 export interface ISubAlteration {
     type: string;
-    value: string;
+    value: number;
 }
 
 export interface IOqlData {
