@@ -2,7 +2,7 @@ import * as React from "react";
 import reactionWithPrev from "shared/lib/reactionWithPrev";
 import OncoprintJS, {TrackId, TrackSpec} from "oncoprintjs";
 import {
-    ClinicalAttribute, GeneMolecularData, GenePanelData, MolecularProfile,
+    ClinicalAttribute, NumericGeneMolecularData, GenePanelData, MolecularProfile,
     Mutation
 } from "../../api/generated/CBioPortalAPI";
 import {observer} from "mobx-react";
