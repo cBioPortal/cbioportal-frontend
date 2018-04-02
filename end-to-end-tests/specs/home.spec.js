@@ -252,9 +252,8 @@ describe('cross cancer query', function() {
         browser.waitForEnabled('[data-test="queryButton"]', 30000);
         browser.click('[data-test="queryButton"]');
 
-        // go to cancer types summary
-        $('#ui-id-1').waitForExist(60000);
-        $('#ui-id-1').click();
+        // wait for cancer types summary to appear
+        $('[data-test="cancerTypeSummaryChart"]').waitForExist(60000);
 
         // check if TP53 is in the navigation above the plots
         $('.nav-pills').waitForExist(30000);
