@@ -1,6 +1,6 @@
 import {
     DiscreteCopyNumberFilter, DiscreteCopyNumberData, ClinicalData, ClinicalDataMultiStudyFilter, Sample,
-    SampleIdentifier, MolecularProfile, Mutation, GeneMolecularData, MolecularDataFilter, Gene,
+    SampleIdentifier, MolecularProfile, Mutation, NumericGeneMolecularData, MolecularDataFilter, Gene,
     ClinicalDataSingleStudyFilter, CancerStudy, PatientIdentifier, Patient, GenePanelData, GenePanelDataFilter,
     SampleList, MutationCountByPosition, MutationMultipleStudyFilter, SampleMolecularIdentifier,
     MolecularDataMultipleStudyFilter, SampleFilter, MolecularProfileFilter, GenePanelMultipleStudyFilter, PatientFilter
@@ -23,7 +23,7 @@ import {
     fetchSamplesWithoutCancerTypeClinicalData, fetchStudiesForSamplesWithoutCancerTypeClinicalData, IDataQueryFilter,
     isMutationProfile, fetchOncoKbAnnotatedGenes, groupBy, fetchOncoKbData,
     ONCOKB_DEFAULT, generateUniqueSampleKeyToTumorTypeMap, cancerTypeForOncoKb, fetchCnaOncoKbData,
-    fetchCnaOncoKbDataWithGeneMolecularData, fetchGermlineConsentedSamples
+    fetchCnaOncoKbDataWithNumericGeneMolecularData, fetchGermlineConsentedSamples
 } from "shared/lib/StoreUtils";
 import {indexHotspotsData, fetchHotspotsData} from "shared/lib/CancerHotspotsUtils";
 import {MutationMapperStore} from "./mutation/MutationMapperStore";
@@ -85,8 +85,10 @@ export const AlterationTypeConstants = {
     GENESET_SCORE: 'GENESET_SCORE'
 };
 
-export interface ExtendedAlteration extends Mutation, GeneMolecularData {
+export interface ExtendedAlteration extends Mutation, NumericGeneMolecularData {
     molecularProfileAlterationType: MolecularProfile["molecularAlterationType"];
+    // TODO: what is difference molecularProfileAlterationType and
+    // alterationType?
     alterationType: string
     alterationSubType: string
 };
@@ -98,11 +100,11 @@ export interface AnnotatedMutation extends Mutation {
     simplifiedMutationType: SimplifiedMutationType;
 }
 
-export interface AnnotatedGeneMolecularData extends GeneMolecularData {
+export interface AnnotatedNumericGeneMolecularData extends NumericGeneMolecularData {
     oncoKbOncogenic: string;
 }
 
-export interface AnnotatedExtendedAlteration extends ExtendedAlteration, AnnotatedMutation, AnnotatedGeneMolecularData {};
+export interface AnnotatedExtendedAlteration extends ExtendedAlteration, AnnotatedMutation, AnnotatedNumericGeneMolecularData {};
 
 export interface ExtendedSample extends Sample {
     cancerType: string;
@@ -287,7 +289,7 @@ export class ResultsViewPageStore {
         }
     });
 
-    readonly molecularData = remoteData<GeneMolecularData[]>({
+    readonly molecularData = remoteData<NumericGeneMolecularData[]>({
         await: () => [
             this.studyToDataQueryFilter,
             this.genes,
@@ -327,13 +329,13 @@ export class ResultsViewPageStore {
         }
     });
 
-    readonly unfilteredAlterations = remoteData<(Mutation|GeneMolecularData)[]>({
+    readonly unfilteredAlterations = remoteData<(Mutation|NumericGeneMolecularData)[]>({
         await: ()=>[
             this.mutations,
             this.molecularData
         ],
         invoke: ()=>{
-            let result:(Mutation|GeneMolecularData)[] = [];
+            let result:(Mutation|NumericGeneMolecularData)[] = [];
             result = result.concat(this.mutations.result!);
             result = result.concat(this.molecularData.result!);
             return Promise.resolve(result);
@@ -434,7 +436,7 @@ export class ResultsViewPageStore {
             this.patients
         ],
         invoke:()=>{
-            let unfilteredAlterations:(AnnotatedMutation | AnnotatedGeneMolecularData)[] = [];
+            let unfilteredAlterations:(AnnotatedMutation | AnnotatedNumericGeneMolecularData)[] = [];
             unfilteredAlterations = unfilteredAlterations.concat(this.putativeDriverAnnotatedMutations.result!);
             unfilteredAlterations = unfilteredAlterations.concat(this.annotatedMolecularData.result!);
 
@@ -1363,7 +1365,7 @@ export class ResultsViewPageStore {
         }
     });
 
-    readonly annotatedMolecularData = remoteData<AnnotatedGeneMolecularData[]>({
+    readonly annotatedMolecularData = remoteData<AnnotatedNumericGeneMolecularData[]>({
         await: ()=>[
             this.molecularData,
             this.getOncoKbCnaAnnotationForOncoprint,
@@ -1525,7 +1527,7 @@ export class ResultsViewPageStore {
             this.molecularData,
             this.molecularProfileIdToMolecularProfile
         ],
-        invoke: () => fetchCnaOncoKbDataWithGeneMolecularData(
+        invoke: () => fetchCnaOncoKbDataWithNumericGeneMolecularData(
             this.uniqueSampleKeyToTumorType.result!,
             this.oncoKbAnnotatedGenes.result!,
             this.molecularData,
@@ -1542,7 +1544,7 @@ export class ResultsViewPageStore {
             this.molecularData,
             this.molecularProfileIdToMolecularProfile
         ],
-        invoke: () => fetchCnaOncoKbDataWithGeneMolecularData(
+        invoke: () => fetchCnaOncoKbDataWithNumericGeneMolecularData(
             {},
             this.oncoKbAnnotatedGenes.result!,
             this.molecularData,
@@ -1573,12 +1575,12 @@ export class ResultsViewPageStore {
             this.cnaOncoKbDataForOncoprint
         ],
         invoke: ()=>{
-            return Promise.resolve((data:GeneMolecularData)=>{
+            return Promise.resolve((data:NumericGeneMolecularData)=>{
                 const uniqueSampleKeyToTumorType = this.cnaOncoKbDataForOncoprint.result.uniqueSampleKeyToTumorType!;
                 const id = generateQueryVariantId(
                     data.entrezGeneId,
                     cancerTypeForOncoKb(data.uniqueSampleKey, uniqueSampleKeyToTumorType),
-                    getAlterationString(parseInt(data.value, 10))
+                    getAlterationString(data.value)
                 );
                 return this.cnaOncoKbDataForOncoprint.result!.indicatorMap![id];
             });

@@ -7,7 +7,7 @@ import {
 import {
     ClinicalAttribute,
     ClinicalData,
-    GeneMolecularData, GenePanelData, MolecularProfile, Mutation, MutationCount, Patient,
+    NumericGeneMolecularData, GenePanelData, MolecularProfile, Mutation, MutationCount, Patient,
     Sample
 } from "../../api/generated/CBioPortalAPI";
 import {
@@ -116,7 +116,7 @@ export function fillGeneticTrackDatum(
         const molecularAlterationType = event.molecularProfileAlterationType;
         switch (molecularAlterationType) {
             case "COPY_NUMBER_ALTERATION":
-                const cnaEvent = cnaDataToString[(event as GeneMolecularData).value];
+                const cnaEvent = cnaDataToString[(event as NumericGeneMolecularData).value];
                 if (cnaEvent) {
                     // not diploid
                     dispCnaCounts[cnaEvent] = dispCnaCounts[cnaEvent] || 0;
@@ -247,7 +247,7 @@ export function fillHeatmapTrackDatum<T extends IBaseHeatmapTrackDatum, K extend
     featureKey: K,
     featureId: T[K],
     case_:Sample|Patient,
-    data?: {value: string}[]
+    data?: {value: number}[]
 ) {
     trackDatum[featureKey] = featureId;
     trackDatum.study = case_.studyId;
@@ -255,7 +255,7 @@ export function fillHeatmapTrackDatum<T extends IBaseHeatmapTrackDatum, K extend
         trackDatum.profile_data = null;
         trackDatum.na = true;
     } else if (data.length === 1) {
-        trackDatum.profile_data = parseFloat(data[0].value);
+        trackDatum.profile_data = data[0].value;
     } else {
         if (isSample(case_)) {
             throw Error("Unexpectedly received multiple heatmap profile data for one sample");
@@ -263,7 +263,7 @@ export function fillHeatmapTrackDatum<T extends IBaseHeatmapTrackDatum, K extend
             // aggregate samples for this patient by selecting the highest absolute (Z-)score
             trackDatum.profile_data = data.reduce(
                 (maxInAbsVal: number, next) => {
-                    const val = parseFloat(next.value);
+                    const val = next.value;
                     if (Math.abs(val) > Math.abs(maxInAbsVal)) {
                         return val;
                     } else {
@@ -280,13 +280,13 @@ export function makeHeatmapTrackData<T extends IBaseHeatmapTrackDatum, K extends
     featureKey: K,
     featureId: T[K],
     cases:Sample[]|Patient[],
-    data: {value: string, uniquePatientKey: string, uniqueSampleKey: string}[]
+    data: {value: number, uniquePatientKey: string, uniqueSampleKey: string}[]
 ): T[] {
     if (!cases.length) {
         return [];
     }
     const sampleData = isSampleList(cases);
-    let keyToData:{[uniqueKey:string]:{value: string}[]};
+    let keyToData:{[uniqueKey:string]:{value: number}[]};
     let ret: T[];
     if (isSampleList(cases)) {
         keyToData = _.groupBy(data, d=>d.uniqueSampleKey);
