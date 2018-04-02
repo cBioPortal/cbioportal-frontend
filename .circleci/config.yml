@@ -102,6 +102,9 @@ jobs:
           environment:
             JUNIT_REPORT_PATH: ./junit/
           when: always
+      - run:
+          name: "Make sure all screenshots are tracked (otherwise the test will always be succesful)"
+          command: 'for f in end-to-end-tests/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || echo -e "\033[0;31m $f not tracked \033[0m"; done'
       -  store_artifacts:
           path: ~/repo/end-to-end-tests/screenshots
           destination: /screenshots
