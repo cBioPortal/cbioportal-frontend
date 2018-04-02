@@ -60,14 +60,14 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 				textLabel:'User-defined Case List'
 			}
 		];
-		if (this.store.isVirtualCohortQuery) {
+		if (this.store.isVirtualStudyQuery) {
 			ret = [{
 				value: ALL_CASES_LIST_ID,
 				label: (
 					<DefaultTooltip
 						placement="right"
 						mouseEnterDelay={0}
-						overlay={<div className={styles.tooltip}>All cases in the selected cohorts</div>}
+						overlay={<div className={styles.tooltip}>All cases in the selected studies</div>}
 					>
 						<span>All</span>
 					</DefaultTooltip>

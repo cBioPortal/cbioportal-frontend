@@ -74,7 +74,7 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
 
 				<CancerStudySelector/>
 
-				{this.store.isVirtualCohortQuery ?
+				{this.store.isVirtualStudyQuery ?
 					(<DataTypePrioritySelector/>) :
 					(<MolecularProfileSelector/>)
 				}
