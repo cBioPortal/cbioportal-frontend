@@ -1,7 +1,7 @@
 import {getSimplifiedMutationType} from "shared/lib/oql/accessors";
 import {assert} from "chai";
 import {
-    Gene, GeneMolecularData, GenePanelData, MolecularProfile, Mutation, Patient,
+    Gene, NumericGeneMolecularData, GenePanelData, MolecularProfile, Mutation, Patient,
     Sample
 } from "../../shared/api/generated/CBioPortalAPI";
 import {
@@ -456,115 +456,115 @@ describe("ResultsViewPageStoreUtils", ()=>{
         it("annotates single element correctly in case of Likely Oncogenic", ()=>{
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:"Likely Oncogenic"} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:"Likely Oncogenic"} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"COPY_NUMBER_ALTERATION"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:"Likely Oncogenic"}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:"Likely Oncogenic"}
             );
         });
         it("annotates single element correctly in case of Predicted Oncogenic", ()=>{
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:"Predicted Oncogenic"} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:"Predicted Oncogenic"} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"COPY_NUMBER_ALTERATION"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:"Predicted Oncogenic"}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:"Predicted Oncogenic"}
             );
         });
         it("annotates single element correctly in case of Oncogenic", ()=>{
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:"Oncogenic"} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:"Oncogenic"} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"COPY_NUMBER_ALTERATION"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:"Oncogenic"}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:"Oncogenic"}
             );
         });
         it("annotates single element correctly in case of Likely Neutral, Inconclusive, Unknown, asdfasd, undefined, empty", ()=>{
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:"Likely Neutral"} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:"Likely Neutral"} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"COPY_NUMBER_ALTERATION"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:""}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:""}
             );
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:"Inconclusive"} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:"Inconclusive"} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"COPY_NUMBER_ALTERATION"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:""}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:""}
             );
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:"Unknown"} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:"Unknown"} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"COPY_NUMBER_ALTERATION"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:""}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:""}
             );
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:"asdfasdf"} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:"asdfasdf"} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"COPY_NUMBER_ALTERATION"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:""}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:""}
             );
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:undefined} as any),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:undefined} as any),
                     {"profile":{molecularAlterationType:"COPY_NUMBER_ALTERATION"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:""}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:""}
             );
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:""} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:""} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"COPY_NUMBER_ALTERATION"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:""}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:""}
             );
         });
         it("annotates non-copy number data with empty string", ()=>{
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:"Oncogenic"} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:"Oncogenic"} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"MUTATION_EXTENDED"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:""}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:""}
             );
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:"Oncogenic"} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:"Oncogenic"} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"MRNA_EXPRESSION"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:""}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:""}
             );
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:"Oncogenic"} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:"Oncogenic"} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"PROTEIN_LEVEL"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:""}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:""}
             );
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:"Oncogenic"} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:"Oncogenic"} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"FUSION"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:""}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:""}
             );
         });
     });
