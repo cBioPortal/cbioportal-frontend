@@ -4,7 +4,7 @@ import * as styles_any from "./styles.module.scss";
 import classNames from "classnames";
 import FontAwesome from "react-fontawesome";
 import LabeledCheckbox from "../../labeledCheckbox/LabeledCheckbox";
-import {observer} from "mobx-react";
+import {observer, Observer} from "mobx-react";
 import {computed} from "mobx";
 import _ from "lodash";
 import {getPubMedUrl, openStudySummaryFormSubmit} from "../../../api/urls";
@@ -24,6 +24,7 @@ const styles = {
 
 		Study: string,
 		StudyName: string,
+		DeletedStudy: string,
 		StudyMeta: string,
 		StudySamples: string,
 		StudyLinks: string,
@@ -163,8 +164,7 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}>
 		);
 
 		const isOverlap = study.studyId in this.store.getOverlappingStudiesMap;
-		const classes = classNames({ [styles.StudyName]:true, 'overlappingStudy':isOverlap  });
-        const overlapWarning = isOverlap ?
+		const overlapWarning = isOverlap ?
             <DefaultTooltip
                 mouseEnterDelay={0}
                 placement="top"
@@ -172,24 +172,36 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}>
             >
                 <i className="fa fa-exclamation-triangle"></i>
             </DefaultTooltip>
-            : null;
+			: null;
 
 		return (
-			<li key={arrayIndex} className={liClassName} data-test='StudySelect'>
+			<li key={arrayIndex} 
+			    className={liClassName} 
+			    data-test={this.store.isVirtualStudy(study.studyId) ? 'VirtualStudySelect' : 'StudySelect'}>
+                <Observer>
+                {() => {
+                    const classes = classNames({ [styles.StudyName]:true, 'overlappingStudy':isOverlap ,   [styles.DeletedStudy]: this.store.isDeletedVirtualStudy(study.studyId)});
+                    return(
+                        <CancerTreeCheckbox view={this.view} node={study}>
+                            <span className={classes}>
+                                {study.name}
+                                {overlapWarning}
+                            </span>
+                       </CancerTreeCheckbox>
+                    )
+                }}
+                </Observer>
 
-                <CancerTreeCheckbox view={this.view} node={study}>
-                    <span className={classes}>
-                        {study.name}
-                        {overlapWarning}
-                    </span>
-
-                </CancerTreeCheckbox>
-
-
-				<div className={styles.StudyMeta}>
-					{this.renderSamples(study)}
-					{this.renderStudyLinks(study)}
-				</div>
+                <Observer>
+                    {() => {
+                        return(
+                            <div className={styles.StudyMeta}>
+                                {!this.store.isDeletedVirtualStudy(study.studyId) && this.renderSamples(study)}
+                                {this.renderStudyLinks(study)}
+                            </div>
+                        );
+                    }}
+                </Observer>
 			</li>
 		);
 	}
@@ -216,94 +228,117 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}>
 
 	renderStudyLinks = (study:CancerStudy) =>
 	{
-		let links:{icon:string, onClick?:string|(()=>void), tooltip?:string}[] = [
-			{
-				icon: 'info-circle',
-				tooltip: study.description,
+        if(this.store.isDeletedVirtualStudy(study.studyId)){
+            return(
+                <DefaultTooltip
+                    mouseEnterDelay={0}
+                    placement="top"
+                    overlay={
+                        <div className={styles.tooltip}
+                        >Restore study</div>
+                    }
+                    children={
+                        <button 
+                            className={`btn btn-default btn-xs`} 
+                            onClick={()=>this.store.restoreVirtualStudy(study.studyId)}
+                            style={{
+                                lineHeight: '80%',
+                            }}
+							data-test='virtualStudyRestore'>
+                            Restore
+                        </button>
+                    }
+                />
+            )
+        } else {
+            let links:{icon:string, onClick?:string|(()=>void), tooltip?:string}[] = [
+                {
+                    icon: 'info-circle',
+                    tooltip: study.description,
+                }
+            ];
+    
+            if (this.store.isVirtualStudy(study.studyId)) {
+                links.push({
+                    icon: 'trash',
+                    tooltip: "Delete this virtual study.",
+                    onClick: ()=>this.store.deleteVirtualStudy(study.studyId),
+                });
+            } else {
+                links.push({
+                    icon: 'book',
+                    onClick: study.pmid && getPubMedUrl(study.pmid),
+                    tooltip: study.pmid && "PubMed",
+                });
 			}
-		];
-
-		if (!this.store.isVirtualCohort(study.studyId)) {
-			links.push({
-				icon: 'book',
-				onClick: study.pmid && getPubMedUrl(study.pmid),
-				tooltip: study.pmid && "PubMed",
-			});
-		}
-
-		if (this.store.isVirtualCohort(study.studyId) && !this.store.isTemporaryVirtualCohort(study.studyId)) {
-			links.push({
-				icon: 'trash',
-				tooltip: "Delete this virtual study.",
-				onClick: ()=>this.store.deleteVirtualCohort(study.studyId),
-			});
-		}
-		return (
-			<span className={styles.StudyLinks}>
-				{links.map((link, i) => {
-					let content = (
-						<FontAwesome
-							key={i}
-							name={link.icon}
-							className={classNames({
-								[styles.icon]: true,
-								[styles.iconWithTooltip]: !!link.tooltip,
-								[styles.trashIcon]: (link.icon === "trash")
-							})}
-						/>
-					);
-
-					if (link.onClick) {
-						let anchorProps:any = {
-							key: i
-						};
-						if (typeof link.onClick === "string") {
-							anchorProps.href = link.onClick;
-							anchorProps.target = "_blank";
-						} else {
-							anchorProps.onClick = link.onClick;
-						}
-						content = (
-							<a {...anchorProps}>
-								{content}
-							</a>
-						);
-					}
-
-					if (link.tooltip)
-					{
-						let overlay = (
-							<div className={styles.tooltip} dangerouslySetInnerHTML={{__html: link.tooltip}}/>
-						);
-						content = (
-							<DefaultTooltip
-								key={i}
-								mouseEnterDelay={0}
-								placement="top"
-								overlay={overlay}
-								children={content}
-							/>
-						);
-					}
-
-					return content;
-				})}
-				{study.studyId && (
-					<DefaultTooltip
-						mouseEnterDelay={0}
-						placement="top"
-						overlay={
-							<div className={styles.tooltip}
-							>View study summary</div>
-						}
-						children={
-							<span onClick={()=>openStudySummaryFormSubmit(study.studyId)}
-							  className={ classNames(styles.summaryIcon, 'ci ci-pie-chart')}></span>
-						}
-					/>
-				)}
-			</span>
-		);
+    
+            return (
+                <span className={styles.StudyLinks}>
+                    {links.map((link, i) => {
+                        let content = (
+                            <FontAwesome
+                                key={i}
+                                name={link.icon}
+                                className={classNames({
+                                    [styles.icon]: true,
+                                    [styles.iconWithTooltip]: !!link.tooltip,
+                                    [styles.trashIcon]: (link.icon === "trash")
+                                })}
+                            />
+                        );
+    
+                        if (link.onClick) {
+                            let anchorProps:any = {
+                                key: i
+                            };
+                            if (typeof link.onClick === "string") {
+                                anchorProps.href = link.onClick;
+                                anchorProps.target = "_blank";
+                            } else {
+                                anchorProps.onClick = link.onClick;
+                            }
+                            content = (
+                                <a {...anchorProps}>
+                                    {content}
+                                </a>
+                            );
+                        }
+    
+                        if (link.tooltip)
+                        {
+                            let overlay = (
+                                <div className={styles.tooltip} dangerouslySetInnerHTML={{__html: link.tooltip}}/>
+                            );
+                            content = (
+                                <DefaultTooltip
+                                    key={i}
+                                    mouseEnterDelay={0}
+                                    placement="top"
+                                    overlay={overlay}
+                                    children={content}
+                                />
+                            );
+                        }
+    
+                        return content;
+                    })}
+                    {study.studyId && (
+                        <DefaultTooltip
+                            mouseEnterDelay={0}
+                            placement="top"
+                            overlay={
+                                <div className={styles.tooltip}
+                                >View study summary</div>
+                            }
+                        >
+						    <span onClick={()=>openStudySummaryFormSubmit(study.studyId)}
+						        className={ classNames(styles.summaryIcon, 'ci ci-pie-chart')}>
+					        </span>
+						</DefaultTooltip>
+                    )}
+                </span>
+            );
+        }
 	}
 }
 
