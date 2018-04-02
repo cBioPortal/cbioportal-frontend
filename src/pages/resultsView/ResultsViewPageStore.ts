@@ -64,9 +64,12 @@ import {QueryStore} from "shared/components/query/QueryStore";
 import {
     annotateMolecularDatum, getOncoKbOncogenic,
     computeCustomDriverAnnotationReport, computePutativeDriverAnnotatedMutations,
-    initializeCustomDriverAnnotationSettings, computeGenePanelInformation
+    initializeCustomDriverAnnotationSettings, computeGenePanelInformation,
+    getQueriedStudies
 } from "./ResultsViewPageStoreUtils";
 import {getAlterationCountsForCancerTypesForAllGenes} from "../../shared/lib/alterationCountHelpers";
+import sessionServiceClient from "shared/api//sessionServiceInstance";
+import { VirtualStudy } from "shared/model/VirtualStudy";
 
 type Optional<T> = (
     {isApplicable: true, value: T}
@@ -228,6 +231,9 @@ export class ResultsViewPageStore {
     @observable hugoGeneSymbols: string[];
     @observable genesetIds: string[];
     @observable samplesSpecification: SamplesSpecificationElement[] = [];
+
+    //queried id(any combination of physical and virtual studies)
+    @observable cohortIdsList: string[] = []
 
     @observable zScoreThreshold: number;
 
@@ -740,7 +746,9 @@ export class ResultsViewPageStore {
        }
     });
 
-    public get studyMap():{ [studyId:string]:CancerStudy } {
+    //contains all the physical studies for the current selected cohort ids
+    //selected cohort ids can be any combination of physical_study_id and virtual_study_id(shared or saved ones)
+    public get physicalStudySet():{ [studyId:string]:CancerStudy } {
         return _.keyBy(this.studies.result, (study:CancerStudy)=>study.studyId);
     }
 
@@ -1164,6 +1172,37 @@ export class ResultsViewPageStore {
             })
         }
     }, []);
+    
+    //user saved virtual studies
+    private readonly virtualStudies = remoteData(sessionServiceClient.getUserVirtualStudies(), []);
+    
+    private readonly virtualStudyIdToStudy = remoteData({
+        await: ()=>[this.virtualStudies],
+        invoke: async ()=>{
+            return _.keyBy(
+                this.virtualStudies.result.map(virtualStudy=>{
+                    let study = {
+                        allSampleCount:_.sumBy(virtualStudy.data.studies, study=>study.samples.length),
+                        studyId: virtualStudy.id,
+                        name: virtualStudy.data.name,
+                        description: virtualStudy.data.description,
+                        cancerTypeId: "My Virtual Studies"
+                    } as CancerStudy;
+                    return study;
+                }), x =>x.studyId);
+        }
+    },{});
+
+    //this is only required to show study name and description on the results page
+    readonly queriedStudies = remoteData({
+		await: ()=>[this.studyIdToStudy, this.virtualStudyIdToStudy],
+		invoke: async ()=>{
+            return getQueriedStudies(this.studyIdToStudy.result,
+                                     this.virtualStudyIdToStudy.result,
+                                     this.cohortIdsList);
+		},
+		default: [],
+    });
 
     readonly studyIdToStudy = remoteData({
         await: ()=>[this.studies],
