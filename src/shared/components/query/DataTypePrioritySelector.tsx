@@ -21,7 +21,7 @@ export default class DataTypePrioritySelector extends QueryStoreComponent<{}, {}
 {
 	render()
 	{
-		if (!this.store.isVirtualCohortQuery)
+		if (!this.store.isVirtualStudyQuery)
 			return null;
 
 		let flexRowContents:JSX.Element[] = [];
