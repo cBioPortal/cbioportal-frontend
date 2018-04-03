@@ -4,6 +4,7 @@ var hasElementsInInterval = require('./haselementsininterval.js');
 var CachedProperty = require('./CachedProperty.js');
 var clustering = require('./clustering.js');
 var $ = require('jquery');
+var BucketSort = require("./bucketsort.js");
 
 function ifndef(x, val) {
     return (typeof x === "undefined" ? val : x);
@@ -1390,30 +1391,26 @@ var OncoprintModel = (function () {
 	}, []);
 	
 	var precomputed_comparator = model.precomputed_comparator.get();
-	var curr_id_to_index = model.getIdToIndexMap();
-	var combinedComparator = function(idA, idB) {
-	    var res = 0;
-            var abs_res = 0;
-	    for (var i=0; i<track_sort_priority.length; i++) {
-		var next_res = precomputed_comparator[track_sort_priority[i]].compare(idA, idB);
-                var abs_next_res = Math.abs(next_res);
-		if (abs_next_res > abs_res) {
-		    res = next_res;
-                    abs_res = abs_next_res;
+	var getVector = function(id) {
+		var mandatory_values = [];
+		var preferred_values = [];
+		for (var i=0; i<track_sort_priority.length; i++) {
+			var sort_value = precomputed_comparator[track_sort_priority[i]].getSortValue(id);
+			mandatory_values.push(sort_value.mandatory);
+			preferred_values.push(sort_value.preferred);
 		}
-		if (abs_res === 1) {
-		    break;
-		}
-	    }
-	    if (res === 0) {
-		// stable sort
-		res = ( curr_id_to_index[idA] < curr_id_to_index[idB] ? -1 : 1); // will never be the same, no need to check for 0
-	    }
-	    return (res > 0) ? 1 : -1;
-	}
-	var id_order = model.getIdOrder(true).slice();
-	id_order.sort(combinedComparator);
-	model.setIdOrder(id_order);
+		return mandatory_values.concat(preferred_values);
+	};
+
+	var ids_with_vectors = model.getIdOrder(true).map(function(id) {
+		return {
+			id: id,
+			vector: getVector(id)
+		};
+	});
+	var sort_vector_length = track_sort_priority.length*2; // if you inspect getVector above, you'll see theres two entries for each track
+	var order = BucketSort.bucketSort(ids_with_vectors, sort_vector_length, function(d) { return d.vector; });
+	model.setIdOrder(order.map(function(d) { return d.id; }));
     };
     OncoprintModel.prototype.sort = function() {
     	var def = new $.Deferred();
@@ -1450,54 +1447,125 @@ var OncoprintModel = (function () {
 
 var PrecomputedComparator = (function() {
     function PrecomputedComparator(list, comparator, sort_direction, element_identifier_key) {
-	var preferred, mandatory;
-	if (typeof comparator === "function") {
-	    preferred = comparator;
-	    mandatory = comparator;
-	} else {
-	    preferred = comparator.preferred;
-	    mandatory = comparator.mandatory;
-	}
-	var makeDirectedComparator = function(cmp) {
-	    return function (d1, d2) {
-		if (sort_direction === 0) {
-		    return 0;
-		}
-		var res = cmp(d1, d2);
-		if (res === 2) {
-		    return 1;
-		} else if (res === -2) {
-		    return -1;
+		if (typeof comparator === "object" && comparator.vector_length) {
+			// comparator.vector_length being set implies vector-specification for sort order
+			initializeVector(this, list, comparator, sort_direction, element_identifier_key);
 		} else {
-		    return res * sort_direction;
+			initializeComparator(this, list, comparator, sort_direction, element_identifier_key);
 		}
-	    };
-	};
-	var preferredComparator = makeDirectedComparator(preferred);
-	var mandatoryComparator = makeDirectedComparator(mandatory);
-	var sorted_list = list.sort(preferredComparator);
-	
-	// i is a change point iff comp(elt[i], elt[i+1]) !== 0
-	this.preferred_change_points = []; // i is a preferred change pt iff its a change pt with comp = preferredComparator but not with comp = mandatoryComparator
-	this.mandatory_change_points = []; // i is a mandatory change pt iff its a change pt with comp = mandatoryComparator
-	
-	// note that by the following process, preferred_change_points and mandatory_change_points are sorted
-	for (var i=0; i<sorted_list.length; i++) {
-	    if (i === sorted_list.length - 1) {
-		break;
-	    }
-	    if (mandatoryComparator(sorted_list[i], sorted_list[i+1]) !== 0) {
-		this.mandatory_change_points.push(i);
-	    } else if (preferredComparator(sorted_list[i], sorted_list[i+1]) !== 0) {
-		this.preferred_change_points.push(i);
-	    }
-	}
-	// Note that by this process change_points is sorted
-	this.id_to_index = {};
-	for (var i=0; i<sorted_list.length; i++) {
-	    this.id_to_index[sorted_list[i][element_identifier_key]] = i;
-	}
     }
+
+    function initializeComparator(precomputed_comparator, list, comparator, sort_direction, element_identifier_key) {
+    	// initializeComparator initializes the PrecomputedComparator in the case that
+		//	the sort order is given using a comparator
+        var preferred, mandatory;
+        if (typeof comparator === "function") {
+            preferred = comparator;
+            mandatory = comparator;
+        } else {
+            preferred = comparator.preferred;
+            mandatory = comparator.mandatory;
+        }
+        var makeDirectedComparator = function(cmp) {
+            return function (d1, d2) {
+                if (sort_direction === 0) {
+                    return 0;
+                }
+                var res = cmp(d1, d2);
+                if (res === 2) {
+                    return 1;
+                } else if (res === -2) {
+                    return -1;
+                } else {
+                    return res * sort_direction;
+                }
+            };
+        };
+        var preferredComparator = makeDirectedComparator(preferred);
+        var mandatoryComparator = makeDirectedComparator(mandatory);
+        var sorted_list = list.sort(preferredComparator);
+
+        // i is a change point iff comp(elt[i], elt[i+1]) !== 0
+        precomputed_comparator.preferred_change_points = [0]; // i is a preferred change pt iff its a change pt with comp = preferredComparator but not with comp = mandatoryComparator
+        precomputed_comparator.mandatory_change_points = [0]; // i is a mandatory change pt iff its a change pt with comp = mandatoryComparator
+
+        // note that by the following process, preferred_change_points and mandatory_change_points are sorted
+        for (var i=1; i<sorted_list.length; i++) {
+            if (mandatoryComparator(sorted_list[i-1], sorted_list[i]) !== 0) {
+                precomputed_comparator.mandatory_change_points.push(i);
+            } else if (preferredComparator(sorted_list[i-1], sorted_list[i]) !== 0) {
+                precomputed_comparator.preferred_change_points.push(i);
+            }
+        }
+        precomputed_comparator.id_to_index = {};
+        for (var i=0; i<sorted_list.length; i++) {
+            precomputed_comparator.id_to_index[sorted_list[i][element_identifier_key]] = i;
+        }
+	}
+
+    function initializeVector(precomputed_comparator, list, getVector, sort_direction, element_identifier_key) {
+    	// initializeVector initializes the PrecomputedComparator in the case that the sort order is specified by vectors for bucket sort
+        var makeDirectedVector = function(vec) {
+        	if (sort_direction === 0) {
+        		return function(d) { return 0; };
+			} else {
+        		return function(d) {
+        			return vec(d).map(function(n) { return n * sort_direction; });
+				}
+			}
+        };
+        var preferredVector = makeDirectedVector(getVector.preferred);
+        var mandatoryVector = makeDirectedVector(getVector.mandatory);
+
+        // associate each data to its vector and sort them together
+		var list_with_vectors = list.map(function(d) {
+			return { d: d, preferred_vector: preferredVector(d), mandatory_vector: mandatoryVector(d) };
+		});
+		// sort by preferred vector
+        var sorted_list = BucketSort.bucketSort(
+        	list_with_vectors,
+			getVector.vector_length,
+			function(d) { return d.preferred_vector; },
+			getVector.compareEquals
+		);
+
+        // i is a change point iff comp(elt[i], elt[i+1]) !== 0
+        precomputed_comparator.preferred_change_points = [0]; // i (besides 0) is a preferred change pt iff its a change pt with comp = preferredComparator but not with comp = mandatoryComparator
+        precomputed_comparator.mandatory_change_points = [0]; // i (besides 0) is a mandatory change pt iff its a change pt with comp = mandatoryComparator
+
+        // note that by the following process, preferred_change_points and mandatory_change_points are sorted
+        for (var i=1; i<sorted_list.length; i++) {
+            if (BucketSort.compare(sorted_list[i-1].mandatory_vector, sorted_list[i].mandatory_vector) !== 0) {
+                precomputed_comparator.mandatory_change_points.push(i);
+			} else if (BucketSort.compare(sorted_list[i-1].preferred_vector, sorted_list[i].preferred_vector) !== 0) {
+                precomputed_comparator.preferred_change_points.push(i);
+            }
+        }
+
+        precomputed_comparator.id_to_index = {};
+        for (var i=0; i<sorted_list.length; i++) {
+            precomputed_comparator.id_to_index[sorted_list[i].d[element_identifier_key]] = i;
+        }
+    }
+
+    PrecomputedComparator.prototype.getSortValue = function(id) {
+    	var index = this.id_to_index[id];
+    	// find greatest lower change points - thats where this should be sorted by
+		//		because everything between change points has same sort value
+		var mandatory = 0;
+		var preferred = 0;
+		if (this.mandatory_change_points.length) {
+			mandatory = this.mandatory_change_points[binarysearch(this.mandatory_change_points, index, function(ind) { return ind; }, true)];
+		}
+        if (this.preferred_change_points.length) {
+            preferred = this.preferred_change_points[binarysearch(this.preferred_change_points, index, function(ind) { return ind; }, true)];
+        }
+		return {
+			mandatory: mandatory,
+			preferred: preferred
+		};
+	}
+
     PrecomputedComparator.prototype.compare = function(idA, idB) {
 	var indA = this.id_to_index[idA];
 	var indB = this.id_to_index[idB];

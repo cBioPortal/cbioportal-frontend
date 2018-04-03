@@ -1,4 +1,7 @@
-module.exports = function(array, target_key, keyFn, return_closest_if_not_found) {
+module.exports = function(array, target_key, keyFn, return_closest_lower_if_not_found) {
+	if (!array.length) {
+		return -1; // return -1 for an empty array
+	}
     var upper_excl = array.length;
     var lower_incl = 0;
     var middle;
@@ -17,8 +20,8 @@ module.exports = function(array, target_key, keyFn, return_closest_if_not_found)
 	    return -1;
 	}
     }
-    if (return_closest_if_not_found) {
-	return lower_incl-1;
+    if (return_closest_lower_if_not_found) {
+	return Math.max(0, lower_incl-1);
     } else {
 	return -1;
     }
