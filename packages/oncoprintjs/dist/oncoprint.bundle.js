@@ -11040,9 +11040,9 @@ jQuery.fn.andSelf = jQuery.fn.addBack;
 // https://github.com/jrburke/requirejs/wiki/Updating-existing-libraries#wiki-anon
 
 if ( true ) {
-	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = (function() {
+	!(__WEBPACK_AMD_DEFINE_ARRAY__ = [], __WEBPACK_AMD_DEFINE_RESULT__ = function() {
 		return jQuery;
-	}).apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),
+	}.apply(exports, __WEBPACK_AMD_DEFINE_ARRAY__),
 				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 }
 
@@ -11159,8 +11159,8 @@ module.exports = glMatrix;
 /* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
-var makeSVGElement = __webpack_require__(24);
-var shapeToSVG = __webpack_require__(25);
+var makeSVGElement = __webpack_require__(25);
+var shapeToSVG = __webpack_require__(26);
 var extractRGBA = __webpack_require__(3);
 
 var extractColor = function(str) {
@@ -11337,7 +11337,10 @@ module.exports = function (str) {
 /* 4 */
 /***/ (function(module, exports) {
 
-module.exports = function(array, target_key, keyFn, return_closest_if_not_found) {
+module.exports = function(array, target_key, keyFn, return_closest_lower_if_not_found) {
+	if (!array.length) {
+		return -1; // return -1 for an empty array
+	}
     var upper_excl = array.length;
     var lower_incl = 0;
     var middle;
@@ -11356,8 +11359,8 @@ module.exports = function(array, target_key, keyFn, return_closest_if_not_found)
 	    return -1;
 	}
     }
-    if (return_closest_if_not_found) {
-	return lower_incl-1;
+    if (return_closest_lower_if_not_found) {
+	return Math.max(0, lower_incl-1);
     } else {
 	return -1;
     }
@@ -11427,12 +11430,12 @@ THE SOFTWARE. */
 // END HEADER
 
 exports.glMatrix = __webpack_require__(1);
-exports.mat2 = __webpack_require__(19);
-exports.mat2d = __webpack_require__(20);
+exports.mat2 = __webpack_require__(20);
+exports.mat2d = __webpack_require__(21);
 exports.mat3 = __webpack_require__(7);
-exports.mat4 = __webpack_require__(21);
-exports.quat = __webpack_require__(22);
-exports.vec2 = __webpack_require__(23);
+exports.mat4 = __webpack_require__(22);
+exports.quat = __webpack_require__(23);
+exports.vec2 = __webpack_require__(24);
 exports.vec3 = __webpack_require__(8);
 exports.vec4 = __webpack_require__(9);
 
@@ -13754,14 +13757,14 @@ module.exports = {
 __webpack_require__(12);
 
 var OncoprintModel = __webpack_require__(13);
-var OncoprintWebGLCellView = __webpack_require__(18);
-var OncoprintLabelView = __webpack_require__(27);
-var OncoprintRuleSet = __webpack_require__(28);
-var OncoprintTrackOptionsView = __webpack_require__(30);
-var OncoprintLegendView = __webpack_require__(31);//TODO: rename
-var OncoprintToolTip = __webpack_require__(32);
-var OncoprintTrackInfoView = __webpack_require__(33);
-var OncoprintMinimapView = __webpack_require__(34);
+var OncoprintWebGLCellView = __webpack_require__(19);
+var OncoprintLabelView = __webpack_require__(28);
+var OncoprintRuleSet = __webpack_require__(29);
+var OncoprintTrackOptionsView = __webpack_require__(31);
+var OncoprintLegendView = __webpack_require__(32);//TODO: rename
+var OncoprintToolTip = __webpack_require__(33);
+var OncoprintTrackInfoView = __webpack_require__(34);
+var OncoprintMinimapView = __webpack_require__(35);
 
 var svgfactory = __webpack_require__(2);
 
@@ -14947,6 +14950,7 @@ var hasElementsInInterval = __webpack_require__(14);
 var CachedProperty = __webpack_require__(5);
 var clustering = __webpack_require__(15);
 var $ = __webpack_require__(0);
+var BucketSort = __webpack_require__(18);
 
 function ifndef(x, val) {
     return (typeof x === "undefined" ? val : x);
@@ -16333,30 +16337,26 @@ var OncoprintModel = (function () {
 	}, []);
 	
 	var precomputed_comparator = model.precomputed_comparator.get();
-	var curr_id_to_index = model.getIdToIndexMap();
-	var combinedComparator = function(idA, idB) {
-	    var res = 0;
-            var abs_res = 0;
-	    for (var i=0; i<track_sort_priority.length; i++) {
-		var next_res = precomputed_comparator[track_sort_priority[i]].compare(idA, idB);
-                var abs_next_res = Math.abs(next_res);
-		if (abs_next_res > abs_res) {
-		    res = next_res;
-                    abs_res = abs_next_res;
+	var getVector = function(id) {
+		var mandatory_values = [];
+		var preferred_values = [];
+		for (var i=0; i<track_sort_priority.length; i++) {
+			var sort_value = precomputed_comparator[track_sort_priority[i]].getSortValue(id);
+			mandatory_values.push(sort_value.mandatory);
+			preferred_values.push(sort_value.preferred);
 		}
-		if (abs_res === 1) {
-		    break;
-		}
-	    }
-	    if (res === 0) {
-		// stable sort
-		res = ( curr_id_to_index[idA] < curr_id_to_index[idB] ? -1 : 1); // will never be the same, no need to check for 0
-	    }
-	    return (res > 0) ? 1 : -1;
-	}
-	var id_order = model.getIdOrder(true).slice();
-	id_order.sort(combinedComparator);
-	model.setIdOrder(id_order);
+		return mandatory_values.concat(preferred_values);
+	};
+
+	var ids_with_vectors = model.getIdOrder(true).map(function(id) {
+		return {
+			id: id,
+			vector: getVector(id)
+		};
+	});
+	var sort_vector_length = track_sort_priority.length*2; // if you inspect getVector above, you'll see theres two entries for each track
+	var order = BucketSort.bucketSort(ids_with_vectors, sort_vector_length, function(d) { return d.vector; });
+	model.setIdOrder(order.map(function(d) { return d.id; }));
     };
     OncoprintModel.prototype.sort = function() {
     	var def = new $.Deferred();
@@ -16393,54 +16393,125 @@ var OncoprintModel = (function () {
 
 var PrecomputedComparator = (function() {
     function PrecomputedComparator(list, comparator, sort_direction, element_identifier_key) {
-	var preferred, mandatory;
-	if (typeof comparator === "function") {
-	    preferred = comparator;
-	    mandatory = comparator;
-	} else {
-	    preferred = comparator.preferred;
-	    mandatory = comparator.mandatory;
-	}
-	var makeDirectedComparator = function(cmp) {
-	    return function (d1, d2) {
-		if (sort_direction === 0) {
-		    return 0;
-		}
-		var res = cmp(d1, d2);
-		if (res === 2) {
-		    return 1;
-		} else if (res === -2) {
-		    return -1;
+		if (typeof comparator === "object" && comparator.vector_length) {
+			// comparator.vector_length being set implies vector-specification for sort order
+			initializeVector(this, list, comparator, sort_direction, element_identifier_key);
 		} else {
-		    return res * sort_direction;
+			initializeComparator(this, list, comparator, sort_direction, element_identifier_key);
 		}
-	    };
-	};
-	var preferredComparator = makeDirectedComparator(preferred);
-	var mandatoryComparator = makeDirectedComparator(mandatory);
-	var sorted_list = list.sort(preferredComparator);
-	
-	// i is a change point iff comp(elt[i], elt[i+1]) !== 0
-	this.preferred_change_points = []; // i is a preferred change pt iff its a change pt with comp = preferredComparator but not with comp = mandatoryComparator
-	this.mandatory_change_points = []; // i is a mandatory change pt iff its a change pt with comp = mandatoryComparator
-	
-	// note that by the following process, preferred_change_points and mandatory_change_points are sorted
-	for (var i=0; i<sorted_list.length; i++) {
-	    if (i === sorted_list.length - 1) {
-		break;
-	    }
-	    if (mandatoryComparator(sorted_list[i], sorted_list[i+1]) !== 0) {
-		this.mandatory_change_points.push(i);
-	    } else if (preferredComparator(sorted_list[i], sorted_list[i+1]) !== 0) {
-		this.preferred_change_points.push(i);
-	    }
-	}
-	// Note that by this process change_points is sorted
-	this.id_to_index = {};
-	for (var i=0; i<sorted_list.length; i++) {
-	    this.id_to_index[sorted_list[i][element_identifier_key]] = i;
-	}
     }
+
+    function initializeComparator(precomputed_comparator, list, comparator, sort_direction, element_identifier_key) {
+    	// initializeComparator initializes the PrecomputedComparator in the case that
+		//	the sort order is given using a comparator
+        var preferred, mandatory;
+        if (typeof comparator === "function") {
+            preferred = comparator;
+            mandatory = comparator;
+        } else {
+            preferred = comparator.preferred;
+            mandatory = comparator.mandatory;
+        }
+        var makeDirectedComparator = function(cmp) {
+            return function (d1, d2) {
+                if (sort_direction === 0) {
+                    return 0;
+                }
+                var res = cmp(d1, d2);
+                if (res === 2) {
+                    return 1;
+                } else if (res === -2) {
+                    return -1;
+                } else {
+                    return res * sort_direction;
+                }
+            };
+        };
+        var preferredComparator = makeDirectedComparator(preferred);
+        var mandatoryComparator = makeDirectedComparator(mandatory);
+        var sorted_list = list.sort(preferredComparator);
+
+        // i is a change point iff comp(elt[i], elt[i+1]) !== 0
+        precomputed_comparator.preferred_change_points = [0]; // i is a preferred change pt iff its a change pt with comp = preferredComparator but not with comp = mandatoryComparator
+        precomputed_comparator.mandatory_change_points = [0]; // i is a mandatory change pt iff its a change pt with comp = mandatoryComparator
+
+        // note that by the following process, preferred_change_points and mandatory_change_points are sorted
+        for (var i=1; i<sorted_list.length; i++) {
+            if (mandatoryComparator(sorted_list[i-1], sorted_list[i]) !== 0) {
+                precomputed_comparator.mandatory_change_points.push(i);
+            } else if (preferredComparator(sorted_list[i-1], sorted_list[i]) !== 0) {
+                precomputed_comparator.preferred_change_points.push(i);
+            }
+        }
+        precomputed_comparator.id_to_index = {};
+        for (var i=0; i<sorted_list.length; i++) {
+            precomputed_comparator.id_to_index[sorted_list[i][element_identifier_key]] = i;
+        }
+	}
+
+    function initializeVector(precomputed_comparator, list, getVector, sort_direction, element_identifier_key) {
+    	// initializeVector initializes the PrecomputedComparator in the case that the sort order is specified by vectors for bucket sort
+        var makeDirectedVector = function(vec) {
+        	if (sort_direction === 0) {
+        		return function(d) { return 0; };
+			} else {
+        		return function(d) {
+        			return vec(d).map(function(n) { return n * sort_direction; });
+				}
+			}
+        };
+        var preferredVector = makeDirectedVector(getVector.preferred);
+        var mandatoryVector = makeDirectedVector(getVector.mandatory);
+
+        // associate each data to its vector and sort them together
+		var list_with_vectors = list.map(function(d) {
+			return { d: d, preferred_vector: preferredVector(d), mandatory_vector: mandatoryVector(d) };
+		});
+		// sort by preferred vector
+        var sorted_list = BucketSort.bucketSort(
+        	list_with_vectors,
+			getVector.vector_length,
+			function(d) { return d.preferred_vector; },
+			getVector.compareEquals
+		);
+
+        // i is a change point iff comp(elt[i], elt[i+1]) !== 0
+        precomputed_comparator.preferred_change_points = [0]; // i (besides 0) is a preferred change pt iff its a change pt with comp = preferredComparator but not with comp = mandatoryComparator
+        precomputed_comparator.mandatory_change_points = [0]; // i (besides 0) is a mandatory change pt iff its a change pt with comp = mandatoryComparator
+
+        // note that by the following process, preferred_change_points and mandatory_change_points are sorted
+        for (var i=1; i<sorted_list.length; i++) {
+            if (BucketSort.compare(sorted_list[i-1].mandatory_vector, sorted_list[i].mandatory_vector) !== 0) {
+                precomputed_comparator.mandatory_change_points.push(i);
+			} else if (BucketSort.compare(sorted_list[i-1].preferred_vector, sorted_list[i].preferred_vector) !== 0) {
+                precomputed_comparator.preferred_change_points.push(i);
+            }
+        }
+
+        precomputed_comparator.id_to_index = {};
+        for (var i=0; i<sorted_list.length; i++) {
+            precomputed_comparator.id_to_index[sorted_list[i].d[element_identifier_key]] = i;
+        }
+    }
+
+    PrecomputedComparator.prototype.getSortValue = function(id) {
+    	var index = this.id_to_index[id];
+    	// find greatest lower change points - thats where this should be sorted by
+		//		because everything between change points has same sort value
+		var mandatory = 0;
+		var preferred = 0;
+		if (this.mandatory_change_points.length) {
+			mandatory = this.mandatory_change_points[binarysearch(this.mandatory_change_points, index, function(ind) { return ind; }, true)];
+		}
+        if (this.preferred_change_points.length) {
+            preferred = this.preferred_change_points[binarysearch(this.preferred_change_points, index, function(ind) { return ind; }, true)];
+        }
+		return {
+			mandatory: mandatory,
+			preferred: preferred
+		};
+	}
+
     PrecomputedComparator.prototype.compare = function(idA, idB) {
 	var indA = this.id_to_index[idA];
 	var indB = this.id_to_index[idB];
@@ -16610,7 +16681,6 @@ module.exports = {
     hclusterTracks: hclusterTracks
 }
 
-
 /***/ }),
 /* 16 */
 /***/ (function(module, exports, __webpack_require__) {
@@ -16664,11 +16734,133 @@ module.exports = function (content, url) {
 
 /***/ }),
 /* 18 */
+/***/ (function(module, exports) {
+
+function bucketSort(array, vector_length, getVector, compareEquals) {
+    // array: an array of data
+    // vector_length: the length of vectors coming out of getVector (must be uniform)
+    // getVector: a function that takes an element of array and returns an int vector. defaults to identity
+    // compareEquals: an optional standard sort comparator - if specified it is run on the
+    //               results of the final buckets before returning
+    getVector = getVector || function(d) { return d; };
+
+  var current_sorted_array = array;
+  var current_bucket_ranges = [{lower_index_incl: 0, upper_index_excl: array.length}];
+
+  var new_sorted_array, new_bucket_ranges, bucket_range, sorted_result;
+
+  for (var vector_index=0; vector_index<vector_length; vector_index++) {
+    new_sorted_array = [];
+    new_bucket_ranges = [];
+    // sort each bucket range, and collect sorted array and new bucket ranges
+    for (var j=0; j<current_bucket_ranges.length; j++) {
+      bucket_range = current_bucket_ranges[j];
+      sorted_result = bucketSortHelper(
+          current_sorted_array,
+          vector_length,
+          getVector,
+          bucket_range.lower_index_incl,
+          bucket_range.upper_index_excl,
+          vector_index
+      );
+      if ((vector_index === vector_length-1) && compareEquals) {
+          // if we're on the last bucket, sort with compareEquals if specified
+          sorted_result.sorted_array.sort(compareEquals);
+      }
+      new_sorted_array = new_sorted_array.concat(sorted_result.sorted_array);
+      new_bucket_ranges = new_bucket_ranges.concat(sorted_result.bucket_ranges);
+    }
+    current_sorted_array = new_sorted_array;
+    current_bucket_ranges = new_bucket_ranges;
+  }
+  return current_sorted_array;
+};
+
+function compare(vector1, vector2) {
+    // utility function - comparator that describes sort order given by bucketSort
+    if (vector1.length !== vector2.length)
+        throw new Error("oncoprintjs:bucketsort:compare vector1.length != vector2.length");
+
+    var ret = 0;
+    // go left to right, return result of first difference
+    for (var i=0; i<vector1.length; i++) {
+        if (vector1[i] < vector2[i]) {
+            ret = -1;
+            break;
+        } else if (vector1[i] > vector2[i]) {
+            ret = 1;
+            break;
+        }
+    }
+    return ret;
+}
+
+function bucketSortHelper(array, vector_length, getVector, sort_range_lower_index_incl, sort_range_upper_index_excl, vector_index) {
+    // returns { sorted_array: d[], bucket_ranges:{lower_index_incl, upper_index_excl}[]}} },
+    //      where sorted_array only contains elements from the specified range of
+    //      array[sort_range_lower_index_incl:sort_range_upper_index_excl]
+
+    // stop if empty sort range, or end of vector
+    if (!array.length || sort_range_lower_index_incl >= sort_range_upper_index_excl) {
+        return {
+            sorted_array: [],
+            bucket_ranges: []
+        }
+    }
+    if (vector_index >= vector_length) {
+        return {
+            sorted_array:array.slice(sort_range_lower_index_incl, sort_range_upper_index_excl),
+            bucket_ranges:[{lower_index_incl: sort_range_lower_index_incl, upper_index_excl: sort_range_upper_index_excl}]
+        }
+    }
+
+    // courtesy check that vectors are right size - by this point we know array not empty
+    var firstVector = getVector(array[0]);
+    if (firstVector.length !== vector_length) {
+        throw new Error("oncoprintjs:bucketsort:bucketSortHelper getVector result length is unexpected: "+
+                "Expected "+vector_length+" but got "+firstVector.length);
+    }
+    // otherwise, bucket sort the specified range
+    // gather elements into buckets
+    var buckets = {};
+    for (var i=sort_range_lower_index_incl; i<sort_range_upper_index_excl; i++) {
+      var key = getVector(array[i])[vector_index];
+      buckets[key] = buckets[key] || [];
+      buckets[key].push(array[i]);
+    }
+    // reduce in sorted order
+    var keys = Object.keys(buckets).map(function(key) {
+        return parseFloat(key);
+    });
+    keys.sort(function(k1, k2) { return k1 < k2 ? -1 : (k1 > k2 ? 1 : 0); });
+
+    var sorted_array = [];
+    var bucket_ranges = [];
+    for (var i=0; i<keys.length; i++) {
+      var bucket = buckets[keys[i]];
+      var lower_index_incl = sort_range_lower_index_incl + sorted_array.length;
+      var upper_index_excl = lower_index_incl + bucket.length;
+      bucket_ranges.push({lower_index_incl: lower_index_incl, upper_index_excl: upper_index_excl});
+      sorted_array = sorted_array.concat(bucket);
+    }
+
+    return { sorted_array: sorted_array, bucket_ranges: bucket_ranges };
+}
+
+module.exports = {
+  bucketSort: bucketSort,
+    compare: compare,
+  __bucketSortHelper: bucketSortHelper
+};
+
+
+/***/ }),
+/* 19 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var gl_matrix = __webpack_require__(6);
 var svgfactory = __webpack_require__(2);
-var shapeToVertexes = __webpack_require__(26);
+var shapeToVertexes = __webpack_require__(27);
 var CachedProperty = __webpack_require__(5);
 var Shape = __webpack_require__(10);
 var $ = __webpack_require__(0);
@@ -17587,7 +17779,7 @@ module.exports = OncoprintWebGLCellView;
 
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* Copyright (c) 2015, Brandon Jones, Colin MacKenzie IV.
@@ -18029,7 +18221,7 @@ module.exports = mat2;
 
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* Copyright (c) 2015, Brandon Jones, Colin MacKenzie IV.
@@ -18504,7 +18696,7 @@ module.exports = mat2d;
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* Copyright (c) 2015, Brandon Jones, Colin MacKenzie IV.
@@ -20646,7 +20838,7 @@ module.exports = mat4;
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* Copyright (c) 2015, Brandon Jones, Colin MacKenzie IV.
@@ -21252,7 +21444,7 @@ module.exports = quat;
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* Copyright (c) 2015, Brandon Jones, Colin MacKenzie IV.
@@ -21845,7 +22037,7 @@ module.exports = vec2;
 
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(module, exports) {
 
 module.exports = function (tag, attrs) {
@@ -21859,7 +22051,7 @@ module.exports = function (tag, attrs) {
 };
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var makeSVGElement = function (tag, attrs) {
@@ -21962,7 +22154,7 @@ module.exports = function(oncoprint_shape_computed_params, offset_x, offset_y) {
 };
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(module, exports) {
 
 var halfsqrt2 = Math.sqrt(2) / 2;
@@ -22142,7 +22334,7 @@ module.exports = function(oncoprint_shape_computed_params, z_index, addVertex) {
 }
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var svgfactory = __webpack_require__(2);
@@ -22527,7 +22719,7 @@ module.exports = OncoprintLabelView;
 
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /* Rule:
@@ -22553,7 +22745,7 @@ module.exports = OncoprintLabelView;
 
 var Shape = __webpack_require__(10);
 var extractRGBA = __webpack_require__(3);
-var heatmapColors = __webpack_require__(29);
+var heatmapColors = __webpack_require__(30);
 var binarysearch = __webpack_require__(4);
 
 function ifndef(x, val) {
@@ -23472,7 +23664,7 @@ module.exports = function (params) {
 
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(module, exports) {
 
 // Colours for the oncoprint heatmap feature
@@ -23999,7 +24191,7 @@ module.exports = {
 
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var $ = __webpack_require__(0);
@@ -24340,7 +24532,7 @@ module.exports = OncoprintTrackOptionsView;
 
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var svgfactory = __webpack_require__(2);
@@ -24625,7 +24817,7 @@ module.exports = OncoprintLegendView;
 
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var $ = __webpack_require__(0);
@@ -24740,7 +24932,7 @@ module.exports = OncoprintToolTip;
 
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var svgfactory = __webpack_require__(2);
@@ -24881,11 +25073,11 @@ module.exports = OncoprintTrackInfoView;
 
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var gl_matrix = __webpack_require__(6);
-var OncoprintZoomSlider = __webpack_require__(35);
+var OncoprintZoomSlider = __webpack_require__(36);
 var $ = __webpack_require__(0);
 
 var arrayFindIndex = function (arr, callback, start_index) {
@@ -25804,7 +25996,7 @@ module.exports = OncoprintMinimapView;
 
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var $ = __webpack_require__(0);
