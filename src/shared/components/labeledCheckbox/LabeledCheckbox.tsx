@@ -11,6 +11,7 @@ export interface ILabeledCheckboxProps
 {
 	checked?: boolean;
 	indeterminate?: boolean;
+	disabled?: boolean;
 	onChange?: ChangeEventHandler<HTMLInputElement>;
 	labelProps?: React.HTMLProps<HTMLLabelElement>;
 	inputProps?: React.HTMLProps<HTMLInputElement>;
@@ -48,6 +49,7 @@ export default class LabeledCheckbox extends React.Component<ILabeledCheckboxPro
 					type="checkbox"
 					checked={this.props.checked}
 					onChange={this.props.onChange}
+					disabled={this.props.disabled}
 					{...this.props.inputProps}
 					ref={this.handleInputRef}
 				/>

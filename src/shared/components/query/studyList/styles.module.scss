@@ -184,6 +184,11 @@ li.Study {
     overflow: hidden;
   }
 
+  .DeletedStudy {
+    text-decoration: line-through;
+    color: rgb(198, 203, 209);
+  }
+
   @media (min-width: 1450px) {
     .StudyName {
       max-width:500px;
