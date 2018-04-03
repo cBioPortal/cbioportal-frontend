@@ -93,6 +93,7 @@ function initStore(queryStore: QueryStore) {
     resultsViewPageStore.zScoreThreshold = serverVars.zScoreThreshold;
     resultsViewPageStore.oqlQuery = oqlQuery;
     resultsViewPageStore.queryStore = queryStore;
+    resultsViewPageStore.cohortIdsList = serverVars.cohortIdsList;
 
     return resultsViewPageStore;
 
@@ -266,7 +267,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                                     samplesExtendedWithClinicalData={this.resultsViewPageStore.samplesExtendedWithClinicalData.result!}
                                     alterationsByGeneBySampleKey={this.resultsViewPageStore.alterationsByGeneBySampleKey.result!}
                                     studies={this.resultsViewPageStore.studies.result!}
-                                    studyMap={this.resultsViewPageStore.studyMap}
+                                    studyMap={this.resultsViewPageStore.physicalStudySet}
                                   />
                             </div>)
                         } else if (isPending) {
