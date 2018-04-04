@@ -58,23 +58,23 @@ describe("bucketSort", function() {
     describe("bucketSort", function() {
         it("case: empty input", function() {
             assert.deepEqual(
-                BucketSort.bucketSort([], 3),
+                BucketSort.bucketSort([]),
                 []
             );
         });
         it("case: size 1 vectors", function() {
             assert.deepEqual(
-                BucketSort.bucketSort([[3],[1],[2]], 1),
+                BucketSort.bucketSort([[3],[1],[2]]),
                 [[1],[2],[3]]
             );
         });
         it("case: sorting with infinity", function() {
             assert.deepEqual(
-                BucketSort.bucketSort([[Number.POSITIVE_INFINITY, 0], [0, 1]], 2),
+                BucketSort.bucketSort([[Number.POSITIVE_INFINITY, 0], [0, 1]]),
                 [[0,1],[Number.POSITIVE_INFINITY, 0]]
             );
             assert.deepEqual(
-                BucketSort.bucketSort([[0, 0], [Number.NEGATIVE_INFINITY, 1]], 2),
+                BucketSort.bucketSort([[0, 0], [Number.NEGATIVE_INFINITY, 1]]),
                 [[Number.NEGATIVE_INFINITY,1],[0, 0]]
             );
         });
@@ -85,7 +85,7 @@ describe("bucketSort", function() {
                     [0,0,0,0],
                     [2,2,2,2],
                     [1,1,1,1]
-                ], 4),
+                ]),
                 [
                     [0,0,0,0],
                     [1,1,1,1],
@@ -102,7 +102,7 @@ describe("bucketSort", function() {
                     [-12, 23,-17,15],
                     [-21,6,11,4],
                     [12,22,21,8]
-                ], 4),
+                ]),
                 [
                     [-21,6,11,4],
                     [-12, 23,-17,15],
@@ -119,7 +119,7 @@ describe("bucketSort", function() {
                     [-12, 23,-17,15],
                     [-12,6,11,4],
                     [12,22,21,8]
-                ], 4),
+                ]),
                 [
                     [-12,6,11,4],
                     [-12, 23,-17,15],
@@ -135,13 +135,27 @@ describe("bucketSort", function() {
                     [0, 23,-17,15],
                     [0,6,11,4],
                     [0,22,21,8]
-                ], 4),
+                ]),
                 [
                     [0,1,-8,-24],
                     [0,6,11,4],
                     [0,10,-11,5],
                     [0,22,21,8],
                     [0, 23,-17,15]
+                ]
+            );
+            assert.deepEqual(
+                BucketSort.bucketSort([
+                    [0,10,-11,5],
+                    [0,10],
+                    [0],
+                    [0,10,-11]
+                ]),
+                [
+                    [0],
+                    [0,10],
+                    [0,10,-11],
+                    [0,10,-11,5]
                 ]
             );
         });
@@ -151,7 +165,7 @@ describe("bucketSort", function() {
                         {sample:"D", vector:[13,8]},
                         {sample:"A", vector:[13,10]},
                         {sample:"C", vector:[12,10]}
-                ], 2, function(d) { return d.vector; }, function(d1, d2) { return d1.sample.localeCompare(d2.sample); }),
+                ], function(d) { return d.vector; }, function(d1, d2) { return d1.sample.localeCompare(d2.sample); }),
                 [
                     {sample:"C", vector:[12,10]},
                     {sample:"D", vector:[13,8]},
@@ -164,7 +178,7 @@ describe("bucketSort", function() {
                     {sample:"D", vector:[13,10]},
                     {sample:"A", vector:[13,10]},
                     {sample:"C", vector:[12,10]}
-                ], 2, function(d) { return d.vector; }, function(d1, d2) { return d1.sample.localeCompare(d2.sample); }),
+                ], function(d) { return d.vector; }, function(d1, d2) { return d1.sample.localeCompare(d2.sample); }),
                 [
                     {sample:"C", vector:[12,10]},
                     {sample:"A", vector:[13,10]},
@@ -184,7 +198,8 @@ describe("bucketSort", function() {
 
             function generateVector(size) {
                 var ret = [];
-                for (var i=0; i<size; i++) {
+                var vectorSize = size+Math.round(Math.random()*4);
+                for (var i=0; i<vectorSize; i++) {
                     ret.push(randInt(3));
                 }
                 return ret;
@@ -197,7 +212,7 @@ describe("bucketSort", function() {
                 for (var i=0; i<100; i++) {
                     vectors.push(generateVector(size));
                 }
-                var sorted = BucketSort.bucketSort(vectors, size);
+                var sorted = BucketSort.bucketSort(vectors);
                 vectors.sort(BucketSort.compare); // sort using equivalent comparator - resultant order should be same
                 assert.deepEqual(sorted, vectors, "randomized test: vector size "+size);
             }
@@ -214,7 +229,8 @@ describe("bucketSort", function() {
 
             function generateVector(size) {
                 var ret = [];
-                for (var i=0; i<size; i++) {
+                var vectorSize = size+Math.round(Math.random()*4);
+                for (var i=0; i<vectorSize; i++) {
                     ret.push(randInt(3));
                 }
                 return ret;
@@ -239,17 +255,169 @@ describe("bucketSort", function() {
                     name = names.splice(Math.floor(Math.random()*names.length), 1)[0];
                     data.push({name:name, vector:vector});
                 }
-                var sorted = BucketSort.bucketSort(data, size, getVector, compareEquals);
+                var sorted = BucketSort.bucketSort(data, getVector, compareEquals);
                 data.sort(function(d1, d2) { return BucketSort.compareFull(d1, d2, getVector, compareEquals); })// sort using equivalent comparator - resultant order should be same
                 assert.deepEqual(sorted, data, "randomized test: vector size "+size);
             }
+        });
+        it("case: randomized tests, with strings", function() {
+            var names = [];
+            for (var i=0; i<100; i++) {
+                names.push("TCGA-"+(i<10 ? "0" : "")+(i<100 ? "0" : "") + i);
+            }
+
+            function randInt(magnitude) {
+                var ret = Math.round(Math.random()*magnitude - Math.random()*magnitude);
+                if (ret === 0) {
+                    // to deal w issues w negative zero
+                    ret = 0;
+                }
+                return ret;
+            }
+
+            function generateVector(size) {
+                var ret = [];
+                var vectorSize = size+Math.round(Math.random()*4);
+                for (var i=0; i<vectorSize; i++) {
+                    if (i % 2) {
+                        ret.push(randInt(3));
+                    } else {
+                        ret.push(Math.random() < 0.5 ? names[Math.floor(Math.random()*names.length)] : "");
+                    }
+                }
+                return ret;
+            }
+
+            var vectors;
+
+            for (var size=0; size<20; size++) {
+                vectors = [];
+                for (var i=0; i<100; i++) {
+                    vectors.push(generateVector(size));
+                }
+                var sorted = BucketSort.bucketSort(vectors);
+                vectors.sort(BucketSort.compare); // sort using equivalent comparator - resultant order should be same
+                assert.deepEqual(sorted, vectors, "randomized test: vector size "+size);
+            }
+        });
+    });
+    describe("stringToVector", function() {
+        it("creates the right vectors", function() {
+            assert.deepEqual(
+                BucketSort.__stringToVector(""), []
+            );
+            assert.deepEqual(
+                BucketSort.__stringToVector("a"), [97]
+            );
+            assert.deepEqual(
+                BucketSort.__stringToVector("abc"), [97, 98, 99]
+            );
+            assert.deepEqual(
+                BucketSort.__stringToVector("abc123abc456c"), [97, 98, 99, 123, 97, 98, 99, 456, 99]
+            );
+            assert.deepEqual(
+                BucketSort.__stringToVector("abc123abc456"), [97, 98, 99, 123, 97, 98, 99, 456]
+            );
+            assert.deepEqual(
+                BucketSort.__stringToVector("000"), [0]
+            );
+            assert.deepEqual(
+                BucketSort.__stringToVector("1"), [1]
+            );
+        });
+    });
+    describe("stringSort", function() {
+        it("sorts a list in right order", function(){
+            assert.deepEqual(BucketSort.stringSort([
+                "A20",
+                "P20",
+                "P04",
+                "P2",
+                "P13",
+                "ABCDE"
+            ]),[
+                "A20",
+                "ABCDE",
+                "P2",
+                "P04",
+                "P13",
+                "P20"
+            ]);
+        })
+        it("sorts four tcga ids in right order", function() {
+            assert.deepEqual(BucketSort.stringSort(
+                ["TCGA-AA-A01I", "TCGA-AG-3599", "TCGA-AG-3605", "TCGA-AA-3556"]),
+                ["TCGA-AA-A01I", "TCGA-AA-3556", "TCGA-AG-3599", "TCGA-AG-3605"]
+            );
+        });
+        it("sorts a list of tcga ids in right order", function() {
+            assert.deepEqual(BucketSort.stringSort(["TCGA-AG-3605","TCGA-AA-3680","TCGA-AA-3520","TCGA-AA-3854","TCGA-AA-3818","TCGA-AG-3575","TCGA-AA-3522","TCGA-AA-3814","TCGA-AA-3986","TCGA-AA-3696","TCGA-AA-A00Q","TCGA-AA-A00K","TCGA-AA-3561","TCGA-AF-2692","TCGA-AG-3901","TCGA-AA-3556","TCGA-AG-3580","TCGA-AA-3695","TCGA-AA-3930","TCGA-AG-3902","TCGA-AG-3727","TCGA-AA-A029","TCGA-A6-2683","TCGA-AG-3599","TCGA-AA-A01K","TCGA-AG-3878","TCGA-AA-3994","TCGA-AA-3979","TCGA-AG-3887","TCGA-AA-A01G","TCGA-AA-3560","TCGA-AA-3842","TCGA-AA-3837","TCGA-AG-3586","TCGA-AA-A01F","TCGA-AA-3870","TCGA-AA-3521","TCGA-AA-3673","TCGA-AA-A01I","TCGA-AF-2689","TCGA-AA-A02W","TCGA-AA-3681","TCGA-AG-3896","TCGA-AA-3851","TCGA-AA-3548","TCGA-AA-3852","TCGA-AA-3530","TCGA-AA-3939","TCGA-AG-3594","TCGA-AG-3909","TCGA-AA-3532","TCGA-AG-3581","TCGA-AG-3726","TCGA-AG-3611","TCGA-AA-3848","TCGA-AG-3583","TCGA-AG-3602"]),
+                [
+                    "TCGA-A6-2683",
+                    "TCGA-AA-A00K",
+                    "TCGA-AA-A00Q",
+                    "TCGA-AA-A01F",
+                    "TCGA-AA-A01G",
+                    "TCGA-AA-A01I",
+                    "TCGA-AA-A01K",
+                    "TCGA-AA-A02W",
+                    "TCGA-AA-A029",
+                    "TCGA-AA-3520",
+                    "TCGA-AA-3521",
+                    "TCGA-AA-3522",
+                    "TCGA-AA-3530",
+                    "TCGA-AA-3532",
+                    "TCGA-AA-3548",
+                    "TCGA-AA-3556",
+                    "TCGA-AA-3560",
+                    "TCGA-AA-3561",
+                    "TCGA-AA-3673",
+                    "TCGA-AA-3680",
+                    "TCGA-AA-3681",
+                    "TCGA-AA-3695",
+                    "TCGA-AA-3696",
+                    "TCGA-AA-3814",
+                    "TCGA-AA-3818",
+                    "TCGA-AA-3837",
+                    "TCGA-AA-3842",
+                    "TCGA-AA-3848",
+                    "TCGA-AA-3851",
+                    "TCGA-AA-3852",
+                    "TCGA-AA-3854",
+                    "TCGA-AA-3870",
+                    "TCGA-AA-3930",
+                    "TCGA-AA-3939",
+                    "TCGA-AA-3979",
+                    "TCGA-AA-3986",
+                    "TCGA-AA-3994",
+                    "TCGA-AF-2689",
+                    "TCGA-AF-2692",
+                    "TCGA-AG-3575",
+                    "TCGA-AG-3580",
+                    "TCGA-AG-3581",
+                    "TCGA-AG-3583",
+                    "TCGA-AG-3586",
+                    "TCGA-AG-3594",
+                    "TCGA-AG-3599",
+                    "TCGA-AG-3602",
+                    "TCGA-AG-3605",
+                    "TCGA-AG-3611",
+                    "TCGA-AG-3726",
+                    "TCGA-AG-3727",
+                    "TCGA-AG-3878",
+                    "TCGA-AG-3887",
+                    "TCGA-AG-3896",
+                    "TCGA-AG-3901",
+                    "TCGA-AG-3902",
+                    "TCGA-AG-3909"
+                ]);
         });
     });
     describe("__bucketSortHelper", function() {
         it("case: size 1 vector", function() {
             assert.deepEqual(
                 BucketSort.__bucketSortHelper(
-                    [[3],[1],[2]], 1, function(x) { return x; }, 0, 3, 0
+                    [[3],[1],[2]], function(x) { return x; }, 0, 3, 0, false
                 ),
                 {
                     sorted_array: [[1],[2],[3]],

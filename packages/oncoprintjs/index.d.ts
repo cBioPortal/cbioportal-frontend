@@ -18,16 +18,17 @@ declare module "oncoprintjs"
     export type TrackGroupIndex = number;
     export type TrackSortDirection = 0|1|-1;
     export type TrackSortComparator<D> = (d1:D, d2:D)=>number;//returns (0|1|2|-1|-2); for comparison-based sort, where 2 and -2 mean force to end or beginning (resp) no matter what direction sorted in
-    export type TrackSortVector<D> = (d:D)=>number[]; // maps data to vector used for bucket sort
+    export type TrackSortVector<D> = (d:D)=>(number|string)[]; // maps data to vector used for bucket sort - types of elements in each position must be same, i.e. Kth element must always be a number, or always be a string
     export type TrackTooltipFn<D> = (cell_datum:D)=>HTMLElement|string|any;
     export type TrackSortSpecification<D> = TrackSortComparator<D> | TrackSortVector<D> | {
         mandatory:TrackSortComparator<D>; // specifies the mandatory order for the track
         preferred:TrackSortComparator<D>; // specifies the preferred order for the track (can be overridden by mandatory order of higher track)
+        isVector?:false;
     } | {
         mandatory: TrackSortVector<D>; // specifies the mandatory order for the track
         preferred: TrackSortVector<D>; // specifies the preferred order for the track (can be overridden by mandatory order of higher track)
+        isVector: true;
         compareEquals?:TrackSortComparator<D>; // specifies a comparator to be applied to sort among equal sort vectors in the *preferred* order (optional). eg sort by sample id if all else equal
-        vector_length: number; // the length of the sort vectors
     };
 
     export type RuleSetParams = ICategoricalRuleSetParams |
