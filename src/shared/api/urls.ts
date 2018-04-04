@@ -216,6 +216,9 @@ export function getDigitalSlideArchiveMetaUrl(patientId:string) {
 }
 export function getDigitalSlideArchiveIFrameUrl(patientId:string){
     return AppConfig.serverConfig.digital_slide_archive_iframe_url + patientId;
+
+export function getPathologySlideCheckUrl(patientId:string) {
+    return `//localhost:8081/api/fetch-image-ids/${patientId}`;
 }
 
 export function getDarwinUrl(sampleIds:string[], caseId:string) {

@@ -566,6 +566,17 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     </MSKTab>
                     )}
 
+                    <MSKTab key={6} id="pathSlidesTab" linkText="Pathology Slide"
+                            hide={/https/.test(window.location.protocol) ||
+                            patientViewPageStore.pathologySlides.isError ||
+                            (patientViewPageStore.pathologySlides.isComplete &&
+                                patientViewPageStore.pathologySlides.result.length===0)}
+                    >
+                        <div style={{position: "relative"}}>
+                            <IFrameLoader height={700} url={  `https://eslide1/eSlideTray.php?ImageIds=${patientViewPageStore.pathologySlides.result}` } />
+                        </div>
+                    </MSKTab>
+
                     {
                         this.shouldShowTrialMatch(patientViewPageStore) && (
                             <MSKTab key={7} id="trialMatchTab" linkText="Matched Trials">
