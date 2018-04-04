@@ -148,9 +148,22 @@ describe("bucketSort", function() {
         it("case: size 2 vectors with compareEquals on the sample id", function() {
             assert.deepEqual(
                 BucketSort.bucketSort([
-                        {sample:"D", vector:[13,10]},
+                        {sample:"D", vector:[13,8]},
                         {sample:"A", vector:[13,10]},
                         {sample:"C", vector:[12,10]}
+                ], 2, function(d) { return d.vector; }, function(d1, d2) { return d1.sample.localeCompare(d2.sample); }),
+                [
+                    {sample:"C", vector:[12,10]},
+                    {sample:"D", vector:[13,8]},
+                    {sample:"A", vector:[13,10]}
+                ]
+            );
+
+            assert.deepEqual(
+                BucketSort.bucketSort([
+                    {sample:"D", vector:[13,10]},
+                    {sample:"A", vector:[13,10]},
+                    {sample:"C", vector:[12,10]}
                 ], 2, function(d) { return d.vector; }, function(d1, d2) { return d1.sample.localeCompare(d2.sample); }),
                 [
                     {sample:"C", vector:[12,10]},
@@ -161,20 +174,25 @@ describe("bucketSort", function() {
         });
         it("case: randomized tests", function() {
             function randInt(magnitude) {
-                return Math.round(Math.random()*magnitude - Math.random()*magnitude);
+                var ret = Math.round(Math.random()*magnitude - Math.random()*magnitude);
+                if (ret === 0) {
+                    // to deal w issues w negative zero
+                    ret = 0;
+                }
+                return ret;
             }
 
             function generateVector(size) {
                 var ret = [];
                 for (var i=0; i<size; i++) {
-                    ret.push(randInt(50));
+                    ret.push(randInt(3));
                 }
                 return ret;
             }
 
             var vectors;
 
-            for (var size=0; i<20; i++) {
+            for (var size=0; size<20; size++) {
                 vectors = [];
                 for (var i=0; i<100; i++) {
                     vectors.push(generateVector(size));
@@ -182,6 +200,48 @@ describe("bucketSort", function() {
                 var sorted = BucketSort.bucketSort(vectors, size);
                 vectors.sort(BucketSort.compare); // sort using equivalent comparator - resultant order should be same
                 assert.deepEqual(sorted, vectors, "randomized test: vector size "+size);
+            }
+        });
+        it("case: randomized tests, with compareEquals", function() {
+            function randInt(magnitude) {
+                var ret = Math.round(Math.random()*magnitude - Math.random()*magnitude);
+                if (ret === 0) {
+                    // to deal w issues w negative zero
+                    ret = 0;
+                }
+                return ret;
+            }
+
+            function generateVector(size) {
+                var ret = [];
+                for (var i=0; i<size; i++) {
+                    ret.push(randInt(3));
+                }
+                return ret;
+            }
+
+            var data;
+            var names;
+            var vector;
+            var name;
+
+            var getVector = function(d) { return d.vector; };
+            var compareEquals = function(d1, d2) {return d1.name.localeCompare(d2.name);};
+
+            for (var size=0; size<20; size++) {
+                names = [];
+                for (var i=0; i<100; i++) {
+                    names.push("TCGA-"+(i<10 ? "0" : "")+(i<100 ? "0" : "") + i);
+                }
+                data = [];
+                for (var i=0; i<100; i++) {
+                    vector = generateVector(size);
+                    name = names.splice(Math.floor(Math.random()*names.length), 1)[0];
+                    data.push({name:name, vector:vector});
+                }
+                var sorted = BucketSort.bucketSort(data, size, getVector, compareEquals);
+                data.sort(function(d1, d2) { return BucketSort.compareFull(d1, d2, getVector, compareEquals); })// sort using equivalent comparator - resultant order should be same
+                assert.deepEqual(sorted, data, "randomized test: vector size "+size);
             }
         });
     });

@@ -16468,11 +16468,13 @@ var PrecomputedComparator = (function() {
 			return { d: d, preferred_vector: preferredVector(d), mandatory_vector: mandatoryVector(d) };
 		});
 		// sort by preferred vector
+		var _compareEquals = getVector.compareEquals;
+        var compareEquals = _compareEquals ? function(d1, d2) { return _compareEquals(d1.d, d2.d); } : undefined;
         var sorted_list = BucketSort.bucketSort(
         	list_with_vectors,
 			getVector.vector_length,
 			function(d) { return d.preferred_vector; },
-			getVector.compareEquals
+			compareEquals
 		);
 
         // i is a change point iff comp(elt[i], elt[i+1]) !== 0
@@ -16480,10 +16482,12 @@ var PrecomputedComparator = (function() {
         precomputed_comparator.mandatory_change_points = [0]; // i (besides 0) is a mandatory change pt iff its a change pt with comp = mandatoryComparator
 
         // note that by the following process, preferred_change_points and mandatory_change_points are sorted
+		var getMandatoryVector = function(d) { return d.mandatory_vector; };
+		var getPreferredVector = function(d) { return d.preferred_vector; };
         for (var i=1; i<sorted_list.length; i++) {
-            if (BucketSort.compare(sorted_list[i-1].mandatory_vector, sorted_list[i].mandatory_vector) !== 0) {
+            if (BucketSort.compareFull(sorted_list[i-1], sorted_list[i], getMandatoryVector) !== 0) {
                 precomputed_comparator.mandatory_change_points.push(i);
-			} else if (BucketSort.compare(sorted_list[i-1].preferred_vector, sorted_list[i].preferred_vector) !== 0) {
+			} else if (BucketSort.compareFull(sorted_list[i-1], sorted_list[i], getPreferredVector, compareEquals) !== 0) {
                 precomputed_comparator.preferred_change_points.push(i);
             }
         }
@@ -16763,21 +16767,38 @@ function bucketSort(array, vector_length, getVector, compareEquals) {
           bucket_range.upper_index_excl,
           vector_index
       );
-      if ((vector_index === vector_length-1) && compareEquals) {
-          // if we're on the last bucket, sort with compareEquals if specified
-          sorted_result.sorted_array.sort(compareEquals);
-      }
       new_sorted_array = new_sorted_array.concat(sorted_result.sorted_array);
       new_bucket_ranges = new_bucket_ranges.concat(sorted_result.bucket_ranges);
     }
     current_sorted_array = new_sorted_array;
     current_bucket_ranges = new_bucket_ranges;
   }
+  // if compareEquals specified, sort remaining buckets with it
+    if (compareEquals) {
+      new_sorted_array = [];
+      var bucket_elts;
+      for (var j=0; j<current_bucket_ranges.length; j++) {
+          bucket_range = current_bucket_ranges[j];
+          bucket_elts = current_sorted_array.slice(bucket_range.lower_index_incl, bucket_range.upper_index_excl);
+          bucket_elts.sort(compareEquals);
+          new_sorted_array = new_sorted_array.concat(bucket_elts);
+      }
+      current_sorted_array = new_sorted_array;
+    }
   return current_sorted_array;
 };
 
-function compare(vector1, vector2) {
+function compareFull(d1, d2, getVector, compareEquals) {
     // utility function - comparator that describes sort order given by bucketSort
+    var ret = compare(getVector(d1), getVector(d2));
+    if (ret === 0 && compareEquals) {
+        ret = compareEquals(d1, d2);
+    }
+    return ret;
+}
+
+function compare(vector1, vector2) {
+    // utility function - comparator that describes vector sort order given by bucketSort
     if (vector1.length !== vector2.length)
         throw new Error("oncoprintjs:bucketsort:compare vector1.length != vector2.length");
 
@@ -16850,6 +16871,7 @@ function bucketSortHelper(array, vector_length, getVector, sort_range_lower_inde
 module.exports = {
   bucketSort: bucketSort,
     compare: compare,
+    compareFull: compareFull,
   __bucketSortHelper: bucketSortHelper
 };
 
