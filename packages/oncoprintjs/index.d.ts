@@ -26,7 +26,7 @@ declare module "oncoprintjs"
     } | {
         mandatory: TrackSortVector<D>; // specifies the mandatory order for the track
         preferred: TrackSortVector<D>; // specifies the preferred order for the track (can be overridden by mandatory order of higher track)
-        compareEquals?:TrackSortComparator<D>; // specifies a comparator to be applied to sort among equal sort vectors (optional). eg sort by sample id if all else equal
+        compareEquals?:TrackSortComparator<D>; // specifies a comparator to be applied to sort among equal sort vectors in the *preferred* order (optional). eg sort by sample id if all else equal
         vector_length: number; // the length of the sort vectors
     };
 

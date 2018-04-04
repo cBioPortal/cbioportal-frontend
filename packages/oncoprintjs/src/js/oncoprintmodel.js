@@ -1522,11 +1522,13 @@ var PrecomputedComparator = (function() {
 			return { d: d, preferred_vector: preferredVector(d), mandatory_vector: mandatoryVector(d) };
 		});
 		// sort by preferred vector
+		var _compareEquals = getVector.compareEquals;
+        var compareEquals = _compareEquals ? function(d1, d2) { return _compareEquals(d1.d, d2.d); } : undefined;
         var sorted_list = BucketSort.bucketSort(
         	list_with_vectors,
 			getVector.vector_length,
 			function(d) { return d.preferred_vector; },
-			getVector.compareEquals
+			compareEquals
 		);
 
         // i is a change point iff comp(elt[i], elt[i+1]) !== 0
@@ -1534,10 +1536,12 @@ var PrecomputedComparator = (function() {
         precomputed_comparator.mandatory_change_points = [0]; // i (besides 0) is a mandatory change pt iff its a change pt with comp = mandatoryComparator
 
         // note that by the following process, preferred_change_points and mandatory_change_points are sorted
+		var getMandatoryVector = function(d) { return d.mandatory_vector; };
+		var getPreferredVector = function(d) { return d.preferred_vector; };
         for (var i=1; i<sorted_list.length; i++) {
-            if (BucketSort.compare(sorted_list[i-1].mandatory_vector, sorted_list[i].mandatory_vector) !== 0) {
+            if (BucketSort.compareFull(sorted_list[i-1], sorted_list[i], getMandatoryVector) !== 0) {
                 precomputed_comparator.mandatory_change_points.push(i);
-			} else if (BucketSort.compare(sorted_list[i-1].preferred_vector, sorted_list[i].preferred_vector) !== 0) {
+			} else if (BucketSort.compareFull(sorted_list[i-1], sorted_list[i], getPreferredVector, compareEquals) !== 0) {
                 precomputed_comparator.preferred_change_points.push(i);
             }
         }
