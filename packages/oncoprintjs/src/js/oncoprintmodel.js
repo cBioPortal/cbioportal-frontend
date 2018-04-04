@@ -1408,8 +1408,7 @@ var OncoprintModel = (function () {
 			vector: getVector(id)
 		};
 	});
-	var sort_vector_length = track_sort_priority.length*2; // if you inspect getVector above, you'll see theres two entries for each track
-	var order = BucketSort.bucketSort(ids_with_vectors, sort_vector_length, function(d) { return d.vector; });
+	var order = BucketSort.bucketSort(ids_with_vectors, function(d) { return d.vector; });
 	model.setIdOrder(order.map(function(d) { return d.id; }));
     };
     OncoprintModel.prototype.sort = function() {
@@ -1447,8 +1446,7 @@ var OncoprintModel = (function () {
 
 var PrecomputedComparator = (function() {
     function PrecomputedComparator(list, comparator, sort_direction, element_identifier_key) {
-		if (typeof comparator === "object" && comparator.vector_length) {
-			// comparator.vector_length being set implies vector-specification for sort order
+		if (typeof comparator === "object" && comparator.isVector) {
 			initializeVector(this, list, comparator, sort_direction, element_identifier_key);
 		} else {
 			initializeComparator(this, list, comparator, sort_direction, element_identifier_key);
@@ -1510,7 +1508,13 @@ var PrecomputedComparator = (function() {
         		return function(d) { return 0; };
 			} else {
         		return function(d) {
-        			return vec(d).map(function(n) { return n * sort_direction; });
+        			return vec(d).map(function(n) {
+        				if (typeof n === typeof 0) {
+        					return n * sort_direction;
+						} else {
+        					return n;
+						}
+					});
 				}
 			}
         };
@@ -1526,7 +1530,6 @@ var PrecomputedComparator = (function() {
         var compareEquals = _compareEquals ? function(d1, d2) { return _compareEquals(d1.d, d2.d); } : undefined;
         var sorted_list = BucketSort.bucketSort(
         	list_with_vectors,
-			getVector.vector_length,
 			function(d) { return d.preferred_vector; },
 			compareEquals
 		);
