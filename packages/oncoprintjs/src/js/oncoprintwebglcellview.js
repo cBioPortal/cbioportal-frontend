@@ -168,10 +168,6 @@ var OncoprintWebGLCellView = (function () {
 		    cell_over_callback(null);
 		}
 	    });
-	    self.$overlay_canvas.on("mouseout mouseleave", function(evt) {
-		clearOverlay(self);
-		tooltip.hide();
-	    });
 	    self.$overlay_canvas.on("mousemove", function(evt) {
 		if (self.rendering_suppressed) {
 		    return;
