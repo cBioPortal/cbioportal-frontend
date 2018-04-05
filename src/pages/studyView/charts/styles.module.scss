@@ -1,0 +1,32 @@
+.chart {
+    width:200px;
+    border: 1px solid #d3d3d3;
+    margin: 5px;
+    .header {
+        overflow: hidden;
+        white-space:nowrap;
+        text-overflow:ellipsis;
+        width:inherit;
+        display:inline-block;
+        text-align: center !important;
+        height:15px;
+    
+        span {
+            font-size: 10px;
+            color: #000;
+            font-weight: 700;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            text-align: center;
+        }
+    }
+    
+    .plot {
+        height:200px;
+    }
+    .footer {
+        height:21px;
+        float:right;
+    }
+}

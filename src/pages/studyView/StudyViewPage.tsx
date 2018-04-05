@@ -21,6 +21,7 @@ import styles from "./styles.module.scss";
 import {MutatedGenesTable} from "./table/MutatedGenesTable";
 import {CNAGenesTable} from "./table/CNAGenesTable";
 import { ResultsViewPageStore } from 'pages/resultsView/ResultsViewPageStore';
+import { Chart } from 'pages/studyView/charts/Chart';
 
 export type ClinicalDataType= "SAMPLE" | "PATIENT";
 export type ClinicalAttributeData = {[attrId:string]:ClinicalDataCount[]};
@@ -46,33 +47,20 @@ export class StudyViewPageStore {
 
     @action updateClinicalDataEqualityFilters( attributeId      : string,
                                                clinicalDataType : ClinicalDataType,
-                                               value            : string) {
+                                               values           : string[]) {
 
         let id = [clinicalDataType,attributeId].join('_');
 
-        let clinicalDataEqualityFilter =this._clinicalDataEqualityFilterSet.get(id);
-
-        if(clinicalDataEqualityFilter) {
-            let values = clinicalDataEqualityFilter.values;
-            if(_.includes(values,value)){
-                values = values.filter(item => item !== value);
-            } else {
-                values.push(value);
-            }
-            if(values.length>0) {
-                clinicalDataEqualityFilter.values = values;
-                this._clinicalDataEqualityFilterSet.set(id, clinicalDataEqualityFilter);
-            } else {
-                clinicalDataEqualityFilter = {} as any;
-                this._clinicalDataEqualityFilterSet.delete(id)
-            }
-        } else {
-            clinicalDataEqualityFilter = {
-                    attributeId: attributeId,
-                    clinicalDataType: clinicalDataType,
-                    values: [value]
+        if(values.length>0){
+            let clinicalDataEqualityFilter = {
+                attributeId: attributeId,
+                clinicalDataType: clinicalDataType,
+                values: values
             };
             this._clinicalDataEqualityFilterSet.set(id, clinicalDataEqualityFilter);
+    
+        } else {
+            this._clinicalDataEqualityFilterSet.delete(id)
         }
     }
 
@@ -425,9 +413,9 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
 
     private onUserSelection(attrId           : string,
                             clinicalDataType : ClinicalDataType,
-                            value            : string) {
+                            values            : string[]) {
 
-        this.store.updateClinicalDataEqualityFilters(attrId, clinicalDataType, value)
+        this.store.updateClinicalDataEqualityFilters(attrId, clinicalDataType, values)
     }
 
     private updateGeneFilter(entrezGeneId: number) {
@@ -444,18 +432,12 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         let attributeUID = (clinicalAttribute.patientAttribute ? "PATIENT_" : "SAMPLE_")+clinicalAttribute.clinicalAttributeId;
         let filters = this.store.getClinicalDataEqualityFilters(attributeUID)
         let data = this.store.cinicalAttributeData.result[attributeUID]
-        return (
-            data && <div className={styles.chart} key={arrayIndex}>
-                <div className={styles.header}>
-                    <span>{clinicalAttribute.displayName}</span>
-                </div>
-                <div className="plot">
-                    <PieChart onUserSelection= {this.onUserSelection}
-                              filters={filters}
-                              data={data}/>
-                </div>
-            </div>
-        );
+        return (<Chart
+                    clinicalAttribute={clinicalAttribute}
+                    onUserSelection= {this.onUserSelection}
+                    filters={filters}
+                    data={data}
+                    key={arrayIndex} />);
     }
 
     render(){
