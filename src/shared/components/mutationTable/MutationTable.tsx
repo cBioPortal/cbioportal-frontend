@@ -80,6 +80,7 @@ export interface IMutationTableProps {
     initialSortDirection?:SortDirection;
     paginationProps?:IPaginationControlsProps;
     showCountHeader?:boolean;
+    columnVisibility?: {[columnId: string]: boolean};
 }
 
 export enum MutationTableColumnType {
@@ -533,6 +534,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 itemsLabelPlural={this.props.itemsLabelPlural}
                 paginationProps={this.props.paginationProps}
                 showCountHeader={this.props.showCountHeader}
+                columnVisibility={this.props.columnVisibility}
             />
         );
     }
