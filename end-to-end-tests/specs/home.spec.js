@@ -966,7 +966,7 @@ describe('case set selection in front page query form', function(){
         // select Adrenocortical Carcinoma
         input = $(".autosuggest input[type=text]");
         input.waitForExist(10000);
-        input.setValue('adrenocortical carcinoma');
+        input.setValue('adrenocortical carcinoma tcga provisional');
         browser.pause(500);
         // should only be one element
         assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
@@ -1038,7 +1038,7 @@ describe('case set selection in front page query form', function(){
         // select Adrenocortical Carcinoma
         input = $(".autosuggest input[type=text]");
         input.waitForExist(10000);
-        input.setValue('adrenocortical carcinoma');
+        input.setValue('adrenocortical carcinoma tcga provisional');
         browser.pause(500);
         // should only be one element
         assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
@@ -1098,7 +1098,7 @@ describe('case set selection in modify query form', function(){
         // Select a different study
         var input = $(".autosuggest input[type=text]");
         input.waitForExist(10000);
-        input.setValue('adrenocortical carcinoma tcga');
+        input.setValue('adrenocortical carcinoma tcga provisional');
         browser.pause(500);
         // should only be one element
         assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
