@@ -10,7 +10,7 @@ import _ from "lodash";
 export interface IPieChartProps {
   data: ClinicalAttributeDataWithMeta;
   filters:string[];
-  onUserSelection:(attrId:string,clinicalDataType:ClinicalDataType,value:string)=>void;
+  onUserSelection:(value:string)=>void;
 }
 
 //TODO:cleanup
@@ -72,6 +72,11 @@ export const COLORS = [
 @observer
 export class PieChart extends React.Component<IPieChartProps, {}> {
 
+
+  constructor(props: IPieChartProps) {
+    super(props);
+  }
+
   private events = [{
     target: "data",
     eventHandlers: {
@@ -80,31 +85,28 @@ export class PieChart extends React.Component<IPieChartProps, {}> {
           {
             target: "data",
             mutation: (props:any) => {
-              this.props.onUserSelection(this.props.data.attributeId, this.props.data.clinicalDataType, props.datum.x);
+              this.props.onUserSelection(props.datum.x);
             }
           }
         ];
       }
     }
   }];
+
   public render() {
     let data:ClinicalDataCount[] = this.props.data.counts;
     let chartFilters = this.props.filters;
-    let hasFilters = chartFilters.length>0;
     let result =data.map(prop => {
       let toReturn = {x:prop.value,y:prop.count};
       if(_.includes(chartFilters,prop.value)){
         toReturn = Object.assign({}, toReturn, { stroke: "#cccccc", strokeWidth: 3 });
-      } else if(hasFilters){
-        toReturn = Object.assign({}, toReturn,  { fill: "#cccccc" });
       }
       return toReturn;
     })
     return (
-      <div>
         <VictoryPie
           colorScale={COLORS}
-          containerComponent={<VictoryContainer responsive={false}/>}
+          containerComponent={<VictoryContainer responsive={false} />}
           width={200}
           height={200}
           labelRadius={25}
@@ -119,12 +121,10 @@ export class PieChart extends React.Component<IPieChartProps, {}> {
             labels: { fill: "white" }
           }}
         />
-      </div>
     );
   }
 
 }
-
 
 //to hide label if the angle is too small(currently set to 20 degrees)
 class CustomLabel extends React.Component {
@@ -142,8 +142,7 @@ class CustomLabel extends React.Component {
       <g>
         <VictoryLabel
             {...this.props} 
-            text={text}
-            renderInPortal={false}/>
+            text={text}/>
       </g>
     );
   }
