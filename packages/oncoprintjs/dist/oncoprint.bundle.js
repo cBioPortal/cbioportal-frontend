@@ -11164,7 +11164,7 @@ var shapeToSVG = __webpack_require__(26);
 var extractRGBA = __webpack_require__(3);
 
 var extractColor = function(str) {
-    if (str.indexOf("rgb(") > -1) {
+    if (str.indexOf("rgb(") > -1 || str.indexOf("url(") > -1) {
 	return {
 	    'rgb': str,
 	    'opacity': 1
