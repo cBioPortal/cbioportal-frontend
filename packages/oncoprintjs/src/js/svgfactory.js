@@ -88,13 +88,16 @@ module.exports = {
 	return shapeToSVG(oncoprint_shape_computed_params, offset_x, offset_y);
     },
     polygon: function(points, fill) {
-	return makeSVGElement('polygon', {'points': points, 'fill':fill});
+    	fill = extractColor(fill);
+	return makeSVGElement('polygon', {'points': points, 'fill':fill.rgb, 'fill-opacity':fill.opacity});
     },
     rect: function(x,y,width,height,fill) {
-	return makeSVGElement('rect', {'x':x, 'y':y, 'width':width, 'height':height, 'fill':fill});
+    	fill = extractColor(fill);
+	return makeSVGElement('rect', {'x':x, 'y':y, 'width':width, 'height':height, 'fill':fill.rgb, 'fill-opacity':fill.opacity});
     },
     bgrect: function(width, height, fill) {
-	return makeSVGElement('rect', {'width':width, 'height':height, 'fill':fill});
+    	fill = extractColor(fill);
+	return makeSVGElement('rect', {'width':width, 'height':height, 'fill':fill.rgb, 'fill-opacity':fill.opacity});
     },
     path: function(points, stroke, fill, linearGradient) {
 	points = points.map(function(pt) { return pt.join(","); });
