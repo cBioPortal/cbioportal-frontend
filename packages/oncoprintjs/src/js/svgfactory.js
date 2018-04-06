@@ -3,7 +3,7 @@ var shapeToSVG = require('./oncoprintshapetosvg.js');
 var extractRGBA = require('./extractrgba.js');
 
 var extractColor = function(str) {
-    if (str.indexOf("rgb(") > -1) {
+    if (str.indexOf("rgb(") > -1 || str.indexOf("url(") > -1) {
 	return {
 	    'rgb': str,
 	    'opacity': 1
