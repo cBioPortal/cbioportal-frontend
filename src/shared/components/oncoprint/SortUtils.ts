@@ -1,4 +1,4 @@
-import {TrackSortComparator} from "oncoprintjs";
+import {TrackSortComparator,TrackSortVector} from "oncoprintjs";
 import {ClinicalTrackSpec, GeneticTrackDatum} from "./Oncoprint";
 import naturalSort from 'javascript-natural-sort';
 
@@ -23,7 +23,11 @@ function sign(x:number):0|-1|1 {
     }
 };
 
-export function getGeneticTrackSortComparator(sortByMutationType?: boolean, sortByDrivers?: boolean): { preferred:TrackSortComparator<GeneticTrackDatum>, mandatory:TrackSortComparator<GeneticTrackDatum> } {
+export function getGeneticTrackSortComparator(sortByMutationType?: boolean, sortByDrivers?: boolean): {
+    preferred:TrackSortVector<GeneticTrackDatum>,
+    mandatory:TrackSortVector<GeneticTrackDatum>,
+    isVector: true
+} {
     const cna_order = makeComparatorMetric(['amp', 'homdel', 'gain', 'hetloss', 'diploid', undefined]);
     const mut_order = (function () {
         let _order:{[s:string]:number};
@@ -44,53 +48,44 @@ export function getGeneticTrackSortComparator(sortByMutationType?: boolean, sort
     })();
     const regulation_order = makeComparatorMetric(['up', 'down', undefined]);
 
-    function mandatory(d1:GeneticTrackDatum, d2:GeneticTrackDatum):0|1|-1 {
+    function mandatoryHelper(d:GeneticTrackDatum):number[] {
+        const vector = [];
+
         // Test fusion
-        if (d1.disp_fusion && !d2.disp_fusion) {
-            return -1;
-        } else if (!d1.disp_fusion && d2.disp_fusion) {
-            return 1;
+        if (d.disp_fusion) {
+            vector.push(0);
+        } else {
+            vector.push(1);
         }
 
         // Next, CNA
-        const cna_diff = sign(cna_order[d1.disp_cna+""] - cna_order[d2.disp_cna + ""]);
-        if (cna_diff !== 0) {
-            return cna_diff;
-        }
+        vector.push(cna_order[d.disp_cna+""]);
 
         // Next, mutation type
-        const mut_type_diff = sign(mut_order(d1.disp_mut) - mut_order(d2.disp_mut));
-        if (mut_type_diff !== 0) {
-            return mut_type_diff;
-        }
+        vector.push(mut_order(d.disp_mut));
 
         // Next, mrna expression
-        const mrna_diff = sign(regulation_order[d1.disp_mrna+""] - regulation_order[d2.disp_mrna+""]);
-        if (mrna_diff !== 0) {
-            return mrna_diff;
-        }
+        vector.push(regulation_order[d.disp_mrna+""]);
 
         // Next, protein expression
-        const rppa_diff = sign(regulation_order[d1.disp_prot+""] - regulation_order[d2.disp_prot+""]);
-        if (rppa_diff !== 0) {
-            return rppa_diff;
-        }
+        vector.push(regulation_order[d.disp_prot+""]);
 
-        // If we reach this point, there's no order difference
-        return 0;
+        return vector;
     }
-    function preferred(d1:GeneticTrackDatum, d2:GeneticTrackDatum):0|1|-1 {
-        // First, test if either is not sequenced
-        const ns_diff = sign(+(!!d1.na) - (+(!!d2.na)));
-        if (ns_diff !== 0) {
-            return ns_diff;
-        }
-
-        return mandatory(d1, d2);
+    function mandatory(d:GeneticTrackDatum):number[] {
+        return mandatoryHelper(d);
+    }
+    function preferred(d:GeneticTrackDatum):(number|string)[] {
+        // First, test if not sequenced
+        // Last, use sample/patient id
+        return [+(!!d.na)].concat(mandatoryHelper(d)).concat(
+            [d.sample ? d.sample : d.patient!] as any
+        );
     };
     return {
-        preferred: alphabeticalDefault(preferred),
-        mandatory: mandatory
+        preferred,
+        mandatory,
+        isVector: true
     };
 }
 
