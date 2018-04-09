@@ -140,7 +140,7 @@ export default class GenesetsSelector extends QueryStoreComponent<GenesetsSelect
                         initialSelection={this.store.genesetIds}
                         data={this.store.volcanoPlotTableData.result}
                         plotData={this.store.volcanoPlotGraphData}
-                        maxY={this.store.maxYVolcanoPlot ? -(Math.log(this.store.maxYVolcanoPlot)/Math.log(10)) : undefined}
+                        maxY={this.store.minYVolcanoPlot ? -(Math.log(this.store.minYVolcanoPlot)/Math.log(10)) : undefined}
                         onSelect={map_genesets_selected => {
                             this.store.addToGenesetSelection(map_genesets_selected);
                             this.store.showGenesetsVolcanoPopup = false;
