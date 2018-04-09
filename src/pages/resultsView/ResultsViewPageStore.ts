@@ -792,6 +792,29 @@ export class ResultsViewPageStore {
     //     return undefined;
     // });
 
+    readonly givenSampleOrder = remoteData<Sample[]>({
+        await: ()=>[
+            this.samples
+        ],
+        invoke: async()=>{
+            // for now, just assume we won't mix sample lists and samples in the specification
+            if (this.samplesSpecification.find(x=>!x.sampleId)) {
+                // for now, if theres any sample list id specification, then there is no given sample order
+                return [];
+            }
+            // at this point, we know samplesSpecification is a list of samples
+            const studyToSampleToIndex:{[studyId:string]:{[sampleId:string]:number}} =
+                _.reduce(this.samplesSpecification,
+                    (map:{[studyId:string]:{[sampleId:string]:number}}, next:SamplesSpecificationElement, index:number)=>{
+                        map[next.studyId] = map[next.studyId] || {};
+                        map[next.studyId][next.sampleId!] = index; // we know sampleId defined otherwise we would have returned from function already
+                        return map;
+                    },
+                {});
+            return _.sortBy(this.samples.result, sample=>studyToSampleToIndex[sample.studyId][sample.sampleId]);
+        }
+    });
+
     readonly studyToSampleIds = remoteData<{ [studyId: string]: { [sampleId: string]: boolean } }>(async () => {
         const sampleListsToQuery: { studyId: string, sampleListId: string }[] = [];
         const ret: { [studyId: string]: { [sampleId: string]: boolean } } = {};
