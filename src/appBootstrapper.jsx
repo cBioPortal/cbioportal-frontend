@@ -14,6 +14,7 @@ import * as superagent from 'superagent';
 import { getHost } from './shared/api/urls';
 import { validateParametersPatientView } from './shared/lib/validateParameters';
 import AppConfig from "appConfig";
+import browser from 'bowser';
 
 if (localStorage.localdev === 'true') {
     __webpack_public_path__ = "//localhost:3000/"
@@ -31,6 +32,13 @@ if (!window.hasOwnProperty("$")) {
 
 if (!window.hasOwnProperty("jQuery")) {
     window.jQuery = $;
+}
+
+// write browser name, version to brody tag
+if (browser) {
+    $(document).ready(()=>{
+        $("body").addClass(browser.name);
+    });
 }
 
 // expose version on window
