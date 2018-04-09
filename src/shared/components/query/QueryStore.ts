@@ -376,13 +376,13 @@ export class QueryStore
 
 	// sample list id
 	@observable private _selectedSampleListId?:string = undefined; // user selection
-	@computed get selectedSampleListId()
+	@computed public get selectedSampleListId()
 	{
 		if (this._selectedSampleListId !== undefined)
 			return this._selectedSampleListId;
 		return this.defaultSelectedSampleListId;
 	}
-	set selectedSampleListId(value)
+	public set selectedSampleListId(value)
 	{
 		this._selectedSampleListId = value;
 	}
@@ -692,14 +692,6 @@ export class QueryStore
 				error => ({studyId, patientId, samples: [] as Sample[], error})
 			);
 	}
-
-	readonly asyncCustomCaseSetUrlParam = remoteData({
-		await: ()=>[this.asyncCustomCaseSet],
-		invoke: async ()=>{
-			return this.asyncCustomCaseSet.result.map(x=>`${x.studyId}\t${x.sampleId}`).join('\r\n');
-		},
-		default: ''
-	});
 
 	readonly asyncCustomCaseSet = remoteData<{sampleId:string, studyId:string}[]>({
 		invoke: async () => {
@@ -1458,11 +1450,12 @@ export class QueryStore
 				this._defaultStudySampleMap = studySampleMap;
 			}
 
-			const caseIds:string = (_window as any).serverVars.caseIds;
-			if (caseIds && (caseSetId === CUSTOM_CASE_LIST_ID)) {
-				this.caseIdsMode = 'sample';
-				this.caseIds = caseIds.split(/[\s+]/).join("\n");
-				this.initiallySelected.sampleListId = true;
+			const caseIds = (_window as any).serverVars.caseIds;
+			if (caseIds) {
+				if (caseSetId === CUSTOM_CASE_LIST_ID) {
+					this.caseIdsMode = 'sample';
+					this.caseIds = caseIds.replace(/\+/g, "\n");
+				}
 			}
 		}
 
