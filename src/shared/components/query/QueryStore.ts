@@ -36,6 +36,7 @@ import {CacheData} from "../../lib/LazyMobXCache";
 import { getHierarchyData } from "shared/lib/StoreUtils";
 import sessionServiceClient from "shared/api//sessionServiceInstance";
 import {VirtualStudy} from "shared/model/VirtualStudy";
+import { getGenesetsFromHierarchy, getVolcanoPlotMinYValue, getVolcanoPlotData } from "shared/components/query/GenesetsSelectorStore";
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -1199,39 +1200,30 @@ export class QueryStore
         return this.genesetIdsQuery.query;
     }
     
-    readonly volcanoPlotTableData = remoteData<Geneset[]>({
+    readonly hierarchyData = remoteData<any[]>({
         invoke: async()=>{
-            const tableData: Geneset[] = [];
             const hierarchyData = await getHierarchyData(
-                    this.getFilteredProfiles("GENESET_SCORE")[0].molecularProfileId, 
-                    Number(this.volcanoPlotSelectedPercentile.value),
-                    0, 1, this.defaultSelectedSampleListId);
-            for (const node of hierarchyData) {
-                if (_.has(node, 'genesets')) {
-                    for (const geneset of node.genesets) {
-                        tableData.push({
-                            genesetId: geneset.genesetId,
-                            name: geneset.genesetId,
-                            description : geneset.description,
-                            representativeScore : geneset.representativeScore,
-                            representativePvalue : geneset.representativePvalue,
-                            refLink : geneset.refLink,
-                        });
-                    }
-                }
-            }
-            return tableData;
+            this.getFilteredProfiles("GENESET_SCORE")[0].molecularProfileId, 
+            Number(this.volcanoPlotSelectedPercentile.value),
+            0, 1, this.defaultSelectedSampleListId);
+            return hierarchyData;
+        }
+    });
+        
+        
+    readonly volcanoPlotTableData = remoteData<Geneset[]>({
+        await: ()=>[this.hierarchyData],
+        invoke: async()=>{
+            return getGenesetsFromHierarchy(this.hierarchyData.result!);
         }
     });
     
-    @computed get maxYVolcanoPlot(): number|undefined
+    @computed get minYVolcanoPlot(): number|undefined
     {
         if (this.volcanoPlotTableData.result) {
-            let genesetWithMaxY = _.maxBy(this.volcanoPlotTableData.result!);
-            return genesetWithMaxY!.representativePvalue;
+            return getVolcanoPlotMinYValue(this.volcanoPlotTableData.result);
         } else {
             return undefined;
-            //throw new Error("Function called before volcanoPlotTableData was called.");
         }
     }
     
@@ -1239,20 +1231,12 @@ export class QueryStore
     
     @computed get volcanoPlotGraphData(): {x: number, y: number, fill: string}[]|undefined
     {
-        let graphData: {x: number, y: number, fill: string}[]|undefined = undefined;
         if (this.volcanoPlotTableData.result) {
-            const tableData = this.volcanoPlotTableData.result!;
-            graphData = tableData.map(({representativeScore, representativePvalue, name}) => {
-                    const xValue = representativeScore;
-                    const yValue = -(Math.log(representativePvalue)/Math.log(10));
-                    const fillColor = this.map_genesets_selected_volcano.get(name) ? "tomato" : "3786C2";
-                    return {x: xValue, y: yValue, fill: fillColor};
-            });
+            return getVolcanoPlotData(this.volcanoPlotTableData.result, this.map_genesets_selected_volcano);
         } else {
             return undefined;
-            //throw new Error("Function called before volcanoPlotTableData was called.");
         }
-        return graphData;
+        
     }
 
 	// SUBMIT
