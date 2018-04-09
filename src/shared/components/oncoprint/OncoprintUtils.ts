@@ -504,7 +504,7 @@ export function makeGenesetHeatmapTracksMobxPromise(
                         sampleMode ? samples : patients,
                         // TODO: GenesetMolecularData still has type value of
                         // string, other NumericGeneMolecularData have number
-                        dataCache.get({molecularProfileId, genesetId})!.data!.map((d) => Object.assign(d, {'value':parseFloat(d.value!)}))
+                        dataCache.get({molecularProfileId, genesetId})!.data!.map(d => ({...d!, value: parseFloat(d.value!)}))
                     ),
                     trackGroupIndex: trackGroup,
                     expansionCallback: makeGenesetHeatmapExpandHandler(
