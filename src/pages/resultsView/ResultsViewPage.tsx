@@ -62,8 +62,8 @@ function initStore(queryStore: QueryStore) {
     // ultimate we will phase this out and this information will be stored in router etc.
     //const qSession:any = (window as any).QuerySession;
     var samplesSpecification:any = [];
-    if (["-1", "all"].indexOf(serverVars.caseSetProperties.case_set_id) > -1) {
-        // "-1" means custom case id, "all" means all cases in the queried stud(y/ies). Neither is an actual case set that could eg be queried
+    if (serverVars.caseSetProperties.case_set_id === "all") {
+        // "all" means all cases in the queried stud(y/ies) - not an actual case set that could be queried
         var studyToSampleMap = serverVars.studySampleObj;
         var studies = Object.keys(studyToSampleMap);
         for (var i=0; i<studies.length; i++) {
@@ -75,7 +75,17 @@ function initStore(queryStore: QueryStore) {
                 };
             }));
         }
+    } else if (serverVars.caseIds) {
+        // populated if custom case list
+        samplesSpecification = samplesSpecification.concat(serverVars.caseIds.trim().split(/\+/).map((c:string)=>{
+            const elts = c.split(":");
+            return {
+                studyId: elts[0],
+                sampleId: elts[1]
+            };
+        }));
     } else {
+        // case set
         var studies = Object.keys(serverVars.studySampleListMap);
         for (var i=0; i<studies.length; i++) {
             samplesSpecification.push({
