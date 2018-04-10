@@ -237,6 +237,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             get sortByMutationType() {
                 return self.sortByMutationType;
             },
+            get sortByCaseListDisabled() {
+                return !self.props.store.givenSampleOrder.isComplete || !self.props.store.givenSampleOrder.result.length;
+            },
             get distinguishMutationType() {
                 return self.distinguishMutationType;
             },
@@ -765,10 +768,12 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         if (this.sortMode.type === "alphabetical") {
             return this.columnMode === "sample" ? this.alphabeticalSampleOrder : this.alphabeticalPatientOrder;
         } else if (this.sortMode.type === "caseList") {
-            if (this.columnMode === "sample" && this.props.store.samples.isComplete) {
-                return this.props.store.samples.result.map(x=>x.uniqueSampleKey);
-            } else if (this.columnMode === "patient" && this.props.store.patients.isComplete) {
-                return this.props.store.patients.result.map(x=>x.uniquePatientKey);
+            if (this.columnMode === "sample" && this.props.store.givenSampleOrder.isComplete) {
+                return this.props.store.givenSampleOrder.result.map(x=>x.uniqueSampleKey);
+            } else if (this.columnMode === "patient" && this.props.store.givenSampleOrder.isComplete) {
+                return this.props.store.givenSampleOrder.result.map(x=>x.uniquePatientKey);
+            } else {
+                return undefined;
             }
         } else {
             return undefined;
@@ -961,6 +966,16 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         return 300;
     }
 
+    @computed get loadingIndicatorMessage() {
+        if (this.isLoading)
+            return "Downloading Oncoprint data...";
+        else if (!this.renderingComplete)
+            return "Data downloaded. Rendering Oncoprint..";
+        // Otherwise, isHidden is false, so no message shown at all..
+        // Putting this here just for Typescript
+        return "";
+    }
+
     public render() {
         return (
             <div style={{position:'relative', minHeight:this.isHidden ? this.loadingIndicatorHeight : "auto"}} className="cbioportal-frontend">
@@ -971,7 +986,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                             position: "absolute", top: 0, left: 0, width: "100%", height: "100%", minHeight:this.loadingIndicatorHeight
                         }}
                     >
-                        <div>Loading Oncoprint data</div>
+                        <div>{this.loadingIndicatorMessage}</div>
                         <LoadingIndicator style={{display: 'block'}} isLoading={true}/>
                     </div>
                 }
