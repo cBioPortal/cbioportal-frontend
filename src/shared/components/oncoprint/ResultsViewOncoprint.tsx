@@ -966,6 +966,16 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         return 300;
     }
 
+    @computed get loadingIndicatorMessage() {
+        if (this.isLoading)
+            return "Downloading Oncoprint data...";
+        else if (!this.renderingComplete)
+            return "Data downloaded. Rendering Oncoprint..";
+        // Otherwise, isHidden is false, so no message shown at all..
+        // Putting this here just for Typescript
+        return "";
+    }
+
     public render() {
         return (
             <div style={{position:'relative', minHeight:this.isHidden ? this.loadingIndicatorHeight : "auto"}} className="cbioportal-frontend">
@@ -976,7 +986,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                             position: "absolute", top: 0, left: 0, width: "100%", height: "100%", minHeight:this.loadingIndicatorHeight
                         }}
                     >
-                        <div>Loading Oncoprint data</div>
+                        <div>{this.loadingIndicatorMessage}</div>
                         <LoadingIndicator style={{display: 'block'}} isLoading={true}/>
                     </div>
                 }
