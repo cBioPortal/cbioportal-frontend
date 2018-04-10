@@ -60,7 +60,7 @@ function runResultsTestSuite(){
     it('survival tab', function(){
         browser.click("[href='#survival']");
         browser.waitForVisible('[data-test=SurvivalChart] svg',10000);
-        var res = browser.checkElement('#survival');
+        var res = browser.checkElement('#survival', { hide:['.qtip'] } );
         assertScreenShotMatch(res);
     });
 
