@@ -34,7 +34,7 @@ if (!window.hasOwnProperty("jQuery")) {
     window.jQuery = $;
 }
 
-// write browser name, version to brody tag
+// write browser name, version to body tag
 if (browser) {
     $(document).ready(()=>{
         $("body").addClass(browser.name);
