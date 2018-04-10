@@ -85,8 +85,9 @@ export const AlterationTypeConstants = {
     MRNA_EXPRESSION: 'MRNA_EXPRESSION',
     PROTEIN_LEVEL: 'PROTEIN_LEVEL',
     FUSION: 'FUSION',
-    GENESET_SCORE: 'GENESET_SCORE'
-};
+    GENESET_SCORE: 'GENESET_SCORE',
+    METHYLATION: 'METHYLATION'
+}
 
 export interface ExtendedAlteration extends Mutation, NumericGeneMolecularData {
     molecularProfileAlterationType: MolecularProfile["molecularAlterationType"];
@@ -1272,33 +1273,37 @@ export class ResultsViewPageStore {
             this.genesetMolecularProfile
         ],
         invoke: () => {
-            const MRNA_EXPRESSION = "MRNA_EXPRESSION";
-            const PROTEIN_LEVEL = "PROTEIN_LEVEL";
+            const MRNA_EXPRESSION = AlterationTypeConstants.MRNA_EXPRESSION;
+            const PROTEIN_LEVEL = AlterationTypeConstants.PROTEIN_LEVEL;
+            const METHYLATION = AlterationTypeConstants.METHYLATION;
             const selectedMolecularProfileIds = stringListToSet(this.selectedMolecularProfileIds);
 
             const expressionHeatmaps = _.sortBy(
-                _.filter(
-                    this.molecularProfilesInStudies.result!,
-                    ({showProfileInAnalysisTab, molecularAlterationType}) => (
-                        showProfileInAnalysisTab && (
-                            molecularAlterationType === MRNA_EXPRESSION ||
-                            molecularAlterationType === PROTEIN_LEVEL
-                        )
-                    )
+                _.filter(this.molecularProfilesInStudies.result!, profile=>{
+                    return ((profile.molecularAlterationType === MRNA_EXPRESSION ||
+                        profile.molecularAlterationType === PROTEIN_LEVEL) && profile.showProfileInAnalysisTab) ||
+                        profile.molecularAlterationType === METHYLATION;
+                    }
                 ),
-                profile => {
-                    // Sort order: selected and mrna, selected and protein, unselected and mrna, unselected and protein
+                profile=>{
+                    // Sort order: selected and [mrna, protein, methylation], unselected and [mrna, protein, meth]
                     if (profile.molecularProfileId in selectedMolecularProfileIds) {
-                        if (profile.molecularAlterationType === MRNA_EXPRESSION) {
-                            return 0;
-                        } else if (profile.molecularAlterationType === PROTEIN_LEVEL) {
-                            return 1;
+                        switch (profile.molecularAlterationType) {
+                            case MRNA_EXPRESSION:
+                                return 0;
+                            case PROTEIN_LEVEL:
+                                return 1;
+                            case METHYLATION:
+                                return 2;
                         }
                     } else {
-                        if (profile.molecularAlterationType === MRNA_EXPRESSION) {
-                            return 2;
-                        } else if (profile.molecularAlterationType === PROTEIN_LEVEL) {
-                            return 3;
+                        switch(profile.molecularAlterationType) {
+                            case MRNA_EXPRESSION:
+                                return 3;
+                            case PROTEIN_LEVEL:
+                                return 4;
+                            case METHYLATION:
+                                return 5;
                         }
                     }
                 }
