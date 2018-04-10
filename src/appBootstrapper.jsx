@@ -41,6 +41,13 @@ if (browser) {
     });
 }
 
+if (localStorage.e2etest) {
+    $(document).ready(()=>{
+        $("body").addClass("e2etest");
+        window.e2etest = true;
+    });
+}
+
 // expose version on window
 window.FRONTEND_VERSION = VERSION;
 window.FRONTEND_COMMIT = COMMIT;
