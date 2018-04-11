@@ -15,22 +15,27 @@ import {
     MutationGeneFilter,
     StudyViewFilter
 } from 'shared/api/generated/CBioPortalAPIInternal';
-import {PieChart} from './charts/pieChart/PieChart'
-import {ClinicalAttribute, MolecularProfile} from 'shared/api/generated/CBioPortalAPI';
+import {
+    ClinicalAttribute,
+    ClinicalData,
+    ClinicalDataSingleStudyFilter,
+    MolecularProfile
+} from 'shared/api/generated/CBioPortalAPI';
 import styles from "./styles.module.scss";
 import {MutatedGenesTable} from "./table/MutatedGenesTable";
 import {CNAGenesTable} from "./table/CNAGenesTable";
-import { ResultsViewPageStore } from 'pages/resultsView/ResultsViewPageStore';
-import { Chart } from 'pages/studyView/charts/Chart';
+import {ResultsViewPageStore} from 'pages/resultsView/ResultsViewPageStore';
+import {Chart} from 'pages/studyView/charts/Chart';
 
 export type ClinicalDataType= "SAMPLE" | "PATIENT";
 export type ClinicalAttributeData = {[attrId:string]:ClinicalDataCount[]};
-export type ClinicalAttributeDataWithMeta = {attributeId:string,clinicalDataType:ClinicalDataType,counts:ClinicalDataCount[]};
+export type ClinicalAttributeDataWithMeta = { attributeId: string, clinicalDataType: ClinicalDataType, counts: ClinicalDataCount[] };
 export type MutatedGenesData = MutationCountByGene[];
 export type CNAGenesData = CopyNumberCountByGene[];
+
 export class StudyViewPageStore {
 
-    constructor(){
+    constructor() {
     }
 
     @observable studyId:string;
@@ -58,7 +63,7 @@ export class StudyViewPageStore {
                 values: values
             };
             this._clinicalDataEqualityFilterSet.set(id, clinicalDataEqualityFilter);
-    
+
         } else {
             this._clinicalDataEqualityFilterSet.delete(id)
         }
@@ -69,7 +74,7 @@ export class StudyViewPageStore {
         let mutatedGeneFilter = this._mutatedGeneFilter
         if(!mutatedGeneFilter) {
             mutatedGeneFilter = { molecularProfileId : this.mutationProfileId, entrezGeneIds: []}
-        } 
+        }
         let _index = mutatedGeneFilter.entrezGeneIds.indexOf(entrezGeneId);
         if (_index === -1) {
             mutatedGeneFilter.entrezGeneIds.push(entrezGeneId);
@@ -122,6 +127,8 @@ export class StudyViewPageStore {
         if(this._cnaGeneFilter && this._cnaGeneFilter.alterations.length > 0) {
             filters.cnaGenes = [this._cnaGeneFilter];
         }
+
+        filters.sampleIds = [];
         return filters;
     }
 
@@ -146,7 +153,7 @@ export class StudyViewPageStore {
 		},
 		default: []
     });
-    
+
     @computed get mutationProfileId():string {
         var i;
         let molecularProfiles = this.molecularProfiles.result
@@ -191,7 +198,7 @@ export class StudyViewPageStore {
                 result[tag + obj.clinicalAttributeId] = obj
                 return result;
             }, {} as any)
-            
+
             let sampleData:ClinicalAttributeData = this.initialSampleAttributesData.result
 
             let patientData:ClinicalAttributeData = this.initialPatientAttributesData.result
@@ -290,6 +297,16 @@ export class StudyViewPageStore {
         default: {}
     });
 
+    readonly selectedSampleIds = remoteData<string[]>({
+        await: () => [this.molecularProfiles],
+        invoke: () => {
+            return internalClient.fetchSampleIdsUsingPOST({
+                studyId: this.studyId,
+                studyViewFilter: this.filters
+            })
+        },
+        default: []
+    });
 
     //invoked once initially
     readonly initialSampleAttributesData = remoteData<ClinicalAttributeData>({
@@ -366,12 +383,28 @@ export class StudyViewPageStore {
         },
         default: []
     });
+
+    readonly fullClinicalDataForPatients = remoteData<ClinicalData[]>({
+        await: ()=>[this.molecularProfiles, this.selectedSampleIds],
+        invoke: () => {
+            const filter: ClinicalDataSingleStudyFilter = {
+                attributeIds: ["OS_STATUS", "OS_MONTHS", "DFS_STATUS", "DFS_MONTHS"],
+                ids: this.selectedSampleIds.result
+            };
+            return defaultClient.fetchAllClinicalDataInStudyUsingPOST({
+                studyId: this.studyId,
+                clinicalDataSingleStudyFilter: filter,
+                clinicalDataType: "PATIENT"
+            })
+        },
+        default: []
+    });
 }
 
 
 export interface IStudyViewPageProps {
     routing: any;
-    resultsViewPageStore:ResultsViewPageStore;
+    resultsViewPageStore: ResultsViewPageStore;
 }
 
 // making this an observer (mobx-react) causes this component to re-render any time
@@ -443,6 +476,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     render(){
         let mutatedGeneData = this.store.mutatedGeneData.result;
         let cnaGeneData = this.store.cnaGeneData.result;
+        let fullPatientClinicaldata = this.store.fullClinicalDataForPatients.result;
         return (
             <div style={{overflowY: "scroll", border:"1px solid #cccccc"}}>
                 {
