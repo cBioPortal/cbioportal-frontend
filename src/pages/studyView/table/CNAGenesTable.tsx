@@ -66,6 +66,10 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                                     >
                                         {data.countByEntity}
                                     </LabeledCheckbox>
+                            },
+                            {
+                                name: 'Freq',
+                                render: (data: CopyNumberCountByGene) => <span>{data.frequency + '%'}</span>
                             }
                         ]
                     }
