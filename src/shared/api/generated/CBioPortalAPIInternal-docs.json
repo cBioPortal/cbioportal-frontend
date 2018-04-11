@@ -1079,6 +1079,50 @@
         }
       }
     },
+    "/studies/{studyId}/sample-ids/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Fetch sample IDs by study view filter",
+        "operationId": "fetchSampleIdsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. acc_tcga",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "description": "Study view filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
     "/studies/{studyId}/significant-copy-number-regions": {
       "get": {
         "tags": [
@@ -1428,6 +1472,9 @@
         "entrezGeneId": {
           "type": "integer",
           "format": "int32"
+        },
+        "frequency": {
+          "type": "number"
         },
         "hugoGeneSymbol": {
           "type": "string"
@@ -1906,6 +1953,9 @@
         "entrezGeneId": {
           "type": "integer",
           "format": "int32"
+        },
+        "frequency": {
+          "type": "number"
         },
         "hugoGeneSymbol": {
           "type": "string"
