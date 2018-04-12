@@ -10,8 +10,12 @@ Oncoprint is on [NPM](https://www.npmjs.com/package/oncoprintjs). To install:
 In order to use it, just `require` it into your script.
 
     const Oncoprint = require('oncoprintjs');
+    
+It can also be imported
 
-This will load the `Oncoprint` prototype into your environment. A full documentation of the API is still pending, but to see the basic usage in action, please follow the instructions below and take a look at the examples in the `test/` directory.
+    import Oncoprint from "oncoprintjs";
+
+A full documentation of the API is still pending, but the typescript declarations in `index.d.ts` may be of use.
 
 ## Development
 ### Getting Started
@@ -23,7 +27,7 @@ Install the necessary NPM packages defined in `package.json` by running:
 
 	npm install
 	
-Next, execute
+Next, build
 
 	webpack
 	
