@@ -107,7 +107,7 @@ describe('homepage', function() {
         beforeEach(function(){
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
             browser.setViewportSize({ height:1400, width:1000 });
-            //browser.waitForExist('[data-test="StudySelect"] input[type=checkbox]');
+            browser.waitForExist('[data-test="StudySelect"] input[type=checkbox]');
         });
 
 
