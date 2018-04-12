@@ -1116,7 +1116,7 @@
             "schema": {
               "type": "array",
               "items": {
-                "type": "string"
+                "$ref": "#/definitions/Sample"
               }
             }
           }
@@ -2057,6 +2057,53 @@
         }
       },
       "title": "MutationSpectrumFilter"
+    },
+    "Sample": {
+      "type": "object",
+      "required": [
+        "patientId",
+        "sampleId",
+        "studyId"
+      ],
+      "properties": {
+        "cancerTypeId": {
+          "type": "string"
+        },
+        "copyNumberSegmentPresent": {
+          "type": "boolean"
+        },
+        "patientId": {
+          "type": "string"
+        },
+        "sampleId": {
+          "type": "string"
+        },
+        "sampleType": {
+          "type": "string",
+          "enum": [
+            "Primary Solid Tumor",
+            "Recurrent Solid Tumor",
+            "Primary Blood Tumor",
+            "Recurrent Blood Tumor",
+            "Metastatic",
+            "Blood Derived Normal",
+            "Solid Tissues Normal"
+          ]
+        },
+        "sequenced": {
+          "type": "boolean"
+        },
+        "studyId": {
+          "type": "string"
+        },
+        "uniquePatientKey": {
+          "type": "string"
+        },
+        "uniqueSampleKey": {
+          "type": "string"
+        }
+      },
+      "title": "Sample"
     },
     "StudyViewFilter": {
       "type": "object",

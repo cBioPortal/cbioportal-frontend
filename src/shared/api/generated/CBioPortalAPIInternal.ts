@@ -321,6 +321,26 @@ export type MutationSpectrumFilter = {
         'sampleListId': string
 
 };
+export type Sample = {
+    'cancerTypeId': string
+
+        'copyNumberSegmentPresent': boolean
+
+        'patientId': string
+
+        'sampleId': string
+
+        'sampleType': "Primary Solid Tumor" | "Recurrent Solid Tumor" | "Primary Blood Tumor" | "Recurrent Blood Tumor" | "Metastatic" | "Blood Derived Normal" | "Solid Tissues Normal"
+
+        'sequenced': boolean
+
+        'studyId': string
+
+        'uniquePatientKey': string
+
+        'uniqueSampleKey': string
+
+};
 export type StudyViewFilter = {
     'clinicalDataEqualityFilters': Array < ClinicalDataEqualityFilter >
 
@@ -2002,7 +2022,7 @@ export default class CBioPortalAPIInternal {
             'studyViewFilter': StudyViewFilter,
             $queryParameters ? : any,
             $domain ? : string
-        }): Promise < Array < string >
+        }): Promise < Array < Sample >
         > {
             const domain = parameters.$domain ? parameters.$domain : this.domain;
             const errorHandlers = this.errorHandlers;
