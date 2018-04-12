@@ -114,6 +114,9 @@ jobs:
       -  store_artifacts:
           path: ~/repo/end-to-end-tests/image-compare
           destination: /image-compare
+      -  store_artifacts:
+          path: ~/repo/end-to-end-tests/errorShots
+          destination: /errorShots
       - store_test_results:
           path: ~/repo/end-to-end-tests/junit
       - store_artifacts:
