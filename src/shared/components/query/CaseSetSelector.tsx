@@ -116,6 +116,7 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 							cols={80}
 							value={this.store.caseIds}
 							onChange={event => this.store.caseIds = event.currentTarget.value}
+							data-test='CustomCaseSetInput'
 						/>
 					</FlexCol>
 				)}
