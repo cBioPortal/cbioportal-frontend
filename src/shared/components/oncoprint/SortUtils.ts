@@ -33,15 +33,6 @@ function sign(x: number): 0 | -1 | 1 {
     }
 };
 
-<<<<<<< HEAD
-=======
-/**
- * Get genetic track sort comparator
- * @param {boolean} sortByMutationType
- * @param {boolean} sortByDrivers
- * @returns {{preferred: <GeneticTrackDatum>; mandatory: <GeneticTrackDatum>}}
- */
->>>>>>> origin/release-1.13.0
 export function getGeneticTrackSortComparator(sortByMutationType?: boolean, sortByDrivers?: boolean): {
     preferred:TrackSortVector<GeneticTrackDatum>,
     mandatory:TrackSortVector<GeneticTrackDatum>,
