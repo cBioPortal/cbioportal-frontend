@@ -41,7 +41,7 @@ describe('QueryStoreUtils', ()=>{
             Sinon.stub(store, "selectableStudiesSet").get(() => {
                 return {"a":["a"], "b":["b"]};
             });
-            store.selectedStudyIds = ["a"];
+            store.selectableSelectedStudyIds = ["a"];
             assert.equal(nonMolecularProfileParams(store).cancer_study_id, "a");
             assert.equal(nonMolecularProfileParams(store).cancer_study_list, undefined);
         });
