@@ -151,7 +151,7 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
 
         this.trackSpecKeyToTrackId = {};
         this.divRefHandler = this.divRefHandler.bind(this);
-        this.refreshOncoprint = _.debounce(this.refreshOncoprint, 50);
+        this.refreshOncoprint = _.debounce(this.refreshOncoprint.bind(this),  0);
     }
 
     private divRefHandler(div:HTMLDivElement) {
@@ -182,7 +182,7 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
         }
         if (!this.oncoprint.webgl_unavailable) {
             transition(props, this.lastTransitionProps || {}, this.oncoprint, ()=>this.trackSpecKeyToTrackId);
-            this.lastTransitionProps = _.clone(this.props);
+            this.lastTransitionProps = _.clone(props);
         }
     }
 
