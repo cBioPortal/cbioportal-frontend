@@ -1,12 +1,15 @@
+.Safari {
+  // this is necessary to fix hidden scroll bars when position:absolute
+  .oncoprintjs__scroll_div {
+    position:static !important;
+  }
+}
+
 #oncoprint {
   border: none !important;
   padding: 0 !important;
 
   #oncoprint-inner {
-    .oncoprintjs__scroll_div {
-      overflow: auto !important;
-      position:static !important;
-    }
 
     .oncoprintjs__track_options__toggle_btn_img {
       border-width:0px !important;
