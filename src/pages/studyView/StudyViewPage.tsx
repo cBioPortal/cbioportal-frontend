@@ -40,7 +40,7 @@ export type CNAGenesData = CopyNumberCountByGene[];
 export type SurvivalType = {
     id: string,
     associatedAttrs: string[],
-    filter: string,
+    filter: string[],
     alteredGroup: PatientSurvival[]
     unalteredGroup: PatientSurvival[]
 }
@@ -383,23 +383,23 @@ export class StudyViewPageStore {
             const survivalTypes: SurvivalType[] = [{
                 id: 'os_survival',
                 associatedAttrs: ['OS_STATUS', 'OS_MONTHS'],
-                filter: 'DECEASED',
+                filter: ['DECEASED'],
                 alteredGroup: [],
                 unalteredGroup: []
             },{
                 id: 'dfs_survival',
                 associatedAttrs: ['DFS_STATUS', 'DFS_MONTHS'],
-                filter: 'DECEASED',
+                filter: ['Recurred/Progressed','Recurred'],
                 alteredGroup: [],
                 unalteredGroup: []
             }];
             survivalTypes.forEach(survivalType => {
                 survivalType.alteredGroup = getPatientSurvivals(
                     _.groupBy(this.survivalData.result, 'patientId'), this.allPatients.result,
-                    this.selectedPatientIds.result!, survivalType.associatedAttrs[0], survivalType.associatedAttrs[1], s => s === survivalType.filter);
+                    this.selectedPatientIds.result!, survivalType.associatedAttrs[0], survivalType.associatedAttrs[1], s => survivalType.filter.indexOf(s) !== -1);
                 survivalType.unalteredGroup = getPatientSurvivals(
                     _.groupBy(this.survivalData.result, 'patientId'), this.allPatients.result,
-                    this.unSelectedPatientIds.result!, survivalType.associatedAttrs[0], survivalType.associatedAttrs[1], s => s === survivalType.filter);
+                    this.unSelectedPatientIds.result!, survivalType.associatedAttrs[0], survivalType.associatedAttrs[1], s => survivalType.filter.indexOf(s) !== -1);
             });
             return survivalTypes;
         },
