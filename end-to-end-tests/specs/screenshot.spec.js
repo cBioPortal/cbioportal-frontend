@@ -116,21 +116,21 @@ describe("oncoprint screenshot tests", function() {
     });
     it("hcc_inserm_fr_2015 with genes including TERT - it should show orange promoter mutations in TERT", function() {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=hcc_inserm_fr_2015&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=hcc_inserm_fr_2015_sequenced&gene_list=SOX9%2520RAN%2520TNK2%2520EP300%2520PXN%2520NCOA2%2520AR%2520NRIP1%2520NCOR1%2520NCOR2%2520TERT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=hcc_inserm_fr_2015_mutations`);
-        waitForOncoprint(10000);
+        waitForOncoprint(20000);
         var res = browser.checkElement('#oncoprint');
         assertScreenShotMatch(res);
     });
     it("msk_impact_2017 with SOS1 - SOS1 should be not sequenced", function() {
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=msk_impact_2017_all&gene_list=SOS1&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=msk_impact_2017_cna`;
         goToUrlAndSetLocalStorage(url);
-        waitForOncoprint(10000);
+        waitForOncoprint(20000);
         var res = browser.checkElement("#oncoprint");
         assertScreenShotMatch(res);
     });
     it("msk_impact_2017 with ALK and SOS1 - SOS1 should be not sequenced", function() {
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=msk_impact_2017_all&gene_list=ALK%2520SOS1&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=msk_impact_2017_cna`;
         goToUrlAndSetLocalStorage(url);
-        waitForOncoprint(10000);
+        waitForOncoprint(20000);
         var res = browser.checkElement("#oncoprint");
         assertScreenShotMatch(res);
     });
