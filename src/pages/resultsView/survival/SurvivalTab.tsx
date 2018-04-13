@@ -46,10 +46,7 @@ export default class SurvivalTab extends React.Component<ISurvivalTabProps, {}> 
                         yLabelTooltip="Survival estimate"
                         xLabelWithEventTooltip="Time of death"
                         xLabelWithoutEventTooltip="Time of last observation"
-                        fileName="Overall_Survival" 
-                        showTable={true}
-                        showLegend={true}
-                        showDownloadButtons={true} />
+                        fileName="Overall_Survival" />
                 </div>
             );
         } else {
@@ -74,10 +71,7 @@ export default class SurvivalTab extends React.Component<ISurvivalTabProps, {}> 
                     yLabelTooltip="Disease-free Estimate"
                     xLabelWithEventTooltip="Time of Relapse"
                     xLabelWithoutEventTooltip="Time of Last Observation"
-                    fileName="Disease_Free_Survival" 
-                    showTable={true}
-                    showLegend={true}
-                    showDownloadButtons={true} />
+                    fileName="Disease_Free_Survival" />
                 </div>
             );
         } else {
