@@ -13,25 +13,37 @@ import {
     CopyNumberGeneFilterElement,
     MutationCountByGene,
     MutationGeneFilter,
+    Sample,
     StudyViewFilter
 } from 'shared/api/generated/CBioPortalAPIInternal';
 import {
     ClinicalAttribute,
     ClinicalData,
     ClinicalDataSingleStudyFilter,
-    MolecularProfile
+    MolecularProfile,
+    Patient
 } from 'shared/api/generated/CBioPortalAPI';
 import styles from "./styles.module.scss";
 import {MutatedGenesTable} from "./table/MutatedGenesTable";
 import {CNAGenesTable} from "./table/CNAGenesTable";
 import {ResultsViewPageStore} from 'pages/resultsView/ResultsViewPageStore';
 import {Chart} from 'pages/studyView/charts/Chart';
+import SurvivalChart from "../resultsView/survival/SurvivalChart";
+import {getPatientSurvivals} from "../resultsView/SurvivalStoreHelper";
+import {PatientSurvival} from "../../shared/model/PatientSurvival";
 
 export type ClinicalDataType= "SAMPLE" | "PATIENT";
 export type ClinicalAttributeData = {[attrId:string]:ClinicalDataCount[]};
 export type ClinicalAttributeDataWithMeta = { attributeId: string, clinicalDataType: ClinicalDataType, counts: ClinicalDataCount[] };
 export type MutatedGenesData = MutationCountByGene[];
 export type CNAGenesData = CopyNumberCountByGene[];
+export type SurvivalType = {
+    id: string,
+    associatedAttrs: string[],
+    filter: string,
+    alteredGroup: PatientSurvival[]
+    unalteredGroup: PatientSurvival[]
+}
 
 export class StudyViewPageStore {
 
@@ -145,8 +157,17 @@ export class StudyViewPageStore {
         return this._cnaGeneFilter ? this._cnaGeneFilter.alterations : [];
     }
 
+    private getPatientBySample(sample: Sample): Patient {
+        return {
+            patientId: sample.patientId,
+            studyId: sample.studyId,
+            uniquePatientKey: sample.patientId,
+            uniqueSampleKey: sample.sampleId
+        };
+    }
+
     readonly molecularProfiles = remoteData<MolecularProfile[]>({
-		invoke: async () => {
+        invoke: async () => {
 			return await defaultClient.getAllMolecularProfilesInStudyUsingGET({
 				studyId: this.studyId
 			});
@@ -290,20 +311,97 @@ export class StudyViewPageStore {
                         filter: this.filters
                     }
                 })
-            } else{
+            } else {
                 return this.initialPatientAttributesData.result;
             }
         },
         default: {}
     });
 
-    readonly selectedSampleIds = remoteData<string[]>({
+    readonly allSamples = remoteData<Sample[]>({
+        await: () => [this.molecularProfiles],
+        invoke: () => {
+            return internalClient.fetchSampleIdsUsingPOST({
+                studyId: this.studyId,
+                studyViewFilter: {
+                    clinicalDataEqualityFilters: [],
+                    mutatedGenes: [],
+                    cnaGenes: [],
+                    sampleIds: []
+                }
+            })
+        },
+        default: []
+    });
+
+    readonly allPatients = remoteData<Patient[]>({
+        await: () => [this.allSamples],
+        invoke: async () => {
+            return this.allSamples.result.map(sample => this.getPatientBySample(sample));
+        },
+        default: []
+    });
+
+    readonly allPatientIds = remoteData<string[]>({
+        await: () => [this.allPatients],
+        invoke: async () => {
+            return this.allPatients.result.map(patient => patient.patientId);
+        },
+        default: []
+    });
+
+    readonly selectedSamples = remoteData<Sample[]>({
         await: () => [this.molecularProfiles],
         invoke: () => {
             return internalClient.fetchSampleIdsUsingPOST({
                 studyId: this.studyId,
                 studyViewFilter: this.filters
             })
+        },
+        default: []
+    });
+
+    readonly selectedPatientIds = remoteData<string[]>({
+        await: () => [this.selectedSamples],
+        invoke: async () => {
+            return this.selectedSamples.result.map(sample => sample.patientId);
+        },
+        default: []
+    });
+
+    readonly unSelectedPatientIds = remoteData<string[]>({
+        await: () => [this.selectedPatientIds],
+        invoke: async () => {
+            return this.allPatientIds.result.filter(patientId => !_.includes(this.selectedPatientIds.result, patientId));
+        },
+        default: []
+    });
+
+    readonly survivalPlotData = remoteData<SurvivalType[]>({
+        await: () => [this.allPatients, this.survivalData, this.selectedPatientIds, this.unSelectedPatientIds],
+        invoke: async () => {
+            const survivalTypes: SurvivalType[] = [{
+                id: 'os_survival',
+                associatedAttrs: ['OS_STATUS', 'OS_MONTHS'],
+                filter: 'DECEASED',
+                alteredGroup: [],
+                unalteredGroup: []
+            },{
+                id: 'dfs_survival',
+                associatedAttrs: ['DFS_STATUS', 'DFS_MONTHS'],
+                filter: 'DECEASED',
+                alteredGroup: [],
+                unalteredGroup: []
+            }];
+            survivalTypes.forEach(survivalType => {
+                survivalType.alteredGroup = getPatientSurvivals(
+                    _.groupBy(this.survivalData.result, 'patientId'), this.allPatients.result,
+                    this.selectedPatientIds.result!, survivalType.associatedAttrs[0], survivalType.associatedAttrs[1], s => s === survivalType.filter);
+                survivalType.unalteredGroup = getPatientSurvivals(
+                    _.groupBy(this.survivalData.result, 'patientId'), this.allPatients.result,
+                    this.unSelectedPatientIds.result!, survivalType.associatedAttrs[0], survivalType.associatedAttrs[1], s => s === survivalType.filter);
+            });
+            return survivalTypes;
         },
         default: []
     });
@@ -384,12 +482,12 @@ export class StudyViewPageStore {
         default: []
     });
 
-    readonly fullClinicalDataForPatients = remoteData<ClinicalData[]>({
-        await: ()=>[this.molecularProfiles, this.selectedSampleIds],
+    readonly survivalData = remoteData<ClinicalData[]>({
+        await: () => [this.molecularProfiles, this.allPatientIds],
         invoke: () => {
             const filter: ClinicalDataSingleStudyFilter = {
                 attributeIds: ["OS_STATUS", "OS_MONTHS", "DFS_STATUS", "DFS_MONTHS"],
-                ids: this.selectedSampleIds.result
+                ids: this.allPatientIds.result
             };
             return defaultClient.fetchAllClinicalDataInStudyUsingPOST({
                 studyId: this.studyId,
@@ -471,12 +569,28 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                     filters={filters}
                     data={data}
                     key={arrayIndex} />);
+    };
+
+    renderSurvivalPlot = (data: SurvivalType) => {
+        return <div className={styles.survivalPlot}>
+            <SurvivalChart alteredPatientSurvivals={data.alteredGroup}
+                           unalteredPatientSurvivals={data.unalteredGroup}
+                           title={'test'}
+                           xAxisLabel="Months Survival"
+                           yAxisLabel="Overall Survival"
+                           totalCasesHeader="Number of Cases, Total"
+                           statusCasesHeader="Number of Cases, Deceased"
+                           medianMonthsHeader="Median Months Survival"
+                           yLabelTooltip="Survival estimate"
+                           xLabelWithEventTooltip="Time of death"
+                           xLabelWithoutEventTooltip="Time of last observation"
+                           fileName="Overall_Survival"/>
+        </div>
     }
 
     render(){
         let mutatedGeneData = this.store.mutatedGeneData.result;
         let cnaGeneData = this.store.cnaGeneData.result;
-        let fullPatientClinicaldata = this.store.fullClinicalDataForPatients.result;
         return (
             <div style={{overflowY: "scroll", border:"1px solid #cccccc"}}>
                 {
@@ -484,6 +598,14 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                     (
                         <div  className={styles.flexContainer}>
                             {this.store.defaultVisibleAttributes.result.map(this.renderAttributeChart)}
+                        </div>
+                    )
+                }
+                {
+                    this.store.survivalPlotData.isComplete &&
+                    (
+                        <div>
+                            {this.store.survivalPlotData.result.map(this.renderSurvivalPlot)}
                         </div>
                     )
                 }
