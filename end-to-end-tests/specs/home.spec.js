@@ -107,7 +107,7 @@ describe('homepage', function() {
         beforeEach(function(){
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
             browser.setViewportSize({ height:1400, width:1000 });
-            //browser.waitForExist('[data-test="StudySelect"] input[type=checkbox]');
+            browser.waitForExist('[data-test="StudySelect"] input[type=checkbox]');
         });
 
 
@@ -357,6 +357,8 @@ describe('single study query', function() {
 
         it('should be possible to add genes to query, with custom case list query in single study query', function() {
             browser.url(`${CBIOPORTAL_URL}/index.do?cancer_study_id=ov_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=-1&case_ids=ov_tcga_pub%3ATCGA-24-1428-01%0D%0Aov_tcga_pub%3ATCGA-24-1928-01%0D%0Aov_tcga_pub%3ATCGA-29-1698-01%0D%0Aov_tcga_pub%3ATCGA-24-0980-01%0D%0Aov_tcga_pub%3ATCGA-24-0970-01%0D%0Aov_tcga_pub%3ATCGA-13-0725-01%0D%0Aov_tcga_pub%3ATCGA-23-1027-01%0D%0Aov_tcga_pub%3ATCGA-13-0755-01%0D%0Aov_tcga_pub%3ATCGA-25-1315-01&gene_list=BRCA1%2520BRCA2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=ov_tcga_pub_gistic`);
+            waitForOncoprint(60000);
+            browser.pause(2000)
 
             // click enrichments tab
             $('#enrichments-result-tab').waitForExist(30000);
@@ -372,6 +374,7 @@ describe('single study query', function() {
 
             // wait for page to load
             $('[data-test="QuerySummaryGeneCount"]').waitForExist(60000);
+            browser.pause(2000)
             var text = browser.getText('[data-test="QuerySummaryGeneCount"]')
 
             // there should be one more gene queried now
