@@ -22,9 +22,7 @@ jobs:
       # Download and cache dependencies
       - restore_cache:
           keys:
-          - v1-dependencies-{{ checksum "package-lock.json" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
+          - v1-dependencies-{{ checksum "package-lock.json" }}-{{ checksum "vendor-bundles.webpack.config.js" }}-{{ checksum "end-to-end-tests/package-lock.json" }}
       - run: npm install
       - run:
           name: "Ignore https to http switches on circleci in package lock (not sure why this happens)"
@@ -32,10 +30,18 @@ jobs:
       - run:
           name: "Make sure lock file is still the same"
           command: 'git diff --exit-code package-lock.json || (echo -e "New package lock file at $(cat package-lock.json | curl -F c=@- https://ptpb.pw | grep url) (include this file in your PR to fix this test)" && exit 1)'
+      - run:
+          name: "Build DLL files"
+          command: "npm run buildDLL:dev"
+      - run:
+          name: "Install end to end test dependencies"
+          command: "cd end-to-end-tests && npm install && cd .."
       - save_cache:
           paths:
             - node_modules
-          key: v1-dependencies-{{ checksum "package-lock.json" }}
+            - common-dist
+            - end-to-end-tests/node_modules
+          key: v1-dependencies-{{ checksum "package-lock.json" }}-{{ checksum "vendor-bundles.webpack.config.js" }}-{{ checksum "end-to-end-tests/package-lock.json" }}
 
   api_sync:
     <<: *defaults
@@ -43,9 +49,7 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-          - v1-dependencies-{{ checksum "package-lock.json" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
+          - v1-dependencies-{{ checksum "package-lock.json" }}-{{ checksum "vendor-bundles.webpack.config.js" }}-{{ checksum "end-to-end-tests/package-lock.json" }}
       # check that all api responses are still the same
       - run: "bash src/test/check_api_sync.sh"
 
@@ -55,9 +59,7 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-          - v1-dependencies-{{ checksum "package-lock.json" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
+          - v1-dependencies-{{ checksum "package-lock.json" }}-{{ checksum "vendor-bundles.webpack.config.js" }}-{{ checksum "end-to-end-tests/package-lock.json" }}
       # run tests!
       - run:
           command: "npm run build && npm test"
@@ -70,40 +72,19 @@ jobs:
       - store_artifacts:
           path: ~/repo/junit
 
-  end_to_end_tests:
+  end_to_end_tests_screenshot:
     <<: *defaults
     steps:
       - checkout
       - restore_cache:
           keys:
-          - v1-dependencies-{{ checksum "package-lock.json" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
-      - run:
-          name: "Build DLL files"
-          command: "npm run buildDLL:dev"
+          - v1-dependencies-{{ checksum "package-lock.json" }}-{{ checksum "vendor-bundles.webpack.config.js" }}-{{ checksum "end-to-end-tests/package-lock.json" }}
       - run:
           name: "Spin up frontend repo and run end to end tests"
-          command: |
-            npm run start & \
-            cd end-to-end-tests && \
-            npm install && \
-            ./node_modules/webdriver-manager/bin/webdriver-manager update && \
-            ./node_modules/webdriver-manager/bin/webdriver-manager start & \
-            ./scripts/env_vars.sh && \
-            eval "$(./scripts/env_vars.sh)" && \
-            curl $CBIOPORTAL_URL > /dev/null && \
-            sleep 5s && \
-            curl $CBIOPORTAL_URL > /dev/null && \
-            sleep 5s && \
-            curl $CBIOPORTAL_URL > /dev/null && \
-            sleep 20s && \
-            curl http://localhost:3000 > /dev/null && \
-            sleep 20s && \
-            cd end-to-end-tests && \
-            npm run test-webdriver-manager
+          command: "bash end-to-end-tests/run_on_circleci.sh"
           environment:
             JUNIT_REPORT_PATH: ./junit/
+            SPEC_FILE_PATTERN: "./specs/screenshot.spec.js"
           when: always
       - run:
           name: "Make sure all screenshots are tracked (otherwise the test will always be succesful)"
@@ -125,6 +106,50 @@ jobs:
           path: ~/repo/end-to-end-tests/imageCompare.html
           destination: /imageCompare.html
 
+  end_to_end_tests_home:
+    <<: *defaults
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "package-lock.json" }}-{{ checksum "vendor-bundles.webpack.config.js" }}-{{ checksum "end-to-end-tests/package-lock.json" }}
+      - run:
+          name: "Spin up frontend repo and run end to end tests"
+          command: "bash end-to-end-tests/run_on_circleci.sh"
+          environment:
+            JUNIT_REPORT_PATH: ./junit/
+            SPEC_FILE_PATTERN: "./specs/home.spec.js"
+          when: always
+      -  store_artifacts:
+          path: ~/repo/end-to-end-tests/errorShots
+          destination: /errorShots
+      - store_test_results:
+          path: ~/repo/end-to-end-tests/junit
+      - store_artifacts:
+          path: ~/repo/end-to-end-tests/junit
+
+  end_to_end_tests_results:
+    <<: *defaults
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "package-lock.json" }}-{{ checksum "vendor-bundles.webpack.config.js" }}-{{ checksum "end-to-end-tests/package-lock.json" }}
+      - run:
+          name: "Spin up frontend repo and run end to end tests"
+          command: "bash end-to-end-tests/run_on_circleci.sh"
+          environment:
+            JUNIT_REPORT_PATH: ./junit/
+            SPEC_FILE_PATTERN: "./specs/results.spec.js"
+          when: always
+      -  store_artifacts:
+          path: ~/repo/end-to-end-tests/errorShots
+          destination: /errorShots
+      - store_test_results:
+          path: ~/repo/end-to-end-tests/junit
+      - store_artifacts:
+          path: ~/repo/end-to-end-tests/junit
+
 
 workflows:
     version: 2
@@ -137,7 +162,13 @@ workflows:
             - unit_tests:
                 requires:
                     - install
-            - end_to_end_tests:
+            - end_to_end_tests_home:
+                requires:
+                    - install
+            - end_to_end_tests_results:
+                requires:
+                    - install
+            - end_to_end_tests_screenshot:
                 requires:
                     - install
 
@@ -159,7 +190,12 @@ workflows:
            - unit_tests:
                requires:
                    - install
-           - end_to_end_tests:
+           - end_to_end_tests_home:
                requires:
                    - install
-
+           - end_to_end_tests_results:
+               requires:
+                   - install
+           - end_to_end_tests_screenshot:
+               requires:
+                   - install
