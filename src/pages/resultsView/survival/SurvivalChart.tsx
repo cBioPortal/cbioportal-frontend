@@ -69,7 +69,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
     private svgContainer: any;
     private svgsaver = new SvgSaver();
     private victoryOptsDefaultProps:SurvivalChartVictoryOpt = {
-        width: 600,
+        width: 900,
         height: 500,
         padding: {top: 20, bottom: 50, left: 60, right: 300},
         axis: {
