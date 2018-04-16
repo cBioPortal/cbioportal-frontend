@@ -80,13 +80,13 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 
 	render()
 	{
-		if (!this.store.selectedStudyIds.length)
+		if (!this.store.selectableSelectedStudyIds.length)
 			return null;
 		return (
 			<FlexRow padded overflow className={styles.CaseSetSelector} data-test='CaseSetSelector'>
 				<div>
 				<SectionHeader className="sectionLabel"
-							   secondaryComponent={<a href={getStudySummaryUrl(this.store.selectedStudyIds)} target="_blank">To build your own case set, try out our enhanced Study View.</a>}
+							   secondaryComponent={<a href={getStudySummaryUrl(this.store.selectableSelectedStudyIds)} target="_blank">To build your own case set, try out our enhanced Study View.</a>}
 							   promises={[this.store.sampleLists, this.store.asyncCustomCaseSet]}>
 					Select Patient/Case Set:
 				</SectionHeader>
