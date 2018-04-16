@@ -55,6 +55,7 @@ import {CosmicMutation} from "../../shared/api/generated/CBioPortalAPIInternal";
 import internalClient from "../../shared/api/cbioportalInternalClientInstance";
 import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
 import {getAlterationString} from "../../shared/lib/CopyNumberUtils";
+import {isRecurrentHotspot} from "../../shared/lib/AnnotationUtils";
 import memoize from "memoize-weak-decorator";
 import request from 'superagent';
 import {countMutations, mutationCountByPositionKey} from "./mutationCountHelpers";
@@ -1403,7 +1404,7 @@ export class ResultsViewPageStore {
                 toAwait.push(this.getOncoKbMutationAnnotationForOncoprint);
             }
             if (this.mutationAnnotationSettings.hotspots) {
-                toAwait.push(this.isHotspot);
+                toAwait.push(this.indexedHotspotData);
             }
             if (this.mutationAnnotationSettings.cbioportalCount) {
                 toAwait.push(this.getCBioportalCount);
@@ -1426,8 +1427,8 @@ export class ResultsViewPageStore {
 
                 const hotspots:boolean =
                     (this.mutationAnnotationSettings.hotspots &&
-                    this.isHotspot.isComplete &&
-                    this.isHotspot.result(mutation));
+                    this.indexedHotspotData.isComplete &&
+                    isRecurrentHotspot(mutation, this.indexedHotspotData.result!));
 
                 const cbioportalCount:boolean =
                     (this.mutationAnnotationSettings.cbioportalCount &&
@@ -1478,17 +1479,6 @@ export class ResultsViewPageStore {
         invoke: ()=>Promise.resolve(indexHotspotsData(this.hotspotData))
     });
 
-    public readonly isHotspot = remoteData({
-        await:()=>[
-            this.getOncoKbMutationAnnotationForOncoprint
-        ],
-        invoke:()=>{
-            return Promise.resolve((mutation:Mutation)=>{
-                const oncokbAnnotation = this.getOncoKbMutationAnnotationForOncoprint.result!(mutation);
-                return (oncokbAnnotation ? !!oncokbAnnotation.hotspot : false);
-            });
-        }
-    });
     //OncoKb
     readonly uniqueSampleKeyToTumorType = remoteData<{[uniqueSampleKey: string]: string}>({
         await:()=>[
