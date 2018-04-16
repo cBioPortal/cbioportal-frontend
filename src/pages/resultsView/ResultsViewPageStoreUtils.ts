@@ -144,7 +144,7 @@ export function computeGenePanelInformation(
 
 export function annotateMolecularDatum(
     molecularDatum:GeneMolecularData,
-    getOncoKbCnaAnnotationForOncoprint:(datum:GeneMolecularData)=>IndicatorQueryResp,
+    getOncoKbCnaAnnotationForOncoprint:(datum:GeneMolecularData)=>IndicatorQueryResp|undefined,
     molecularProfileIdToMolecularProfile:{[molecularProfileId:string]:MolecularProfile}
 ):AnnotatedGeneMolecularData {
     let oncogenic = "";
