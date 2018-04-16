@@ -161,7 +161,7 @@ describe('study view screenshot test', function(){
         browser.setViewportSize({ height: 1600, width: 1000 })
         browser.pause(5000);
 
-        var res = browser.checkElement('#page_wrapper_table', {hide:['.qtip'] });
+        var res = browser.checkElement('#page_wrapper_table', {hide:['.qtip', '#footer-span-version'] });
         assertScreenShotMatch(res);
     });
 });
