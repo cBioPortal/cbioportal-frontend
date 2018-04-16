@@ -79,7 +79,7 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
 					(<MolecularProfileSelector/>)
 				}
 
-				{(this.store.selectedStudyIds.length > 0) && (
+				{(this.store.selectableSelectedStudyIds.length > 0) && (
 					<CaseSetSelector/>
 				)}
 
