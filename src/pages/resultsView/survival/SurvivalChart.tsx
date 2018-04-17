@@ -43,7 +43,7 @@ type AxisStyleOpts = {
         stroke: string,
         strokeWidth: number
     },
-    tickLabel: {
+    tickLabels: {
         padding: number, fill: string
     },
     axisLabel: {
@@ -92,7 +92,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                     stroke: 'black',
                     strokeWidth: 1
                 },
-                tickLabel: {
+                tickLabels: {
                     padding: 2, fill: "black"
                 },
                 axisLabel: {
@@ -107,7 +107,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                     stroke: 'black',
                     strokeWidth: 1
                 },
-                tickLabel: {
+                tickLabels: {
                     padding: 2, fill: "black"
                 },
                 axisLabel: {
