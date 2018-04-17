@@ -78,7 +78,7 @@ export function normalizeQuery(geneQuery:string)
 export type CancerStudyQueryParams = Pick<
 	QueryStore,
 	'searchText' |
-	'selectedStudyIds' |
+	'selectableSelectedStudyIds' |
 	'dataTypePriority' |
 	'selectedProfileIds' |
 	'zScoreThreshold' |
@@ -91,7 +91,7 @@ export type CancerStudyQueryParams = Pick<
 >;
 export const QueryParamsKeys:(keyof CancerStudyQueryParams)[] = [
 	'searchText',
-	'selectedStudyIds',
+	'selectableSelectedStudyIds',
 	'dataTypePriority',
 	'selectedProfileIds',
 	'zScoreThreshold',
@@ -189,8 +189,8 @@ export class QueryStore
 			action(() => {
 				this.deletedVirtualStudies.push(id);
 				//unselect if the virtual study is selected
-				if(this.selectedStudyIds.indexOf(id) !== -1) {
-					this.selectedStudyIds = _.difference(this.selectedStudyIds, [id]);
+				if(this.selectableSelectedStudyIds.indexOf(id) !== -1) {
+					this.selectableSelectedStudyIds = _.difference(this.selectableSelectedStudyIds, [id]);
 				}
 			}),
 			action(error => {
@@ -220,7 +220,7 @@ export class QueryStore
 	@computed get physicalStudyIdsInSelection():string[] {
 		// Gives selected study ids and study ids that are in selected virtual studies
 		const ret:{[id:string]:boolean} = {};
-		for (const studyId of this.selectedStudyIds) {
+		for (const studyId of this.selectableSelectedStudyIds) {
 			const virtualStudy = this.virtualStudiesMap[studyId];
 			if (virtualStudy) {
 				virtualStudy.data.studies.forEach(study => ret[study.id] = true);
@@ -255,15 +255,15 @@ export class QueryStore
 
 	@observable searchText:string = '';
 
-	@observable private _selectedStudyIds:ObservableMap<boolean> = observable.map<boolean>();
+	@observable private _allSelectedStudyIds:ObservableMap<boolean> = observable.map<boolean>();
 
 	@computed get allSelectedStudyIds():string[] {
-		return this._selectedStudyIds.keys();
+		return this._allSelectedStudyIds.keys();
 	}
 
-	@computed get selectedStudyIds():string[]
+	@computed get selectableSelectedStudyIds():string[]
 	{
-		let ids:string[] = this._selectedStudyIds.keys();
+		let ids:string[] = this._allSelectedStudyIds.keys();
 		const selectableStudies = this.selectableStudiesSet;
 		ids = ids.reduce((obj:string[],next)=>{
 			if(selectableStudies[next]){
@@ -279,7 +279,7 @@ export class QueryStore
 	@computed get selectedStudyToSampleSet():{[id:string]:{[id:string]:boolean}}
 	{
 		let studyToSampleSet:{[id:string]:{[id:string]:boolean}} = {}
-		this.selectedStudyIds.forEach(id => {
+		this.selectableSelectedStudyIds.forEach(id => {
 			if(this.virtualStudiesMap[id]){
 				let virtualStudy = this.virtualStudiesMap[id]
 				virtualStudy.data.studies.forEach(study => {
@@ -298,12 +298,12 @@ export class QueryStore
 		return studyToSampleSet;
 	}
 
-	set selectedStudyIds(val:string[]) {
+	set selectableSelectedStudyIds(val:string[]) {
 		//surrounded with action block to indicate that state is going to be modified
 		action(()=>{
 			//filter out deleted virtual study
 			const filteredStudies = val.filter(id => !_.includes(this.deletedVirtualStudies,id))
-			this._selectedStudyIds = observable.map(stringListToSet(filteredStudies));
+			this._allSelectedStudyIds = observable.map(stringListToSet(filteredStudies));
 		})()
 	}
 
@@ -314,12 +314,12 @@ export class QueryStore
 			if (selected) {
 				newMap[studyId] = selected;
 			}
-			this._selectedStudyIds = observable.map(newMap);
+			this._allSelectedStudyIds = observable.map(newMap);
 		} else {
 			if (selected) {
-				this._selectedStudyIds.set(studyId, true);
+				this._allSelectedStudyIds.set(studyId, true);
 			} else {
-				this._selectedStudyIds.delete(studyId);
+				this._allSelectedStudyIds.delete(studyId);
 			}
 		}
 	}
@@ -551,7 +551,7 @@ export class QueryStore
 			if (!this.isSingleNonVirtualStudySelected)
 				return [];
 			return await client.getAllMolecularProfilesInStudyUsingGET({
-				studyId: this.selectedStudyIds[0]
+				studyId: this.selectableSelectedStudyIds[0]
 			});
 		},
 		default: [],
@@ -576,7 +576,7 @@ export class QueryStore
 				return [];
 			}
 			let sampleLists = await client.getAllSampleListsInStudyUsingGET({
-				studyId: this.selectedStudyIds[0],
+				studyId: this.selectableSelectedStudyIds[0],
 				projection: 'DETAILED'
 			});
 			return _.sortBy(sampleLists, sampleList => sampleList.name);
@@ -595,7 +595,7 @@ export class QueryStore
 				return [];
 			}
 			return await internalClient.getSignificantlyMutatedGenesUsingGET({
-				studyId: this.selectedStudyIds[0]
+				studyId: this.selectableSelectedStudyIds[0]
 			});
 		},
 		default: []
@@ -607,7 +607,7 @@ export class QueryStore
 				return [];
 			}
 			return await internalClient.getSignificantCopyNumberRegionsUsingGET({
-				studyId: this.selectedStudyIds[0]
+				studyId: this.selectableSelectedStudyIds[0]
 			});
 		},
 		default: []
@@ -699,7 +699,6 @@ export class QueryStore
 			if (this.selectedSampleListId !== CUSTOM_CASE_LIST_ID || (this.caseIds.trim().length === 0))
 				return [];
 			return this.invokeCustomCaseSetLater({
-				singleSelectedStudyId: this.singleSelectedStudyId,
 				isVirtualStudySelected: this.isVirtualStudySelected,
 				caseIds: this.caseIds,
 				caseIdsMode: this.caseIdsMode,
@@ -709,10 +708,10 @@ export class QueryStore
 	});
 
 	private invokeCustomCaseSetLater = debounceAsync(
-		async (params:Pick<this, 'singleSelectedStudyId' | 'isVirtualStudySelected' | 'caseIds' | 'caseIdsMode'>) => {
+		async (params:Pick<this, 'isVirtualStudySelected' | 'caseIds' | 'caseIdsMode'>) => {
 			let singleSelectedStudyId = '';
 			if (this.isSingleNonVirtualStudySelected) {
-				singleSelectedStudyId = this.selectedStudyIds[0];
+				singleSelectedStudyId = this.selectableSelectedStudyIds[0];
 			}
 			let entities = params.caseIds.trim().split(/\s+/g);
 			const studyIdsInSelectionSet = stringListToSet(this.physicalStudyIdsInSelection);
@@ -861,14 +860,9 @@ export class QueryStore
 		return this.selectedCancerTypeIds.map(id => this.treeData.map_cancerTypeId_cancerType.get(id) as CancerType).filter(_.identity);
 	}
 
-	@computed get singleSelectedStudyId()
+	@computed get selectableSelectedStudies()
 	{
-		return this.selectedStudyIds.length == 1 ? this.selectedStudyIds[0] : undefined;
-	}
-
-	@computed get selectedStudies()
-	{
-		return this.selectedStudyIds.map(id => this.treeData.map_studyId_cancerStudy.get(id) as CancerStudy).filter(_.identity);
+		return this.selectableSelectedStudyIds.map(id => this.treeData.map_studyId_cancerStudy.get(id) as CancerStudy).filter(_.identity);
 	}
 
 	// get all selected ids(that are set) that are not selectable in the cancer tree
@@ -876,16 +870,16 @@ export class QueryStore
 	@computed get unknownStudyIds()
 	{
 		const selectableStudiesSet = this.selectableStudiesSet;
-		let ids:string[] = this._selectedStudyIds.keys();
+		let ids:string[] = this._allSelectedStudyIds.keys();
 		return ids.filter(id=>!(id in selectableStudiesSet));
 	}
 
-	@computed get selectedStudies_totalSampleCount()
+	@computed get selectableSelectedStudies_totalSampleCount()
 	{
 		const result:{[id:string]:number} = {};
 		const virtualStudySamples:{[id:string]:string[]} = {};
 
-		this.selectedStudies.forEach(study => {
+		this.selectableSelectedStudies.forEach(study => {
 			//merge samples for a study across all virtual studies 
 			if(this.isVirtualStudy(study.studyId)){
 				if(this.virtualStudiesMap[study.studyId]){
@@ -926,10 +920,10 @@ export class QueryStore
 	}
 
 	private isSingleStudySelected(shouldBeVirtualStudy:boolean) {
-		if (this.selectedStudyIds.length !== 1) {
+		if (this.selectableSelectedStudyIds.length !== 1) {
 			return false;
 		}
-		const selectedStudyId = this.selectedStudyIds[0];
+		const selectedStudyId = this.selectableSelectedStudyIds[0];
 		return (this.isVirtualStudy(selectedStudyId) === shouldBeVirtualStudy);
 	}
 
@@ -942,7 +936,7 @@ export class QueryStore
 	}
 
 	@computed public get getOverlappingStudiesMap() {
-		const overlappingStudyGroups = getOverlappingStudies(this.selectedStudies);
+		const overlappingStudyGroups = getOverlappingStudies(this.selectableSelectedStudies);
 		return _.chain(overlappingStudyGroups)
 			.flatten()
 			.keyBy((study:CancerStudy)=>study.studyId)
@@ -951,7 +945,7 @@ export class QueryStore
 
 	@computed public get isVirtualStudySelected() {
 		let ret = false;
-		for (const studyId of this.selectedStudyIds) {
+		for (const studyId of this.selectableSelectedStudyIds) {
 			if (this.virtualStudiesMap[studyId]) {
 				ret = true;
 				break;
@@ -961,9 +955,9 @@ export class QueryStore
 	}
 
 	@computed public get isVirtualStudyQuery() {
-		if (this.selectedStudyIds.length === 0) {
+		if (this.selectableSelectedStudyIds.length === 0) {
 			return false;
-		} else if (this.selectedStudyIds.length > 1) {
+		} else if (this.selectableSelectedStudyIds.length > 1) {
 			return true;
 		} else {
 			return this.isSingleVirtualStudySelected;
@@ -1061,10 +1055,10 @@ export class QueryStore
 			return ALL_CASES_LIST_ID;
 		}
 
-		let studyId = this.singleSelectedStudyId;
-		if (!studyId)
+		if (this.selectableSelectedStudyIds.length !== 1)
 			return undefined;
 
+		let studyId = this.selectableSelectedStudyIds[0];
 		let mutSelect = this.getSelectedProfileIdFromMolecularAlterationType('MUTATION_EXTENDED');
 		let cnaSelect = this.getSelectedProfileIdFromMolecularAlterationType('COPY_NUMBER_ALTERATION');
 		let expSelect = this.getSelectedProfileIdFromMolecularAlterationType('MRNA_EXPRESSION');
@@ -1251,7 +1245,7 @@ export class QueryStore
 	}
 
 	@computed get summaryEnabled() {
-		return this.selectedStudyIds.length > 0;
+		return this.selectableSelectedStudyIds.length > 0;
 	}
 
 	@computed get oqlMessages():string[] {
@@ -1273,7 +1267,7 @@ export class QueryStore
 			return (result.alterations || []).some(alt => alt.alteration_type === 'prot');
 		});
 
-		if (!this.selectedStudyIds.length)
+		if (!this.selectableSelectedStudyIds.length)
 			return "Please select one or more cancer studies.";
 
 		if (this.isSingleNonVirtualStudySelected)
@@ -1286,18 +1280,18 @@ export class QueryStore
 				return "Expression specified in the list of genes, but not selected in the Molecular Profile Checkboxes.";
 
 		}
-		if (this.selectedStudyIds.length && this.selectedSampleListId === CUSTOM_CASE_LIST_ID)
+		if (this.selectableSelectedStudyIds.length && this.selectedSampleListId === CUSTOM_CASE_LIST_ID)
 		{
 			if (this.asyncCustomCaseSet.isComplete && !this.asyncCustomCaseSet.result.length)
 				return "Please enter at least one ID in your custom case set.";
 			if (this.asyncCustomCaseSet.error)
 				return "Error in custom case set.";
 		}
-		else if (haveExpInQuery && this.selectedStudyIds.length > 1)
+		else if (haveExpInQuery && this.selectableSelectedStudyIds.length > 1)
 		{
 			return "Expression filtering in the gene list (the EXP command) is not supported when doing cross cancer queries.";
 		}
-		else if (haveProtInQuery && this.selectedStudyIds.length > 1)
+		else if (haveProtInQuery && this.selectableSelectedStudyIds.length > 1)
 		{
 			return "Protein level filtering in the gene list (the PROT command) is not supported when doing cross cancer queries.";
 		}
@@ -1369,7 +1363,7 @@ export class QueryStore
 
 	@computed get downloadDataFilename()
 	{
-		let study = this.singleSelectedStudyId && this.treeData.map_studyId_cancerStudy.get(this.singleSelectedStudyId);
+		let study = (this.selectableSelectedStudyIds.length === 1 && this.treeData.map_studyId_cancerStudy.get(this.selectableSelectedStudyIds[0]));
 		let profile = this.dict_molecularProfileId_molecularProfile[this.selectedProfileIds[0] as string];
 
 		if (!this.forDownloadTab || !study || !profile)
@@ -1472,7 +1466,7 @@ export class QueryStore
 			params.genetic_profile_ids_PROFILE_GENESET_SCORE,
 		];
 
-		this.selectedStudyIds = params.cancer_study_list ? params.cancer_study_list.split(",") : (params.cancer_study_id ? [params.cancer_study_id] : []);
+		this.selectableSelectedStudyIds = params.cancer_study_list ? params.cancer_study_list.split(",") : (params.cancer_study_id ? [params.cancer_study_id] : []);
 		this._selectedProfileIds = profileIds.every(id => id === undefined) ? undefined : profileIds.filter(_.identity) as string[];
 		this.zScoreThreshold = params.Z_SCORE_THRESHOLD || '2.0';
 		this.rppaScoreThreshold = params.RPPA_SCORE_THRESHOLD || '2.0';
@@ -1628,7 +1622,7 @@ export class QueryStore
 			return;
 		}
 
-		openStudySummaryFormSubmit(this.selectedStudyIds);
+		openStudySummaryFormSubmit(this.selectableSelectedStudyIds);
 	}
 
 	@action addGenesAndSubmit(genes:string[]) {
