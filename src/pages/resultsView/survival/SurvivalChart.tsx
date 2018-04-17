@@ -125,8 +125,9 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
 
     @computed
     get styleOpts() {
-        let configurableOpts: StyleOpts = _.merge(this.styleOptsDefaultProps, this.props.styleOpts);
+        let configurableOpts: StyleOpts = _.merge({}, this.styleOptsDefaultProps, this.props.styleOpts);
         configurableOpts.padding.right = this.props.showLegend ? 300 : configurableOpts.padding.right;
+        configurableOpts.legend.x = configurableOpts.width - configurableOpts.padding.right;
         return configurableOpts;
     }
 
