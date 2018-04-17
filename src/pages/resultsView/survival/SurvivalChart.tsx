@@ -84,7 +84,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
     private styleOptsDefaultProps:StyleOpts = {
         width: 900,
         height: 500,
-        padding: {top: 20, bottom: 50, left: 60, right: 300},
+        padding: {top: 20, bottom: 50, left: 60, right: 20},
         axis: {
             x: {
                 ticks: {
@@ -126,7 +126,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
     @computed
     get styleOpts() {
         let configurableOpts: StyleOpts = _.merge(this.styleOptsDefaultProps, this.props.styleOpts);
-        configurableOpts.padding.right = this.props.showLegend ? 300 : configurableOpts.padding.left;
+        configurableOpts.padding.right = this.props.showLegend ? 300 : configurableOpts.padding.right;
         return configurableOpts;
     }
 
