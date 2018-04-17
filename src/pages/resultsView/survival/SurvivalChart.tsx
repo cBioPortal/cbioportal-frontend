@@ -81,7 +81,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
     private unalteredLegendText = 'Cases without Alteration(s) in Query Gene(s)';
     private svgContainer: any;
     private svgsaver = new SvgSaver();
-    private victoryOptsDefaultProps:StyleOpts = {
+    private styleOptsDefaultProps:StyleOpts = {
         width: 900,
         height: 500,
         padding: {top: 20, bottom: 50, left: 60, right: 300},
@@ -125,7 +125,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
 
     @computed
     get styleOpts() {
-        let configurableOpts: StyleOpts = _.merge(this.victoryOptsDefaultProps, this.props.styleOpts);
+        let configurableOpts: StyleOpts = _.merge(this.styleOptsDefaultProps, this.props.styleOpts);
         configurableOpts.padding.right = this.props.showLegend ? 300 : configurableOpts.padding.left;
         return configurableOpts;
     }
@@ -165,10 +165,6 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         return calculateLogRank(this.sortedAlteredPatientSurvivals, this.sortedUnalteredPatientSurvivals);
     }
 
-    private deepMergeVictoryOpts(opts:SurvivalChartVictoryOpt):SurvivalChartVictoryOpt {
-        return _.merge(this.victoryOptsDefaultProps, opts);
-    }
-
     private tooltipMouseEnter(): void {
         this.isTooltipHovered = true;
     }
@@ -190,10 +186,6 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         fileDownload(getDownloadContent(getScatterData(this.sortedAlteredPatientSurvivals, this.alteredEstimates),
             getScatterData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates), this.props.title,
             this.alteredLegendText, this.unalteredLegendText), this.props.fileName + '.txt');
-    }
-
-    componentWillReceiveProps(nextProps:ISurvivalChartProps) {
-        this.victoryOpts = this.deepMergeVictoryOpts(nextProps.victoryOpts === undefined ? {} : nextProps.victoryOpts);
     }
 
     public render() {
@@ -236,8 +228,6 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                 }
             }
         }];
-        const victoryOpts = this.victoryOpts;
-        const victoryOptsLegend = victoryOpts.legend!;
 
         return (
 
