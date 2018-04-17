@@ -13,6 +13,7 @@ import OncokbPubMedCache from "shared/cache/PubMedCache";
 import MyCancerGenome from "shared/components/annotation/MyCancerGenome";
 import Civic from "shared/components/annotation/Civic";
 import {IOncoKbCancerGenesWrapper, IOncoKbData, IOncoKbDataWrapper} from "shared/model/OncoKB";
+import Trial from "shared/components/annotation/Trial";
 import {IMyCancerGenomeData, IMyCancerGenome} from "shared/model/MyCancerGenome";
 import {IHotspotDataWrapper} from "shared/model/CancerHotspots";
 import {CancerStudy, Mutation} from "shared/api/generated/CBioPortalAPI";
@@ -355,6 +356,13 @@ export default class AnnotationColumnFormatter
                         isHotspot={annotation.isHotspot}
                         is3dHotspot={annotation.is3dHotspot}
                         status={annotation.hotspotStatus}
+                    />
+                </If>
+                <If condition={columnProps.enableCivic || false}>
+                    <Trial
+                        civicEntry={annotation.civicEntry}
+                        civicStatus={annotation.civicStatus}
+                        hasCivicVariants={annotation.hasCivicVariants}
                     />
                 </If>
             </span>
