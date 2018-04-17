@@ -165,6 +165,10 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         return calculateLogRank(this.sortedAlteredPatientSurvivals, this.sortedUnalteredPatientSurvivals);
     }
 
+    private deepMergeVictoryOpts(opts:SurvivalChartVictoryOpt):SurvivalChartVictoryOpt {
+        return _.merge(this.victoryOptsDefaultProps, opts);
+    }
+
     private tooltipMouseEnter(): void {
         this.isTooltipHovered = true;
     }
@@ -186,6 +190,10 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         fileDownload(getDownloadContent(getScatterData(this.sortedAlteredPatientSurvivals, this.alteredEstimates),
             getScatterData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates), this.props.title,
             this.alteredLegendText, this.unalteredLegendText), this.props.fileName + '.txt');
+    }
+
+    componentWillReceiveProps(nextProps:ISurvivalChartProps) {
+        this.victoryOpts = this.deepMergeVictoryOpts(nextProps.victoryOpts === undefined ? {} : nextProps.victoryOpts);
     }
 
     public render() {
@@ -228,6 +236,8 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                 }
             }
         }];
+        const victoryOpts = this.victoryOpts;
+        const victoryOptsLegend = victoryOpts.legend!;
 
         return (
 
