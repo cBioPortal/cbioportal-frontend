@@ -1,4 +1,5 @@
 import {
+    alterationInfoForCaseAggregatedDataByOQLLine,
     makeGeneticTrackWith,
     percentAltered
 } from "./OncoprintUtils";
@@ -6,6 +7,93 @@ import * as _ from 'lodash';
 import {assert} from 'chai';
 
 describe('OncoprintUtils', () => {
+    describe('alterationInfoForCaseAggregatedDataByOQLLine', () => {
+        it('counts two sequenced samples if the gene was sequenced in two out of three samples', () => {
+            // given
+            const dataByCase = {
+                samples: {'SAMPLE1': [], 'SAMPLE2': [], 'SAMPLE3': []},
+                patients: {}
+            };
+            const sequencedSampleKeysByGene = {'TTN': ['SAMPLE2', 'SAMPLE3']};
+            // when
+            const info = alterationInfoForCaseAggregatedDataByOQLLine(
+                true,
+                {cases: dataByCase, oql: {gene: 'TTN'}},
+                sequencedSampleKeysByGene,
+                {}
+            );
+            // then
+            assert.equal(info.sequenced, 2);
+        });
+
+        it("counts no sequenced patients if the gene wasn't sequenced in either patient", () => {
+            // given
+            const dataByCase = {
+                samples: {},
+                patients: {'PATIENT1': [], 'PATIENT2': []}
+            };
+            const sequencedPatientKeysByGene = {'ADH1A': []};
+            // when
+            const info = alterationInfoForCaseAggregatedDataByOQLLine(
+                false,
+                {cases: dataByCase, oql: {gene: 'ADH1A'}},
+                {},
+                sequencedPatientKeysByGene
+            );
+            // then
+            assert.equal(info.sequenced, 0);
+        });
+
+        it('counts three sequenced patients if at least one merged-track gene was sequenced in each', () => {
+            // given
+            const dataByCase = {
+                samples: {},
+                patients: {'PATIENT1': [], 'PATIENT2': [], 'PATIENT3': []}
+            };
+            const sequencedPatientKeysByGene = {
+                'VEGFA': ['PATIENT1', 'PATIENT2'],
+                'VEGFB': ['PATIENT1', 'PATIENT3'],
+                'CXCL8': ['PATIENT1', 'PATIENT3']
+            };
+            // when
+            const info = alterationInfoForCaseAggregatedDataByOQLLine(
+                false,
+                {
+                    cases: dataByCase,
+                    oql: ['CXCL8', 'VEGFA', 'VEGFB']
+                },
+                {},
+                sequencedPatientKeysByGene
+            );
+            // then
+            assert.equal(info.sequenced, 3);
+        });
+
+        it("counts one sequenced sample if the other one wasn't covered by either of the genes", () => {
+            // given
+            const dataByCase = {
+                samples: {'SAMPLE1': [], 'SAMPLE2': []},
+                patients: {}
+            };
+            const sequencedSampleKeysByGene = {
+                'MYC': ['SAMPLE2'],
+                'CDK8': []
+            };
+            // when
+            const info = alterationInfoForCaseAggregatedDataByOQLLine(
+                true,
+                {
+                    cases: dataByCase,
+                    oql: ['MYC', 'CDK8']
+                },
+                sequencedSampleKeysByGene,
+                {}
+            );
+            // then
+            assert.equal(info.sequenced, 1);
+        });
+    });
+
     describe('makeGeneticTrackWith', () => {
         const makeMinimalCoverageRecord = () => ({
             byGene: {}, allGenes: [],
