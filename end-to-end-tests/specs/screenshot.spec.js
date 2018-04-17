@@ -126,25 +126,6 @@ describe("download tab screenshot tests", function() {
     });
 });
 
-describe('patient view page screenshot test', function(){
-    before(function(){
-        var url = `${CBIOPORTAL_URL}/case.do#/patient?studyId=lgg_ucsf_2014&caseId=P04`;
-        goToUrlAndSetLocalStorage(url);
-    });
-
-    it('patient view lgg_ucsf_2014 P04', function() {
-        // find oncokb image
-        var oncokbIndicator = $('[data-test="oncogenic-icon-image"]');
-        oncokbIndicator.waitForExist(30000);
-        // find vaf plot
-        var vafPlot = $('.vafPlot');
-        vafPlot.waitForExist(30000);
-
-        var res = browser.checkElement('#mainColumn', {hide:['.qtip'] });
-        assertScreenShotMatch(res);
-    });
-});
-
 describe('study view screenshot test', function(){
     before(function(){
         var url = `${CBIOPORTAL_URL}/study.do?cancer_study_id=lgg_ucsf_2014`;
