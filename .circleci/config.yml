@@ -88,8 +88,8 @@ jobs:
             npm run start & \
             cd end-to-end-tests && \
             npm install && \
-            ./node_modules/webdriver-manager/bin/webdriver-manager update && \
-            ./node_modules/webdriver-manager/bin/webdriver-manager start & \
+            ./node_modules/webdriver-manager/bin/webdriver-manager update --versions.chrome '2.37' && \
+            ./node_modules/webdriver-manager/bin/webdriver-manager start --versions.chrome '2.37' & \
             ./scripts/env_vars.sh && \
             eval "$(./scripts/env_vars.sh)" && \
             curl $CBIOPORTAL_URL > /dev/null && \
