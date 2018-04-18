@@ -86,7 +86,7 @@ export declare type CNAType = 'AMP' | 'HOMDEL' | 'GAIN' | 'HETLOSS';
 // CNACommand
 // 	= "CNA"i msp op:ComparisonOp msp constrval:CNAType { return {"alteration_type":"cna", "constr_rel":op, "constr_val":constrval}; }
 //         / constrval:CNAType { return {"alteration_type":"cna", "constr_rel":"=", "constr_val":constrval}; }
-export declare type CNACommand = {alteration_type:'cna', constr_rel:ComparisonOp, constr_val:CNAType};
+export declare type CNACommand = {alteration_type:'cna', constr_rel:ComparisonOp | '=', constr_val:CNAType};
 //
 // MUTCommand
 // 	= "MUT" msp "=" msp mutation:Mutation { return {"alteration_type":"mut", "constr_rel": "=", "constr_type":mutation.type, "constr_val":mutation.value, "info":mutation.info}; }
