@@ -627,7 +627,7 @@ describe('oncoprint', function() {
             browser.url(CBIOPORTAL_URL);
             var input = $(".autosuggest input[type=text]");
             input.waitForExist(10000);
-            input.setValue('Ovarian');
+            input.setValue('ovarian nature 2011');
             browser.pause(500);
             // should only be one element
             assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
