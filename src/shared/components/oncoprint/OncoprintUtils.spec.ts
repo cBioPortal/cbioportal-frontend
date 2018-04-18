@@ -198,6 +198,27 @@ describe('OncoprintUtils', () => {
             assert.equal(track.label, 'HELLO');
             assert.equal(track.oql, '[BRCA1; PTEN;]');
         });
+
+        it('returns an expandable track if queried for a merged track', () => {
+            // given
+            const storeProperties = makeMinimal3Patient3GeneStoreProperties();
+            const queryData = {
+                cases: makeMinimal3Patient3GeneCaseData(),
+                oql: {
+                    list: [
+                        {gene: 'TTN', oql_line: 'TTN;', parsed_oql_line: {gene: 'TTN', alterations: []}, data: []}
+                    ]
+                }
+            };
+            // when
+            const trackFunction = makeGeneticTrackWith({
+                sampleMode: false,
+                ...storeProperties
+            });
+            const track = trackFunction(queryData, MINIMAL_TRACK_INDEX);
+            // then
+            assert.isFunction(track.expansionCallback);
+        });
     });
 
     describe('percentAltered', () => {

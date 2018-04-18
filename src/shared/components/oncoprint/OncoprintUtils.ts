@@ -319,7 +319,11 @@ export function makeGeneticTrackWith({
             label: formatGeneticTrackLabel(oql),
             oql: formatGeneticTrackOql(oql),
             info,
-            data
+            data,
+            expansionCallback: (isMergedTrackFilter(oql)
+                ? () => { /* TODO implement expansion */ }
+                : undefined
+            )
         };
     };
 }
