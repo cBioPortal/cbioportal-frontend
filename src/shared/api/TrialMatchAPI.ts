@@ -1,10 +1,5 @@
 import * as request from 'superagent';
-import {ITrialMatchGeneData} from "shared/model/TrialMatch.ts";
-import {ICivicGeneData} from "../model/Civic";
-
-type TrialMatchAPIGene = {
-    matches: TrialMatch[];
-};
+import {ITrialMatchData} from "shared/model/TrialMatch.ts";
 
 type TrialMatch = {
     nctID: string;
@@ -17,7 +12,6 @@ type TrialMatch = {
     trialStatus: string;
     oncogenicity: string;
     mutEffect: string;
-    [propName: string]: any;
 };
 
 
@@ -28,18 +22,27 @@ export default class TrialMatchAPI {
     /**
      * Retrieves the gene entries for the ids given, if they are in the Civic API.
      */
-    getTrialMatchGenesBatch(ids: string): Promise<ITrialMatchGeneData[]> {
-        return request.get('http://localhost:8082/api/matches/genes/' + ids)
+    getTrialMatchGenesBatch(id: string): Promise<ITrialMatchData[]> {
+        return request.get('http://localhost:8082/api/matches/genes/' + id)
             .then((res) => {
                 const response = res.body;
-                let result: TrialMatchAPIGene[];
+                let result: TrialMatch[];
                 if (response instanceof Array) {
                     result = response;
                 } else {
                     result = [response];
                 }
-                return result.map((record: TrialMatchAPIGene) => ({
-                    matches: record.matches
+                return result.map((record: TrialMatch) => ({
+                    nctID: record.nctID,
+                    trialTitle: record.trialTitle,
+                    code: record.code,
+                    matchType: record.matchType,
+                    matchLevel: record.matchLevel,
+                    proteinChange: record.proteinChange,
+                    dose: record.dose,
+                    trialStatus: record.trialStatus,
+                    oncogenicity: record.oncogenicity,
+                    mutEffect: record.mutEffect
                 }));
             });
     }

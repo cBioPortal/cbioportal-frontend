@@ -4,7 +4,7 @@ import { ICivicVariantData } from "shared/model/Civic.ts";
 import "./styles/trialCard.scss";
 import * as _ from "lodash";
 
-export interface ICivicCardProps {
+export interface ITrialCardProps {
     title: string;
     geneName: string;
     geneDescription: string;
@@ -12,7 +12,7 @@ export interface ICivicCardProps {
     variants: { [name: string]: ICivicVariantData };
 }
 
-export default class CivicCard extends React.Component<ICivicCardProps, {}> {
+export default class TrialCard extends React.Component<ITrialCardProps, {}> {
     constructor() {
         super();
     }
@@ -94,7 +94,8 @@ export default class CivicCard extends React.Component<ICivicCardProps, {}> {
                 <div className="trial-card-trial-header">
                     <span>
                     <a href="https://clinicaltrials.gov/ct2/show/NCT03297606"
-                       className="oncokb-logo">Canadian Profiling and Targeted Agent Utilization Trial(CAPTUR)
+                       className="oncokb-logo">Canadian Profiling and Targeted Agent Utilization Trial
+                        <img src={require("./images/open-sign.png")} className="trial-logo"/>
                     </a>
                     </span>
                 </div>
@@ -106,30 +107,19 @@ export default class CivicCard extends React.Component<ICivicCardProps, {}> {
                             <th key="match_level" scope="col">Gene</th>
                             <th key="alteration" scope="col">Alteration</th>
                             <th key="oncogenic" scope="col">Implication</th>
-                            <th key="mutation_effect" scope="col">Bio Effect</th>
+                            <th key="mutation_effect" scope="col">Effect</th>
                             <th key="dose" scope="col">Drug</th>
                         </tr>
                         </thead>
                         <tbody>
                         <tr>
                             <td>group2</td>
-                            <td>BRCA2</td>
-                            <td>S2835*</td>
+                            <td>ERBB2</td>
+                            <td>V777L</td>
                             <td>Oncogenic</td>
-                            <td>Loss of function</td>
+                            <td>Gain-of-function</td>
                             <td>
-                                <a href="https://www.drugbank.ca/drugs/DB09074">Olaparib
-                                </a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>group2</td>
-                            <td>TP53</td>
-                            <td>D281Y</td>
-                            <td>Oncogenic</td>
-                            <td>Loss of function</td>
-                            <td>
-                                <a href="https://www.drugbank.ca/drugs/DB09074">Olaparib
+                                <a href="https://www.drugbank.ca/drugs/DB09074">Olaparib if loss of function
                                 </a>
                             </td>
                         </tr>

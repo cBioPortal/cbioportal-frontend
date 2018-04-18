@@ -1,8 +1,4 @@
-export interface ITrialMatchGeneData {
-    matches: ITrialMatch[];
-}
-
-export interface ITrialMatch {
+export interface ITrialMatchData {
     nctID: string;
     trialTitle: string;
     code: string;
@@ -15,7 +11,7 @@ export interface ITrialMatch {
     mutEffect: string;
 }
 
-export interface ITrialMatchGene {[name: string]: ITrialMatchGeneData;}
+export interface ITrialMatchGeneData {[gene: string]: ITrialMatchData[];}
 
 export type MobXStatus = "pending" | "error" | "complete";
 
