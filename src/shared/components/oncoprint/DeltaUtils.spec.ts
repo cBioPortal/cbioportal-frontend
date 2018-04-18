@@ -1,11 +1,17 @@
 import {assert} from "chai";
 import {
     heatmapClusterValueFn, numTracksWhoseDataChanged, transitionSortConfig,
+    transition,
     transitionTrackGroupSortPriority
 } from "./DeltaUtils";
-import {spy} from "sinon";
+import {createStubInstance, SinonStub, spy} from "sinon";
 import OncoprintJS from "oncoprintjs";
-import {CLINICAL_TRACK_GROUP_INDEX, GENETIC_TRACK_GROUP_INDEX, IGeneHeatmapTrackSpec} from "./Oncoprint";
+import {
+    CLINICAL_TRACK_GROUP_INDEX,
+    GENETIC_TRACK_GROUP_INDEX,
+    IGeneHeatmapTrackSpec,
+    IOncoprintProps
+} from "./Oncoprint";
 
 describe("Oncoprint DeltaUtils", ()=>{
     describe("numTracksWhoseDataChanged", ()=>{
@@ -29,6 +35,59 @@ describe("Oncoprint DeltaUtils", ()=>{
                 assert.equal(numTracksWhoseDataChanged(state1.slice(i), state2.slice(i)), state1.length - i);
                 assert.equal(numTracksWhoseDataChanged(state2.slice(i), state1.slice(i)), state1.length - i);
             }
+        });
+    });
+
+    describe("transition", () => {
+        const makeMinimalOncoprintProps = (): IOncoprintProps => ({
+            clinicalTracks: [],
+            geneticTracks: [],
+            genesetHeatmapTracks: [],
+            heatmapTracks: [],
+            divId: 'myDomId',
+            width: 1000,
+        });
+        const makeMinimalProfileMap = () => undefined;
+
+        it("renders an expandable genetic track if an expansion callback is provided for it", () => {
+            // given a genetic track specification with an expandCallback
+            const expansionCallback = spy();
+            const newProps: IOncoprintProps = {
+                ...makeMinimalOncoprintProps(),
+                geneticTracks: [{
+                    key: 'GENETICTRACK_1',
+                    label: 'GENE1 / GENE2',
+                    oql: '[GENE1: AMP; GENE2: AMP;]',
+                    info: '10%',
+                    data: [],
+                    expansionCallback: expansionCallback
+                }]
+            };
+            const oncoprint: OncoprintJS<any> = createStubInstance(OncoprintJS);
+            (oncoprint.addTracks as SinonStub).returns([1]);
+            const trackIdsByKey = {};
+            // when instructed to render the track from scratch
+            transition(
+                newProps,
+                makeMinimalOncoprintProps(),
+                oncoprint,
+                () => trackIdsByKey,
+                () => makeMinimalProfileMap()
+            );
+            // then it adds a track with an expandCallback track property that
+            // calls the provided function
+            assert.isTrue((oncoprint.addTracks as SinonStub).called);
+            (oncoprint.addTracks as SinonStub).args.forEach(([trackParamArray]) => {
+                trackParamArray.forEach((trackParams: any) => {
+                    if (trackParams.expandCallback !== undefined) {
+                        trackParams.expandCallback();
+                    }
+                });
+            });
+            assert.isTrue(
+                expansionCallback.called,
+                'calling the expand callbacks of added tracks should invoke the one provided'
+            );
         });
     });
 

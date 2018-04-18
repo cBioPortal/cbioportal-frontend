@@ -76,6 +76,7 @@ export type GeneticTrackSpec = {
     oql: string; // OQL corresponding to the track
     info: string;
     data: GeneticTrackDatum[];
+    expansionCallback?: () => void;
 };
 
 interface IBaseHeatmapTrackSpec {
