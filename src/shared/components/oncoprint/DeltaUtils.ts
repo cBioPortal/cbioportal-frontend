@@ -343,7 +343,8 @@ function transitionTracks(
     const trackIdForRuleSetSharing = {
         genetic: undefined as undefined|TrackId,
         genesetHeatmap: undefined as undefined|TrackId,
-        heatmap: undefined as undefined|TrackId
+        heatmap: undefined as undefined|TrackId,
+        heatmap01:undefined as undefined|TrackId
     };
     const trackSpecKeyToTrackId = getTrackSpecKeyToTrackId();
     if (prevProps.geneticTracks && prevProps.geneticTracks.length && !hasGeneticTrackRuleSetChanged(nextProps, prevProps)) {
@@ -355,8 +356,21 @@ function transitionTracks(
         trackIdForRuleSetSharing.genesetHeatmap = trackSpecKeyToTrackId[prevProps.genesetHeatmapTracks[0].key];
     }
     if (prevProps.heatmapTracks && prevProps.heatmapTracks.length) {
-        // set rule set to existing track if there is one
-        trackIdForRuleSetSharing.heatmap = trackSpecKeyToTrackId[prevProps.heatmapTracks[0].key];
+        // set rule set to existing track if theres a track
+        let heatmap01;
+        let heatmap;
+        for (const spec of prevProps.heatmapTracks) {
+            if (heatmap01 === undefined && spec.molecularAlterationType === "METHYLATION") {
+                heatmap01 = trackSpecKeyToTrackId[spec.key];
+            } else if (heatmap === undefined) {
+                heatmap = trackSpecKeyToTrackId[spec.key];
+            }
+            if (heatmap01 !== undefined && heatmap !== undefined) {
+                break;
+            }
+        }
+        trackIdForRuleSetSharing.heatmap = heatmap;
+        trackIdForRuleSetSharing.heatmap01 = heatmap01;
     } else if (prevProps.genesetHeatmapTracks) {
         for (const gsTrack of prevProps.genesetHeatmapTracks) {
             if (gsTrack.expansionTrackList && gsTrack.expansionTrackList.length) {
@@ -658,7 +672,7 @@ function transitionHeatmapTrack(
     getTrackSpecKeyToTrackId:()=>{[key:string]:TrackId},
     oncoprint:OncoprintJS<any>,
     nextProps:IOncoprintProps,
-    trackIdForRuleSetSharing:{heatmap?:TrackId},
+    trackIdForRuleSetSharing:{heatmap?:TrackId, heatmap01?:TrackId},
     expansionParentKey?:string
 ) {
     const trackSpecKeyToTrackId = getTrackSpecKeyToTrackId();
@@ -667,7 +681,7 @@ function transitionHeatmapTrack(
     } else if (nextSpec && !prevSpec) {
         // Add track
         const heatmapTrackParams = {
-            rule_set_params: getHeatmapTrackRuleSetParams(),
+            rule_set_params: getHeatmapTrackRuleSetParams(nextSpec.molecularAlterationType),
             data: nextSpec.data,
             data_id_key: "uid",
             has_column_spacing: false,
@@ -695,10 +709,14 @@ function transitionHeatmapTrack(
         const newTrackId = oncoprint.addTracks([heatmapTrackParams])[0];
         trackSpecKeyToTrackId[nextSpec.key] = newTrackId;
 
-        if (typeof trackIdForRuleSetSharing.heatmap !== "undefined") {
-            oncoprint.shareRuleSet(trackIdForRuleSetSharing.heatmap, newTrackId);
+        let trackIdForRuleSetSharingKey:"heatmap"|"heatmap01" = "heatmap";
+        if (nextSpec.molecularAlterationType === "METHYLATION") {
+            trackIdForRuleSetSharingKey = "heatmap01";
         }
-        trackIdForRuleSetSharing.heatmap = newTrackId;
+        if (typeof trackIdForRuleSetSharing[trackIdForRuleSetSharingKey] !== "undefined") {
+            oncoprint.shareRuleSet(trackIdForRuleSetSharing[trackIdForRuleSetSharingKey]!, newTrackId);
+        }
+        trackIdForRuleSetSharing[trackIdForRuleSetSharingKey] = newTrackId;
     } else if (nextSpec && prevSpec) {
         // Transition track
         const trackId = trackSpecKeyToTrackId[nextSpec.key];

@@ -90,10 +90,16 @@ export function makeHeatmapTrackTooltip(genetic_alteration_type:MolecularProfile
     return function (d:any) {
         let data_header = '';
         let profile_data = 'N/A';
-        if (genetic_alteration_type === "MRNA_EXPRESSION") {
-            data_header = 'MRNA: ';
-        } else if (genetic_alteration_type === "PROTEIN_LEVEL") {
-            data_header = 'PROT: ';
+        switch(genetic_alteration_type) {
+            case "MRNA_EXPRESSION":
+                data_header = 'MRNA: ';
+                break;
+            case "PROTEIN_LEVEL":
+                data_header = 'PROT: ';
+                break;
+            case "METHYLATION":
+                data_header = 'METHYLATION: ';
+                break;
         }
         if ((d.profile_data !== null) && (typeof d.profile_data !== "undefined")) {
             profile_data = d.profile_data.toFixed(2);

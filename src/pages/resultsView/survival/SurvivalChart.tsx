@@ -30,6 +30,9 @@ export interface ISurvivalChartProps {
     xLabelWithEventTooltip: string;
     xLabelWithoutEventTooltip: string;
     fileName: string;
+    showTable: boolean;
+    showLegend: boolean;
+    showDownloadButtons: boolean;
 }
 
 @observer
@@ -142,17 +145,19 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
 
                 <div className="borderedChart" data-test={'SurvivalChart'} style={{width: 910}}>
 
-                    <div className="btn-group" style={{position:'absolute', zIndex:10, right:260 }} role="group">
-                        <button className={`btn btn-default btn-xs`} onClick={this.downloadSvg}>
-                            SVG <i className="fa fa-cloud-download" />
-                        </button>
-                        <button className={`btn btn-default btn-xs`} onClick={this.downloadPng}>
-                            PNG <i className="fa fa-cloud-download" />
-                        </button>
-                        <button className={`btn btn-default btn-xs`} onClick={this.downloadData}>
-                            Data <i className="fa fa-cloud-download" />
-                        </button>
-                    </div>
+                    {this.props.showDownloadButtons &&
+                        <div className="btn-group" style={{position:'absolute', zIndex:10, right:260 }} role="group">
+                            <button className={`btn btn-default btn-xs`} onClick={this.downloadSvg}>
+                                SVG <i className="fa fa-cloud-download" />
+                            </button>
+                            <button className={`btn btn-default btn-xs`} onClick={this.downloadPng}>
+                                PNG <i className="fa fa-cloud-download" />
+                            </button>
+                            <button className={`btn btn-default btn-xs`} onClick={this.downloadData}>
+                                Data <i className="fa fa-cloud-download" />
+                            </button>
+                        </div>
+                    }
 
                     <VictoryChart containerComponent={<VictoryContainer responsive={false} containerRef={(ref: any) => this.svgContainer = ref} />}
                         height={500} width={900} padding={{ top: 20, bottom: 50, left: 60, right: 300 }} theme={CBIOPORTAL_VICTORY_THEME}>
@@ -173,11 +178,13 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                             symbol="circle" style={{ data: { fill: "red", fillOpacity: (datum: any, active: any) => active ? 0.3 : 0 } }} size={10} events={events} />
                         <VictoryScatter data={getScatterData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)}
                             symbol="circle" style={{ data: { fill: "blue", fillOpacity: (datum: any, active: any) => active ? 0.3 : 0 } }} size={10} events={events} />
-                        <VictoryLegend x={600} y={40}
-                            data={[
-                                { name: this.alteredLegendText, symbol: { fill: "red", type: "square" } },
-                                { name: this.unalteredLegendText, symbol: { fill: "blue", type: "square" } },
-                                { name: `Logrank Test P-Value: ${this.logRank.toPrecision(3)}`, symbol: { opacity: 0 } }]} />
+                        {this.props.showLegend && 
+                            <VictoryLegend x={600} y={40}
+                                data={[
+                                    { name: this.alteredLegendText, symbol: { fill: "red", type: "square" } },
+                                    { name: this.unalteredLegendText, symbol: { fill: "blue", type: "square" } },
+                                    { name: `Logrank Test P-Value: ${this.logRank.toPrecision(3)}`, symbol: { opacity: 0 } }]} />
+                        }
                     </VictoryChart>
                 </div>
                 {this.tooltipModel &&
@@ -196,32 +203,32 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                         </div>
                     </Popover>
                 }
-
-                <table className="table table-striped" style={{marginTop:20, width: 910}}>
-                    <tbody>
-                        <tr>
-                            <td />
-                            <td>{this.props.totalCasesHeader}</td>
-                            <td>{this.props.statusCasesHeader}</td>
-                            <td>{this.props.medianMonthsHeader}</td>
-                        </tr>
-                        <tr>
-                            <td>{this.alteredLegendText}</td>
-                            {
-                                getStats(this.sortedAlteredPatientSurvivals, this.alteredEstimates).map(stat =>
-                                    <td><b>{stat}</b></td>)
-                            }
-                        </tr>
-                        <tr>
-                            <td>{this.unalteredLegendText}</td>
-                            {
-                                getStats(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates).map(stat =>
-                                    <td><b>{stat}</b></td>)
-                            }
-                        </tr>
-                    </tbody>
-                </table>
-
+                {this.props.showTable &&
+                    <table className="table table-striped" style={{marginTop:20, width: 910}}>
+                        <tbody>
+                            <tr>
+                                <td />
+                                <td>{this.props.totalCasesHeader}</td>
+                                <td>{this.props.statusCasesHeader}</td>
+                                <td>{this.props.medianMonthsHeader}</td>
+                            </tr>
+                            <tr>
+                                <td>{this.alteredLegendText}</td>
+                                {
+                                    getStats(this.sortedAlteredPatientSurvivals, this.alteredEstimates).map(stat =>
+                                        <td><b>{stat}</b></td>)
+                                }
+                            </tr>
+                            <tr>
+                                <td>{this.unalteredLegendText}</td>
+                                {
+                                    getStats(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates).map(stat =>
+                                        <td><b>{stat}</b></td>)
+                                }
+                            </tr>
+                        </tbody>
+                    </table>
+                }
             </div>
         );
     }

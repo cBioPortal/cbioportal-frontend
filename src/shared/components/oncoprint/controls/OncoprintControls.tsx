@@ -482,7 +482,6 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
         return (
             <CustomDropdown bsStyle="default" title="Sort" id="sortDropdown">
                 <div className="oncoprint__controls__sort_menu" data-test="oncoprintSortDropdownMenu">
-
                         <div className="radio"><label>
                             <input
                                 data-test="sortByData"

@@ -33,12 +33,6 @@ function sign(x: number): 0 | -1 | 1 {
     }
 };
 
-/**
- * Get genetic track sort comparator
- * @param {boolean} sortByMutationType
- * @param {boolean} sortByDrivers
- * @returns {{preferred: <GeneticTrackDatum>; mandatory: <GeneticTrackDatum>}}
- */
 export function getGeneticTrackSortComparator(sortByMutationType?: boolean, sortByDrivers?: boolean): {
     preferred:TrackSortVector<GeneticTrackDatum>,
     mandatory:TrackSortVector<GeneticTrackDatum>,
@@ -92,6 +86,7 @@ export function getGeneticTrackSortComparator(sortByMutationType?: boolean, sort
 
         return vector;
     }
+
     function mandatory(d:GeneticTrackDatum):number[] {
         return mandatoryHelper(d);
     }
