@@ -78,8 +78,11 @@ export function getGeneticTrackSortComparator(sortByMutationType?: boolean, sort
         // Next, CNA
         vector.push(cna_order[d.disp_cna+""]);
 
-        // Next, mutation type
+        // Next, mutation
+        // Mutation type
         vector.push(mut_order(d.disp_mut));
+        // Germline status
+        vector.push(germline_order[d.disp_germ + ""]);
 
         // Next, mrna expression
         vector.push(regulation_order[d.disp_mrna+""]);

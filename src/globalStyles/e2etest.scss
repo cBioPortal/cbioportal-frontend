@@ -1,0 +1,8 @@
+.e2etest {
+  input:focus, select:focus {
+    outline:none !important;
+    box-shadow:none !important;
+    border-color: $borderColor !important;
+  }
+}
+

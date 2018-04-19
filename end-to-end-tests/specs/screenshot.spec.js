@@ -60,7 +60,7 @@ function runResultsTestSuite(){
     it('survival tab', function(){
         browser.click("[href='#survival']");
         browser.waitForVisible('[data-test=SurvivalChart] svg',10000);
-        var res = browser.checkElement('#survival');
+        var res = browser.checkElement('#survival', { hide:['.qtip'] } );
         assertScreenShotMatch(res);
     });
 
@@ -182,7 +182,7 @@ describe('study view screenshot test', function(){
         browser.setViewportSize({ height: 1600, width: 1000 })
         browser.pause(5000);
 
-        var res = browser.checkElement('#page_wrapper_table', {hide:['.qtip'] });
+        var res = browser.checkElement('#page_wrapper_table', {hide:['.qtip', '#footer-span-version'] });
         assertScreenShotMatch(res);
     });
 });
