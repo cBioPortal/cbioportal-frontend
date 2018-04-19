@@ -601,6 +601,7 @@ describe('oncoprint', function() {
             // set threshold 1
             browser.execute(function() { resultsViewOncoprint.setAnnotateCBioPortalInputValue("1"); });
             browser.pause(100); // give time to take effect
+            waitForOncoprint(10000);
             let legendText = browser.getText("#oncoprint-inner svg");
             assert(legendText.indexOf("Inframe Mutation (putative driver)") > -1, "cbio count annotates inframe mutations");
             assert(legendText.indexOf("Missense Mutation (putative driver)") > -1, "cbio count annotates missense mutations");
@@ -612,6 +613,7 @@ describe('oncoprint', function() {
             // set threshold 1
             browser.execute(function() { resultsViewOncoprint.setAnnotateCOSMICInputValue("1"); });
             browser.pause(100); // give time to take effect
+            waitForOncoprint(10000);
             legendText = browser.getText("#oncoprint-inner svg");
             assert(legendText.indexOf("Inframe Mutation (putative driver)") > -1, "cosmic count annotates inframe mutations");
             assert(legendText.indexOf("Missense Mutation (putative driver)") > -1, "cosmic count annotates missense mutations");
@@ -627,7 +629,7 @@ describe('oncoprint', function() {
             browser.url(CBIOPORTAL_URL);
             var input = $(".autosuggest input[type=text]");
             input.waitForExist(10000);
-            input.setValue('ovarian serous cystadenocarcinoma tcga nature');
+            input.setValue('ovarian serous cystadenocarcinoma tcga nature 2011');
             browser.pause(500);
             // should only be one element
             assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
