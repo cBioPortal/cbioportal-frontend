@@ -111,7 +111,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     @observable sortMode:SortMode = {type:"data"};
 
     @observable distinguishMutationType:boolean = true;
-    @observable distinguishDrivers:boolean = true;
     @observable sortByMutationType:boolean = true;
     @observable sortByDrivers:boolean = true;
 
@@ -249,8 +248,14 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             get annotateDriversOncoKb() {
                 return self.props.store.mutationAnnotationSettings.oncoKb;
             },
+            get annotateDriversOncoKbDisabled() {
+                return self.props.store.didOncoKbFailInOncoprint;
+            },
             get annotateDriversHotspots() {
                 return self.props.store.mutationAnnotationSettings.hotspots;
+            },
+            get annotateDriversHotspotsDisabled() {
+                return false; // maybe we'll use this in future
             },
             get annotateDriversCBioPortal() {
                 return self.props.store.mutationAnnotationSettings.cbioportalCount;
@@ -347,6 +352,19 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         });
     }
 
+    @computed get distinguishDrivers() {
+        const anySelected = this.props.store.mutationAnnotationSettings.oncoKb ||
+            this.props.store.mutationAnnotationSettings.hotspots ||
+            this.props.store.mutationAnnotationSettings.cbioportalCount ||
+            this.props.store.mutationAnnotationSettings.cosmicCount ||
+            this.props.store.mutationAnnotationSettings.driverFilter ||
+            this.props.store.mutationAnnotationSettings.driverTiers.entries().reduce((oneSelected, nextEntry)=>{
+                return oneSelected || nextEntry[1];
+            }, false);
+
+        return anySelected;
+    }
+
     onMouseEnter(){
         this.mouseInsideBounds = true;
     }
@@ -378,22 +396,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }
 
     private buildControlsHandlers() {
-        const considerChangingDistinguishDrivers = action(()=>{
-            if (!this.props.store.mutationAnnotationSettings.oncoKb &&
-                !this.props.store.mutationAnnotationSettings.hotspots &&
-                !this.props.store.mutationAnnotationSettings.cbioportalCount &&
-                !this.props.store.mutationAnnotationSettings.cosmicCount &&
-                !this.props.store.mutationAnnotationSettings.driverFilter &&
-                !this.props.store.mutationAnnotationSettings.driverTiers.entries().reduce((oneSelected, nextEntry)=>{
-                    return oneSelected || nextEntry[1];
-                }, false)) {
-                this.distinguishDrivers = false;
-                this.props.store.mutationAnnotationSettings.ignoreUnknown = false;
-            } else {
-                this.distinguishDrivers = true;
-            }
-        });
-
         return {
             onSelectColumnType:(type:"sample"|"patient")=>{this.setColumnMode(type);},
             onSelectShowUnalteredColumns:(show:boolean)=>{this.showUnalteredColumns = show;},
@@ -402,8 +404,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             onSelectShowMinimap:(show:boolean)=>{this.showMinimap = show;},
             onSelectDistinguishMutationType:(s:boolean)=>{this.distinguishMutationType = s;},
             onSelectDistinguishDrivers:action((s:boolean)=>{
-                this.distinguishDrivers = s;
-                if (!this.distinguishDrivers) {
+                if (!s) {
                     this.props.store.mutationAnnotationSettings.oncoKb = false;
                     this.props.store.mutationAnnotationSettings.hotspots = false;
                     this.props.store.mutationAnnotationSettings.cbioportalCount = false;
@@ -414,8 +415,12 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                     });
                     this.props.store.mutationAnnotationSettings.ignoreUnknown = false;
                 } else {
-                    this.props.store.mutationAnnotationSettings.oncoKb = true;
-                    this.props.store.mutationAnnotationSettings.hotspots = true;
+                    if (!this.controlsState.annotateDriversOncoKbDisabled)
+                        this.props.store.mutationAnnotationSettings.oncoKb = true;
+
+                    if (!this.controlsState.annotateDriversHotspotsDisabled)
+                        this.props.store.mutationAnnotationSettings.hotspots = true;
+
                     this.props.store.mutationAnnotationSettings.cbioportalCount = true;
                     this.props.store.mutationAnnotationSettings.cosmicCount = true;
                     this.props.store.mutationAnnotationSettings.driverFilter = true;
@@ -426,19 +431,15 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             }),
             onSelectAnnotateOncoKb:action((s:boolean)=>{
                 this.props.store.mutationAnnotationSettings.oncoKb = s;
-                considerChangingDistinguishDrivers();
             }),
             onSelectAnnotateHotspots:action((s:boolean)=>{
                 this.props.store.mutationAnnotationSettings.hotspots = s;
-                considerChangingDistinguishDrivers();
             }),
             onSelectAnnotateCBioPortal:action((s:boolean)=>{
                 this.props.store.mutationAnnotationSettings.cbioportalCount = s;
-                considerChangingDistinguishDrivers();
             }),
             onSelectAnnotateCOSMIC:action((s:boolean)=>{
                 this.props.store.mutationAnnotationSettings.cosmicCount = s;
-                considerChangingDistinguishDrivers();
             }),
             onChangeAnnotateCBioPortalInputValue:action((s:string)=>{
                 this.props.store.mutationAnnotationSettings.cbioportalCountThreshold = parseInt(s, 10);
@@ -450,15 +451,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             }),
             onSelectCustomDriverAnnotationBinary:action((s:boolean)=>{
                 this.props.store.mutationAnnotationSettings.driverFilter = s;
-                if (this.props.store.mutationAnnotationSettings.driverFilter) {
-                    this.distinguishDrivers = true;
-                }
             }),
             onSelectCustomDriverAnnotationTier:action((value:string, checked:boolean)=>{
                 this.props.store.mutationAnnotationSettings.driverTiers.set(value, checked);
-                if (checked) {
-                    this.distinguishDrivers = true;
-                }
             }),
             onSelectHidePutativePassengers:(s:boolean)=>{
                 this.props.store.mutationAnnotationSettings.ignoreUnknown = s;
