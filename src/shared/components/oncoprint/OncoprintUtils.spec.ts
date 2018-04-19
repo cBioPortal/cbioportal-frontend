@@ -3,6 +3,7 @@ import {
     makeGeneticTrackWith,
     percentAltered
 } from "./OncoprintUtils";
+import {observable} from "mobx";
 import * as _ from 'lodash';
 import {assert} from 'chai';
 
@@ -116,7 +117,8 @@ describe('OncoprintUtils', () => {
             },
             sequencedSampleKeysByGene: {},
             sequencedPatientKeysByGene: {'BRCA1': [], 'PTEN': [], 'TP53': []},
-            selectedMolecularProfiles: []
+            selectedMolecularProfiles: [],
+            expansionIndexMap: observable.map<number[]>()
         });
         const makeMinimal3Patient3GeneCaseData = () => ({
             samples: {},
@@ -218,6 +220,33 @@ describe('OncoprintUtils', () => {
             const track = trackFunction(queryData, MINIMAL_TRACK_INDEX);
             // then
             assert.isFunction(track.expansionCallback);
+        });
+
+        it("makes the expansion callback for merged tracks list the track's subquery indexes in the expansion observable", () => {
+            // given
+            const storeProperties = makeMinimal3Patient3GeneStoreProperties();
+            const queryData = {
+                cases: makeMinimal3Patient3GeneCaseData(),
+                oql: {
+                    list: [
+                        {gene: 'FOLR1', oql_line: 'FOLR1;', parsed_oql_line: {gene: 'FOLR1', alterations: []}, data: []},
+                        {gene: 'FOLR2', oql_line: 'FOLR2;', parsed_oql_line: {gene: 'FOLR2', alterations: []}, data: []},
+                        {gene: 'IZUMO1R', oql_line: 'IZUMO1R;', parsed_oql_line: {gene: 'IZUMO1R', alterations: []}, data: []}
+                    ]
+                }
+            };
+            // when
+            const trackFunction = makeGeneticTrackWith({
+                sampleMode: false,
+                ...storeProperties,
+            });
+            const track = trackFunction(queryData, MINIMAL_TRACK_INDEX);
+            track.expansionCallback!();
+            // then
+            assert.includeMembers(
+                storeProperties.expansionIndexMap.get(track.key)!.slice(),
+                [0, 1, 2]
+            );
         });
     });
 
