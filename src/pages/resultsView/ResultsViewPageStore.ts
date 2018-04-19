@@ -6,7 +6,7 @@ import {
     MolecularDataMultipleStudyFilter, SampleFilter, MolecularProfileFilter, GenePanelMultipleStudyFilter, PatientFilter
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
-import {computed, observable, action} from "mobx";
+import {computed, observable, action, reaction, IObservable, IObservableValue, ObservableMap} from "mobx";
 import {remoteData, addErrorHandler} from "shared/api/remoteData";
 import {labelMobxPromises, cached, MobxPromise} from "mobxpromise";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
@@ -56,6 +56,7 @@ import {CosmicMutation} from "../../shared/api/generated/CBioPortalAPIInternal";
 import internalClient from "../../shared/api/cbioportalInternalClientInstance";
 import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
 import {getAlterationString} from "../../shared/lib/CopyNumberUtils";
+import {isRecurrentHotspot} from "../../shared/lib/AnnotationUtils";
 import memoize from "memoize-weak-decorator";
 import request from 'superagent';
 import {countMutations, mutationCountByPositionKey} from "./mutationCountHelpers";
@@ -209,6 +210,18 @@ export function extendSamplesWithCancerType(samples:Sample[], clinicalDataForSam
 
 }
 
+type MutationAnnotationSettings = {
+    ignoreUnknown: boolean;
+    cbioportalCount:boolean;
+    cbioportalCountThreshold:number;
+    cosmicCount:boolean;
+    cosmicCountThreshold:number;
+    driverFilter:boolean;
+    driverTiers:ObservableMap<boolean>;
+    hotspots:boolean;
+    oncoKb:boolean;
+};
+
 /* fields and methods in the class below are ordered based on roughly
 /* chronological setup concerns, rather than on encapsulation and public API */
 /* tslint:disable: member-ordering */
@@ -221,6 +234,42 @@ export class ResultsViewPageStore {
         //     this.ajaxErrors.push(error);
         // });
         this.getURL();
+
+        const store = this;
+
+        this.mutationAnnotationSettings = observable({
+            cbioportalCount: false,
+            cbioportalCountThreshold: 10,
+            cosmicCount: false,
+            cosmicCountThreshold: 10,
+            driverFilter: !!AppConfig.oncoprintCustomDriverAnnotationDefault,
+            driverTiers: observable.map<boolean>(),
+
+            hotspots:!AppConfig.oncoprintOncoKbHotspotsDefault,
+            _oncoKb:!AppConfig.oncoprintOncoKbHotspotsDefault,
+            _ignoreUnknown: !!AppConfig.oncoprintHideVUSDefault,
+
+            set oncoKb(val:boolean) {
+                this._oncoKb = val;
+            },
+            get oncoKb() {
+                return this._oncoKb && !store.didOncoKbFailInOncoprint;
+            },
+            set ignoreUnknown(val:boolean) {
+                this._ignoreUnknown = val;
+            },
+            get ignoreUnknown() {
+                const anySelected = store.mutationAnnotationSettings.oncoKb ||
+                    store.mutationAnnotationSettings.hotspots ||
+                    store.mutationAnnotationSettings.cbioportalCount ||
+                    store.mutationAnnotationSettings.cosmicCount ||
+                    store.mutationAnnotationSettings.driverFilter ||
+                    store.mutationAnnotationSettings.driverTiers.entries().reduce((oneSelected, nextEntry)=>{
+                        return oneSelected || nextEntry[1];
+                    }, false);
+                return this._ignoreUnknown && anySelected;
+            }
+        });
     }
 
     public queryStore: QueryStore;
@@ -245,17 +294,7 @@ export class ResultsViewPageStore {
 
     @observable selectedMolecularProfileIds: string[] = [];
 
-    @observable mutationAnnotationSettings = {
-        ignoreUnknown: AppConfig.oncoprintHideVUSDefault,
-        cbioportalCount: false,
-        cbioportalCountThreshold: 10,
-        cosmicCount: false,
-        cosmicCountThreshold: 10,
-        hotspots:!AppConfig.oncoprintOncoKbHotspotsDefault,
-        oncoKb:!AppConfig.oncoprintOncoKbHotspotsDefault,
-        driverFilter: AppConfig.oncoprintCustomDriverAnnotationDefault,
-        driverTiers: observable.map<boolean>()
-    };
+    public mutationAnnotationSettings:MutationAnnotationSettings;
 
     private getURL() {
         const shareURL = window.location.href;
@@ -1439,7 +1478,12 @@ export class ResultsViewPageStore {
             this.molecularProfileIdToMolecularProfile
         ],
         invoke:()=>{
-            const getOncoKbAnnotation = this.getOncoKbCnaAnnotationForOncoprint.result!;
+            let getOncoKbAnnotation:(datum:NumericGeneMolecularData)=>IndicatorQueryResp|undefined;
+            if (this.getOncoKbCnaAnnotationForOncoprint.result! instanceof Error) {
+                getOncoKbAnnotation = ()=>undefined;
+            } else {
+                getOncoKbAnnotation = this.getOncoKbCnaAnnotationForOncoprint.result! as typeof getOncoKbAnnotation;
+            }
             const profileIdToProfile = this.molecularProfileIdToMolecularProfile.result!;
             return Promise.resolve(this.molecularData.result!.map(d=>{
                     return annotateMolecularDatum(
@@ -1459,7 +1503,7 @@ export class ResultsViewPageStore {
                 toAwait.push(this.getOncoKbMutationAnnotationForOncoprint);
             }
             if (this.mutationAnnotationSettings.hotspots) {
-                toAwait.push(this.isHotspot);
+                toAwait.push(this.indexedHotspotData);
             }
             if (this.mutationAnnotationSettings.cbioportalCount) {
                 toAwait.push(this.getCBioportalCount);
@@ -1471,9 +1515,10 @@ export class ResultsViewPageStore {
         },
         invoke:()=>{
             return Promise.resolve((mutation:Mutation):{oncoKb:string, hotspots:boolean, cbioportalCount:boolean, cosmicCount:boolean, customDriverBinary:boolean, customDriverTier?:string}=>{
+                const getOncoKbMutationAnnotationForOncoprint = this.getOncoKbMutationAnnotationForOncoprint.result!;
                 const oncoKbDatum:IndicatorQueryResp | undefined | null | false = this.mutationAnnotationSettings.oncoKb &&
-                    this.getOncoKbMutationAnnotationForOncoprint.isComplete &&
-                    this.getOncoKbMutationAnnotationForOncoprint.result(mutation);
+                    (!(getOncoKbMutationAnnotationForOncoprint instanceof Error)) &&
+                    getOncoKbMutationAnnotationForOncoprint(mutation);
 
                 let oncoKb:string = "";
                 if (oncoKbDatum) {
@@ -1482,8 +1527,8 @@ export class ResultsViewPageStore {
 
                 const hotspots:boolean =
                     (this.mutationAnnotationSettings.hotspots &&
-                    this.isHotspot.isComplete &&
-                    this.isHotspot.result(mutation));
+                    this.indexedHotspotData.isComplete &&
+                    isRecurrentHotspot(mutation, this.indexedHotspotData.result!));
 
                 const cbioportalCount:boolean =
                     (this.mutationAnnotationSettings.cbioportalCount &&
@@ -1534,17 +1579,6 @@ export class ResultsViewPageStore {
         invoke: ()=>Promise.resolve(indexHotspotsData(this.hotspotData))
     });
 
-    public readonly isHotspot = remoteData({
-        await:()=>[
-            this.getOncoKbMutationAnnotationForOncoprint
-        ],
-        invoke:()=>{
-            return Promise.resolve((mutation:Mutation)=>{
-                const oncokbAnnotation = this.getOncoKbMutationAnnotationForOncoprint.result!(mutation);
-                return (oncokbAnnotation ? !!oncokbAnnotation.hotspot : false);
-            });
-        }
-    });
     //OncoKb
     readonly uniqueSampleKeyToTumorType = remoteData<{[uniqueSampleKey: string]: string}>({
         await:()=>[
@@ -1575,13 +1609,21 @@ export class ResultsViewPageStore {
 
     //we need seperate oncokb data because oncoprint requires onkb queries across cancertype
     //mutations tab the opposite
-    readonly oncoKbDataForOncoprint = remoteData<IOncoKbData>({
+    readonly oncoKbDataForOncoprint = remoteData<IOncoKbData|Error>({
         await: () => [
             this.mutations,
             this.uniqueSampleKeyToTumorType,
             this.oncoKbAnnotatedGenes
         ],
-        invoke: () => fetchOncoKbData({}, this.oncoKbAnnotatedGenes.result!, this.mutations),
+        invoke: async() => {
+            let result;
+            try {
+                result = await fetchOncoKbData({}, this.oncoKbAnnotatedGenes.result!, this.mutations)
+            } catch(e) {
+                result = new Error();
+            }
+            return result;
+        },
         onError: (err: Error) => {
             // fail silently, leave the error handling responsibility to the data consumer
         }
@@ -1604,53 +1646,75 @@ export class ResultsViewPageStore {
 
     //we need seperate oncokb data because oncoprint requires onkb queries across cancertype
     //mutations tab the opposite
-    readonly cnaOncoKbDataForOncoprint = remoteData<IOncoKbData>({
+    readonly cnaOncoKbDataForOncoprint = remoteData<IOncoKbData|Error>({
         await: ()=> [
             this.uniqueSampleKeyToTumorType,
             this.oncoKbAnnotatedGenes,
             this.molecularData,
             this.molecularProfileIdToMolecularProfile
         ],
-        invoke: () => fetchCnaOncoKbDataWithNumericGeneMolecularData(
-            {},
-            this.oncoKbAnnotatedGenes.result!,
-            this.molecularData,
-            this.molecularProfileIdToMolecularProfile.result!
-        )
+        invoke: async() => {
+            let result;
+            try {
+                result = await fetchCnaOncoKbDataWithNumericGeneMolecularData(
+                    {},
+                    this.oncoKbAnnotatedGenes.result!,
+                    this.molecularData,
+                    this.molecularProfileIdToMolecularProfile.result!
+                );
+            } catch(e) {
+                result = new Error();
+            }
+            return result;
+        }
     }, ONCOKB_DEFAULT);
 
-    readonly getOncoKbMutationAnnotationForOncoprint = remoteData<(mutation:Mutation)=>(IndicatorQueryResp|undefined)>({
+    @computed get didOncoKbFailInOncoprint() {
+        return this.getOncoKbMutationAnnotationForOncoprint.result instanceof Error;
+    }
+
+    readonly getOncoKbMutationAnnotationForOncoprint = remoteData<Error|((mutation:Mutation)=>(IndicatorQueryResp|undefined))>({
         await: ()=>[
             this.oncoKbDataForOncoprint
         ],
         invoke: ()=>{
-            return Promise.resolve((mutation:Mutation)=>{
-                const uniqueSampleKeyToTumorType = this.oncoKbDataForOncoprint.result.uniqueSampleKeyToTumorType!;
-                const id = generateQueryVariantId(
-                    mutation.entrezGeneId,
-                    cancerTypeForOncoKb(mutation.uniqueSampleKey, uniqueSampleKeyToTumorType),
-                    mutation.proteinChange,
-                    mutation.mutationType
-                );
-                return this.oncoKbDataForOncoprint.result!.indicatorMap![id];
-            });
+            const oncoKbDataForOncoprint = this.oncoKbDataForOncoprint.result!;
+            if (oncoKbDataForOncoprint instanceof Error) {
+                return Promise.resolve(new Error());
+            } else {
+                return Promise.resolve((mutation:Mutation)=>{
+                    const uniqueSampleKeyToTumorType = oncoKbDataForOncoprint.uniqueSampleKeyToTumorType!;
+                    const id = generateQueryVariantId(
+                        mutation.entrezGeneId,
+                        cancerTypeForOncoKb(mutation.uniqueSampleKey, uniqueSampleKeyToTumorType),
+                        mutation.proteinChange,
+                        mutation.mutationType
+                    );
+                    return oncoKbDataForOncoprint.indicatorMap![id];
+                });
+            }
         }
     });
 
-    readonly getOncoKbCnaAnnotationForOncoprint = remoteData({
+    readonly getOncoKbCnaAnnotationForOncoprint = remoteData<Error|((data:NumericGeneMolecularData)=>(IndicatorQueryResp|undefined))>({
         await: ()=>[
             this.cnaOncoKbDataForOncoprint
         ],
         invoke: ()=>{
-            return Promise.resolve((data:NumericGeneMolecularData)=>{
-                const uniqueSampleKeyToTumorType = this.cnaOncoKbDataForOncoprint.result.uniqueSampleKeyToTumorType!;
-                const id = generateQueryVariantId(
-                    data.entrezGeneId,
-                    cancerTypeForOncoKb(data.uniqueSampleKey, uniqueSampleKeyToTumorType),
-                    getAlterationString(data.value)
-                );
-                return this.cnaOncoKbDataForOncoprint.result!.indicatorMap![id];
-            });
+            const cnaOncoKbDataForOncoprint = this.cnaOncoKbDataForOncoprint.result!;
+            if (cnaOncoKbDataForOncoprint instanceof Error) {
+                return Promise.resolve(new Error());
+            } else {
+                return Promise.resolve((data:NumericGeneMolecularData)=>{
+                    const uniqueSampleKeyToTumorType = cnaOncoKbDataForOncoprint.uniqueSampleKeyToTumorType!;
+                    const id = generateQueryVariantId(
+                        data.entrezGeneId,
+                        cancerTypeForOncoKb(data.uniqueSampleKey, uniqueSampleKeyToTumorType),
+                        getAlterationString(data.value)
+                    );
+                    return cnaOncoKbDataForOncoprint.indicatorMap![id];
+                });
+            }
         }
     });
 
