@@ -27,7 +27,7 @@ import {
 } from "./DataUtils";
 import ResultsViewOncoprint from "./ResultsViewOncoprint";
 import _ from "lodash";
-import {action, runInAction} from "mobx";
+import {action, runInAction, ObservableMap} from "mobx";
 import {MobxPromise} from "mobxpromise";
 import GenesetCorrelatedGeneCache from "shared/cache/GenesetCorrelatedGeneCache";
 import Spec = Mocha.reporters.Spec;
@@ -282,6 +282,7 @@ interface IGeneticTrackAppState {
     sequencedSampleKeysByGene: any;
     sequencedPatientKeysByGene: any;
     selectedMolecularProfiles: MolecularProfile[];
+    expansionIndexMap: ObservableMap<number[]>;
 }
 export function makeGeneticTrackWith({
     sampleMode,
@@ -290,7 +291,8 @@ export function makeGeneticTrackWith({
     coverageInformation,
     sequencedSampleKeysByGene,
     sequencedPatientKeysByGene,
-    selectedMolecularProfiles
+    selectedMolecularProfiles,
+    expansionIndexMap
 }: IGeneticTrackAppState) {
     return (
         {cases: dataByCase, oql}: {
@@ -313,17 +315,18 @@ export function makeGeneticTrackWith({
             sequencedSampleKeysByGene,
             sequencedPatientKeysByGene
         ).percent;
-
+        const trackKey = `GENETICTRACK_${index}`;
+        const expansionCallback = (isMergedTrackFilter(oql)
+            ? () => { expansionIndexMap.set(trackKey, _.range(oql.list.length)); }
+            : undefined
+        );
         return {
-            key: `GENETICTRACK_${index}`,
+            key: trackKey,
             label: formatGeneticTrackLabel(oql),
             oql: formatGeneticTrackOql(oql),
             info,
             data,
-            expansionCallback: (isMergedTrackFilter(oql)
-                ? () => { /* TODO implement expansion */ }
-                : undefined
-            )
+            expansionCallback
         };
     };
 }
@@ -348,7 +351,8 @@ export function makeGeneticTracksMobxPromise(oncoprint:ResultsViewOncoprint, sam
                     coverageInformation: oncoprint.props.store.coverageInformation.result!,
                     sequencedSampleKeysByGene: oncoprint.props.store.sequencedSampleKeysByGene.result!,
                     sequencedPatientKeysByGene: oncoprint.props.store.sequencedPatientKeysByGene.result!,
-                    selectedMolecularProfiles: oncoprint.props.store.selectedMolecularProfiles.result!
+                    selectedMolecularProfiles: oncoprint.props.store.selectedMolecularProfiles.result!,
+                    expansionIndexMap: oncoprint.expansionsByGeneticTrackKey
                 })
             );
         },
