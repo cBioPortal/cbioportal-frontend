@@ -393,7 +393,7 @@ describe("results page", function() {
     describe("mutual exclusivity tab", function() {
         it("should appear in a single study query with multiple genes", function(){
             browser.url(`${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%2520NRAS%2520BRAF%250APTEN%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`);
-            browser.waitForExist('li a#oncoprint-result-tab', 10000);
+            waitForOncoprint(10000);
 
             assert(browser.isVisible('li a#mutex-result-tab'));
         });
@@ -405,11 +405,11 @@ describe("results page", function() {
         });
         it("should not appear in a single study query with one gene", function(){
             browser.url(`${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`);
-            browser.waitForExist('li a#oncoprint-result-tab', 10000);
+            waitForOncoprint(10000);
             assert(!browser.isVisible('li a#mutex-result-tab'));
 
             browser.url(`${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`);
-            browser.waitForExist('li a#oncoprint-result-tab', 10000);
+            waitForOncoprint(10000);
             assert(!browser.isVisible('li a#mutex-result-tab'));
         });
         it.skip("should not appear in a multiple study query with one gene", function() {
@@ -627,7 +627,7 @@ describe('oncoprint', function() {
             browser.url(CBIOPORTAL_URL);
             var input = $(".autosuggest input[type=text]");
             input.waitForExist(10000);
-            input.setValue('ovarian nature 2011');
+            input.setValue('ovarian serous cystadenocarcinoma tcga nature 2011');
             browser.pause(500);
             // should only be one element
             assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);

@@ -1,5 +1,5 @@
 import * as React from "react";
-import OncoprintJS, {TrackId, TrackSpec} from "oncoprintjs";
+import OncoprintJS, {TrackId} from "oncoprintjs";
 import {GenePanelData, MolecularProfile} from "../../api/generated/CBioPortalAPI";
 import {observer} from "mobx-react";
 import {computed} from "mobx";

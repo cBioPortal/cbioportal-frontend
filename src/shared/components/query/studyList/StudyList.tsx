@@ -134,7 +134,7 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}>
 						</span>
                             {!!(!this.store.forDownloadTab) && (
                                 <span className={styles.SelectAll}>
-                                    {_.intersection(childStudyIds, this.store.selectedStudyIds).length ?
+                                    {_.intersection(childStudyIds, this.store.selectableSelectedStudyIds).length ?
                                         'Deselect All' : 'Select All'}
                                 </span>
                             )}
