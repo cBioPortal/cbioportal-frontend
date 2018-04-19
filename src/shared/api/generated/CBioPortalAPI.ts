@@ -248,6 +248,8 @@ export type GenePanelData = {
 
         'patientId': string
 
+        'profiled': boolean
+
         'sampleId': string
 
         'studyId': string
@@ -255,8 +257,6 @@ export type GenePanelData = {
         'uniquePatientKey': string
 
         'uniqueSampleKey': string
-
-        'wholeExomeSequenced': boolean
 
 };
 export type GenePanelDataFilter = {
