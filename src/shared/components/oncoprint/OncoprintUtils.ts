@@ -7,13 +7,13 @@ import {
     IGenesetHeatmapTrackDatum,
     IGenesetHeatmapTrackSpec,
 } from "./Oncoprint";
-import {ClinicalAttribute} from "../../api/generated/CBioPortalAPI";
 import {genetic_rule_set_same_color_for_all_no_recurrence,
     genetic_rule_set_same_color_for_all_recurrence,
     genetic_rule_set_different_colors_no_recurrence,
     genetic_rule_set_different_colors_recurrence} from "./geneticrules";
 import {OncoprintPatientGeneticTrackData, OncoprintSampleGeneticTrackData} from "../../lib/QuerySession";
 import {
+    AlterationTypeConstants,
     AnnotatedExtendedAlteration,
     AnnotatedMutation, CaseAggregatedData, ExtendedAlteration,
     ResultsViewPageStore
@@ -32,6 +32,7 @@ import {SpecialAttribute} from "shared/cache/ClinicalDataCache";
 import GenesetCorrelatedGeneCache from "shared/cache/GenesetCorrelatedGeneCache";
 import Spec = Mocha.reporters.Spec;
 import {OQLLineFilterOutput} from "../../lib/oql/oqlfilter";
+import {ClinicalAttribute} from "../../api/generated/CBioPortalAPI";
 
 interface IGenesetExpansionMap {
         [genesetTrackKey: string]: IGeneHeatmapTrackSpec[];
@@ -107,14 +108,29 @@ export function doWithRenderingSuppressedAndSortingOff(oncoprint:OncoprintJS<any
     oncoprint.releaseRendering();
 }
 
-export function getHeatmapTrackRuleSetParams() {
+export function getHeatmapTrackRuleSetParams(molecularAlterationType: string) {
+    let value_range:[number, number];
+    let legend_label:string;
+    let colors:number[][];
+    let value_stop_points:number[];
+    if (molecularAlterationType === "METHYLATION") {
+        value_range = [0,1];
+        legend_label = "Methylation Heatmap";
+        value_stop_points = [0,1];
+        colors = [[0,0,0,1], [255,0,0,1]];
+    } else {
+        value_range = [-3,3];
+        legend_label = "Expression Heatmap";
+        value_stop_points = [-3, 0, 3];
+        colors = [[0,0,255,1], [0,0,0,1], [255,0,0,1]];
+    }
     return {
         type: 'gradient' as 'gradient',
-        legend_label: 'Expression Heatmap',
-        value_key: 'profile_data',
-        value_range: [-3,3] as [number, number],
-        colors: [[0,0,255,1], [0,0,0,1], [255,0,0,1]],
-        value_stop_points: [-3, 0, 3],
+        legend_label,
+        value_key: "profile_data",
+        value_range,
+        colors,
+        value_stop_points,
         null_color: 'rgba(224,224,224,1)'
     };
 }
@@ -504,7 +520,7 @@ export function makeGenesetHeatmapTracksMobxPromise(
                         sampleMode ? samples : patients,
                         // TODO: GenesetMolecularData still has type value of
                         // string, other NumericGeneMolecularData have number
-                        dataCache.get({molecularProfileId, genesetId})!.data!.map((d) => Object.assign(d, {'value':parseFloat(d.value!)}))
+                        dataCache.get({molecularProfileId, genesetId})!.data!.map(d => ({...d!, value: parseFloat(d.value!)}))
                     ),
                     trackGroupIndex: trackGroup,
                     expansionCallback: makeGenesetHeatmapExpandHandler(
