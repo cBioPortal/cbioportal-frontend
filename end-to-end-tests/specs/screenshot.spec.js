@@ -2,9 +2,11 @@ var assert = require('assert');
 var expect = require('chai').expect;
 var waitForOncoprint = require('./specUtils').waitForOncoprint;
 var goToUrlAndSetLocalStorage = require('./specUtils').goToUrlAndSetLocalStorage;
+var sessionServiceIsEnabled = require('./specUtils').sessionServiceIsEnabled;
 var assertScreenShotMatch = require('../lib/testUtils').assertScreenShotMatch;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
+
 
 function runResultsTestSuite(){
 
@@ -170,8 +172,12 @@ describe('result page tabs, loading from session id', function(){
     before(function(){
         var url = `${CBIOPORTAL_URL}/index.do?session_id=596f9fa3498e5df2e292bdfd`;
         goToUrlAndSetLocalStorage(url);
+
+        // only run these tests if session service is enabled
+        if (sessionServiceIsEnabled() === false) {
+            this.skip();
+        }
     });
 
     runResultsTestSuite();
-
 });
