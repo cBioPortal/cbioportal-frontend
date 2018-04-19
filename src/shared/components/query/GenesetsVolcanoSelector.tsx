@@ -83,7 +83,7 @@ export default class GenesetsVolcanoSelector extends QueryStoreComponent<Geneset
                 </span>
                     <LoadingIndicator isLoading={!(this.props.plotData && this.props.maxY
                         && this.store.volcanoPlotTableData.isComplete && this.props.data)} />
-                {  (this.store.volcanoPlotGraphData) && (this.store.maxYVolcanoPlot)
+                {  (this.store.volcanoPlotGraphData) && (this.store.minYVolcanoPlot)
                     && (this.props.plotData) && (this.props.maxY)
                     && (this.store.volcanoPlotTableData.isComplete) && (this.props.data) && (
                 <VictoryChart
