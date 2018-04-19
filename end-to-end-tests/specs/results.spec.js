@@ -14,6 +14,7 @@ describe('Results Page', function() {
         var url = `${CBIOPORTAL_URL}`;
         browser.url(url);
         browser.localStorage('POST', {key: 'localdev', value: 'true'});
+        browser.localStorage('POST', {key: 'e2etest', value: 'true'});
         browser.refresh();
     });
 
@@ -82,8 +83,8 @@ describe('Results Page', function() {
                 assertScreenShotMatch(res);
             });
         });
-        
-       
+
+
         describe('customization functionality', ()=>{
             before(()=>{
                 var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=brca_metabric&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=brca_metabric_cnaseq&gene_list=CDKN2A%2520MDM2%2520MDM4%2520TP53&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=brca_metabric_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=brca_metabric_cna#pancancer_study_summary`;
@@ -135,3 +136,5 @@ describe('Results Page', function() {
     });
 
 });
+
+
