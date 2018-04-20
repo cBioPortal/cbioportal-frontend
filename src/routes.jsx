@@ -19,6 +19,7 @@ import ResultsViewPage from 'bundle-loader?lazy!babel-loader!./pages/resultsView
 import HomePage from 'bundle-loader?lazy!babel-loader!./pages/home/HomePage';
 import TestimonialsPage from 'pages/staticPages/testimonialsPage/TestimonialsPage';
 import DatasetPage from 'bundle-loader?lazy!babel-loader!./pages/datasetView/DatasetPage';
+import StudyViewPage from 'bundle-loader?lazy!babel-loader!./pages/studyView/StudyViewPage';
 import './globalComponents';
 
 // accepts bundle-loader's deferred loader function and defers execution of route's render
@@ -56,6 +57,7 @@ export const makeRoutes = (routing) => {
         <Route path="/testimonials" component={TestimonialsPage}/>
         <Route path="/blank" component={getBlankPage}/>
         <Route path="/results" getComponent={lazyLoadComponent(ResultsViewPage)} />
+        <Route path="/study" getComponent={lazyLoadComponent(StudyViewPage)} />
         <IndexRedirect to={defaultRoute}/>
     </Route>)
 };
