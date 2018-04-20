@@ -28,3 +28,5 @@ declare module 'svgsaver';
 declare module 'addthis-snippet';
 declare module 'd3-dsv';
 declare module 'victory';
+declare module 'universal-ga';
+declare module 'mixpanel-browser';
