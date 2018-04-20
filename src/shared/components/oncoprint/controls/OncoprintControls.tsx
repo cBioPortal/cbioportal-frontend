@@ -20,6 +20,7 @@ import EditableSpan from "shared/components/editableSpan/EditableSpan";
 import FadeInteraction from "shared/components/fadeInteraction/FadeInteraction";
 import './styles.scss';
 import {SpecialAttribute} from "../../../cache/ClinicalDataCache";
+import ErrorIcon from "../../ErrorIcon";
 const CheckedSelect = require("react-select-checked").CheckedSelect;
 import classNames from "classnames";
 
@@ -72,7 +73,9 @@ export interface IOncoprintControlsState {
     sortByDrivers?:boolean,
     sortByCaseListDisabled?:boolean,
     annotateDriversOncoKb?:boolean,
+    annotateDriversOncoKbDisabled?:boolean;
     annotateDriversHotspots?:boolean,
+    annotateDriversHotspotsDisabled?:boolean,
     annotateDriversCBioPortal?:boolean,
     annotateDriversCOSMIC?:boolean,
     hidePutativePassengers?:boolean,
@@ -576,7 +579,9 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                                     checked={this.props.state.annotateDriversOncoKb}
                                     onClick={this.onInputClick}
                                     data-test="annotateOncoKb"
+                                    disabled={this.props.state.annotateDriversOncoKbDisabled}
                                 />
+                                {this.props.state.annotateDriversOncoKbDisabled && <ErrorIcon style={{marginRight:4}} tooltip={<span>Error loading OncoKb data. Please refresh the page or try again later.</span>}/>}
                                 <DefaultTooltip
                                     overlay={<span>Oncogenicity from OncoKB</span>}
                                     placement="top"
@@ -595,7 +600,10 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                                     checked={this.props.state.annotateDriversHotspots}
                                     onClick={this.onInputClick}
                                     data-test="annotateHotspots"
-                                /> Hotspots
+                                    disabled={this.props.state.annotateDriversHotspotsDisabled}
+                                />
+                                {this.props.state.annotateDriversHotspotsDisabled && <ErrorIcon style={{marginRight:4}} tooltip={<span>Error loading Hotspots data. Please refresh the page or try again later.</span>}/>}
+                                Hotspots
                                 <DefaultTooltip
                                     overlay={<div style={{maxWidth:"400px"}}>Identified as a recurrent hotspot (statistically significant) in a population-scale cohort of tumor samples of various cancer types using methodology based in part on <a href="http://www.ncbi.nlm.nih.gov/pubmed/26619011" target="_blank">Chang et al., Nat Biotechnol, 2016.</a>
                                         Explore all mutations at <a href="http://www.cancerhotspots.org" target="_blank">http://cancerhotspots.org</a></div>}
