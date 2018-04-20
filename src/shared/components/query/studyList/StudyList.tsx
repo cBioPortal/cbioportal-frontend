@@ -12,6 +12,7 @@ import {QueryStoreComponent} from "../QueryStore";
 import DefaultTooltip from "../../defaultTooltip/DefaultTooltip";
 import {FilteredCancerTreeView} from "../StudyListLogic";
 import {CancerTreeNode} from "../CancerStudyTreeData";
+import { Link } from "react-router";
 
 const styles = {
 	...styles_any as {
@@ -331,9 +332,9 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}>
                                 >View study summary</div>
                             }
                         >
-						    <span onClick={()=>openStudySummaryFormSubmit(study.studyId)}
-						        className={ classNames(styles.summaryIcon, 'ci ci-pie-chart')}>
-					        </span>
+							<Link to={`/study?studyId=${study.studyId}`}  target="_blank">
+								<span className={ classNames(styles.summaryIcon, 'ci ci-pie-chart')} />
+							</Link>
 						</DefaultTooltip>
                     )}
                 </span>
