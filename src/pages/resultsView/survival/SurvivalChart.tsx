@@ -5,6 +5,7 @@ import { computed, observable } from "mobx";
 import { Popover, Table } from 'react-bootstrap';
 import styles from "./styles.module.scss";
 import { sleep } from "../../../shared/lib/TimeUtils";
+import * as _ from 'lodash';
 import {
     VictoryChart, VictoryContainer, VictoryLine, VictoryTooltip,
     VictoryAxis, VictoryLegend, VictoryLabel, VictoryScatter, VictoryTheme
@@ -30,9 +31,44 @@ export interface ISurvivalChartProps {
     xLabelWithEventTooltip: string;
     xLabelWithoutEventTooltip: string;
     fileName: string;
-    showTable: boolean;
-    showLegend: boolean;
-    showDownloadButtons: boolean;
+    showTable?: boolean;
+    showLegend?: boolean;
+    showDownloadButtons?: boolean;
+    styleOpts?: ConfigurableSurvivalChartStyleOpts;
+}
+
+type AxisStyleOpts = {
+    ticks: {
+        size: number,
+        stroke: string,
+        strokeWidth: number
+    },
+    tickLabels: {
+        padding: number, fill: string
+    },
+    axisLabel: {
+        padding: number, fill: string
+    },
+    grid: { opacity: number },
+    axis: { stroke: string, strokeWidth: number }
+}
+type StyleOpts = {
+    width: number,
+    height: number,
+    padding: { top: number, bottom: number, left: number, right: number },
+    axis: {
+        x: AxisStyleOpts,
+        y: AxisStyleOpts
+    },
+    legend: {
+        x: number
+        y: number
+    }
+}
+
+export type ConfigurableSurvivalChartStyleOpts = {
+    width?: number,
+    height?: number,
 }
 
 @observer
@@ -45,6 +81,61 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
     private unalteredLegendText = 'Cases without Alteration(s) in Query Gene(s)';
     private svgContainer: any;
     private svgsaver = new SvgSaver();
+    private styleOptsDefaultProps:StyleOpts = {
+        width: 900,
+        height: 500,
+        padding: {top: 20, bottom: 50, left: 60, right: 20},
+        axis: {
+            x: {
+                ticks: {
+                    size: 8,
+                    stroke: 'black',
+                    strokeWidth: 1
+                },
+                tickLabels: {
+                    padding: 2, fill: "black"
+                },
+                axisLabel: {
+                    padding: 35, fill: "black"
+                },
+                grid: {opacity: 0},
+                axis: {stroke: "black", strokeWidth: 1}
+            },
+            y: {
+                ticks: {
+                    size: 8,
+                    stroke: 'black',
+                    strokeWidth: 1
+                },
+                tickLabels: {
+                    padding: 2, fill: "black"
+                },
+                axisLabel: {
+                    padding: 45, fill: "black"
+                },
+                grid: {opacity: 0},
+                axis: {stroke: "black", strokeWidth: 1}
+            }
+        },
+        legend: {
+            x: 600,
+            y: 40
+        }
+    };
+
+    @computed
+    get styleOpts() {
+        let configurableOpts: StyleOpts = _.merge({}, this.styleOptsDefaultProps, this.props.styleOpts);
+        configurableOpts.padding.right = this.props.showLegend ? 300 : configurableOpts.padding.right;
+        configurableOpts.legend.x = configurableOpts.width - configurableOpts.padding.right;
+        return configurableOpts;
+    }
+
+    public static defaultProps: Partial<ISurvivalChartProps> = {
+        showTable: true,
+        showLegend: true,
+        showDownloadButtons: true
+    };
 
     constructor(props: ISurvivalChartProps) {
         super(props);
@@ -141,12 +232,12 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
 
         return (
 
-            <div className="posRelative">
+            <div className="posRelative" style={{width: (this.styleOpts.width + 20)}}>
 
-                <div className="borderedChart" data-test={'SurvivalChart'} style={{width: 910}}>
+                <div className="borderedChart" data-test={'SurvivalChart'} style={{width: '100%'}}>
 
                     {this.props.showDownloadButtons &&
-                        <div className="btn-group" style={{position:'absolute', zIndex:10, right:260 }} role="group">
+                        <div className="btn-group" style={{position:'absolute', zIndex:10, right: 10 }} role="group">
                             <button className={`btn btn-default btn-xs`} onClick={this.downloadSvg}>
                                 SVG <i className="fa fa-cloud-download" />
                             </button>
@@ -159,17 +250,20 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                         </div>
                     }
 
-                    <VictoryChart containerComponent={<VictoryContainer responsive={false} containerRef={(ref: any) => this.svgContainer = ref} />}
-                        height={500} width={900} padding={{ top: 20, bottom: 50, left: 60, right: 300 }} theme={CBIOPORTAL_VICTORY_THEME}>
-                        <VictoryAxis style={{ ticks: { size: 8, stroke: "black" }, tickLabels: { padding: 2, fill: "black" }, axisLabel: { padding: 35, fill: "black" },
-                            grid: { opacity: 0 }, axis: {stroke: "black", strokeWidth: 1} }} crossAxis={false} tickCount={11} label={this.props.xAxisLabel} />
-                        <VictoryAxis label={this.props.yAxisLabel} dependentAxis={true} tickFormat={(t: any) => `${t}%`} tickCount={11}
-                            style={{ ticks: { size: 8, stroke: "black" }, tickLabels: { padding: 2, fill: "black" }, axisLabel: { padding: 45, fill: "black" },
-                            grid: { opacity: 0 }, axis: {stroke: "black", strokeWidth: 1} }} domain={[0, 100]} crossAxis={false} />
-                        <VictoryLine interpolation="stepAfter" data={getLineData(this.sortedAlteredPatientSurvivals, this.alteredEstimates)}
-                            style={{ data: { stroke: "red", strokeWidth: 1 } }} />
-                        <VictoryLine interpolation="stepAfter" data={getLineData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)}
-                            style={{ data: { stroke: "blue", strokeWidth: 1 } }} />
+                    <VictoryChart containerComponent={<VictoryContainer responsive={false}
+                                                                        containerRef={(ref: any) => this.svgContainer = ref}/>}
+                                  height={this.styleOpts.height} width={this.styleOpts.width} padding={this.styleOpts.padding}
+                                  theme={CBIOPORTAL_VICTORY_THEME}>
+                        <VictoryAxis style={this.styleOpts.axis.x} crossAxis={false} tickCount={11} label={this.props.xAxisLabel}/>
+                        <VictoryAxis label={this.props.yAxisLabel} dependentAxis={true} tickFormat={(t: any) => `${t}%`}
+                                     tickCount={11}
+                                     style={this.styleOpts.axis.y} domain={[0, 100]} crossAxis={false}/>
+                        <VictoryLine interpolation="stepAfter"
+                                     data={getLineData(this.sortedAlteredPatientSurvivals, this.alteredEstimates)}
+                                     style={{data: {stroke: "red", strokeWidth: 1}}}/>
+                        <VictoryLine interpolation="stepAfter"
+                                     data={getLineData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)}
+                                     style={{data: {stroke: "blue", strokeWidth: 1}}}/>
                         <VictoryScatter data={getScatterDataWithOpacity(this.sortedAlteredPatientSurvivals, this.alteredEstimates)}
                             symbol="plus" style={{ data: { fill: "red" } }} size={3} />
                         <VictoryScatter data={getScatterDataWithOpacity(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)}
@@ -178,8 +272,8 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                             symbol="circle" style={{ data: { fill: "red", fillOpacity: (datum: any, active: any) => active ? 0.3 : 0 } }} size={10} events={events} />
                         <VictoryScatter data={getScatterData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)}
                             symbol="circle" style={{ data: { fill: "blue", fillOpacity: (datum: any, active: any) => active ? 0.3 : 0 } }} size={10} events={events} />
-                        {this.props.showLegend && 
-                            <VictoryLegend x={600} y={40}
+                        {this.props.showLegend &&
+                            <VictoryLegend x={this.styleOpts.legend.x} y={this.styleOpts.legend.y}
                                 data={[
                                     { name: this.alteredLegendText, symbol: { fill: "red", type: "square" } },
                                     { name: this.unalteredLegendText, symbol: { fill: "blue", type: "square" } },
@@ -204,7 +298,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                     </Popover>
                 }
                 {this.props.showTable &&
-                    <table className="table table-striped" style={{marginTop:20, width: 910}}>
+                    <table className="table table-striped" style={{marginTop:20, width: '100%'}}>
                         <tbody>
                             <tr>
                                 <td />
