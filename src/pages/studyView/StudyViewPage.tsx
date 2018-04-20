@@ -584,6 +584,13 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                            yLabelTooltip="Survival estimate"
                            xLabelWithEventTooltip="Time of death"
                            xLabelWithoutEventTooltip="Time of last observation"
+                           showDownloadButtons={false}
+                           showTable={false}
+                           showLegend={false}
+                           styleOpts={{
+                               width: 500,
+                               height: 300
+                           }}
                            fileName="Overall_Survival"/>
         </div>
     }
