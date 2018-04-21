@@ -15,6 +15,7 @@ import { getHost } from './shared/api/urls';
 import { validateParametersPatientView } from './shared/lib/validateParameters';
 import AppConfig from "appConfig";
 import browser from 'bowser';
+import './shared/lib/tracking';
 
 if (localStorage.localdev === 'true') {
     __webpack_public_path__ = "//localhost:3000/"
