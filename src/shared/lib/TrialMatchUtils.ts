@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
-import {ICivicGene, ICivicGeneData, ICivicVariant, ICivicVariantData} from "shared/model/Civic.ts";
-import civicClient from "shared/api/civicClientInstance";
+import {ITrialMatchGene, ITrialMatchGeneData, ITrialMatchVariant, ITrialMatchVariantData} from "shared/model/TrialMatch.ts";
+import trialMatchClient from "shared/api/trialMatchClientInstance";
 import { DiscreteCopyNumberData } from "shared/api/generated/CBioPortalAPI";
 
 type MutationSpec = {gene:{hugoGeneSymbol: string}, proteinChange: string};
@@ -8,9 +8,10 @@ type MutationSpec = {gene:{hugoGeneSymbol: string}, proteinChange: string};
 /**
  * Asynchronously adds the given variant from a gene to the variant map specified.
  */
-function addCivicVariant(variantMap: ICivicVariant, variantId: number, variantName: string, geneSymbol: string, geneId: number): Promise<void> {
-    return civicClient.getVariant(variantId, variantName, geneId)
-        .then(function(result: ICivicVariantData) {
+function addTrialMatchVariant(variantMap: ITrialMatchVariant, variantId: string,
+                              variantName: string, geneSymbol: string): Promise<void> {
+    return trialMatchClient.getVariant(variantId, variantName, geneSymbol)
+        .then(function(result: ITrialMatchVariantData) {
             if (result) {
                 if (!variantMap[geneSymbol]) {
                     variantMap[geneSymbol] = {};
@@ -21,20 +22,20 @@ function addCivicVariant(variantMap: ICivicVariant, variantId: number, variantNa
 }
 
 /**
- * Asynchronously return a map with Civic information from the genes given.
+ * Asynchronously return a map with Trial Match information from the genes given.
  */
-export function getCivicGenes(geneSymbols: Array<string>): Promise<ICivicGene> {
+export function getTrialMatchGenes(geneSymbols: Array<string>): Promise<ITrialMatchGene> {
 
-    let civicGenes: ICivicGene = {};
+    const trialMatchGenes: ITrialMatchGene = {};
 
     // Assemble a list of promises, each of which will retrieve a batch of genes
-    let promises: Array<Promise<Array<ICivicGeneData>>> = [];
-    let ids: Array<String> = [];
+    let promises: Array<Promise<Array<ITrialMatchGeneData>>> = [];
+    let ids: Array<string> = [];
     geneSymbols.forEach(function(geneSymbol: string) {
         //Encode "/" characters
         geneSymbol = geneSymbol.replace(/\//g,'%2F');
         // Check if we already have it in the cache
-        if (civicGenes.hasOwnProperty(geneSymbol)) {
+        if (trialMatchGenes.hasOwnProperty(geneSymbol)) {
             return;
         }
 
@@ -45,25 +46,25 @@ export function getCivicGenes(geneSymbols: Array<string>): Promise<ICivicGene> {
         // when it reaches this limit and start a new one
         if (ids.length >= 400) {
             let requestIds = ids.join();
-            promises.push(civicClient.getCivicGenesBatch(requestIds));
+            promises.push(trialMatchClient.getTrialMatchGenesBatch(requestIds));
             ids = [];
         }
     });
     if (ids.length > 0) {
         let requestIds = ids.join();
-        promises.push(civicClient.getCivicGenesBatch(requestIds));
+        promises.push(trialMatchClient.getTrialMatchGenesBatch(requestIds));
     }
 
     // We're waiting for all promises to finish, then return civicGenes
     return Promise.all(promises).then(function(responses) {
         for (let res in responses) {
-            let arrayCivicGenes: Array<ICivicGeneData> = responses[res];
-            arrayCivicGenes.forEach((civicGene) => {
-                civicGenes[civicGene.name] = civicGene;
+            let arrayTrialMatchGenes: Array<ITrialMatchGeneData> = responses[res];
+            arrayTrialMatchGenes.forEach((trialMatchGene) => {
+                trialMatchGenes[trialMatchGene.name] = trialMatchGene;
             });
         }
     }).then(function() {
-        return civicGenes;
+        return trialMatchGenes;
     });
 }
 
@@ -71,46 +72,39 @@ export function getCivicGenes(geneSymbols: Array<string>): Promise<ICivicGene> {
  * Asynchronously retrieve a map with Civic information from the mutationSpecs given for all genes in civicGenes.
  * If no mutationSpecs are given, then return the Civic information of all the CNA variants of the genes in civicGenes.
  */
-export function getCivicVariants(civicGenes: ICivicGene, mutationSpecs?: Array<MutationSpec>): Promise<ICivicVariant> {
+export function getTrialMatchVariants(trialMatchGenes: ITrialMatchGene, mutationSpecs?: Array<MutationSpec>): Promise<ITrialMatchVariant> {
 
-    let civicVariants: ICivicVariant = {};
+    let trialMatchVariants: ITrialMatchVariant = {};
     let promises: Array<Promise<void>> = [];
 
     if (mutationSpecs) {
-        let calledVariants: Set<number> = new Set([]);
+        let calledVariants: Set<any> = new Set([]);
         for (let mutation of mutationSpecs) {
             let geneSymbol = mutation.gene.hugoGeneSymbol;
-            let geneEntry = civicGenes[geneSymbol];
+            let geneEntry = trialMatchGenes[geneSymbol];
             let proteinChanges = [mutation.proteinChange];
             // Match any other variants after splitting the name on + or /
-            let split = mutation.proteinChange.split(/[+\/]/);
+            const split = mutation.proteinChange.split(/[+\/]/);
             proteinChanges.push(split[0]);
-            for (let proteinChange of proteinChanges) {
+            for (const proteinChange of proteinChanges) {
                 if (geneEntry && geneEntry.variants[proteinChange]) {
-                    if (!calledVariants.has(geneEntry.variants[proteinChange])) { //Avoid calling the same variant
+                    if (!calledVariants.has(geneEntry.variants[proteinChange])) { //Avoid calling the same variant,
                         calledVariants.add(geneEntry.variants[proteinChange]);
-                        promises.push(addCivicVariant(civicVariants,
-                            geneEntry.variants[proteinChange],
-                            proteinChange,
-                            geneSymbol,
-                            geneEntry.id));
+                        promises.push(addTrialMatchVariant(trialMatchVariants, geneEntry.variants[proteinChange], proteinChange, geneSymbol));
                     }
                 }
             }
         }
-    } else {
-        for (let geneName in civicGenes) {
-            let geneEntry = civicGenes[geneName];
+    }
+    else {
+        for (let geneName in trialMatchGenes) {
+            let geneEntry = trialMatchGenes[geneName];
             let geneVariants = geneEntry.variants;
             if (!_.isEmpty(geneVariants)) {
                 for (let variantName in geneVariants) {
                     // Only retrieve CNA variants
-                    if (variantName == 'AMPLIFICATION' || variantName == 'DELETION') {
-                        promises.push(addCivicVariant(civicVariants,
-                            geneVariants[variantName],
-                            variantName,
-                            geneName,
-                            geneEntry.id));
+                    if (variantName === 'AMPLIFICATION' || variantName === 'DELETION') {
+                        promises.push(addTrialMatchVariant(trialMatchVariants, geneVariants[variantName],variantName, geneName));
                     }
                 }
             }
@@ -121,34 +115,32 @@ export function getCivicVariants(civicGenes: ICivicGene, mutationSpecs?: Array<M
     // We are wrapping them in another promise separately, to make sure we also
     // wait in case one of the promises fails and the other is still busy.
     return Promise.all(promises).then(function() {
-        return civicVariants;
+        return trialMatchVariants;
     });
 }
 
 /**
  * Build a Civic Entry with the data given.
  */
-export function buildCivicEntry(geneEntry: ICivicGeneData, geneVariants: {[name: string]: ICivicVariantData}) {
+export function buildCivicEntry(geneEntry: ITrialMatchGeneData, geneVariants: {[name: string]: ITrialMatchVariantData}) {
     return {
         name: geneEntry.name,
-        description: geneEntry.description,
-        url: geneEntry.url,
         variants: geneVariants
     };
 }
 
-export function getCivicCNAVariants(copyNumberData:DiscreteCopyNumberData[], geneSymbol: string, civicVariants:ICivicVariant): {[name: string]: ICivicVariantData} {
-    let geneVariants: {[name: string]: ICivicVariantData} = {};
+export function getTrialMatchCNAVariants(copyNumberData:DiscreteCopyNumberData[], geneSymbol: string, trialMatchVariants:ITrialMatchVariant): {[name: string]: ITrialMatchVariantData} {
+    let geneVariants: {[name: string]: ITrialMatchVariantData} = {};
     if (copyNumberData[0].alteration === 2) {
-        for (let alteration in civicVariants[geneSymbol]) {
+        for (let alteration in trialMatchVariants[geneSymbol]) {
             if (alteration === "AMPLIFICATION") {
-                geneVariants = {[geneSymbol]: civicVariants[geneSymbol][alteration]};
+                geneVariants = {[geneSymbol]: trialMatchVariants[geneSymbol][alteration]};
             }
         }
     } else if (copyNumberData[0].alteration === -2) {
-        for (let alteration in civicVariants[geneSymbol]) {
+        for (let alteration in trialMatchVariants[geneSymbol]) {
             if (alteration === "DELETION") {
-                geneVariants = {[geneSymbol]: civicVariants[geneSymbol][alteration]};
+                geneVariants = {[geneSymbol]: trialMatchVariants[geneSymbol][alteration]};
             }
         }
     }
