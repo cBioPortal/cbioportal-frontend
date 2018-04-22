@@ -128,7 +128,7 @@ export function getCivicVariants(civicGenes: ICivicGene, mutationSpecs?: Array<M
 /**
  * Build a Civic Entry with the data given.
  */
-export function buildCivicEntry(geneEntry: ICivicGeneData, geneVariants: {[name: string]: ICivicVariantData}) {
+export function buildTrialMatchEntry(geneEntry: ITrialMatchGeneData, geneVariants: {[name: string]: ITrialMatchVariantData}) {
     return {
         name: geneEntry.name,
         description: geneEntry.description,

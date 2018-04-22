@@ -19,6 +19,7 @@ import MrnaExprRankCache from "shared/cache/MrnaExprRankCache";
 import {IGisticData} from "shared/model/Gistic";
 import CopyNumberCountCache from "../clinicalInformation/CopyNumberCountCache";
 import {ICivicGeneDataWrapper, ICivicVariantDataWrapper} from "shared/model/Civic.ts";
+import {ITrialMatchGeneDataWrapper, ITrialMatchVariantDataWrapper} from "shared/model/TrialMatch.ts";
 
 class CNATableComponent extends LazyMobXTable<DiscreteCopyNumberData[]> {
 
@@ -33,10 +34,13 @@ type ICopyNumberTableWrapperProps = {
     cnaOncoKbData?: IOncoKbDataWrapper;
     cnaCivicGenes?: ICivicGeneDataWrapper;
     cnaCivicVariants?: ICivicVariantDataWrapper;
+    cnaTrialMatchGenes?: ITrialMatchGeneDataWrapper;
+    cnaTrialMatchVariants?: ITrialMatchVariantDataWrapper;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
     oncoKbCancerGenes?:IOncoKbCancerGenesWrapper;
     enableOncoKb?:boolean;
     enableCivic?:boolean;
+    enableTrialMatch?: boolean;
     pubMedCache?:PubMedCache;
     referenceGenes:ReferenceGenomeGene[];
     data:DiscreteCopyNumberData[][];
@@ -121,6 +125,9 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
                 civicGenes: this.props.cnaCivicGenes,
                 civicVariants: this.props.cnaCivicVariants,
                 enableCivic: this.props.enableCivic as boolean,
+                trialMatchGenes: this.props.cnaTrialMatchGenes,
+                trialMatchVariants: this.props.cnaTrialMatchVariants,
+                enableTrialMatch: this.props.enableTrialMatch as boolean,
                 enableMyCancerGenome: false,
                 enableHotspot: false,
                 userEmailAddress: this.props.userEmailAddress,
@@ -128,7 +135,7 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
             })),
             sortBy:(d:DiscreteCopyNumberData[])=>{
                 return AnnotationColumnFormatter.sortValue(d,
-                    this.props.oncoKbCancerGenes, this.props.cnaOncoKbData, this.props.cnaCivicGenes, this.props.cnaCivicVariants);
+                    this.props.oncoKbCancerGenes, this.props.cnaOncoKbData, this.props.cnaCivicGenes, this.props.cnaCivicVariants,this.props.cnaTrialMatchGenes, this.props.cnaTrialMatchVariants);
             },
             order: 50
         });

@@ -15,7 +15,12 @@ export interface ITrialMatchGeneData {[gene: string]: ITrialMatchData[];}
 
 export type MobXStatus = "pending" | "error" | "complete";
 
-export interface ITrialMatchDataWrapper {
+export interface ITrialMatchGeneDataWrapper {
+    status: MobXStatus;
+    result?: ITrialMatchGene;
+}
+
+export interface ITrialMatchVariantDataWrapper {
     status: MobXStatus;
     result?: ITrialMatchGeneData;
 }

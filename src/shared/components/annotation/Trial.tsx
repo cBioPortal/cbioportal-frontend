@@ -4,14 +4,14 @@ import {observer} from "mobx-react";
 import {Circle} from "better-react-spinkit";
 import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import annotationStyles from "./styles/annotation.module.scss";
-import {ICivicVariant, ICivicEntry} from "shared/model/Civic.ts";
+import {ITrialMatchVariant, ITrialMatchEntry} from "shared/model/TrialMatch.ts";
 import {observable} from "mobx";
 import TrialCard from "./TrialCard";
 
-export interface ICivicProps {
-    civicEntry: ICivicEntry | null | undefined;
-    civicStatus: "pending" | "error" | "complete";
-    hasCivicVariants: boolean;
+export interface ITrialMatchProps {
+    trialMatchEntry: ITrialMatchEntry | null | undefined;
+    trialMatchStatus: "pending" | "error" | "complete";
+    hasTrialMatchVariants: boolean;
 }
 
 export function hideArrow(tooltipEl: any) {
@@ -20,33 +20,33 @@ export function hideArrow(tooltipEl: any) {
 }
 
 @observer
-export default class Civic extends React.Component<ICivicProps, {}>
+export default class TrialMatch extends React.Component<ITrialMatchProps, {}>
 {
     @observable tooltipDataLoadComplete:boolean = false;
 
-    public static sortValue(civicEntry:ICivicEntry | null | undefined): number
+    public static sortValue(trialMatchEntry:ITrialMatchEntry | null | undefined): number
     {
         let score: number = 0;
 
-        if (civicEntry) {
+        if (trialMatchEntry) {
             score = 1;
         }
 
         return score;
     }
 
-    public static download(civicEntry:ICivicEntry | null | undefined): string
+    public static download(trialMatchEntry:ITrialMatchEntry | null | undefined): string
     {
-        if (!civicEntry) {
+        if (!trialMatchEntry) {
             return "NA";
         }
 
-        const variants = _.values(civicEntry.variants);
+        const variants = _.values(trialMatchEntry.variants);
         const values: string[] = [];
 
-        if (variants && variants.length > 0 && variants[0].evidence)
+        if (variants && variants.length > 0 && variants[0].match)
         {
-            _.toPairs(variants[0].evidence).forEach(pair => {
+            _.toPairs(variants[0].match).forEach(pair => {
                 values.push(`${pair[0]}: ${pair[1]}`);
             });
         }
@@ -59,7 +59,7 @@ export default class Civic extends React.Component<ICivicProps, {}>
         return values.join(", ");
     }
 
-    constructor(props: ICivicProps)
+    constructor(props: ITrialMatchProps)
     {
         super(props);
 
@@ -68,48 +68,48 @@ export default class Civic extends React.Component<ICivicProps, {}>
 
     public render()
     {
-        let civicContent:JSX.Element = (
+        let trialMatchContent:JSX.Element = (
             <span className={`${annotationStyles["annotation-item"]}`} />
         );
 
-        const civicImgWidth:number = 14;
-        let civicImgHeight:number = 14;
-        let civicImgSrc = require("./images/clinic.png");
-        if (!this.props.hasCivicVariants)
+        const trialMatchImgWidth:number = 14;
+        const trialMatchImgHeight:number = 14;
+        let trialMatchImgSrc = require("./images/clinic.png");
+        if (!this.props.hasTrialMatchVariants)
         {
-            civicImgSrc = require("./images/civic-logo-no-variants.png");
+            trialMatchImgSrc = require("./images/civic-logo-no-variants.png");
         }
 
-        if (this.props.civicStatus == "error") {
-            civicContent = this.errorIcon();
+        if (this.props.trialMatchStatus === "error") {
+            trialMatchContent = this.errorIcon();
         }
-        else if (this.props.civicEntry !== undefined)
+        else if (this.props.trialMatchEntry !== undefined)
         {
-            if (this.props.civicEntry !== null && this.props.civicStatus == "complete")
+            if (this.props.trialMatchEntry !== null && this.props.trialMatchStatus === "complete")
             {
-                civicContent = (
+                trialMatchContent = (
                     <span className={`${annotationStyles["annotation-item"]}`}>
                         <img
-                            width={civicImgWidth}
-                            height={civicImgHeight}
-                            src={civicImgSrc}
-                            alt='Civic Variant Entry'
+                            width={trialMatchImgWidth}
+                            height={trialMatchImgHeight}
+                            src={trialMatchImgSrc}
+                            alt='TrialMatch Variant Entry'
                         />
                     </span>
                 );
 
                 const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
 
-                civicContent = (
+                trialMatchContent = (
                     <DefaultTooltip
-                        overlay={this.cardContent.bind(this, this.props.civicEntry)}
+                        overlay={this.cardContent.bind(this, this.props.trialMatchEntry)}
                         placement="right"
                         trigger={['hover', 'focus']}
                         arrowContent={arrowContent}
                         onPopupAlign={hideArrow}
                         destroyTooltipOnHide={false}
                     >
-                        {civicContent}
+                        {trialMatchContent}
                     </DefaultTooltip>
                 );
             }
@@ -117,10 +117,10 @@ export default class Civic extends React.Component<ICivicProps, {}>
         else
         {
             // It's still unknown (undefined) if the current gene has a Civic entry or not.
-            civicContent = this.loaderIcon();
+            trialMatchContent = this.loaderIcon();
         }
 
-        return civicContent;
+        return trialMatchContent;
     }
 
     public loaderIcon()
@@ -146,15 +146,13 @@ export default class Civic extends React.Component<ICivicProps, {}>
         );
     }
 
-    private cardContent(civicEntry: ICivicEntry): JSX.Element
+    private cardContent(trialMatchEntry: ITrialMatchEntry): JSX.Element
     {
         return (
             <TrialCard
                 title={`Match patient-specific genomic events to clinical trials`}
-                geneName={civicEntry.name}
-                geneDescription={civicEntry.description}
-                geneUrl={civicEntry.url}
-                variants={civicEntry.variants}
+                geneName={trialMatchEntry.name}
+                variants={trialMatchEntry.variants}
             />
         );
     }

@@ -11,8 +11,13 @@ import {generateQueryVariant} from "shared/lib/OncoKbUtils";
 import {generateQueryVariantId} from "public-lib/lib/OncoKbUtils";
 import {CancerGene, IndicatorQueryResp, Query} from "public-lib/api/generated/OncoKbAPI";
 import {getAlterationString} from "shared/lib/CopyNumberUtils";
-import {ICivicVariant, ICivicGene, ICivicEntry, ICivicVariantData, ICivicGeneData, ICivicGeneDataWrapper, ICivicVariantDataWrapper} from "shared/model/Civic.ts";
+import {ICivicVariant, ICivicGene, ICivicEntry, ICivicVariantData, ICivicGeneData,
+        ICivicGeneDataWrapper, ICivicVariantDataWrapper} from "shared/model/Civic.ts";
 import {buildCivicEntry, getCivicCNAVariants} from "shared/lib/CivicUtils";
+import {ITrialMatchVariant, ITrialMatchGene, ITrialMatchEntry, ITrialMatchVariantData, ITrialMatchGeneData,
+        ITrialMatchGeneDataWrapper, ITrialMatchVariantDataWrapper} from "shared/model/TrialMatch.ts";
+import {buildTrialMatchEntry, getTrialMatchCNAVariants} from "shared/lib/TrialMatchUtils";
+
 
 /**
  * @author Selcuk Onur Sumer
@@ -24,6 +29,8 @@ export default class AnnotationColumnFormatter
                           oncoKbData?: IOncoKbDataWrapper,
                           civicGenes?: ICivicGeneDataWrapper,
                           civicVariants?: ICivicVariantDataWrapper,
+                          trialMatchGenes?: ITrialMatchGeneDataWrapper,
+                          trialMatchVariants?: ITrialMatchVariantDataWrapper,
                           studyIdToStudy?: {[studyId:string]:CancerStudy})
     {
         let value: IAnnotation;
@@ -72,6 +79,12 @@ export default class AnnotationColumnFormatter
                 hasCivicVariants: civicGenes && civicGenes.result && civicVariants && civicVariants.result ?
                     AnnotationColumnFormatter.hasCivicVariants(copyNumberData, civicGenes.result, civicVariants.result) : true,
                 myCancerGenomeLinks: [],
+                trialMatchEntry: trialMatchGenes && trialMatchGenes.result && trialMatchVariants && trialMatchVariants.result?
+                    AnnotationColumnFormatter.getTrialMatchEntry(copyNumberData, trialMatchGenes.result, trialMatchVariants.result) : undefined,
+                trialMatchStatus: trialMatchGenes && trialMatchGenes.status && trialMatchVariants && trialMatchVariants.status ?
+                    AnnotationColumnFormatter.getTrialMatchStatus(trialMatchGenes.status, trialMatchVariants.status) : "pending",
+                hasTrialMatchVariants: trialMatchGenes && trialMatchGenes.result && trialMatchVariants && trialMatchVariants.result ?
+                    AnnotationColumnFormatter.hasTrialMatchVariants(copyNumberData, trialMatchGenes.result, trialMatchVariants.result) : true,
                 hotspotStatus: "complete",
                 isHotspot: false,
                 is3dHotspot: false
@@ -88,10 +101,36 @@ export default class AnnotationColumnFormatter
     * Returns an ICivicEntry if the civicGenes and civicVariants have information about the gene and the mutation (variant) specified. Otherwise it returns
     * an empty object.
     */
-    public static getCivicEntry(copyNumberData:DiscreteCopyNumberData[], civicGenes:ICivicGene, 
-                                civicVariants:ICivicVariant): ICivicEntry | null
+
+   public static getCivicEntry(copyNumberData:DiscreteCopyNumberData[], civicGenes:ICivicGene,
+                               civicVariants:ICivicVariant): ICivicEntry | null
+   {
+       let civicEntry = null;
+       let geneSymbol: string = copyNumberData[0].gene.hugoGeneSymbol;
+       let geneVariants:{[name: string]: ICivicVariantData} = getCivicCNAVariants(copyNumberData, geneSymbol, civicVariants);
+       let geneEntry: ICivicGeneData = civicGenes[geneSymbol];
+       //Only return data for genes with variants or it has a description provided by the Civic API
+       if (!_.isEmpty(geneVariants) || geneEntry && geneEntry.description !== "") {
+           civicEntry = buildCivicEntry(geneEntry, geneVariants);
+       }
+
+       return civicEntry;
+   }
+
+    public static getCivicStatus(civicGenesStatus:"pending" | "error" | "complete", civicVariantsStatus:"pending" | "error" | "complete"): "pending" | "error" | "complete"
     {
-        let civicEntry = null;
+        if (civicGenesStatus === "error" || civicVariantsStatus === "error") {
+            return "error";
+        }
+        if (civicGenesStatus === "complete" && civicVariantsStatus === "complete") {
+            return "complete";
+        }
+
+        return "pending";
+    }
+
+    public static hasCivicVariants (copyNumberData:DiscreteCopyNumberData[], civicGenes:ICivicGene, civicVariants:ICivicVariant): boolean
+    {
         let geneSymbol: string = copyNumberData[0].gene.hugoGeneSymbol;
         let geneVariants:{[name: string]: ICivicVariantData} = getCivicCNAVariants(copyNumberData, geneSymbol, civicVariants);
         let geneEntry: ICivicGeneData = civicGenes[geneSymbol];
@@ -100,26 +139,41 @@ export default class AnnotationColumnFormatter
             civicEntry = buildCivicEntry(geneEntry, geneVariants);
         }
 
-        return civicEntry;
-    }
-    
-    public static getCivicStatus(civicGenesStatus:"pending" | "error" | "complete", civicVariantsStatus:"pending" | "error" | "complete"): "pending" | "error" | "complete"
-    {
-    if (civicGenesStatus === "error" || civicVariantsStatus === "error") {
-        return "error";
-    }
-    if (civicGenesStatus === "complete" && civicVariantsStatus === "complete") {
-        return "complete";
-    }
-    
-    return "pending";
+        return true;
     }
 
-    public static hasCivicVariants (copyNumberData:DiscreteCopyNumberData[], civicGenes:ICivicGene, civicVariants:ICivicVariant): boolean
+    public static getTrialMatchEntry(copyNumberData:DiscreteCopyNumberData[], trialMatchGenes:ITrialMatchGene,
+                                     trialMatchVariants:ITrialMatchVariant): ITrialMatchEntry | null
+    {
+        let trialEntry = null;
+        let geneSymbol: string = copyNumberData[0].gene.hugoGeneSymbol;
+        let geneVariants:{[name: string]: ITrialMatchVariantData} = getTrialMatchCNAVariants(copyNumberData, geneSymbol, trialMatchVariants);
+        let geneEntry: ITrialMatchGeneData = trialMatchGenes[geneSymbol];
+        //Only return data for genes with variants or it has a description provided by the Civic API
+        if (!_.isEmpty(geneVariants) || geneEntry && geneEntry.name !== "") {
+            trialEntry = buildTrialMatchEntry(geneEntry, geneVariants);
+        }
+
+        return trialEntry;
+    }
+
+    public static getTrialMatchStatus(trialMatchGenesStatus:"pending" | "error" | "complete", trialMatchVariantsStatus:"pending" | "error" | "complete"): "pending" | "error" | "complete"
+    {
+        if (trialMatchGenesStatus === "error" || trialMatchVariantsStatus === "error") {
+            return "error";
+        }
+        if (trialMatchGenesStatus === "complete" && trialMatchVariantsStatus === "complete") {
+            return "complete";
+        }
+
+        return "pending";
+    }
+
+    public static hasTrialMatchVariants (copyNumberData:DiscreteCopyNumberData[], trialMatchGenes:ITrialMatchGene, trialMatchVariants:ITrialMatchVariant): boolean
     {
         let geneSymbol: string = copyNumberData[0].gene.hugoGeneSymbol;
-        let geneVariants:{[name: string]: ICivicVariantData} = getCivicCNAVariants(copyNumberData, geneSymbol, civicVariants);
-        let geneEntry: ICivicGeneData = civicGenes[geneSymbol];
+        let geneVariants:{[name: string]: ITrialMatchVariantData} = getTrialMatchCNAVariants(copyNumberData, geneSymbol, trialMatchVariants);
+        let geneEntry: ITrialMatchGeneData = trialMatchGenes[geneSymbol];
 
         if (geneEntry && _.isEmpty(geneVariants)) {
             return false;
@@ -165,15 +219,17 @@ export default class AnnotationColumnFormatter
                             oncoKbCancerGenes? :IOncoKbCancerGenesWrapper,
                             oncoKbData?: IOncoKbDataWrapper,
                             civicGenes?: ICivicGeneDataWrapper,
-                            civicVariants?: ICivicVariantDataWrapper):number[] {
-        const annotationData:IAnnotation = AnnotationColumnFormatter.getData(data, oncoKbCancerGenes, oncoKbData, civicGenes, civicVariants);
+                            civicVariants?: ICivicVariantDataWrapper,
+                            trialMatchGenes?: ITrialMatchGeneDataWrapper,
+                            trialMatchVariants?: ITrialMatchVariantDataWrapper):number[] {
+        const annotationData:IAnnotation = AnnotationColumnFormatter.getData(data, oncoKbAnnotatedGenes, oncoKbData, civicGenes, civicVariants);
 
         return _.flatten([oncoKbAnnotationSortValue(annotationData.oncoKbIndicator), Civic.sortValue(annotationData.civicEntry), annotationData.isOncoKbCancerGene ? 1 : 0]);
     }
 
     public static renderFunction(data:DiscreteCopyNumberData[], columnProps:IAnnotationColumnProps)
     {
-        const annotation:IAnnotation = AnnotationColumnFormatter.getData(data, columnProps.oncoKbCancerGenes, columnProps.oncoKbData, columnProps.civicGenes, columnProps.civicVariants, columnProps.studyIdToStudy);
+        const annotation:IAnnotation = AnnotationColumnFormatter.getData(data, columnProps.oncoKbCancerGenes, columnProps.oncoKbData, columnProps.civicGenes, columnProps.civicVariants,  columnProps.trialMatchGenes, columnProps.trialMatchVariants, columnProps.studyIdToStudy);
 
         let evidenceQuery:Query|undefined;
 

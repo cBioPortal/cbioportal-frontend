@@ -1,15 +1,13 @@
 import * as React from 'react';
 import { If, Then, Else } from 'react-if';
-import { ICivicVariantData } from "shared/model/Civic.ts";
+import { ITrialMatchVariantData } from "shared/model/TrialMatch.ts";
 import "./styles/trialCard.scss";
 import * as _ from "lodash";
 
 export interface ITrialCardProps {
     title: string;
     geneName: string;
-    geneDescription: string;
-    geneUrl: string;
-    variants: { [name: string]: ICivicVariantData };
+    variants: { [name: string]: ITrialMatchVariantData };
 }
 
 export default class TrialCard extends React.Component<ITrialCardProps, {}> {
@@ -22,7 +20,7 @@ export default class TrialCard extends React.Component<ITrialCardProps, {}> {
      * @param variantMap
      * @returns {JSX.Element[]}
      */
-    public generateVariants(variantMap: { [name: string]: ICivicVariantData }) {
+    public generateVariants(variantMap: { [name: string]: ITrialMatchVariantData }) {
         const list: JSX.Element[] = [];
 
         if (variantMap) {
@@ -31,13 +29,13 @@ export default class TrialCard extends React.Component<ITrialCardProps, {}> {
             } else {
                 for (let name in variantMap) {
                     let variant = variantMap[name];
-                    let entryTypes: string = '';
-                    for (let evidenceType in variant.evidence) {
-                        entryTypes += evidenceType.toLowerCase() + ': ' + variant.evidence[evidenceType] + ', ';
+                    let trialTitle: string = '';
+                    for (const title in variant.match) {
+                        trialTitle += trialTitle.toLowerCase() + ': ' + variant.match[title] + ', ';
                     }
-                    entryTypes = entryTypes.slice(0, -2) + '.';
+                    trialTitle = trialTitle.slice(0, -2) + '.';
 
-                    list.push(this.variantItem(variant.url, variant.name, entryTypes, variant.description));
+                    list.push(this.variantItem(variant.name, trialTitle, variant.gene));
                 }
             }
         } else {
@@ -55,17 +53,17 @@ export default class TrialCard extends React.Component<ITrialCardProps, {}> {
      * @param description
      * @returns {any}
      */
-    public variantItem(url?: string, name?: string, entryTypes?: string, description?: string) {
+    public variantItem(name?: string, trialTitle?: string, gene?: string) {
         let result;
 
-        if (url || name || entryTypes || description) {
+        if (name || trialTitle || gene) {
             result = (
                 <div className="civic-card-variant">
                     <div className="civic-card-variant-header">
-                        <span className="civic-card-variant-name"><a href={url} target="_blank">{name}</a></span>
-                        <span className="civic-card-variant-entry-types"> Entries: {entryTypes}</span>
+                        <span className="civic-card-variant-name">{name}</span>
+                        <span className="civic-card-variant-entry-types"> Trial: {trialTitle}</span>
                     </div>
-                    <div className="civic-card-variant-description summary">{description}</div>
+                    <div className="civic-card-variant-description summary">{gene}</div>
                 </div>
             );
         } else {
