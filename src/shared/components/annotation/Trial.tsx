@@ -134,7 +134,7 @@ export default class TrialMatch extends React.Component<ITrialMatchProps, {}>
     {
         return (
             <DefaultTooltip
-                overlay={<span>Error fetching Civic data</span>}
+                overlay={<span>Error fetching Trial data</span>}
                 placement="right"
                 trigger={['hover', 'focus']}
                 destroyTooltipOnHide={true}

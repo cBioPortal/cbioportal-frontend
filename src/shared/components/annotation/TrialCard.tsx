@@ -124,6 +124,11 @@ export default class TrialCard extends React.Component<ITrialCardProps, {}> {
                         </tbody>
                     </table>
                 </div>
+                <div className="col s12">
+                    <ul>
+                        {this.generateVariants(this.props.variants)}
+                    </ul>
+                </div>
                 <div className="item disclaimer">
                     <span>
                         Disclaimer: This resource is intended for purely research purposes.

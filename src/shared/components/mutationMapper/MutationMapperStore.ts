@@ -243,7 +243,7 @@ export default class MutationMapperStore
             this.mutationData,
             this.clinicalDataForSamples
         ],
-        invoke: async() => this.config.showTrialMatch? fetchTrialMatchGenes(this.mutationData) : {},
+        invoke: async() => this.config.showCivic? fetchTrialMatchGenes(this.mutationData) : {},
         onError: (err: Error) => {
             // fail silently
         }
@@ -255,7 +255,7 @@ export default class MutationMapperStore
             this.mutationData
         ],
         invoke: async() => {
-            if (this.config.showTrialMatch && this.trialMatchGenes.result) {
+            if (this.config.showCivic && this.trialMatchGenes.result) {
                 return fetchTrialMatchVariants(this.trialMatchGenes.result as ITrialMatchGene, this.mutationData);
             }
             else {
