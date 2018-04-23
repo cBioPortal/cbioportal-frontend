@@ -22969,7 +22969,7 @@ var makeNAShapes = function(z) {
     ];
 };
 var NA_STRING = "na";
-var NA_LABEL = "N/A";
+var NA_LABEL = "No data";
 
 var colorToHex = function(str) {
     var r;
@@ -23233,7 +23233,7 @@ var ConditionRuleSet = (function () {
 	    return d[NA_STRING] === true;
 	},
 		{shapes: makeNAShapes(params.na_z || 1000),
-		    legend_label: NA_LABEL,
+		    legend_label: params.na_legend_label || NA_LABEL,
 		    exclude_from_legend: false,
 		    legend_config: {'type': 'rule', 'target': {'na': true}},
 			legend_order: Number.POSITIVE_INFINITY
@@ -23278,7 +23278,7 @@ var CategoricalRuleSet = (function () {
 
 	this.addRule(NA_STRING, true, {
 	    shapes: makeNAShapes(params.na_z || 1000),
-	    legend_label: NA_LABEL,
+	    legend_label: params.na_legend_label || NA_LABEL,
 	    exclude_from_legend: false,
 	    legend_config: {'type': 'rule', 'target': {'na': true}},
 		legend_order: Number.POSITIVE_INFINITY
@@ -23730,7 +23730,7 @@ var GeneticAlterationRuleSet = (function () {
 	})(this);
 	this.addRule(NA_STRING, true, {
 	    shapes: makeNAShapes(params.na_z || 1),
-	    legend_label: "Not sequenced",
+	    legend_label: params.na_legend_label || NA_LABEL,
 	    exclude_from_legend: false,
 	    legend_config: {'type': 'rule', 'target': {'na': true}},
 	    legend_order: Number.POSITIVE_INFINITY
