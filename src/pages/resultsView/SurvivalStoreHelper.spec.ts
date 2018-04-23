@@ -84,11 +84,11 @@ const exampleTargetKeys = ["1", "2", "3", "5"];
 describe("SurvivalStoreHelper", () => {
     describe("#getPatientSurvivals()", () => {
         it("returns empty list for empty clinical data", () => {
-            assert.deepEqual(getPatientSurvivals({}, [], [], "OS_STATUS", "OS_MONTHS", s => s === 'DECEASED'), []);
+            assert.deepEqual(getPatientSurvivals({}, [], "OS_STATUS", "OS_MONTHS", s => s === 'DECEASED'), []);
         });
 
         it("returns correct result for example data", () => {
-            assert.deepEqual(getPatientSurvivals(exampleClinicalData, examplePatients as Patient[], exampleTargetKeys,
+            assert.deepEqual(getPatientSurvivals(exampleClinicalData, exampleTargetKeys,
                  "OS_STATUS", "OS_MONTHS", s => s === 'DECEASED'), [
                     {
                         patientId: "patient_1",
