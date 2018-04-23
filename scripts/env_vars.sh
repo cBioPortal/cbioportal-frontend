@@ -17,14 +17,14 @@ if [[ "$CIRCLECI" ]]; then
     cat $SCRIPT_DIR/../env/${BRANCH}.sh
 elif [[ "$BRANCH_ENV" ]]; then
     cat $SCRIPT_DIR/../env/${BRANCH_ENV}.sh
-
-    # override with custom exports if they exist
-    if [[ -f ${SCRIPT_DIR}/../env/custom.sh ]]; then
-        cat ${SCRIPT_DIR}/../env/custom.sh
-    fi
 else
     echo -e "${RED}No desired BRANCH_ENV variable set${NC}"
     echo -e "${RED}set with e.g. export BRANCH_ENV=master${NC}"
     echo -e "${RED}or export BRANCH_ENV=rc${NC}"
     exit 1
+fi
+
+# override with custom exports if they exist
+if [[ -f ${SCRIPT_DIR}/../env/custom.sh ]]; then
+    cat ${SCRIPT_DIR}/../env/custom.sh
 fi
