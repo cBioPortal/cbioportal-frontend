@@ -41,6 +41,8 @@ declare module "oncoprintjs"
         legend_label?: string;
         legend_base_color?: string;
         exclude_from_legend?: boolean;
+        na_z?:number; // z index of na shapes (defaults to 1)
+        na_legend_label?:string; // legend label associated to NA (defaults to 'No data')
     }
 
     // all colors are hex, rgb, or rgba
