@@ -1,11 +1,15 @@
-
 import {
     Gene, NumericGeneMolecularData, GenePanel, GenePanelData, MolecularProfile,
     Mutation, Patient, Sample, CancerStudy
 } from "../../shared/api/generated/CBioPortalAPI";
 import {action} from "mobx";
-import {getSimplifiedMutationType} from "../../shared/lib/oql/accessors";
-import {UnflattenedOQLLineFilterOutput, isMergedTrackFilter} from "../../shared/lib/oql/oqlfilter";
+import accessors, {getSimplifiedMutationType} from "../../shared/lib/oql/accessors";
+import {
+    OQLLineFilterOutput,
+    UnflattenedOQLLineFilterOutput,
+    filterCBioPortalWebServiceDataByUnflattenedOQLLine,
+    isMergedTrackFilter
+} from "../../shared/lib/oql/oqlfilter";
 import {groupBy} from "../../shared/lib/StoreUtils";
 import {
     AnnotatedExtendedAlteration,
@@ -272,4 +276,93 @@ export function groupDataByCase(
         samples: groupBy(data, datum=>datum.uniqueSampleKey, samples.map(sample=>sample.uniqueSampleKey)),
         patients: groupBy(data, datum=>datum.uniquePatientKey, patients.map(sample=>sample.uniquePatientKey))
     };
+}
+
+export function filterSubQueryData(
+    queryStructure: UnflattenedOQLLineFilterOutput<object>,
+    defaultOQLQuery: string,
+    data: (AnnotatedMutation | NumericGeneMolecularData)[],
+    accessorsInstance: accessors,
+    samples: {uniqueSampleKey: string}[],
+    patients: {uniquePatientKey: string}[]
+): undefined | {
+    cases: CaseAggregatedData<AnnotatedExtendedAlteration>,
+    oql: OQLLineFilterOutput<object>
+}[]
+{
+    function filterDataForLine(oqlLine: string) {
+        // assuming that merged track syntax will never allow
+        // nesting, each inner OQL line will be one single-gene
+        // query
+        const alterationsForLine = (
+            filterCBioPortalWebServiceDataByUnflattenedOQLLine(
+                oqlLine,
+                data,
+                accessorsInstance,
+                defaultOQLQuery
+            )[0]
+        ) as OQLLineFilterOutput<AnnotatedExtendedAlteration>;
+        return {
+            cases: groupDataByCase(alterationsForLine, samples, patients),
+            oql: alterationsForLine
+        };
+    }
+
+    if (!isMergedTrackFilter(queryStructure)) {
+        return undefined;
+    } else {
+        return queryStructure.list.map(
+            innerLine => filterDataForLine(innerLine.oql_line)
+        );
+    }
+}
+
+export function filterMergedTrackGeneData(
+    oqlQuery: string,
+    defaultOQLQuery: string,
+    data: (AnnotatedMutation | NumericGeneMolecularData)[],
+    accessorsInstance: accessors,
+    samples: {uniqueSampleKey: string}[],
+    patients: {uniquePatientKey: string}[]
+): {
+    list?: {
+        cases: CaseAggregatedData<AnnotatedExtendedAlteration>,
+        oql: OQLLineFilterOutput<object>
+    }[]
+}[] {
+    function filterDataForLine(oqlLine: string) {
+        // assuming that merged track syntax will never allow
+        // nesting, each inner OQL line will be one single-gene
+        // query
+        const alterationsForLine = (
+            filterCBioPortalWebServiceDataByUnflattenedOQLLine(
+                oqlLine,
+                data,
+                accessorsInstance,
+                defaultOQLQuery
+            )[0]
+        ) as OQLLineFilterOutput<AnnotatedExtendedAlteration>;
+        return {
+            cases: groupDataByCase(alterationsForLine, samples, patients),
+            oql: alterationsForLine
+        };
+    }
+
+    const queryStructure = filterCBioPortalWebServiceDataByUnflattenedOQLLine(
+        oqlQuery,
+        [],
+        accessorsInstance,
+        defaultOQLQuery
+    );
+    return queryStructure.map(queryLine => {
+        if (!isMergedTrackFilter(queryLine)) {
+            return {};
+        } else {
+            return {
+                list: queryLine.list.map(
+                    innerLine => filterDataForLine(innerLine.oql_line)
+                )
+            };
+        }
+    });
 }
