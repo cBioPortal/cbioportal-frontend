@@ -1,5 +1,5 @@
 import * as request from 'superagent';
-import {ITrialMatchGene, ITrialMatchGeneData, ITrialMatchVariant, ITrialMatchVariantData} from "shared/model/TrialMatch.ts";
+import {ITrialMatchGene, ITrialMatchGeneData, ITrialMatchVariant, ITrialMatchVariantData, ITrialMatchData} from "shared/model/TrialMatch.ts";
 
 type TrialMatchAPIGene = {
     name: string;
@@ -13,27 +13,31 @@ type TrialMatchAPIGeneVariant = {
 
 type TrialMatchAPIVariant = {
     name: string;
-    matches: Array<TrialMatch>;
+    oncogenicity: string;
+    mutEffect: string;
+    matches: Array<ITrialMatchData>;
 };
 
 type TrialMatch = {
     trialTitle: string;
+    nctID: string;
+    trialStatus: string;
+    code: string;
+    matchLevel: string;
+    matchType: string;
+    dose: string;
     [propName: string]: any;
 };
 
 /**
  * Returns a map with the different types of evidence and the number of times that each evidence happens.
  */
-function countMatches(trialMatchItems: Array<TrialMatch>): {[title: string]: number} {
-    const match: {[title: string]: number} = {};
+function countMatches(trialMatchItems: Array<TrialMatch>): {[trialTitle: string]: string} {
+    const match: {[trialTitle: string]: string} = {};
     trialMatchItems.forEach(function (trialMatchItem: TrialMatch) {
-        let title = trialMatchItem.trialTitle;
-        if (match.hasOwnProperty(title)) {
-            match[title] += 1;
-        }
-        else {
-            match[title] = 1;
-        }
+        let trialTitle = trialMatchItem.trialTitle;
+        match[trialTitle] = trialMatchItem.nctID + "," + trialMatchItem.trialStatus + "," +
+                            trialMatchItem.code  + "," + trialMatchItem.dose;
     });
     return match;
 };
@@ -86,6 +90,8 @@ export default class TrialMatchAPI {
                     id,
                     name,
                     gene,
+                    oncogenicity: result.oncogenicity,
+                    mutEffect: result.mutEffect,
                     match: countMatches(result.matches)
                 };
             });

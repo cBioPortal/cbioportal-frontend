@@ -7,7 +7,18 @@ export interface ITrialMatchVariantData {
     id: string;
     name: string;
     gene: string;
-    match: {[title: string]: number};
+    oncogenicity: string;
+    mutEffect: string;
+    match: {[trialTitle: string]: string};
+}
+
+export interface ITrialMatchData {
+    title: string;
+    nctID: string;
+    code: string;
+    matchLevel: string;
+    matchType: string;
+    dose: string;
 }
 
 export interface ITrialMatchGene {[name: string]: ITrialMatchGeneData;}
