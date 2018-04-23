@@ -377,28 +377,65 @@ export class StudyViewPageStore {
         default: []
     });
 
+    @computed get hasSurvivalPlots(){
+
+        let toReturn = {os_survival:false,dfs_survival:false};
+        let osStatusFlag = false;
+        let osMonthsFlag = false;
+        let dfsStatusFlag = false;
+        let dfsMonthsFlag = false;
+
+        this.clinicalAttributes.result.forEach(obj => {
+            if(obj.clinicalAttributeId === 'OS_STATUS'){
+                osStatusFlag = true;
+            }else if(obj.clinicalAttributeId === 'OS_MONTHS'){
+                osMonthsFlag = true;
+            }else if(obj.clinicalAttributeId === 'DFS_STATUS'){
+                dfsStatusFlag = true;
+            }else if(obj.clinicalAttributeId === 'DFS_MONTHS'){
+                dfsMonthsFlag = true;
+            }
+        });
+
+        if(osStatusFlag && osMonthsFlag){
+            toReturn.os_survival = true;
+        }
+        if(dfsStatusFlag && dfsMonthsFlag){
+            toReturn.dfs_survival = true;
+        }
+        return toReturn
+    }
+
     readonly survivalPlotData = remoteData<SurvivalType[]>({
-        await: () => [this.allPatients, this.survivalData, this.selectedPatientIds, this.unSelectedPatientIds],
+        await: () => [this.clinicalAttributes, this.survivalData, this.selectedPatientIds, this.unSelectedPatientIds],
         invoke: async () => {
-            const survivalTypes: SurvivalType[] = [{
-                id: 'os_survival',
-                associatedAttrs: ['OS_STATUS', 'OS_MONTHS'],
-                filter: ['DECEASED'],
-                alteredGroup: [],
-                unalteredGroup: []
-            },{
-                id: 'dfs_survival',
-                associatedAttrs: ['DFS_STATUS', 'DFS_MONTHS'],
-                filter: ['Recurred/Progressed','Recurred'],
-                alteredGroup: [],
-                unalteredGroup: []
-            }];
+
+            let survivalTypes: SurvivalType[] = [];
+
+            if(this.hasSurvivalPlots.os_survival){
+                survivalTypes.push({
+                    id: 'os_survival',
+                    associatedAttrs: ['OS_STATUS', 'OS_MONTHS'],
+                    filter: ['DECEASED'],
+                    alteredGroup: [],
+                    unalteredGroup: []
+                })
+            }
+            if(this.hasSurvivalPlots.dfs_survival){
+                survivalTypes.push({
+                    id: 'dfs_survival',
+                    associatedAttrs: ['DFS_STATUS', 'DFS_MONTHS'],
+                    filter: ['Recurred/Progressed','Recurred'],
+                    alteredGroup: [],
+                    unalteredGroup: []
+                })
+            }
             survivalTypes.forEach(survivalType => {
                 survivalType.alteredGroup = getPatientSurvivals(
-                    _.groupBy(this.survivalData.result, 'patientId'), this.allPatients.result,
+                    _.groupBy(this.survivalData.result, 'patientId'),
                     this.selectedPatientIds.result!, survivalType.associatedAttrs[0], survivalType.associatedAttrs[1], s => survivalType.filter.indexOf(s) !== -1);
                 survivalType.unalteredGroup = getPatientSurvivals(
-                    _.groupBy(this.survivalData.result, 'patientId'), this.allPatients.result,
+                    _.groupBy(this.survivalData.result, 'patientId'),
                     this.unSelectedPatientIds.result!, survivalType.associatedAttrs[0], survivalType.associatedAttrs[1], s => survivalType.filter.indexOf(s) !== -1);
             });
             return survivalTypes;
@@ -599,7 +636,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         let mutatedGeneData = this.store.mutatedGeneData.result;
         let cnaGeneData = this.store.cnaGeneData.result;
         return (
-            <div style={{overflowY: "scroll", border:"1px solid #cccccc"}}>
+            <div>
                 {
                     this.store.defaultVisibleAttributes.isComplete &&
                     (
@@ -608,14 +645,8 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                         </div>
                     )
                 }
-                {
-                    this.store.survivalPlotData.isComplete &&
-                    (
-                        <div>
-                            {this.store.survivalPlotData.result.map(this.renderSurvivalPlot)}
-                        </div>
-                    )
-                }
+                {this.store.survivalPlotData.result.map(this.renderSurvivalPlot)}
+                <div  className={styles.flexContainer}>
                 {(this.store.mutatedGeneData.isComplete && <MutatedGenesTable
                     data={mutatedGeneData}
                     numOfSelectedSamples={100}
@@ -628,6 +659,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                     filters={this.store.getCNAGenesTableFilters()}
                     toggleSelection={this.updateCNAGeneFilter}
                 />)}
+                 </div>
             </div>
         )
     }
