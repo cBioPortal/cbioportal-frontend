@@ -6,6 +6,7 @@ function waitForOncoprint(timeout) {
 function goToUrlAndSetLocalStorage(url) {
     browser.url(url);
     browser.localStorage('DELETE');
+    browser.localStorage('POST', {key: 'e2etest', value: 'true'});
     if (useExternalFrontend) {
         browser.localStorage('POST', {key: 'localdev', value: 'true'});
     }

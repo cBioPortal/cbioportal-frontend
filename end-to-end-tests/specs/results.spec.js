@@ -3,6 +3,7 @@ var assertScreenShotMatch = require('../lib/testUtils').assertScreenShotMatch;
 var assert = require('assert');
 var expect = require('chai').expect;
 var waitForOncoprint = require('./specUtils').waitForOncoprint;
+var goToUrlAndSetLocalStorage = require('./specUtils').goToUrlAndSetLocalStorage;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
@@ -11,11 +12,7 @@ describe('Results Page', function() {
     //this.retries(2);
 
     before(function(){
-        var url = `${CBIOPORTAL_URL}`;
-        browser.url(url);
-        browser.localStorage('POST', {key: 'localdev', value: 'true'});
-        browser.localStorage('POST', {key: 'e2etest', value: 'true'});
-        browser.refresh();
+        goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
     });
 
     describe("Cancer Type Summary Bar Chart", ()=>{
