@@ -66,7 +66,7 @@ const canonicalType:{ [lowerCaseType:string]:CanonicalMutationType } = {
     "nonframeshift": "inframe",
     "nonframeshift insertion": "inframe",
     "nonframeshift_insertion": "inframe",
-    "targeted_region": "inframe",
+    "targeted_region": "other",
     "inframe": "inframe",
     "truncating": "truncating",
     "feature_truncation": "truncating",

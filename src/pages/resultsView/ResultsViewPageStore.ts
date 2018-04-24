@@ -1834,7 +1834,7 @@ export class ResultsViewPageStore {
         }
     });
 
-    readonly rnaSeqMolecularData = remoteData<{[hugoGeneSymbol:string]:GeneMolecularData[][]}>({
+    readonly rnaSeqMolecularData = remoteData<{[hugoGeneSymbol:string]:NumericGeneMolecularData[][]}>({
        await:()=>[
            this.molecularProfilesInStudies,
            this.genes,
@@ -1856,7 +1856,7 @@ export class ResultsViewPageStore {
            const data = await this.geneMolecularDataCache.result!.getPromise(queries,true);
 
            // group cache objects by entrez geneId
-           const groupedByGene = _.groupBy(data,(cacheItem:AugmentedData<GeneMolecularData[], MolecularDataCacheQuery>)=>cacheItem.meta.entrezGeneId);
+           const groupedByGene = _.groupBy(data,(cacheItem:AugmentedData<NumericGeneMolecularData[], MolecularDataCacheQuery>)=>cacheItem.meta.entrezGeneId);
 
            // now convert key from entrez to hugeGeneSymbol
            const keyedByHugoSymbol = _.mapKeys(groupedByGene,(val, entrezGeneId:string)=>{
@@ -1864,9 +1864,9 @@ export class ResultsViewPageStore {
                return _.find(this.genes.result,(gene:Gene)=>gene.entrezGeneId.toString()===entrezGeneId)!.hugoGeneSymbol;
            });
 
-           const unwrapCacheObjects:{[hugeGeneSymbol:string]:GeneMolecularData[][]} =
-               _.mapValues(keyedByHugoSymbol,(val:AugmentedData<GeneMolecularData[], MolecularDataCacheQuery>)=>{
-                    return _.map(val,(item:AugmentedData<GeneMolecularData[], MolecularDataCacheQuery>)=>item.data);
+           const unwrapCacheObjects:{[hugeGeneSymbol:string]:NumericGeneMolecularData[][]} =
+               _.mapValues(keyedByHugoSymbol,(val:AugmentedData<NumericGeneMolecularData[], MolecularDataCacheQuery>)=>{
+                    return _.map(val,(item:AugmentedData<NumericGeneMolecularData[], MolecularDataCacheQuery>)=>item.data);
                 }) as any; // there's an error with typing for _.mapValues
 
            return Promise.resolve(unwrapCacheObjects);
@@ -1875,8 +1875,8 @@ export class ResultsViewPageStore {
 
     });
 
-    @memoize sortRnaSeqMolecularDataByStudy(seqData:{[profileId:string]:GeneMolecularData[]}){
-        return _.keyBy(seqData,(data:GeneMolecularData[])=>{
+    @memoize sortRnaSeqMolecularDataByStudy(seqData:{[profileId:string]:NumericGeneMolecularData[]}){
+        return _.keyBy(seqData,(data:NumericGeneMolecularData[])=>{
            return data[0].studyId;
         });
     }

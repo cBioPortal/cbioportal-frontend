@@ -2,16 +2,16 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import {observer} from "mobx-react";
 import './styles.scss';
-import {CancerStudy, Gene, GeneMolecularData, Mutation} from "../../../shared/api/generated/CBioPortalAPI";
+import {CancerStudy, Gene, NumericGeneMolecularData, Mutation} from "../../../shared/api/generated/CBioPortalAPI";
 import {computed, observable} from "mobx";
 import getCanonicalMutationType from "../../../shared/lib/getCanonicalMutationType";
-import {ExpressionStyleSheet} from "./expressionHelpers";
+import {ExpressionStyle, ExpressionStyleSheet} from "./expressionHelpers";
 import {Modal} from "react-bootstrap";
 import autobind from "autobind-decorator";
 import { VictoryBoxPlot, VictoryChart, VictoryAxis,
     VictoryLabel,  VictoryContainer, VictoryPie, VictoryScatter, VictoryLegend } from 'victory';
 import CBIOPORTAL_VICTORY_THEME from "../../../shared/theme/cBioPoralTheme";
-import {calculateBoxPlotModel} from "../../../shared/lib/boxPlotUtils";
+import {BoxPlotModel, calculateBoxPlotModel} from "../../../shared/lib/boxPlotUtils";
 import d3 from 'd3';
 import {ITooltipModel} from "../../../shared/model/ITooltipModel";
 
@@ -20,14 +20,14 @@ interface ExpressionWrapperProps {
 
     studyMap:{[studyId:string]:CancerStudy};
     genes:Gene[];
-    data:{[hugeGeneSymbol:string]:GeneMolecularData[][]};
+    data:{[hugeGeneSymbol:string]:NumericGeneMolecularData[][]};
     mutations:Mutation[];
 
 }
 
 interface MolecularDataBuckets {
-    mutationBuckets: { [mutationType:string]:GeneMolecularData[] };
-    unmutatedBucket: GeneMolecularData[]
+    mutationBuckets: { [mutationType:string]:NumericGeneMolecularData[] };
+    unmutatedBucket: NumericGeneMolecularData[]
 };
 
 const JITTER_VALUE = 0.4;
@@ -53,16 +53,15 @@ const BOX_STYLES ={
     median: { stroke: "#999999", strokeWidth: 1 },
 };
 
-function getMolecularDataBuckets(studyData:GeneMolecularData[],
+function getMolecularDataBuckets(studyData:NumericGeneMolecularData[],
                                  showMutations:boolean,
                                  mutationsKeyedBySampleId:{ [sampleId:string]:Mutation }){
 
 
     // if mutation mode is on, we want to fill buckets by mutation type (or unmutated)
-    const mutationModeInteratee = (memo:MolecularDataBuckets , molecularData:GeneMolecularData)=>{
+    const mutationModeInteratee = (memo:MolecularDataBuckets , molecularData:NumericGeneMolecularData)=>{
         const mutation = mutationsKeyedBySampleId[molecularData.uniqueSampleKey];
         if (mutation) {
-            // this really should happen inside function
             const canonicalMutationType = getCanonicalMutationType(mutation.mutationType) || "other";
             const bucket = memo.mutationBuckets[canonicalMutationType] = memo.mutationBuckets[canonicalMutationType] || [];
             bucket.push(molecularData);
@@ -73,7 +72,7 @@ function getMolecularDataBuckets(studyData:GeneMolecularData[],
     };
 
     // if mutation mode is off, we don't care about mutation state
-    const noMutationModeIteratee = (memo:MolecularDataBuckets, molecularData:GeneMolecularData)=>{
+    const noMutationModeIteratee = (memo:MolecularDataBuckets, molecularData:NumericGeneMolecularData)=>{
         memo.unmutatedBucket.push(molecularData);
         return memo;
     };
@@ -87,6 +86,7 @@ function getMolecularDataBuckets(studyData:GeneMolecularData[],
 
 }
 
+export type ScatterPoint = { x:number, y:NumericGeneMolecularData };
 
 type SortOptions = "alphabetic" | "median";
 
@@ -112,12 +112,12 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
         this.selectedGene = props.genes[0].hugoGeneSymbol;
         this.selectedStudies = _.mapValues(props.studyMap,()=>true);
 
-        window.box = this;
+        (window as any).box = this;
     }
 
     svgContainer:SVGAElement;
 
-    @observable.ref tooltipModel: ITooltipModel<{studyName:string;sampleId:string;expression:number}>;
+    @observable.ref tooltipModel: ITooltipModel<{studyName:string;sampleId:string;expression:number}> | null = null;
 
     @observable selectedGene:string;
 
@@ -133,26 +133,26 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     @computed get filteredData(){
         // filter for selected studies
-        return _.filter(this.props.data[this.selectedGene], (data:GeneMolecularData[])=>this.selectedStudies[data[0].studyId] === true);
+        return _.filter(this.props.data[this.selectedGene], (data:NumericGeneMolecularData[])=>this.selectedStudies[data[0].studyId] === true);
     }
 
     @computed get sortedData() {
         if (this.sortBy === "alphabetic") {
             return _.sortBy(this.filteredData, [
-                (data:GeneMolecularData[])=>{
+                (data:NumericGeneMolecularData[])=>{
                     return this.props.studyMap[data[0].studyId].shortName
                 }]
             );
         } else {
-            return _.sortBy(this.filteredData, [(data:GeneMolecularData[])=>{
-                return findMedian(data.map((molecularData:GeneMolecularData)=>parseFloat(molecularData.value)));
+            return _.sortBy(this.filteredData, [(data:NumericGeneMolecularData[])=>{
+                return findMedian(data.map((molecularData:NumericGeneMolecularData)=>molecularData.value));
             }]);
         }
     }
 
     @computed get sortedLabels(){
 
-        return _.map(this.sortedData,(data:GeneMolecularData[])=>{
+        return _.map(this.sortedData,(data:NumericGeneMolecularData[])=>{
             return this.props.studyMap[data[0].studyId].shortName;
         });
 
@@ -164,27 +164,19 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     @computed get victoryTraces(){
 
-        const boxTraces: any[] = [];
-        const mutationScatterTraces: any[] = [];
-        const unMutatedTraces: any[] = [];
+        const boxTraces: Partial<BoxPlotModel>[] = [];
+        const mutationScatterTraces: { [key:string]:ScatterPoint[] }[] = [];
+        const unMutatedTraces: ScatterPoint[][] = [];
 
-        const myLogger = (num:string)=>{
-            let log = Math.log(parseFloat(num)) / Math.log(2);
-            return log === -Infinity ? 0 : log;
-        };
-
-        const handleZero = (num)=>(num === 0) ? 0.25 : num;
+        const handleZero = (num:number)=>(num === 0) ? 0.25 : num;
 
         // if we are in log mode, compute log of value
-        const dataTransformer = (molecularData:GeneMolecularData)=>
+        const dataTransformer = (molecularData:NumericGeneMolecularData)=>
             (this.logScale ? handleZero(molecularData.value) : molecularData.value);
 
-        let studyIndex = 0;
-
-        this.sortedData.forEach((studyData)=>{
-
-            //const boxData = studyData.map(dataTransformer);
-
+        const sortedData = this.sortedData;
+        for (let i = 0; i < sortedData.length; i++) {
+            const studyData = sortedData[i];
             const boxData = calculateBoxPlotModel(studyData.map(dataTransformer));
 
             // *IMPORTANT* because Victory does not handle outliers,
@@ -197,33 +189,67 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                 max: boxData.whiskerUpper,
                 q1: boxData.q1,
                 q3: boxData.q3,
-                x: studyIndex,
+                x: i,
             });
 
             const buckets = getMolecularDataBuckets(studyData, this.showMutations, this.mutationsKeyedBySampleId);
 
-            const mutationTraces = _.mapValues(buckets.mutationBuckets,(molecularData:GeneMolecularData[],canonicalMutationType:string)=>{
-
+            const mutationTraces = _.mapValues(buckets.mutationBuckets,(molecularData:NumericGeneMolecularData[],canonicalMutationType:string)=>{
                 return molecularData.map((datum)=>{
-                    return { y:datum, x:studyIndex + getJitter()  }
+                    return { y:datum, x:i + getJitter()  }
                 });
-
             });
 
             mutationScatterTraces.push(mutationTraces);
 
             if (buckets.unmutatedBucket.length > 0) {
-                const unmutated = buckets.unmutatedBucket.map((datum:GeneMolecularData)=>{
-                    return { y:datum, x:studyIndex + getJitter() }
+                const unmutated = buckets.unmutatedBucket.map((datum:NumericGeneMolecularData)=>{
+                    return { y:datum, x:i + getJitter() }
                 });
                 unMutatedTraces.push(unmutated);
             }
 
-            studyIndex++;
+        }
 
-        });
-
-        console.log(unMutatedTraces);
+        // this.sortedData.forEach((studyData)=>{
+        //
+        //     //const boxData = studyData.map(dataTransformer);
+        //
+        //     const boxData = calculateBoxPlotModel(studyData.map(dataTransformer));
+        //
+        //     // *IMPORTANT* because Victory does not handle outliers,
+        //     // we are overriding meaning of min and max in order to show whiskers
+        //     // at quartile +/-IQL * 1.5 instead of true max/min
+        //
+        //     boxTraces.push({
+        //         min: boxData.whiskerLower, // see above
+        //         median: boxData.median, // see above
+        //         max: boxData.whiskerUpper,
+        //         q1: boxData.q1,
+        //         q3: boxData.q3,
+        //         x: i,
+        //     });
+        //
+        //     const buckets = getMolecularDataBuckets(studyData, this.showMutations, this.mutationsKeyedBySampleId);
+        //
+        //     const mutationTraces = _.mapValues(buckets.mutationBuckets,(molecularData:NumericGeneMolecularData[],canonicalMutationType:string)=>{
+        //         return molecularData.map((datum)=>{
+        //             return { y:datum, x:studyIndex + getJitter()  }
+        //         });
+        //     });
+        //
+        //     mutationScatterTraces.push(mutationTraces);
+        //
+        //     if (buckets.unmutatedBucket.length > 0) {
+        //         const unmutated = buckets.unmutatedBucket.map((datum:NumericGeneMolecularData)=>{
+        //             return { y:datum, x:studyIndex + getJitter() }
+        //         });
+        //         unMutatedTraces.push(unmutated);
+        //     }
+        //
+        //     studyIndex++;
+        //
+        // });
 
         return { boxTraces, mutationScatterTraces, unMutatedTraces };
 
@@ -264,7 +290,8 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     }
 
-    @computed get mutationTypes(){
+    // the keys of the scatter traces will ALWAYS be canonycal mutation types
+    @computed get mutationTypesPresent(){
         const mutationTypes = _.flatMap(this.victoryTraces.mutationScatterTraces,(blah:any)=>{
             return _.keys(blah);
         });
@@ -272,11 +299,11 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     }
 
     @computed get legendData(){
-        const legendData = this.mutationTypes.map((mutationType:string)=>{
+        const legendData = this.mutationTypesPresent.map((mutationType:string)=>{
             const style = ExpressionStyleSheet[mutationType];
             return { name: style.legendText, symbol: { fill: style.fill, type: style.symbol } }
         });
-        legendData.push({ name: "No Mutation", symbol: { fill: "#00AAF8", type: "circle" }  });
+        //legendData.push(Expre);
         return legendData;
     }
 
@@ -286,7 +313,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     @autobind makeTooltip(props:any){
 
-        const geneMolecularData: GeneMolecularData = props.datum.y;
+        const geneMolecularData: NumericGeneMolecularData = props.datum.y;
 
         this.tooltipModel = {
             x:props.x + 20,
@@ -300,16 +327,18 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     }
 
-    buildTooltip(tooltipModel: ITooltipModel){
+    @computed get toolTip(){
 
         return (
             <div className="popover right"
                  onMouseLeave={()=>this.hideTooltip()}
-                 style={{display:'block', position:'absolute', top:tooltipModel.y, width:500, left:tooltipModel!.x}}
+                 style={{display:'block', position:'absolute', top:this.tooltipModel!.y, width:500, left:this.tooltipModel!.x}}
             >
                 <div className="arrow" style={{top:30}}></div>
                 <div className="popover-content">
-                    { this.tooltipModel!.data.studyName}
+                    <strong>Study:</strong> { this.tooltipModel!.data.studyName }<br />
+                    <strong>Sample ID:</strong> { this.tooltipModel!.data.sampleId }<br />
+                    <strong>Expression:</strong> { this.tooltipModel!.data.expression }
                 </div>
             </div>
 
@@ -317,10 +346,10 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     }
 
-    buildScatter(data, style){
+    buildScatter(data:ScatterPoint[], style: ExpressionStyle){
 
         return <VictoryScatter
-            style={{ data: { fill: style.fill, stroke:"#999999", strokeWidth: 1 } }}
+            style={{ data: { fill: style.fill, stroke:"#666666", strokeWidth: 1 } }}
             symbol={style.symbol}
             events={[{
                 target: "data",
@@ -343,12 +372,10 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                     }
                 }
             }]}
-            y={(datum:{ y:GeneMolecularData })=>{
+            y={(datum:{ y:NumericGeneMolecularData })=>{
                 return datum.y.value;
-                //const ret = logger(parseFloat(datum.y.value));
-                //return (isFinite(ret)) ? ret : ZERO_EXPRESSION;
             }}
-            x={(item)=>item.x+1}
+            x={(item:ScatterPoint)=>item.x+1}
             size={3}
             data={data}
         />
@@ -357,62 +384,22 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
 
     @computed get buildUnmutatedTraces(){
-        return this.victoryTraces.unMutatedTraces.map((trace)=>this.buildScatter(trace, {fill: "#00AAF8"}))
+        return this.victoryTraces.unMutatedTraces.map((trace)=>this.buildScatter(trace, ExpressionStyleSheet.non_mut))
     }
 
     @computed get buildMutationScatters(){
 
         return _.flatMap(this.victoryTraces.mutationScatterTraces,(blah:any)=>{
             return _.map(blah,(value:any,key)=>{
-
+                // mutation types (keys) have been canonicalized, so there should always be
+                // an entry in ExpressionStyleSheet, but just in case ...
                 if (key in ExpressionStyleSheet) {
                     const style = ExpressionStyleSheet[key];
-
                     return this.buildScatter(value, style);
-
-                    // return <VictoryScatter
-                    //     style={{ data: { fill: style.fill, stroke:style.stroke, strokeWidth: 1 } }}
-                    //     symbol={style.symbol}
-                    //     events={[{
-                    //         target: "data",
-                    //         eventHandlers: {
-                    //             onMouseOver: () => {
-                    //                 return [
-                    //                     {
-                    //                         target: "data",
-                    //                         mutation: this.makeTooltip
-                    //                     }
-                    //                 ];
-                    //             },
-                    //             onMouseLeave: () => {
-                    //                 return [
-                    //                     {
-                    //                         target: "data",
-                    //                         mutation: this.hideTooltip
-                    //                     }
-                    //                 ];
-                    //             }
-                    //         }
-                    //     }]}
-                    //     y={(datum:{ y:GeneMolecularData })=>{
-                    //         return datum.y.value;
-                    //         //const ret = logger(parseFloat(datum.y.value));
-                    //         //return (isFinite(ret)) ? ret : ZERO_EXPRESSION;
-                    //     }}
-                    //     x={(item)=>item.x+1}
-                    //     size={3}
-                    //     data={value}
-                    // />
-
 
                 } else {
                     return null;
                 }
-
-
-
-
-
             })
         });
 
@@ -423,7 +410,6 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     }
 
     @observable height = 600;
-
 
     @computed get chart(){
 
@@ -453,7 +439,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
             <VictoryAxis dependentAxis
                          axisLabelComponent={<VictoryLabel />}
                          tickValues={[-5,0,5,10,15].map((val)=>Math.pow(2,val))}
-                         tickFormat={(val)=>Math.log2(val)}
+                         tickFormat={(val:number)=>Math.log2(val)}
             />
 
 
@@ -461,8 +447,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                 boxWidth={BOX_WIDTH}
                 style={BOX_STYLES}
                 data={this.victoryTraces.boxTraces}
-                y={(...args)=>{ return 1}}
-                x={(item)=>item.x+1}
+                x={(item:BoxPlotModel)=>item.x!+1}
             />
 
             {
@@ -581,7 +566,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                 <div className="posRelative">
 
                     {
-                        (this.tooltipModel) && (this.buildTooltip(this.tooltipModel))
+                        (this.tooltipModel) && (this.toolTip)
                     }
 
                     {this.chart}

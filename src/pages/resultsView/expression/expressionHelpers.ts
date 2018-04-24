@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 
-type ExpressionStyle = {
+export type ExpressionStyle = {
     typeName: string;
     symbol: string;
     fill: string;
@@ -85,7 +85,7 @@ export const ExpressionStyleSheet: { [mutationType:string]:ExpressionStyle } = {
         symbol: "circle",
         fill: "#00AAF8",
         stroke: "#0089C6",
-        legendText: "Neither mutated"
+        legendText: "No Mutation"
     },
     non_sequenced: {
         typeName: "non_sequenced",

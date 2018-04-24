@@ -15,6 +15,22 @@ interface Outliers {
   }
 };
 
+export type BoxPlotModel = {
+    min: number,
+    median: number,
+    max: number,
+    q1: number,
+    q2:number,
+    q3: number,
+    x?: number,
+    whiskerUpper:number,
+    whiskerLower:number,
+    IQR:number,
+    outliersUpper:Outliers["upper"],
+    outliersLower:Outliers["lower"]
+};
+
+
 function calculateOutliers(vector:number[], suspectedOutlierThresholdUpper:number, outlierThresholdUpper:number,
                            suspectedOutlierThresholdLower:number, outlierThresholdLower:number):Outliers
 {
@@ -36,19 +52,19 @@ function calculateOutliers(vector:number[], suspectedOutlierThresholdUpper:numbe
 }
 
 
-export function calculateBoxPlotModel(vector: number[]) {
+export function calculateBoxPlotModel(vector: number[]) : BoxPlotModel {
 
-    const sortedVector = _.sortBy(vector, [(o)=>o]);
+    const sortedVector = _.sortBy<number>(vector, [(n:number)=>n]);
 
-    const quartiles = jStat.quartiles(sortedVector);
-    const median = jStat.median(sortedVector);
+    const quartiles = jStat.quartiles(sortedVector) as number[];
+    const median = jStat.median(sortedVector) as number;
 
-    const q1 = quartiles[0];
-    const q2 = quartiles[1];
-    const q3 = quartiles[2];
-    const IQR = q3 - q1;
-    const max = sortedVector[sortedVector.length-1];
-    const min = sortedVector[0];
+    const q1:number = quartiles[0];
+    const q2:number = quartiles[1];
+    const q3:number = quartiles[2];
+    const IQR:number = q3 - q1;
+    const max:number = sortedVector[sortedVector.length-1];
+    const min:number = sortedVector[0];
 
     const outlierThresholdLower = q1-(OUTLIER_MULTIPLE*IQR);
     const outlierThresholdUpper = q3+(OUTLIER_MULTIPLE*IQR);
@@ -66,7 +82,6 @@ export function calculateBoxPlotModel(vector: number[]) {
         suspectedOutlierThresholdUpper : sortedVector[sortedVector.length-1];
 
     return {
-
         q1,
         q2,
         q3,
@@ -78,7 +93,6 @@ export function calculateBoxPlotModel(vector: number[]) {
         min,
         outliersUpper:outliers.upper,
         outliersLower:outliers.lower,
-
     }
 
 
