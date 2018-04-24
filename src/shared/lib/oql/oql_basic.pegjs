@@ -9,7 +9,8 @@ Number = "-" number: Number { return "-"+number;}
         / whole_part:NaturalNumber {return whole_part;}
 String = word:[-_.@/a-zA-Z0-9*]+ { return word.join("") }
 AminoAcid = letter:[GPAVLIMCFYWHKRQNEDST] { return letter; }
-AnyString = anyString:[^"]+ { return anyString.join("") }
+// any character, except " :
+StringExceptQuotes = stringExceptQuotes:[^"]+ { return stringExceptQuotes.join("") }
 
 sp = space:[ \t\r]+
 msp = space:[ \t\r]*
@@ -18,7 +19,7 @@ zmbs = zero_or_more_breaks_and_spaces:[; \t\r\n]*
 ombs = one_or_more_breaks_and_spaces:[; \t\r\n]+
 
 StartMergedGenes
-	= "[" zmbs "\"" label:AnyString "\"" {return {"label": label, "list":[]};}
+	= "[" zmbs "\"" StringExceptQuotes "\"" {return {"label": label, "list":[]};}
 	/ "[" zmbs {return {"label": undefined, "list":[]};}
 
 // Case-insensitive keywords
