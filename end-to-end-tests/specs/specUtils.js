@@ -12,10 +12,17 @@ function goToUrlAndSetLocalStorage(url) {
     browser.refresh();
 }
 
+function sessionServiceIsEnabled() {
+    return browser.execute(function() {
+        return window.frontendConfig.sessionServiceIsEnabled;
+    }).value;
+}
+
 const useExternalFrontend = !process.env.FRONTEND_TEST_DO_NOT_LOAD_EXTERNAL_FRONTEND;
 
 module.exports = {
     waitForOncoprint: waitForOncoprint,
     goToUrlAndSetLocalStorage: goToUrlAndSetLocalStorage,
-    useExternalFrontend: useExternalFrontend
+    useExternalFrontend: useExternalFrontend,
+    sessionServiceIsEnabled: sessionServiceIsEnabled
 };
