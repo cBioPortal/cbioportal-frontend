@@ -188,6 +188,7 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
                                     className="btn btn-default btn-sm"
                                     disabled={this.props.store.pdbChainDataStore.allData.length === 0}
                                     onClick={this.toggle3dPanel}
+                                    data-test="view3DStructure"
                                 >
                                     View 3D Structure
                                 </button>
