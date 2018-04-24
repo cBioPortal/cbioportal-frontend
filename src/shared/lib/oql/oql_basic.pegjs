@@ -1,5 +1,5 @@
 start
-	= SuperQuery
+	= Query
 	/ sp { return false; }
 
 NaturalNumber = number:[0-9]+ { return number.join("");}
@@ -30,18 +30,18 @@ MUT = "MUT"i
 EXP = "EXP"i
 PROT = "PROT"i
 
-SuperQuery
-	= mqr:MergedQuery sqr:SuperQuery {return mqr.concat(sqr);}
-	/ qr:Query sqr:SuperQuery {return qr.concat(sqr);}
+Query
+	= mqr:MergedQuery sqr:Query {return mqr.concat(sqr);}
+	/ qr:StandardQuery sqr:Query {return qr.concat(sqr);}
 	/ mqr:MergedQuery {return mqr;}
-	/ qr:Query {return qr; }
+	/ qr:StandardQuery {return qr; }
 
 MergedQuery
-	= zmbs mergedGenes:StartMergedGenes qr:Query zmbs "]" zmbs mqr:MergedQuery { mergedGenes.list = qr; return [mergedGenes].concat(mqr);; }
-	/ zmbs mergedGenes:StartMergedGenes qr:Query zmbs "]" zmbs { mergedGenes.list = qr; return [mergedGenes]; }
+	= zmbs mergedGenes:StartMergedGenes qr:StandardQuery zmbs "]" zmbs mqr:MergedQuery { mergedGenes.list = qr; return [mergedGenes].concat(mqr);; }
+	/ zmbs mergedGenes:StartMergedGenes qr:StandardQuery zmbs "]" zmbs { mergedGenes.list = qr; return [mergedGenes]; }
 
-Query
-	= zmbs first:SingleGeneQuery ombs rest:Query  { return [first].concat(rest); }
+StandardQuery
+	= zmbs first:SingleGeneQuery ombs rest:StandardQuery  { return [first].concat(rest); }
 	/ zmbs first:SingleGeneQuery zmbs { return [first]; }
 
 SingleGeneQuery 
