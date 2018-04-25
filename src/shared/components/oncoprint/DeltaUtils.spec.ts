@@ -4,7 +4,7 @@ import {
     transition,
     transitionTrackGroupSortPriority
 } from "./DeltaUtils";
-import {createStubInstance, SinonStub, spy} from "sinon";
+import {createStubInstance, match, SinonStub, spy} from "sinon";
 import OncoprintJS from "oncoprintjs";
 import {
     CLINICAL_TRACK_GROUP_INDEX,
@@ -87,6 +87,61 @@ describe("Oncoprint DeltaUtils", ()=>{
             assert.isTrue(
                 expansionCallback.called,
                 'calling the expand callbacks of added tracks should invoke the one provided'
+            );
+        });
+
+        it("renders expansion tracks if they are added to an existing genetic track", () => {
+            // given a genetic track specification with three expansion tracks
+            const expandableTrack = {
+                key: 'GENETICTRACK_0',
+                label: 'GENE5 / GENE7 / GENE1',
+                oql: '[GENE5: HOMDEL; GENE7: AMP HOMDEL; GENE1: HOMDEL]',
+                info: '60%',
+                data: [],
+            };
+            const oldProps: IOncoprintProps = {
+                ...makeMinimalOncoprintProps(),
+                geneticTracks: [expandableTrack]
+            };
+            const newProps: IOncoprintProps = {
+                ...makeMinimalOncoprintProps(),
+                geneticTracks: [{
+                    ...expandableTrack,
+                    expansionTrackList: [
+                        {key: 'GENETICTRACK_0_EXPANSION_0', label: 'GENE5', oql: 'GENE5: HOMDEL', info: '30%', data: []},
+                        {key: 'GENETICTRACK_0_EXPANSION_1', label: 'GENE7', oql: 'GENE7: AMP HOMDEL', info: '40%', data: []},
+                        {key: 'GENETICTRACK_0_EXPANSION_2', label: 'GENE1', oql: 'GENE1: HOMDEL', info: '10%', data: []}
+                    ]
+                }]
+            };
+            const oncoprint: OncoprintJS<any> = createStubInstance(OncoprintJS);
+            (oncoprint.addTracks as SinonStub).returns([1]);
+            const trackIdsByKey = {'GENETICTRACK_0': 5};
+            // when instructed to render the track from scratch
+            transition(
+                newProps,
+                oldProps,
+                oncoprint,
+                () => trackIdsByKey,
+                () => makeMinimalProfileMap()
+            );
+            // then it adds the three expansion tracks to the Oncoprint
+            assert.equal(
+                (oncoprint.addTracks as SinonStub).callCount,
+                3,
+                'Adding three expansion tracks should involve adding three tracks'
+            );
+            assert.isTrue(
+                (oncoprint.addTracks as SinonStub).alwaysCalledWith(
+                    [match.has('expansion_of', trackIdsByKey['GENETICTRACK_0'])]
+                ),
+                'Expansion tracks should be marked as expansions of their parent'
+            );
+            assert.isTrue(
+                (oncoprint.addTracks as SinonStub).calledWith(
+                    [match({label: 'GENE7', track_info: '40%'})]
+                ),
+                'The expansion tracks added should correspond to those requested'
             );
         });
     });
