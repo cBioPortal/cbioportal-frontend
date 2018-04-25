@@ -303,7 +303,9 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
             const style = ExpressionStyleSheet[mutationType];
             return { name: style.legendText, symbol: { fill: style.fill, type: style.symbol } }
         });
-        //legendData.push(Expre);
+        // now lets add non mutated entry
+        const nonMutStyle = ExpressionStyleSheet.non_mut;
+        legendData.push( { name: nonMutStyle.legendText, symbol: { fill: nonMutStyle.fill, type: nonMutStyle.symbol } });
         return legendData;
     }
 
