@@ -40,6 +40,7 @@ import QuerySummary from "./querySummary/QuerySummary";
 import {QueryStore} from "../../shared/components/query/QueryStore";
 import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import {getGAInstance} from "../../shared/lib/tracking";
+import PlotsTab from "./plots/PlotsTab";
 
 
 const win = (window as any);
@@ -329,6 +330,12 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     <DownloadTab store={this.resultsViewPageStore} />
                 </div>
             );
+        });
+
+        exposeComponentRenderer('renderPlotsTab', ()=>{
+            return (<div className="cbioportal-frontend">
+                <PlotsTab store={this.resultsViewPageStore}/>
+            </div>);
         });
     }
 
