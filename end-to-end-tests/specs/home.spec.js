@@ -69,8 +69,12 @@ describe('homepage', function() {
     });
 
     it('should not allow submission if OQL contains EXP or PROT for multiple studies', ()=>{
-        var nextCheckboxSel = '[data-test="StudySelect"]:nth-child(5)';
-        browser.click(nextCheckboxSel);
+        var input = $(".autosuggest input[type=text]");
+        input.setValue('breast');
+        browser.pause(500);
+        var checkBox = $('[data-test="StudySelect"]');
+        checkBox.waitForExist(10000);
+        browser.click('[data-test="StudySelect"]');
 
         var oqlEntrySel = 'textarea[data-test="geneSet"]';
         browser.setValue(oqlEntrySel, 'PTEN: EXP>1');

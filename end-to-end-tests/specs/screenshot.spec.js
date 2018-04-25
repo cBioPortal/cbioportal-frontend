@@ -48,6 +48,7 @@ function runResultsTestSuite(){
     it('mutation tab', function(){
         browser.click("[href='#mutation_details']");
         browser.waitForVisible('.borderedChart svg',20000);
+        browser.waitForEnabled('[data-test=view3DStructure]', 10000);
         var res = browser.checkElement('#mutation_details',{hide:['.qtip'], viewportChangePause:1000 });
         assertScreenShotMatch(res);
     });
