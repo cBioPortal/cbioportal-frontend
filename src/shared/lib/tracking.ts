@@ -9,7 +9,7 @@ interface trackingCodes {
   mixpanel?:string;
 };
 
-function getGAInstance(){
+export function getGAInstance(){
     return analytics.name('newGA');
 }
 
@@ -17,14 +17,8 @@ const win = (window as any);
 
 function setCustomTrackingEvents(){
 
-    if (win.cancerStudyIdList !== 'null') {
-        getGAInstance().event('results view', 'show', { eventLabel: win.cancerStudyIdList  });
-    }
-    if (_.includes(['all','null'],win.cancerStudyId) === false) {
-        getGAInstance().event('results view', 'show', { eventLabel: win.cancerStudyId  });
-    }
-
     // tabs on result page
+
     $('#tabs').on('click','.ui-tabs-nav a', function(){
         getGAInstance().screenview($(this).text() + ' tab');
         getGAInstance().event('results tab', 'show', { eventLabel: $(this).text()  });
