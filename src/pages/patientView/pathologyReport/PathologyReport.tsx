@@ -31,7 +31,7 @@ export default class PathologyReport extends React.Component<IPathologyReportPro
 
     buildPDFUrl(url: string):string {
 
-        return `https://drive.google.com/viewerng/viewer?url=${url}?pid=explorer&efh=false&a=v&chrome=false&embedded=true`;
+        return `https://docs.google.com/viewerng/viewer?url=${url}?pid=explorer&efh=false&a=v&chrome=false&embedded=true`;
 
     }
 
