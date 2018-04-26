@@ -74,7 +74,7 @@ function activateAnalytics(){
 
     conditions.forEach((config:any)=>{ trackingCodes = trackingCodes || ((config.condition()) ? config.trackingCodes() : undefined) });
 
-    if (trackingCodes) {
+    if (trackingCodes && !localStorage.e2etest) {
 
         trackingEnabled = true;
         const debugTracking = localStorage.debugTracking;
