@@ -347,6 +347,33 @@ describe('OncoprintUtils', () => {
                 "Calling the track's remove callback should unlist it"
             );
         });
+
+        it('indents and lowlights expansion tracks', () => {
+            // given
+            const storeProperties = makeMinimal3Patient3GeneStoreProperties();
+            const queryData = {
+                 cases: makeMinimal3Patient3GeneCaseData(),
+                 oql: {
+                    gene: 'KRAS',
+                    oql_line: 'KRAS;',
+                    parsed_oql_line: {gene: 'KRAS', alterations: []},
+                    data: []
+                }
+            };
+            // when
+            const trackFunction = makeGeneticTrackWith({
+                sampleMode: true,
+                ...storeProperties,
+            });
+            const track = trackFunction(
+                queryData,
+                MINIMAL_TRACK_INDEX,
+                'PARENT_TRACK_1'
+            );
+            // then
+            assert.equal(track.labelColor, 'grey');
+            assert.equal(track.label, '  KRAS');
+        });
     });
 
     describe('percentAltered', () => {
