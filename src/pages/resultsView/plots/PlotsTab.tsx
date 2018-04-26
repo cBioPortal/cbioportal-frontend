@@ -39,7 +39,7 @@ enum ViewType {
 }
 
 type AxisMenuSelection = {
-    axisType: AxisType;
+    axisType: AxisType|undefined;
     entrezGeneId?:number;
     molecularProfileType?:string;
     molecularProfileId?:string;
@@ -70,22 +70,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     constructor(props:IPlotsTabProps) {
         super(props);
 
-        this.horzSelection = observable({
-            axisType: AxisType.geneticProfile,
-            entrezGeneId: undefined,
-            molecularProfileType: undefined,
-            molecularProfileId: undefined,
-            clinicalAttributeId: undefined,
-            logScale: false
-        });
-        this.vertSelection = observable({
-            axisType: AxisType.geneticProfile,
-            entrezGeneId: undefined,
-            molecularProfileType: undefined,
-            molecularProfileId: undefined,
-            clinicalAttributeId: undefined,
-            logScale: false
-        });
+        this.horzSelection = this.initAxisMenuSelection();
+        this.vertSelection = this.initAxisMenuSelection();
+
         this.geneLock = false;
         this.searchCaseInput = "";
         this.searchMutationInput = "";
@@ -111,6 +98,76 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         this.executeSearchCase = this.executeSearchCase.bind(this);
         this.executeSearchMutation = this.executeSearchMutation.bind(this);
         this.onButtonClick = this.onButtonClick.bind(this);
+    }
+
+    private initAxisMenuSelection():AxisMenuSelection {
+        const self = this;
+
+        return observable({
+            get axisType() {
+                if (!self.profileTypeOptions.length && !self.clinicalAttributeOptions.length) {
+                    return undefined;
+                } else if (!self.profileTypeOptions.length) {
+                    return AxisType.clinicalAttribute;
+                } else if (!self.clinicalAttributeOptions.length) {
+                    return AxisType.geneticProfile;
+                } else {
+                    return this._axisType;
+                }
+            },
+            set axisType(a:AxisType|undefined) {
+                this._axisType = a;
+            },
+            get entrezGeneId() {
+                if (this._entrezGeneId === undefined && self.geneOptions.length) {
+                    return self.geneOptions[0].value;
+                } else {
+                    return this._entrezGeneId;
+                }
+            },
+            set entrezGeneId(e:number|undefined) {
+                this._entrezGeneId = e;
+            },
+            get molecularProfileType() {
+                if (this._molecularProfileType === undefined && self.profileTypeOptions.length) {
+                    return self.profileTypeOptions[0].value;
+                } else {
+                    return this._molecularProfileType;
+                }
+            },
+            set molecularProfileType(t:string|undefined) {
+                this._molecularProfileType = t;
+            },
+            get molecularProfileId() {
+                if (this._molecularProfileId === undefined &&
+                    this.molecularProfileType &&
+                    self.profileNameOptionsByType[this.molecularProfileType] &&
+                    self.profileNameOptionsByType[this.molecularProfileType].length) {
+                    return self.profileNameOptionsByType[this.molecularProfileType][0].value;
+                } else {
+                    return this._molecularProfileId;
+                }
+            },
+            set molecularProfileId(id:string|undefined) {
+                this._molecularProfileId = id;
+            },
+            get clinicalAttributeId() {
+                if (this._clinicalAttributeId === undefined && self.clinicalAttributeOptions.length) {
+                    return self.clinicalAttributeOptions[0].value;
+                } else {
+                    return this._clinicalAttributeId;
+                }
+            },
+            set clinicalAttributeId(id:string|undefined) {
+                this._clinicalAttributeId = id;
+            },
+            _axisType: AxisType.geneticProfile,
+            _entrezGeneId: undefined,
+            _molecularProfileType: undefined,
+            _molecularProfileId: undefined,
+            _clinicalAttributeId: undefined,
+            logScale: false
+        });
     }
 
     private onButtonClick(event:React.MouseEvent<HTMLButtonElement>) {
@@ -451,30 +508,37 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     private get controls() {
-        // TODO: style it up bro
         return (
-            <div>
-                <Observer>
-                    {this.getHorizontalAxisMenu}
-                </Observer>
-                <button onClick={this.swapHorzVertSelections}>Swap Axes</button>
-                <Observer>
-                    {this.getVerticalAxisMenu}
-                </Observer>
-                <Observer>
-                    {this.getUtilitiesMenu}
-                </Observer>
+            <div style={{display:"flex", flexDirection:"column"}}>
+                <div style={{margin:5, padding:10, border: "1px solid #aaaaaa", borderRadius:4}}>
+                    <Observer>
+                        {this.getHorizontalAxisMenu}
+                    </Observer>
+                </div>
+                <div style={{margin:5}}>
+                    <button onClick={this.swapHorzVertSelections}>Swap Axes</button>
+                </div>
+                <div style={{margin:5, padding:10, border: "1px solid #aaaaaa", borderRadius:4}}>
+                    <Observer>
+                        {this.getVerticalAxisMenu}
+                    </Observer>
+                </div>
+                <div style={{margin:5, padding:10, border: "1px solid #aaaaaa", borderRadius:4}}>
+                    <Observer>
+                        {this.getUtilitiesMenu}
+                    </Observer>
+                </div>
             </div>
         );
     }
 
     public render() {
         return (
-            <div>
-                <div id="plots-controls">
+            <div style={{display:"flex", flexDirection: "row"}}>
+                <div id="plots-controls" style={{width:"30%"}}>
                     {this.controls}
                 </div>
-                <div id="plots-box">
+                <div id="plots-box" style={{width:"70%"}}>
                 </div>
             </div>
         );
