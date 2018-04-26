@@ -217,6 +217,8 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                                                       genes={store.genes.result}
                                                       data={store.rnaSeqMolecularData.result}
                                                       mutations={store.mutations.result}
+                                                      RNASeqVersion={store.expressionTabseqVersion}
+                                                      onRNASeqVersionChange={(version:number)=>store.expressionTabseqVersion=version}
                             />
                         } else {
                             return <div>loading</div>

@@ -25,6 +25,8 @@ interface ExpressionWrapperProps {
     genes: Gene[];
     data: { [hugeGeneSymbol: string]: NumericGeneMolecularData[][] };
     mutations: Mutation[];
+    onRNASeqVersionChange:(version:number)=>void;
+    RNASeqVersion:number;
 
 }
 
@@ -222,46 +224,6 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
         }
 
-        // this.sortedData.forEach((studyData)=>{
-        //
-        //     //const boxData = studyData.map(dataTransformer);
-        //
-        //     const boxData = calculateBoxPlotModel(studyData.map(dataTransformer));
-        //
-        //     // *IMPORTANT* because Victory does not handle outliers,
-        //     // we are overriding meaning of min and max in order to show whiskers
-        //     // at quartile +/-IQL * 1.5 instead of true max/min
-        //
-        //     boxTraces.push({
-        //         min: boxData.whiskerLower, // see above
-        //         median: boxData.median, // see above
-        //         max: boxData.whiskerUpper,
-        //         q1: boxData.q1,
-        //         q3: boxData.q3,
-        //         x: i,
-        //     });
-        //
-        //     const buckets = getMolecularDataBuckets(studyData, this.showMutations, this.mutationsKeyedBySampleId);
-        //
-        //     const mutationTraces = _.mapValues(buckets.mutationBuckets,(molecularData:NumericGeneMolecularData[],canonicalMutationType:string)=>{
-        //         return molecularData.map((datum)=>{
-        //             return { y:datum, x:studyIndex + getJitter()  }
-        //         });
-        //     });
-        //
-        //     mutationScatterTraces.push(mutationTraces);
-        //
-        //     if (buckets.unmutatedBucket.length > 0) {
-        //         const unmutated = buckets.unmutatedBucket.map((datum:NumericGeneMolecularData)=>{
-        //             return { y:datum, x:studyIndex + getJitter() }
-        //         });
-        //         unMutatedTraces.push(unmutated);
-        //     }
-        //
-        //     studyIndex++;
-        //
-        // });
-
         return {boxTraces, mutationScatterTraces, unMutatedTraces};
 
     }
@@ -270,6 +232,11 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     handleStudySelection(event: React.SyntheticEvent<HTMLInputElement>) {
         // toggle state of it
         this.selectedStudies[event.currentTarget.value] = !this.selectedStudies[event.currentTarget.value];
+    }
+
+    @autobind
+    handleRNASeqVersionChange(event: React.SyntheticEvent<HTMLSelectElement>){
+        this.props.onRNASeqVersionChange(parseInt(event.currentTarget.value));
     }
 
     studySelectionModal() {
@@ -546,10 +513,9 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                                 </div>
                                 <div className="form-group">
                                     <h5>Profile:</h5>
-                                    <select className="form-control input-sm" onChange={() => {
-                                    }} title="Select profile">
-                                        <option>RNA Seq V2</option>
-                                        <option>RNA Seq</option>
+                                    <select className="form-control input-sm" value={this.props.RNASeqVersion} onChange={this.handleRNASeqVersionChange} title="Select profile">
+                                        <option value={2}>RNA Seq V2</option>
+                                        <option value={1}>RNA Seq</option>
                                     </select>
                                 </div>
 
