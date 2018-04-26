@@ -135,8 +135,6 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     @observable logScale = true;
 
-    @observable seqVersion: "RNA Seq V2" | "RNA Seq" = "RNA Seq V2";
-
     @observable sortBy: SortOptions = "alphabetic";
 
     @computed
@@ -326,7 +324,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     @computed
     get yAxisLabel() {
-        return `${this.selectedGene} Expression --- ${this.seqVersion}`;
+        return `${this.selectedGene} Expression --- RNA Seq V${this.props.RNASeqVersion}`;
     }
 
     @computed
