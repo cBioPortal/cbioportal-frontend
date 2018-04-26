@@ -234,6 +234,41 @@ describe("Oncoprint DeltaUtils", ()=>{
                 )
             );
         });
+
+        it("renders a heatmap track with a coloured label if so requested", () => {
+            // given a single-gene heatmap track specification with a label color
+            const newProps: IOncoprintProps = {
+                ...makeMinimalOncoprintProps(),
+                heatmapTracks: [{
+                    key: '"HEATMAPTRACK_mystudy_Zscores,GENE25"',
+                    label: '  GENE25',
+                    data: [],
+                    molecularProfileId: 'mystudy_Zscores',
+                    molecularAlterationType: 'MRNA_EXPRESSION',
+                    datatype: 'Z-SCORE',
+                    onRemove: () => { /* update external state */ },
+                    trackGroupIndex: 3,
+                    labelColor: 'olive'
+                }]
+            };
+            const oncoprint: OncoprintJS<any> = createStubInstance(OncoprintJS);
+            (oncoprint.addTracks as SinonStub).returns([1]);
+            const trackIdsByKey = {};
+            // when instructed to render the track from scratch
+            transition(
+                newProps,
+                makeMinimalOncoprintProps(),
+                oncoprint,
+                () => trackIdsByKey,
+                () => makeMinimalProfileMap()
+            );
+            // then it adds a track with the specified track label color
+            assert.isTrue(
+                (oncoprint.addTracks as SinonStub).calledWith(
+                    [match.has('track_label_color', 'olive')]
+                )
+            );
+        });
     });
 
     describe("transitionTrackGroupSortPriority", ()=>{
