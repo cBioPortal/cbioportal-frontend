@@ -226,6 +226,14 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     }
 
+    @computed get domain(){
+
+        const min = _.min(this.victoryTraces.boxTraces.map(trace=>trace.min));
+        const max = _.max(this.victoryTraces.boxTraces.map(trace=>trace.max));
+        return { min, max };
+
+    }
+
     @autobind
     handleStudySelection(event: React.SyntheticEvent<HTMLInputElement>) {
         // toggle state of it
@@ -432,7 +440,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                     width={this.width}
                     theme={CBIOPORTAL_VICTORY_THEME}
                     domainPadding={{x: [100, 100]}}
-                    domain={{y: [0.15, 100000]}}
+                    domain={{y: [this.domain.min, this.domain.max]}}
                     scale={{x: "linear", y: d3.scale.log().base(2)}}
                     padding={{bottom: 200, left: 100, top: 100, right: 10}}
                     containerComponent={<VictoryContainer containerRef={(ref: any) => this.svgContainer = ref}
