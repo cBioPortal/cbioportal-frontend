@@ -441,3 +441,17 @@ h3.hr {
   border:1px dashed $borderColor !important;
 }
 
+.popover {
+
+  &.cbioTooltip {
+
+    position:absolute !important;
+    display:block !important;
+    max-width:600px !important;
+
+    .popover-content {
+      font-size:$font-size-small !important;
+    }
+  }
+
+}
