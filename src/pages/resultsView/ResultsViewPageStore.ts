@@ -66,7 +66,7 @@ import {
     annotateMolecularDatum, getOncoKbOncogenic,
     computeCustomDriverAnnotationReport, computePutativeDriverAnnotatedMutations,
     initializeCustomDriverAnnotationSettings, computeGenePanelInformation,
-    getQueriedStudies
+    getQueriedStudies, getRNAExpressionProfiles
 } from "./ResultsViewPageStoreUtils";
 import {getAlterationCountsForCancerTypesForAllGenes} from "../../shared/lib/alterationCountHelpers";
 import sessionServiceClient from "shared/api//sessionServiceInstance";
@@ -293,6 +293,8 @@ export class ResultsViewPageStore {
     @observable public sessionIdURL = '';
 
     @observable selectedMolecularProfileIds: string[] = [];
+
+    @observable expressionTabseqVersion: number = 2;
 
     public mutationAnnotationSettings:MutationAnnotationSettings;
 
@@ -1841,7 +1843,8 @@ export class ResultsViewPageStore {
            this.geneMolecularDataCache
        ],
        invoke: async ()=>{
-           const rnaSeqProfiles = this.molecularProfilesInStudies.result.filter((profile:MolecularProfile)=>/rna_seq_v2_mrna$/.test(profile.molecularProfileId));
+           const version = (this.expressionTabseqVersion === 2) ? 'v2_' : '';
+           const rnaSeqProfiles = this.molecularProfilesInStudies.result.filter((profile:MolecularProfile)=>RegExp(`rna_seq_${version}mrna$`).test(profile.molecularProfileId));
 
            const queries = _.flatMap(this.genes.result,(gene:Gene)=>{
                return rnaSeqProfiles.map((profile:MolecularProfile)=> {

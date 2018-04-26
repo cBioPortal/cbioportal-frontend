@@ -194,3 +194,11 @@ export async function getQueriedStudies(
     });
     return queriedStudies.concat(otherVirtualStudies);
 }
+
+export function getRNAExpressionProfiles(profiles:MolecularProfile[],version:number){
+    if (version === 2) {
+        return profiles.filter(p=>p.molecularProfileId.includes('rna_seq_v2_mrna'));
+    } else {
+        return profiles.filter(p=>p.molecularProfileId.includes('rna_seq_mrna'));
+    }
+}
