@@ -254,7 +254,7 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}>
             let links:{icon:string, onClick?:string|(()=>void), tooltip?:string}[] = [
                 {
                     icon: 'info-circle',
-                    tooltip: study.description,
+                    tooltip: this.store.isVirtualStudy(study.studyId) ? study.description.replace(/\r?\n/g, '<br />') : study.description,
                 }
             ];
     
