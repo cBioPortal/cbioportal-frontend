@@ -555,6 +555,7 @@ function transitionGeneticTrack(
         const geneticTrackParams = {
             rule_set_params: getGeneticTrackRuleSetParams(nextProps.distinguishMutationType, nextProps.distinguishDrivers),
             label: nextSpec.label,
+            track_label_color: nextSpec.labelColor || undefined,
             target_group: GENETIC_TRACK_GROUP_INDEX,
             sortCmpFn: getGeneticTrackSortComparator(sortByMutationType(nextProps), sortByDrivers(nextProps)),
             description: nextSpec.oql,
