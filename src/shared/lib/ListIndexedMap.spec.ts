@@ -53,4 +53,34 @@ describe("ListIndexedMap", ()=>{
         map.set("test2", "whatsup","yo","bye");
         assert.equal(map.get("whatsup","yo","bye"), "test2");
     });
+    it("`entries` returns the entries in insertion order", ()=>{
+        const map = new ListIndexedMap<string>();
+        map.set("test");
+        map.set("blah", "asdf");
+        map.set("apsoidjfa", "yo","whatsup");
+        map.set("foobar", "whatsup","yo");
+        map.set("fubar", "whatsup","yo","bye");
+        assert.deepEqual(map.entries(), [
+            {
+                key: [],
+                value: "test"
+            },
+            {
+                key:["asdf"],
+                value:"blah"
+            },
+            {
+                key: ["yo", "whatsup"],
+                value: "apsoidjfa"
+            },
+            {
+                key: ["whatsup", "yo"],
+                value: "foobar"
+            },
+            {
+                key: ["whatsup", "yo", "bye"],
+                value: "fubar"
+            }
+        ]);
+    });
 });

@@ -1907,7 +1907,7 @@ export class ResultsViewPageStore {
                 clinicalDataType: attr.patientAttribute ? "PATIENT" : "SAMPLE",
                 clinicalDataMultiStudyFilter: {
                     attributeIds: [attr.clinicalAttributeId],
-                    identifiers: q.patientAttribute ?
+                    identifiers: attr.patientAttribute ?
                         this.patients.result!.map(p=>({entityId:p.patientId, studyId:p.studyId})) :
                         this.samples.result!.map(s=>({entityId:s.sampleId, studyId:s.studyId}))
                 }

@@ -6,16 +6,13 @@ function getFolderKey(key:string[]) {
 
 type Entry<R> = { key:string[], value: R };
 
-export default class ListIndexedMap<R, Default = undefined> {
+export default class ListIndexedMap<R> {
     private map:{[folderKey:string]:Entry<R>[]} = {};
-
-    constructor(private getDefault?:()=>Default = ()=>undefined) {
-    }
 
     public entries():Entry<R>[] {
         const ret = [];
-        for (const folderKey of Object.keys(map)) {
-            for (const entry of map[folderKey]) {
+        for (const folderKey of Object.keys(this.map)) {
+            for (const entry of this.map[folderKey]) {
                 ret.push(entry);
             }
         }
@@ -34,16 +31,16 @@ export default class ListIndexedMap<R, Default = undefined> {
         }
     }
 
-    public get(...key:string[]):R|Default {
+    public get(...key:string[]):R|undefined {
         const entry = this.getEntry(key);
         if (!entry) {
-            return this.getDefault();
+            return undefined;
         } else {
             return entry.value;
         }
     }
 
-    private getEntry(key:string[]):Entry<R> {
+    private getEntry(key:string[]):Entry<R>|undefined {
         return this.getFolder(key).find(entry => _.isEqual(entry.key, key));
     }
 

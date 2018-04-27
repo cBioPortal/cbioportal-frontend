@@ -8,6 +8,8 @@ import LockIcon from "../../../shared/components/LockIcon";
 import ReactSelect from "react-select";
 import _ from "lodash";
 import {
+    getAxisDescription,
+    getAxisLabel, isStringData,
     makeAxisDataPromise, molecularProfileTypeDisplayOrder,
     molecularProfileTypeToDisplayType
 } from "./PlotsTabUtils";
@@ -83,6 +85,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         this.searchMutationInput = "";
         this.viewType = ViewType.MutationType;
 
+        this.controls = this.controls.bind(this);
+        this.plot = this.plot.bind(this);
         this.onInputClick = this.onInputClick.bind(this);
         this.getHorizontalAxisMenu = this.getHorizontalAxisMenu.bind(this);
         this.getVerticalAxisMenu = this.getVerticalAxisMenu.bind(this);
@@ -379,27 +383,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
     }
 
-    private isDataCategorical(selection:AxisMenuSelection) {
-        // either copy number profile, or string type clinical attribute
-        switch (selection.axisType) {
-            case AxisType.molecularProfile:
-                return selection.molecularProfileType === AlterationTypeConstants.COPY_NUMBER_ALTERATION;
-            case AxisType.clinicalAttribute:
-                const clinicalAttribute = this.clinicalAttributeIdToClinicalAttribute[selection.clinicalAttributeId!];// clinicalAttributeId defined if axis type is clinicalAttribute
-                return (clinicalAttribute && clinicalAttribute.datatype.toLowerCase() === "string");
-            default:
-                return undefined;
-        }
-    }
-
-    @computed get isHorzDataCategorical() {
-        return this.isDataCategorical(this.horzSelection);
-    }
-
-    @computed get isVertDataCategorical() {
-        return this.isDataCategorical(this.vertSelection);
-    }
-
     @computed get sampleMode() {
         // sample mode unless both axes are patient clinical attributes
         return this.horzSelection.axisType !== AxisType.clinicalAttribute ||
@@ -412,7 +395,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         return makeAxisDataPromise(
             this.horzSelection,
             this.sampleMode,
-            this.props.store.molecularProfileIdToMolecularProfile,
+            this.clinicalAttributeIdToClinicalAttribute,
             this.props.store.patientKeyToSamples,
             this.props.store.clinicalDataMxPCache,
             this.props.store.numericGeneMolecularDataCache
@@ -423,11 +406,60 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         return makeAxisDataPromise(
             this.vertSelection,
             this.sampleMode,
-            this.props.store.molecularProfileIdToMolecularProfile,
+            this.clinicalAttributeIdToClinicalAttribute,
             this.props.store.patientKeyToSamples,
             this.props.store.clinicalDataMxPCache,
             this.props.store.numericGeneMolecularDataCache
         );
+    }
+
+
+    @computed get horzLabel() {
+        if (this.props.store.molecularProfileIdToMolecularProfile.isComplete) {
+            return getAxisLabel(
+                this.horzSelection,
+                this.props.store.molecularProfileIdToMolecularProfile.result,
+                this.clinicalAttributeIdToClinicalAttribute
+            );
+        } else {
+            return "";
+        }
+    }
+
+    @computed get vertLabel() {
+        if (this.props.store.molecularProfileIdToMolecularProfile.isComplete) {
+            return getAxisLabel(
+                this.vertSelection,
+                this.props.store.molecularProfileIdToMolecularProfile.result,
+                this.clinicalAttributeIdToClinicalAttribute
+            );
+        } else {
+            return "";
+        }
+    }
+
+    @computed get horzDescription() {
+        if (this.props.store.molecularProfileIdToMolecularProfile.isComplete) {
+            return getAxisDescription(
+                this.horzSelection,
+                this.props.store.molecularProfileIdToMolecularProfile.result,
+                this.clinicalAttributeIdToClinicalAttribute
+            );
+        } else {
+            return "";
+        }
+    }
+
+    @computed get vertDescription() {
+        if (this.props.store.molecularProfileIdToMolecularProfile.isComplete) {
+            return getAxisDescription(
+                this.vertSelection,
+                this.props.store.molecularProfileIdToMolecularProfile.result,
+                this.clinicalAttributeIdToClinicalAttribute
+            );
+        } else {
+            return "";
+        }
     }
 
     private getAxisMenu(vertical:boolean) {
@@ -600,24 +632,27 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     private plot() {
-        if (this.horzSelection.axisType === undefined || this.vertSelection.axisType === undefined) {
+        if (this.horzAxisDataPromise.isPending || this.vertAxisDataPromise.isPending) {
             return <LoadingIndicator isLoading={true}/>
-        }
-
-        if (this.isVertDataCategorical && this.isHorzDataCategorical) {
-            return (
-                <TablePlot
-                    clinicalDataCache={this.props.store.clinicalDataMxPCache}
-                    numericGeneMolecularDataCache={this.props.store.numericGeneMolecularDataCache}
-                    horzSelection={this.horzSelection}
-                    vertSelection={this.vertSelection}
-                    clinicalAttributeIdToClinicalAttribute={this.clinicalAttributeIdToClinicalAttribute}
-                    molecularProfileIdToMolecularProfile={this.props.store.molecularProfileIdToMolecularProfile}
-                    patientKeyToSamples={this.props.store.patientKeyToSamples}
-                />
-            );
+        } else if (this.horzAxisDataPromise.isComplete && this.vertAxisDataPromise.isComplete) {
+            const horzAxisData = this.horzAxisDataPromise.result!;
+            const vertAxisData = this.vertAxisDataPromise.result!;
+            if (isStringData(horzAxisData) && isStringData(vertAxisData)) {
+                return (
+                    <TablePlot
+                        horzData={horzAxisData.data}
+                        vertData={vertAxisData.data}
+                        horzLabel={this.horzLabel}
+                        vertLabel={this.vertLabel}
+                        horzDescription={this.horzDescription}
+                        vertDescription={this.vertDescription}
+                    />
+                );
+            } else {
+                return <span>Not implemented yet.</span>
+            }
         } else {
-            return <span>Not implemented yet.</span>
+            return <span>Error loading plot data.</span>;
         }
     }
 

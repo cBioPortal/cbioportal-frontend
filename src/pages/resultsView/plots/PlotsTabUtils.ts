@@ -1,6 +1,9 @@
 import {AxisMenuSelection, AxisType} from "./PlotsTab";
 import {MobxPromise} from "mobxpromise";
-import {ClinicalAttribute, ClinicalData, MolecularProfile, Sample} from "../../../shared/api/generated/CBioPortalAPI";
+import {
+    ClinicalAttribute, ClinicalData, MolecularProfile, NumericGeneMolecularData,
+    Sample
+} from "../../../shared/api/generated/CBioPortalAPI";
 import {remoteData} from "../../../shared/api/remoteData";
 import MobxPromiseCache from "../../../shared/lib/MobxPromiseCache";
 export const molecularProfileTypeToDisplayType:{[s:string]:string} = {
@@ -30,10 +33,32 @@ export type PlotsData = {
 export interface IAxisData {
     data:{
         uniqueCaseKey:string;
-        value:string;
+        value:string|number;
     }[];
     datatype:string;//"string" or "number"
 };
+
+export interface IStringAxisData {
+    data:{
+        uniqueCaseKey:string;
+        value:string;
+    }[];
+    datatype:string;
+};
+export interface INumberAxisData {
+    data:{
+        uniqueCaseKey:string;
+        value:number;
+    }[];
+    datatype:string;
+}
+
+export function isStringData(d:IAxisData): d is IStringAxisData {
+    return d.datatype === "string";
+}
+export function isNumberData(d:IAxisData): d is INumberAxisData {
+    return d.datatype === "number";
+}
 
 function makeAxisDataPromise_Clinical(
     attribute:ClinicalAttribute,
@@ -47,7 +72,7 @@ function makeAxisDataPromise_Clinical(
         invoke:()=>{
             const _patientKeyToSamples = patientKeyToSamples.result!;
             const data:ClinicalData[] = promise.result!;
-            const axisData:IAxisData[] = { data:[], datatype:attribute.datatype.toLowerCase() };
+            const axisData:IAxisData = { data:[], datatype:attribute.datatype.toLowerCase() };
             const axisData_Data = axisData.data;
             if (makeSampleData) {
                 if (attribute.patientAttribute) {
@@ -96,11 +121,14 @@ function makeAxisDataPromise_Molecular(
     return remoteData({
         await:()=>[promise],
         invoke:()=>{
-            const data:GeneMolecularData = promise.result!;
-            return data.map(d=>({
-                uniqueCaseKey: d.uniqueSampleKey,
-                value: d.value
-            }));
+            const data:NumericGeneMolecularData[] = promise.result!;
+            return Promise.resolve({
+                data: data.map(d=>({
+                    uniqueCaseKey: d.uniqueSampleKey,
+                    value: d.value
+                })),
+                datatype: "number" // TODO: how to know when its CNA profile to use categories/string?
+            });
         }
     });
 }
@@ -108,31 +136,23 @@ function makeAxisDataPromise_Molecular(
 export function makeAxisDataPromise(
     selection:AxisMenuSelection,
     makeSampleData:boolean,
-    molecularProfileIdToMolecularProfile:MobxPromise<{[molecularProfileId:string]:MolecularProfile}>,
-    patientKeyToSamples:MobxPromise<{[uniquePatientKey]:Sample[]}>,
+    clinicalAttributeIdToClinicalAttribute:{[clinicalAttributeId:string]:ClinicalAttribute},
+    patientKeyToSamples:MobxPromise<{[uniquePatientKey:string]:Sample[]}>,
     clinicalDataCache:MobxPromiseCache<ClinicalAttribute, ClinicalData[]>,
     numericGeneMolecularDataCache:MobxPromiseCache<{entrezGeneId:number, molecularProfileId:string}, NumericGeneMolecularData[]>
-):MobxPromise<IStringData[]> | MobxPromise<INumberData[]> {
+):MobxPromise<IAxisData> {
 
-    let ret = remoteData(()=>Promise.resolve([]));
-    if (molecularProfileIdToMolecularProfile.isComplete && patientKeyToSamples.isComplete) {
-        switch (selection.axisType) {
-            case AxisType.clinicalAttribute:
-                if (!selection.clinicalAttributeId) {
-                    break;
-                }
-                const attribute = clinicalAttributeIdToClinicalAttribute[selection.clinicalAttributeId];
-                ret = makeAxisDataPromise_Clinical(attribute, makeSampleData, clinicalDataCache, patientKeyToSamples);
-                break;
-            case AxisType.molecularProfile:
-                if (!selection.entrezGeneId || !selection.molecularProfileId) {
-                    break;
-                }
-                ret = makeAxisDataPromise_Molecular(
-                    selection.entrezGeneId, selection.molecularProfileId, numericGeneMolecularDataCache
-                );
-                break;
-        }
+    let ret:MobxPromise<IAxisData> = remoteData(()=>new Promise<IAxisData>(()=>0)); // always isPending
+    switch (selection.axisType) {
+        case AxisType.clinicalAttribute:
+            const attribute = clinicalAttributeIdToClinicalAttribute[selection.clinicalAttributeId!];
+            ret = makeAxisDataPromise_Clinical(attribute, makeSampleData, clinicalDataCache, patientKeyToSamples);
+            break;
+        case AxisType.molecularProfile:
+            ret = makeAxisDataPromise_Molecular(
+                selection.entrezGeneId!, selection.molecularProfileId!, numericGeneMolecularDataCache
+            );
+            break;
     }
     return ret;
 }
@@ -145,6 +165,51 @@ export function tableCellTextColor(val:number, min:number, max:number) {
     }
 }
 
+export function getAxisLabel(
+    selection:AxisMenuSelection,
+    molecularProfileIdToMolecularProfile:{[molecularProfileId:string]:MolecularProfile},
+    clinicalAttributeIdToClinicalAttribute:{[clinicalAttributeId:string]:ClinicalAttribute}
+) {
+    let ret = "";
+    switch (selection.axisType) {
+        case AxisType.clinicalAttribute:
+            const attribute = clinicalAttributeIdToClinicalAttribute[selection.clinicalAttributeId!];
+            if (attribute) {
+                ret = attribute.displayName;
+            }
+            break;
+        case AxisType.molecularProfile:
+            const profile = molecularProfileIdToMolecularProfile[selection.molecularProfileId!];
+            if (profile) {
+                ret = profile.name;
+            }
+            break;
+    }
+    return ret;
+}
+
+export function getAxisDescription(
+    selection:AxisMenuSelection,
+    molecularProfileIdToMolecularProfile:{[molecularProfileId:string]:MolecularProfile},
+    clinicalAttributeIdToClinicalAttribute:{[clinicalAttributeId:string]:ClinicalAttribute}
+) {
+    let ret = "";
+    switch (selection.axisType) {
+        case AxisType.clinicalAttribute:
+            const attribute = clinicalAttributeIdToClinicalAttribute[selection.clinicalAttributeId!];
+            if (attribute) {
+                ret = attribute.description;
+            }
+            break;
+        case AxisType.molecularProfile:
+            const profile = molecularProfileIdToMolecularProfile[selection.molecularProfileId!];
+            if (profile) {
+                ret = profile.description;
+            }
+            break;
+    }
+    return ret;
+}
 /*export function makePlotsData:PlotsData(
 ) {
 }*/
