@@ -22,13 +22,17 @@ export class CopyDownloadButtons extends React.Component<ICopyDownloadButtonsPro
     public render() {
         return (
             <span className={this.props.className}>
-                <If condition={this.props.showCopyMessage}>
-                    <span style={{marginLeft: 10}} className="alert-success">Copied!</span>
-                </If>
                 <ButtonGroup style={{ marginLeft:10 }} className={this.props.className}>
                     <If condition={this.props.showCopy}>
                         <DefaultTooltip
-                            overlay={<span>Copy</span>}
+                            overlay={() => {
+                                if (this.props.showCopyMessage) {
+                                    return <span className="alert-success">Copied!</span>;
+                                }
+                                else {
+                                    return <span>Copy</span>;
+                                }
+                            }}
                             placement="top"
                             mouseLeaveDelay={0}
                             mouseEnterDelay={0.5}
