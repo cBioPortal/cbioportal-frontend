@@ -179,7 +179,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
         const mutationScatterTraces: { [key: string]: ScatterPoint[] }[] = [];
         const unMutatedTraces: ScatterPoint[][] = [];
 
-        const handleZero = (num: number) => (num === 0) ? 0.25 : num;
+        const handleZero = (num: number) => (num === 0) ? 1 : num;
 
         // if we are in log mode, compute log of value
         const dataTransformer = (molecularData: NumericGeneMolecularData) =>
@@ -195,6 +195,8 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
             // at quartile +/-IQL * 1.5 instead of true max/min
 
             boxTraces.push({
+                realMin:boxData.min,
+                realMax:boxData.max,
                 min: boxData.whiskerLower, // see above
                 median: boxData.median, // see above
                 max: boxData.whiskerUpper,
@@ -228,8 +230,8 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     @computed get domain(){
 
-        const min = _.min(this.victoryTraces.boxTraces.map(trace=>trace.min));
-        const max = _.max(this.victoryTraces.boxTraces.map(trace=>trace.max));
+        const min = _.min(this.victoryTraces.boxTraces.map(trace=>trace.realMin));
+        const max = _.max(this.victoryTraces.boxTraces.map(trace=>trace.realMax));
         return { min, max };
 
     }
@@ -440,7 +442,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                     height={this.height}
                     width={this.width}
                     theme={CBIOPORTAL_VICTORY_THEME}
-                    domainPadding={{x: [100, 100], y:[1,1]}}
+                    domainPadding={{x: [100, 100]}}
                     domain={{y: [this.domain.min, this.domain.max]}}
                     scale={{x: "linear", y: d3.scale.log().base(2)}}
                     padding={{bottom: 200, left: 100, top: 100, right: 10}}
