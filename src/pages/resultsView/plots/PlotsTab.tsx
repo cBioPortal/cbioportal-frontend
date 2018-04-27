@@ -2,21 +2,26 @@ import * as React from "react";
 import {action, computed, observable} from "mobx";
 import {Observer, observer} from "mobx-react";
 import "./styles.scss";
-import {ResultsViewPageStore} from "../ResultsViewPageStore";
+import {AlterationTypeConstants, ResultsViewPageStore} from "../ResultsViewPageStore";
 import {FormControl} from "react-bootstrap";
 import LockIcon from "../../../shared/components/LockIcon";
 import ReactSelect from "react-select";
 import _ from "lodash";
-import {molecularProfileTypeDisplayOrder, molecularProfileTypeToDisplayType} from "./PlotsTabUtils";
-import {MolecularProfile} from "../../../shared/api/generated/CBioPortalAPI";
+import {
+    makeAxisDataPromise, molecularProfileTypeDisplayOrder,
+    molecularProfileTypeToDisplayType
+} from "./PlotsTabUtils";
+import {ClinicalAttribute, MolecularProfile} from "../../../shared/api/generated/CBioPortalAPI";
 import Timer = NodeJS.Timer;
+import TablePlot from "./TablePlot";
+import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 
 enum EventKey {
-    horz_geneticProfile,
+    horz_molecularProfile,
     horz_clinicalAttribute,
     horz_logScale,
 
-    vert_geneticProfile,
+    vert_molecularProfile,
     vert_clinicalAttribute,
     vert_logScale,
 
@@ -28,8 +33,8 @@ enum EventKey {
     downloadData
 }
 
-enum AxisType {
-    geneticProfile,
+export enum AxisType {
+    molecularProfile,
     clinicalAttribute
 }
 
@@ -38,7 +43,7 @@ enum ViewType {
     CopyNumber
 }
 
-type AxisMenuSelection = {
+export type AxisMenuSelection = {
     axisType: AxisType|undefined;
     entrezGeneId?:number;
     molecularProfileType?:string;
@@ -110,7 +115,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 } else if (!self.profileTypeOptions.length) {
                     return AxisType.clinicalAttribute;
                 } else if (!self.clinicalAttributeOptions.length) {
-                    return AxisType.geneticProfile;
+                    return AxisType.molecularProfile;
                 } else {
                     return this._axisType;
                 }
@@ -161,7 +166,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             set clinicalAttributeId(id:string|undefined) {
                 this._clinicalAttributeId = id;
             },
-            _axisType: AxisType.geneticProfile,
+            _axisType: AxisType.molecularProfile,
             _entrezGeneId: undefined,
             _molecularProfileType: undefined,
             _molecularProfileId: undefined,
@@ -186,14 +191,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     private onInputClick(event:React.MouseEvent<HTMLInputElement>) {
         switch (parseInt((event.target as HTMLInputElement).value, 10)) {
-            case EventKey.horz_geneticProfile:
-                this.horzSelection.axisType = AxisType.geneticProfile;
+            case EventKey.horz_molecularProfile:
+                this.horzSelection.axisType = AxisType.molecularProfile;
                 break;
             case EventKey.horz_clinicalAttribute:
                 this.horzSelection.axisType = AxisType.clinicalAttribute;
                 break;
-            case EventKey.vert_geneticProfile:
-                this.vertSelection.axisType = AxisType.geneticProfile;
+            case EventKey.vert_molecularProfile:
+                this.vertSelection.axisType = AxisType.molecularProfile;
                 break;
             case EventKey.vert_clinicalAttribute:
                 this.vertSelection.axisType = AxisType.clinicalAttribute;
@@ -292,6 +297,17 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
     }
 
+    @computed get clinicalAttributeIdToClinicalAttribute():{[clinicalAttributeId:string]:ClinicalAttribute} {
+        if (this.props.store.clinicalAttributes.isComplete) {
+            return this.props.store.clinicalAttributes.result.reduce((map:{[clinicalAttributeId:string]:ClinicalAttribute}, next)=>{
+                map[next.clinicalAttributeId] = next;
+                return map;
+            }, {});
+        } else {
+            return {};
+        }
+    }
+
     @computed get clinicalAttributeOptions() {
         if (this.props.store.clinicalAttributes.isComplete) {
             return this.props.store.clinicalAttributes.result.map(attribute=>({
@@ -363,6 +379,57 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
     }
 
+    private isDataCategorical(selection:AxisMenuSelection) {
+        // either copy number profile, or string type clinical attribute
+        switch (selection.axisType) {
+            case AxisType.molecularProfile:
+                return selection.molecularProfileType === AlterationTypeConstants.COPY_NUMBER_ALTERATION;
+            case AxisType.clinicalAttribute:
+                const clinicalAttribute = this.clinicalAttributeIdToClinicalAttribute[selection.clinicalAttributeId!];// clinicalAttributeId defined if axis type is clinicalAttribute
+                return (clinicalAttribute && clinicalAttribute.datatype.toLowerCase() === "string");
+            default:
+                return undefined;
+        }
+    }
+
+    @computed get isHorzDataCategorical() {
+        return this.isDataCategorical(this.horzSelection);
+    }
+
+    @computed get isVertDataCategorical() {
+        return this.isDataCategorical(this.vertSelection);
+    }
+
+    @computed get sampleMode() {
+        // sample mode unless both axes are patient clinical attributes
+        return this.horzSelection.axisType !== AxisType.clinicalAttribute ||
+            this.vertSelection.axisType !== AxisType.clinicalAttribute ||
+            !this.clinicalAttributeIdToClinicalAttribute[this.horzSelection.clinicalAttributeId!].patientAttribute || // clinicalAttributeId defined if axis type is clinicalAttribute
+            !this.clinicalAttributeIdToClinicalAttribute[this.vertSelection.clinicalAttributeId!].patientAttribute;
+    }
+
+    @computed get horzAxisDataPromise() {
+        return makeAxisDataPromise(
+            this.horzSelection,
+            this.sampleMode,
+            this.props.store.molecularProfileIdToMolecularProfile,
+            this.props.store.patientKeyToSamples,
+            this.props.store.clinicalDataMxPCache,
+            this.props.store.numericGeneMolecularDataCache
+        );
+    }
+
+    @computed get vertAxisDataPromise() {
+        return makeAxisDataPromise(
+            this.vertSelection,
+            this.sampleMode,
+            this.props.store.molecularProfileIdToMolecularProfile,
+            this.props.store.patientKeyToSamples,
+            this.props.store.clinicalDataMxPCache,
+            this.props.store.numericGeneMolecularDataCache
+        );
+    }
+
     private getAxisMenu(vertical:boolean) {
         return (
             <div>
@@ -371,11 +438,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     <div className="radio"><label>
                         <input
                             type="radio"
-                            name={vertical ? "vert_geneticProfile" : "horz_geneticProfile"}
-                            value={vertical ? EventKey.vert_geneticProfile : EventKey.horz_geneticProfile}
-                            checked={(vertical ? this.vertSelection.axisType: this.horzSelection.axisType) === AxisType.geneticProfile}
+                            name={vertical ? "vert_molecularProfile" : "horz_molecularProfile"}
+                            value={vertical ? EventKey.vert_molecularProfile : EventKey.horz_molecularProfile}
+                            checked={(vertical ? this.vertSelection.axisType: this.horzSelection.axisType) === AxisType.molecularProfile}
                             onClick={this.onInputClick}
-                        /> Genetic Profile
+                        /> Molecular Profile
                     </label></div>
                     <div className="radio"><label>
                         <input
@@ -387,7 +454,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                         /> Clinical Attribute
                     </label></div>
                 </div>
-                {((vertical ? this.vertSelection.axisType : this.horzSelection.axisType) === AxisType.geneticProfile) && (
+                {((vertical ? this.vertSelection.axisType : this.horzSelection.axisType) === AxisType.molecularProfile) && (
                     <div>
                         <div>
                             Gene
@@ -507,7 +574,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         );
     }
 
-    private get controls() {
+    private controls() {
         return (
             <div style={{display:"flex", flexDirection:"column"}}>
                 <div style={{margin:5, padding:10, border: "1px solid #aaaaaa", borderRadius:4}}>
@@ -532,13 +599,40 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         );
     }
 
+    private plot() {
+        if (this.horzSelection.axisType === undefined || this.vertSelection.axisType === undefined) {
+            return <LoadingIndicator isLoading={true}/>
+        }
+
+        if (this.isVertDataCategorical && this.isHorzDataCategorical) {
+            return (
+                <TablePlot
+                    clinicalDataCache={this.props.store.clinicalDataMxPCache}
+                    numericGeneMolecularDataCache={this.props.store.numericGeneMolecularDataCache}
+                    horzSelection={this.horzSelection}
+                    vertSelection={this.vertSelection}
+                    clinicalAttributeIdToClinicalAttribute={this.clinicalAttributeIdToClinicalAttribute}
+                    molecularProfileIdToMolecularProfile={this.props.store.molecularProfileIdToMolecularProfile}
+                    patientKeyToSamples={this.props.store.patientKeyToSamples}
+                />
+            );
+        } else {
+            return <span>Not implemented yet.</span>
+        }
+    }
+
     public render() {
         return (
             <div style={{display:"flex", flexDirection: "row"}}>
                 <div id="plots-controls" style={{width:"30%"}}>
-                    {this.controls}
+                    <Observer>
+                        {this.controls}
+                    </Observer>
                 </div>
-                <div id="plots-box" style={{width:"70%"}}>
+                <div id="plots-box" style={{width:"70%", scroll:"auto"}}>
+                    <Observer>
+                        {this.plot}
+                    </Observer>
                 </div>
             </div>
         );
