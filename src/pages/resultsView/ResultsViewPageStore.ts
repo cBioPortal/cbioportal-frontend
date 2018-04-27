@@ -1528,7 +1528,7 @@ export class ResultsViewPageStore {
         ],
         invoke:()=>{
             return Promise.resolve((mutation:Mutation)=>{
-                const oncokbAnnotation = this.getOncoKbMutationAnnotationForOncoprint.result!(mutation);
+                const oncokbAnnotation = typeof this.getOncoKbMutationAnnotationForOncoprint.result === "function" && this.getOncoKbMutationAnnotationForOncoprint.result!(mutation);
                 return (oncokbAnnotation ? !!oncokbAnnotation.hotspot : false);
             });
         }
