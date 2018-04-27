@@ -199,11 +199,9 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
     private mountExpressionTab(){
 
-        const target = $('<div class="cbioportal-frontend"></div>').insertBefore("#page_wrapper_table");
+        let target = $('<div class="ui-tabs-panel ui-widget-content ui-corner-bottom cbioportal-frontend"></div>').insertBefore("#cc-plots");
 
-
-
-
+        $("#cc-plots").hide();
 
         ReactDOM.render(
             <Observer>

@@ -332,7 +332,8 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     @computed
     get yAxisLabel() {
-        return `${this.selectedGene} Expression --- RNA Seq V${this.props.RNASeqVersion}`;
+        const log = this.logScale ? ' (log)' : '';
+        return `${this.selectedGene} Expression --- RNA Seq V${this.props.RNASeqVersion}${log}`;
     }
 
     @computed
@@ -439,7 +440,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                     height={this.height}
                     width={this.width}
                     theme={CBIOPORTAL_VICTORY_THEME}
-                    domainPadding={{x: [100, 100]}}
+                    domainPadding={{x: [100, 100], y:[1,1]}}
                     domain={{y: [this.domain.min, this.domain.max]}}
                     scale={{x: "linear", y: d3.scale.log().base(2)}}
                     padding={{bottom: 200, left: 100, top: 100, right: 10}}
@@ -460,7 +461,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                     />
 
                     <VictoryAxis dependentAxis
-                                 tickValues={[-5, 0, 5, 10, 15].map((val) => Math.pow(2, val))}
+
                                  tickFormat={(val: number) => Math.log2(val)}
                                  axisLabelComponent={<VictoryLabel dy={-50}/>}
                                  label={this.yAxisLabel}
@@ -556,6 +557,15 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                                                title="Show mutations"/>
                                         Show mutations
                                     </label>
+                                </div>
+
+                                <div className="form-group">
+                                    <h5>Profile:</h5>
+                                    <select className="form-control input-sm" onChange={()=>{}} title="Select profile">
+                                        <option value="provisional">TCGA Provisional</option>
+                                        <option value="tcga">TCGA</option>
+                                        <option value="all">All</option>
+                                    </select>
                                 </div>
 
                                 <div className="form-group">
