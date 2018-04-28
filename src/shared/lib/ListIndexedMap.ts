@@ -1,7 +1,7 @@
 import _ from "lodash";
 
 function getFolderKey(key:string[]) {
-    return JSON.stringify(key);
+    return key.join(",");
 }
 
 type Entry<R> = { key:string[], value: R };
@@ -38,6 +38,10 @@ export default class ListIndexedMap<R> {
         } else {
             return entry.value;
         }
+    }
+
+    public has(...key:string[]):boolean {
+        return !!this.getEntry(key);
     }
 
     private getEntry(key:string[]):Entry<R>|undefined {

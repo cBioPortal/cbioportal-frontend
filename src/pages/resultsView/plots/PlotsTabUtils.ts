@@ -159,9 +159,9 @@ export function makeAxisDataPromise(
 
 export function tableCellTextColor(val:number, min:number, max:number) {
     if (val > (max+min)/2) {
-        return "white";
+        return "rgb(255,255,255)";
     } else {
-        return "black";
+        return "rgb(0,0,0)";
     }
 }
 

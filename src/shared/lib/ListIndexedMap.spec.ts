@@ -83,4 +83,30 @@ describe("ListIndexedMap", ()=>{
             }
         ]);
     });
+    it("`has` returns true iff there is a corresponding entry", ()=>{
+        const map = new ListIndexedMap<string>();
+        assert.isFalse(map.has());
+        map.set("test");
+        assert.isTrue(map.has());
+        map.set("test2");
+        assert.isTrue(map.has());
+
+        assert.isFalse(map.has("yo"));
+        map.set("test", "yo");
+        assert.isTrue(map.has("yo"));
+        map.set("test2", "yo");
+        assert.isTrue(map.has("yo"));
+
+        assert.isFalse(map.has("yo", "whatsup"));
+        map.set("test", "yo","whatsup");
+        assert.isTrue(map.has("yo", "whatsup"));
+        map.set("test2", "yo","whatsup");
+        assert.isTrue(map.has("yo", "whatsup"));
+
+        assert.isFalse(map.has("whatsup","yo","bye"));
+        map.set("test", "whatsup","yo","bye");
+        assert.isTrue(map.has("whatsup","yo","bye"));
+        map.set("test2", "whatsup","yo","bye");
+        assert.isTrue(map.has("whatsup","yo","bye"));
+    });
 });

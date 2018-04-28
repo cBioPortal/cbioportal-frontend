@@ -658,13 +658,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     public render() {
         return (
-            <div style={{display:"flex", flexDirection: "row"}}>
-                <div id="plots-controls" style={{width:"30%"}}>
+            <div style={{display:"flex", flexDirection: "row", maxWidth: "inherit"}}>
+                <div style={{width:"25%"}}>
                     <Observer>
                         {this.controls}
                     </Observer>
                 </div>
-                <div id="plots-box" style={{width:"70%", scroll:"auto"}}>
+                <div style={{width:"75%", overflow:"scroll", maxHeight:700}}>
                     <Observer>
                         {this.plot}
                     </Observer>
