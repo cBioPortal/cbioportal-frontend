@@ -17,6 +17,7 @@ import {
     StudyViewFilter
 } from 'shared/api/generated/CBioPortalAPIInternal';
 import {
+    CancerStudy,
     ClinicalAttribute,
     ClinicalData,
     ClinicalDataSingleStudyFilter,
@@ -31,9 +32,10 @@ import {Chart} from 'pages/studyView/charts/Chart';
 import SurvivalChart from "../resultsView/survival/SurvivalChart";
 import {getPatientSurvivals} from "../resultsView/SurvivalStoreHelper";
 import {PatientSurvival} from "../../shared/model/PatientSurvival";
+import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
 
-export type ClinicalDataType= "SAMPLE" | "PATIENT";
-export type ClinicalAttributeData = {[attrId:string]:ClinicalDataCount[]};
+export type ClinicalDataType = "SAMPLE" | "PATIENT";
+export type ClinicalAttributeData = { [attrId: string]: ClinicalDataCount[] };
 export type ClinicalAttributeDataWithMeta = { attributeId: string, clinicalDataType: ClinicalDataType, counts: ClinicalDataCount[] };
 export type MutatedGenesData = MutationCountByGene[];
 export type CNAGenesData = CopyNumberCountByGene[];
@@ -50,11 +52,11 @@ export class StudyViewPageStore {
     constructor() {
     }
 
-    @observable studyId:string;
+    @observable studyId: string;
 
-    @observable sampleAttrIds:string[] = [];
+    @observable sampleAttrIds: string[] = [];
 
-    @observable patientAttrIds:string[] = [];
+    @observable patientAttrIds: string[] = [];
 
     @observable private _clinicalDataEqualityFilterSet = observable.map<ClinicalDataEqualityFilter>();
 
@@ -62,13 +64,14 @@ export class StudyViewPageStore {
 
     @observable private _cnaGeneFilter: CopyNumberGeneFilter;
 
-    @action updateClinicalDataEqualityFilters( attributeId      : string,
-                                               clinicalDataType : ClinicalDataType,
-                                               values           : string[]) {
+    @action
+    updateClinicalDataEqualityFilters(attributeId: string,
+                                      clinicalDataType: ClinicalDataType,
+                                      values: string[]) {
 
-        let id = [clinicalDataType,attributeId].join('_');
+        let id = [clinicalDataType, attributeId].join('_');
 
-        if(values.length>0){
+        if (values.length > 0) {
             let clinicalDataEqualityFilter = {
                 attributeId: attributeId,
                 clinicalDataType: clinicalDataType,
@@ -84,8 +87,8 @@ export class StudyViewPageStore {
     @action
     updateGeneFilter(entrezGeneId: number) {
         let mutatedGeneFilter = this._mutatedGeneFilter
-        if(!mutatedGeneFilter) {
-            mutatedGeneFilter = { molecularProfileId : this.mutationProfileId, entrezGeneIds: []}
+        if (!mutatedGeneFilter) {
+            mutatedGeneFilter = {molecularProfileId: this.mutationProfileId, entrezGeneIds: []}
         }
         let _index = mutatedGeneFilter.entrezGeneIds.indexOf(entrezGeneId);
         if (_index === -1) {
@@ -99,11 +102,11 @@ export class StudyViewPageStore {
     @action
     updateCNAGeneFilter(entrezGeneId: number, alteration: number) {
         let _cnaGeneFilter = this._cnaGeneFilter;
-        if(!_cnaGeneFilter) {
+        if (!_cnaGeneFilter) {
             _cnaGeneFilter = {
-                    alterations: [],
-                    molecularProfileId: this.cnaProfileId
-                }
+                alterations: [],
+                molecularProfileId: this.cnaProfileId
+            }
         }
         var _index = -1;
         _.every(_cnaGeneFilter.alterations, (val: CopyNumberGeneFilterElement, index: number) => {
@@ -123,20 +126,21 @@ export class StudyViewPageStore {
         this._cnaGeneFilter = _cnaGeneFilter;
     }
 
-    @computed get filters() {
+    @computed
+    get filters() {
         let filters: StudyViewFilter = {} as any;
-        let clinicalDataEqualityFilter= this._clinicalDataEqualityFilterSet.values();
+        let clinicalDataEqualityFilter = this._clinicalDataEqualityFilterSet.values();
 
         //checking for empty since the api throws error when the clinicalDataEqualityFilter array is empty
-        if(clinicalDataEqualityFilter.length>0){
+        if (clinicalDataEqualityFilter.length > 0) {
             filters.clinicalDataEqualityFilters = clinicalDataEqualityFilter
         }
 
-        if(this._mutatedGeneFilter && this._mutatedGeneFilter.entrezGeneIds.length > 0) {
+        if (this._mutatedGeneFilter && this._mutatedGeneFilter.entrezGeneIds.length > 0) {
             filters.mutatedGenes = [this._mutatedGeneFilter];
         }
 
-        if(this._cnaGeneFilter && this._cnaGeneFilter.alterations.length > 0) {
+        if (this._cnaGeneFilter && this._cnaGeneFilter.alterations.length > 0) {
             filters.cnaGenes = [this._cnaGeneFilter];
         }
 
@@ -144,7 +148,7 @@ export class StudyViewPageStore {
         return filters;
     }
 
-    public getClinicalDataEqualityFilters(id : string): string[] {
+    public getClinicalDataEqualityFilters(id: string): string[] {
         let clinicalDataEqualityFilter = this._clinicalDataEqualityFilterSet.get(id)
         return clinicalDataEqualityFilter ? clinicalDataEqualityFilter.values : [];
     }
@@ -168,29 +172,35 @@ export class StudyViewPageStore {
 
     readonly molecularProfiles = remoteData<MolecularProfile[]>({
         invoke: async () => {
-			return await defaultClient.getAllMolecularProfilesInStudyUsingGET({
-				studyId: this.studyId
-			});
-		},
-		default: []
+            return await defaultClient.getAllMolecularProfilesInStudyUsingGET({
+                studyId: this.studyId
+            });
+        },
+        default: []
     });
 
-    @computed get mutationProfileId():string {
+    readonly studyMetaData = remoteData({
+        invoke: async() => defaultClient.getStudyUsingGET({studyId: this.studyId})
+    });
+
+    @computed
+    get mutationProfileId(): string {
         var i;
         let molecularProfiles = this.molecularProfiles.result
-        for (i=0; i<molecularProfiles.length; i++) {
-            if (molecularProfiles[i].molecularAlterationType === "MUTATION_EXTENDED"){
+        for (i = 0; i < molecularProfiles.length; i++) {
+            if (molecularProfiles[i].molecularAlterationType === "MUTATION_EXTENDED") {
                 return molecularProfiles[i].molecularProfileId
             }
         }
         return '';
     }
 
-    @computed get cnaProfileId():string {
+    @computed
+    get cnaProfileId(): string {
         var i;
         let molecularProfiles = this.molecularProfiles.result
-        for (i=0; i<molecularProfiles.length; i++) {
-            if(molecularProfiles[i].molecularAlterationType === "COPY_NUMBER_ALTERATION" && molecularProfiles[i].datatype === "DISCRETE"){
+        for (i = 0; i < molecularProfiles.length; i++) {
+            if (molecularProfiles[i].molecularAlterationType === "COPY_NUMBER_ALTERATION" && molecularProfiles[i].datatype === "DISCRETE") {
                 return molecularProfiles[i].molecularProfileId
             }
         }
@@ -215,34 +225,34 @@ export class StudyViewPageStore {
             // TODO
             // START : This is a temporary logic to dispaly only the attributes with values(slices) size >1 and <10
             let attribureSet: { [id: string]: ClinicalAttribute } = _.reduce(queriedAttributes, function (result, obj) {
-                let tag = obj.patientAttribute?"PATIENT_":"SAMPLE_";
+                let tag = obj.patientAttribute ? "PATIENT_" : "SAMPLE_";
                 result[tag + obj.clinicalAttributeId] = obj
                 return result;
             }, {} as any)
 
-            let sampleData:ClinicalAttributeData = this.initialSampleAttributesData.result
+            let sampleData: ClinicalAttributeData = this.initialSampleAttributesData.result
 
-            let patientData:ClinicalAttributeData = this.initialPatientAttributesData.result
+            let patientData: ClinicalAttributeData = this.initialPatientAttributesData.result
 
-            let filterSampleAttributes:ClinicalAttribute[] = _.reduce(sampleData, function (result, value, key) {
+            let filterSampleAttributes: ClinicalAttribute[] = _.reduce(sampleData, function (result, value, key) {
                 //check if number of visible charts <10 and number of slices >1 and <10
-                if(result.length<10 && value.length>1 && value.length<10){
-                    if(attribureSet["SAMPLE_"+key]){
-                        result.push(attribureSet["SAMPLE_"+key]);
+                if (result.length < 10 && value.length > 1 && value.length < 10) {
+                    if (attribureSet["SAMPLE_" + key]) {
+                        result.push(attribureSet["SAMPLE_" + key]);
                     }
                 }
                 return result;
             }, [] as any)
 
-            let filterPatientAttributes:ClinicalAttribute[] = _.reduce(patientData, function (result, value, key) {
+            let filterPatientAttributes: ClinicalAttribute[] = _.reduce(patientData, function (result, value, key) {
                 //check if number of visible charts <10 and number of slices >1 and <10
-                if(result.length<10 && value.length>1 && value.length<10){
-                    if(attribureSet["PATIENT_"+key]){
-                        result.push(attribureSet["PATIENT_"+key]);
+                if (result.length < 10 && value.length > 1 && value.length < 10) {
+                    if (attribureSet["PATIENT_" + key]) {
+                        result.push(attribureSet["PATIENT_" + key]);
                     }
                 }
                 return result;
-            } , [] as any)
+            }, [] as any)
             //END
 
             return [...filterSampleAttributes, ...filterPatientAttributes]
@@ -251,12 +261,12 @@ export class StudyViewPageStore {
     });
 
     readonly initialQueriedAttributes = remoteData({
-        await: ()=>[this.clinicalAttributes],
+        await: () => [this.clinicalAttributes],
         invoke: async () => {
             let selectedAttrIds = [...this.sampleAttrIds, ...this.patientAttrIds];
             //filter datatype === "STRING"
             let visibleClinicalAttributes = this.clinicalAttributes.result.filter(attribute => attribute.datatype === "STRING");
-            if(!_.isEmpty(selectedAttrIds)){
+            if (!_.isEmpty(selectedAttrIds)) {
                 visibleClinicalAttributes = visibleClinicalAttributes.filter(attribute => {
                     return _.includes(selectedAttrIds, attribute.clinicalAttributeId);
                 });
@@ -266,24 +276,26 @@ export class StudyViewPageStore {
         default: []
     });
 
-    @computed get selectedSampleAttributeIds(){
+    @computed
+    get selectedSampleAttributeIds() {
         let attributes = this.defaultVisibleAttributes.result;
         return attributes
-                    .filter(attribute => !attribute.patientAttribute)
-                    .map(attribute => attribute.clinicalAttributeId);
+            .filter(attribute => !attribute.patientAttribute)
+            .map(attribute => attribute.clinicalAttributeId);
     }
 
-    @computed get selectedPatientAttributeIds(){
+    @computed
+    get selectedPatientAttributeIds() {
         let attributes = this.defaultVisibleAttributes.result;
         return attributes
-                    .filter(attribute => attribute.patientAttribute)
-                    .map(attribute => attribute.clinicalAttributeId);
+            .filter(attribute => attribute.patientAttribute)
+            .map(attribute => attribute.clinicalAttributeId);
     }
 
     readonly sampleAttributesData = remoteData<ClinicalAttributeData>({
-        await: ()=>[this.initialSampleAttributesData],
+        await: () => [this.initialSampleAttributesData],
         invoke: async () => {
-            if(!_.isEmpty(this.filters)){
+            if (!_.isEmpty(this.filters)) {
                 return internalClient.fetchClinicalDataCountsUsingPOST({
                     studyId: this.studyId,
                     clinicalDataType: "SAMPLE",
@@ -292,7 +304,7 @@ export class StudyViewPageStore {
                         filter: this.filters
                     }
                 })
-            } else{
+            } else {
                 return this.initialSampleAttributesData.result;
             }
         },
@@ -300,9 +312,9 @@ export class StudyViewPageStore {
     });
 
     readonly patientAttributesData = remoteData<ClinicalAttributeData>({
-        await: ()=>[this.initialPatientAttributesData],
+        await: () => [this.initialPatientAttributesData],
         invoke: async () => {
-            if(!_.isEmpty(this.filters)){
+            if (!_.isEmpty(this.filters)) {
                 return internalClient.fetchClinicalDataCountsUsingPOST({
                     studyId: this.studyId,
                     clinicalDataType: "PATIENT",
@@ -377,30 +389,31 @@ export class StudyViewPageStore {
         default: []
     });
 
-    @computed get hasSurvivalPlots(){
+    @computed
+    get hasSurvivalPlots() {
 
-        let toReturn = {os_survival:false,dfs_survival:false};
+        let toReturn = {os_survival: false, dfs_survival: false};
         let osStatusFlag = false;
         let osMonthsFlag = false;
         let dfsStatusFlag = false;
         let dfsMonthsFlag = false;
 
         this.clinicalAttributes.result.forEach(obj => {
-            if(obj.clinicalAttributeId === 'OS_STATUS'){
+            if (obj.clinicalAttributeId === 'OS_STATUS') {
                 osStatusFlag = true;
-            }else if(obj.clinicalAttributeId === 'OS_MONTHS'){
+            } else if (obj.clinicalAttributeId === 'OS_MONTHS') {
                 osMonthsFlag = true;
-            }else if(obj.clinicalAttributeId === 'DFS_STATUS'){
+            } else if (obj.clinicalAttributeId === 'DFS_STATUS') {
                 dfsStatusFlag = true;
-            }else if(obj.clinicalAttributeId === 'DFS_MONTHS'){
+            } else if (obj.clinicalAttributeId === 'DFS_MONTHS') {
                 dfsMonthsFlag = true;
             }
         });
 
-        if(osStatusFlag && osMonthsFlag){
+        if (osStatusFlag && osMonthsFlag) {
             toReturn.os_survival = true;
         }
-        if(dfsStatusFlag && dfsMonthsFlag){
+        if (dfsStatusFlag && dfsMonthsFlag) {
             toReturn.dfs_survival = true;
         }
         return toReturn
@@ -412,7 +425,7 @@ export class StudyViewPageStore {
 
             let survivalTypes: SurvivalType[] = [];
 
-            if(this.hasSurvivalPlots.os_survival){
+            if (this.hasSurvivalPlots.os_survival) {
                 survivalTypes.push({
                     id: 'os_survival',
                     associatedAttrs: ['OS_STATUS', 'OS_MONTHS'],
@@ -421,11 +434,11 @@ export class StudyViewPageStore {
                     unalteredGroup: []
                 })
             }
-            if(this.hasSurvivalPlots.dfs_survival){
+            if (this.hasSurvivalPlots.dfs_survival) {
                 survivalTypes.push({
                     id: 'dfs_survival',
                     associatedAttrs: ['DFS_STATUS', 'DFS_MONTHS'],
-                    filter: ['Recurred/Progressed','Recurred'],
+                    filter: ['Recurred/Progressed', 'Recurred'],
                     alteredGroup: [],
                     unalteredGroup: []
                 })
@@ -445,15 +458,15 @@ export class StudyViewPageStore {
 
     //invoked once initially
     readonly initialSampleAttributesData = remoteData<ClinicalAttributeData>({
-        await: ()=>[this.initialQueriedAttributes],
+        await: () => [this.initialQueriedAttributes],
         invoke: () => {
             return internalClient.fetchClinicalDataCountsUsingPOST({
                 studyId: this.studyId,
                 clinicalDataType: "SAMPLE",
                 clinicalDataCountFilter: {
                     attributeIds: this.initialQueriedAttributes.result
-                    .filter(attribute => !attribute.patientAttribute)
-                    .map(attribute => attribute.clinicalAttributeId),
+                        .filter(attribute => !attribute.patientAttribute)
+                        .map(attribute => attribute.clinicalAttributeId),
                     filter: {} as any
                 }
             })
@@ -463,15 +476,15 @@ export class StudyViewPageStore {
 
     //invoked once initially
     readonly initialPatientAttributesData = remoteData<ClinicalAttributeData>({
-        await: ()=>[this.initialQueriedAttributes],
+        await: () => [this.initialQueriedAttributes],
         invoke: () => {
             return internalClient.fetchClinicalDataCountsUsingPOST({
                 studyId: this.studyId,
                 clinicalDataType: "PATIENT",
                 clinicalDataCountFilter: {
                     attributeIds: this.initialQueriedAttributes.result
-                    .filter(attribute => attribute.patientAttribute)
-                    .map(attribute => attribute.clinicalAttributeId),
+                        .filter(attribute => attribute.patientAttribute)
+                        .map(attribute => attribute.clinicalAttributeId),
                     filter: {} as any
                 }
             })
@@ -479,17 +492,17 @@ export class StudyViewPageStore {
         default: {}
     });
 
-    readonly cinicalAttributeData = remoteData<{ [attrId: string]: ClinicalAttributeDataWithMeta }>({
+    readonly clinicalAttributeData = remoteData<{ [attrId: string]: ClinicalAttributeDataWithMeta }>({
         await: () => [this.sampleAttributesData, this.patientAttributesData],
         invoke: async () => {
 
             let result: { [attrId: string]: ClinicalAttributeDataWithMeta } = _.reduce(this.sampleAttributesData.result, function (result, value, key) {
-                result["SAMPLE_" + key] = { attributeId: key, clinicalDataType: "SAMPLE", counts: value }
+                result["SAMPLE_" + key] = {attributeId: key, clinicalDataType: "SAMPLE", counts: value}
                 return result;
             }, {} as any)
 
             result = _.reduce(this.patientAttributesData.result, function (result, value, key) {
-                result["PATIENT_" + key] = { attributeId: key, clinicalDataType: "PATIENT", counts: value }
+                result["PATIENT_" + key] = {attributeId: key, clinicalDataType: "PATIENT", counts: value}
                 return result;
             }, result);
             return result;
@@ -498,7 +511,7 @@ export class StudyViewPageStore {
     });
 
     readonly mutatedGeneData = remoteData<MutatedGenesData>({
-        await: ()=>[this.molecularProfiles],
+        await: () => [this.molecularProfiles],
         invoke: () => {
             return internalClient.fetchMutatedGenesUsingPOST({
                 molecularProfileId: this.mutationProfileId,
@@ -509,7 +522,7 @@ export class StudyViewPageStore {
     });
 
     readonly cnaGeneData = remoteData<CNAGenesData>({
-        await: ()=>[this.molecularProfiles],
+        await: () => [this.molecularProfiles],
         invoke: () => {
             return internalClient.fetchCNAGenesUsingPOST({
                 molecularProfileId: this.cnaProfileId,
@@ -549,10 +562,10 @@ export interface IStudyViewPageProps {
 @observer
 export default class StudyViewPage extends React.Component<IStudyViewPageProps, {}> {
 
-    store:StudyViewPageStore;
-    queryInput:HTMLInputElement;
+    store: StudyViewPageStore;
+    queryInput: HTMLInputElement;
 
-    constructor(props: IStudyViewPageProps){
+    constructor(props: IStudyViewPageProps) {
         super();
         this.store = new StudyViewPageStore();
         this.onUserSelection = this.onUserSelection.bind(this);
@@ -565,23 +578,23 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             query => {
                 if ('studyId' in query) {
                     this.store.studyId = query.studyId;
-                    this.store.sampleAttrIds  = ('sampleAttrIds'  in query ? (query.sampleAttrIds  as string).split(",") : []);
+                    this.store.sampleAttrIds = ('sampleAttrIds' in query ? (query.sampleAttrIds  as string).split(",") : []);
                     this.store.patientAttrIds = ('patientAttrIds' in query ? (query.patientAttrIds as string).split(",") : []);
                 } else {
                     let studies = this.props.resultsViewPageStore.studyIds.result
-                    if(studies && studies.length>0){
+                    if (studies && studies.length > 0) {
                         this.store.studyId = studies[0];
                     }
                 }
             },
-            { fireImmediately:true }
+            {fireImmediately: true}
         );
 
     }
 
-    private onUserSelection(attrId           : string,
-                            clinicalDataType : ClinicalDataType,
-                            values            : string[]) {
+    private onUserSelection(attrId: string,
+                            clinicalDataType: ClinicalDataType,
+                            values: string[]) {
 
         this.store.updateClinicalDataEqualityFilters(attrId, clinicalDataType, values)
     }
@@ -594,18 +607,18 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         this.store.updateCNAGeneFilter(entrezGeneId, alteration);
     }
 
-    renderAttributeChart = (clinicalAttribute : ClinicalAttribute,
-                            arrayIndex        : number) => {
+    renderAttributeChart = (clinicalAttribute: ClinicalAttribute,
+                            arrayIndex: number) => {
 
-        let attributeUID = (clinicalAttribute.patientAttribute ? "PATIENT_" : "SAMPLE_")+clinicalAttribute.clinicalAttributeId;
+        let attributeUID = (clinicalAttribute.patientAttribute ? "PATIENT_" : "SAMPLE_") + clinicalAttribute.clinicalAttributeId;
         let filters = this.store.getClinicalDataEqualityFilters(attributeUID)
-        let data = this.store.cinicalAttributeData.result[attributeUID]
+        let data = this.store.clinicalAttributeData.result[attributeUID]
         return (<Chart
-                    clinicalAttribute={clinicalAttribute}
-                    onUserSelection= {this.onUserSelection}
-                    filters={filters}
-                    data={data}
-                    key={arrayIndex} />);
+            clinicalAttribute={clinicalAttribute}
+            onUserSelection={this.onUserSelection}
+            filters={filters}
+            data={data}
+            key={arrayIndex}/>);
     };
 
     renderSurvivalPlot = (data: SurvivalType) => {
@@ -632,34 +645,55 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         </div>
     }
 
-    render(){
+    render() {
         let mutatedGeneData = this.store.mutatedGeneData.result;
         let cnaGeneData = this.store.cnaGeneData.result;
+        let cancerStudy = this.store.studyMetaData.result!;
         return (
-            <div>
-                {
-                    this.store.defaultVisibleAttributes.isComplete &&
-                    (
-                        <div  className={styles.flexContainer}>
-                            {this.store.defaultVisibleAttributes.result.map(this.renderAttributeChart)}
+            <div className="studyView">
+                <div className="topBanner">
+                    {
+                        this.store.studyMetaData.isComplete && (
+                            <div className="studyViewHeader">
+                                <h3>{cancerStudy.name}</h3>
+                                <p dangerouslySetInnerHTML={{__html: cancerStudy.description}}></p>
+                            </div>
+                        )
+                    }
+                </div>
+                <MSKTabs id="studyViewTabs" activeTabId={this.props.routing.location.query.tab}
+                         className="mainTabs">
+
+                    <MSKTab key={0} id="summaryTab" linkText="Summary">
+                        <div>
+                            {
+                                this.store.defaultVisibleAttributes.isComplete &&
+                                (
+                                    <div className={styles.flexContainer}>
+                                        {this.store.defaultVisibleAttributes.result.map(this.renderAttributeChart)}
+                                    </div>
+                                )
+                            }
+                            {
+                                this.store.survivalPlotData.result.map(this.renderSurvivalPlot)
+                            }
+                            <div className={styles.flexContainer}>
+                                {(this.store.mutatedGeneData.isComplete && <MutatedGenesTable
+                                    data={mutatedGeneData}
+                                    numOfSelectedSamples={100}
+                                    filters={this.store.getMutatedGenesTableFilters()}
+                                    toggleSelection={this.updateGeneFilter}
+                                />)}
+                                {(this.store.cnaGeneData.isComplete && <CNAGenesTable
+                                    data={cnaGeneData}
+                                    numOfSelectedSamples={100}
+                                    filters={this.store.getCNAGenesTableFilters()}
+                                    toggleSelection={this.updateCNAGeneFilter}
+                                />)}
+                            </div>
                         </div>
-                    )
-                }
-                {this.store.survivalPlotData.result.map(this.renderSurvivalPlot)}
-                <div  className={styles.flexContainer}>
-                {(this.store.mutatedGeneData.isComplete && <MutatedGenesTable
-                    data={mutatedGeneData}
-                    numOfSelectedSamples={100}
-                    filters={this.store.getMutatedGenesTableFilters()}
-                    toggleSelection={this.updateGeneFilter}
-                />)}
-                {(this.store.cnaGeneData.isComplete && <CNAGenesTable
-                    data={cnaGeneData}
-                    numOfSelectedSamples={100}
-                    filters={this.store.getCNAGenesTableFilters()}
-                    toggleSelection={this.updateCNAGeneFilter}
-                />)}
-                 </div>
+                    </MSKTab>
+                </MSKTabs>
             </div>
         )
     }
