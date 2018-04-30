@@ -17,6 +17,7 @@ import {ClinicalAttribute, MolecularProfile} from "../../../shared/api/generated
 import Timer = NodeJS.Timer;
 import TablePlot from "./TablePlot";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
+import InfoIcon from "../../../shared/components/InfoIcon";
 
 enum EventKey {
     horz_molecularProfile,
@@ -658,16 +659,42 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     public render() {
         return (
-            <div style={{display:"flex", flexDirection: "row", maxWidth: "inherit"}}>
+            <div style={{display:"flex", flexDirection:"row", maxWidth:"inherit"}}>
                 <div style={{width:"25%"}}>
                     <Observer>
                         {this.controls}
                     </Observer>
                 </div>
-                <div style={{width:"75%", overflow:"scroll", maxHeight:700}}>
-                    <Observer>
-                        {this.plot}
-                    </Observer>
+                <div style={{display:"flex", flexDirection:"row", width:"75%", maxHeight:700, alignItems:"center"}}>
+                    <div style={{width:"5%"}}>
+                        <div
+                            className="rotateCCW90"
+                            style={{
+                                position:"absolute",
+                                top:"50%"
+                            }}
+                        >
+                            {this.vertLabel}
+                            <InfoIcon
+                                tooltip={<span>{this.vertDescription}</span>}
+                                style={{marginLeft:5}}
+                            />
+                        </div>
+                    </div>
+                    <div style={{display:"flex", flexDirection:"column", width:"95%", maxHeight:700, alignItems:"center"}}>
+                        <div style={{height:"90%", overflow:"scroll"}}>
+                            <Observer>
+                                {this.plot}
+                            </Observer>
+                        </div>
+                        <div style={{height:"10%", alignSelf:"center"}}>
+                            {this.horzLabel}
+                            <InfoIcon
+                                tooltip={<span>{this.horzDescription}</span>}
+                                style={{marginLeft:5}}
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>
         );

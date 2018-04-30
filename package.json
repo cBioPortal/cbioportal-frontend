@@ -88,6 +88,7 @@
     "babel-preset-stage-0": "^6.22.0",
     "babel-register": "^6.22.0",
     "better-react-spinkit": "^2.0.0-6",
+    "bind-decorator": "^1.0.11",
     "bootstrap": "^3.3.7",
     "bootstrap-loader": "^1.2.0-beta.1",
     "bootstrap-sass": "^3.3.7",

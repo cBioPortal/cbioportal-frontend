@@ -1,10 +1,11 @@
 import * as React from "react";
 import * as d3Scale from "d3-scale";
-import {computed, whyRun} from "mobx";
+import {action, computed, observable, whyRun} from "mobx";
 import {observer} from "mobx-react";
 import ListIndexedMap from "../../../shared/lib/ListIndexedMap";
 import {IStringAxisData, tableCellTextColor} from "./PlotsTabUtils";
 import naturalSort from "javascript-natural-sort";
+import {bind} from "bind-decorator";
 
 export interface ITablePlotProps {
     horzData:IStringAxisData["data"];
@@ -28,8 +29,13 @@ interface ITableData {
 const HOT_COLOR = "rgb(0, 102, 204)";
 const COLD_COLOR = "rgb(255,255,255)";
 
+const TABLE_LABEL_CLASSNAME = "plots-tab-table-label";
+
 @observer
 export default class TablePlot extends React.Component<ITablePlotProps, {}> {
+    private paddingForLabelsSet = false;
+    @observable paddingForLabels = 250;
+
     @computed get tableData():ITableData {
         const caseToCategories:{[caseKey:string]:{ horz?:string, vert?:string }} = {};
         for (const d of this.props.horzData) {
@@ -129,7 +135,7 @@ export default class TablePlot extends React.Component<ITablePlotProps, {}> {
     }
 
     @computed get tableTopLeft() {
-        return [0,100];// 100 for label padding
+        return [this.paddingForLabels,25];
     }
 
     private getCellCoordinates(horzCategory:string, vertCategory:string) {
@@ -148,8 +154,8 @@ export default class TablePlot extends React.Component<ITablePlotProps, {}> {
     }
     
     @computed get svgSize() {
-        const width = this.tableBottomRight[0] + 300; // label padding
-        const height = this.tableBottomRight[1];
+        const width = this.tableBottomRight[0] + this.paddingForLabels;
+        const height = this.tableBottomRight[1] + this.paddingForLabels;
         return {
             width, height
         };
@@ -186,20 +192,49 @@ export default class TablePlot extends React.Component<ITablePlotProps, {}> {
     private makeLabel(category:string, horz:boolean) {
         const coords = this.getCellCoordinates(horz ? category : "", horz ? "" : category);
         const padding = 5;
-        const x = horz ? (coords.x + this.cellWidth/2) : (this.tableBottomRight[0] + padding);
-        const y = horz ? (this.tableTopLeft[1] - 3*padding) : (coords.y + this.cellHeight/2);
+        const x = horz ? (coords.x + this.cellWidth/2) : (this.tableTopLeft[0] - padding);
+        const y = horz ? (this.tableBottomRight[1] + 3*padding) : (coords.y + this.cellHeight/2);
         return (
             <text
+                className={TABLE_LABEL_CLASSNAME}
                 key={`${category},${horz}`}
                 dy="0.3em"
-                transform={`translate(${x},${y}) ${horz ? "rotate(-15)" : ""}`}
-                textAnchor="start"
+                transform={`translate(${x},${y}) ${horz ? "rotate(15)" : ""}`}
+                textAnchor={horz ? "start" : "end"}
                 fill="black"
                 fontWeight="bold"
             >
                 {category}
             </text>
         );
+    }
+
+    private updatePaddingForLabels() {
+        console.log("A");
+        if (!this.paddingForLabelsSet) {
+            console.log("B");
+            // get maximum width and height for labels
+            let max = 0;
+            let box;
+            for (const labelElt of (document.getElementsByClassName(TABLE_LABEL_CLASSNAME) as SVGTextElement[])) {
+                box = labelElt.getBBox();
+                max = Math.max(max, box.width);
+                max = Math.max(max, box.height);
+            }
+            this.paddingForLabels = max + 50; // bump up bc bbox typically underestimates slightly
+            this.paddingForLabelsSet = true;
+        } else {
+            console.log("C");
+            this.paddingForLabelsSet = false;
+        }
+    }
+
+    componentDidMount() {
+        this.updatePaddingForLabels();
+    }
+
+    componentDidUpdate() {
+        this.updatePaddingForLabels();
     }
 
     render() {
