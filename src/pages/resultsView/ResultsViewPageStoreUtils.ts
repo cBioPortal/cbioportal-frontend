@@ -16,6 +16,23 @@ type CustomDriverAnnotationReport = {
     tiers: string[];
 };
 
+export type CoverageInformation = {
+    samples:
+        {[uniqueSampleKey:string]:{
+            byGene:{[hugoGeneSymbol:string]:GenePanelData[]},
+            allGenes:GenePanelData[],
+            notProfiledByGene:{[hugoGeneSymbol:string]:GenePanelData[]}
+            notProfiledAllGenes:GenePanelData[];
+        }};
+    patients:
+        {[uniquePatientKey:string]:{
+            byGene:{[hugoGeneSymbol:string]:GenePanelData[]},
+            allGenes:GenePanelData[],
+            notProfiledByGene:{[hugoGeneSymbol:string]:GenePanelData[]}
+            notProfiledAllGenes:GenePanelData[];
+        }};
+};
+
 export function computeCustomDriverAnnotationReport(mutations:Mutation[]):CustomDriverAnnotationReport {
     let hasBinary = false;
     let tiersMap:{[tier:string]:boolean} = {};
@@ -98,46 +115,76 @@ export function computeGenePanelInformation(
     samples: Sample[],
     patients: Patient[],
     genes:Gene[]
-):GenePanelInformation {
+):CoverageInformation {
     const entrezToGene = _.keyBy(genes, gene=>gene.entrezGeneId);
     const genePanelToGenes = _.mapValues(_.keyBy(genePanels, panel=>panel.genePanelId), (panel:GenePanel)=>{
         return panel.genes.filter(gene=>!!entrezToGene[gene.entrezGeneId]); // only list genes that we're curious in
     });
-    const sampleInfo:GenePanelInformation["samples"] = _.reduce(samples, (map:GenePanelInformation["samples"], sample)=>{
+    const sampleInfo:CoverageInformation["samples"] = _.reduce(samples, (map:CoverageInformation["samples"], sample)=>{
         map[sample.uniqueSampleKey] = {
-            sequencedGenes: {},
-            wholeExomeSequenced: false
+            byGene: {},
+            allGenes:[],
+            notProfiledByGene: {},
+            notProfiledAllGenes:[]
         };
         return map;
     }, {});
 
-    const patientInfo:GenePanelInformation["patients"] = _.reduce(patients, (map:GenePanelInformation["patients"], patient)=>{
+    const patientInfo:CoverageInformation["patients"] = _.reduce(patients, (map:CoverageInformation["patients"], patient)=>{
         map[patient.uniquePatientKey] = {
-            sequencedGenes: {},
-            wholeExomeSequenced: false
+            byGene: {},
+            allGenes:[],
+            notProfiledByGene: {},
+            notProfiledAllGenes:[]
         };
         return map;
     }, {});
+
+    const genePanelDataWithGenePanelId:GenePanelData[] = [];
     for (const gpData of genePanelData) {
         const sampleSequencingInfo = sampleInfo[gpData.uniqueSampleKey];
         const patientSequencingInfo = patientInfo[gpData.uniquePatientKey];
         const genePanelId = gpData.genePanelId;
 
-        if (genePanelId) {
-            // add gene panel data to record particular genes sequenced iff theres a gene panel id
-            if (genePanelToGenes[genePanelId]) {
-                for (const gene of genePanelToGenes[genePanelId]) {
-                    sampleSequencingInfo.sequencedGenes[gene.hugoGeneSymbol] = sampleSequencingInfo.sequencedGenes[gene.hugoGeneSymbol] || [];
-                    sampleSequencingInfo.sequencedGenes[gene.hugoGeneSymbol].push(gpData);
+        if (gpData.profiled) {
+            if (genePanelId) {
+                if (genePanelToGenes[genePanelId]) {
+                    // add gene panel data to record particular genes sequenced
+                    for (const gene of genePanelToGenes[genePanelId]) {
+                        sampleSequencingInfo.byGene[gene.hugoGeneSymbol] = sampleSequencingInfo.byGene[gene.hugoGeneSymbol] || [];
+                        sampleSequencingInfo.byGene[gene.hugoGeneSymbol].push(gpData);
 
-                    patientSequencingInfo.sequencedGenes[gene.hugoGeneSymbol] = patientSequencingInfo.sequencedGenes[gene.hugoGeneSymbol] || [];
-                    patientSequencingInfo.sequencedGenes[gene.hugoGeneSymbol].push(gpData);
+                        patientSequencingInfo.byGene[gene.hugoGeneSymbol] = patientSequencingInfo.byGene[gene.hugoGeneSymbol] || [];
+                        patientSequencingInfo.byGene[gene.hugoGeneSymbol].push(gpData);
+                    }
+                    // Add to list for more processing later
+                    genePanelDataWithGenePanelId.push(gpData);
                 }
+            } else {
+                // otherwise, all genes are profiled
+                sampleSequencingInfo.allGenes.push(gpData);
+                patientSequencingInfo.allGenes.push(gpData);
+            }
+        } else {
+            sampleSequencingInfo.notProfiledAllGenes.push(gpData);
+            patientSequencingInfo.notProfiledAllGenes.push(gpData);
+        }
+    }
+    // Record which of the queried genes are not profiled by gene panels
+    for (const gpData of genePanelDataWithGenePanelId) {
+        const sampleSequencingInfo = sampleInfo[gpData.uniqueSampleKey];
+        const patientSequencingInfo = patientInfo[gpData.uniquePatientKey];
+
+        for (const queryGene of genes) {
+            if (!sampleSequencingInfo.byGene[queryGene.hugoGeneSymbol]) {
+                sampleSequencingInfo.notProfiledByGene[queryGene.hugoGeneSymbol] = sampleSequencingInfo.notProfiledByGene[queryGene.hugoGeneSymbol] || [];
+                sampleSequencingInfo.notProfiledByGene[queryGene.hugoGeneSymbol].push(gpData);
+            }
+            if (!patientSequencingInfo.byGene[queryGene.hugoGeneSymbol]) {
+                patientSequencingInfo.notProfiledByGene[queryGene.hugoGeneSymbol] = patientSequencingInfo.notProfiledByGene[queryGene.hugoGeneSymbol] || [];
+                patientSequencingInfo.notProfiledByGene[queryGene.hugoGeneSymbol].push(gpData);
             }
         }
-
-        sampleSequencingInfo.wholeExomeSequenced = gpData.wholeExomeSequenced || sampleSequencingInfo.wholeExomeSequenced;
-        patientSequencingInfo.wholeExomeSequenced = gpData.wholeExomeSequenced || patientSequencingInfo.wholeExomeSequenced;
     }
     return {
         samples: sampleInfo,
