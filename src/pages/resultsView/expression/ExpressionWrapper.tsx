@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import {observer} from "mobx-react";
 import './styles.scss';
 import {CancerStudy, Gene, NumericGeneMolecularData, Mutation} from "../../../shared/api/generated/CBioPortalAPI";
-import {computed, observable} from "mobx";
+import {action, computed, observable} from "mobx";
 import getCanonicalMutationType from "../../../shared/lib/getCanonicalMutationType";
 import {ExpressionStyle, ExpressionStyleSheet} from "./expressionHelpers";
 import {Modal} from "react-bootstrap";
@@ -17,6 +17,7 @@ import {BoxPlotModel, calculateBoxPlotModel} from "../../../shared/lib/boxPlotUt
 import d3 from 'd3';
 import {ITooltipModel} from "../../../shared/model/ITooltipModel";
 import ChartContainer from "../../../shared/components/ChartContainer/ChartContainer";
+import {If, Then, Else} from 'react-if';
 
 
 interface ExpressionWrapperProps {
@@ -44,10 +45,6 @@ const ZERO_EXPRESSION = -2;
 const SAMPLE_STYLE_BASE = {
     size: 6,
     line: {color: "#B40404", width: 1.2}
-};
-
-const logger = (num: number) => {
-    return Math.log(num) / Math.log(2);
 };
 
 const BOX_STYLES = {
@@ -116,7 +113,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     constructor(props: ExpressionWrapperProps) {
         super();
         this.selectedGene = props.genes[0].hugoGeneSymbol;
-        this.selectedStudies = _.mapValues(props.studyMap, () => true);
+        this._selectedStudies = _.mapValues(props.studyMap, () => true);
 
         (window as any).box = this;
     }
@@ -131,7 +128,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     @observable showMutations: boolean = true;
 
-    @observable selectedStudies: { [studyId: string]: boolean } = {};
+    @observable _selectedStudies: { [studyId: string]: boolean } = {};
 
     @observable logScale = true;
 
@@ -140,7 +137,12 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     @computed
     get filteredData() {
         // filter for selected studies
-        return _.filter(this.props.data[this.selectedGene], (data: NumericGeneMolecularData[]) => this.selectedStudies[data[0].studyId] === true);
+        return _.filter(this.props.data[this.selectedGene], (data: NumericGeneMolecularData[]) => this._selectedStudies[data[0].studyId] === true);
+    }
+
+    @computed
+    get selectedStudies(){
+        return _.filter(this._selectedStudies,(isSelected:boolean, study:CancerStudy)=>isSelected);
     }
 
     @computed
@@ -174,7 +176,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     @computed get dataTransformer(){
         function logger(expressionValue:number){
-            return (expressionValue === 0) ? .00001 : Math.log2(expressionValue);
+            return (expressionValue === 0) ? .00001 : Math.log(expressionValue);
         }
         return (molecularData: NumericGeneMolecularData) =>
             (this.logScale ? logger(molecularData.value) : molecularData.value);
@@ -245,7 +247,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     @autobind
     handleStudySelection(event: React.SyntheticEvent<HTMLInputElement>) {
         // toggle state of it
-        this.selectedStudies[event.currentTarget.value] = !this.selectedStudies[event.currentTarget.value];
+        this._selectedStudies[event.currentTarget.value] = !this._selectedStudies[event.currentTarget.value];
     }
 
     @autobind
@@ -269,7 +271,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                                 <div className="checkbox">
                                     <label>
                                         <input type="checkbox"
-                                               checked={this.selectedStudies[study.studyId] === true}
+                                               checked={this._selectedStudies[study.studyId] === true}
                                                value={study.studyId}
                                                onChange={this.handleStudySelection}/>
                                         {study.name}
@@ -407,6 +409,12 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     }
 
+    @autobind
+    public applyStudyFilter(test:(study:CancerStudy)=>boolean){
+        this._selectedStudies = _.mapValues(this.props.studyMap,(study:CancerStudy, studyId:string)=>{
+           return test(study);
+        });
+    }
 
     @computed
     get buildUnmutatedTraces() {
@@ -567,15 +575,6 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                                 </div>
 
                                 <div className="form-group">
-                                    <h5>Profile:</h5>
-                                    <select className="form-control input-sm" onChange={()=>{}} title="Select profile">
-                                        <option value="provisional">TCGA Provisional</option>
-                                        <option value="tcga">TCGA</option>
-                                        <option value="all">All</option>
-                                    </select>
-                                </div>
-
-                                <div className="form-group">
                                     <div className="btn-group" role="group">
                                         <button className="btn btn-default btn-xs" type="button">
                                             <i className="fa fa-cloud-download" aria-hidden="true"></i> PDF
@@ -599,6 +598,13 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
                             </form>
 
+                            <div>
+                                Quick filters:
+                                <a onClick={()=>this.applyStudyFilter((study:CancerStudy)=>/_tcga$/.test(study.studyId))}>TCGA Provisional</a>&nbsp;|&nbsp;
+                                <a onClick={()=>this.applyStudyFilter((study:CancerStudy)=>/_tcga_pan_can_atlas_2018/.test(study.studyId))}>TCGA Provisional</a>
+                            </div>
+
+
                             <div className="collapse">
                                 <div className="well"></div>
                             </div>
@@ -609,14 +615,24 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                     </tr>
                 </table>
 
-                <div className="posRelative">
 
-                    {
-                        (this.tooltipModel) && (this.toolTip)
-                    }
+                <If condition={this.selectedStudies.length > 0}>
+                    <Then>
+                        <div className="posRelative">
+                            {
+                                (this.tooltipModel) && (this.toolTip)
+                            }
+                            {this.chart}
+                        </div>
+                    </Then>
+                    <Else>
+                        <div>
+                            No studies selected.
+                        </div>
+                    </Else>
+                </If>
 
-                    {this.chart}
-                </div>
+
 
 
             </div>
