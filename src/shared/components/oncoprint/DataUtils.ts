@@ -1,8 +1,7 @@
 import {
     AnnotatedExtendedAlteration,
     AnnotatedMutation,
-    CaseAggregatedData, ExtendedAlteration,
-    GenePanelInformation
+    CaseAggregatedData, ExtendedAlteration
 } from "../../../pages/resultsView/ResultsViewPageStore";
 import {
     ClinicalAttribute,
@@ -22,6 +21,7 @@ import _ from "lodash";
 import {FractionGenomeAltered, MutationSpectrum} from "../../api/generated/CBioPortalAPIInternal";
 import {SpecialAttribute} from "../../cache/ClinicalDataCache";
 import {OncoprintClinicalAttribute} from "./ResultsViewOncoprint";
+import {CoverageInformation} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
 
 const cnaDataToString:{[integerCNA:string]:string|undefined} = {
     "-2": "homdel",
@@ -168,21 +168,21 @@ export function makeGeneticTrackData(
     caseAggregatedAlterationData:CaseAggregatedData<AnnotatedExtendedAlteration>["samples"],
     hugoGeneSymbol:string,
     samples:Sample[],
-    genePanelInformation:GenePanelInformation
+    genePanelInformation:CoverageInformation
 ):GeneticTrackDatum[];
 
 export function makeGeneticTrackData(
     caseAggregatedAlterationData:CaseAggregatedData<AnnotatedExtendedAlteration>["patients"],
     hugoGeneSymbol:string,
     patients:Patient[],
-    genePanelInformation:GenePanelInformation
+    genePanelInformation:CoverageInformation
 ):GeneticTrackDatum[];
 
 export function makeGeneticTrackData(
     caseAggregatedAlterationData:CaseAggregatedData<AnnotatedExtendedAlteration>["samples"]|CaseAggregatedData<AnnotatedExtendedAlteration>["patients"],
     hugoGeneSymbol:string,
     cases:Sample[]|Patient[],
-    genePanelInformation:GenePanelInformation
+    genePanelInformation:CoverageInformation
 ):GeneticTrackDatum[] {
     if (!cases.length) {
         return [];
@@ -197,16 +197,14 @@ export function makeGeneticTrackData(
             newDatum.uid = sample.uniqueSampleKey;
 
             const sampleSequencingInfo = genePanelInformation.samples[sample.uniqueSampleKey];
-            if (!sampleSequencingInfo.wholeExomeSequenced && !sampleSequencingInfo.sequencedGenes.hasOwnProperty(hugoGeneSymbol)) {
+            newDatum.profiled_in = sampleSequencingInfo.byGene[hugoGeneSymbol] || [];
+            newDatum.profiled_in = newDatum.profiled_in.concat(sampleSequencingInfo.allGenes);
+            if (!newDatum.profiled_in.length) {
                 newDatum.na = true;
-            } else {
-                if (sampleSequencingInfo.sequencedGenes[hugoGeneSymbol]) {
-                    newDatum.coverage = sampleSequencingInfo.sequencedGenes[hugoGeneSymbol];
-                }
-                if (sampleSequencingInfo.wholeExomeSequenced) {
-                    newDatum.wholeExomeSequenced = true;
-                }
             }
+            newDatum.not_profiled_in = sampleSequencingInfo.notProfiledByGene[hugoGeneSymbol] || [];
+            newDatum.not_profiled_in = newDatum.not_profiled_in.concat(sampleSequencingInfo.notProfiledAllGenes);
+
             fillGeneticTrackDatum(
                 newDatum, hugoGeneSymbol,
                 caseAggregatedAlterationData[sample.uniqueSampleKey]
@@ -222,16 +220,14 @@ export function makeGeneticTrackData(
             newDatum.uid = patient.uniquePatientKey;
 
             const patientSequencingInfo = genePanelInformation.patients[patient.uniquePatientKey];
-            if (!patientSequencingInfo.wholeExomeSequenced && !patientSequencingInfo.sequencedGenes.hasOwnProperty(hugoGeneSymbol)) {
+            newDatum.profiled_in = patientSequencingInfo.byGene[hugoGeneSymbol] || [];
+            newDatum.profiled_in = newDatum.profiled_in.concat(patientSequencingInfo.allGenes);
+            if (!newDatum.profiled_in.length) {
                 newDatum.na = true;
-            } else {
-                if (patientSequencingInfo.sequencedGenes[hugoGeneSymbol]) {
-                    newDatum.coverage = patientSequencingInfo.sequencedGenes[hugoGeneSymbol];
-                }
-                if (patientSequencingInfo.wholeExomeSequenced) {
-                    newDatum.wholeExomeSequenced = true;
-                }
             }
+            newDatum.not_profiled_in = patientSequencingInfo.notProfiledByGene[hugoGeneSymbol] || [];
+            newDatum.not_profiled_in = newDatum.not_profiled_in.concat(patientSequencingInfo.notProfiledAllGenes);
+
             fillGeneticTrackDatum(
                 newDatum, hugoGeneSymbol,
                 caseAggregatedAlterationData[patient.uniquePatientKey]
