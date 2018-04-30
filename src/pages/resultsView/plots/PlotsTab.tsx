@@ -665,35 +665,31 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                         {this.controls}
                     </Observer>
                 </div>
-                <div style={{display:"flex", flexDirection:"row", width:"75%", maxHeight:700, alignItems:"center"}}>
-                    <div style={{width:"5%"}}>
-                        <div
-                            className="rotateCCW90"
-                            style={{
-                                position:"absolute",
-                                top:"50%"
-                            }}
-                        >
-                            {this.vertLabel}
-                            <InfoIcon
-                                tooltip={<span>{this.vertDescription}</span>}
-                                style={{marginLeft:5}}
-                            />
+                <div style={{display:"flex", flexDirection:"column", width:"75%", maxHeight:700}}>
+                    <div style={{display:"flex", flexDirection:"row"}}>
+                        <div>
+                            <div
+                                className="rotateCCW90"
+                            >
+                                {this.vertLabel}
+                                <InfoIcon
+                                    tooltip={<span>{this.vertDescription}</span>}
+                                    style={{marginLeft:5}}
+                                />
+                            </div>
                         </div>
-                    </div>
-                    <div style={{display:"flex", flexDirection:"column", width:"95%", maxHeight:700, alignItems:"center"}}>
-                        <div style={{height:"90%", overflow:"scroll"}}>
+                        <div style={{overflow:"auto", maxHeight:"inherit"}}>
                             <Observer>
                                 {this.plot}
                             </Observer>
                         </div>
-                        <div style={{height:"10%", alignSelf:"center"}}>
-                            {this.horzLabel}
-                            <InfoIcon
-                                tooltip={<span>{this.horzDescription}</span>}
-                                style={{marginLeft:5}}
-                            />
-                        </div>
+                    </div>
+                    <div style={{height:"10%", alignSelf:"center"}}>
+                        {this.horzLabel}
+                        <InfoIcon
+                            tooltip={<span>{this.horzDescription}</span>}
+                            style={{marginLeft:5}}
+                        />
                     </div>
                 </div>
             </div>

@@ -154,7 +154,7 @@ export default class TablePlot extends React.Component<ITablePlotProps, {}> {
     }
     
     @computed get svgSize() {
-        const width = this.tableBottomRight[0] + this.paddingForLabels;
+        const width = this.tableBottomRight[0] + 25;
         const height = this.tableBottomRight[1] + this.paddingForLabels;
         return {
             width, height
@@ -199,8 +199,8 @@ export default class TablePlot extends React.Component<ITablePlotProps, {}> {
                 className={TABLE_LABEL_CLASSNAME}
                 key={`${category},${horz}`}
                 dy="0.3em"
-                transform={`translate(${x},${y}) ${horz ? "rotate(15)" : ""}`}
-                textAnchor={horz ? "start" : "end"}
+                transform={`translate(${x},${y}) ${horz ? "rotate(-70)" : ""}`}
+                textAnchor="end"
                 fill="black"
                 fontWeight="bold"
             >
@@ -210,9 +210,7 @@ export default class TablePlot extends React.Component<ITablePlotProps, {}> {
     }
 
     private updatePaddingForLabels() {
-        console.log("A");
         if (!this.paddingForLabelsSet) {
-            console.log("B");
             // get maximum width and height for labels
             let max = 0;
             let box;
@@ -224,7 +222,6 @@ export default class TablePlot extends React.Component<ITablePlotProps, {}> {
             this.paddingForLabels = max + 50; // bump up bc bbox typically underestimates slightly
             this.paddingForLabelsSet = true;
         } else {
-            console.log("C");
             this.paddingForLabelsSet = false;
         }
     }
