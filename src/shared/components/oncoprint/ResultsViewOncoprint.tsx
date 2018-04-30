@@ -1016,6 +1016,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                                 onSuppressRendering={this.onSuppressRendering}
                                 onReleaseRendering={this.onReleaseRendering}
                                 hiddenIds={!this.showUnalteredColumns ? this.unalteredKeys.result : undefined}
+                                molecularProfileIdToMolecularProfile={this.props.store.molecularProfileIdToMolecularProfile.result}
 
                                 horzZoomToFitIds={this.horzZoomToFitIds}
                                 distinguishMutationType={this.distinguishMutationType}
