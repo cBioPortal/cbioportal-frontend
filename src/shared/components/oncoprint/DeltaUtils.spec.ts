@@ -144,6 +144,64 @@ describe("Oncoprint DeltaUtils", ()=>{
                 'The expansion tracks added should correspond to those requested'
             );
         });
+
+        it("supplies genetic expansions with callbacks that update track IDs when collapsing", () => {
+            // given a track being expanded
+            const expandableTrack = {
+                key: 'GENETICTRACK_0',
+                label: 'GENE1 / GENE2',
+                oql: '[GENE1: MUT; GENE2: MUT]',
+                info: '6.28%',
+                data: [],
+            };
+            const preExpandProps: IOncoprintProps = {
+                ...makeMinimalOncoprintProps(),
+                geneticTracks: [expandableTrack]
+            };
+            const postExpandProps: IOncoprintProps = {
+                ...makeMinimalOncoprintProps(),
+                geneticTracks: [{
+                    ...expandableTrack,
+                    expansionTrackList: [
+                        {key: 'GENETICTRACK_0_EXPANSION_0', label: 'GENE1', oql: 'GENE5: MUT', info: '0%', data: []},
+                        {key: 'GENETICTRACK_0_EXPANSION_1', label: 'GENE2', oql: 'GENE7: MUT', info: '6.28%', data: []},
+                    ]
+                }]
+            };
+            const oncoprint: OncoprintJS<any> = createStubInstance(OncoprintJS);
+            (oncoprint.addTracks as SinonStub).returns([27]);
+            const trackIdsByKey: {[trackKey: string]: number} = {
+                'GENETICTRACK_0': 5
+            };
+            // when rendering this transition
+            transition(
+                postExpandProps,
+                preExpandProps,
+                oncoprint,
+                () => trackIdsByKey,
+                () => makeMinimalProfileMap()
+            );
+            // then it lists these expansions' IDs in the map and passes the
+            // newly added tracks callbacks that unlist them again
+            assert.deepEqual(
+                trackIdsByKey,
+                {
+                    'GENETICTRACK_0': 5,
+                    'GENETICTRACK_0_EXPANSION_0': 27,
+                    'GENETICTRACK_0_EXPANSION_1': 27
+                },
+                "expansion tracks should have been listed before they're removed"
+            );
+            (oncoprint.addTracks as SinonStub).args.forEach(
+                // call the removeCallback with the track ID
+                ([[trackParams]]) => { trackParams.removeCallback(27); }
+            );
+            assert.deepEqual(
+                trackIdsByKey,
+                {'GENETICTRACK_0': 5},
+                'expansion tracks should have disappeared from the list after removal'
+            );
+        });
     });
 
     describe("transitionTrackGroupSortPriority", ()=>{

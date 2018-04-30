@@ -562,6 +562,10 @@ function transitionGeneticTrack(
             data: nextSpec.data,
             tooltipFn: makeGeneticTrackTooltip(true, getMolecularProfileMap),
             track_info: nextSpec.info,
+            removeCallback: () => {
+                delete getTrackSpecKeyToTrackId()[nextSpec.key];
+                if (nextSpec.removeCallback) nextSpec.removeCallback();
+            },
             expandCallback: nextSpec.expansionCallback || undefined,
             expandButtonTextGetter: () => 'Expand',
             expansion_of: (
