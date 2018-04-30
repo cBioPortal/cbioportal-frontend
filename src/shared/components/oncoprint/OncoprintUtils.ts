@@ -205,7 +205,7 @@ export function getClinicalTrackRuleSetParams(track:ClinicalTrackSpec) {
 
 export function percentAltered(altered:number, sequenced:number) {
     if (sequenced === 0) {
-        return "N/S";
+        return "N/P";
     }
 
     const p = altered/sequenced;
@@ -258,7 +258,7 @@ export function makeGeneticTracksMobxPromise(oncoprint:ResultsViewOncoprint, sam
             oncoprint.props.store.patients,
             oncoprint.props.store.putativeDriverFilteredCaseAggregatedDataByOQLLine,
             oncoprint.props.store.molecularProfileIdToMolecularProfile,
-            oncoprint.props.store.genePanelInformation,
+            oncoprint.props.store.coverageInformation,
             oncoprint.props.store.alteredSampleKeys,
             oncoprint.props.store.sequencedSampleKeysByGene,
             oncoprint.props.store.alteredPatientKeys,
@@ -271,7 +271,7 @@ export function makeGeneticTracksMobxPromise(oncoprint:ResultsViewOncoprint, sam
                     sampleMode ? x.cases.samples : x.cases.patients,
                     x.oql.gene,
                     sampleMode ? oncoprint.props.store.samples.result! : oncoprint.props.store.patients.result!,
-                    oncoprint.props.store.genePanelInformation.result!
+                    oncoprint.props.store.coverageInformation.result!
                 );
 
                 const info = alterationInfoForCaseAggregatedDataByOQLLine(sampleMode, x,
