@@ -20,14 +20,15 @@ import ChartContainer from "../../../shared/components/ChartContainer/ChartConta
 import {If, Then, Else} from 'react-if';
 
 
+
 interface ExpressionWrapperProps {
 
     studyMap: { [studyId: string]: CancerStudy };
     genes: Gene[];
     data: { [hugeGeneSymbol: string]: NumericGeneMolecularData[][] };
     mutations: Mutation[];
-    onRNASeqVersionChange:(version:number)=>void;
-    RNASeqVersion:number;
+    onRNASeqVersionChange: (version: number) => void;
+    RNASeqVersion: number;
 
 }
 
@@ -118,7 +119,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
         (window as any).box = this;
     }
 
-    svgContainer: SVGAElement;
+    svgContainer: SVGElement;
 
     @observable.ref tooltipModel: ITooltipModel<{ studyName: string; sampleId: string; expression: number, style: ExpressionStyle }> | null = null;
 
@@ -141,8 +142,8 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     }
 
     @computed
-    get selectedStudies(){
-        return _.filter(this._selectedStudies,(isSelected:boolean, study:CancerStudy)=>isSelected);
+    get selectedStudies() {
+        return _.filter(this._selectedStudies, (isSelected: boolean, study: CancerStudy) => isSelected);
     }
 
     @computed
@@ -174,10 +175,12 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
         return _.keyBy(this.props.mutations, (mutation: Mutation) => mutation.uniqueSampleKey);
     }
 
-    @computed get dataTransformer(){
-        function logger(expressionValue:number){
-            return (expressionValue === 0) ? .00001 : Math.log(expressionValue);
+    @computed
+    get dataTransformer() {
+        function logger(expressionValue: number) {
+            return (expressionValue === 0) ? .00001 : Math.log10(expressionValue);
         }
+
         return (molecularData: NumericGeneMolecularData) =>
             (this.logScale ? logger(molecularData.value) : molecularData.value);
     }
@@ -194,7 +197,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
             const studyData = sortedData[i];
 
             // we don't want to let zero values affect the distribution markers
-            const withoutZeros = studyData.filter((molecularData:NumericGeneMolecularData)=>molecularData.value > 0);
+            const withoutZeros = studyData.filter((molecularData: NumericGeneMolecularData) => molecularData.value > 0);
 
             const boxData = calculateBoxPlotModel(withoutZeros.map(this.dataTransformer));
 
@@ -203,8 +206,8 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
             // at quartile +/-IQL * 1.5 instead of true max/min
 
             boxTraces.push({
-                realMin:boxData.min,
-                realMax:boxData.max,
+                realMin: boxData.min,
+                realMax: boxData.max,
                 min: boxData.whiskerLower, // see above
                 median: boxData.median, // see above
                 max: boxData.whiskerUpper,
@@ -236,11 +239,12 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     }
 
-    @computed get domain(){
+    @computed
+    get domain() {
 
-        const min = _.min(this.victoryTraces.boxTraces.map(trace=>trace.realMin));
-        const max = _.max(this.victoryTraces.boxTraces.map(trace=>trace.realMax));
-        return { min, max };
+        const min = _.min(this.victoryTraces.boxTraces.map(trace => trace.realMin));
+        const max = _.max(this.victoryTraces.boxTraces.map(trace => trace.realMax));
+        return {min, max};
 
     }
 
@@ -251,11 +255,12 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     }
 
     @autobind
-    handleRNASeqVersionChange(event: React.SyntheticEvent<HTMLSelectElement>){
+    handleRNASeqVersionChange(event: React.SyntheticEvent<HTMLSelectElement>) {
         this.props.onRNASeqVersionChange(parseInt(event.currentTarget.value));
     }
 
-    studySelectionModal() {
+    @computed
+    get studySelectionModal() {
 
         return (<Modal show={this.studySelectorModalVisible} onHide={() => {
             this.studySelectorModalVisible = false
@@ -410,9 +415,9 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     }
 
     @autobind
-    public applyStudyFilter(test:(study:CancerStudy)=>boolean){
-        this._selectedStudies = _.mapValues(this.props.studyMap,(study:CancerStudy, studyId:string)=>{
-           return test(study);
+    public applyStudyFilter(test: (study: CancerStudy) => boolean) {
+        this._selectedStudies = _.mapValues(this.props.studyMap, (study: CancerStudy, studyId: string) => {
+            return test(study);
         });
     }
 
@@ -441,6 +446,22 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     }
 
     @computed
+    get tickFormat() {
+
+        function format(val:number) {
+            console.log(val);
+            if (val >= 1000) {
+                return numeral(val).format('0a');
+            } else {
+                return numeral(val).format('0.[00]');
+            }
+        }
+
+        const ret = (this.logScale) ? (val: number) => format(Math.pow(10, val)) : (val: number) => format(val);
+
+    }
+
+    @computed
     get width() {
         return this.sortedLabels.length * 150 + 200;
     }
@@ -449,37 +470,39 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     @computed
     get chart() {
-
         return (
-            <ChartContainer>
+            <ChartContainer
+                getSVGElement={()=>this.svgContainer}
+                exportFileName="Expression"
+            >
                 <VictoryChart
                     height={this.height}
                     width={this.width}
                     theme={CBIOPORTAL_VICTORY_THEME}
-                    domainPadding={{x: [100, 100]}}
+                    domainPadding={{x: [100, 100], y:[10, 10]}}
                     domain={{y: [this.domain.min, this.domain.max]}}
                     padding={{bottom: 200, left: 100, top: 100, right: 10}}
                     containerComponent={<VictoryContainer containerRef={(ref: any) => this.svgContainer = ref}
                                                           responsive={false}/>}
                 >
+                    <VictoryAxis dependentAxis
+                                 tickFormat={this.tickFormat}
+                                 axisLabelComponent={<VictoryLabel dy={-50}/>}
+                                 label={this.yAxisLabel}
+                    />
 
                     <VictoryAxis
                         tickFormat={this.sortedLabels}
+                        orientation={'bottom'}
                         tickLabelComponent={
                             <VictoryLabel
                                 angle={-85}
+                                dx={-20}
                                 verticalAnchor="middle"
                                 textAnchor="end"
                             />
                         }
 
-                    />
-
-                    <VictoryAxis dependentAxis
-
-                                 tickFormat={(val: number) => val }
-                                 axisLabelComponent={<VictoryLabel dy={-50}/>}
-                                 label={this.yAxisLabel}
                     />
 
 
@@ -489,7 +512,6 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                         data={this.victoryTraces.boxTraces}
                         x={(item: BoxPlotModel) => item.x! + 1}
                     />
-
                     {
                         this.buildUnmutatedTraces
                     }
@@ -497,7 +519,6 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                     {
                         this.buildMutationScatters
                     }
-
                     <VictoryLegend x={0} y={0}
                                    orientation="horizontal"
                                    gutter={20}
@@ -507,114 +528,85 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                 </VictoryChart>
             </ChartContainer>
         )
-
     }
 
-
     render() {
-
         return (
             <div>
-
-                {this.studySelectionModal()}
-
-                <table>
-                    <tr>
-                        <div>
-                            <form className="form-inline expression-controls">
-                                <div className="form-group">
-                                    <h5>Gene:</h5>
-                                    <select className="form-control input-sm"
-                                            value={this.selectedGene}
-                                            onChange={(event: React.SyntheticEvent<HTMLSelectElement>) => this.selectedGene = event.currentTarget.value}
-                                            title="Select gene">
-                                        {
-                                            this.props.genes.map((gene: Gene) => <option>{gene.hugoGeneSymbol}</option>)
-                                        }
-                                    </select>
-                                </div>
-                                <div className="form-group">
-                                    <h5>Profile:</h5>
-                                    <select className="form-control input-sm" value={this.props.RNASeqVersion} onChange={this.handleRNASeqVersionChange} title="Select profile">
-                                        <option value={2}>RNA Seq V2</option>
-                                        <option value={1}>RNA Seq</option>
-                                    </select>
-                                </div>
-
-                                <div className="form-group">
-                                    <h5>Sort By:</h5>
-                                    <label className="radio-inline">
-                                        <input type="radio"
-                                               onChange={(event: React.SyntheticEvent<HTMLInputElement>) => this.sortBy = event.currentTarget.value as SortOptions}
-                                               value={"alphabetic"}
-                                               title="Sort by cancer study"
-                                               checked={this.sortBy === "alphabetic"}/> Cancer Study
-                                    </label>
-
-                                    <label className="radio-inline">
-                                        <input type="radio"
-                                               onChange={(event: React.SyntheticEvent<HTMLInputElement>) => this.sortBy = event.currentTarget.value as SortOptions}
-                                               value={"median"}
-                                               checked={this.sortBy === "median"}
-                                               title="Sort by median"/> Median
-                                    </label>
-                                </div>
-
-                                <div className="form-group">
-                                    <label className="checkbox-inline">
-                                        <input type="checkbox" checked={this.logScale}
-                                               onChange={() => this.logScale = !this.logScale} title="Log scale"/>
-                                        Log scale
-                                    </label>
-                                    <label className="checkbox-inline">
-                                        <input type="checkbox" checked={this.showMutations}
-                                               onChange={() => this.showMutations = !this.showMutations}
-                                               title="Show mutations"/>
-                                        Show mutations
-                                    </label>
-                                </div>
-
-                                <div className="form-group">
-                                    <div className="btn-group" role="group">
-                                        <button className="btn btn-default btn-xs" type="button">
-                                            <i className="fa fa-cloud-download" aria-hidden="true"></i> PDF
-                                        </button>
-                                        <button className="btn btn-default btn-xs" type="button">
-                                            <i className="fa fa-cloud-download" aria-hidden="true"></i> SVG
-                                        </button>
-                                        <button className="btn btn-default btn-xs" type="button">
-                                            <i className="fa fa-cloud-download" aria-hidden="true"></i> Data
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="form-group">
-                                    <button className="btn btn-default btn-xs"
-                                            onClick={() => this.studySelectorModalVisible = true} type="button">
-                                        <i className="fa fa-bars" aria-hidden="true"></i>&nbsp;Select Studies
-                                    </button>
-                                </div>
-
-
-                            </form>
-
-                            <div>
-                                Quick filters:
-                                <a onClick={()=>this.applyStudyFilter((study:CancerStudy)=>/_tcga$/.test(study.studyId))}>TCGA Provisional</a>&nbsp;|&nbsp;
-                                <a onClick={()=>this.applyStudyFilter((study:CancerStudy)=>/_tcga_pan_can_atlas_2018/.test(study.studyId))}>TCGA Provisional</a>
-                            </div>
-
-
-                            <div className="collapse">
-                                <div className="well"></div>
-                            </div>
+                {this.studySelectionModal}
+                <div style={{marginBottom:15}}>
+                    <form className="form-inline expression-controls" style={{marginBottom:10}}>
+                        <div className="form-group">
+                            <h5>Gene:</h5>
+                            <select className="form-control input-sm"
+                                    value={this.selectedGene}
+                                    onChange={(event: React.SyntheticEvent<HTMLSelectElement>) => this.selectedGene = event.currentTarget.value}
+                                    title="Select gene">
+                                {
+                                    this.props.genes.map((gene: Gene) => <option>{gene.hugoGeneSymbol}</option>)
+                                }
+                            </select>
                         </div>
-                    </tr>
-                    <tr>
-                        <td></td>
-                    </tr>
-                </table>
+                        <div className="form-group">
+                            <h5>Profile:</h5>
+                            <select className="form-control input-sm" value={this.props.RNASeqVersion}
+                                    onChange={this.handleRNASeqVersionChange} title="Select profile">
+                                <option value={2}>RNA Seq V2</option>
+                                <option value={1}>RNA Seq</option>
+                            </select>
+                        </div>
 
+                        <div className="form-group">
+                            <h5>Sort By:</h5>
+                            <label className="radio-inline">
+                                <input type="radio"
+                                       onChange={(event: React.SyntheticEvent<HTMLInputElement>) => this.sortBy = event.currentTarget.value as SortOptions}
+                                       value={"alphabetic"}
+                                       title="Sort by cancer study"
+                                       checked={this.sortBy === "alphabetic"}/> Cancer Study
+                            </label>
+
+                            <label className="radio-inline">
+                                <input type="radio"
+                                       onChange={(event: React.SyntheticEvent<HTMLInputElement>) => this.sortBy = event.currentTarget.value as SortOptions}
+                                       value={"median"}
+                                       checked={this.sortBy === "median"}
+                                       title="Sort by median"/> Median
+                            </label>
+                        </div>
+
+                        <div className="form-group">
+                            <label className="checkbox-inline">
+                                <input type="checkbox" checked={this.logScale}
+                                       onChange={() => this.logScale = !this.logScale} title="Log scale"/>
+                                Log scale
+                            </label>
+                            <label className="checkbox-inline">
+                                <input type="checkbox" checked={this.showMutations}
+                                       onChange={() => this.showMutations = !this.showMutations}
+                                       title="Show mutations"/>
+                                Show mutations
+                            </label>
+                        </div>
+
+                    </form>
+
+                    <div>
+                        <button className="btn btn-default btn-xs"
+                                style={{marginRight:15}}
+                                onClick={() => this.studySelectorModalVisible = true} type="button">
+                            <i className="fa fa-bars" aria-hidden="true"></i>&nbsp;Select Studies
+                        </button>
+                        Quick filters: <a onClick={() => this.applyStudyFilter((study: CancerStudy) => /_tcga$/.test(study.studyId))}>TCGA Provisional</a>
+                        &nbsp;|&nbsp;
+                        <a onClick={() => this.applyStudyFilter((study: CancerStudy) => /_tcga_pan_can_atlas_2018/.test(study.studyId))}>TCGA
+                            TCGA Pan-Can Atlas</a>
+                    </div>
+
+                    <div className="collapse">
+                        <div className="well"></div>
+                    </div>
+                </div>
 
                 <If condition={this.selectedStudies.length > 0}>
                     <Then>
@@ -631,13 +623,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                         </div>
                     </Else>
                 </If>
-
-
-
-
             </div>
-
-
         );
     }
 
