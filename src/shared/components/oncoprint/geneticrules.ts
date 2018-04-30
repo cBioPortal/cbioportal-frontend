@@ -39,12 +39,6 @@ const MRNA_DOWN_LEGEND_ORDER = 21;
 const PROT_UP_LEGEND_ORDER = 31;
 const PROT_DOWN_LEGEND_ORDER = 32;
 
-// Base mutation rule set parameters
-let baseRuleSetParams = {
-    'type': 'gene',
-    'legend_label': 'Genetic Alteration',
-    'legend_base_color': DEFAULT_GREY
-};
 let non_mutation_rule_params = {
     // Default: gray rectangle
     '*': {
@@ -217,209 +211,223 @@ let non_mutation_rule_params = {
     }
 };
 
-export const genetic_rule_set_same_color_for_all_no_recurrence:RuleSetParams = $.extend({}, baseRuleSetParams, {
-    'rule_params': $.extend({}, non_mutation_rule_params, {
-	'disp_mut': {
-	    'trunc,inframe,missense,promoter,trunc_rec,inframe_rec,missense_rec,promoter_rec': {
-		shapes: [{
-			'type': 'rectangle',
-			'fill': MUT_COLOR_MISSENSE,
-			'x': '0%',
-			'y': '33.33%',
-			'width': '100%',
-			'height': '33.33%',
-			'z': 6
-		}],
-		legend_label: 'Mutation',
-        legend_order: MUTATION_LEGEND_ORDER
-	    }
-	}
-    })
-});
-export const genetic_rule_set_same_color_for_all_recurrence:RuleSetParams = $.extend({}, baseRuleSetParams, {
-    'rule_params': $.extend({}, non_mutation_rule_params, {
-	'disp_mut': {
-	    'missense_rec,inframe_rec,trunc_rec': {
-		shapes: [{
-			'type': 'rectangle',
-			'fill': MUT_COLOR_MISSENSE,
-			'x': '0%',
-			'y': '33.33%',
-			'width': '100%',
-			'height': '33.33%',
-			'z': 6
-		}],
-		legend_label: 'Mutation (putative driver)',
-        legend_order: MUTATION_LEGEND_ORDER
-	    },
-	    'missense,inframe,trunc,promoter,promoter_rec': {
-		shapes: [{
-			'type': 'rectangle',
-			'fill': MUT_COLOR_MISSENSE_PASSENGER,
-			'x': '0%',
-			'y': '33.33%',
-			'width': '100%',
-			'height': '33.33%',
-			'z': 6
-		}],
-		legend_label: 'Mutation (unknown significance)',
-        legend_order: MUTATION_LEGEND_ORDER
-	    },
-	},
-    })
-});
-export const genetic_rule_set_different_colors_no_recurrence:RuleSetParams = $.extend({}, baseRuleSetParams, {
-    'rule_params': $.extend({}, non_mutation_rule_params, {
-	'disp_mut': {
-	    'promoter,promoter_rec': {
-		shapes: [{
-			'type': 'rectangle',
-			'fill': MUT_COLOR_PROMOTER,
-			'x': '0%',
-			'y': '33.33%',
-			'width': '100%',
-			'height': '33.33%',
-			'z': 6,
-		    }],
-		legend_label: 'Promoter Mutation',
-        legend_order: MUTATION_LEGEND_ORDER
-	    },
-	    'trunc,trunc_rec': {
-		shapes: [{
-			'type': 'rectangle',
-			'fill': MUT_COLOR_TRUNC,
-			'x': '0%',
-			'y': '33.33%',
-			'width': '100%',
-			'height': '33.33%',
-			'z': 6,
-		    }],
-		legend_label: 'Truncating Mutation',
-        legend_order: MUTATION_LEGEND_ORDER
-	    },
-	    'inframe,inframe_rec': {
-		shapes: [{
-			'type': 'rectangle',
-			'fill': MUT_COLOR_INFRAME,
-			'x': '0%',
-			'y': '33.33%',
-			'width': '100%',
-			'height': '33.33%',
-			'z': 6,
-		    }],
-		legend_label: 'Inframe Mutation',
-        legend_order: MUTATION_LEGEND_ORDER
-	    },
-	    'missense,missense_rec': {
-		shapes: [{
-			'type': 'rectangle',
-			'fill': MUT_COLOR_MISSENSE,
-			'x': '0%',
-			'y': '33.33%',
-			'width': '100%',
-			'height': '33.33%',
-			'z': 6,
-		    }],
-		legend_label: 'Missense Mutation',
-        legend_order: MUTATION_LEGEND_ORDER
-	    },
-	}
-    })
-});
-export const genetic_rule_set_different_colors_recurrence:RuleSetParams = $.extend({}, baseRuleSetParams, {
-    'rule_params': $.extend({}, non_mutation_rule_params, {
-	'disp_mut': {
-	    'promoter,promoter_rec': {
-		shapes: [{
-			'type': 'rectangle',
-			'fill': MUT_COLOR_PROMOTER,
-			'x': '0%',
-			'y': '33.33%',
-			'width': '100%',
-			'height': '33.33%',
-			'z': 6,
-		    }],
-		legend_label: 'Promoter Mutation',
-        legend_order: MUTATION_LEGEND_ORDER
-	    },
-	    'trunc_rec': {
-		shapes: [{
-			'type': 'rectangle',
-			'fill': MUT_COLOR_TRUNC,
-			'x': '0%',
-			'y': '33.33%',
-			'width': '100%',
-			'height': '33.33%',
-			'z': 6,
-		    }],
-		legend_label: 'Truncating Mutation (putative driver)',
-        legend_order: MUTATION_LEGEND_ORDER
-	    },
-	    'trunc': {
-		shapes: [{
-			'type': 'rectangle',
-			'fill': MUT_COLOR_TRUNC_PASSENGER,
-			'x': '0%',
-			'y': '33.33%',
-			'width': '100%',
-			'height': '33.33%',
-			'z': 6,
-		    }],
-		legend_label: 'Truncating Mutation (unknown significance)',
-        legend_order: MUTATION_LEGEND_ORDER
-	    },
-	    'inframe_rec': {
-		shapes: [{
-			'type': 'rectangle',
-			'fill': MUT_COLOR_INFRAME,
-			'x': '0%',
-			'y': '33.33%',
-			'width': '100%',
-			'height': '33.33%',
-			'z': 6,
-		    }],
-		legend_label: 'Inframe Mutation (putative driver)',
-        legend_order: MUTATION_LEGEND_ORDER
-	    },
-	    'inframe': {
-		shapes: [{
-			'type': 'rectangle',
-			'fill': MUT_COLOR_INFRAME_PASSENGER,
-			'x': '0%',
-			'y': '33.33%',
-			'width': '100%',
-			'height': '33.33%',
-			'z': 6,
-		    }],
-		legend_label: 'Inframe Mutation (unknown significance)',
-        legend_order: MUTATION_LEGEND_ORDER
-	    },
-	    'missense_rec': {
-		shapes: [{
-			'type': 'rectangle',
-			'fill': MUT_COLOR_MISSENSE,
-			'x': '0%',
-			'y': '33.33%',
-			'width': '100%',
-			'height': '33.33%',
-			'z': 6,
-		    }],
-		legend_label: 'Missense Mutation (putative driver)',
-        legend_order: MUTATION_LEGEND_ORDER
-	    },
-	    'missense': {
-		shapes: [{
-			'type': 'rectangle',
-			'fill': MUT_COLOR_MISSENSE_PASSENGER,
-			'x': '0%',
-			'y': '33.33%',
-			'width': '100%',
-			'height': '33.33%',
-			'z': 6,
-		    }],
-		legend_label: 'Missense Mutation (unknown significance)',
-        legend_order: MUTATION_LEGEND_ORDER
-	    },
-	}
-    })
-});
+const base_genetic_rule_set_params = {
+	type: 'gene',
+	legend_label: 'Genetic Alteration',
+	na_legend_label: 'Not profiled',
+	legend_base_color: DEFAULT_GREY
+};
+
+export const genetic_rule_set_same_color_for_all_no_recurrence:RuleSetParams =
+	$.extend({}, base_genetic_rule_set_params, {
+		'rule_params': $.extend({}, non_mutation_rule_params, {
+			'disp_mut': {
+				'trunc,inframe,missense,promoter,trunc_rec,inframe_rec,missense_rec,promoter_rec': {
+				shapes: [{
+					'type': 'rectangle',
+					'fill': MUT_COLOR_MISSENSE,
+					'x': '0%',
+					'y': '33.33%',
+					'width': '100%',
+					'height': '33.33%',
+					'z': 6
+				}],
+				legend_label: 'Mutation',
+				legend_order: MUTATION_LEGEND_ORDER
+				}
+			}
+		})
+	});
+
+export const genetic_rule_set_same_color_for_all_recurrence:RuleSetParams =
+	$.extend({}, base_genetic_rule_set_params, {
+		'rule_params': $.extend({}, non_mutation_rule_params, {
+			'disp_mut': {
+				'missense_rec,inframe_rec,trunc_rec': {
+				shapes: [{
+					'type': 'rectangle',
+					'fill': MUT_COLOR_MISSENSE,
+					'x': '0%',
+					'y': '33.33%',
+					'width': '100%',
+					'height': '33.33%',
+					'z': 6
+				}],
+				legend_label: 'Mutation (putative driver)',
+				legend_order: MUTATION_LEGEND_ORDER
+				},
+				'missense,inframe,trunc,promoter,promoter_rec': {
+				shapes: [{
+					'type': 'rectangle',
+					'fill': MUT_COLOR_MISSENSE_PASSENGER,
+					'x': '0%',
+					'y': '33.33%',
+					'width': '100%',
+					'height': '33.33%',
+					'z': 6
+				}],
+				legend_label: 'Mutation (unknown significance)',
+				legend_order: MUTATION_LEGEND_ORDER
+				},
+			},
+		})
+	});
+
+export const genetic_rule_set_different_colors_no_recurrence:RuleSetParams =
+	$.extend({}, base_genetic_rule_set_params, {
+			'rule_params': $.extend({}, non_mutation_rule_params, {
+			'disp_mut': {
+				'promoter,promoter_rec': {
+				shapes: [{
+					'type': 'rectangle',
+					'fill': MUT_COLOR_PROMOTER,
+					'x': '0%',
+					'y': '33.33%',
+					'width': '100%',
+					'height': '33.33%',
+					'z': 6,
+					}],
+				legend_label: 'Promoter Mutation',
+				legend_order: MUTATION_LEGEND_ORDER
+				},
+				'trunc,trunc_rec': {
+				shapes: [{
+					'type': 'rectangle',
+					'fill': MUT_COLOR_TRUNC,
+					'x': '0%',
+					'y': '33.33%',
+					'width': '100%',
+					'height': '33.33%',
+					'z': 6,
+					}],
+				legend_label: 'Truncating Mutation',
+				legend_order: MUTATION_LEGEND_ORDER
+				},
+				'inframe,inframe_rec': {
+				shapes: [{
+					'type': 'rectangle',
+					'fill': MUT_COLOR_INFRAME,
+					'x': '0%',
+					'y': '33.33%',
+					'width': '100%',
+					'height': '33.33%',
+					'z': 6,
+					}],
+				legend_label: 'Inframe Mutation',
+				legend_order: MUTATION_LEGEND_ORDER
+				},
+				'missense,missense_rec': {
+				shapes: [{
+					'type': 'rectangle',
+					'fill': MUT_COLOR_MISSENSE,
+					'x': '0%',
+					'y': '33.33%',
+					'width': '100%',
+					'height': '33.33%',
+					'z': 6,
+					}],
+				legend_label: 'Missense Mutation',
+				legend_order: MUTATION_LEGEND_ORDER
+				},
+			}
+		})
+	});
+
+export const genetic_rule_set_different_colors_recurrence:RuleSetParams =
+	$.extend({}, base_genetic_rule_set_params, {
+			'rule_params': $.extend({}, non_mutation_rule_params, {
+			'disp_mut': {
+				'promoter,promoter_rec': {
+				shapes: [{
+					'type': 'rectangle',
+					'fill': MUT_COLOR_PROMOTER,
+					'x': '0%',
+					'y': '33.33%',
+					'width': '100%',
+					'height': '33.33%',
+					'z': 6,
+					}],
+				legend_label: 'Promoter Mutation',
+				legend_order: MUTATION_LEGEND_ORDER
+				},
+				'trunc_rec': {
+				shapes: [{
+					'type': 'rectangle',
+					'fill': MUT_COLOR_TRUNC,
+					'x': '0%',
+					'y': '33.33%',
+					'width': '100%',
+					'height': '33.33%',
+					'z': 6,
+					}],
+				legend_label: 'Truncating Mutation (putative driver)',
+				legend_order: MUTATION_LEGEND_ORDER
+				},
+				'trunc': {
+				shapes: [{
+					'type': 'rectangle',
+					'fill': MUT_COLOR_TRUNC_PASSENGER,
+					'x': '0%',
+					'y': '33.33%',
+					'width': '100%',
+					'height': '33.33%',
+					'z': 6,
+					}],
+				legend_label: 'Truncating Mutation (unknown significance)',
+				legend_order: MUTATION_LEGEND_ORDER
+				},
+				'inframe_rec': {
+				shapes: [{
+					'type': 'rectangle',
+					'fill': MUT_COLOR_INFRAME,
+					'x': '0%',
+					'y': '33.33%',
+					'width': '100%',
+					'height': '33.33%',
+					'z': 6,
+					}],
+				legend_label: 'Inframe Mutation (putative driver)',
+				legend_order: MUTATION_LEGEND_ORDER
+				},
+				'inframe': {
+				shapes: [{
+					'type': 'rectangle',
+					'fill': MUT_COLOR_INFRAME_PASSENGER,
+					'x': '0%',
+					'y': '33.33%',
+					'width': '100%',
+					'height': '33.33%',
+					'z': 6,
+					}],
+				legend_label: 'Inframe Mutation (unknown significance)',
+				legend_order: MUTATION_LEGEND_ORDER
+				},
+				'missense_rec': {
+				shapes: [{
+					'type': 'rectangle',
+					'fill': MUT_COLOR_MISSENSE,
+					'x': '0%',
+					'y': '33.33%',
+					'width': '100%',
+					'height': '33.33%',
+					'z': 6,
+					}],
+				legend_label: 'Missense Mutation (putative driver)',
+				legend_order: MUTATION_LEGEND_ORDER
+				},
+				'missense': {
+				shapes: [{
+					'type': 'rectangle',
+					'fill': MUT_COLOR_MISSENSE_PASSENGER,
+					'x': '0%',
+					'y': '33.33%',
+					'width': '100%',
+					'height': '33.33%',
+					'z': 6,
+					}],
+				legend_label: 'Missense Mutation (unknown significance)',
+				legend_order: MUTATION_LEGEND_ORDER
+				},
+			}
+		})
+	});
