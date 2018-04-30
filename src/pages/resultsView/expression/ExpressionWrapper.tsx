@@ -172,6 +172,14 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
         return _.keyBy(this.props.mutations, (mutation: Mutation) => mutation.uniqueSampleKey);
     }
 
+    @computed get dataTransformer(){
+        function logger(expressionValue:number){
+            return (expressionValue === 0) ? .00001 : Math.log2(expressionValue);
+        }
+        return (molecularData: NumericGeneMolecularData) =>
+            (this.logScale ? logger(molecularData.value) : molecularData.value);
+    }
+
     @computed
     get victoryTraces() {
 
@@ -179,16 +187,14 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
         const mutationScatterTraces: { [key: string]: ScatterPoint[] }[] = [];
         const unMutatedTraces: ScatterPoint[][] = [];
 
-        const handleZero = (num: number) => (num === 0) ? 1 : num;
-
-        // if we are in log mode, compute log of value
-        const dataTransformer = (molecularData: NumericGeneMolecularData) =>
-            (this.logScale ? handleZero(molecularData.value) : molecularData.value);
-
         const sortedData = this.sortedData;
         for (let i = 0; i < sortedData.length; i++) {
             const studyData = sortedData[i];
-            const boxData = calculateBoxPlotModel(studyData.map(dataTransformer));
+
+            // we don't want to let zero values affect the distribution markers
+            const withoutZeros = studyData.filter((molecularData:NumericGeneMolecularData)=>molecularData.value > 0);
+
+            const boxData = calculateBoxPlotModel(withoutZeros.map(this.dataTransformer));
 
             // *IMPORTANT* because Victory does not handle outliers,
             // we are overriding meaning of min and max in order to show whiskers
@@ -392,7 +398,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                 }
             }]}
             y={(datum: { y: NumericGeneMolecularData }) => {
-                return datum.y.value;
+                return this.dataTransformer(datum.y);
             }}
             x={(item: ScatterPoint) => item.x + 1}
             size={3}
@@ -444,7 +450,6 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                     theme={CBIOPORTAL_VICTORY_THEME}
                     domainPadding={{x: [100, 100]}}
                     domain={{y: [this.domain.min, this.domain.max]}}
-                    scale={{x: "linear", y: d3.scale.log().base(2)}}
                     padding={{bottom: 200, left: 100, top: 100, right: 10}}
                     containerComponent={<VictoryContainer containerRef={(ref: any) => this.svgContainer = ref}
                                                           responsive={false}/>}
@@ -464,7 +469,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
                     <VictoryAxis dependentAxis
 
-                                 tickFormat={(val: number) => Math.log2(val)}
+                                 tickFormat={(val: number) => val }
                                  axisLabelComponent={<VictoryLabel dy={-50}/>}
                                  label={this.yAxisLabel}
                     />
