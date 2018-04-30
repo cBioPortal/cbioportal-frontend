@@ -38,6 +38,7 @@ import ResultsViewOncoprint from "shared/components/oncoprint/ResultsViewOncopri
 import QuerySummary from "./querySummary/QuerySummary";
 import {QueryStore} from "../../shared/components/query/QueryStore";
 import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
+import {getGAInstance} from "../../shared/lib/tracking";
 
 
 const win = (window as any);
@@ -145,6 +146,14 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             if (genes((window as any).serverVars.theQuery).length <= 1) {
                 $('a#mutex-result-tab').parent().hide();
             }
+
+            if (win.cancerStudyIdList !== 'null') {
+                getGAInstance().event('results view', 'show', { eventLabel: win.cancerStudyIdList  });
+            } else if (_.includes(['all','null'],win.cancerStudyId) === false) {
+                getGAInstance().event('results view', 'show', { eventLabel: win.cancerStudyId  });
+            }
+
+
         });
     }
 
