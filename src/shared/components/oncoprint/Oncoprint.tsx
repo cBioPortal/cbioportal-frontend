@@ -77,6 +77,7 @@ export type GeneticTrackSpec = {
     info: string;
     data: GeneticTrackDatum[];
     expansionCallback?: () => void;
+    removeCallback?: () => void;
     expansionTrackList?: GeneticTrackSpec[];
 };
 
