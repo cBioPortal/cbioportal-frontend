@@ -307,6 +307,46 @@ describe('OncoprintUtils', () => {
             assert.equal(track.expansionTrackList![0].oql, 'PIK3CA;');
             assert.equal(track.expansionTrackList![1].oql, 'MTOR;');
         });
+
+        it("gives expansion tracks a remove callback that removes them from the observable", () => {
+            // given
+            const parentKey = 'SOME_MERGED_TRACK_14';
+            const trackIndex = MINIMAL_TRACK_INDEX + 8;
+            const storeProperties = {
+                ...makeMinimal3Patient3GeneStoreProperties(),
+                expansionIndexMap: observable.map<number[]>({
+                    'UNRELATED_TRACK_1': [8, 9, 10],
+                    [parentKey]: [3, trackIndex, 15]
+                })
+            };
+            const queryData = {
+                cases: makeMinimal3Patient3GeneCaseData(),
+                oql: {
+                    gene: 'ADH1',
+                    oql_line: 'ADH1;',
+                    parsed_oql_line: {gene: 'ADH1', alterations: []},
+                    data: []
+                }
+            };
+            // when
+            const trackFunction = makeGeneticTrackWith({
+                sampleMode: false,
+                ...storeProperties
+            });
+            const track = trackFunction(queryData, trackIndex, parentKey);
+            // then
+            assert.deepEqual(
+                storeProperties.expansionIndexMap.get(parentKey)!.slice(),
+                [3, trackIndex, 15],
+                "Just formatting an expansion track shouldn't change the parent's active expansions"
+            );
+            track.removeCallback!();
+            assert.deepEqual(
+                storeProperties.expansionIndexMap.get(parentKey)!.slice(),
+                [3, 15],
+                "Calling the track's remove callback should unlist it"
+            );
+        });
     });
 
     describe('percentAltered', () => {
