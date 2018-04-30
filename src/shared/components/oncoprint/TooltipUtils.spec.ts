@@ -3,10 +3,11 @@ import {makeClinicalTrackTooltip, makeGeneticTrackTooltip, makeHeatmapTrackToolt
 import {GeneticTrackDatum} from "./Oncoprint";
 import {AnnotatedExtendedAlteration, AnnotatedMutation} from "../../../pages/resultsView/ResultsViewPageStore";
 import $ from "jquery";
+import {Mutation} from "../../api/generated/CBioPortalAPI";
 
 describe("Oncoprint TooltipUtils", ()=>{
     describe("makeGeneticTrackTooltip", ()=>{
-        let tooltip:(d:GeneticTrackDatum)=>JQuery;
+        let tooltip:(d:any)=>JQuery;
         before(()=>{
             tooltip = makeGeneticTrackTooltip(false);
         });
@@ -25,9 +26,10 @@ describe("Oncoprint TooltipUtils", ()=>{
                     data: [makeMutation({
                         driverFilter:"Putative_Driver",
                         driverFilterAnnotation: "annotation here"
-                    })]
+                    })],
+                    coverage: []
                 };
-                const tooltipOutput = tooltip(datum as GeneticTrackDatum);
+                const tooltipOutput = tooltip(datum);
                 assert.equal(tooltipOutput.find("img[src$='driver.png'][title='Putative_Driver: annotation here']").length, 1);
                 assert.equal(tooltipOutput.find("img[src$='driver.png']").length, 1, "should only be one icon");
             });
@@ -44,9 +46,10 @@ describe("Oncoprint TooltipUtils", ()=>{
                     }), makeMutation({
                         driverFilter:"Putative_Driver",
                         driverFilterAnnotation: "3 annotation"
-                    })]
+                    })],
+                    coverage: []
                 };
-                const tooltipOutput = tooltip(datum as GeneticTrackDatum);
+                const tooltipOutput = tooltip(datum );
                 assert.equal(tooltipOutput.find("img[src$='driver.png'][title='Putative_Driver: annotation 1']").length, 1);
                 assert.equal(tooltipOutput.find("img[src$='driver.png'][title='Putative_Driver: annotation 2']").length, 1);
                 assert.equal(tooltipOutput.find("img[src$='driver.png'][title='Putative_Driver: 3 annotation']").length, 1);
@@ -62,9 +65,10 @@ describe("Oncoprint TooltipUtils", ()=>{
                     }),makeMutation({
                         driverFilter:"Unknown",
                         driverFilterAnnotation: "asdfas"
-                    })]
+                    })],
+                    coverage: []
                 };
-                const tooltipOutput = tooltip(datum as GeneticTrackDatum);
+                const tooltipOutput = tooltip(datum);
                 assert.equal(tooltipOutput.find("img[src$='driver.png']").length, 0);
             });
 
@@ -74,9 +78,10 @@ describe("Oncoprint TooltipUtils", ()=>{
                     data: [makeMutation({
                         driverTiersFilter:"tier1",
                         driverTiersFilterAnnotation: "tier1 mutation"
-                    })]
+                    })],
+                    coverage: []
                 };
-                const tooltipOutput = tooltip(datum as GeneticTrackDatum);
+                const tooltipOutput = tooltip(datum);
                 assert.equal(tooltipOutput.find("img[src$='driver_tiers.png'][title='tier1: tier1 mutation']").length, 1);
                 assert.equal(tooltipOutput.find("img[src$='driver_tiers.png']").length, 1, "should only be one icon");
             });
@@ -93,9 +98,10 @@ describe("Oncoprint TooltipUtils", ()=>{
                     }),makeMutation({
                         driverTiersFilter:"tier4",
                         driverTiersFilterAnnotation: "mutation tier4"
-                    })]
+                    })],
+                    coverage: []
                 };
-                const tooltipOutput = tooltip(datum as GeneticTrackDatum);
+                const tooltipOutput = tooltip(datum);
                 assert.equal(tooltipOutput.find("img[src$='driver_tiers.png'][title='tier1: tier1 mutation']").length, 1);
                 assert.equal(tooltipOutput.find("img[src$='driver_tiers.png'][title='tier2: tier2 mutation']").length, 1);
                 assert.equal(tooltipOutput.find("img[src$='driver_tiers.png'][title='tier4: mutation tier4']").length, 1);
@@ -129,9 +135,10 @@ describe("Oncoprint TooltipUtils", ()=>{
                     }),makeMutation({
                         driverTiersFilter:"tier4",
                         driverTiersFilterAnnotation: "mutation tier4"
-                    })]
+                    })],
+                    coverage: []
                 };
-                const tooltipOutput = tooltip(datum as GeneticTrackDatum);
+                const tooltipOutput = tooltip(datum);
                 assert.equal(tooltipOutput.find("img[src$='driver_tiers.png'][title='tier1: tier1 mutation']").length, 1);
                 assert.equal(tooltipOutput.find("img[src$='driver_tiers.png'][title='tier2: tier2 mutation']").length, 1);
                 assert.equal(tooltipOutput.find("img[src$='driver_tiers.png'][title='tier4: mutation tier4']").length, 1);
@@ -151,11 +158,25 @@ describe("Oncoprint TooltipUtils", ()=>{
                     }),makeMutation({
                         driverFilter:"Unknown",
                         driverFilterAnnotation: "asdfas"
-                    }),makeMutation({}), makeMutation({})]
+                    }),makeMutation({}), makeMutation({})],
+                    coverage: []
                 };
-                const tooltipOutput = tooltip(datum as GeneticTrackDatum);
+                const tooltipOutput = tooltip(datum);
                 assert.equal(tooltipOutput.find("img[src$='driver.png']").length, 0, "should be no binary icons");
                 assert.equal(tooltipOutput.find("img[src$='driver_tiers.png']").length, 0, "should be no tiers icons");
+            });
+        });
+        describe("na", ()=>{
+            it("should say 'Not profiled' if 'profiled_in' is empty", ()=>{
+                const datum = {
+                    sample: "sample",
+                    data: [] as AnnotatedExtendedAlteration[],
+                    na:true,
+                    coverage: [],
+                    profiled_in:[]
+                };
+                const tooltipOutput = tooltip(datum);
+                assert.isTrue(tooltipOutput.html().indexOf("Not profiled in selected molecular profiles.") > -1);
             });
         });
     });
