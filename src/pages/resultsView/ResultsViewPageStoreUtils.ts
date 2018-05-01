@@ -5,7 +5,7 @@ import {
 } from "../../shared/api/generated/CBioPortalAPI";
 import {action} from "mobx";
 import {getSimplifiedMutationType} from "../../shared/lib/oql/accessors";
-import {AnnotatedNumericGeneMolecularData, AnnotatedMutation, GenePanelInformation} from "./ResultsViewPageStore";
+import {AnnotatedNumericGeneMolecularData, AnnotatedMutation} from "./ResultsViewPageStore";
 import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
 import _ from "lodash";
 import sessionServiceClient from "shared/api//sessionServiceInstance";
