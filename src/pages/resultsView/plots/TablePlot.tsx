@@ -10,10 +10,6 @@ import {bind} from "bind-decorator";
 export interface ITablePlotProps {
     horzData:IStringAxisData["data"];
     vertData:IStringAxisData["data"];
-    horzLabel:string;
-    vertLabel:string;
-    horzDescription:string;
-    vertDescription:string;
 }
 
 interface ITableData {

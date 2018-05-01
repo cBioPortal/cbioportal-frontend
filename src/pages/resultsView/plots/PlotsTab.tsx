@@ -41,7 +41,7 @@ export enum AxisType {
     clinicalAttribute
 }
 
-enum ViewType {
+export enum ViewType {
     MutationType,
     CopyNumber
 }
@@ -643,10 +643,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     <TablePlot
                         horzData={horzAxisData.data}
                         vertData={vertAxisData.data}
-                        horzLabel={this.horzLabel}
-                        vertLabel={this.vertLabel}
-                        horzDescription={this.horzDescription}
-                        vertDescription={this.vertDescription}
                     />
                 );
             } else {
@@ -672,10 +668,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                 className="rotateCCW90"
                             >
                                 {this.vertLabel}
-                                <InfoIcon
-                                    tooltip={<span>{this.vertDescription}</span>}
-                                    style={{marginLeft:5}}
-                                />
+                                { (this.vertLabel !== this.vertDescription) && (
+                                    <InfoIcon
+                                        tooltip={<span>{this.vertDescription}</span>}
+                                        style={{marginLeft:5}}
+                                    />
+                                )}
                             </div>
                         </div>
                         <div style={{overflow:"auto", maxHeight:"inherit"}}>
@@ -686,10 +684,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     </div>
                     <div style={{height:"10%", alignSelf:"center"}}>
                         {this.horzLabel}
-                        <InfoIcon
-                            tooltip={<span>{this.horzDescription}</span>}
-                            style={{marginLeft:5}}
-                        />
+                        { (this.horzLabel !== this.horzDescription) && (
+                            <InfoIcon
+                                tooltip={<span>{this.horzDescription}</span>}
+                                style={{marginLeft:5}}
+                            />
+                        )}
                     </div>
                 </div>
             </div>
