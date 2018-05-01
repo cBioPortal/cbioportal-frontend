@@ -21,7 +21,8 @@ export function transition(
     nextProps:IOncoprintProps,
     prevProps:Partial<IOncoprintProps>,
     oncoprint:OncoprintJS<any>,
-    getTrackSpecKeyToTrackId:()=>{[key:string]:TrackId}
+    getTrackSpecKeyToTrackId:()=>{[key:string]:TrackId},
+    getMolecularProfileMap:()=>({[molecularProfileId:string]:MolecularProfile}|undefined)
 ) {
     const notKeepingSorted = shouldNotKeepSortedForTransition(nextProps, prevProps);
     const suppressingRendering = shouldSuppressRenderingForTransition(nextProps, prevProps);
@@ -35,7 +36,7 @@ export function transition(
     transitionWhitespaceBetweenColumns(nextProps, prevProps, oncoprint);
     transitionShowMinimap(nextProps, prevProps, oncoprint);
     transitionOnMinimapCloseCallback(nextProps, prevProps, oncoprint);
-    transitionTracks(nextProps, prevProps, oncoprint, getTrackSpecKeyToTrackId);
+    transitionTracks(nextProps, prevProps, oncoprint, getTrackSpecKeyToTrackId, getMolecularProfileMap);
     transitionSortConfig(nextProps, prevProps, oncoprint);
     transitionTrackGroupSortPriority(nextProps, prevProps, oncoprint);
     transitionHiddenIds(nextProps, prevProps, oncoprint);
@@ -337,7 +338,8 @@ function transitionTracks(
     nextProps:IOncoprintProps,
     prevProps:Partial<IOncoprintProps>,
     oncoprint:OncoprintJS<any>,
-    getTrackSpecKeyToTrackId:()=>{[key:string]:TrackId}
+    getTrackSpecKeyToTrackId:()=>{[key:string]:TrackId},
+    getMolecularProfileMap:()=>({[molecularProfileId:string]:MolecularProfile}|undefined)
 ) {
     // Initialize tracks for rule set sharing
     const trackIdForRuleSetSharing = {
@@ -364,14 +366,14 @@ function transitionTracks(
     const prevGeneticTracks = _.keyBy(prevProps.geneticTracks || [], track=>track.key);
     for (const track of nextProps.geneticTracks) {
         transitionGeneticTrack(track, prevGeneticTracks[track.key], getTrackSpecKeyToTrackId,
-                               oncoprint, nextProps, prevProps, trackIdForRuleSetSharing);
+                        getMolecularProfileMap, oncoprint, nextProps, prevProps, trackIdForRuleSetSharing);
         delete prevGeneticTracks[track.key];
     }
     for (const track of (prevProps.geneticTracks || [])) {
         if (prevGeneticTracks.hasOwnProperty(track.key)) {
             // if its still there, then this track no longer exists, we need to remove it
             transitionGeneticTrack(undefined, prevGeneticTracks[track.key], getTrackSpecKeyToTrackId,
-                                   oncoprint, nextProps, prevProps, trackIdForRuleSetSharing);
+                        getMolecularProfileMap, oncoprint, nextProps, prevProps, trackIdForRuleSetSharing);
         }
     }
 
@@ -454,6 +456,7 @@ function transitionGeneticTrack(
     nextSpec:GeneticTrackSpec|undefined,
     prevSpec:GeneticTrackSpec|undefined,
     getTrackSpecKeyToTrackId:()=>{[key:string]:TrackId},
+    getMolecularProfileMap:()=>({[molecularProfileId:string]:MolecularProfile}|undefined),
     oncoprint:OncoprintJS<any>,
     nextProps:IOncoprintProps,
     prevProps:Partial<IOncoprintProps>,
@@ -473,8 +476,8 @@ function transitionGeneticTrack(
             description: nextSpec.oql,
             data_id_key: "uid",
             data: nextSpec.data,
-            tooltipFn: makeGeneticTrackTooltip(true),
-            track_info: nextSpec.info
+            tooltipFn: makeGeneticTrackTooltip(true, getMolecularProfileMap),
+            track_info: nextSpec.info,
         };
         const newTrackId = oncoprint.addTracks([geneticTrackParams])[0];
         trackSpecKeyToTrackId[nextSpec.key] = newTrackId;
