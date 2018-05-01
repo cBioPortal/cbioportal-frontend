@@ -1,9 +1,10 @@
 import {
     DiscreteCopyNumberFilter, DiscreteCopyNumberData, ClinicalData, ClinicalDataMultiStudyFilter, Sample,
-    SampleIdentifier, MolecularProfile, Mutation, GeneMolecularData, MolecularDataFilter, Gene,
+    SampleIdentifier, MolecularProfile, Mutation, MolecularDataFilter, Gene,
     ClinicalDataSingleStudyFilter, CancerStudy, PatientIdentifier, Patient, GenePanelData, GenePanelDataFilter,
     SampleList, MutationCountByPosition, MutationMultipleStudyFilter, SampleMolecularIdentifier,
-    MolecularDataMultipleStudyFilter, SampleFilter, MolecularProfileFilter, GenePanelMultipleStudyFilter, PatientFilter
+    MolecularDataMultipleStudyFilter, SampleFilter, MolecularProfileFilter, GenePanelMultipleStudyFilter, PatientFilter,
+    GeneMolecularData, GenePanel
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {computed, observable, action, reaction, IObservable, IObservableValue, ObservableMap} from "mobx";
@@ -63,7 +64,7 @@ import {QueryStore} from "shared/components/query/QueryStore";
 import {
     annotateMolecularDatum, getOncoKbOncogenic,
     computeCustomDriverAnnotationReport, computePutativeDriverAnnotatedMutations,
-    initializeCustomDriverAnnotationSettings, computeGenePanelInformation
+    initializeCustomDriverAnnotationSettings, computeGenePanelInformation, CoverageInformation
 } from "./ResultsViewPageStoreUtils";
 import {getAlterationCountsForCancerTypesForAllGenes} from "../../shared/lib/alterationCountHelpers";
 
@@ -111,19 +112,6 @@ export interface ExtendedSample extends Sample {
 export type CaseAggregatedData<T> = {
     samples: {[uniqueSampleKey:string]:T[]};
     patients: {[uniquePatientKey:string]:T[]};
-};
-
-export type GenePanelInformation = {
-    samples:
-        {[uniqueSampleKey:string]:{
-            sequencedGenes:{[hugoGeneSymbol:string]:GenePanelData[]},
-            wholeExomeSequenced: boolean
-        }};
-    patients:
-        {[uniquePatientKey:string]:{
-            sequencedGenes:{[hugoGeneSymbol:string]:GenePanelData[]},
-            wholeExomeSequenced: boolean
-        }};
 };
 
 export function buildDefaultOQLProfile(profilesTypes: string[], zScoreThreshold: number, rppaScoreThreshold: number) {
@@ -488,28 +476,30 @@ export class ResultsViewPageStore {
         }
     });
 
-    readonly genePanelInformation = remoteData<GenePanelInformation>({
+    readonly coverageInformation = remoteData<CoverageInformation>({
         await:()=>[
-            this.studyToMutationMolecularProfile,
+            this.selectedMolecularProfiles,
             this.genes,
             this.samples,
             this.patients
         ],
         invoke:async()=>{
-            const studyToMutationMolecularProfile = this.studyToMutationMolecularProfile.result!;
+            const studyToMolecularProfiles = _.groupBy(this.selectedMolecularProfiles.result!, profile=>profile.studyId);
             const sampleMolecularIdentifiers:SampleMolecularIdentifier[] = [];
             this.samples.result!.forEach(sample=>{
-                const profile = studyToMutationMolecularProfile[sample.studyId];
-                if (profile) {
-                    sampleMolecularIdentifiers.push({
-                        molecularProfileId: profile.molecularProfileId,
-                        sampleId: sample.sampleId
-                    });
+                const profiles = studyToMolecularProfiles[sample.studyId];
+                if (profiles) {
+                    const sampleId = sample.sampleId;
+                    for (const profile of profiles) {
+                        sampleMolecularIdentifiers.push({
+                            molecularProfileId: profile.molecularProfileId,
+                            sampleId
+                        });
+                    }
                 }
             });
-            const entrezGeneIds = this.genes.result!.map(gene=>gene.entrezGeneId);
             let genePanelData:GenePanelData[];
-            if (sampleMolecularIdentifiers.length && entrezGeneIds.length) {
+            if (sampleMolecularIdentifiers.length && this.genes.result!.length) {
                 genePanelData = await client.fetchGenePanelDataInMultipleMolecularProfilesUsingPOST({
                     genePanelMultipleStudyFilter:{
                         sampleMolecularIdentifiers
@@ -519,11 +509,14 @@ export class ResultsViewPageStore {
                 genePanelData = [];
             }
 
-            const genePanelIds = _.uniq(genePanelData.map(gpData=>gpData.genePanelId));
-            const genePanels = await client.fetchGenePanelsUsingPOST({
-                genePanelIds,
-                projection:"DETAILED"
-            });
+            const genePanelIds = _.uniq(genePanelData.map(gpData=>gpData.genePanelId).filter(id=>!!id));
+            let genePanels:GenePanel[] = [];
+            if (genePanelIds.length) {
+                genePanels = await client.fetchGenePanelsUsingPOST({
+                    genePanelIds,
+                    projection:"DETAILED"
+                });
+            }
             return computeGenePanelInformation(genePanelData, genePanels, this.samples.result!, this.patients.result!, this.genes.result!);
         }
     });
@@ -531,13 +524,13 @@ export class ResultsViewPageStore {
     readonly sequencedSampleKeys = remoteData<string[]>({
         await:()=>[
             this.samples,
-            this.genePanelInformation
+            this.coverageInformation
         ],
         invoke:()=>{
-            const genePanelInformation = this.genePanelInformation.result!;
+            const genePanelInformation = this.coverageInformation.result!;
             return Promise.resolve(this.samples.result!.map(s=>s.uniqueSampleKey).filter(k=>{
                 const sequencedInfo = genePanelInformation.samples[k];
-                return sequencedInfo.wholeExomeSequenced || !!Object.keys(sequencedInfo.sequencedGenes).length;
+                return !!sequencedInfo.allGenes.length || !!Object.keys(sequencedInfo.byGene).length;
             }));
         }
     });
@@ -545,13 +538,13 @@ export class ResultsViewPageStore {
     readonly sequencedPatientKeys = remoteData<string[]>({
         await:()=>[
             this.patients,
-            this.genePanelInformation
+            this.coverageInformation
         ],
         invoke:()=>{
-            const genePanelInformation = this.genePanelInformation.result!;
+            const genePanelInformation = this.coverageInformation.result!;
             return Promise.resolve(this.patients.result!.map(p=>p.uniquePatientKey).filter(k=>{
                 const sequencedInfo = genePanelInformation.patients[k];
-                return sequencedInfo.wholeExomeSequenced || !!Object.keys(sequencedInfo.sequencedGenes).length;
+                return !!sequencedInfo.allGenes.length || !!Object.keys(sequencedInfo.byGene).length;
             }));
         }
     });
@@ -560,14 +553,14 @@ export class ResultsViewPageStore {
         await: ()=>[
             this.samples,
             this.genes,
-            this.genePanelInformation
+            this.coverageInformation
         ],
         invoke:()=>{
-            const genePanelInformation = this.genePanelInformation.result!;
+            const genePanelInformation = this.coverageInformation.result!;
             return Promise.resolve(this.genes.result!.reduce((map:{[hugoGeneSymbol:string]:string[]}, next:Gene)=>{
                 map[next.hugoGeneSymbol] = this.samples.result!.map(s=>s.uniqueSampleKey).filter(k=>{
                     const sequencedInfo = genePanelInformation.samples[k];
-                    return (sequencedInfo.wholeExomeSequenced || sequencedInfo.sequencedGenes.hasOwnProperty(next.hugoGeneSymbol));
+                    return (!!sequencedInfo.allGenes.length || sequencedInfo.byGene.hasOwnProperty(next.hugoGeneSymbol));
                 });
                 return map;
             }, {}));
@@ -578,14 +571,14 @@ export class ResultsViewPageStore {
         await: ()=>[
             this.patients,
             this.genes,
-            this.genePanelInformation
+            this.coverageInformation
         ],
         invoke:()=>{
-            const genePanelInformation = this.genePanelInformation.result!;
+            const genePanelInformation = this.coverageInformation.result!;
             return Promise.resolve(this.genes.result!.reduce((map:{[hugoGeneSymbol:string]:string[]}, next:Gene)=>{
                 map[next.hugoGeneSymbol] = this.patients.result!.map(p=>p.uniquePatientKey).filter(k=>{
                     const sequencedInfo = genePanelInformation.patients[k];
-                    return (sequencedInfo.wholeExomeSequenced || sequencedInfo.sequencedGenes.hasOwnProperty(next.hugoGeneSymbol));
+                    return (!!sequencedInfo.allGenes.length || sequencedInfo.byGene.hasOwnProperty(next.hugoGeneSymbol));
                 });
                 return map;
             }, {}));
@@ -1460,6 +1453,7 @@ export class ResultsViewPageStore {
             return Promise.resolve((mutation:Mutation):{oncoKb:string, hotspots:boolean, cbioportalCount:boolean, cosmicCount:boolean, customDriverBinary:boolean, customDriverTier?:string}=>{
                 const getOncoKbMutationAnnotationForOncoprint = this.getOncoKbMutationAnnotationForOncoprint.result!;
                 const oncoKbDatum:IndicatorQueryResp | undefined | null | false = this.mutationAnnotationSettings.oncoKb &&
+                    getOncoKbMutationAnnotationForOncoprint &&
                     (!(getOncoKbMutationAnnotationForOncoprint instanceof Error)) &&
                     getOncoKbMutationAnnotationForOncoprint(mutation);
 
