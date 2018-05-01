@@ -47,8 +47,8 @@ export default class GeneAlterationTable extends React.Component<IGeneAlteration
                         },
                         {
                             name: 'Num Samples Altered',
-                            render: (data: IGeneAlteration) => <span>{data.sequenced ? data.altered : "Not Sequenced"}</span>,
-                            download: (data: IGeneAlteration) => data.sequenced ? `${data.altered}` : "N/S",
+                            render: (data: IGeneAlteration) => <span>{data.sequenced ? data.altered : "Not Profiled"}</span>,
+                            download: (data: IGeneAlteration) => data.sequenced ? `${data.altered}` : "N/P",
                             sortBy: (data: IGeneAlteration) => data.altered
                         },
                         {
@@ -61,7 +61,7 @@ export default class GeneAlterationTable extends React.Component<IGeneAlteration
                                     counts={[data.altered]}
                                     totalCount={data.sequenced}
                                 /> :
-                                <span>Not Sequenced</span>
+                                <span>Not Profiled</span>
                             ),
                             download: (data: IGeneAlteration) => data.percentAltered,
                             sortBy: (data: IGeneAlteration) => data.altered / data.sequenced,
