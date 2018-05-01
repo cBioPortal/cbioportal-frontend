@@ -70,6 +70,7 @@ import {
 import {getAlterationCountsForCancerTypesForAllGenes} from "../../shared/lib/alterationCountHelpers";
 import sessionServiceClient from "shared/api//sessionServiceInstance";
 import { VirtualStudy } from "shared/model/VirtualStudy";
+import MobxPromiseCache from "../../shared/lib/MobxPromiseCache";
 
 type Optional<T> = (
     {isApplicable: true, value: T}
@@ -1862,6 +1863,28 @@ export class ResultsViewPageStore {
     @cached get geneCache() {
         return new GeneCache();
     }
+
+    public numericGeneMolecularDataCache = new MobxPromiseCache<{entrezGeneId:number, molecularProfileId:string}, NumericGeneMolecularData[]>(
+        q=>({
+            await: ()=>[
+                this.molecularProfileIdToDataQueryFilter
+            ],
+            invoke: ()=>{
+                const dqf = this.molecularProfileIdToDataQueryFilter.result![q.molecularProfileId];
+                if (dqf) {
+                    return client.fetchAllMolecularDataInMolecularProfileUsingPOST({
+                        molecularProfileId: q.molecularProfileId,
+                        molecularDataFilter: {
+                            entrezGeneIds: [q.entrezGeneId],
+                            ...dqf
+                        } as MolecularDataFilter
+                    });
+                } else {
+                    return Promise.resolve([]);
+                }
+            }
+        })
+    );
 
     @cached get clinicalDataCache() {
         return new ClinicalDataCache(this.samples.result, this.patients.result, this.studyToMutationMolecularProfile.result, this.studyIdToStudy.result);
