@@ -154,7 +154,7 @@ export function makeGeneticTrackTooltip(
     }
 
     const disp_cna:{[integerCN:string]:string} = {'-2': 'HOMODELETED', '-1': 'HETLOSS', '1': 'GAIN', '2': 'AMPLIFIED'};
-    return function (d:Pick<GeneticTrackDatum, "data"|"profiled_in"|"sample"|"patient"|"study_id"|"na"|"not_profiled_in">) {
+    return function (d:Pick<GeneticTrackDatum, "data"|"profiled_in"|"sample"|"patient"|"study_id"|"na"|"not_profiled_in"|"disp_germ">) {
         const ret = $('<div>').addClass(TOOLTIP_DIV_CLASS);
         let mutations:any[] = [];
         let cna:any[] = [];
