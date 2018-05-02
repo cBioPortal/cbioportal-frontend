@@ -39,7 +39,6 @@ import QuerySummary from "./querySummary/QuerySummary";
 import {QueryStore} from "../../shared/components/query/QueryStore";
 import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import {getGAInstance} from "../../shared/lib/tracking";
-import StudyViewPage from 'pages/studyView/StudyViewPage';
 
 
 const win = (window as any);

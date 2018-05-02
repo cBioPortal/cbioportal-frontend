@@ -552,7 +552,6 @@ export class StudyViewPageStore {
 
 export interface IStudyViewPageProps {
     routing: any;
-    resultsViewPageStore: ResultsViewPageStore;
 }
 
 // making this an observer (mobx-react) causes this component to re-render any time
@@ -580,11 +579,6 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                     this.store.studyId = query.studyId;
                     this.store.sampleAttrIds = ('sampleAttrIds' in query ? (query.sampleAttrIds  as string).split(",") : []);
                     this.store.patientAttrIds = ('patientAttrIds' in query ? (query.patientAttrIds as string).split(",") : []);
-                } else {
-                    let studies = this.props.resultsViewPageStore.studyIds.result
-                    if (studies && studies.length > 0) {
-                        this.store.studyId = studies[0];
-                    }
                 }
             },
             {fireImmediately: true}
