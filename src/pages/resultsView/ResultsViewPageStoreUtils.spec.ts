@@ -10,7 +10,7 @@ import {
     computeCustomDriverAnnotationReport, computeGenePanelInformation, computePutativeDriverAnnotatedMutations,
     getOncoKbOncogenic,
     initializeCustomDriverAnnotationSettings,
-    getQueriedStudies
+    getQueriedStudies, isExpressionProfile
 } from "./ResultsViewPageStoreUtils";
 import {observable} from "mobx";
 import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
@@ -823,6 +823,22 @@ describe("ResultsViewPageStoreUtils", ()=>{
             );
         });
     });
+
+    describe.only('getRNASeqProfiles',()=>{
+
+        it('properly recognizes expression profile based on patterns in id',()=>{
+            assert.isFalse(isExpressionProfile("",1), "blank is false");
+            assert.isTrue(isExpressionProfile("acc_tcga_rna_seq_v2_mrna",2),"matches seq v2 id");
+            assert.isFalse(isExpressionProfile("acc_tcga_rna_seq_v2_mrna",1),"fails if versions is wrong");
+            assert.isTrue(isExpressionProfile("chol_tcga_pan_can_atlas_2018_rna_seq_v2_mrna_median",2),'matches pan can v2');
+            assert.isFalse(isExpressionProfile("chol_tcga_pan_can_atlas_2018_rna_seq_v2_mrna_median",1),'matches pan can v2');
+            assert.isFalse(isExpressionProfile("laml_tcga_rna_seq_mrna",2));
+            assert.isTrue(isExpressionProfile("laml_tcga_rna_seq_mrna",1));
+            assert.isFalse(isExpressionProfile("chol_tcga_pan_can_atlas_2018_rna_seq_v2_mrna_median_Zscores"),2, 'doesn\'t match zscores profils');
+        });
+
+    });
+
     describe("getQueriedStudies", ()=>{
 
         let physicalStudies = [{

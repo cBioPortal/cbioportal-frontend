@@ -195,10 +195,9 @@ export async function getQueriedStudies(
     return queriedStudies.concat(otherVirtualStudies);
 }
 
-export function getRNAExpressionProfiles(profiles:MolecularProfile[],version:number){
-    if (version === 2) {
-        return profiles.filter(p=>p.molecularProfileId.includes('rna_seq_v2_mrna'));
-    } else {
-        return profiles.filter(p=>p.molecularProfileId.includes('rna_seq_mrna'));
-    }
+
+export function isExpressionProfile(profileId:string, version:number): boolean {
+    const ver = (version === 2) ? 'v2_' : '';
+    // note that pan can only has v2 expression data, so don't worry about v1
+    return RegExp(`rna_seq_${ver}mrna$|pan_can_atlas_2018_rna_seq_${ver}mrna_median$`).test(profileId);
 }

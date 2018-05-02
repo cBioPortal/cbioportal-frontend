@@ -610,19 +610,31 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
                 <If condition={this.selectedStudies.length > 0}>
                     <Then>
-                        <div className="posRelative">
-                            {
-                                (this.tooltipModel) && (this.toolTip)
-                            }
-                            {this.chart}
-                        </div>
+                        <If condition={_.size(this.props.data) > 0}>
+                            <Then>
+                                <div className="posRelative">
+                                    {
+                                        (this.tooltipModel) && (this.toolTip)
+                                    }
+                                    {this.chart}
+                                </div>
+                            </Then>
+                            <Else>
+                                <div className="alert alert-info">
+                                    No expression data for this query.
+                                </div>
+                            </Else>
+                        </If>
                     </Then>
                     <Else>
-                        <div>
+                        <div className="alert alert-info">
                             No studies selected.
                         </div>
                     </Else>
                 </If>
+
+
+
             </div>
         );
     }
