@@ -39,7 +39,6 @@ import ResultsViewOncoprint from "shared/components/oncoprint/ResultsViewOncopri
 import QuerySummary from "./querySummary/QuerySummary";
 import {QueryStore} from "../../shared/components/query/QueryStore";
 import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
-import StudyViewPage from 'pages/studyView/StudyViewPage';
 
 
 const win = (window as any);
@@ -166,7 +165,6 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
     componentDidMount(){
 
         this.mountOverlappingStudiesWarning();
-        this.mountStudyView()
 
     }
 
@@ -183,28 +181,6 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                             // disable overlapping studies warning until #3395
                             // is implemented
                             return <span></span>;
-                        } else {
-                            return <span></span>;
-                        }
-                    }
-                }
-            </Observer>
-            ,
-            target[0]
-        );
-
-    }
-
-    private mountStudyView(){
-
-        const target = $('<div class="study-view"></div>').insertBefore("#tabs");
-
-        ReactDOM.render(
-            <Observer>
-                {
-                    ()=> {
-                        if (this.resultsViewPageStore.studies.isComplete) {
-                            return <StudyViewPage routing={this.props.routing} resultsViewPageStore={this.resultsViewPageStore}/>;
                         } else {
                             return <span></span>;
                         }
