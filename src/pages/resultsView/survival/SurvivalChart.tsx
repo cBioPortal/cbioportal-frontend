@@ -8,13 +8,13 @@ import { sleep } from "../../../shared/lib/TimeUtils";
 import * as _ from 'lodash';
 import {
     VictoryChart, VictoryContainer, VictoryLine, VictoryTooltip,
-    VictoryAxis, VictoryLegend, VictoryLabel, VictoryScatter, VictoryTheme
+    VictoryAxis, VictoryLegend, VictoryLabel, VictoryScatter, VictoryTheme, VictoryZoomContainer
 } from 'victory';
 import SvgSaver from 'svgsaver';
 import fileDownload from 'react-file-download';
 import {
     getEstimates, getMedian, getLineData, getScatterData, getScatterDataWithOpacity, getStats, calculateLogRank,
-    getDownloadContent, convertScatterDataToDownloadData
+    getDownloadContent, convertScatterDataToDownloadData, downSampling
 } from "./SurvivalUtil";
 import CBIOPORTAL_VICTORY_THEME from "../../../shared/theme/cBioPoralTheme";
 
@@ -71,10 +71,17 @@ export type ConfigurableSurvivalChartStyleOpts = {
     height?: number,
 }
 
+// Start to down sampling when there are more than 1000 dots in the plot.
+const SURVIVAL_DOWN_SAMPLING_THRESHOLD = 1000;
+
 @observer
 export default class SurvivalChart extends React.Component<ISurvivalChartProps, {}> {
 
     @observable tooltipModel: any;
+    @observable scatterFilter: any;
+    // The denominator should be determined based on the plot width and height.
+    private downSamplingDenominatorX:number = 200;
+    private downSamplingDenominatorY:number = 200;
     private isTooltipHovered: boolean = false;
     private tooltipCounter: number = 0;
     private alteredLegendText = 'Cases with Alteration(s) in Query Gene(s)';
@@ -128,7 +135,65 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         let configurableOpts: StyleOpts = _.merge({}, this.styleOptsDefaultProps, this.props.styleOpts);
         configurableOpts.padding.right = this.props.showLegend ? 300 : configurableOpts.padding.right;
         configurableOpts.legend.x = configurableOpts.width - configurableOpts.padding.right;
+        this.downSamplingDenominatorX = configurableOpts.width - configurableOpts.padding.left - configurableOpts.padding.right;
+        this.downSamplingDenominatorY = configurableOpts.height - configurableOpts.padding.top - configurableOpts.padding.bottom;
         return configurableOpts;
+    }
+
+    @computed
+    get allScatterData() {
+        let a = {
+            altered: {
+                numOfCases: this.sortedAlteredPatientSurvivals.length,
+                line: getLineData(this.sortedAlteredPatientSurvivals, this.alteredEstimates),
+                scatterWithOpacity: getScatterDataWithOpacity(this.sortedAlteredPatientSurvivals, this.alteredEstimates),
+                scatter: getScatterData(this.sortedAlteredPatientSurvivals, this.alteredEstimates)
+            },
+            unaltered: {
+                numOfCases: this.sortedUnalteredPatientSurvivals.length,
+                line: getLineData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates),
+                scatterWithOpacity: getScatterDataWithOpacity(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates),
+                scatter: getScatterData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)
+            }
+        };
+        return a;
+    }
+
+    // Only recalculate the scatter data based on the plot filter.
+    // The filter is only available when user zooms in the plot.
+    @computed
+    get scatterData() {
+        let filteredData = _.cloneDeep(this.allScatterData);
+        if (this.scatterFilter) {
+            _.forEach(filteredData, (value, key) => {
+                if(value.numOfCases > SURVIVAL_DOWN_SAMPLING_THRESHOLD) {
+                    let filteredIndex: number[] = [];
+                    _.forEach(value.scatter, (_val, _key) => {
+                        if (_val.x <= this.scatterFilter.x[1] && _val.x >= this.scatterFilter.x[0]
+                            && _val.y <= this.scatterFilter.y[1] && _val.y >= this.scatterFilter.y[0]) {
+                            filteredIndex.push(_key);
+                        }
+                    });
+                    value.scatter = value.scatter.filter((val, index) => _.includes(filteredIndex, index));
+                    value.scatterWithOpacity = value.scatterWithOpacity.filter((val, index) => _.includes(filteredIndex, index));
+                }
+            });
+        }
+        _.forEach(filteredData, (value, key) => {
+            if (value.numOfCases > SURVIVAL_DOWN_SAMPLING_THRESHOLD) {
+                value.scatter = downSampling({
+                    data: value.scatter,
+                    xDenominator: this.downSamplingDenominatorX,
+                    yDenominator: this.downSamplingDenominatorY
+                });
+                value.scatterWithOpacity = downSampling({
+                    data: value.scatterWithOpacity,
+                    xDenominator: this.downSamplingDenominatorX,
+                    yDenominator: this.downSamplingDenominatorY
+                });
+            }
+        });
+        return filteredData;
     }
 
     public static defaultProps: Partial<ISurvivalChartProps> = {
@@ -187,6 +252,11 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         fileDownload(getDownloadContent(getScatterData(this.sortedAlteredPatientSurvivals, this.alteredEstimates),
             getScatterData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates), this.props.title,
             this.alteredLegendText, this.unalteredLegendText), this.props.fileName + '.txt');
+    }
+
+    private onZoomDomainChange(domain: any, props: any) {
+        // TODO: Add timeout. setTimeout seems not working here.
+        this.scatterFilter = domain;
     }
 
     public render() {
@@ -250,28 +320,42 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                         </div>
                     }
 
-                    <VictoryChart containerComponent={<VictoryContainer responsive={false}
-                                                                        containerRef={(ref: any) => this.svgContainer = ref}/>}
-                                  height={this.styleOpts.height} width={this.styleOpts.width} padding={this.styleOpts.padding}
-                                  theme={CBIOPORTAL_VICTORY_THEME}>
-                        <VictoryAxis style={this.styleOpts.axis.x} crossAxis={false} tickCount={11} label={this.props.xAxisLabel}/>
+                    <VictoryChart containerComponent={<VictoryZoomContainer responsive={false}
+                                                                            onZoomDomainChange={(domain: any, props: any) => this.onZoomDomainChange(domain, props)}
+                                                                            containerRef={(ref: any) => this.svgContainer = ref}/>}
+                                  height={this.styleOpts.height} width={this.styleOpts.width}
+                                  padding={this.styleOpts.padding}
+                                  theme={CBIOPORTAL_VICTORY_THEME}
+                                  domainPadding={{x: [10, 50], y: [20, 20]}}>
+                        <VictoryAxis style={this.styleOpts.axis.x} crossAxis={false} tickCount={11}
+                                     label={this.props.xAxisLabel}/>
                         <VictoryAxis label={this.props.yAxisLabel} dependentAxis={true} tickFormat={(t: any) => `${t}%`}
                                      tickCount={11}
                                      style={this.styleOpts.axis.y} domain={[0, 100]} crossAxis={false}/>
                         <VictoryLine interpolation="stepAfter"
-                                     data={getLineData(this.sortedAlteredPatientSurvivals, this.alteredEstimates)}
+                                     data={this.scatterData.altered.line}
                                      style={{data: {stroke: "red", strokeWidth: 1}}}/>
                         <VictoryLine interpolation="stepAfter"
-                                     data={getLineData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)}
+                                     data={this.scatterData.unaltered.line}
                                      style={{data: {stroke: "blue", strokeWidth: 1}}}/>
-                        <VictoryScatter data={getScatterDataWithOpacity(this.sortedAlteredPatientSurvivals, this.alteredEstimates)}
-                            symbol="plus" style={{ data: { fill: "red" } }} size={3} />
-                        <VictoryScatter data={getScatterDataWithOpacity(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)}
-                            symbol="plus" style={{ data: { fill: "blue" } }} size={3} />
-                        <VictoryScatter data={getScatterData(this.sortedAlteredPatientSurvivals, this.alteredEstimates)}
-                            symbol="circle" style={{ data: { fill: "red", fillOpacity: (datum: any, active: any) => active ? 0.3 : 0 } }} size={10} events={events} />
-                        <VictoryScatter data={getScatterData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)}
-                            symbol="circle" style={{ data: { fill: "blue", fillOpacity: (datum: any, active: any) => active ? 0.3 : 0 } }} size={10} events={events} />
+                        <VictoryScatter
+                            data={this.scatterData.altered.scatterWithOpacity}
+                            symbol="plus" style={{data: {fill: "red"}}} size={3}/>
+                        <VictoryScatter
+                            data={this.scatterData.unaltered.scatterWithOpacity}
+                            symbol="plus" style={{data: {fill: "blue"}}} size={3}/>
+                        <VictoryScatter data={this.scatterData.altered.scatter}
+                                        symbol="circle" style={{
+                            data: {
+                                fill: "red",
+                                fillOpacity: (datum: any, active: any) => active ? 0.3 : 0
+                            }
+                        }} size={10} events={events}/>
+                        <VictoryScatter
+                            data={this.scatterData.unaltered.scatter}
+                            symbol="circle"
+                            style={{data: {fill: "blue", fillOpacity: (datum: any, active: any) => active ? 0.3 : 0}}}
+                            size={10} events={events}/>
                         {this.props.showLegend &&
                             <VictoryLegend x={this.styleOpts.legend.x} y={this.styleOpts.legend.y}
                                 data={[
