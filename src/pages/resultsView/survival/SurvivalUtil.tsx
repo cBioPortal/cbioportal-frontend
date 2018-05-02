@@ -1,6 +1,22 @@
 import { PatientSurvival } from "../../../shared/model/PatientSurvival";
 import { tsvFormat } from 'd3-dsv';
 import jStat from 'jStat';
+import * as _ from 'lodash';
+
+export type ScatterData = {
+    x: number,
+    y: number,
+    patientId: string,
+    studyId: string,
+    status: boolean,
+    opacity?: number
+}
+
+export type DownSampling = {
+    data: ScatterData[],
+    xDenominator: number,
+    yDenominator: number
+}
 
 export function getEstimates(patientSurvivals: PatientSurvival[]): number[] {
 
@@ -43,7 +59,7 @@ export function getLineData(patientSurvivals: PatientSurvival[], estimates: numb
     return chartData;
 }
 
-export function getScatterData(patientSurvivals: PatientSurvival[], estimates: number[]): any[] {
+export function getScatterData(patientSurvivals: PatientSurvival[], estimates: number[]): ScatterData[] {
 
     return patientSurvivals.map((patientSurvival, index) => {
         return {
@@ -152,4 +168,59 @@ export function convertScatterDataToDownloadData(patientData: any[]): any[] {
     })
 
     return downloadData;
+}
+
+/**
+ * Down sampling based on the hypotenuse difference.
+ * The cross dot is guaranteed to be drawn when hidden dots are taking into account.
+ * @param {DownSampling} opts
+ * @returns {ScatterData[]}
+ */
+export function downSampling(opts: DownSampling): ScatterData[] {
+    let x = opts.data.map(item => item.x);
+    let y = opts.data.map(item => item.y);
+
+    let xMax = _.max(x) || 0;
+    let xMin = _.min(x) || 0;
+
+    let yMax = _.max(y) || 0;
+    let yMin = _.min(y) || 0;
+
+    let timeThreshold = (xMax - xMin) / opts.xDenominator;
+    let survivalRateThreshold = (yMax - yMin) / opts.yDenominator;
+    let averageThreshold = Math.hypot(timeThreshold, survivalRateThreshold);
+    let lastVisibleDataPoint = {
+        x: 0,
+        y: 0
+    };
+    let lastDataPoint = {
+        x: 0,
+        y: 0
+    };
+
+    return opts.data.filter(function (dataItem, index) {
+        let isVisibleDot = _.isUndefined(dataItem.opacity) || dataItem.opacity > 0;
+        if (index == 0) {
+            lastDataPoint.x = dataItem.x;
+            lastDataPoint.y = dataItem.y;
+            return true;
+        }
+        let distance = 0;
+        if (isVisibleDot) {
+            distance = Math.hypot(dataItem.x - lastVisibleDataPoint.x, dataItem.y - lastVisibleDataPoint.y)
+        } else {
+            distance = Math.hypot(dataItem.x - lastDataPoint.x, dataItem.y - lastDataPoint.y);
+        }
+        if (distance > averageThreshold) {
+            lastDataPoint.x = dataItem.x;
+            lastDataPoint.y = dataItem.y;
+            if(isVisibleDot) {
+                lastVisibleDataPoint.x = dataItem.x;
+                lastVisibleDataPoint.y = dataItem.y;
+            }
+            return true;
+        } else {
+            return false;
+        }
+    });
 }
