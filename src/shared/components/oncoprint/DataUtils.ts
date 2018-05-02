@@ -22,6 +22,7 @@ import {FractionGenomeAltered, MutationSpectrum} from "../../api/generated/CBioP
 import {SpecialAttribute} from "../../cache/ClinicalDataCache";
 import {OncoprintClinicalAttribute} from "./ResultsViewOncoprint";
 import {CoverageInformation} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
+import { MUTATION_STATUS_GERMLINE } from "shared/constants";
 
 const cnaDataToString:{[integerCNA:string]:string|undefined} = {
     "-2": "homdel",
@@ -111,6 +112,7 @@ export function fillGeneticTrackDatum(
     const dispProtCounts:{[protEvent:string]:number} = {};
     const dispMutCounts:{[mutType:string]:number} = {};
     const dispGermline:{[mutType:string]:boolean} = {};
+    const caseInsensitiveGermlineMatch = new RegExp(MUTATION_STATUS_GERMLINE, "i");
 
     for (const event of data) {
         const molecularAlterationType = event.molecularProfileAlterationType;
@@ -145,7 +147,7 @@ export function fillGeneticTrackDatum(
                     if (event.putativeDriver) {
                         oncoprintMutationType += "_rec";
                     }
-                    dispGermline[oncoprintMutationType] = dispGermline[oncoprintMutationType] || (event.mutationStatus === 'Germline');
+                    dispGermline[oncoprintMutationType] = dispGermline[oncoprintMutationType] || (caseInsensitiveGermlineMatch.test(event.mutationStatus));
                     dispMutCounts[oncoprintMutationType] = dispMutCounts[oncoprintMutationType] || 0;
                     dispMutCounts[oncoprintMutationType] += 1;
                 }
