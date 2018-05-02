@@ -49,7 +49,7 @@ function runResultsTestSuite(prefix){
         browser.click("[href='#mutation_details']");
         browser.waitForVisible('.borderedChart svg',20000);
         browser.waitForEnabled('[data-test=view3DStructure]', 10000);
-        var res = browser.checkElement('#mutation_details',{hide:['.qtip'], viewportChangePause:2000, misMatchTolerance:0.3});
+        var res = browser.checkElement('#mutation_details',{hide:['.qtip'], viewportChangePause:2000, misMatchTolerance:0.08});
         assertScreenShotMatch(res);
     });
 
