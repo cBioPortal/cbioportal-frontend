@@ -18,6 +18,8 @@ export type GeneXref = {
 
         'display_id': string
 
+        'ensemblGeneId': string
+
         'info_text': string
 
         'info_types': string
@@ -123,6 +125,46 @@ export type MutationAssessor = {
         'variantSpecificityScore': number
 
 };
+export type TranscriptConsequenceSummary = {
+    'codonChange': string
+
+        'consequenceTerms': string
+
+        'entrezGeneId': string
+
+        'hgvsc': string
+
+        'hgvsp': string
+
+        'hgvspShort': string
+
+        'hugoGeneSymbol': string
+
+        'proteinPosition': IntegerRange
+
+        'refSeq': string
+
+        'transcriptId': string
+
+        'variantClassification': string
+
+};
+export type VariantAnnotationSummary = {
+    'assemblyName': string
+
+        'canonicalTranscriptId': string
+
+        'genomicLocation': GenomicLocation
+
+        'strandSign': string
+
+        'transcriptConsequences': Array < TranscriptConsequenceSummary >
+
+        'variant': string
+
+        'variantType': string
+
+};
 
 /**
  * Genome Nexus Variant Annotation API
@@ -177,6 +219,176 @@ export default class GenomeNexusAPIInternal {
             }
         });
     }
+
+    fetchVariantAnnotationPOST_1URL(parameters: {
+        'variants': Array < string > ,
+        'isoformOverrideSource' ? : string,
+        'projection' ? : "ALL" | "CANONICAL",
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/annotation/summary';
+
+        if (parameters['isoformOverrideSource'] !== undefined) {
+            queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
+        }
+
+        if (parameters['projection'] !== undefined) {
+            queryParameters['projection'] = parameters['projection'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves VEP annotation summary for the provided list of variants
+     * @method
+     * @name GenomeNexusAPIInternal#fetchVariantAnnotationPOST_1
+     * @param {} variants - List of variants. For example ["X:g.66937331T>A","17:g.41242962_41242963insGA"]
+     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} projection - Indicates whether to return summary for all transcripts or only for canonical transcript
+     */
+    fetchVariantAnnotationPOST_1(parameters: {
+            'variants': Array < string > ,
+            'isoformOverrideSource' ? : string,
+            'projection' ? : "ALL" | "CANONICAL",
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < VariantAnnotationSummary >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/annotation/summary';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                if (parameters['variants'] !== undefined) {
+                    body = parameters['variants'];
+                }
+
+                if (parameters['variants'] === undefined) {
+                    reject(new Error('Missing required  parameter: variants'));
+                    return;
+                }
+
+                if (parameters['isoformOverrideSource'] !== undefined) {
+                    queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
+                }
+
+                if (parameters['projection'] !== undefined) {
+                    queryParameters['projection'] = parameters['projection'];
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    fetchVariantAnnotationSummaryGETURL(parameters: {
+        'variant': string,
+        'isoformOverrideSource' ? : string,
+        'projection' ? : "ALL" | "CANONICAL",
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/annotation/summary/{variant}';
+
+        path = path.replace('{variant}', parameters['variant'] + '');
+        if (parameters['isoformOverrideSource'] !== undefined) {
+            queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
+        }
+
+        if (parameters['projection'] !== undefined) {
+            queryParameters['projection'] = parameters['projection'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves VEP annotation summary for the provided variant
+     * @method
+     * @name GenomeNexusAPIInternal#fetchVariantAnnotationSummaryGET
+     * @param {string} variant - Variant. For example 17:g.41242962_41242963insGA
+     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {string} projection - Indicates whether to return summary for all transcripts or only for canonical transcript
+     */
+    fetchVariantAnnotationSummaryGET(parameters: {
+        'variant': string,
+        'isoformOverrideSource' ? : string,
+        'projection' ? : "ALL" | "CANONICAL",
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < VariantAnnotationSummary > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/annotation/summary/{variant}';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            path = path.replace('{variant}', parameters['variant'] + '');
+
+            if (parameters['variant'] === undefined) {
+                reject(new Error('Missing required  parameter: variant'));
+                return;
+            }
+
+            if (parameters['isoformOverrideSource'] !== undefined) {
+                queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
+            }
+
+            if (parameters['projection'] !== undefined) {
+                queryParameters['projection'] = parameters['projection'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        }).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
 
     fetchHotspotAnnotationByGenomicLocationPOSTURL(parameters: {
         'genomicLocations': Array < GenomicLocation > ,
