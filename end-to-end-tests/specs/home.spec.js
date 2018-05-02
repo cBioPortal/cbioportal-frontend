@@ -1147,7 +1147,7 @@ describe('case set selection in front page query form', function(){
         browser.waitForExist(selectedCaseSet_sel);
         assert.equal(
             browser.getText(selectedCaseSet_sel),
-            "All",
+            "All (252)",
             "Default case set for multiple"
         );
 
@@ -1197,7 +1197,7 @@ describe('case set selection in front page query form', function(){
         browser.waitForExist(selectedCaseSet_sel, 10000);
         assert.equal(
             browser.getText(selectedCaseSet_sel),
-            "All",
+            "All (21206)",
             "Default selected case set with multiple studies should be 'All'"
         );
 
@@ -1219,7 +1219,7 @@ describe('case set selection in front page query form', function(){
         browser.waitForExist(selectedCaseSet_sel);
         assert.equal(
             browser.getText(selectedCaseSet_sel),
-            "All",
+            "All (252)",
             "Default case set for multiple"
         );
 
@@ -1280,7 +1280,7 @@ describe('case set selection in modify query form', function(){
         browser.waitForExist(selectedCaseSet_sel, 10000);
         assert.equal(
             browser.getText(selectedCaseSet_sel),
-            "All",
+            "All (368)",
             "Default selected case set with multiple studies should be 'All'"
         );
 
@@ -1317,7 +1317,7 @@ describe('case set selection in modify query form', function(){
         browser.waitForExist(selectedCaseSet_sel, 10000);
         assert.equal(
             browser.getText(selectedCaseSet_sel),
-            "All",
+            "All (12997)",
             "Default selected case set with multiple studies should be 'All'"
         );
 
