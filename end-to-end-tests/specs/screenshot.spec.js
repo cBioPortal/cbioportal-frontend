@@ -8,9 +8,9 @@ var assertScreenShotMatch = require('../lib/testUtils').assertScreenShotMatch;
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
 
-function runResultsTestSuite(){
+function runResultsTestSuite(prefix){
 
-    it('render the oncoprint', function(){
+    it(`${prefix} render the oncoprint`, function(){
         waitForOncoprint();
         browser.pause(2000);
         var res = browser.checkElement('#oncoprint');
@@ -18,63 +18,63 @@ function runResultsTestSuite(){
     });
 
     // can't get it to pass reliably
-    it.skip('igv_tab tab', function(){
+    it.skip(`${prefix} igv_tab tab`, function(){
         browser.click("[href='#igv_tab']");
         browser.waitForExist('#cnSegmentsFrame', 20000);
         var res = browser.checkElement('#igv_tab',{hide:['.qtip'] });
         assertScreenShotMatch(res);
     });
 
-    it('cancer type summary', function(){
+    it(`${prefix} cancer type summary`, function(){
         browser.click("[href='#pancancer_study_summary']");
         browser.waitForVisible('[data-test="cancerTypeSummaryChart"]',10000);
         var res = browser.checkElement('#pancancer_study_summary', { hide:['.qtip'] });
         assertScreenShotMatch(res);
     });
 
-    it('mutex tab', function(){
+    it(`${prefix} mutex tab`, function(){
         browser.click("[href='#mutex']");
         var res = browser.checkElement('#mutex',{ hide:['.qtip'] });
         assertScreenShotMatch(res);
     });
 
-    it('plots tab', function(){
+    it(`${prefix} plots tab`, function(){
         browser.click("[href='#plots']");
         browser.waitForExist('#plots-box svg',10000);
         var res = browser.checkElement('#plots', { hide:['.qtip'], misMatchTolerance:1 });
         assertScreenShotMatch(res);
     });
 
-    it('mutation tab', function(){
+    it(`${prefix} mutation tab`, function(){
         browser.click("[href='#mutation_details']");
         browser.waitForVisible('.borderedChart svg',20000);
         browser.waitForEnabled('[data-test=view3DStructure]', 10000);
-        var res = browser.checkElement('#mutation_details',{hide:['.qtip'], viewportChangePause:1000 });
+        var res = browser.checkElement('#mutation_details',{hide:['.qtip'], viewportChangePause:2000, misMatchTolerance:0.08});
         assertScreenShotMatch(res);
     });
 
-    it('coexpression tab', function(){
+    it(`${prefix} coexpression tab`, function(){
         browser.click("[href='#coexp']");
         browser.waitForVisible('#coexp_table_div_KRAS',10000);
         var res = browser.checkElement('#coexp',{hide:['.qtip'] });
         assertScreenShotMatch(res);
     });
 
-    it('survival tab', function(){
+    it(`${prefix} survival tab`, function(){
         browser.click("[href='#survival']");
         browser.waitForVisible('[data-test=SurvivalChart] svg',10000);
         var res = browser.checkElement('#survival', { hide:['.qtip'] } );
         assertScreenShotMatch(res);
     });
 
-    it('network tab', function(){
+    it(`${prefix} network tab`, function(){
         browser.click("[href='#network']");
         browser.waitForVisible('#cytoscapeweb canvas',20000);
         var res = browser.checkElement("#network",{hide:['.qtip','canvas'] });
         assertScreenShotMatch(res);
     });
 
-    it.skip('data_download tab', function(){
+    it.skip(`${prefix} data_download tab`, function(){
         browser.click("[href='#data_download']");
         //  browser.pause(1000);
         browser.waitForExist("#text_area_gene_alteration_freq",20000);
@@ -91,7 +91,7 @@ describe('result page screenshot tests', function(){
         goToUrlAndSetLocalStorage(url);
     });
 
-    runResultsTestSuite()
+    runResultsTestSuite('no session')
 
 });
 
@@ -116,7 +116,7 @@ describe("oncoprint screenshot tests", function() {
         var res = browser.checkElement("#oncoprint");
         assertScreenShotMatch(res);
     });
-    it("msk_impact_2017 with SOS1 with CNA profile - SOS1 should be sequenced", function() {
+    it("msk_impact_2017 with SOS1 with CNA profile - SOS1 should not be sequenced", function() {
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=msk_impact_2017_all&gene_list=SOS1&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=msk_impact_2017_cna`;
         goToUrlAndSetLocalStorage(url);
         waitForOncoprint(20000);
@@ -187,5 +187,5 @@ describe('result page tabs, loading from session id', function(){
         }
     });
 
-    runResultsTestSuite();
+    runResultsTestSuite('session');
 });
