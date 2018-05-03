@@ -11,6 +11,7 @@ import { PieChart } from "pages/studyView/charts/pieChart/PieChart";
 import {If} from 'react-if';
 import {Button} from 'react-bootstrap';
 import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
+import { ChartHeader } from "pages/studyView/chartHeader/ChartHeader";
 
 export interface IChartProps {
     clinicalAttribute: ClinicalAttribute,
@@ -28,6 +29,8 @@ export class Chart extends React.Component<IChartProps, {}> {
         this.onUserSelection = this.onUserSelection.bind(this)
         this.handleFilter = this.handleFilter.bind(this)
         this.resetFilters = this.resetFilters.bind(this)
+        this.onMouseEnter = this.onMouseEnter.bind(this);
+        this.onMouseLeave = this.onMouseLeave.bind(this);
 
     }
 
@@ -63,12 +66,23 @@ export class Chart extends React.Component<IChartProps, {}> {
         }
     }
 
+    @observable mouseInsideBounds:boolean = false;
+
+    onMouseEnter(){
+        this.mouseInsideBounds = true;
+    }
+
+    onMouseLeave(){
+        this.mouseInsideBounds = false;
+    }
+    
+
+
     public render() {
         return (
-            <div className={styles.chart}>
-                <div className={styles.header}>
-                    <span>{this.props.clinicalAttribute.displayName}</span>
-                </div>
+            <div className={styles.chart} onMouseEnter={this.onMouseEnter}
+            onMouseLeave={this.onMouseLeave}>
+                <ChartHeader clinicalAttribute={this.props.clinicalAttribute} showControls={this.mouseInsideBounds}/>
                 {this.props.data && <div className={styles.plot}>
                     <PieChart
                         onUserSelection={this.onUserSelection}
