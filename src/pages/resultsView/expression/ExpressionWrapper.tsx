@@ -13,12 +13,13 @@ import {
     VictoryLabel, VictoryContainer, VictoryPie, VictoryScatter, VictoryLegend
 } from 'victory';
 import CBIOPORTAL_VICTORY_THEME from "../../../shared/theme/cBioPoralTheme";
-import {BoxPlotModel, calculateBoxPlotModel} from "../../../shared/lib/boxPlotUtils";
+import {BoxPlotModel, calculateBoxPlotModel, VictoryBoxPlotModel} from "../../../shared/lib/boxPlotUtils";
 import d3 from 'd3';
 import {ITooltipModel} from "../../../shared/model/ITooltipModel";
 import ChartContainer from "../../../shared/components/ChartContainer/ChartContainer";
 import {If, Then, Else} from 'react-if';
 import jStat from 'jStat';
+import numeral from 'numeral';
 
 
 
@@ -177,7 +178,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
             );
         } else {
             return _.sortBy(this.filteredData, [(data: NumericGeneMolecularData[]) => {
-                return jStat.median(data.map((molecularData: NumericGeneMolecularData) => molecularData.value).asMutable()) as number;
+                return jStat.median((data.map((molecularData: NumericGeneMolecularData) => molecularData.value) as any).asMutable()) as number;
             }]);
         }
     }
@@ -209,7 +210,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     @computed
     get victoryTraces() {
 
-        const boxTraces: Partial<BoxPlotModel>[] = [];
+        const boxTraces: Partial<VictoryBoxPlotModel>[] = [];
         const mutationScatterTraces: { [key: string]: ScatterPoint[] }[] = [];
         const unMutatedTraces: ScatterPoint[][] = [];
 
@@ -225,7 +226,6 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
             // *IMPORTANT* because Victory does not handle outliers,
             // we are overriding meaning of min and max in order to show whiskers
             // at quartile +/-IQL * 1.5 instead of true max/min
-
             boxTraces.push({
                 realMin: boxData.min,
                 realMax: boxData.max,
@@ -469,9 +469,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     @computed
     get tickFormat() {
-
         function format(val:number) {
-            console.log(val);
             if (val >= 1000) {
                 return numeral(val).format('0a');
             } else {
@@ -479,8 +477,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
             }
         }
 
-        const ret = (this.logScale) ? (val: number) => format(Math.pow(10, val)) : (val: number) => format(val);
-
+        return (this.logScale) ? (val:number)=>val : (val:number) => format(val);
     }
 
     @computed

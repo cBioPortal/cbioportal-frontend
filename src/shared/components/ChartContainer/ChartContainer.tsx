@@ -7,16 +7,16 @@ interface IChartContainer {
     exportFileName?:string;
 }
 
-export default class ChartContainer extends React.Component<{}, {}> {
+export default class ChartContainer extends React.Component<IChartContainer, {}> {
 
     @autobind
     private downloadSvg() {
-        this.svgsaver.asSvg(this.props.getSVGElement(), this.props.exportFileName + '.svg');
+        this.svgsaver.asSvg(this.props.getSVGElement!(), this.props.exportFileName + '.svg');
     }
 
     @autobind
     private downloadPng() {
-        this.svgsaver.asPng(this.props.getSVGElement(), this.props.exportFileName + '.png');
+        this.svgsaver.asPng(this.props.getSVGElement!(), this.props.exportFileName + '.png');
     }
 
     private svgsaver = new SvgSaver();

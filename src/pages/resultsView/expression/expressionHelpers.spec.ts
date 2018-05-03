@@ -16,7 +16,7 @@ describe('getDefaultSelectedStudiesForExpressionTab',()=>{
 
     it('recognizes pub tcga study',()=>{
         const studyId = "blca_tcga_pub";
-        assert.true(isTCGAPubStudy(studyId));
+        assert.isTrue(isTCGAPubStudy(studyId));
         assert.isFalse(isTCGAProvStudy(studyId));
         assert.isFalse(isPanCanStudy(studyId));
     });

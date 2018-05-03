@@ -44,7 +44,7 @@ import {
 import {writeTest} from "../../shared/lib/writeTest";
 import {PatientSurvival} from "../../shared/model/PatientSurvival";
 import {filterCBioPortalWebServiceDataByOQLLine, OQLLineFilterOutput} from "../../shared/lib/oql/oqlfilter";
-import GeneMolecularDataCache, {MolecularDataCacheQuery} from "../../shared/cache/GeneMolecularDataCache";
+import GeneMolecularDataCache from "../../shared/cache/GeneMolecularDataCache";
 import GenesetMolecularDataCache from "../../shared/cache/GenesetMolecularDataCache";
 import GenesetCorrelatedGeneCache from "../../shared/cache/GenesetCorrelatedGeneCache";
 import GeneCache from "../../shared/cache/GeneCache";
@@ -1863,14 +1863,15 @@ export class ResultsViewPageStore {
                        entrezGeneId: gene.entrezGeneId,
                        molecularProfileId: profile.molecularProfileId,
                        hugoGeneSymbol:gene.hugoGeneSymbol
-                   } as MolecularDataCacheQuery)
+                   })
                });
            });
 
            const data = await this.geneMolecularDataCache.result!.getPromise(queries,true);
 
            // group cache objects by entrez geneId
-           const groupedByGene = _.groupBy(data,(cacheItem:AugmentedData<NumericGeneMolecularData[], MolecularDataCacheQuery>)=>cacheItem.meta.entrezGeneId);
+           //TODO: fix typing of cachItem
+           const groupedByGene = _.groupBy(data,(cacheItem:AugmentedData<NumericGeneMolecularData[], GeneMolecularDataCache>)=>(cacheItem as any).meta.entrezGeneId);
 
            // now convert key from entrez to hugeGeneSymbol
            const keyedByHugoSymbol = _.mapKeys(groupedByGene,(val, entrezGeneId:string)=>{
@@ -1879,8 +1880,8 @@ export class ResultsViewPageStore {
            });
 
            const unwrapCacheObjects:{[hugeGeneSymbol:string]:NumericGeneMolecularData[][]} =
-               _.mapValues(keyedByHugoSymbol,(val:AugmentedData<NumericGeneMolecularData[], MolecularDataCacheQuery>)=>{
-                    return _.map(val,(item:AugmentedData<NumericGeneMolecularData[], MolecularDataCacheQuery>)=>item.data);
+               _.mapValues(keyedByHugoSymbol,(val:AugmentedData<NumericGeneMolecularData[], GeneMolecularDataCache>)=>{
+                    return _.map(val,(item:AugmentedData<NumericGeneMolecularData[], GeneMolecularDataCache>)=>item.data);
                 }) as any; // there's an error with typing for _.mapValues
 
            return Promise.resolve(unwrapCacheObjects);

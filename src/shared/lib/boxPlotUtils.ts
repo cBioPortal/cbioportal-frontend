@@ -15,20 +15,26 @@ interface Outliers {
   }
 };
 
-export type BoxPlotModel = {
-    min: number,
-    median: number,
-    max: number,
-    q1: number,
-    q2:number,
-    q3: number,
-    x?: number,
-    whiskerUpper:number,
-    whiskerLower:number,
-    IQR:number,
-    outliersUpper:Outliers["upper"],
-    outliersLower:Outliers["lower"]
+export interface BoxPlotModel {
+    min: number;
+    median: number;
+    max: number;
+    q1: number;
+    q2:number;
+    q3: number;
+    x?: number;
+    whiskerUpper:number;
+    whiskerLower:number;
+    IQR:number;
+    outliersUpper:Outliers["upper"];
+    outliersLower:Outliers["lower"];
 };
+
+export interface VictoryBoxPlotModel extends BoxPlotModel
+{
+    realMin: number;
+    realMax: number;
+}
 
 
 function calculateOutliers(vector:number[], suspectedOutlierThresholdUpper:number, outlierThresholdUpper:number,

@@ -834,7 +834,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
             assert.isFalse(isExpressionProfile("chol_tcga_pan_can_atlas_2018_rna_seq_v2_mrna_median",1),'matches pan can v2');
             assert.isFalse(isExpressionProfile("laml_tcga_rna_seq_mrna",2));
             assert.isTrue(isExpressionProfile("laml_tcga_rna_seq_mrna",1));
-            assert.isFalse(isExpressionProfile("chol_tcga_pan_can_atlas_2018_rna_seq_v2_mrna_median_Zscores"),2, 'doesn\'t match zscores profils');
+            assert.isFalse(isExpressionProfile("chol_tcga_pan_can_atlas_2018_rna_seq_v2_mrna_median_Zscores",2), 'doesn\'t match zscores profils');
         });
 
     });

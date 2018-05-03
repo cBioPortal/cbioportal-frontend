@@ -40,7 +40,6 @@ import QuerySummary from "./querySummary/QuerySummary";
 import {QueryStore} from "../../shared/components/query/QueryStore";
 import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ExpressionWrapper from "./expression/ExpressionWrapper";
-import {MolecularDataCacheQuery} from "../../shared/cache/GeneMolecularDataCache";
 
 
 const win = (window as any);
