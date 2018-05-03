@@ -233,7 +233,21 @@ describe('OncoprintUtils', () => {
                         {gene: 'FOLR2', oql_line: 'FOLR2;', parsed_oql_line: {gene: 'FOLR2', alterations: []}, data: []},
                         {gene: 'IZUMO1R', oql_line: 'IZUMO1R;', parsed_oql_line: {gene: 'IZUMO1R', alterations: []}, data: []}
                     ]
-                }
+                },
+                list: [
+                    {
+                        cases: makeMinimal3Patient3GeneCaseData(),
+                        oql: {gene: 'FOLR1', oql_line: 'FOLR1;', parsed_oql_line: {gene: 'FOLR1', alterations: []}, data: []},
+                    },
+                    {
+                        cases: makeMinimal3Patient3GeneCaseData(),
+                        oql: {gene: 'FOLR2', oql_line: 'FOLR2;', parsed_oql_line: {gene: 'FOLR2', alterations: []}, data: []},
+                    },
+                    {
+                        cases: makeMinimal3Patient3GeneCaseData(),
+                        oql: {gene: 'IZUMO1R', oql_line: 'IZUMO1R;', parsed_oql_line: {gene: 'IZUMO1R', alterations: []}, data: []}
+                    }
+                ]
             };
             // when
             const trackFunction = makeGeneticTrackWith({
@@ -247,6 +261,51 @@ describe('OncoprintUtils', () => {
                 storeProperties.expansionIndexMap.get(track.key)!.slice(),
                 [0, 1, 2]
             );
+        });
+
+        it("includes expansion tracks in the spec if the observable lists them", () => {
+            // given
+            const queryData = {
+                cases: makeMinimal3Patient3GeneCaseData(),
+                oql: {
+                    list: [
+                        {gene: 'PIK3CA', oql_line: 'PIK3CA;', parsed_oql_line: {gene: 'PIK3CA', alterations: []}, data: []},
+                        {gene: 'MTOR', oql_line: 'MTOR;', parsed_oql_line: {gene: 'MTOR', alterations: []}, data: []},
+                    ]
+                },
+                list: [
+                    {
+                        cases: makeMinimal3Patient3GeneCaseData(),
+                        oql: {gene: 'PIK3CA', oql_line: 'PIK3CA;', parsed_oql_line: {gene: 'PIK3CA', alterations: []}, data: []}
+                    },
+                    {
+                        cases: makeMinimal3Patient3GeneCaseData(),
+                        oql: {gene: 'MTOR', oql_line: 'MTOR;', parsed_oql_line: {gene: 'MTOR', alterations: []}, data: []}
+                    }
+                ]
+            };
+            const trackIndex = MINIMAL_TRACK_INDEX + 7;
+            // list expansions for the track key determined before expansion
+            const preExpandStoreProperties = makeMinimal3Patient3GeneStoreProperties();
+            const trackKey: string = makeGeneticTrackWith({
+                sampleMode: false, ...preExpandStoreProperties,
+            })(queryData, trackIndex).key;
+            const postExpandStoreProperties = {
+                ...preExpandStoreProperties,
+                expansionIndexMap: observable.shallowMap({[trackKey]: [0, 1]})
+            };
+            // when
+            const trackFunction = makeGeneticTrackWith({
+                sampleMode: false,
+                ...postExpandStoreProperties,
+            });
+            const track = trackFunction(
+                queryData,
+                trackIndex
+            );
+            // then
+            assert.equal(track.expansionTrackList![0].oql, 'PIK3CA;');
+            assert.equal(track.expansionTrackList![1].oql, 'MTOR;');
         });
     });
 
