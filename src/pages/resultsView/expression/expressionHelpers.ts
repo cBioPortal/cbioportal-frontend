@@ -96,3 +96,15 @@ export const ExpressionStyleSheet: { [mutationType:string]:ExpressionStyle } = {
     }
 
 };
+
+export function isTCGAPubStudy(studyId:string){
+    return /tcga_pub$/.test(studyId);
+}
+
+export function isTCGAProvStudy(studyId:string){
+    return /tcga$/.test(studyId);
+}
+
+export function isPanCanStudy(studyId:string){
+    return /tcga_pan_can_atlas/.test(studyId);
+}

@@ -1836,17 +1836,26 @@ export class ResultsViewPageStore {
         }
     });
 
+    readonly expressionProfiles = remoteData({
+        await:()=>[
+            this.molecularProfilesInStudies
+        ],
+        invoke:()=>{
+            return Promise.resolve(this.molecularProfilesInStudies.result.filter(
+                (profile:MolecularProfile)=>isExpressionProfile(profile.molecularProfileId, this.expressionTabseqVersion)
+            ));
+        }
+    });
+
     readonly rnaSeqMolecularData = remoteData<{[hugoGeneSymbol:string]:NumericGeneMolecularData[][]}>({
        await:()=>[
-           this.molecularProfilesInStudies,
+           this.expressionProfiles,
            this.genes,
            this.geneMolecularDataCache
        ],
        invoke: async ()=>{
 
-           const rnaSeqProfiles = this.molecularProfilesInStudies.result.filter(
-               (profile:MolecularProfile)=>isExpressionProfile(profile.molecularProfileId, this.expressionTabseqVersion)
-           );
+           const rnaSeqProfiles = this.expressionProfiles.result!;
 
            const queries = _.flatMap(this.genes.result,(gene:Gene)=>{
                return rnaSeqProfiles.map((profile:MolecularProfile)=> {

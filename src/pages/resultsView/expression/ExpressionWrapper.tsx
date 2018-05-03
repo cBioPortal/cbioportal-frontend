@@ -18,6 +18,7 @@ import d3 from 'd3';
 import {ITooltipModel} from "../../../shared/model/ITooltipModel";
 import ChartContainer from "../../../shared/components/ChartContainer/ChartContainer";
 import {If, Then, Else} from 'react-if';
+import jStat from 'jStat';
 
 
 
@@ -37,9 +38,11 @@ interface MolecularDataBuckets {
     unmutatedBucket: NumericGeneMolecularData[]
 };
 
-const JITTER_VALUE = 0.4;
+
 
 const BOX_WIDTH = 100;
+
+const JITTER_VALUE = 0.4;
 
 const ZERO_EXPRESSION = -2;
 
@@ -104,9 +107,6 @@ function findMedian(_input_data: number[]) {
     }
 }
 
-function getJitter() {
-    return (Math.random() * JITTER_VALUE - JITTER_VALUE / 2);
-}
 
 @observer
 export default class ExpressionWrapper extends React.Component<ExpressionWrapperProps, {}> {
@@ -131,6 +131,8 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     @observable _selectedStudies: { [studyId: string]: boolean } = {};
 
+    @observable height = 600;
+
     @observable logScale = true;
 
     @observable sortBy: SortOptions = "alphabetic";
@@ -147,6 +149,25 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     }
 
     @computed
+    get width() {
+        return this.sortedLabels.length * (this.widthThreshold ? 50 : 100) + 200;
+    }
+
+
+    @computed get widthThreshold(){
+        return (this.selectedStudies.length > 7);
+    }
+
+    @computed get boxWidth(){
+        return this.widthThreshold ? 30 : 100;
+    }
+
+    jitterValue(){
+        const jitter = this.boxWidth/200;
+        return (Math.random() * jitter - jitter / 2);
+    }
+
+    @computed
     get sortedData() {
         if (this.sortBy === "alphabetic") {
             return _.sortBy(this.filteredData, [
@@ -156,7 +177,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
             );
         } else {
             return _.sortBy(this.filteredData, [(data: NumericGeneMolecularData[]) => {
-                return findMedian(data.map((molecularData: NumericGeneMolecularData) => molecularData.value));
+                return jStat.median(data.map((molecularData: NumericGeneMolecularData) => molecularData.value).asMutable()) as number;
             }]);
         }
     }
@@ -220,7 +241,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
             const mutationTraces = _.mapValues(buckets.mutationBuckets, (molecularData: NumericGeneMolecularData[], canonicalMutationType: string) => {
                 return molecularData.map((datum) => {
-                    return {y: datum, x: i + getJitter()}
+                    return {y: datum, x: i + this.jitterValue()}
                 });
             });
 
@@ -228,7 +249,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
             if (buckets.unmutatedBucket.length > 0) {
                 const unmutated = buckets.unmutatedBucket.map((datum: NumericGeneMolecularData) => {
-                    return {y: datum, x: i + getJitter()}
+                    return {y: datum, x: i + this.jitterValue()}
                 });
                 unMutatedTraces.push(unmutated);
             }
@@ -238,6 +259,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
         return {boxTraces, mutationScatterTraces, unMutatedTraces};
 
     }
+
 
     @computed
     get domain() {
@@ -462,13 +484,6 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     }
 
     @computed
-    get width() {
-        return this.sortedLabels.length * 150 + 200;
-    }
-
-    @observable height = 600;
-
-    @computed
     get chart() {
         return (
             <ChartContainer
@@ -479,7 +494,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                     height={this.height}
                     width={this.width}
                     theme={CBIOPORTAL_VICTORY_THEME}
-                    domainPadding={{x: [100, 100], y:[10, 10]}}
+                    domainPadding={{x: [30, 30], y:[10, 10]}}
                     domain={{y: [this.domain.min, this.domain.max]}}
                     padding={{bottom: 200, left: 100, top: 100, right: 10}}
                     containerComponent={<VictoryContainer containerRef={(ref: any) => this.svgContainer = ref}
@@ -507,7 +522,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
 
                     <VictoryBoxPlot
-                        boxWidth={BOX_WIDTH}
+                        boxWidth={this.boxWidth}
                         style={BOX_STYLES}
                         data={this.victoryTraces.boxTraces}
                         x={(item: BoxPlotModel) => item.x! + 1}
@@ -592,15 +607,10 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                     </form>
 
                     <div>
-                        <button className="btn btn-default btn-xs"
-                                style={{marginRight:15}}
-                                onClick={() => this.studySelectorModalVisible = true} type="button">
-                            <i className="fa fa-bars" aria-hidden="true"></i>&nbsp;Select Studies
-                        </button>
-                        Quick filters: <a onClick={() => this.applyStudyFilter((study: CancerStudy) => /_tcga$/.test(study.studyId))}>TCGA Provisional</a>
+                        Filters: <a onClick={() => this.applyStudyFilter((study: CancerStudy) => /_tcga$/.test(study.studyId))}>TCGA Provisional</a>
                         &nbsp;|&nbsp;
                         <a onClick={() => this.applyStudyFilter((study: CancerStudy) => /_tcga_pan_can_atlas_2018/.test(study.studyId))}>TCGA
-                            TCGA Pan-Can Atlas</a>
+                            TCGA Pan-Can Atlas</a>&nbsp;|&nbsp;<a onClick={() => this.studySelectorModalVisible = !this.studySelectorModalVisible}>Custom filter</a>
                     </div>
 
                     <div className="collapse">
