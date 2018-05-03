@@ -254,11 +254,6 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
             this.alteredLegendText, this.unalteredLegendText), this.props.fileName + '.txt');
     }
 
-    private onZoomDomainChange(domain: any, props: any) {
-        // TODO: Add timeout. setTimeout seems not working here.
-        this.scatterFilter = domain;
-    }
-
     public render() {
 
         const events = [{
@@ -321,7 +316,9 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                     }
 
                     <VictoryChart containerComponent={<VictoryZoomContainer responsive={false}
-                                                                            onZoomDomainChange={(domain: any, props: any) => this.onZoomDomainChange(domain, props)}
+                                                                            onZoomDomainChange={_.debounce((domain: any) => {
+                                                                                this.scatterFilter = domain;
+                                                                            }, 1000)}
                                                                             containerRef={(ref: any) => this.svgContainer = ref}/>}
                                   height={this.styleOpts.height} width={this.styleOpts.width}
                                   padding={this.styleOpts.padding}
