@@ -1,5 +1,5 @@
 import * as React from "react";
-import styles from "./styles.module.scss";
+import "./styles.scss";
 import { StudyViewPageStore, ClinicalAttributeDataWithMeta, ClinicalDataType } from "pages/studyView/StudyViewPage";
 import { observer } from "mobx-react";
 import { VictoryPie, VictoryContainer, VictoryLabel, VictoryTooltip } from 'victory';
@@ -110,6 +110,7 @@ export class PieChart extends React.Component<IPieChartProps, {}> {
       return toReturn;
     })
     return (
+      <div className="study-view-pie">
         <VictoryPie
           colorScale={COLORS}
           containerComponent={<VictoryContainer responsive={false}/>}
@@ -127,6 +128,7 @@ export class PieChart extends React.Component<IPieChartProps, {}> {
             labels: { fill: "white" }
           }}
         />
+      </div>
     );
   }
 
