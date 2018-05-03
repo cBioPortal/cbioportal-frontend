@@ -294,13 +294,18 @@ export function makeGeneticTrackWith({
     selectedMolecularProfiles,
     expansionIndexMap
 }: IGeneticTrackAppState) {
-    return (
-        {cases: dataByCase, oql}: {
+    return function makeTrack(
+        {cases: dataByCase, oql, list: subTrackData}: {
             cases: CaseAggregatedData<AnnotatedExtendedAlteration>,
-            oql: UnflattenedOQLLineFilterOutput<object>
+            oql: UnflattenedOQLLineFilterOutput<object>,
+            list?: {
+                cases: CaseAggregatedData<AnnotatedExtendedAlteration>,
+                oql: UnflattenedOQLLineFilterOutput<object>
+            }[]
         },
-        index: number
-    ): GeneticTrackSpec => {
+        index: number,
+        parentKey?: string
+    ): GeneticTrackSpec {
         const geneSymbolArray = (isMergedTrackFilter(oql)
             ? oql.list.map(({gene}) => gene)
             : [oql.gene]
@@ -315,18 +320,27 @@ export function makeGeneticTrackWith({
             sequencedSampleKeysByGene,
             sequencedPatientKeysByGene
         ).percent;
-        const trackKey = `GENETICTRACK_${index}`;
+        const trackKey = (parentKey === undefined
+            ? `GENETICTRACK_${index}`
+            : `${parentKey}_EXPANSION_${index}`
+        );
         const expansionCallback = (isMergedTrackFilter(oql)
             ? () => { expansionIndexMap.set(trackKey, _.range(oql.list.length)); }
             : undefined
         );
+        const expansions: GeneticTrackSpec[] = (
+            expansionIndexMap.get(trackKey) || []
+        ).map(expansionIndex => makeTrack(
+            subTrackData![expansionIndex], expansionIndex, trackKey
+        ));
         return {
             key: trackKey,
             label: formatGeneticTrackLabel(oql),
             oql: formatGeneticTrackOql(oql),
             info,
             data,
-            expansionCallback
+            expansionCallback,
+            expansionTrackList: expansions.length ? expansions : undefined
         };
     };
 }
@@ -343,17 +357,20 @@ export function makeGeneticTracksMobxPromise(oncoprint:ResultsViewOncoprint, sam
             oncoprint.props.store.selectedMolecularProfiles
         ],
         invoke: async () => {
+            const trackFunction = makeGeneticTrackWith({
+                sampleMode,
+                samples: oncoprint.props.store.samples.result!,
+                patients: oncoprint.props.store.patients.result!,
+                coverageInformation: oncoprint.props.store.coverageInformation.result!,
+                sequencedSampleKeysByGene: oncoprint.props.store.sequencedSampleKeysByGene.result!,
+                sequencedPatientKeysByGene: oncoprint.props.store.sequencedPatientKeysByGene.result!,
+                selectedMolecularProfiles: oncoprint.props.store.selectedMolecularProfiles.result!,
+                expansionIndexMap: oncoprint.expansionsByGeneticTrackKey
+            });
             return oncoprint.props.store.putativeDriverFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.map(
-                makeGeneticTrackWith({
-                    sampleMode,
-                    samples: oncoprint.props.store.samples.result!,
-                    patients: oncoprint.props.store.patients.result!,
-                    coverageInformation: oncoprint.props.store.coverageInformation.result!,
-                    sequencedSampleKeysByGene: oncoprint.props.store.sequencedSampleKeysByGene.result!,
-                    sequencedPatientKeysByGene: oncoprint.props.store.sequencedPatientKeysByGene.result!,
-                    selectedMolecularProfiles: oncoprint.props.store.selectedMolecularProfiles.result!,
-                    expansionIndexMap: oncoprint.expansionsByGeneticTrackKey
-                })
+                (alterationData, trackIndex) => trackFunction(
+                    alterationData, trackIndex, undefined
+                )
             );
         },
         default: [],
