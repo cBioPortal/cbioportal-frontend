@@ -967,7 +967,7 @@
         }
       }
     },
-    "/studies/{studyId}/clinical-data-counts/fetch": {
+    "/studies/{studyId}/attributes/{attributeId}/clinical-data-counts/fetch": {
       "post": {
         "tags": [
           "Study View"
@@ -989,6 +989,13 @@
             "type": "string"
           },
           {
+            "name": "attributeId",
+            "in": "path",
+            "description": "Attribute ID e.g. CANCER_TYPE",
+            "required": true,
+            "type": "string"
+          },
+          {
             "name": "clinicalDataType",
             "in": "query",
             "description": "Type of the clinical data",
@@ -1002,11 +1009,11 @@
           },
           {
             "in": "body",
-            "name": "clinicalDataCountFilter",
+            "name": "studyViewFilter",
             "description": "Clinical data count filter",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/ClinicalDataCountFilter"
+              "$ref": "#/definitions/StudyViewFilter"
             }
           }
         ],
@@ -1373,21 +1380,6 @@
         }
       },
       "title": "ClinicalDataCount"
-    },
-    "ClinicalDataCountFilter": {
-      "type": "object",
-      "properties": {
-        "attributeIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "filter": {
-          "$ref": "#/definitions/StudyViewFilter"
-        }
-      },
-      "title": "ClinicalDataCountFilter"
     },
     "ClinicalDataEqualityFilter": {
       "type": "object",
