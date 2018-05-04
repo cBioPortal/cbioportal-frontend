@@ -14,7 +14,7 @@ import SvgSaver from 'svgsaver';
 import fileDownload from 'react-file-download';
 import {
     getEstimates, getMedian, getLineData, getScatterData, getScatterDataWithOpacity, getStats, calculateLogRank,
-    getDownloadContent, convertScatterDataToDownloadData, downSampling
+    getDownloadContent, convertScatterDataToDownloadData, downSampling, GroupedScatterData, filteringScatterData
 } from "./SurvivalUtil";
 import CBIOPORTAL_VICTORY_THEME from "../../../shared/theme/cBioPoralTheme";
 
@@ -141,8 +141,8 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
     }
 
     @computed
-    get allScatterData() {
-        let a = {
+    get allScatterData(): GroupedScatterData {
+        return {
             altered: {
                 numOfCases: this.sortedAlteredPatientSurvivals.length,
                 line: getLineData(this.sortedAlteredPatientSurvivals, this.alteredEstimates),
@@ -156,44 +156,17 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                 scatter: getScatterData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)
             }
         };
-        return a;
     }
 
     // Only recalculate the scatter data based on the plot filter.
     // The filter is only available when user zooms in the plot.
     @computed
-    get scatterData() {
-        let filteredData = _.cloneDeep(this.allScatterData);
-        if (this.scatterFilter) {
-            _.forEach(filteredData, (value, key) => {
-                if(value.numOfCases > SURVIVAL_DOWN_SAMPLING_THRESHOLD) {
-                    let filteredIndex: number[] = [];
-                    _.forEach(value.scatter, (_val, _key) => {
-                        if (_val.x <= this.scatterFilter.x[1] && _val.x >= this.scatterFilter.x[0]
-                            && _val.y <= this.scatterFilter.y[1] && _val.y >= this.scatterFilter.y[0]) {
-                            filteredIndex.push(_key);
-                        }
-                    });
-                    value.scatter = value.scatter.filter((val, index) => _.includes(filteredIndex, index));
-                    value.scatterWithOpacity = value.scatterWithOpacity.filter((val, index) => _.includes(filteredIndex, index));
-                }
-            });
-        }
-        _.forEach(filteredData, (value, key) => {
-            if (value.numOfCases > SURVIVAL_DOWN_SAMPLING_THRESHOLD) {
-                value.scatter = downSampling({
-                    data: value.scatter,
-                    xDenominator: this.downSamplingDenominatorX,
-                    yDenominator: this.downSamplingDenominatorY
-                });
-                value.scatterWithOpacity = downSampling({
-                    data: value.scatterWithOpacity,
-                    xDenominator: this.downSamplingDenominatorX,
-                    yDenominator: this.downSamplingDenominatorY
-                });
-            }
+    get scatterData(): GroupedScatterData {
+        return filteringScatterData(this.allScatterData, this.scatterFilter, {
+            xDenominator: this.downSamplingDenominatorX,
+            yDenominator: this.downSamplingDenominatorY,
+            threshold: SURVIVAL_DOWN_SAMPLING_THRESHOLD
         });
-        return filteredData;
     }
 
     public static defaultProps: Partial<ISurvivalChartProps> = {
