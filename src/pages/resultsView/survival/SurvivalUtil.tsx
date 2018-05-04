@@ -1,5 +1,5 @@
-import { PatientSurvival } from "../../../shared/model/PatientSurvival";
-import { tsvFormat } from 'd3-dsv';
+import {PatientSurvival} from "../../../shared/model/PatientSurvival";
+import {tsvFormat} from 'd3-dsv';
 import jStat from 'jStat';
 import * as _ from 'lodash';
 
@@ -12,10 +12,26 @@ export type ScatterData = {
     opacity?: number
 }
 
-export type DownSampling = {
-    data: ScatterData[],
+export type DownSamplingOpts = {
     xDenominator: number,
-    yDenominator: number
+    yDenominator: number,
+    threshold: number
+}
+
+export type GroupedScatterData = {
+    [key: string]: SurvivalCurveData
+}
+
+export type SurvivalCurveData = {
+    numOfCases: number,
+    line: any[],
+    scatterWithOpacity: ScatterData[],
+    scatter: ScatterData[]
+}
+
+export type SurvivalPlotFilters = {
+    x: [number, number],
+    y: [number, number]
 }
 
 export function getEstimates(patientSurvivals: PatientSurvival[]): number[] {
@@ -176,15 +192,18 @@ export function convertScatterDataToDownloadData(patientData: any[]): any[] {
  * @param {DownSampling} opts
  * @returns {ScatterData[]}
  */
-export function downSampling(opts: DownSampling): ScatterData[] {
-    let x = opts.data.map(item => item.x);
-    let y = opts.data.map(item => item.y);
+export function downSampling(data: ScatterData[], opts: DownSamplingOpts): ScatterData[] {
+    let x = data.map(item => item.x);
+    let y = data.map(item => item.y);
 
     let xMax = _.max(x) || 0;
     let xMin = _.min(x) || 0;
 
     let yMax = _.max(y) || 0;
     let yMin = _.min(y) || 0;
+
+    if (opts.xDenominator <= 0 || opts.yDenominator <= 0)
+        return data;
 
     let timeThreshold = (xMax - xMin) / opts.xDenominator;
     let survivalRateThreshold = (yMax - yMin) / opts.yDenominator;
@@ -198,11 +217,13 @@ export function downSampling(opts: DownSampling): ScatterData[] {
         y: 0
     };
 
-    return opts.data.filter(function (dataItem, index) {
+    return data.filter(function (dataItem, index) {
         let isVisibleDot = _.isUndefined(dataItem.opacity) || dataItem.opacity > 0;
         if (index == 0) {
             lastDataPoint.x = dataItem.x;
             lastDataPoint.y = dataItem.y;
+            lastVisibleDataPoint.x = dataItem.x;
+            lastVisibleDataPoint.y = dataItem.y;
             return true;
         }
         let distance = 0;
@@ -214,7 +235,7 @@ export function downSampling(opts: DownSampling): ScatterData[] {
         if (distance > averageThreshold) {
             lastDataPoint.x = dataItem.x;
             lastDataPoint.y = dataItem.y;
-            if(isVisibleDot) {
+            if (isVisibleDot) {
                 lastVisibleDataPoint.x = dataItem.x;
                 lastVisibleDataPoint.y = dataItem.y;
             }
@@ -223,4 +244,27 @@ export function downSampling(opts: DownSampling): ScatterData[] {
             return false;
         }
     });
+}
+
+export function filteringScatterData(allScatterData: GroupedScatterData, filters: SurvivalPlotFilters | undefined, downSamplingOpts: DownSamplingOpts):GroupedScatterData {
+    let filteredData = _.cloneDeep(allScatterData);
+    _.forEach(filteredData, (value:SurvivalCurveData, key:string) => {
+        if (value.numOfCases > downSamplingOpts.threshold) {
+            if (filters) {
+                let filteredIndex: number[] = [];
+                _.forEach(value.scatter, (_val, _key) => {
+                    if (_val.x <= filters.x[1] && _val.x >= filters.x[0]
+                        && _val.y <= filters.y[1] && _val.y >= filters.y[0]) {
+                        filteredIndex.push(_key);
+                    }
+                });
+                value.scatter = value.scatter.filter((val, index) => _.includes(filteredIndex, index));
+                value.scatterWithOpacity = value.scatterWithOpacity.filter((val, index) => _.includes(filteredIndex, index));
+            }
+            value.scatter = downSampling(value.scatter, downSamplingOpts);
+            value.scatterWithOpacity = downSampling(value.scatterWithOpacity, downSamplingOpts);
+            value.numOfCases = value.scatter.length;
+        }
+    });
+    return filteredData;
 }
