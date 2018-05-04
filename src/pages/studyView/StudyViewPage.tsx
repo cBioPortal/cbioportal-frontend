@@ -296,14 +296,21 @@ export class StudyViewPageStore {
         await: () => [this.initialSampleAttributesData],
         invoke: async () => {
             if (!_.isEmpty(this.filters)) {
-                return internalClient.fetchClinicalDataCountsUsingPOST({
-                    studyId: this.studyId,
-                    clinicalDataType: "SAMPLE",
-                    clinicalDataCountFilter: {
-                        attributeIds: this.selectedSampleAttributeIds,
-                        filter: this.filters
-                    }
-                })
+
+                let promises = this.selectedSampleAttributeIds
+                                   .map(attributeId => internalClient.fetchClinicalDataCountsUsingPOST({
+                                        studyId: this.studyId,
+                                        attributeId:attributeId,
+                                        clinicalDataType: "SAMPLE",
+                                        studyViewFilter: this.filters
+                                    }));
+                
+                return Promise.all(promises).then((allData: ClinicalAttributeData[]) => {
+                    return _.reduce(allData, (acc: ClinicalAttributeData, next: ClinicalAttributeData)=>{
+                        acc = $.extend({},acc,next)
+                        return acc;
+                    }, {});
+                });
             } else {
                 return this.initialSampleAttributesData.result;
             }
@@ -315,14 +322,22 @@ export class StudyViewPageStore {
         await: () => [this.initialPatientAttributesData],
         invoke: async () => {
             if (!_.isEmpty(this.filters)) {
-                return internalClient.fetchClinicalDataCountsUsingPOST({
-                    studyId: this.studyId,
-                    clinicalDataType: "PATIENT",
-                    clinicalDataCountFilter: {
-                        attributeIds: this.selectedPatientAttributeIds,
-                        filter: this.filters
-                    }
-                })
+
+                let promises = this.selectedPatientAttributeIds
+                                   .map(attributeId => internalClient.fetchClinicalDataCountsUsingPOST({
+                                        studyId: this.studyId,
+                                        attributeId:attributeId,
+                                        clinicalDataType: "PATIENT",
+                                        studyViewFilter: this.filters
+                                    }));
+                
+                return Promise.all(promises).then((allData: ClinicalAttributeData[]) => {
+                    return _.reduce(allData, (acc: ClinicalAttributeData, next: ClinicalAttributeData)=>{
+                        acc = $.extend({},acc,next)
+                        return acc;
+                    }, {});
+                });
+
             } else {
                 return this.initialPatientAttributesData.result;
             }
@@ -459,17 +474,24 @@ export class StudyViewPageStore {
     //invoked once initially
     readonly initialSampleAttributesData = remoteData<ClinicalAttributeData>({
         await: () => [this.initialQueriedAttributes],
-        invoke: () => {
-            return internalClient.fetchClinicalDataCountsUsingPOST({
-                studyId: this.studyId,
-                clinicalDataType: "SAMPLE",
-                clinicalDataCountFilter: {
-                    attributeIds: this.initialQueriedAttributes.result
-                        .filter(attribute => !attribute.patientAttribute)
-                        .map(attribute => attribute.clinicalAttributeId),
-                    filter: {} as any
-                }
-            })
+        invoke: async () => {
+
+            let promises = this.initialQueriedAttributes
+                               .result
+                               .filter(attribute => !attribute.patientAttribute)
+                               .map(attribute => internalClient.fetchClinicalDataCountsUsingPOST({
+                                    studyId: this.studyId,
+                                    attributeId:attribute.clinicalAttributeId,
+                                    clinicalDataType: "SAMPLE",
+                                    studyViewFilter: {} as any
+                                }));
+            
+            return Promise.all(promises).then((allData: ClinicalAttributeData[]) => {
+                return _.reduce(allData, (acc: ClinicalAttributeData, next: ClinicalAttributeData)=>{
+                    acc = $.extend({},acc,next)
+                    return acc;
+                }, {});
+            });
         },
         default: {}
     });
@@ -477,17 +499,25 @@ export class StudyViewPageStore {
     //invoked once initially
     readonly initialPatientAttributesData = remoteData<ClinicalAttributeData>({
         await: () => [this.initialQueriedAttributes],
-        invoke: () => {
-            return internalClient.fetchClinicalDataCountsUsingPOST({
-                studyId: this.studyId,
-                clinicalDataType: "PATIENT",
-                clinicalDataCountFilter: {
-                    attributeIds: this.initialQueriedAttributes.result
-                        .filter(attribute => attribute.patientAttribute)
-                        .map(attribute => attribute.clinicalAttributeId),
-                    filter: {} as any
-                }
-            })
+        invoke: async () => {
+
+            let promises = this.initialQueriedAttributes
+                               .result
+                                .filter(attribute => attribute.patientAttribute)
+                                .map(attribute => internalClient.fetchClinicalDataCountsUsingPOST({
+                                    studyId: this.studyId,
+                                    attributeId:attribute.clinicalAttributeId,
+                                    clinicalDataType: "PATIENT",
+                                    studyViewFilter: {} as any
+                                }))
+
+            
+            return Promise.all(promises).then((allData: ClinicalAttributeData[]) => {
+                return _.reduce(allData, (acc: ClinicalAttributeData, next: ClinicalAttributeData)=>{
+                    acc = $.extend({},acc,next)
+                    return acc;
+                }, {});
+            });
         },
         default: {}
     });
