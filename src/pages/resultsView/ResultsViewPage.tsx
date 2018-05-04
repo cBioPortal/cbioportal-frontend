@@ -198,9 +198,11 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
     private mountExpressionTab(){
 
-        let target = $('<div class="ui-tabs-panel ui-widget-content ui-corner-bottom cbioportal-frontend"></div>').insertBefore("#cc-plots");
+        // disable the shit out of old ccplots
+        (window as any).ccPlots.init = function(){};
+        $("#cc-plots").empty();
 
-        $("#cc-plots").hide();
+        let target = $('<div class="ui-tabs-panel ui-widget-content ui-corner-bottom cbioportal-frontend"></div>').appendTo("#cc-plots");
 
         ReactDOM.render(
             <Observer>

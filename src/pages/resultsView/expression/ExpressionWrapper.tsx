@@ -506,6 +506,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                     <VictoryAxis
                         tickFormat={this.sortedLabels}
                         orientation={'bottom'}
+                        offset={0}
                         tickLabelComponent={
                             <VictoryLabel
                                 angle={-85}
