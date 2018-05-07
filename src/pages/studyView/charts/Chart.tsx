@@ -10,7 +10,6 @@ import _ from "lodash";
 import { PieChart } from "pages/studyView/charts/pieChart/PieChart";
 import {If} from 'react-if';
 import {Button} from 'react-bootstrap';
-import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import { ChartHeader } from "pages/studyView/chartHeader/ChartHeader";
 
 export interface IChartProps {
@@ -26,7 +25,7 @@ export class Chart extends React.Component<IChartProps, {}> {
 
     constructor(props: IChartProps) {
         super(props);
-        this.onUserSelection = this.onUserSelection.bind(this)
+        this.onUserSelection = this.onUserSelection.bind(this);
         this.handleFilter = this.handleFilter.bind(this)
         this.resetFilters = this.resetFilters.bind(this)
         this.onMouseEnter = this.onMouseEnter.bind(this);

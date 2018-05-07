@@ -6,8 +6,8 @@
     color: #2986e2;
 }
 
-.study-view-chart-buttons {
-    color: grey;
+.study-view-chart-contorls {
+    color: grey !important;
     font-size: 12px;
     float: right;
     >button {
@@ -17,14 +17,14 @@
         background-image:none !important;
         padding: 0px !important;
         margin: 0 2px !important;
+        &:hover, &:active, &:focus {
+            color: grey !important;
+        }
     }
-
     >button:first-child {
         margin-left: 10px !important;
     }
 }
-
-
 
 main {
     display: flex !important;
@@ -51,4 +51,16 @@ section {
 
 aside {
     flex-shrink: 0;
+}
+
+.download-button {
+    >button {
+        border: 1px solid grey !important;
+        font-size: 8px !important;
+        border-radius: 0px !important;
+    }
+}
+
+.rc-tooltip-inner {
+    padding: 3px;
 }
