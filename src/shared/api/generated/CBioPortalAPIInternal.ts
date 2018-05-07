@@ -25,12 +25,6 @@ export type ClinicalDataCount = {
         'value': string
 
 };
-export type ClinicalDataCountFilter = {
-    'attributeIds': Array < string >
-
-        'filter': StudyViewFilter
-
-};
 export type ClinicalDataEqualityFilter = {
     'attributeId': string
 
@@ -1820,14 +1814,17 @@ export default class CBioPortalAPIInternal {
 
     fetchClinicalDataCountsUsingPOSTURL(parameters: {
         'studyId': string,
+        'attributeId': string,
         'clinicalDataType' ? : "SAMPLE" | "PATIENT",
-        'clinicalDataCountFilter': ClinicalDataCountFilter,
+        'studyViewFilter': StudyViewFilter,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/studies/{studyId}/clinical-data-counts/fetch';
+        let path = '/studies/{studyId}/attributes/{attributeId}/clinical-data-counts/fetch';
 
         path = path.replace('{studyId}', parameters['studyId'] + '');
+
+        path = path.replace('{attributeId}', parameters['attributeId'] + '');
         if (parameters['clinicalDataType'] !== undefined) {
             queryParameters['clinicalDataType'] = parameters['clinicalDataType'];
         }
@@ -1847,20 +1844,22 @@ export default class CBioPortalAPIInternal {
      * @method
      * @name CBioPortalAPIInternal#fetchClinicalDataCountsUsingPOST
      * @param {string} studyId - Study ID e.g. acc_tcga
+     * @param {string} attributeId - Attribute ID e.g. CANCER_TYPE
      * @param {string} clinicalDataType - Type of the clinical data
-     * @param {} clinicalDataCountFilter - Clinical data count filter
+     * @param {} studyViewFilter - Clinical data count filter
      */
     fetchClinicalDataCountsUsingPOST(parameters: {
         'studyId': string,
+        'attributeId': string,
         'clinicalDataType' ? : "SAMPLE" | "PATIENT",
-        'clinicalDataCountFilter': ClinicalDataCountFilter,
+        'studyViewFilter': StudyViewFilter,
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < {} > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
-        let path = '/studies/{studyId}/clinical-data-counts/fetch';
+        let path = '/studies/{studyId}/attributes/{attributeId}/clinical-data-counts/fetch';
         let body: any;
         let queryParameters: any = {};
         let headers: any = {};
@@ -1876,16 +1875,23 @@ export default class CBioPortalAPIInternal {
                 return;
             }
 
+            path = path.replace('{attributeId}', parameters['attributeId'] + '');
+
+            if (parameters['attributeId'] === undefined) {
+                reject(new Error('Missing required  parameter: attributeId'));
+                return;
+            }
+
             if (parameters['clinicalDataType'] !== undefined) {
                 queryParameters['clinicalDataType'] = parameters['clinicalDataType'];
             }
 
-            if (parameters['clinicalDataCountFilter'] !== undefined) {
-                body = parameters['clinicalDataCountFilter'];
+            if (parameters['studyViewFilter'] !== undefined) {
+                body = parameters['studyViewFilter'];
             }
 
-            if (parameters['clinicalDataCountFilter'] === undefined) {
-                reject(new Error('Missing required  parameter: clinicalDataCountFilter'));
+            if (parameters['studyViewFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: studyViewFilter'));
                 return;
             }
 
