@@ -1,7 +1,7 @@
 import * as React from "react";
 import "./styles.scss";
 import { observer } from "mobx-react";
-import { VictoryPie, VictoryContainer, VictoryLabel, VictoryTooltip } from 'victory';
+import { VictoryPie, VictoryContainer, VictoryLabel, VictoryTooltip, Slice } from 'victory';
 import { ClinicalDataCount } from "shared/api/generated/CBioPortalAPIInternal";
 import { observable, computed } from "mobx";
 import _ from "lodash";
@@ -59,17 +59,17 @@ export class PieChart extends React.Component<IPieChartProps, {}> {
     return (
       <div className="study-view-pie">
         <VictoryPie
-          //colorScale={COLORS}
           containerComponent={<VictoryContainer responsive={false}/>}
           width={200}
-          height={200}
+          height={175}
           labelRadius={30}
-          padding={35}
+          padding={30}
           //to hide label if the angle is too small(currently set to 20 degrees)
           labels={(d:any) => ((d.y*360)/this.totalCount)<20?'':d.y}
           data={annotatePieChartDatum(this.props.data.counts,this.props.filters,this.colorSet)}
+          dataComponent={<CustomSlice/>}
           events={this.events}
-          labelComponent={<CustomTooltip />}
+          labelComponent={<VictoryLabel/>}
           style={{
             data: { fillOpacity: 0.9 },
             labels: { fill: "white" }
@@ -83,20 +83,13 @@ export class PieChart extends React.Component<IPieChartProps, {}> {
 
 }
 
-class CustomTooltip extends React.Component<{}, {}> {
-  static defaultEvents = VictoryTooltip.defaultEvents
+class CustomSlice extends React.Component<{}, {}> {
   render() {
     const d:any = this.props;
     return (
       <g>
-        <VictoryTooltip {...this.props}
-                        pointerLength={0}
-                        cornerRadius={0}
-                        text={`${d.datum.x}: ${d.datum.y}`}
-                        style={{ fontSize: '10px',fontFamily: "Verdana, Arial, sans-serif" }}
-                        flyoutStyle={{ strokeWidth: '0' }}
-        />
-        <VictoryLabel {...this.props}/>
+        <Slice {...this.props}/>
+        <title>{`${d.datum.x}:${d.datum.y}`}</title>
       </g>
     );
   }
