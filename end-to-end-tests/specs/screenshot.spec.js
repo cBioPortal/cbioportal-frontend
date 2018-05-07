@@ -47,6 +47,7 @@ function runResultsTestSuite(prefix){
     it(`${prefix} mutation tab`, function(){
         browser.click("[href='#mutation_details']");
         browser.waitForVisible('.borderedChart svg',20000);
+        browser.pause(3000);
         var res = browser.checkElement('#mutation_details',{hide:['.qtip', '[data-test=view3DStructure]', '[data-test=GeneSummaryUniProt]'], viewportChangePause:4000}); // hide these things because the timing of data loading makes this test so flaky
         assertScreenShotMatch(res);
     });
