@@ -47,7 +47,6 @@ export class Chart extends React.Component<IChartProps, {}> {
         if(this.props.data){
             this.props.onUserSelection(this.props.clinicalAttribute.clinicalAttributeId,
                                        this.props.data.clinicalDataType,this.chartFilterSet.keys());
-            this.chartFilterSet.clear()
         }
     }
 
@@ -63,6 +62,7 @@ export class Chart extends React.Component<IChartProps, {}> {
         }else{
             this.chartFilterSet.set(value);
         }
+        this.handleFilter()
     }
 
     @observable mouseInsideBounds:boolean = false;
@@ -81,25 +81,18 @@ export class Chart extends React.Component<IChartProps, {}> {
         return (
             <div className={styles.chart} onMouseEnter={this.onMouseEnter}
             onMouseLeave={this.onMouseLeave}>
-                <ChartHeader clinicalAttribute={this.props.clinicalAttribute} showControls={this.mouseInsideBounds}/>
+                <ChartHeader 
+                    clinicalAttribute={this.props.clinicalAttribute}
+                    showControls={this.mouseInsideBounds}
+                    showResetIcon={this.chartFilterSet.size>0}
+                    handleResetClick={this.resetFilters}
+                />
                 {this.props.data && <div className={styles.plot}>
                     <PieChart
                         onUserSelection={this.onUserSelection}
                         filters={this.chartFilterSet.keys()}
                         data={this.props.data} />
                 </div>}
-                <div className={styles.footer}>
-                    <If condition={this.showResetIcon}>
-                        <button onClick={this.resetFilters} className="btn btn-default btn-xs" style={{height: "20px"}}>
-                            Reset
-                        </button>
-                    </If>
-                    <If condition={this.showSelectIcon}>
-                        <button onClick={this.handleFilter} className="btn btn-default btn-xs" style={{height: "20px"}}>
-                            Select
-                        </button>
-                    </If>
-                </div>
             </div>
         );
     }
