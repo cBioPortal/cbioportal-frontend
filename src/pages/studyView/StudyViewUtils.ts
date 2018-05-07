@@ -1,5 +1,7 @@
-import { ClinicalDataCount } from "shared/api/generated/CBioPortalAPIInternal";
+import { ClinicalDataCount, StudyViewFilter } from "shared/api/generated/CBioPortalAPIInternal";
 import _ from "lodash";
+import { ClinicalAttributeData, ClinicalDataType } from "pages/studyView/StudyViewPageStore";
+import internalClient from "shared/api/cbioportalInternalClientInstance";
 
 //TODO:cleanup
 export const COLORS = [
@@ -70,5 +72,27 @@ export function annotatePieChartDatum(
                 toReturn = Object.assign({}, toReturn, { stroke: "#cccccc", strokeWidth: 3 });
             }
             return toReturn;
+        });
+}
+
+
+export async function getClinicalCountsData(
+    attributeIds:string[],
+    studyId:string,
+    clinicalDataType:ClinicalDataType,
+    studyViewFilter:StudyViewFilter):Promise<ClinicalAttributeData>{
+
+        let promises = attributeIds.map(attributeId => internalClient.fetchClinicalDataCountsUsingPOST({
+                                        studyId: studyId,
+                                        attributeId:attributeId,
+                                        clinicalDataType: clinicalDataType,
+                                        studyViewFilter: studyViewFilter
+                                    }));
+                
+        return Promise.all(promises).then((allData: ClinicalAttributeData[]) => {
+            return _.reduce(allData, (acc: ClinicalAttributeData, next: ClinicalAttributeData)=>{
+                acc = $.extend({},acc,next)
+                return acc;
+            }, {});
         });
 }
