@@ -24,6 +24,9 @@
     >button:first-child {
         margin-left: 10px !important;
     }
+    .fa-arrows:hover {
+        cursor: move;
+    }
 }
 
 main {
