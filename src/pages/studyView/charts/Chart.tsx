@@ -1,6 +1,5 @@
 import * as React from "react";
 import styles from "./styles.module.scss";
-import { StudyViewPageStore, ClinicalAttributeDataWithMeta, ClinicalDataType } from "pages/studyView/StudyViewPage";
 import { observer } from "mobx-react";
 import { VictoryPie, VictoryContainer, VictoryLabel } from 'victory';
 import { ClinicalAttribute } from "shared/api/generated/CBioPortalAPI";
@@ -11,6 +10,7 @@ import { PieChart } from "pages/studyView/charts/pieChart/PieChart";
 import {If} from 'react-if';
 import {Button} from 'react-bootstrap';
 import { ChartHeader } from "pages/studyView/chartHeader/ChartHeader";
+import { ClinicalAttributeDataWithMeta, ClinicalDataType } from "pages/studyView/StudyViewPageStore";
 
 export interface IChartProps {
     clinicalAttribute: ClinicalAttribute,

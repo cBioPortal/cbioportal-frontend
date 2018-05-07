@@ -1,12 +1,12 @@
 import * as React from "react";
 import "./styles.scss";
-import { StudyViewPageStore, ClinicalAttributeDataWithMeta, ClinicalDataType } from "pages/studyView/StudyViewPage";
 import { observer } from "mobx-react";
 import { VictoryPie, VictoryContainer, VictoryLabel, VictoryTooltip } from 'victory';
 import { ClinicalDataCount } from "shared/api/generated/CBioPortalAPIInternal";
 import { observable, computed } from "mobx";
 import _ from "lodash";
 import { annotatePieChartDatum, COLORS, NA_COLOR } from "pages/studyView/StudyViewUtils";
+import { ClinicalAttributeDataWithMeta } from "pages/studyView/StudyViewPageStore";
 
 export interface IPieChartProps {
   data: ClinicalAttributeDataWithMeta;
