@@ -11,8 +11,10 @@ import {If} from 'react-if';
 import {Button} from 'react-bootstrap';
 import { ChartHeader } from "pages/studyView/chartHeader/ChartHeader";
 import { ClinicalAttributeDataWithMeta, ClinicalDataType } from "pages/studyView/StudyViewPageStore";
+import { getClinicalDataType } from "pages/studyView/StudyViewUtils";
 
 export interface IChartProps {
+    chartType:ChartType;
     clinicalAttribute: ClinicalAttribute,
     data?: ClinicalAttributeDataWithMeta;
     filters: string[];
@@ -20,11 +22,20 @@ export interface IChartProps {
     key: number;
 }
 
+export enum ChartType {
+    PIE_CHART,
+    BAR_CHART,
+    SURVIVAL,
+    TABLE,
+    SCATTER
+}
+
 @observer
 export class Chart extends React.Component<IChartProps, {}> {
 
     constructor(props: IChartProps) {
         super(props);
+        this.currentChartType = props.chartType;
         this.onUserSelection = this.onUserSelection.bind(this);
         this.handleFilter = this.handleFilter.bind(this)
         this.resetFilters = this.resetFilters.bind(this)
@@ -35,6 +46,8 @@ export class Chart extends React.Component<IChartProps, {}> {
 
     private chartFilterSet = observable.shallowMap<boolean>();
 
+    private currentChartType:ChartType;
+
     @computed private get showSelectIcon(){
         return this.chartFilterSet.keys().length>0;
     }
@@ -43,16 +56,15 @@ export class Chart extends React.Component<IChartProps, {}> {
         return this.props.filters.length>0;
     }
     private handleFilter(){
-        //TODO: get rid off data variable here
-        if(this.props.data){
-            this.props.onUserSelection(this.props.clinicalAttribute.clinicalAttributeId,
-                                       this.props.data.clinicalDataType,this.chartFilterSet.keys());
-        }
+        this.props.onUserSelection(
+            this.props.clinicalAttribute.clinicalAttributeId,
+            getClinicalDataType(this.props.clinicalAttribute),
+            this.chartFilterSet.keys());
     }
 
     @action private resetFilters(){
-        this.chartFilterSet.clear()
-        this.handleFilter()
+        this.chartFilterSet.clear();
+        this.handleFilter();
     }
 
     @action private onUserSelection(value : string){
@@ -62,7 +74,7 @@ export class Chart extends React.Component<IChartProps, {}> {
         }else{
             this.chartFilterSet.set(value);
         }
-        this.handleFilter()
+        this.handleFilter();
     }
 
     @observable mouseInsideBounds:boolean = false;
@@ -73,6 +85,14 @@ export class Chart extends React.Component<IChartProps, {}> {
 
     onMouseLeave(){
         this.mouseInsideBounds = false;
+    }
+
+    @computed get showPieControlIcon(){
+        return this.props.clinicalAttribute.datatype==='STRING' && this.currentChartType === ChartType.TABLE;
+    }
+
+    @computed get showTableControlIcon(){
+        return this.currentChartType === ChartType.PIE_CHART && this.props.clinicalAttribute.datatype==='STRING';
     }
     
 
@@ -86,13 +106,14 @@ export class Chart extends React.Component<IChartProps, {}> {
                     showControls={this.mouseInsideBounds}
                     showResetIcon={this.chartFilterSet.size>0}
                     handleResetClick={this.resetFilters}
+                    showTableIcon={this.showTableControlIcon}
+                    showPieIcon={this.showPieControlIcon}
                 />
-                {this.props.data && <div className={styles.plot}>
+                {this.props.data &&
                     <PieChart
                         onUserSelection={this.onUserSelection}
                         filters={this.chartFilterSet.keys()}
-                        data={this.props.data} />
-                </div>}
+                        data={this.props.data} />}
             </div>
         );
     }
