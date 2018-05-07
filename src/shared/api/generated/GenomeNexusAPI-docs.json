@@ -98,6 +98,116 @@
         }
       }
     },
+    "/annotation/genomic": {
+      "post": {
+        "tags": [
+          "annotation-controller"
+        ],
+        "summary": "Retrieves VEP annotation for the provided list of genomic locations",
+        "operationId": "fetchVariantAnnotationByGenomicLocationPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "genomicLocations",
+            "description": "List of Genomic Locations",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/GenomicLocation"
+              }
+            }
+          },
+          {
+            "name": "isoformOverrideSource",
+            "in": "query",
+            "description": "Isoform override source. For example uniprot",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi",
+            "default": "hotspots,mutation_assessor"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/VariantAnnotation"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/annotation/genomic/{genomicLocation}": {
+      "get": {
+        "tags": [
+          "annotation-controller"
+        ],
+        "summary": "Retrieves VEP annotation for the provided genomic location",
+        "operationId": "fetchVariantAnnotationByGenomicLocationGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "genomicLocation",
+            "in": "path",
+            "description": "A genomic location. For example 7,140453136,140453136,A,T",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "isoformOverrideSource",
+            "in": "query",
+            "description": "Isoform override source. For example uniprot",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "fields",
+            "in": "query",
+            "description": "Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "collectionFormat": "multi",
+            "default": "hotspots,mutation_assessor"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/VariantAnnotation"
+            }
+          }
+        }
+      }
+    },
     "/annotation/{variant}": {
       "get": {
         "tags": [
@@ -144,6 +254,78 @@
             "description": "OK",
             "schema": {
               "$ref": "#/definitions/VariantAnnotation"
+            }
+          }
+        }
+      }
+    },
+    "/ensembl/canonical-gene/hgnc": {
+      "post": {
+        "tags": [
+          "ensembl-controller"
+        ],
+        "summary": "Retrieves canonical Ensembl Gene ID by Hugo Symbols",
+        "operationId": "fetchCanonicalEnsemblGeneIdByHugoSymbolsPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "hugoSymbols",
+            "description": "List of Hugo Symbols. For example [\"TP53\",\"PIK3CA\",\"BRCA1\"]",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/EnsemblGene"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ensembl/canonical-gene/hgnc/{hugoSymbol}": {
+      "get": {
+        "tags": [
+          "ensembl-controller"
+        ],
+        "summary": "Retrieves Ensembl canonical gene id by Hugo Symbol",
+        "operationId": "fetchCanonicalEnsemblGeneIdByHugoSymbolGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "hugoSymbol",
+            "in": "path",
+            "description": "A Hugo Symbol. For example TP53",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/EnsemblGene"
             }
           }
         }
@@ -581,6 +763,43 @@
     }
   },
   "definitions": {
+    "ColocatedVariant": {
+      "type": "object",
+      "required": [
+        "gnomad_afr_allele",
+        "gnomad_afr_maf",
+        "gnomad_eas_allele",
+        "gnomad_eas_maf",
+        "gnomad_nfe_allele",
+        "gnomad_nfe_maf"
+      ],
+      "properties": {
+        "gnomad_nfe_allele": {
+          "type": "string",
+          "description": "GnomAD Non-Finnish European Allele"
+        },
+        "gnomad_nfe_maf": {
+          "type": "string",
+          "description": "GnomAD Non-Finnish European MAF"
+        },
+        "gnomad_afr_allele": {
+          "type": "string",
+          "description": "GnomAD African/African American Allele"
+        },
+        "gnomad_afr_maf": {
+          "type": "string",
+          "description": "GnomAD African/African American MAF"
+        },
+        "gnomad_eas_allele": {
+          "type": "string",
+          "description": "GnomAD East Asian Allele"
+        },
+        "gnomad_eas_maf": {
+          "type": "string",
+          "description": "GnomAD East Asian MAF"
+        }
+      }
+    },
     "EnsemblFilter": {
       "type": "object",
       "properties": {
@@ -608,6 +827,32 @@
         "transcriptIds": {
           "type": "array",
           "description": "List of Ensembl transcript IDs. For example [\"ENST00000361390\", \"ENST00000361453\", \"ENST00000361624\"]",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "EnsemblGene": {
+      "type": "object",
+      "required": [
+        "geneId"
+      ],
+      "properties": {
+        "geneId": {
+          "type": "string",
+          "description": "Ensembl gene id"
+        },
+        "synonyms": {
+          "type": "array",
+          "description": "Hugo symbol synonyms",
+          "items": {
+            "type": "string"
+          }
+        },
+        "previousSymbols": {
+          "type": "array",
+          "description": "Hugo symbol synonyms",
           "items": {
             "type": "string"
           }
@@ -731,6 +976,9 @@
           "type": "string",
           "description": "Display id"
         },
+        "ensemblGeneId": {
+          "type": "string"
+        },
         "info_text": {
           "type": "string",
           "description": "Database info text"
@@ -753,6 +1001,231 @@
         "version": {
           "type": "string",
           "description": "Version"
+        }
+      }
+    },
+    "GenomicLocation": {
+      "type": "object",
+      "required": [
+        "chromosome",
+        "end",
+        "referenceAllele",
+        "start",
+        "variantAllele"
+      ],
+      "properties": {
+        "chromosome": {
+          "type": "string",
+          "description": "Chromosome"
+        },
+        "start": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Start Position"
+        },
+        "end": {
+          "type": "integer",
+          "format": "int32",
+          "description": "End Position"
+        },
+        "referenceAllele": {
+          "type": "string",
+          "description": "Reference Allele"
+        },
+        "variantAllele": {
+          "type": "string",
+          "description": "Variant Allele"
+        }
+      }
+    },
+    "Hotspot": {
+      "type": "object",
+      "required": [
+        "transcriptId"
+      ],
+      "properties": {
+        "aminoAcidPosition": {
+          "description": "Amino acid position (start - end)",
+          "$ref": "#/definitions/IntegerRange"
+        },
+        "hugoSymbol": {
+          "type": "string",
+          "description": "Hugo gene symbol"
+        },
+        "residue": {
+          "type": "string",
+          "description": "Hotspot Residue"
+        },
+        "transcriptId": {
+          "type": "string",
+          "description": "Transcript id"
+        },
+        "tumorCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Tumor count"
+        },
+        "tumorTypeCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Tumor type count"
+        },
+        "type": {
+          "type": "string",
+          "description": "Hotspot type"
+        }
+      }
+    },
+    "HotspotAnnotation": {
+      "type": "object",
+      "properties": {
+        "annotation": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/Hotspot"
+            }
+          }
+        },
+        "license": {
+          "type": "string"
+        }
+      }
+    },
+    "IntegerRange": {
+      "type": "object",
+      "properties": {
+        "end": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "start": {
+          "type": "integer",
+          "format": "int32"
+        }
+      }
+    },
+    "MutationAssessor": {
+      "type": "object",
+      "required": [
+        "input"
+      ],
+      "properties": {
+        "codonStartPosition": {
+          "type": "string",
+          "description": "Codon start position"
+        },
+        "cosmicCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Number of mutations in COSMIC for this protein"
+        },
+        "functionalImpact": {
+          "type": "string",
+          "description": "Functional impact"
+        },
+        "functionalImpactScore": {
+          "type": "number",
+          "format": "double",
+          "description": "Functional impact score"
+        },
+        "hgvs": {
+          "type": "string"
+        },
+        "hugoSymbol": {
+          "type": "string",
+          "description": "Hugo gene symbol"
+        },
+        "input": {
+          "type": "string",
+          "description": "User-input variants"
+        },
+        "mappingIssue": {
+          "type": "string",
+          "description": "Mapping issue info"
+        },
+        "msaGaps": {
+          "type": "number",
+          "format": "double",
+          "description": "Portion of gaps in variant position in multiple sequence alignment"
+        },
+        "msaHeight": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Number of diverse sequences in multiple sequence alignment (identical or highly similar sequences filtered out)"
+        },
+        "msaLink": {
+          "type": "string",
+          "description": "Link to multiple sequence alignment"
+        },
+        "pdbLink": {
+          "type": "string",
+          "description": "Link to 3d structure browser"
+        },
+        "referenceGenomeVariant": {
+          "type": "string",
+          "description": "Reference genome variant"
+        },
+        "referenceGenomeVariantType": {
+          "type": "string",
+          "description": "Reference genome variant type"
+        },
+        "refseqId": {
+          "type": "string",
+          "description": "Refseq protein ID"
+        },
+        "refseqPosition": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Variant position in Refseq protein, can be different from the one in Uniprot"
+        },
+        "refseqResidue": {
+          "type": "string",
+          "description": "Reference residue in Refseq protein, can be different from the one in Uniprot"
+        },
+        "snpCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Number of SNPs in dbSNP for this protein"
+        },
+        "uniprotId": {
+          "type": "string",
+          "description": "Uniprot protein accession ID"
+        },
+        "uniprotPosition": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Variant position in Uniprot protein, can be different from the one in Refseq"
+        },
+        "uniprotResidue": {
+          "type": "string",
+          "description": "Reference residue in Uniprot protein, can be different from the one in Refseq"
+        },
+        "variant": {
+          "type": "string",
+          "description": "Amino acid substitution"
+        },
+        "variantConservationScore": {
+          "type": "number",
+          "format": "double",
+          "description": "Variant conservation score"
+        },
+        "variantSpecificityScore": {
+          "type": "number",
+          "format": "double",
+          "description": "Variant specificity score"
+        }
+      }
+    },
+    "MutationAssessorAnnotation": {
+      "type": "object",
+      "properties": {
+        "annotation": {
+          "$ref": "#/definitions/MutationAssessor"
+        },
+        "license": {
+          "type": "string"
         }
       }
     },
@@ -919,6 +1392,58 @@
         }
       }
     },
+    "TranscriptConsequenceSummary": {
+      "type": "object",
+      "required": [
+        "transcriptId"
+      ],
+      "properties": {
+        "codonChange": {
+          "type": "string",
+          "description": "Codon change"
+        },
+        "consequenceTerms": {
+          "type": "string",
+          "description": "Consequence terms (comma separated)"
+        },
+        "entrezGeneId": {
+          "type": "string",
+          "description": "Entrez gene id"
+        },
+        "hgvsc": {
+          "type": "string",
+          "description": "HGVSc"
+        },
+        "hgvsp": {
+          "type": "string",
+          "description": "HGVSp"
+        },
+        "hgvspShort": {
+          "type": "string",
+          "description": "HGVSp short"
+        },
+        "hugoGeneSymbol": {
+          "type": "string",
+          "description": "Hugo gene symbol"
+        },
+        "proteinPosition": {
+          "description": "Protein position (start and end)",
+          "$ref": "#/definitions/IntegerRange"
+        },
+        "refSeq": {
+          "type": "string",
+          "description": "RefSeq id"
+        },
+        "transcriptId": {
+          "type": "string",
+          "description": "Transcript id"
+        },
+        "variantClassification": {
+          "type": "string",
+          "description": "Variant classification"
+        }
+      }
+    },
     "VariantAnnotation": {
       "type": "object",
       "required": [
@@ -934,14 +1459,28 @@
           "type": "string",
           "description": "Annotation data as JSON string"
         },
+        "annotation_summary": {
+          "description": "Variant Annotation Summary",
+          "$ref": "#/definitions/VariantAnnotationSummary"
+        },
         "assembly_name": {
           "type": "string",
           "description": "NCBI build number"
+        },
+        "colocatedVariants": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ColocatedVariant"
+          }
         },
         "end": {
           "type": "integer",
           "format": "int32",
           "description": "End position"
+        },
+        "hotspots": {
+          "description": "Hotspot Annotation",
+          "$ref": "#/definitions/HotspotAnnotation"
         },
         "id": {
           "type": "string",
@@ -950,6 +1489,10 @@
         "most_severe_consequence": {
           "type": "string",
           "description": "Most severe consequence"
+        },
+        "mutation_assessor": {
+          "description": "Mutation Assessor Annotation",
+          "$ref": "#/definitions/MutationAssessorAnnotation"
         },
         "seq_region_name": {
           "type": "string",
@@ -975,6 +1518,46 @@
         "variant": {
           "type": "string",
           "description": "Variant key"
+        }
+      }
+    },
+    "VariantAnnotationSummary": {
+      "type": "object",
+      "required": [
+        "transcriptConsequences",
+        "variant"
+      ],
+      "properties": {
+        "assemblyName": {
+          "type": "string",
+          "description": "Assembly name"
+        },
+        "canonicalTranscriptId": {
+          "type": "string",
+          "description": "Canonical transcript id"
+        },
+        "genomicLocation": {
+          "description": "Genomic location",
+          "$ref": "#/definitions/GenomicLocation"
+        },
+        "strandSign": {
+          "type": "string",
+          "description": "Strand (- or +)"
+        },
+        "transcriptConsequences": {
+          "type": "array",
+          "description": "List of transcript consequence summaries",
+          "items": {
+            "$ref": "#/definitions/TranscriptConsequenceSummary"
+          }
+        },
+        "variant": {
+          "type": "string",
+          "description": "Variant key"
+        },
+        "variantType": {
+          "type": "string",
+          "description": "Variant type"
         }
       }
     },
