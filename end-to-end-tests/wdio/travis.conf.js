@@ -4,6 +4,7 @@ var path = require('path');
 var VisualRegressionCompare = require('wdio-visual-regression-service/compare');
 
 var getScreenshotName = require('./getScreenshotName');
+
 const localIdentifier = `foobar_${Date.now()}`
 
 exports.config = {
@@ -58,7 +59,7 @@ exports.config = {
         build: 'webdriver-browserstack',
         'browserstack.local': true,
         'browserstack.localIdentifier': localIdentifier,
-        'browserstack.networkLogs':true
+        'browserstack.networkLogs':false
     }],
     //
     // ===================
@@ -123,19 +124,25 @@ exports.config = {
     services: ['browserstack', 'visual-regression'],
 
     visualRegression: {
+
         compare: new VisualRegressionCompare.LocalCompare({
-            referenceName: getScreenshotName(path.join(process.cwd(), 'screenshots/reference')),
-            screenshotName: getScreenshotName(path.join(process.cwd(), 'screenshots/screen')),
-            diffName: getScreenshotName(path.join(process.cwd(), 'screenshots/diff')),
-            misMatchTolerance:0.1
+            referenceName: getScreenshotName(path.join(process.cwd(), 'screenshots/browserstack/reference')),
+            screenshotName: getScreenshotName(path.join(process.cwd(), 'screenshots/browserstack/screen')),
+            diffName: getScreenshotName(path.join(process.cwd(), 'screenshots/browserstack/diff')),
+            misMatchTolerance:0.05,
+            ignoreComparison: "antialiasing"
         }),
+
         viewportChangePause: 300,
         viewports: [{ width: 1600, height: 1000 }],
         orientations: ['landscape', 'portrait'],
     },
 
-    user: process.env.BROWSERSTACK_USERNAME,
-    key: process.env.BROWSERSTACK_ACCESS_KEY,
+    // user: process.env.BROWSERSTACK_USERNAME,
+    // key: process.env.BROWSERSTACK_ACCESS_KEY,
+    user: 'aaronlisman2',
+    key: 'SsvxMVGa2fFVc5bWzswx',
+
     // Framework you want to run your specs with.
     // The following are supported: Mocha, Jasmine, and Cucumber
     // see also: http://webdriver.io/guide/testrunner/frameworks.html
@@ -152,7 +159,7 @@ exports.config = {
         junit: {
             outputDir: process.env.JUNIT_REPORT_PATH,
             outputFileFormat: function(opts) { // optional
-                return `results-${opts.cid}.${opts.capabilities}.xml`
+                return `results-${opts.cid}.${opts.capabilities}.browserstack.xml`
             }
         }
     },

@@ -117,6 +117,7 @@ jobs:
             sleep 1s && \
             cd end-to-end-tests && \
             npm run test-webdriver-manager
+            npm run test-travis
           environment:
             JUNIT_REPORT_PATH: ./junit/
             FRONTEND_TEST_USE_LOCAL_DIST: true
