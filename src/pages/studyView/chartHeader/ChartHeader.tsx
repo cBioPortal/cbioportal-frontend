@@ -28,7 +28,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
     isDownloadControlActive:boolean = false;
 
     private onVisibleChange = (visible:boolean) => {
-        this.isDownloadControlActive=visible
+        this.isDownloadControlActive=visible;
     }
 
     @computed
@@ -43,7 +43,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                 <aside>
                     <If condition={this.showChartControls}>
                         <div role="group" className="btn-group study-view-chart-contorls">
-                            <If condition={this.props.showResetIcon}>
+                            <If condition={!!this.props.showResetIcon}>
                                 <button className="btn btn-xs" onClick={()=>this.props.handleResetClick()}>
                                     <i className="fa fa-undo" aria-hidden="true" title="Reset filters in chart"></i>
                                 </button>
@@ -51,17 +51,17 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                             <button className="btn btn-xs" >
                                 <i className="fa fa-info-circle" aria-hidden="true" title={this.props.clinicalAttribute.description}></i>
                             </button>
-                            <If condition={this.props.showTableIcon}>
+                            <If condition={!!this.props.showTableIcon}>
                                 <button className="btn btn-xs">
                                     <i className="fa fa-table" aria-hidden="true" title="Convert pie chart to table"></i>
                                 </button>
                             </If>
-                            <If condition={this.props.showPieIcon}>
+                            <If condition={!!this.props.showPieIcon}>
                                 <button className="btn btn-xs">
                                     <i className="fa fa-pie-chart" aria-hidden="true" title="Convert table to pie chart"></i>
                                 </button>
                             </If>
-                            <If condition={this.props.showSurvivalIcon}>
+                            <If condition={!!this.props.showSurvivalIcon}>
                                 <button className="btn btn-xs">
                                     <i className="fa fa-line-chart" aria-hidden="true" title="Survival Analysis"></i>
                                 </button>
@@ -70,7 +70,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                 <DefaultTooltip
                                     placement="bottom"
                                     onVisibleChange={this.onVisibleChange}
-                                    trigger={['hover', 'focus','click']}
+                                    trigger={['hover', 'focus']}
                                     overlay={<div role="group" className="btn-group download-button">
                                                 <button className="btn btn-xs">
                                                 DATA

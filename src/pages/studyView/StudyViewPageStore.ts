@@ -141,7 +141,6 @@ export class StudyViewPageStore {
             filters.cnaGenes = [this._cnaGeneFilter];
         }
 
-        filters.sampleIds = [];
         return filters;
     }
 

@@ -2,6 +2,7 @@ import { ClinicalDataCount, StudyViewFilter } from "shared/api/generated/CBioPor
 import _ from "lodash";
 import { ClinicalAttributeData, ClinicalDataType } from "pages/studyView/StudyViewPageStore";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
+import { ClinicalAttribute } from "shared/api/generated/CBioPortalAPI";
 
 //TODO:cleanup
 export const COLORS = [
@@ -95,4 +96,21 @@ export async function getClinicalCountsData(
                 return acc;
             }, {});
         });
+}
+
+export function getClinicalDataType(clinicalAttribute: ClinicalAttribute){
+    return clinicalAttribute.patientAttribute?ClinicalDataType.PATIENT:ClinicalDataType.SAMPLE;
+}
+
+export function getPieSliceColors(data: ClinicalDataCount[]):{[id:string]:string}{
+    let index = 0;
+    return _.reduce(data, (result: {[id:string]:string}, obj: ClinicalDataCount)=>{
+        if(obj.value.toLowerCase().includes('na')){
+            result[obj.value] = NA_COLOR;
+        } else{
+            result[obj.value] = COLORS[index];
+            index++;
+        }
+        return result;
+    }, {});
 }
