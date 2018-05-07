@@ -210,7 +210,7 @@ export default class TablePlot extends React.Component<ITablePlotProps, {}> {
             // get maximum width and height for labels
             let max = 0;
             let box;
-            for (const labelElt of (document.getElementsByClassName(TABLE_LABEL_CLASSNAME) as SVGTextElement[])) {
+            for (const labelElt of (document.getElementsByClassName(TABLE_LABEL_CLASSNAME) as any as SVGTextElement[])) {
                 box = labelElt.getBBox();
                 max = Math.max(max, box.width);
                 max = Math.max(max, box.height);

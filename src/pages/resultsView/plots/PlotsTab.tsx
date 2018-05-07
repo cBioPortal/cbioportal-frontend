@@ -9,12 +9,13 @@ import ReactSelect from "react-select";
 import _ from "lodash";
 import {
     getAxisDescription,
-    getAxisLabel, isStringData,
+    getAxisLabel, isNumberData, isStringData,
     makeAxisDataPromise, molecularProfileTypeDisplayOrder,
     molecularProfileTypeToDisplayType
 } from "./PlotsTabUtils";
 import {ClinicalAttribute, MolecularProfile} from "../../../shared/api/generated/CBioPortalAPI";
 import Timer = NodeJS.Timer;
+import ScatterPlot from "shared/components/scatterPlot/ScatterPlot";
 import TablePlot from "./TablePlot";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import InfoIcon from "../../../shared/components/InfoIcon";
@@ -643,6 +644,15 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     <TablePlot
                         horzData={horzAxisData.data}
                         vertData={vertAxisData.data}
+                    />
+                );
+            } else if (isNumberData(horzAxisData) && isNumberData(vertAxisData)) {
+                const data = makeScatterPlotData(horzAxisData.data, vertAxisData.data);
+                return (
+                    <ScatterPlot
+                        data={data}
+                        chartWidth={300}
+                        chartHeight={300}
                     />
                 );
             } else {

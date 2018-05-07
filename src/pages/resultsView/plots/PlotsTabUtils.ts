@@ -1,7 +1,7 @@
 import {AxisMenuSelection, AxisType} from "./PlotsTab";
 import {MobxPromise} from "mobxpromise";
 import {
-    ClinicalAttribute, ClinicalData, MolecularProfile, NumericGeneMolecularData,
+    ClinicalAttribute, ClinicalData, MolecularProfile, Mutation, NumericGeneMolecularData,
     Sample
 } from "../../../shared/api/generated/CBioPortalAPI";
 import {remoteData} from "../../../shared/api/remoteData";
@@ -210,6 +210,20 @@ export function getAxisDescription(
     }
     return ret;
 }
-/*export function makePlotsData:PlotsData(
+
+export function makeScatterPlotData(
+    horzData: INumberAxisData["data"],
+    vertData: INumberAxisData["data"],
+    mutations?:Mutation[],
+    copyNumberAlterations?:NumericGeneMolecularData[]
 ) {
-}*/
+    const dataMap:{[caseKey:string]:{x:number, y:number}} = {};
+    for (const d of horzAxisData.data) {
+        dataMap[d.uniqueCaseKey] = dataMap[d.uniqueCaseKey] || {};
+        dataMap[d.uniqueCaseKey].x = d.value;
+    }
+    for (const d of vertAxisData.data) {
+        dataMap[d.uniqueCaseKey] = dataMap[d.uniqueCaseKey] || {};
+        dataMap[d.uniqueCaseKey].y = d.value;
+    }
+}

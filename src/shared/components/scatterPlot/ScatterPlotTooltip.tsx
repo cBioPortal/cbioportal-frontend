@@ -13,8 +13,8 @@ export interface IScatterPlotTooltipProps {
 }
 
 @observer
-class ScatterPlotTooltip extends React.Component<IScatterPlotTooltipProps, {}> {
-    @observable isHovered = false;
+export default class ScatterPlotTooltip extends React.Component<IScatterPlotTooltipProps, {}> {
+    @observable isHovered = false; // allows persistence when mouse rolls over tooltip
 
     @bind
     private onMouseEnter() {
@@ -29,7 +29,7 @@ class ScatterPlotTooltip extends React.Component<IScatterPlotTooltipProps, {}> {
     render() {
         const arrowOffsetTop = 30; // experimentally determined for aesthetic excellence
         const leftPadding = 5;
-        if (tooltipModel && (this.props.targetHovered || this.isHovered)) {
+        if (this.props.targetHovered || this.isHovered) {
             return (
                 <Popover
                     className={this.props.className}
