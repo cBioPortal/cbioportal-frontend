@@ -8,12 +8,13 @@ import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultToo
 
 
 export interface IChartHeaderProps {
-    clinicalAttribute: ClinicalAttribute,
-    showControls:boolean,
-    showResetIcon?:boolean,
-    showTableIcon?:boolean,
-    showPieIcon?:boolean,
-    showSurvivalIcon?:boolean
+    clinicalAttribute: ClinicalAttribute;
+    showControls:boolean;
+    showResetIcon?:boolean;
+    showTableIcon?:boolean;
+    showPieIcon?:boolean;
+    showSurvivalIcon?:boolean;
+    handleResetClick: () => void;
 }
 
 export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
@@ -43,7 +44,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                     <If condition={this.showChartControls}>
                         <div role="group" className="btn-group study-view-chart-contorls">
                             <If condition={this.props.showResetIcon}>
-                                <button className="btn btn-xs">
+                                <button className="btn btn-xs" onClick={()=>this.props.handleResetClick()}>
                                     <i className="fa fa-undo" aria-hidden="true" title="Reset filters in chart"></i>
                                 </button>
                             </If>
