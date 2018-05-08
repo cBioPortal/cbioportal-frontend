@@ -98,22 +98,11 @@ export function selectDisplayValue(counts:{[value:string]:number}, priority:{[va
     }
 };
 
-type FilledGeneticTrackDatum<T> = T & Pick<GeneticTrackDatum, (
-    'gene'
-    | 'data'
-    | 'disp_fusion'
-    | 'disp_cna'
-    | 'disp_mrna'
-    | 'disp_prot'
-    | 'disp_mut'
-    | 'disp_germ'
-)>;
-export function fillGeneticTrackDatum<T>(
-    oldDatum: T,
+export function fillGeneticTrackDatum(
+    newDatum:Partial<GeneticTrackDatum>,
     hugoGeneSymbol:string,
     data:AnnotatedExtendedAlteration[]
-): FilledGeneticTrackDatum<T> {
-    const newDatum: Partial<FilledGeneticTrackDatum<T>> = oldDatum;
+):GeneticTrackDatum {
     newDatum.gene = hugoGeneSymbol;
     newDatum.data = data;
 
@@ -171,11 +160,10 @@ export function fillGeneticTrackDatum<T>(
     newDatum.disp_cna = selectDisplayValue(dispCnaCounts, cnaRenderPriority);
     newDatum.disp_mrna = selectDisplayValue(dispMrnaCounts, mrnaRenderPriority);
     newDatum.disp_prot = selectDisplayValue(dispProtCounts, protRenderPriority);
-    const disp_mut = selectDisplayValue(dispMutCounts, mutRenderPriority);
-    newDatum.disp_mut = disp_mut;
-    newDatum.disp_germ = disp_mut ? dispGermline[disp_mut] : undefined;
+    newDatum.disp_mut = selectDisplayValue(dispMutCounts, mutRenderPriority);
+    newDatum.disp_germ = newDatum.disp_mut ? dispGermline[newDatum.disp_mut] : undefined;
 
-    return newDatum as FilledGeneticTrackDatum<T>;
+    return newDatum as GeneticTrackDatum; // return for convenience, even though changes made in place
 }
 
 export function makeGeneticTrackData(
