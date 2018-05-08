@@ -37,44 +37,26 @@ export class Chart extends React.Component<IChartProps, {}> {
         super(props);
         this.currentChartType = props.chartType;
         this.onUserSelection = this.onUserSelection.bind(this);
-        this.handleFilter = this.handleFilter.bind(this)
         this.resetFilters = this.resetFilters.bind(this)
         this.onMouseEnter = this.onMouseEnter.bind(this);
         this.onMouseLeave = this.onMouseLeave.bind(this);
 
     }
 
-    private chartFilterSet = observable.shallowMap<boolean>();
-
     private currentChartType:ChartType;
 
-    @computed private get showSelectIcon(){
-        return this.chartFilterSet.keys().length>0;
-    }
-
-    @computed private get showResetIcon(){
-        return this.props.filters.length>0;
-    }
-    private handleFilter(){
+    @action private resetFilters(){
         this.props.onUserSelection(
             this.props.clinicalAttribute.clinicalAttributeId,
             getClinicalDataType(this.props.clinicalAttribute),
-            this.chartFilterSet.keys());
+            []);
     }
 
-    @action private resetFilters(){
-        this.chartFilterSet.clear();
-        this.handleFilter();
-    }
-
-    @action private onUserSelection(value : string){
-        let values = this.chartFilterSet;
-        if(this.chartFilterSet.has(value)){
-            this.chartFilterSet.delete(value);
-        }else{
-            this.chartFilterSet.set(value);
-        }
-        this.handleFilter();
+    @action private onUserSelection(values : string[]){
+       this.props.onUserSelection(
+            this.props.clinicalAttribute.clinicalAttributeId,
+            getClinicalDataType(this.props.clinicalAttribute),
+            values);
     }
 
     @observable mouseInsideBounds:boolean = false;
@@ -104,7 +86,7 @@ export class Chart extends React.Component<IChartProps, {}> {
                 <ChartHeader 
                     clinicalAttribute={this.props.clinicalAttribute}
                     showControls={this.mouseInsideBounds}
-                    showResetIcon={this.chartFilterSet.size>0}
+                    showResetIcon={this.props.filters.length>0}
                     handleResetClick={this.resetFilters}
                     showTableIcon={this.showTableControlIcon}
                     showPieIcon={this.showPieControlIcon}
@@ -112,7 +94,7 @@ export class Chart extends React.Component<IChartProps, {}> {
                 {this.props.data &&
                     <PieChart
                         onUserSelection={this.onUserSelection}
-                        filters={this.chartFilterSet.keys()}
+                        filters={this.props.filters}
                         data={this.props.data} />}
             </div>
         );
