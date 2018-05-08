@@ -104,6 +104,19 @@ export default class ProteinChangeColumnFormatter
         return textValue;
     }
 
+    public static getFilterValue(data:Mutation[], filterString:string, filterStringUpper:string): boolean
+    {
+        let filterValue = ProteinChangeColumnFormatter.getDisplayValue(data);
+        const mutationStatus:string|null = MutationStatusColumnFormatter.getData(data);
+
+        if (mutationStatus && mutationStatus.toLowerCase().includes("germline")) {
+            filterValue = `${filterValue}${mutationStatus}`;
+        }
+
+        return filterValue.toUpperCase().indexOf(filterStringUpper) > -1;
+    }
+
+
     public static getDisplayValue(data:Mutation[]):string
     {
         // same as text value
