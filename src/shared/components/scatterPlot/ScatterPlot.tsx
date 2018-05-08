@@ -31,6 +31,8 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
         pearson: number;
         spearman: number;
     }
+    logX?:boolean;
+    logY?:boolean;
 }
 
 const FONT_FAMILY = "Verdana,Arial,sans-serif";
@@ -192,6 +194,14 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
             min.x = Math.min(d.x, min.x);
             min.y = Math.min(d.y, min.y);
         }
+        if (this.props.logX) {
+            min.x = Math.log10(min.x);
+            max.x = Math.log10(max.x);
+        }
+        if (this.props.logY) {
+            min.y = Math.log10(min.y);
+            max.y = Math.log10(max.y);
+        }
         const xPadding = pixelsToDataLength(PLOT_DATA_PADDING_PIXELS, [min.x, max.x], this.props.chartWidth);
         const yPadding = pixelsToDataLength(PLOT_DATA_PADDING_PIXELS, [min.y, max.y], this.props.chartHeight);
         max.x += xPadding;
@@ -202,34 +212,6 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
             x: [min.x, max.x],
             y: [min.y, max.y]
         };
-    }
-
-    @computed get yAxisOffsetX() {
-        const minX = this.plotDomain.x[0];
-        if (minX >= 0) {
-            // we wont cross 0, so it'll be at bottom anyway
-            return 0;
-        } else {
-            return -dataLengthToPixels(
-                Math.abs(minX),
-                this.plotDomain.x,
-                this.props.chartWidth
-            );
-        }
-    }
-
-    @computed get xAxisOffsetY() {
-        const minY = this.plotDomain.y[0];
-        if (minY >= 0) {
-            // we wont cross 0, so it'll be at bottom anyway
-            return 0;
-        } else {
-            return -dataLengthToPixels(
-                Math.abs(minY),
-                this.plotDomain.y,
-                this.props.chartHeight
-            );
-        }
     }
 
     @computed get pearsonCorr() {
@@ -248,7 +230,28 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
         return this.props.chartHeight + TOP_GUTTER;
     }
 
+    @bind
+    private x(d:IBaseScatterPlotData) {
+        if (this.props.logX) {
+            return Math.log10(d.x);
+        } else {
+            return d.x;
+        }
+    }
+
+    @bind
+    private y(d:IBaseScatterPlotData) {
+        if (this.props.logY) {
+            return Math.log10(d.y);
+        } else {
+            return d.y;
+        }
+    }
+
     render() {
+        if (!this.props.data.length) {
+            return <span>"No data to plot."</span>;
+        }
         return (
             <div>
                 <div
@@ -278,6 +281,8 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                             {this.correlationInfo}
                             <VictoryAxis
                                 domain={this.plotDomain.x}
+                                orientation="bottom"
+                                offsetY={50}
                                 style={VictoryAxisStyle}
                                 crossAxis={false}
                                 tickCount={NUM_AXIS_TICKS}
@@ -286,6 +291,8 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                             <VictoryAxis
                                 domain={this.plotDomain.y}
                                 style={VictoryAxisStyle}
+                                offsetX={50}
+                                orientation="left"
                                 crossAxis={false}
                                 tickCount={NUM_AXIS_TICKS}
                                 dependentAxis={true}
@@ -304,16 +311,18 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                                 symbol={this.props.symbol || "circle"}
                                 data={this.props.data}
                                 events={this.mouseEvents}
+                                x={this.x}
+                                y={this.y}
                             />
                         </VictoryChart>
                     </svg>
                 </div>
-                {this.container && this.tooltipModel && (
+                {this.container && this.tooltipModel && this.props.tooltip && (
                     <ScatterPlotTooltip
                         container={this.container}
                         targetHovered={this.pointHovered}
                         targetCoords={{x: this.tooltipModel.x, y: this.tooltipModel.y}}
-                        overlay={<span>Not implemented yet.</span>}
+                        overlay={this.props.tooltip(this.tooltipModel.data[this.tooltipModel.index])}
                     />
                 )}
             </div>

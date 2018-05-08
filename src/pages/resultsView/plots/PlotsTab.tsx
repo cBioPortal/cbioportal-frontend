@@ -9,9 +9,9 @@ import ReactSelect from "react-select";
 import _ from "lodash";
 import {
     getAxisDescription,
-    getAxisLabel, isNumberData, isStringData,
-    makeAxisDataPromise, molecularProfileTypeDisplayOrder,
-    molecularProfileTypeToDisplayType
+    getAxisLabel, isNumberData, isStringData, logScalePossible,
+    makeAxisDataPromise, makeScatterPlotData, molecularProfileTypeDisplayOrder,
+    molecularProfileTypeToDisplayType, scatterPlotTooltip
 } from "./PlotsTabUtils";
 import {ClinicalAttribute, MolecularProfile} from "../../../shared/api/generated/CBioPortalAPI";
 import Timer = NodeJS.Timer;
@@ -172,12 +172,18 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             set clinicalAttributeId(id:string|undefined) {
                 this._clinicalAttributeId = id;
             },
+            get logScale() {
+                return this._logScale && this.molecularProfileId && logScalePossible(this.molecularProfileId)
+            },
+            set logScale(v:boolean) {
+                this._logScale = v;
+            },
             _axisType: AxisType.molecularProfile,
             _entrezGeneId: undefined,
             _molecularProfileType: undefined,
             _molecularProfileId: undefined,
             _clinicalAttributeId: undefined,
-            logScale: false
+            _logScale: true
         });
     }
 
@@ -385,18 +391,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
     }
 
-    @computed get sampleMode() {
-        // sample mode unless both axes are patient clinical attributes
-        return this.horzSelection.axisType !== AxisType.clinicalAttribute ||
-            this.vertSelection.axisType !== AxisType.clinicalAttribute ||
-            !this.clinicalAttributeIdToClinicalAttribute[this.horzSelection.clinicalAttributeId!].patientAttribute || // clinicalAttributeId defined if axis type is clinicalAttribute
-            !this.clinicalAttributeIdToClinicalAttribute[this.vertSelection.clinicalAttributeId!].patientAttribute;
-    }
-
     @computed get horzAxisDataPromise() {
         return makeAxisDataPromise(
             this.horzSelection,
-            this.sampleMode,
+            true,
             this.clinicalAttributeIdToClinicalAttribute,
             this.props.store.patientKeyToSamples,
             this.props.store.clinicalDataMxPCache,
@@ -407,7 +405,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     @computed get vertAxisDataPromise() {
         return makeAxisDataPromise(
             this.vertSelection,
-            this.sampleMode,
+            true,
             this.clinicalAttributeIdToClinicalAttribute,
             this.props.store.patientKeyToSamples,
             this.props.store.clinicalDataMxPCache,
@@ -465,6 +463,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     private getAxisMenu(vertical:boolean) {
+        const axisSelection = vertical ? this.vertSelection : this.horzSelection;
         return (
             <div>
                 <h4>{vertical ? "Vertical" : "Horizontal"} Axis</h4>
@@ -474,7 +473,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             type="radio"
                             name={vertical ? "vert_molecularProfile" : "horz_molecularProfile"}
                             value={vertical ? EventKey.vert_molecularProfile : EventKey.horz_molecularProfile}
-                            checked={(vertical ? this.vertSelection.axisType: this.horzSelection.axisType) === AxisType.molecularProfile}
+                            checked={axisSelection.axisType === AxisType.molecularProfile}
                             onClick={this.onInputClick}
                         /> Molecular Profile
                     </label></div>
@@ -483,18 +482,18 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             type="radio"
                             name={vertical ? "vert_clinicalAttribute" : "horz_clinicalAttribute"}
                             value={vertical ? EventKey.vert_clinicalAttribute : EventKey.horz_clinicalAttribute}
-                            checked={(vertical ? this.vertSelection.axisType: this.horzSelection.axisType) === AxisType.clinicalAttribute}
+                            checked={axisSelection.axisType === AxisType.clinicalAttribute}
                             onClick={this.onInputClick}
                         /> Clinical Attribute
                     </label></div>
                 </div>
-                {((vertical ? this.vertSelection.axisType : this.horzSelection.axisType) === AxisType.molecularProfile) && (
+                {(axisSelection.axisType === AxisType.molecularProfile) && (
                     <div>
                         <div>
                             Gene
                             <ReactSelect
                                 name={`${vertical ? "v" : "h"}-gene-selector`}
-                                value={vertical ? this.vertSelection.entrezGeneId : this.horzSelection.entrezGeneId}
+                                value={axisSelection.entrezGeneId}
                                 onChange={vertical ? this.onVerticalAxisGeneSelect : this.onHorizontalAxisGeneSelect}
                                 options={this.geneOptions}
                                 clearable={false}
@@ -506,7 +505,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             Profile Type
                             <ReactSelect
                                 name={`${vertical ? "v" : "h"}-profile-type-selector`}
-                                value={vertical ? this.vertSelection.molecularProfileType : this.horzSelection.molecularProfileType}
+                                value={axisSelection.molecularProfileType}
                                 onChange={vertical ? this.onVerticalAxisProfileTypeSelect : this.onHorizontalAxisProfileTypeSelect}
                                 options={this.profileTypeOptions}
                                 clearable={false}
@@ -517,30 +516,32 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             Profile Name
                             <ReactSelect
                                 name={`${vertical ? "v" : "h"}-profile-name-selector`}
-                                value={vertical ? this.vertSelection.molecularProfileId : this.horzSelection.molecularProfileId}
+                                value={axisSelection.molecularProfileId}
                                 onChange={vertical ? this.onVerticalAxisProfileIdSelect : this.onHorizontalAxisProfileIdSelect}
-                                options={this.profileNameOptionsByType[(vertical ? this.vertSelection.molecularProfileType : this.horzSelection.molecularProfileType)+""] || []}
+                                options={this.profileNameOptionsByType[axisSelection.molecularProfileType+""] || []}
                                 clearable={false}
                                 searchable={false}
                             />
                         </div>
-                        <div className="checkbox"><label>
-                            <input
-                                type="checkbox"
-                                name={vertical ? "vert_logScale" : "vert_logScale"}
-                                value={vertical ? EventKey.vert_logScale : EventKey.horz_logScale}
-                                checked={vertical ? this.vertSelection.logScale: this.horzSelection.logScale}
-                                onClick={this.onInputClick}
-                            /> Apply Log Scale
-                        </label></div>
+                        { axisSelection.molecularProfileId && logScalePossible(axisSelection.molecularProfileId) && (
+                            <div className="checkbox"><label>
+                                <input
+                                    type="checkbox"
+                                    name={vertical ? "vert_logScale" : "vert_logScale"}
+                                    value={vertical ? EventKey.vert_logScale : EventKey.horz_logScale}
+                                    checked={axisSelection.logScale}
+                                    onClick={this.onInputClick}
+                                /> Apply Log Scale
+                            </label></div>
+                        )}
                     </div>
                 )}
-                {((vertical ? this.vertSelection.axisType : this.horzSelection.axisType) === AxisType.clinicalAttribute) && (
+                {(axisSelection.axisType === AxisType.clinicalAttribute) && (
                     <div>
                         Clinical Attribute
                         <ReactSelect
                             name={`${vertical ? "v" : "h"}-clinical-attribute-selector`}
-                            value={vertical ? this.vertSelection.clinicalAttributeId : this.horzSelection.clinicalAttributeId}
+                            value={axisSelection.clinicalAttributeId}
                             onChange={vertical ? this.onVerticalAxisClinicalAttributeSelect : this.onHorizontalAxisClinicalAttributeSelect}
                             options={this.clinicalAttributeOptions}
                             clearable={false}
@@ -633,10 +634,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         );
     }
 
+
+
     private plot() {
-        if (this.horzAxisDataPromise.isPending || this.vertAxisDataPromise.isPending) {
+        if (this.horzAxisDataPromise.isPending || this.vertAxisDataPromise.isPending || this.props.store.sampleKeyToSample.isPending) {
             return <LoadingIndicator isLoading={true}/>
-        } else if (this.horzAxisDataPromise.isComplete && this.vertAxisDataPromise.isComplete) {
+        } else if (this.horzAxisDataPromise.isComplete && this.vertAxisDataPromise.isComplete && this.props.store.sampleKeyToSample.isComplete) {
             const horzAxisData = this.horzAxisDataPromise.result!;
             const vertAxisData = this.vertAxisDataPromise.result!;
             if (isStringData(horzAxisData) && isStringData(vertAxisData)) {
@@ -647,12 +650,15 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     />
                 );
             } else if (isNumberData(horzAxisData) && isNumberData(vertAxisData)) {
-                const data = makeScatterPlotData(horzAxisData.data, vertAxisData.data);
+                const data = makeScatterPlotData(horzAxisData.data, vertAxisData.data, this.props.store.sampleKeyToSample.result!);
                 return (
                     <ScatterPlot
                         data={data}
                         chartWidth={300}
                         chartHeight={300}
+                        tooltip={scatterPlotTooltip}
+                        logX={this.horzSelection.logScale}
+                        logY={this.vertSelection.logScale}
                     />
                 );
             } else {
