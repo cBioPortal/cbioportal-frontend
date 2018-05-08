@@ -12,7 +12,7 @@ import CBIOPORTAL_VICTORY_THEME from "shared/theme/cBioPoralTheme";
 export interface IPieChartProps {
     data: ClinicalAttributeDataWithMeta;
     filters:string[];
-    onUserSelection:(value:string)=>void;
+    onUserSelection:(values:string[])=>void;
 }
 
 @observer
@@ -35,7 +35,13 @@ export class PieChart extends React.Component<IPieChartProps, {}> {
                         {
                             target: "data",
                             mutation: (props:any) => {
-                                self.props.onUserSelection(props.datum.x);
+                                let filters = self.props.filters;
+                                if(_.includes(filters,props.datum.x)){
+                                    filters = _.filter(filters, filter=> filter !== props.datum.x);
+                                }else{
+                                    filters.push(props.datum.x);
+                                }
+                                self.props.onUserSelection(filters);
                             }
                         }
                     ];

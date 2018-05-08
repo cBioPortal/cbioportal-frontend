@@ -123,7 +123,6 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                          className="mainTabs">
 
                     <MSKTab key={0} id="summaryTab" linkText="Summary">
-                        <div>
                             {
                                 this.store.defaultVisibleAttributes.isComplete &&
                                 (
@@ -149,7 +148,6 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                     toggleSelection={this.updateCNAGeneFilter}
                                 />)}
                             </div>
-                        </div>
                     </MSKTab>
                 </MSKTabs>
             </div>

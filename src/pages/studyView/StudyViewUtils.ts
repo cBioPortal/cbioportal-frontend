@@ -63,16 +63,22 @@ export const COLORS = [
 
 export const NA_COLOR = '#CCCCCC'
 
+export const UNSELECTED_COLOR = '#808080'
+
 export function annotatePieChartDatum(
     slices  : ClinicalDataCount[],
     filters : string[],
     colorSet:{ [id: string]: string}):{ [id: string]: string | number}[] {
         return slices.map(slice => {
-            let toReturn = {...slice, fill:colorSet[slice.value]};
-            if(_.includes(filters, slice.value)){
-                toReturn = Object.assign({}, toReturn, { stroke: "#cccccc", strokeWidth: 3 });
+            if(_.isEmpty(filters)){
+                return {...slice, fill:colorSet[slice.value]};
+            } else{
+                if(_.includes(filters, slice.value)){
+                    return {...slice, fill:colorSet[slice.value], stroke: "#cccccc", strokeWidth: 3 };
+                } else{
+                    return {...slice, fill:UNSELECTED_COLOR, fillOpacity: '0.5'};
+                }
             }
-            return toReturn;
         });
 }
 
