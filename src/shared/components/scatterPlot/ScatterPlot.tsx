@@ -23,7 +23,6 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
     stroke?:(d:D)=>string;
     fillOpacity?:(d:D)=>number;
     strokeWidth?:(d:D)=>number;
-    size?:(d:D)=>number;
     symbol?: (d:D)=>string; // see http://formidable.com/open-source/victory/docs/victory-scatter/#symbol for options
     tooltip?:(d:D)=>JSX.Element;
     legendData?:{name:string, symbol:any}[]; // see http://formidable.com/open-source/victory/docs/victory-legend/#data
@@ -248,6 +247,11 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
         }
     }
 
+    @bind
+    private size(d:IBaseScatterPlotData, active:boolean) {
+        return (active ? 6 : 3);
+    }
+
     render() {
         if (!this.props.data.length) {
             return <span>"No data to plot."</span>;
@@ -307,7 +311,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                                         fillOpacity: this.props.fillOpacity || 1
                                     }
                                 }}
-                                size={this.props.size || 3}
+                                size={this.size}
                                 symbol={this.props.symbol || "circle"}
                                 data={this.props.data}
                                 events={this.mouseEvents}
@@ -322,7 +326,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                         container={this.container}
                         targetHovered={this.pointHovered}
                         targetCoords={{x: this.tooltipModel.x, y: this.tooltipModel.y}}
-                        overlay={this.props.tooltip(this.tooltipModel.data[this.tooltipModel.index])}
+                        overlay={this.props.tooltip(this.tooltipModel.datum)}
                     />
                 )}
             </div>

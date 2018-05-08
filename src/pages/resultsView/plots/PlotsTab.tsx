@@ -576,7 +576,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             placeholder="Protein Change.."
                         />
                     </div>
-                    {(this.horzSelection.entrezGeneId === this.vertSelection.entrezGeneId) && (typeof this.horzSelection.entrezGeneId !== "undefined") && (
+                    {(this.horzSelection.axisType === AxisType.molecularProfile) && (this.vertSelection.axisType === AxisType.molecularProfile) &&
+                    (this.horzSelection.entrezGeneId === this.vertSelection.entrezGeneId) && (
                         <div>
                             View
                             <div className="radio"><label>
