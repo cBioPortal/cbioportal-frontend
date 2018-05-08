@@ -47,6 +47,8 @@ const JITTER_VALUE = 0.4;
 
 const ZERO_EXPRESSION = -2;
 
+const EXPRESSION_CAP = .01;
+
 const SAMPLE_STYLE_BASE = {
     size: 6,
     line: {color: "#B40404", width: 1.2}
@@ -200,7 +202,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     @computed
     get dataTransformer() {
         function logger(expressionValue: number) {
-            return (expressionValue === 0) ? .00001 : Math.log10(expressionValue);
+            return (expressionValue < EXPRESSION_CAP) ? EXPRESSION_CAP : Math.log10(expressionValue);
         }
 
         return (molecularData: NumericGeneMolecularData) =>
@@ -486,6 +488,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
             <ChartContainer
                 getSVGElement={()=>this.svgContainer}
                 exportFileName="Expression"
+
             >
                 <VictoryChart
                     height={this.height}
